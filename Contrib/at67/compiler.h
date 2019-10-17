@@ -4,7 +4,9 @@
 
 namespace Compiler
 {
-    void initialise(void);
+    bool initialise(void);
+    bool intialiseMacros(void);
+
     bool compile(const std::string& inputFilename, const std::string& outputFilename);
 }
 

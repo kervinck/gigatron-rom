@@ -31,6 +31,8 @@
 
 namespace Editor
 {
+    enum SingleStepMode {RunToBrk=0, StepVpc, StepWatch, NumSingleStepModes};
+
     struct KeyCodeMod
     {
         int scanCode;
@@ -56,11 +58,15 @@ namespace Editor
 
     bool _pageUpButton = false;
     bool _pageDnButton = false;
+    bool _delAllButton = false;
+
 
     bool _singleStep = false;
-    bool _singleStepMode = false;
+    bool _singleStepEnabled = false;
+    SingleStepMode _singleStepMode = RunToBrk;
     uint32_t _singleStepTicks = 0;
-    uint8_t _singleStepWatch = 0x00;
+    uint16_t _singleStepValue = 0x0000;
+    uint16_t _singleStepAddress = VIDEO_Y_ADDRESS;
 
     std::string _cwdPath = "";
     std::string _filePath = "";
@@ -68,19 +74,23 @@ namespace Editor
     MouseState _mouseState;
     MemoryMode _memoryMode = RAM;
     EditorMode _editorMode = Hex;
+    EditorMode _editorModePrev = Hex;
     KeyboardMode _keyboardMode = Giga;
     OnVarType _onVarType = OnNone;
 
     uint8_t _memoryDigit = 0;
     uint8_t _addressDigit = 0;
+
     uint16_t _hexBaseAddress = HEX_BASE_ADDRESS;
     uint16_t _vpcBaseAddress = HEX_BASE_ADDRESS;
     uint16_t _loadBaseAddress = LOAD_BASE_ADDRESS;
     uint16_t _varsBaseAddress = VARS_BASE_ADDRESS;
-    uint16_t _singleStepWatchAddress = VIDEO_Y_ADDRESS;
+
     uint16_t _cpuUsageAddressA = HEX_BASE_ADDRESS;
     uint16_t _cpuUsageAddressB = HEX_BASE_ADDRESS + 0x0020;
     
+    std::vector<uint16_t> _breakPoints;
+
     int _fileEntriesSize = 0;
     int _fileEntriesIndex = 0;
     std::vector<FileEntry> _fileEntries;
@@ -99,13 +109,13 @@ namespace Editor
     int getCursorX(void) {return _cursorX;}
     int getCursorY(void) {return _cursorY;}
     bool getHexEdit(void) {return _hexEdit;}
+    bool getSingleStepEnabled(void) {return _singleStepEnabled;}
     bool getStartMusic(void) {return _startMusic;}
-    bool getSingleStep(void) {return _singleStep;}
-    bool getSingleStepMode(void) {return _singleStepMode;}
 
     bool getPageUpButton(void) {return _pageUpButton;}
     bool getPageDnButton(void) {return _pageDnButton;}
-
+    bool getDelAllButton(void) {return _delAllButton;}
+ 
     MemoryMode getMemoryMode(void) {return _memoryMode;}
     EditorMode getEditorMode(void) {return _editorMode;}
     KeyboardMode getKeyboardMode(void) {return _keyboardMode;}
@@ -117,33 +127,40 @@ namespace Editor
     uint16_t getVpcBaseAddress(void) {return _vpcBaseAddress;}
     uint16_t getLoadBaseAddress(void) {return _loadBaseAddress;}
     uint16_t getVarsBaseAddress(void) {return _varsBaseAddress;}
-    uint16_t getSingleStepWatchAddress(void) {return _singleStepWatchAddress;}
+    uint16_t getSingleStepAddress(void) {return _singleStepAddress;}
     uint16_t getCpuUsageAddressA(void) {return _cpuUsageAddressA;}
     uint16_t getCpuUsageAddressB(void) {return _cpuUsageAddressB;}
 
+    int getBreakPointsSize(void) {return int(_breakPoints.size());}
+    uint16_t getBreakPointAddress(int index) {return _breakPoints.size() ? _breakPoints[index % _breakPoints.size()] : 0;}
+    void addBreakPoint(uint16_t address) {_breakPoints.push_back(address);}
+    void clearBreakPoints(void) {_breakPoints.clear();}
+
     int getFileEntriesIndex(void) {return _fileEntriesIndex;}
     int getFileEntriesSize(void) {return int(_fileEntries.size());}
-    FileType getFileEntryType(int index) {return _fileEntries[index % _fileEntries.size()]._fileType;}
-    FileType getCurrentFileEntryType(void) {return _fileEntries[(_cursorY + _fileEntriesIndex) % _fileEntries.size()]._fileType;}
-    std::string* getFileEntryName(int index) {return &_fileEntries[index % _fileEntries.size()]._name;}
-    std::string* getCurrentFileEntryName(void) {return &_fileEntries[(_cursorY + _fileEntriesIndex) % _fileEntries.size()]._name;}
+    FileType getFileEntryType(int index) {return _fileEntries.size() ? _fileEntries[index % _fileEntries.size()]._fileType : File;}
+    FileType getCurrentFileEntryType(void) {return _fileEntries.size() ? _fileEntries[(_cursorY + _fileEntriesIndex) % _fileEntries.size()]._fileType : File;}
+    std::string* getFileEntryName(int index) {return _fileEntries.size() ? &_fileEntries[index % _fileEntries.size()]._name : nullptr;}
+    std::string* getCurrentFileEntryName(void) {return _fileEntries.size() ? &_fileEntries[(_cursorY + _fileEntriesIndex) % _fileEntries.size()]._name : nullptr;}
 
     int getRomEntriesIndex(void) {return _romEntriesIndex;}
     int getRomEntriesSize(void) {return int(_romEntries.size());}
-    uint8_t getRomEntryVersion(int index) {return _romEntries[index % _romEntries.size()]._version;}
-    uint8_t getCurrentRomEntryVersion(int& index) {index = (_cursorY + _romEntriesIndex) % _romEntries.size(); return _romEntries[index]._version;}
-    std::string* getRomEntryName(int index) {return &_romEntries[index % _romEntries.size()]._name;}
-    std::string* getCurrentRomEntryName(int& index) {index = (_cursorY + _romEntriesIndex) % _romEntries.size(); return &_romEntries[index]._name;}
-    int getCurrentRomEntryIndex(void) {return (_cursorY + _romEntriesIndex) % _romEntries.size();}
-    void setRomEntry(uint8_t version, std::string& name) {Editor::RomEntry romEntry = {version, name}; _romEntries.push_back(romEntry); return;}
+    uint8_t getRomEntryType(int index) {return _romEntries.size() ? _romEntries[index % _romEntries.size()]._type : 0;}
+    uint8_t getCurrentRomEntryType(int& index) {if(_romEntries.size() == 0) return 0; index = (_cursorY + _romEntriesIndex) % _romEntries.size(); return _romEntries[index]._type;}
+    std::string* getRomEntryName(int index) {return _romEntries.size() ? &_romEntries[index % _romEntries.size()]._name : nullptr;}
+    std::string* getCurrentRomEntryName(int& index) {if(_romEntries.size() == 0) return nullptr; index = (_cursorY + _romEntriesIndex) % _romEntries.size(); return &_romEntries[index]._name;}
+    int getCurrentRomEntryIndex(void) {return _romEntries.size() ? (_cursorY + _romEntriesIndex) % _romEntries.size() : 0;}
+    void addRomEntry(uint8_t type, std::string& name) {Editor::RomEntry romEntry = {type, name}; _romEntries.push_back(romEntry); return;}
+
+    void resetEditor(void) {_memoryDigit = 0; _addressDigit = 0;}
+    void setEditorMode(EditorMode editorMode) {_editorModePrev = _editorMode; _editorMode = editorMode;}
 
     void setCursorX(int x) {_cursorX = x;}
     void setCursorY(int y) {_cursorY = y;}
+    void setHexEdit(bool hexEdit) {_hexEdit = hexEdit; if(!hexEdit) resetEditor();}
     void setStartMusic(bool startMusic) {_startMusic = startMusic;}
-    void setSingleStep(bool singleStep) {_singleStep = singleStep;}
-    void setSingleStepMode(bool singleStepMode) {_singleStepMode = singleStepMode;}
+    void setSingleStepAddress(uint16_t address) {_singleStepAddress = address;}
     void setLoadBaseAddress(uint16_t address) {_loadBaseAddress = address;}
-    void setSingleStepWatchAddress(uint16_t address) {_singleStepWatchAddress = address;}
     void setCpuUsageAddressA(uint16_t address) {_cpuUsageAddressA = address;}
     void setCpuUsageAddressB(uint16_t address) {_cpuUsageAddressB = address;}
 
@@ -155,7 +172,7 @@ namespace Editor
         float mx = float(_mouseState._x) / float(Graphics::getWidth());
         float my = float(_mouseState._y) / float(Graphics::getHeight());
 
-        // Pageup and Pagedn buttons
+        // PageUp, PageDn and DelAll buttons
         float pux0 = float(MENU_START_X+PAGEUP_START_X) / float(SCREEN_WIDTH);
         float puy0 = float(MENU_START_Y+PAGEUP_START_Y) / float(SCREEN_HEIGHT);
         float pux1 = float(MENU_START_X+PAGEUP_START_X+FONT_WIDTH) / float(SCREEN_WIDTH);
@@ -164,8 +181,14 @@ namespace Editor
         float pdy0 = float(MENU_START_Y+PAGEDN_START_Y) / float(SCREEN_HEIGHT);
         float pdx1 = float(MENU_START_X+PAGEDN_START_X+FONT_WIDTH) / float(SCREEN_WIDTH);
         float pdy1 = float(MENU_START_Y+PAGEDN_START_Y+FONT_HEIGHT) / float(SCREEN_HEIGHT);
+        float dax0 = float(MENU_START_X+DELALL_START_X) / float(SCREEN_WIDTH);
+        float day0 = float(MENU_START_Y+DELALL_START_Y) / float(SCREEN_HEIGHT);
+        float dax1 = float(MENU_START_X+DELALL_START_X+FONT_WIDTH) / float(SCREEN_WIDTH);
+        float day1 = float(MENU_START_Y+DELALL_START_Y+FONT_HEIGHT) / float(SCREEN_HEIGHT);
+
         _pageUpButton = (mx >= pux0  &&  mx < pux1  &&  my >= puy0  &&  my < puy1);
         _pageDnButton = (mx >= pdx0  &&  mx < pdx1  &&  my >= pdy0  &&  my < pdy1);
+        _delAllButton = (mx >= dax0  &&  mx < dax1  &&  my >= day0  &&  my < day1);
 
         // Normalised cursor origin
         float ox = float(MENU_START_X) / float(SCREEN_WIDTH);
@@ -180,7 +203,7 @@ namespace Editor
             cy = y - 4;
         }
 
-        //fprintf(stderr, "%d %d %d %d %d %08x\n", x, y, cy, _pageUpButton, _pageDnButton, _mouseState._state);
+        //fprintf(stderr, "%d %d %d  %d %d %d  %08x\n", x, y, cy, _pageUpButton, _pageDnButton, _delAllButton, _mouseState._state);
     }
 
     std::string getBrowserPath(bool removeSlash)
@@ -220,13 +243,34 @@ namespace Editor
         return true;
     }
 
+
+    // Attempt to solve Window's Non Client Area process starvation
+    int eventFilter(void* data, SDL_Event *event)
+    {
+        if(event->type == SDL_WINDOWEVENT  ||  event->type == SDL_SYSWMEVENT)
+        {
+            if(event->window.event == SDL_WINDOWEVENT_SIZE_CHANGED  ||  event->window.event == SDL_WINDOWEVENT_MOVED)
+            {
+                SDL_RenderSetViewport(Graphics::getRenderer(), NULL);
+                //Graphics::refreshScreen();
+                //Graphics::render();
+                //fprintf(stderr, "%08x\n", event->window.event);
+                for(int i=0; i<CLOCK_FREQ/600; i++) Cpu::process();
+            }
+        }
+
+        return 1;
+    }
+
     void initialise(void)
     {
+        //SDL_SetEventFilter(eventFilter, NULL);
+
         SDL_StartTextInput();
 
         // Current working directory
         char cwdPath[FILENAME_MAX];
-        getcwd(cwdPath, FILENAME_MAX);
+        if(!getcwd(cwdPath, FILENAME_MAX)) sprintf(cwdPath, ".");
         _cwdPath = std::string(cwdPath);
         _filePath = _cwdPath + "/";
 
@@ -359,13 +403,15 @@ namespace Editor
 
 
         // Emulator INI key to SDL key mapping
-        _emulator["RamMode"]      = {SDLK_m, KMOD_LCTRL};
-        _emulator["Execute"]      = {SDLK_F5, KMOD_LCTRL};
+        _emulator["MemoryMode"]   = {SDLK_m, KMOD_LCTRL};
+        _emulator["MemorySize"]   = {SDLK_z, KMOD_LCTRL};
         _emulator["Browse"]       = {SDLK_b, KMOD_LCTRL};
         _emulator["RomType"]      = {SDLK_r, KMOD_LCTRL};
-        _emulator["Reset"]        = {SDLK_F1, KMOD_LCTRL};
+        _emulator["HexMonitor"]   = {SDLK_x, KMOD_LCTRL};
         _emulator["Disassembler"] = {SDLK_d, KMOD_LCTRL};
-        _emulator["ScanlineMode"] = {SDLK_F3, KMOD_LCTRL};
+        _emulator["ScanlineMode"] = {SDLK_s, KMOD_LCTRL};
+        _emulator["Reset"]        = {SDLK_F1, KMOD_LCTRL};
+        _emulator["Execute"]      = {SDLK_F5, KMOD_LCTRL};
         _emulator["Help"]         = {SDLK_h, KMOD_LCTRL};
         _emulator["Quit"]         = {SDLK_q, KMOD_LCTRL};
         _emulator["Speed+"]       = {SDLK_EQUALS, KMOD_NONE};
@@ -387,9 +433,10 @@ namespace Editor
         _hardware["Execute"] = {SDLK_F5, KMOD_LALT};
 
         // Debugger INI key to SDL key mapping
-        _debugger["Debug"] = {SDLK_F6, KMOD_LCTRL};
-        _debugger["Step"]  = {SDLK_F7, KMOD_LCTRL};
-
+        _debugger["Debug"]     = {SDLK_F6, KMOD_LCTRL};
+        _debugger["RunToBrk"]  = {SDLK_F7, KMOD_LCTRL};
+        _debugger["StepVpc"]   = {SDLK_F8, KMOD_LCTRL};
+        _debugger["StepWatch"] = {SDLK_F9, KMOD_LCTRL};
 
         // Input configuration
         INIReader iniReader(INPUT_CONFIG_INI);
@@ -419,13 +466,15 @@ namespace Editor
             {
                 case Emulator:
                 {
-                    scanCodeFromIniKey(sectionString, "RamMode",      "CTRL+M",   _emulator["RamMode"]);
-                    scanCodeFromIniKey(sectionString, "Execute",      "CTRL+F5",  _emulator["Execute"]);
+                    scanCodeFromIniKey(sectionString, "MemoryMode",   "CTRL+M",   _emulator["MemoryMode"]);
+                    scanCodeFromIniKey(sectionString, "MemorySize",   "CTRL+Z",   _emulator["MemorySize"]);
                     scanCodeFromIniKey(sectionString, "Browse",       "CTRL+B",   _emulator["Browse"]);
                     scanCodeFromIniKey(sectionString, "RomType",      "CTRL+R",   _emulator["RomType"]);
-                    scanCodeFromIniKey(sectionString, "Reset",        "CTRL+F1",  _emulator["Reset"]);
+                    scanCodeFromIniKey(sectionString, "HexMonitor",   "CTRL+X",   _emulator["HexMonitor"]);
                     scanCodeFromIniKey(sectionString, "Disassembler", "CTRL+D",   _emulator["Disassembler"]);
-                    scanCodeFromIniKey(sectionString, "ScanlineMode", "CTRL+F3",  _emulator["ScanlineMode"]);
+                    scanCodeFromIniKey(sectionString, "ScanlineMode", "CTRL+S",   _emulator["ScanlineMode"]);
+                    scanCodeFromIniKey(sectionString, "Reset",        "CTRL+F1",  _emulator["Reset"]);
+                    scanCodeFromIniKey(sectionString, "Execute",      "CTRL+F5",  _emulator["Execute"]);
                     scanCodeFromIniKey(sectionString, "Help",         "CTRL+H",   _emulator["Help"]);
                     scanCodeFromIniKey(sectionString, "Quit",         "CTRL+Q",   _emulator["Quit"]);
                     scanCodeFromIniKey(sectionString, "Speed+",       "+",        _emulator["Speed+"]);
@@ -456,8 +505,10 @@ namespace Editor
 
                 case Debugger:
                 {
-                    scanCodeFromIniKey(sectionString, "Debug", "CTRL+F6", _debugger["Debug"]);
-                    scanCodeFromIniKey(sectionString, "Step",  "CTRL+F7", _debugger["Step"]);
+                    scanCodeFromIniKey(sectionString, "Debug",     "CTRL+F6", _debugger["Debug"]);
+                    scanCodeFromIniKey(sectionString, "RunToBrk",  "CTRL+F7", _debugger["RunToBrk"]);
+                    scanCodeFromIniKey(sectionString, "StepVpc",   "CTRL+F8", _debugger["StepVpc"]);
+                    scanCodeFromIniKey(sectionString, "StepWatch", "CTRL+F9", _debugger["StepWatch"]);
                 }
                 break;
             }
@@ -548,10 +599,21 @@ namespace Editor
     {
         switch(_editorMode)
         {
-            case Hex:  _hexBaseAddress = (_hexBaseAddress - HEX_CHARS_X*numRows) & (RAM_SIZE-1);               break;
-            case Dasm: _hexBaseAddress = (_hexBaseAddress - Assembler::getPrevDasmByteCount()) & (RAM_SIZE-1); break;
-            case Load: if(-_fileEntriesIndex < 0) _fileEntriesIndex = 0;                                       break;
-            case Rom:  if(-_romEntriesIndex < 0) _romEntriesIndex = 0;                                         break;
+            case Hex:  _hexBaseAddress = (_hexBaseAddress - HEX_CHARS_X*numRows) & (Memory::getSizeRAM()-1); break;
+            case Load: if(--_fileEntriesIndex < 0) _fileEntriesIndex = 0;                                    break;
+            case Rom:  if(--_romEntriesIndex < 0) _romEntriesIndex = 0;                                      break;
+            case Dasm: 
+            {
+                if(numRows == 1)
+                {
+                    _hexBaseAddress = (_hexBaseAddress - Assembler::getPrevDasmByteCount()) & (Memory::getSizeRAM()-1);
+                }
+                else
+                {
+                    _hexBaseAddress = (_hexBaseAddress - Assembler::getPrevDasmPageByteCount()) & (Memory::getSizeRAM()-1);
+                }
+            }
+            break;
         }
     }
 
@@ -559,8 +621,7 @@ namespace Editor
     {
         switch(_editorMode)
         {
-            case Hex:  _hexBaseAddress = (_hexBaseAddress + HEX_CHARS_X*numRows) & (RAM_SIZE-1);               break;
-            case Dasm: _hexBaseAddress = (_hexBaseAddress + Assembler::getCurrDasmByteCount()) & (RAM_SIZE-1); break;
+            case Hex:  _hexBaseAddress = (_hexBaseAddress + HEX_CHARS_X*numRows) & (Memory::getSizeRAM()-1); break;
             case Load:
             {
                 if(_fileEntries.size() > HEX_CHARS_Y)
@@ -579,6 +640,18 @@ namespace Editor
                 }
             }
             break;
+            case Dasm:
+            {
+                if(numRows == 1)
+                {
+                    _hexBaseAddress = (_hexBaseAddress + Assembler::getCurrDasmByteCount()) & (Memory::getSizeRAM()-1);
+                }
+                else
+                {
+                    _hexBaseAddress = (_hexBaseAddress + Assembler::getCurrDasmPageByteCount()) & (Memory::getSizeRAM()-1);
+                }
+            }
+            break;
         }
     }
 
@@ -588,14 +661,16 @@ namespace Editor
         if(event.wheel.y < 0) handlePageDown(1);
     }
 
-    void handleLoadEdit(void)
+    void handleMouseLeftClick(void)
     {
         if(_editorMode == Hex  ||  (_cursorY < 0  &&  _editorMode != Rom))
         {
             _hexEdit = !_hexEdit;
+            if(!_hexEdit) resetEditor();
         }
         else if(_editorMode == Load)
         {
+            // No loading/browsing if cursor is out of bounds
             if(_cursorY >= getFileEntriesSize()) return;
 
             FileType fileType = getCurrentFileEntryType();
@@ -611,11 +686,35 @@ namespace Editor
 
             Cpu::loadRom(getCurrentRomEntryIndex());
         }
+        else if(_editorMode == Dasm  &&  _singleStepEnabled)
+        {
+            // Breakpoints only work in vCPU code
+            if(_cursorY < 0  ||  _cursorY >= Assembler::getDisassembledCodeSize() ||  _memoryMode != RAM) return;
+
+            // If breakpoint already exists, delete it, otherwise save it
+            auto it = std::find(_breakPoints.begin(), _breakPoints.end(), Assembler::getDisassembledCode(_cursorY)->_address);
+            (it != _breakPoints.end()) ? _breakPoints.erase(it) : _breakPoints.push_back(Assembler::getDisassembledCode(_cursorY)->_address);
+        }
+    }
+
+    void handleMouseRightClick(void)
+    {
+        if(_editorMode == Load)
+        {
+            // No loading/browsing if cursor is out of bounds
+            if(_cursorY >= getFileEntriesSize()) return;
+
+            FileType fileType = getCurrentFileEntryType();
+            switch(fileType)
+            {
+                case File: Loader::setUploadTarget(Loader::Hardware); break;
+            }
+        }
     }
 
     OnVarType updateOnVarType(void)
     {
-        if(Editor::getSingleStepMode())
+        if(_singleStepEnabled)
         {
             if(getCursorY() == -2  &&  getCursorX() > 5  &&  getCursorX() < 7) return OnWatch;
         }
@@ -632,7 +731,14 @@ namespace Editor
 
     void updateEditor(void)
     {
-        if(!_hexEdit) return;
+        if(!_hexEdit)
+        {
+            resetEditor();
+            return;
+        }
+
+        // Don't allow emulator commands to accidently modify fields
+        if(_sdlKeyModifier == KMOD_LALT  ||  _sdlKeyModifier == KMOD_LCTRL) return;
 
         int range = 0;
         if(_sdlKeyScanCode >= SDLK_0  &&  _sdlKeyScanCode <= SDLK_9) range = 1;
@@ -729,10 +835,10 @@ namespace Editor
                 {
                     switch(_addressDigit)
                     {
-                        case 0: value = (value << 12) & 0xF000; _singleStepWatchAddress = _singleStepWatchAddress & 0x0FFF | value; break;
-                        case 1: value = (value << 8)  & 0x0F00; _singleStepWatchAddress = _singleStepWatchAddress & 0xF0FF | value; break;
-                        case 2: value = (value << 4)  & 0x00F0; _singleStepWatchAddress = _singleStepWatchAddress & 0xFF0F | value; break;
-                        case 3: value = (value << 0)  & 0x000F; _singleStepWatchAddress = _singleStepWatchAddress & 0xFFF0 | value; break;
+                        case 0: value = (value << 12) & 0xF000; _singleStepAddress = _singleStepAddress & 0x0FFF | value; break;
+                        case 1: value = (value << 8)  & 0x0F00; _singleStepAddress = _singleStepAddress & 0xF0FF | value; break;
+                        case 2: value = (value << 4)  & 0x00F0; _singleStepAddress = _singleStepAddress & 0xFF0F | value; break;
+                        case 3: value = (value << 0)  & 0x000F; _singleStepAddress = _singleStepAddress & 0xFFF0 | value; break;
                     }
                 }
                 break;
@@ -747,13 +853,18 @@ namespace Editor
     void startDebugger(void)
     {
         _singleStep = false;
-        _singleStepMode = true;
+        _singleStepEnabled = true;
+        _singleStepMode = RunToBrk;
+
+        _hexBaseAddress = (_memoryMode == RAM) ? Cpu::getVPC() : Cpu::getStateS()._PC;
+        _vpcBaseAddress = _hexBaseAddress;
     }
 
     void resetDebugger(void)
     {
         _singleStep = false;
-        _singleStepMode = false;
+        _singleStepEnabled = false;
+        _singleStepMode = RunToBrk;
     }
 
     // PS2 Keyboard emulation mode
@@ -837,7 +948,7 @@ namespace Editor
 
         if(_sdlKeyScanCode == _emulator["Quit"].scanCode  &&  _sdlKeyModifier == _emulator["Quit"].modifier)
         {
-            SDL_Quit();
+            Cpu::shutdown();
             exit(0);
         }
 
@@ -851,10 +962,7 @@ namespace Editor
         else if(_sdlKeyScanCode == _emulator["ScanlineMode"].scanCode  &&  _sdlKeyModifier == _emulator["ScanlineMode"].modifier)
         {
             // ROMS after v1 have their own inbuilt scanline handlers
-            if(!_singleStepMode)
-            {
-                if(Cpu::getRomType() != Cpu::ROMv1) {Cpu::setIN(Cpu::getIN() | INPUT_SELECT); return;}
-            }
+            if(Cpu::getRomType() != Cpu::ROMv1) {Cpu::setIN(Cpu::getIN() | INPUT_SELECT); return;}
         }
 
         // PS2 Keyboard emulation mode
@@ -952,39 +1060,75 @@ namespace Editor
         // Disassembler
         else if(_sdlKeyScanCode == _emulator["Disassembler"].scanCode  &&  _sdlKeyModifier == _emulator["Disassembler"].modifier)
         {
-            _editorMode = (_editorMode == Dasm) ? Hex : Dasm;
+            if(_editorMode == Dasm)
+            {
+                _editorMode = _editorModePrev;
+                _editorModePrev = Dasm;
+            }
+            else
+            {
+                _editorModePrev = _editorMode;
+                _editorMode = Dasm;
+            }
         }
 
         // ROMS after v1 have their own inbuilt scanline handlers
         else if(_sdlKeyScanCode == _emulator["ScanlineMode"].scanCode  &&  _sdlKeyModifier == _emulator["ScanlineMode"].modifier)
         {
-            if(!_singleStepMode) (Cpu::getRomType() != Cpu::ROMv1) ? Cpu::setIN(Cpu::getIN() & ~INPUT_SELECT) : Cpu::swapScanlineMode();
+            (Cpu::getRomType() != Cpu::ROMv1) ? Cpu::setIN(Cpu::getIN() & ~INPUT_SELECT) : Cpu::swapScanlineMode();
         }
 
         // Browse vCPU directory
         else if(_sdlKeyScanCode == _emulator["Browse"].scanCode  &&  _sdlKeyModifier == _emulator["Browse"].modifier)
         {
-            if(!_singleStepMode)
+            if(!_singleStepEnabled)
             {
-                _editorMode = (_editorMode == Load) ? Hex : Load;
-                if(_editorMode == Load) browseDirectory();
+                if(_editorMode == Load)
+                {
+                    _editorMode = _editorModePrev;
+                    _editorModePrev = Load;
+                }
+                else
+                {
+                    _editorModePrev = _editorMode;
+                    _editorMode = Load;
+                    browseDirectory();
+                }
             }
         }
 
         // ROM type
         else if(_sdlKeyScanCode == _emulator["RomType"].scanCode  &&  _sdlKeyModifier == _emulator["RomType"].modifier)
         {
-            if(!_singleStepMode)
+            if(!_singleStepEnabled)
             {
                 if(_editorMode == Rom)
                 {
-                    _editorMode = Hex;
+                    _editorMode = _editorModePrev;
+                    _editorModePrev = Rom;
                 }
                 else
                 {
-                    _hexEdit = false;
+                    _editorModePrev = _editorMode;
                     _editorMode = Rom;
+                    _hexEdit = false;
+                    resetEditor();
                 }
+            }
+        }
+
+        // ROM type
+        else if(_sdlKeyScanCode == _emulator["HexMonitor"].scanCode  &&  _sdlKeyModifier == _emulator["HexMonitor"].modifier)
+        {
+            if(_editorMode == Hex)
+            {
+                _editorMode = _editorModePrev;
+                _editorModePrev = Hex;
+            }
+            else
+            {
+                _editorModePrev = _editorMode;
+                _editorMode = Hex;
             }
         }
 
@@ -997,7 +1141,7 @@ namespace Editor
         // Keyboard mode
         else if(_sdlKeyScanCode ==  _keyboard["Mode"].scanCode  &&  _sdlKeyModifier == _keyboard["Mode"].modifier)
         {
-            static int keyboardMode = Giga;
+            int keyboardMode = _keyboardMode;
             keyboardMode = (++keyboardMode) % NumKeyboardModes;
             _keyboardMode = (KeyboardMode)keyboardMode;
 
@@ -1006,20 +1150,30 @@ namespace Editor
         }
 
         // RAM/ROM mode
-        else if(_sdlKeyScanCode ==  _emulator["RamMode"].scanCode  &&  _sdlKeyModifier == _emulator["RamMode"].modifier)
+        else if(_sdlKeyScanCode ==  _emulator["MemoryMode"].scanCode  &&  _sdlKeyModifier == _emulator["MemoryMode"].modifier)
         {
-            if(!_singleStepMode)
+            int memoryMode = _memoryMode;
+            memoryMode = (_editorMode == Dasm) ? (++memoryMode) % (NumMemoryModes-1) : (++memoryMode) % NumMemoryModes;
+            _memoryMode = (MemoryMode)memoryMode;
+            
+            // Update hex address with PC or vPC
+            if(_singleStepEnabled)
             {
-                static int memoryMode = RAM;
-                memoryMode = (++memoryMode) % NumMemoryModes;
-                _memoryMode = (MemoryMode)memoryMode;
+                _hexBaseAddress = (_memoryMode == RAM) ? Cpu::getVPC() : Cpu::getStateS()._PC;
+                _vpcBaseAddress = _hexBaseAddress;
             }
+        }
+
+        // RAM Size
+        else if(_sdlKeyScanCode ==  _emulator["MemorySize"].scanCode  &&  _sdlKeyModifier == _emulator["MemorySize"].modifier)
+        {
+            Cpu::swapMemoryModel();
         }
 
         // Hardware upload and execute
         else if(_sdlKeyScanCode == _hardware["Execute"].scanCode  &&  _sdlKeyModifier == _hardware["Execute"].modifier)
         {
-            if(!_singleStepMode) Loader::setUploadTarget(Loader::Hardware);
+            if(!_singleStepEnabled) Loader::setUploadTarget(Loader::Hardware);
         }
 
         updateEditor();
@@ -1031,34 +1185,102 @@ namespace Editor
         if(handleGigaKeyUp()) return;
     }
 
+
+    void handleGuiEvents(SDL_Event& event)
+    {
+        switch(event.type)
+        {
+            case SDL_WINDOWEVENT:
+            {
+                switch(event.window.event)
+                {
+                    case SDL_WINDOWEVENT_RESIZED:
+                    case SDL_WINDOWEVENT_SIZE_CHANGED:
+                    {
+                        Graphics::setWidthHeight(event.window.data1, event.window.data2);
+                    }
+                    break;
+                }
+            }
+            break;
+
+            case SDL_QUIT: 
+            {
+                Cpu::shutdown();
+                exit(0);
+            }
+        }
+    }
+
+
+    void singleStep(uint16_t address)
+    {
+        _singleStep = false;
+        _singleStepEnabled = true;
+        _hexBaseAddress = address;
+        _vpcBaseAddress = address;
+    }
+
     // Debug mode, handles it's own input and rendering
-    bool singleStepDebug(void)
+    bool handleDebugger(void)
     {
         // Gprintfs
         Assembler::printGprintfStrings();
 
-        // Single step
+        // Debug
+        static uint16_t vPC = Cpu::getVPC();
         if(_singleStep)
         {
-            // Timeout on change of variable
-            if(SDL_GetTicks() - _singleStepTicks > SINGLE_STEP_STALL_TIME)
+            static int cycles = 0;
+
+            // Native debugging
+            if(_memoryMode != RAM)
             {
-                setSingleStep(false); 
-                setSingleStepMode(false);
-                fprintf(stderr, "Editor::singleStepDebug() : Single step stall for %d milliseconds : exiting debugger.\n", SDL_GetTicks() - _singleStepTicks);
+                singleStep(Cpu::getStateS()._PC);
             }
-            // Watch variable 
-            else if(Cpu::getRAM(_singleStepWatchAddress) != _singleStepWatch) 
+            // vCPU debugging, (this code can potentially run for every Native instruction, for efficiency we check vPC so this code only runs for each vCPU instruction)
+            else if(vPC != Cpu::getVPC()  ||  cycles >= MAX_SINGLE_STEP_CYCLES)
             {
-                _singleStep = false;
-                _singleStepMode = true;
-                _hexBaseAddress = (Cpu::getRAM(0x0017) <<8) | Cpu::getRAM(0x0016);
-                _vpcBaseAddress = _hexBaseAddress;
+                vPC = Cpu::getVPC();
+
+                // Timeout on change of variable
+                if(SDL_GetTicks() - _singleStepTicks > SINGLE_STEP_STALL_TIME)
+                {
+                    resetDebugger();
+                    fprintf(stderr, "Editor::handleDebugger() : Single step stall for %d milliseconds : exiting debugger.\n", SDL_GetTicks() - _singleStepTicks);
+                }
+                // Single step on vPC or on watch value
+                switch(_singleStepMode)
+                {
+                    case RunToBrk:
+                    {
+                        auto it = std::find(_breakPoints.begin(), _breakPoints.end(), vPC);
+                        if(it != _breakPoints.end()) singleStep(vPC);
+                    }
+                    break;
+                
+                    case StepVpc:
+                    {
+                        // Step whenever program counter changes or when MAX_SINGLE_STEP_CYCLES cycles have occured, (to avoid deadlocks)
+                        if(vPC != _singleStepValue  ||  cycles >= MAX_SINGLE_STEP_CYCLES) singleStep(vPC);
+                    }
+                    break;
+
+                    case StepWatch:
+                    {
+                        if(Cpu::getRAM(_singleStepAddress) != _singleStepValue) singleStep(vPC);
+                    }
+                    break;
+                }
+
+                cycles = 0;
             }
+
+            cycles++;
         }
 
         // Pause simulation and handle debugging keys
-        while(_singleStepMode)
+        while(_singleStepEnabled)
         {
             // Update graphics but only once every 16.66667ms
             static uint64_t prevFrameCounter = 0;
@@ -1082,31 +1304,24 @@ namespace Editor
                 _sdlKeyModifier = event.key.keysym.mod & (KMOD_LCTRL | KMOD_LALT);
                 _mouseState._state = SDL_GetMouseState(&_mouseState._x, &_mouseState._y);
 
+                handleGuiEvents(event);
+
                 switch(event.type)
                 {
                     case SDL_MOUSEBUTTONDOWN:
                     {
                         if(_pageUpButton  &&  event.button.button == SDL_BUTTON_LEFT) handlePageUp(HEX_CHARS_Y);
                         else if(_pageDnButton  &&  event.button.button == SDL_BUTTON_LEFT) handlePageDown(HEX_CHARS_Y);
-                        else if(event.button.button == SDL_BUTTON_LEFT) handleLoadEdit();
+                        else if(_memoryMode == RAM  &&  _delAllButton  &&  event.button.button == SDL_BUTTON_LEFT) _breakPoints.clear();
+                        else if(event.button.button == SDL_BUTTON_LEFT) handleMouseLeftClick();
                     }
                     break;
 
-                    case SDL_WINDOWEVENT:
+                    case SDL_MOUSEWHEEL:
                     {
-                        switch(event.window.event)
-                        {
-                            case SDL_WINDOWEVENT_RESIZED:
-                            case SDL_WINDOWEVENT_SIZE_CHANGED:
-                            {
-                                Graphics::setWidthHeight(event.window.data1, event.window.data2);
-                            }
-                            break;
-                        }
+                        handleMouseWheel(event);
                     }
                     break;
-
-                    case SDL_MOUSEWHEEL: handleMouseWheel(event); break;
 
                     case SDL_KEYUP:
                     {
@@ -1124,13 +1339,31 @@ namespace Editor
 
                     case SDL_KEYDOWN:
                     {
-                        // Single step
-                        if(_sdlKeyScanCode == _debugger["Step"].scanCode  &&  _sdlKeyModifier == _debugger["Step"].modifier)
+                        // Run to breakpoint, (vCPU only)
+                        if(_memoryMode == RAM  &&  _sdlKeyScanCode == _debugger["RunToBrk"].scanCode  &&  _sdlKeyModifier == _debugger["RunToBrk"].modifier)
                         {
                             _singleStep = true;
-                            _singleStepMode = false;
+                            _singleStepEnabled = false;
+                            _singleStepMode = RunToBrk;
                             _singleStepTicks = SDL_GetTicks();
-                            _singleStepWatch = Cpu::getRAM(_singleStepWatchAddress);
+                        }
+                        // Single step on vPC or on PC, (vCPU or native)
+                        else if(_sdlKeyScanCode == _debugger["StepVpc"].scanCode  &&  _sdlKeyModifier == _debugger["StepVpc"].modifier)
+                        {
+                            _singleStep = true;
+                            _singleStepEnabled = false;
+                            _singleStepMode = StepVpc;
+                            _singleStepTicks = SDL_GetTicks();
+                            _singleStepValue = (_memoryMode == RAM) ? Cpu::getVPC() : Cpu::getStateS()._PC;
+                        }
+                        // Single step on watch value, (vCPU only)
+                        else if(_memoryMode == RAM  &&  _sdlKeyScanCode == _debugger["StepWatch"].scanCode  &&  _sdlKeyModifier == _debugger["StepWatch"].modifier)
+                        {
+                            _singleStep = true;
+                            _singleStepEnabled = false;
+                            _singleStepMode = StepWatch;
+                            _singleStepTicks = SDL_GetTicks();
+                            _singleStepValue = Cpu::getRAM(_singleStepAddress);
                         }
                         else
                         {
@@ -1161,27 +1394,17 @@ namespace Editor
             _sdlKeyModifier = event.key.keysym.mod & (KMOD_LCTRL | KMOD_LALT);
             _mouseState._state = SDL_GetMouseState(&_mouseState._x, &_mouseState._y);
 
+            handleGuiEvents(event);
+
             switch(event.type)
             {
                 case SDL_MOUSEBUTTONDOWN:
                 {
                     if(_pageUpButton  &&  event.button.button == SDL_BUTTON_LEFT) handlePageUp(HEX_CHARS_Y);
                     else if(_pageDnButton  &&  event.button.button == SDL_BUTTON_LEFT) handlePageDown(HEX_CHARS_Y);
-                    else if(event.button.button == SDL_BUTTON_LEFT) handleLoadEdit();
-                }
-                break;
-
-                case SDL_WINDOWEVENT:
-                {
-                    switch(event.window.event)
-                    {
-                        case SDL_WINDOWEVENT_RESIZED:
-                        case SDL_WINDOWEVENT_SIZE_CHANGED:
-                        {
-                            Graphics::setWidthHeight(event.window.data1, event.window.data2);
-                        }
-                        break;
-                    }
+                    else if(_memoryMode == RAM  &&  _delAllButton  &&  event.button.button == SDL_BUTTON_LEFT) _breakPoints.clear();
+                    else if(event.button.button == SDL_BUTTON_LEFT) handleMouseLeftClick();
+                    else if(event.button.button == SDL_BUTTON_RIGHT) handleMouseRightClick();
                 }
                 break;
 
@@ -1189,11 +1412,6 @@ namespace Editor
                 case SDL_TEXTINPUT:  handlePS2key(event);     break;
                 case SDL_KEYDOWN:    handleKeyDown();         break;
                 case SDL_KEYUP:      handleKeyUp();           break;
-                case SDL_QUIT: 
-                {
-                    SDL_Quit();
-                    exit(0);
-                }
             }
         }
 

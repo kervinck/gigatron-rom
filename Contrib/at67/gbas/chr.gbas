@@ -13,8 +13,10 @@ for k = 0 to 1
         next i
     next j
 next k
-print
+
+print "wooooooooooooooooooooooooooooow!!!";
 for i = 0 to 6
     print "dog";" ";i
 next i
-20 goto 20
+cls
+20 goto 10

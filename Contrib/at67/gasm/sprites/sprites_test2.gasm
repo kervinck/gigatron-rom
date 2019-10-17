@@ -34,8 +34,8 @@ mask2       EQU     0x4C
 scratch     EQU     0x4E
 
 pixelsArray EQU     0x50
-xyPosArray  EQU     0x82
-xyVelArray  EQU     0xB2
+xyPosArray  EQU     0x90
+xyVelArray  EQU     0xC0
 
 xExtent     EQU     0x96
 yExtent     EQU     0x6e
@@ -45,8 +45,13 @@ numSprites  EQU     24
    
 _startAddress_      EQU     0x0200      ; entry point for the code, if this is missing defaults to 0x0200
 
-_callTable_         EQU     0x00FE      ; call addresses are automatically stored here by the assembler, it grows downwards,
-                                        ; for every NEW call address; make sure it doesn't crash into anything important
+_callTable_         EQU     0x008E      ; call addresses are automatically stored here by the assembler, it grows downwards
+                                        ; *NOTE* gt1 spec only allows for one zero page segment, .vasm files use this for the call table
+                                        ; do *NOT* make this address higher than 0x00BE, it will conflict with future ROM loading mechanisms
+                                        ; do *NOT* define constants, (DB or DW), between 0x30 -> 0x44 and 0xc0 -> 0xFF, these addresses are
+                                        ; used by the loader and the vCPU stack, you can create variables in these areas as long as you don't
+                                        ; corrupt your nested CALL return addresses on the stack
+                                                                                
 _singleStepWatch_   EQU     k           ; the single step debugger watches this variable location to decide when to step,
                                         ; choose a variable that is updated often
 

@@ -3,6 +3,7 @@
 #include <iomanip>
 #include <iostream>
 #include <algorithm>
+#include <atomic>
 
 #include "graphics.h"
 #include "memory.h"
@@ -40,6 +41,11 @@ namespace Graphics
     bool _displayHelpScreen = false;
     uint8_t _displayHelpScreenAlpha = 0;
 
+    std::atomic<bool> _enableUploadBar = false;
+    std::atomic<int> _uploadCursorY = -1;
+    std::atomic<float> _uploadPercentage = 0.0f;
+    std::string _uploadFilename;
+
     uint32_t _pixels[SCREEN_WIDTH * SCREEN_HEIGHT];
     uint32_t _colours[COLOUR_PALETTE];
     uint32_t _hlineTiming[GIGA_HEIGHT];
@@ -69,6 +75,24 @@ namespace Graphics
     void setDisplayHelpScreen(bool display) {_displayHelpScreen = display;}
     void setWidthHeight(int width, int height) {_width = width, _height = height;}
 
+    bool getUploadBarEnabled(void) {return _enableUploadBar;}
+    void setUploadFilename(const std::string& uploadFilename) {_uploadFilename = uploadFilename;}
+    void updateUploadBar(float uploadPercentage) {_uploadPercentage = uploadPercentage;}
+    void enableUploadBar(bool enableUploadBar)
+    {
+        _uploadPercentage = 0.0f;
+        _enableUploadBar = enableUploadBar;
+        if(enableUploadBar)
+        {
+            _uploadCursorY = 34;
+        }
+        else
+        {
+            _uploadCursorY = -1;
+            _uploadFilename = "";
+        }
+    }
+
 
     SDL_Surface* createSurface(int width, int height)
     {
@@ -89,7 +113,7 @@ namespace Graphics
         SDL_Surface* surface = SDL_CreateRGBSurface(0, width, height, 32, rmask, gmask, bmask, amask);
         if(surface == NULL)
         {
-            SDL_Quit();
+            Cpu::shutdown();
             fprintf(stderr, "Graphics::createSurface() :  failed to create SDL surface.\n");
             _EXIT_(EXIT_FAILURE);
         }
@@ -165,7 +189,7 @@ namespace Graphics
                 lineTokens.push_back(lineToken);
                 if(!infile.good()  &&  !infile.eof())
                 {
-                    SDL_Quit();
+                    Cpu::shutdown();
                     fprintf(stderr, "Graphics::createHelpTexture() : Bad line : '%s' : in %s : on line %d\n", lineToken.c_str(), INPUT_CONFIG_INI, lines);
                     _EXIT_(EXIT_FAILURE);
                 }
@@ -189,7 +213,7 @@ namespace Graphics
         _helpTexture = SDL_CreateTextureFromSurface(_renderer, _helpSurface);
         if(_helpTexture == NULL)
         {
-            SDL_Quit();
+            Cpu::shutdown();
             fprintf(stderr, "Graphics::createHelpTexture() :  failed to create SDL texture.\n");
             _EXIT_(EXIT_FAILURE);
         }
@@ -311,7 +335,6 @@ namespace Graphics
         // SDL hints, VSync and Batching
         char vsChar = char(_vSync + '0');
         SDL_SetHint(SDL_HINT_RENDER_VSYNC, &vsChar);
-        //SDL_SetHint(SDL_HINT_RENDER_BATCHING, "1");
         SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, std::to_string(_filter).c_str());
 
         // Fullscreen
@@ -319,8 +342,8 @@ namespace Graphics
         {
             if(SDL_CreateWindowAndRenderer(0, 0, SDL_WINDOW_FULLSCREEN_DESKTOP, &_window, &_renderer) < 0)
             {
-                SDL_Quit();
-                fprintf(stderr, "Graphics::initialise() : failed to create SDL window.\n");
+                Cpu::shutdown();
+                fprintf(stderr, "Graphics::initialise() : failed to create SDL fullscreen window.\n");
                 _EXIT_(EXIT_FAILURE);
             }
         }
@@ -333,7 +356,7 @@ namespace Graphics
 
                 if(SDL_CreateWindowAndRenderer(_width, _height, 0, &_window, &_renderer) < 0)
                 {
-                    SDL_Quit();
+                    Cpu::shutdown();
                     fprintf(stderr, "Graphics::initialise() : failed to create SDL window.\n");
                     _EXIT_(EXIT_FAILURE);
                 }
@@ -348,7 +371,7 @@ namespace Graphics
 
                 if(SDL_CreateWindowAndRenderer(_width, _height, 0, &_window, &_renderer) < 0)
                 {
-                    SDL_Quit();
+                    Cpu::shutdown();
                     fprintf(stderr, "Graphics::initialise() : failed to create SDL window.\n");
                     _EXIT_(EXIT_FAILURE);
                 }
@@ -368,7 +391,7 @@ namespace Graphics
         _screenTexture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH, SCREEN_HEIGHT);
         if(_screenTexture == NULL)
         {
-            SDL_Quit();
+            Cpu::shutdown();
             fprintf(stderr, "Graphics::initialise() :  failed to create SDL texture.\n");
             _EXIT_(EXIT_FAILURE);
         }
@@ -378,7 +401,7 @@ namespace Graphics
         SDL_Surface* fontSurface = SDL_LoadBMP("EmuFont-96x48.bmp");
         if(fontSurface == NULL)
         {
-            SDL_Quit();
+            Cpu::shutdown();
             fprintf(stderr, "Graphics::initialise() : failed to create SDL font surface, you're probably missing 'EmuFont-96x48.bmp' in the current directory/path.\n");
             _EXIT_(EXIT_FAILURE);
         }
@@ -386,7 +409,7 @@ namespace Graphics
         SDL_FreeSurface(fontSurface);
         if(_fontSurface == NULL)
         {
-            SDL_Quit();
+            Cpu::shutdown();
             fprintf(stderr, "Graphics::initialise() : failed to convert SDL font surface format to screen surface format.\n");
             _EXIT_(EXIT_FAILURE);
         }
@@ -417,7 +440,7 @@ namespace Graphics
 
         if(debugging) return;
 
-        uint32_t screen = (vgaX % SCREEN_WIDTH)*3 + (pixelY % GIGA_HEIGHT)*4*SCREEN_WIDTH;
+        uint32_t screen = (vgaX % (GIGA_WIDTH+1))*3 + (pixelY % GIGA_HEIGHT)*4*SCREEN_WIDTH;
         _pixels[screen + 0 + 0*SCREEN_WIDTH] = colour; _pixels[screen + 1 + 0*SCREEN_WIDTH] = colour; _pixels[screen + 2 + 0*SCREEN_WIDTH] = colour;
         _pixels[screen + 0 + 1*SCREEN_WIDTH] = colour; _pixels[screen + 1 + 1*SCREEN_WIDTH] = colour; _pixels[screen + 2 + 1*SCREEN_WIDTH] = colour;
         _pixels[screen + 0 + 2*SCREEN_WIDTH] = colour; _pixels[screen + 1 + 2*SCREEN_WIDTH] = colour; _pixels[screen + 2 + 2*SCREEN_WIDTH] = colour;
@@ -429,7 +452,7 @@ namespace Graphics
         if(debugging) return;
 
         uint32_t colour = _colours[S._OUT & (COLOUR_PALETTE-1)];
-        uint32_t address = (vgaX % SCREEN_WIDTH)*3 + (vgaY % SCREEN_HEIGHT)*SCREEN_WIDTH;
+        uint32_t address = (vgaX % GIGA_WIDTH)*3 + (vgaY % SCREEN_HEIGHT)*SCREEN_WIDTH;
         _pixels[address + 0] = colour;
         _pixels[address + 1] = colour;
         _pixels[address + 2] = colour;
@@ -609,21 +632,18 @@ namespace Graphics
 
     void drawUploadBar(float upload)
     {
-        int i = Editor::getCursorY();
-        int index = Editor::getFileEntriesIndex() + i;
-        std::string uploadFilename = *Editor::getFileEntryName(index);
-        uploadFilename.append(MENU_TEXT_SIZE - uploadFilename.size(), ' ');
+        if(!_enableUploadBar  ||  _uploadCursorY == -1) return;
+
+        char uploadPercentage[MENU_TEXT_SIZE+2] = "";
+        std::string uploadFilename = _uploadFilename;
+        if(uploadFilename.size() < MENU_TEXT_SIZE+1) uploadFilename.append(MENU_TEXT_SIZE+1 - uploadFilename.size(), ' ');
         if(upload < 1.0f)
         {
-            char* uploadPercentage = &uploadFilename[MENU_TEXT_SIZE - 5];
-            sprintf(uploadPercentage, " %3d%%\r", int(upload * 100.0f));
+            sprintf(uploadPercentage, uploadFilename.substr(0, MENU_TEXT_SIZE+1).c_str());
+            sprintf(&uploadPercentage[MENU_TEXT_SIZE+1 - 6], " %3d%%\r", int(upload * 100.0f));
         }
-        drawText(uploadFilename, _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, (Editor::getFileEntryType(index) == Editor::Dir) ? 0xFFA0A0A0 : 0xFFFFFFFF, true, MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
-        SDL_UpdateTexture(_screenTexture, NULL, _pixels, SCREEN_WIDTH * sizeof(uint32_t));
-        SDL_RenderCopy(_renderer, _screenTexture, NULL, NULL);
-        SDL_RenderPresent(_renderer);
-        SDL_Event event;
-        while(SDL_PollEvent(&event));
+
+        drawText(uploadPercentage, _pixels, HEX_START_X, int(FONT_CELL_Y*4.4) + _uploadCursorY*FONT_CELL_Y, 0xFFB0B0B0, true, MENU_TEXT_SIZE+1, false, MENU_TEXT_SIZE+1);
     }
 
     void renderText(void)
@@ -640,41 +660,42 @@ namespace Graphics
             drawText(std::string(str), _pixels, FONT_WIDTH*4, FONT_CELL_Y*2, 0x80808080, false, 0, true);
 
             //drawText(std::string("LEDS:"), _pixels, 0, 0, 0xFFFFFFFF, false, 0);
-            sprintf(str, "FPS %5.1f  XOUT %02X IN %02X", 1.0f / Timing::getFrameTime(), Cpu::getXOUT(), Cpu::getIN());
+            sprintf(str, "FPS %5.1f  XOUT:%02X IN:%02X", 1.0f / Timing::getFrameTime(), Cpu::getXOUT(), Cpu::getIN());
             drawText(std::string(str), _pixels, 0, FONT_CELL_Y, 0xFFFFFFFF, false, 0);
             drawText("M:              R:", _pixels, 0, 472 - FONT_CELL_Y, 0xFFFFFFFF, false, 0);
 
             switch(Editor::getEditorMode())
             {
-                case Editor::Hex:   sprintf(str, "Hex  "); break;
-                case Editor::Rom:   sprintf(str, "Rom  "); break;
-                case Editor::Load:  sprintf(str, "Load "); break;
-                case Editor::Dasm:  sprintf(str, "Dasm "); break;
+                case Editor::Hex:   (Editor::getSingleStepEnabled()) ? sprintf(str, "Debug ") : sprintf(str, "Hex   "); break;
+                case Editor::Rom:   (Editor::getSingleStepEnabled()) ? sprintf(str, "Debug ") : sprintf(str, "Rom   "); break;
+                case Editor::Load:  (Editor::getSingleStepEnabled()) ? sprintf(str, "Debug ") : sprintf(str, "Load  "); break;
+                case Editor::Dasm:  (Editor::getSingleStepEnabled()) ? sprintf(str, "Debug ") : sprintf(str, "Dasm  "); break;
                 default: sprintf(str, "     ");
             }
             drawText(std::string(str), _pixels, 12, 472 - FONT_CELL_Y, 0xFF00FF00, false, 0);
 
             switch(Editor::getKeyboardMode())
             {
-                case Editor::Giga:   sprintf(str, "Kbd  "); break;
-                case Editor::PS2:    sprintf(str, "PS2  "); break;
-                case Editor::HwGiga: sprintf(str, "HwKbd"); break;
-                case Editor::HwPS2:  sprintf(str, "HwPS2"); break;
+                case Editor::Giga:   sprintf(str, "Kbd   "); break;
+                case Editor::PS2:    sprintf(str, "PS2   "); break;
+                case Editor::HwGiga: sprintf(str, "HwKbd "); break;
+                case Editor::HwPS2:  sprintf(str, "HwPS2 "); break;
                 default: sprintf(str, "     ");
             }
             drawText("K:", _pixels, 48, 472 - FONT_CELL_Y, 0xFFFFFFFF, false, 0);
             drawText(std::string(str), _pixels, 60, 472 - FONT_CELL_Y, 0xFF00FF00, false, 0);
 
-            sprintf(str, "%05d", Memory::getFreeRAM());
+            sprintf(str, "%05d", Memory::getSizeFreeRAM());
             drawText(std::string(str), _pixels, RAM_START, 472 - FONT_CELL_Y, 0xFF00FF00, false, 0);
             sprintf(str, " ROM %02x", Cpu::getRomType());
             drawText(std::string(VERSION_STR) + std::string(str), _pixels, 0, 472, 0xFFFFFFFF, false, 0);
         }
     }
 
-    void renderHexMonitor(bool onHex)
+    int renderHexMonitor(bool onHex)
     {
         char str[32] = "";
+        int hexDigitIndex = -1;
 
         switch(Editor::getMemoryMode())
         {
@@ -699,14 +720,17 @@ namespace Graphics
                 }
                 sprintf(str, "%02X ", value);
                 bool onCursor = (i == Editor::getCursorX()  &&  j == Editor::getCursorY());
-                drawText(std::string(str), _pixels, HEX_START_X + i*HEX_CHAR_WIDE, FONT_CELL_Y*4 + j*(FONT_HEIGHT+FONT_GAP_Y), (Editor::getHexEdit() && Editor::getMemoryMode() == Editor::RAM && onCursor) ? 0xFF00FF00 : 0xFFFFFFFF, onCursor, 2);
+                if(onCursor) hexDigitIndex = j*HEX_CHARS_X + i;
+                uint32_t colour = (Editor::getHexEdit() && Editor::getMemoryMode() == Editor::RAM && onCursor) ? 0xFF00FF00 : 0xFFB0B0B0;
+                drawText(std::string(str), _pixels, HEX_START_X + i*HEX_CHAR_WIDE, FONT_CELL_Y*4 + j*(FONT_HEIGHT+FONT_GAP_Y), colour, onCursor, 2);
                 if(onCursor) cursorAddress = hexAddress;
                 hexAddress++;
             }
         }
 
         sprintf(str, "%04X", cursorAddress);
-        drawText(std::string(str), _pixels, HEX_START, FONT_CELL_Y*3, (Editor::getHexEdit() && onHex) ? 0xFF00FF00 : 0xFFFFFFFF, onHex, 4);
+        uint32_t colour = (Editor::getHexEdit() && onHex) ? 0xFF00FF00 : 0xFFFFFFFF;
+        drawText(std::string(str), _pixels, HEX_START, FONT_CELL_Y*3, colour, onHex, 4);
 
         // Edit digit select for monitor
         if(Editor::getHexEdit())
@@ -717,24 +741,30 @@ namespace Graphics
                 drawDigitBox(Editor::getMemoryDigit(), HEX_START_X + Editor::getCursorX()*HEX_CHAR_WIDE, FONT_CELL_Y*4 + Editor::getCursorY()*FONT_CELL_Y, 0xFFFF00FF);
             }
         }
+
+        return hexDigitIndex;
     }
 
     void renderRomBrowser(void)
     {
         drawText("ROM:       Vars:", _pixels, 0, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0);
+
+        // Clear window
+        for(int i=0; i<HEX_CHARS_Y; i++) drawText("                       ", _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, 0xFFFFFFFF, false, 0);
+
+        // ROM list
         for(int i=0; i<HEX_CHARS_Y; i++)
         {
-            drawText("                       ", _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, 0xFFFFFFFF, false, 0);
-        }
-        for(int i=0; i<HEX_CHARS_Y; i++)
-        {
+            bool onCursor = i == Editor::getCursorY();
             int index = Editor::getRomEntriesIndex() + i;
             if(index >= int(Editor::getRomEntriesSize())) break;
-            drawText(*Editor::getRomEntryName(index), _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, (i < NUM_INT_ROMS) ? 0xFFA0A0A0 : 0xFFFFFFFF, i == Editor::getCursorY(), MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
+            uint32_t colour = (i < NUM_INT_ROMS) ? 0xFFB0B0B0 : 0xFFFFFFFF;
+            drawText(*Editor::getRomEntryName(index), _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, colour, onCursor, MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
         }
 
+        // ROM type
         char str[32] = "";
-        (Editor::getCursorY() < 0  ||  Editor::getCursorY() >= Editor::getRomEntriesSize()) ? sprintf(str, "  ") : sprintf(str, "%02X", Editor::getRomEntryVersion(Editor::getCursorY()));
+        (Editor::getCursorY() < 0  ||  Editor::getCursorY() >= Editor::getRomEntriesSize()) ? sprintf(str, "  ") : sprintf(str, "%02X", Editor::getRomEntryType(Editor::getCursorY()));
         drawText(std::string(str), _pixels, HEX_START-6, FONT_CELL_Y*3, 0xFFFFFFFF, false, 4);
     }
 
@@ -743,20 +773,25 @@ namespace Graphics
         uint16_t hexLoadAddress = (Editor::getEditorMode() == Editor::Load) ? Editor::getLoadBaseAddress() : Editor::getHexBaseAddress();
 
         drawText("Load:      Vars:", _pixels, 0, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0);
+
+        // Clear window
+        for(int i=0; i<HEX_CHARS_Y; i++) drawText("                       ", _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, 0xFFFFFFFF, false, 0);
+
+        // File list
         for(int i=0; i<HEX_CHARS_Y; i++)
         {
-            drawText("                       ", _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, 0xFFFFFFFF, false, 0);
-        }
-        for(int i=0; i<HEX_CHARS_Y; i++)
-        {
+            bool onCursor = i == Editor::getCursorY();
             int index = Editor::getFileEntriesIndex() + i;
             if(index >= int(Editor::getFileEntriesSize())) break;
-            drawText(*Editor::getFileEntryName(index), _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, (Editor::getFileEntryType(index) == Editor::Dir) ? 0xFFA0A0A0 : 0xFFFFFFFF, i == Editor::getCursorY(), MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
+            uint32_t colour = (Editor::getFileEntryType(index) == Editor::Dir) ? 0xFFB0B0B0 : 0xFFFFFFFF;
+            drawText(*Editor::getFileEntryName(index), _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, colour, onCursor, MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
         }
 
+        // Load address
         char str[32] = "";
         sprintf(str, "%04X", hexLoadAddress);
-        drawText(std::string(str), _pixels, HEX_START, FONT_CELL_Y*3, (Editor::getHexEdit() && onHex) ? 0xFF00FF00 : 0xFFFFFFFF, onHex, 4);
+        uint32_t colour = (Editor::getHexEdit() && onHex) ? 0xFF00FF00 : 0xFFFFFFFF;
+        drawText(std::string(str), _pixels, HEX_START, FONT_CELL_Y*3, colour, onHex, 4);
     }
 
     void renderDisassembler(bool onHex)
@@ -765,24 +800,51 @@ namespace Graphics
 
         Assembler::disassemble(Editor::getHexBaseAddress());
 
-        for(int i=0; i<HEX_CHARS_Y; i++)
-        {
-            drawText("                       ", _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, 0xFFFFFFFF, false, 0);
-        }
+        //sprintf(str, "%d\n", Editor::getBreakpointsSize());
+        //fprintf(stderr, str);
+
+        // Clear window
+        for(int i=0; i<HEX_CHARS_Y; i++) drawText("                       ", _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, 0xFFFFFFFF, false, 0);
+
         for(int i=0; i<Assembler::getDisassembledCodeSize(); i++)
         {
-            drawText(*Assembler::getDisassembledCode(i), _pixels, HEX_START_X+6, FONT_CELL_Y*4 + i*FONT_CELL_Y, 0xFFA0A0A0, i == Editor::getCursorY(), MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
+            bool onCursor = i == Editor::getCursorY();
+            bool onVPC = (Assembler::getDisassembledCode(i)->_address == Editor::getVpcBaseAddress()  &&  Editor::getSingleStepEnabled());
+
+            // vPC icon in debug mode
+            if(onVPC) drawText(">", _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y,  0xFFFFFF00, onCursor, MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
+
+            for(int j=0; j<Editor::getBreakPointsSize(); j++)
+            {
+                // Breakpoint icon
+                if(Assembler::getDisassembledCode(i)->_address == Editor::getBreakPointAddress(j)  &&  Editor::getSingleStepEnabled())
+                {
+                    drawText("*", _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y,  0xFFB000B0, onCursor, MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
+                    break;
+                }
+            }
+
+            // Mnemonic, highlight if on vPC and show cursor in debug mode
+            uint32_t colour = (onVPC) ? 0xFFFFFFFF : 0xFFB0B0B0;
+            drawText(Assembler::getDisassembledCode(i)->_text, _pixels, HEX_START_X+6, FONT_CELL_Y*4 + i*FONT_CELL_Y, colour, (onCursor || onVPC)  &&  (Editor::getSingleStepEnabled()), MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
         }
 
         switch(Editor::getMemoryMode())
         {
             case Editor::RAM:  drawText("RAM:       Vars:", _pixels, 0, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0); break;
-            case Editor::ROM0: drawText("ROM0:      Vars:", _pixels, 0, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0); break;
-            case Editor::ROM1: drawText("ROM1:      Vars:", _pixels, 0, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0); break;
+            case Editor::ROM0: drawText("ROM:       Vars:", _pixels, 0, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0); break;
+            case Editor::ROM1: drawText("ROM:       Vars:", _pixels, 0, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0); break;
         }
 
         sprintf(str, "%04X", Editor::getHexBaseAddress());
-        drawText(std::string(str), _pixels, HEX_START, FONT_CELL_Y*3, (Editor::getHexEdit() && onHex) ? 0xFF00FF00 : 0xFFFFFFFF, onHex, 4);
+        uint32_t colour = (Editor::getHexEdit() && onHex) ? 0xFF00FF00 : 0xFFFFFFFF;
+        drawText(std::string(str), _pixels, HEX_START, FONT_CELL_Y*3, colour, onHex, 4);
+
+        // Display native registers
+        sprintf(str, "PC:%04X  IR:%02X  OUT:%02X", Cpu::getStateS()._PC, Cpu::getStateT()._IR, Cpu::getStateT()._OUT);
+        drawText(std::string(str), _pixels, HEX_START_X, int(FONT_CELL_Y*2.0) + FONT_CELL_Y*HEX_CHARS_Y, 0xFF00FFFF, false, 0);
+        sprintf(str, "AC:%02X  X:%02X  Y:%02X  D:%02X", Cpu::getStateT()._AC, Cpu::getStateT()._X, Cpu::getStateT()._Y, Cpu::getStateT()._D);
+        drawText(std::string(str), _pixels, HEX_START_X, int(FONT_CELL_Y*3.0) + FONT_CELL_Y*HEX_CHARS_Y, 0xFF00FFFF, false, 0);
     }
 
     void renderTextWindow(void)
@@ -804,39 +866,50 @@ namespace Graphics
 
             // Mouse cursor over vars
             Editor::OnVarType onVarType = Editor::getOnVarType();
-            sprintf(str, "%d\n", onVarType);
-            fprintf(stderr, str);
             bool onHex   = (onVarType == Editor::OnHex);
             bool onCpuA  = (onVarType == Editor::OnCpuA);
             bool onCpuB  = (onVarType == Editor::OnCpuB);
             bool onVars  = (onVarType == Editor::OnVars);
             bool onWatch = (onVarType == Editor::OnWatch);
+            uint8_t onVarMask = uint8_t(onHex) | (uint8_t(onCpuA) <<1) | (uint8_t(onCpuB) <<2) | (uint8_t(onVars) <<3) | (uint8_t(onWatch) <<4);
+            static uint8_t onVarMaskPrev = onVarMask;
 
             // Text window
+            int hexDigitIndex = -1;
+            static int hexDigitIndexPrev = hexDigitIndex;
             switch(Editor::getEditorMode())
             {
-                case Editor::Hex:  renderHexMonitor(onHex);   break;
-                case Editor::Rom:  renderRomBrowser();        break;
-                case Editor::Load: renderLoadBrowser(onHex);  break;
-                case Editor::Dasm: renderDisassembler(onHex); break;
+                case Editor::Hex:  hexDigitIndex = renderHexMonitor(onHex); break;
+                case Editor::Rom:  renderRomBrowser();                      break;
+                case Editor::Load: renderLoadBrowser(onHex);                break;
+                case Editor::Dasm: renderDisassembler(onHex);               break;
             }
 
+            // Disable hex/var editing when mouse moves off a currently editing field
+            if(onVarMask != onVarMaskPrev  ||  hexDigitIndex != hexDigitIndexPrev) Editor::setHexEdit(false);
+            onVarMaskPrev = onVarMask;
+            hexDigitIndexPrev = hexDigitIndex;
+
             // Draw addresses
-            if(Editor::getSingleStepMode())
+            if(Editor::getSingleStepEnabled())
             {
                 drawText("Watch:", _pixels, WATCH_START, FONT_CELL_Y*2, 0xFFFFFFFF, false, 0);
-                sprintf(str, "%04x   ", Editor::getSingleStepWatchAddress());
-                drawText(str, _pixels, WATCH_START+36, FONT_CELL_Y*2, (Editor::getHexEdit() && onWatch) ? 0xFF00FF00 : 0xFFFFFFFF, onWatch, 4);
+                sprintf(str, "%04x   ", Editor::getSingleStepAddress());
+                uint32_t colour = (Editor::getHexEdit() && onWatch) ? 0xFF00FF00 : 0xFFFFFFFF;
+                drawText(str, _pixels, WATCH_START+36, FONT_CELL_Y*2, colour, onWatch, 4);
             }
             else
             {
                 sprintf(str, "%04X", cpuUsageAddressA);
-                drawText(std::string(str), _pixels, CPUA_START, FONT_CELL_Y*2, (Editor::getHexEdit() && onCpuA) ? 0xFF00FF00 : 0xFFFFFFFF, onCpuA, 4);
+                uint32_t colourA = (Editor::getHexEdit() && onCpuA) ? 0xFF00FF00 : 0xFFFFFFFF;
+                drawText(std::string(str), _pixels, CPUA_START, FONT_CELL_Y*2, colourA, onCpuA, 4);
                 sprintf(str, "%04X", cpuUsageAddressB);
-                drawText(std::string(str), _pixels, CPUB_START, FONT_CELL_Y*2, (Editor::getHexEdit() && onCpuB) ? 0xFF00FF00 : 0xFFFFFFFF, onCpuB, 4);
+                uint32_t colourB = (Editor::getHexEdit() && onCpuB) ? 0xFF00FF00 : 0xFFFFFFFF;
+                drawText(std::string(str), _pixels, CPUB_START, FONT_CELL_Y*2, colourB, onCpuB, 4);
             }
             sprintf(str, "%04X", varsAddress);
-            drawText(std::string(str), _pixels, VAR_START, FONT_CELL_Y*3, (Editor::getHexEdit() && onVars) ? 0xFF00FF00 : 0xFFFFFFFF, onVars, 4);
+            uint32_t colour = (Editor::getHexEdit() && onVars) ? 0xFF00FF00 : 0xFFFFFFFF;
+            drawText(std::string(str), _pixels, VAR_START, FONT_CELL_Y*3, colour, onVars, 4);
 
             // Edit digit select for addresses
             if(Editor::getHexEdit())
@@ -859,11 +932,24 @@ namespace Graphics
                 }
             }
 
+            // Upload bar
+            drawUploadBar(_uploadPercentage);
+
             // Page up/down icons
             sprintf(str, "^");
-            drawText(std::string(str), _pixels, 140, 44, 0xFF00FF00, Editor::getPageUpButton(), 1);
+            drawText(std::string(str), _pixels, PAGEUP_START_X, PAGEUP_START_Y, 0xFF00FF00, Editor::getPageUpButton(), 1);
             str[0] = 127; str[1] = 0;
-            drawText(std::string(str), _pixels, 140, 428, 0xFF00FF00, Editor::getPageDnButton(), 1);
+            drawText(std::string(str), _pixels, PAGEDN_START_X, PAGEDN_START_Y, 0xFF00FF00, Editor::getPageDnButton(), 1);
+
+            // Delete icon, (currently only used for clearing breakpoints)
+            if(Editor::getEditorMode() == Editor::Dasm  &&  (Editor::getSingleStepEnabled())  &&  Editor::getMemoryMode() == Editor::RAM)
+            {
+                drawText("x", _pixels, DELALL_START_X, DELALL_START_Y, 0xFFFF0000, Editor::getDelAllButton(), 1);
+            }
+            else
+            {
+                drawText(" ", _pixels, DELALL_START_X, DELALL_START_Y, 0, false, 0);
+            }
         }
     }
 
@@ -895,7 +981,7 @@ namespace Graphics
         renderText();
         renderTextWindow();
 
-        SDL_UpdateTexture(_screenTexture, NULL, _pixels, SCREEN_WIDTH * sizeof(uint32_t));
+        SDL_UpdateTexture(_screenTexture, NULL, _pixels, SCREEN_WIDTH * sizeof uint32_t);
         SDL_RenderCopy(_renderer, _screenTexture, NULL, NULL);
         renderHelpScreen();
         SDL_RenderPresent(_renderer);
@@ -1462,7 +1548,7 @@ namespace Graphics
 
                     case SDLK_ESCAPE:
                     {
-                        SDL_Quit();
+                        Cpu::shutdown();
                         exit(0);
                     }
                 }

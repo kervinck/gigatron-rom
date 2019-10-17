@@ -81,6 +81,10 @@ printD_slice    LDW     scratch
                 STW     giga_sysArg4        ; xy
                 SYS     0xFF                ; draw horizontal slice, SYS_Draw4_30, 270 - 30/2 = 0xFF
 
+                PUSH
+                CALL    playMidi
+                POP
+
                 INC     scratch + 1         ; next horizontal slice
                 INC     textPos + 1         ; next y
                 LoopCounter ii printD_slice

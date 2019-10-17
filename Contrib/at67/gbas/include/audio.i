@@ -13,7 +13,7 @@ resetAudio      LDWI    0x0000
                 
                 LDI     0x04
                 ST      numChannels
-resetA_loop     LDI     giga_soundChan0     ; reset low byte
+resetA_loop     LDI     giga_soundChan1     ; reset low byte
                 ST      audioBase
                 LDWI    0x0300              
                 DOKE    audioBase           ; wavA and wavX
@@ -35,12 +35,13 @@ playMidiAsync   LD      giga_frameCount
                 LD      giga_frameCount
                 STW     frameCountPrev
                 PUSH
-                CALL    playMidi
+                LDWI    playMidi
+                CALL    giga_vAC
                 POP
 playMV_exit     RET
 
 
-playMidi        LDWI    giga_soundChan0 + 2 ; keyL, keyH
+playMidi        LDWI    giga_soundChan1 + 2 ; keyL, keyH
                 STW     channelsBase
                 LDI     0x01                ; keep pumping soundTimer, so that global sound stays alive
                 ST      giga_soundTimer
@@ -63,8 +64,9 @@ playM_process   LDW     midiStreamPtr
                 XORI    0x90                ; check for start note
                 BNE     playM_endnote
 
-                PUSH                    
-                CALL    midiStartNote       ; start note
+                PUSH
+                LDWI    midiStartNote
+                CALL    giga_vAC            ; start note
                 POP
                 BRA     playM_process
                 
@@ -73,7 +75,8 @@ playM_endnote   LDW     midiCommand
                 BNE     playM_segment
 
                 PUSH
-                CALL    midiEndNote         ; end note
+                LDWI    midiEndNote
+                CALL    giga_vAC            ; end note
                 POP
                 BRA     playM_process
 
@@ -83,7 +86,8 @@ playM_segment   LDW     midiCommand
                 BNE     playM_delay
 
                 PUSH
-                CALL    midiSegment         ; new midi segment
+                LDWI    midiSegment
+                CALL    giga_vAC            ; new midi segment
                 POP
                 BRA     playM_process
 

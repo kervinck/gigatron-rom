@@ -14,6 +14,9 @@
 #define DEFAULT_START_ADDRESS_HI  0x02
 #define DEFAULT_START_ADDRESS_LO  0x00
 
+#define ZERO_CONST_ADDRESS        0x00
+#define ONE_CONST_ADDRESS         0x80
+
 #define LOADER_CONFIG_INI  "loader_config.ini"
 #define HIGH_SCORES_INI    "high_scores.ini"
 
@@ -59,10 +62,21 @@ namespace Loader
         std::vector<std::vector<uint8_t>> _data;
     };
 
+    struct ConfigRom
+    {
+        uint8_t _type;
+        std::string _name;
+    };
+
+
+    std::string& getCurrentGame(void);
+    void setCurrentGame(std::string& currentGame);
 
     UploadTarget getUploadTarget(void);
     void setUploadTarget(UploadTarget target);
-    bool getRomName(std::string& romName);
+
+    int getConfigRomsSize(void);
+    ConfigRom* getConfigRom(int index);
 
     void initialise(void);
 
@@ -72,7 +86,7 @@ namespace Loader
     bool loadDataFile(SaveData& saveData);
     bool saveDataFile(const SaveData& saveData);
     void loadHighScore(void);
-    void saveHighScore(void);
+    bool saveHighScore(void);
     void updateHighScore(void);
 
     void upload(int vgaY);

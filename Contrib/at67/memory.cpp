@@ -8,9 +8,9 @@
 
 namespace Memory
 {
-    bool _has64KRAM = (RAM_SIZE == 1<<16);
-    uint16_t _baseFreeRAM = RAM_SIZE - RAM_USED_DEFAULT;
-    uint16_t _freeRAM = _baseFreeRAM;
+    int _sizeRAM = RAM_SIZE_LO;
+    int _baseFreeRAM = _sizeRAM - RAM_USED_DEFAULT;
+    int _sizeFreeRAM = _baseFreeRAM;
 
     std::vector<RamEntry> _freeRam;
     std::vector<RamEntry> _stackRam;
@@ -20,17 +20,19 @@ namespace Memory
     std::vector<RamEntry> _arrayRam;
 
 
-    bool has64KRAM(void) {return _has64KRAM;}
-    uint16_t getBaseFreeRAM(void) {return _baseFreeRAM;}
-    uint16_t getFreeRAM(void) {return _freeRAM;}
-    uint16_t getFreeGtbRAM(uint16_t numLines)
+    int getSizeRAM(void) {return _sizeRAM;}
+    int getBaseFreeRAM(void) {return _baseFreeRAM;}
+    int getSizeFreeRAM(void) {return _sizeFreeRAM;}
+    int getFreeGtbRAM(int numLines)
     {
-        uint16_t free = ((0x80 - HI_BYTE(GTB_LINE0_ADDRESS))*NUM_GTB_LINES_PER_ROW - numLines)*MAX_GTB_LINE_SIZE - MAX_GTB_LINE_SIZE;
-        if(_has64KRAM) free += (1<<15);
+        int free = ((0x80 - HI_BYTE(GTB_LINE0_ADDRESS))*NUM_GTB_LINES_PER_ROW - numLines)*MAX_GTB_LINE_SIZE - MAX_GTB_LINE_SIZE;
+        if(_sizeRAM == RAM_SIZE_HI) free += _sizeRAM;
         return free;
     }
 
-    void setFreeRAM(uint16_t freeRAM) {_freeRAM = freeRAM;}
+    void setSizeRAM(int sizeRAM) {_sizeRAM = sizeRAM;}
+    void setSizeFreeRAM(int freeRAM) {_sizeFreeRAM = (freeRAM >= 0) ? freeRAM : 0;}
+
 
     void intitialise(void)
     {
@@ -50,10 +52,13 @@ namespace Memory
 
         for(uint16_t i=RAM_SEGMENTS_START; i<=RAM_SEGMENTS_END; i+=RAM_SEGMENTS_OFS) _freeRam.push_back({i, RAM_SEGMENTS_SIZE});
 
-        if(_has64KRAM) _freeRam.push_back({RAM_EXPANSION_START, RAM_EXPANSION_SIZE});
+        if(_sizeRAM == RAM_SIZE_HI) _freeRam.push_back({RAM_EXPANSION_START, RAM_EXPANSION_SIZE});
+
+        _baseFreeRAM = _sizeRAM - RAM_USED_DEFAULT;
+        _sizeFreeRAM = _baseFreeRAM;
     }
 
-    bool updateRamLists(RamType ramType, int index, uint16_t address, uint16_t size, uint16_t newSize)
+    bool updateRamLists(RamType ramType, int index, uint16_t address, int size, int newSize)
     {
         if(index >= 0)
         {
@@ -78,17 +83,17 @@ namespace Memory
         return false;
     }
 
-    bool getRam(FitType fitType, RamType ramType, uint16_t size, uint16_t& address)
+    bool getRAM(FitType fitType, RamType ramType, int size, uint16_t& address)
     {
         int index = -1;
-        uint16_t newSize = 0;
+        int newSize = 0;
 
         switch(fitType)
         {
             case FitSmallest:
             {
                 //std::sort(_freeRam.begin(), _freeRam.end(), [](const RamEntry& a, const RamEntry& b) {return a._size < b._size; });
-                uint16_t smallest = 0xFFFF;
+                int smallest = 0xFFFF;
                 for(int i=0; i<_freeRam.size(); i++)
                 {
                     if(_freeRam[i]._size >= size  &&  _freeRam[i]._size < smallest)
@@ -107,7 +112,7 @@ namespace Memory
             case FitLargest:
             {
                 //std::sort(_freeRam.begin(), _freeRam.end(), [](const RamEntry& a, const RamEntry& b) {return a._size > b._size; });
-                uint16_t largest = 0;
+                int largest = 0;
                 for(int i=0; i<_freeRam.size(); i++)
                 {
                     if(_freeRam[i]._size >= size  &&  _freeRam[i]._size > largest)

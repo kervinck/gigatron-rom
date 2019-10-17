@@ -44,6 +44,8 @@
 #define PAGEUP_START_Y   44
 #define PAGEDN_START_X   140
 #define PAGEDN_START_Y   428
+#define DELALL_START_X   140
+#define DELALL_START_Y   32
 
 #define GRAPHICS_CONFIG_INI  "graphics_config.ini"
 
@@ -66,6 +68,11 @@ namespace Graphics
     void setDisplayHelpScreen(bool display);
     void setWidthHeight(int width, int height);
 
+    bool getUploadBarEnabled(void);
+    void setUploadFilename(const std::string& uploadFilename);
+    void enableUploadBar(bool enableUploadBar);
+    void updateUploadBar(float uploadPercentage);
+
     void initialise(void);
 
     void resetVTable(void);
@@ -77,7 +84,6 @@ namespace Graphics
     void drawLeds(void);
     bool drawText(const std::string& text, uint32_t* pixels, int x, int y, uint32_t colour, bool invert, int invertSize, bool colourKey=false, int size=-1, bool fullscreen=false, uint32_t commentColour=0x00000000, uint32_t sectionColour=0x00000000);
     void drawDigitBox(uint8_t digit, int x, int y, uint32_t colour);
-    void drawUploadBar(float upload);
 
     void renderText(void);
     void renderTextWindow(void);

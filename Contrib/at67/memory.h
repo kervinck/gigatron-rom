@@ -6,7 +6,8 @@
 
 
 #define ROM_SIZE (1<<16)
-#define RAM_SIZE (1<<16) // Can be 32k or 64k
+#define RAM_SIZE_LO (1<<15)
+#define RAM_SIZE_HI (1<<16)
 
 #define RAM_USED_DEFAULT  19986 // ignores page 0, would be 19779 otherwise
 
@@ -52,20 +53,21 @@ namespace Memory
     struct RamEntry
     {
         uint16_t _address;
-        uint16_t _size;
+        int _size;
     };
 
 
-    bool has64KRAM(void);
-    uint16_t getBaseFreeRAM(void);
-    uint16_t getFreeRAM(void);
-    uint16_t getFreeGtbRAM(uint16_t numLines);
+    int getSizeRAM(void);
+    int getBaseFreeRAM(void);
+    int getSizeFreeRAM(void);
+    int getFreeGtbRAM(int numLines);
 
-    void setFreeRAM(uint16_t freeRAM);
+    void setSizeRAM(int sizeRAM);
+    void setSizeFreeRAM(int freeRAM);
 
     void intitialise(void);
 
-    bool getRam(FitType fitType, RamType ramType, uint16_t size, uint16_t& address);
+    bool getRAM(FitType fitType, RamType ramType, int size, uint16_t& address);
 }
 
 #endif

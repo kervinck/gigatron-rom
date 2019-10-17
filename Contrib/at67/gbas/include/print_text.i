@@ -1,29 +1,18 @@
 textStr         EQU     register0
-textDigits      EQU     register0
+textNum         EQU     register0
+textBak         EQU     register0
 textLen         EQU     register1
 textFont        EQU     register2
 textChr         EQU     register3
-textSlice       EQU     register4
-scanLine        EQU     register5
-digitMult       EQU     register6
-digitIndex      EQU     register7
+textHex         EQU     register4
+textSlice       EQU     register5
+scanLine        EQU     register6
+digitMult       EQU     register7
+digitIndex      EQU     register8
+clearloop       EQU     register9
 
 
-                ; prints text using the inbuilt font
-printText       PUSH
-                LDW     textStr             
-                PEEK
-                ST      textLen             ; first byte is length
-
-printT_char     INC     textStr             ; next char
-                LDW     textStr             
-                PEEK
-                CALL    printChar
-printT_loop     LoopCounter textLen printT_char
-                POP
-                RET
-
-
+                ; clears the top 8 lines of pixels in preparation of text scrolling
 clearCursorRow  LDWI    0x2020
                 STW     giga_sysArg0        ; 4 pixels of colour
                 STW     giga_sysArg2
@@ -31,7 +20,7 @@ clearCursorRow  LDWI    0x2020
                 STW     giga_sysFn
 
                 LDI     8
-                ST      ycount
+                ST      clearloop
 
                 LDWI    giga_videoTable     ; current cursor position
                 PEEK
@@ -54,22 +43,40 @@ clearCR_loopx   SUBI    4                   ; loop is unrolled 4 times
                 BGT     clearCR_loopx
 
                 INC     giga_sysArg4 + 1    ; next line                
-                LoopCounter ycount clearCR_loopy
+                LoopCounter clearloop clearCR_loopy
+                RET
+                
+                ; prints text using the inbuilt font
+printText       PUSH
+                LDW     textStr             
+                PEEK
+                ST      textLen             ; first byte is length
+
+printT_char     INC     textStr             ; next char
+                LDW     textStr             
+                PEEK
+                ST      textChr
+                LDWI    printChar
+                CALL    giga_vAC
+printT_loop     LoopCounter textLen printT_char
+                POP
                 RET
 
-
+                
 printDigit      PUSH
-                LDW     textDigits
+                LDW     textNum
 printD_index    SUBW    digitMult
                 BLT     printD_cont
-                STW     textDigits
+                STW     textNum
                 INC     digitIndex
                 BRA     printD_index
 
 printD_cont     LD      digitIndex
                 BEQ     printD_exit
                 ORI     0x30
-                CALL    printChar
+                ST      textChr
+                LDWI    printChar
+                CALL    giga_vAC
                 LDI     0x30
                 ST      digitIndex
 printD_exit     POP
@@ -79,39 +86,49 @@ printD_exit     POP
 printVarInt16   PUSH
                 LDI     0
                 ST      digitIndex
-                LDW     textDigits
+                LDW     textNum
                 BGE     printVI16_pos
                 LDI     0x2D
-                CALL    printChar
+                ST      textChr
+                LDWI    printChar
+                CALL    giga_vAC
                 LDWI    0
-                SUBW    textDigits
-printVI16_pos   STW     textDigits    
+                SUBW    textNum
+printVI16_pos   STW     textNum    
 
                 LDWI    10000
                 STW     digitMult
-                CALL    printDigit
+                LDWI    printDigit
+                CALL    giga_vAC
                 LDWI    1000
                 STW     digitMult
-                CALL    printDigit
+                LDWI    printDigit
+                CALL    giga_vAC
                 LDWI    100
                 STW     digitMult
-                CALL    printDigit
+                LDWI    printDigit
+                CALL    giga_vAC
                 LDWI    10
                 STW     digitMult
-                CALL    printDigit
-                LD      textDigits
+                LDWI    printDigit
+                CALL    giga_vAC
+                LD      textNum
                 ORI     0x30
-                CALL    printChar
+                ST      textChr
+                LDWI    printChar
+                CALL    giga_vAC
                 POP
                 RET
 
 
                 ; char in accumulator
-printChar       SUBI    32                  ; (char - 32)*5 + 0x0700
+printChar       PUSH
+                LD      textChr             ; (char-32)*5 + 0x0700
+                SUBI    32
                 STW     textChr
                 STW     textFont
-                LSLW    textFont
-                LSLW    textFont
+                LSLW    
+                LSLW    
                 ADDW    textChr
                 STW     textFont             
                 LDWI    giga_text32
@@ -149,14 +166,15 @@ printC_slice    LDW     textFont            ; text font slice base address
                 ST      cursorXY
                 SUBI    158
                 BLT     printC_exit
-                PUSH
-                CALL    newLineScroll       ; next row, scroll at bottom
-                POP
-printC_exit     RET
+                LDWI    newLineScroll       ; next row, scroll at bottom
+                CALL    giga_vAC
+printC_exit     POP
+                RET
 
 
                 ; print from top row to bottom row, then start scrolling 
-newLineScroll   LDI     0x02                ; x offset slightly
+newLineScroll   PUSH
+                LDI     0x02                ; x offset slightly
                 ST      cursorXY
                 LD      cursorXY+1
                 ANDI    0x80                ; on bottom row flag
@@ -167,10 +185,9 @@ newLineScroll   LDI     0x02                ; x offset slightly
                 SUBI    128
                 BLT     newLS_exit
                 
-newLS_cont      PUSH
-                CALL    clearCursorRow
-                POP
-
+newLS_cont      LDWI    clearCursorRow
+                CALL    giga_vAC
+                
                 LDWI    giga_videoTable
                 STW     scanLine
 
@@ -195,16 +212,59 @@ newLS_adjust    ADDI    8
                 PEEK
                 ORI     0x80                ; on bottom row
                 ST      cursorXY+1
+newLS_exit      POP
+                RET
 
-newLS_exit      RET
 
-
-                ; arg in accumulator, result in accumulator and textChr
-validChar       ANDI    0x7F                ; char = <32...127>
+                ; arg in textChr, result in textChr
+validChar       LD      textChr
+                ANDI    0x7F                ; char = <32...127>
                 ST      textChr
                 SUBI    32
                 BGE     validC_chr
                 LDI     32
                 ST      textChr
-validC_chr      LD      textChr
+validC_chr      RET
+
+
+printHexByte    PUSH
+                LDWI    SYS_LSRW4_50    ; shift right by 4 SYS routine
+                STW     giga_sysFn
+                LD      textHex
+                SYS     0xF5            ; SYS_LSRW4_50, 270 - 50/2 = 0xF5
+                SUBI    10
+                BLT     printH_skip0
+                ADDI    7
+printH_skip0    ADDI    0x3A
+                ST      textChr
+                LDWI    printChar
+                CALL    giga_vAC
+                LD      textHex
+                ANDI    0x0F
+                SUBI    10
+                BLT     printH_skip1
+                ADDI    7
+printH_skip1    ADDI    0x3A
+                ST      textChr
+                LDWI    printChar
+                CALL    giga_vAC
+                POP
                 RET
+                
+                
+printHexWord    PUSH
+                LD      textHex
+                ST      textBak
+                LD      textHex + 1
+                ST      textHex
+                LDWI    printHexByte
+                CALL    giga_vAC
+                LD      textBak
+                ST      textHex
+                LDWI    printHexByte
+                CALL    giga_vAC
+                POP
+                RET
+
+                
+

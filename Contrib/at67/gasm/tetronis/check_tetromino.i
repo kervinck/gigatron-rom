@@ -17,7 +17,7 @@ getTetrisBlock  LD      xx              ; xx * 4
                 STW     result          ; return pixel
 
                 PUSH
-                CALL    playMidiAsync
+                CALL    playMidi
                 POP
 
                 RET

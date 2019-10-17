@@ -26,7 +26,7 @@ namespace Audio
     SDL_AudioDeviceID _audioDevice = 1;
 
     int32_t _audioIndex = 0;
-    uint8_t _audioSamples[AUDIO_SAMPLES];
+    uint16_t _audioSamples[AUDIO_SAMPLES] = {0};
 
     int _scoreIndex = 0;
     uint8_t* _score[] = {(uint8_t*)musicMidi00};
@@ -84,28 +84,53 @@ namespace Audio
         SDL_AudioSpec audSpec;
         SDL_zero(audSpec);
         audSpec.freq = AUDIO_FREQUENCY;
-        audSpec.format = AUDIO_U8;
+        audSpec.format = AUDIO_S16;
         audSpec.channels = 1;
 
         if(SDL_OpenAudio(&audSpec, NULL) < 0)
         {
-            SDL_Quit();
+            Cpu::shutdown();
             fprintf(stderr, "Audio::initialise() : failed to initialise SDL audio\n");
             _EXIT_(EXIT_FAILURE);
         }
         SDL_PauseAudio(0);
+
+        initialiseChannels();
+    }
+
+    void initialiseChannels(void)
+    {
+        for(int i=0; i<GIGA_SOUND_CHANNELS; i++)
+        {
+            Cpu::setRAM(GIGA_CH0_WAV_A + i*GIGA_CHANNEL_OFFSET, 0x00); // sample index modification for advanced noise generation
+            Cpu::setRAM(GIGA_CH0_WAV_X + i*GIGA_CHANNEL_OFFSET, 0x03); // waveform index
+            Cpu::setRAM(GIGA_CH0_KEY_L + i*GIGA_CHANNEL_OFFSET, 0x00); // low frequency look up from ROM
+            Cpu::setRAM(GIGA_CH0_KEY_H + i*GIGA_CHANNEL_OFFSET, 0x00); // high frequency look up from ROM
+            Cpu::setRAM(GIGA_CH0_OSC_L + i*GIGA_CHANNEL_OFFSET, 0x00); // low internal oscillator
+            Cpu::setRAM(GIGA_CH0_OSC_H + i*GIGA_CHANNEL_OFFSET, 0x00); // high internal oscillator
+        }
+
+#if 0
+        // Audio channels are byte interlaced
+        for(int i=0; i<64; i++)
+        {
+            Cpu::setRAM(0x700+i*4, uint8_t(sinf(float(i) / 64.0f * 2.0f * 3.141529f)*31.0f + 31.0f));
+            Cpu::setRAM(0x701+i*4, uint8_t(sinf(float(i) / 64.0f * 2.0f * 3.141529f)*31.0f + 31.0f));
+            Cpu::setRAM(0x702+i*4, uint8_t(sinf(float(i) / 64.0f * 2.0f * 3.141529f)*31.0f + 31.0f));
+            Cpu::setRAM(0x703+i*4, uint8_t(sinf(float(i) / 64.0f * 2.0f * 3.141529f)*31.0f + 31.0f));
+        }
+#endif
     }
 
     void fillAudioBuffer(void)
     {
-        uint8_t sample = (Cpu::getXOUT() & 0xF0) >>2;
-        _audioSamples[_audioIndex] = sample;
+        _audioSamples[_audioIndex] = (Cpu::getXOUT() & 0xf0) <<5;
         _audioIndex = (_audioIndex + 1) % AUDIO_SAMPLES;
     }
 
     void playAudioBuffer(void)
     {
-        SDL_QueueAudio(_audioDevice, &_audioSamples[0], _audioIndex);
+        SDL_QueueAudio(_audioDevice, &_audioSamples[0], _audioIndex <<1);
         _audioIndex = 0;
     }
 
@@ -119,27 +144,15 @@ namespace Audio
         skip += 1.0 / ratio;
         if(uint64_t(skip) > count)
         {
-            uint8_t sample = (Cpu::getXOUT() & 0xF0) >>2;
-            SDL_QueueAudio(_audioDevice, &sample, 1);
+            uint16_t sample = (Cpu::getXOUT() & 0xf0) <<5;
+            SDL_QueueAudio(_audioDevice, &sample, 2);
         }
     }
 
-    void resetChannels(void)
-    {
-        for(int i=0; i<GIGA_SOUND_CHANNELS; i++)
-        {
-            Cpu::setRAM(GIGA_CH0_WAV_A + i*GIGA_CHANNEL_OFFSET, 0x00); // sample index modification for advanced noise generation
-            Cpu::setRAM(GIGA_CH0_WAV_X + i*GIGA_CHANNEL_OFFSET, 0x03); // waveform index
-            Cpu::setRAM(GIGA_CH0_KEY_L + i*GIGA_CHANNEL_OFFSET, 0x00); // low frequency look up from ROM
-            Cpu::setRAM(GIGA_CH0_KEY_H + i*GIGA_CHANNEL_OFFSET, 0x00); // high frequency look up from ROM
-            Cpu::setRAM(GIGA_CH0_OSC_L + i*GIGA_CHANNEL_OFFSET, 0x00); // low internal oscillator
-            Cpu::setRAM(GIGA_CH0_OSC_H + i*GIGA_CHANNEL_OFFSET, 0x00); // high internal oscillator
-        }
-    }
 
     void nextScore(void)
     {
-        resetChannels();
+        initialiseChannels();
 
         if(++_scoreIndex >= 1) _scoreIndex = 0;
         _scorePtr = (uint8_t*)_score[_scoreIndex];
@@ -153,13 +166,7 @@ namespace Audio
         if(firstTime == true)
         {
             firstTime = false;
-            resetChannels();            
-
-            // Signed -31 to +31 sine wave
-            //for(int i=0; i<64; i++)
-            //{
-            //    Cpu::setRAM(0x700+i, int8_t(sinf(float(i) / 64.0f * 2.0f* 3.141529f)*31.0f));
-            //}
+            initialiseChannels();            
         }
 
         static int16_t midiDelay = 0;

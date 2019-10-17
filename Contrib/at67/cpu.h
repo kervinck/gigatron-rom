@@ -8,20 +8,21 @@
 
 
 #define MAJOR_VERSION "0.8"
-#define MINOR_VERSION "4"
+#define MINOR_VERSION "7"
 #define VERSION_STR "gtemuAT67 v" MAJOR_VERSION "." MINOR_VERSION
  
 #define ROM_INST 0
 #define ROM_DATA 1
 
 #define NUM_INT_ROMS 4
-#define MAX_ROMS 5
 
 #define ROM_TITLE_ADDRESS 0xFEB1
 #define MAX_TITLE_CHARS   25
 
 #define BOOT_COUNT 0x0004
 #define BOOT_CHECK 0x0005
+
+#define STACK_POINTER 0x001C
 
 #define VIDEO_MODE_D 0x000D
 #define VIDEO_MODE_B 0x001F
@@ -74,26 +75,29 @@ namespace Cpu
     void loadRom(int index);
     void swapRom(void);
 
-    void setFreeRAM(uint16_t freeRAM);
-
     void initialiseInternalGt1s(void);
 
     void patchSYS_Exec_88(void);
     void patchScanlineModeVideoB(void);
     void patchScanlineModeVideoC(void);
     void patchTitleIntoRom(const std::string& title);
-    void patchSplitGt1IntoRom(const std::string& splitGt1path, const std::string& splitGt1name, uint16_t startAddress, InternalGt1Id gt1Id);
+    bool patchSplitGt1IntoRom(const std::string& splitGt1path, const std::string& splitGt1name, uint16_t startAddress, InternalGt1Id gt1Id);
 
 #ifndef STAND_ALONE
+    bool getIsInReset(void);
+    State& getStateS(void);
+    State& getStateT(void);
     int64_t getClock(void);
     uint8_t getIN(void);
     uint8_t getXOUT(void);
+    uint16_t getVPC(void);
     uint8_t getRAM(uint16_t address);
     uint8_t getROM(uint16_t address, int page);
     uint16_t getRAM16(uint16_t address);
     uint16_t getROM16(uint16_t address, int page);
     float getvCpuUtilisation(void);
 
+    void setIsInReset(bool isInReset);
     void setClock(int64_t clock);
     void setIN(uint8_t in);
     void setXOUT(uint8_t xout);
@@ -107,10 +111,14 @@ namespace Cpu
     void restoreScanlineModes(void);
     void swapScanlineMode(void);
 
-    void initialise(State& S);
-    State cycle(const State& S);
+    void initialise(void);
+    void shutdown(void);
+    void cycle(const State& S, State& T);
     void reset(bool coldBoot=false);
-    void vCpuUsage(State& S);
+    void softReset(void);
+    void swapMemoryModel(void);
+    void vCpuUsage(const State& S, const State& T);
+    bool process(void);
 #endif
 }
 

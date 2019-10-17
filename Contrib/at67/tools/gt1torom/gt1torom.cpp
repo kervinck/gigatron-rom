@@ -31,7 +31,7 @@ bool writeRomDataWithTrampoline(const std::string& outputFilename0, const std::s
             static uint8_t trampolineOpcode[]  = {0xFE, 0xFC, 0x14, 0xE0, 0xC2};
             static uint8_t trampolineOperand[] = {0x00, 0xFD, 0x04, 0x65, 0x18};
 
-            for(int j=0; j<sizeof(trampolineOpcode); j++)
+            for(int j=0; j<sizeof trampolineOpcode; j++)
             {
                 outfile0.write((char *)&trampolineOpcode[j], 1);
                 if(outfile0.bad() || outfile0.fail())
@@ -48,7 +48,7 @@ bool writeRomDataWithTrampoline(const std::string& outputFilename0, const std::s
                 }
             }
 
-            trampolineOffset += sizeof(trampolineOpcode);
+            trampolineOffset += sizeof trampolineOpcode;
         }
         
         // Don't write default data after last trampoline

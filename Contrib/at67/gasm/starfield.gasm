@@ -1,45 +1,53 @@
 %include macros\gigatron.i
+%include macros\macros.i
 
 vram            EQU     0x0800
     
-rand            EQU     0x06
-videoY          EQU     0x09
-frameCount      EQU     0x0E
+midiStreamPtr   EQU     0x82
+midiCommand     EQU     midiStreamPtr + 0x02
+midiChannel     EQU     midiStreamPtr + 0x04
+midiDelay       EQU     midiStreamPtr + 0x06
+midiNote        EQU     midiStreamPtr + 0x08
+midiScratch     EQU     midiStreamPtr + 0x0A
     
-vbase           EQU     0x30
-pixels          EQU     0x32 
-xPos            EQU     0x34
-yPos            EQU     0x36
-xVel            EQU     0x38
-yVel            EQU     0x3A
-i               EQU     0x3C
-frame           EQU     0x3E
-scratch         EQU     0x40
-pixel           EQU     0x42
-random          EQU     0x44
-skip            EQU     0x46
-xyAbs           EQU     0x48
-colour          EQU     0x4A
-ii              EQU     0x50
-jj              EQU     0x51
-kk              EQU     0x52
-ll              EQU     0x53
-xx              EQU     0x54
-yy              EQU     0x55
+vbase           EQU     0x90
+pixels          EQU     0x92 
+xPos            EQU     0x94
+yPos            EQU     0x96
+xVel            EQU     0x98
+yVel            EQU     0x9A
+i               EQU     0x9C
+frame           EQU     0x9E
+scratch         EQU     0xA0
+pixel           EQU     0xA2
+random          EQU     0xA4
+skip            EQU     0xA6
+xyAbs           EQU     0xA8
+colour          EQU     0xAA
+ii              EQU     0xB0
+jj              EQU     0xB1
+kk              EQU     0xB2
+ll              EQU     0xB3
+xx              EQU     0xB4
+yy              EQU     0xB5
 
 xyPosArray      EQU     0x600
 xyVelArray      EQU     0x680
     
-        
-numStars        EQU     64          ; max 64
+
+numStars        EQU     40          ; max 64, (arrays are fixed at a maximum size of 64)
 
 
 _startAddress_  EQU     0x0200      ; entry point for the code, if this is missing defaults to 0x0200
                 
-_callTable_     EQU     0x00EE      ; this grows downwards as you use more CALL's, it will crash into program variables if you are not careful
-                                    ; "_callTable_" is a reserved word, do not use it for anything other than it's intended use
-                                    ; leave some space for stack, (nested calls)
-
+_callTable_     EQU     0x007E      ; call addresses are automatically stored here by the assembler, it grows downwards
+                                    ; this is optional, if you choose not to use it, then you must use the LDWI xxxx, CALL _vAC paradigm
+                                    ; *NOTE* gt1 spec only allows for one zero page segment, .vasm files use this for the call table
+                                    ; do *NOT* make this address higher than 0x00BE, it will conflict with future ROM loading mechanisms
+                                    ; do *NOT* define constants, (DB or DW), between 0x30 -> 0x44 and 0xc0 -> 0xFF, these addresses are
+                                    ; used by the loader and the vCPU stack, you can create variables in these areas as long as you don't
+                                    ; corrupt your nested CALL return addresses on the stack
+                                    
 _singleStepWatch_   EQU     i       ; the single step debugger watches this variable location to decide when to step,
                                     ; choose a variable that is updated often
  
@@ -48,6 +56,10 @@ loopInit        EQU     0x300
 vBlank          EQU     0x400
 clearScreen     EQU     0x08A1
 clearScreen_0   EQU     0x09A1
+resetAudio      EQU     0x0AA1
+playMidi        EQU     0x0BA1
+midiStartNote   EQU     0x0CA1
+midiSegment     EQU     0x0DA1
 
 
 ; look up table that retrieves skip values based on max velocity component
@@ -73,28 +85,14 @@ colourLut   DB      0x15 0x15 0x15 0x15 0x15 0x15 0x15 0x15 0x15 0x15 0x15 0x15 
             DB      0x3F 0x3F 0x3F 0x3F 0x3F 0x3F 0x3F 0x3F 0x3F 0x3F 0x3F 0x3F 0x3F 0x3F 0x3F 0x3F 
 
 
-%MACRO  lutVal lut index
-        LDWI    lut
-        DEEK
-        ADDW    index
-        PEEK
-%ENDM
-
-%MACRO  LoopCounter _counter _label
-        LD      _counter
-        SUBI    0x01
-        ST      _counter
-        BNE     _label
-%ENDM
-
-
-start           CALL    clearScreen
+start           CALL    resetAudio
+                CALL    clearScreen
                 
                 LDWI    vram
                 STW     vbase               ; vram base address
                 STW     pixels              ; pixel address
     
-                LDWI    rand
+                LDWI    giga_rand0
                 STW     random
     
                 LDWI    skipLut
@@ -114,7 +112,7 @@ start           CALL    clearScreen
                 LDWI    xyVelArray + 1
                 STW     yVel
     
-                LD      frameCount
+                LD      giga_frameCount
                 STW     frame
                 
 init            LDI     numStars
@@ -138,7 +136,10 @@ rand_vel        CALL    randPos
                 SUBI    0x01
                 ST      i
                 BGT     rand_vel
-                
+
+                LD      giga_frameCount     ; Start checking midi stream immediately
+                ST      midiDelay
+
                 CALL    loopInit
     
     
@@ -160,9 +161,9 @@ loop            LDW     yVel                ; high nibble of yVel is max(abs(xVe
                 PEEK    
                 ANDI    0xF0    
                 STW     scratch 
-                lutVal  skip scratch    
+                LutPeek skip scratch    
                 STW     scratch 
-                LD      frameCount  
+                LD      giga_frameCount  
                 ANDW    scratch 
                 BNE     pickcolour  
                     
@@ -181,7 +182,7 @@ pickcolour      LDW     xVel                ; high nibble of xVel is counter
                 PEEK
                 ANDI    0xF0
                 STW     scratch
-                lutVal  colour scratch
+                LutPeek colour scratch
                 BRA     pixelcolour
     
 maxcolour       LDI     0x3F
@@ -207,7 +208,7 @@ xbounds         LDW     xPos
 ybounds         LDW     yPos     
                 PEEK
                 BLE     xyreset
-                SUBI    0x78
+                SUBI    0x6E
                 BLT     draw
     
                 ; reset
@@ -235,24 +236,26 @@ draw            LDW     xPos
                 INC     yVel
                 INC     yVel
     
+                CALL    playMidi
+    
                 LD      i
                 SUBI    0x01
                 ST      i
                 BGT     loop
-    
+
                 CALL    vBlank
-    
                 BRA     loopInit
                 
-    
+
+;------------------------------------------------------------------------------                
                 ; subroutines
-vBlank          LD      frameCount
+vBlank          LD      giga_frameCount
                 SUBW    frame
                 BEQ     vBlank
-                LD      frameCount
+                LD      giga_frameCount
                 STW     frame
                 RET
-    
+         
     
                 ; random position
 randPos         LD      i
@@ -282,7 +285,7 @@ randVel         LD      i
                 ANDI    0x0F
                 POKE    xVel
                 STW     scratch
-                lutVal  xyAbs scratch
+                LutPeek xyAbs scratch
                 ORW     scratch
                 POKE    xVel                ; high nibble = abs(xvel)
     
@@ -294,7 +297,7 @@ randVel         LD      i
                 ANDI    0x0F
                 POKE    yVel
                 STW     scratch
-                lutVal  xyAbs scratch
+                LutPeek xyAbs scratch
                 ORW     scratch
                 POKE    yVel                ; high nibble = abs(yvel)
             
@@ -353,6 +356,7 @@ y_vel0          ADDW    scratch
                 RET
 
 
+;------------------------------------------------------------------------------                                
                 ; clears the viewable screen
 clearScreen     LDWI    SYS_Draw4_30        ; setup 4 pixel SYS routine
                 STW     giga_sysFn  
@@ -398,7 +402,7 @@ clearS_loop     LDW     xx
                 LD      kk                  ; 4 horizontal pixels
                 ADDI    0x04
                 ST      kk
-                LoopCounter ii clearS_loop
+                LoopCounterTo1 ii clearS_loop
 
                 ; clear one extra pixel wide stripes for screen shake
                 PUSH                        ; top
@@ -420,5 +424,124 @@ clearS_loop     LDW     xx
                 ST      kk
                 LDI     giga_xres / 4
                 ST      ii
-                LoopCounter jj clearS_loop
+                LoopCounterTo1 jj clearS_loop
                 RET
+                
+
+;------------------------------------------------------------------------------                                
+resetAudio      LDWI    0x0000
+                STW     midiCommand
+                STW     midiDelay
+                STW     midiNote
+                LDWI    giga_soundChan1 + 2 ; keyL, keyH
+                STW     midiChannel
+                STW     midiScratch
+                LDWI    ffe00               ; midi score
+                STW     midiStreamPtr
+
+                LDI     0x04
+                ST      ii
+
+resetA_loop     LDI     giga_soundChan1     ; reset low byte
+                ST      midiScratch
+                LDWI    0x0300              
+                DOKE    midiScratch         ; wavA and wavX
+                INC     midiScratch
+                INC     midiScratch    
+                LDWI    0x0000
+                DOKE    midiScratch         ; keyL and keyH
+                INC     midiScratch
+                INC     midiScratch
+                DOKE    midiScratch         ; oscL and oscH
+                INC     midiScratch + 1     ; increment high byte
+                LoopCounterTo1 ii resetA_loop
+                RET
+
+
+playMidi        LDI     0x10                ; keep pumping soundTimer, so that global sound stays alive
+                ST      giga_soundTimer
+                LD      giga_frameCount
+                SUBW    midiDelay
+                BEQ     playM_start
+                RET
+
+playM_start     PUSH
+playM_process   LDW     midiStreamPtr
+                PEEK                        ; get midi stream byte
+                STW     midiCommand
+                LDW     midiStreamPtr
+                ADDI    0x01
+                STW     midiStreamPtr
+                LDI     0xF0
+                ANDW    midiCommand
+                XORI    0x90                ; check for start note
+                BNE     playM_endnote
+
+                CALL    midiStartNote       ; start note
+                BRA     playM_process
+                
+playM_endnote   XORI    0x10                ; check for end note
+                BNE     playM_segment
+
+                CALL    midiEndNote         ; end note
+                BRA     playM_process
+
+
+playM_segment   XORI    0x50                ; check for new segment
+                BNE     playM_delay
+
+                LDW     midiStreamPtr       ; midi score
+                DEEK
+                STW     midiStreamPtr       ; 0xD0 new midi segment address
+                BRA     playM_process
+
+playM_delay     LD      giga_frameCount     ; midiDelay = (midiCommand + peek(frameCount)) & 0x00FF 
+                ADDW    midiCommand
+                ST      midiDelay
+                POP
+                RET
+
+
+midiStartNote   LDWI    giga_notesTable     ; note table in ROM
+                STW     midiScratch
+                LDW     midiStreamPtr       ; midi score
+                PEEK
+                SUBI    11
+                LSLW
+                ADDW    midiScratch
+                STW     midiScratch
+                LUP     0x00                ; get ROM midi note low byte
+                ST      midiNote
+                LDW     midiScratch
+                LUP     0x01                ; get ROM midi note high byte
+                ST      midiNote + 1
+                LDW     midiCommand
+                ANDI    0x03                ; get channel
+                ST      midiScratch + 1
+                LDI     0x00
+                ST      midiScratch
+                LDW     midiScratch
+                ADDW    midiChannel         ; channel address
+                STW     midiScratch
+                LDW     midiNote
+                DOKE    midiScratch             ; set note
+                LDW     midiStreamPtr
+                ADDI    0x01                ; midiStreamPtr++
+                STW     midiStreamPtr
+                RET
+
+
+midiEndNote     LDW     midiCommand
+                ANDI    0x03                ; get channel
+                ST      midiScratch + 1
+                LDI     0x00
+                ST      midiScratch
+                LDW     midiScratch
+                ADDW    midiChannel         ; channel address
+                STW     midiScratch
+                LDWI    0x0000
+                DOKE    midiScratch         ; end note
+                RET
+                
+                
+%include midi.i

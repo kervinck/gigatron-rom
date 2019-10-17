@@ -8,6 +8,9 @@
 ; sprite test
 
 
+%include ../macros/gigatron.i
+
+
 vram        EQU     0x0800
 buff0       EQU     0x08B0
 buff1       EQU     0x08D0
@@ -44,9 +47,9 @@ rowBuffer1  EQU     0x74
 rowBuffer2  EQU     0x78
 rowBuffer3  EQU     0x7C
 
-pixelsArray EQU     0x82
-xyPosArray  EQU     0xA2
-xyVelArray  EQU     0xC2
+pixelsArray EQU     0x90
+xyPosArray  EQU     0xB0
+xyVelArray  EQU     0xD0
 
 
 xExtent     EQU     0x9C
@@ -57,8 +60,13 @@ numSprites  EQU     16
    
 _startAddress_      EQU     0x0200      ; entry point for the code, if this is missing defaults to 0x0200
 
-_callTable_         EQU     0x00F8      ; call addresses are automatically stored here by the assembler, it grows downwards,
-                                        ; for every NEW call address; make sure it doesn't crash into anything important
+_callTable_         EQU     0x008E      ; call addresses are automatically stored here by the assembler, it grows downwards
+                                        ; *NOTE* gt1 spec only allows for one zero page segment, .vasm files use this for the call table
+                                        ; do *NOT* make this address higher than 0x00BE, it will conflict with future ROM loading mechanisms
+                                        ; do *NOT* define constants, (DB or DW), between 0x30 -> 0x44 and 0xc0 -> 0xFF, these addresses are
+                                        ; used by the loader and the vCPU stack, you can create variables in these areas as long as you don't
+                                        ; corrupt your nested CALL return addresses on the stack
+                                        
 _singleStepWatch_   EQU     k           ; the single step debugger watches this variable location to decide when to step,
                                         ; choose a variable that is updated often
 
@@ -224,7 +232,7 @@ velocity    LDW     xyPos       ; xpos += xvel
             LDW     xyPos
             DEEK
             ADDW    vbase       ; generate vram address
-            DOKE     pixels
+            DOKE    pixels
 
 save        STW     srcAddr
             LDW     backBuffer
@@ -279,7 +287,7 @@ draw        LDW     pixels
             
             ;CALL    vblank0
             ;CALL    vblank1
-            CALL    vblank2
+            ;CALL    vblank2
             
             LDWI    buff1
             STW     backBuffer
@@ -289,7 +297,9 @@ draw        LDW     pixels
             LDI     0x00
             ST      i
 
-restore     LDW     backBuffer
+restore     CALL    waitScanln
+
+            LDW     backBuffer
             STW     srcAddr
             LDW     pixels
             DEEK
@@ -331,6 +341,16 @@ loopdelay   LDW     i
             STW     i
             SUBW    delay
             BLT     loopdelay
+            RET
+
+waitScanln  LD      videoY
+            STW     scratch
+            ADDW    videoY
+            STW     scratch
+            LDW     xyPosHi     ; ypos
+            PEEK
+            SUBW    scratch
+            BGT     waitScanln
             RET
 
 fillsprite  LDI     0x00

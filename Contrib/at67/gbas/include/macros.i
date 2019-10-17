@@ -70,7 +70,10 @@
         INC     _var
         LD      _var
         SUBI    _end
-        BLE     _label
+        BGT     _label_
+        LDWI    _label
+        CALL    giga_vAC
+_label_ LD      _var
 %ENDM
 
 %MACRO  ForNextLoopVsVeP _var _label _varEnd _varStep
@@ -91,42 +94,81 @@
 
 %MACRO  PrintChar _chr
         LDI     _chr
-        CALL    validChar
-        CALL    printChar
+        ST      textChr
+        LDWI    validChar
+        CALL    giga_vAC
+        LDWI    printChar
+        CALL    giga_vAC
 %ENDM
 
 %MACRO  PrintAcChar
-        CALL    validChar
-        CALL    printChar
+        ST      textChr
+        LDWI    validChar
+        CALL    giga_vAC
+        LDWI    printChar
+        CALL    giga_vAC
 %ENDM
 
 %MACRO  PrintVarChar _var
         LD      _var
-        CALL    validChar
-        CALL    printChar
+        ST      textChr
+        LDWI    validChar
+        CALL    giga_vAC
+        LDWI    printChar
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  PrintAcHexByte
+        ST      textHex
+        LDWI    printHexByte
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  PrintVarHexByte _var
+        LD      _var
+        ST      textHex
+        LDWI    printHex
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  PrintAcHexWord
+        STW     textHex
+        LDWI    printHexWord
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  PrintVarHexWord _var
+        LDW     _var
+        STW     textHex
+        LDWI    printHexWord
+        CALL    giga_vAC
 %ENDM
 
 %MACRO  PrintString _str
         LDWI    _str
         STW     textStr
-        CALL    printText
+        LDWI    printText
+        CALL    giga_vAC
 %ENDM
 
 %MACRO  PrintInt16 _int
         LDWI    _int
-        STW     textDigits    
-        CALL    printVarInt16
+        STW     textNum    
+        LDWI    printVarInt16
+        CALL    giga_vAC
 %ENDM
 
 %MACRO  PrintAcInt16
-        STW     textDigits    
-        CALL    printVarInt16
+        STW     textNum    
+        LDWI    printVarInt16
+        CALL    giga_vAC
 %ENDM
 
 %MACRO  PrintVarInt16 _var
         LDW     _var
-        STW     textDigits    
-        CALL    printVarInt16
+        STW     textNum    
+        LDWI    printVarInt16
+        CALL    giga_vAC
 %ENDM
 
 %MACRO  Initialise
@@ -154,5 +196,6 @@
         LDWI    ((_h - 1) + _y)*256 + _x + giga_vram    ; bottom line
         STW     breset
         STW     bot
-        CALL    clearRegion
+        LDWI    clearRegion
+        CALL    giga_vAC
 %ENDM

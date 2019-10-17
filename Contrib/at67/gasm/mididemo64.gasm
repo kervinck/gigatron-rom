@@ -33,8 +33,7 @@ midiCommand     EQU     0x5A
 midiChannel     EQU     0x5C
 midiDelay       EQU     0x5E
 midiNote        EQU     0x60
-frameCountPrev  EQU     0x62
-tbase           EQU     0x64
+fontBase        EQU     0x62
 
 xyPosArray      EQU     0x600
 xyVelArray      EQU     0x680
@@ -45,10 +44,13 @@ numStars        EQU     40          ; max 64
 
 _startAddress_  EQU     0x0200      ; entry point for the code, if this is missing defaults to 0x0200
                 
-_callTable_     EQU     0x00EE      ; this grows downwards as you use more CALL's, it will crash into program variables if you are not careful
-                                    ; "_callTable_" is a reserved word, do not use it for anything other than it's intended use
-                                    ; leave some space for stack, (nested calls)
-
+_callTable_     EQU     0x007E      ; call addresses are automatically stored here by the assembler, it grows downwardss, it will crash into program variables if you are not careful
+                                    ; *NOTE* gt1 spec only allows for one zero page segment, .vasm files use this for the call tablese it for anything other than it's intended use
+                                    ; do *NOT* make this address higher than 0x00BE, it will conflict with future ROM loading mechanisms
+                                    ; do *NOT* define constants, (DB or DW), between 0x30 -> 0x44 and 0xc0 -> 0xFF, these addresses are
+                                    ; used by the loader and the vCPU stack, you can create variables in these areas as long as you don't
+                                    ; corrupt your nested CALL return addresses on the stack
+                                    
 _singleStepWatch_   EQU     ii      ; the single step debugger watches this variable location to decide when to step,
                                     ; choose a variable that is updated often
 
@@ -65,20 +67,34 @@ printText       EQU     0x10A1
 
 ; these two addresses are used to build an exclusion zone around vCPU code that will not be counted
 ; in the vCPU usage meter, (almost always used to exclude your VBlank polling loop, in this case MIDI)
-_cpuUsageAddressA_  EQU     resetAudio  
-_cpuUsageAddressB_  EQU     printText - 1
+_cpuUsageAddressA_  EQU     start  
+_cpuUsageAddressB_  EQU     playMidi - 1
+
+RAM_64K_string  EQU     0x0300
+RAM_64K_string  DB      13 'Need 64K RAM!'
 
 
 start           CALL    resetAudio
                 CALL    clearScreen
+                
+                LD      giga_memSize        ; check for 64K RAM
+                BEQ     found_64K
+
+                LDWI    giga_text32 
+                STW     fontBase            ; text font base address, (ROM)
+                LDWI    0xFF00              ; foreground and background colour
+                STW     giga_sysArg0
+                LDWI    0x3E30              ; position
+                STW     textPos
+                LDWI    RAM_64K_string
+                STW     textStr
+                CALL    printText
+need_64k        BRA     need_64k               
                     
-                LDWI    vram
+found_64K       LDWI    vram
                 STW     vbase               ; vram base address
                 STW     pixels              ; pixel address
         
-                LDWI    giga_text32 
-                STW     tbase               ; text font base address, (ROM)
-    
                 LDWI    rand    
                 STW     random  
         
@@ -115,7 +131,13 @@ rand_vel        CALL    centerPos
                    
                 LoopCounterTo1 ii rand_vel
 
-loopInit        LDI     numStars    
+                LD      giga_frameCount     ; Start checking midi stream immediately
+                ST      midiDelay
+
+loopInit        LDI     0x10                ; keep pumping soundTimer, so that global sound stays alive
+                ST      giga_soundTimer
+                
+                LDI     numStars    
                 ST      ii  
         
                 LDWI    xyPosArray  
@@ -178,7 +200,7 @@ draw            LDW     xPos
                 INC     yVel    
                 INC     yVel    
         
-                CALL    playMidiAsync
+                CALL    playMidi
 
                 LoopCounterTo1 ii erase
                 BRA     loopInit    
@@ -337,64 +359,45 @@ resetA_loop     LDI     giga_soundChan1     ; reset low byte
                 RET
 
 
-playMidiAsync   LD      giga_frameCount
-                SUBW    frameCountPrev
-                BEQ     playMV_exit
-                LD      giga_frameCount
-                STW     frameCountPrev
-                PUSH
-                CALL    playMidi
-                POP
-playMV_exit     RET
-
-
-playMidi        LDI     0x01                ; keep pumping soundTimer, so that global sound stays alive
-                ST      giga_soundTimer
-                LDW     midiDelay
-                BEQ     playM_process
-                SUBI    0x01
-                STW     midiDelay
-                BEQ     playM_process    
+playMidi        LD      giga_frameCount
+                SUBW    midiDelay
+                BEQ     playM_start
                 RET
 
+playM_start     PUSH
 playM_process   LDW     midiStreamPtr
                 PEEK                        ; get midi stream byte
                 STW     midiCommand
                 LDW     midiStreamPtr
                 ADDI    0x01
                 STW     midiStreamPtr
-                LDW     midiCommand
-                ANDI    0xF0
-                STW     scratch
+                LDI     0xF0
+                ANDW    midiCommand
                 XORI    0x90                ; check for start note
                 BNE     playM_endnote
 
-                PUSH                    
                 CALL    midiStartNote       ; start note
-                POP
                 BRA     playM_process
                 
-playM_endnote   LDW     scratch 
-                XORI    0x80                ; check for end note
+playM_endnote   XORI    0x10                ; check for end note
                 BNE     playM_segment
 
-                PUSH
                 CALL    midiEndNote         ; end note
-                POP
                 BRA     playM_process
 
 
-playM_segment   LDW     scratch
-                XORI    0xD0                ; check for new segment
+playM_segment   XORI    0x50                ; check for new segment
                 BNE     playM_delay
 
-                PUSH
-                CALL    midiSegment         ; new midi segment
-                POP
+                LDW     midiStreamPtr       ; midi score
+                DEEK
+                STW     midiStreamPtr       ; 0xD0 new midi segment address
                 BRA     playM_process
 
-playM_delay     LDW     midiCommand         ; all that is left is delay
-                STW     midiDelay
+playM_delay     LD      giga_frameCount     ; midiDelay = (midiCommand + peek(frameCount)) & 0x00FF 
+                ADDW    midiCommand
+                ST      midiDelay
+                POP
                 RET
 
 
@@ -402,9 +405,8 @@ midiStartNote   LDWI    giga_notesTable     ; note table in ROM
                 STW     scratch
                 LDW     midiStreamPtr       ; midi score
                 PEEK
-                SUBI    10
+                SUBI    11
                 LSLW
-                SUBI    2
                 ADDW    scratch
                 STW     scratch
                 LUP     0x00                ; get ROM midi note low byte
@@ -441,20 +443,9 @@ midiEndNote     LDW     midiCommand
                 RET
 
 
-midiSegment     LDW     midiStreamPtr       ; midi score
-                DEEK
-                STW     midiStreamPtr       ; 0xD0 new midi segment address
-midiSegmentEnd  RET
-
-
                 ; prints text using the inbuilt font and SYS routine
 printText       LDWI    SYS_VDrawBits_134   ; setup 8 vertical pixel SYS routine
                 STW     giga_sysFn
-
-                LDI     0x00                ; background colour
-                ST      giga_sysArg0
-                LD      giga_rand0          ; foreground colour
-                ST      giga_sysArg1
 
                 LDW     textStr             ; first byte is length
                 PEEK
@@ -469,7 +460,7 @@ printT_chr      LDW     textStr
                 LSLW    scratch
                 LSLW    scratch
                 ADDW    textChr
-                ADDW    tbase
+                ADDW    fontBase
                 STW     scratch             ; text font slice base address for chars 32-81
 
                 LDW     textChr

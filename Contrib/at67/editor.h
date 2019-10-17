@@ -4,6 +4,10 @@
 #include <stdint.h>
 #include <string>
 
+#ifndef STAND_ALONE
+#include <SDL.h>
+#endif
+
 
 #define INPUT_RIGHT   0x01
 #define INPUT_LEFT    0x02
@@ -52,7 +56,7 @@ namespace Editor
 
     struct RomEntry
     {
-        uint8_t _version;
+        uint8_t _type;
         std::string _name;
     };
 
@@ -60,11 +64,12 @@ namespace Editor
     int getCursorX(void);
     int getCursorY(void);
     bool getHexEdit(void);
+    bool getSingleStepEnabled(void);
     bool getStartMusic(void);
-    bool getSingleStepMode(void);
 
     bool getPageUpButton(void);
     bool getPageDnButton(void);
+    bool getDelAllButton(void);
 
     MemoryMode getMemoryMode(void);
     EditorMode getEditorMode(void);
@@ -77,9 +82,14 @@ namespace Editor
     uint16_t getVpcBaseAddress(void);
     uint16_t getLoadBaseAddress(void);
     uint16_t getVarsBaseAddress(void);
-    uint16_t getSingleStepWatchAddress(void);
+    uint16_t getSingleStepAddress(void);
     uint16_t getCpuUsageAddressA(void);
     uint16_t getCpuUsageAddressB(void);
+
+    int getBreakPointsSize(void);
+    uint16_t getBreakPointAddress(int index);
+    void addBreakPoint(uint16_t address);
+    void clearBreakPoints(void);
 
     int getFileEntriesIndex(void);
     int getFileEntriesSize(void);
@@ -90,20 +100,22 @@ namespace Editor
 
     int getRomEntriesIndex(void);
     int getRomEntriesSize(void);
-    uint8_t getRomEntryVersion(int index);
-    uint8_t getCurrentRomEntryVersion(int& index);
+    uint8_t getRomEntryType(int index);
+    uint8_t getCurrentRomEntryType(int& index);
     std::string* getRomEntryName(int index);
     std::string* getCurrentRomEntryName(int& index);
     int getCurrentRomEntryIndex(void);
-    void setRomEntry(uint8_t version, std::string& name);
+    void addRomEntry(uint8_t type, std::string& name);
+
+    void resetEditor(void);
+    void setEditorMode(EditorMode editorMode);
 
     void setCursorX(int x);
     void setCursorY(int y);
+    void setHexEdit(bool hexEdit);
     void setStartMusic(bool startMusic);
-    void setSingleStep(bool singleStep);
-    void setSingleStepMode(bool singleStepMode);
+    void setSingleStepAddress(uint16_t address);
     void setLoadBaseAddress(uint16_t address);
-    void setSingleStepWatchAddress(uint16_t address);
     void setCpuUsageAddressA(uint16_t address);
     void setCpuUsageAddressB(uint16_t address);
 
@@ -114,8 +126,15 @@ namespace Editor
 
     void initialise(void);
     void browseDirectory(void);
-    bool singleStepDebug(void);
+
+#ifndef STAND_ALONE
+    void handleGuiEvents(SDL_Event& event);
+#endif
+    bool handleDebugger(void);
     void handleInput(void);
+
+    void startDebugger(void);
+    void resetDebugger(void);
 }
 
 #endif

@@ -190,11 +190,11 @@ void outputDelay(std::ofstream& outfile, Format format, uint8_t delay8, double t
 
 int main(int argc, char* argv[])
 {
-    if(argc != 10)
+    if(argc != 11)
     {
         fprintf(stderr, "%s\n", GTMIDI_VERSION_STR);
-        fprintf(stderr, "Usage:   gtmidi <input filename> <output filename> <midiname> <int format 0, 1, 2 or 3> <uint16_t start_address in hex>\n         <uint16_t segment_offset in hex> <int segment_size> <int line_length> <float timing_adjust>\n");
-        fprintf(stderr, "Example: gtmidi game_over.bin game_over.i gameOver 0 0x8000 0 0 100 0.5\n");
+        fprintf(stderr, "Usage:   gtmidi <input filename> <output filename> <midiname> <int format 0, 1, 2 or 3> <uint16_t start_address in hex>\n         <uint16_t segment_offset in hex> <int segment_size> <int line_length> <name offset> <float timing_adjust>\n");
+        fprintf(stderr, "Example: gtmidi game_over.bin game_over.i gameOver 0 0x8000 0 0 100 0 0.5\n");
         fprintf(stderr, "Input:   miditones binary file produced with miditones, e.g. miditones -t4 -b -s1 -pi <filename>.bin\n");
         fprintf(stderr, "Format:  0 = vCPU ASM, 1 = GCL, 2 = C/C++, 3 = Python\n");
         return 1;
@@ -221,7 +221,8 @@ int main(int argc, char* argv[])
 
     uint16_t segmentSize = uint16_t(strtol(argv[7], nullptr, 10));
     int lineLength = strtol(argv[8], nullptr, 10);
-    double timingAdjust = strtod(argv[9], nullptr);
+    int nameOffset = strtol(argv[9], nullptr, 10);
+    double timingAdjust = strtod(argv[10], nullptr);
 
     std::ifstream infile(inFilename, std::ios::binary | std::ios::in);
     if(!infile.is_open())
@@ -252,7 +253,7 @@ int main(int argc, char* argv[])
     double totalTime8 = 0;
 
     int charCount = 0;
-    uint16_t segmentIndex = 0;
+    uint16_t segmentIndex = nameOffset;
     std::string segmentName;
 
     // Header
@@ -307,12 +308,12 @@ int main(int argc, char* argv[])
             {
             }
         }
-        // Delay n milliseconds where n = 16bit value, converted to 8bit, (0x00 <-> 0x7F)
+        // Delay n milliseconds where n = 16bit value, converted to multiple, (if necessary), 7bit values, (0x00 <-> 0x7F)
         else
         {
             // Coalesce sequence of delays together
             int i = 0;
-            int coalescedDelay = ((command<<8) | *midiPtr++); midiSize--;
+            uint16_t coalescedDelay = ((command<<8) | *midiPtr++); midiSize--;
             while(midiSize)
             {
                 if(midiPtr[i] & 0x80) break;
@@ -326,7 +327,7 @@ int main(int argc, char* argv[])
             if(coalescedDelay)
             {
                 totalTime16 += double(coalescedDelay);
-                coalescedDelay = int(double(coalescedDelay)/16.6666666667 + 0.5);
+                coalescedDelay = uint16_t(double(coalescedDelay)/16.6666666667 + 0.5);
 
                 // Ignore zero delays
                 if(coalescedDelay)
@@ -348,7 +349,7 @@ int main(int argc, char* argv[])
         if(midiSize  &&  segmentSize  &&  segmentOffset)
         {
             // If segment size is approaching count, (leave room for segment command 0xD0 and 1 extra byte for Note On command)
-            if(gigaSize / (segmentSize-4) > segmentIndex)
+            if(gigaSize / (segmentSize-4) > segmentIndex - nameOffset)
             {
                 gigaSize += 3; 
                 segmentIndex++;

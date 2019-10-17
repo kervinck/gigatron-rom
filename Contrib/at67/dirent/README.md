@@ -47,8 +47,9 @@ find     | Find files in subdirectories, e.g. find "c:\Program Files\CMake"
 updatedb | Build database of files in a drive, e.g. updatedb c:\
 locate   | Locate a file from database, e.g. locate notepad.exe
 
-To build the example programs, install [CMake](https://cmake.org/).
-Then, open command prompt and create a build directory as
+To build the example programs, first install [CMake](https://cmake.org/).
+Then, with CMake installed, open command prompt and create a temporary
+directory ``c:\temp\dirent`` for the build files as
 
 ```
 c:\
@@ -60,12 +61,15 @@ cd temp\dirent
 Generate build files as
 
 ```
-cmake .
+cmake d:\dirent
 ```
 
-Open Visual Studio, load the generated dirent.sln file from the build
-directory and build the solution.  Once ready, you can run the example
-programs from the command prompt as
+where ``d:\dirent`` is the root directory of the Dirent package (containing
+this README.md and LICENSE file).
+
+Once CMake is finished, open Visual Studio, load the generated dirent.sln file
+from the build directory and build the solution.  Once the build completes, run
+the example programs from the command prompt as
 
 ```
 cd Debug
@@ -78,8 +82,8 @@ locate cmd.exe
 
 # Copying
 
-Dirent may be freely distributed under the MIT license.  See the LICENSE
-file for details.
+Dirent may be freely distributed under the MIT license.  See the
+[LICENSE](LICENSE) file for details.
 
 
 # Alternatives to Dirent
@@ -90,4 +94,3 @@ both [Cygwin](http://www.cygwin.com) and [MingW](http://www.mingw.org)
 allow you to compile a great number of UNIX programs in Microsoft Windows.
 They both provide a full dirent API as well as many other UNIX APIs.  MingW
 can even be used for commercial applications!
-

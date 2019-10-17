@@ -42,9 +42,12 @@ namespace Audio
     bool getRealTimeAudio(void);
 
     void initialise(void);
+    void initialiseChannels(void);
+
     void fillAudioBuffer(void);
     void playAudioBuffer(void);
     void playSample(void);
+
     void playMusic(void);
     void nextScore(void);
 }
