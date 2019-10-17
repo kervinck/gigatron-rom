@@ -6,7 +6,7 @@ printText       EQU     clearRegion - 0x0300
 printDigit      EQU     clearRegion - 0x0400
 printVarInt16   EQU     clearRegion - 0x0500
 printChar       EQU     clearRegion - 0x0600
-printHex        EQU     clearRegion - 0x0700
+printHexByte    EQU     clearRegion - 0x0700
 newLineScroll   EQU     clearRegion - 0x0800
 resetAudio      EQU     clearRegion - 0x0900
 playMidi        EQU     clearRegion - 0x0A00
@@ -39,9 +39,9 @@ frameCountPrev  EQU     register0 + 0x1C
 ; Labels
 _entryPoint_    EQU		0x0200
 _10             EQU		0x0236
-_15             EQU		0x026d
-_16             EQU		0x0273
-_20             EQU		0x0279
+_15             EQU		0x0262
+_16             EQU		0x0268
+_20             EQU		0x026e
 
 ; Variables
 _a              EQU		0x0030
@@ -60,13 +60,7 @@ _entryPoint_    Initialise	                        		; INIT
                 LDI		1
                 STW		_b                          		; b =1
 
-_10             LDI		7
-                ADDW	_b
-                STW		0xd0
-                LDI		71
-                SUBW	0xd0
-                STW		0xd0
-                PrintVarInt16	0xd0
+_10             PrintInt16	0x0047
                 PrintString	usrStr_0x6ea0
                 PrintVarInt16	_a
                 PrintString	usrStr_0x6da2

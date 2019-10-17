@@ -7,9 +7,16 @@ b = z
         next j
     next i
 
-    print chr$(b)
-                
-    print "lkalalalala"
+    print chr$(b);" ";peek(0x21)
+    
+    a = peek(0x21) AND 0xFC
+    print hex$(a+1)
+    print hexw$(0xAA55 ^ 0x55AA)
+    print 56
+    print hexw$(0xdead)
+    print hexw$(0b0000111100001111 | 0b1000000010000000)
+
+    print "lalalalala2345534563465"
     END
     
 test: print hex$(i+40);" ";hex$(j+30);" "

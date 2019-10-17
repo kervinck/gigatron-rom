@@ -36,6 +36,21 @@ namespace Expression
         numeric._value = -numeric._value;
         return numeric;
     }
+    Numeric and(Numeric& left, Numeric& right)
+    {
+        left._value &= right._value;
+        return left;
+    }
+    Numeric or(Numeric& left, Numeric& right)
+    {
+        left._value |= right._value;
+        return left;
+    }
+    Numeric xor(Numeric& left, Numeric& right)
+    {
+        left._value ^= right._value;
+        return left;
+    }
     Numeric add(Numeric& left, Numeric& right)
     {
         left._value += right._value;
@@ -477,9 +492,11 @@ namespace Expression
         if((uchr >= '0'  &&  uchr <= '9')  ||  uchr == 'X'  ||  uchr == 'B'  ||  uchr == 'O'  ||  uchr == 'Q')
         {
             valueStr.push_back(uchr); get();
-            while((peek() >= '0'  &&  peek() <= '9')  ||  (peek() >= 'A'  &&  peek() <= 'F'))
+            uchr = toupper(peek());
+            while((uchr >= '0'  &&  uchr <= '9')  ||  (uchr >= 'A'  &&  uchr <= 'F'))
             {
                 valueStr.push_back(get());
+                uchr = toupper(peek());
             }
         }
 
@@ -560,17 +577,17 @@ namespace Expression
     {
         Numeric t, result = term();
     
-        while(peek() == '+' || peek() == '-')
+        bool finished = false;
+        while(!finished)
         {
-            if(get() == '+')
+            switch(peek())
             {
-                t = term();
-                result = add(result, t);
-            }
-            else
-            {
-                t = term();
-                result = sub(result, t);
+                case '+': get(); t = term(); result = add(result, t); break;
+                case '-': get(); t = term(); result = sub(result, t); break;
+                case '&': get(); t = term(); result = and(result, t); break;
+                case '|': get(); t = term(); result = or(result, t);  break;
+                case '^': get(); t = term(); result = xor(result, t); break;
+                default: finished = true;                             break;
             }
         }
 

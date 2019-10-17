@@ -1,5 +1,6 @@
 textStr         EQU     register0
 textNum         EQU     register0
+textBak         EQU     register0
 textLen         EQU     register1
 textFont        EQU     register2
 textChr         EQU     register3
@@ -226,7 +227,7 @@ validChar       LD      textChr
 validC_chr      RET
 
 
-printHex        PUSH
+printHexByte    PUSH
                 LDWI    SYS_LSRW4_50    ; shift right by 4 SYS routine
                 STW     giga_sysFn
                 LD      textHex
@@ -246,6 +247,21 @@ printH_skip0    ADDI    0x3A
 printH_skip1    ADDI    0x3A
                 ST      textChr
                 LDWI    printChar
+                CALL    giga_vAC
+                POP
+                RET
+                
+                
+printHexWord    PUSH
+                LD      textHex
+                ST      textBak
+                LD      textHex + 1
+                ST      textHex
+                LDWI    printHexByte
+                CALL    giga_vAC
+                LD      textBak
+                ST      textHex
+                LDWI    printHexByte
                 CALL    giga_vAC
                 POP
                 RET

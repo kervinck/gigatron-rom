@@ -73,7 +73,7 @@ SYS_SpriteRow_118   EQU     0x2300      ; 16 pixel memory copy
             STW     srcAddr
             LDW     backBuffer
             STW     dstAddr
-            SYS     0xEF        ; SYS_SpriteRow_118, 270 - 63/2 = 0xEF
+            SYS     0xD3        ; SYS_SpriteRow_118, 270 - 118/2 = 0xD3
            
             LD      frameCount
             STW     frame
@@ -113,7 +113,7 @@ vblank      LD      frameCount
             STW     srcAddr
             LDW     pixels
             STW     dstAddr
-            SYS     0xD3        ; SYS_SpriteRow_118, 270 - 118/2 = 0xDA
+            SYS     0xD3        ; SYS_SpriteRow_118, 270 - 118/2 = 0xD3
             
             LDW     vbase       ; generate vram address
             ADDW    xyPos
@@ -122,13 +122,13 @@ vblank      LD      frameCount
             STW     srcAddr
             LDW     backBuffer
             STW     dstAddr
-            SYS     0xD3        ; SYS_SpriteRow_118, 270 - 118/2 = 0xDA
+            SYS     0xD3        ; SYS_SpriteRow_118, 270 - 118/2 = 0xD3
 
             LDW     srcAddr
             STW     dstAddr
             LDW     spriteData
             STW     srcAddr
-            SYS     0xD3        ; SYS_SpriteRow_118, 270 - 118/2 = 0xDA
+            SYS     0xD3        ; SYS_SpriteRow_118, 270 - 118/2 = 0xD3
             
             BRA     xbounds
             

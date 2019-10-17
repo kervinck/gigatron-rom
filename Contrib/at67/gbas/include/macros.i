@@ -118,16 +118,29 @@ _label_ LD      _var
         CALL    giga_vAC
 %ENDM
 
-%MACRO  PrintAcHex
+%MACRO  PrintAcHexByte
+        ST      textHex
+        LDWI    printHexByte
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  PrintVarHexByte _var
+        LD      _var
         ST      textHex
         LDWI    printHex
         CALL    giga_vAC
 %ENDM
 
-%MACRO  PrintVarHex _var
-        LD      _var
-        ST      textHex
-        LDWI    printHex
+%MACRO  PrintAcHexWord
+        STW     textHex
+        LDWI    printHexWord
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  PrintVarHexWord _var
+        LDW     _var
+        STW     textHex
+        LDWI    printHexWord
         CALL    giga_vAC
 %ENDM
 
