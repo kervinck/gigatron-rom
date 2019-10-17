@@ -139,7 +139,7 @@
  "SYS_SetMemory_v2_54"  : "0x0b03",
  "SYS_SendSerial1_v3_80": "0x0b06",
  "SYS_ExpanderControl_v4_40"  : "0x0b09",
- "SYS_Run6502_DEVROM_80"      : "0x0b0c",
+ "SYS_Run6502_v4_80"          : "0x0b0c",
  "SYS_ResetWaveforms_v4_50"   : "0x0b0f",
  "SYS_ShuffleNoise_v4_46"     : "0x0b12",
  "SYS_SpiExchangeBytes_v4_134": "0x0b15",

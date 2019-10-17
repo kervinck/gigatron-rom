@@ -17,31 +17,34 @@ gcl0x
         --------------------------
 
         Open issues:
-        Xxx Ctrl-C not implemented
-        XXX Give errors for dangling pointers (LOAD, SAVE etc)
-        XXX There's no π-character ($ff)
-        XXX TI$ not implemented
+        XXX Ctrl-C not yet implemented (ISCNTC)
+        XXX Still crashes on dangling kernal pointers (LOAD, SAVE etc)
+        XXX TI$ not yet implemented
+        XXX Where do the zero page variables really end?
         XXX Keyboard buffer should move back to page 2
         XXX Floating point buffer (STACK2) should move back
+        XXX Meaning of WIDTH, WIDTH2?
+        XXX Meaning of SPACE_FOR_GOSUB?
 
         Features:
         - 9 digit floating point (40 bits)
         - "WAIT 6502,1" Easter Egg
         - TI$ XXX TODO base on frameCount
 
-        $30 - $37               GCL variables: p CharOut i j
-        $38 -                   Relocated MS BASIC variables
+        $30 - $37               GCL variables (p, CharOut, i, j)
+        $38 -                   MS BASIC variables, relocated
 
         $0280 - $23ff           (6502) Microsoft BASIC version 2 (Commodore PET)
         $2400 -                 Input buffer
         $2460 - $70ff           Video RAM for 11 text rows: 11*7 = 77 pages
-        $2500 -                 MainLoop
-        $2600 -                 CharOut
-        $2700 -                 CharOut continued
-        $2800 -                 (6502) CHROUT
-        $2900 -                 (6502) GETIN
-        $2a00 -                 (6502) ISCNTC
-        $2b00 -                 (6502) CLALL
+        $2500 -                 Main vCPU loop (BRK call handling); DrawChar
+        $2600 -                 CharOut; PiOut
+        $2700 -                 Newline; FormFeed
+        $2800 -                 WaitKey
+        $2900 -                 (6502) CHROUT
+        $2a00 -                 (6502) GETIN
+        $2b00 -                 (6502) ISCNTC
+        $2c00 -                 (6502) CLALL
         $7100 - $715f           Floating point buffer aka STACK2
         $7160 - $71ff           Empty pixel line
         $7200 - $7fff           Free RAM giving 3584 bytes
@@ -74,7 +77,7 @@ gcl0x
 
 { Create one dedicated empty pixel line }
 
-\SYS_SetMemory_v2_54 \sysFn:
+\SYS_SetMemory_v2_54 _sysFn=
 160   \sysArgs0:                {Count = 160, Value = 0}
 $7160 \sysArgs2: 54!            {Clear $7160 - $71ff}
 
@@ -95,7 +98,7 @@ $ffb3                           {$24 - $71}
 }
 $101 {videoTable+1} p= $60 p.   {Use offsets 96..255 for pixel data, not 0..159}
 
-\ClearScreen call               {Setup CharOut and clear the screen}
+\FormFeed call                  {Setup CharOut and clear the screen}
 
 &_MainLoop _vLR=                {Prepare transfer to main loop}
 &_COLD_START                    {Start address for 6502 program}
@@ -189,7 +192,7 @@ _COLD_START=$0022BE
  #$1d #$a0 #$04 #$c8 #$b1 #$57 #$d0 #$fb #$c8 #$98 #$65 #$57 #$aa #$a0 #$00 #$91
  #$57 #$a5 #$58 #$69 #$00 #$c8 #$91 #$57 #$86 #$57 #$85 #$58 #$90 #$dd #$60 #$a2
  #$00 #$20 #$c1 #$06 #$c9 #$0d #$f0 #$06 #$9d #$00 #$24 #$e8 #$d0 #$f3 #$4c #$f7
- #$0b #$20 #$00 #$29 #$c9 #$0f #$d0 #$08 #$48 #$a5 #$45 #$49 #$ff #$85 #$45 #$68
+ #$0b #$20 #$00 #$2a #$c9 #$0f #$d0 #$08 #$48 #$a5 #$45 #$49 #$ff #$85 #$45 #$68
  #$60 #$a6 #$b0 #$a0 #$04 #$84 #$41 #$bd #$00 #$24 #$10 #$07 #$c9 #$ff #$f0 #$3e
  #$e8 #$d0 #$f4 #$c9 #$20 #$f0 #$37 #$85 #$3c #$c9 #$22 #$f0 #$56 #$24 #$41 #$70
  #$2d #$c9 #$3f #$d0 #$04 #$a9 #$97 #$d0 #$25 #$c9 #$30 #$90 #$04 #$c9 #$3c #$90
@@ -206,7 +209,7 @@ _COLD_START=$0022BE
  #$88 #$d0 #$09 #$a5 #$49 #$88 #$d1 #$95 #$90 #$0c #$f0 #$0a #$88 #$b1 #$95 #$aa
  #$88 #$b1 #$95 #$b0 #$d7 #$18 #$60 #$d0 #$fd #$a9 #$00 #$a8 #$91 #$60 #$c8 #$91
  #$60 #$a5 #$60 #$18 #$69 #$02 #$85 #$62 #$a5 #$61 #$69 #$00 #$85 #$63 #$20 #$e3
- #$07 #$a9 #$00 #$d0 #$2d #$a5 #$6c #$a4 #$6d #$85 #$68 #$84 #$69 #$20 #$00 #$2b
+ #$07 #$a9 #$00 #$d0 #$2d #$a5 #$6c #$a4 #$6d #$85 #$68 #$84 #$69 #$20 #$00 #$2c
  #$a5 #$62 #$a4 #$63 #$85 #$64 #$84 #$65 #$85 #$66 #$84 #$67 #$20 #$6c #$09 #$a2
  #$4e #$86 #$4b #$68 #$a8 #$68 #$a2 #$ff #$9a #$48 #$98 #$48 #$a9 #$00 #$85 #$73
  #$85 #$42 #$60 #$18 #$a5 #$60 #$69 #$ff #$85 #$b0 #$a5 #$61 #$69 #$ff #$85 #$b1
@@ -215,7 +218,7 @@ _COLD_START=$0022BE
 *=$800
  #$af #$00 #$f0 #$0c #$c9 #$a5 #$d0 #$8e #$20 #$a9 #$00 #$20 #$af #$0a #$d0 #$86
  #$68 #$68 #$a5 #$49 #$05 #$4a #$d0 #$06 #$a9 #$ff #$85 #$49 #$85 #$4a #$a0 #$01
- #$84 #$41 #$b1 #$95 #$f0 #$43 #$20 #$00 #$2a #$20 #$00 #$0c #$c8 #$b1 #$95 #$aa
+ #$84 #$41 #$b1 #$95 #$f0 #$43 #$20 #$00 #$2b #$20 #$00 #$0c #$c8 #$b1 #$95 #$aa
  #$c8 #$b1 #$95 #$c5 #$4a #$d0 #$04 #$e4 #$49 #$f0 #$02 #$b0 #$2c #$84 #$7e #$20
  #$85 #$1e #$a9 #$20 #$a4 #$7e #$29 #$7f #$20 #$5c #$0c #$c9 #$22 #$d0 #$06 #$a5
  #$41 #$49 #$ff #$85 #$41 #$c8 #$f0 #$11 #$b1 #$95 #$d0 #$10 #$a8 #$b1 #$95 #$aa
@@ -231,7 +234,7 @@ _COLD_START=$0022BE
  #$0e #$20 #$e3 #$1c #$20 #$ef #$0e #$a5 #$7f #$48 #$a5 #$7e #$48 #$a9 #$81 #$48
 
 *=$900
- #$20 #$00 #$2a #$a5 #$b0 #$a4 #$b1 #$c0 #$24 #$ea #$f0 #$04 #$85 #$72 #$84 #$73
+ #$20 #$00 #$2b #$a5 #$b0 #$a4 #$b1 #$c0 #$24 #$ea #$f0 #$04 #$85 #$72 #$84 #$73
  #$a0 #$00 #$b1 #$b0 #$d0 #$40 #$a0 #$02 #$b1 #$b0 #$18 #$d0 #$03 #$4c #$97 #$09
  #$c8 #$b1 #$b0 #$85 #$6e #$c8 #$b1 #$b0 #$85 #$6f #$98 #$65 #$b0 #$85 #$b0 #$90
  #$02 #$e6 #$b1 #$20 #$a9 #$00 #$20 #$3c #$09 #$4c #$00 #$09 #$f0 #$3c #$e9 #$80
@@ -291,7 +294,7 @@ _COLD_START=$0022BE
  #$a9 #$00 #$4c #$cf #$0b #$20 #$57 #$0c #$d0 #$f2 #$20 #$13 #$15 #$20 #$32 #$17
  #$aa #$a0 #$00 #$e8 #$ca #$f0 #$c5 #$b1 #$57 #$20 #$5c #$0c #$c8 #$c9 #$0d #$d0
  #$f3 #$20 #$0a #$0c #$4c #$44 #$0c #$a9 #$20 #$2c #$a9 #$3f #$24 #$45 #$30 #$03
- #$20 #$00 #$28 #$29 #$ff #$60 #$a5 #$43 #$f0 #$11 #$30 #$04 #$a0 #$ff #$d0 #$04
+ #$20 #$00 #$29 #$29 #$ff #$60 #$a5 #$43 #$f0 #$11 #$30 #$04 #$a0 #$ff #$d0 #$04
  #$a5 #$74 #$a4 #$75 #$85 #$6e #$84 #$6f #$4c #$b9 #$0f #$a9 #$c9 #$a0 #$0d #$20
  #$3a #$0c #$a5 #$72 #$a4 #$73 #$85 #$b0 #$84 #$b1 #$60 #$20 #$32 #$14 #$a2 #$01
  #$a0 #$24 #$a9 #$00 #$8d #$01 #$24 #$a9 #$40 #$20 #$d4 #$0c #$60 #$46 #$45 #$c9
@@ -300,7 +303,7 @@ _COLD_START=$0022BE
  #$8d #$09 #$20 #$5a #$0c #$20 #$57 #$0c #$4c #$af #$06 #$a6 #$76 #$a4 #$77 #$a9
  #$98 #$2c #$a9 #$00 #$85 #$43 #$86 #$78 #$84 #$79 #$20 #$23 #$11 #$85 #$7e #$84
  #$7f #$a5 #$b0 #$a4 #$b1 #$85 #$81 #$84 #$82 #$a6 #$78 #$a4 #$79 #$86 #$b0 #$84
- #$b1 #$20 #$af #$00 #$d0 #$1c #$24 #$43 #$50 #$0c #$20 #$00 #$29 #$8d #$00 #$24
+ #$b1 #$20 #$af #$00 #$d0 #$1c #$24 #$43 #$50 #$0c #$20 #$00 #$2a #$8d #$00 #$24
 
 *=$d00
  #$a2 #$ff #$a0 #$23 #$d0 #$08 #$30 #$71 #$20 #$5a #$0c #$20 #$c2 #$0c #$86 #$b0
@@ -520,7 +523,7 @@ _COLD_START=$0022BE
 
 *=$1900
  #$19 #$d0 #$ce #$a2 #$0a #$bd #$29 #$22 #$29 #$3f #$49 #$20 #$18 #$69 #$20 #$20
- #$00 #$28 #$ca #$d0 #$f0 #$c6 #$7e #$d0 #$ea #$60 #$20 #$51 #$1a #$90 #$3c #$20
+ #$00 #$29 #$ca #$d0 #$f0 #$c6 #$7e #$d0 #$ea #$60 #$20 #$51 #$1a #$90 #$3c #$20
  #$44 #$1b #$d0 #$03 #$4c #$b4 #$1c #$a6 #$a6 #$86 #$8c #$a2 #$9f #$a5 #$9f #$a8
  #$f0 #$ab #$38 #$e5 #$97 #$f0 #$24 #$90 #$12 #$84 #$97 #$a4 #$a4 #$84 #$9c #$49
  #$ff #$69 #$00 #$a0 #$00 #$84 #$8c #$a2 #$97 #$d0 #$04 #$a0 #$00 #$84 #$a6 #$c9
@@ -708,6 +711,7 @@ _COLD_START=$0022BE
  #$42 #$59 #$54 #$45 #$53 #$20 #$46 #$52 #$45 #$45 #$0d #$00 #$23 #$23 #$23 #$20
  #$43 #$4f #$4d #$4d #$4f #$44 #$4f #$52 #$45 #$20 #$42 #$41 #$53 #$49 #$43 #$20
  #$23 #$23 #$23 #$0d #$0d #$00
+
 { ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^   Insert BASIC image here   ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ }
 
 {-----------------------------------------------------------------------+
@@ -715,7 +719,7 @@ _COLD_START=$0022BE
 +-----------------------------------------------------------------------}
 *=$2500
 
-_k=$2a                          {sysArg6: Parking spot for keyboard handler}
+_k=$2a                          {Parking spot for keyboard handler: sysArgs6}
 
 _MainLoop=*
 
@@ -723,104 +727,32 @@ _MainLoop=*
 
 _vLR=                           {Reset v6502 PC}
 [do
-  \SYS_Run6502_DEVROM_80 _sysFn=
-  \k,                           {ASCII code in A}
+  \SYS_Run6502_v4_80 _sysFn=
+  \k,                           {Pass back resulting ASCII code in A}
   80!                           {Run 6502 code until BRK}
   push                          {Save v6502 PC}
-  [if=0                         {A=0 reads from keyboard}
-    [do
-      \serialRaw, 255^          {Wait for idle keyboard}
-      if<>0loop]
-    [do
-      \frameCount, 15& [if=0    {4 Hz cursor redraw rate}
-        \frameCount, 48&        {Flash at 1 Hz with 75% duty cycle}
-        [if=0 $a0 else $ff]     {Select space or cursor symbol}
-        CharOut! p=             {Display cursor and immediately move back}
-      ]
-      \serialRaw, \k. 128&      {Key ready?}
-      if<>0loop]                {Loop until ready}
-    $a0 CharOut! p=             {Overwrite cursor symbol with a space}
-    \k, $60- [if>=0 $40+ \k.]   {Map to upper case, and DEL to rubout}
-    \k, 10^  [if=0  13   \k.]   {Map LF to CR}
-  else                          {A<>0 for echo}
-    \k.
-    CharOut!
+  [if=0                         {A=0 reads char from keyboard}
+    \WaitKey call
+  else                          {A<>0 sends char to video terminal}
+    \k.                         {Store input for later return}
+    255^ [if<>0                 {Check for pi character code 255}
+      \k, CharOut!              {Either we can use the regalar function}
+    else
+      \PiOut call]              {Or we draw the pi character in a special way}
   ]
   pop                           {Restore v6502 PC}
-  loop]                         {Back to wozmon}
+  loop]                         {Return to v6502 code}
 
 {-----------------------------------------------------------------------+
-|       Character output with automatic scrolling                       |
+|       DrawChar                                                        |
 +-----------------------------------------------------------------------}
-*=$2600
 
-_CharOut=*
+_DrawChar=*
+[
+  { Tail function: pops without push }
 
-{ Minimalistic terminal output, ASCII with bit 7 set }
-
-push
-
-%-2=                            {Park character in stack area}
-\SYS_VDrawBits_134 _sysFn=      {Prepare SYS calls for rendering text}
-$800 \sysArgs0:                 {Green on black}
-
-%-2                             {Get character back}
-$8d^ [if<>0                     {Test for CR...}
-  <p, 251- if>0 0]              {...or line wrap}
-
-[if=0
-
-  {-------------------------------------------------------------------+
-  |       Newline                                                     |
-  +-------------------------------------------------------------------}
-
-  { Clear a new line first }
-
-  $60 <p.                       {Go to start of line}
-  $a0+ i=                       {$0100: first entry in video table}
-  \sysArgs2.                    {Set all-zero output pattern}
-  peek >p.                      {Move to what is now still the top text row}
-  p \sysArgs4:                  {Set drawing position}
-  [do
-    134!                        {SYS call to draw 8 pixels vertically}
-    <\sysArgs4++                {Step 1 pixel right}
-    \sysArgs4, if<>0loop]       {Loop until end of pixel line}
-
-  { Then scroll everything up by modifying videoTable[] }
-
-  [do
-    i 22+ j=
-
-    i,         \sysArgs7.       {Swap 7+4 with scanlines below}
-    j,         i.
-    \sysArgs7, j.
-
-    i 2+ i=                     {Move to next entry in video table}
-    255& 212^ if<>0loop]        {Until all done}
-]
-
-$2700 call
-{-----------------------------------------------------------------------}
-*=$2700
-
-%-2 $a0-                        {Apple 1 wants ASCII with bit 7 set}
-[if>=0                          {If printable}
-
-  {-------------------------------------------------------------------+
-  |       Draw character in screen memory                             |
-  +-------------------------------------------------------------------}
-
-  {
-    Draw ASCII character (32..127) on screen in 5x8 pixels
-    and advance cursor position
-  }
-
-  50-                           {Map ASCII code to offset in font table}
-  [if<0 50+ i= \font32up        {ASCII 32..81}
-   else     i= \font82up]       {ASCII 82..127}
-  j= i 2<< i+                   {Multiply char code by 5}
-  j+ j=                         {Add to page address to reach bitmap data}
-
+  \SYS_VDrawBits_134 _sysFn=    {Prepare SYS calls}
+  $800 \sysArgs0:               {Green on black}
   p \sysArgs4:                  {Screen position for character}
   %-2=                          {Remember this position}
   6+ p=                         {Advance by 6 pixels}
@@ -833,31 +765,170 @@ $2700 call
     i 1- if>0loop]              {Looping}
 
   %-2                           {Return position for backspace}
+
+  pop ret
 ]
 
-[pop ret]
+{-----------------------------------------------------------------------+
+|       Character output with automatic scrolling                       |
++-----------------------------------------------------------------------}
+*=$2600
+
+_CharOut=*
+[
+  {
+    Simple video terminal output with automatic line feed.
+    Takes ASCII, bit with bit 7 set (like Apple-1,2)
+    Returns screen position if printable (for backspace)
+  }
+
+  push
+  %-2=                          {Park character in stack area}
+
+  $8d^ [if<>0 <p, 251- if>0 0]  {Test for CR or line wrap}
+
+  [if=0 \Newline call]          {Tail call: doesn't return}
+
+  %-2 $a0-                      {Apple 1 wants ASCII with bit 7 set}
+  [if<0 pop ret]                {Skip non-printables}
+
+  {
+    Draw ASCII character (32..127) on screen in 5x8 pixels
+    and advance cursor position
+  }
+
+  50-                           {Map ASCII code to offset in font table}
+  [if<0 50+ i= \font32up        {ASCII 32..81}
+   else     i= \font82up]       {ASCII 82..127}
+  j= i 2<< i+                   {Multiply char code by 5}
+  j+ j=                         {Add to page address to reach bitmap data}
+
+  \DrawChar call                {Tail call: doesn't return}
+]
+
+{
+  R         S         T   pi    U
+  |         |         |   |     |
+  v         v         v   v     v
+  x x x x . . x x x . x x # # # # . . . x
+  x . . . x x . . . . . . # . . # . . . x
+  x . . . x x . . . . . . # . . # . . . x
+  x x x x . . x x x . . . # . . # . . . x
+  x . x . . . . . . x . . # . . # . . . x
+  x . . x . . . . . x . . # . . # . . . x
+  x . . . x x x x x . . . # . . . # x x .
+  . . . . . . . . . . . . . . . . . . . .
+  0 1 2 3 4 5 6 7 8 9 a b c d e f 1 1 1 1
+  ^                               0 1 2 3
+  |
+  font82up
+}
+
+_PiOut=*
+[
+  push
+  #\LDWI #12 #>\font82up j=     {Right half of 'T' and left half of 'U'}
+  \DrawChar call                {Tail call: doesn't return}
+]
 
 {-----------------------------------------------------------------------+
-|       ClearScreen                                                     |
+|       Newline                                                         |
 +-----------------------------------------------------------------------}
+*=$2700
 
-_ClearScreen=*
+_Newline=*
+[
+  { Tail function: pops without push }
 
-push
-6 [do
-  \k.
-  $8d CharOut!
-  \k, 1- if>0loop]
-[pop ret]
+  { First clear the top text row }
+
+  $60 <p.                       {Go to start of line}
+  $a0+ i=                       {$0100 first entry in video table}
+  peek >p.                      {Move to what is now still the top text row}
+
+  \SYS_VDrawBits_134 _sysFn=    {Prepare SYS calls}
+  0 \sysArgs0:                  {All black}
+  p \sysArgs4:                  {Set drawing position for clearing}
+
+  [do
+    134!                        {SYS call to draw 8 pixels vertically}
+    <\sysArgs4++                {Step 1 pixel right}
+    \sysArgs4, if<>0loop]       {Loop until end of pixel line}
+
+  { Then scroll everything up by modifying videoTable[] }
+
+  [do
+    i 22+ j=                    {j looks 11 entries ahead of i}
+    i, \sysArgs7.               {Swap scanlines}
+    j, i.
+    \sysArgs7, j.
+    i 2+ i=                     {Advance to next entry in video table}
+    255& 212^ if<>0loop]        {Until all done}
+
+  pop ret
+]
 
 {-----------------------------------------------------------------------+
-|       I/O functions                                                   |
+|       FormFeed                                                        |
 +-----------------------------------------------------------------------}
 
+{
+  Semi-clear the screen. Give just enough newlines such that once the
+  READY prompt is there, all garbage pixels are gone.
+}
+_FormFeed=*
+[
+  push
+  6 [do
+    \k.
+    $8d CharOut!
+    \k, 1- if>0loop]
+  pop ret
+]
+
+{-----------------------------------------------------------------------+
+|       WaitKey                                                         |
++-----------------------------------------------------------------------}
 *=$2800
 
+_WaitKey=*
+[
+  {
+    Wait for key stroke and leave ASCII result in [\k]
+  }
+  push
+  [do
+    \serialRaw, 255^            {Wait for idle keyboard}
+    if<>0loop]
+  [do
+    \frameCount, 15& [if=0      {4 Hz cursor redraw rate}
+      \frameCount, 48&          {Flash at 1 Hz with 75% duty cycle}
+      [if=0 $a0 else $ff]       {Select space or cursor symbol}
+      CharOut! p=               {Display cursor and immediately move back}
+    ]
+    \serialRaw, \k. 128&        {Key ready?}
+    if<>0loop]                  {Loop until ready}
+  $a0 CharOut! p=               {Overwrite cursor symbol with a space}
+  \k, $60- [if=0 $bf]           {Back tick to become pi}
+           [if>0 $40+ \k.]      {Map to upper case, DEL becomes rubout}
+  \k, 10^  [if=0 13 \k.]        {LF becomes CR}
+
+  pop ret
+]
+
+{-----------------------------------------------------------------------+
+|                                                                       |
+|       I/O functions                                                   |
+|                                                                       |
++-----------------------------------------------------------------------}
+
+{-----------------------------------------------------------------------+
+|       CHROUT                                                          |
++-----------------------------------------------------------------------}
+*=$2900
+
 _CHROUT=*
-                #_STAZ_  #\vACH         {Safe spot unless we use SBC}
+                #_STAZ_  #\vACH         {Safe spot (unless we use SBC)}
                 #_PHA_                  {Save registers}
                 #_TXA_
                 #_PHA_
@@ -876,7 +947,10 @@ _CHROUT=*
                 #_CLC_                  {Return OK}
                 #_RTS_
 
-*=$2900
+{-----------------------------------------------------------------------+
+|       GETIN                                                           |
++-----------------------------------------------------------------------}
+*=$2a00
 
 _GETIN=*
                 #_TXA_                  {Save registers}
@@ -896,7 +970,7 @@ _SKIPECHO=*     #_PLA_
 
                 #_BEQ_   #@_REDO        {XXX Redo when we get a stray zero from Babelfish}
 
-                #_STAZ_  #\vACH         {Safe spot unless we use SBC}
+                #_STAZ_  #\vACH         {Safe spot (unless we use SBC)}
                 #_PLA_                  {Restore registers}
                 #_TAY_
                 #_PLA_
@@ -905,14 +979,21 @@ _SKIPECHO=*     #_PLA_
                 #_CLC_                  {Return OK}
                 #_RTS_
 
-*=$2A00
+{-----------------------------------------------------------------------+
+|       ISCNTC                                                          |
++-----------------------------------------------------------------------}
+*=$2b00
 
 _ISCNTC=*
                 #_LDAIM_ #0
                 #_CLC_
                 #_RTS_
 
-*=$2B00
+{-----------------------------------------------------------------------+
+|       CLALL                                                           |
++-----------------------------------------------------------------------}
+*=$2c00
+
 _CLALL=*
                 #_RTS_
 

@@ -33,7 +33,7 @@ gcl0x
 
 { GCL notation for main loop }
 
-\SYS_Run6502_DEVROM_80 _sysFn=
+\SYS_Run6502_v4_80 _sysFn=
 
 0 {Black}
 [do
