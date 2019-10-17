@@ -12,37 +12,45 @@ CONFIG_NO_READ_Y_IS_ZERO_HACK := 1
 CONFIG_PEEK_SAVE_LINNUM := 1
 CONFIG_SCRTCH_ORDER := 2
 
-
 ; zero page
-ZP_START1 = $00+$38     ; 10 bytes
-ZP_START2 = $0D+$38     ; 6 bytes
-ZP_START3 = $03+$38     ; 11 bytes
-ZP_START4 = $13+$38     ; 94 bytes incl. gap at $80 (until $a8)
+SCRATCH	= $19				; Use vACH as scratch location
+ZP_START1 = $38				; 10 bytes
+ZP_START2 = ZP_START1+10 		; 6 bytes
+ZP_START3 = ZP_START1+3			; 11 bytes
+ZP_START4 = ZP_START1+16 	 	; 94 bytes incl. gap at $80
 
 ; extra/override ZP variables
-CURDVC			:= $000E+$38
-TISTR			:= $00A9 ; 3 bytes (was $008D)
-Z96			:= $00AC ; 2 bytes (was $0096)
-POSX			:= $00AE ; 1 byte  (was $00C6)
-TXPSV			:= LASTOP
-USR				:= GORESTART ; XXX
+POSX			:= $30		; X position for POS() and TAB()
+CURDVC			:= SCRATCH	; Current device
+Z96			:= SCRATCH 	; System file status variable ST
+TISTR			:= STRNG2+2 	; 3 bytes 60 Hz time of day clock
+STACK_BOT		:= TISTR+3  	; For CHKMEM
+TXPSV			:= LASTOP	; 2 bytes text pointer
+USR			:= GORESTART	; Trampoline for USR()
 
-STACK			:= $0000
-			; Stack size: 81 bytes ($AF.$FF)
-
-STACK2			:= $7100
-			; Floating point buffer
+STACK			:= $0000	; v6502 has stack in zero page
+STACK2			:= $7100	; Floating point buffer (13+3 bytes)
 
 ; inputbuffer
-INPUTBUFFER     := $2400
-CONFIG_INPUTBUFFER_0200 := 1
+INPUTBUFFER		:= $2400	; Will use INPUTBUFFER-5 and up!
+CONFIG_INPUTBUFFER_0200	:= 1
 
 ; constants
-SPACE_FOR_GOSUB := $3E          ; XXX ???
-STACK_TOP		:= $FF  ; (was $FA)
-WIDTH			:= 26   ; (was 40)
+NUMLEV			:= 23		; Max internal stack usage (words)
+SPACE_FOR_GOSUB		:= 2*NUMLEV + STACK_BOT
+; Original
+;	SPACE_FOR_GOSUB $3E = 2*NUMLEV + 3*ADDPRC + 13 = 62
+; With:
+;	Sizeof FBUFFR = 13 (normally at bottom of page 1)
+;	ADDPRC = 1 "FOR ADDITIONAL PRECISION" (extra bytes)
+; Both aren't there in the Gigatron...
+; Instead, Gigatron has zero page usage until ~$00A8 and stack above
 
-WIDTH2			:= 30   ; XXX ???
+STACK_TOP		:= $FF		; Was $FA because INPUTBUFFER-5
+WIDTH			:= 40		; Value put in Z17, but never used
+WIDTH2			:= 30		; Value put in Z18, but never used
+Z17			:= SCRATCH
+Z18			:= SCRATCH
 
 RAMSTART2		:= $7200
 
@@ -50,20 +58,12 @@ RAMSTART2		:= $7200
 ENTROPY = $06
 
 ; monitor functions
-OPEN	:= $FFC0
-CLOSE	:= $FFC3
-CHKIN	:= $FFC6
-CHKOUT	:= $FFC9
-CLRCH	:= $FFCC
-CHRIN	:= $FFCF
-CHROUT	:= $2900        ; Gigatron
-LOAD	:= $FFD5
-SAVE	:= $FFD8
-VERIFY	:= $FFDB
-SYS		:= $FFDE
-ISCNTC	:= $2b00
-GETIN	:= $2a00
-CLALL	:= $2c00
-LE7F3	:= $E7F3; for CBM1
+CHROUT	:= $2900
+LOAD	:= SYNERR
+SAVE	:= SYNERR
+VERIFY	:= SYNERR
+ISCNTC	:= $2B00
+GETIN	:= $2A00
+CLALL	:= $2C00
 MONCOUT	:= CHROUT
 MONRDKEY := GETIN

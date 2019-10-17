@@ -112,15 +112,16 @@ VARPNT:
 FORPNT:
 	.res 2
 
+LASTOP:
+	.res 2
+CPRTYP:
+	.res 1
+
 .ifdef GT1
 .assert *=$0080, error, "Gigatron needs gap at $0080"
 	.res 1
 .endif
 
-LASTOP:
-	.res 2
-CPRTYP:
-	.res 1
 FNCNAM:
 TEMP3:
 	.res 2
