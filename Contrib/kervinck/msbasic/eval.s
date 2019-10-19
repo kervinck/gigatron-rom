@@ -526,7 +526,7 @@ L2DC2:
 .endif
 .ifdef CONFIG_CBM_ALL
 LCE69:
-        cpy     #$49    ; I
+        cpy     #$49    ; I, C=1 when equal
 .ifdef CBM1
         bne     LCE82
 .else
@@ -535,7 +535,7 @@ LCE69:
         jsr     GETTIM
         tya             ; (Y=0) FOR FLOAT3
         ldx     #$A0    ; EXPONENT
-        jmp     FLOAT3
+        jmp     FLOAT3  ; With C=1
 .ifdef GETTIM           ; allow override
 GETTIM1:
 .else

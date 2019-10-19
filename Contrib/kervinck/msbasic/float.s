@@ -1658,7 +1658,7 @@ CON_HALF:
         .byte   $00
 .endif
 .ifdef CONFIG_2
-   C_ZERO = (CON_HALF + 2) | $8000  ; SIMULATED ZERO
+  C_ZERO = CON_HALF + 2         ; SIMULATED ZERO
 .endif
 
 ; ----------------------------------------------------------------------------
