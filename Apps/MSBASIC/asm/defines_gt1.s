@@ -3,7 +3,7 @@ CONFIG_2A := 1                  ; Base on CBMBASIC2
 CONFIG_CBM_ALL := 1
 
 CONFIG_DATAFLG := 1
-CONFIG_EASTER_EGG := 1          ; WAIT-6502 Easter egg
+CONFIG_EASTER_EGG := 0          ; WAIT-6502 Easter egg with CHROUT
 CONFIG_NO_CR := 1               ; Terminal has automatic line wrap
 CONFIG_NO_LINE_EDITING := 1     ; Terminal doesn't have "@", "_", BEL etc.
 CONFIG_NO_READ_Y_IS_ZERO_HACK := 1

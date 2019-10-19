@@ -33,36 +33,48 @@ FSUBT:
 ; ----------------------------------------------------------------------------
 .ifdef CONFIG_EASTER_EGG
 EASTER_EGG:
+  .if !(CONFIG_EASTER_EGG)
         lda     LINNUM
-        cmp     #<6502
+        eor     #$e8
+        bne     LD745
+        ldx     #$14
+        eor     LINNUM+1
+        eor     #$1c
+        beq     LD75A
+LD745:
+  .endif
+        lda     LINNUM
+        cmp     #$66
         bne     L3628
         lda     LINNUM+1
-        sbc     #>6502
+        sbc     #$19
         bne     L3628
-.ifndef GT1
+  .if CONFIG_EASTER_EGG
         sta     LINNUM
         tay
         lda     #$80
         sta     LINNUM+1
-.endif
+  .endif
 LD758:
         ldx     #$0A
 LD75A:
         lda     MICROSOFT-1,x
         and     #$3F
-.ifndef GT1
+  .if CONFIG_EASTER_EGG
         sta     (LINNUM),y
         iny
         bne     LD766
         inc     LINNUM+1
-.else
-        eor     #$20 ; Map charset code to ASCII
+LD766:
+        dex
+  .else
+        eor     #$20 ; Map screen code to CBM ASCII
         clc
         adc     #$20
         jsr     CHROUT
-.endif
-LD766:
         dex
+        eor     #$21
+  .endif
         bne     LD75A
         dec     FORPNT
         bne     LD758
