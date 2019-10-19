@@ -21,12 +21,15 @@ awk '
 ' tmp/gigatron.lbl
 
 # Hex dump
-od -v -A n -t x1 tmp/gigatron.bin |\
-fmt -1 |\
-awk -v A=0x280 'NF>0 {
- if(A%16==0)print""
- if(A%256==0)printf"\n*=$%x\n",A
- printf " #$%-2s",$1
- A++}'
+od -v -A n -t x1 tmp/gigatron.bin |
+ fmt -1 |
+  awk -v A=0x280 '
+   NF>0 {
+    if(A%16==0)print""
+    if(A%256==0)printf"\n*=$%x\n",A
+    printf " #$%-2s",$1
+    A++}
+   END          {print}
+  '
 ) > include.gcl
 ls -l include.gcl

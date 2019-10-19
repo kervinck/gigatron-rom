@@ -1056,7 +1056,7 @@ FLOAT2:
         sta     FAC+4
 .endif
         sta     FAC+3
-LDB21:
+FLOAT3:
         stx     FAC
         sta     FACEXTENSION
         sta     FACSIGN
@@ -1653,10 +1653,12 @@ L3D94:
 
 ; ----------------------------------------------------------------------------
 CON_HALF:
-.ifdef CONFIG_SMALL
-        .byte   $80,$00,$00,$00
-.else
-        .byte   $80,$00,$00,$00,$00
+        .byte   $80,$00,$00,$00 ; 1/2
+.ifndef CONFIG_SMALL
+        .byte   $00
+.endif
+.ifdef CONFIG_2
+   C_ZERO = (CON_HALF + 2) | $8000  ; SIMULATED ZERO
 .endif
 
 ; ----------------------------------------------------------------------------
@@ -1690,9 +1692,6 @@ DECTBL_END:
 		.byte	$00,$00,$0E,$10
 		.byte	$FF,$FF,$FD,$A8
 		.byte	$00,$00,$00,$3C
-.endif
-.ifdef CONFIG_2
-C_ZERO = CON_HALF + 2
 .endif
 
 ; ----------------------------------------------------------------------------
