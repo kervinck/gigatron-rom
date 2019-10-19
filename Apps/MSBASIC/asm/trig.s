@@ -135,7 +135,7 @@ MICROSOFT:
     .if !(CONFIG_EASTER_EGG)
 SINCON:
         .byte   $E1,$4E,$8F,$92,$14     ; 7.2362932E7
-        .byte  ,$AD,$81,$47,$89,$C7     ; 73276.2515
+        .byte   $AD,$81,$47,$89,$C7     ; 73276.2515
     .endif
   .endif
 .endif
