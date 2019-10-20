@@ -53,6 +53,7 @@ CHROUT          := $2A00        ; Send char or newline to video terminal
 GETIN           := $2B00        ; Get key stroke, update TI$
 ISCNTC          := $2C00        ; Check for Ctrl-C, update TI$
 CLALL           := $2D00        ; Close all devices in init
+LINEEDIT        := $2E00        ; Delete character or line if needed
 MONCOUT         := CHROUT
 MONRDKEY        := GETIN
 LOAD            := SYNERR       ; Not implemented
