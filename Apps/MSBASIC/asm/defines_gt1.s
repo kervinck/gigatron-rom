@@ -11,11 +11,11 @@ CONFIG_PEEK_SAVE_LINNUM := 1
 CONFIG_SCRTCH_ORDER := 2
 
 ; zero page
-SCRATCH = $19                   ; Use vACH as scratch location
-ZP_START1 = $38                 ; 10 bytes
+SCRATCH         := $19          ; Use vACH as scratch location
+ZP_START1       := $38          ; 10 bytes
 ZP_START2 = ZP_START1+10        ; 6 bytes
 ZP_START3 = ZP_START1+3         ; 11 bytes
-ZP_START4 = ZP_START1+16        ; 94 bytes incl. gap at $80
+ZP_START4 = ZP_START1+16        ; Many bytes incl. gap at $80
 
 ; extra/override ZP variables
 POSX            := $30          ; X position for POS() and TAB()
@@ -27,11 +27,14 @@ TXPSV           := LASTOP       ; Text pointer (2 bytges)
 USR             := GORESTART    ; Trampoline for USR()
 STACK_BOT       := <(GENERIC_CHRGET_END-GENERIC_CHRGET + CHRGET); CHKMEM
 
-STACK           := $0000        ; v6502 has its stack in zero page
-STACK2          := $7100        ; Floating point buffer (13+3 bytes)
+STACK           := $0000        ; v6502 has its stack in page zero
+
+TISTR           := $0200        ; 60 Hz 24hr clock TI$ (3+1 bytes)
+STACK2          := $0204+1      ; Floating point buffer (13+3 bytes)
+                                ; String conversion uses offset -1 as well!
 
 ; inputbuffer
-INPUTBUFFER     := $2400        ; Will use INPUTBUFFER-5 and up!
+INPUTBUFFER     := $2405        ; Will use INPUTBUFFER-5 and up!
 CONFIG_INPUTBUFFER_0200 := 1
 
 ; constants
@@ -40,17 +43,16 @@ SPACE_FOR_GOSUB := STACK_BOT + 2*NUMLEV
 STACK_TOP       := $FF          ; Was $FA because INPUTBUFFER-5
 WIDTH           := 40           ; Value put in Z17, but never used
 WIDTH2          := 30           ; Value put in Z18, but never used
-RAMSTART2       := $7200        ; User space
+RAMSTART2       := $7100        ; User space
 
 ; magic memory locations
-ENTROPY = $06
+ENTROPY         := $06
 
 ; monitor functions
-CHROUT          := $2900        ; Send char or newline to video terminal
-GETIN           := $2A00        ; Get key stroke, update TI$
-ISCNTC          := $2B00        ; Check for Ctrl-C, update TI$
-CLALL           := $2C00        ; Close all devices in init
-TISTR           := $2D00        ; 60 Hz 24hr clock TI$ (3+1 bytes)
+CHROUT          := $2A00        ; Send char or newline to video terminal
+GETIN           := $2B00        ; Get key stroke, update TI$
+ISCNTC          := $2C00        ; Check for Ctrl-C, update TI$
+CLALL           := $2D00        ; Close all devices in init
 MONCOUT         := CHROUT
 MONRDKEY        := GETIN
 LOAD            := SYNERR       ; Not implemented
