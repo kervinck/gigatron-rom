@@ -21,18 +21,18 @@ gcl0x
         XXX Lower STACK_BOT for more stack (3x nested FOR?). Move CHRGET?
         XXX TI$ doesn't wrap after "235959"
         XXX Support 64K Gigatron
-        XXX Check if something is wrong with RND(-1)
 
         Implemented:
         - 9 digit floating point (40 bits)
         - WAIT-6502 Easter Egg
         - TIME and TIME$
+        - Simple line editing
 
         Restrictions:
         - No file I/O (SAVE, LOAD, VERIFY)
         - Stack space is severely limited
 
-        $30 - $37               GCL variables (p, CharOut, i, j)
+        $30 - $37               GCL variables ($30 p, $32 CharOut, $34 i, $36 j)
         $38 -                   MS BASIC variables, relocated
 
         $200 -                  Version check / TI$ and floating point buffer
@@ -836,7 +836,7 @@ _CharOut=*
   j= i 2<< i+                   {Multiply char code by 5}
   j+ j=                         {Add to page address to reach bitmap data}
 
-  \DrawChar call                {Tail call: doesn't return}
+  \DrawChar call                {Tail call: doesn't return here}
 ]
 
 {
@@ -861,7 +861,7 @@ _PiOut=*
 [
   push
   #\LDWI #12 #>\font82up j=     {Right half of 'T' and left half of 'U'}
-  \DrawChar call                {Tail call: doesn't return}
+  \DrawChar call                {Tail call: doesn't return here}
 ]
 
 {-----------------------------------------------------------------------+
@@ -1005,6 +1005,7 @@ _ISCNTC=*
                 #_CMPIM_ #3             {Ctrl-C}
                 #_BNE_   #@_TICK
                 #_JMP_   ##_STOP
+
 _TICK=*
                 {
                   Advance TI$ once in a while with [frameCount] as base clock
@@ -1013,10 +1014,12 @@ _TICK=*
                 #_LDAZ_  #\frameCount
                 #_CMP_   ##_TISTR3
                 #_BPL_   #@_NOTICK      {Postpone work as much as possible}
+                #_STYZ_  #$36           {Park Y in idle GCL variable j}
                 #_TAY_                  {TAX would conflict with _k...}
                 #_SEC_
                 #_SBC_   ##_TISTR3
                 #_STY_   ##_TISTR3
+                #_LDYZ_  #$36           {Restore Y}
                 #_CLC_
                 #_ADC_   ##_TISTR2
                 #_STA_   ##_TISTR2
@@ -1088,7 +1091,7 @@ _EDIT1=*        #_RTS_
 _EDIT2=*        #_LDAIM_ #$8d           {Newline to signal buffer clearing}
                 #_BRK_
                 #_LDXIM_ #0             {Clear buffer}
-_EDIT1=*        #_RTS_
+                #_RTS_
 
 {-----------------------------------------------------------------------+
 |                                                                       |
