@@ -7,23 +7,26 @@
 
 namespace Expression
 {
-    enum ExpressionType {Invalid=-1, None, HasAlpha, IsString, Valid};
+    enum ExpressionType {Invalid=-1, None=0x0000, HasKeywords=0x0001, HasVars=0x0002, IsString=0x0004, Valid=0x10000};
     enum NumericType {BadBase=-1, Decimal, HexaDecimal, Octal, Binary};
 
     struct Numeric
     {
-        Numeric() {_value = 0; _isValid = false; _isAddress = false; _varNamePtr = nullptr;}
-        Numeric(int16_t value, bool isValid, bool isAddress, char* varNamePtr) {_value = value; _isValid = isValid; _isAddress = isAddress; _varNamePtr = varNamePtr;}
+        Numeric() {_value = 0; _isValid = false; _isAddress = false; _varName="";}
+        Numeric(int16_t value, bool isValid, bool isAddress, std::string& varName) {_value = value; _isValid = isValid; _isAddress = isAddress; _varName = varName;}
 
         int16_t _value;
         bool _isValid = false;
         bool _isAddress = false;
-        char* _varNamePtr = nullptr;
+        std::string _varName;
     };
 
     using exprFuncPtr = std::function<Numeric (void)>;
 
+    bool getEnablePrint(void);
+
     void setExprFunc(exprFuncPtr exprFunc);
+    void setEnablePrint(bool enablePrint);
 
     void initialise(void);
 
@@ -36,6 +39,7 @@ namespace Expression
     void stripNonStringWhitespace(std::string& input);
     void stripWhitespace(std::string& input);
     void trimWhitespace(std::string& input);
+    std::string collapseWhitespace(std::string& input);
     void padString(std::string &str, int num, char pad=' ');
     void addString(std::string &str, int num, char add=' ');
     int tabbedStringLength(const std::string& input, int tabSize);
@@ -46,6 +50,7 @@ namespace Expression
     std::string wordToHexString(uint16_t n);
     std::string& strToLower(std::string& s);
     std::string& strToUpper(std::string& s);
+    std::string getSubAlpha(const std::string& s);
 
     NumericType getBase(const std::string& input, long& result);
     bool stringToI8(const std::string& token, int8_t& result);
@@ -53,19 +58,26 @@ namespace Expression
     bool stringToI16(const std::string& token, int16_t& result);
     bool stringToU16(const std::string& token, uint16_t& result);
 
+    std::vector<std::string> tokenise(const std::string& text, const std::string& delimiters, bool toUpper=false);
     std::vector<std::string> tokenise(const std::string& text, char c, bool skipSpaces=true, bool toUpper=false);
     std::vector<std::string> tokenise(const std::string& text, char c, std::vector<size_t>& offsets, bool skipSpaces=true, bool toUpper=false);
     std::vector<std::string> tokeniseLine(std::string& line);
 
+    void replaceKeyword(std::string& expression, const std::string& keyword, const std::string& replace);
+
+    char* getExpression(void);
+    const char* getExpressionToParse(void);
+    std::string& getExpressionToParseString(void);
+    int getLineNumber(void);
+
     char peek(void);
     char get(void);
-    char* getExpression(void);
-    char* getExpressionToParse(void);
-    int getLineNumber(void);
+    bool advance(uintptr_t n);
+    bool find(const std::string& text);
 
     bool number(int16_t& value);
     Numeric expression(void);
-    bool parse(char* expressionToParse, int lineNumber, int16_t& value);
+    bool parse(const std::string& expression, int lineNumber, int16_t& value);
 }
 
 #endif

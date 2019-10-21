@@ -321,7 +321,7 @@ namespace Loader
     {
         result = iniReader.Get(sectionString, iniKey, defaultKey);
         if(result == defaultKey) return false;
-        if(upperCase) result = Expression::strToUpper(result);
+        if(upperCase) Expression::strToUpper(result);
         return true;
     }
 

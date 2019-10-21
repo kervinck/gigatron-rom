@@ -227,7 +227,7 @@ namespace Graphics
     {
         result = _configIniReader.Get(sectionString, iniKey, defaultKey);
         if(result == defaultKey) return false;
-        result = Expression::strToUpper(result);
+        Expression::strToUpper(result);
         return true;
     }
 
@@ -639,7 +639,7 @@ namespace Graphics
         if(uploadFilename.size() < MENU_TEXT_SIZE+1) uploadFilename.append(MENU_TEXT_SIZE+1 - uploadFilename.size(), ' ');
         if(upload < 1.0f)
         {
-            sprintf(uploadPercentage, uploadFilename.substr(0, MENU_TEXT_SIZE+1).c_str());
+            strcpy(uploadPercentage, uploadFilename.substr(0, MENU_TEXT_SIZE+1).c_str());
             sprintf(&uploadPercentage[MENU_TEXT_SIZE+1 - 6], " %3d%%\r", int(upload * 100.0f));
         }
 
@@ -666,21 +666,21 @@ namespace Graphics
 
             switch(Editor::getEditorMode())
             {
-                case Editor::Hex:   (Editor::getSingleStepEnabled()) ? sprintf(str, "Debug ") : sprintf(str, "Hex   "); break;
-                case Editor::Rom:   (Editor::getSingleStepEnabled()) ? sprintf(str, "Debug ") : sprintf(str, "Rom   "); break;
-                case Editor::Load:  (Editor::getSingleStepEnabled()) ? sprintf(str, "Debug ") : sprintf(str, "Load  "); break;
-                case Editor::Dasm:  (Editor::getSingleStepEnabled()) ? sprintf(str, "Debug ") : sprintf(str, "Dasm  "); break;
-                default: sprintf(str, "     ");
+                case Editor::Hex:   (Editor::getSingleStepEnabled()) ? strcpy(str, "Debug ") : strcpy(str, "Hex   "); break;
+                case Editor::Rom:   (Editor::getSingleStepEnabled()) ? strcpy(str, "Debug ") : strcpy(str, "Rom   "); break;
+                case Editor::Load:  (Editor::getSingleStepEnabled()) ? strcpy(str, "Debug ") : strcpy(str, "Load  "); break;
+                case Editor::Dasm:  (Editor::getSingleStepEnabled()) ? strcpy(str, "Debug ") : strcpy(str, "Dasm  "); break;
+                default: strcpy(str, "     ");
             }
             drawText(std::string(str), _pixels, 12, 472 - FONT_CELL_Y, 0xFF00FF00, false, 0);
 
             switch(Editor::getKeyboardMode())
             {
-                case Editor::Giga:   sprintf(str, "Kbd   "); break;
-                case Editor::PS2:    sprintf(str, "PS2   "); break;
-                case Editor::HwGiga: sprintf(str, "HwKbd "); break;
-                case Editor::HwPS2:  sprintf(str, "HwPS2 "); break;
-                default: sprintf(str, "     ");
+                case Editor::Giga:   strcpy(str, "Kbd   "); break;
+                case Editor::PS2:    strcpy(str, "PS2   "); break;
+                case Editor::HwGiga: strcpy(str, "HwKbd "); break;
+                case Editor::HwPS2:  strcpy(str, "HwPS2 "); break;
+                default: strcpy(str, "     ");
             }
             drawText("K:", _pixels, 48, 472 - FONT_CELL_Y, 0xFFFFFFFF, false, 0);
             drawText(std::string(str), _pixels, 60, 472 - FONT_CELL_Y, 0xFF00FF00, false, 0);
@@ -936,7 +936,7 @@ namespace Graphics
             drawUploadBar(_uploadPercentage);
 
             // Page up/down icons
-            sprintf(str, "^");
+            strcpy(str, "^");
             drawText(std::string(str), _pixels, PAGEUP_START_X, PAGEUP_START_Y, 0xFF00FF00, Editor::getPageUpButton(), 1);
             str[0] = 127; str[1] = 0;
             drawText(std::string(str), _pixels, PAGEDN_START_X, PAGEDN_START_Y, 0xFF00FF00, Editor::getPageDnButton(), 1);

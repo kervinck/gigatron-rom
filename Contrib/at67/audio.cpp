@@ -41,7 +41,7 @@ namespace Audio
     {
         result = _configIniReader.Get(sectionString, iniKey, defaultKey);
         if(result == defaultKey) return false;
-        result = Expression::strToUpper(result);
+        Expression::strToUpper(result);
         return true;
     }
 

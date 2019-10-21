@@ -219,7 +219,7 @@ namespace Editor
 
         std::string mod;
         std::string key = _configIniReader.Get(sectionString, iniKey, defaultKey);
-        key = Expression::strToUpper(key);
+        Expression::strToUpper(key);
 
         // Parse CTRL or ALT
         size_t keyPos = key.find("+");
@@ -270,7 +270,7 @@ namespace Editor
 
         // Current working directory
         char cwdPath[FILENAME_MAX];
-        if(!getcwd(cwdPath, FILENAME_MAX)) sprintf(cwdPath, ".");
+        if(!getcwd(cwdPath, FILENAME_MAX)) strcpy(cwdPath, ".");
         _cwdPath = std::string(cwdPath);
         _filePath = _cwdPath + "/";
 
@@ -600,8 +600,8 @@ namespace Editor
         switch(_editorMode)
         {
             case Hex:  _hexBaseAddress = (_hexBaseAddress - HEX_CHARS_X*numRows) & (Memory::getSizeRAM()-1); break;
-            case Load: if(--_fileEntriesIndex < 0) _fileEntriesIndex = 0;                                    break;
-            case Rom:  if(--_romEntriesIndex < 0) _romEntriesIndex = 0;                                      break;
+            case Load: if((_fileEntriesIndex -= numRows) < 0) _fileEntriesIndex = 0;                                    break;
+            case Rom:  if((_romEntriesIndex -= numRows) < 0) _romEntriesIndex = 0;                                      break;
             case Dasm: 
             {
                 if(numRows == 1)
@@ -626,8 +626,9 @@ namespace Editor
             {
                 if(_fileEntries.size() > HEX_CHARS_Y)
                 {
-                    _fileEntriesIndex++;
-                    if(_fileEntries.size() - _fileEntriesIndex < HEX_CHARS_Y) _fileEntriesIndex--;
+                    _fileEntriesIndex += numRows;
+                    int fileEntriesDelta = int(_fileEntries.size()) - _fileEntriesIndex;
+                    if(fileEntriesDelta < HEX_CHARS_Y) _fileEntriesIndex -= HEX_CHARS_Y - std::max(fileEntriesDelta, 0);
                 }
             }
             break;
@@ -635,8 +636,9 @@ namespace Editor
             {
                 if(_romEntries.size() > HEX_CHARS_Y)
                 {
-                    _romEntriesIndex++;
-                    if(_romEntries.size() - _romEntriesIndex < HEX_CHARS_Y) _romEntriesIndex--;
+                    _romEntriesIndex += numRows;
+                    int romEntriesDelta = int(_romEntries.size()) - _romEntriesIndex;
+                    if(romEntriesDelta < HEX_CHARS_Y) _romEntriesIndex -= HEX_CHARS_Y - std::max(romEntriesDelta, 0);
                 }
             }
             break;
@@ -1231,7 +1233,7 @@ namespace Editor
         static uint16_t vPC = Cpu::getVPC();
         if(_singleStep)
         {
-            static int cycles = 0;
+            static int clocks = 0;
 
             // Native debugging
             if(_memoryMode != RAM)
@@ -1239,12 +1241,12 @@ namespace Editor
                 singleStep(Cpu::getStateS()._PC);
             }
             // vCPU debugging, (this code can potentially run for every Native instruction, for efficiency we check vPC so this code only runs for each vCPU instruction)
-            else if(vPC != Cpu::getVPC()  ||  cycles >= MAX_SINGLE_STEP_CYCLES)
+            else if(vPC != Cpu::getVPC()  ||  clocks >= MAX_SINGLE_STEP_CLOCKS)
             {
                 vPC = Cpu::getVPC();
 
                 // Timeout on change of variable
-                if(SDL_GetTicks() - _singleStepTicks > SINGLE_STEP_STALL_TIME)
+                if(SDL_GetTicks() - _singleStepTicks > SINGLE_STEP_STALL_CLOCKS)
                 {
                     resetDebugger();
                     fprintf(stderr, "Editor::handleDebugger() : Single step stall for %d milliseconds : exiting debugger.\n", SDL_GetTicks() - _singleStepTicks);
@@ -1261,8 +1263,8 @@ namespace Editor
                 
                     case StepVpc:
                     {
-                        // Step whenever program counter changes or when MAX_SINGLE_STEP_CYCLES cycles have occured, (to avoid deadlocks)
-                        if(vPC != _singleStepValue  ||  cycles >= MAX_SINGLE_STEP_CYCLES) singleStep(vPC);
+                        // Step whenever program counter changes or when MAX_SINGLE_STEP_CLOCKS clocks have occured, (to avoid deadlocks)
+                        if(vPC != _singleStepValue  ||  clocks >= MAX_SINGLE_STEP_CLOCKS) singleStep(vPC);
                     }
                     break;
 
@@ -1273,10 +1275,10 @@ namespace Editor
                     break;
                 }
 
-                cycles = 0;
+                clocks = 0;
             }
 
-            cycles++;
+            clocks++;
         }
 
         // Pause simulation and handle debugging keys

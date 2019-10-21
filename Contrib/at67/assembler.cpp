@@ -391,7 +391,7 @@ namespace Assembler
         // Special case NOP
         if(instruction == 0x02  &&  data == 0x00)
         {
-            sprintf(mnemonic, _nativeOpcodes[instruction]._mnemonic.c_str());
+            strcpy(mnemonic, _nativeOpcodes[instruction]._mnemonic.c_str());
             return true;
         }
 
@@ -406,7 +406,7 @@ namespace Assembler
 
         // Instruction mnemonic, jump = 0xE0 + (condition codes)
         char instStr[8];
-        (!jump) ? sprintf(instStr, _nativeOpcodes[inst]._mnemonic.c_str()) : sprintf(instStr, _nativeOpcodes[0xE0 + addr]._mnemonic.c_str());
+        (!jump) ? strcpy(instStr, _nativeOpcodes[inst]._mnemonic.c_str()) : strcpy(instStr, _nativeOpcodes[0xE0 + addr]._mnemonic.c_str());
 
         // Effective address string
         char addrStr[12];
@@ -436,8 +436,8 @@ namespace Assembler
         {
             case BUS_D:   sprintf(busStr, "$%02x", data);                          break;
             case BUS_RAM: (!store) ? strcpy(busStr, addrStr) : strcpy(busStr, ""); break;
-            case BUS_AC:  sprintf(busStr, "AC");                                   break;
-            case BUS_IN:  sprintf(busStr, "IN");                                   break;
+            case BUS_AC:  strcpy(busStr, "AC");                                    break;
+            case BUS_IN:  strcpy(busStr, "IN");                                    break;
         }
         
         // Compose instruction string
@@ -731,7 +731,7 @@ namespace Assembler
         input.erase(remove_if(input.begin(), input.end(), isspace), input.end());
 
         // Parse expression and return with a result
-        return Expression::parse((char*)input.c_str(), _lineNumber, result);
+        return Expression::parse(input, _lineNumber, result);
     }
 
     bool searchEquate(const std::string& token, Equate& equate)
@@ -1007,7 +1007,7 @@ namespace Assembler
                         if(Expression::isExpression(tokens[i]) == Expression::Valid)
                         {
                             int16_t value;
-                            if(Expression::parse((char*)tokens[i].c_str(), _lineNumber, value))
+                            if(Expression::parse(tokens[i], _lineNumber, value))
                             {
                                 operand = uint8_t(value);
                                 success = true;
@@ -1068,7 +1068,7 @@ namespace Assembler
                     if(Expression::isExpression(tokens[i]) == Expression::Valid)
                     {
                         int16_t value;
-                        if(Expression::parse((char*)tokens[i].c_str(), _lineNumber, value))
+                        if(Expression::parse(tokens[i], _lineNumber, value))
                         {
                             operand = value;
                             success = true;
@@ -1901,7 +1901,7 @@ namespace Assembler
                         if(Expression::isExpression(token) == Expression::Valid)
                         {
                             int16_t value;
-                            if(Expression::parse((char*)token.c_str(), _lineNumber, value))
+                            if(Expression::parse(token, _lineNumber, value))
                             {
                                 data = value;
                                 success = true;
@@ -2020,6 +2020,8 @@ namespace Assembler
         _gprintfs.clear();
 
         _callTablePtr = 0x0000;
+
+        Expression::setExprFunc(Expression::expression);
 
 #ifndef STAND_ALONE
         Editor::clearBreakPoints();
@@ -2347,7 +2349,7 @@ namespace Assembler
                                     int16_t value;
                                     std::string input;
                                     preProcessExpression(tokens, tokenIndex, input, true);
-                                    if(!Expression::parse((char*)input.c_str(), _lineNumber, value)) return false;
+                                    if(!Expression::parse(input, _lineNumber, value)) return false;
                                     operand = uint8_t(value);
                                     operandValid = true;
                                 }
