@@ -27,7 +27,7 @@
 // 3. Forward text from USB to Gigatron as keystrokes
 //    For example to get a long BASIC program loaded into BASIC
 // 4. Controlling the Gigatron over USB from a PC/laptop
-// 5. Passing through of game controller signals
+// 5. Passing through of game controller signals (XXX currently broken)
 // 6. Receive data from Gigatron and store it in the EEPROM area
 //
 // Select one of the supported platforms in the Tools->Board menu.
@@ -414,7 +414,7 @@ void loop()
       break;
   }
 
-  // Game controller pass through
+  // Game controller pass through (XXX currently broken)
   #if gameControllerDataPin >= 0
     digitalWrite(gigatronDataPin, digitalRead(gameControllerDataPin));
   #endif
