@@ -1014,12 +1014,12 @@ _TICK=*
                 #_LDAZ_  #\frameCount
                 #_CMP_   ##_TISTR3
                 #_BPL_   #@_NOTICK      {Postpone work as much as possible}
-                #_STYZ_  #$36           {Park Y in idle GCL variable j}
+                #_STYZ_  #<j            {Park Y in idle GCL variable}
                 #_TAY_                  {TAX would conflict with _k...}
                 #_SEC_
                 #_SBC_   ##_TISTR3
                 #_STY_   ##_TISTR3
-                #_LDYZ_  #$36           {Restore Y}
+                #_LDYZ_  #<j            {Restore Y}
                 #_CLC_
                 #_ADC_   ##_TISTR2
                 #_STA_   ##_TISTR2
@@ -1079,7 +1079,7 @@ _LINEEDIT=*
                 #_TAX_
                 #_BEQ_   #@_EDIT1       {Nothing in buffer to delete}
 
-                #_LDAZ_  #<p            {Can we go back on the screen}
+                #_LDAZ_  #<p            {Can we go back on this screen line?}
                 #_CMPIM_ #$66           {XXX POSX can make this simpler}
                 #_BCC_   #@_EDIT2       {Clear all when in the left-most column}
                 #_SBCIM_ #6
@@ -1088,7 +1088,10 @@ _LINEEDIT=*
                 #_LDAIM_ #0             {For caller}
 _EDIT1=*        #_RTS_
 
-_EDIT2=*        #_LDAIM_ #$8d           {Newline to signal buffer clearing}
+_EDIT2=*
+                #_LDAIM_ #$bf           {"?" to signal buffer clearing}
+                #_BRK_
+                #_LDAIM_ #$8d           {Newline}
                 #_BRK_
                 #_LDXIM_ #0             {Clear buffer}
                 #_RTS_
