@@ -43,6 +43,7 @@ namespace Compiler
     enum FloatSize {Float16=2, Float32=4};
     enum LabelResult {LabelError=-1, LabelNotFound, LabelFound};
     enum KeywordResult {KeywordNotFound, KeywordError, KeywordFound};
+    enum ConstantStrType {StrChar, StrHex, StrHexw};
 
     struct Label
     {
@@ -492,31 +493,38 @@ namespace Compiler
     uint32_t isExpression(const std::string& input, int& varIndex, int& params)
     {
         uint32_t expressionType = 0x0000;
-
-        // Check for vars
         std::vector<std::string> tokens = Expression::tokenise(input, "-+/*();, ", false);
-        for(int i=0; i<tokens.size(); i++)
-        {
-            varIndex = findVar(tokens[i]);
-            if(varIndex != -1) expressionType |= Expression::HasVars;
-        }
 
+        // Check for keywords
         for(int i=0; i<tokens.size(); i++)
         {
-            Expression::strToUpper(tokens[i]);
-            if(_keywords.find(tokens[i]) != _keywords.end())
+            std::string token = tokens[i];
+            Expression::strToUpper(token);
+            if(_keywords.find(token) != _keywords.end())
             {
-                params = _keywords[tokens[i]]._params;
+                params = _keywords[token]._params;
                 expressionType |= Expression::HasKeywords;
+                break;
             }
         }
 
-        // Check for strings
-        if(input.find("$") != std::string::npos) expressionType |= Expression::IsString;
-        if(input.find("\"") != std::string::npos) expressionType |= Expression::IsString;
+        // Check for vars
+        for(int i=0; i<tokens.size(); i++)
+        {
+            varIndex = findVar(tokens[i]);
+            if(varIndex != -1)
+            {
+                expressionType |= Expression::HasVars;
+                break;
+            }
+        }
 
         // Check for operators
-        if(input.find_first_of("-+/*()") != std::string::npos) expressionType |= Expression::Valid;
+        if(input.find_first_of("-+/*") != std::string::npos) expressionType |= Expression::HasOperators;
+
+        // Check for strings
+        //if(input.find("$") != std::string::npos) expressionType |= Expression::HasStrings;
+        if(input.find("\"") != std::string::npos) expressionType |= Expression::HasStrings;
 
         return expressionType;
     }
@@ -917,7 +925,6 @@ namespace Compiler
         }
     }
 
-
     bool parseVars(void)
     {
         int varIndex;
@@ -944,6 +951,7 @@ namespace Compiler
 
         return true;
     }
+
 
     bool handleDualOp(const std::string& opcodeStr, Expression::Numeric& lhs, Expression::Numeric& rhs, bool outputHex)
     {
@@ -1043,6 +1051,56 @@ namespace Compiler
         return true;
     }
 
+    // Create string and advance string pointer
+    bool createString(CodeLine& codeLine, int codeLineIndex, const std::string& str, uint16_t& strAddress)
+    {
+        if(str.size() > USER_STR_SIZE)
+        {
+            fprintf(stderr, "Compiler::createString() : user string is %d characters too long in '%s' on line %d\n", int(str.size() - USER_STR_SIZE), codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        // Does string fit?
+        if(HI_MASK(_userStrStart + str.size()) != HI_MASK(_userStrStart))
+        {
+            _userStrStart = HI_MASK(_userStrStart) - 0x0100 + 0x00A0;
+            if(_userStrStart < 0x08A0)
+            {
+                fprintf(stderr, "Compiler::createString() : out of string memory, user string address %04x in '%s' on line %d\n", _userStrStart, codeLine._text.c_str(), codeLineIndex + 1);
+                return false;
+            }
+        }
+
+        // Find next free spot
+        strAddress = _userStrStart;
+        std::string usrStrName = "usrStr_" + Expression::wordToHexString(_userStrStart);
+        StringVar usrStrVar = {uint8_t(str.size()), _userStrStart, str, usrStrName, usrStrName + "\t\t", -1};
+        _stringVars.push_back(usrStrVar);
+        _userStrStart += uint16_t(str.size() + 1);
+
+        return true;
+    }
+
+    // Create constant string    
+    void createConstantString(ConstantStrType constantStrType, int16_t& value)
+    {
+        char str[16];
+        switch(constantStrType)
+        {
+            case StrChar: sprintf(str, "%c",   uint8_t(value) & 0x007F); break;
+            case StrHex:  sprintf(str, "%02x", uint8_t(value));          break;
+            case StrHexw: sprintf(str, "%04x", uint16_t(value));         break;
+
+            default: break;
+        }
+
+        uint16_t strAddress;
+        createString(_codeLines[_currentCodeLineIndex], _currentCodeLineIndex, std::string(str), strAddress);
+        emitVcpuAsm("LDWI", Expression::wordToHexString(strAddress), false);
+        value = strAddress;
+    }
+
+
     // ********************************************************************************************
     // Functions
     // ********************************************************************************************
@@ -1050,12 +1108,21 @@ namespace Compiler
     {
         if(!numeric._isAddress)
         {
-            emitVcpuAsm("LDWI", std::to_string(numeric._value), false);
+            // Print constant, (without wasting memory)
+            if(Expression::getEnablePrint())
+            {
+                emitVcpuAsm("LDWI", std::to_string(numeric._value), false);
+                emitVcpuAsm("%PrintAcChar", "", false);
+                return numeric;
+            }
+
+            // Create constant string
+            createConstantString(StrChar, numeric._value);
+            return numeric;
         }
 
         getNextTempVar();
         handleSingleOp("LDW", numeric);
-        //emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(_tempVarStart)), false);
         if(Expression::getEnablePrint()) emitVcpuAsm("%PrintAcChar", "", false);
 
         return numeric;
@@ -1063,14 +1130,23 @@ namespace Compiler
 
     Expression::Numeric functionHEX$(Expression::Numeric& numeric)
     {
+        // Print constant, (without wasting memory)
         if(!numeric._isAddress)
         {
-            emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(numeric._value)), false);
+            if(Expression::getEnablePrint())
+            {
+                emitVcpuAsm("LDI", std::to_string(numeric._value), false);
+                emitVcpuAsm("%PrintAcHexByte", "", false);
+                return numeric;
+            }
+
+            // Create constant string
+            createConstantString(StrHex, numeric._value);
+            return numeric;
         }
 
         getNextTempVar();
         handleSingleOp("LDW", numeric);
-        //emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(_tempVarStart)), false);
         if(Expression::getEnablePrint()) emitVcpuAsm("%PrintAcHexByte", "", false);
 
         return numeric;
@@ -1080,12 +1156,21 @@ namespace Compiler
     {
         if(!numeric._isAddress)
         {
-            emitVcpuAsm("LDWI", Expression::wordToHexString(numeric._value), false);
+            // Print constant, (without wasting memory)
+            if(Expression::getEnablePrint())
+            {
+                emitVcpuAsm("LDWI", std::to_string(numeric._value), false);
+                emitVcpuAsm("%PrintAcHexWord", "", false);
+                return numeric;
+            }
+
+            // Create constant string
+            createConstantString(StrHexw, numeric._value);
+            return numeric;
         }
 
         getNextTempVar();
         handleSingleOp("LDW", numeric);
-        //emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(_tempVarStart)), false);
         if(Expression::getEnablePrint()) emitVcpuAsm("%PrintAcHexWord", "", false);
 
         return numeric;
@@ -1098,6 +1183,7 @@ namespace Compiler
             emitVcpuAsm("LDWI", Expression::wordToHexString(numeric._value), false);
         }
 
+        getNextTempVar();
         handleSingleOp("LDW", numeric);
         emitVcpuAsm("PEEK", "", false);
         emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(_tempVarStart)), false);
@@ -1387,18 +1473,6 @@ namespace Compiler
         }
     }
 
-    bool varExpressionParse(CodeLine& codeLine, int codeLineIndex)
-    {
-        int16_t value;
-        return Expression::parse(codeLine._expression, codeLineIndex, value);
-    }
-
-    int varAssignmentParse(CodeLine& codeLine, int codeLineIndex)
-    {
-        //if(codeLine._expression.find_first_of("-+/*()&|^") != std::string::npos) return -1;
-        int varIndex = findVar(codeLine._expression);
-        return varIndex;
-    }
 
     KeywordResult handleKeywords(CodeLine& codeLine, const std::string& keyword, int codeLineIndex, KeywordFuncResult& result)
     {
@@ -1532,6 +1606,12 @@ namespace Compiler
                 Expression::parse(tokens[i], codeLineIndex, value);
                 Expression::setEnablePrint(false);
             }
+            else if((expressionType & Expression::HasVars)  &&  (expressionType & Expression::HasOperators))
+            {
+                Expression::parse(tokens[i], codeLineIndex, value);
+                emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(_tempVarStart)), false, codeLineIndex);
+                emitVcpuAsm("%PrintAcInt16", "", false, codeLineIndex);
+            }
             else if(expressionType & Expression::HasVars)
             {
                 Expression::parse(tokens[i], codeLineIndex, value);
@@ -1541,15 +1621,15 @@ namespace Compiler
                 }
                 else
                 {
-                    emitVcpuAsm("%PrintVarInt16", Expression::byteToHexString(uint8_t(_tempVarStart)), false, codeLineIndex);
+                    emitVcpuAsm("%PrintAcInt16", "", false, codeLineIndex);
                 }
             }
-            else if(expressionType & Expression::Valid)
+            else if(expressionType & Expression::HasOperators)
             {
                 Expression::parse(tokens[i], codeLineIndex, value);
                 emitVcpuAsm("%PrintInt16", Expression::wordToHexString(value), false, codeLineIndex);
             }
-            else if(expressionType & Expression::IsString)
+            else if(expressionType & Expression::HasStrings)
             {
                 size_t lquote = tokens[i].find_first_of("\"");
                 size_t rquote = tokens[i].find_first_of("\"", lquote + 1);
@@ -1557,11 +1637,6 @@ namespace Compiler
                 {
                     if(rquote == lquote + 1) continue; // skip empty strings
                     std::string str = tokens[i].substr(lquote + 1, rquote - (lquote + 1));
-                    if(str.size() > USER_STR_SIZE)
-                    {
-                        fprintf(stderr, "Compiler::keywordPRINT() : user string is %d characters too long in '%s' on line %d\n", int(str.size() - USER_STR_SIZE), codeLine._text.c_str(), codeLineIndex + 1);
-                        return false;
-                    }
 
                     // Reuse string
                     bool foundString = false;
@@ -1576,25 +1651,15 @@ namespace Compiler
                     }
                     if(foundString) continue;
 
-                    // Create string            
-                    if((_userStrStart + HI_MASK(str.size())) != HI_MASK(_userStrStart))
-                    {
-                        _userStrStart -= 0x0100;
-                        if(_userStrStart < 0x08A0)
-                        {
-                            fprintf(stderr, "Compiler::keywordPRINT() : out of string memory, user string address %04x in '%s' on line %d\n", _userStrStart, codeLine._text.c_str(), codeLineIndex + 1);
-                            return false;
-                        }
-                    }
+                    // Create string
+                    uint16_t strAddress;
+                    if(!createString(codeLine, codeLineIndex, str, strAddress)) return false;
 
-                    std::string usrStrName = "usrStr_" + Expression::wordToHexString(_userStrStart);
-                    StringVar usrStrVar = {uint8_t(str.size()), _userStrStart, str, usrStrName, usrStrName + "\t\t", -1};
-                    _stringVars.push_back(usrStrVar);
-                    _userStrStart += uint16_t(str.size() + 1);
+                    // Print string
                     emitVcpuAsm("%PrintString", _stringVars[_stringVars.size() - 1]._name, false, codeLineIndex);
                 }
             }
-            else
+            else if(expressionType == Expression::HasNumbers)
             {
                 Expression::parse(tokens[i], codeLineIndex, value);
                 emitVcpuAsm("%PrintInt16", Expression::wordToHexString(value), false, codeLineIndex);
@@ -1609,171 +1674,68 @@ namespace Compiler
         }
 
         return true;
-
-#if 0
-        // Parse print tokens
-        std::vector<size_t> offsets;
-        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ';', offsets, false);
-
-        // First offset is always missing and last one is always bogus
-        offsets.insert(offsets.begin(), 0);
-        offsets.pop_back();
-
-        for(int i=0; i<tokens.size(); i++)
-        {
-            Expression::ExpressionType expressionType;// = isExpression(tokens[i]);
-            switch(expressionType)
-            {
-                case Expression::IsString:
-                {
-                    KeywordResult keywordResult;// = handleStringwords(codeLine, foundPos + offsets[i], tokens[i], codeLineIndex, result, true);
-                    if(keywordResult == KeywordFound) continue;
-
-                    size_t lquote = tokens[i].find_first_of("\"");
-                    size_t rquote = tokens[i].find_first_of("\"", lquote + 1);
-                    if(lquote != std::string::npos  &&  rquote != std::string::npos)
-                    {
-                        if(rquote == lquote + 1) continue; // skip empty strings
-                        std::string str = tokens[i].substr(lquote + 1, rquote - (lquote + 1));
-                        if(str.size() > USER_STR_SIZE)
-                        {
-                            fprintf(stderr, "Compiler::keywordPRINT() : user string is %d characters too long in '%s' on line %d\n", int(str.size() - USER_STR_SIZE), codeLine._text.c_str(), codeLineIndex + 1);
-                            return false;
-                        }
-
-                        // Reuse string
-                        bool foundString = false;
-                        for(int j=0; j<_stringVars.size(); j++)
-                        {
-                            if(_stringVars[j]._data == str) 
-                            {
-                                emitVcpuAsm("%PrintString", _stringVars[j]._name, false, codeLineIndex);
-                                foundString = true;
-                                break;
-                            }
-                        }
-                        if(foundString) continue;
-
-                        // Create string            
-                        if((_userStrStart + HI_MASK(str.size())) != HI_MASK(_userStrStart))
-                        {
-                            _userStrStart -= 0x0100;
-                            if(_userStrStart < 0x08A0)
-                            {
-                                fprintf(stderr, "Compiler::keywordPRINT() : out of string memory, user string address %04x in '%s' on line %d\n", _userStrStart, codeLine._text.c_str(), codeLineIndex + 1);
-                                return false;
-                            }
-                        }
-
-                        std::string usrStrName = "usrStr_" + Expression::wordToHexString(_userStrStart);
-                        StringVar usrStrVar = {uint8_t(str.size()), _userStrStart, str, usrStrName, usrStrName + "\t\t", -1};
-                        _stringVars.push_back(usrStrVar);
-                        _userStrStart += uint16_t(str.size() + 1);
-                        emitVcpuAsm("%PrintString", _stringVars[_stringVars.size() - 1]._name, false, codeLineIndex);
-                    }
-                }
-                break;
-
-                case Expression::None:
-                case Expression::Valid:
-                {
-                    int16_t result;
-                    if(!Expression::parse(tokens[i], codeLineIndex, result)) return false;
-                    emitVcpuAsm("%PrintInt16", Expression::wordToHexString(result), false, codeLineIndex);
-                }
-                break;
-
-                case Expression::HasVars:
-                {
-                    // Keywords like PEEK, DEEK, etc
-                    KeywordResult keywordResult;// = handleKeywords(codeLine, foundPos + offsets[i], tokens[i], codeLineIndex, result, true);
-                    if(keywordResult == KeywordFound) continue;
-
-                    // Search math words and string words
-                    //keywordResult = handleMathwords(codeLine, foundPos, codeLineIndex, result, true);
-                    //if(keywordResult == KeywordNotFound) keywordResult = handleStringwords(codeLine, foundPos, codeLineIndex, result, true);
-                    if(keywordResult == KeywordNotFound)
-                    {
-                        CodeLine cl = codeLine;
-                        cl._code = cl._expression = tokens[i];
-                        if(!varExpressionParse(cl, codeLineIndex)) return false;
-                        int varIndex = varAssignmentParse(cl, codeLineIndex);
-                        if(varIndex >= 0)
-                        {
-                            emitVcpuAsm("%PrintVarInt16", "_" + _integerVars[varIndex]._name, false, codeLineIndex);
-                        }
-                        else
-                        {
-                            emitVcpuAsm("%PrintVarInt16", Expression::byteToHexString(uint8_t(_tempVarStart)), false, codeLineIndex);
-                        }
-                    }
-                }
-                break;
-
-                default:
-                {
-                    fprintf(stderr, "Compiler::keywordPRINT() : invalid input in '%s' on line %d\n", tokens[i].c_str(), codeLineIndex);
-                    return false;
-                }
-                break;
-            }
-        }
-
-        // New line
-        if(codeLine._code[codeLine._code.size() - 1] != ';')
-        {
-            emitVcpuAsm("LDWI", "newLineScroll", false, codeLineIndex);
-            emitVcpuAsm("CALL", "giga_vAC", false, codeLineIndex);
-        }
-
-        return true;
-#endif
     }
 
     bool keywordFOR(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        if(codeLine._tokens.size() < 6  ||  codeLine._tokens.size() > 8)
-        {
-            fprintf(stderr, "Compiler::keywordFOR() : syntax error, (wrong number of tokens), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
-            return false;
-        }
-        if(codeLine._tokens[2] != "=")
+        // Parse first line of FOR loop
+        bool foundStep = false;
+        std::string code = codeLine._code;
+        Expression::strToUpper(code);
+        size_t equals, to, step;
+        if((equals = code.find("=")) == std::string::npos)
         {
             fprintf(stderr, "Compiler::keywordFOR() : syntax error, (missing '='), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
-        if(Expression::strToUpper(codeLine._tokens[4]) != "TO")
+        if((to = code.find("TO")) == std::string::npos)
         {
-            fprintf(stderr, "Compiler::keywordFOR() : syntax error, (missing 'TO'), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Compiler::keywordFOR() : syntax error, (missing '='), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
-        
-        // Optional step
-        if(codeLine._tokens.size() == 8  &&  Expression::strToUpper(codeLine._tokens[6]) == "STEP")
-        {
-        }
+        step = code.find("STEP");
 
         // Loop start
         int16_t loopStart;
-        if(!Expression::stringToI16(codeLine._tokens[3], loopStart))
+        std::string startToken = codeLine._code.substr(equals + 1, to - (equals + 1));
+        Expression::stripWhitespace(startToken);
+        if(!Expression::stringToI16(startToken, loopStart))
         {
             fprintf(stderr, "Compiler::keywordFOR() : syntax error, (bad FOR start), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
 
         // Var counter, (create or update if being reused)
-        int varIndex = findVar(codeLine._tokens[1]);
-        (varIndex < 0) ? createVar(codeLine._tokens[1], loopStart, codeLineIndex, false, varIndex) : updateVar(loopStart, codeLineIndex, varIndex, false);
+        std::string var = codeLine._code.substr(foundPos, equals - foundPos);
+        Expression::stripWhitespace(var);
+        int varIndex = findVar(var);
+        (varIndex < 0) ? createVar(var, loopStart, codeLineIndex, false, varIndex) : updateVar(loopStart, codeLineIndex, varIndex, false);
 
         // Loop end
         int16_t loopEnd;
-        if(!Expression::stringToI16(codeLine._tokens[5], loopEnd))
+        size_t end = (step == std::string::npos) ? codeLine._code.size() : step;
+        std::string endToken = codeLine._code.substr(to + 2, end - (to + 2));
+        Expression::stripWhitespace(endToken);
+        if(!Expression::stringToI16(endToken, loopEnd))
         {
             fprintf(stderr, "Compiler::keywordFOR() : syntax error, (bad FOR end), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
 
-#if 0
+        // Loop step
+        int16_t loopStep = 1;
+        if(step != std::string::npos)
+        {
+            end = codeLine._code.size();
+            std::string stepToken = codeLine._code.substr(step + 4, end - (step + 4));
+            Expression::stripWhitespace(stepToken);
+            if(!Expression::stringToI16(stepToken, loopStep))
+            {
+                fprintf(stderr, "Compiler::keywordFOR() : syntax error, (bad STEP), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+                return false;
+            }
+        }
+
         // Maximum of 4 nested loops
         if(_forNextDataStack.size() == 4)
         {
@@ -1781,15 +1743,11 @@ namespace Compiler
             return false;
         }
 
+        // Nested loops temporary variables
         int offset = int(_forNextDataStack.size()) * 4;
         uint16_t varEnd = LOOP_VAR_START + offset;
         uint16_t varStep = LOOP_VAR_START + offset + 2;
-
-        emitVcpuAsm("%ForNextInitVsVe", "_" + _integerVars[varIndex]._name + " " + std::to_string(loopStart) + " " + std::to_string(loopEnd) + " 1" + " " + Expression::wordToHexString(varEnd) + " " + Expression::wordToHexString(varStep), false, codeLineIndex);
-#endif
-
-        // Variable is intialised automatically in createVasmCode()
-        //emitVcpuAsm("LDWI", std::to_string(loopStart), false, codeLineIndex);
+        emitVcpuAsm("%ForNextLoopInit", std::to_string(loopEnd) + " " + std::to_string(loopStep) + " " + Expression::byteToHexString(uint8_t(varEnd)) + " " + Expression::byteToHexString(uint8_t(varStep)), false, codeLineIndex);
 
         // Find first valid line
         int lineAfterLoopInit = -1;
@@ -1820,8 +1778,8 @@ namespace Compiler
             if(!_codeLines[i]._ownsLabel) _codeLines[i]._labelIndex = _currentLabelIndex;
         }
 
-        // FOR loops that have inputs as variables use a stack
-        _forNextDataStack.push({varIndex, _codeLines[lineAfterLoopInit]._labelIndex, lineAfterLoopInit, loopEnd, 1, 0x00, 0x00});
+        // Save FOR loop data for NEXT
+        _forNextDataStack.push({varIndex, _codeLines[lineAfterLoopInit]._labelIndex, lineAfterLoopInit, loopEnd, loopStep, varEnd, varStep});
 
         return true;
     }
@@ -1842,19 +1800,27 @@ namespace Compiler
             return false;
         }
 
+        // Pop stack for this nested loop
+        if(_forNextDataStack.empty()) return false;
         ForNextData forNextData = _forNextDataStack.top();
         _forNextDataStack.pop();
+
         if(varIndex != forNextData._varIndex)
         {
             fprintf(stderr, "Compiler::keywordNEXT() : syntax error, (wrong var), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
 
-        emitVcpuAsm("%ForNextLoopP", "_" + _integerVars[varIndex]._name + " " + _labels[forNextData._labelIndex]._name + " " + std::to_string(forNextData._loopEnd), false, codeLineIndex, "", forNextData._labelIndex);
-
-#if 0
-        emitVcpuAsm("%ForNextLoopVsVeP", "_" + _integerVars[varIndex]._name + " " + _labels[forNextData._labelIndex]._name + " " + Expression::wordToHexString(forNextData._varEnd) + " " + Expression::wordToHexString(forNextData._varStep), false, codeLineIndex, "", forNextData._labelIndex);
-#endif
+        // Positive step
+        if(forNextData._loopStep > 0)
+        {
+            emitVcpuAsm("%ForNextLoopStepUp", "_" + _integerVars[varIndex]._name + " " + _labels[forNextData._labelIndex]._name + " " + Expression::byteToHexString(uint8_t(forNextData._varEnd)) + " " + Expression::byteToHexString(uint8_t(forNextData._varStep)), false, codeLineIndex, "", forNextData._labelIndex);
+        }
+        // Negative step
+        else
+        {
+            emitVcpuAsm("%ForNextLoopStepDown", "_" + _integerVars[varIndex]._name + " " + _labels[forNextData._labelIndex]._name + " " + Expression::byteToHexString(uint8_t(forNextData._varEnd)) + " " + Expression::byteToHexString(uint8_t(forNextData._varStep)), false, codeLineIndex, "", forNextData._labelIndex);
+        }
 
         return true;
     }
@@ -2017,8 +1983,7 @@ namespace Compiler
             else
             {
                 // Skip for functions
-                //if(params != 1  &&  (expressiontype != Expression::HasKeywords  ||  varIndex == -1))
-                if(params != 1  &&  !(expressionType & Expression::HasKeywords)  &&  varIndex == -1)
+                if(params != 1)//  &&  !(expressionType & Expression::HasKeywords)  &&  !(expressionType & Expression::HasVars))
                 {
                     // 8bit constants
                     if(_integerVars[codeLine._varIndex]._data >=0  &&  _integerVars[codeLine._varIndex]._data <= 255)
@@ -2188,7 +2153,7 @@ namespace Compiler
         // Adjust addresses for any non page jump labels with addresses higher than start label, (labels can be stored out of order)
         for(int i=0; i<_labels.size(); i++)
         {
-            if(!_labels[i]._pageJump  &&  _labels[i]._address >= address)
+            if(!_labels[i]._pageJump  &&  _labels[i]._address > address)
             {
                 _labels[i]._address += offset;
             }
@@ -2275,16 +2240,16 @@ namespace Compiler
                 }
 #endif
 
-                uint8_t hPC = HI_BYTE(itCode->_vasm[0]._address);
-                uint16_t nextPC = (hPC + 1) <<8;
                 for(auto itVasm=itCode->_vasm.begin(); itVasm!=itCode->_vasm.end();)
                 {
                     resetCheck = false;
                     int vasmLineIndex = int(itVasm - itCode->_vasm.begin());
 
-                    uint8_t lPC = LO_BYTE(itVasm->_address);
-                    uint8_t audioExcl = 0xF2;
-                    uint8_t pageExcl = 0xF8;
+                    uint8_t hPC = HI_BYTE(itVasm->_address);
+                    uint16_t nextPC = (hPC + 1) <<8;
+                    uint16_t vPC = itVasm->_address;
+                    uint16_t audioExcl = (hPC <<8) | 0x00F2;
+                    uint16_t pageExcl  = (hPC <<8) | 0x00F8;
 
                     // Check MACRO opcodes
                     std::string macroOpcode = itVasm->_opcode;
@@ -2300,7 +2265,7 @@ namespace Compiler
                         }
                     }
 
-                    if(itVasm->_pageJump == false  &&  (lPC > pageExcl  ||  ((hPC == 0x02 || hPC == 0x03 || hPC == 0x04)  &&  lPC > audioExcl)))
+                    if(itVasm->_pageJump == false  &&  (vPC > pageExcl  ||  ((hPC == 0x02 || hPC == 0x03 || hPC == 0x04)  &&  vPC > audioExcl)))
                     {
                         std::string operandSTW, operandLDWI, operandCALL, operandLDW;
                         std::vector<std::string> tokens;

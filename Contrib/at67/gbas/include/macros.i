@@ -43,53 +43,31 @@
         DEEK
 %ENDM
 
-%MACRO  ForNextInitVe _var _start _end _varEnd
-        LDWI    _start
-        STW     _var
+%MACRO  ForNextLoopInit _end _step _vEnd _vStep
         LDWI    _end
-        STW     _varEnd
-%ENDM
-
-%MACRO  ForNextInitVs _var _start _step _varStep
-        LDWI    _start
-        STW     _var
+        STW     _vEnd
         LDWI    _step
-        STW     _varStep
+        STW     _vStep
 %ENDM
 
-%MACRO  ForNextInitVsVe _var _start _end _step _varEnd _varStep
-        LDWI    _start
+%MACRO  ForNextLoopStepUp _var _label _vEnd _vStep
+        LDW     _var
+        ADDW    _vStep
         STW     _var
-        LDWI    _end
-        STW     _varEnd
-        LDWI    _step
-        STW     _varStep
-%ENDM
-
-%MACRO  ForNextLoopP _var _label _end
-        INC     _var
-        LD      _var
-        SUBI    _end
-        BGT     _label_
+        SUBW    _vEnd
+        BGT     _label_+2
         LDWI    _label
-        CALL    giga_vAC
-_label_ LD      _var
+_label_ CALL    giga_vAC
 %ENDM
 
-%MACRO  ForNextLoopVsVeP _var _label _varEnd _varStep
+%MACRO  ForNextLoopStepDown _var _label _vEnd _vStep
         LDW     _var
-        ADDW    _varStep
+        ADDW    _vStep
         STW     _var
-        SUBW    _varEnd
-        BLE     _label
-%ENDM
-
-%MACRO  ForNextLoopVsVeN _var _label _varEnd _varStep
-        LDW     _var
-        ADDW    _varStep
-        STW     _var
-        SUBW    _varEnd
-        BGE     _label
+        SUBW    _vEnd
+        BLT     _label_+2
+        LDWI    _label
+_label_ CALL    giga_vAC
 %ENDM
 
 %MACRO  PrintChar _chr

@@ -14,7 +14,7 @@ for k = 0 to 1
     next j
 next k
 
-print "wooooooooooooooooooooooooooooow!!!";
+print "wooooooooooooooooooooooooooooow!!!"
 for i = 0 to 6
     print "dog";" ";i
 next i

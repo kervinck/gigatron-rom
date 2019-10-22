@@ -39,33 +39,37 @@ frameCountPrev  EQU     register0 + 0x1C
 ; Labels
 _entryPoint_    EQU		0x0200
 _10             EQU		0x0236
-_15             EQU		0x0262
-_16             EQU		0x0268
-_20             EQU		0x026e
+_15             EQU		0x0263
+_16             EQU		0x0269
+_20             EQU		0x026f
 
 ; Variables
 _a              EQU		0x0030
 _b              EQU		0x0032
 
 ; Strings
-usrStr_0x6ea0		EQU		0x6ea0
-usrStr_0x6ea0		DB		1 ' '
-usrStr_0x6da2		EQU		0x6da2
-usrStr_0x6da2		DB		5 ' dog '
+usrStr_0x6fa0		EQU		0x6fa0
+usrStr_0x6fa0		DB		1 ' '
+usrStr_0x6fa2		EQU		0x6fa2
+usrStr_0x6fa2		DB		5 ' dog '
 
 ; Code
 _entryPoint_    Initialise	                        		; INIT
+
                 LDI		0
                 STW		_a                          		; a=0
+
                 LDI		1
                 STW		_b                          		; b =1
 
-_10             PrintInt16	0x0047
-                PrintString	usrStr_0x6ea0
+_10             LDI		1
+                ADDW	_b
+                PrintAcInt16	
+                PrintString	usrStr_0x6fa0
                 PrintVarInt16	_a
-                PrintString	usrStr_0x6da2
+                PrintString	usrStr_0x6fa2
                 LDWI	newLineScroll
-                CALL	giga_vAC                    		; print 54 - 23 + (27*2) - 32 + (56/3) - (7+b);" " ;a; " dog "
+                CALL	giga_vAC                    		; print 1 + b;" " ;a; " dog "
 
 _15             LDW		_a
                 ADDI	1
@@ -76,4 +80,5 @@ _16             LDW		_b
                 STW		_b                          		; b = b+1
 
 _20             BRA		_10                         		; goto 10
+
 

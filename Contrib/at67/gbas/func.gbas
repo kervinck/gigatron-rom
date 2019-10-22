@@ -1,0 +1,27 @@
+10 addr = &h21
+addr = addr AND &hFFFF
+a = NOT addr - peek(addr AND pEeK(&h0FFF OR peek(&hF000))) AND &hFC OR peek(addr+1) + 23 XOR &B00001111 - NOT 56 + NOT addr
+
+gosub blamo
+
+rem cls
+print "test";" ";"dog";" ";56+44;" ";a;" ";hex$(peek(&h21) AND &hFC)
+print hex$(a);" ";hexw$(b);" ";hexw$(&h1111 OR &h2222)
+goto 10
+END
+
+blamo: b = &haa55 XOR &hF0F0
+b = b XOR a
+
+for i = 0 to 300
+    c = CHR$(32)
+    f = peek(0)
+    d = c AND &hAA55 AND a
+    z = a + 5 + b
+    b = -b
+    print i; " " ; hexw$(b)
+next i
+
+g = z - NOT g
+h = NOT a - d
+return

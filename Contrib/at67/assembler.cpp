@@ -755,7 +755,7 @@ namespace Assembler
         // Expression equates
         Expression::ExpressionType expressionType = Expression::isExpression(token);
         if(expressionType == Expression::Invalid) return false;
-        if(expressionType == Expression::Valid)
+        if(expressionType == Expression::HasOperators)
         {
             int16_t value;
             if(!evaluateExpression(token, false, value)) return false;
@@ -871,7 +871,7 @@ namespace Assembler
         // Expression labels
         Expression::ExpressionType expressionType = Expression::isExpression(token);
         if(expressionType == Expression::Invalid) return false;
-        if(expressionType == Expression::Valid)
+        if(expressionType == Expression::HasOperators)
         {
             int16_t value;
             if(!evaluateExpression(token, false, value)) return false;
@@ -1004,7 +1004,7 @@ namespace Assembler
                     else
                     {
                         // Normal expression
-                        if(Expression::isExpression(tokens[i]) == Expression::Valid)
+                        if(Expression::isExpression(tokens[i]) == Expression::HasOperators)
                         {
                             int16_t value;
                             if(Expression::parse(tokens[i], _lineNumber, value))
@@ -1065,7 +1065,7 @@ namespace Assembler
                 else
                 {
                     // Normal expression
-                    if(Expression::isExpression(tokens[i]) == Expression::Valid)
+                    if(Expression::isExpression(tokens[i]) == Expression::HasOperators)
                     {
                         int16_t value;
                         if(Expression::parse(tokens[i], _lineNumber, value))
@@ -1096,7 +1096,7 @@ namespace Assembler
     {
         Expression::ExpressionType expressionType = Expression::isExpression(token);
         if(expressionType == Expression::Invalid) return false;
-        if(expressionType == Expression::Valid)
+        if(expressionType == Expression::HasOperators)
         {
             // Parse expression and return with a result
             int16_t value;
@@ -1898,7 +1898,7 @@ namespace Assembler
                     // Normal expression
                     else
                     {
-                        if(Expression::isExpression(token) == Expression::Valid)
+                        if(Expression::isExpression(token) == Expression::HasOperators)
                         {
                             int16_t value;
                             if(Expression::parse(token, _lineNumber, value))
@@ -2344,7 +2344,7 @@ namespace Assembler
                                 {
                                     operand = uint8_t(label._address);
                                 }
-                                else if(Expression::isExpression(tokens[tokenIndex]) == Expression::Valid)
+                                else if(Expression::isExpression(tokens[tokenIndex]) == Expression::HasOperators)
                                 {
                                     int16_t value;
                                     std::string input;
@@ -2469,7 +2469,7 @@ namespace Assembler
                                 {
                                     operand = label._address;
                                 }
-                                else if(Expression::isExpression(tokens[tokenIndex]) == Expression::Valid)
+                                else if(Expression::isExpression(tokens[tokenIndex]) == Expression::HasOperators)
                                 {
                                     int16_t value;
                                     std::string input;
