@@ -11,7 +11,7 @@ gcl0x
         --------------------------
         ### COMMODORE BASIC ###
 
-         3839 BYTES FREE
+         4095 BYTES FREE
 
         READY.
         --------------------------
@@ -49,10 +49,12 @@ gcl0x
         $2b00 -                 (6502) GETIN
         $2c00 -                 (6502) ISCNTC
         $2d00 -                 (6502) CLALL
-        $7100 - $7fff           Free RAM giving 3840 bytes user space
+        $2e00 -                 (6502) LINEEDIT
+        $7000 - $7fff           Free RAM giving 4096 bytes user space
 }
 
 _k=$2a                          {Parking spot for keyboard handler: sysArgs6}
+                                {Note when using _k: sysArgs6 is also v6502_X!}
 
 _TISTR0=$200                    {Timer high byte}
 _TISTR1=$201                    {Timer middle byte}
@@ -668,10 +670,10 @@ _STOP=$00093B
  #$58 #$a2 #$fb #$9a #$a9 #$4c #$85 #$87 #$85 #$38 #$a9 #$8e #$a0 #$12 #$85 #$39
  #$84 #$3a #$a9 #$28 #$85 #$19 #$a9 #$1e #$85 #$19 #$a2 #$1c #$bd #$73 #$22 #$95
  #$a5 #$ca #$d0 #$f8 #$a9 #$03 #$85 #$86 #$8a #$85 #$9b #$85 #$19 #$85 #$4a #$48
- #$85 #$45 #$e8 #$8e #$02 #$24 #$8e #$01 #$24 #$a2 #$4b #$86 #$48 #$a0 #$71 #$85
+ #$85 #$45 #$e8 #$8e #$02 #$24 #$8e #$01 #$24 #$a2 #$4b #$86 #$48 #$a0 #$70 #$85
  #$5d #$84 #$5e #$85 #$46 #$84 #$47 #$a8 #$e6 #$46 #$d0 #$04 #$e6 #$47 #$30 #$0f
  #$a9 #$55 #$91 #$46 #$d1 #$46 #$d0 #$07 #$0a #$91 #$46 #$d1 #$46 #$f0 #$e9 #$a5
- #$46 #$a4 #$47 #$85 #$69 #$84 #$6a #$85 #$65 #$84 #$66 #$a2 #$00 #$a0 #$71 #$86
+ #$46 #$a4 #$47 #$85 #$69 #$84 #$6a #$85 #$65 #$84 #$66 #$a2 #$00 #$a0 #$70 #$86
 
 *=$2300
  #$5d #$84 #$5e #$a0 #$00 #$98 #$91 #$5d #$e6 #$5d #$a5 #$5d #$a4 #$5e #$20 #$30
@@ -698,17 +700,6 @@ _Setup=*
   \videoTable p=                {First variable at $30, will become p later}
   &_CharOut CharOut=            {Prepare for vCPU calls}
 
-  120
-  [do i=                        {Set all 120 video lines the same}
-    $23 p:                      {Y[y]=$23 and dX[y]=0}
-    <p++ <p++                   {Advance pointer one word}
-    i 1- if>0loop]
-
-  { Create one dedicated empty pixel line }
-
-  \SYS_SetMemory_v2_54 _sysFn=
-  160   \sysArgs0:              {Count = 160, Value = 0}
-  $2360 \sysArgs2: 54!          {Clear $2360 - $23ff for empty pixel line}
 ]
 
 \Setup1 call
@@ -718,14 +709,13 @@ _Setup=*
 _Setup1=*
 [
   \videoTable p=
-  7 j=
-  $ffb3                         {$24 - $71}
-  [do i= $71+                   {Loop over $24..$71 range}
+  6 j=                          {Modulo 7 counter}
+  $b3 [do i= $70+               {Loop over $23..$6f range}
     p. <p++ <p++                {Y[y]=7+j}
-    j 1- [if=0
+    j 1- [if<0
       p 8+ p=                   {Four(!) empty lines between text rows}
-      7] j=
-    i 1+ if<>0loop]
+      6] j=
+    <i++ i if<>0loop]
 
   {
     Shift the horizontal display by 96 bytes. For MS BASIC it doesn't matter,
@@ -762,7 +752,7 @@ _vLR=                           {Reset v6502 PC}
 [do
   \SYS_Run6502_v4_80 _sysFn=
   \k,                           {Pass back resulting ASCII code in A}
-  80!                           {Run 6502 code until BRK}
+  80!!                          {Run 6502 code until BRK}
   push                          {Save v6502 PC}
   [if=0                         {A=0 reads char from keyboard}
     \WaitKey call
@@ -793,7 +783,7 @@ _DrawChar=*
   5 [do i=                      {Draw character as 5 vertical bit slices}
     j 0?                        {Get bit slice as byte from ROM table}
     $fe& \sysArgs2.             {Clear bottom pixel}
-    134!                        {SYS call to draw 8 pixels vertically}
+    134!!                       {SYS call to draw 8 pixels vertically}
     <j++ <\sysArgs4++           {Advance to next byte}
     i 1- if>0loop]              {Looping}
 
@@ -820,7 +810,9 @@ _CharOut=*
 
   $8d^ [if<>0 <p, 251- if>0 0]  {Test for CR or line wrap}
 
-  [if=0 \Newline call]          {Move to next line}
+  [if=0
+    \SYS_VDrawBits_134 _sysFn=  {Prepare SYS calls}
+    \Newline call]              {Move to next line}
 
   %-2 $a0-                      {Apple 1 wants ASCII with bit 7 set}
   [if<0 pop ret]                {Skip non-printables}
@@ -871,30 +863,54 @@ _PiOut=*
 
 _Newline=*
 [
-  { First clear the top text row }
+  {
+    Newline function for the compressed layout (7 pixel lines per text row)
+  }
 
-  $62 <p.                       {Go to start of line, indent 2 pixels}
-  $9e+ i=                       {$0100 first entry in video table}
-  peek >p.                      {Move to what is now still the top text row}
+  \sysArgs0.                    {vACL == <_Newline == 0 == Black}
+ {\sysArgs2.}                   {Bit slice == sysArgs2 == v6502_IR == BRK == 0}
 
-  \SYS_VDrawBits_134 _sysFn=    {Prepare SYS calls}
-  0 \sysArgs0:                  {All black}
+  { Find the top text row }
+
+  $62 <p.                       {Go to start of line, nicely indent by 2 pixels}
+  $9e+ i=                       {i==$100: start of the video table}
+  peek >p.                      {Go to what is now still the top text row}
+
+  { Clear the text row }
+
   p 2- \sysArgs4:               {Set drawing position for clearing}
 
   [do
-    134!                        {SYS call to draw 8 pixels vertically}
+    134!!                       {SYS call to draw 8 pixels vertically}
     <\sysArgs4++                {Step 1 pixel right}
     \sysArgs4, if<>0loop]       {Loop until end of pixel line}
 
-  { Then scroll everything up by modifying videoTable[] }
-
+  {
+    Scroll everything up by modifying the video indirection table.
+    [This may be a cool effect to watch in slow motion?]
+  }
   [do
     i 22+ j=                    {j looks 11 entries ahead of i}
     i, \sysArgs7.               {Swap scanlines}
     j, i.
     \sysArgs7, j.
     i 2+ i=                     {Advance to next entry in video table}
-    255& 212^ if<>0loop]        {Until all done}
+    255& 218^ if<>0loop]        {Until all done}
+
+  { The cleared text row has now bubbled down to the bottom }
+
+  {
+    Set the vertical dividers to the empty base line just created. Since
+    there's always one in the active text row, we don't need to maintain
+    a dedicated empty pixel line. This saves 1 page of memory.
+  }
+  $e020 i=                      {Rotating bit pattern: 1110.0000.001x.xxxx}
+  [do
+    i [if<0
+      >p, 7+ j.                 {This is the new shared empty pixel line}
+      i $10+] 1<< i=            {Rotate bit 5:15}
+    <j, 2- <j.
+    if>=0loop]                  {Step one line up}
 
   ret
 ]
@@ -1041,7 +1057,7 @@ _Tick=*
   [def
                 #_JSR_   ##_TICK
                 #_BRK_
-  ] _vLR= 80!
+  ] _vLR= 80!!
   pop ret
 ]
 

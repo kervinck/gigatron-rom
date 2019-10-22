@@ -254,7 +254,7 @@ ret             Jump to vLR, to return from a leaf function. Non-leaf
                 functions should use `pop' + `ret' as return sequence
 push            Push vLR onto stack, for entering a non-leaf function
 pop             Remove top of stack and put value in vLR
-i!              Call native code pointed at by sysFn, not exceeding i cycles
+i!!             Call native code pointed at by sysFn, not exceeding i cycles
 call            Jump to function pointed at by vAC
 
 Stack variables
@@ -382,6 +382,7 @@ X<++ X>++       Original notation for <X++ >X++
 i<++ i>++       Original notation for <i++ >i++
 ii:             Original notation for *=ii
 i% i%=          Original notation for %i %i=
+i!              Original notaiton for i!! (will only be depricated in gcl1)
 
 ----------------------
 vCPU instruction table
@@ -507,7 +508,7 @@ ADDI            &X+             i+
 SUBI            &X-             i-
 LSLW                            i<<                             alias for i*LSLW
 LSRW                            i>>                             XXX if we can add LSRW to vCPU
-SYS                             i!
+SYS                             i!!                             was i!
 LUP                             i?
 
 ------------------------
