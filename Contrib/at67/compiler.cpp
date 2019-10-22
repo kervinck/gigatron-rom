@@ -221,10 +221,9 @@ namespace Compiler
     bool keywordFOR(CodeLine& codeLine,    int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordNEXT(CodeLine& codeLine,   int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordIF(CodeLine& codeLine,     int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool keywordTHEN(CodeLine& codeLine,   int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
+    bool keywordENDIF(CodeLine& codeLine,  int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordELSE(CodeLine& codeLine,   int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordELSEIF(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool keywordENDIF(CodeLine& codeLine,  int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordDIM(CodeLine& codeLine,    int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordDEF(CodeLine& codeLine,    int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordINPUT(CodeLine& codeLine,  int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
@@ -248,10 +247,9 @@ namespace Compiler
         _keywords["FOR"   ] = {0, "FOR",    keywordFOR   };
         _keywords["NEXT"  ] = {0, "NEXT",   keywordNEXT  };
         _keywords["IF"    ] = {0, "IF",     nullptr      };
-        _keywords["THEN"  ] = {0, "THEN",   nullptr      };
+        _keywords["ENDIF" ] = {0, "ENDIF",  nullptr      };
         _keywords["ELSE"  ] = {0, "ELSE",   nullptr      };
         _keywords["ELSEIF"] = {0, "ELSEIF", nullptr      };
-        _keywords["ENDIF" ] = {0, "ENDIF",  nullptr      };
         _keywords["DIM"   ] = {0, "DIM",    nullptr      };
         _keywords["DEF"   ] = {0, "DEF",    nullptr      };
         _keywords["INPUT" ] = {0, "INPUT",  nullptr      };
@@ -770,7 +768,30 @@ namespace Compiler
         return true;
     }
 
-    uint32_t parseExpression(CodeLine& codeLine, int codeLineIndex, const std::string& expression, int16_t& value, int16_t replace=0)
+    // Generic expression parser
+    uint32_t parseExpression(CodeLine& codeLine, int codeLineIndex, const std::string& expression, int16_t& value)
+    {
+        int varIndex, params;
+        Expression::parse(expression, codeLineIndex, value);
+        uint32_t expressionType = isExpression(expression, varIndex, params);
+        if((expressionType & Expression::HasVars)  &&  (expressionType & Expression::HasOperators))
+        {
+            emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(_tempVarStart)), false, codeLineIndex);
+        }
+        else if(expressionType & Expression::HasVars)
+        {
+            emitVcpuAsm("LDW", "_" + _integerVars[varIndex]._name, false, codeLineIndex);
+        }
+        else
+        {
+            emitVcpuAsm("LDWI", std::to_string(value), false, codeLineIndex);
+        }
+
+        return expressionType;
+    }
+
+    // Loop specific parser
+    uint32_t parseExpression(CodeLine& codeLine, int codeLineIndex, const std::string& expression, int16_t& value, int16_t replace)
     {
         int varIndex, params;
         Expression::parse(expression, codeLineIndex, value);
@@ -1759,20 +1780,35 @@ namespace Compiler
         uint16_t varEnd = LOOP_VAR_START + offset;
         uint16_t varStep = LOOP_VAR_START + offset + 2;
 
-        // Parse start field
+        // Optimised case for 8bit constants
         bool optimise = false;
-        uint32_t expressionType = parseExpression(codeLine, codeLineIndex, startToken, loopStart);
-        emitVcpuAsm("STW", "_" + _integerVars[varIndex]._name, false, codeLineIndex);
-        //if(expressionType == Expression::HasNumbers) 
+        if(Expression::stringToI16(startToken, loopStart)  &&  Expression::stringToI16(endToken, loopEnd)  &&  (stepToken.size() == 0  ||  Expression::stringToI16(stepToken, loopStep)))
+        {
+            if(loopStart >=0  &&  loopStart <= 255  &&  loopEnd >=0  &&  loopEnd <= 255  &&  abs(loopStep) == 1)
+            {
+                optimise = true;
+                if(stepToken.size() == 0) loopStep = (loopEnd >= loopStart) ? 1 : -1;
+                emitVcpuAsm("LDI", std::to_string(loopStart), false, codeLineIndex);
+                emitVcpuAsm("STW", "_" + _integerVars[varIndex]._name, false, codeLineIndex);
+            }
+        }
 
-        // Parse end field
-        expressionType = parseExpression(codeLine, codeLineIndex, endToken, loopEnd);
-        emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(varEnd)), false, codeLineIndex);
+        // General purpose supports 16bit, expresssions and variables
+        if(!optimise)
+        {
+            // Parse start field
+            uint32_t expressionType = parseExpression(codeLine, codeLineIndex, startToken, loopStart, 0);
+            emitVcpuAsm("STW", "_" + _integerVars[varIndex]._name, false, codeLineIndex);
 
-        // Parse step field
-        int16_t replace = (loopStart < loopEnd) ? 1 : -1; // auto step based on start and end
-        expressionType = parseExpression(codeLine, codeLineIndex, stepToken, loopStep, replace);
-        emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(varStep)), false, codeLineIndex);
+            // Parse end field
+            expressionType = parseExpression(codeLine, codeLineIndex, endToken, loopEnd, 0);
+            emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(varEnd)), false, codeLineIndex);
+
+            // Parse step field
+            int16_t replace = (loopStart < loopEnd) ? 1 : -1; // auto step based on start and end
+            expressionType = parseExpression(codeLine, codeLineIndex, stepToken, loopStep, replace);
+            emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(varStep)), false, codeLineIndex);
+        }
 
         // Find first valid line
         int lineAfterLoopInit = -1;
@@ -1839,12 +1875,26 @@ namespace Compiler
         // Positive step
         if(forNextData._loopStep > 0)
         {
-            emitVcpuAsm("%ForNextLoopStepUp", "_" + _integerVars[varIndex]._name + " " + _labels[forNextData._labelIndex]._name + " " + Expression::byteToHexString(uint8_t(forNextData._varEnd)) + " " + Expression::byteToHexString(uint8_t(forNextData._varStep)), false, codeLineIndex, "", forNextData._labelIndex);
+            if(forNextData._optimise)
+            {
+                emitVcpuAsm("%ForNextLoopUp", "_" + _integerVars[varIndex]._name + " " + _labels[forNextData._labelIndex]._name + " " + std::to_string(forNextData._loopEnd), false, codeLineIndex, "", forNextData._labelIndex);
+            }
+            else
+            {
+                emitVcpuAsm("%ForNextLoopStepUp", "_" + _integerVars[varIndex]._name + " " + _labels[forNextData._labelIndex]._name + " " + Expression::byteToHexString(uint8_t(forNextData._varEnd)) + " " + Expression::byteToHexString(uint8_t(forNextData._varStep)), false, codeLineIndex, "", forNextData._labelIndex);
+            }
         }
         // Negative step
         else
         {
-            emitVcpuAsm("%ForNextLoopStepDown", "_" + _integerVars[varIndex]._name + " " + _labels[forNextData._labelIndex]._name + " " + Expression::byteToHexString(uint8_t(forNextData._varEnd)) + " " + Expression::byteToHexString(uint8_t(forNextData._varStep)), false, codeLineIndex, "", forNextData._labelIndex);
+            if(forNextData._optimise)
+            {
+                emitVcpuAsm("%ForNextLoopDown", "_" + _integerVars[varIndex]._name + " " + _labels[forNextData._labelIndex]._name + " " + std::to_string(forNextData._loopEnd), false, codeLineIndex, "", forNextData._labelIndex);
+            }
+            else
+            {
+                emitVcpuAsm("%ForNextLoopStepDown", "_" + _integerVars[varIndex]._name + " " + _labels[forNextData._labelIndex]._name + " " + Expression::byteToHexString(uint8_t(forNextData._varEnd)) + " " + Expression::byteToHexString(uint8_t(forNextData._varStep)), false, codeLineIndex, "", forNextData._labelIndex);
+            }
         }
 
         return true;
@@ -1852,10 +1902,28 @@ namespace Compiler
 
     bool keywordIF(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
+        // Parse first line of IF
+        std::string code = codeLine._code;
+        Expression::strToUpper(code);
+        size_t then;
+        if((then = code.find("THEN")) == std::string::npos)
+        {
+            fprintf(stderr, "Compiler::keywordIF() : syntax error, (missing 'THEN'), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        // Condition
+        int16_t condition = 0;
+        std::string startToken = codeLine._code.substr(foundPos, then - foundPos);
+        Expression::stripWhitespace(startToken);
+
+        uint32_t expressionType = parseExpression(codeLine, codeLineIndex, startToken, condition);
+        //emitVcpuAsm("STW", "_" + _integerVars[varIndex]._name, false, codeLineIndex);
+
         return true;
     }
 
-    bool keywordTHEN(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordENDIF(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }
@@ -1866,11 +1934,6 @@ namespace Compiler
     }
 
     bool keywordELSEIF(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
-    {
-        return true;
-    }
-
-    bool keywordENDIF(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
         return true;
     }

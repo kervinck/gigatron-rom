@@ -39,14 +39,14 @@ frameCountPrev  EQU     register0 + 0x1C
 ; Labels
 _entryPoint_    EQU		0x0200
 _10             EQU		0x024c
-_test           EQU		0x0493
-_Big            EQU		0x05bb
+_test           EQU		0x0469
+_Big            EQU		0x059e
 _next9          EQU		0x025c
-_next10         EQU		0x026b
-_next11         EQU		0x027a
-_next12         EQU		0x0289
-_next22         EQU		0x047c
-_end_24         EQU		0x0491
+_next10         EQU		0x0260
+_next11         EQU		0x0264
+_next12         EQU		0x0268
+_next22         EQU		0x0454
+_end_24         EQU		0x0467
 0x0300          EQU		0x0300
 0x0400          EQU		0x0400
 0x0500          EQU		0x0500
@@ -114,26 +114,14 @@ _10             LDW		_z
                 LDW		_cat
                 STW		0xc2                        		; for i=z+1 to dog-1 step cat
 
-_next9          LDWI	1
-                STW		_j
-                LDWI	3
-                STW		0xc4
-                LDWI	1
-                STW		0xc6                        		; for j = 1 to 3
+_next9          LDI		1
+                STW		_j                          		; for j = 1 to 0
 
-_next10         LDWI	1
-                STW		_jj
-                LDWI	2
-                STW		0xc8
-                LDWI	1
-                STW		0xca                        		; for jj = 1 to 2 step 1
+_next10         LDI		1
+                STW		_jj                         		; for jj = 1 to 2 step 1
 
-_next11         LDWI	1
-                STW		_ss
-                LDWI	5
-                STW		0xcc
-                LDWI	1
-                STW		0xce                        		; for ss = 1 to 5 step 1
+_next11         LDI		1
+                STW		_ss                         		; for ss = 1 to 5 step 1
 
 _next12         PrintInt16	0x003d
                 PrintString	usrStr_0x6faa
@@ -150,16 +138,16 @@ _next12         PrintInt16	0x003d
                 PrintAcInt16	
                 PrintString	usrStr_0x6faa
                 LDW		_i
-                STW		0xe0
-                LDWI	0x0300
-                CALL	giga_vAC
-
-0x0300          LDW		0xe0
                 ADDW	_j
                 PrintAcInt16	
                 PrintString	usrStr_0x6faa
                 LDW		_i
                 SUBW	_j
+                STW		0xe0
+                LDWI	0x0300
+                CALL	giga_vAC
+
+0x0300          LDW		0xe0
                 PrintAcInt16	
                 PrintString	usrStr_0x6faa
                 LDW		_i
@@ -174,11 +162,11 @@ _next12         PrintInt16	0x003d
                 LDWI	newLineScroll
                 CALL	giga_vAC                    		; print 20*3+1;" ";i;" ";j;" ";j+23;" ";i+55;" ";i+j;" ";i-j;" ";i-j+1;" ";i+j+j
 
-                ForNextLoopStepUp	_ss _next12 0xcc 0xce                                               		; next ss
+                ForNextLoopUp	_ss _next12 5       		; next ss
 
-                ForNextLoopStepUp	_jj _next11 0xc8 0xca                                               		; next jj
+                ForNextLoopUp	_jj _next11 2       		; next jj
 
-                ForNextLoopStepUp	_j _next10 0xc4 0xc6                                                		; next j
+                ForNextLoopDown	_j _next10 0        		; next j
 
                 ForNextLoopStepDown	_i _next9 0xc0 0xc2                                                 		; next i
 
@@ -197,16 +185,16 @@ _next12         PrintInt16	0x003d
                 LDW		_b
                 PrintAcChar	
                 PrintString	usrStr_0x6faa
-                STW		0xe0
-                LDWI	0x0400
-                CALL	giga_vAC
-
-0x0400          LDW		0xe0
                 LDWI	48
                 PrintAcChar	
                 PrintString	usrStr_0x6faa
                 LDWI	0x0021
                 PEEK	
+                STW		0xe0
+                LDWI	0x0400
+                CALL	giga_vAC
+
+0x0400          LDW		0xe0
                 ANDI	252
                 PrintAcHexByte	
                 PrintString	usrStr_0x6faa
@@ -224,17 +212,13 @@ _next12         PrintInt16	0x003d
                 LDWI	newLineScroll
                 CALL	giga_vAC                    		; print hex$(80);" ";hexw$(&hdead);" ";hexw$(&hbeef)
 
-                LDWI	0
-                STW		_ii
-                LDWI	0
-                STW		0xc0
-                LDWI	1
-                STW		0xc2                        		; for ii = 0 to 0 step 1
+                LDI		0
+                STW		_ii                         		; for ii = 0 to 0 step 1
 
 _next22         LDWI	_Big
                 CALL	giga_vAC                    		; gosub Big
 
-                ForNextLoopStepUp	_ii _next22 0xc0 0xc2                                               		; next ii
+                ForNextLoopUp	_ii _next22 0       		; next ii
 
 _end_24         BRA		_end_24                     		; END
 
@@ -261,14 +245,14 @@ _test           PUSH
                 LDWI	newLineScroll
                 CALL	giga_vAC                    		; print hex$(i+30);" ";hex$(j+40);" "
 
+                PrintInt16	0x003d
+                PrintString	usrStr_0x6faa
+                PrintVarInt16	_i
                 STW		0xe0
                 LDWI	0x0500
                 CALL	giga_vAC
 
 0x0500          LDW		0xe0
-                PrintInt16	0x003d
-                PrintString	usrStr_0x6faa
-                PrintVarInt16	_i
                 PrintString	usrStr_0x6faa
                 PrintVarInt16	_j
                 PrintString	usrStr_0x6faa
@@ -330,11 +314,6 @@ _Big            PUSH
                 XORW	_f
                 STW		_h                          		; h = NOT g XOR f
 
-                STW		0xe0
-                LDWI	0x0600
-                CALL	giga_vAC
-
-0x0600          LDW		0xe0
                 LDW		_h
                 PrintAcHexWord	
                 PrintString	usrStr_0x6faa
@@ -342,6 +321,11 @@ _Big            PUSH
                 LDWI	newLineScroll
                 CALL	giga_vAC                    		; print hexw$(h);" ";56
 
+                STW		0xe0
+                LDWI	0x0600
+                CALL	giga_vAC
+
+0x0600          LDW		0xe0
                 LDWI	-8531
                 PrintAcHexWord	
                 LDWI	newLineScroll

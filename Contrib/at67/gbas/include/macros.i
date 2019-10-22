@@ -43,6 +43,25 @@
         DEEK
 %ENDM
 
+%MACRO  ForNextLoopUp _var _label _end
+        INC     _var
+        LD      _var
+        SUBI    _end
+        BGT     _label_+2
+        LDWI    _label
+_label_ CALL    giga_vAC
+%ENDM
+
+%MACRO  ForNextLoopDown _var _label _end
+        LD      _var
+        SUBI    1
+        ST      _var
+        SUBI    _end
+        BLT     _label_+2
+        LDWI    _label
+_label_ CALL    giga_vAC
+%ENDM
+
 %MACRO  ForNextLoopInit _start _end _step _vStart _vEnd _vStep
         LDWI    _start
         STW     _vStart

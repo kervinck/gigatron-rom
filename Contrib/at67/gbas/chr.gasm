@@ -39,12 +39,12 @@ frameCountPrev  EQU     register0 + 0x1C
 ; Labels
 _entryPoint_    EQU		0x0200
 _10             EQU		0x022e
-_20             EQU		0x039f
-_next3          EQU		0x0240
-_next4          EQU		0x024e
-_next5          EQU		0x025c
-_next9          EQU		0x029c
-_next17         EQU		0x033f
+_20             EQU		0x0360
+_next3          EQU		0x0236
+_next4          EQU		0x023a
+_next5          EQU		0x023e
+_next9          EQU		0x0274
+_next17         EQU		0x02f1
 0x0300          EQU		0x0300
 
 ; Variables
@@ -72,16 +72,13 @@ _entryPoint_    Initialise	                        		; INIT
 _10             LDI		1
                 STW		_a                          		; a =1
 
-                ForNextLoopInit	1 1 0xc0 0xc2
                 LDI		0
                 STW		_k                          		; for k = 0 to 1
 
-_next3          ForNextLoopInit	1 1 0xc4 0xc6
-                LDI		0
+_next3          LDI		0
                 STW		_j                          		; for j = 0 to 1
 
-_next4          ForNextLoopInit	1 1 0xc8 0xca
-                LDI		0
+_next4          LDI		0
                 STW		_i                          		; for i = 0 to 1
 
 _next5          PrintString	usrStr_0x6fa0           		; print "yahooowalllallllalalalwallla";
@@ -92,7 +89,6 @@ _next5          PrintString	usrStr_0x6fa0           		; print "yahooowalllalllla
                 PrintInt16	0x003d
                 PrintString	usrStr_0x6fc1           		; print 20*3+1;" ";
 
-                ForNextLoopInit	127 1 0xcc 0xce
                 LDI		32
                 STW		_char                       		; for char = 32 to 127
 
@@ -118,34 +114,33 @@ _next9          LDW		_a
                 ADDW	0xd2
                 PrintAcChar	                        		; print chr$(char+1 +a+a+a - 32*0 + 50/0 + a/0 + 3 - a -a -a -4 + j*0 + (k-k));
 
-                ForNextLoopStepUp	_char _next9 0xcc 0xce                                              		; next char
+                ForNextLoopUp	_char _next9 127    		; next char
 
-                ForNextLoopStepUp	_i _next5 0xc8 0xca                                                 		; next i
+                ForNextLoopUp	_i _next5 1         		; next i
 
-                STW		0xe0
-                LDWI	0x0300
-                CALL	giga_vAC
+                ForNextLoopUp	_j _next4 1         		; next j
 
-0x0300          LDW		0xe0
-                ForNextLoopStepUp	_j _next4 0xc4 0xc6                                                 		; next j
-
-                ForNextLoopStepUp	_k _next3 0xc0 0xc2                                                 		; next k
+                ForNextLoopUp	_k _next3 1         		; next k
 
                 PrintString	usrStr_0x6fc3
                 LDWI	newLineScroll
                 CALL	giga_vAC                    		; print "wooooooooooooooooooooooooooooow!!!"
 
-                ForNextLoopInit	6 1 0xc0 0xc2
                 LDI		0
                 STW		_i                          		; for i = 0 to 6
 
-_next17         PrintString	usrStr_0x6fe6
+_next17         STW		0xe0
+                LDWI	0x0300
+                CALL	giga_vAC
+
+0x0300          LDW		0xe0
+                PrintString	usrStr_0x6fe6
                 PrintString	usrStr_0x6fc1
                 PrintVarInt16	_i
                 LDWI	newLineScroll
                 CALL	giga_vAC                    		; print "dog";" ";i
 
-                ForNextLoopStepUp	_i _next17 0xc0 0xc2                                                		; next i
+                ForNextLoopUp	_i _next17 6        		; next i
 
                 Initialise	                        		; cls
 
