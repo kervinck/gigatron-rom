@@ -158,6 +158,7 @@ namespace Compiler
         int16_t _loopStep;
         uint16_t _varEnd;
         uint16_t _varStep;
+        bool _optimise = false;
     };
 
     struct MacroNameEntry
@@ -564,10 +565,8 @@ namespace Compiler
         std::string codeExpr = Expression::collapseWhitespace(codeText);
         std::vector<std::string> tokens = Expression::tokenise(codeExpr, ' ', true);
         codeLine = {codeText, codeExpr, tokens, vasm, expression, 0, labelIndex, varIndex, varType, assign, vars, ownsLabel};
-        //Expression::stripNonStringWhitespace(codeLine._code);
-        //Expression::stripWhitespace(codeLine._expression);
         Expression::operatorReduction(codeLine._expression);
-        if(codeLine._code.size() < 3) return true;
+        if(codeLine._code.size() < 3) return true; // anything too small is ignored
         _codeLines.push_back(codeLine);
 
         return true;
@@ -771,6 +770,28 @@ namespace Compiler
         return true;
     }
 
+    uint32_t parseExpression(CodeLine& codeLine, int codeLineIndex, const std::string& expression, int16_t& value, int16_t replace=0)
+    {
+        int varIndex, params;
+        Expression::parse(expression, codeLineIndex, value);
+        uint32_t expressionType = isExpression(expression, varIndex, params);
+        if((expressionType & Expression::HasVars)  &&  (expressionType & Expression::HasOperators))
+        {
+            emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(_tempVarStart)), false, codeLineIndex);
+        }
+        else if(expressionType & Expression::HasVars)
+        {
+            emitVcpuAsm("LDW", "_" + _integerVars[varIndex]._name, false, codeLineIndex);
+        }
+        else
+        {
+            if(value == 0  &&  replace != 0) value = replace;
+            emitVcpuAsm("LDWI", std::to_string(value), false, codeLineIndex);
+        }
+
+        return expressionType;
+    }
+
     bool isGosubLabel(const std::string& label)
     {
         std::string lab = label;
@@ -936,13 +957,17 @@ namespace Compiler
             // REM and LET modify code
             size_t foundPos;
             KeywordFuncResult result;
-            if(findKeyword(_codeLines[i]._code, "REM", foundPos))
+            if((foundPos = _codeLines[i]._code.find_first_of('\'')) != std::string::npos) // ' is a shortcut for REM
             {
                 keywordREM(_codeLines[i], 0, foundPos, result);
             }
+            else if(findKeyword(_codeLines[i]._code, "REM", foundPos))
+            {
+                keywordREM(_codeLines[i], 0, foundPos - 3, result);
+            }
             else if(findKeyword(_codeLines[i]._code, "LET", foundPos))
             {
-                keywordLET(_codeLines[i], 0, foundPos, result);
+                keywordLET(_codeLines[i], 0, foundPos - 3, result);
             }
 
             varResult = createCodeVar(_codeLines[i]._code, i, varIndex);
@@ -1499,7 +1524,7 @@ namespace Compiler
     bool keywordREM(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
         // Remove REM and everything after it in code
-        codeLine._code.erase(foundPos - 3, codeLine._code.size() - (foundPos - 3));
+        codeLine._code.erase(foundPos, codeLine._code.size() - foundPos);
 
         // Remove REM and everything after it in expression
         size_t rem;
@@ -1528,7 +1553,7 @@ namespace Compiler
     bool keywordLET(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
         // Remove LET from code
-        codeLine._code.erase(foundPos - 3, foundPos);
+        codeLine._code.erase(foundPos, foundPos + 3);
 
         return true;
     }
@@ -1696,14 +1721,9 @@ namespace Compiler
         step = code.find("STEP");
 
         // Loop start
-        int16_t loopStart;
+        int16_t loopStart = 0;
         std::string startToken = codeLine._code.substr(equals + 1, to - (equals + 1));
         Expression::stripWhitespace(startToken);
-        if(!Expression::stringToI16(startToken, loopStart))
-        {
-            fprintf(stderr, "Compiler::keywordFOR() : syntax error, (bad FOR start), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
-            return false;
-        }
 
         // Var counter, (create or update if being reused)
         std::string var = codeLine._code.substr(foundPos, equals - foundPos);
@@ -1712,28 +1732,19 @@ namespace Compiler
         (varIndex < 0) ? createVar(var, loopStart, codeLineIndex, false, varIndex) : updateVar(loopStart, codeLineIndex, varIndex, false);
 
         // Loop end
-        int16_t loopEnd;
+        int16_t loopEnd = 0;
         size_t end = (step == std::string::npos) ? codeLine._code.size() : step;
         std::string endToken = codeLine._code.substr(to + 2, end - (to + 2));
         Expression::stripWhitespace(endToken);
-        if(!Expression::stringToI16(endToken, loopEnd))
-        {
-            fprintf(stderr, "Compiler::keywordFOR() : syntax error, (bad FOR end), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
-            return false;
-        }
 
         // Loop step
         int16_t loopStep = 1;
+        std::string stepToken;
         if(step != std::string::npos)
         {
             end = codeLine._code.size();
-            std::string stepToken = codeLine._code.substr(step + 4, end - (step + 4));
+            stepToken = codeLine._code.substr(step + 4, end - (step + 4));
             Expression::stripWhitespace(stepToken);
-            if(!Expression::stringToI16(stepToken, loopStep))
-            {
-                fprintf(stderr, "Compiler::keywordFOR() : syntax error, (bad STEP), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
-                return false;
-            }
         }
 
         // Maximum of 4 nested loops
@@ -1747,7 +1758,21 @@ namespace Compiler
         int offset = int(_forNextDataStack.size()) * 4;
         uint16_t varEnd = LOOP_VAR_START + offset;
         uint16_t varStep = LOOP_VAR_START + offset + 2;
-        emitVcpuAsm("%ForNextLoopInit", std::to_string(loopEnd) + " " + std::to_string(loopStep) + " " + Expression::byteToHexString(uint8_t(varEnd)) + " " + Expression::byteToHexString(uint8_t(varStep)), false, codeLineIndex);
+
+        // Parse start field
+        bool optimise = false;
+        uint32_t expressionType = parseExpression(codeLine, codeLineIndex, startToken, loopStart);
+        emitVcpuAsm("STW", "_" + _integerVars[varIndex]._name, false, codeLineIndex);
+        //if(expressionType == Expression::HasNumbers) 
+
+        // Parse end field
+        expressionType = parseExpression(codeLine, codeLineIndex, endToken, loopEnd);
+        emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(varEnd)), false, codeLineIndex);
+
+        // Parse step field
+        int16_t replace = (loopStart < loopEnd) ? 1 : -1; // auto step based on start and end
+        expressionType = parseExpression(codeLine, codeLineIndex, stepToken, loopStep, replace);
+        emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(varStep)), false, codeLineIndex);
 
         // Find first valid line
         int lineAfterLoopInit = -1;
@@ -1779,7 +1804,7 @@ namespace Compiler
         }
 
         // Save FOR loop data for NEXT
-        _forNextDataStack.push({varIndex, _codeLines[lineAfterLoopInit]._labelIndex, lineAfterLoopInit, loopEnd, loopStep, varEnd, varStep});
+        _forNextDataStack.push({varIndex, _codeLines[lineAfterLoopInit]._labelIndex, lineAfterLoopInit, loopEnd, loopStep, varEnd, varStep, optimise});
 
         return true;
     }
@@ -1946,6 +1971,7 @@ namespace Compiler
             //if(keywordResult == KeywordFound) return true;
             std::string token = codeLine._tokens[i];
             if(Expression::strToUpper(token) == "PRINT") return true;
+            else if(Expression::strToUpper(token) == "FOR") return true;
         }
 
         int varIndex, params;

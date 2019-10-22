@@ -43,7 +43,9 @@
         DEEK
 %ENDM
 
-%MACRO  ForNextLoopInit _end _step _vEnd _vStep
+%MACRO  ForNextLoopInit _start _end _step _vStart _vEnd _vStep
+        LDWI    _start
+        STW     _vStart
         LDWI    _end
         STW     _vEnd
         LDWI    _step

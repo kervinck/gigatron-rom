@@ -38,15 +38,15 @@ frameCountPrev  EQU     register0 + 0x1C
 
 ; Labels
 _entryPoint_    EQU		0x0200
-_10             EQU		0x0243
-_test           EQU		0x0492
+_10             EQU		0x024c
+_test           EQU		0x0493
 _Big            EQU		0x05bb
-_next7          EQU		0x0251
-_next8          EQU		0x025f
-_next9          EQU		0x026d
-_next10         EQU		0x027b
-_next20         EQU		0x047b
-_end_22         EQU		0x0490
+_next9          EQU		0x025c
+_next10         EQU		0x026b
+_next11         EQU		0x027a
+_next12         EQU		0x0289
+_next22         EQU		0x047c
+_end_24         EQU		0x0491
 0x0300          EQU		0x0300
 0x0400          EQU		0x0400
 0x0500          EQU		0x0500
@@ -58,15 +58,17 @@ _b              EQU		0x0032
 _w              EQU		0x0034
 _x              EQU		0x0036
 _y              EQU		0x0038
-_a              EQU		0x003a
-_f              EQU		0x003c
-_g              EQU		0x003e
-_h              EQU		0x0040
-_i              EQU		0x0042
-_j              EQU		0x0044
-_jj             EQU		0x0046
-_ss             EQU		0x0048
-_ii             EQU		0x004a
+_dog            EQU		0x003a
+_cat            EQU		0x003c
+_a              EQU		0x003e
+_f              EQU		0x0040
+_g              EQU		0x0042
+_h              EQU		0x0044
+_i              EQU		0x0046
+_j              EQU		0x0048
+_jj             EQU		0x004a
+_ss             EQU		0x004c
+_ii             EQU		0x004e
 
 ; Strings
 usrStr_0x6fa0		EQU		0x6fa0
@@ -89,31 +91,51 @@ _entryPoint_    Initialise	                        		; INIT
                 STW		_b                          		; b = z
 
                 LDWI	0x6fa0
-                STW		_w                          		; w = chr$(&h31);
+                STW		_w                          		; w = chr$(&h31)
 
                 LDWI	0x6fa2
-                STW		_x                          		; x = hex$(127);
+                STW		_x                          		; x = hex$(127)
 
                 LDWI	0x6fa5
-                STW		_y                          		; y = hexw$(&hb00b);
+                STW		_y                          		; y = hexw$(&hb00b)
 
-_10             ForNextLoopInit	1 -1 0xc0 0xc2
-                LDI		5
-                STW		_i                          		; for i=5 to 1 step -1
+                LDI		31
+                STW		_dog                        		; dog = 31
 
-_next7          ForNextLoopInit	2 1 0xc4 0xc6
-                LDI		1
-                STW		_j                          		; for j = 1 to 2 step 1
+                LDWI	-2
+                STW		_cat                        		; cat = -2
 
-_next8          ForNextLoopInit	2 1 0xc8 0xca
-                LDI		1
-                STW		_jj                         		; for jj = 1 to 2 step 1
+_10             LDW		_z
+                ADDI	1
+                STW		_i
+                LDW		_dog
+                SUBI	1
+                STW		0xc0
+                LDW		_cat
+                STW		0xc2                        		; for i=z+1 to dog-1 step cat
 
-_next9          ForNextLoopInit	5 1 0xcc 0xce
-                LDI		1
-                STW		_ss                         		; for ss = 1 to 5 step 1
+_next9          LDWI	1
+                STW		_j
+                LDWI	3
+                STW		0xc4
+                LDWI	1
+                STW		0xc6                        		; for j = 1 to 3
 
-_next10         PrintInt16	0x003d
+_next10         LDWI	1
+                STW		_jj
+                LDWI	2
+                STW		0xc8
+                LDWI	1
+                STW		0xca                        		; for jj = 1 to 2 step 1
+
+_next11         LDWI	1
+                STW		_ss
+                LDWI	5
+                STW		0xcc
+                LDWI	1
+                STW		0xce                        		; for ss = 1 to 5 step 1
+
+_next12         PrintInt16	0x003d
                 PrintString	usrStr_0x6faa
                 PrintVarInt16	_i
                 PrintString	usrStr_0x6faa
@@ -128,12 +150,12 @@ _next10         PrintInt16	0x003d
                 PrintAcInt16	
                 PrintString	usrStr_0x6faa
                 LDW		_i
-                ADDW	_j
                 STW		0xe0
                 LDWI	0x0300
                 CALL	giga_vAC
 
 0x0300          LDW		0xe0
+                ADDW	_j
                 PrintAcInt16	
                 PrintString	usrStr_0x6faa
                 LDW		_i
@@ -152,13 +174,13 @@ _next10         PrintInt16	0x003d
                 LDWI	newLineScroll
                 CALL	giga_vAC                    		; print 20*3+1;" ";i;" ";j;" ";j+23;" ";i+55;" ";i+j;" ";i-j;" ";i-j+1;" ";i+j+j
 
-                ForNextLoopStepUp	_ss _next10 0xcc 0xce                                               		; next ss
+                ForNextLoopStepUp	_ss _next12 0xcc 0xce                                               		; next ss
 
-                ForNextLoopStepUp	_jj _next9 0xc8 0xca                                                		; next jj
+                ForNextLoopStepUp	_jj _next11 0xc8 0xca                                               		; next jj
 
-                ForNextLoopStepUp	_j _next8 0xc4 0xc6                                                 		; next j
+                ForNextLoopStepUp	_j _next10 0xc4 0xc6                                                		; next j
 
-                ForNextLoopStepDown	_i _next7 0xc0 0xc2                                                 		; next i
+                ForNextLoopStepDown	_i _next9 0xc0 0xc2                                                 		; next i
 
                 LDWI	_test
                 CALL	giga_vAC                    		; gosub   test
@@ -202,16 +224,19 @@ _next10         PrintInt16	0x003d
                 LDWI	newLineScroll
                 CALL	giga_vAC                    		; print hex$(80);" ";hexw$(&hdead);" ";hexw$(&hbeef)
 
-                ForNextLoopInit	0 1 0xc0 0xc2
-                LDI		0
-                STW		_ii                         		; for ii = 0 to 0 step 1
+                LDWI	0
+                STW		_ii
+                LDWI	0
+                STW		0xc0
+                LDWI	1
+                STW		0xc2                        		; for ii = 0 to 0 step 1
 
-_next20         LDWI	_Big
+_next22         LDWI	_Big
                 CALL	giga_vAC                    		; gosub Big
 
-                ForNextLoopStepUp	_ii _next20 0xc0 0xc2                                               		; next ii
+                ForNextLoopStepUp	_ii _next22 0xc0 0xc2                                               		; next ii
 
-_end_22         BRA		_end_22                     		; END
+_end_24         BRA		_end_24                     		; END
 
 _test           PUSH	
                 LDW		_i

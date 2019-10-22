@@ -154,7 +154,7 @@ _end_9          BRA		_end_9                      		; END
 
 _blamo          PUSH	
                 LDWI	23205
-                STW		_b                          		; b = &haa55 XOR 0xF0F0
+                STW		_b                          		; b = &haa55 XOR &hF0F0
 
                 LDW		_b
                 XORW	_a

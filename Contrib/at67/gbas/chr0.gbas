@@ -1,10 +1,14 @@
 let z = 33
 b = z
 
-w = chr$(&h31) : x = hex$(127) : y = hexw$(&hb00b)
+w = chr$(&h31)
+x = hex$(127)
+y = hexw$(&hb00b)
 
-10  for i=5 to 1 step -1
-        for j = 1 to 2 step 1
+dog = 31
+cat = -2
+10  for i=z+1 to dog-1 step cat
+        for j = 1 to 3
             for jj = 1 to 2 step 1
                 for ss = 1 to 5 step 1
                     print 20*3+1;" ";i;" ";j;" ";j+23;" ";i+55;" ";i+j;" ";i-j;" ";i-j+1;" ";i+j+j
@@ -19,7 +23,7 @@ w = chr$(&h31) : x = hex$(127) : y = hexw$(&hb00b)
     print hex$(80);" ";hexw$(&hdead);" ";hexw$(&hbeef)
 
     for ii = 0 to 0 step 1
-        rem cls
+        'cls
         gosub Big
     next ii
     
