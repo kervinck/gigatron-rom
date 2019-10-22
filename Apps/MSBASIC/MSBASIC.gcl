@@ -37,8 +37,7 @@ gcl0x
 
         $200 -                  Version check / TI$ and floating point buffer
         $218  - $235f           (6502) Microsoft BASIC version 2 (Commodore PET)
-        $2360 - $23ff           Shared empty pixel line
-        $2460 - $70ff           Video RAM for 11 text rows: 11*7 = 77 pages
+        $2360 - $6fff           Video RAM for 11 text rows: 11*7 = 77 pages
         $2400 -                 Setup / Input buffer
         $2500 -                 Setup continued
         $2600 -                 Main vCPU loop (BRK call handling); DrawChar
