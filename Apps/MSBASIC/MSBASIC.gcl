@@ -11,7 +11,7 @@ gcl0x
         --------------------------
         ### COMMODORE BASIC ###
 
-         4095 BYTES FREE
+         3839 BYTES FREE
 
         READY.
         --------------------------
@@ -37,7 +37,7 @@ gcl0x
 
         $200 -                  Version check / TI$ and floating point buffer
         $218  - $235f           (6502) Microsoft BASIC version 2 (Commodore PET)
-        $2360 - $6fff           Video RAM for 11 text rows: 11*7 = 77 pages
+        $2360 - $70ff           Video RAM for 11 text rows: 11*7+1 = 78 pages
         $2400 -                 Setup / Input buffer
         $2500 -                 Setup continued
         $2600 -                 Main vCPU loop (BRK call handling); DrawChar
@@ -49,7 +49,7 @@ gcl0x
         $2c00 -                 (6502) ISCNTC
         $2d00 -                 (6502) CLALL
         $2e00 -                 (6502) LINEEDIT
-        $7000 - $7fff           Free RAM giving 4096 bytes user space
+        $7100 - $7fff           Free RAM giving 3840 bytes user space
 }
 
 _k=$2a                          {Parking spot for keyboard handler: sysArgs6}
@@ -669,10 +669,10 @@ _STOP=$00093B
  #$58 #$a2 #$fb #$9a #$a9 #$4c #$85 #$87 #$85 #$38 #$a9 #$8e #$a0 #$12 #$85 #$39
  #$84 #$3a #$a9 #$28 #$85 #$19 #$a9 #$1e #$85 #$19 #$a2 #$1c #$bd #$73 #$22 #$95
  #$a5 #$ca #$d0 #$f8 #$a9 #$03 #$85 #$86 #$8a #$85 #$9b #$85 #$19 #$85 #$4a #$48
- #$85 #$45 #$e8 #$8e #$02 #$24 #$8e #$01 #$24 #$a2 #$4b #$86 #$48 #$a0 #$70 #$85
+ #$85 #$45 #$e8 #$8e #$02 #$24 #$8e #$01 #$24 #$a2 #$4b #$86 #$48 #$a0 #$71 #$85
  #$5d #$84 #$5e #$85 #$46 #$84 #$47 #$a8 #$e6 #$46 #$d0 #$04 #$e6 #$47 #$30 #$0f
  #$a9 #$55 #$91 #$46 #$d1 #$46 #$d0 #$07 #$0a #$91 #$46 #$d1 #$46 #$f0 #$e9 #$a5
- #$46 #$a4 #$47 #$85 #$69 #$84 #$6a #$85 #$65 #$84 #$66 #$a2 #$00 #$a0 #$70 #$86
+ #$46 #$a4 #$47 #$85 #$69 #$84 #$6a #$85 #$65 #$84 #$66 #$a2 #$00 #$a0 #$71 #$86
 
 *=$2300
  #$5d #$84 #$5e #$a0 #$00 #$98 #$91 #$5d #$e6 #$5d #$a5 #$5d #$a4 #$5e #$20 #$30

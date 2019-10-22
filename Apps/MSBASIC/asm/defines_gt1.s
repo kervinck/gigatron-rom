@@ -43,7 +43,7 @@ SPACE_FOR_GOSUB := STACK_BOT + 2*NUMLEV
 STACK_TOP       := $FF          ; Was $FA because INPUTBUFFER-5
 WIDTH           := 40           ; Value put in Z17, but never used
 WIDTH2          := 30           ; Value put in Z18, but never used
-RAMSTART2       := $7000        ; User space
+RAMSTART2       := $7100        ; User space
 
 ; magic memory locations
 ENTROPY         := $06
