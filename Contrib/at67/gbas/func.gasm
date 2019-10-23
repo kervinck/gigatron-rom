@@ -1,16 +1,28 @@
 _startAddress_  EQU		0x0200
-clearRegion     EQU     0x7fa0
-resetVideoTable EQU     clearRegion - 0x0100
-clearCursorRow  EQU     clearRegion - 0x0200
-printText       EQU     clearRegion - 0x0300
-printDigit      EQU     clearRegion - 0x0400
-printVarInt16   EQU     clearRegion - 0x0500
-printChar       EQU     clearRegion - 0x0600
-printHexByte    EQU     clearRegion - 0x0700
-newLineScroll   EQU     clearRegion - 0x0800
-resetAudio      EQU     clearRegion - 0x0900
-playMidi        EQU     clearRegion - 0x0A00
-midiStartNote   EQU     clearRegion - 0x0B00
+resetVideoTable EQU 0x7fa0
+convertEqOp     EQU resetVideoTable - 0x0100
+convertNeOp     EQU convertEqOp     + 9     
+convertLeOp     EQU convertNeOp     + 9     
+convertGeOp     EQU convertLeOp     + 9     
+convertLtOp     EQU convertGeOp     + 9     
+convertGtOp     EQU convertLtOp     + 9     
+clearRegion     EQU resetVideoTable - 0x0200
+clearCursorRow  EQU resetVideoTable - 0x0300
+printText       EQU resetVideoTable - 0x0400
+printDigit      EQU resetVideoTable - 0x0500
+printVarInt16   EQU resetVideoTable - 0x0600
+printChar       EQU resetVideoTable - 0x0700
+printHexByte    EQU resetVideoTable - 0x0800
+newLineScroll   EQU resetVideoTable - 0x0900
+resetAudio      EQU resetVideoTable - 0x0A00
+playMidi        EQU resetVideoTable - 0x0B00
+midiStartNote   EQU resetVideoTable - 0x0C00
+convertEqOpAddr EQU 0x00E2                  
+convertNeOpAddr EQU 0x00E4                  
+convertLeOpAddr EQU 0x00E6                  
+convertGeOpAddr EQU 0x00E8                  
+convertLtOpAddr EQU 0x00EA                  
+convertGtOpAddr EQU 0x00EC                  
 
 ; Internal variables
 register0       EQU     0x00a0
@@ -33,15 +45,16 @@ frameCountPrev  EQU     register0 + 0x1C
 %include include/gigatron.i
 %include include/audio.i
 %include include/clear_screen.i
+%include include/conv_conds.i
 %include include/print_text.i
 %include include/macros.i
 
 ; Labels
 _entryPoint_    EQU		0x0200
-_10             EQU		0x022e
-_blamo          EQU		0x033c
-_end_9          EQU		0x033a
-_next13         EQU		0x034c
+_10             EQU		0x024c
+_blamo          EQU		0x0363
+_end_9          EQU		0x0361
+_next14         EQU		0x0373
 0x0300          EQU		0x0300
 
 ; Variables
@@ -122,6 +135,11 @@ _10             LDI		33
                 PrintString	usrStr_0x6fa5
                 PrintInt16	0x0064
                 PrintString	usrStr_0x6fa5
+                STW		0xe0
+                LDWI	0x0300
+                CALL	giga_vAC
+
+0x0300          LDW		0xe0
                 PrintVarInt16	_a
                 PrintString	usrStr_0x6fa5
                 LDWI	0x0021
@@ -132,11 +150,6 @@ _10             LDI		33
                 CALL	giga_vAC                    		; print "test";" ";"dog";" ";56+44;" ";a;" ";hex$(peek(&h21) AND &hFC)
 
                 LDW		_a
-                STW		0xe0
-                LDWI	0x0300
-                CALL	giga_vAC
-
-0x0300          LDW		0xe0
                 PrintAcHexByte	
                 PrintString	usrStr_0x6fa5
                 LDW		_b
@@ -163,7 +176,7 @@ _blamo          PUSH
                 LDI		0
                 STW		_i                          		; for i = 0 to 100
 
-_next13         LDWI	0x6fab
+_next14         LDWI	0x6fab
                 STW		_c                          		; c = CHR$(32)
 
                 LDWI	0x0000
@@ -191,7 +204,7 @@ _next13         LDWI	0x6fab
                 LDWI	newLineScroll
                 CALL	giga_vAC                    		; print i; " " ; hexw$(b)
 
-                ForNextLoopUp	_i _next13 100      		; next i
+                ForNextLoopUp	_i _next14 100      		; next i
 
                 LDWI	-1
                 SUBW	_g

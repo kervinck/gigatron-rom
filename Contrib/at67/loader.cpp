@@ -1194,10 +1194,16 @@ namespace Loader
             // Execute code
             if(!_disableUploads  &&  hasRamCode)
             {
+                // vPC
                 Cpu::setRAM(0x0016, LO_BYTE(executeAddress-2));
                 Cpu::setRAM(0x0017, HI_BYTE(executeAddress));
+
+                // vLR
                 Cpu::setRAM(0x001a, LO_BYTE(executeAddress-2));
                 Cpu::setRAM(0x001b, HI_BYTE(executeAddress));
+
+                // Reset stack
+                Cpu::setRAM(0x001c, 0xFE);
             }
 
             //Editor::startDebugger();

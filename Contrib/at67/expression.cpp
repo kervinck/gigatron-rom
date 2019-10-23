@@ -78,6 +78,37 @@ namespace Expression
         left._value = (right._value == 0) ? 0 : left._value / right._value;
         return left;
     }
+    Numeric lt(Numeric& left, Numeric& right)
+    {
+        left._value = left._value < right._value;
+        return left;
+    }
+    Numeric gt(Numeric& left, Numeric& right)
+    {
+        left._value = left._value > right._value;
+        return left;
+    }
+    Numeric eq(Numeric& left, Numeric& right)
+    {
+        left._value = left._value == right._value;
+        return left;
+    }
+    Numeric ne(Numeric& left, Numeric& right)
+    {
+        left._value = left._value != right._value;
+        return left;
+    }
+    Numeric le(Numeric& left, Numeric& right)
+    {
+        left._value = left._value <= right._value;
+        return left;
+    }
+    Numeric ge(Numeric& left, Numeric& right)
+    {
+        left._value = left._value >= right._value;
+        return left;
+    }
+
 
     ExpressionType isExpression(const std::string& input)
     {
@@ -285,7 +316,7 @@ namespace Expression
         if(it == s.end()) return std::string("");
 
         size_t start = it - s.begin();
-        size_t end = s.find_first_of("-+/*) ");
+        size_t end = s.find_first_of("-+/*();,<>= ");
         if(end == std::string::npos) return s.substr(start);
 
         return s.substr(start, end - start);
@@ -755,6 +786,12 @@ namespace Expression
             else if(peek() == '&') {get(); t = term(); result = and(result, t);}
             else if(peek() == '^') {get(); t = term(); result = xor(result, t);}
             else if(peek() == '|') {get(); t = term(); result = or(result, t); }
+            else if(find("=="))    {       t = term(); result = eq(result, t); }
+            else if(find("!="))    {       t = term(); result = ne(result, t); }
+            else if(find("<="))    {       t = term(); result = le(result, t); }
+            else if(find(">="))    {       t = term(); result = ge(result, t); }
+            else if(peek() == '<') {get(); t = term(); result = lt(result, t); }
+            else if(peek() == '>') {get(); t = term(); result = gt(result, t); }
             else return result;
         }
     }

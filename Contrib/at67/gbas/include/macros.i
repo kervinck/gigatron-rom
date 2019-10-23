@@ -176,6 +176,18 @@ _label_ CALL    giga_vAC
         STW     textColour
         LDWI    0x0802          ; starting cursor position
         STW     cursorXY
+        LDWI    convertEqOp     ; (0x00E2 <-> 0x00ED), critical routines that can't straddle page boundaries
+        STW     convertEqOpAddr
+        LDWI    convertNeOp
+        STW     convertNeOpAddr
+        LDWI    convertLeOp
+        STW     convertLeOpAddr
+        LDWI    convertGeOp
+        STW     convertGeOpAddr
+        LDWI    convertLtOp
+        STW     convertLtOpAddr
+        LDWI    convertGtOp
+        STW     convertGtOpAddr
 %ENDM
 
 %MACRO  ClearRegion  _colour _x _y _w _h

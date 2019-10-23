@@ -1,16 +1,28 @@
 _startAddress_  EQU		0x0200
-clearRegion     EQU     0x7fa0
-resetVideoTable EQU     clearRegion - 0x0100
-clearCursorRow  EQU     clearRegion - 0x0200
-printText       EQU     clearRegion - 0x0300
-printDigit      EQU     clearRegion - 0x0400
-printVarInt16   EQU     clearRegion - 0x0500
-printChar       EQU     clearRegion - 0x0600
-printHexByte    EQU     clearRegion - 0x0700
-newLineScroll   EQU     clearRegion - 0x0800
-resetAudio      EQU     clearRegion - 0x0900
-playMidi        EQU     clearRegion - 0x0A00
-midiStartNote   EQU     clearRegion - 0x0B00
+resetVideoTable EQU 0x7fa0
+convertEqOp     EQU resetVideoTable - 0x0100
+convertNeOp     EQU convertEqOp     + 9     
+convertLeOp     EQU convertNeOp     + 9     
+convertGeOp     EQU convertLeOp     + 9     
+convertLtOp     EQU convertGeOp     + 9     
+convertGtOp     EQU convertLtOp     + 9     
+clearRegion     EQU resetVideoTable - 0x0200
+clearCursorRow  EQU resetVideoTable - 0x0300
+printText       EQU resetVideoTable - 0x0400
+printDigit      EQU resetVideoTable - 0x0500
+printVarInt16   EQU resetVideoTable - 0x0600
+printChar       EQU resetVideoTable - 0x0700
+printHexByte    EQU resetVideoTable - 0x0800
+newLineScroll   EQU resetVideoTable - 0x0900
+resetAudio      EQU resetVideoTable - 0x0A00
+playMidi        EQU resetVideoTable - 0x0B00
+midiStartNote   EQU resetVideoTable - 0x0C00
+convertEqOpAddr EQU 0x00E2                  
+convertNeOpAddr EQU 0x00E4                  
+convertLeOpAddr EQU 0x00E6                  
+convertGeOpAddr EQU 0x00E8                  
+convertLtOpAddr EQU 0x00EA                  
+convertGtOpAddr EQU 0x00EC                  
 
 ; Internal variables
 register0       EQU     0x00a0
@@ -33,18 +45,19 @@ frameCountPrev  EQU     register0 + 0x1C
 %include include/gigatron.i
 %include include/audio.i
 %include include/clear_screen.i
+%include include/conv_conds.i
 %include include/print_text.i
 %include include/macros.i
 
 ; Labels
 _entryPoint_    EQU		0x0200
-_10             EQU		0x022e
-_20             EQU		0x0360
-_next3          EQU		0x0236
-_next4          EQU		0x023a
-_next5          EQU		0x023e
-_next9          EQU		0x0274
-_next17         EQU		0x02f1
+_10             EQU		0x024c
+_20             EQU		0x039f
+_next4          EQU		0x0254
+_next5          EQU		0x0258
+_next6          EQU		0x025c
+_next10         EQU		0x0292
+_next18         EQU		0x0323
 0x0300          EQU		0x0300
 
 ; Variables
@@ -75,13 +88,13 @@ _10             LDI		1
                 LDI		0
                 STW		_k                          		; for k = 0 to 1
 
-_next3          LDI		0
+_next4          LDI		0
                 STW		_j                          		; for j = 0 to 1
 
-_next4          LDI		0
+_next5          LDI		0
                 STW		_i                          		; for i = 0 to 1
 
-_next5          PrintString	usrStr_0x6fa0           		; print "yahooowalllallllalalalwallla";
+_next6          PrintString	usrStr_0x6fa0           		; print "yahooowalllallllalalalwallla";
 
                 PrintString	usrStr_0x6fbd
                 PrintString	usrStr_0x6fc1           		; print "yes";" ";
@@ -92,7 +105,7 @@ _next5          PrintString	usrStr_0x6fa0           		; print "yahooowalllalllla
                 LDI		32
                 STW		_char                       		; for char = 32 to 127
 
-_next9          LDW		_a
+_next10         LDW		_a
                 ADDI	1
                 STW		_a                          		; a = a + 1
 
@@ -114,13 +127,18 @@ _next9          LDW		_a
                 ADDW	0xd2
                 PrintAcChar	                        		; print chr$(char+1 +a+a+a - 32*0 + 50/0 + a/0 + 3 - a -a -a -4 + j*0 + (k-k));
 
-                ForNextLoopUp	_char _next9 127    		; next char
+                ForNextLoopUp	_char _next10 127   		; next char
 
-                ForNextLoopUp	_i _next5 1         		; next i
+                ForNextLoopUp	_i _next6 1         		; next i
 
-                ForNextLoopUp	_j _next4 1         		; next j
+                ForNextLoopUp	_j _next5 1         		; next j
 
-                ForNextLoopUp	_k _next3 1         		; next k
+                STW		0xe0
+                LDWI	0x0300
+                CALL	giga_vAC
+
+0x0300          LDW		0xe0
+                ForNextLoopUp	_k _next4 1         		; next k
 
                 PrintString	usrStr_0x6fc3
                 LDWI	newLineScroll
@@ -129,18 +147,13 @@ _next9          LDW		_a
                 LDI		0
                 STW		_i                          		; for i = 0 to 6
 
-_next17         STW		0xe0
-                LDWI	0x0300
-                CALL	giga_vAC
-
-0x0300          LDW		0xe0
-                PrintString	usrStr_0x6fe6
+_next18         PrintString	usrStr_0x6fe6
                 PrintString	usrStr_0x6fc1
                 PrintVarInt16	_i
                 LDWI	newLineScroll
                 CALL	giga_vAC                    		; print "dog";" ";i
 
-                ForNextLoopUp	_i _next17 6        		; next i
+                ForNextLoopUp	_i _next18 6        		; next i
 
                 Initialise	                        		; cls
 
