@@ -336,7 +336,7 @@ L2D39:
         jsr     ISLETC
         bcs     FRM_VARIABLE
 .ifdef CONFIG_CBM_ALL
-        cmp     #$FF
+        cmp     #$FF    ; PI CHAR
         bne     LCDC1
         lda     #<CON_PI
         ldy     #>CON_PI
@@ -346,13 +346,13 @@ CON_PI:
         .byte   $82,$49,$0f,$DA,$A1
 LCDC1:
 .endif
-        cmp     #$2E
+        cmp     #$2E    ; "."
         beq     L2D36
         cmp     #TOKEN_MINUS
         beq     MIN
         cmp     #TOKEN_PLUS
         beq     L2D31
-        cmp     #$22
+        cmp     #$22    ; A QUOTE? A STRING?
         bne     NOT_
 
 ; ----------------------------------------------------------------------------
@@ -466,15 +466,17 @@ LCE3B:
   .else
         ldx     #$00
         stx     STRNG1+1
-        bit     FAC+4
-        bpl     LCE53
+    .ifndef GT1
+        bit     FAC_LAST
+        bpl     LCE53   ; Assumes vars are <32K and C_ZERO lives above!
+    .endif
         cmp     #$54	; T
         bne     LCE53
   .endif
         cpy     #$C9	; I$
         bne     LCE53
-        jsr     LCE76
-        sty     EXPON
+        jsr     GETTIM
+        sty     EXPON   ; Y=0
         dey
         sty     STRNG2
         ldy     #$06
@@ -512,9 +514,11 @@ L2DC2:
         .byte   $19
 .endif
 .ifdef CBM2
-        bit     FAC+4
-        bpl     LCE90
-        cmp     #$54
+  .ifndef GT1
+        bit     FAC_LAST
+        bpl     LCE90   ; Assumes vars are <32K and C_ZERO lives above!
+  .endif
+        cmp     #$54    ; T
         bne     LCE82
 .endif
 .ifndef CONFIG_CBM_ALL
@@ -522,39 +526,38 @@ L2DC2:
 .endif
 .ifdef CONFIG_CBM_ALL
 LCE69:
-        cpy     #$49
+        cpy     #$49    ; I, C=1 when equal
 .ifdef CBM1
         bne     LCE82
 .else
         bne     LCE90
 .endif
-        jsr     LCE76
-        tya
-        ldx     #$A0
-        jmp     LDB21
-LCE76:
-.ifdef CBM1
-        lda     #$FE
-        ldy     #$01
+        jsr     GETTIM
+        tya             ; (Y=0) FOR FLOAT3
+        ldx     #$A0    ; EXPONENT
+        jmp     FLOAT3  ; With C=1
+.ifdef GETTIM           ; allow override
+GETTIM1:
 .else
-        lda     #$8B
-        ldy     #$00
+GETTIM:
 .endif
+        lda     #<(TISTR-2)
+        ldy     #>(TISTR-2)
         sei
         jsr     LOAD_FAC_FROM_YA
         cli
-        sty     FAC+1
+        sty     FAC+1   ; ZERO HIGHEST.
         rts
 LCE82:
-        cmp     #$53
+        cmp     #$53    ; S
         bne     LCE90
-        cpy     #$54
+        cpy     #$54    ; T
         bne     LCE90
         lda     Z96
         jmp     FLOAT
 LCE90:
-        lda     FAC+3
-        ldy     FAC+4
+        lda     FAC_LAST-1
+        ldy     FAC_LAST
         jmp     LOAD_FAC_FROM_YA
 .endif
 

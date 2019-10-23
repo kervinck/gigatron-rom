@@ -111,16 +111,14 @@ VARPNT:
 	.res 2
 FORPNT:
 	.res 2
-
-.ifdef GT1
-.assert *=$0080, error, "Gigatron needs gap at $0080"
-	.res 1
-.endif
-
 LASTOP:
 	.res 2
 CPRTYP:
 	.res 1
+.ifdef GT1
+.assert *=$0080, error, "Gigatron needs gap at $0080"
+	.res 1
+.endif
 FNCNAM:
 TEMP3:
 	.res 2
@@ -157,7 +155,6 @@ TMPEXP:
 TEMP2:
 .endif
 	.res 1
-
 EXPON:
 	.res 1
 LOWTR:

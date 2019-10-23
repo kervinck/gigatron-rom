@@ -32,7 +32,7 @@ The following symbols can be defined in addition:
 | CONFIG_CBM1_PATCHES               | jump out into CBM1's binary patches instead of doing the right thing inline
 | CONFIG_CBM_ALL                    | add all Commodore-specific additions except file I/O
 | CONFIG_DATAFLG                    | ?
-| CONFIG_EASTER_EGG                 | include the CBM2 "WAIT 6502" easter egg
+| CONFIG_EASTER_EGG                 | include the CBM2 "WAIT 6502" easter egg. set to 0 for CHROUT
 | CONFIG_FILE                       | support Commodore PRINT#, INPUT#, GET#, CMD
 | CONFIG_IO_MSB                     | all I/O has bit #7 set
 | CONFIG_MONCOUT_DESTROYS_Y         | Y needs to be preserved when calling MONCOUT

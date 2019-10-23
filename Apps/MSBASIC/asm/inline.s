@@ -97,6 +97,10 @@ L2443:
       .endif
         bcs     L244C
     .endif
+    .ifdef GT1
+        jsr     LINEEDIT
+        beq     INLIN2
+    .endif
         sta     INPUTBUFFER,x
         inx
     .if .def(OSI) || .def(AIM65)

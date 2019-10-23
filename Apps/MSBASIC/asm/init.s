@@ -148,7 +148,7 @@ COLD_START:
         ldx     #GENERIC_CHRGET_END-GENERIC_CHRGET
   .endif
 .else
-        ldx     #GENERIC_CHRGET_END-GENERIC_CHRGET-1 ; XXX
+        ldx     #GENERIC_CHRGET_END-GENERIC_CHRGET-1 ; XXX BUG!
 .endif
 L4098:
         lda     GENERIC_CHRGET-1,x
