@@ -928,9 +928,12 @@ namespace Compiler
         emitVcpuAsm("%Initialise", "", false, 0);
 
         // GOSUB labels
+        Assembler::setUseOpcodeCALLI(false);
         for(int i=0; i<numLines; i++)
         {
             if(!checkForGosubLabel(_input[i], i)) return false;
+
+            if(_input[i].find("_useOpcodeCALLI_") != std::string::npos) Assembler::setUseOpcodeCALLI(true);
         }
 
         // All labels
@@ -2540,6 +2543,12 @@ namespace Compiler
                     uint16_t audioExcl = (hPC <<8) | 0x00F2;
                     uint16_t pageExcl  = (hPC <<8) | 0x00F8;
 
+                    if(Assembler::getUseOpcodeCALLI())
+                    {
+                        audioExcl += 6;
+                        pageExcl += 6;
+                    }
+
                     // Check MACRO opcodes
                     std::string macroOpcode = itVasm->_opcode;
                     if(macroOpcode.size()  &&  macroOpcode[0] == '%')
@@ -2554,30 +2563,43 @@ namespace Compiler
                         }
                     }
 
-                    if(itVasm->_pageJump == false  &&  (vPC > pageExcl  ||  ((hPC == 0x02 || hPC == 0x03 || hPC == 0x04)  &&  vPC > audioExcl)))
+                    if(itVasm->_pageJump == false  &&  (vPC >= pageExcl  ||  ((hPC == 0x02 || hPC == 0x03 || hPC == 0x04)  &&  vPC >= audioExcl)))
                     {
-                        std::string operandSTW, operandLDWI, operandCALL, operandLDW;
                         std::vector<std::string> tokens;
                         uint16_t currPC = (vasmLineIndex > 0) ? itCode->_vasm[vasmLineIndex-1]._address : itVasm->_address;
 
-                        // Insert page jump, (save and restore vAC)
-                        int sizeSTW  = createVcpuAsm("STW", Expression::byteToHexString(VAC_SAVE_START), codeLineIndex, operandSTW);
-                        int sizeLDWI = createVcpuAsm("LDWI", Expression::wordToHexString(nextPC), codeLineIndex, operandLDWI);
-                        int sizeCALL = createVcpuAsm("CALL", "giga_vAC", codeLineIndex, operandCALL);
-                        int sizeLDW  = createVcpuAsm("LDW", Expression::byteToHexString(VAC_SAVE_START), codeLineIndex, operandLDW);
-                        itVasm = itCode->_vasm.insert((vasmLineIndex > 0) ? itVasm-1 : itVasm, {currPC, "STW", operandSTW, "", -1, true});
-                        itVasm = insertPageJumpInstruction(itCode, itVasm + 1, "LDWI", operandLDWI, uint16_t(currPC + sizeSTW));
-                        itVasm = insertPageJumpInstruction(itCode, itVasm + 1, "CALL", operandCALL, uint16_t(currPC + sizeSTW + sizeLDWI));
-                        itVasm = insertPageJumpInstruction(itCode, itVasm + 1, "LDW", operandLDW, uint16_t(nextPC));
+                        // Insert page jump
+                        if(Assembler::getUseOpcodeCALLI())
+                        {
+                            std::string operandCALLI;
+                            int sizeCALLI = createVcpuAsm("CALLI", Expression::wordToHexString(nextPC), codeLineIndex, operandCALLI);
+                            itVasm = itCode->_vasm.insert((vasmLineIndex > 0) ? itVasm-1 : itVasm, {currPC, "CALLI", operandCALLI, "", -1, true});
 
-                        // Create page jump label, (created later in outputCode())
-                        itCode->_vasm[itVasm - itCode->_vasm.begin()]._internalLabel = Expression::wordToHexString(nextPC);
+                            // Create page jump label, (created later in outputCode())
+                            itCode->_vasm[itVasm + 1 - itCode->_vasm.begin()]._internalLabel = Expression::wordToHexString(nextPC);
+                        }
+                        // ROMS that don't have CALLI, (save and restore vAC)
+                        else
+                        {
+                            std::string operandSTW, operandLDWI, operandCALL, operandLDW;
+                            int sizeSTW  = createVcpuAsm("STW", Expression::byteToHexString(VAC_SAVE_START), codeLineIndex, operandSTW);
+                            int sizeLDWI = createVcpuAsm("LDWI", Expression::wordToHexString(nextPC), codeLineIndex, operandLDWI);
+                            int sizeCALL = createVcpuAsm("CALL", "giga_vAC", codeLineIndex, operandCALL);
+                            int sizeLDW  = createVcpuAsm("LDW", Expression::byteToHexString(VAC_SAVE_START), codeLineIndex, operandLDW);
+                            itVasm = itCode->_vasm.insert((vasmLineIndex > 0) ? itVasm-1 : itVasm, {currPC, "STW", operandSTW, "", -1, true});
+                            itVasm = insertPageJumpInstruction(itCode, itVasm + 1, "LDWI", operandLDWI, uint16_t(currPC + sizeSTW));
+                            itVasm = insertPageJumpInstruction(itCode, itVasm + 1, "CALL", operandCALL, uint16_t(currPC + sizeSTW + sizeLDWI));
+                            itVasm = insertPageJumpInstruction(itCode, itVasm + 1, "LDW", operandLDW, uint16_t(nextPC));
 
-                        // New page address is offset by size of vAC restore
-                        nextPC += sizeLDW;
-                        int offset = nextPC - currPC;
+                            // Create page jump label, (created later in outputCode())
+                            itCode->_vasm[itVasm - itCode->_vasm.begin()]._internalLabel = Expression::wordToHexString(nextPC);
+
+                            // New page address is offset by size of vAC restore
+                            nextPC += sizeLDW;
+                        }
 
                         // Fix labels and addresses
+                        int offset = nextPC - currPC;
                         adjustExclusionLabelAddresses(currPC, offset);
                         adjustExclusionVasmAddresses(codeLineIndex, currPC, nextPC, offset);
 
@@ -2801,6 +2823,7 @@ namespace Compiler
 
     bool compile(const std::string& inputFilename, const std::string& outputFilename)
     {
+        Assembler::clearAssembler();
         clearCompiler();
 
         uint16_t address;

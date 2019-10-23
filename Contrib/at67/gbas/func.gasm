@@ -52,9 +52,9 @@ frameCountPrev  EQU     register0 + 0x1C
 ; Labels
 _entryPoint_    EQU		0x0200
 _10             EQU		0x024c
-_blamo          EQU		0x0363
-_end_9          EQU		0x0361
-_next14         EQU		0x0373
+_blamo          EQU		0x034b
+_end_10         EQU		0x0349
+_next15         EQU		0x035b
 0x0300          EQU		0x0300
 
 ; Variables
@@ -135,15 +135,12 @@ _10             LDI		33
                 PrintString	usrStr_0x6fa5
                 PrintInt16	0x0064
                 PrintString	usrStr_0x6fa5
-                STW		0xe0
-                LDWI	0x0300
-                CALL	giga_vAC
-
-0x0300          LDW		0xe0
                 PrintVarInt16	_a
                 PrintString	usrStr_0x6fa5
                 LDWI	0x0021
-                PEEK	
+                CALLI	0x0300
+
+0x0300          PEEK	
                 ANDI	252
                 PrintAcHexByte	
                 LDWI	newLineScroll
@@ -163,7 +160,7 @@ _10             LDI		33
                 LDWI	_10
                 CALL	giga_vAC                    		; goto 10
 
-_end_9          BRA		_end_9                      		; END
+_end_10         BRA		_end_10                     		; END
 
 _blamo          PUSH	
                 LDWI	23205
@@ -176,7 +173,7 @@ _blamo          PUSH
                 LDI		0
                 STW		_i                          		; for i = 0 to 100
 
-_next14         LDWI	0x6fab
+_next15         LDWI	0x6fab
                 STW		_c                          		; c = CHR$(32)
 
                 LDWI	0x0000
@@ -204,7 +201,7 @@ _next14         LDWI	0x6fab
                 LDWI	newLineScroll
                 CALL	giga_vAC                    		; print i; " " ; hexw$(b)
 
-                ForNextLoopUp	_i _next14 100      		; next i
+                ForNextLoopUp	_i _next15 100      		; next i
 
                 LDWI	-1
                 SUBW	_g

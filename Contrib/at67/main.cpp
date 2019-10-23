@@ -1,5 +1,5 @@
 /*******************************************************************************/
-/* gtemuAT67 ver0.8.6                                                          */
+/* gtemuAT67 ver0.8.11                                                          */
 /*                                                                             */ 
 /* gtemuAT67 is an emulator, controller, assembler, (vCPU and Native code),    */
 /* disassembler, debugger and soon to be a BASIC compiler for the Gigatron TTL */

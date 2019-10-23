@@ -110,6 +110,8 @@ namespace Assembler
 
     int _lineNumber;
 
+    bool _useOpcodeCALLI_ = false;
+
     uint16_t _byteCount = 0;
     uint16_t _callTablePtr = 0x0000;
     uint16_t _startAddress = DEFAULT_START_ADDRESS;
@@ -133,6 +135,7 @@ namespace Assembler
     std::map<uint8_t, InstructionDasm> _nativeOpcodes;
 
 
+    bool getUseOpcodeCALLI(void) {return _useOpcodeCALLI_;}
     uint16_t getStartAddress(void) {return _startAddress;}
     int getPrevDasmByteCount(void) {return _prevDasmByteCount;}
     int getCurrDasmByteCount(void) {return _currDasmByteCount;}
@@ -141,6 +144,7 @@ namespace Assembler
     int getDisassembledCodeSize(void) {return int(_disassembledCode.size());}
     DasmCode* getDisassembledCode(int index) {return &_disassembledCode[index % _disassembledCode.size()];}
 
+    void setUseOpcodeCALLI(bool useOpcodeCALLI) {_useOpcodeCALLI_ = useOpcodeCALLI;}
     void setIncludePath(const std::string& includePath) {_includePath = includePath;}
 
 
@@ -204,6 +208,9 @@ namespace Assembler
         _asmOpcodes["ALLOC"] = {0xDF, 0x00, TwoBytes,   vCpu};
         _asmOpcodes["SYS"]   = {0xB4, 0x00, TwoBytes,   vCpu};
         _asmOpcodes["DEF"]   = {0xCD, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["CALLI"] = {0x85, 0x00, ThreeBytes, vCpu};
+        _asmOpcodes["CMPHS"] = {0x1F, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["CMPHU"] = {0x97, 0x00, TwoBytes,   vCpu};
 
         // Gigatron vCPU branch instructions
         _asmOpcodes["BEQ"] = {0x35, 0x3F, ThreeBytes, vCpu};
@@ -271,6 +278,9 @@ namespace Assembler
         _vcpuOpcodes[0xDF] = {0xDF, 0x00, TwoBytes,   vCpu, "ALLOC"};
         _vcpuOpcodes[0xB4] = {0xB4, 0x00, TwoBytes,   vCpu, "SYS"  };
         _vcpuOpcodes[0xCD] = {0xCD, 0x00, TwoBytes,   vCpu, "DEF"  };
+        _vcpuOpcodes[0x85] = {0x85, 0x00, ThreeBytes, vCpu, "CALLI"};
+        _vcpuOpcodes[0x1F] = {0x1F, 0x00, TwoBytes,   vCpu, "CMPHS"};
+        _vcpuOpcodes[0x97] = {0x97, 0x00, TwoBytes,   vCpu, "CMPHU"};
 
         // Gigatron vCPU branch instructions, (this works because condition code is still unique compared to opcodes)
         _vcpuOpcodes[0x3F] = {VCPU_BRANCH_OPCODE, 0x3F, ThreeBytes, vCpu, "BEQ"};
@@ -807,6 +817,11 @@ namespace Assembler
                 {
                     _startAddress = equate._operand;
                     _currentAddress = _startAddress;
+                }
+                // Reserved word, (equate), _useOpcodeCALLI_
+                else if(tokens[0] == "_useOpcodeCALLI_")
+                {
+                    _useOpcodeCALLI_ = true;
                 }
 #ifndef STAND_ALONE
                 // Disable upload of the current assembler module
@@ -2020,6 +2035,7 @@ namespace Assembler
         _gprintfs.clear();
 
         _callTablePtr = 0x0000;
+        _useOpcodeCALLI_ = false;
 
         Expression::setExprFunc(Expression::expression);
 
