@@ -3199,9 +3199,9 @@ st([vLR])                       #14
 ld([vPC+1])                     #15
 st([vLR+1],Y)                   #16
 ld([Y,X])                       #17
-suba(2)                         #18
-st([vPC])                       #19
-st([Y,Xpp])                     #20 Just to increment X
+st([Y,Xpp])                     #18 Just to increment X
+suba(2)                         #19
+st([vPC])                       #20
 ld([Y,X])                       #21
 ld(hi('REENTER_28'),Y)          #22
 jmp(Y,'REENTER_28')             #23
