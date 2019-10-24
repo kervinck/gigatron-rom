@@ -46,7 +46,7 @@ clearCR_loopx   SUBI    4                   ; loop is unrolled 4 times
                 LoopCounter clearLoop clearCR_loopy
                 RET
                 
-                ; prints text using the inbuilt font
+                ; prints text string pointed to by the accumulator
 printText       PUSH
                 LDW     textStr             
                 PEEK
@@ -63,6 +63,7 @@ printT_loop     LoopCounter textLen printT_char
                 RET
 
                 
+                ; prints single digit in textNum
 printDigit      PUSH
                 LDW     textNum
 printD_index    SUBW    digitMult
@@ -83,18 +84,19 @@ printD_exit     POP
                 RET
 
 
-printVarInt16   PUSH
+                ; prints 16bit int in textNum
+printInt16      PUSH
                 LDI     0
                 ST      digitIndex
                 LDW     textNum
-                BGE     printVI16_pos
+                BGE     printI16_pos
                 LDI     0x2D
                 ST      textChr
                 LDWI    printChar
                 CALL    giga_vAC
                 LDWI    0
                 SUBW    textNum
-printVI16_pos   STW     textNum    
+printI16_pos    STW     textNum    
 
                 LDWI    10000
                 STW     digitMult
@@ -121,7 +123,7 @@ printVI16_pos   STW     textNum
                 RET
 
 
-                ; char in accumulator
+                ; prints char in textChr
 printChar       PUSH
                 LD      textChr             ; (char-32)*5 + 0x0700
                 SUBI    32
@@ -216,6 +218,7 @@ newLS_exit      POP
                 RET
 
                 
+                ; print hex byte in textHex
 printHexByte    PUSH
                 LDWI    SYS_LSRW4_50    ; shift right by 4 SYS routine
                 STW     giga_sysFn
@@ -241,6 +244,7 @@ printH_skip1    ADDI    0x3A
                 RET
                 
                 
+                ; print hex word in textHex
 printHexWord    PUSH
                 LD      textHex
                 ST      textBak

@@ -10,21 +10,14 @@ clearRegion          EQU		resetVideoTable - 0x0200
 clearCursorRow       EQU		resetVideoTable - 0x0300
 printText            EQU		resetVideoTable - 0x0400
 printDigit           EQU		resetVideoTable - 0x0500
-printVarInt16        EQU		resetVideoTable - 0x0600
+printInt16           EQU		resetVideoTable - 0x0600
 printChar            EQU		resetVideoTable - 0x0700
 printHexByte         EQU		resetVideoTable - 0x0800
 printHexWord         EQU		resetVideoTable - 0x0900
 newLineScroll        EQU		resetVideoTable - 0x0A00
-printText_CALLI      EQU		resetVideoTable - 0x0B00
-printDigit_CALLI     EQU		resetVideoTable - 0x0C00
-printVarInt16_CALLI  EQU		resetVideoTable - 0x0D00
-printChar_CALLI      EQU		resetVideoTable - 0x0E00
-printHexByte_CALLI   EQU		resetVideoTable - 0x0F00
-printHexWord_CALLI   EQU		resetVideoTable - 0x1000
-newLineScroll_CALLI  EQU		resetVideoTable - 0x1100
-resetAudio           EQU		resetVideoTable - 0x1200
-playMidi             EQU		resetVideoTable - 0x1300
-midiStartNote        EQU		resetVideoTable - 0x1400
+resetAudio           EQU		resetVideoTable - 0x0B00
+playMidi             EQU		resetVideoTable - 0x0C00
+midiStartNote        EQU		resetVideoTable - 0x0D00
 
 ; Internal variables
 register0            EQU		0x00a0
@@ -48,16 +41,15 @@ frameCountPrev       EQU		register0 + 0x1C
 %include             include/audio.i
 %include             include/clear_screen.i
 %include             include/conv_conds.i
-%include             include/print_text.i
 %include             include/print_text_CALLI.i
-%include             include/macros.i
+%include             include/macros_CALLI.i
 
 ; Labels
 _entryPoint_         EQU		0x0200
 _10                  EQU		0x022c
-_blamo               EQU		0x0305
-_end_10              EQU		0x0303
-_next15              EQU		0x0315
+_blamo               EQU		0x02e2
+_end_10              EQU		0x02e0
+_next15              EQU		0x02f2
 0x0300               EQU		0x0300
 
 ; Variables
@@ -83,7 +75,7 @@ usrStr_0x5fab		 EQU		0x5fab
 usrStr_0x5fab		 DB			1 ' '
 
 ; Code
-_entryPoint_         Initialise_CALLI		                                      		; INIT
+_entryPoint_         Initialise		                                            		; INIT
 
 _10                  LDI		33
                      STW		_addr                                            		; addr = &h21
@@ -131,33 +123,31 @@ _10                  LDI		33
 
                      CALLI		_blamo                                             		; gosub blamo
 
-                     PrintString_CALLI		usrStr_0x5fa0
-                     PrintString_CALLI		usrStr_0x5fa5
-                     PrintString_CALLI		usrStr_0x5fa7
-                     PrintString_CALLI		usrStr_0x5fa5
-                     PrintInt16_CALLI		0x0064
-                     PrintString_CALLI		usrStr_0x5fa5
-                     PrintVarInt16_CALLI		_a
-                     PrintString_CALLI		usrStr_0x5fa5
+                     PrintString		usrStr_0x5fa0
+                     PrintString		usrStr_0x5fa5
+                     PrintString		usrStr_0x5fa7
+                     PrintString		usrStr_0x5fa5
+                     PrintInt16		0x0064
+                     PrintString		usrStr_0x5fa5
+                     PrintVarInt16		_a
+                     PrintString		usrStr_0x5fa5
                      LDWI		0x0021
                      PEEK		
                      ANDI		252
-                     PrintAcHexByte_CALLI		
+                     PrintAcHexByte		
                      CALLI		newLineScroll                                      		; print "test";" ";"dog";" ";56+44;" ";a;" ";hex$(peek(&h21) AND &hFC)
 
                      LDW		_a
-                     PrintAcHexByte_CALLI		
-                     PrintString_CALLI		usrStr_0x5fa5
+                     PrintAcHexByte		
+                     PrintString		usrStr_0x5fa5
                      LDW		_b
-                     PrintAcHexWord_CALLI		
-                     PrintString_CALLI		usrStr_0x5fa5
+                     PrintAcHexWord		
+                     PrintString		usrStr_0x5fa5
                      LDWI		13107
-                     PrintAcHexWord_CALLI		
+                     PrintAcHexWord		
                      CALLI		newLineScroll                                      		; print hex$(a);" ";hexw$(b);" ";hexw$(&h1111 OR &h2222)
 
-                     CALLI		0x0300
-
-0x0300               CALLI		_10                                                		; goto 10
+                     CALLI		_10                                                		; goto 10
 
 _end_10              BRA		_end_10                                          		; END
 
@@ -172,7 +162,9 @@ _blamo               PUSH
                      LDI		0
                      STW		_i                                               		; for i = 0 to 100
 
-_next15              LDWI		0x5fab
+_next15              CALLI		0x0300
+
+0x0300               LDWI		0x5fab
                      STW		_c                                               		; c = CHR$(32)
 
                      LDWI		0x0000
@@ -193,10 +185,10 @@ _next15              LDWI		0x5fab
                      SUBW		_b
                      STW		_b                                               		; b = -b
 
-                     PrintVarInt16_CALLI		_i
-                     PrintString_CALLI		usrStr_0x5fa5
+                     PrintVarInt16		_i
+                     PrintString		usrStr_0x5fa5
                      LDW		_b
-                     PrintAcHexWord_CALLI		
+                     PrintAcHexWord		
                      CALLI		newLineScroll                                      		; print i; " " ; hexw$(b)
 
                      ForNextLoopUp		_i _next15 100                             		; next i

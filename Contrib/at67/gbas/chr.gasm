@@ -10,21 +10,14 @@ clearRegion          EQU		resetVideoTable - 0x0200
 clearCursorRow       EQU		resetVideoTable - 0x0300
 printText            EQU		resetVideoTable - 0x0400
 printDigit           EQU		resetVideoTable - 0x0500
-printVarInt16        EQU		resetVideoTable - 0x0600
+printInt16           EQU		resetVideoTable - 0x0600
 printChar            EQU		resetVideoTable - 0x0700
 printHexByte         EQU		resetVideoTable - 0x0800
 printHexWord         EQU		resetVideoTable - 0x0900
 newLineScroll        EQU		resetVideoTable - 0x0A00
-printText_CALLI      EQU		resetVideoTable - 0x0B00
-printDigit_CALLI     EQU		resetVideoTable - 0x0C00
-printVarInt16_CALLI  EQU		resetVideoTable - 0x0D00
-printChar_CALLI      EQU		resetVideoTable - 0x0E00
-printHexByte_CALLI   EQU		resetVideoTable - 0x0F00
-printHexWord_CALLI   EQU		resetVideoTable - 0x1000
-newLineScroll_CALLI  EQU		resetVideoTable - 0x1100
-resetAudio           EQU		resetVideoTable - 0x1200
-playMidi             EQU		resetVideoTable - 0x1300
-midiStartNote        EQU		resetVideoTable - 0x1400
+resetAudio           EQU		resetVideoTable - 0x0B00
+playMidi             EQU		resetVideoTable - 0x0C00
+midiStartNote        EQU		resetVideoTable - 0x0D00
 convertEqOpAddr      EQU		0x00E2
 convertNeOpAddr      EQU		0x00E4
 convertLeOpAddr      EQU		0x00E6
@@ -55,18 +48,17 @@ frameCountPrev       EQU		register0 + 0x1C
 %include             include/clear_screen.i
 %include             include/conv_conds.i
 %include             include/print_text.i
-%include             include/print_text_CALLI.i
 %include             include/macros.i
 
 ; Labels
 _entryPoint_         EQU		0x0200
 _10                  EQU		0x024c
-_20                  EQU		0x0381
+_20                  EQU		0x038f
 _next4               EQU		0x0254
 _next5               EQU		0x0258
 _next6               EQU		0x025c
 _next10              EQU		0x0292
-_next18              EQU		0x0323
+_next18              EQU		0x0331
 0x0300               EQU		0x0300
 
 ; Variables
@@ -145,13 +137,13 @@ _next10              LDW		_a
 
                      ForNextLoopUp		_i _next6 1                                		; next i
 
-                     ForNextLoopUp		_j _next5 1                                		; next j
-
                      STW		0xe0
                      LDWI		0x0300
                      CALL		giga_vAC
 
 0x0300               LDW		0xe0
+                     ForNextLoopUp		_j _next5 1                                		; next j
+
                      ForNextLoopUp		_k _next4 1                                		; next k
 
                      PrintString		usrStr_0x5fc3

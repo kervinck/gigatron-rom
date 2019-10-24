@@ -303,7 +303,7 @@ namespace Compiler
         _keywordsWithEquals.push_back("FOR");
         _keywordsWithEquals.push_back("IF");
 
-        return intialiseMacros();
+        return true;
     }
 
 
@@ -637,14 +637,14 @@ namespace Compiler
         return opcodesSize;
     }
 
-    bool intialiseMacros(void)
+    bool initialiseMacros(void)
     {
-        static std::string filename = "gbas/include/macros.i";
-        static std::ifstream infile(filename);
+        std::string filename = (!Assembler::getUseOpcodeCALLI()) ? "gbas/include/macros.i" : "gbas/include/macros_CALLI.i";
+        std::ifstream infile(filename);
 
         if(!infile.is_open())
         {
-            fprintf(stderr, "Compiler::intialiseMacros() : Failed to open file : '%s'\n", filename.c_str());
+            fprintf(stderr, "Compiler::initialiseMacros() : Failed to open file : '%s'\n", filename.c_str());
             return false;
         }
 
@@ -689,7 +689,7 @@ namespace Compiler
             //_macroNameEntries.erase(macroIndex);
             //_macroIndexEntries.erase(macroName);
 
-            fprintf(stderr, "Compiler::intialiseMacros() : %%MACRO %s on line %d: is missing a %%ENDM\n", macroName.c_str(), macroIndex);
+            fprintf(stderr, "Compiler::initialiseMacros() : %%MACRO %s on line %d: is missing a %%ENDM\n", macroName.c_str(), macroIndex);
             return false;
         }
 
@@ -931,20 +931,16 @@ namespace Compiler
             }
         }
 
+        // Relies _useOpcodeCALLI_
+        initialiseMacros();
+
         // Entry point initialisation
         Label label;
         CodeLine codeLine;
         createLabel(_vasmPC, "_entryPoint_", "_entryPoint_\t", 0, label, false, false, false);
         if(!createCodeLine("INIT", 0, 0, -1, VarInt16, false, false, true, codeLine)) return false;
-        if(Assembler::getUseOpcodeCALLI())
-        {
-            emitVcpuAsm("%Initialise_CALLI", "", false, 0);
-        }
-        else
-        {
-            emitVcpuAsm("%Initialise", "", false, 0);
-            emitVcpuAsm("%InitialiseCcOps", "", false, 0);
-        }
+        emitVcpuAsm("%Initialise", "", false, 0);
+        if(!Assembler::getUseOpcodeCALLI()) emitVcpuAsm("%InitialiseCcOps", "", false, 0);
 
         // GOSUB labels
         for(int i=0; i<numLines; i++)
@@ -1104,7 +1100,7 @@ namespace Compiler
             if(Expression::getEnablePrint())
             {
                 emitVcpuAsm("LDWI", std::to_string(numeric._value), false);
-                (Assembler::getUseOpcodeCALLI()) ? emitVcpuAsm("%PrintAcChar_CALLI", "", false) : emitVcpuAsm("%PrintAcChar", "", false);
+                emitVcpuAsm("%PrintAcChar", "", false);
                 return numeric;
             }
 
@@ -1115,7 +1111,7 @@ namespace Compiler
 
         getNextTempVar();
         handleSingleOp("LDW", numeric);
-        if(Expression::getEnablePrint()) (Assembler::getUseOpcodeCALLI()) ? emitVcpuAsm("%PrintAcChar_CALLI", "", false) : emitVcpuAsm("%PrintAcChar", "", false);
+        if(Expression::getEnablePrint()) emitVcpuAsm("%PrintAcChar", "", false);
 
         return numeric;
     }
@@ -1128,7 +1124,7 @@ namespace Compiler
             if(Expression::getEnablePrint())
             {
                 emitVcpuAsm("LDI", std::to_string(numeric._value), false);
-                (Assembler::getUseOpcodeCALLI()) ? emitVcpuAsm("%PrintAcHexByte_CALLI", "", false) : emitVcpuAsm("%PrintAcHexByte", "", false);
+                emitVcpuAsm("%PrintAcHexByte", "", false);
                 return numeric;
             }
 
@@ -1139,7 +1135,7 @@ namespace Compiler
 
         getNextTempVar();
         handleSingleOp("LDW", numeric);
-        if(Expression::getEnablePrint()) (Assembler::getUseOpcodeCALLI()) ? emitVcpuAsm("%PrintAcHexByte_CALLI", "", false) : emitVcpuAsm("%PrintAcHexByte", "", false);
+        if(Expression::getEnablePrint()) emitVcpuAsm("%PrintAcHexByte", "", false);
 
         return numeric;
     }
@@ -1152,7 +1148,7 @@ namespace Compiler
             if(Expression::getEnablePrint())
             {
                 emitVcpuAsm("LDWI", std::to_string(numeric._value), false);
-                (Assembler::getUseOpcodeCALLI()) ? emitVcpuAsm("%PrintAcHexWord_CALLI", "", false) : emitVcpuAsm("%PrintAcHexWord", "", false);
+                emitVcpuAsm("%PrintAcHexWord", "", false);
                 return numeric;
             }
 
@@ -1163,7 +1159,7 @@ namespace Compiler
 
         getNextTempVar();
         handleSingleOp("LDW", numeric);
-        if(Expression::getEnablePrint()) (Assembler::getUseOpcodeCALLI()) ? emitVcpuAsm("%PrintAcHexWord_CALLI", "", false) : emitVcpuAsm("%PrintAcHexWord", "", false);
+        if(Expression::getEnablePrint()) emitVcpuAsm("%PrintAcHexWord", "", false);
 
         return numeric;
     }
@@ -1834,7 +1830,7 @@ namespace Compiler
 
     bool keywordCLS(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        Assembler::getUseOpcodeCALLI() ? emitVcpuAsm("%Init_CALLI", "", false, codeLineIndex) : emitVcpuAsm("%Initialise", "", false, codeLineIndex);
+        emitVcpuAsm("%Initialise", "", false, codeLineIndex);
 
         return true;
     }
@@ -1866,24 +1862,24 @@ namespace Compiler
             {
                 Expression::parse(tokens[i], codeLineIndex, value);
                 emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(_tempVarStart)), false, codeLineIndex);
-                (Assembler::getUseOpcodeCALLI()) ? emitVcpuAsm("%PrintAcInt16_CALLI", "", false, codeLineIndex) : emitVcpuAsm("%PrintAcInt16", "", false, codeLineIndex);
+                emitVcpuAsm("%PrintAcInt16", "", false, codeLineIndex);
             }
             else if(expressionType & Expression::HasVars)
             {
                 Expression::parse(tokens[i], codeLineIndex, value);
                 if(varIndex >= 0)
                 {
-                    (Assembler::getUseOpcodeCALLI()) ? emitVcpuAsm("%PrintVarInt16_CALLI", "_" + _integerVars[varIndex]._name, false, codeLineIndex) : emitVcpuAsm("%PrintVarInt16", "_" + _integerVars[varIndex]._name, false, codeLineIndex);
+                    emitVcpuAsm("%PrintVarInt16", "_" + _integerVars[varIndex]._name, false, codeLineIndex);
                 }
                 else
                 {
-                    (Assembler::getUseOpcodeCALLI()) ? emitVcpuAsm("%PrintAcInt16_CALLI", "", false, codeLineIndex) : emitVcpuAsm("%PrintAcInt16", "", false, codeLineIndex);
+                    emitVcpuAsm("%PrintAcInt16", "", false, codeLineIndex);
                 }
             }
             else if(expressionType & Expression::HasOperators)
             {
                 Expression::parse(tokens[i], codeLineIndex, value);
-                (Assembler::getUseOpcodeCALLI()) ? emitVcpuAsm("%PrintInt16_CALLI", Expression::wordToHexString(value), false, codeLineIndex) : emitVcpuAsm("%PrintInt16", Expression::wordToHexString(value), false, codeLineIndex);
+                emitVcpuAsm("%PrintInt16", Expression::wordToHexString(value), false, codeLineIndex);
             }
             else if(expressionType & Expression::HasStrings)
             {
@@ -1900,7 +1896,7 @@ namespace Compiler
                     {
                         if(_stringVars[j]._data == str) 
                         {
-                            (Assembler::getUseOpcodeCALLI()) ? emitVcpuAsm("%PrintString_CALLI", _stringVars[j]._name, false, codeLineIndex) : emitVcpuAsm("%PrintString", _stringVars[j]._name, false, codeLineIndex);
+                            emitVcpuAsm("%PrintString", _stringVars[j]._name, false, codeLineIndex);
                             foundString = true;
                             break;
                         }
@@ -1912,13 +1908,13 @@ namespace Compiler
                     if(!createString(codeLine, codeLineIndex, str, strAddress)) return false;
 
                     // Print string
-                    (Assembler::getUseOpcodeCALLI()) ? emitVcpuAsm("%PrintString_CALLI", _stringVars[_stringVars.size() - 1]._name, false, codeLineIndex) : emitVcpuAsm("%PrintString", _stringVars[_stringVars.size() - 1]._name, false, codeLineIndex);
+                    emitVcpuAsm("%PrintString", _stringVars[_stringVars.size() - 1]._name, false, codeLineIndex);
                 }
             }
             else if(expressionType == Expression::HasNumbers)
             {
                 Expression::parse(tokens[i], codeLineIndex, value);
-                (Assembler::getUseOpcodeCALLI()) ? emitVcpuAsm("%PrintInt16_CALLI", Expression::wordToHexString(value), false, codeLineIndex) : emitVcpuAsm("%PrintInt16", Expression::wordToHexString(value), false, codeLineIndex);
+                emitVcpuAsm("%PrintInt16", Expression::wordToHexString(value), false, codeLineIndex);
             }
         }
 
@@ -2575,13 +2571,14 @@ namespace Compiler
                     uint8_t hPC = HI_BYTE(itVasm->_address);
                     uint16_t nextPC = (hPC + 1) <<8;
                     uint16_t vPC = itVasm->_address;
-                    uint16_t audioExcl = (hPC <<8) | 0x00F2;
-                    uint16_t pageExcl  = (hPC <<8) | 0x00F8;
+                    uint16_t audioExcl = (hPC <<8) | 0x00F0;
+                    uint16_t pageExcl  = (hPC <<8) | 0x00F6;
 
+                    // 8 bytes for non CALLI PAGE JUMP, (STW, LDWI, CALL), 3 bytes for CALLI PAGE JUMP
                     if(Assembler::getUseOpcodeCALLI())
                     {
-                        audioExcl += 6;
-                        pageExcl += 6;
+                        audioExcl += 5;
+                        pageExcl += 5;
                     }
 
                     // Check MACRO opcodes
@@ -2707,21 +2704,14 @@ namespace Compiler
         _output.push_back("clearCursorRow       EQU\t\tresetVideoTable - 0x0300\n");
         _output.push_back("printText            EQU\t\tresetVideoTable - 0x0400\n");
         _output.push_back("printDigit           EQU\t\tresetVideoTable - 0x0500\n");
-        _output.push_back("printVarInt16        EQU\t\tresetVideoTable - 0x0600\n");
+        _output.push_back("printInt16           EQU\t\tresetVideoTable - 0x0600\n");
         _output.push_back("printChar            EQU\t\tresetVideoTable - 0x0700\n");
         _output.push_back("printHexByte         EQU\t\tresetVideoTable - 0x0800\n");
         _output.push_back("printHexWord         EQU\t\tresetVideoTable - 0x0900\n");
         _output.push_back("newLineScroll        EQU\t\tresetVideoTable - 0x0A00\n");
-        _output.push_back("printText_CALLI      EQU\t\tresetVideoTable - 0x0B00\n");
-        _output.push_back("printDigit_CALLI     EQU\t\tresetVideoTable - 0x0C00\n");
-        _output.push_back("printVarInt16_CALLI  EQU\t\tresetVideoTable - 0x0D00\n");
-        _output.push_back("printChar_CALLI      EQU\t\tresetVideoTable - 0x0E00\n");
-        _output.push_back("printHexByte_CALLI   EQU\t\tresetVideoTable - 0x0F00\n");
-        _output.push_back("printHexWord_CALLI   EQU\t\tresetVideoTable - 0x1000\n");
-        _output.push_back("newLineScroll_CALLI  EQU\t\tresetVideoTable - 0x1100\n");
-        _output.push_back("resetAudio           EQU\t\tresetVideoTable - 0x1200\n");
-        _output.push_back("playMidi             EQU\t\tresetVideoTable - 0x1300\n");
-        _output.push_back("midiStartNote        EQU\t\tresetVideoTable - 0x1400\n");
+        _output.push_back("resetAudio           EQU\t\tresetVideoTable - 0x0B00\n");
+        _output.push_back("playMidi             EQU\t\tresetVideoTable - 0x0C00\n");
+        _output.push_back("midiStartNote        EQU\t\tresetVideoTable - 0x0D00\n");
 
         // Zero page call table is not needed when using CALLI
         if(!Assembler::getUseOpcodeCALLI())
@@ -2764,9 +2754,18 @@ namespace Compiler
         _output.push_back("%include             include/audio.i\n");
         _output.push_back("%include             include/clear_screen.i\n");
         _output.push_back("%include             include/conv_conds.i\n");
-        _output.push_back("%include             include/print_text.i\n");
-        _output.push_back("%include             include/print_text_CALLI.i\n");
-        _output.push_back("%include             include/macros.i\n");
+
+        if(!Assembler::getUseOpcodeCALLI())
+        {
+            _output.push_back("%include             include/print_text.i\n");
+            _output.push_back("%include             include/macros.i\n");
+        }
+        else
+        {
+            _output.push_back("%include             include/print_text_CALLI.i\n");
+            _output.push_back("%include             include/macros_CALLI.i\n");
+        }
+    
         _output.push_back("\n");
     }
 

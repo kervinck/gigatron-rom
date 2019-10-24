@@ -47,9 +47,8 @@
         INC     _var
         LD      _var
         SUBI    _end
-        BGT     _label_+2
-        LDWI    _label
-_label_ CALL    giga_vAC
+        BGT     _label_+3
+_label_ CALLI   _label
 %ENDM
 
 %MACRO  ForNextLoopDown _var _label _end
@@ -57,9 +56,8 @@ _label_ CALL    giga_vAC
         SUBI    1
         ST      _var
         SUBI    _end
-        BLT     _label_+2
-        LDWI    _label
-_label_ CALL    giga_vAC
+        BLT     _label_+3
+_label_ CALLI   _label
 %ENDM
 
 %MACRO  ForNextLoopInit _start _end _step _vStart _vEnd _vStep
@@ -76,9 +74,8 @@ _label_ CALL    giga_vAC
         ADDW    _vStep
         STW     _var
         SUBW    _vEnd
-        BGT     _label_+2
-        LDWI    _label
-_label_ CALL    giga_vAC
+        BGT     _label_+3
+_label_ CALLI   _label
 %ENDM
 
 %MACRO  ForNextLoopStepDown _var _label _vEnd _vStep
@@ -86,108 +83,69 @@ _label_ CALL    giga_vAC
         ADDW    _vStep
         STW     _var
         SUBW    _vEnd
-        BLT     _label_+2
-        LDWI    _label
-_label_ CALL    giga_vAC
+        BLT     _label_+3
+_label_ CALLI   _label
 %ENDM
 
 %MACRO  PrintChar _chr
         LDI     _chr
-        ST      textChr
-        LDWI    printChar
-        CALL    giga_vAC
+        CALLI   printChar
 %ENDM
 
 %MACRO  PrintAcChar
-        ST      textChr
-        LDWI    printChar
-        CALL    giga_vAC
+        CALLI   printChar
 %ENDM
 
 %MACRO  PrintVarChar _var
         LD      _var
-        ST      textChr
-        LDWI    printChar
-        CALL    giga_vAC
+        CALLI   printChar
 %ENDM
 
 %MACRO  PrintAcHexByte
-        ST      textHex
-        LDWI    printHexByte
-        CALL    giga_vAC
+        CALLI   printHexByte
 %ENDM
 
 %MACRO  PrintVarHexByte _var
         LD      _var
-        ST      textHex
-        LDWI    printHexByte
-        CALL    giga_vAC
+        CALLI   printHexByte
 %ENDM
 
 %MACRO  PrintAcHexWord
-        STW     textHex
-        LDWI    printHexWord
-        CALL    giga_vAC
+        CALLI   printHexWord
 %ENDM
 
 %MACRO  PrintVarHexWord _var
         LDW     _var
-        STW     textHex
-        LDWI    printHexWord
-        CALL    giga_vAC
+        CALLI   printHexWord
 %ENDM
 
 %MACRO  PrintString _str
         LDWI    _str
-        STW     textStr
-        LDWI    printText
-        CALL    giga_vAC
+        CALLI   printText
 %ENDM
 
 %MACRO  PrintInt16 _int
         LDWI    _int
-        STW     textNum    
-        LDWI    printInt16
-        CALL    giga_vAC
+        CALLI   printInt16
 %ENDM
 
 %MACRO  PrintAcInt16
-        STW     textNum    
-        LDWI    printInt16
-        CALL    giga_vAC
+        CALLI   printInt16
 %ENDM
 
 %MACRO  PrintVarInt16 _var
         LDW     _var
-        STW     textNum    
-        LDWI    printInt16
-        CALL    giga_vAC
+        CALLI   printInt16
 %ENDM
 
 %MACRO  Initialise
         ClearRegionInit 0x2020 0 0 giga_xres giga_yres
-        LDWI    clearRegion
-        CALL    giga_vAC
+        CALLI   clearRegion
 
         LDWI    0x0F20          ; yellow on blue
         STW     textColour
         LDWI    0x0802          ; starting cursor position
         STW     cursorXY
-%ENDM
-
-%MACRO  InitialiseCcOps
-        LDWI    convertEqOp     ; (0x00E2 <-> 0x00ED), critical routines that can't straddle page boundaries
-        STW     convertEqOpAddr
-        LDWI    convertNeOp
-        STW     convertNeOpAddr
-        LDWI    convertLeOp
-        STW     convertLeOpAddr
-        LDWI    convertGeOp
-        STW     convertGeOpAddr
-        LDWI    convertLtOp
-        STW     convertLtOpAddr
-        LDWI    convertGtOp
-        STW     convertGtOpAddr
 %ENDM
 
 %MACRO  ClearRegionInit  _colour _x _y _w _h
