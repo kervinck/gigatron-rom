@@ -52,6 +52,14 @@
 _label_ CALL    giga_vAC
 %ENDM
 
+%MACRO  ForNextLoopUp_CALLI _var _label _end
+        INC     _var
+        LD      _var
+        SUBI    _end
+        BGT     _label_+3
+_label_ CALLI   _label
+%ENDM
+
 %MACRO  ForNextLoopDown _var _label _end
         LD      _var
         SUBI    1
@@ -60,6 +68,15 @@ _label_ CALL    giga_vAC
         BLT     _label_+2
         LDWI    _label
 _label_ CALL    giga_vAC
+%ENDM
+
+%MACRO  ForNextLoopDown_CALLI _var _label _end
+        LD      _var
+        SUBI    1
+        ST      _var
+        SUBI    _end
+        BLT     _label_+3
+_label_ CALLI   _label
 %ENDM
 
 %MACRO  ForNextLoopInit _start _end _step _vStart _vEnd _vStep
@@ -81,6 +98,15 @@ _label_ CALL    giga_vAC
 _label_ CALL    giga_vAC
 %ENDM
 
+%MACRO  ForNextLoopStepUp_CALLI _var _label _vEnd _vStep
+        LDW     _var
+        ADDW    _vStep
+        STW     _var
+        SUBW    _vEnd
+        BGT     _label_+3
+_label_ CALLI   _label
+%ENDM
+
 %MACRO  ForNextLoopStepDown _var _label _vEnd _vStep
         LDW     _var
         ADDW    _vStep
@@ -91,36 +117,61 @@ _label_ CALL    giga_vAC
 _label_ CALL    giga_vAC
 %ENDM
 
+%MACRO  ForNextLoopStepDown_CALLI _var _label _vEnd _vStep
+        LDW     _var
+        ADDW    _vStep
+        STW     _var
+        SUBW    _vEnd
+        BLT     _label_+3
+_label_ CALLI   _label
+%ENDM
+
 %MACRO  PrintChar _chr
         LDI     _chr
         ST      textChr
-        LDWI    validChar
-        CALL    giga_vAC
         LDWI    printChar
         CALL    giga_vAC
 %ENDM
 
+%MACRO  PrintChar_CALLI _chr
+        LDI     _chr
+        ST      textChr_CALLI
+        CALLI   printChar_CALLI
+%ENDM
+
 %MACRO  PrintAcChar
         ST      textChr
-        LDWI    validChar
-        CALL    giga_vAC
         LDWI    printChar
         CALL    giga_vAC
+%ENDM
+
+%MACRO  PrintAcChar_CALLI
+        ST      textChr_CALLI
+        CALLI   printChar_CALLI
 %ENDM
 
 %MACRO  PrintVarChar _var
         LD      _var
         ST      textChr
-        LDWI    validChar
-        CALL    giga_vAC
         LDWI    printChar
         CALL    giga_vAC
+%ENDM
+
+%MACRO  PrintVarChar_CALLI _var
+        LD      _var
+        ST      textChr_CALLI
+        CALLI   printChar_CALLI
 %ENDM
 
 %MACRO  PrintAcHexByte
         ST      textHex
         LDWI    printHexByte
         CALL    giga_vAC
+%ENDM
+
+%MACRO  PrintAcHexByte_CALLI
+        ST      textHex_CALLI
+        CALLI   printHexByte_CALLI
 %ENDM
 
 %MACRO  PrintVarHexByte _var
@@ -130,10 +181,21 @@ _label_ CALL    giga_vAC
         CALL    giga_vAC
 %ENDM
 
+%MACRO  PrintVarHexByte_CALLI _var
+        LD      _var
+        ST      textHex_CALLI
+        CALLI   printHexByte_CALLI
+%ENDM
+
 %MACRO  PrintAcHexWord
         STW     textHex
         LDWI    printHexWord
         CALL    giga_vAC
+%ENDM
+
+%MACRO  PrintAcHexWord_CALLI
+        STW     textHex_CALLI
+        CALLI   printHexWord_CALLI
 %ENDM
 
 %MACRO  PrintVarHexWord _var
@@ -143,11 +205,23 @@ _label_ CALL    giga_vAC
         CALL    giga_vAC
 %ENDM
 
+%MACRO  PrintVarHexWord_CALLI _var
+        LDW     _var
+        STW     textHex_CALLI
+        CALLI   printHexWord_CALLI
+%ENDM
+
 %MACRO  PrintString _str
         LDWI    _str
         STW     textStr
         LDWI    printText
         CALL    giga_vAC
+%ENDM
+
+%MACRO  PrintString_CALLI _str
+        LDWI    _str
+        STW     textStr_CALLI
+        CALLI   printText_CALLI
 %ENDM
 
 %MACRO  PrintInt16 _int
@@ -157,10 +231,21 @@ _label_ CALL    giga_vAC
         CALL    giga_vAC
 %ENDM
 
+%MACRO  PrintInt16_CALLI _int
+        LDWI    _int
+        STW     textNum_CALLI
+        CALLI   printVarInt16_CALLI
+%ENDM
+
 %MACRO  PrintAcInt16
         STW     textNum    
         LDWI    printVarInt16
         CALL    giga_vAC
+%ENDM
+
+%MACRO  PrintAcInt16_CALLI
+        STW     textNum_CALLI
+        CALLI   printVarInt16_CALLI
 %ENDM
 
 %MACRO  PrintVarInt16 _var
@@ -170,14 +255,34 @@ _label_ CALL    giga_vAC
         CALL    giga_vAC
 %ENDM
 
+%MACRO  PrintVarInt16_CALLI _var
+        LDW     _var
+        STW     textNum_CALLI
+        CALLI   printVarInt16_CALLI
+%ENDM
+
 %MACRO  Initialise
-        ClearRegion 0x2020 0 0 giga_xres giga_yres
+        ClearRegionInit 0x2020 0 0 giga_xres giga_yres
+        LDWI    clearRegion
+        CALL    giga_vAC
 
         LDWI    0x0F20          ; yellow on blue
         STW     textColour
         LDWI    0x0802          ; starting cursor position
         STW     cursorXY
-        
+%ENDM
+
+%MACRO  Initialise_CALLI
+        ClearRegionInit 0x2020 0 0 giga_xres giga_yres
+        CALLI   clearRegion
+
+        LDWI    0x0F20          ; yellow on blue
+        STW     textColour
+        LDWI    0x0802          ; starting cursor position
+        STW     cursorXY
+%ENDM
+
+%MACRO  InitialiseCcOps
         LDWI    convertEqOp     ; (0x00E2 <-> 0x00ED), critical routines that can't straddle page boundaries
         STW     convertEqOpAddr
         LDWI    convertNeOp
@@ -192,16 +297,7 @@ _label_ CALL    giga_vAC
         STW     convertGtOpAddr
 %ENDM
 
-%MACRO  Init_CALLI
-        ClearRegion 0x2020 0 0 giga_xres giga_yres
-
-        LDWI    0x0F20          ; yellow on blue
-        STW     textColour
-        LDWI    0x0802          ; starting cursor position
-        STW     cursorXY
-%ENDM
-
-%MACRO  ClearRegion  _colour _x _y _w _h
+%MACRO  ClearRegionInit  _colour _x _y _w _h
         LDWI    _colour
         STW     giga_sysArg0                            ; 4 pixels of colour
         STW     giga_sysArg2
@@ -218,6 +314,4 @@ _label_ CALL    giga_vAC
         LDWI    ((_h - 1) + _y)*256 + _x + giga_vram    ; bottom line
         STW     breset
         STW     bot
-        LDWI    clearRegion
-        CALL    giga_vAC
 %ENDM

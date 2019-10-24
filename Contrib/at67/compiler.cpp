@@ -15,7 +15,7 @@
 #include "assembler.h"
 
 
-#define LABEL_TRUNC_SIZE 16     // The smaller you make this, the more your BASIC label names will be truncated in the resultant .vasm code
+#define LABEL_TRUNC_SIZE 21     // The smaller you make this, the more your BASIC label names will be truncated in the resultant .vasm code
 #define USER_STR_SIZE    95
 
 // 18 bytes, (0x00EE <-> 0x00FF), reserved for vCPU stack, allows for 9 nested calls. The amount of GOSUBS you can use is dependant on how
@@ -34,7 +34,7 @@
 #define CONVERT_GT_OP    0x00EC  // 2 bytes,  (0x00EC <-> 0x00ED), critical routine that can't straddle page boundaries
 #define USER_CODE_START  0x0200
 #define USER_STACK_START 0x06FF
-#define USER_STR_START   0x6FA0
+#define USER_STR_START   0x5FA0
 #define INT_FUNC_START   0x7FA0
 #define USER_VAR_END_0   0x007F
 #define USER_VAR_END_1   0x009F
@@ -730,7 +730,7 @@ namespace Compiler
         //fprintf(stderr, "%s  %d %04x\n", opcode.c_str(), vasmSize, _vasmPC);
 
         std::string operand = std::string(operandStr);
-        std::string tabs = (opcode.size() > 3) ? "\t" : "\t\t";
+        std::string tabs = "\t\t"; //(opcode.size() > 3) ? "\t" : "\t\t";
         line = opcode + tabs + operand;
 
         return vasmSize;
@@ -936,7 +936,15 @@ namespace Compiler
         CodeLine codeLine;
         createLabel(_vasmPC, "_entryPoint_", "_entryPoint_\t", 0, label, false, false, false);
         if(!createCodeLine("INIT", 0, 0, -1, VarInt16, false, false, true, codeLine)) return false;
-        Assembler::getUseOpcodeCALLI() ? emitVcpuAsm("%Init_CALLI", "", false, 0) : emitVcpuAsm("%Initialise", "", false, 0);
+        if(Assembler::getUseOpcodeCALLI())
+        {
+            emitVcpuAsm("%Initialise_CALLI", "", false, 0);
+        }
+        else
+        {
+            emitVcpuAsm("%Initialise", "", false, 0);
+            emitVcpuAsm("%InitialiseCcOps", "", false, 0);
+        }
 
         // GOSUB labels
         for(int i=0; i<numLines; i++)
@@ -1035,7 +1043,7 @@ namespace Compiler
         // Find next free spot
         strAddress = _userStrStart;
         std::string usrStrName = "usrStr_" + Expression::wordToHexString(_userStrStart);
-        StringVar usrStrVar = {uint8_t(str.size()), _userStrStart, str, usrStrName, usrStrName + "\t", -1};
+        StringVar usrStrVar = {uint8_t(str.size()), _userStrStart, str, usrStrName, usrStrName + "\t\t", -1};
         _stringVars.push_back(usrStrVar);
         _userStrStart += uint16_t(str.size() + 1);
 
@@ -1096,7 +1104,7 @@ namespace Compiler
             if(Expression::getEnablePrint())
             {
                 emitVcpuAsm("LDWI", std::to_string(numeric._value), false);
-                emitVcpuAsm("%PrintAcChar", "", false);
+                (Assembler::getUseOpcodeCALLI()) ? emitVcpuAsm("%PrintAcChar_CALLI", "", false) : emitVcpuAsm("%PrintAcChar", "", false);
                 return numeric;
             }
 
@@ -1107,7 +1115,7 @@ namespace Compiler
 
         getNextTempVar();
         handleSingleOp("LDW", numeric);
-        if(Expression::getEnablePrint()) emitVcpuAsm("%PrintAcChar", "", false);
+        if(Expression::getEnablePrint()) (Assembler::getUseOpcodeCALLI()) ? emitVcpuAsm("%PrintAcChar_CALLI", "", false) : emitVcpuAsm("%PrintAcChar", "", false);
 
         return numeric;
     }
@@ -1120,7 +1128,7 @@ namespace Compiler
             if(Expression::getEnablePrint())
             {
                 emitVcpuAsm("LDI", std::to_string(numeric._value), false);
-                emitVcpuAsm("%PrintAcHexByte", "", false);
+                (Assembler::getUseOpcodeCALLI()) ? emitVcpuAsm("%PrintAcHexByte_CALLI", "", false) : emitVcpuAsm("%PrintAcHexByte", "", false);
                 return numeric;
             }
 
@@ -1131,7 +1139,7 @@ namespace Compiler
 
         getNextTempVar();
         handleSingleOp("LDW", numeric);
-        if(Expression::getEnablePrint()) emitVcpuAsm("%PrintAcHexByte", "", false);
+        if(Expression::getEnablePrint()) (Assembler::getUseOpcodeCALLI()) ? emitVcpuAsm("%PrintAcHexByte_CALLI", "", false) : emitVcpuAsm("%PrintAcHexByte", "", false);
 
         return numeric;
     }
@@ -1144,7 +1152,7 @@ namespace Compiler
             if(Expression::getEnablePrint())
             {
                 emitVcpuAsm("LDWI", std::to_string(numeric._value), false);
-                emitVcpuAsm("%PrintAcHexWord", "", false);
+                (Assembler::getUseOpcodeCALLI()) ? emitVcpuAsm("%PrintAcHexWord_CALLI", "", false) : emitVcpuAsm("%PrintAcHexWord", "", false);
                 return numeric;
             }
 
@@ -1155,7 +1163,7 @@ namespace Compiler
 
         getNextTempVar();
         handleSingleOp("LDW", numeric);
-        if(Expression::getEnablePrint()) emitVcpuAsm("%PrintAcHexWord", "", false);
+        if(Expression::getEnablePrint()) (Assembler::getUseOpcodeCALLI()) ? emitVcpuAsm("%PrintAcHexWord_CALLI", "", false) : emitVcpuAsm("%PrintAcHexWord", "", false);
 
         return numeric;
     }
@@ -1858,24 +1866,24 @@ namespace Compiler
             {
                 Expression::parse(tokens[i], codeLineIndex, value);
                 emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(_tempVarStart)), false, codeLineIndex);
-                emitVcpuAsm("%PrintAcInt16", "", false, codeLineIndex);
+                (Assembler::getUseOpcodeCALLI()) ? emitVcpuAsm("%PrintAcInt16_CALLI", "", false, codeLineIndex) : emitVcpuAsm("%PrintAcInt16", "", false, codeLineIndex);
             }
             else if(expressionType & Expression::HasVars)
             {
                 Expression::parse(tokens[i], codeLineIndex, value);
                 if(varIndex >= 0)
                 {
-                    emitVcpuAsm("%PrintVarInt16", "_" + _integerVars[varIndex]._name, false, codeLineIndex);
+                    (Assembler::getUseOpcodeCALLI()) ? emitVcpuAsm("%PrintVarInt16_CALLI", "_" + _integerVars[varIndex]._name, false, codeLineIndex) : emitVcpuAsm("%PrintVarInt16", "_" + _integerVars[varIndex]._name, false, codeLineIndex);
                 }
                 else
                 {
-                    emitVcpuAsm("%PrintAcInt16", "", false, codeLineIndex);
+                    (Assembler::getUseOpcodeCALLI()) ? emitVcpuAsm("%PrintAcInt16_CALLI", "", false, codeLineIndex) : emitVcpuAsm("%PrintAcInt16", "", false, codeLineIndex);
                 }
             }
             else if(expressionType & Expression::HasOperators)
             {
                 Expression::parse(tokens[i], codeLineIndex, value);
-                emitVcpuAsm("%PrintInt16", Expression::wordToHexString(value), false, codeLineIndex);
+                (Assembler::getUseOpcodeCALLI()) ? emitVcpuAsm("%PrintInt16_CALLI", Expression::wordToHexString(value), false, codeLineIndex) : emitVcpuAsm("%PrintInt16", Expression::wordToHexString(value), false, codeLineIndex);
             }
             else if(expressionType & Expression::HasStrings)
             {
@@ -1892,7 +1900,7 @@ namespace Compiler
                     {
                         if(_stringVars[j]._data == str) 
                         {
-                            emitVcpuAsm("%PrintString", _stringVars[j]._name, false, codeLineIndex);
+                            (Assembler::getUseOpcodeCALLI()) ? emitVcpuAsm("%PrintString_CALLI", _stringVars[j]._name, false, codeLineIndex) : emitVcpuAsm("%PrintString", _stringVars[j]._name, false, codeLineIndex);
                             foundString = true;
                             break;
                         }
@@ -1904,13 +1912,13 @@ namespace Compiler
                     if(!createString(codeLine, codeLineIndex, str, strAddress)) return false;
 
                     // Print string
-                    emitVcpuAsm("%PrintString", _stringVars[_stringVars.size() - 1]._name, false, codeLineIndex);
+                    (Assembler::getUseOpcodeCALLI()) ? emitVcpuAsm("%PrintString_CALLI", _stringVars[_stringVars.size() - 1]._name, false, codeLineIndex) : emitVcpuAsm("%PrintString", _stringVars[_stringVars.size() - 1]._name, false, codeLineIndex);
                 }
             }
             else if(expressionType == Expression::HasNumbers)
             {
                 Expression::parse(tokens[i], codeLineIndex, value);
-                emitVcpuAsm("%PrintInt16", Expression::wordToHexString(value), false, codeLineIndex);
+                (Assembler::getUseOpcodeCALLI()) ? emitVcpuAsm("%PrintInt16_CALLI", Expression::wordToHexString(value), false, codeLineIndex) : emitVcpuAsm("%PrintInt16", Expression::wordToHexString(value), false, codeLineIndex);
             }
         }
 
@@ -2688,34 +2696,42 @@ namespace Compiler
 
     void outputInternalSubs(void)
     {
-        _output.push_back("resetVideoTable EQU     " + Expression::wordToHexString(INT_FUNC_START) + "\n");
-        _output.push_back("convertEqOp     EQU     resetVideoTable - 0x0100\n");
-        _output.push_back("convertNeOp     EQU     convertEqOp     + 9     \n");
-        _output.push_back("convertLeOp     EQU     convertNeOp     + 9     \n");
-        _output.push_back("convertGeOp     EQU     convertLeOp     + 9     \n");
-        _output.push_back("convertLtOp     EQU     convertGeOp     + 9     \n");
-        _output.push_back("convertGtOp     EQU     convertLtOp     + 9     \n");
-        _output.push_back("clearRegion     EQU     resetVideoTable - 0x0200\n");
-        _output.push_back("clearCursorRow  EQU     resetVideoTable - 0x0300\n");
-        _output.push_back("printText       EQU     resetVideoTable - 0x0400\n");
-        _output.push_back("printDigit      EQU     resetVideoTable - 0x0500\n");
-        _output.push_back("printVarInt16   EQU     resetVideoTable - 0x0600\n");
-        _output.push_back("printChar       EQU     resetVideoTable - 0x0700\n");
-        _output.push_back("printHexByte    EQU     resetVideoTable - 0x0800\n");
-        _output.push_back("newLineScroll   EQU     resetVideoTable - 0x0900\n");
-        _output.push_back("resetAudio      EQU     resetVideoTable - 0x0A00\n");
-        _output.push_back("playMidi        EQU     resetVideoTable - 0x0B00\n");
-        _output.push_back("midiStartNote   EQU     resetVideoTable - 0x0C00\n");
+        _output.push_back("resetVideoTable      EQU\t\t" + Expression::wordToHexString(INT_FUNC_START) + "\n");
+        _output.push_back("convertEqOp          EQU\t\tresetVideoTable - 0x0100\n");
+        _output.push_back("convertNeOp          EQU\t\tconvertEqOp     + 9     \n");
+        _output.push_back("convertLeOp          EQU\t\tconvertNeOp     + 9     \n");
+        _output.push_back("convertGeOp          EQU\t\tconvertLeOp     + 9     \n");
+        _output.push_back("convertLtOp          EQU\t\tconvertGeOp     + 9     \n");
+        _output.push_back("convertGtOp          EQU\t\tconvertLtOp     + 9     \n");
+        _output.push_back("clearRegion          EQU\t\tresetVideoTable - 0x0200\n");
+        _output.push_back("clearCursorRow       EQU\t\tresetVideoTable - 0x0300\n");
+        _output.push_back("printText            EQU\t\tresetVideoTable - 0x0400\n");
+        _output.push_back("printDigit           EQU\t\tresetVideoTable - 0x0500\n");
+        _output.push_back("printVarInt16        EQU\t\tresetVideoTable - 0x0600\n");
+        _output.push_back("printChar            EQU\t\tresetVideoTable - 0x0700\n");
+        _output.push_back("printHexByte         EQU\t\tresetVideoTable - 0x0800\n");
+        _output.push_back("printHexWord         EQU\t\tresetVideoTable - 0x0900\n");
+        _output.push_back("newLineScroll        EQU\t\tresetVideoTable - 0x0A00\n");
+        _output.push_back("printText_CALLI      EQU\t\tresetVideoTable - 0x0B00\n");
+        _output.push_back("printDigit_CALLI     EQU\t\tresetVideoTable - 0x0C00\n");
+        _output.push_back("printVarInt16_CALLI  EQU\t\tresetVideoTable - 0x0D00\n");
+        _output.push_back("printChar_CALLI      EQU\t\tresetVideoTable - 0x0E00\n");
+        _output.push_back("printHexByte_CALLI   EQU\t\tresetVideoTable - 0x0F00\n");
+        _output.push_back("printHexWord_CALLI   EQU\t\tresetVideoTable - 0x1000\n");
+        _output.push_back("newLineScroll_CALLI  EQU\t\tresetVideoTable - 0x1100\n");
+        _output.push_back("resetAudio           EQU\t\tresetVideoTable - 0x1200\n");
+        _output.push_back("playMidi             EQU\t\tresetVideoTable - 0x1300\n");
+        _output.push_back("midiStartNote        EQU\t\tresetVideoTable - 0x1400\n");
 
         // Zero page call table is not needed when using CALLI
         if(!Assembler::getUseOpcodeCALLI())
         {
-            _output.push_back("convertEqOpAddr EQU 0x00E2                  \n");
-            _output.push_back("convertNeOpAddr EQU 0x00E4                  \n");
-            _output.push_back("convertLeOpAddr EQU 0x00E6                  \n");
-            _output.push_back("convertGeOpAddr EQU 0x00E8                  \n");
-            _output.push_back("convertLtOpAddr EQU 0x00EA                  \n");
-            _output.push_back("convertGtOpAddr EQU 0x00EC                  \n");
+            _output.push_back("convertEqOpAddr      EQU\t\t0x00E2\n");
+            _output.push_back("convertNeOpAddr      EQU\t\t0x00E4\n");
+            _output.push_back("convertLeOpAddr      EQU\t\t0x00E6\n");
+            _output.push_back("convertGeOpAddr      EQU\t\t0x00E8\n");
+            _output.push_back("convertLtOpAddr      EQU\t\t0x00EA\n");
+            _output.push_back("convertGtOpAddr      EQU\t\t0x00EC\n");
         }
         _output.push_back("\n");
     }
@@ -2723,33 +2739,34 @@ namespace Compiler
     void outputInternalVars(void)
     {
         _output.push_back("; Internal variables\n");
-        _output.push_back("register0       EQU     " + Expression::wordToHexString(INT_VAR_START) + "\n");
-        _output.push_back("register1       EQU     register0 + 0x02\n");
-        _output.push_back("register2       EQU     register0 + 0x04\n");
-        _output.push_back("register3       EQU     register0 + 0x06\n");
-        _output.push_back("register4       EQU     register0 + 0x08\n");
-        _output.push_back("register5       EQU     register0 + 0x0A\n");
-        _output.push_back("register6       EQU     register0 + 0x0C\n");
-        _output.push_back("register7       EQU     register0 + 0x0E\n");
-        _output.push_back("register8       EQU     register0 + 0x10\n");
-        _output.push_back("register9       EQU     register0 + 0x12\n");
-        _output.push_back("textColour      EQU     register0 + 0x14\n");
-        _output.push_back("cursorXY        EQU     register0 + 0x16\n");
-        _output.push_back("midiStreamPtr   EQU     register0 + 0x18\n");
-        _output.push_back("midiDelay       EQU     register0 + 0x1A\n");
-        _output.push_back("frameCountPrev  EQU     register0 + 0x1C\n");
+        _output.push_back("register0            EQU\t\t" + Expression::wordToHexString(INT_VAR_START) + "\n");
+        _output.push_back("register1            EQU\t\tregister0 + 0x02\n");
+        _output.push_back("register2            EQU\t\tregister0 + 0x04\n");
+        _output.push_back("register3            EQU\t\tregister0 + 0x06\n");
+        _output.push_back("register4            EQU\t\tregister0 + 0x08\n");
+        _output.push_back("register5            EQU\t\tregister0 + 0x0A\n");
+        _output.push_back("register6            EQU\t\tregister0 + 0x0C\n");
+        _output.push_back("register7            EQU\t\tregister0 + 0x0E\n");
+        _output.push_back("register8            EQU\t\tregister0 + 0x10\n");
+        _output.push_back("register9            EQU\t\tregister0 + 0x12\n");
+        _output.push_back("textColour           EQU\t\tregister0 + 0x14\n");
+        _output.push_back("cursorXY             EQU\t\tregister0 + 0x16\n");
+        _output.push_back("midiStreamPtr        EQU\t\tregister0 + 0x18\n");
+        _output.push_back("midiDelay            EQU\t\tregister0 + 0x1A\n");
+        _output.push_back("frameCountPrev       EQU\t\tregister0 + 0x1C\n");
         _output.push_back("\n");
     }
 
     void outputIncludes(void)
     {
         _output.push_back("; Includes\n");
-        _output.push_back("%include        include/gigatron.i\n");
-        _output.push_back("%include        include/audio.i\n");
-        _output.push_back("%include        include/clear_screen.i\n");
-        _output.push_back("%include        include/conv_conds.i\n");
-        _output.push_back("%include        include/print_text.i\n");
-        _output.push_back("%include        include/macros.i\n");
+        _output.push_back("%include             include/gigatron.i\n");
+        _output.push_back("%include             include/audio.i\n");
+        _output.push_back("%include             include/clear_screen.i\n");
+        _output.push_back("%include             include/conv_conds.i\n");
+        _output.push_back("%include             include/print_text.i\n");
+        _output.push_back("%include             include/print_text_CALLI.i\n");
+        _output.push_back("%include             include/macros.i\n");
         _output.push_back("\n");
     }
 
@@ -2772,8 +2789,8 @@ namespace Compiler
 
         for(int i=0; i<_stringVars.size(); i++)
         {
-            _output.push_back(_stringVars[i]._output + "EQU\t\t" + Expression::wordToHexString(_stringVars[i]._address) + "\n");
-            _output.push_back(_stringVars[i]._output + "DB\t\t" + std::to_string(_stringVars[i]._size) + " '" + _stringVars[i]._data + "'\n");
+            _output.push_back(_stringVars[i]._output + " EQU\t\t" + Expression::wordToHexString(_stringVars[i]._address) + "\n");
+            _output.push_back(_stringVars[i]._output + " DB\t\t\t" + std::to_string(_stringVars[i]._size) + " '" + _stringVars[i]._data + "'\n");
         }
 
         _output.push_back("\n");
@@ -2807,7 +2824,7 @@ namespace Compiler
                 }
 
 #define TAB_SPACE_LENGTH 4
-#define COMMENT_PADDING  (TAB_SPACE_LENGTH*13)
+#define COMMENT_PADDING  (TAB_SPACE_LENGTH*20)
                 // Commented BASIC code, (assumes tabs are 4 spaces)
                 int lineLength = Expression::tabbedStringLength(line, TAB_SPACE_LENGTH);
                 line.append(COMMENT_PADDING - (lineLength % COMMENT_PADDING), ' ');

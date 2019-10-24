@@ -1,163 +1,177 @@
-; Includes
-%include include/gigatron.i
-%include include/audio.i
-%include include/clear_screen.i
-%include include/conv_conds.i
-%include include/print_text.i
-%include include/macros.i
-
-_startAddress_  EQU		0x0200
-resetVideoTable EQU     0x7fa0
-convertEqOp     EQU     resetVideoTable - 0x0100
-convertNeOp     EQU     convertEqOp     + 9     
-convertLeOp     EQU     convertNeOp     + 9     
-convertGeOp     EQU     convertLeOp     + 9     
-convertLtOp     EQU     convertGeOp     + 9     
-convertGtOp     EQU     convertLtOp     + 9     
-clearRegion     EQU     resetVideoTable - 0x0200
-clearCursorRow  EQU     resetVideoTable - 0x0300
-printText       EQU     resetVideoTable - 0x0400
-printDigit      EQU     resetVideoTable - 0x0500
-printVarInt16   EQU     resetVideoTable - 0x0600
-printChar       EQU     resetVideoTable - 0x0700
-printHexByte    EQU     resetVideoTable - 0x0800
-newLineScroll   EQU     resetVideoTable - 0x0900
-resetAudio      EQU     resetVideoTable - 0x0A00
-playMidi        EQU     resetVideoTable - 0x0B00
-midiStartNote   EQU     resetVideoTable - 0x0C00
-convertEqOpAddr EQU 0x00E2                  
-convertNeOpAddr EQU 0x00E4                  
-convertLeOpAddr EQU 0x00E6                  
-convertGeOpAddr EQU 0x00E8                  
-convertLtOpAddr EQU 0x00EA                  
-convertGtOpAddr EQU 0x00EC                  
+_startAddress_       EQU		0x0200
+resetVideoTable      EQU		0x7fa0
+convertEqOp          EQU		resetVideoTable - 0x0100
+convertNeOp          EQU		convertEqOp     + 9     
+convertLeOp          EQU		convertNeOp     + 9     
+convertGeOp          EQU		convertLeOp     + 9     
+convertLtOp          EQU		convertGeOp     + 9     
+convertGtOp          EQU		convertLtOp     + 9     
+clearRegion          EQU		resetVideoTable - 0x0200
+clearCursorRow       EQU		resetVideoTable - 0x0300
+printText            EQU		resetVideoTable - 0x0400
+printDigit           EQU		resetVideoTable - 0x0500
+printVarInt16        EQU		resetVideoTable - 0x0600
+printChar            EQU		resetVideoTable - 0x0700
+printHexByte         EQU		resetVideoTable - 0x0800
+printHexWord         EQU		resetVideoTable - 0x0900
+newLineScroll        EQU		resetVideoTable - 0x0A00
+printText_CALLI      EQU		resetVideoTable - 0x0B00
+printDigit_CALLI     EQU		resetVideoTable - 0x0C00
+printVarInt16_CALLI  EQU		resetVideoTable - 0x0D00
+printChar_CALLI      EQU		resetVideoTable - 0x0E00
+printHexByte_CALLI   EQU		resetVideoTable - 0x0F00
+printHexWord_CALLI   EQU		resetVideoTable - 0x1000
+newLineScroll_CALLI  EQU		resetVideoTable - 0x1100
+resetAudio           EQU		resetVideoTable - 0x1200
+playMidi             EQU		resetVideoTable - 0x1300
+midiStartNote        EQU		resetVideoTable - 0x1400
+convertEqOpAddr      EQU		0x00E2
+convertNeOpAddr      EQU		0x00E4
+convertLeOpAddr      EQU		0x00E6
+convertGeOpAddr      EQU		0x00E8
+convertLtOpAddr      EQU		0x00EA
+convertGtOpAddr      EQU		0x00EC
 
 ; Internal variables
-register0       EQU     0x00a0
-register1       EQU     register0 + 0x02
-register2       EQU     register0 + 0x04
-register3       EQU     register0 + 0x06
-register4       EQU     register0 + 0x08
-register5       EQU     register0 + 0x0A
-register6       EQU     register0 + 0x0C
-register7       EQU     register0 + 0x0E
-register8       EQU     register0 + 0x10
-register9       EQU     register0 + 0x12
-textColour      EQU     register0 + 0x14
-cursorXY        EQU     register0 + 0x16
-midiStreamPtr   EQU     register0 + 0x18
-midiDelay       EQU     register0 + 0x1A
-frameCountPrev  EQU     register0 + 0x1C
+register0            EQU		0x00a0
+register1            EQU		register0 + 0x02
+register2            EQU		register0 + 0x04
+register3            EQU		register0 + 0x06
+register4            EQU		register0 + 0x08
+register5            EQU		register0 + 0x0A
+register6            EQU		register0 + 0x0C
+register7            EQU		register0 + 0x0E
+register8            EQU		register0 + 0x10
+register9            EQU		register0 + 0x12
+textColour           EQU		register0 + 0x14
+cursorXY             EQU		register0 + 0x16
+midiStreamPtr        EQU		register0 + 0x18
+midiDelay            EQU		register0 + 0x1A
+frameCountPrev       EQU		register0 + 0x1C
+
+; Includes
+%include             include/gigatron.i
+%include             include/audio.i
+%include             include/clear_screen.i
+%include             include/conv_conds.i
+%include             include/print_text.i
+%include             include/print_text_CALLI.i
+%include             include/macros.i
 
 ; Labels
-_entryPoint_    EQU		0x0200
-_10             EQU		0x024c
-_20             EQU		0x039f
-_next4          EQU		0x0254
-_next5          EQU		0x0258
-_next6          EQU		0x025c
-_next10         EQU		0x0292
-_next18         EQU		0x0323
-0x0300          EQU		0x0300
+_entryPoint_         EQU		0x0200
+_10                  EQU		0x024c
+_20                  EQU		0x0381
+_next4               EQU		0x0254
+_next5               EQU		0x0258
+_next6               EQU		0x025c
+_next10              EQU		0x0292
+_next18              EQU		0x0323
+0x0300               EQU		0x0300
 
 ; Variables
-_a              EQU		0x0030
-_k              EQU		0x0032
-_j              EQU		0x0034
-_i              EQU		0x0036
-_char           EQU		0x0038
+_a                   EQU		0x0030
+_k                   EQU		0x0032
+_j                   EQU		0x0034
+_i                   EQU		0x0036
+_char                EQU		0x0038
 
 ; Strings
-usrStr_0x6fa0		EQU		0x6fa0
-usrStr_0x6fa0		DB		28 'yahooowalllallllalalalwallla'
-usrStr_0x6fbd		EQU		0x6fbd
-usrStr_0x6fbd		DB		3 'yes'
-usrStr_0x6fc1		EQU		0x6fc1
-usrStr_0x6fc1		DB		1 ' '
-usrStr_0x6fc3		EQU		0x6fc3
-usrStr_0x6fc3		DB		34 'wooooooooooooooooooooooooooooow!!!'
-usrStr_0x6fe6		EQU		0x6fe6
-usrStr_0x6fe6		DB		3 'dog'
+usrStr_0x5fa0		 EQU		0x5fa0
+usrStr_0x5fa0		 DB			28 'yahooowalllallllalalalwallla'
+usrStr_0x5fbd		 EQU		0x5fbd
+usrStr_0x5fbd		 DB			3 'yes'
+usrStr_0x5fc1		 EQU		0x5fc1
+usrStr_0x5fc1		 DB			1 ' '
+usrStr_0x5fc3		 EQU		0x5fc3
+usrStr_0x5fc3		 DB			34 'wooooooooooooooooooooooooooooow!!!'
+usrStr_0x5fe6		 EQU		0x5fe6
+usrStr_0x5fe6		 DB			3 'dog'
 
 ; Code
-_entryPoint_    Initialise	                        		; INIT
+_entryPoint_         Initialise		
+                     InitialiseCcOps		                                     		; INIT
 
-_10             LDI		1
-                STW		_a                          		; a =1
+_10                  LDI		1
+                     STW		_a                                               		; a =1
 
-                LDI		0
-                STW		_k                          		; for k = 0 to 1
+                     LDI		0
+                     STW		_k                                               		; for k = 0 to 1
 
-_next4          LDI		0
-                STW		_j                          		; for j = 0 to 1
+_next4               LDI		0
+                     STW		_j                                               		; for j = 0 to 1
 
-_next5          LDI		0
-                STW		_i                          		; for i = 0 to 1
+_next5               LDI		0
+                     STW		_i                                               		; for i = 0 to 1
 
-_next6          PrintString	usrStr_0x6fa0           		; print "yahooowalllallllalalalwallla";
+_next6               PrintString		usrStr_0x5fa0                            		; print "yahooowalllallllalalalwallla";
 
-                PrintString	usrStr_0x6fbd
-                PrintString	usrStr_0x6fc1           		; print "yes";" ";
+                     PrintString		usrStr_0x5fbd
+                     PrintString		usrStr_0x5fc1                            		; print "yes";" ";
 
-                PrintInt16	0x003d
-                PrintString	usrStr_0x6fc1           		; print 20*3+1;" ";
+                     PrintInt16		0x003d
+                     PrintString		usrStr_0x5fc1                            		; print 20*3+1;" ";
 
-                LDI		32
-                STW		_char                       		; for char = 32 to 127
+                     LDI		32
+                     STW		_char                                            		; for char = 32 to 127
 
-_next10         LDW		_a
-                ADDI	1
-                STW		_a                          		; a = a + 1
+_next10              LDW		_a
+                     ADDI		1
+                     STW		_a                                               		; a = a + 1
 
-                LDW		_char
-                ADDI	1
-                ADDW	_a
-                ADDW	_a
-                ADDW	_a
-                ADDI	3
-                SUBW	_a
-                SUBW	_a
-                SUBW	_a
-                SUBI	4
-                STW		0xd0
-                LDW		_k
-                SUBW	_k
-                STW		0xd2
-                LDW		0xd0
-                ADDW	0xd2
-                PrintAcChar	                        		; print chr$(char+1 +a+a+a - 32*0 + 50/0 + a/0 + 3 - a -a -a -4 + j*0 + (k-k));
+                     LDW		_char
+                     ADDI		1
+                     ADDW		_a
+                     ADDW		_a
+                     ADDW		_a
+                     SUBI		0
+                     ADDI		0
+                     ADDI		0
+                     ADDI		3
+                     SUBW		_a
+                     SUBW		_a
+                     SUBW		_a
+                     SUBI		4
+                     ADDI		0
+                     STW		0xd0
+                     LDW		_k
+                     SUBW		_k
+                     STW		0xd2
+                     LDW		0xd0
+                     ADDW		0xd2
+                     PrintAcChar		                                         		; print chr$(char+1 +a+a+a - 32*0 + 50/0 + a/0 + 3 - a -a -a -4 + j*0 + (k-k));
 
-                ForNextLoopUp	_char _next10 127   		; next char
+                     ForNextLoopUp		_char _next10 127                          		; next char
 
-                ForNextLoopUp	_i _next6 1         		; next i
+                     ForNextLoopUp		_i _next6 1                                		; next i
 
-                ForNextLoopUp	_j _next5 1         		; next j
+                     ForNextLoopUp		_j _next5 1                                		; next j
 
-                STW		0xe0
-                LDWI	0x0300
-                CALL	giga_vAC
+                     STW		0xe0
+                     LDWI		0x0300
+                     CALL		giga_vAC
 
-0x0300          LDW		0xe0
-                ForNextLoopUp	_k _next4 1         		; next k
+0x0300               LDW		0xe0
+                     ForNextLoopUp		_k _next4 1                                		; next k
 
-                PrintString	usrStr_0x6fc3
-                LDWI	newLineScroll
-                CALL	giga_vAC                    		; print "wooooooooooooooooooooooooooooow!!!"
+                     PrintString		usrStr_0x5fc3
+                     LDWI		newLineScroll
+                     CALL		giga_vAC                                          		; print "wooooooooooooooooooooooooooooow!!!"
 
-                LDI		0
-                STW		_i                          		; for i = 0 to 6
+                     LDI		0
+                     STW		_i                                               		; for i = 0 to 6
 
-_next18         PrintString	usrStr_0x6fe6
-                PrintString	usrStr_0x6fc1
-                PrintVarInt16	_i
-                LDWI	newLineScroll
-                CALL	giga_vAC                    		; print "dog";" ";i
+_next18              PrintString		usrStr_0x5fe6
+                     PrintString		usrStr_0x5fc1
+                     PrintVarInt16		_i
+                     LDWI		newLineScroll
+                     CALL		giga_vAC                                          		; print "dog";" ";i
 
-                ForNextLoopUp	_i _next18 6        		; next i
+                     ForNextLoopUp		_i _next18 6                               		; next i
 
-                Initialise	                        		; cls
+                     Initialise		                                            		; cls
 
-_20             LDWI	_10
-                CALL	giga_vAC                    		; goto 10
+_20                  LDWI		_10
+                     CALL		giga_vAC                                          		; goto 10
 
 

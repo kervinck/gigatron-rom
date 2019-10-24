@@ -9,7 +9,7 @@ textSlice       EQU     register5
 scanLine        EQU     register6
 digitMult       EQU     register7
 digitIndex      EQU     register8
-clearloop       EQU     register9
+clearLoop       EQU     register9
 
 
                 ; clears the top 8 lines of pixels in preparation of text scrolling
@@ -20,7 +20,7 @@ clearCursorRow  LDWI    0x2020
                 STW     giga_sysFn
 
                 LDI     8
-                ST      clearloop
+                ST      clearLoop
 
                 LDWI    giga_videoTable     ; current cursor position
                 PEEK
@@ -43,7 +43,7 @@ clearCR_loopx   SUBI    4                   ; loop is unrolled 4 times
                 BGT     clearCR_loopx
 
                 INC     giga_sysArg4 + 1    ; next line                
-                LoopCounter clearloop clearCR_loopy
+                LoopCounter clearLoop clearCR_loopy
                 RET
                 
                 ; prints text using the inbuilt font
@@ -215,18 +215,7 @@ newLS_adjust    ADDI    8
 newLS_exit      POP
                 RET
 
-
-                ; arg in textChr, result in textChr
-validChar       LD      textChr
-                ANDI    0x7F                ; char = <32...127>
-                ST      textChr
-                SUBI    32
-                BGE     validC_chr
-                LDI     32
-                ST      textChr
-validC_chr      RET
-
-
+                
 printHexByte    PUSH
                 LDWI    SYS_LSRW4_50    ; shift right by 4 SYS routine
                 STW     giga_sysFn
