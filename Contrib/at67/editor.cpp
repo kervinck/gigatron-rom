@@ -858,8 +858,7 @@ namespace Editor
         _singleStepEnabled = true;
         _singleStepMode = RunToBrk;
 
-        _hexBaseAddress = (_memoryMode == RAM) ? Cpu::getVPC() : Cpu::getStateS()._PC;
-        _vpcBaseAddress = _hexBaseAddress;
+        _vpcBaseAddress = (_memoryMode == RAM) ? Cpu::getVPC() : Cpu::getStateS()._PC;;
     }
 
     void resetDebugger(void)
@@ -1158,12 +1157,8 @@ namespace Editor
             memoryMode = (_editorMode == Dasm) ? (++memoryMode) % (NumMemoryModes-1) : (++memoryMode) % NumMemoryModes;
             _memoryMode = (MemoryMode)memoryMode;
             
-            // Update hex address with PC or vPC
-            if(_singleStepEnabled)
-            {
-                _hexBaseAddress = (_memoryMode == RAM) ? Cpu::getVPC() : Cpu::getStateS()._PC;
-                _vpcBaseAddress = _hexBaseAddress;
-            }
+            // Update debugger address with PC or vPC
+            if(_singleStepEnabled) _vpcBaseAddress = (_memoryMode == RAM) ? Cpu::getVPC() : Cpu::getStateS()._PC;
         }
 
         // RAM Size
@@ -1219,7 +1214,6 @@ namespace Editor
     {
         _singleStep = false;
         _singleStepEnabled = true;
-        _hexBaseAddress = address;
         _vpcBaseAddress = address;
     }
 

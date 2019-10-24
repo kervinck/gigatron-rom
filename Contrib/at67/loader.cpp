@@ -995,10 +995,6 @@ namespace Loader
         std::string filepath = std::string(Editor::getBrowserPath() + filename);
         std::string gtbFilepath;
 
-        // Reset video table and reset single step watch address to video line counter
-        Graphics::resetVTable();
-        Editor::setSingleStepAddress(VIDEO_Y_ADDRESS);
-
         size_t nameSuffix = filename.find_last_of(".");
         size_t pathSuffix = filepath.find_last_of(".");
         if(nameSuffix == std::string::npos  ||  pathSuffix == std::string::npos)
@@ -1190,6 +1186,10 @@ namespace Loader
             {
                 loadGtbFile(gtbFilepath);
             }
+
+            // Reset video table and reset single step watch address to video line counter
+            Graphics::resetVTable();
+            Editor::setSingleStepAddress(VIDEO_Y_ADDRESS);
 
             // Execute code
             if(!_disableUploads  &&  hasRamCode)

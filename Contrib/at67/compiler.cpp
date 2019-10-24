@@ -932,8 +932,6 @@ namespace Compiler
         for(int i=0; i<numLines; i++)
         {
             if(!checkForGosubLabel(_input[i], i)) return false;
-
-            if(_input[i].find("_useOpcodeCALLI_") != std::string::npos) Assembler::setUseOpcodeCALLI(true);
         }
 
         // All labels
@@ -998,6 +996,8 @@ namespace Compiler
             {
                 keywordLET(_codeLines[i], 0, foundPos - 3, result);
             }
+
+            if(_codeLines[i]._expression.find("_useOpcodeCALLI_") != std::string::npos) Assembler::setUseOpcodeCALLI(true);
 
             varResult = createCodeVar(_codeLines[i]._code, i, varIndex);
             if(varResult == VarError) return false;

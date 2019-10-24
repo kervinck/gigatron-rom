@@ -798,7 +798,7 @@ namespace Graphics
     {
         char str[32] = "";
 
-        Assembler::disassemble(Editor::getHexBaseAddress());
+        Assembler::disassemble(Editor::getVpcBaseAddress());
 
         //sprintf(str, "%d\n", Editor::getBreakpointsSize());
         //fprintf(stderr, str);
@@ -836,7 +836,7 @@ namespace Graphics
             case Editor::ROM1: drawText("ROM:       Vars:", _pixels, 0, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0); break;
         }
 
-        sprintf(str, "%04X", Editor::getHexBaseAddress());
+        sprintf(str, "%04X", Editor::getVpcBaseAddress());
         uint32_t colour = (Editor::getHexEdit() && onHex) ? 0xFF00FF00 : 0xFFFFFFFF;
         drawText(std::string(str), _pixels, HEX_START, FONT_CELL_Y*3, colour, onHex, 4);
 
