@@ -1,4 +1,3 @@
-rem _useOpcodeCALLI_
 
 let z = 33
 b = z + 1000

@@ -425,6 +425,53 @@ namespace Graphics
         createHelpTexture();
     }
 
+    uint32_t savedPixels[6*5];
+    void restoreReticlePixel(int x, int y)
+    {
+        if(x < 0  ||  x > SCREEN_WIDTH - 1) return;
+        if(y < 0  ||  y > SCREEN_HEIGHT - 1) return;
+        int index = (x % 5) + (y % 6)*5;
+        _pixels[x + y*SCREEN_WIDTH] = savedPixels[index];
+    }
+    void saveReticlePixel(int x, int y)
+    {
+        if(x < 0  ||  x > SCREEN_WIDTH - 1) return;
+        if(y < 0  ||  y > SCREEN_HEIGHT - 1) return;
+        int index = (x % 5) + (y % 6)*5;
+        savedPixels[index] = _pixels[x + y*SCREEN_WIDTH];
+    }
+    void drawReticlePixel(int x, int y)
+    {
+        if(x < 0  ||  x > SCREEN_WIDTH - 1) return;
+        if(y < 0  ||  y > SCREEN_HEIGHT - 1) return;
+        _pixels[x + y*SCREEN_WIDTH] = 0x00FFFFFFFF; //(0x00FFFFFF ^ _pixels[x + y*SCREEN_WIDTH]) & 0x00FFFFFF;
+    }
+    void drawReticle(int vgaX, int vgaY)
+    {
+        for(int j=-1; j<5; j++)
+        {
+            for(int i=-1; i<4; i++)
+            {
+                int x = vgaX*3 + i;
+                int y = vgaY*4 + j;
+                saveReticlePixel(x, y);
+                if(j==-1 || j==4 || i==-1 || i==3) drawReticlePixel(x, y);
+            }
+        }
+    }
+    void restoreReticle(int vgaX, int vgaY)
+    {
+        for(int j=-1; j<5; j++)
+        {
+            for(int i=-1; i<4; i++)
+            {
+                int x = vgaX*3 + i;
+                int y = vgaY*4 + j;
+                restoreReticlePixel(x, y);
+            }
+        }
+    }
+
     void resetVTable(void)
     {
         for(int i=0; i<GIGA_HEIGHT; i++)
@@ -438,45 +485,31 @@ namespace Graphics
     {
         _hlineTiming[pixelY % GIGA_HEIGHT] = colour;
 
-        if(debugging) return;
+        //if(debugging) return;
 
-        uint32_t screen = (vgaX % (GIGA_WIDTH+1))*3 + (pixelY % GIGA_HEIGHT)*4*SCREEN_WIDTH;
+        uint32_t screen = (vgaX % (GIGA_WIDTH + 1))*3 + (pixelY % GIGA_HEIGHT)*4*SCREEN_WIDTH;
         _pixels[screen + 0 + 0*SCREEN_WIDTH] = colour; _pixels[screen + 1 + 0*SCREEN_WIDTH] = colour; _pixels[screen + 2 + 0*SCREEN_WIDTH] = colour;
         _pixels[screen + 0 + 1*SCREEN_WIDTH] = colour; _pixels[screen + 1 + 1*SCREEN_WIDTH] = colour; _pixels[screen + 2 + 1*SCREEN_WIDTH] = colour;
         _pixels[screen + 0 + 2*SCREEN_WIDTH] = colour; _pixels[screen + 1 + 2*SCREEN_WIDTH] = colour; _pixels[screen + 2 + 2*SCREEN_WIDTH] = colour;
         _pixels[screen + 0 + 3*SCREEN_WIDTH] = 0x00;   _pixels[screen + 1 + 3*SCREEN_WIDTH] = 0x00;   _pixels[screen + 2 + 3*SCREEN_WIDTH] = 0x00;
     }
 
-    void refreshPixel(const Cpu::State& S, int vgaX, int vgaY, bool debugging)
+    void refreshPixel(const Cpu::State& S, int vgaX, int vgaY)
     {
-        if(debugging) return;
-
-        uint32_t colour = _colours[S._OUT & (COLOUR_PALETTE-1)];
+        uint32_t colour = _colours[S._OUT & (COLOUR_PALETTE - 1)];
         uint32_t address = (vgaX % GIGA_WIDTH)*3 + (vgaY % SCREEN_HEIGHT)*SCREEN_WIDTH;
         _pixels[address + 0] = colour;
         _pixels[address + 1] = colour;
         _pixels[address + 2] = colour;
     }
 
-    void refreshScreen(void)
+    void pixelReticle(const Cpu::State& S, int vgaX, int vgaY)
     {
-        uint8_t offsetx = 0;
-
-        for(int y=0; y<GIGA_HEIGHT; y++)
+        // Draw pixel reticle, but only for active pixels
+        if(S._PC >= 0x020D  &&  S._PC <= 0x02AD)
         {
-            offsetx += Cpu::getRAM(GIGA_VTABLE + 1 + y*2);
-    
-            for(int x=0; x<=GIGA_WIDTH; x++)
-            {
-                uint16_t address = (Cpu::getRAM(GIGA_VTABLE + y*2) <<8) + ((offsetx + x) & 0xFF);
-                uint32_t colour = (x < GIGA_WIDTH) ? _colours[Cpu::getRAM(address) & (COLOUR_PALETTE-1)] : _hlineTiming[y];
-                uint32_t screen = (y*4 % SCREEN_HEIGHT)*SCREEN_WIDTH  +  (x*3 % SCREEN_WIDTH);
-
-                _pixels[screen + 0 + 0*SCREEN_WIDTH] = colour; _pixels[screen + 1 + 0*SCREEN_WIDTH] = colour; _pixels[screen + 2 + 0*SCREEN_WIDTH] = colour;
-                _pixels[screen + 0 + 1*SCREEN_WIDTH] = colour; _pixels[screen + 1 + 1*SCREEN_WIDTH] = colour; _pixels[screen + 2 + 1*SCREEN_WIDTH] = colour;
-                _pixels[screen + 0 + 2*SCREEN_WIDTH] = colour; _pixels[screen + 1 + 2*SCREEN_WIDTH] = colour; _pixels[screen + 2 + 2*SCREEN_WIDTH] = colour;
-                _pixels[screen + 0 + 3*SCREEN_WIDTH] = 0x00;   _pixels[screen + 1 + 3*SCREEN_WIDTH] = 0x00;   _pixels[screen + 2 + 3*SCREEN_WIDTH] = 0x00;
-            }
+            if(vgaX > 0) restoreReticle(vgaX - 1, vgaY/4);
+            if(vgaX < HPIXELS_END - HPIXELS_START) drawReticle(vgaX, vgaY/4);
         }
     }
 
@@ -575,22 +608,6 @@ namespace Graphics
 
         pixelAddress += (FONT_HEIGHT-1)*SCREEN_WIDTH;
         for(int i=0; i<FONT_WIDTH; i++) _pixels[pixelAddress+i] = colour;
-
-        //pixelAddress += (FONT_HEIGHT-4)*SCREEN_WIDTH;
-        //for(int i=0; i<FONT_WIDTH; i++) _pixels[pixelAddress+i] = colour;
-        //pixelAddress += SCREEN_WIDTH;
-        //for(int i=0; i<FONT_WIDTH; i++) _pixels[pixelAddress+i] = colour;
-        //pixelAddress += SCREEN_WIDTH;
-        //for(int i=0; i<FONT_WIDTH; i++) _pixels[pixelAddress+i] = colour;
-        //pixelAddress += SCREEN_WIDTH;
-        //for(int i=0; i<FONT_WIDTH; i++) _pixels[pixelAddress+i] = colour;
-
-        //for(int i=0; i<FONT_WIDTH-1; i++) _pixels[pixelAddress+i] = colour;
-        //pixelAddress += (FONT_HEIGHT-1)*SCREEN_WIDTH;
-        //for(int i=0; i<FONT_WIDTH-1; i++) _pixels[pixelAddress+i] = colour;
-        //for(int i=0; i<FONT_HEIGHT; i++) _pixels[pixelAddress-i*SCREEN_WIDTH] = colour;
-        //pixelAddress += FONT_WIDTH-1;
-        //for(int i=0; i<FONT_HEIGHT; i++) _pixels[pixelAddress-i*SCREEN_WIDTH] = colour;
     }
 
     float powStepRising(float x, float a, float b, float p)
@@ -798,9 +815,10 @@ namespace Graphics
     {
         char str[32] = "";
 
-        Assembler::disassemble(Editor::getVpcBaseAddress());
+        (Editor::getMemoryMode() == Editor::RAM) ? Assembler::disassemble(Editor::getVpcBaseAddress()) : Assembler::disassemble(Editor::getNtvBaseAddress());
 
-        //sprintf(str, "%d\n", Editor::getBreakpointsSize());
+        //sprintf(str, "%d\n", Editor::getVpcBreakpointsSize());
+        //sprintf(str, "%d\n", Editor::getNtvBreakpointsSize());
         //fprintf(stderr, str);
 
         // Clear window
@@ -808,25 +826,50 @@ namespace Graphics
 
         for(int i=0; i<Assembler::getDisassembledCodeSize(); i++)
         {
-            bool onCursor = i == Editor::getCursorY();
-            bool onVPC = (Assembler::getDisassembledCode(i)->_address == Editor::getVpcBaseAddress()  &&  Editor::getSingleStepEnabled());
-
-            // vPC icon in debug mode
-            if(onVPC) drawText(">", _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y,  0xFFFFFF00, onCursor, MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
-
-            for(int j=0; j<Editor::getBreakPointsSize(); j++)
+            bool onPC = false;
+            if(Editor::getSingleStepEnabled())
             {
-                // Breakpoint icon
-                if(Assembler::getDisassembledCode(i)->_address == Editor::getBreakPointAddress(j)  &&  Editor::getSingleStepEnabled())
+                if(Editor::getMemoryMode() == Editor::RAM)
                 {
-                    drawText("*", _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y,  0xFFB000B0, onCursor, MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
-                    break;
+                    onPC = (Assembler::getDisassembledCode(i)->_address == Cpu::getVPC());
+                }
+                else
+                {
+                    onPC = (Assembler::getDisassembledCode(i)->_address == Cpu::getStateS()._PC);
+                }
+            }
+
+            // Program counter icon in debug mode
+            bool onCursor = i == Editor::getCursorY();
+            if(onPC) drawText(">", _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y,  0xFF00FF00, onCursor, MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
+
+            // Breakpoint icons
+            if(Editor::getMemoryMode() == Editor::RAM)
+            {
+                for(int j=0; j<Editor::getVpcBreakPointsSize(); j++)
+                {
+                    if(Assembler::getDisassembledCode(i)->_address == Editor::getVpcBreakPointAddress(j)  &&  Editor::getSingleStepEnabled())
+                    {
+                        drawText("*", _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y,  0xFFC000C0, onCursor, MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                for(int j=0; j<Editor::getNtvBreakPointsSize(); j++)
+                {
+                    if(Assembler::getDisassembledCode(i)->_address == Editor::getNtvBreakPointAddress(j)  &&  Editor::getSingleStepEnabled())
+                    {
+                        drawText("*", _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y,  0xFFC0C000, onCursor, MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
+                        break;
+                    }
                 }
             }
 
             // Mnemonic, highlight if on vPC and show cursor in debug mode
-            uint32_t colour = (onVPC) ? 0xFFFFFFFF : 0xFFB0B0B0;
-            drawText(Assembler::getDisassembledCode(i)->_text, _pixels, HEX_START_X+6, FONT_CELL_Y*4 + i*FONT_CELL_Y, colour, (onCursor || onVPC)  &&  (Editor::getSingleStepEnabled()), MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
+            uint32_t colour = (onPC) ? 0xFFFFFFFF : 0xFFB0B0B0;
+            drawText(Assembler::getDisassembledCode(i)->_text, _pixels, HEX_START_X+6, FONT_CELL_Y*4 + i*FONT_CELL_Y, colour, (onCursor || onPC)  &&  (Editor::getSingleStepEnabled()), MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
         }
 
         switch(Editor::getMemoryMode())
@@ -836,7 +879,7 @@ namespace Graphics
             case Editor::ROM1: drawText("ROM:       Vars:", _pixels, 0, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0); break;
         }
 
-        sprintf(str, "%04X", Editor::getVpcBaseAddress());
+        (Editor::getMemoryMode() == Editor::RAM) ? sprintf(str, "%04X", Editor::getVpcBaseAddress()) : sprintf(str, "%04X", Editor::getNtvBaseAddress());
         uint32_t colour = (Editor::getHexEdit() && onHex) ? 0xFF00FF00 : 0xFFFFFFFF;
         drawText(std::string(str), _pixels, HEX_START, FONT_CELL_Y*3, colour, onHex, 4);
 
@@ -942,7 +985,7 @@ namespace Graphics
             drawText(std::string(str), _pixels, PAGEDN_START_X, PAGEDN_START_Y, 0xFF00FF00, Editor::getPageDnButton(), 1);
 
             // Delete icon, (currently only used for clearing breakpoints)
-            if(Editor::getEditorMode() == Editor::Dasm  &&  (Editor::getSingleStepEnabled())  &&  Editor::getMemoryMode() == Editor::RAM)
+            if(Editor::getEditorMode() == Editor::Dasm  &&  (Editor::getSingleStepEnabled()))
             {
                 drawText("x", _pixels, DELALL_START_X, DELALL_START_Y, 0xFFFF0000, Editor::getDelAllButton(), 1);
             }

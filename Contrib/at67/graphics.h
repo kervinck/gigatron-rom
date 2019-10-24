@@ -78,8 +78,8 @@ namespace Graphics
     void resetVTable(void);
 
     void refreshTimingPixel(const Cpu::State& S, int vgaX, int pixelY, uint32_t colour, bool debugging);
-    void refreshPixel(const Cpu::State& S, int vgaX, int vgaY, bool debugging);
-    void refreshScreen(void);
+    void refreshPixel(const Cpu::State& S, int vgaX, int vgaY);
+    void pixelReticle(const Cpu::State& S, int vgaX, int vgaY);
 
     void drawLeds(void);
     bool drawText(const std::string& text, uint32_t* pixels, int x, int y, uint32_t colour, bool invert, int invertSize, bool colourKey=false, int size=-1, bool fullscreen=false, uint32_t commentColour=0x00000000, uint32_t sectionColour=0x00000000);

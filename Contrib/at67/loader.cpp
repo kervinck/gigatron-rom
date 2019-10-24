@@ -1095,7 +1095,7 @@ namespace Loader
             if(!Assembler::assemble(filepath, DEFAULT_START_ADDRESS)) return;
 
             // Found a breakpoint in source code
-            if(Editor::getBreakPointsSize())
+            if(Editor::getVpcBreakPointsSize())
             {
                 Editor::startDebugger();
                 Editor::setEditorMode(Editor::Dasm);

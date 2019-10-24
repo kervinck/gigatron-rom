@@ -31,7 +31,7 @@
 
 namespace Editor
 {
-    enum SingleStepMode {RunToBrk=0, StepVpc, StepWatch, NumSingleStepModes};
+    enum SingleStepMode {RunToBrk=0, StepPC, StepWatch, NumSingleStepModes};
 
     struct KeyCodeMod
     {
@@ -65,7 +65,8 @@ namespace Editor
     bool _singleStepEnabled = false;
     SingleStepMode _singleStepMode = RunToBrk;
     uint32_t _singleStepTicks = 0;
-    uint16_t _singleStepValue = 0x0000;
+    uint16_t _singleStepNtv = 0x0000;
+    uint16_t _singleStepVpc = 0x0000;
     uint16_t _singleStepAddress = VIDEO_Y_ADDRESS;
 
     std::string _cwdPath = "";
@@ -81,6 +82,7 @@ namespace Editor
     uint8_t _memoryDigit = 0;
     uint8_t _addressDigit = 0;
 
+    uint16_t _ntvBaseAddress = 0x0000;
     uint16_t _hexBaseAddress = HEX_BASE_ADDRESS;
     uint16_t _vpcBaseAddress = HEX_BASE_ADDRESS;
     uint16_t _loadBaseAddress = LOAD_BASE_ADDRESS;
@@ -89,7 +91,8 @@ namespace Editor
     uint16_t _cpuUsageAddressA = HEX_BASE_ADDRESS;
     uint16_t _cpuUsageAddressB = HEX_BASE_ADDRESS + 0x0020;
     
-    std::vector<uint16_t> _breakPoints;
+    std::vector<uint16_t> _ntvBreakPoints;
+    std::vector<uint16_t> _vpcBreakPoints;
 
     int _fileEntriesSize = 0;
     int _fileEntriesIndex = 0;
@@ -123,6 +126,7 @@ namespace Editor
 
     uint8_t getMemoryDigit(void) {return _memoryDigit;}
     uint8_t getAddressDigit(void) {return _addressDigit;}
+    uint16_t getNtvBaseAddress(void) {return _ntvBaseAddress;}
     uint16_t getHexBaseAddress(void) {return _hexBaseAddress;}
     uint16_t getVpcBaseAddress(void) {return _vpcBaseAddress;}
     uint16_t getLoadBaseAddress(void) {return _loadBaseAddress;}
@@ -131,10 +135,15 @@ namespace Editor
     uint16_t getCpuUsageAddressA(void) {return _cpuUsageAddressA;}
     uint16_t getCpuUsageAddressB(void) {return _cpuUsageAddressB;}
 
-    int getBreakPointsSize(void) {return int(_breakPoints.size());}
-    uint16_t getBreakPointAddress(int index) {return _breakPoints.size() ? _breakPoints[index % _breakPoints.size()] : 0;}
-    void addBreakPoint(uint16_t address) {_breakPoints.push_back(address);}
-    void clearBreakPoints(void) {_breakPoints.clear();}
+    int getNtvBreakPointsSize(void) {return int(_ntvBreakPoints.size());}
+    uint16_t getNtvBreakPointAddress(int index) {return _ntvBreakPoints.size() ? _ntvBreakPoints[index % _ntvBreakPoints.size()] : 0;}
+    void addNtvBreakPoint(uint16_t address) {_ntvBreakPoints.push_back(address);}
+    void clearNtvBreakPoints(void) {_ntvBreakPoints.clear();}
+
+    int getVpcBreakPointsSize(void) {return int(_vpcBreakPoints.size());}
+    uint16_t getVpcBreakPointAddress(int index) {return _vpcBreakPoints.size() ? _vpcBreakPoints[index % _vpcBreakPoints.size()] : 0;}
+    void addVpcBreakPoint(uint16_t address) {_vpcBreakPoints.push_back(address);}
+    void clearVpcBreakPoints(void) {_vpcBreakPoints.clear();}
 
     int getFileEntriesIndex(void) {return _fileEntriesIndex;}
     int getFileEntriesSize(void) {return int(_fileEntries.size());}
@@ -244,28 +253,8 @@ namespace Editor
     }
 
 
-    // Attempt to solve Window's Non Client Area process starvation
-    int eventFilter(void* data, SDL_Event *event)
-    {
-        if(event->type == SDL_WINDOWEVENT  ||  event->type == SDL_SYSWMEVENT)
-        {
-            if(event->window.event == SDL_WINDOWEVENT_SIZE_CHANGED  ||  event->window.event == SDL_WINDOWEVENT_MOVED)
-            {
-                SDL_RenderSetViewport(Graphics::getRenderer(), NULL);
-                //Graphics::refreshScreen();
-                //Graphics::render();
-                //fprintf(stderr, "%08x\n", event->window.event);
-                for(int i=0; i<CLOCK_FREQ/600; i++) Cpu::process();
-            }
-        }
-
-        return 1;
-    }
-
     void initialise(void)
     {
-        //SDL_SetEventFilter(eventFilter, NULL);
-
         SDL_StartTextInput();
 
         // Current working directory
@@ -435,7 +424,7 @@ namespace Editor
         // Debugger INI key to SDL key mapping
         _debugger["Debug"]     = {SDLK_F6, KMOD_LCTRL};
         _debugger["RunToBrk"]  = {SDLK_F7, KMOD_LCTRL};
-        _debugger["StepVpc"]   = {SDLK_F8, KMOD_LCTRL};
+        _debugger["StepPC"]    = {SDLK_F8, KMOD_LCTRL};
         _debugger["StepWatch"] = {SDLK_F9, KMOD_LCTRL};
 
         // Input configuration
@@ -507,7 +496,7 @@ namespace Editor
                 {
                     scanCodeFromIniKey(sectionString, "Debug",     "CTRL+F6", _debugger["Debug"]);
                     scanCodeFromIniKey(sectionString, "RunToBrk",  "CTRL+F7", _debugger["RunToBrk"]);
-                    scanCodeFromIniKey(sectionString, "StepVpc",   "CTRL+F8", _debugger["StepVpc"]);
+                    scanCodeFromIniKey(sectionString, "StepPC",    "CTRL+F8", _debugger["StepPC"]);
                     scanCodeFromIniKey(sectionString, "StepWatch", "CTRL+F9", _debugger["StepWatch"]);
                 }
                 break;
@@ -606,11 +595,25 @@ namespace Editor
             {
                 if(numRows == 1)
                 {
-                    _hexBaseAddress = (_hexBaseAddress - Assembler::getPrevDasmByteCount()) & (Memory::getSizeRAM()-1);
+                    if(_memoryMode == RAM)
+                    {
+                        _vpcBaseAddress = (_vpcBaseAddress - Assembler::getPrevDasmByteCount()) & (Memory::getSizeRAM()-1);
+                    }
+                    else
+                    {
+                        _ntvBaseAddress = (_ntvBaseAddress - Assembler::getPrevDasmByteCount()) & (Memory::getSizeRAM()-1);
+                    }
                 }
                 else
                 {
-                    _hexBaseAddress = (_hexBaseAddress - Assembler::getPrevDasmPageByteCount()) & (Memory::getSizeRAM()-1);
+                    if(_memoryMode == RAM)
+                    {
+                        _vpcBaseAddress = (_vpcBaseAddress - Assembler::getPrevDasmPageByteCount()) & (Memory::getSizeRAM()-1);
+                    }
+                    else
+                    {
+                        _ntvBaseAddress = (_ntvBaseAddress - Assembler::getPrevDasmPageByteCount()) & (Memory::getSizeRAM()-1);
+                    }
                 }
             }
             break;
@@ -646,11 +649,25 @@ namespace Editor
             {
                 if(numRows == 1)
                 {
-                    _hexBaseAddress = (_hexBaseAddress + Assembler::getCurrDasmByteCount()) & (Memory::getSizeRAM()-1);
+                    if(_memoryMode == RAM)
+                    {
+                        _vpcBaseAddress = (_vpcBaseAddress + Assembler::getCurrDasmByteCount()) & (Memory::getSizeRAM()-1);
+                    }
+                    else
+                    {
+                        _ntvBaseAddress = (_ntvBaseAddress + Assembler::getCurrDasmByteCount()) & (Memory::getSizeRAM()-1);
+                    }
                 }
                 else
                 {
-                    _hexBaseAddress = (_hexBaseAddress + Assembler::getCurrDasmPageByteCount()) & (Memory::getSizeRAM()-1);
+                    if(_memoryMode == RAM)
+                    {
+                        _vpcBaseAddress = (_vpcBaseAddress + Assembler::getCurrDasmPageByteCount()) & (Memory::getSizeRAM()-1);
+                    }
+                    else
+                    {
+                        _ntvBaseAddress = (_ntvBaseAddress + Assembler::getCurrDasmPageByteCount()) & (Memory::getSizeRAM()-1);
+                    }
                 }
             }
             break;
@@ -690,12 +707,20 @@ namespace Editor
         }
         else if(_editorMode == Dasm  &&  _singleStepEnabled)
         {
-            // Breakpoints only work in vCPU code
-            if(_cursorY < 0  ||  _cursorY >= Assembler::getDisassembledCodeSize() ||  _memoryMode != RAM) return;
+            // Validate breakpoint
+            if(_cursorY < 0  ||  _cursorY >= Assembler::getDisassembledCodeSize()) return;
 
             // If breakpoint already exists, delete it, otherwise save it
-            auto it = std::find(_breakPoints.begin(), _breakPoints.end(), Assembler::getDisassembledCode(_cursorY)->_address);
-            (it != _breakPoints.end()) ? _breakPoints.erase(it) : _breakPoints.push_back(Assembler::getDisassembledCode(_cursorY)->_address);
+            if(_memoryMode == RAM)
+            {
+                auto it = std::find(_vpcBreakPoints.begin(), _vpcBreakPoints.end(), Assembler::getDisassembledCode(_cursorY)->_address);
+                (it != _vpcBreakPoints.end()) ? _vpcBreakPoints.erase(it) : _vpcBreakPoints.push_back(Assembler::getDisassembledCode(_cursorY)->_address);
+            }
+            else
+            {
+                auto it = std::find(_ntvBreakPoints.begin(), _ntvBreakPoints.end(), Assembler::getDisassembledCode(_cursorY)->_address);
+                (it != _ntvBreakPoints.end()) ? _ntvBreakPoints.erase(it) : _ntvBreakPoints.push_back(Assembler::getDisassembledCode(_cursorY)->_address);
+            }
         }
     }
 
@@ -796,27 +821,65 @@ namespace Editor
 
                 case OnHex:
                 {
-                    if(_editorMode == Load)
+                    // Hex address field is disabled for ROM browsing
+                    switch(_editorMode)
                     {
-                        switch(_addressDigit)
+                        case Load:
                         {
-                            case 0: value = (value << 12) & 0xF000; _loadBaseAddress = _loadBaseAddress & 0x0FFF | value; break;
-                            case 1: value = (value << 8)  & 0x0F00; _loadBaseAddress = _loadBaseAddress & 0xF0FF | value; break;
-                            case 2: value = (value << 4)  & 0x00F0; _loadBaseAddress = _loadBaseAddress & 0xFF0F | value; break;
-                            case 3: value = (value << 0)  & 0x000F; _loadBaseAddress = _loadBaseAddress & 0xFFF0 | value; break;
-                        }
+                            switch(_addressDigit)
+                            {
+                                case 0: value = (value << 12) & 0xF000; _loadBaseAddress = _loadBaseAddress & 0x0FFF | value; break;
+                                case 1: value = (value << 8)  & 0x0F00; _loadBaseAddress = _loadBaseAddress & 0xF0FF | value; break;
+                                case 2: value = (value << 4)  & 0x00F0; _loadBaseAddress = _loadBaseAddress & 0xFF0F | value; break;
+                                case 3: value = (value << 0)  & 0x000F; _loadBaseAddress = _loadBaseAddress & 0xFFF0 | value; break;
+                            }
 
-                        if(_loadBaseAddress < LOAD_BASE_ADDRESS) _loadBaseAddress = LOAD_BASE_ADDRESS;
-                    }
-                    else
-                    {
-                        switch(_addressDigit)
-                        {
-                            case 0: value = (value << 12) & 0xF000; _hexBaseAddress = _hexBaseAddress & 0x0FFF | value; break;
-                            case 1: value = (value << 8)  & 0x0F00; _hexBaseAddress = _hexBaseAddress & 0xF0FF | value; break;
-                            case 2: value = (value << 4)  & 0x00F0; _hexBaseAddress = _hexBaseAddress & 0xFF0F | value; break;
-                            case 3: value = (value << 0)  & 0x000F; _hexBaseAddress = _hexBaseAddress & 0xFFF0 | value; break;
+                            if(_loadBaseAddress < LOAD_BASE_ADDRESS) _loadBaseAddress = LOAD_BASE_ADDRESS;
                         }
+                        break;
+
+                        case Dasm:
+                        {
+                            switch(_memoryMode)
+                            {
+                                case RAM:
+                                {
+                                    switch(_addressDigit)
+                                    {
+                                        case 0: value = (value << 12) & 0xF000; _vpcBaseAddress = _vpcBaseAddress & 0x0FFF | value; break;
+                                        case 1: value = (value << 8)  & 0x0F00; _vpcBaseAddress = _vpcBaseAddress & 0xF0FF | value; break;
+                                        case 2: value = (value << 4)  & 0x00F0; _vpcBaseAddress = _vpcBaseAddress & 0xFF0F | value; break;
+                                        case 3: value = (value << 0)  & 0x000F; _vpcBaseAddress = _vpcBaseAddress & 0xFFF0 | value; break;
+                                    }
+                                }
+                                break;
+
+                                default:
+                                {
+                                    switch(_addressDigit)
+                                    {
+                                        case 0: value = (value << 12) & 0xF000; _ntvBaseAddress = _ntvBaseAddress & 0x0FFF | value; break;
+                                        case 1: value = (value << 8)  & 0x0F00; _ntvBaseAddress = _ntvBaseAddress & 0xF0FF | value; break;
+                                        case 2: value = (value << 4)  & 0x00F0; _ntvBaseAddress = _ntvBaseAddress & 0xFF0F | value; break;
+                                        case 3: value = (value << 0)  & 0x000F; _ntvBaseAddress = _ntvBaseAddress & 0xFFF0 | value; break;
+                                    }
+                                }
+                                break;
+                            }
+                        }
+                        break;
+
+                        case Hex:
+                        {
+                            switch(_addressDigit)
+                            {
+                                case 0: value = (value << 12) & 0xF000; _hexBaseAddress = _hexBaseAddress & 0x0FFF | value; break;
+                                case 1: value = (value << 8)  & 0x0F00; _hexBaseAddress = _hexBaseAddress & 0xF0FF | value; break;
+                                case 2: value = (value << 4)  & 0x00F0; _hexBaseAddress = _hexBaseAddress & 0xFF0F | value; break;
+                                case 3: value = (value << 0)  & 0x000F; _hexBaseAddress = _hexBaseAddress & 0xFFF0 | value; break;
+                            }
+                        }
+                        break;
                     }
                 }
                 break;
@@ -858,7 +921,8 @@ namespace Editor
         _singleStepEnabled = true;
         _singleStepMode = RunToBrk;
 
-        _vpcBaseAddress = (_memoryMode == RAM) ? Cpu::getVPC() : Cpu::getStateS()._PC;;
+        _ntvBaseAddress = Cpu::getStateS()._PC;
+        _vpcBaseAddress = Cpu::getVPC();
     }
 
     void resetDebugger(void)
@@ -963,7 +1027,7 @@ namespace Editor
         else if(_sdlKeyScanCode == _emulator["ScanlineMode"].scanCode  &&  _sdlKeyModifier == _emulator["ScanlineMode"].modifier)
         {
             // ROMS after v1 have their own inbuilt scanline handlers
-            if(Cpu::getRomType() != Cpu::ROMv1) {Cpu::setIN(Cpu::getIN() | INPUT_SELECT); return;}
+            if(Cpu::getRomType() != Cpu::ROMv1) {Cpu::setIN(Cpu::getIN() & ~INPUT_SELECT); return;}
         }
 
         // PS2 Keyboard emulation mode
@@ -1076,45 +1140,39 @@ namespace Editor
         // ROMS after v1 have their own inbuilt scanline handlers
         else if(_sdlKeyScanCode == _emulator["ScanlineMode"].scanCode  &&  _sdlKeyModifier == _emulator["ScanlineMode"].modifier)
         {
-            (Cpu::getRomType() != Cpu::ROMv1) ? Cpu::setIN(Cpu::getIN() & ~INPUT_SELECT) : Cpu::swapScanlineMode();
+            (Cpu::getRomType() != Cpu::ROMv1) ? Cpu::setIN(Cpu::getIN() | INPUT_SELECT) : Cpu::swapScanlineMode();
         }
 
         // Browse vCPU directory
         else if(_sdlKeyScanCode == _emulator["Browse"].scanCode  &&  _sdlKeyModifier == _emulator["Browse"].modifier)
         {
-            if(!_singleStepEnabled)
+            if(_editorMode == Load)
             {
-                if(_editorMode == Load)
-                {
-                    _editorMode = _editorModePrev;
-                    _editorModePrev = Load;
-                }
-                else
-                {
-                    _editorModePrev = _editorMode;
-                    _editorMode = Load;
-                    browseDirectory();
-                }
+                _editorMode = _editorModePrev;
+                _editorModePrev = Load;
+            }
+            else
+            {
+                _editorModePrev = _editorMode;
+                _editorMode = Load;
+                browseDirectory();
             }
         }
 
         // ROM type
         else if(_sdlKeyScanCode == _emulator["RomType"].scanCode  &&  _sdlKeyModifier == _emulator["RomType"].modifier)
         {
-            if(!_singleStepEnabled)
+            if(_editorMode == Rom)
             {
-                if(_editorMode == Rom)
-                {
-                    _editorMode = _editorModePrev;
-                    _editorModePrev = Rom;
-                }
-                else
-                {
-                    _editorModePrev = _editorMode;
-                    _editorMode = Rom;
-                    _hexEdit = false;
-                    resetEditor();
-                }
+                _editorMode = _editorModePrev;
+                _editorModePrev = Rom;
+            }
+            else
+            {
+                _editorModePrev = _editorMode;
+                _editorMode = Rom;
+                _hexEdit = false;
+                resetEditor();
             }
         }
 
@@ -1158,7 +1216,11 @@ namespace Editor
             _memoryMode = (MemoryMode)memoryMode;
             
             // Update debugger address with PC or vPC
-            if(_singleStepEnabled) _vpcBaseAddress = (_memoryMode == RAM) ? Cpu::getVPC() : Cpu::getStateS()._PC;
+            if(_singleStepEnabled)
+            {
+                _ntvBaseAddress = Cpu::getStateS()._PC;
+                _vpcBaseAddress = Cpu::getVPC();
+            }
         }
 
         // RAM Size
@@ -1170,7 +1232,7 @@ namespace Editor
         // Hardware upload and execute
         else if(_sdlKeyScanCode == _hardware["Execute"].scanCode  &&  _sdlKeyModifier == _hardware["Execute"].modifier)
         {
-            if(!_singleStepEnabled) Loader::setUploadTarget(Loader::Hardware);
+            Loader::setUploadTarget(Loader::Hardware);
         }
 
         updateEditor();
@@ -1214,7 +1276,8 @@ namespace Editor
     {
         _singleStep = false;
         _singleStepEnabled = true;
-        _vpcBaseAddress = address;
+        if(_memoryMode != RAM) _ntvBaseAddress = address;
+        if(_memoryMode == RAM) _vpcBaseAddress = address;
     }
 
     // Debug mode, handles it's own input and rendering
@@ -1232,7 +1295,29 @@ namespace Editor
             // Native debugging
             if(_memoryMode != RAM)
             {
-                singleStep(Cpu::getStateS()._PC);
+                uint16_t nPC = Cpu::getStateS()._PC;
+
+                switch(_singleStepMode)
+                {
+                    case RunToBrk:
+                    {
+                        auto it = std::find(_ntvBreakPoints.begin(), _ntvBreakPoints.end(), nPC);
+                        if(it != _ntvBreakPoints.end()) singleStep(nPC);
+                    }
+                    break;
+                
+                    case StepPC:
+                    {
+                        if(nPC != _singleStepNtv) singleStep(nPC);
+                    }
+                    break;
+
+                    case StepWatch:
+                    {
+                        if(Cpu::getRAM(_singleStepAddress) != _singleStepNtv) singleStep(nPC);
+                    }
+                    break;
+                }
             }
             // vCPU debugging, (this code can potentially run for every Native instruction, for efficiency we check vPC so this code only runs for each vCPU instruction)
             else if(vPC != Cpu::getVPC()  ||  clocks >= MAX_SINGLE_STEP_CLOCKS)
@@ -1245,26 +1330,26 @@ namespace Editor
                     resetDebugger();
                     fprintf(stderr, "Editor::handleDebugger() : Single step stall for %d milliseconds : exiting debugger.\n", SDL_GetTicks() - _singleStepTicks);
                 }
-                // Single step on vPC or on watch value
+                // Single step on breakpoint, vPC or on watch value
                 switch(_singleStepMode)
                 {
                     case RunToBrk:
                     {
-                        auto it = std::find(_breakPoints.begin(), _breakPoints.end(), vPC);
-                        if(it != _breakPoints.end()) singleStep(vPC);
+                        auto it = std::find(_vpcBreakPoints.begin(), _vpcBreakPoints.end(), vPC);
+                        if(it != _vpcBreakPoints.end()) singleStep(vPC);
                     }
                     break;
                 
-                    case StepVpc:
+                    case StepPC:
                     {
                         // Step whenever program counter changes or when MAX_SINGLE_STEP_CLOCKS clocks have occured, (to avoid deadlocks)
-                        if(vPC != _singleStepValue  ||  clocks >= MAX_SINGLE_STEP_CLOCKS) singleStep(vPC);
+                        if(vPC != _singleStepVpc  ||  clocks >= MAX_SINGLE_STEP_CLOCKS) singleStep(vPC);
                     }
                     break;
 
                     case StepWatch:
                     {
-                        if(Cpu::getRAM(_singleStepAddress) != _singleStepValue) singleStep(vPC);
+                        if(Cpu::getRAM(_singleStepAddress) != _singleStepVpc) singleStep(vPC);
                     }
                     break;
                 }
@@ -1278,20 +1363,8 @@ namespace Editor
         // Pause simulation and handle debugging keys
         while(_singleStepEnabled)
         {
-            // Update graphics but only once every 16.66667ms
-            static uint64_t prevFrameCounter = 0;
-            double frameTime = double(SDL_GetPerformanceCounter() - prevFrameCounter) / double(SDL_GetPerformanceFrequency());
-
-            Timing::setFrameUpdate(false);
-            if(frameTime > VSYNC_TIMING_60)
-            {
-                _onVarType = updateOnVarType();
-
-                prevFrameCounter = SDL_GetPerformanceCounter();
-                Timing::setFrameUpdate(true);
-                Graphics::refreshScreen();
-                Graphics::render(false);
-            }
+            _onVarType = updateOnVarType();
+            Graphics::render(false);
 
             SDL_Event event;
             while(SDL_PollEvent(&event))
@@ -1308,7 +1381,8 @@ namespace Editor
                     {
                         if(_pageUpButton  &&  event.button.button == SDL_BUTTON_LEFT) handlePageUp(HEX_CHARS_Y);
                         else if(_pageDnButton  &&  event.button.button == SDL_BUTTON_LEFT) handlePageDown(HEX_CHARS_Y);
-                        else if(_memoryMode == RAM  &&  _delAllButton  &&  event.button.button == SDL_BUTTON_LEFT) _breakPoints.clear();
+                        else if(_memoryMode == RAM  &&  _delAllButton  &&  event.button.button == SDL_BUTTON_LEFT) _vpcBreakPoints.clear();
+                        else if(_memoryMode != RAM  &&  _delAllButton  &&  event.button.button == SDL_BUTTON_LEFT) _ntvBreakPoints.clear();
                         else if(event.button.button == SDL_BUTTON_LEFT) handleMouseLeftClick();
                     }
                     break;
@@ -1335,8 +1409,8 @@ namespace Editor
 
                     case SDL_KEYDOWN:
                     {
-                        // Run to breakpoint, (vCPU only)
-                        if(_memoryMode == RAM  &&  _sdlKeyScanCode == _debugger["RunToBrk"].scanCode  &&  _sdlKeyModifier == _debugger["RunToBrk"].modifier)
+                        // Run to breakpoint, (vCPU or native)
+                        if(_sdlKeyScanCode == _debugger["RunToBrk"].scanCode  &&  _sdlKeyModifier == _debugger["RunToBrk"].modifier)
                         {
                             _singleStep = true;
                             _singleStepEnabled = false;
@@ -1344,22 +1418,24 @@ namespace Editor
                             _singleStepTicks = SDL_GetTicks();
                         }
                         // Single step on vPC or on PC, (vCPU or native)
-                        else if(_sdlKeyScanCode == _debugger["StepVpc"].scanCode  &&  _sdlKeyModifier == _debugger["StepVpc"].modifier)
+                        else if(_sdlKeyScanCode == _debugger["StepPC"].scanCode  &&  _sdlKeyModifier == _debugger["StepPC"].modifier)
                         {
                             _singleStep = true;
                             _singleStepEnabled = false;
-                            _singleStepMode = StepVpc;
+                            _singleStepMode = StepPC;
                             _singleStepTicks = SDL_GetTicks();
-                            _singleStepValue = (_memoryMode == RAM) ? Cpu::getVPC() : Cpu::getStateS()._PC;
+                            _singleStepVpc = Cpu::getVPC();
+                            _singleStepNtv = Cpu::getStateS()._PC;
                         }
-                        // Single step on watch value, (vCPU only)
-                        else if(_memoryMode == RAM  &&  _sdlKeyScanCode == _debugger["StepWatch"].scanCode  &&  _sdlKeyModifier == _debugger["StepWatch"].modifier)
+                        // Single step on watch value, (vCPU or native)
+                        else if(_sdlKeyScanCode == _debugger["StepWatch"].scanCode  &&  _sdlKeyModifier == _debugger["StepWatch"].modifier)
                         {
                             _singleStep = true;
                             _singleStepEnabled = false;
                             _singleStepMode = StepWatch;
                             _singleStepTicks = SDL_GetTicks();
-                            _singleStepValue = Cpu::getRAM(_singleStepAddress);
+                            _singleStepVpc = Cpu::getRAM(_singleStepAddress);
+                            _singleStepNtv = Cpu::getRAM(_singleStepAddress);
                         }
                         else
                         {
@@ -1398,7 +1474,8 @@ namespace Editor
                 {
                     if(_pageUpButton  &&  event.button.button == SDL_BUTTON_LEFT) handlePageUp(HEX_CHARS_Y);
                     else if(_pageDnButton  &&  event.button.button == SDL_BUTTON_LEFT) handlePageDown(HEX_CHARS_Y);
-                    else if(_memoryMode == RAM  &&  _delAllButton  &&  event.button.button == SDL_BUTTON_LEFT) _breakPoints.clear();
+                    else if(_memoryMode == RAM  &&  _delAllButton  &&  event.button.button == SDL_BUTTON_LEFT) _vpcBreakPoints.clear();
+                    else if(_memoryMode != RAM  &&  _delAllButton  &&  event.button.button == SDL_BUTTON_LEFT) _ntvBreakPoints.clear();
                     else if(event.button.button == SDL_BUTTON_LEFT) handleMouseLeftClick();
                     else if(event.button.button == SDL_BUTTON_RIGHT) handleMouseRightClick();
                 }

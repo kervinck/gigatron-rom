@@ -854,20 +854,21 @@ namespace Cpu
             _clockStall = _clock;
             _vgaY = VSYNC_START;
 
-            // Input and graphics
             if(!_debugging)
             {
+                // Input and graphics
                 Editor::handleInput();
-                Graphics::render();
+                Graphics::render(true);
             }
         }
 
         // Pixel
         if(_vgaX++ < HLINE_END)
         {
-            if(_vgaY >= 0  &&  _vgaY < SCREEN_HEIGHT  &&  _vgaX >=HPIXELS_START  &&  _vgaX < HPIXELS_END)
+            if(_vgaY >= 0  &&  _vgaY < SCREEN_HEIGHT)
             {
-                Graphics::refreshPixel(_stateS, _vgaX-HPIXELS_START, _vgaY, _debugging);
+                if(_vgaX >=HPIXELS_START  &&  _vgaX < HPIXELS_END) Graphics::refreshPixel(_stateS, _vgaX-HPIXELS_START, _vgaY);
+                if(_debugging  &&  _vgaX >=HPIXELS_START-1  &&  _vgaX <= HPIXELS_END-1) Graphics::pixelReticle(_stateS, _vgaX-(HPIXELS_START-1), _vgaY);
             }
         }
 

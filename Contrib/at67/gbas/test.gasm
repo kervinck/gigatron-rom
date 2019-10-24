@@ -1,22 +1,22 @@
 _startAddress_  EQU		0x0200
-resetVideoTable EQU 0x7fa0
-convertEqOp     EQU resetVideoTable - 0x0100
-convertNeOp     EQU convertEqOp     + 9     
-convertLeOp     EQU convertNeOp     + 9     
-convertGeOp     EQU convertLeOp     + 9     
-convertLtOp     EQU convertGeOp     + 9     
-convertGtOp     EQU convertLtOp     + 9     
-clearRegion     EQU resetVideoTable - 0x0200
-clearCursorRow  EQU resetVideoTable - 0x0300
-printText       EQU resetVideoTable - 0x0400
-printDigit      EQU resetVideoTable - 0x0500
-printVarInt16   EQU resetVideoTable - 0x0600
-printChar       EQU resetVideoTable - 0x0700
-printHexByte    EQU resetVideoTable - 0x0800
-newLineScroll   EQU resetVideoTable - 0x0900
-resetAudio      EQU resetVideoTable - 0x0A00
-playMidi        EQU resetVideoTable - 0x0B00
-midiStartNote   EQU resetVideoTable - 0x0C00
+resetVideoTable EQU     0x7fa0
+convertEqOp     EQU     resetVideoTable - 0x0100
+convertNeOp     EQU     convertEqOp     + 9     
+convertLeOp     EQU     convertNeOp     + 9     
+convertGeOp     EQU     convertLeOp     + 9     
+convertLtOp     EQU     convertGeOp     + 9     
+convertGtOp     EQU     convertLtOp     + 9     
+clearRegion     EQU     resetVideoTable - 0x0200
+clearCursorRow  EQU     resetVideoTable - 0x0300
+printText       EQU     resetVideoTable - 0x0400
+printDigit      EQU     resetVideoTable - 0x0500
+printVarInt16   EQU     resetVideoTable - 0x0600
+printChar       EQU     resetVideoTable - 0x0700
+printHexByte    EQU     resetVideoTable - 0x0800
+newLineScroll   EQU     resetVideoTable - 0x0900
+resetAudio      EQU     resetVideoTable - 0x0A00
+playMidi        EQU     resetVideoTable - 0x0B00
+midiStartNote   EQU     resetVideoTable - 0x0C00
 convertEqOpAddr EQU 0x00E2                  
 convertNeOpAddr EQU 0x00E4                  
 convertLeOpAddr EQU 0x00E6                  
@@ -42,12 +42,12 @@ midiDelay       EQU     register0 + 0x1A
 frameCountPrev  EQU     register0 + 0x1C
 
 ; Includes
-%include include/gigatron.i
-%include include/audio.i
-%include include/clear_screen.i
-%include include/conv_conds.i
-%include include/print_text.i
-%include include/macros.i
+%include        include/gigatron.i
+%include        include/audio.i
+%include        include/clear_screen.i
+%include        include/conv_conds.i
+%include        include/print_text.i
+%include        include/macros.i
 
 ; Labels
 _entryPoint_    EQU		0x0200
@@ -61,8 +61,8 @@ _34             EQU		0x03b7
 _35             EQU		0x03d2
 _36             EQU		0x03ed
 _37             EQU		0x0419
-_40             EQU		0x06c1
-_end_39         EQU		0x06c6
+_40             EQU		0x06c5
+_end_39         EQU		0x06ca
 0x0300          EQU		0x0300
 0x0400          EQU		0x0400
 0x0500          EQU		0x0500
@@ -79,8 +79,8 @@ _g              EQU		0x003c
 _z              EQU		0x003e
 
 ; Strings
-usrStr_0x6fa0		EQU		0x6fa0
-usrStr_0x6fa0		DB		1 ' '
+usrStr_0x6fa0	EQU		0x6fa0
+usrStr_0x6fa0	DB		1 ' '
 
 ; Code
 _entryPoint_    Initialise	                        		; INIT
@@ -371,27 +371,11 @@ _37             LDI		0
                 ADDW	_f
                 STW		0xd4
                 LDW		0xd2
-                SUBW	0xd4
                 STW		0xe0
                 LDWI	0x0500
                 CALL	giga_vAC
 
 0x0500          LDW		0xe0
-                STW		0xd4
-                LDW		0xd0
-                SUBW	0xd4
-                STW		_z                          		; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
-
-                LDWI	-2949
-                ADDW	_b
-                STW		0xd0
-                LDWI	300
-                ADDW	_e
-                STW		0xd2
-                LDWI	-900
-                ADDW	_f
-                STW		0xd4
-                LDW		0xd2
                 SUBW	0xd4
                 STW		0xd4
                 LDW		0xd0
@@ -497,11 +481,27 @@ _37             LDI		0
                 LDWI	-2949
                 ADDW	_b
                 STW		0xd0
+                LDWI	300
+                ADDW	_e
+                STW		0xd2
+                LDWI	-900
+                ADDW	_f
+                STW		0xd4
+                LDW		0xd2
+                SUBW	0xd4
+                STW		0xd4
+                LDW		0xd0
+                SUBW	0xd4
+                STW		_z                          		; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
+
+                LDWI	-2949
                 STW		0xe0
                 LDWI	0x0600
                 CALL	giga_vAC
 
 0x0600          LDW		0xe0
+                ADDW	_b
+                STW		0xd0
                 LDWI	300
                 ADDW	_e
                 STW		0xd2

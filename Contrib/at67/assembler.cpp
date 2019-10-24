@@ -1766,7 +1766,7 @@ namespace Assembler
 
         if(input.find("_BREAKPOINT_") != std::string::npos)
         {
-            if(parse == MnemonicPass) Editor::addBreakPoint(_currentAddress);
+            if(parse == MnemonicPass) Editor::addVpcBreakPoint(_currentAddress);
             return true;
         }
 
@@ -2040,7 +2040,7 @@ namespace Assembler
         Expression::setExprFunc(Expression::expression);
 
 #ifndef STAND_ALONE
-        Editor::clearBreakPoints();
+        Editor::clearVpcBreakPoints();
 #endif
     }
 

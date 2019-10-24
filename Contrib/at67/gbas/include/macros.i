@@ -172,10 +172,12 @@ _label_ CALL    giga_vAC
 
 %MACRO  Initialise
         ClearRegion 0x2020 0 0 giga_xres giga_yres
+
         LDWI    0x0F20          ; yellow on blue
         STW     textColour
         LDWI    0x0802          ; starting cursor position
         STW     cursorXY
+        
         LDWI    convertEqOp     ; (0x00E2 <-> 0x00ED), critical routines that can't straddle page boundaries
         STW     convertEqOpAddr
         LDWI    convertNeOp
@@ -188,6 +190,15 @@ _label_ CALL    giga_vAC
         STW     convertLtOpAddr
         LDWI    convertGtOp
         STW     convertGtOpAddr
+%ENDM
+
+%MACRO  Init_CALLI
+        ClearRegion 0x2020 0 0 giga_xres giga_yres
+
+        LDWI    0x0F20          ; yellow on blue
+        STW     textColour
+        LDWI    0x0802          ; starting cursor position
+        STW     cursorXY
 %ENDM
 
 %MACRO  ClearRegion  _colour _x _y _w _h

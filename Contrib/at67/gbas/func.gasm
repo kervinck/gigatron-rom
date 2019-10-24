@@ -17,12 +17,6 @@ newLineScroll   EQU resetVideoTable - 0x0900
 resetAudio      EQU resetVideoTable - 0x0A00
 playMidi        EQU resetVideoTable - 0x0B00
 midiStartNote   EQU resetVideoTable - 0x0C00
-convertEqOpAddr EQU 0x00E2                  
-convertNeOpAddr EQU 0x00E4                  
-convertLeOpAddr EQU 0x00E6                  
-convertGeOpAddr EQU 0x00E8                  
-convertLtOpAddr EQU 0x00EA                  
-convertGtOpAddr EQU 0x00EC                  
 
 ; Internal variables
 register0       EQU     0x00a0
@@ -51,10 +45,10 @@ frameCountPrev  EQU     register0 + 0x1C
 
 ; Labels
 _entryPoint_    EQU		0x0200
-_10             EQU		0x024c
-_blamo          EQU		0x034b
-_end_10         EQU		0x0349
-_next15         EQU		0x035b
+_10             EQU		0x022e
+_blamo          EQU		0x0325
+_end_10         EQU		0x0323
+_next15         EQU		0x0335
 0x0300          EQU		0x0300
 
 ; Variables
@@ -80,7 +74,7 @@ usrStr_0x6fab		EQU		0x6fab
 usrStr_0x6fab		DB		1 ' '
 
 ; Code
-_entryPoint_    Initialise	                        		; INIT
+_entryPoint_    Init_CALLI	                        		; INIT
 
 _10             LDI		33
                 STW		_addr                       		; addr = &h21
@@ -126,8 +120,7 @@ _10             LDI		33
                 ADDW	0xde
                 STW		_a                          		; a = NOT addr - peek(addr AND pEeK(&h0FFF OR peek(&hF000))) AND &hFC OR peek(addr+1) + 23 XOR &B00001111 - NOT 56 + NOT addr
 
-                LDWI	_blamo
-                CALL	giga_vAC                    		; gosub blamo
+                CALLI	_blamo                      		; gosub blamo
 
                 PrintString	usrStr_0x6fa0
                 PrintString	usrStr_0x6fa5
@@ -138,27 +131,24 @@ _10             LDI		33
                 PrintVarInt16	_a
                 PrintString	usrStr_0x6fa5
                 LDWI	0x0021
-                CALLI	0x0300
-
-0x0300          PEEK	
+                PEEK	
                 ANDI	252
                 PrintAcHexByte	
-                LDWI	newLineScroll
-                CALL	giga_vAC                    		; print "test";" ";"dog";" ";56+44;" ";a;" ";hex$(peek(&h21) AND &hFC)
+                CALLI	newLineScroll               		; print "test";" ";"dog";" ";56+44;" ";a;" ";hex$(peek(&h21) AND &hFC)
 
                 LDW		_a
                 PrintAcHexByte	
                 PrintString	usrStr_0x6fa5
-                LDW		_b
+                CALLI	0x0300
+
+0x0300          LDW		_b
                 PrintAcHexWord	
                 PrintString	usrStr_0x6fa5
                 LDWI	13107
                 PrintAcHexWord	
-                LDWI	newLineScroll
-                CALL	giga_vAC                    		; print hex$(a);" ";hexw$(b);" ";hexw$(&h1111 OR &h2222)
+                CALLI	newLineScroll               		; print hex$(a);" ";hexw$(b);" ";hexw$(&h1111 OR &h2222)
 
-                LDWI	_10
-                CALL	giga_vAC                    		; goto 10
+                CALLI	_10                         		; goto 10
 
 _end_10         BRA		_end_10                     		; END
 
@@ -198,8 +188,7 @@ _next15         LDWI	0x6fab
                 PrintString	usrStr_0x6fa5
                 LDW		_b
                 PrintAcHexWord	
-                LDWI	newLineScroll
-                CALL	giga_vAC                    		; print i; " " ; hexw$(b)
+                CALLI	newLineScroll               		; print i; " " ; hexw$(b)
 
                 ForNextLoopUp	_i _next15 100      		; next i
 

@@ -78,6 +78,7 @@ namespace Editor
 
     uint8_t getMemoryDigit(void);
     uint8_t getAddressDigit(void);
+    uint16_t getNtvBaseAddress(void);
     uint16_t getHexBaseAddress(void);
     uint16_t getVpcBaseAddress(void);
     uint16_t getLoadBaseAddress(void);
@@ -86,10 +87,15 @@ namespace Editor
     uint16_t getCpuUsageAddressA(void);
     uint16_t getCpuUsageAddressB(void);
 
-    int getBreakPointsSize(void);
-    uint16_t getBreakPointAddress(int index);
-    void addBreakPoint(uint16_t address);
-    void clearBreakPoints(void);
+    int getNtvBreakPointsSize(void);
+    uint16_t getNtvBreakPointAddress(int index);
+    void addNtvBreakPoint(uint16_t address);
+    void clearNtvBreakPoints(void);
+
+    int getVpcBreakPointsSize(void);
+    uint16_t getVpcBreakPointAddress(int index);
+    void addVpcBreakPoint(uint16_t address);
+    void clearVpcBreakPoints(void);
 
     int getFileEntriesIndex(void);
     int getFileEntriesSize(void);

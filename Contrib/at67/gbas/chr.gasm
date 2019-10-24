@@ -1,22 +1,30 @@
+; Includes
+%include include/gigatron.i
+%include include/audio.i
+%include include/clear_screen.i
+%include include/conv_conds.i
+%include include/print_text.i
+%include include/macros.i
+
 _startAddress_  EQU		0x0200
-resetVideoTable EQU 0x7fa0
-convertEqOp     EQU resetVideoTable - 0x0100
-convertNeOp     EQU convertEqOp     + 9     
-convertLeOp     EQU convertNeOp     + 9     
-convertGeOp     EQU convertLeOp     + 9     
-convertLtOp     EQU convertGeOp     + 9     
-convertGtOp     EQU convertLtOp     + 9     
-clearRegion     EQU resetVideoTable - 0x0200
-clearCursorRow  EQU resetVideoTable - 0x0300
-printText       EQU resetVideoTable - 0x0400
-printDigit      EQU resetVideoTable - 0x0500
-printVarInt16   EQU resetVideoTable - 0x0600
-printChar       EQU resetVideoTable - 0x0700
-printHexByte    EQU resetVideoTable - 0x0800
-newLineScroll   EQU resetVideoTable - 0x0900
-resetAudio      EQU resetVideoTable - 0x0A00
-playMidi        EQU resetVideoTable - 0x0B00
-midiStartNote   EQU resetVideoTable - 0x0C00
+resetVideoTable EQU     0x7fa0
+convertEqOp     EQU     resetVideoTable - 0x0100
+convertNeOp     EQU     convertEqOp     + 9     
+convertLeOp     EQU     convertNeOp     + 9     
+convertGeOp     EQU     convertLeOp     + 9     
+convertLtOp     EQU     convertGeOp     + 9     
+convertGtOp     EQU     convertLtOp     + 9     
+clearRegion     EQU     resetVideoTable - 0x0200
+clearCursorRow  EQU     resetVideoTable - 0x0300
+printText       EQU     resetVideoTable - 0x0400
+printDigit      EQU     resetVideoTable - 0x0500
+printVarInt16   EQU     resetVideoTable - 0x0600
+printChar       EQU     resetVideoTable - 0x0700
+printHexByte    EQU     resetVideoTable - 0x0800
+newLineScroll   EQU     resetVideoTable - 0x0900
+resetAudio      EQU     resetVideoTable - 0x0A00
+playMidi        EQU     resetVideoTable - 0x0B00
+midiStartNote   EQU     resetVideoTable - 0x0C00
 convertEqOpAddr EQU 0x00E2                  
 convertNeOpAddr EQU 0x00E4                  
 convertLeOpAddr EQU 0x00E6                  
@@ -40,14 +48,6 @@ cursorXY        EQU     register0 + 0x16
 midiStreamPtr   EQU     register0 + 0x18
 midiDelay       EQU     register0 + 0x1A
 frameCountPrev  EQU     register0 + 0x1C
-
-; Includes
-%include include/gigatron.i
-%include include/audio.i
-%include include/clear_screen.i
-%include include/conv_conds.i
-%include include/print_text.i
-%include include/macros.i
 
 ; Labels
 _entryPoint_    EQU		0x0200
