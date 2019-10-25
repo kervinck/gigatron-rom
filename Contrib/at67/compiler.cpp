@@ -379,6 +379,16 @@ namespace Compiler
 
         return -1;
     }
+    
+    int findLabel(uint16_t address)
+    {
+        for(int i=0; i<_labels.size(); i++)
+        {
+            if(_labels[i]._address == address) return i;
+        }
+
+        return -1;
+    }
 
     int findVar(std::string& varName)
     {
@@ -525,6 +535,9 @@ namespace Compiler
 
         // Check for operators
         if(input.find_first_of("-+/*<>=") != std::string::npos) expressionType |= Expression::HasOperators;
+        std::string mod = input;
+        Expression::strToUpper(mod);
+        if(mod.find("MOD") != std::string::npos) expressionType |= Expression::HasOperators;
 
         // Check for strings
         //if(input.find("$") != std::string::npos) expressionType |= Expression::HasStrings;
@@ -730,7 +743,7 @@ namespace Compiler
         //fprintf(stderr, "%s  %d %04x\n", opcode.c_str(), vasmSize, _vasmPC);
 
         std::string operand = std::string(operandStr);
-        std::string tabs = "\t\t"; //(opcode.size() > 3) ? "\t" : "\t\t";
+        std::string tabs = "\t\t";
         line = opcode + tabs + operand;
 
         return vasmSize;
@@ -1530,6 +1543,94 @@ namespace Compiler
         return left;
     }
 
+
+    // ********************************************************************************************
+    // Math Operators
+    // ********************************************************************************************
+    bool handleMathOp(const std::string& opcode, const std::string& operand, Expression::Numeric& lhs, Expression::Numeric& rhs, bool isMod=false)
+    {
+        // LHS
+        if(lhs._isAddress)
+        {
+            // Temporary variable address
+            if(isdigit(lhs._varName[0]))
+            {
+                emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(lhs._value)), false);
+            }
+            // User variable address
+            else
+            {
+                if(!emitVcpuAsmUserVar("LDW", lhs._varName.c_str(), true)) return false;
+                _nextTempVar = false;
+            }
+        }
+        else
+        {
+            // 8bit positive constants
+            if(lhs._value >=0  &&  lhs._value <= 255)
+            {
+                emitVcpuAsm("LDI", std::to_string(lhs._value), false);
+            }
+            // 16bit constants
+            else
+            {
+                emitVcpuAsm("LDWI", std::to_string(lhs._value), false);
+            }
+
+            _nextTempVar = true;
+        }
+
+        emitVcpuAsm("STW", "mathX", false);
+
+        // RHS
+        if(rhs._isAddress)
+        {
+            // Temporary variable address
+            if(isdigit(rhs._varName[0]))
+            {
+                emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(rhs._value)), false);
+            }
+            // User variable address
+            else
+            {
+                if(!emitVcpuAsmUserVar("LDW", rhs._varName.c_str(), _nextTempVar)) return false;
+                _nextTempVar = false;
+            }
+        }
+        else
+        {
+            if(rhs._value >=0  &&  rhs._value <= 255)
+            {
+                emitVcpuAsm("LDI", std::to_string(rhs._value), false);
+            }
+            else
+            {
+                emitVcpuAsm("LDWI", std::to_string(rhs._value), false);
+            }
+        }
+
+        emitVcpuAsm("STW", "mathY", false);
+
+        if(Assembler::getUseOpcodeCALLI())
+        {
+            emitVcpuAsm(opcode, operand, false);
+        }
+        else
+        {
+            emitVcpuAsm("LDWI", operand, false);
+            emitVcpuAsm(opcode, "giga_vAC", false);
+        }
+
+        lhs._value = uint8_t(_tempVarStart);
+        lhs._isAddress = true;
+        lhs._varName = _tempVarStartStr;
+        
+        if(isMod) emitVcpuAsm("LDW", "mathRem", false);
+        emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(_tempVarStart)), false);
+
+        return true;
+    }
+
     Expression::Numeric operatorMUL(Expression::Numeric& left, Expression::Numeric& right)
     {
         if(!left._isAddress  &&  !right._isAddress)
@@ -1540,6 +1641,8 @@ namespace Compiler
 
         // Optimise multiply with 0
         if((!left._isAddress  &&  left._value == 0)  ||  (!right._isAddress  &&  right._value == 0)) return Expression::Numeric(0, true, false, std::string(""));
+
+        left._isValid = (Assembler::getUseOpcodeCALLI()) ? handleMathOp("CALLI", "multiply16bit", left, right) : handleMathOp("CALL", "multiply16bit", left, right);
 
         return left;
     }
@@ -1554,6 +1657,24 @@ namespace Compiler
 
         // Optimise divide with 0, term() never lets denominator = 0
         if((!left._isAddress  &&  left._value == 0)  ||  (!right._isAddress  &&  right._value == 0)) return Expression::Numeric(0, true, false, std::string(""));
+
+        left._isValid = (Assembler::getUseOpcodeCALLI()) ? handleMathOp("CALLI", "divide16bit", left, right) : handleMathOp("CALL", "divide16bit", left, right);
+
+        return left;
+    }
+
+    Expression::Numeric operatorMOD(Expression::Numeric& left, Expression::Numeric& right)
+    {
+        if(!left._isAddress  &&  !right._isAddress)
+        {
+            left._value /= right._value;
+            return left;
+        }
+
+        // Optimise divide with 0, term() never lets denominator = 0
+        if((!left._isAddress  &&  left._value == 0)  ||  (!right._isAddress  &&  right._value == 0)) return Expression::Numeric(0, true, false, std::string(""));
+
+        left._isValid = (Assembler::getUseOpcodeCALLI()) ? handleMathOp("CALLI", "divide16bit", left, right, true) : handleMathOp("CALL", "divide16bit", left, right, true);
 
         return left;
     }
@@ -1691,8 +1812,9 @@ namespace Compiler
 
         for(;;)
         {
-            if(peek(false) == '*')      {get(false); f = factor(0); result = operatorMUL(result, f);                                           }
-            else if(peek(false) == '/') {get(false); f = factor(0); result = (f._value != 0) ? operatorDIV(result, f) : operatorMUL(result, f);}
+            if(peek(false) == '*')           {get(false); f = factor(0); result = operatorMUL(result, f);                                           }
+            else if(peek(false) == '/')      {get(false); f = factor(0); result = (f._value != 0) ? operatorDIV(result, f) : operatorMUL(result, f);}
+            else if(Expression::find("MOD")) {            f = factor(0); result = (f._value != 0) ? operatorMOD(result, f) : operatorMUL(result, f);}
             else return result;
         }
     }
@@ -2506,7 +2628,7 @@ namespace Compiler
         // Adjust addresses for any non page jump labels with addresses higher than start label, (labels can be stored out of order)
         for(int i=0; i<_labels.size(); i++)
         {
-            if(!_labels[i]._pageJump  &&  _labels[i]._address > address)
+            if(!_labels[i]._pageJump  &&  _labels[i]._address >= address)
             {
                 _labels[i]._address += offset;
             }
@@ -2529,7 +2651,7 @@ namespace Compiler
     }
 
     auto insertPageJumpInstruction(std::vector<Compiler::CodeLine>::iterator& itCode, std::vector<Compiler::VasmLine>::iterator& itVasm,
-                                   const std::string& opcode, const std::string& operand, uint16_t address)
+                                   const std::string& opcode, const std::string& code, uint16_t address)
     {
         if(itVasm >= itCode->_vasm.end())
         {
@@ -2540,7 +2662,7 @@ namespace Compiler
             _EXIT_(EXIT_FAILURE);
         }
 
-        return itCode->_vasm.insert(itVasm, {address, opcode, operand, "", -1, true});
+        return itCode->_vasm.insert(itVasm, {address, opcode, code, "", -1, true});
     }
 
     bool checkExclusionZones(void)
@@ -2571,28 +2693,41 @@ namespace Compiler
                     uint8_t hPC = HI_BYTE(itVasm->_address);
                     uint16_t nextPC = (hPC + 1) <<8;
                     uint16_t vPC = itVasm->_address;
-                    uint16_t audioExcl = (hPC <<8) | 0x00F0;
-                    uint16_t pageExcl  = (hPC <<8) | 0x00F6;
+                    uint16_t audioExcl = (hPC <<8) | 0x00F9;
+                    uint16_t pageExcl  = (hPC <<8) | 0x00FF;
 
-                    // 8 bytes for non CALLI PAGE JUMP, (STW, LDWI, CALL), 3 bytes for CALLI PAGE JUMP
+                    // 3 bytes for CALLI PAGE JUMP
                     if(Assembler::getUseOpcodeCALLI())
                     {
-                        audioExcl += 5;
-                        pageExcl += 5;
+                        audioExcl -= 3;
+                        pageExcl  -= 3;
+                    }
+                    // 7 bytes for non CALLI PAGE JUMP, (STW, LDWI, CALL)
+                    else
+                    {
+                        audioExcl -= 7;
+                        pageExcl  -= 7;
                     }
 
-                    // Check MACRO opcodes
-                    std::string macroOpcode = itVasm->_opcode;
-                    if(macroOpcode.size()  &&  macroOpcode[0] == '%')
+                    // Adjust for MACRO size
+                    std::string opcode = itVasm->_opcode;
+                    if(opcode.size()  &&  opcode[0] == '%')
                     {
-                        macroOpcode.erase(0, 1);
+                        opcode.erase(0, 1);
 
-                        if(_macroIndexEntries.find(macroOpcode) != _macroIndexEntries.end())
+                        if(_macroIndexEntries.find(opcode) != _macroIndexEntries.end())
                         {
-                            int macroSize = _macroIndexEntries[macroOpcode]._byteSize;
+                            int macroSize = _macroIndexEntries[opcode]._byteSize;
                             audioExcl -= macroSize;
                             pageExcl -= macroSize;
                         }
+                    }
+                    // Adjust for opcode size
+                    int opcodeSize = Assembler::getAsmOpcodeSize(opcode);
+                    if(opcodeSize)
+                    {
+                        audioExcl -= opcodeSize;
+                        pageExcl -= opcodeSize;
                     }
 
                     if(itVasm->_pageJump == false  &&  (vPC >= pageExcl  ||  ((hPC == 0x02 || hPC == 0x03 || hPC == 0x04)  &&  vPC >= audioExcl)))
@@ -2601,39 +2736,64 @@ namespace Compiler
                         uint16_t currPC = (vasmLineIndex > 0) ? itCode->_vasm[vasmLineIndex-1]._address : itVasm->_address;
 
                         // Insert page jump
+                        int restoreOffset = 0;
                         if(Assembler::getUseOpcodeCALLI())
                         {
-                            std::string operandCALLI;
-                            int sizeCALLI = createVcpuAsm("CALLI", Expression::wordToHexString(nextPC), codeLineIndex, operandCALLI);
-                            itVasm = itCode->_vasm.insert((vasmLineIndex > 0) ? itVasm-1 : itVasm, {currPC, "CALLI", operandCALLI, "", -1, true});
-
-                            // Create page jump label, (created later in outputCode())
-                            itCode->_vasm[itVasm + 1 - itCode->_vasm.begin()]._internalLabel = Expression::wordToHexString(nextPC);
+                            std::string codeCALLI;
+                            int sizeCALLI = createVcpuAsm("CALLI", Expression::wordToHexString(nextPC), codeLineIndex, codeCALLI);
+                            itVasm = itCode->_vasm.insert((vasmLineIndex > 0) ? itVasm-1 : itVasm, {currPC, "CALLI", codeCALLI, "", -1, true});
                         }
                         // ROMS that don't have CALLI, (save and restore vAC)
                         else
                         {
-                            std::string operandSTW, operandLDWI, operandCALL, operandLDW;
-                            int sizeSTW  = createVcpuAsm("STW", Expression::byteToHexString(VAC_SAVE_START), codeLineIndex, operandSTW);
-                            int sizeLDWI = createVcpuAsm("LDWI", Expression::wordToHexString(nextPC), codeLineIndex, operandLDWI);
-                            int sizeCALL = createVcpuAsm("CALL", "giga_vAC", codeLineIndex, operandCALL);
-                            int sizeLDW  = createVcpuAsm("LDW", Expression::byteToHexString(VAC_SAVE_START), codeLineIndex, operandLDW);
-                            itVasm = itCode->_vasm.insert((vasmLineIndex > 0) ? itVasm-1 : itVasm, {currPC, "STW", operandSTW, "", -1, true});
-                            itVasm = insertPageJumpInstruction(itCode, itVasm + 1, "LDWI", operandLDWI, uint16_t(currPC + sizeSTW));
-                            itVasm = insertPageJumpInstruction(itCode, itVasm + 1, "CALL", operandCALL, uint16_t(currPC + sizeSTW + sizeLDWI));
-                            itVasm = insertPageJumpInstruction(itCode, itVasm + 1, "LDW", operandLDW, uint16_t(nextPC));
-
-                            // Create page jump label, (created later in outputCode())
-                            itCode->_vasm[itVasm - itCode->_vasm.begin()]._internalLabel = Expression::wordToHexString(nextPC);
+                            std::string codeSTW, codeLDWI, codeCALL, codeLDW;
+                            int sizeSTW  = createVcpuAsm("STW", Expression::byteToHexString(VAC_SAVE_START), codeLineIndex, codeSTW);
+                            int sizeLDWI = createVcpuAsm("LDWI", Expression::wordToHexString(nextPC), codeLineIndex, codeLDWI);
+                            int sizeCALL = createVcpuAsm("CALL", "giga_vAC", codeLineIndex, codeCALL);
+                            int sizeLDW  = createVcpuAsm("LDW", Expression::byteToHexString(VAC_SAVE_START), codeLineIndex, codeLDW);
+                            itVasm = itCode->_vasm.insert((vasmLineIndex > 0) ? itVasm-1 : itVasm, {currPC, "STW", codeSTW, "", -1, true});
+                            itVasm = insertPageJumpInstruction(itCode, itVasm + 1, "LDWI", codeLDWI, uint16_t(currPC + sizeSTW));
+                            itVasm = insertPageJumpInstruction(itCode, itVasm + 1, "CALL", codeCALL, uint16_t(currPC + sizeSTW + sizeLDWI));
+                            itVasm = insertPageJumpInstruction(itCode, itVasm + 1, "LDW", codeLDW, uint16_t(nextPC));
 
                             // New page address is offset by size of vAC restore
-                            nextPC += sizeLDW;
+                            restoreOffset = sizeLDW;
                         }
 
                         // Fix labels and addresses
-                        int offset = nextPC - currPC;
+                        int offset = nextPC + restoreOffset - currPC;
                         adjustExclusionLabelAddresses(currPC, offset);
-                        adjustExclusionVasmAddresses(codeLineIndex, currPC, nextPC, offset);
+                        adjustExclusionVasmAddresses(codeLineIndex, currPC, nextPC + restoreOffset, offset);
+
+                        // Check for existing label, (after label adjustments)
+                        int pageJumpLabelIndex = findLabel(nextPC);
+                        if(pageJumpLabelIndex == -1)
+                        {
+                            // Create CALLI page jump label, (created later in outputCode())
+                            if(Assembler::getUseOpcodeCALLI())
+                            {
+                                itCode->_vasm[itVasm + 1 - itCode->_vasm.begin()]._internalLabel = Expression::wordToHexString(nextPC);
+                            }
+                            // Create pre-CALLI page jump label, (created later in outputCode())
+                            else
+                            {
+                                itCode->_vasm[itVasm - itCode->_vasm.begin()]._internalLabel = Expression::wordToHexString(nextPC);
+                            }
+                        }
+                        // Existing label at the PAGE JUMP address, so use it
+                        else
+                        {
+                            // Update CALLI page jump label
+                            if(Assembler::getUseOpcodeCALLI())
+                            {
+                                itCode->_vasm[itVasm - itCode->_vasm.begin()]._code = "CALLI\t\t_" + _labels[pageJumpLabelIndex]._name;
+                            }
+                            // Update pre-CALLI page jump label
+                            else
+                            {
+                                itCode->_vasm[itVasm - itCode->_vasm.begin()]._code = "LDWI\t\t_" + _labels[pageJumpLabelIndex]._name;
+                            }
+                        }
 
                         // Restart checking procedure
                         resetCheck = true;
@@ -2700,18 +2860,20 @@ namespace Compiler
         _output.push_back("convertGeOp          EQU\t\tconvertLeOp     + 9     \n");
         _output.push_back("convertLtOp          EQU\t\tconvertGeOp     + 9     \n");
         _output.push_back("convertGtOp          EQU\t\tconvertLtOp     + 9     \n");
-        _output.push_back("clearRegion          EQU\t\tresetVideoTable - 0x0200\n");
-        _output.push_back("clearCursorRow       EQU\t\tresetVideoTable - 0x0300\n");
-        _output.push_back("printText            EQU\t\tresetVideoTable - 0x0400\n");
-        _output.push_back("printDigit           EQU\t\tresetVideoTable - 0x0500\n");
-        _output.push_back("printInt16           EQU\t\tresetVideoTable - 0x0600\n");
-        _output.push_back("printChar            EQU\t\tresetVideoTable - 0x0700\n");
-        _output.push_back("printHexByte         EQU\t\tresetVideoTable - 0x0800\n");
-        _output.push_back("printHexWord         EQU\t\tresetVideoTable - 0x0900\n");
-        _output.push_back("newLineScroll        EQU\t\tresetVideoTable - 0x0A00\n");
-        _output.push_back("resetAudio           EQU\t\tresetVideoTable - 0x0B00\n");
-        _output.push_back("playMidi             EQU\t\tresetVideoTable - 0x0C00\n");
-        _output.push_back("midiStartNote        EQU\t\tresetVideoTable - 0x0D00\n");
+        _output.push_back("multiply16bit        EQU\t\tresetVideoTable - 0x0200\n");
+        _output.push_back("divide16bit          EQU\t\tresetVideoTable - 0x0300\n");
+        _output.push_back("clearRegion          EQU\t\tresetVideoTable - 0x0400\n");
+        _output.push_back("clearCursorRow       EQU\t\tresetVideoTable - 0x0500\n");
+        _output.push_back("printText            EQU\t\tresetVideoTable - 0x0600\n");
+        _output.push_back("printDigit           EQU\t\tresetVideoTable - 0x0700\n");
+        _output.push_back("printInt16           EQU\t\tresetVideoTable - 0x0800\n");
+        _output.push_back("printChar            EQU\t\tresetVideoTable - 0x0900\n");
+        _output.push_back("printHexByte         EQU\t\tresetVideoTable - 0x0A00\n");
+        _output.push_back("printHexWord         EQU\t\tresetVideoTable - 0x0B00\n");
+        _output.push_back("newLineScroll        EQU\t\tresetVideoTable - 0x0C00\n");
+        _output.push_back("resetAudio           EQU\t\tresetVideoTable - 0x0D00\n");
+        _output.push_back("playMidi             EQU\t\tresetVideoTable - 0x0E00\n");
+        _output.push_back("midiStartNote        EQU\t\tresetVideoTable - 0x0F00\n");
 
         // Zero page call table is not needed when using CALLI
         if(!Assembler::getUseOpcodeCALLI())
@@ -2751,9 +2913,10 @@ namespace Compiler
     {
         _output.push_back("; Includes\n");
         _output.push_back("%include             include/gigatron.i\n");
+        _output.push_back("%include             include/math.i\n");
+        _output.push_back("%include             include/conv_conds.i\n");
         _output.push_back("%include             include/audio.i\n");
         _output.push_back("%include             include/clear_screen.i\n");
-        _output.push_back("%include             include/conv_conds.i\n");
 
         if(!Assembler::getUseOpcodeCALLI())
         {
@@ -2806,18 +2969,21 @@ namespace Compiler
             // Valid BASIC code
             if(_codeLines[i]._code.size() > 2  &&  _codeLines[i]._vasm.size())
             {
-                // BASIC Label
+                // BASIC Label, (may not be owned by vasm line 0 as PAGE JUMPS may move labels)
                 std::string vasmCode = _codeLines[i]._vasm[0]._code;
                 std::string basicLabel = _labels[_codeLines[i]._labelIndex]._output;
-                line = (_codeLines[i]._ownsLabel) ? basicLabel + vasmCode : std::string(LABEL_TRUNC_SIZE, ' ') + vasmCode;
+                bool vasmOwnsLabel = _labels[_codeLines[i]._labelIndex]._address == _codeLines[i]._vasm[0]._address;
+                line = (_codeLines[i]._ownsLabel  &&  vasmOwnsLabel) ? basicLabel + vasmCode : std::string(LABEL_TRUNC_SIZE, ' ') + vasmCode;
                 _vasmCode.push_back(vasmCode);
 
                 // Vasm code
                 for(int j=1; j<_codeLines[i]._vasm.size(); j++)
                 {
-                    // Internal label
+                    vasmOwnsLabel = _labels[_codeLines[i]._labelIndex]._address == _codeLines[i]._vasm[j]._address;
+
+                    // Internal label or ownwer of BASIC label, (may have been moved by PAGE JUMPS)
                     std::string vasmCode = _codeLines[i]._vasm[j]._code;
-                    std::string vasmLabel = _codeLines[i]._vasm[j]._internalLabel;
+                    std::string vasmLabel = (vasmOwnsLabel) ? basicLabel : _codeLines[i]._vasm[j]._internalLabel;
                     line += (vasmLabel.size() > 0) ?  "\n\n" + vasmLabel + std::string(LABEL_TRUNC_SIZE - vasmLabel.size(), ' ') + vasmCode : "\n" + std::string(LABEL_TRUNC_SIZE, ' ') + vasmCode;
                     _vasmCode.push_back(vasmCode);
                 }

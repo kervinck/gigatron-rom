@@ -78,6 +78,11 @@ namespace Expression
         left._value = (right._value == 0) ? 0 : left._value / right._value;
         return left;
     }
+    Numeric mod(Numeric& left, Numeric& right)
+    {
+        left._value = (right._value == 0) ? 0 : left._value % right._value;
+        return left;
+    }
     Numeric lt(Numeric& left, Numeric& right)
     {
         left._value = left._value < right._value;
@@ -115,7 +120,7 @@ namespace Expression
         if(input.find_first_of("[]") != std::string::npos) return Invalid;
         if(input.find("++") != std::string::npos) return Invalid;
         if(input.find("--") != std::string::npos) return Invalid;
-        if(input.find_first_of("-+/*()&|^") != std::string::npos) return HasOperators;
+        if(input.find_first_of("-+/%*()&|^") != std::string::npos) return HasOperators;
         return HasNumbers;
     }
 
@@ -771,6 +776,7 @@ namespace Expression
         {
             if(peek() == '*')      {get(); f = factor(0); result = mul(result, f);                                   }
             else if(peek() == '/') {get(); f = factor(0); result = (f._value != 0) ? div(result, f) : mul(result, f);}
+            else if(peek() == '%') {get(); f = factor(0); result = (f._value != 0) ? mod(result, f) : mul(result, f);}
             else return result;
         }
     }

@@ -6,18 +6,26 @@ convertLeOp          EQU		convertNeOp     + 9
 convertGeOp          EQU		convertLeOp     + 9     
 convertLtOp          EQU		convertGeOp     + 9     
 convertGtOp          EQU		convertLtOp     + 9     
-clearRegion          EQU		resetVideoTable - 0x0200
-clearCursorRow       EQU		resetVideoTable - 0x0300
-printText            EQU		resetVideoTable - 0x0400
-printDigit           EQU		resetVideoTable - 0x0500
-printInt16           EQU		resetVideoTable - 0x0600
-printChar            EQU		resetVideoTable - 0x0700
-printHexByte         EQU		resetVideoTable - 0x0800
-printHexWord         EQU		resetVideoTable - 0x0900
-newLineScroll        EQU		resetVideoTable - 0x0A00
-resetAudio           EQU		resetVideoTable - 0x0B00
-playMidi             EQU		resetVideoTable - 0x0C00
-midiStartNote        EQU		resetVideoTable - 0x0D00
+multiply16bit        EQU		resetVideoTable - 0x0200
+divide16bit          EQU		resetVideoTable - 0x0300
+clearRegion          EQU		resetVideoTable - 0x0400
+clearCursorRow       EQU		resetVideoTable - 0x0500
+printText            EQU		resetVideoTable - 0x0600
+printDigit           EQU		resetVideoTable - 0x0700
+printInt16           EQU		resetVideoTable - 0x0800
+printChar            EQU		resetVideoTable - 0x0900
+printHexByte         EQU		resetVideoTable - 0x0A00
+printHexWord         EQU		resetVideoTable - 0x0B00
+newLineScroll        EQU		resetVideoTable - 0x0C00
+resetAudio           EQU		resetVideoTable - 0x0D00
+playMidi             EQU		resetVideoTable - 0x0E00
+midiStartNote        EQU		resetVideoTable - 0x0F00
+convertEqOpAddr      EQU		0x00E2
+convertNeOpAddr      EQU		0x00E4
+convertLeOpAddr      EQU		0x00E6
+convertGeOpAddr      EQU		0x00E8
+convertLtOpAddr      EQU		0x00EA
+convertGtOpAddr      EQU		0x00EC
 
 ; Internal variables
 register0            EQU		0x00a0
@@ -38,18 +46,19 @@ frameCountPrev       EQU		register0 + 0x1C
 
 ; Includes
 %include             include/gigatron.i
+%include             include/math.i
+%include             include/conv_conds.i
 %include             include/audio.i
 %include             include/clear_screen.i
-%include             include/conv_conds.i
-%include             include/print_text_CALLI.i
-%include             include/macros_CALLI.i
+%include             include/print_text.i
+%include             include/macros.i
 
 ; Labels
 _entryPoint_         EQU		0x0200
-_10                  EQU		0x0234
-_15                  EQU		0x024f
-_16                  EQU		0x0255
-_20                  EQU		0x025b
+_10                  EQU		0x0254
+_15                  EQU		0x0281
+_16                  EQU		0x0287
+_20                  EQU		0x028d
 
 ; Variables
 _a                   EQU		0x0030
@@ -62,7 +71,8 @@ usrStr_0x5fa2		 EQU		0x5fa2
 usrStr_0x5fa2		 DB			5 ' dog '
 
 ; Code
-_entryPoint_         Initialise		                                            		; INIT
+_entryPoint_         Initialise		
+                     InitialiseCcOps		                                     		; INIT
 
                      LDI		0
                      STW		_a                                               		; a=0
@@ -76,7 +86,8 @@ _10                  LDI		1
                      PrintString		usrStr_0x5fa0
                      PrintVarInt16		_a
                      PrintString		usrStr_0x5fa2
-                     CALLI		newLineScroll                                      		; print 1 + b;" " ;a; " dog "
+                     LDWI		newLineScroll
+                     CALL		giga_vAC                                          		; print 1 + b;" " ;a; " dog "
 
 _15                  LDW		_a
                      ADDI		1

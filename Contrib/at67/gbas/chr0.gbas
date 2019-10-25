@@ -1,6 +1,7 @@
+_useOpcodeCALLI_
 
 let z = 33
-b = z + 1000
+b = z * 2 + 1000
 
 b = (b <= 1) + (b >= 1) + (b = 33) + (b <> 32)
 
@@ -19,7 +20,7 @@ cat = -2
         for j = 1 to 0
             for jj = 1 to 2 step 1
                 for ss = 1 to 5 step 1
-                    print 20*3+1;" ";i;" ";j;" ";j+23;" ";i+55;" ";i+j;" ";i-j;" ";i-j+1;" ";i+j+j
+                    print i*3+1;" ";i/2;" ";j*3;" ";j+23;" ";i+55;" ";i+j;" ";i-j
                 next ss    
             next jj
         next j
@@ -50,7 +51,7 @@ Big: a = peek(&h21) AND &hFC
      g = &hAAAA
      h = NOT g XOR f
      print hexw$(h);" ";56
-     print hexw$(&hdead)
+     print hexw$(&hdead);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
      print hexw$(&b0000111100001111 OR &b1000000010000000)
      
      print "lalalalala23d455345634650";

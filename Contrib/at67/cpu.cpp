@@ -868,6 +868,8 @@ namespace Cpu
             if(_vgaY >= 0  &&  _vgaY < SCREEN_HEIGHT)
             {
                 if(_vgaX >=HPIXELS_START  &&  _vgaX < HPIXELS_END) Graphics::refreshPixel(_stateS, _vgaX-HPIXELS_START, _vgaY);
+
+                // Show pixel reticle when debugging Native code
                 if(_debugging  &&  _vgaX >=HPIXELS_START-1  &&  _vgaX <= HPIXELS_END-1) Graphics::pixelReticle(_stateS, _vgaX-(HPIXELS_START-1), _vgaY);
             }
         }
