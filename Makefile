@@ -45,8 +45,8 @@ dev.rom: Core/* Apps/*/* Makefile interface.json
 		Pictures=Apps/Pictures/Pictures_v2.gcl\
 		Credits=Apps/Credits/Credits_v3.gcl\
 		Loader=Apps/Loader/Loader_v3.gcl\
-		Tetronis=Apps/Tetronis/Tetronis_v1.gt1\
-		Bricks=Apps/Bricks/Bricks_v1.gt1\
+		Tetronis=Apps/Tetronis/Tetronis.gt1\
+		Bricks=Apps/Bricks/Bricks.gt1\
 		TinyBASIC=Apps/TinyBASIC/TinyBASIC_v3.gcl\
 		TicTac=Apps/TicTac/TicTac_v2.gtb\
 		WozMon=Apps/WozMon/WozMon_v2.gt1\

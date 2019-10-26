@@ -202,27 +202,12 @@ Pos 48+ j& q=                   {Box of current cursor}
 \SYS_Exec_88 \sysFn:            {ROM loader}
 Program \sysArgs0:              {ROM image}
 \userCode _vLR=                 {Start of execution address}
-MenuItem 6^ [if=0               {Tetronis workaround}
-  $80 \vSP.                     { 1. Zero-page conflict: move stack}
-  &_TetronisPatch _vLR=]        { 2. Stack must be restored with patch}
-MenuItem 7^ [if=0               {Bricks workaround}
-  $80 \vSP.]                    { 1. Zero-page conflict: move stack}
 MenuItem 8^ [if=0               {TicTacToe needs special launcher}
   &_LaunchTicTacToe call]
 MenuItem 11^ [if=0              {Apple1 workaround}
   \channelMask_v4, $f8&         { 1. Clear channelMask before loading}
   \channelMask_v4.]
 88!                             {Load from ROM and execute}
-
-{-----------------------------------------------------------------------+
-|       Tetronis patch                                                  |
-+-----------------------------------------------------------------------}
-
-*=$06f9
-
-_TetronisPatch=*
-
-\userCode \vSP. call            {Restore stack pointer and go to entry_point}
 
 {-----------------------------------------------------------------------+
 |       Tic Tac Toe launcher                                            |
