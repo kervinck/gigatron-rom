@@ -9,6 +9,7 @@ vramptr         EQU     register7
 evenaddr        EQU     register8
 
 
+%SUB            resetVideoTable
                 ; resets video table pointers
 resetVideoTable LDWI    0x0008
                 STW     vramptr
@@ -25,8 +26,9 @@ resetVT_loop    LDW     vramptr
                 SUBI    giga_yres+8
                 BLT     resetVT_loop
                 RET
-
-                
+%ENDS
+     
+%SUB            clearRegion     
                 ; clears a region within the viewable screen
 clearRegion     PUSH
                 LDWI    resetVideoTable
@@ -65,3 +67,4 @@ clearR_loop     LDW     top
                 ST      xcount
                 LoopCounter ycount clearR_loop
                 RET
+%ENDS

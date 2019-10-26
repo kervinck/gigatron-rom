@@ -78,14 +78,6 @@ namespace Assembler
         std::vector<std::string> _lines;
     };
 
-    struct LineToken
-    {
-        bool _fromInclude = false;
-        int _includeLineNumber;
-        std::string _text;
-        std::string _includeName;
-    };
-
     struct Gprintf
     {
         enum Type {Chr, Int, Bin, Oct, Hex, Str};
@@ -322,6 +314,8 @@ namespace Assembler
         _reservedWords.push_back("%include");
         _reservedWords.push_back("%MACRO");
         _reservedWords.push_back("%ENDM");
+        _reservedWords.push_back("%SUB");
+        _reservedWords.push_back("%END");
         _reservedWords.push_back("gprintf");
 
         initialiseOpcodes();
@@ -1705,6 +1699,13 @@ namespace Assembler
             {
                 Expression::strToUpper(tokens[0]);
 
+                // Remove subroutine header and footer
+                if(tokens[0] == "%SUB"  ||  tokens[0] == "%ENDS")
+                {
+                    itLine = lineTokens.erase(itLine);
+                    continue;
+                }
+
                 // Include
                 if(tokens[0] == "%INCLUDE")
                 {  
@@ -1756,6 +1757,56 @@ namespace Assembler
         if(doMacros  &&  !handleMacros(macros, lineTokens)) return false;
 
         return true;
+    }
+
+    int getAsmOpcodeSize(const std::string& filename, std::vector<LineToken>& lineTokens)
+    {
+        // Pre-processor
+        if(!preProcess(filename, lineTokens, true)) return -1;
+
+        // Tokenise lines
+        int vasmSize = 0;
+        for(int i=0; i<lineTokens.size(); i++)
+        {
+            std::vector<std::string> tokens = Expression::tokeniseLine(lineTokens[i]._text);
+            for(int j=0; j<tokens.size(); j++)
+            {
+                std::string token = Expression::strToUpper(tokens[j]);
+                vasmSize += getAsmOpcodeSize(token);
+            }
+        }
+
+        return vasmSize;
+    }
+
+    int getAsmOpcodeSizeFile(const std::string& filename)
+    {
+        std::ifstream infile(filename);
+        if(!infile.is_open())
+        {
+            fprintf(stderr, "Assembler::getAsmOpcodeSizeFile() : Failed to open file : '%s'\n", filename.c_str());
+            return -1;
+        }
+
+        // Get file
+        int numLines = 0;
+        LineToken lineToken;
+        std::vector<LineToken> lineTokens;
+        while(!infile.eof())
+        {
+            std::getline(infile, lineToken._text);
+            lineTokens.push_back(lineToken);
+
+            if(!infile.good() && !infile.eof())
+            {
+                fprintf(stderr, "Assembler::getAsmOpcodeSizeFile() : Bad lineToken : '%s' : in '%s' : on line %d\n", lineToken._text.c_str(), filename.c_str(), numLines+1);
+                return -1;
+            }
+
+            numLines++;
+        }
+        
+        return getAsmOpcodeSize(filename, lineTokens);
     }
 
 #ifndef STAND_ALONE

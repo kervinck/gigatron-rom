@@ -23,7 +23,7 @@
 
 int main(int argc, char* argv[])
 {
-    Memory::intitialise();
+    Memory::initialise();
     Loader::initialise();
     Cpu::initialise();
     Audio::initialise();

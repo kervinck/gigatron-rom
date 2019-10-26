@@ -144,6 +144,19 @@ _label_ CALL    giga_vAC
         CALL    giga_vAC
 %ENDM
 
+%MACRO  PrintAcString
+        STW     textStr
+        LDWI    printText
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  PrintVarString _var
+        LDW     _var
+        STW     textStr
+        LDWI    printText
+        CALL    giga_vAC
+%ENDM
+
 %MACRO  PrintInt16 _int
         LDWI    _int
         STW     textNum    

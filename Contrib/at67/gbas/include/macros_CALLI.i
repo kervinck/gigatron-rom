@@ -124,6 +124,15 @@ _label_ CALLI   _label
         CALLI   printText
 %ENDM
 
+%MACRO  PrintAcString
+        CALLI   printText
+%ENDM
+
+%MACRO  PrintVarString _var
+        LDW     _var
+        CALLI   printText
+%ENDM
+
 %MACRO  PrintInt16 _int
         LDWI    _int
         CALLI   printInt16

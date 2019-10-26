@@ -15,7 +15,7 @@
 #include "assembler.h"
 
 
-#define LABEL_TRUNC_SIZE 21     // The smaller you make this, the more your BASIC label names will be truncated in the resultant .vasm code
+#define LABEL_TRUNC_SIZE 16     // The smaller you make this, the more your BASIC label names will be truncated in the resultant .vasm code
 #define USER_STR_SIZE    95
 
 // 18 bytes, (0x00EE <-> 0x00FF), reserved for vCPU stack, allows for 9 nested calls. The amount of GOSUBS you can use is dependant on how
@@ -34,8 +34,6 @@
 #define CONVERT_GT_OP    0x00EC  // 2 bytes,  (0x00EC <-> 0x00ED), critical routine that can't straddle page boundaries
 #define USER_CODE_START  0x0200
 #define USER_STACK_START 0x06FF
-#define USER_STR_START   0x5FA0
-#define INT_FUNC_START   0x7FA0
 #define USER_VAR_END_0   0x007F
 #define USER_VAR_END_1   0x009F
 
@@ -68,6 +66,7 @@ namespace Compiler
         std::string _internalLabel;
         int _gotoLabelIndex = -1;
         bool _pageJump = false;
+        int _vasmSize;
     };
 
     struct CodeLine
@@ -185,7 +184,6 @@ namespace Compiler
     uint16_t _tempVarStart   = TEMP_VAR_START;
     uint16_t _userVarStart0  = USER_VAR_START_0;
     uint16_t _userVarStart1  = USER_VAR_START_1;
-    uint16_t _userStrStart   = USER_STR_START;
     uint16_t _userStackStart = USER_STACK_START;
 
     bool _nextTempVar = true;
@@ -540,7 +538,7 @@ namespace Compiler
         if(mod.find("MOD") != std::string::npos) expressionType |= Expression::HasOperators;
 
         // Check for strings
-        //if(input.find("$") != std::string::npos) expressionType |= Expression::HasStrings;
+        if(input.find("$") != std::string::npos) expressionType |= Expression::HasStrings;
         if(input.find("\"") != std::string::npos) expressionType |= Expression::HasStrings;
 
         return expressionType;
@@ -738,12 +736,14 @@ namespace Compiler
         {
             vasmSize = Assembler::getAsmOpcodeSize(opcode);
         }
+
         _vasmPC += vasmSize;
 
         //fprintf(stderr, "%s  %d %04x\n", opcode.c_str(), vasmSize, _vasmPC);
 
         std::string operand = std::string(operandStr);
-        std::string tabs = "\t\t";
+        std::string tabs = (opcode.size() > 3) ? "\t\t" : "\t\t\t";
+        if(opcode.size() > 8) tabs = "\t";
         line = opcode + tabs + operand;
 
         return vasmSize;
@@ -754,7 +754,7 @@ namespace Compiler
         std::string line;
 
         int vasmSize = createVcpuAsm(opcodeStr, operandStr, codeLineIdx, line);
-        _codeLines[codeLineIdx]._vasm.insert(_codeLines[codeLineIdx]._vasm.begin() + vasmLineIdx, {uint16_t(_vasmPC - vasmSize), opcodeStr, line, "", gotoLabelIndex, pageJump});
+        _codeLines[codeLineIdx]._vasm.insert(_codeLines[codeLineIdx]._vasm.begin() + vasmLineIdx, {uint16_t(_vasmPC - vasmSize), opcodeStr, line, "", gotoLabelIndex, pageJump, vasmSize});
         _codeLines[codeLineIdx]._vasmSize += vasmSize;
 
         return vasmSize;
@@ -765,7 +765,7 @@ namespace Compiler
         std::string line;
 
         int vasmSize = createVcpuAsm(opcodeStr, operandStr, codeLineIdx, line);
-        _codeLines[codeLineIdx]._vasm.push_back({uint16_t(_vasmPC - vasmSize), opcodeStr, line, internalLabel, gotoLabelIndex, pageJump});
+        _codeLines[codeLineIdx]._vasm.push_back({uint16_t(_vasmPC - vasmSize), opcodeStr, line, internalLabel, gotoLabelIndex, pageJump, vasmSize});
         _codeLines[codeLineIdx]._vasmSize += vasmSize;
 
         if(nextTempVar) getNextTempVar();
@@ -1030,7 +1030,7 @@ namespace Compiler
     }
 
     // Create string and advance string pointer
-    bool createString(CodeLine& codeLine, int codeLineIndex, const std::string& str, uint16_t& strAddress)
+    bool createString(CodeLine& codeLine, int codeLineIndex, const std::string& str, std::string& name, uint16_t& address)
     {
         if(str.size() > USER_STR_SIZE)
         {
@@ -1038,23 +1038,33 @@ namespace Compiler
             return false;
         }
 
-        // Does string fit?
-        if(HI_MASK(_userStrStart + str.size()) != HI_MASK(_userStrStart))
+        // Reuse string if possible
+        int index = -1;
+        for(int j=0; j<_stringVars.size(); j++)
         {
-            _userStrStart = HI_MASK(_userStrStart) - 0x0100 + 0x00A0;
-            if(_userStrStart < 0x08A0)
+            if(_stringVars[j]._data == str) 
             {
-                fprintf(stderr, "Compiler::createString() : out of string memory, user string address %04x in '%s' on line %d\n", _userStrStart, codeLine._text.c_str(), codeLineIndex + 1);
-                return false;
+                index = j;
+                break;
             }
         }
+        if(index != -1)
+        {
+            name  = _stringVars[index]._name;
+            address = _stringVars[index]._address;
+        }
+        else
+        {
+            if(!Memory::giveFreeRAM(Memory::FitAscending, int(str.size()) + 1, address))
+            {
+                fprintf(stderr, "Compiler::createString() : Not enough RAM for string %s of size %d", str.c_str(), int(str.size()));
+                return false;
+            }
 
-        // Find next free spot
-        strAddress = _userStrStart;
-        std::string usrStrName = "usrStr_" + Expression::wordToHexString(_userStrStart);
-        StringVar usrStrVar = {uint8_t(str.size()), _userStrStart, str, usrStrName, usrStrName + "\t\t", -1};
-        _stringVars.push_back(usrStrVar);
-        _userStrStart += uint16_t(str.size() + 1);
+            name = "usrStr_" + Expression::wordToHexString(address);
+            StringVar stringVar = {uint8_t(str.size()), address, str, name, name + "\t", -1};
+            _stringVars.push_back(stringVar);
+        }
 
         return true;
     }
@@ -1072,10 +1082,11 @@ namespace Compiler
             default: break;
         }
 
-        uint16_t strAddress;
-        createString(_codeLines[_currentCodeLineIndex], _currentCodeLineIndex, std::string(str), strAddress);
-        emitVcpuAsm("LDWI", Expression::wordToHexString(strAddress), false);
-        value = strAddress;
+        std::string name;
+        uint16_t address;
+        createString(_codeLines[_currentCodeLineIndex], _currentCodeLineIndex, std::string(str), name, address);
+        emitVcpuAsm("LDWI", name, false);
+        value = address;
     }
 
 
@@ -1986,7 +1997,7 @@ namespace Compiler
                 emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(_tempVarStart)), false, codeLineIndex);
                 emitVcpuAsm("%PrintAcInt16", "", false, codeLineIndex);
             }
-            else if(expressionType & Expression::HasVars)
+            else if((expressionType & Expression::HasVars)  &&  !(expressionType & Expression::HasStrings))
             {
                 Expression::parse(tokens[i], codeLineIndex, value);
                 if(varIndex >= 0)
@@ -2012,25 +2023,20 @@ namespace Compiler
                     if(rquote == lquote + 1) continue; // skip empty strings
                     std::string str = tokens[i].substr(lquote + 1, rquote - (lquote + 1));
 
-                    // Reuse string
-                    bool foundString = false;
-                    for(int j=0; j<_stringVars.size(); j++)
-                    {
-                        if(_stringVars[j]._data == str) 
-                        {
-                            emitVcpuAsm("%PrintString", _stringVars[j]._name, false, codeLineIndex);
-                            foundString = true;
-                            break;
-                        }
-                    }
-                    if(foundString) continue;
-
                     // Create string
-                    uint16_t strAddress;
-                    if(!createString(codeLine, codeLineIndex, str, strAddress)) return false;
+                    std::string name;
+                    uint16_t address;
+                    if(!createString(codeLine, codeLineIndex, str, name, address)) return false;
 
                     // Print string
-                    emitVcpuAsm("%PrintString", _stringVars[_stringVars.size() - 1]._name, false, codeLineIndex);
+                    emitVcpuAsm("%PrintString", name, false, codeLineIndex);
+                }
+                else
+                {
+                    if(varIndex >= 0  &&  _integerVars[varIndex]._name.find("$") != std::string::npos)
+                    {
+                        emitVcpuAsm("%PrintVarString", "_" + _integerVars[varIndex]._name, false, codeLineIndex);
+                    }
                 }
             }
             else if(expressionType == Expression::HasNumbers)
@@ -2409,10 +2415,10 @@ namespace Compiler
             else if(Expression::strToUpper(token) == "FOR") return true;
         }
 
-        int varIndex, params;
+        int varIndexRhs, params;
         int16_t value = 0;
         bool containsVars = false;
-        uint32_t expressionType = isExpression(codeLine._expression, varIndex, params);
+        uint32_t expressionType = isExpression(codeLine._expression, varIndexRhs, params);
         if(expressionType & Expression::HasVars) containsVars = true;
         Expression::parse(codeLine._expression, codeLineIndex, value);
         if(codeLine._varIndex != -1)
@@ -2432,19 +2438,23 @@ namespace Compiler
         if(codeLine._assignOperator)
         {
             // Optimisation, (removes uneeded LDW's)
-            static int prevVarIndex = -1;
+            static int varIndexLhsPrev = -1;
 
             // Assignment with a var expression
             if(codeLine._containsVars)
             {
+                // Try and optimise LDW away if possible
+                if(varIndexRhs >= 0  &&  varIndexRhs != varIndexLhsPrev  &&  !(expressionType & Expression::HasOperators))
+                {
+                    emitVcpuAsm("LDW", "_" + _integerVars[varIndexRhs]._name, false, codeLineIndex);
+                }
                 emitVcpuAsm("STW", "_" + _integerVars[codeLine._varIndex]._name, false, codeLineIndex);
-                prevVarIndex = codeLine._varIndex;
             }
             // Standard assignment
             else
             {
                 // Skip for functions
-                if(params != 1)//  &&  !(expressionType & Expression::HasKeywords)  &&  !(expressionType & Expression::HasVars))
+                if(params != 1)
                 {
                     // 8bit constants
                     if(_integerVars[codeLine._varIndex]._data >=0  &&  _integerVars[codeLine._varIndex]._data <= 255)
@@ -2458,8 +2468,9 @@ namespace Compiler
                     }
                 }
                 emitVcpuAsm("STW", "_" + _integerVars[codeLine._varIndex]._name, false, codeLineIndex);
-                prevVarIndex = codeLine._varIndex;
             }
+
+            varIndexLhsPrev = codeLine._varIndex;
         }
 
         return true;
@@ -2651,7 +2662,7 @@ namespace Compiler
     }
 
     auto insertPageJumpInstruction(std::vector<Compiler::CodeLine>::iterator& itCode, std::vector<Compiler::VasmLine>::iterator& itVasm,
-                                   const std::string& opcode, const std::string& code, uint16_t address)
+                                   const std::string& opcode, const std::string& code, uint16_t address, int vasmSize)
     {
         if(itVasm >= itCode->_vasm.end())
         {
@@ -2662,7 +2673,59 @@ namespace Compiler
             _EXIT_(EXIT_FAILURE);
         }
 
-        return itCode->_vasm.insert(itVasm, {address, opcode, code, "", -1, true});
+        return itCode->_vasm.insert(itVasm, {address, opcode, code, "", -1, true, vasmSize});
+    }
+
+    bool checkExclusionZone(const std::string& opcode, uint16_t vPC, uint16_t& nextPC)
+    {
+        uint8_t hPC = HI_BYTE(vPC);
+        uint16_t audioExcl = (hPC <<8) + 0x00F8;
+        uint16_t pageExcl  = (hPC <<8) + 0x00FE;
+
+        nextPC = (hPC + 1) <<8;
+
+        // Code page restrictions
+        uint16_t codeEnd0 = 0x0300;
+        uint16_t codePage1 = 0x0800;
+        uint16_t codeOffs1 = 0x00A0;
+        uint16_t codePage2 = 0x8000; // only available with 64K RAM
+        if(nextPC == codeEnd0)
+        {
+            nextPC = codePage1 + codeOffs1;
+        }
+        else
+        {
+            if(nextPC >= codePage1  &&  nextPC < codePage2) nextPC += codeOffs1;
+        }
+
+        // 3 bytes for CALLI PAGE JUMP
+        if(Assembler::getUseOpcodeCALLI())
+        {
+            audioExcl -= 3;
+            pageExcl  -= 3;
+        }
+        // 7 bytes for non CALLI PAGE JUMP, (STW, LDWI, CALL)
+        else
+        {
+            audioExcl -= 7;
+            pageExcl  -= 7;
+        }
+
+        // Adjust for MACRO size
+        std::string macro = opcode;
+        if(macro.size()  &&  macro[0] == '%')
+        {
+            macro.erase(0, 1);
+
+            if(_macroIndexEntries.find(macro) != _macroIndexEntries.end())
+            {
+                int macroSize = _macroIndexEntries[macro]._byteSize;
+                audioExcl -= macroSize;
+                pageExcl -= macroSize;
+            }
+        }
+
+        return (vPC >= pageExcl  ||  ((hPC == 0x02 || hPC == 0x03 || hPC == 0x04)  &&  vPC >= audioExcl));
     }
 
     bool checkExclusionZones(void)
@@ -2690,71 +2753,35 @@ namespace Compiler
                     resetCheck = false;
                     int vasmLineIndex = int(itVasm - itCode->_vasm.begin());
 
-                    uint8_t hPC = HI_BYTE(itVasm->_address);
-                    uint16_t nextPC = (hPC + 1) <<8;
-                    uint16_t vPC = itVasm->_address;
-                    uint16_t audioExcl = (hPC <<8) | 0x00F9;
-                    uint16_t pageExcl  = (hPC <<8) | 0x00FF;
+                    uint16_t nextPC;
+                    bool excluded = checkExclusionZone(itVasm->_opcode, itVasm->_address, nextPC);
 
-                    // 3 bytes for CALLI PAGE JUMP
-                    if(Assembler::getUseOpcodeCALLI())
-                    {
-                        audioExcl -= 3;
-                        pageExcl  -= 3;
-                    }
-                    // 7 bytes for non CALLI PAGE JUMP, (STW, LDWI, CALL)
-                    else
-                    {
-                        audioExcl -= 7;
-                        pageExcl  -= 7;
-                    }
-
-                    // Adjust for MACRO size
-                    std::string opcode = itVasm->_opcode;
-                    if(opcode.size()  &&  opcode[0] == '%')
-                    {
-                        opcode.erase(0, 1);
-
-                        if(_macroIndexEntries.find(opcode) != _macroIndexEntries.end())
-                        {
-                            int macroSize = _macroIndexEntries[opcode]._byteSize;
-                            audioExcl -= macroSize;
-                            pageExcl -= macroSize;
-                        }
-                    }
-                    // Adjust for opcode size
-                    int opcodeSize = Assembler::getAsmOpcodeSize(opcode);
-                    if(opcodeSize)
-                    {
-                        audioExcl -= opcodeSize;
-                        pageExcl -= opcodeSize;
-                    }
-
-                    if(itVasm->_pageJump == false  &&  (vPC >= pageExcl  ||  ((hPC == 0x02 || hPC == 0x03 || hPC == 0x04)  &&  vPC >= audioExcl)))
+                    if(itVasm->_pageJump == false  &&  excluded)
                     {
                         std::vector<std::string> tokens;
                         uint16_t currPC = (vasmLineIndex > 0) ? itCode->_vasm[vasmLineIndex-1]._address : itVasm->_address;
 
-                        // Insert page jump
+                        // Insert PAGE JUMP
                         int restoreOffset = 0;
                         if(Assembler::getUseOpcodeCALLI())
                         {
+                            // CALLI PAGE JUMP
                             std::string codeCALLI;
                             int sizeCALLI = createVcpuAsm("CALLI", Expression::wordToHexString(nextPC), codeLineIndex, codeCALLI);
-                            itVasm = itCode->_vasm.insert((vasmLineIndex > 0) ? itVasm-1 : itVasm, {currPC, "CALLI", codeCALLI, "", -1, true});
+                            itVasm = itCode->_vasm.insert((vasmLineIndex > 0) ? itVasm-1 : itVasm, {currPC, "CALLI", codeCALLI, "", -1, true, sizeCALLI});
                         }
-                        // ROMS that don't have CALLI, (save and restore vAC)
                         else
                         {
+                            // ROMS that don't have CALLI, (save and restore vAC)
                             std::string codeSTW, codeLDWI, codeCALL, codeLDW;
                             int sizeSTW  = createVcpuAsm("STW", Expression::byteToHexString(VAC_SAVE_START), codeLineIndex, codeSTW);
                             int sizeLDWI = createVcpuAsm("LDWI", Expression::wordToHexString(nextPC), codeLineIndex, codeLDWI);
                             int sizeCALL = createVcpuAsm("CALL", "giga_vAC", codeLineIndex, codeCALL);
                             int sizeLDW  = createVcpuAsm("LDW", Expression::byteToHexString(VAC_SAVE_START), codeLineIndex, codeLDW);
-                            itVasm = itCode->_vasm.insert((vasmLineIndex > 0) ? itVasm-1 : itVasm, {currPC, "STW", codeSTW, "", -1, true});
-                            itVasm = insertPageJumpInstruction(itCode, itVasm + 1, "LDWI", codeLDWI, uint16_t(currPC + sizeSTW));
-                            itVasm = insertPageJumpInstruction(itCode, itVasm + 1, "CALL", codeCALL, uint16_t(currPC + sizeSTW + sizeLDWI));
-                            itVasm = insertPageJumpInstruction(itCode, itVasm + 1, "LDW", codeLDW, uint16_t(nextPC));
+                            itVasm = itCode->_vasm.insert((vasmLineIndex > 0) ? itVasm-1 : itVasm, {currPC, "STW", codeSTW, "", -1, true, sizeSTW});
+                            itVasm = insertPageJumpInstruction(itCode, itVasm + 1, "LDWI", codeLDWI, uint16_t(currPC + sizeSTW), sizeLDWI);
+                            itVasm = insertPageJumpInstruction(itCode, itVasm + 1, "CALL", codeCALL, uint16_t(currPC + sizeSTW + sizeLDWI), sizeCALL);
+                            itVasm = insertPageJumpInstruction(itCode, itVasm + 1, "LDW", codeLDW, uint16_t(nextPC), sizeLDW);
 
                             // New page address is offset by size of vAC restore
                             restoreOffset = sizeLDW;
@@ -2784,14 +2811,17 @@ namespace Compiler
                         else
                         {
                             // Update CALLI page jump label
+                            std::string label = _labels[pageJumpLabelIndex]._name;
                             if(Assembler::getUseOpcodeCALLI())
                             {
-                                itCode->_vasm[itVasm - itCode->_vasm.begin()]._code = "CALLI\t\t_" + _labels[pageJumpLabelIndex]._name;
+                                // Macro labels are underscored by default
+                                itCode->_vasm[itVasm - itCode->_vasm.begin()]._code = (label[0] == '_') ? "CALLI\t\t" + label : "CALLI\t\t_" + label;
                             }
                             // Update pre-CALLI page jump label
                             else
                             {
-                                itCode->_vasm[itVasm - itCode->_vasm.begin()]._code = "LDWI\t\t_" + _labels[pageJumpLabelIndex]._name;
+                                // Macro labels are underscored by default
+                                itCode->_vasm[itVasm - itCode->_vasm.begin()]._code = (label[0] == '_') ? "LDWI\t\t" + label : "LDWI\t\t_" + label;
                             }
                         }
 
@@ -2817,7 +2847,7 @@ namespace Compiler
     {
         std::string line = "_startAddress_ ";
         Expression::addString(line, LABEL_TRUNC_SIZE - int(line.size()));
-        line += "EQU\t\t" + Expression::wordToHexString(USER_CODE_START) + "\n";
+        line += "EQU\t\t\t" + Expression::wordToHexString(USER_CODE_START) + "\n";
         _output.push_back(line);
     }
 
@@ -2831,7 +2861,7 @@ namespace Compiler
         for(int i=0; i<_labels.size(); i++)
         {
             std::string address = Expression::wordToHexString(_labels[i]._address);
-            _output.push_back(_labels[i]._output + "EQU\t\t" + address + "\n");
+            _output.push_back(_labels[i]._output + "EQU\t\t\t" + address + "\n");
         }
 
         // Internal labels, (used by page jumps)
@@ -2843,92 +2873,11 @@ namespace Compiler
                 if(internalLabel.size())
                 {
                     std::string address = Expression::wordToHexString(_codeLines[i]._vasm[j]._address);
-                    _output.push_back(internalLabel + std::string(LABEL_TRUNC_SIZE - internalLabel.size(), ' ') + "EQU\t\t" + address + "\n");
+                    _output.push_back(internalLabel + std::string(LABEL_TRUNC_SIZE - internalLabel.size(), ' ') + "EQU\t\t\t" + address + "\n");
                 }
             }
         }
 
-        _output.push_back("\n");
-    }
-
-    void outputInternalSubs(void)
-    {
-        _output.push_back("resetVideoTable      EQU\t\t" + Expression::wordToHexString(INT_FUNC_START) + "\n");
-        _output.push_back("convertEqOp          EQU\t\tresetVideoTable - 0x0100\n");
-        _output.push_back("convertNeOp          EQU\t\tconvertEqOp     + 9     \n");
-        _output.push_back("convertLeOp          EQU\t\tconvertNeOp     + 9     \n");
-        _output.push_back("convertGeOp          EQU\t\tconvertLeOp     + 9     \n");
-        _output.push_back("convertLtOp          EQU\t\tconvertGeOp     + 9     \n");
-        _output.push_back("convertGtOp          EQU\t\tconvertLtOp     + 9     \n");
-        _output.push_back("multiply16bit        EQU\t\tresetVideoTable - 0x0200\n");
-        _output.push_back("divide16bit          EQU\t\tresetVideoTable - 0x0300\n");
-        _output.push_back("clearRegion          EQU\t\tresetVideoTable - 0x0400\n");
-        _output.push_back("clearCursorRow       EQU\t\tresetVideoTable - 0x0500\n");
-        _output.push_back("printText            EQU\t\tresetVideoTable - 0x0600\n");
-        _output.push_back("printDigit           EQU\t\tresetVideoTable - 0x0700\n");
-        _output.push_back("printInt16           EQU\t\tresetVideoTable - 0x0800\n");
-        _output.push_back("printChar            EQU\t\tresetVideoTable - 0x0900\n");
-        _output.push_back("printHexByte         EQU\t\tresetVideoTable - 0x0A00\n");
-        _output.push_back("printHexWord         EQU\t\tresetVideoTable - 0x0B00\n");
-        _output.push_back("newLineScroll        EQU\t\tresetVideoTable - 0x0C00\n");
-        _output.push_back("resetAudio           EQU\t\tresetVideoTable - 0x0D00\n");
-        _output.push_back("playMidi             EQU\t\tresetVideoTable - 0x0E00\n");
-        _output.push_back("midiStartNote        EQU\t\tresetVideoTable - 0x0F00\n");
-
-        // Zero page call table is not needed when using CALLI
-        if(!Assembler::getUseOpcodeCALLI())
-        {
-            _output.push_back("convertEqOpAddr      EQU\t\t0x00E2\n");
-            _output.push_back("convertNeOpAddr      EQU\t\t0x00E4\n");
-            _output.push_back("convertLeOpAddr      EQU\t\t0x00E6\n");
-            _output.push_back("convertGeOpAddr      EQU\t\t0x00E8\n");
-            _output.push_back("convertLtOpAddr      EQU\t\t0x00EA\n");
-            _output.push_back("convertGtOpAddr      EQU\t\t0x00EC\n");
-        }
-        _output.push_back("\n");
-    }
-
-    void outputInternalVars(void)
-    {
-        _output.push_back("; Internal variables\n");
-        _output.push_back("register0            EQU\t\t" + Expression::wordToHexString(INT_VAR_START) + "\n");
-        _output.push_back("register1            EQU\t\tregister0 + 0x02\n");
-        _output.push_back("register2            EQU\t\tregister0 + 0x04\n");
-        _output.push_back("register3            EQU\t\tregister0 + 0x06\n");
-        _output.push_back("register4            EQU\t\tregister0 + 0x08\n");
-        _output.push_back("register5            EQU\t\tregister0 + 0x0A\n");
-        _output.push_back("register6            EQU\t\tregister0 + 0x0C\n");
-        _output.push_back("register7            EQU\t\tregister0 + 0x0E\n");
-        _output.push_back("register8            EQU\t\tregister0 + 0x10\n");
-        _output.push_back("register9            EQU\t\tregister0 + 0x12\n");
-        _output.push_back("textColour           EQU\t\tregister0 + 0x14\n");
-        _output.push_back("cursorXY             EQU\t\tregister0 + 0x16\n");
-        _output.push_back("midiStreamPtr        EQU\t\tregister0 + 0x18\n");
-        _output.push_back("midiDelay            EQU\t\tregister0 + 0x1A\n");
-        _output.push_back("frameCountPrev       EQU\t\tregister0 + 0x1C\n");
-        _output.push_back("\n");
-    }
-
-    void outputIncludes(void)
-    {
-        _output.push_back("; Includes\n");
-        _output.push_back("%include             include/gigatron.i\n");
-        _output.push_back("%include             include/math.i\n");
-        _output.push_back("%include             include/conv_conds.i\n");
-        _output.push_back("%include             include/audio.i\n");
-        _output.push_back("%include             include/clear_screen.i\n");
-
-        if(!Assembler::getUseOpcodeCALLI())
-        {
-            _output.push_back("%include             include/print_text.i\n");
-            _output.push_back("%include             include/macros.i\n");
-        }
-        else
-        {
-            _output.push_back("%include             include/print_text_CALLI.i\n");
-            _output.push_back("%include             include/macros_CALLI.i\n");
-        }
-    
         _output.push_back("\n");
     }
 
@@ -2939,7 +2888,7 @@ namespace Compiler
         for(int i=0; i<_integerVars.size(); i++)
         {
             std::string address = Expression::wordToHexString(_integerVars[i]._address);
-            _output.push_back(_integerVars[i]._output + "EQU\t\t" + address + "\n");
+            _output.push_back(_integerVars[i]._output + "EQU\t\t\t" + address + "\n");
         }
 
         _output.push_back("\n");
@@ -2951,10 +2900,210 @@ namespace Compiler
 
         for(int i=0; i<_stringVars.size(); i++)
         {
-            _output.push_back(_stringVars[i]._output + " EQU\t\t" + Expression::wordToHexString(_stringVars[i]._address) + "\n");
-            _output.push_back(_stringVars[i]._output + " DB\t\t\t" + std::to_string(_stringVars[i]._size) + " '" + _stringVars[i]._data + "'\n");
+            _output.push_back(_stringVars[i]._output + "EQU\t\t\t" + Expression::wordToHexString(_stringVars[i]._address) + "\n");
+            _output.push_back(_stringVars[i]._output + "DB\t\t\t" + std::to_string(_stringVars[i]._size) + " '" + _stringVars[i]._data + "'\n");
         }
 
+        _output.push_back("\n");
+    }
+
+    struct InternalSub
+    {
+        uint16_t _address;
+        uint16_t _size;
+        std::string _name;
+    };
+    std::vector<InternalSub> _internalSubs =
+    {
+        {0x0000, 0x0000, "resetVideoTable"},
+        {0x0000, 0x0000, "clearRegion"    },
+        {0x0000, 0x0000, "convertEqOp"    },
+        {0x0000, 0x0000, "convertNeOp"    },
+        {0x0000, 0x0000, "convertLeOp"    },
+        {0x0000, 0x0000, "convertGeOp"    },
+        {0x0000, 0x0000, "convertLtOp"    },
+        {0x0000, 0x0000, "convertGtOp"    },
+        {0x0000, 0x0000, "multiply16bit"  }, 
+        {0x0000, 0x0000, "divide16bit"    },
+        {0x0000, 0x0000, "clearCursorRow" },
+        {0x0000, 0x0000, "printText"      },
+        {0x0000, 0x0000, "printDigit"     },
+        {0x0000, 0x0000, "printInt16"     },
+        {0x0000, 0x0000, "printChar"      },
+        {0x0000, 0x0000, "printHexByte"   },
+        {0x0000, 0x0000, "printHexWord"   },
+        {0x0000, 0x0000, "newLineScroll"  },
+        {0x0000, 0x0000, "resetAudio"     },
+        {0x0000, 0x0000, "playMidi"       },
+        {0x0000, 0x0000, "playMidiAsync"  },
+        {0x0000, 0x0000, "midiStartNote"  },
+    };
+    const std::vector<std::string> _subIncludes = 
+    {
+        "include/math.i"            ,
+        "include/conv_conds.i"      ,
+        "include/audio.i"           ,
+        "include/clear_screen.i"    ,
+        "include/print_text.i"      ,
+        "include/print_text_CALLI.i",
+    };
+    int getAsmOpcodeSizeSubInFile(const std::string& filename, const std::string& subname)
+    {
+        std::ifstream infile(filename);
+        if(!infile.is_open())
+        {
+            fprintf(stderr, "Assembler::getAsmOpcodeSizeSubInFile() : Failed to open file : '%s'\n", filename.c_str());
+            return -1;
+        }
+
+        // Get file
+        int numLines = 0;
+        int vasmSize = 0;
+        bool buildingSub = false;
+        Assembler::LineToken lineToken;
+
+        while(!infile.eof())
+        {
+            std::getline(infile, lineToken._text);
+            std::vector<std::string> tokens = Expression::tokeniseLine(lineToken._text);
+            if(!buildingSub  &&  tokens.size() >= 2  &&  tokens[0] == "%SUB"  &&  tokens[1] == subname)
+            {
+                buildingSub = true;
+            }
+            else if(buildingSub  &&  tokens.size() >= 1  &&  tokens[0] == "%ENDS")
+            {
+                buildingSub = false;
+                break;
+            }
+            else if(buildingSub)
+            {
+                for(int j=0; j<tokens.size(); j++)
+                {
+                    std::string token = tokens[j];
+                    if(tokens[j].find_first_of(";#") != std::string::npos) break;
+                    int size = Assembler::getAsmOpcodeSize(token);
+                    vasmSize += (size == 0) ? getMacroSize(token) : size;
+                }
+            }
+
+            if(!infile.good() && !infile.eof())
+            {
+                fprintf(stderr, "Assembler::getAsmOpcodeSizeSubInFile() : Bad lineToken : '%s' : in '%s' : on line %d\n", lineToken._text.c_str(), filename.c_str(), numLines+1);
+                return -1;
+            }
+
+            numLines++;
+        }
+
+        //fprintf(stderr, "%s : %s : opcode size : %d\n", filename.c_str(), subname.c_str(), vasmSize);
+
+        return vasmSize;
+    }
+
+    bool getInternalSub(int subIndex, int includeIndex, const std::string& subname)
+    {
+        uint16_t size = getAsmOpcodeSizeSubInFile("gbas/" + _subIncludes[includeIndex], _internalSubs[subIndex]._name);
+        if(size)
+        {
+            _internalSubs[subIndex]._size = size;
+
+            uint16_t address;
+            if(Memory::giveFreeRAM(Memory::FitAscending, size, address))
+            {
+                _internalSubs[subIndex]._address = address;
+                return true;
+            }
+            else
+            {
+                fprintf(stderr, "Compiler::getInternalSubSize() : Not enough RAM for %s of size %d", _internalSubs[subIndex]._name.c_str(), _internalSubs[subIndex]._size);
+                return false;
+            }
+        }
+
+        return false;
+    }
+    bool parseIncludes(void)
+    {
+        for(int i=0; i<_internalSubs.size(); i++)
+        {
+            for(int j=0; j<_subIncludes.size()-2; j++)
+            {
+                getInternalSub(i, j, _internalSubs[i]._name);
+            }
+
+            int includeIndex = int(_subIncludes.size());
+            if(!Assembler::getUseOpcodeCALLI())
+            {
+                getInternalSub(i, includeIndex-2, _internalSubs[i]._name);
+            }
+            else
+            {
+                getInternalSub(i, includeIndex-1, _internalSubs[i]._name);
+            }
+        }
+
+        return true;
+    }
+
+    void outputInternalSubs(void)
+    {
+        for(int i=0; i<_internalSubs.size(); i++)
+        {
+            _output.push_back(_internalSubs[i]._name + std::string(LABEL_TRUNC_SIZE - _internalSubs[i]._name.size(), ' ') + "EQU\t\t\t" + Expression::wordToHexString(_internalSubs[i]._address) + "\n");
+        }
+
+        // Zero page call table is not needed when using CALLI
+        if(!Assembler::getUseOpcodeCALLI())
+        {
+            _output.push_back("convertEqOpAddr  EQU\t\t\t0x00E2\n");
+            _output.push_back("convertNeOpAddr  EQU\t\t\t0x00E4\n");
+            _output.push_back("convertLeOpAddr  EQU\t\t\t0x00E6\n");
+            _output.push_back("convertGeOpAddr  EQU\t\t\t0x00E8\n");
+            _output.push_back("convertLtOpAddr  EQU\t\t\t0x00EA\n");
+            _output.push_back("convertGtOpAddr  EQU\t\t\t0x00EC\n");
+        }
+        _output.push_back("\n");
+    }
+
+    void outputInternalVars(void)
+    {
+        _output.push_back("; Internal variables\n");
+        _output.push_back("register0       EQU\t\t\t" + Expression::wordToHexString(INT_VAR_START) + "\n");
+        _output.push_back("register1       EQU\t\t\tregister0 + 0x02\n");
+        _output.push_back("register2       EQU\t\t\tregister0 + 0x04\n");
+        _output.push_back("register3       EQU\t\t\tregister0 + 0x06\n");
+        _output.push_back("register4       EQU\t\t\tregister0 + 0x08\n");
+        _output.push_back("register5       EQU\t\t\tregister0 + 0x0A\n");
+        _output.push_back("register6       EQU\t\t\tregister0 + 0x0C\n");
+        _output.push_back("register7       EQU\t\t\tregister0 + 0x0E\n");
+        _output.push_back("register8       EQU\t\t\tregister0 + 0x10\n");
+        _output.push_back("register9       EQU\t\t\tregister0 + 0x12\n");
+        _output.push_back("textColour      EQU\t\t\tregister0 + 0x14\n");
+        _output.push_back("cursorXY        EQU\t\t\tregister0 + 0x16\n");
+        _output.push_back("midiStreamPtr   EQU\t\t\tregister0 + 0x18\n");
+        _output.push_back("midiDelay       EQU\t\t\tregister0 + 0x1A\n");
+        _output.push_back("frameCountPrev  EQU\t\t\tregister0 + 0x1C\n");
+        _output.push_back("\n");
+    }
+
+    void outputIncludes(void)
+    {
+        _output.push_back("; Includes\n");
+        _output.push_back("%include        include/gigatron.i\n");
+
+        for(int i=0; i<_subIncludes.size()-2; i++) _output.push_back("%include        " + _subIncludes[i] + "\n");
+
+        if(!Assembler::getUseOpcodeCALLI())
+        {
+            _output.push_back("%include        " + _subIncludes[_subIncludes.size()-2] + "\n");
+            _output.push_back("%include        include/macros.i\n");
+        }
+        else
+        {
+            _output.push_back("%include        " + _subIncludes[_subIncludes.size()-1] + "\n");
+            _output.push_back("%include        include/macros_CALLI.i\n");
+        }
+    
         _output.push_back("\n");
     }
 
@@ -2974,7 +3123,9 @@ namespace Compiler
                 std::string basicLabel = _labels[_codeLines[i]._labelIndex]._output;
                 bool vasmOwnsLabel = _labels[_codeLines[i]._labelIndex]._address == _codeLines[i]._vasm[0]._address;
                 line = (_codeLines[i]._ownsLabel  &&  vasmOwnsLabel) ? basicLabel + vasmCode : std::string(LABEL_TRUNC_SIZE, ' ') + vasmCode;
+
                 _vasmCode.push_back(vasmCode);
+                if(_codeLines[i]._vasm[0]._vasmSize) Memory::takeFreeRAM(_codeLines[i]._vasm[0]._address, _codeLines[i]._vasm[0]._vasmSize);
 
                 // Vasm code
                 for(int j=1; j<_codeLines[i]._vasm.size(); j++)
@@ -2985,11 +3136,13 @@ namespace Compiler
                     std::string vasmCode = _codeLines[i]._vasm[j]._code;
                     std::string vasmLabel = (vasmOwnsLabel) ? basicLabel : _codeLines[i]._vasm[j]._internalLabel;
                     line += (vasmLabel.size() > 0) ?  "\n\n" + vasmLabel + std::string(LABEL_TRUNC_SIZE - vasmLabel.size(), ' ') + vasmCode : "\n" + std::string(LABEL_TRUNC_SIZE, ' ') + vasmCode;
+
                     _vasmCode.push_back(vasmCode);
+                    if(_codeLines[i]._vasm[j]._vasmSize) Memory::takeFreeRAM(_codeLines[i]._vasm[j]._address, _codeLines[i]._vasm[j]._vasmSize);
                 }
 
 #define TAB_SPACE_LENGTH 4
-#define COMMENT_PADDING  (TAB_SPACE_LENGTH*20)
+#define COMMENT_PADDING  (TAB_SPACE_LENGTH*15)
                 // Commented BASIC code, (assumes tabs are 4 spaces)
                 int lineLength = Expression::tabbedStringLength(line, TAB_SPACE_LENGTH);
                 line.append(COMMENT_PADDING - (lineLength % COMMENT_PADDING), ' ');
@@ -3000,6 +3153,8 @@ namespace Compiler
         }
         
         _output.push_back("\n");
+
+        Memory::printFreeRamList();
     }
 
 
@@ -3009,7 +3164,6 @@ namespace Compiler
         _tempVarStart   = TEMP_VAR_START;
         _userVarStart0  = USER_VAR_START_0;
         _userVarStart1  = USER_VAR_START_1;
-        _userStrStart   = USER_STR_START;
         _userStackStart = USER_STACK_START;
 
         _nextTempVar = true;
@@ -3030,7 +3184,7 @@ namespace Compiler
 
         while(!_forNextDataStack.empty()) _forNextDataStack.pop();
 
-        Memory::intitialise();
+        Memory::initialise();
 
         Expression::setExprFunc(expression);
     }
@@ -3039,9 +3193,6 @@ namespace Compiler
     {
         Assembler::clearAssembler();
         clearCompiler();
-
-        uint16_t address;
-        Memory::getRAM(Memory::FitLargest, Memory::RamVasm, 96, address);
 
         // Read .gbas file
         int numLines = 0;
@@ -3052,6 +3203,9 @@ namespace Compiler
 
         // Labels
         if(!parseLabels(numLines)) return false;
+
+        // Includes
+        if(!parseIncludes()) return false;
 
         // Vars
         if(!parseVars()) return false;

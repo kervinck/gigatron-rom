@@ -8,6 +8,7 @@ channelsBase    EQU     register6
 notesBase       EQU     register7
 
 
+%SUB            resetAudio
 resetAudio      LDWI    0x0000
                 STW     midiDelay
                 
@@ -27,8 +28,9 @@ resetA_loop     LDI     giga_soundChan1     ; reset low byte
                 INC     audioBase + 1       ; increment high byte
                 LoopCounter numChannels resetA_loop
                 RET
+%ENDS
 
-
+%SUB            playMidiAsync
 playMidiAsync   LD      giga_frameCount
                 SUBW    frameCountPrev
                 BEQ     playMV_exit
@@ -39,8 +41,9 @@ playMidiAsync   LD      giga_frameCount
                 CALL    giga_vAC
                 POP
 playMV_exit     RET
+%ENDS
 
-
+%SUB            playMidi
 playMidi        LDWI    giga_soundChan1 + 2 ; keyL, keyH
                 STW     channelsBase
                 LDI     0x01                ; keep pumping soundTimer, so that global sound stays alive
@@ -94,8 +97,9 @@ playM_segment   LDW     midiCommand
 playM_delay     LDW     midiData            ; all that is left is delay
                 STW     midiDelay
                 RET
+%ENDS
 
-
+%SUB            midiStartNote
 midiStartNote   LDWI    giga_notesTable     ; note table in ROM
                 STW     notesBase
                 LDW     midiStreamPtr       ; midi score
@@ -143,3 +147,4 @@ midiSegment     LDW     midiStreamPtr       ; midi score
                 DEEK
                 STW     midiStreamPtr       ; 0xD0 new midi segment address
                 RET
+%ENDS

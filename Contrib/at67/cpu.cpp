@@ -312,6 +312,21 @@ namespace Cpu
         _RAM[(address+1) & (Memory::getSizeRAM()-1)] = uint8_t(HI_BYTE(data));
     }
 
+    void clearUserRAM(void)
+    {
+        // Not great for the Gigatron's RNG, will statistically bias it's results
+        for(uint16_t addr=RAM_PAGE_START_0; addr<RAM_PAGE_START_0+RAM_PAGE_SIZE_0; addr++) setRAM(addr, 0x00);
+        for(uint16_t addr=RAM_PAGE_START_1; addr<RAM_PAGE_START_1+RAM_PAGE_SIZE_1; addr++) setRAM(addr, 0x00);
+        for(uint16_t addr=RAM_PAGE_START_2; addr<RAM_PAGE_START_2+RAM_PAGE_SIZE_2; addr++) setRAM(addr, 0x00);
+        for(uint16_t addr=RAM_PAGE_START_3; addr<RAM_PAGE_START_3+RAM_PAGE_SIZE_3; addr++) setRAM(addr, 0x00);
+        for(uint16_t addr=RAM_PAGE_START_4; addr<RAM_PAGE_START_4+RAM_PAGE_SIZE_4; addr++) setRAM(addr, 0x00);
+
+        for(uint16_t addr=RAM_SEGMENTS_START; addr<=RAM_SEGMENTS_END; addr+=RAM_SEGMENTS_OFS)
+        {
+            for(uint16_t offs=0; offs<RAM_SEGMENTS_SIZE; offs++) setRAM(addr+offs, 0x00);
+        }
+    }
+
     void setROM16(uint16_t base, uint16_t address, uint16_t data)
     {
         uint16_t offset = (address - base) / 2;
@@ -771,11 +786,13 @@ namespace Cpu
             //setRAM(BOOT_CHECK, 0xA6);
         }
 
-        Graphics::resetVTable();
+        clearUserRAM();
         setRAM(ZERO_CONST_ADDRESS, 0x00);
         setRAM(ONE_CONST_ADDRESS, 0x01);
-        Editor::setSingleStepAddress(VIDEO_Y_ADDRESS);
         setClock(CLOCK_RESET);
+
+        Graphics::resetVTable();
+        Editor::setSingleStepAddress(VIDEO_Y_ADDRESS);
     }
 
     void softReset(void)
@@ -787,7 +804,7 @@ namespace Cpu
     {
         (Memory::getSizeRAM() == RAM_SIZE_LO) ? Memory::setSizeRAM(RAM_SIZE_HI) : Memory::setSizeRAM(RAM_SIZE_LO);
         _RAM.resize(Memory::getSizeRAM());
-        Memory::intitialise();
+        Memory::initialise();
         reset(false);
     }
 

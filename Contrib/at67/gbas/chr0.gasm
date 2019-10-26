@@ -1,422 +1,450 @@
-_startAddress_       EQU		0x0200
-resetVideoTable      EQU		0x7fa0
-convertEqOp          EQU		resetVideoTable - 0x0100
-convertNeOp          EQU		convertEqOp     + 9     
-convertLeOp          EQU		convertNeOp     + 9     
-convertGeOp          EQU		convertLeOp     + 9     
-convertLtOp          EQU		convertGeOp     + 9     
-convertGtOp          EQU		convertLtOp     + 9     
-multiply16bit        EQU		resetVideoTable - 0x0200
-divide16bit          EQU		resetVideoTable - 0x0300
-clearRegion          EQU		resetVideoTable - 0x0400
-clearCursorRow       EQU		resetVideoTable - 0x0500
-printText            EQU		resetVideoTable - 0x0600
-printDigit           EQU		resetVideoTable - 0x0700
-printInt16           EQU		resetVideoTable - 0x0800
-printChar            EQU		resetVideoTable - 0x0900
-printHexByte         EQU		resetVideoTable - 0x0A00
-printHexWord         EQU		resetVideoTable - 0x0B00
-newLineScroll        EQU		resetVideoTable - 0x0C00
-resetAudio           EQU		resetVideoTable - 0x0D00
-playMidi             EQU		resetVideoTable - 0x0E00
-midiStartNote        EQU		resetVideoTable - 0x0F00
+_startAddress_  EQU			0x0200
+resetVideoTable EQU			0x7fa0
+clearRegion     EQU			0x7ea0
+convertEqOp     EQU			0x7fbc
+convertNeOp     EQU			0x7fc5
+convertLeOp     EQU			0x7fce
+convertGeOp     EQU			0x7fd7
+convertLtOp     EQU			0x7fe0
+convertGtOp     EQU			0x7fe9
+multiply16bit   EQU			0x7da0
+divide16bit     EQU			0x7ca0
+clearCursorRow  EQU			0x7ba0
+printText       EQU			0x7dc3
+printDigit      EQU			0x7ddc
+printInt16      EQU			0x7aa0
+printChar       EQU			0x79a0
+printHexByte    EQU			0x78a0
+printHexWord    EQU			0x7eeb
+newLineScroll   EQU			0x77a0
+resetAudio      EQU			0x78ca
+playMidi        EQU			0x76a0
+playMidiAsync   EQU			0x7bdf
+midiStartNote   EQU			0x75a0
 
 ; Internal variables
-register0            EQU		0x00a0
-register1            EQU		register0 + 0x02
-register2            EQU		register0 + 0x04
-register3            EQU		register0 + 0x06
-register4            EQU		register0 + 0x08
-register5            EQU		register0 + 0x0A
-register6            EQU		register0 + 0x0C
-register7            EQU		register0 + 0x0E
-register8            EQU		register0 + 0x10
-register9            EQU		register0 + 0x12
-textColour           EQU		register0 + 0x14
-cursorXY             EQU		register0 + 0x16
-midiStreamPtr        EQU		register0 + 0x18
-midiDelay            EQU		register0 + 0x1A
-frameCountPrev       EQU		register0 + 0x1C
+register0       EQU			0x00a0
+register1       EQU			register0 + 0x02
+register2       EQU			register0 + 0x04
+register3       EQU			register0 + 0x06
+register4       EQU			register0 + 0x08
+register5       EQU			register0 + 0x0A
+register6       EQU			register0 + 0x0C
+register7       EQU			register0 + 0x0E
+register8       EQU			register0 + 0x10
+register9       EQU			register0 + 0x12
+textColour      EQU			register0 + 0x14
+cursorXY        EQU			register0 + 0x16
+midiStreamPtr   EQU			register0 + 0x18
+midiDelay       EQU			register0 + 0x1A
+frameCountPrev  EQU			register0 + 0x1C
 
 ; Includes
-%include             include/gigatron.i
-%include             include/math.i
-%include             include/conv_conds.i
-%include             include/audio.i
-%include             include/clear_screen.i
-%include             include/print_text_CALLI.i
-%include             include/macros_CALLI.i
+%include        include/gigatron.i
+%include        include/math.i
+%include        include/conv_conds.i
+%include        include/audio.i
+%include        include/clear_screen.i
+%include        include/print_text_CALLI.i
+%include        include/macros_CALLI.i
 
 ; Labels
-_entryPoint_         EQU		0x0200
-_10                  EQU		0x02eb
-_test                EQU		0x044d
-_Big                 EQU		0x050a
-_next15              EQU		0x0308
-_next16              EQU		0x030c
-_next17              EQU		0x0310
-_next18              EQU		0x0314
-_next28              EQU		0x043c
-_end_29              EQU		0x044b
-0x0300               EQU		0x0300
-0x0400               EQU		0x0400
-0x0500               EQU		0x0500
+_entryPoint_    EQU			0x0200
+_10             EQU			0x08ae
+_test           EQU			0x0bf0
+_Big            EQU			0x0def
+_next17         EQU			0x08be
+_next18         EQU			0x08c2
+_next19         EQU			0x08c6
+_next20         EQU			0x08ca
+_next31         EQU			0x0bdf
+_end_32         EQU			0x0bee
+0x08a0          EQU			0x08a0
+0x09a0          EQU			0x09a0
+0x0aa0          EQU			0x0aa0
+0x0ba0          EQU			0x0ba0
+0x0ca0          EQU			0x0ca0
+0x0da0          EQU			0x0da0
+0x0ea0          EQU			0x0ea0
+0x0fa0          EQU			0x0fa0
 
 ; Variables
-_z                   EQU		0x0030
-_b                   EQU		0x0032
-_printb              EQU		0x0034
-_w                   EQU		0x0036
-_x                   EQU		0x0038
-_y                   EQU		0x003a
-_dog                 EQU		0x003c
-_cat                 EQU		0x003e
-_a                   EQU		0x0040
-_f                   EQU		0x0042
-_g                   EQU		0x0044
-_h                   EQU		0x0046
-_i                   EQU		0x0048
-_j                   EQU		0x004a
-_jj                  EQU		0x004c
-_ss                  EQU		0x004e
-_ii                  EQU		0x0050
+_frog$          EQU			0x0030
+_z              EQU			0x0032
+_b              EQU			0x0034
+_bb             EQU			0x0036
+_printb         EQU			0x0038
+_w              EQU			0x003a
+_x              EQU			0x003c
+_y              EQU			0x003e
+_dog            EQU			0x0040
+_cat            EQU			0x0042
+_pong$          EQU			0x0044
+_a              EQU			0x0046
+_f              EQU			0x0048
+_g              EQU			0x004a
+_h              EQU			0x004c
+_i              EQU			0x004e
+_j              EQU			0x0050
+_jj             EQU			0x0052
+_ss             EQU			0x0054
+_ii             EQU			0x0056
 
 ; Strings
-usrStr_0x5fa0		 EQU		0x5fa0
-usrStr_0x5fa0		 DB			1 ' '
-usrStr_0x5fa2		 EQU		0x5fa2
-usrStr_0x5fa2		 DB			1 '1'
-usrStr_0x5fa4		 EQU		0x5fa4
-usrStr_0x5fa4		 DB			2 '7f'
-usrStr_0x5fa7		 EQU		0x5fa7
-usrStr_0x5fa7		 DB			4 'b00b'
-usrStr_0x5fac		 EQU		0x5fac
-usrStr_0x5fac		 DB			25 'lalalalala23d455345634650'
+usrStr_0x7ff2	EQU			0x7ff2
+usrStr_0x7ff2	DB			4 'b00b'
+usrStr_0x7ff7	EQU			0x7ff7
+usrStr_0x7ff7	DB			1 ' '
+usrStr_0x7ff9	EQU			0x7ff9
+usrStr_0x7ff9	DB			1 '1'
+usrStr_0x7ffb	EQU			0x7ffb
+usrStr_0x7ffb	DB			2 '7f'
+usrStr_0x7ad9	EQU			0x7ad9
+usrStr_0x7ad9	DB			25 'lalalalala23d455345634650'
 
 ; Code
-_entryPoint_         Initialise		                                            		; INIT
+_entryPoint_    Initialise	                                		; INIT
 
-                     LDI		33
-                     STW		_z                                               		; let z = 33
+                LDWI		usrStr_0x7ff2
+                STW			_frog$                           		; frog$ = hexw$(&hb00b)
 
-                     LDW		_z
-                     STW		mathX
-                     LDI		2
-                     STW		mathY
-                     CALLI		multiply16bit
-                     STW		0xd0
-                     LDWI		1000
-                     ADDW		0xd0
-                     STW		_b                                               		; b = z * 2 + 1000
+                PrintVarString	_frog$
+                CALLI		newLineScroll                     		; print frog$
 
-                     LDW		_b
-                     SUBI		1
-                     CALLI		convertLeOp
-                     STW		0xd0
-                     LDW		_b
-                     SUBI		1
-                     CALLI		convertGeOp
-                     STW		0xd2
-                     LDW		0xd0
-                     ADDW		0xd2
-                     STW		0xd2
-                     LDW		_b
-                     SUBI		33
-                     CALLI		convertEqOp
-                     STW		0xd4
-                     LDW		0xd2
-                     ADDW		0xd4
-                     STW		0xd4
-                     LDW		_b
-                     SUBI		32
-                     CALLI		convertNeOp
-                     STW		0xd6
-                     LDW		0xd4
-                     ADDW		0xd6
-                     STW		_b                                               		; b = (b <= 1) + (b >= 1) + (b = 33) + (b <> 32)
+                LDI			33
+                STW			_z                               		; let z = 33
 
-                     PrintVarInt16		_b
-                     PrintString		usrStr_0x5fa0
-                     LDW		_b
-                     SUBI		1
-                     CALLI		convertEqOp
-                     PrintAcInt16		
-                     PrintString		usrStr_0x5fa0
-                     LDWI		-1000
-                     ADDW		_b
-                     CALLI		convertNeOp
-                     PrintAcInt16		
-                     PrintString		usrStr_0x5fa0
-                     LDW		_b
-                     SUBI		3
-                     CALLI		convertLeOp
-                     PrintAcInt16		
-                     PrintString		usrStr_0x5fa0
-                     LDW		_b
-                     SUBI		1
-                     CALLI		convertGtOp
-                     PrintAcInt16		
-                     PrintString		usrStr_0x5fa0
-                     LDW		_b
-                     SUBI		2
-                     CALLI		convertGeOp
-                     PrintAcInt16		
-                     CALLI		newLineScroll                                      		; print b;" ";b=1;" ";b<>1000;" ";b<=3;" ";b>1;" ";b>=2
+                LDW			_z
+                STW			mathX
+                LDI			2
+                STW			mathY
+                CALLI		multiply16bit
+                STW			0xd0
+                LDWI		1000
+                ADDW		0xd0
+                STW			_b                               		; b = z * 2 + 1000
 
-                     LDWI		0x5fa2
-                     STW		_w                                               		; w = chr$(&h31)
+                LDW			_b
+                SUBI		1
+                CALLI		convertLeOp
+                STW			0xd0
+                LDW			_b
+                SUBI		1
+                CALLI		convertGeOp
+                STW			0xd2
+                LDW			0xd0
+                ADDW		0xd2
+                STW			0xd2
+                LDW			_b
+                SUBI		33
+                CALLI		convertEqOp
+                STW			0xd4
+                LDW			0xd2
+                ADDW		0xd4
+                STW			0xd4
+                LDW			_b
+                SUBI		32
+                CALLI		convertNeOp
+                STW			0xd6
+                LDW			0xd4
+                ADDW		0xd6
+                STW			_bb                              		; bb = (b <= 1) + (b >= 1) + (b = 33) + (b <> 32)
 
-                     LDWI		0x5fa4
-                     STW		_x                                               		; x = hex$(127)
+                PrintVarInt16	_b
+                PrintString	usrStr_0x7ff7
+                PrintVarInt16	_bb
+                PrintString	usrStr_0x7ff7
+                LDW			_bb
+                SUBI		1
+                CALLI		convertEqOp
+                PrintAcInt16	
+                PrintString	usrStr_0x7ff7
+                LDWI		-1000
+                ADDW		_bb
+                CALLI		convertNeOp
+                PrintAcInt16	
+                PrintString	usrStr_0x7ff7
+                LDW			_bb
+                SUBI		3
+                CALLI		convertLeOp
+                PrintAcInt16	
+                PrintString	usrStr_0x7ff7
+                LDW			_bb
+                SUBI		1
+                CALLI		convertGtOp
+                PrintAcInt16	
+                PrintString	usrStr_0x7ff7
+                LDW			_bb
+                SUBI		2
+                CALLI		convertGeOp
+                PrintAcInt16	
+                CALLI		newLineScroll                     		; print b;" ";bb;" ";bb=1;" ";bb<>1000;" ";bb<=3;" ";bb>1;" ";bb>=2
 
-                     LDWI		0x5fa7
-                     STW		_y                                               		; y = hexw$(&hb00b)
+                LDWI		usrStr_0x7ff9
+                STW			_w                               		; w = chr$(&h31)
 
-                     LDI		31
-                     STW		_dog                                             		; dog = 31
+                LDWI		usrStr_0x7ffb
+                STW			_x                               		; x = hex$(127)
 
-                     LDWI		-2
-                     STW		_cat                                             		; cat = -2
+                CALLI		0x08a0
 
-_10                  LDW		_z
-                     ADDI		1
-                     STW		_i
-                     LDW		_dog
-                     CALLI		0x0300
+0x08a0          LDWI		usrStr_0x7ff2
+                STW			_y                               		; y = hexw$(&hb00b)
 
-0x0300               SUBI		1
-                     STW		0xc0
-                     LDW		_cat
-                     STW		0xc2                                             		; for i=z+1 to dog-1 step cat
+                LDI			31
+                STW			_dog                             		; dog = 31
 
-_next15              LDI		1
-                     STW		_j                                               		; for j = 1 to 0
+                LDWI		-2
+                STW			_cat                             		; cat = -2
 
-_next16              LDI		1
-                     STW		_jj                                              		; for jj = 1 to 2 step 1
+_10             LDW			_z
+                ADDI		1
+                STW			_i
+                LDW			_dog
+                SUBI		1
+                STW			0xc0
+                LDW			_cat
+                STW			0xc2                             		; for i=z+1 to dog-1 step cat
 
-_next17              LDI		1
-                     STW		_ss                                              		; for ss = 1 to 5 step 1
+_next17         LDI			1
+                STW			_j                               		; for j = 1 to 0
 
-_next18              LDW		_i
-                     STW		mathX
-                     LDI		3
-                     STW		mathY
-                     CALLI		multiply16bit
-                     ADDI		1
-                     PrintAcInt16		
-                     PrintString		usrStr_0x5fa0
-                     LDW		_i
-                     STW		mathX
-                     LDI		2
-                     STW		mathY
-                     CALLI		divide16bit
-                     PrintAcInt16		
-                     PrintString		usrStr_0x5fa0
-                     LDW		_j
-                     STW		mathX
-                     LDI		3
-                     STW		mathY
-                     CALLI		multiply16bit
-                     PrintAcInt16		
-                     PrintString		usrStr_0x5fa0
-                     LDW		_j
-                     ADDI		23
-                     PrintAcInt16		
-                     PrintString		usrStr_0x5fa0
-                     LDW		_i
-                     ADDI		55
-                     PrintAcInt16		
-                     PrintString		usrStr_0x5fa0
-                     LDW		_i
-                     ADDW		_j
-                     PrintAcInt16		
-                     PrintString		usrStr_0x5fa0
-                     LDW		_i
-                     SUBW		_j
-                     PrintAcInt16		
-                     CALLI		newLineScroll                                      		; print i*3+1;" ";i/2;" ";j*3;" ";j+23;" ";i+55;" ";i+j;" ";i-j
+_next18         LDI			1
+                STW			_jj                              		; for jj = 1 to 2 step 1
 
-                     ForNextLoopUp		_ss _next18 5                              		; next ss
+_next19         LDI			1
+                STW			_ss                              		; for ss = 1 to 5 step 1
 
-                     ForNextLoopUp		_jj _next17 2                              		; next jj
+_next20         LDW			_i
+                STW			mathX
+                LDI			3
+                STW			mathY
+                CALLI		multiply16bit
+                ADDI		1
+                PrintAcInt16	
+                PrintString	usrStr_0x7ff7
+                LDW			_i
+                STW			mathX
+                LDI			2
+                STW			mathY
+                CALLI		divide16bit
+                PrintAcInt16	
+                PrintString	usrStr_0x7ff7
+                LDW			_j
+                STW			mathX
+                LDI			3
+                CALLI		0x09a0
 
-                     ForNextLoopDown		_j _next16 0                         		; next j
+0x09a0          STW			mathY
+                CALLI		multiply16bit
+                PrintAcInt16	
+                PrintString	usrStr_0x7ff7
+                LDW			_j
+                ADDI		23
+                PrintAcInt16	
+                PrintString	usrStr_0x7ff7
+                LDW			_i
+                ADDI		55
+                PrintAcInt16	
+                PrintString	usrStr_0x7ff7
+                LDW			_i
+                ADDW		_j
+                PrintAcInt16	
+                PrintString	usrStr_0x7ff7
+                LDW			_i
+                SUBW		_j
+                PrintAcInt16	
+                CALLI		newLineScroll                     		; print i*3+1;" ";i/2;" ";j*3;" ";j+23;" ";i+55;" ";i+j;" ";i-j
 
-                     ForNextLoopStepDown		_i _next15 0xc0 0xc2             		; next i
+                ForNextLoopUp	_ss _next20 5               		; next ss
 
-                     CALLI		_test                                              		; gosub   test
+                ForNextLoopUp	_jj _next19 2               		; next jj
 
-                     LDW		_w
-                     PrintAcHexWord		
-                     PrintString		usrStr_0x5fa0
-                     LDW		_x
-                     PrintAcHexWord		
-                     PrintString		usrStr_0x5fa0
-                     LDW		_y
-                     PrintAcHexWord		
-                     PrintString		usrStr_0x5fa0
-                     LDW		_b
-                     ADDI		60
-                     PrintAcChar		
-                     PrintString		usrStr_0x5fa0
-                     LDWI		48
-                     PrintAcChar		
-                     CALLI		0x0400
+                CALLI		0x0aa0
 
-0x0400               PrintString		usrStr_0x5fa0
-                     LDWI		0x0021
-                     PEEK		
-                     ANDI		252
-                     PrintAcHexByte		
-                     PrintString		usrStr_0x5fa0
-                     CALLI		newLineScroll                                      		; print hexw$(w);" ";hexw$(x);" ";hexw$(y);" ";chr$(b+60);" ";chr$(&h30);" ";hex$(peek(&h21) AND &hFC);" "
+0x0aa0          ForNextLoopDown	_j _next18 0                		; next j
 
-                     LDI		80
-                     PrintAcHexByte		
-                     PrintString		usrStr_0x5fa0
-                     LDWI		-8531
-                     PrintAcHexWord		
-                     PrintString		usrStr_0x5fa0
-                     LDWI		-16657
-                     PrintAcHexWord		
-                     CALLI		newLineScroll                                      		; print hex$(80);" ";hexw$(&hdead);" ";hexw$(&hbeef)
+                ForNextLoopStepDown	_i _next17 0xc0 0xc2    		; next i
 
-                     LDI		0
-                     STW		_ii                                              		; for ii = 0 to 0 step 1
+                CALLI		_test                             		; gosub   test
 
-_next28              CALLI		_Big                                               		; gosub Big
+                LDW			_y
+                STW			_pong$                           		; pong$ = y
 
-                     ForNextLoopUp		_ii _next28 0                              		; next ii
+                PrintVarInt16	_w
+                PrintString	usrStr_0x7ff7
+                LDW			_x
+                PrintAcHexWord	
+                PrintString	usrStr_0x7ff7
+                PrintVarString	_pong$
+                PrintString	usrStr_0x7ff7
+                LDW			_bb
+                ADDI		60
+                PrintAcChar	
+                PrintString	usrStr_0x7ff7
+                LDWI		48
+                CALLI		0x0ba0
 
-_end_29              BRA		_end_29                                          		; END
+0x0ba0          PrintAcChar	
+                PrintString	usrStr_0x7ff7
+                LDWI		0x0021
+                PEEK		
+                ANDI		252
+                PrintAcHexByte	
+                PrintString	usrStr_0x7ff7
+                CALLI		newLineScroll                     		; print w;" ";hexw$(x);" ";pong$;" ";chr$(bb+60);" ";chr$(&h30);" ";hex$(peek(&h21) AND &hFC);" "
 
-_test                PUSH		
-                     LDW		_i
-                     ADDI		40
-                     PrintAcHexByte		
-                     PrintString		usrStr_0x5fa0
-                     LDW		_j
-                     ADDI		30
-                     PrintAcHexByte		
-                     PrintString		usrStr_0x5fa0
-                     CALLI		newLineScroll                                      		; print hex$(i+40);" ";hex$(j+30);" "
+                LDI			80
+                PrintAcHexByte	
+                PrintString	usrStr_0x7ff7
+                LDWI		-8531
+                PrintAcHexWord	
+                PrintString	usrStr_0x7ff7
+                LDWI		-16657
+                PrintAcHexWord	
+                CALLI		newLineScroll                     		; print hex$(80);" ";hexw$(&hdead);" ";hexw$(&hbeef)
 
-                     LDW		_i
-                     ADDI		30
-                     PrintAcHexByte		
-                     PrintString		usrStr_0x5fa0
-                     LDW		_j
-                     ADDI		40
-                     PrintAcHexByte		
-                     PrintString		usrStr_0x5fa0
-                     CALLI		newLineScroll                                      		; print hex$(i+30);" ";hex$(j+40);" "
+                LDI			0
+                STW			_ii                              		; for ii = 0 to 0 step 1
 
-                     PrintInt16		0x003d
-                     PrintString		usrStr_0x5fa0
-                     PrintVarInt16		_i
-                     PrintString		usrStr_0x5fa0
-                     PrintVarInt16		_j
-                     PrintString		usrStr_0x5fa0
-                     LDW		_j
-                     ADDI		23
-                     PrintAcInt16		
-                     PrintString		usrStr_0x5fa0
-                     LDW		_i
-                     ADDI		55
-                     PrintAcInt16		
-                     PrintString		usrStr_0x5fa0
-                     LDW		_i
-                     ADDW		_j
-                     PrintAcInt16		
-                     PrintString		usrStr_0x5fa0
-                     LDW		_i
-                     SUBW		_j
-                     PrintAcInt16		
-                     PrintString		usrStr_0x5fa0
-                     LDW		_i
-                     SUBW		_j
-                     ADDI		1
-                     PrintAcInt16		
-                     PrintString		usrStr_0x5fa0
-                     LDW		_i
-                     ADDW		_j
-                     CALLI		0x0500
+_next31         CALLI		_Big                              		; gosub Big
 
-0x0500               ADDW		_j
-                     PrintAcInt16		
-                     CALLI		newLineScroll                                      		; print 20*3+1;" ";i;" ";j;" ";j+23;" ";i+55;" ";i+j;" ";i-j;" ";i-j+1;" ";i+j+j
+                ForNextLoopUp	_ii _next31 0               		; next ii
 
-                     POP		
-                     RET		                                                 		; return
+_end_32         BRA			_end_32                          		; END
 
-_Big                 PUSH		
-                     LDWI		0x0021
-                     PEEK		
-                     ANDI		252
-                     STW		_a                                               		; a = peek(&h21) AND &hFC
+_test           PUSH		
+                LDW			_i
+                ADDI		40
+                CALLI		0x0ca0
 
-                     LDW		_a
-                     PrintAcHexByte		
-                     CALLI		newLineScroll                                      		; print hex$(a)
+0x0ca0          PrintAcHexByte	
+                PrintString	usrStr_0x7ff7
+                LDW			_j
+                ADDI		30
+                PrintAcHexByte	
+                PrintString	usrStr_0x7ff7
+                CALLI		newLineScroll                     		; print hex$(i+40);" ";hex$(j+30);" "
 
-                     LDWI		-1
-                     PrintAcHexWord		
-                     CALLI		newLineScroll                                      		; print hexw$(&hFFFF OR &h1111)
+                LDW			_i
+                ADDI		30
+                PrintAcHexByte	
+                PrintString	usrStr_0x7ff7
+                LDW			_j
+                ADDI		40
+                PrintAcHexByte	
+                PrintString	usrStr_0x7ff7
+                CALLI		newLineScroll                     		; print hex$(i+30);" ";hex$(j+40);" "
 
-                     LDWI		4369
-                     STW		_f                                               		; f = &h1111
+                PrintInt16	0x003d
+                PrintString	usrStr_0x7ff7
+                PrintVarInt16	_i
+                PrintString	usrStr_0x7ff7
+                PrintVarInt16	_j
+                PrintString	usrStr_0x7ff7
+                LDW			_j
+                CALLI		0x0da0
 
-                     LDWI		-21846
-                     STW		_g                                               		; g = &hAAAA
+0x0da0          ADDI		23
+                PrintAcInt16	
+                PrintString	usrStr_0x7ff7
+                LDW			_i
+                ADDI		55
+                PrintAcInt16	
+                PrintString	usrStr_0x7ff7
+                LDW			_i
+                ADDW		_j
+                PrintAcInt16	
+                PrintString	usrStr_0x7ff7
+                LDW			_i
+                SUBW		_j
+                PrintAcInt16	
+                PrintString	usrStr_0x7ff7
+                LDW			_i
+                SUBW		_j
+                ADDI		1
+                PrintAcInt16	
+                PrintString	usrStr_0x7ff7
+                LDW			_i
+                ADDW		_j
+                ADDW		_j
+                PrintAcInt16	
+                CALLI		newLineScroll                     		; print 20*3+1;" ";i;" ";j;" ";j+23;" ";i+55;" ";i+j;" ";i-j;" ";i-j+1;" ";i+j+j
 
-                     LDWI		-1
-                     SUBW		_g
-                     XORW		_f
-                     STW		_h                                               		; h = NOT g XOR f
+                POP			
+                RET			                                 		; return
 
-                     LDW		_h
-                     PrintAcHexWord		
-                     PrintString		usrStr_0x5fa0
-                     PrintInt16		0x0038
-                     CALLI		newLineScroll                                      		; print hexw$(h);" ";56
+_Big            PUSH		
+                LDWI		0x0021
+                PEEK		
+                ANDI		252
+                STW			_a                               		; a = peek(&h21) AND &hFC
 
-                     LDWI		-8531
-                     PrintAcHexWord		
-                     PrintString		usrStr_0x5fa0
-                     PrintVarInt16		_z
-                     PrintString		usrStr_0x5fa0
-                     LDWI		-6
-                     STW		mathX
-                     LDW		_z
-                     STW		mathY
-                     CALLI		multiply16bit
-                     PrintAcInt16		
-                     PrintString		usrStr_0x5fa0
-                     LDI		0
-                     SUBW		_z
-                     STW		mathX
-                     LDI		21
-                     STW		mathY
-                     CALLI		divide16bit
-                     PrintAcInt16		
-                     PrintString		usrStr_0x5fa0
-                     LDW		_z
-                     STW		mathX
-                     LDI		21
-                     STW		mathY
-                     CALLI		divide16bit
-                     LDW		mathRem
-                     PrintAcInt16		
-                     CALLI		newLineScroll                                      		; print hexw$(&hdead);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+                CALLI		0x0ea0
 
-                     LDWI		-28785
-                     PrintAcHexWord		
-                     CALLI		newLineScroll                                      		; print hexw$(&b0000111100001111 OR &b1000000010000000)
+0x0ea0          LDW			_a
+                PrintAcHexByte	
+                CALLI		newLineScroll                     		; print hex$(a)
 
-                     PrintString		usrStr_0x5fac                            		; print "lalalalala23d455345634650";
+                LDWI		-1
+                PrintAcHexWord	
+                CALLI		newLineScroll                     		; print hexw$(&hFFFF OR &h1111)
 
-                     POP		
-                     RET		                                                 		; return
+                LDWI		4369
+                STW			_f                               		; f = &h1111
+
+                LDWI		-21846
+                STW			_g                               		; g = &hAAAA
+
+                LDWI		-1
+                SUBW		_g
+                XORW		_f
+                STW			_h                               		; h = NOT g XOR f
+
+                LDW			_h
+                PrintAcHexWord	
+                PrintString	usrStr_0x7ff7
+                PrintInt16	0x0038
+                CALLI		newLineScroll                     		; print hexw$(h);" ";56
+
+                LDWI		-8531
+                PrintAcHexWord	
+                PrintString	usrStr_0x7ff7
+                PrintVarInt16	_z
+                PrintString	usrStr_0x7ff7
+                LDWI		-6
+                STW			mathX
+                LDW			_z
+                STW			mathY
+                CALLI		0x0fa0
+
+0x0fa0          CALLI		multiply16bit
+                PrintAcInt16	
+                PrintString	usrStr_0x7ff7
+                LDI			0
+                SUBW		_z
+                STW			mathX
+                LDI			21
+                STW			mathY
+                CALLI		divide16bit
+                PrintAcInt16	
+                PrintString	usrStr_0x7ff7
+                LDW			_z
+                STW			mathX
+                LDI			21
+                STW			mathY
+                CALLI		divide16bit
+                LDW			mathRem
+                PrintAcInt16	
+                CALLI		newLineScroll                     		; print hexw$(&hdead);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+
+                LDWI		-28785
+                PrintAcHexWord	
+                CALLI		newLineScroll                     		; print hexw$(&b0000111100001111 OR &b1000000010000000)
+
+                PrintString	usrStr_0x7ad9                   		; print "lalalalala23d455345634650";
+
+                POP			
+                RET			                                 		; return
 
 

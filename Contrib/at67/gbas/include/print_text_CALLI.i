@@ -12,6 +12,7 @@ digitIndex      EQU     register8
 clearLoop       EQU     register9
 
 
+%SUB            clearCursorRow
                 ; clears the top 8 lines of pixels in preparation of text scrolling
 clearCursorRow  LDWI    0x2020
                 STW     giga_sysArg0        ; 4 pixels of colour
@@ -45,8 +46,9 @@ clearCR_loopx   SUBI    4                   ; loop is unrolled 4 times
                 INC     giga_sysArg4 + 1    ; next line                
                 LoopCounter clearLoop clearCR_loopy
                 RET
-
-                
+%ENDS
+     
+%SUB            printText
                 ; prints text string pointed to by the accumulator
 printText       PUSH
                 STW     textStr             
@@ -60,8 +62,9 @@ printT_char     INC     textStr             ; next char
                 LoopCounter textLen printT_char
                 POP
                 RET
+%ENDS
 
-
+%SUB            printDigit
                 ; prints single digit in textNum
 printDigit      PUSH
                 STW     digitMult
@@ -80,8 +83,9 @@ printD_cont     LD      digitIndex
                 ST      digitIndex
 printD_exit     POP
                 RET
+%ENDS    
     
-    
+%SUB            printInt16
                 ; prints 16bit int in the accumulator
 printInt16      PUSH
                 STW     textNum
@@ -108,8 +112,9 @@ printI16_pos    STW     textNum
                 CALLI   printChar
                 POP
                 RET
+%ENDS    
     
-    
+%SUB            printChar
                 ; prints char in the accumulator
 printChar       PUSH
                 ST      textChr             ; (char-32)*5 + 0x0700
@@ -158,8 +163,9 @@ printC_slice    LDW     textFont            ; text font slice base address
                 CALLI   newLineScroll ; next row, scroll at bottom
 printC_exit     POP
                 RET
+%ENDS
     
-    
+%SUB            newLineScroll
               ; print from top row to bottom row, then start scrolling 
 newLineScroll   PUSH
                 LDI     0x02                ; x offset slightly
@@ -201,8 +207,9 @@ newLS_adjust    ADDI    8
                 ST      cursorXY+1
 newLS_exit      POP
                 RET
-    
-                    
+%ENDS
+     
+%SUB            printHexByte
                 ; print hex byte in the accumulator
 printHexByte    PUSH
                 ST      textHex
@@ -224,8 +231,9 @@ printH_skip1    ADDI    0x3A
                 CALLI   printChar
                 POP
                 RET
-                    
-                    
+%ENDS
+     
+%SUB            printHexWord
                 ; print hex word in the accumulator
 printHexWord    PUSH
                 STW     textScratch
@@ -235,3 +243,4 @@ printHexWord    PUSH
                 CALLI   printHexByte
                 POP
                 RET
+%ENDS

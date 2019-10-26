@@ -1,13 +1,16 @@
 _useOpcodeCALLI_
 
+frog$ = hexw$(&hb00b)
+print frog$
+
 let z = 33
 b = z * 2 + 1000
 
-b = (b <= 1) + (b >= 1) + (b = 33) + (b <> 32)
+bb = (b <= 1) + (b >= 1) + (b = 33) + (b <> 32)
 
 'if b > 1 then print b
 
-print b;" ";b=1;" ";b<>1000;" ";b<=3;" ";b>1;" ";b>=2
+print b;" ";bb;" ";bb=1;" ";bb<>1000;" ";bb<=3;" ";bb>1;" ";bb>=2
 'END
 
 w = chr$(&h31)
@@ -28,7 +31,8 @@ cat = -2
 
     gosub   test
     
-    print hexw$(w);" ";hexw$(x);" ";hexw$(y);" ";chr$(b+60);" ";chr$(&h30);" ";hex$(peek(&h21) AND &hFC);" "
+    pong$ = y
+    print w;" ";hexw$(x);" ";pong$;" ";chr$(bb+60);" ";chr$(&h30);" ";hex$(peek(&h21) AND &hFC);" "
     print hex$(80);" ";hexw$(&hdead);" ";hexw$(&hbeef)
 
     for ii = 0 to 0 step 1

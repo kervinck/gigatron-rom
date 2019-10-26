@@ -6,7 +6,8 @@ mathRem         EQU     register4
 mathSign        EQU     register5
 mathScratch     EQU     register6
 
-                
+
+%SUB            multiply16bit
                 ; accumulator = mathX * mathY, (result 16bit)
 multiply16bit   LDI     0
                 STW     mathSum
@@ -28,8 +29,9 @@ multiply16_skip LDW     mathX
                 
                 LDW     mathSum
                 RET
+%ENDS
 
-
+%SUB            divide16bit
                 ; accumulator:mathRem = mathX / mathY, (results 16bit)
 divide16bit     LDW     mathX
                 XORW    mathY
@@ -78,4 +80,4 @@ divide16_skip4  LDW     mathScratch
                 
 divide16_exit   LDW     mathX
                 RET
-  
+%ENDS
