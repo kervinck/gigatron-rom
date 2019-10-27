@@ -1,5 +1,15 @@
 gcl0x
 {-----------------------------------------------------------------------+
+|                                                                       |
+|       Forth74 -- Inner interpreter for a vCPU based Forth             |
+|                                                                       |
+|       !!! WORK IN PROGRESS !!!                                        |
+|                                                                       |
++-----------------------------------------------------------------------}
+
+{
+  References:
+
         http://forth.org/OffeteStore/1010_SystemsGuideToFigForth.pdf
         Systems Guide to figForth
         C.H.Ting, Ph.D
@@ -15,16 +25,18 @@ gcl0x
         https://users.ece.cmu.edu/~koopman/stack_computers/appb.html
         A Glossery of Forth Primitives
         Philip Koopman
-+-----------------------------------------------------------------------}
 
-{
+  Variables:
+
         IP              Instruction pointer
-        \vSP            Data stack
         RSP             Return stack
         W i j           Work register(s)
         DoColon         Fall into threaded code, save IP on stack
         Next            Fetch and dispatch next threaded instruction
         Pos             Cursor position in video memory (initialized by CR)
+
+  Other:
+        \vSP            Data stack
 }
 
 {-----------------------------------------------------------------------+
@@ -80,6 +92,7 @@ _QUIT=*
   DoColon!
   ##_Zero ##_RspStore           {Clear return stack: top of memory}
   ##_CR
+  ##_TEST
 
 {-----------------------------------------------------------------------+
 |       "INTERPRET"                                                     |
@@ -253,6 +266,12 @@ _AND=*
   %0 2++ W= %0 W& %0= Next!
   ##__AND                       {Link}
 
+__OR=*
+  #@_OR `OR                     {Name}
+_OR=*
+  %0 2++ W= %0 W| %0= Next!
+  ##__OR                        {Link}
+
 {-----------------------------------------------------------------------+
 |       Data stack words                                                |
 +-----------------------------------------------------------------------}
@@ -285,7 +304,6 @@ __ROT=*
   #@_ROT `ROT                   {Name}
 _ROT=*
   %4 W= %2 %4= %0 %2= W %0= Next!
-
 {-----------------------------------------------------------------------+
 |                       RAM page 4                                      |
 +-----------------------------------------------------------------------}
@@ -395,7 +413,6 @@ _waitKey=*
   ##_DUP ##_Byte #128 ##_AND    {Check high bit}
   ##_JumpNe ##_waitKey          {Loop if keyboard idle}
   ##_Exit
-
 {-----------------------------------------------------------------------+
 |                       RAM page 5                                      |
 +-----------------------------------------------------------------------}
@@ -403,11 +420,64 @@ _waitKey=*
   ##__KEY                       {Link}
 
 {-----------------------------------------------------------------------+
+|       0< ( n -- f ) True if top number negative                       |
++-----------------------------------------------------------------------}
+
+__IsNeg=*
+  #@_IsNeg `0<                  {Name}
+_IsNeg=*
+  %1 128& [if<>0 129-] %0=      {Set to -1 or 0}
+  Next!
+  ##__IsNeg
+
+{-----------------------------------------------------------------------+
+|       1+ ( n -- n+1 ) Add 1         i                                 |
++-----------------------------------------------------------------------}
+
+__Add1=*
+  #@_Add1 `1+                   {Name}
+_Add1=*
+  %0 1+ %0= Next!
+  ##__Add1                      {Link}
+
+{-----------------------------------------------------------------------+
+|       MINUS ( n -- -n ) Change sign                                   |
++-----------------------------------------------------------------------}
+
+__MINUS=*
+  #@_MINUS `MINUS               {Name}
+_MINUS=*
+  %0 W= 0 W- %0= Next!
+  ##__MINUS                     {Link}
+
+{-----------------------------------------------------------------------+
+|       Return Stack words                                              |
++-----------------------------------------------------------------------}
+
+__ToR=*
+  #@_ToR `>R                    {Name}
+_ToR=*
+  RSP 2- RSP= %0 2++ RSP: Next! {Code}
+  ##__ToR                       {Link}
+
+__FromR=*
+  #@_ToR `R>                    {Name}
+_FromR=*
+  RSP; 2-- %0= RSP 2+ RSP= Next!{Code}
+  ##__FromR                     {Link}
+
+__R=*
+  #@_R `R                       {Name}
+_R=*
+  RSP; 2-- %0= Next!            {Code}
+  ##__R                         {Link}
+
+{-----------------------------------------------------------------------+
 |       SPACE ( -- ) Print one space                                    |
 +-----------------------------------------------------------------------}
 
 __SPACE=*
-  #@_SPACE `.                   {Name}
+  #@_SPACE `SPACE               {Name}
 _SPACE=*
   DoColon!
   ##_Byte #32 ##__EMIT
@@ -415,16 +485,20 @@ _SPACE=*
   ##__SPACE                     {Link}
 
 {-----------------------------------------------------------------------+
-|       . (n -- ) Print number                                          |
+|       . ( n -- ) Print number                                         |
 +-----------------------------------------------------------------------}
 
-{
 __Dot=*
   #@_Dot `.                     {Name}
 _Dot=*
   DoColon!
   ##_SPACE
-  ##_Zero                       {Leading zero}
+  ##_DUP ##_IsNeg               {Test sign}
+  ##_JumpEq ##_L0
+  ##_Byte `- ##_EMIT            {Print "-"}
+  ##_MINUS
+_L0=*
+  ##_Zero                       {Suppress leading zeroes}
   ##_Lit ##10000 ##_Digit
   ##_Lit ##1000 ##_Digit
   ##_Byte #100 ##_Digit
@@ -433,26 +507,33 @@ _Dot=*
   ##_DROP ##_DROP
   ##_Exit
 
-_Digit=*                        { n 0 r -- n 0 }
-  DoColon!                      { 0 n r         | }
-  ##_ToR                        { 0 n           | r }
-_loop1=*
+_Digit=*                        { n z r -- n-d*r z+d }
+  DoColon!
+  ##_ToR                        { n 0           | r }
+  ##_SWAP                       { 0 n           | r }
+_L1=*
   ##_R                          { 0 n r         | r }
-  ##_Sub                        { 0 n-r         | r }
-  ##_DUP                        { 0 n-r n-r     | r }
-  ##_IsNeg                      { 0 n-r sign    | r }
-  ##_JumpNe ##_loop2            { 0 n-r         | r }
-  ##_SWAP ##_Add1 ##_SWAP       { 1 n-r         | r }
-  ##_R                          { 1 n-r r       | r }
-  ##_Add                        { 1 n           | r }
-  ##_Jump ##_loop1
-loop2=*
-  ##_FromR                      { 1 n r }
-  ##_DROP                       { 1 n }
-  ##_SWAP ##_EMIT               { n }
-  ##_Byte `0                    { n 0 }
+  ##_Sub                        { 0 m           | r }
+  ##_DUP                        { 0 m m         | r }
+  ##_IsNeg                      { 0 m sign      | r }
+  ##_JumpNe ##_L2               { 0 m           | r }
+  ##_SWAP ##_Add1 ##_SWAP       { 1 m           | r }
+  ##_Jump ##_L1
+_L2=*
+  ##_FromR                      { 1 m r }
+  ##_Add                        { 1 m }
+  ##_SWAP                       { m 1 }
+  ##_DUP ##_JumpEq ##_L3
+  ##_Byte #$30 ##_OR            { m '1' }
+_L3=*
+  ##_EMIT                       { m }
+  ##_Byte #$30                  { m 0 }
   ##_Exit
-}
+{-----------------------------------------------------------------------+
+|                       RAM page 6                                      |
++-----------------------------------------------------------------------}
+*=$600
+  ##__Dot                       {Link}
 
 {-----------------------------------------------------------------------+
 |       HELLO ( -- ) Send text to terminal                              |
@@ -472,6 +553,20 @@ _HELLO=*
   ##_Byte `4 ##_EMIT
   ##_Exit
   ##__HELLO                     {Link}
+
+{-----------------------------------------------------------------------+
+|       TEST ( -- ) Program under test                                  |
++-----------------------------------------------------------------------}
+
+__TEST=*
+  #@_TEST `TEST                 {Name}
+_TEST=*
+  DoColon!                      { : TEST -12345 . CR ; }
+  ##_Lit ##-12345
+  ##_Dot
+  ##_CR
+  ##_Exit
+  ##__TEST                      {Link}
 
 _FreeMem=*
 
