@@ -52,13 +52,14 @@ ENTROPY         := $06
 CHROUT          := $2A00        ; Send char or newline to video terminal
 GETIN           := $2B00        ; Get key stroke, update TI$
 ISCNTC          := $2C00        ; Check for Ctrl-C, update TI$
-CLALL           := $2D00        ; Close all devices in init
+TICK            := $2D00        ; Update TISTR
+CLALL           := TICK         ; Not implemented, do nothing
 LINEEDIT        := $2E00        ; Delete character or line if needed
 MONCOUT         := CHROUT
 MONRDKEY        := GETIN
-LOAD            := SYNERR       ; Not implemented
-SAVE            := SYNERR       ; Not implemented
-VERIFY          := SYNERR       ; Not implemented
+LOAD            := SYNERR       ; Not implemented, give error
+SAVE            := SYNERR       ; Not implemented, give error
+VERIFY          := SYNERR       ; Not implemented, give error
 
 ; patches
 
@@ -66,20 +67,7 @@ VERIFY          := SYNERR       ; Not implemented
 
 ; update 3-byte timer with latest frameCount before exporting to BASIC
 GETTIM:
-                lda     $0e     ; frameCount
-                tay
-                sec
-                sbc     TISTR+3
-                sty     TISTR+3
-                clc
-                adc     TISTR+2
-                sta     TISTR+2
-                lda     #0
-                adc     TISTR+1
-                sta     TISTR+1
-                lda     #0
-                adc     TISTR+0
-                sta     TISTR+0
+                jsr     TICK
                 sec             ; for FLOAT3
                 jmp     GETTIM1
 
