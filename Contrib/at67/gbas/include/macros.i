@@ -62,31 +62,12 @@ _label_ CALL    giga_vAC
 _label_ CALL    giga_vAC
 %ENDM
 
-%MACRO  ForNextLoopInit _start _end _step _vStart _vEnd _vStep
-        LDWI    _start
-        STW     _vStart
-        LDWI    _end
-        STW     _vEnd
-        LDWI    _step
-        STW     _vStep
-%ENDM
-
-%MACRO  ForNextLoopStepUp _var _label _vEnd _vStep
+%MACRO  ForNextLoopStep _var _label _vEnd _vStep
         LDW     _var
         ADDW    _vStep
         STW     _var
         SUBW    _vEnd
         BGT     _label_+2
-        LDWI    _label
-_label_ CALL    giga_vAC
-%ENDM
-
-%MACRO  ForNextLoopStepDown _var _label _vEnd _vStep
-        LDW     _var
-        ADDW    _vStep
-        STW     _var
-        SUBW    _vEnd
-        BLT     _label_+2
         LDWI    _label
 _label_ CALL    giga_vAC
 %ENDM
@@ -176,6 +157,11 @@ _label_ CALL    giga_vAC
         LDWI    printInt16
         CALL    giga_vAC
 %ENDM
+
+%MACRO  Random
+        LDWI    random8bit
+        CALL    giga_vAC
+%ENDM        
 
 %MACRO  Initialise
         ClearRegionInit 0x2020 0 0 giga_xres giga_yres

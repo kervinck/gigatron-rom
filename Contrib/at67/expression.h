@@ -40,6 +40,7 @@ namespace Expression
     void stripWhitespace(std::string& input);
     void trimWhitespace(std::string& input);
     std::string collapseWhitespace(std::string& input);
+    std::string collapseWhitespaceNotStrings(std::string& input);
     void padString(std::string &str, int num, char pad=' ');
     void addString(std::string &str, int num, char add=' ');
     int tabbedStringLength(const std::string& input, int tabSize);
@@ -61,7 +62,7 @@ namespace Expression
     std::vector<std::string> tokenise(const std::string& text, const std::string& delimiters, bool toUpper=false);
     std::vector<std::string> tokenise(const std::string& text, char c, bool skipSpaces=true, bool toUpper=false);
     std::vector<std::string> tokenise(const std::string& text, char c, std::vector<size_t>& offsets, bool skipSpaces=true, bool toUpper=false);
-    std::vector<std::string> tokeniseLine(std::string& line);
+    std::vector<std::string> tokeniseLine(std::string& line, const std::string& delimiters=" \n\r\f\t\v");
 
     void replaceKeyword(std::string& expression, const std::string& keyword, const std::string& replace);
 

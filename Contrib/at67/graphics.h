@@ -79,6 +79,8 @@ namespace Graphics
 
     void refreshTimingPixel(const Cpu::State& S, int vgaX, int pixelY, uint32_t colour, bool debugging);
     void refreshPixel(const Cpu::State& S, int vgaX, int vgaY);
+    void refreshScreen(void);
+
     void pixelReticle(const Cpu::State& S, int vgaX, int vgaY);
 
     void drawLeds(void);

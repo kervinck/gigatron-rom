@@ -60,30 +60,12 @@ _label_ CALLI   _label
 _label_ CALLI   _label
 %ENDM
 
-%MACRO  ForNextLoopInit _start _end _step _vStart _vEnd _vStep
-        LDWI    _start
-        STW     _vStart
-        LDWI    _end
-        STW     _vEnd
-        LDWI    _step
-        STW     _vStep
-%ENDM
-
-%MACRO  ForNextLoopStepUp _var _label _vEnd _vStep
+%MACRO  ForNextLoopStep _var _label _vEnd _vStep
         LDW     _var
         ADDW    _vStep
         STW     _var
         SUBW    _vEnd
         BGT     _label_+3
-_label_ CALLI   _label
-%ENDM
-
-%MACRO  ForNextLoopStepDown _var _label _vEnd _vStep
-        LDW     _var
-        ADDW    _vStep
-        STW     _var
-        SUBW    _vEnd
-        BLT     _label_+3
 _label_ CALLI   _label
 %ENDM
 
@@ -146,6 +128,10 @@ _label_ CALLI   _label
         LDW     _var
         CALLI   printInt16
 %ENDM
+
+%MACRO  Random
+        CALL    random8bit
+%ENDM        
 
 %MACRO  Initialise
         ClearRegionInit 0x2020 0 0 giga_xres giga_yres

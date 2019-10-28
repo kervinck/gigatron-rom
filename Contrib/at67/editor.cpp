@@ -1364,6 +1364,7 @@ namespace Editor
         while(_singleStepEnabled)
         {
             _onVarType = updateOnVarType();
+            Graphics::refreshScreen();
             Graphics::render(false);
 
             SDL_Event event;

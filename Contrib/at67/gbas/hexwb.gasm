@@ -56,16 +56,18 @@ frameCountPrev      EQU                     register0 + 0x1C
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_1                  EQU                     0x0250
-_end_8              EQU                     0x02ed
+_next4              EQU                     0x0254
+_end_9              EQU                     0x08b2
+0x08a0              EQU                     0x08a0
 
 ; Variables
 _z                  EQU                     0x0030
-_a                  EQU                     0x0032
-_b                  EQU                     0x0034
-_c                  EQU                     0x0036
-_d                  EQU                     0x0038
-_e                  EQU                     0x003a
+_i                  EQU                     0x0032
+_a                  EQU                     0x0034
+_b                  EQU                     0x0036
+_c                  EQU                     0x0038
+_d                  EQU                     0x003a
+_e                  EQU                     0x003c
 
 ; Strings
 usrStr_0x7ff2       EQU                     0x7ff2
@@ -78,7 +80,10 @@ _entryPoint_        Initialise
                     LDI                     3
                     STW                     _z                              ; z = 3
 
-_1                  LDI                     16
+                    LDI                     0
+                    STW                     _i                              ; for i=0 to 5
+
+_next4              LDI                     16
                     STW                     _a                              ; a = &h10
 
                     LDW                     _a
@@ -119,9 +124,14 @@ _1                  LDI                     16
                     PrintString             usrStr_0x7ff2
                     PrintVarInt16           _z
                     LDWI                    newLineScroll
+                    STW                     0xe0
+                    LDWI                    0x08a0
                     CALL                    giga_vAC
-                    BRA                     _1                              ; print a;" ";b;" ";c;" ";hex$(d);" ";hexw$(e);" ";z : goto 1
 
-_end_8              BRA                     _end_8                          ; END
+0x08a0              LDW                     0xe0
+                    CALL                    giga_vAC
+                    ForNextLoopUp           _i _next4 5                     ; print a;" ";b;" ";c;" ";hex$(d);" ";hexw$(e);" ";z : next i
+
+_end_9              BRA                     _end_9                          ; END
 
 

@@ -241,7 +241,9 @@ namespace Compiler
     bool keywordLOOP(CodeLine& codeLine,   int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordWHILE(CodeLine& codeLine,  int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordUNTIL(CodeLine& codeLine,  int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    
+    bool keywordAT(CodeLine& codeLine,     int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
+    bool keywordPUT(CodeLine& codeLine,    int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
+    bool keywordPOKE(CodeLine& codeLine,   int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
 
     bool initialise(void)
     {
@@ -261,7 +263,7 @@ namespace Compiler
         _keywords["READ"  ] = {0, "READ",   nullptr      };
         _keywords["DATA"  ] = {0, "DATA",   nullptr      };
         _keywords["PEEK"  ] = {1, "PEEK",   nullptr      };
-        _keywords["POKE"  ] = {1, "POKE",   nullptr      };
+        _keywords["POKE"  ] = {1, "POKE",   keywordPOKE  };
         _keywords["DEEK"  ] = {1, "DEEK",   nullptr      };
         _keywords["DOKE"  ] = {1, "DOKE",   nullptr      };
         _keywords["ON"    ] = {0, "ON",     nullptr      };
@@ -286,6 +288,8 @@ namespace Compiler
         _keywords["TAN"   ] = {1, "TAN",    nullptr      };
         _keywords["FRE"   ] = {1, "FRE",    nullptr      };
         _keywords["TIME"  ] = {1, "TIME",   nullptr      };
+        _keywords["AT"    ] = {1, "AT",     keywordAT    };
+        _keywords["PUT"   ] = {1, "PUT",    keywordPUT   };
         _keywords["CHR$"  ] = {1, "CHR$",   nullptr      };
         _keywords["HEX$"  ] = {1, "HEX$",   nullptr      };
         _keywords["HEXW$" ] = {1, "HEXW$",  nullptr      };
@@ -575,11 +579,11 @@ namespace Compiler
         Expression::trimWhitespace(expression);
 
         std::vector<VasmLine> vasm;
-        std::string codeText = code.substr(codeLineOffset, code.size() - (codeLineOffset));
-        Expression::trimWhitespace(codeText);
-        std::string codeExpr = Expression::collapseWhitespace(codeText);
-        std::vector<std::string> tokens = Expression::tokenise(codeExpr, ' ', true);
-        codeLine = {codeText, codeExpr, tokens, vasm, expression, 0, labelIndex, varIndex, varType, assign, vars, ownsLabel};
+        std::string text = code.substr(codeLineOffset, code.size() - (codeLineOffset));
+        Expression::trimWhitespace(text);
+        std::string codeText = Expression::collapseWhitespaceNotStrings(text);
+        std::vector<std::string> tokens = Expression::tokenise(codeText, ' ', false);
+        codeLine = {text, codeText, tokens, vasm, expression, 0, labelIndex, varIndex, varType, assign, vars, ownsLabel};
         Expression::operatorReduction(codeLine._expression);
 
         if(codeLine._code.size() < 3) return false; // anything too small is ignored
@@ -786,6 +790,29 @@ namespace Compiler
     }
 
     // Generic expression parser
+    enum OperandType {OperandVar, OperandTemp, OperandConst};
+    OperandType parseExpression(CodeLine& codeLine, int codeLineIndex, const std::string& expression, std::string& operand)
+    {
+        int16_t value;
+        int varIndex, params;
+        Expression::parse(expression, codeLineIndex, value);
+        uint32_t expressionType = isExpression(expression, varIndex, params);
+        if((expressionType & Expression::HasVars)  &&  (expressionType & Expression::HasOperators))
+        {
+            operand = Expression::byteToHexString(uint8_t(_tempVarStart));
+            return OperandVar;
+        }
+        else if(expressionType & Expression::HasVars)
+        {
+            operand = _integerVars[varIndex]._name;
+            return OperandTemp;
+        }
+
+        operand = std::to_string(value);
+        return OperandConst;
+    }
+
+    // Generic LDW expression parser
     uint32_t parseExpression(CodeLine& codeLine, int codeLineIndex, const std::string& expression, int16_t& value)
     {
         int varIndex, params;
@@ -861,7 +888,7 @@ namespace Compiler
         return true;
     }
 
-    LabelResult checkForLabel(const std::string& code, int lineNumber)
+    LabelResult checkForLabel(std::string& code, int lineNumber)
     {
         Label label;
         CodeLine codeLine;
@@ -876,12 +903,15 @@ namespace Compiler
                 fprintf(stderr, "Compiler::checkForLabel() : white space expected after line mumber in : '%s' : on line %d\n", code.c_str(), lineNumber + 1);
                 return LabelError;
             }
+
+            // Force space between line numbers and line
             for(int i=1; i<space; i++)
             {
                 if(!isdigit(code[i]))
                 {
-                    fprintf(stderr, "Compiler::checkForLabel() : non digits found in line number in : '%s' : on line %d\n", code.c_str(), lineNumber + 1);
-                    return LabelError;
+                    space = i;
+                    code.insert(1, " ");
+                    break;
                 }
             }
 
@@ -1174,6 +1204,20 @@ namespace Compiler
         getNextTempVar();
         handleSingleOp("LDW", numeric);
         emitVcpuAsm("PEEK", "", false);
+        emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(_tempVarStart)), false);
+
+        return numeric;
+    }
+
+    Expression::Numeric functionRND(Expression::Numeric& numeric)
+    {
+        getNextTempVar();
+
+        numeric._value = uint8_t(_tempVarStart);
+        numeric._isAddress = true;
+        numeric._varName = _tempVarStartStr;
+
+        emitVcpuAsm("%Random", "", false);
         emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(_tempVarStart)), false);
 
         return numeric;
@@ -1760,6 +1804,10 @@ namespace Compiler
         {
             numeric = factor(0); numeric = functionPEEK(numeric);
         }
+        else if(Expression::find("RND"))
+        {
+            numeric = factor(0); numeric = functionRND(numeric);
+        }
         // Unary operators
         else if(Expression::find("NOT"))
         {
@@ -1944,15 +1992,103 @@ namespace Compiler
         return true;
     }
 
+    bool keywordPOKE(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        std::vector<size_t> offsets;
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', offsets, false);
+        if(tokens.size() != 2)
+        {
+            fprintf(stderr, "Compiler::keywordPOKE() : syntax error, 'POKE A,X', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        std::vector<std::string> operands = {"", ""};
+        std::vector<OperandType> operandTypes {OperandConst, OperandConst};
+
+        for(int i=0; i<tokens.size(); i++)
+        {
+            operandTypes[i] = parseExpression(codeLine, codeLineIndex, tokens[i], operands[i]);
+        }
+
+        if((operandTypes[0] == OperandVar  ||  operandTypes[0] == OperandTemp)  &&  (operandTypes[1] == OperandVar  ||  operandTypes[1] == OperandTemp))
+        {
+            emitVcpuAsm("LD", "_" + operands[1], false, codeLineIndex);
+            emitVcpuAsm("POKE", "_" + operands[0], false, codeLineIndex);
+        }
+        else if((operandTypes[0] == OperandVar  ||  operandTypes[0] == OperandTemp)  &&  operandTypes[1] == OperandConst)
+        {
+            emitVcpuAsm("LDI", operands[1], false, codeLineIndex);
+            emitVcpuAsm("POKE", "_" + operands[0], false, codeLineIndex);
+        }
+        else if(operandTypes[0] == OperandConst  &&  (operandTypes[1] == OperandVar  ||  operandTypes[1] == OperandTemp))
+        {
+            emitVcpuAsm("LDWI", operands[0], false, codeLineIndex);
+            emitVcpuAsm("STW", "register0", false, codeLineIndex);
+            emitVcpuAsm("LD", "_" + operands[1], false, codeLineIndex);
+            emitVcpuAsm("POKE", "register0", false, codeLineIndex);
+        }
+        else
+        {
+            emitVcpuAsm("LDWI", operands[0], false, codeLineIndex);
+            emitVcpuAsm("STW",  "register0", false, codeLineIndex);
+            emitVcpuAsm("LDI",  operands[1], false, codeLineIndex);
+            emitVcpuAsm("POKE", "register0", false, codeLineIndex);
+        }
+
+        return true;
+    }
+
+    bool keywordAT(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        std::vector<size_t> offsets;
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', offsets, false);
+        if(tokens.size() < 1  &&  tokens.size() > 2)
+        {
+            fprintf(stderr, "Compiler::keywordAT() : syntax error, 'AT X' or 'AT X,Y', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        std::vector<int16_t> params = {0, 0};
+        for(int i=0; i<tokens.size(); i++)
+        {
+            uint32_t expressionType = parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
+            switch(i)
+            {
+                case 0: emitVcpuAsm("ST", "cursorXY",     false, codeLineIndex); break;
+                case 1: emitVcpuAsm("ST", "cursorXY + 1", false, codeLineIndex); break;
+            }
+        }
+
+        return true;
+    }
+
+    bool keywordPUT(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        std::vector<size_t> offsets;
+        std::string expression = codeLine._code.substr(foundPos);
+        if(expression.size() == 0)
+        {
+            fprintf(stderr, "Compiler::keywordPUT() : syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        int16_t param;
+        uint32_t expressionType = parseExpression(codeLine, codeLineIndex, expression, param);
+        emitVcpuAsm("%PrintAcChar", "", false, codeLineIndex);
+
+        return true;
+    }
+
     bool keywordPRINT(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
         // Parse print tokens
-        std::vector<size_t> offsets;
-        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ';', offsets, false);
+        std::vector<std::string> tokens = Expression::tokeniseLine(codeLine._code.substr(foundPos), ";");
+        //std::vector<size_t> offsets;
+        //std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ';', offsets, false);
 
         // First offset is always missing and last one is always incorrect
-        offsets.insert(offsets.begin(), 0);
-        offsets.pop_back();
+        //offsets.insert(offsets.begin(), 0);
+        //offsets.pop_back();
 
         int16_t value;
         int varIndex, params;
@@ -2110,7 +2246,7 @@ namespace Compiler
             }
         }
 
-        // General purpose supports 16bit, expresssions and variables
+        // General purpose supports 16bit, expressions and variables
         if(!optimise)
         {
             // Parse start field
@@ -2122,7 +2258,7 @@ namespace Compiler
             emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(varEnd)), false, codeLineIndex);
 
             // Parse step field
-            int16_t replace = (loopStart < loopEnd) ? 1 : -1; // auto step based on start and end
+            int16_t replace = (loopStart <= loopEnd) ? 1 : -1; // auto step based on start and end
             expressionType = parseExpression(codeLine, codeLineIndex, stepToken, loopStep, replace);
             emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(varStep)), false, codeLineIndex);
         }
@@ -2189,29 +2325,22 @@ namespace Compiler
             return false;
         }
 
-        // Positive step
-        if(forNextData._loopStep > 0)
+        if(forNextData._optimise)
         {
-            if(forNextData._optimise)
+            // Positive step
+            if(forNextData._loopStep > 0)
             {
                 emitVcpuAsm("%ForNextLoopUp", "_" + _integerVars[varIndex]._name + " " + _labels[forNextData._labelIndex]._name + " " + std::to_string(forNextData._loopEnd), false, codeLineIndex, "", forNextData._labelIndex);
             }
+            // Negative step
             else
-            {
-                emitVcpuAsm("%ForNextLoopStepUp", "_" + _integerVars[varIndex]._name + " " + _labels[forNextData._labelIndex]._name + " " + Expression::byteToHexString(uint8_t(forNextData._varEnd)) + " " + Expression::byteToHexString(uint8_t(forNextData._varStep)), false, codeLineIndex, "", forNextData._labelIndex);
-            }
-        }
-        // Negative step
-        else
-        {
-            if(forNextData._optimise)
             {
                 emitVcpuAsm("%ForNextLoopDown", "_" + _integerVars[varIndex]._name + " " + _labels[forNextData._labelIndex]._name + " " + std::to_string(forNextData._loopEnd), false, codeLineIndex, "", forNextData._labelIndex);
             }
-            else
-            {
-                emitVcpuAsm("%ForNextLoopStepDown", "_" + _integerVars[varIndex]._name + " " + _labels[forNextData._labelIndex]._name + " " + Expression::byteToHexString(uint8_t(forNextData._varEnd)) + " " + Expression::byteToHexString(uint8_t(forNextData._varStep)), false, codeLineIndex, "", forNextData._labelIndex);
-            }
+        }
+        else
+        {
+            emitVcpuAsm("%ForNextLoopStep", "_" + _integerVars[varIndex]._name + " " + _labels[forNextData._labelIndex]._name + " " + Expression::byteToHexString(uint8_t(forNextData._varEnd)) + " " + Expression::byteToHexString(uint8_t(forNextData._varStep)), false, codeLineIndex, "", forNextData._labelIndex);
         }
 
         return true;
@@ -2454,12 +2583,11 @@ namespace Compiler
 
     bool parseCode(void)
     {
-        std::string line;
+        size_t foundPos;
 
         // REM and LET modify code
         for(int i=0; i<_codeLines.size(); i++)
         {
-            size_t foundPos;
             KeywordFuncResult result;
 
             // ' is a shortcut for REM
@@ -2472,6 +2600,12 @@ namespace Compiler
                 keywordLET(_codeLines[i], 0, foundPos - 3, result);
             }
         }
+
+        // TODO: this can result in two END statements, fix it
+        // Add END to code
+        int varIndex;
+        CodeLine codeLine;
+        if(createCodeLine("END", 0, 0, -1, VarInt16, false, false, false, codeLine)) _codeLines.push_back(codeLine);
 
         // Parse code creating vars and vasm code, (BASIC code lines were created in ParseLabels())
         for(int i=0; i<_codeLines.size(); i++)
@@ -2491,8 +2625,6 @@ namespace Compiler
                 std::vector<std::string> tokens = Expression::tokenise(_codeLines[i]._code, ':', false);
                 for(int j=0; j<tokens.size(); j++)
                 {
-                    int varIndex;
-                    CodeLine codeLine;
                     std::replace(tokens[j].begin(), tokens[j].end(), ':', ' ');
                     createCodeLine(tokens[j], 0, _codeLines[i]._labelIndex, -1, VarInt16, false, false, _codeLines[i]._ownsLabel, codeLine);
                     createCodeVar(codeLine, i, varIndex);
@@ -2974,6 +3106,7 @@ namespace Compiler
         {0x0000, 0x0000, "convertGtOp"    },
         {0x0000, 0x0000, "multiply16bit"  }, 
         {0x0000, 0x0000, "divide16bit"    },
+        {0x0000, 0x0000, "random8bit"     },
         {0x0000, 0x0000, "clearCursorRow" },
         {0x0000, 0x0000, "printText"      },
         {0x0000, 0x0000, "printDigit"     },

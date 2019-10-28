@@ -63,6 +63,7 @@ _next5              EQU                     0x0258
 _next6              EQU                     0x025c
 _next10             EQU                     0x0292
 _next18             EQU                     0x08c3
+_end_21             EQU                     0x09d5
 0x08a0              EQU                     0x08a0
 0x09a0              EQU                     0x09a0
 
@@ -169,5 +170,7 @@ _next18             PrintString             usrStr_0x7ff8
 
 _20                 LDWI                    _10
                     CALL                    giga_vAC                        ; goto 10
+
+_end_21             BRA                     _end_21                         ; END
 
 

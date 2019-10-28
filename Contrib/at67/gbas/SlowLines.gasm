@@ -1,0 +1,113 @@
+_startAddress_      EQU                     0x0200
+resetVideoTable     EQU                     0x7fa0
+clearRegion         EQU                     0x7ea0
+convertEqOp         EQU                     0x7fbc
+convertNeOp         EQU                     0x7fc5
+convertLeOp         EQU                     0x7fce
+convertGeOp         EQU                     0x7fd7
+convertLtOp         EQU                     0x7fe0
+convertGtOp         EQU                     0x7fe9
+multiply16bit       EQU                     0x7da0
+divide16bit         EQU                     0x7ca0
+random8bit          EQU                     0x7ff2
+clearCursorRow      EQU                     0x7ba0
+printText           EQU                     0x7dc3
+printDigit          EQU                     0x7aa0
+printInt16          EQU                     0x79a0
+printChar           EQU                     0x78a0
+printHexByte        EQU                     0x7ac2
+printHexWord        EQU                     0x7de0
+newLineScroll       EQU                     0x77a0
+resetAudio          EQU                     0x76a0
+playMidi            EQU                     0x75a0
+playMidiAsync       EQU                     0x7eeb
+midiStartNote       EQU                     0x74a0
+convertEqOpAddr     EQU                     0x00E2
+convertNeOpAddr     EQU                     0x00E4
+convertLeOpAddr     EQU                     0x00E6
+convertGeOpAddr     EQU                     0x00E8
+convertLtOpAddr     EQU                     0x00EA
+convertGtOpAddr     EQU                     0x00EC
+
+; Internal variables
+register0           EQU                     0x00a0
+register1           EQU                     register0 + 0x02
+register2           EQU                     register0 + 0x04
+register3           EQU                     register0 + 0x06
+register4           EQU                     register0 + 0x08
+register5           EQU                     register0 + 0x0A
+register6           EQU                     register0 + 0x0C
+register7           EQU                     register0 + 0x0E
+register8           EQU                     register0 + 0x10
+register9           EQU                     register0 + 0x12
+textColour          EQU                     register0 + 0x14
+cursorXY            EQU                     register0 + 0x16
+midiStreamPtr       EQU                     register0 + 0x18
+midiDelay           EQU                     register0 + 0x1A
+frameCountPrev      EQU                     register0 + 0x1C
+
+; Includes
+%include            include/gigatron.i
+%include            include/math.i
+%include            include/conv_conds.i
+%include            include/audio.i
+%include            include/clear_screen.i
+%include            include/print_text.i
+%include            include/macros.i
+
+; Labels
+_entryPoint_        EQU                     0x0200
+_1                  EQU                     0x024c
+_next18             EQU                     0x0297
+_end_19             EQU                     0x02a9
+
+; Variables
+_a                  EQU                     0x0030
+_i                  EQU                     0x0032
+_b                  EQU                     0x0034
+
+; Strings
+usrStr_0x7ffa       EQU                     0x7ffa
+usrStr_0x7ffa       DB                      2 '0x'
+
+; Code
+_entryPoint_        Initialise              
+                    InitialiseCcOps                                         ; INIT
+
+_1                  Random                  
+                    STW                     mathX
+                    LDI                     16
+                    STW                     mathY
+                    LDWI                    divide16bit
+                    CALL                    giga_vAC
+                    LDW                     mathRem
+                    STW                     _a                              ; a = RND MOD 16
+
+                    LDWI                    70
+                    ST                      cursorXY
+                    LDWI                    56
+                    ST                      cursorXY + 1                    ; AT 70, 56
+
+                    PrintString             usrStr_0x7ffa
+                    LDW                     _a
+                    ANDI                    255
+                    PrintAcHexByte          
+                    LDWI                    newLineScroll
+                    CALL                    giga_vAC                        ; print "0x";hex$(a AND &hFF)
+
+                    LDWI                    0
+                    STW                     _i
+                    LDWI                    500
+                    STW                     0xc0
+                    LDWI                    1
+                    STW                     0xc2
+                    LDI                     1
+                    STW                     _b                              ; for i=0 to 500:b=1
+
+_next18             ForNextLoopStep         _i _next18 0xc0 0xc2            ; next i
+
+                    BRA                     _1                              ; goto 1
+
+_end_19             BRA                     _end_19                         ; END
+
+

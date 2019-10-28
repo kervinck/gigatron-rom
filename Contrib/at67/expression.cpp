@@ -195,6 +195,37 @@ namespace Expression
         return output;
     }
 
+    std::string collapseWhitespaceNotStrings(std::string& input)
+    {
+        std::string output;
+        int spaceCount = 0;        
+        bool inString = false;
+
+        for(int i=0; i<input.size(); i++)
+        {
+            if(input[i] == '\"') inString = !inString;
+
+            if(isspace(input[i]))
+            {
+                if(!inString)
+                {
+                    if(spaceCount++ == 0) output.push_back(input[i]);
+                }
+                else
+                {
+                    output.push_back(input[i]);
+                }
+            }
+            else
+            {
+                spaceCount = 0;
+                output.push_back(input[i]);
+            }
+        }
+
+        return output;
+    }
+
     void padString(std::string &input, int num, char pad)
     {
         if(num > input.size()) input.insert(0, num - input.size(), pad);
@@ -526,7 +557,7 @@ namespace Expression
             while(*str  &&  *str != c) str++;
 
             std::string s = std::string(begin, str);
-            if(str > begin  &&  (!skipSpaces  ||  !std::all_of(s.begin(), s.end(), isspace)))
+            if(str > begin  &&  !(skipSpaces  &&  std::all_of(s.begin(), s.end(), isspace)))
             {
                 if(toUpper) strToUpper(s);
                 offsets.push_back(size_t(str - text.c_str()) + 1);
@@ -539,7 +570,7 @@ namespace Expression
     }
 
     // Tokenise using whitespace and quotes, preserves strings
-    std::vector<std::string> tokeniseLine(std::string& line)
+    std::vector<std::string> tokeniseLine(std::string& line, const std::string& delimiters)
     {
         std::string token = "";
         bool delimiterStart = true;
@@ -566,7 +597,7 @@ namespace Expression
             else
             {
                 // White space delimiters
-                if(strchr(" \n\r\f\t\v", line[i]))
+                if(strchr(delimiters.c_str(), line[i]))
                 {
                     if(delimiterState != Quotes)
                     {
@@ -590,7 +621,7 @@ namespace Expression
                     // Don't save delimiters
                     if(delimiterStart)
                     {
-                        if(!strchr(" \n\r\f\t\v", line[i])) token += line[i];
+                        if(!strchr(delimiters.c_str(), line[i])) token += line[i];
                     }
                     else
                     {

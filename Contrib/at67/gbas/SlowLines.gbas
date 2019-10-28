@@ -1,0 +1,19 @@
+rem 1 cls:rem Lines demo
+rem 2 a=rnd(160):b=8+rnd(120)
+rem 3 c=rnd(160):d=8+rnd(120)
+rem 4 x=c-a:y=d-b:q=rnd(64)
+rem 5 u=1  :ifx<0x=-x:u=-u
+rem 6 v=256:ify<0y=-y:v=-v
+rem 7 p=a+256*b:ify<xgoto9
+rem 8 t=x:x=y:y=t:t=u:u=v:v=t
+rem 9 d=-x:x=x+x:y=y+y
+rem 10 fort=dto0:pokep,q
+rem 11 d=d+y:ifd>0d=d-x:p=p+v
+rem 12 p=p+u:nextt:goto2
+
+1 a = RND MOD 16
+AT 70, 56
+print "0x";hex$(a AND &hFF)
+for i=0 to 500:b=1
+next i
+goto 1

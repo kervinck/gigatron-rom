@@ -1,0 +1,135 @@
+_startAddress_      EQU                     0x0200
+resetVideoTable     EQU                     0x7fa0
+clearRegion         EQU                     0x7ea0
+convertEqOp         EQU                     0x7fbc
+convertNeOp         EQU                     0x7fc5
+convertLeOp         EQU                     0x7fce
+convertGeOp         EQU                     0x7fd7
+convertLtOp         EQU                     0x7fe0
+convertGtOp         EQU                     0x7fe9
+multiply16bit       EQU                     0x7da0
+divide16bit         EQU                     0x7ca0
+random8bit          EQU                     0x7ff2
+clearCursorRow      EQU                     0x7ba0
+printText           EQU                     0x7dc3
+printDigit          EQU                     0x7aa0
+printInt16          EQU                     0x79a0
+printChar           EQU                     0x78a0
+printHexByte        EQU                     0x7ac2
+printHexWord        EQU                     0x7de0
+newLineScroll       EQU                     0x77a0
+resetAudio          EQU                     0x76a0
+playMidi            EQU                     0x75a0
+playMidiAsync       EQU                     0x7eeb
+midiStartNote       EQU                     0x74a0
+convertEqOpAddr     EQU                     0x00E2
+convertNeOpAddr     EQU                     0x00E4
+convertLeOpAddr     EQU                     0x00E6
+convertGeOpAddr     EQU                     0x00E8
+convertLtOpAddr     EQU                     0x00EA
+convertGtOpAddr     EQU                     0x00EC
+
+; Internal variables
+register0           EQU                     0x00a0
+register1           EQU                     register0 + 0x02
+register2           EQU                     register0 + 0x04
+register3           EQU                     register0 + 0x06
+register4           EQU                     register0 + 0x08
+register5           EQU                     register0 + 0x0A
+register6           EQU                     register0 + 0x0C
+register7           EQU                     register0 + 0x0E
+register8           EQU                     register0 + 0x10
+register9           EQU                     register0 + 0x12
+textColour          EQU                     register0 + 0x14
+cursorXY            EQU                     register0 + 0x16
+midiStreamPtr       EQU                     register0 + 0x18
+midiDelay           EQU                     register0 + 0x1A
+frameCountPrev      EQU                     register0 + 0x1C
+
+; Includes
+%include            include/gigatron.i
+%include            include/math.i
+%include            include/conv_conds.i
+%include            include/audio.i
+%include            include/clear_screen.i
+%include            include/print_text.i
+%include            include/macros.i
+
+; Labels
+_entryPoint_        EQU                     0x0200
+_1                  EQU                     0x024c
+_20                 EQU                     0x026b
+_3                  EQU                     0x024c
+_40                 EQU                     0x0277
+_5                  EQU                     0x024c
+_60                 EQU                     0x029c
+_end_12             EQU                     0x02a8
+
+; Variables
+_x                  EQU                     0x0030
+_c                  EQU                     0x0032
+_X                  EQU                     0x0034
+_Y                  EQU                     0x0036
+_I                  EQU                     0x0038
+_P                  EQU                     0x003a
+
+; Strings
+
+; Code
+_entryPoint_        Initialise              
+                    InitialiseCcOps                                         ; INIT
+
+                    LDWI                    2048
+                    STW                     register0
+                    LDI                     255
+                    POKE                    register0                       ; POKE &h0800,&hFF
+
+                    LDWI                    2049
+                    STW                     _x                              ; x = &h0801
+
+                    LDI                     3
+                    POKE                    _x                              ; POKE x,&b00000011
+
+                    LDI                     12
+                    STW                     _c                              ; c = &b00001100
+
+                    LDWI                    2050
+                    STW                     register0
+                    LD                      _c
+                    POKE                    register0                       ; POKE &h0802,c
+
+_20                 LDI                     80
+                    STW                     _X
+                    LDI                     60
+                    STW                     _Y
+                    LDI                     0
+                    STW                     _I                              ; X=160/2:Y=120/2:I=0
+
+_40                 LDI                     2
+                    STW                     mathX
+                    LDW                     _Y
+                    STW                     mathY
+                    LDWI                    multiply16bit
+                    CALL                    giga_vAC
+                    STW                     0xd0
+                    LDWI                    256
+                    ADDW                    0xd0
+                    PEEK                    
+                    STW                     mathX
+                    LDWI                    256
+                    STW                     mathY
+                    LDWI                    multiply16bit
+                    CALL                    giga_vAC
+                    ADDW                    _X
+                    STW                     _P                              ; P=PEEK(256+2*Y)*256+X
+
+_60                 LD                      _I
+                    POKE                    _P
+                    LDW                     _I
+                    ADDI                    1
+                    STW                     _I
+                    BRA                     _60                             ; POKE P,I:I=I+1:GOTO 60
+
+_end_12             BRA                     _end_12                         ; END
+
+
