@@ -228,14 +228,6 @@ namespace Expression
         rbra = input.find_first_of(")", lbra + 1);
         if(lbra == std::string::npos  ||  rbra == std::string::npos) return false;
         return true;
-
-        //size_t left = lbra;
-        //while((left = input.find_first_of("(", left + 1)) != std::string::npos)
-        //{
-        //    rbra = input.find_first_of(")", rbra + 1);
-        //}
-        //if(lbra != std::string::npos  &&  rbra != std::string::npos) return true;
-        //return false;
     }
 
     void operatorReduction(std::string& input)
@@ -510,7 +502,7 @@ namespace Expression
             while(*str  &&  *str != c) str++;
 
             std::string s = std::string(begin, str);
-            if(str > begin  &&  (!skipSpaces  ||  !std::all_of(s.begin(), s.end(), isspace)))
+            if(str > begin  &&  !(skipSpaces  &&  std::all_of(s.begin(), s.end(), isspace)))
             {
                 if(toUpper) strToUpper(s);
                 result.push_back(s);

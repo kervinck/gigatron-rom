@@ -423,6 +423,12 @@ namespace Graphics
         // Help screen
         _helpSurface = createSurface(SCREEN_WIDTH, SCREEN_HEIGHT);
         createHelpTexture();
+
+#ifdef _WIN32
+        Cpu::restoreWin32Console();
+#endif
+
+        SDL_RaiseWindow(_window);
     }
 
     uint32_t savedPixels[6*5];

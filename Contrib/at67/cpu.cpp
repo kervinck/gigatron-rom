@@ -457,8 +457,48 @@ namespace Cpu
     }
 
 
+#ifdef _WIN32
+    HWND _consoleWindowHWND;
+    void restoreWin32Console(void)
+    {
+        std::string line;
+        std::ifstream infile("console.txt");
+        if(infile.is_open())
+        {
+            getline(infile, line);
+
+            int xpos, ypos, width, height;
+            sscanf_s(line.c_str(), "%d %d %d %d", &xpos, &ypos, &width, &height);
+
+            MoveWindow(_consoleWindowHWND, xpos, ypos, width, height, true);
+            BringWindowToTop(_consoleWindowHWND);
+        }
+    }
+
+    void saveWin32Console(void)
+    {
+        RECT rect;
+        if(GetWindowRect(_consoleWindowHWND, &rect))
+        {
+            std::ofstream outfile("console.txt");
+            if(outfile.is_open())
+            {
+                int xpos = rect.left;
+                int ypos = rect.top;
+                int width = rect.right - rect.left;
+                int height = rect.bottom - rect.top;
+                outfile << xpos << " " << ypos << " " << width << " " << height << std::endl;
+            }
+        }
+    }
+#endif
+
     void shutdown(void)
     {
+#ifdef _WIN32
+        saveWin32Console();
+#endif
+
         for(int i=NUM_INT_ROMS; i<_romFiles.size(); i++)
         {
             if(_romFiles[i])
@@ -471,23 +511,43 @@ namespace Cpu
         SDL_Quit();
     }
 
+#ifdef _WIN32
+    BOOL WINAPI consoleCtrlHandler(DWORD fdwCtrlType)
+    {
+        switch(fdwCtrlType)
+        {
+            case CTRL_C_EVENT:        shutdown(); return FALSE;
+            case CTRL_CLOSE_EVENT:    shutdown(); return FALSE;
+            case CTRL_BREAK_EVENT:    shutdown(); return FALSE;
+            case CTRL_LOGOFF_EVENT:   shutdown(); return FALSE;
+            case CTRL_SHUTDOWN_EVENT: shutdown(); return FALSE;
+    
+            default: return FALSE;
+        }
+    }
+#endif
+
     void initialise(void)
     {
 #ifdef _WIN32
-        CONSOLE_SCREEN_BUFFER_INFO csbi;
-
         if(!AllocConsole()) return;
 
-        if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi))
+        // Increase internal buffer
+        CONSOLE_SCREEN_BUFFER_INFO csbi;
+        if(GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi))
         {
-            csbi.dwSize.Y = 1000;
+            csbi.dwSize.Y = 10000;
             SetConsoleScreenBufferSize(GetStdHandle(STD_OUTPUT_HANDLE), csbi.dwSize);
         }
 
         if(!freopen("CONIN$", "w", stdin)) return;
         if(!freopen("CONOUT$", "w", stderr)) return;
-        if (!freopen("CONOUT$", "w", stdout)) return;
+        if(!freopen("CONOUT$", "w", stdout)) return;
         setbuf(stdout, NULL);
+
+        _consoleWindowHWND = GetConsoleWindow();
+
+        SetConsoleCtrlHandler(consoleCtrlHandler, TRUE);
 #endif    
 
         _RAM.resize(Memory::getSizeRAM());
@@ -791,6 +851,7 @@ namespace Cpu
         setRAM(ONE_CONST_ADDRESS, 0x01);
         setClock(CLOCK_RESET);
 
+        Memory::initialise();
         Graphics::resetVTable();
         Editor::setSingleStepAddress(VIDEO_Y_ADDRESS);
     }

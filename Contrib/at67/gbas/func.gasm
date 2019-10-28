@@ -1,217 +1,213 @@
-_startAddress_  EQU			0x0200
-resetVideoTable EQU			0x7fa0
-clearRegion     EQU			0x7ea0
-convertEqOp     EQU			0x7fbc
-convertNeOp     EQU			0x7fc5
-convertLeOp     EQU			0x7fce
-convertGeOp     EQU			0x7fd7
-convertLtOp     EQU			0x7fe0
-convertGtOp     EQU			0x7fe9
-multiply16bit   EQU			0x7da0
-divide16bit     EQU			0x7ca0
-clearCursorRow  EQU			0x7ba0
-printText       EQU			0x7dc3
-printDigit      EQU			0x7ddc
-printInt16      EQU			0x7aa0
-printChar       EQU			0x79a0
-printHexByte    EQU			0x78a0
-printHexWord    EQU			0x7eeb
-newLineScroll   EQU			0x77a0
-resetAudio      EQU			0x78ca
-playMidi        EQU			0x76a0
-playMidiAsync   EQU			0x7bdf
-midiStartNote   EQU			0x75a0
+_startAddress_      EQU                     0x0200
+resetVideoTable     EQU                     0x7fa0
+clearRegion         EQU                     0x7ea0
+convertEqOp         EQU                     0x7fbc
+convertNeOp         EQU                     0x7fc5
+convertLeOp         EQU                     0x7fce
+convertGeOp         EQU                     0x7fd7
+convertLtOp         EQU                     0x7fe0
+convertGtOp         EQU                     0x7fe9
+multiply16bit       EQU                     0x7da0
+divide16bit         EQU                     0x7ca0
+clearCursorRow      EQU                     0x7ba0
+printText           EQU                     0x7dc3
+printDigit          EQU                     0x7ddc
+printInt16          EQU                     0x7aa0
+printChar           EQU                     0x79a0
+printHexByte        EQU                     0x78a0
+printHexWord        EQU                     0x7eeb
+newLineScroll       EQU                     0x77a0
+resetAudio          EQU                     0x78ca
+playMidi            EQU                     0x76a0
+playMidiAsync       EQU                     0x7bdf
+midiStartNote       EQU                     0x75a0
 
 ; Internal variables
-register0       EQU			0x00a0
-register1       EQU			register0 + 0x02
-register2       EQU			register0 + 0x04
-register3       EQU			register0 + 0x06
-register4       EQU			register0 + 0x08
-register5       EQU			register0 + 0x0A
-register6       EQU			register0 + 0x0C
-register7       EQU			register0 + 0x0E
-register8       EQU			register0 + 0x10
-register9       EQU			register0 + 0x12
-textColour      EQU			register0 + 0x14
-cursorXY        EQU			register0 + 0x16
-midiStreamPtr   EQU			register0 + 0x18
-midiDelay       EQU			register0 + 0x1A
-frameCountPrev  EQU			register0 + 0x1C
+register0           EQU                     0x00a0
+register1           EQU                     register0 + 0x02
+register2           EQU                     register0 + 0x04
+register3           EQU                     register0 + 0x06
+register4           EQU                     register0 + 0x08
+register5           EQU                     register0 + 0x0A
+register6           EQU                     register0 + 0x0C
+register7           EQU                     register0 + 0x0E
+register8           EQU                     register0 + 0x10
+register9           EQU                     register0 + 0x12
+textColour          EQU                     register0 + 0x14
+cursorXY            EQU                     register0 + 0x16
+midiStreamPtr       EQU                     register0 + 0x18
+midiDelay           EQU                     register0 + 0x1A
+frameCountPrev      EQU                     register0 + 0x1C
 
 ; Includes
-%include        include/gigatron.i
-%include        include/math.i
-%include        include/conv_conds.i
-%include        include/audio.i
-%include        include/clear_screen.i
-%include        include/print_text_CALLI.i
-%include        include/macros_CALLI.i
+%include            include/gigatron.i
+%include            include/math.i
+%include            include/conv_conds.i
+%include            include/audio.i
+%include            include/clear_screen.i
+%include            include/print_text_CALLI.i
+%include            include/macros_CALLI.i
 
 ; Labels
-_entryPoint_    EQU			0x0200
-_10             EQU			0x022c
-_blamo          EQU			0x02e2
-_end_10         EQU			0x02e0
-_next15         EQU			0x08a0
-0x09a0          EQU			0x09a0
+_entryPoint_        EQU                     0x0200
+_10                 EQU                     0x022c
+_blamo              EQU                     0x02e2
+_end_11             EQU                     0x02e0
+_next16             EQU                     0x08a0
 
 ; Variables
-_addr           EQU			0x0030
-_a              EQU			0x0032
-_b              EQU			0x0034
-_c              EQU			0x0036
-_f              EQU			0x0038
-_d              EQU			0x003a
-_z              EQU			0x003c
-_g              EQU			0x003e
-_h              EQU			0x0040
-_i              EQU			0x0042
+_addr               EQU                     0x0030
+_a                  EQU                     0x0032
+_b                  EQU                     0x0034
+_i                  EQU                     0x0036
+_c                  EQU                     0x0038
+_f                  EQU                     0x003a
+_d                  EQU                     0x003c
+_z                  EQU                     0x003e
+_g                  EQU                     0x0040
+_h                  EQU                     0x0042
 
 ; Strings
-usrStr_0x7ff2	EQU			0x7ff2
-usrStr_0x7ff2	DB			4 'test'
-usrStr_0x7ff7	EQU			0x7ff7
-usrStr_0x7ff7	DB			1 ' '
-usrStr_0x7ff9	EQU			0x7ff9
-usrStr_0x7ff9	DB			3 'dog'
+usrStr_0x7ff2       EQU                     0x7ff2
+usrStr_0x7ff2       DB                      1 ' '
+usrStr_0x7ff4       EQU                     0x7ff4
+usrStr_0x7ff4       DB                      4 'test'
+usrStr_0x7ff9       EQU                     0x7ff9
+usrStr_0x7ff9       DB                      3 'dog'
 
 ; Code
-_entryPoint_    Initialise	                                    		; INIT
+_entryPoint_        Initialise                                              ; INIT
 
-_10             LDI			33
-                STW			_addr                                		; addr = &h21
+_10                 LDI                     33
+                    STW                     _addr                           ; addr = &h21
 
-                LDWI		0xffff
-                ANDW		_addr
-                STW			_addr                                		; addr = addr AND &hFFFF
+                    LDWI                    0xffff
+                    ANDW                    _addr
+                    STW                     _addr                           ; addr = addr AND &hFFFF
 
-                LDWI		-1
-                SUBW		_addr
-                STW			0xd0
-                LDWI		0xf000
-                PEEK		
-                STW			0xd2
-                LDWI		0x0fff
-                ORW			0xd2
-                PEEK		
-                STW			0xd4
-                LDW			_addr
-                ANDW		0xd4
-                PEEK		
-                STW			0xd8
-                LDW			0xd0
-                SUBW		0xd8
-                ANDI		252
-                STW			0xd8
-                LDW			_addr
-                ADDI		1
-                PEEK		
-                STW			0xdc
-                LDW			0xd8
-                ORW			0xdc
-                ADDI		23
-                XORI		15
-                STW			0xdc
-                LDWI		-57
-                ADDW		0xdc
-                STW			0xdc
-                LDWI		-1
-                SUBW		_addr
-                STW			0xde
-                LDW			0xdc
-                ADDW		0xde
-                STW			_a                                   		; a = NOT addr - peek(addr AND pEeK(&h0FFF OR peek(&hF000))) AND &hFC OR peek(addr+1) + 23 XOR &B00001111 - NOT 56 + NOT addr
+                    LDWI                    -1
+                    SUBW                    _addr
+                    STW                     0xd0
+                    LDWI                    0xf000
+                    PEEK                    
+                    STW                     0xd2
+                    LDWI                    0x0fff
+                    ORW                     0xd2
+                    PEEK                    
+                    STW                     0xd4
+                    LDW                     _addr
+                    ANDW                    0xd4
+                    PEEK                    
+                    STW                     0xd8
+                    LDW                     0xd0
+                    SUBW                    0xd8
+                    ANDI                    252
+                    STW                     0xd8
+                    LDW                     _addr
+                    ADDI                    1
+                    PEEK                    
+                    STW                     0xdc
+                    LDW                     0xd8
+                    ORW                     0xdc
+                    ADDI                    23
+                    XORI                    15
+                    STW                     0xdc
+                    LDWI                    -57
+                    ADDW                    0xdc
+                    STW                     0xdc
+                    LDWI                    -1
+                    SUBW                    _addr
+                    ADDW                    0xdc
+                    STW                     _a                              ; a = NOT addr - peek(addr AND pEeK(&h0FFF OR peek(&hF000))) AND &hFC OR peek(addr+1) + 23 XOR &B00001111 - NOT 56 + NOT addr
 
-                CALLI		_blamo                                		; gosub blamo
+                    LDI                     131
+                    STW                     _b                              ; b = 131
 
-                PrintString	usrStr_0x7ff2
-                PrintString	usrStr_0x7ff7
-                PrintString	usrStr_0x7ff9
-                PrintString	usrStr_0x7ff7
-                PrintInt16	0x0064
-                PrintString	usrStr_0x7ff7
-                PrintVarInt16	_a
-                PrintString	usrStr_0x7ff7
-                LDWI		0x0021
-                PEEK		
-                ANDI		252
-                PrintAcHexByte	
-                CALLI		newLineScroll                         		; print "test";" ";"dog";" ";56+44;" ";a;" ";hex$(peek(&h21) AND &hFC)
+                    CALLI                   _blamo                          ; gosub blamo
 
-                LDW			_a
-                PrintAcHexByte	
-                PrintString	usrStr_0x7ff7
-                LDW			_b
-                PrintAcHexWord	
-                PrintString	usrStr_0x7ff7
-                LDWI		13107
-                PrintAcHexWord	
-                CALLI		newLineScroll                         		; print hex$(a);" ";hexw$(b);" ";hexw$(&h1111 OR &h2222)
+                    LDW                     _a
+                    PrintAcHexByte          
+                    PrintString             usrStr_0x7ff2
+                    LDW                     _b
+                    PrintAcHexWord          
+                    PrintString             usrStr_0x7ff2
+                    LDWI                    13107
+                    PrintAcHexWord          
+                    CALLI                   newLineScroll                   ; print hex$(a);" ";hexw$(b);" ";hexw$(&h1111 OR &h2222)
 
-                CALLI		_10                                   		; goto 10
+                    PrintString             usrStr_0x7ff4
+                    PrintString             usrStr_0x7ff2
+                    PrintString             usrStr_0x7ff9
+                    PrintString             usrStr_0x7ff2
+                    PrintInt16              0x0064
+                    PrintString             usrStr_0x7ff2
+                    PrintVarInt16           _a
+                    PrintString             usrStr_0x7ff2
+                    LDWI                    0x0021
+                    PEEK                    
+                    ANDI                    252
+                    PrintAcHexByte          
+                    CALLI                   newLineScroll                   ; print "test";" ";"dog";" ";56+44;" ";a;" ";hex$(peek(&h21) AND &hFC)
 
-_end_10         BRA			_end_10                              		; END
+                    CALLI                   _10                             ; goto 10
 
-_blamo          PUSH		
-                LDWI		23205
-                STW			_b                                   		; b = &haa55 XOR &hF0F0
+_end_11             BRA                     _end_11                         ; END
 
-                LDW			_b
-                XORW		_a
-                STW			_b                                   		; b = b XOR a
+_blamo              PUSH                    
+                    LDWI                    23205
+                    STW                     _b                              ; b = &haa55 XOR &hF0F0
 
-                LDI			0
-                STW			_i                                   		; for i = 0 to 100
+                    LDW                     _b
+                    XORW                    _a
+                    STW                     _b                              ; b = b XOR a
 
-                CALLI		_next15
+                    LDI                     0
+                    STW                     _i                              ; for i = 0 to 100
 
-_next15         LDWI		usrStr_0x7ff7
-                STW			_c                                   		; c = CHR$(32)
+                    CALLI                    _next16
 
-                LDWI		0x0000
-                PEEK		
-                STW			_f                                   		; f = peek(0)
+_next16             LDWI                    usrStr_0x7ff2
+                    STW                     _c                              ; c = CHR$(32)
 
-                LDWI		0xaa55
-                ANDW		_c
-                ANDW		_a
-                STW			0xd0
-                LDW			_c
-                STW			_d                                   		; d = c AND &hAA55 AND a
+                    LDWI                    0x0000
+                    PEEK                    
+                    STW                     _f                              ; f = peek(0)
 
-                LDW			_a
-                ADDI		5
-                ADDW		_b
-                STW			_z                                   		; z = a + 5 + b
+                    LDWI                    0xaa55
+                    ANDW                    _c
+                    ANDW                    _a
+                    STW                     _d                              ; d = c AND &hAA55 AND a
 
-                LDI			0
-                SUBW		_b
-                STW			_b                                   		; b = -b
+                    LDW                     _a
+                    ADDI                    5
+                    ADDW                    _b
+                    STW                     _z                              ; z = a + 5 + b
 
-                PrintVarInt16	_i
-                PrintString	usrStr_0x7ff7
-                LDW			_b
-                PrintAcHexWord	
-                CALLI		newLineScroll                         		; print i; " " ; hexw$(b)
+                    LDI                     0
+                    SUBW                    _b
+                    STW                     _b                              ; b = -b
 
-                ForNextLoopUp	_i _next15 100                  		; next i
+                    PrintVarInt16           _i
+                    PrintString             usrStr_0x7ff2
+                    LDW                     _b
+                    PrintAcHexWord          
+                    CALLI                   newLineScroll                   ; print i; " " ; hexw$(b)
 
-                LDWI		-1
-                SUBW		_g
-                STW			0xd0
-                LDW			_z
-                SUBW		0xd0
-                STW			_g                                   		; g = z - NOT g
+                    ForNextLoopUp           _i _next16 100                  ; next i
 
-                LDWI		-1
-                SUBW		_a
-                SUBW		_d
-                STW			_h                                   		; h = NOT a - d
+                    LDWI                    -1
+                    SUBW                    _g
+                    STW                     0xd0
+                    LDW                     _z
+                    SUBW                    0xd0
+                    STW                     _g                              ; g = z - NOT g
 
-                CALLI		0x09a0
+                    LDWI                    -1
+                    SUBW                    _a
+                    SUBW                    _d
+                    STW                     _h                              ; h = NOT a - d
 
-0x09a0          POP			
-                RET			                                     		; return
+                    POP                     
+                    RET                                                     ; return
 
 

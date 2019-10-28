@@ -93,6 +93,12 @@ namespace Memory
 
     bool takeFreeRAM(uint16_t address, int size)
     {
+        if(address > _sizeRAM - 1)
+        {
+            fprintf(stderr, "Memory::takeFreeRAM() : Memory at 0x%04x does not exist on this %d byte system : your request : 0x%04x %d\n", address, _sizeRAM, address, size);
+            return false;
+        }
+
         for(int i=0; i<_freeRam.size(); i++)
         {
             // RAM chunk becomes smaller
@@ -111,12 +117,11 @@ namespace Memory
             }
         }
 
-        fprintf(stderr, "Memory::takeFreeRAM() : Memory at %04x already in use : your request : %04x %d\n", address, address, size);
-
+        fprintf(stderr, "Memory::takeFreeRAM() : Memory at 0x%04x already in use : your request : 0x%04x %d\n", address, address, size);
         return false;
     }
 
-    bool giveFreeRAM(FitType fitType, int size, uint16_t& address)
+    bool giveFreeRAM(FitType fitType, int size, uint16_t min, uint16_t max, uint16_t& address)
     {
         int index = -1;
         int newSize = 0;
@@ -161,15 +166,33 @@ namespace Memory
 
             case FitAscending:
             {
-                uint16_t ascending = 0x0200;
+                uint16_t ascending = min;
                 for(int i=0; i<_freeRam.size(); i++)
                 {
-                    if(_freeRam[i]._size >= size  &&  _freeRam[i]._address >= ascending)
+                    if(_freeRam[i]._size >= size  &&  _freeRam[i]._address >= ascending  &&  _freeRam[i]._address <= max)
                     {
                         index = i;
                         newSize = _freeRam[i]._size - size;
-                        ascending = _freeRam[i]._address;
                         address =  _freeRam[i]._address;
+                        ascending = _freeRam[i]._address;
+                    }
+                }
+
+                return updateFreeRamList(index, address, size, newSize);
+            }
+            break;
+
+            case FitDescending:
+            {
+                uint16_t descending = max;
+                for(int i=0; i<_freeRam.size(); i++)
+                {
+                    if(_freeRam[i]._size >= size  &&  _freeRam[i]._address <= descending  &&  _freeRam[i]._address >= min)
+                    {
+                        index = i;
+                        newSize = _freeRam[i]._size - size;
+                        address =  _freeRam[i]._address;
+                        descending = _freeRam[i]._address;
                     }
                 }
 
@@ -181,13 +204,64 @@ namespace Memory
         return false;
     }
 
-    void printFreeRamList(void)
+    void printFreeRamList(SortType sortType)
     {
+        switch(sortType)
+        {
+            // Sort entries from lowest address to highest address
+            case AddressAscending:
+            {
+                std::sort(_freeRam.begin(), _freeRam.end(), [](const RamEntry& ramEntryA, const RamEntry& ramEntryB)
+                {
+                    uint16_t addressA = ramEntryA._address;
+                    uint16_t addressB = ramEntryB._address;
+                    return (addressA < addressB);
+                });
+            }
+            break;
+
+            // Sort entries from highest address to lowest address
+            case AddressDescending:
+            {
+                std::sort(_freeRam.begin(), _freeRam.end(), [](const RamEntry& ramEntryA, const RamEntry& ramEntryB)
+                {
+                    uint16_t addressA = ramEntryA._address;
+                    uint16_t addressB = ramEntryB._address;
+                    return (addressA > addressB);
+                });
+            }
+            break;
+
+            // Sort entries from lowest address to highest address
+            case SizeAscending:
+            {
+                std::sort(_freeRam.begin(), _freeRam.end(), [](const RamEntry& ramEntryA, const RamEntry& ramEntryB)
+                {
+                    int sizeA = ramEntryA._size;
+                    int sizeB = ramEntryB._size;
+                    return (sizeA < sizeB);
+                });
+            }
+            break;
+
+            // Sort entries from highest address to lowest address
+            case SizeDescending:
+            {
+                std::sort(_freeRam.begin(), _freeRam.end(), [](const RamEntry& ramEntryA, const RamEntry& ramEntryB)
+                {
+                    int sizeA = ramEntryA._size;
+                    int sizeB = ramEntryB._size;
+                    return (sizeA > sizeB);
+                });
+            }
+            break;
+        }
+
         int totalFree = 0;
         for(int i=0; i<_freeRam.size(); i++)
         {
             totalFree += _freeRam[i]._size;
-            fprintf(stderr, "Memory::printFreeRamList() : %3d : %04x %3d\n", i, _freeRam[i]._address, _freeRam[i]._size);
+            fprintf(stderr, "Memory::printFreeRamList() : %3d : 0x%04x %3d\n", i, _freeRam[i]._address, _freeRam[i]._size);
         }
         fprintf(stderr, "Memory::printFreeRamList() : Expected %5d : Found %5d\n", _sizeFreeRAM, totalFree);
     }

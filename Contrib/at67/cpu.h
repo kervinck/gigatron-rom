@@ -71,6 +71,10 @@ namespace Cpu
 
     uint8_t* getPtrToROM(int& romSize);
     RomType getRomType(void);
+
+#ifdef _WIN32
+    void restoreWin32Console(void);
+#endif
     
     void loadRom(int index);
     void swapRom(void);

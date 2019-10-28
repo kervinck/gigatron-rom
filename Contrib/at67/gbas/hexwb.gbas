@@ -1,0 +1,8 @@
+z = 3
+1 a = &h10
+b = a + 100
+c = NOT a <> b : d = peek(c)
+e = &hAA55 XOR a OR c AND &hFFFF
+z = z + 1
+print a;" ";b;" ";c;" ";hex$(d);" ";hexw$(e);" ";z : goto 1
+END
