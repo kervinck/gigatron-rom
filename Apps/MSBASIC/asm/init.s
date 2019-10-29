@@ -141,20 +141,24 @@ COLD_START:
 ; the number of bytes by adding 3 - this
 ; copies four bytes too many, which is no
 ; problem.
-.ifdef CONFIG_SMALL
-  .ifdef KBD
+.ifndef CONFIG_CHRGET_NOT_IN_ZP
+  .ifdef CONFIG_SMALL
+    .ifdef KBD
         ldx     #GENERIC_CHRGET_END-GENERIC_CHRGET+4
-  .else
+    .else
         ldx     #GENERIC_CHRGET_END-GENERIC_CHRGET
-  .endif
-.else
+    .endif
+  .else
         ldx     #GENERIC_CHRGET_END-GENERIC_CHRGET-1 ; XXX BUG!
-.endif
+  .endif
 L4098:
         lda     GENERIC_CHRGET-1,x
         sta     CHRGET-1,x
         dex
         bne     L4098
+.else
+        ldx     #0
+.endif
 .ifdef CONFIG_2
         lda     #$03
         sta     DSCLEN

@@ -5,8 +5,15 @@ GENERIC_CHRGET:
         bne     GENERIC_CHRGOT
         inc     TXTPTR+1
 GENERIC_CHRGOT:
+.ifndef CONFIG_CHRGET_NOT_IN_ZP
 GENERIC_TXTPTR = GENERIC_CHRGOT + 1
         lda     $EA60
+.else
+        sty     SCRATCH
+        ldy     #0
+        lda     (TXTPTR),y
+        ldy     SCRATCH
+.endif
 .ifdef KBD
         jsr     LF430
 .endif
