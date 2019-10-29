@@ -83,6 +83,16 @@ namespace Expression
         left._value = (right._value == 0) ? 0 : left._value % right._value;
         return left;
     }
+    Numeric lsl(Numeric& left, Numeric& right)
+    {
+        left._value = left._value << right._value;
+        return left;
+    }
+    Numeric lsr(Numeric& left, Numeric& right)
+    {
+        left._value = left._value >> right._value;
+        return left;
+    }
     Numeric lt(Numeric& left, Numeric& right)
     {
         left._value = left._value < right._value;
@@ -797,9 +807,9 @@ namespace Expression
 
         for(;;)
         {
-            if(peek() == '*')      {get(); f = factor(0); result = mul(result, f);                                   }
-            else if(peek() == '/') {get(); f = factor(0); result = (f._value != 0) ? div(result, f) : mul(result, f);}
-            else if(peek() == '%') {get(); f = factor(0); result = (f._value != 0) ? mod(result, f) : mul(result, f);}
+            if(peek() == '*')      {get(); f = factor(0); result = mul(result, f);}
+            else if(peek() == '/') {get(); f = factor(0); result = div(result, f);}
+            else if(peek() == '%') {get(); f = factor(0); result = mod(result, f);}
             else return result;
         }
     }
@@ -815,6 +825,8 @@ namespace Expression
             else if(peek() == '&') {get(); t = term(); result = and(result, t);}
             else if(peek() == '^') {get(); t = term(); result = xor(result, t);}
             else if(peek() == '|') {get(); t = term(); result = or(result, t); }
+            else if(find("<<"))    {       t = term(); result = lsl(result, t);}
+            else if(find(">>"))    {       t = term(); result = lsr(result, t);}
             else if(find("=="))    {       t = term(); result = eq(result, t); }
             else if(find("!="))    {       t = term(); result = ne(result, t); }
             else if(find("<="))    {       t = term(); result = le(result, t); }

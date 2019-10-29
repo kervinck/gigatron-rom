@@ -9,6 +9,7 @@ convertLtOp         EQU                     0x7fe0
 convertGtOp         EQU                     0x7fe9
 multiply16bit       EQU                     0x7da0
 divide16bit         EQU                     0x7ca0
+random16bit         EQU                     0x7ff2
 clearCursorRow      EQU                     0x7ba0
 printText           EQU                     0x7dc3
 printDigit          EQU                     0x7aa0
@@ -56,8 +57,9 @@ frameCountPrev      EQU                     register0 + 0x1C
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_next4              EQU                     0x0254
 _end_9              EQU                     0x08b2
+_end_10             EQU                     0x08b4
+_next_0x0256        EQU                     0x0256
 0x08a0              EQU                     0x08a0
 
 ; Variables
@@ -70,8 +72,8 @@ _d                  EQU                     0x003a
 _e                  EQU                     0x003c
 
 ; Strings
-usrStr_0x7ff2       EQU                     0x7ff2
-usrStr_0x7ff2       DB                      1 ' '
+usrStr_0x7ffa       EQU                     0x7ffa
+usrStr_0x7ffa       DB                      1 ' '
 
 ; Code
 _entryPoint_        Initialise              
@@ -83,7 +85,7 @@ _entryPoint_        Initialise
                     LDI                     0
                     STW                     _i                              ; for i=0 to 5
 
-_next4              LDI                     16
+_next_0x0256        LDI                     16
                     STW                     _a                              ; a = &h10
 
                     LDW                     _a
@@ -111,27 +113,28 @@ _next4              LDI                     16
                     STW                     _z                              ; z = z + 1
 
                     PrintVarInt16           _a
-                    PrintString             usrStr_0x7ff2
+                    PrintString             usrStr_0x7ffa
                     PrintVarInt16           _b
-                    PrintString             usrStr_0x7ff2
+                    PrintString             usrStr_0x7ffa
                     PrintVarInt16           _c
-                    PrintString             usrStr_0x7ff2
+                    PrintString             usrStr_0x7ffa
                     LDW                     _d
                     PrintAcHexByte          
-                    PrintString             usrStr_0x7ff2
+                    PrintString             usrStr_0x7ffa
                     LDW                     _e
                     PrintAcHexWord          
-                    PrintString             usrStr_0x7ff2
+                    PrintString             usrStr_0x7ffa
                     PrintVarInt16           _z
                     LDWI                    newLineScroll
                     STW                     0xe0
                     LDWI                    0x08a0
                     CALL                    giga_vAC
-
 0x08a0              LDW                     0xe0
                     CALL                    giga_vAC
-                    ForNextLoopUp           _i _next4 5                     ; print a;" ";b;" ";c;" ";hex$(d);" ";hexw$(e);" ";z : next i
+                    ForNextLoopUp           _i _next_0x0256 5               ; print a;" ";b;" ";c;" ";hex$(d);" ";hexw$(e);" ";z : next i
 
 _end_9              BRA                     _end_9                          ; END
+
+_end_10             BRA                     _end_10                         ; END
 
 

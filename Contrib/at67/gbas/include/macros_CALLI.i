@@ -60,12 +60,21 @@ _label_ CALLI   _label
 _label_ CALLI   _label
 %ENDM
 
-%MACRO  ForNextLoopStep _var _label _vEnd _vStep
+%MACRO  ForNextLoopStepUp _var _label _vEnd _vStep
         LDW     _var
         ADDW    _vStep
         STW     _var
         SUBW    _vEnd
         BGT     _label_+3
+_label_ CALLI   _label
+%ENDM
+
+%MACRO  ForNextLoopStepDown _var _label _vEnd _vStep
+        LDW     _var
+        ADDW    _vStep
+        STW     _var
+        SUBW    _vEnd
+        BLT     _label_+3
 _label_ CALLI   _label
 %ENDM
 
@@ -130,8 +139,48 @@ _label_ CALLI   _label
 %ENDM
 
 %MACRO  Random
-        CALL    random8bit
+        CALLI   random16bit
 %ENDM        
+
+%MACRO  ShiftLeft4bit
+        CALLI   shiftLeft4bit
+%ENDM        
+
+%MACRO  ShiftLeft8bit
+        CALLI   shiftLeft8bit
+%ENDM        
+
+%MACRO  ShiftRight1bit
+        CALLI   shiftRight1bit
+%ENDM        
+
+%MACRO  ShiftRight2bit
+        CALLI   shiftRight2bit
+%ENDM        
+
+%MACRO  ShiftRight3bit
+        CALLI   shiftRight3bit
+%ENDM        
+
+%MACRO  ShiftRight4bit
+        CALLI   shiftRight4bit
+%ENDM        
+
+%MACRO  ShiftRight5bit
+        CALLI   shiftRight5bit
+%ENDM        
+
+%MACRO  ShiftRight6bit
+        CALLI   shiftRight6bit
+%ENDM        
+
+%MACRO  ShiftRight7bit
+        CALLI   shiftRight7bit
+%ENDM        
+
+%MACRO  ShiftRight8bit
+        CALLI   shiftRight8bit
+%ENDM
 
 %MACRO  Initialise
         ClearRegionInit 0x2020 0 0 giga_xres giga_yres
@@ -139,6 +188,7 @@ _label_ CALLI   _label
 
         LDWI    0x0F20          ; yellow on blue
         STW     textColour
+        STW     giga_sysArg0
         LDWI    0x0802          ; starting cursor position
         STW     cursorXY
 %ENDM

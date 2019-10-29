@@ -1,19 +1,28 @@
-rem 1 cls:rem Lines demo
-rem 2 a=rnd(160):b=8+rnd(120)
-rem 3 c=rnd(160):d=8+rnd(120)
-rem 4 x=c-a:y=d-b:q=rnd(64)
-rem 5 u=1  :ifx<0x=-x:u=-u
-rem 6 v=256:ify<0y=-y:v=-v
-rem 7 p=a+256*b:ify<xgoto9
-rem 8 t=x:x=y:y=t:t=u:u=v:v=t
-rem 9 d=-x:x=x+x:y=y+y
-rem 10 fort=dto0:pokep,q
-rem 11 d=d+y:ifd>0d=d-x:p=p+v
-rem 12 p=p+u:nextt:goto2
 
-1 a = RND MOD 16
-AT 70, 56
-print "0x";hex$(a AND &hFF)
-for i=0 to 500:b=1
-next i
-goto 1
+rem original
+' 1 cls:rem Lines demo
+' 2 a=rnd MOD 160:b=(rnd MOD 120)+8
+' 3 c=rnd MOD 160:d=(rnd MOD 120)+8
+' 4 x=c-a:y=d-b:q=rnd MOD 64
+' 5 u=1  :if x<0 then x=-x:u=-u
+' 6 v=256:if y<0 then y=-y:v=-v
+' 7 p=a+256*b:if y< x then goto9
+' 8 t=x:x=y:y=t:t=u:u=v:v=t
+' 9 d=-x:x=x+x:y=y+y
+' 10 for t=d to 0:poke p,q
+' 11 d=d+y:if d>0 then d=d-x:p=p+v
+' 12 p=p+u:next t:goto 2
+
+rem optimised
+1 cls:rem Lines demo
+2 a=(rnd AND &h7F) + (rnd AND &h1F) : b=rnd AND &h7F OR 8
+3 c=(rnd AND &h7F) + (rnd AND &h1F) : d=rnd AND &h7F OR 8
+4 x=c-a:y=d-b:q=rnd AND &h3F
+5 u=1  :if x<0 then x=-x:u=-u
+6 v=256:if y<0 then y=-y:v=-v
+7 p= a + (b LSL 8):if y< x then goto9
+8 t=x:x=y:y=t:t=u:u=v:v=t
+9 d=-x:x=x+x:y=y+y
+10 for t=d to 0:poke p,q
+11 d=d+y:if d>0 then d=d-x:p=p+v
+12 p=p+u:next t:goto 2

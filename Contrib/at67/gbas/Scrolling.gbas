@@ -1,0 +1,13 @@
+_useOpcodeCALLI_
+
+9 MODE 2:P=257:Q=337:R=417:X=0
+10 POKE P,-X:POKE Q,X
+for i=0 to 50:next i
+20 POKE R,X:X=X-1:GOTO 10
+30 rem
+31 'Simple scrolling demo.
+32 'Timing is critical,
+33 'and BASIC is a bit too
+34 'slow for very complex
+35 'or smooth scrolling.
+36 'It is still possible!

@@ -17,9 +17,8 @@ w = chr$(&h31)
 x = hex$(127)
 y = hexw$(&hb00b)
 
-dog = 31
-cat = -2
-10  for i=z+1 to dog-1 step cat
+dog = 39
+10  for i=z+1 to dog-1 step 2
         for j = 1 to 0
             for jj = 1 to 2 step 1
                 for ss = 1 to 5 step 1
@@ -35,7 +34,7 @@ cat = -2
     print bb;" ";w;" ";hexw$(x);" ";pong$;" ";chr$(bb+60);" ";chr$(&h30);" ";hex$(peek(&h21) AND &hFC);" ";
     print hex$(80);" ";hexw$(&hdead);" ";hexw$(&hbeef);
 
-    'END
+    END
     
     for ii = 0 to 0 step 1
         'cls

@@ -62,12 +62,22 @@ _label_ CALL    giga_vAC
 _label_ CALL    giga_vAC
 %ENDM
 
-%MACRO  ForNextLoopStep _var _label _vEnd _vStep
+%MACRO  ForNextLoopStepUp _var _label _vEnd _vStep
         LDW     _var
         ADDW    _vStep
         STW     _var
         SUBW    _vEnd
         BGT     _label_+2
+        LDWI    _label
+_label_ CALL    giga_vAC
+%ENDM
+
+%MACRO  ForNextLoopStepDown _var _label _vEnd _vStep
+        LDW     _var
+        ADDW    _vStep
+        STW     _var
+        SUBW    _vEnd
+        BLT     _label_+2
         LDWI    _label
 _label_ CALL    giga_vAC
 %ENDM
@@ -159,9 +169,59 @@ _label_ CALL    giga_vAC
 %ENDM
 
 %MACRO  Random
-        LDWI    random8bit
+        LDWI    random16bit
         CALL    giga_vAC
 %ENDM        
+
+%MACRO  ShiftLeft4bit
+        LDWI    shiftLeft4bit
+        CALL    giga_vAC
+%ENDM        
+
+%MACRO  ShiftLeft8bit
+        LDWI    shiftLeft8bit
+        CALL    giga_vAC
+%ENDM        
+
+%MACRO  ShiftRight1bit
+        LDWI    shiftRight1bit
+        CALL    giga_vAC
+%ENDM        
+
+%MACRO  ShiftRight2bit
+        LDWI    shiftRight2bit
+        CALL    giga_vAC
+%ENDM        
+
+%MACRO  ShiftRight3bit
+        LDWI    shiftRight3bit
+        CALL    giga_vAC
+%ENDM        
+
+%MACRO  ShiftRight4bit
+        LDWI    shiftRight4bit
+        CALL    giga_vAC
+%ENDM        
+
+%MACRO  ShiftRight5bit
+        LDWI    shiftRight5bit
+        CALL    giga_vAC
+%ENDM        
+
+%MACRO  ShiftRight6bit
+        LDWI    shiftRight6bit
+        CALL    giga_vAC
+%ENDM        
+
+%MACRO  ShiftRight7bit
+        LDWI    shiftRight7bit
+        CALL    giga_vAC
+%ENDM        
+
+%MACRO  ShiftRight8bit
+        LDWI    shiftRight8bit
+        CALL    giga_vAC
+%ENDM
 
 %MACRO  Initialise
         ClearRegionInit 0x2020 0 0 giga_xres giga_yres
@@ -170,6 +230,7 @@ _label_ CALL    giga_vAC
 
         LDWI    0x0F20          ; yellow on blue
         STW     textColour
+        STW     giga_sysArg0
         LDWI    0x0802          ; starting cursor position
         STW     cursorXY
 %ENDM

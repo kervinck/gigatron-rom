@@ -9,24 +9,19 @@ convertLtOp         EQU                     0x7fe0
 convertGtOp         EQU                     0x7fe9
 multiply16bit       EQU                     0x7da0
 divide16bit         EQU                     0x7ca0
+random16bit         EQU                     0x7ff2
 clearCursorRow      EQU                     0x7ba0
 printText           EQU                     0x7dc3
-printDigit          EQU                     0x7aa0
-printInt16          EQU                     0x79a0
-printChar           EQU                     0x78a0
-printHexByte        EQU                     0x7ac2
-printHexWord        EQU                     0x7de0
+printDigit          EQU                     0x7ddc
+printInt16          EQU                     0x7aa0
+printChar           EQU                     0x79a0
+printHexByte        EQU                     0x78a0
+printHexWord        EQU                     0x7eeb
 newLineScroll       EQU                     0x77a0
-resetAudio          EQU                     0x76a0
-playMidi            EQU                     0x75a0
-playMidiAsync       EQU                     0x7eeb
-midiStartNote       EQU                     0x74a0
-convertEqOpAddr     EQU                     0x00E2
-convertNeOpAddr     EQU                     0x00E4
-convertLeOpAddr     EQU                     0x00E6
-convertGeOpAddr     EQU                     0x00E8
-convertLtOpAddr     EQU                     0x00EA
-convertGtOpAddr     EQU                     0x00EC
+resetAudio          EQU                     0x78ca
+playMidi            EQU                     0x76a0
+playMidiAsync       EQU                     0x7bdf
+midiStartNote       EQU                     0x75a0
 
 ; Internal variables
 register0           EQU                     0x00a0
@@ -51,21 +46,20 @@ frameCountPrev      EQU                     register0 + 0x1C
 %include            include/conv_conds.i
 %include            include/audio.i
 %include            include/clear_screen.i
-%include            include/print_text.i
-%include            include/macros.i
+%include            include/print_text_CALLI.i
+%include            include/macros_CALLI.i
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x024c
-_20                 EQU                     0x09d0
-_next4              EQU                     0x0254
-_next5              EQU                     0x0258
-_next6              EQU                     0x025c
-_next10             EQU                     0x0292
-_next18             EQU                     0x08c3
-_end_21             EQU                     0x09d5
+_10                 EQU                     0x022e
+_20                 EQU                     0x08ce
+_end_22             EQU                     0x08d1
+_next_0x0236        EQU                     0x0236
+_next_0x023a        EQU                     0x023a
+_next_0x023e        EQU                     0x023e
+_next_0x0260        EQU                     0x0260
+_next_0x0304        EQU                     0x02c2
 0x08a0              EQU                     0x08a0
-0x09a0              EQU                     0x09a0
 
 ; Variables
 _a                  EQU                     0x0030
@@ -75,20 +69,19 @@ _i                  EQU                     0x0036
 _char               EQU                     0x0038
 
 ; Strings
-usrStr_0x7bdf       EQU                     0x7bdf
-usrStr_0x7bdf       DB                      28 'yahooowalllallllalalalwallla'
-usrStr_0x7ff2       EQU                     0x7ff2
-usrStr_0x7ff2       DB                      3 'yes'
-usrStr_0x7ff6       EQU                     0x7ff6
-usrStr_0x7ff6       DB                      1 ' '
-usrStr_0x76cd       EQU                     0x76cd
-usrStr_0x76cd       DB                      34 'wooooooooooooooooooooooooooooow!!!'
-usrStr_0x7ff8       EQU                     0x7ff8
-usrStr_0x7ff8       DB                      3 'dog'
+usrStr_0x7ad9       EQU                     0x7ad9
+usrStr_0x7ad9       DB                      28 'yahooowalllallllalalalwallla'
+usrStr_0x7ffa       EQU                     0x7ffa
+usrStr_0x7ffa       DB                      3 'yes'
+usrStr_0x7ffe       EQU                     0x7ffe
+usrStr_0x7ffe       DB                      1 ' '
+usrStr_0x74a0       EQU                     0x74a0
+usrStr_0x74a0       DB                      34 'wooooooooooooooooooooooooooooow!!!'
+usrStr_0x7efa       EQU                     0x7efa
+usrStr_0x7efa       DB                      3 'dog'
 
 ; Code
-_entryPoint_        Initialise              
-                    InitialiseCcOps                                         ; INIT
+_entryPoint_        Initialise                                              ; INIT
 
 _10                 LDI                     1
                     STW                     _a                              ; a =1
@@ -96,24 +89,24 @@ _10                 LDI                     1
                     LDI                     0
                     STW                     _k                              ; for k = 0 to 1
 
-_next4              LDI                     0
+_next_0x0236        LDI                     0
                     STW                     _j                              ; for j = 0 to 1
 
-_next5              LDI                     0
+_next_0x023a        LDI                     0
                     STW                     _i                              ; for i = 0 to 1
 
-_next6              PrintString             usrStr_0x7bdf                   ; print "yahooowalllallllalalalwallla";
+_next_0x023e        PrintString             usrStr_0x7ad9                   ; print "yahooowalllallllalalalwallla";
 
-                    PrintString             usrStr_0x7ff2
-                    PrintString             usrStr_0x7ff6                   ; print "yes";" ";
+                    PrintString             usrStr_0x7ffa
+                    PrintString             usrStr_0x7ffe                   ; print "yes";" ";
 
                     PrintInt16              0x003d
-                    PrintString             usrStr_0x7ff6                   ; print 20*3+1;" ";
+                    PrintString             usrStr_0x7ffe                   ; print 20*3+1;" ";
 
                     LDI                     32
                     STW                     _char                           ; for char = 32 to 127
 
-_next10             LDW                     _a
+_next_0x0260        LDW                     _a
                     ADDI                    1
                     STW                     _a                              ; a = a + 1
 
@@ -133,44 +126,32 @@ _next10             LDW                     _a
                     ADDW                    0xd0
                     PrintAcChar                                             ; print chr$(char+1 +a+a+a - 32*0 + 50/0 + a/0 + 3 - a -a -a -4 + j*0 + (k-k));
 
-                    ForNextLoopUp           _char _next10 127               ; next char
+                    ForNextLoopUp           _char _next_0x0260 127          ; next char
 
-                    ForNextLoopUp           _i _next6 1                     ; next i
+                    ForNextLoopUp           _i _next_0x023e 1               ; next i
 
-                    ForNextLoopUp           _j _next5 1                     ; next j
+                    ForNextLoopUp           _j _next_0x023a 1               ; next j
 
-                    STW                     0xe0
-                    LDWI                    0x08a0
-                    CALL                    giga_vAC
+                    ForNextLoopUp           _k _next_0x0236 1               ; next k
 
-0x08a0              LDW                     0xe0
-                    ForNextLoopUp           _k _next4 1                     ; next k
-
-                    PrintString             usrStr_0x76cd
-                    LDWI                    newLineScroll
-                    CALL                    giga_vAC                        ; print "wooooooooooooooooooooooooooooow!!!"
+                    PrintString             usrStr_0x74a0
+                    CALLI                   newLineScroll                   ; print "wooooooooooooooooooooooooooooow!!!"
 
                     LDI                     0
                     STW                     _i                              ; for i = 0 to 6
 
-_next18             PrintString             usrStr_0x7ff8
-                    PrintString             usrStr_0x7ff6
+_next_0x0304        PrintString             usrStr_0x7efa
+                    PrintString             usrStr_0x7ffe
                     PrintVarInt16           _i
-                    LDWI                    newLineScroll
-                    CALL                    giga_vAC                        ; print "dog";" ";i
+                    CALLI                   newLineScroll                   ; print "dog";" ";i
 
-                    ForNextLoopUp           _i _next18 6                    ; next i
+                    ForNextLoopUp           _i _next_0x0304 6               ; next i
 
-                    STW                     0xe0
-                    LDWI                    0x09a0
-                    CALL                    giga_vAC
+                    CALLI                   0x08a0
+0x08a0              Initialise                                              ; cls
 
-0x09a0              LDW                     0xe0
-                    Initialise                                              ; cls
+_20                 CALLI                   _10                             ; goto 10
 
-_20                 LDWI                    _10
-                    CALL                    giga_vAC                        ; goto 10
-
-_end_21             BRA                     _end_21                         ; END
+_end_22             BRA                     _end_22                         ; END
 
 

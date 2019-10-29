@@ -1,0 +1,26 @@
+
+rem original
+' 1' Prints "Gigatron!"
+' 2' in random colors
+' 3' across the screen
+' 10 x=160-6*9+1:y=120-8+1
+' 19 rem Background:
+' 20 poke 180,rnd MOD 64
+' 29 rem Pen Color:
+' 30 poke 181,rnd MOD 64
+' 40 at rnd MOD x,(rnd MOD y) + 8
+' 50 print "Gigatron!";
+' 60 goto 20
+
+rem optimised
+1' Prints "Gigatron!"
+2' in random colors
+3' across the screen
+10 x=160-6*9+1:y=120-8+1
+19 rem Background:
+20 poke 180,rnd AND 63
+29 rem Pen Color:
+30 poke 181,rnd AND 63
+40 at (rnd AND &h3F) + (rnd AND &h1F) + (rnd AND &h0F), (rnd AND &h3F) + (rnd AND &h1F) + (rnd AND &h0F) + (rnd AND &h07) + 8
+50 print "Gigatron!";
+60 goto 20

@@ -9,18 +9,28 @@ convertLtOp         EQU                     0x7fe0
 convertGtOp         EQU                     0x7fe9
 multiply16bit       EQU                     0x7da0
 divide16bit         EQU                     0x7ca0
-random8bit          EQU                     0x7ff2
-clearCursorRow      EQU                     0x7ba0
-printText           EQU                     0x7dc3
-printDigit          EQU                     0x7aa0
+random16bit         EQU                     0x7ff2
+shiftLeft4bit       EQU                     0x7eeb
+shiftLeft8bit       EQU                     0x7ef5
+shiftRight1bit      EQU                     0x7dc3
+shiftRight2bit      EQU                     0x7dcd
+shiftRight3bit      EQU                     0x7dd7
+shiftRight4bit      EQU                     0x7de1
+shiftRight5bit      EQU                     0x7deb
+shiftRight6bit      EQU                     0x7df5
+shiftRight7bit      EQU                     0x7cf6
+shiftRight8bit      EQU                     0x7ba0
+clearCursorRow      EQU                     0x7baa
+printText           EQU                     0x7aa0
+printDigit          EQU                     0x7abd
 printInt16          EQU                     0x79a0
 printChar           EQU                     0x78a0
-printHexByte        EQU                     0x7ac2
-printHexWord        EQU                     0x7de0
-newLineScroll       EQU                     0x77a0
-resetAudio          EQU                     0x76a0
+printHexByte        EQU                     0x77a0
+printHexWord        EQU                     0x7adf
+newLineScroll       EQU                     0x76a0
+resetAudio          EQU                     0x77d0
 playMidi            EQU                     0x75a0
-playMidiAsync       EQU                     0x7eeb
+playMidiAsync       EQU                     0x7be9
 midiStartNote       EQU                     0x74a0
 convertEqOpAddr     EQU                     0x00E2
 convertNeOpAddr     EQU                     0x00E4
@@ -57,13 +67,13 @@ frameCountPrev      EQU                     register0 + 0x1C
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_1                  EQU                     0x024c
-_20                 EQU                     0x026b
-_3                  EQU                     0x024c
-_40                 EQU                     0x0277
-_5                  EQU                     0x024c
-_60                 EQU                     0x029c
-_end_12             EQU                     0x02a8
+_1                  EQU                     0x024e
+_20                 EQU                     0x026d
+_3                  EQU                     0x024e
+_40                 EQU                     0x0279
+_5                  EQU                     0x024e
+_60                 EQU                     0x029e
+_end_0x02ba         EQU                     0x02aa
 
 ; Variables
 _x                  EQU                     0x0030
@@ -130,6 +140,6 @@ _60                 LD                      _I
                     STW                     _I
                     BRA                     _60                             ; POKE P,I:I=I+1:GOTO 60
 
-_end_12             BRA                     _end_12                         ; END
+_end_0x02ba         BRA                     _end_0x02ba                     ; END
 
 

@@ -68,57 +68,87 @@ frameCountPrev      EQU                     register0 + 0x1C
 ; Labels
 _entryPoint_        EQU                     0x0200
 _1                  EQU                     0x024e
+_2                  EQU                     0x024e
+_3                  EQU                     0x024e
 _10                 EQU                     0x024e
-_20                 EQU                     0x0252
-_30                 EQU                     0x0265
-_40                 EQU                     0x0277
-_50                 EQU                     0x0290
-_end_0x02a9         EQU                     0x02a3
-_next_0x0252        EQU                     0x0252
-_next_0x027d        EQU                     0x0277
+_19                 EQU                     0x0256
+_20                 EQU                     0x0256
+_29                 EQU                     0x0268
+_30                 EQU                     0x0268
+_40                 EQU                     0x027a
+_50                 EQU                     0x02ce
+_60                 EQU                     0x02d8
+_end_0x0325         EQU                     0x02dd
 
 ; Variables
-_Y                  EQU                     0x0030
-_D                  EQU                     0x0032
-_E                  EQU                     0x0034
-_C                  EQU                     0x0036
+_x                  EQU                     0x0030
+_y                  EQU                     0x0032
 
 ; Strings
+usrStr_0x79ef       EQU                     0x79ef
+usrStr_0x79ef       DB                      9 'Gigatron!'
 
 ; Code
 _entryPoint_        Initialise              
                     InitialiseCcOps                                         ; INIT
 
-_10                 LDI                     2
-                    STW                     _Y                              ; FOR Y=2 TO 7
+_10                 LDI                     107
+                    STW                     _x
+                    LDI                     113
+                    STW                     _y                              ; x=160-6*9+1:y=120-8+1
 
-_next_0x0252        LDW                     _Y
-                    STW                     mathX
-                    LDI                     16
-                    STW                     mathY
-                    LDWI                    multiply16bit
-                    CALL                    giga_vAC
-                    STW                     _D
-                    ADDI                    15
-                    STW                     _E                              ; D=Y*16: E=D+15
+_20                 Random                  
+                    ANDI                    63
+                    STW                     0xd0
+                    LDWI                    180
+                    STW                     register0
+                    LD                      0xd0
+                    POKE                    register0                       ; poke 180,rnd AND 63
 
-_30                 LDWI                    32
+_30                 Random                  
+                    ANDI                    63
+                    STW                     0xd0
+                    LDWI                    181
+                    STW                     register0
+                    LD                      0xd0
+                    POKE                    register0                       ; poke 181,rnd AND 63
+
+_40                 Random                  
+                    ANDI                    63
+                    STW                     0xd0
+                    Random                  
+                    ANDI                    31
+                    ADDW                    0xd0
+                    STW                     0xd2
+                    Random                  
+                    ANDI                    15
+                    ADDW                    0xd2
                     ST                      cursorXY
-                    LDW                     _D
-                    STW                     _C
-                    LDW                     _E
-                    STW                     0xc4
-                    LDWI                    1
-                    STW                     0xc6                            ; AT 32: FOR C=D TO E
+                    Random                  
+                    ANDI                    63
+                    STW                     0xd6
+                    Random                  
+                    ANDI                    31
+                    ADDW                    0xd6
+                    STW                     0xd8
+                    Random                  
+                    ANDI                    15
+                    ADDW                    0xd8
+                    STW                     0xda
+                    Random                  
+                    ANDI                    7
+                    ADDW                    0xda
+                    ADDI                    8
+                    ST                      cursorXY + 1
+                    Random                  
+                    ANDI                    63
+                    STW                     0xde                            ; at (rnd AND &h3F) + (rnd AND &h1F) + (rnd AND &h0F), (rnd AND &h3F) + (rnd AND &h1F) + (rnd AND &h0F) + (rnd AND &h07) + 8
 
-_next_0x027d        LDW                     _C
-                    PrintAcChar             
-                    ForNextLoopStepUp       _C _next_0x027d 0xc4 0xc6       ; PUT C: NEXT C
+_50                 PrintString             usrStr_0x79ef                   ; print "Gigatron!";
 
-_50                 LDWI                    newLineScroll
-                    CALL                    giga_vAC
-                    ForNextLoopUp           _Y _next_0x0252 7               ; PRINT: NEXT Y
+_60                 LDWI                    _20
+                    CALL                    giga_vAC                        ; goto 20
 
-_end_0x02a9         BRA                     _end_0x02a9                     ; END
+_end_0x0325         BRA                     _end_0x0325                     ; END
 
 

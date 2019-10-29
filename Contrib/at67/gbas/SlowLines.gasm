@@ -9,18 +9,28 @@ convertLtOp         EQU                     0x7fe0
 convertGtOp         EQU                     0x7fe9
 multiply16bit       EQU                     0x7da0
 divide16bit         EQU                     0x7ca0
-random8bit          EQU                     0x7ff2
-clearCursorRow      EQU                     0x7ba0
-printText           EQU                     0x7dc3
-printDigit          EQU                     0x7aa0
+random16bit         EQU                     0x7ff2
+shiftLeft4bit       EQU                     0x7eeb
+shiftLeft8bit       EQU                     0x7ef5
+shiftRight1bit      EQU                     0x7dc3
+shiftRight2bit      EQU                     0x7dcd
+shiftRight3bit      EQU                     0x7dd7
+shiftRight4bit      EQU                     0x7de1
+shiftRight5bit      EQU                     0x7deb
+shiftRight6bit      EQU                     0x7df5
+shiftRight7bit      EQU                     0x7cf6
+shiftRight8bit      EQU                     0x7ba0
+clearCursorRow      EQU                     0x7baa
+printText           EQU                     0x7aa0
+printDigit          EQU                     0x7abd
 printInt16          EQU                     0x79a0
 printChar           EQU                     0x78a0
-printHexByte        EQU                     0x7ac2
-printHexWord        EQU                     0x7de0
-newLineScroll       EQU                     0x77a0
-resetAudio          EQU                     0x76a0
+printHexByte        EQU                     0x77a0
+printHexWord        EQU                     0x7adf
+newLineScroll       EQU                     0x76a0
+resetAudio          EQU                     0x77d0
 playMidi            EQU                     0x75a0
-playMidiAsync       EQU                     0x7eeb
+playMidiAsync       EQU                     0x7be9
 midiStartNote       EQU                     0x74a0
 convertEqOpAddr     EQU                     0x00E2
 convertNeOpAddr     EQU                     0x00E4
@@ -57,57 +67,175 @@ frameCountPrev      EQU                     register0 + 0x1C
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_1                  EQU                     0x024c
-_next18             EQU                     0x0297
-_end_19             EQU                     0x02a9
+_1                  EQU                     0x024e
+_2                  EQU                     0x027e
+_3                  EQU                     0x029d
+_4                  EQU                     0x02bc
+_5                  EQU                     0x02d1
+_6                  EQU                     0x02e8
+_7                  EQU                     0x08b3
+_8                  EQU                     0x08c9
+_9                  EQU                     0x08e1
+_10                 EQU                     0x08f3
+_11                 EQU                     0x09b2
+_12                 EQU                     0x09c9
+_end_0x03f2         EQU                     0x09e4
+_if_0x032c          EQU                     0x02e8
+_page_0x08a0        EQU                     0x08a0
+_if_0x034e          EQU                     0x08b3
+_if_0x036e          EQU                     0x08c9
+_page_0x09a0        EQU                     0x09a0
+_next_0x03ac        EQU                     0x09ae
+_if_0x03d5          EQU                     0x09c9
 
 ; Variables
 _a                  EQU                     0x0030
-_i                  EQU                     0x0032
-_b                  EQU                     0x0034
+_b                  EQU                     0x0032
+_c                  EQU                     0x0034
+_d                  EQU                     0x0036
+_x                  EQU                     0x0038
+_y                  EQU                     0x003a
+_q                  EQU                     0x003c
+_u                  EQU                     0x003e
+_v                  EQU                     0x0040
+_p                  EQU                     0x0042
+_t                  EQU                     0x0044
 
 ; Strings
-usrStr_0x7ffa       EQU                     0x7ffa
-usrStr_0x7ffa       DB                      2 '0x'
 
 ; Code
 _entryPoint_        Initialise              
                     InitialiseCcOps                                         ; INIT
 
-_1                  Random                  
-                    STW                     mathX
-                    LDI                     16
-                    STW                     mathY
-                    LDWI                    divide16bit
+_1                  Initialise                                              ; cls:rem Lines demo
+
+_2                  Random                  
+                    ANDI                    127
+                    STW                     0xd0
+                    Random                  
+                    ANDI                    31
+                    ADDW                    0xd0
+                    STW                     _a
+                    Random                  
+                    ANDI                    127
+                    ORI                     8
+                    STW                     _b                              ; a=(rnd AND &h7F) + (rnd AND &h1F) : b=rnd AND &h7F OR 8
+
+_3                  Random                  
+                    ANDI                    127
+                    STW                     0xd0
+                    Random                  
+                    ANDI                    31
+                    ADDW                    0xd0
+                    STW                     _c
+                    Random                  
+                    ANDI                    127
+                    ORI                     8
+                    STW                     _d                              ; c=(rnd AND &h7F) + (rnd AND &h1F) : d=rnd AND &h7F OR 8
+
+_4                  LDW                     _c
+                    SUBW                    _a
+                    STW                     _x
+                    LDW                     _d
+                    SUBW                    _b
+                    STW                     _y
+                    Random                  
+                    ANDI                    63
+                    STW                     _q                              ; x=c-a:y=d-b:q=rnd AND &h3F
+
+_5                  LDI                     1
+                    STW                     _u
+                    LDW                     _x
+                    CALL                    convertLtOpAddr
+                    BEQ                     _if_0x032c
+                    LDI                     0
+                    SUBW                    _x
+                    STW                     _x
+                    LDI                     0
+                    SUBW                    _u
+                    STW                     _u                              ; u=1  :if x<0 then x=-x:u=-u
+
+_if_0x032c          LDWI                    256
+                    STW                     _v
+                    LDW                     _y
+                    STW                     0xe0
+                    LDWI                    _page_0x08a0
                     CALL                    giga_vAC
-                    LDW                     mathRem
-                    STW                     _a                              ; a = RND MOD 16
+_page_0x08a0        LDW                     0xe0
+                    CALL                    convertLtOpAddr
+                    BEQ                     _if_0x034e
+                    LDI                     0
+                    SUBW                    _y
+                    STW                     _y
+                    LDI                     0
+                    SUBW                    _v
+                    STW                     _v                              ; v=256:if y<0 then y=-y:v=-v
 
-                    LDWI                    70
-                    ST                      cursorXY
-                    LDWI                    56
-                    ST                      cursorXY + 1                    ; AT 70, 56
+_if_0x034e          LDW                     _b
+                    STW                     mathShift
+                    ShiftLeft8bit           
+                    ADDW                    _a
+                    STW                     _p
+                    LDW                     _y
+                    SUBW                    _x
+                    CALL                    convertLtOpAddr
+                    BEQ                     _if_0x036e                      ; p= a + (b LSL 8):if y< x then goto9
 
-                    PrintString             usrStr_0x7ffa
-                    LDW                     _a
-                    ANDI                    255
-                    PrintAcHexByte          
-                    LDWI                    newLineScroll
-                    CALL                    giga_vAC                        ; print "0x";hex$(a AND &hFF)
+_if_0x036e          LDW                     _x
+                    STW                     _t
+                    LDW                     _y
+                    STW                     _x
+                    LDW                     _t
+                    STW                     _y
+                    LDW                     _u
+                    STW                     _t
+                    LDW                     _v
+                    STW                     _u
+                    LDW                     _t
+                    STW                     _v                              ; t=x:x=y:y=t:t=u:u=v:v=t
 
+_9                  LDI                     0
+                    SUBW                    _x
+                    STW                     _d
+                    LDW                     _x
+                    ADDW                    _x
+                    STW                     _x
+                    LDW                     _y
+                    ADDW                    _y
+                    STW                     _y                              ; d=-x:x=x+x:y=y+y
+
+_10                 LDW                     _d
+                    STW                     0xe0
+                    LDWI                    _page_0x09a0
+                    CALL                    giga_vAC
+_page_0x09a0        LDW                     0xe0
+                    STW                     _t
                     LDWI                    0
-                    STW                     _i
-                    LDWI                    500
                     STW                     0xc0
                     LDWI                    1
                     STW                     0xc2
-                    LDI                     1
-                    STW                     _b                              ; for i=0 to 500:b=1
+_next_0x03ac        LD                      _q
+                    POKE                    _p                              ; for t=d to 0:poke p,q
 
-_next18             ForNextLoopStep         _i _next18 0xc0 0xc2            ; next i
+_11                 LDW                     _d
+                    ADDW                    _y
+                    STW                     _d
+                    CALL                    convertGtOpAddr
+                    BEQ                     _if_0x03d5
+                    LDW                     _d
+                    SUBW                    _x
+                    STW                     _d
+                    LDW                     _p
+                    ADDW                    _v
+                    STW                     _p                              ; d=d+y:if d>0 then d=d-x:p=p+v
 
-                    BRA                     _1                              ; goto 1
+_if_0x03d5          LDW                     _p
+                    ADDW                    _u
+                    STW                     _p
+                    ForNextLoopStepUp       _t _next_0x03ac 0xc0 0xc2
+                    LDWI                    _2
+                    CALL                    giga_vAC                        ; p=p+u:next t:goto 2
 
-_end_19             BRA                     _end_19                         ; END
+_end_0x03f2         BRA                     _end_0x03f2                     ; END
 
 

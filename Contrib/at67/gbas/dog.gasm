@@ -9,6 +9,7 @@ convertLtOp         EQU                     0x7fe0
 convertGtOp         EQU                     0x7fe9
 multiply16bit       EQU                     0x7da0
 divide16bit         EQU                     0x7ca0
+random16bit         EQU                     0x7ff2
 clearCursorRow      EQU                     0x7ba0
 printText           EQU                     0x7dc3
 printDigit          EQU                     0x7ddc
@@ -50,11 +51,12 @@ frameCountPrev      EQU                     register0 + 0x1C
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_1                  EQU                     0x0234
-_8                  EQU                     0x025e
-_15                 EQU                     0x02a5
-_16                 EQU                     0x02ab
-_20                 EQU                     0x02b1
+_1                  EQU                     0x0236
+_8                  EQU                     0x0260
+_15                 EQU                     0x02a7
+_16                 EQU                     0x02ad
+_20                 EQU                     0x02b3
+_end_8              EQU                     0x02b5
 
 ; Variables
 _a                  EQU                     0x0030
@@ -64,10 +66,10 @@ _z                  EQU                     0x0036
 _j                  EQU                     0x0038
 
 ; Strings
-usrStr_0x7ff2       EQU                     0x7ff2
-usrStr_0x7ff2       DB                      1 ' '
-usrStr_0x7ff4       EQU                     0x7ff4
-usrStr_0x7ff4       DB                      5 ' dog '
+usrStr_0x7ffa       EQU                     0x7ffa
+usrStr_0x7ffa       DB                      1 ' '
+usrStr_0x7efa       EQU                     0x7efa
+usrStr_0x7efa       DB                      5 ' dog '
 
 ; Code
 _entryPoint_        Initialise                                              ; INIT
@@ -104,15 +106,15 @@ _8                  LDI                     2
                     SUBW                    _a
                     STW                     _j
                     PrintVarInt16           _a
-                    PrintString             usrStr_0x7ff2
+                    PrintString             usrStr_0x7ffa
                     PrintVarInt16           _b
-                    PrintString             usrStr_0x7ff2
+                    PrintString             usrStr_0x7ffa
                     LDI                     1
                     ADDW                    _b
                     PrintAcInt16            
-                    PrintString             usrStr_0x7ff4
+                    PrintString             usrStr_0x7efa
                     PrintVarInt16           _bb
-                    PrintString             usrStr_0x7ff2
+                    PrintString             usrStr_0x7ffa
                     LDW                     _z
                     SUBI                    20
                     CALLI                   convertGtOp
@@ -128,5 +130,7 @@ _16                 LDW                     _b
                     STW                     _b                              ; b = b+1
 
 _20                 BRA                     _1                              ; goto 1
+
+_end_8              BRA                     _end_8                          ; END
 
 
