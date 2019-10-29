@@ -1,7 +1,7 @@
 gcl0x
 {-----------------------------------------------------------------------+
 |                                                                       |
-|       Forth74 -- Inner interpreter for a vCPU based Forth             |
+|       Forth74 -- Inner interpreter for a vCPU-based Forth             |
 |                                                                       |
 |       !!! WORK IN PROGRESS !!!                                        |
 |                                                                       |
@@ -9,6 +9,10 @@ gcl0x
 
 {
   References:
+
+        https://colorforth.github.io/HOPL.html
+        Forth - The Early Years
+        Chuck Moore
 
         http://forth.org/OffeteStore/1010_SystemsGuideToFigForth.pdf
         Systems Guide to figForth
@@ -78,10 +82,8 @@ _COLD=*
 _ABORT=*
   0 \vSP.                       {Clear data stack: top of page 0}
   DoColon!
-{
-  ##_Lit ##_FreeMem             {XXX Select vocabulary}
+  ##_Lit ##_FreeMem             {Select vocabulary}
   ##_CP ##_Doke
-}
   ##_QUIT                       {Doesn't return}
 
 {-----------------------------------------------------------------------+
@@ -175,7 +177,7 @@ _JumpNe=*
 
 {
                         |                       |
-         FreeMemory --> |                       |               High memory
+            FreeMem --> |                       |               High memory
                         +-----------------------+
                         | Pointer to name 2     | ------.
                         +-----------------------+       |
@@ -211,7 +213,7 @@ _JumpNe=*
   ##0                           {Null}
 
 {-----------------------------------------------------------------------+
-|       Memory words                                                    |
+|       Constants words                                                 |
 +-----------------------------------------------------------------------}
 
 __Zero=*
@@ -225,6 +227,10 @@ __One=*
 _One=*
   1 2-- %0= Next!
   ##__One                       {Link}
+
+{-----------------------------------------------------------------------+
+|       Memory words                                                    |
++-----------------------------------------------------------------------}
 
 __Deek=*
   #@_Deek `@                    {Name}
@@ -351,7 +357,7 @@ _CR=*
   ##__CR                        {Link}
 
 {-----------------------------------------------------------------------+
-|       EMIT (c -- ) Emit ASCII to video terminal                       |
+|       EMIT ( c -- ) Emit ASCII to video terminal                      |
 +-----------------------------------------------------------------------}
 
 __EMIT=*
@@ -406,12 +412,12 @@ __KEY=*
 _KEY=*
   DoColon!
   ##_PeekZp #\serialRaw         {Reference}
-_waitKey=*
+_key1=*
   ##_PeekZp #\serialRaw         {Probe}
   ##_SWAP ##_OVER ##_Sub        {Compare with reference}
-  ##_JumpEq ##_waitKey          {Loop if not changed}
+  ##_JumpEq ##_key1             {Loop if not changed}
   ##_DUP ##_Byte #128 ##_AND    {Check high bit}
-  ##_JumpNe ##_waitKey          {Loop if keyboard idle}
+  ##_JumpNe ##_key1             {Loop if keyboard idle}
   ##_Exit
 {-----------------------------------------------------------------------+
 |                       RAM page 5                                      |
@@ -516,10 +522,10 @@ _Dot=*
   DoColon!
   ##_SPACE
   ##_DUP ##_IsNeg               {Test sign}
-  ##_JumpEq ##_L0
+  ##_JumpEq ##_dot1
   ##_Byte `- ##_EMIT            {Print "-"}
   ##_MINUS
-_L0=*
+_dot1=*
   ##_Zero                       {Suppress leading zeroes}
   ##_Lit ##10000 ##_Digit
   ##_Lit ##1000 ##_Digit
@@ -533,21 +539,21 @@ _Digit=*                        { n z r -- n-d*r z+d }
   DoColon!
   ##_ToR                        { n 0           | r }
   ##_SWAP                       { 0 n           | r }
-_L1=*
+_digit1=*
   ##_R                          { 0 n r         | r }
   ##_Sub                        { 0 m           | r }
   ##_DUP                        { 0 m m         | r }
   ##_IsNeg                      { 0 m sign      | r }
-  ##_JumpNe ##_L2               { 0 m           | r }
+  ##_JumpNe ##_digit2           { 0 m           | r }
   ##_SWAP ##_Add1 ##_SWAP       { 1 m           | r }
-  ##_Jump ##_L1
-_L2=*
+  ##_Jump ##_digit1
+_digit2=*
   ##_FromR                      { 1 m r }
   ##_Add                        { 1 m }
   ##_SWAP                       { m 1 }
-  ##_DUP ##_JumpEq ##_L3
+  ##_DUP ##_JumpEq ##_digit3
   ##_Byte #$30 ##_OR            { m '1' }
-_L3=*
+_digit3=*
   ##_EMIT                       { m }
   ##_Byte #$30                  { m 0 }
   ##_Exit
@@ -584,18 +590,40 @@ __TYPE=*
   #@_TYPE `TYPE                 {Name}
 _TYPE=*
   DoColon!
-  ##_Jump ##_Type1
-_Type0=*
+  ##_Jump ##_type2
+_type1=*
   ##_SWAP
   ##_DUP ##_Peek ##_EMIT
   ##_Add1
   ##_SWAP
   ##_Sub1
-_Type1=*
-  ##_DUP ##_JumpNe ##_Type0
+_type2=*
+  ##_DUP ##_JumpNe ##_type1
   ##_DROP ##_DROP
   ##_Exit
   ##__TYPE                      {Link}
+
+{-----------------------------------------------------------------------+
+|       CP ( -- addr ) Variable to begin of free memory                 |
++-----------------------------------------------------------------------}
+
+__CP=*
+  #@_CP `CP                     {Name}
+_CP=*
+  DoVar!
+  ##0
+  ##__CP                        {Link}
+
+{-----------------------------------------------------------------------+
+|       HERE ( -- addr ) Return address above dictionary                |
++-----------------------------------------------------------------------}
+
+__HERE=*
+  #@_HERE `HERE                 {Name}
+_HERE=*
+  DoColon!
+  ##_CP ##_Deek ##_Exit
+  ##__HERE                      {Link}
 
 {-----------------------------------------------------------------------+
 |       WORDS ( -- ) Print names in dictionary                          |
@@ -605,16 +633,16 @@ __WORDS=*
   #@_WORDS `WORDS               {Name}
 _WORDS=*
   DoColon!
-  ##_Lit ##_FreeMem
-  ##_Jump ##_Words1
-_Words0=*
+  ##_HERE
+  ##_Jump ##_words2
+_words1=*
   ##_SPACE
   ##_DUP ##_Add1
   ##_OVER ##_Peek
   ##_TYPE
-_Words1=*
+_words2=*
   ##_Byte #2 ##_Sub ##_Deek
-  ##_DUP ##_JumpNe ##_Words0
+  ##_DUP ##_JumpNe ##_words1
   ##_DROP
   ##_CR
   ##_Exit
