@@ -65,7 +65,7 @@ _COLD=*
 
   { DoVar }
   [def
-    \vLR; 2-- %0=
+    push                        {Same as "\vLR; 2-- %0="}
     Next!
   ] DoVar=
 
