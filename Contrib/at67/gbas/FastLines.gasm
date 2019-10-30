@@ -1,0 +1,260 @@
+_startAddress_      EQU                     0x0200
+convertEqOp         EQU                     0x7fa0
+convertNeOp         EQU                     0x7fa9
+convertLeOp         EQU                     0x7fb2
+convertGeOp         EQU                     0x7fbb
+convertLtOp         EQU                     0x7fc4
+convertGtOp         EQU                     0x7fcd
+multiply16bit       EQU                     0x7fd6
+divide16bit         EQU                     0x7ea0
+random16bit         EQU                     0x7ef6
+shiftLeft4bit       EQU                     0x7da0
+shiftLeft8bit       EQU                     0x7daa
+shiftRight1bit      EQU                     0x7db4
+shiftRight2bit      EQU                     0x7dbe
+shiftRight3bit      EQU                     0x7dc8
+shiftRight4bit      EQU                     0x7dd2
+shiftRight5bit      EQU                     0x7ddc
+shiftRight6bit      EQU                     0x7de6
+shiftRight7bit      EQU                     0x7df0
+shiftRight8bit      EQU                     0x7ca0
+resetVideoTable     EQU                     0x7caa
+scanlineMode        EQU                     0x7cc6
+waitVBlank          EQU                     0x7cda
+clearRegion         EQU                     0x7ba0
+clearCursorRow      EQU                     0x7aa0
+drawLine            EQU                     0x79a0
+drawLineExt         EQU                     0x78a0
+drawLinePixel       EQU                     0x7cf1
+printText           EQU                     0x7adf
+printDigit          EQU                     0x77a0
+printInt16          EQU                     0x77c0
+printChar           EQU                     0x76a0
+printHexByte        EQU                     0x75a0
+printHexWord        EQU                     0x7beb
+newLineScroll       EQU                     0x74a0
+resetAudio          EQU                     0x75ca
+playMidi            EQU                     0x73a0
+playMidiAsync       EQU                     0x74ec
+midiStartNote       EQU                     0x72a0
+
+; Internal variables
+register0           EQU                     0x00a0
+register1           EQU                     register0 + 0x02
+register2           EQU                     register0 + 0x04
+register3           EQU                     register0 + 0x06
+register4           EQU                     register0 + 0x08
+register5           EQU                     register0 + 0x0A
+register6           EQU                     register0 + 0x0C
+register7           EQU                     register0 + 0x0E
+register8           EQU                     register0 + 0x10
+register9           EQU                     register0 + 0x12
+register10          EQU                     0x0024
+register11          EQU                     0x0026
+register12          EQU                     0x0028
+register13          EQU                     0x002A
+fgbgColour          EQU                     register0 + 0x14
+cursorXY            EQU                     register0 + 0x16
+midiStreamPtr       EQU                     register0 + 0x18
+midiDelay           EQU                     register0 + 0x1A
+frameCountPrev      EQU                     register0 + 0x1C
+textScroll          EQU                     register0 + 0x1E
+
+; Includes
+%include            include/gigatron.i
+%include            include/math.i
+%include            include/conv_conds.i
+%include            include/audio.i
+%include            include/graphics.i
+%include            include/clear_screen.i
+%include            include/print_text_CALLI.i
+%include            include/macros_CALLI.i
+
+; Labels
+_entryPoint_        EQU                     0x0200
+_1                  EQU                     0x0233
+_10                 EQU                     0x023b
+_20                 EQU                     0x023f
+_30                 EQU                     0x0242
+_40                 EQU                     0x0253
+_50                 EQU                     0x0268
+_60                 EQU                     0x0274
+_70                 EQU                     0x0278
+_80                 EQU                     0x027b
+_90                 EQU                     0x028c
+_100                EQU                     0x029f
+_110                EQU                     0x02ad
+_120                EQU                     0x02b1
+_130                EQU                     0x02b4
+_140                EQU                     0x02c5
+_150                EQU                     0x02da
+_160                EQU                     0x02e6
+_170                EQU                     0x02ea
+_180                EQU                     0x02ed
+_190                EQU                     0x08ab
+_200                EQU                     0x08c2
+_math               EQU                     0x08d3
+_end_0x0389         EQU                     0x08f8
+_next_0x023f        EQU                     0x023f
+_next_0x0282        EQU                     0x0278
+_next_0x02c1        EQU                     0x02b1
+_next_0x0304        EQU                     0x02ea
+_page_0x08a0        EQU                     0x08a0
+
+; Variables
+_x                  EQU                     0x0030
+_y                  EQU                     0x0032
+_i                  EQU                     0x0034
+_p                  EQU                     0x0036
+_t                  EQU                     0x0038
+
+; Strings
+
+; Code
+_entryPoint_        Initialise                                              ; INIT
+
+_1                  LDI                     0
+                    STW                     _x
+                    LDI                     0
+                    STW                     _y                              ; x= 0 : y = 0
+
+_10                 LDI                     0
+                    STW                     _i                              ; for i=0 to 19
+
+_20                 CALLI                   _math                           ; gosub math 'x=4+8*i:y=3+6*i
+
+_30                 LDWI                    0x00b5
+                    PEEK                    
+                    ADDI                    7
+                    STW                     _p
+                    LDWI                    181
+                    STW                     register0
+                    LD                      _p
+                    POKE                    register0                       ; p=peek(181)+7 : poke 181,p
+
+_40                 LDW                     _x
+                    STW                     drawLine_x1
+                    LDI                     119
+                    STW                     drawLine_y1
+                    LDI                     159
+                    STW                     drawLine_x2
+                    LDI                     119
+                    SUBW                    _y
+                    STW                     drawLine_y2
+                    DrawLine                                                ; line x,119, 159,119-y
+
+_50                 ForNextLoopUp           _i _20                  19      ; next i
+
+_60                 LDI                     19
+                    STW                     _i                              ; for i=19 to 0
+
+_70                 CALLI                   _math                           ; gosub math 'x=4+8*i:y=3+6*i
+
+_80                 LDWI                    0x00b5
+                    PEEK                    
+                    ADDI                    7
+                    STW                     _p
+                    LDWI                    181
+                    STW                     register0
+                    LD                      _p
+                    POKE                    register0                       ; p=peek(181)+7 : poke 181,p
+
+_90                 LDI                     159
+                    STW                     drawLine_x1
+                    LDW                     _y
+                    STW                     drawLine_y1
+                    LDW                     _x
+                    STW                     drawLine_x2
+                    LDI                     0
+                    STW                     drawLine_y2
+                    DrawLine                                                ; line 159,y, x,0
+
+_100                ForNextLoopDown         _i _70                  0       ; next i
+
+_110                LDI                     0
+                    STW                     _i                              ; for i=0 to 19
+
+_120                CALLI                   _math                           ; gosub math 'x=4+8*i:y=3+6*i
+
+_130                LDWI                    0x00b5
+                    PEEK                    
+                    ADDI                    7
+                    STW                     _p
+                    LDWI                    181
+                    STW                     register0
+                    LD                      _p
+                    POKE                    register0                       ; p=peek(181)+7 : poke 181,p
+
+_140                LDI                     0
+                    STW                     drawLine_x1
+                    LDW                     _y
+                    STW                     drawLine_y1
+                    LDI                     159
+                    SUBW                    _x
+                    STW                     drawLine_x2
+                    LDI                     0
+                    STW                     drawLine_y2
+                    DrawLine                                                ; line 0,y, 159-x,0
+
+_150                ForNextLoopUp           _i _120                 19      ; next i
+
+_160                LDI                     19
+                    STW                     _i                              ; for i=19 to 0
+
+_170                CALLI                   _math                           ; gosub math 'x=4+8*i:y=3+6*i
+
+_180                LDWI                    0x00b5
+                    PEEK                    
+                    ADDI                    7
+                    CALLI                   _page_0x08a0
+_page_0x08a0        STW                     _p
+                    LDWI                    181
+                    STW                     register0
+                    LD                      _p
+                    POKE                    register0                       ; p=peek(181)+7 : poke 181,p
+
+_190                LDI                     159
+                    SUBW                    _x
+                    STW                     drawLine_x1
+                    LDI                     119
+                    STW                     drawLine_y1
+                    LDI                     0
+                    STW                     drawLine_x2
+                    LDI                     119
+                    SUBW                    _y
+                    STW                     drawLine_y2
+                    DrawLine                                                ; line 159-x,119, 0,119-y
+
+_200                ForNextLoopDown         _i _170                 0       ; next i
+
+                    CALLI                   _10                             ; goto 10
+
+_math               PUSH                    
+                    LDW                     _i
+                    LSLW                    
+                    STW                     0xd2
+                    LDW                     _i
+                    LSLW                    
+                    ADDW                    0xd2
+                    STW                     0xd6
+                    LDW                     _i
+                    LSLW                    
+                    ADDW                    0xd6
+                    STW                     _t                              ; t = (i LSL 1)+(i LSL 1)+(i LSL 1)
+
+                    LDW                     _i
+                    LSLW                    
+                    ADDW                    _t
+                    ADDI                    4
+                    STW                     _x                              ; x = t + (i LSL 1) + 4
+
+                    LDW                     _t
+                    ADDI                    3
+                    STW                     _y                              ; y = t + 3
+
+                    POP                     
+                    RET                                                     ; return
+
+_end_0x0389         BRA                     _end_0x0389                     ; END
+
+

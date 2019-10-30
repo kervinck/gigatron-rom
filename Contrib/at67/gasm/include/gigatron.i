@@ -40,6 +40,13 @@ giga_sysArg6                    EQU     0x2A
 giga_sysArg7                    EQU     0x2B
 giga_soundTimer                 EQU     0x2C
 
+; ROM types
+romTypeValue_ROMv1              EQU     0x1c
+romTypeValue_ROMv2              EQU     0x20
+romTypeValue_ROMv3              EQU     0x28
+romTypeValue_ROMv4              EQU     0x38
+romTypeValue_DEVROM             EQU     0xf8
+
 ; ROMv1 SYS calls
 SYS_Reset_36                    EQU     0x009a
 SYS_Exec_88                     EQU     0x00ad
@@ -79,6 +86,3 @@ SYS_ExpanderControl_v4_40       EQU     0x0b09
 SYS_ResetWaveforms_v4_50        EQU     0x0b0f
 SYS_ShuffleNoise_v4_46          EQU     0x0b12
 SYS_SpiExchangeBytes_v4_134     EQU     0x0b15
-
-
-

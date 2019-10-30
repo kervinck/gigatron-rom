@@ -1,43 +1,38 @@
 _startAddress_      EQU                     0x0200
-resetVideoTable     EQU                     0x7fa0
-clearRegion         EQU                     0x7ea0
-convertEqOp         EQU                     0x7fbc
-convertNeOp         EQU                     0x7fc5
-convertLeOp         EQU                     0x7fce
-convertGeOp         EQU                     0x7fd7
-convertLtOp         EQU                     0x7fe0
-convertGtOp         EQU                     0x7fe9
-multiply16bit       EQU                     0x7da0
-divide16bit         EQU                     0x7ca0
-random16bit         EQU                     0x7ff2
-shiftLeft4bit       EQU                     0x7eeb
-shiftLeft8bit       EQU                     0x7ef5
-shiftRight1bit      EQU                     0x7dc3
-shiftRight2bit      EQU                     0x7dcd
-shiftRight3bit      EQU                     0x7dd7
-shiftRight4bit      EQU                     0x7de1
-shiftRight5bit      EQU                     0x7deb
-shiftRight6bit      EQU                     0x7df5
-shiftRight7bit      EQU                     0x7cf6
-shiftRight8bit      EQU                     0x7ba0
-clearCursorRow      EQU                     0x7baa
-printText           EQU                     0x7aa0
-printDigit          EQU                     0x7abd
+convertEqOp         EQU                     0x7fa0
+convertNeOp         EQU                     0x7fa9
+convertLeOp         EQU                     0x7fb2
+convertGeOp         EQU                     0x7fbb
+convertLtOp         EQU                     0x7fc4
+convertGtOp         EQU                     0x7fcd
+multiply16bit       EQU                     0x7fd6
+divide16bit         EQU                     0x7ea0
+random16bit         EQU                     0x7ef6
+shiftLeft4bit       EQU                     0x7da0
+shiftLeft8bit       EQU                     0x7daa
+shiftRight1bit      EQU                     0x7db4
+shiftRight2bit      EQU                     0x7dbe
+shiftRight3bit      EQU                     0x7dc8
+shiftRight4bit      EQU                     0x7dd2
+shiftRight5bit      EQU                     0x7ddc
+shiftRight6bit      EQU                     0x7de6
+shiftRight7bit      EQU                     0x7df0
+shiftRight8bit      EQU                     0x7ca0
+resetVideoTable     EQU                     0x7caa
+scanlineMode        EQU                     0x7cc6
+clearRegion         EQU                     0x7ba0
+clearCursorRow      EQU                     0x7aa0
+printText           EQU                     0x7cda
+printDigit          EQU                     0x7adf
 printInt16          EQU                     0x79a0
 printChar           EQU                     0x78a0
 printHexByte        EQU                     0x77a0
-printHexWord        EQU                     0x7adf
+printHexWord        EQU                     0x7beb
 newLineScroll       EQU                     0x76a0
-resetAudio          EQU                     0x77d0
+resetAudio          EQU                     0x77ca
 playMidi            EQU                     0x75a0
-playMidiAsync       EQU                     0x7be9
+playMidiAsync       EQU                     0x79d9
 midiStartNote       EQU                     0x74a0
-convertEqOpAddr     EQU                     0x00E2
-convertNeOpAddr     EQU                     0x00E4
-convertLeOpAddr     EQU                     0x00E6
-convertGeOpAddr     EQU                     0x00E8
-convertLtOpAddr     EQU                     0x00EA
-convertGtOpAddr     EQU                     0x00EC
 
 ; Internal variables
 register0           EQU                     0x00a0
@@ -61,36 +56,36 @@ frameCountPrev      EQU                     register0 + 0x1C
 %include            include/math.i
 %include            include/conv_conds.i
 %include            include/audio.i
+%include            include/graphics.i
 %include            include/clear_screen.i
-%include            include/print_text.i
-%include            include/macros.i
+%include            include/print_text_CALLI.i
+%include            include/macros_CALLI.i
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_1                  EQU                     0x024e
-_2                  EQU                     0x024e
-_3                  EQU                     0x024e
-_10                 EQU                     0x024e
-_19                 EQU                     0x0256
-_20                 EQU                     0x0256
-_29                 EQU                     0x0268
-_30                 EQU                     0x0268
-_40                 EQU                     0x027a
-_50                 EQU                     0x02ce
-_60                 EQU                     0x02d8
-_end_0x0325         EQU                     0x02dd
+_1                  EQU                     0x022e
+_2                  EQU                     0x022e
+_3                  EQU                     0x022e
+_10                 EQU                     0x022e
+_19                 EQU                     0x0236
+_20                 EQU                     0x0236
+_29                 EQU                     0x0246
+_30                 EQU                     0x0246
+_40                 EQU                     0x0256
+_50                 EQU                     0x029c
+_60                 EQU                     0x02a2
+_end_0x02ed         EQU                     0x02a5
 
 ; Variables
 _x                  EQU                     0x0030
 _y                  EQU                     0x0032
 
 ; Strings
-usrStr_0x79ef       EQU                     0x79ef
-usrStr_0x79ef       DB                      9 'Gigatron!'
+usrStr_0x7cf3       EQU                     0x7cf3
+usrStr_0x7cf3       DB                      9 'Gigatron!'
 
 ; Code
-_entryPoint_        Initialise              
-                    InitialiseCcOps                                         ; INIT
+_entryPoint_        Initialise                                              ; INIT
 
 _10                 LDI                     107
                     STW                     _x
@@ -121,34 +116,34 @@ _40                 Random
                     ADDW                    0xd0
                     STW                     0xd2
                     Random                  
-                    ANDI                    15
+                    ANDI                    7
                     ADDW                    0xd2
+                    STW                     0xd4
+                    Random                  
+                    ANDI                    7
+                    ADDW                    0xd4
                     ST                      cursorXY
                     Random                  
                     ANDI                    63
-                    STW                     0xd6
-                    Random                  
-                    ANDI                    31
-                    ADDW                    0xd6
                     STW                     0xd8
                     Random                  
-                    ANDI                    15
+                    ANDI                    31
                     ADDW                    0xd8
                     STW                     0xda
                     Random                  
-                    ANDI                    7
+                    ANDI                    15
                     ADDW                    0xda
-                    ADDI                    8
-                    ST                      cursorXY + 1
+                    STW                     0xdc
                     Random                  
-                    ANDI                    63
-                    STW                     0xde                            ; at (rnd AND &h3F) + (rnd AND &h1F) + (rnd AND &h0F), (rnd AND &h3F) + (rnd AND &h1F) + (rnd AND &h0F) + (rnd AND &h07) + 8
+                    ANDI                    3
+                    ADDW                    0xdc
+                    ADDI                    0x08
+                    ST                      cursorXY + 1                    ; at (rnd AND &h3F) + (rnd AND &h1F) + (rnd AND &h07) + (rnd AND &h07), (rnd AND &h3F) + (rnd AND &h1F) + (rnd AND &h0F) + (rnd AND &h03)
 
-_50                 PrintString             usrStr_0x79ef                   ; print "Gigatron!";
+_50                 PrintString             usrStr_0x7cf3                   ; print "Gigatron!";
 
-_60                 LDWI                    _20
-                    CALL                    giga_vAC                        ; goto 20
+_60                 CALLI                   _20                             ; goto 20
 
-_end_0x0325         BRA                     _end_0x0325                     ; END
+_end_0x02ed         BRA                     _end_0x02ed                     ; END
 
 

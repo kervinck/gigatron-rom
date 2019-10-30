@@ -8,7 +8,7 @@
 ; sprite test
 
 
-%include ../macros/gigatron.i
+%include ../include/gigatron.i
 
 
 vram        EQU     0x0800

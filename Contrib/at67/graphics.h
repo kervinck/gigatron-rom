@@ -91,8 +91,8 @@ namespace Graphics
     void renderTextWindow(void);
     void render(bool synchronise=true);
 
-    void drawLine(int x, int y, int x2, int y2, uint32_t colour);
-    void drawLineGiga(uint16_t x, uint16_t y, uint16_t x2, uint16_t y2, uint8_t colour);
+    void drawLineGiga(int x0, int y0, int x1, int y1);
+    void drawLineGiga(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint8_t colour);
     void life(bool initialise);
     void life1(bool initialise);
     void tetris(void);

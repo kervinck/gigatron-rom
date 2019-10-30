@@ -1,0 +1,5 @@
+10 poke 180,42:cls:'Paper
+20 poke 181,rnd %64:'Pen
+30 at rnd %155,rnd%113
+40 put 127:'Block
+50 goto 20

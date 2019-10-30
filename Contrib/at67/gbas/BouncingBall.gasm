@@ -1,0 +1,150 @@
+_startAddress_      EQU                     0x0200
+convertEqOp         EQU                     0x7fa0
+convertNeOp         EQU                     0x7fa9
+convertLeOp         EQU                     0x7fb2
+convertGeOp         EQU                     0x7fbb
+convertLtOp         EQU                     0x7fc4
+convertGtOp         EQU                     0x7fcd
+multiply16bit       EQU                     0x7fd6
+divide16bit         EQU                     0x7ea0
+random16bit         EQU                     0x7ef6
+shiftLeft4bit       EQU                     0x7da0
+shiftLeft8bit       EQU                     0x7daa
+shiftRight1bit      EQU                     0x7db4
+shiftRight2bit      EQU                     0x7dbe
+shiftRight3bit      EQU                     0x7dc8
+shiftRight4bit      EQU                     0x7dd2
+shiftRight5bit      EQU                     0x7ddc
+shiftRight6bit      EQU                     0x7de6
+shiftRight7bit      EQU                     0x7df0
+shiftRight8bit      EQU                     0x7ca0
+resetVideoTable     EQU                     0x7caa
+scanlineMode        EQU                     0x7cc6
+waitVBlank          EQU                     0x7cda
+clearRegion         EQU                     0x7ba0
+clearCursorRow      EQU                     0x7aa0
+drawLine            EQU                     0x79a0
+drawLineExt         EQU                     0x78a0
+drawLinePixel       EQU                     0x7cf1
+printText           EQU                     0x7adf
+printDigit          EQU                     0x77a0
+printInt16          EQU                     0x76a0
+printChar           EQU                     0x75a0
+printHexByte        EQU                     0x77c2
+printHexWord        EQU                     0x74a0
+newLineScroll       EQU                     0x73a0
+resetAudio          EQU                     0x74b9
+playMidi            EQU                     0x72a0
+playMidiAsync       EQU                     0x7beb
+midiStartNote       EQU                     0x71a0
+convertEqOpAddr     EQU                     0x00E2
+convertNeOpAddr     EQU                     0x00E4
+convertLeOpAddr     EQU                     0x00E6
+convertGeOpAddr     EQU                     0x00E8
+convertLtOpAddr     EQU                     0x00EA
+convertGtOpAddr     EQU                     0x00EC
+
+; Internal variables
+register0           EQU                     0x00a0
+register1           EQU                     register0 + 0x02
+register2           EQU                     register0 + 0x04
+register3           EQU                     register0 + 0x06
+register4           EQU                     register0 + 0x08
+register5           EQU                     register0 + 0x0A
+register6           EQU                     register0 + 0x0C
+register7           EQU                     register0 + 0x0E
+register8           EQU                     register0 + 0x10
+register9           EQU                     register0 + 0x12
+register10          EQU                     0x0024
+register11          EQU                     0x0026
+register12          EQU                     0x0028
+register13          EQU                     0x002A
+fgbgColour          EQU                     register0 + 0x14
+cursorXY            EQU                     register0 + 0x16
+midiStreamPtr       EQU                     register0 + 0x18
+midiDelay           EQU                     register0 + 0x1A
+frameCountPrev      EQU                     register0 + 0x1C
+textScroll          EQU                     register0 + 0x1E
+
+; Includes
+%include            include/gigatron.i
+%include            include/math.i
+%include            include/conv_conds.i
+%include            include/audio.i
+%include            include/graphics.i
+%include            include/clear_screen.i
+%include            include/print_text.i
+%include            include/macros.i
+
+; Labels
+_entryPoint_        EQU                     0x0200
+_10                 EQU                     0x0253
+_20                 EQU                     0x0253
+_30                 EQU                     0x025b
+_40                 EQU                     0x029e
+_50                 EQU                     0x02a2
+_60                 EQU                     0x02af
+_70                 EQU                     0x02b5
+_80                 EQU                     0x02c2
+_90                 EQU                     0x02d9
+_100                EQU                     0x02df
+_end_0x02e8         EQU                     0x02e4
+_next_0x02a2        EQU                     0x02a2
+
+; Variables
+_X                  EQU                     0x0030
+_V                  EQU                     0x0032
+_I                  EQU                     0x0034
+
+; Strings
+
+; Code
+_entryPoint_        Initialise              
+                    InitialiseCcOps                                         ; INIT
+
+_20                 LDI                     2
+                    STW                     _X
+                    LDI                     6
+                    STW                     _V                              ; X=2:V=6
+
+_30                 Initialise              
+                    LDW                     _X
+                    ST                      cursorXY
+                    LDI                     60
+                    ADDI                    0x08
+                    ST                      cursorXY + 1
+                    LDI                     0
+                    STW                     textScroll                      ; CLS:AT X,60 : SCROLL 0
+
+_40                 LDI                     1
+                    STW                     _I                              ; FOR I=1 TO 25
+
+_50                 LDW                     _X
+                    ST                      cursorXY
+                    LDI                     32
+                    PrintAcChar                                             ; AT X:PUT 32:REM CLEAR
+
+_60                 LDW                     _X
+                    ADDW                    _V
+                    STW                     _X                              ; X=X+V
+
+_70                 LDW                     _X
+                    ST                      cursorXY
+                    LDI                     79
+                    PrintAcChar                                             ; AT X:PUT 79:REM DRAW O
+
+_80                 LDI                     1
+                    STW                     waitVBlankNum
+                    WaitVBlank              
+                    ForNextLoopUp           _I _50                  25      ; WAIT 1:NEXT I
+
+_90                 LDI                     0
+                    SUBW                    _V
+                    STW                     _V                              ; V=-V
+
+_100                LDWI                    _40
+                    CALL                    giga_vAC                        ; GOTO 40
+
+_end_0x02e8         BRA                     _end_0x02e8                     ; END
+
+

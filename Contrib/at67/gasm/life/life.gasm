@@ -1,3 +1,5 @@
+; game of life coded by at67, original algorithm by John Conway
+
 vram        EQU     0x0800
 buffer0     EQU     0x08A0
 buffer1     EQU     0x08C0

@@ -1,5 +1,5 @@
-%include macros\gigatron.i
-%include macros\macros.i
+%include include\gigatron.i
+%include include\macros.i
 
 
 ii              EQU     0x30

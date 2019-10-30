@@ -1,27 +1,38 @@
 _startAddress_      EQU                     0x0200
-resetVideoTable     EQU                     0x7fa0
-clearRegion         EQU                     0x7ea0
-convertEqOp         EQU                     0x7fbc
-convertNeOp         EQU                     0x7fc5
-convertLeOp         EQU                     0x7fce
-convertGeOp         EQU                     0x7fd7
-convertLtOp         EQU                     0x7fe0
-convertGtOp         EQU                     0x7fe9
-multiply16bit       EQU                     0x7da0
-divide16bit         EQU                     0x7ca0
-random16bit         EQU                     0x7ff2
-clearCursorRow      EQU                     0x7ba0
-printText           EQU                     0x7dc3
-printDigit          EQU                     0x7aa0
-printInt16          EQU                     0x79a0
-printChar           EQU                     0x78a0
-printHexByte        EQU                     0x7ac2
-printHexWord        EQU                     0x7de0
-newLineScroll       EQU                     0x77a0
-resetAudio          EQU                     0x76a0
-playMidi            EQU                     0x75a0
-playMidiAsync       EQU                     0x7eeb
-midiStartNote       EQU                     0x74a0
+convertEqOp         EQU                     0x7fa0
+convertNeOp         EQU                     0x7fa9
+convertLeOp         EQU                     0x7fb2
+convertGeOp         EQU                     0x7fbb
+convertLtOp         EQU                     0x7fc4
+convertGtOp         EQU                     0x7fcd
+multiply16bit       EQU                     0x7fd6
+divide16bit         EQU                     0x7ea0
+random16bit         EQU                     0x7ef6
+shiftLeft4bit       EQU                     0x7da0
+shiftLeft8bit       EQU                     0x7daa
+shiftRight1bit      EQU                     0x7db4
+shiftRight2bit      EQU                     0x7dbe
+shiftRight3bit      EQU                     0x7dc8
+shiftRight4bit      EQU                     0x7dd2
+shiftRight5bit      EQU                     0x7ddc
+shiftRight6bit      EQU                     0x7de6
+shiftRight7bit      EQU                     0x7df0
+shiftRight8bit      EQU                     0x7ca0
+resetVideoTable     EQU                     0x7caa
+scanlineMode        EQU                     0x7cc6
+clearRegion         EQU                     0x7ba0
+clearCursorRow      EQU                     0x7aa0
+printText           EQU                     0x7cda
+printDigit          EQU                     0x79a0
+printInt16          EQU                     0x78a0
+printChar           EQU                     0x77a0
+printHexByte        EQU                     0x79c2
+printHexWord        EQU                     0x7adf
+newLineScroll       EQU                     0x76a0
+resetAudio          EQU                     0x75a0
+playMidi            EQU                     0x74a0
+playMidiAsync       EQU                     0x7beb
+midiStartNote       EQU                     0x73a0
 convertEqOpAddr     EQU                     0x00E2
 convertNeOpAddr     EQU                     0x00E4
 convertLeOpAddr     EQU                     0x00E6
@@ -51,6 +62,7 @@ frameCountPrev      EQU                     register0 + 0x1C
 %include            include/math.i
 %include            include/conv_conds.i
 %include            include/audio.i
+%include            include/graphics.i
 %include            include/clear_screen.i
 %include            include/print_text.i
 %include            include/macros.i
@@ -67,20 +79,20 @@ _35                 EQU                     0x08e4
 _36                 EQU                     0x09ac
 _37                 EQU                     0x09c7
 _40                 EQU                     0x13c3
-_end_39             EQU                     0x13c8
-_end_40             EQU                     0x13ca
-0x08a0              EQU                     0x08a0
-0x09a0              EQU                     0x09a0
-0x0aa0              EQU                     0x0aa0
-0x0ba0              EQU                     0x0ba0
-0x0ca0              EQU                     0x0ca0
-0x0da0              EQU                     0x0da0
-0x0ea0              EQU                     0x0ea0
-0x0fa0              EQU                     0x0fa0
-0x10a0              EQU                     0x10a0
-0x11a0              EQU                     0x11a0
-0x12a0              EQU                     0x12a0
-0x13a0              EQU                     0x13a0
+_end_0x06fd         EQU                     0x13c8
+_end_0x06ff         EQU                     0x13ca
+_page_0x08a0        EQU                     0x08a0
+_page_0x09a0        EQU                     0x09a0
+_page_0x0aa0        EQU                     0x0aa0
+_page_0x0ba0        EQU                     0x0ba0
+_page_0x0ca0        EQU                     0x0ca0
+_page_0x0da0        EQU                     0x0da0
+_page_0x0ea0        EQU                     0x0ea0
+_page_0x0fa0        EQU                     0x0fa0
+_page_0x10a0        EQU                     0x10a0
+_page_0x11a0        EQU                     0x11a0
+_page_0x12a0        EQU                     0x12a0
+_page_0x13a0        EQU                     0x13a0
 
 ; Variables
 _a                  EQU                     0x0030
@@ -93,8 +105,8 @@ _g                  EQU                     0x003c
 _z                  EQU                     0x003e
 
 ; Strings
-usrStr_0x7ffa       EQU                     0x7ffa
-usrStr_0x7ffa       DB                      1 ' '
+usrStr_0x7ff9       EQU                     0x7ff9
+usrStr_0x7ff9       DB                      1 ' '
 
 ; Code
 _entryPoint_        Initialise              
@@ -189,9 +201,9 @@ _32                 LDI                     0
                     STW                     0xd0
                     LDI                     24
                     STW                     0xe0
-                    LDWI                    0x08a0
+                    LDWI                    _page_0x08a0
                     CALL                    giga_vAC
-0x08a0              LDW                     0xe0
+_page_0x08a0        LDW                     0xe0
                     SUBW                    _g
                     STW                     0xd2
                     LDW                     0xd0
@@ -236,9 +248,9 @@ _35                 LDI                     0
                     LDI                     24
                     SUBW                    _g
                     STW                     0xe0
-                    LDWI                    0x09a0
+                    LDWI                    _page_0x09a0
                     CALL                    giga_vAC
-0x09a0              LDW                     0xe0
+_page_0x09a0        LDW                     0xe0
                     STW                     0xd2
                     LDW                     0xd0
                     SUBW                    0xd2
@@ -282,9 +294,9 @@ _37                 LDI                     0
                     LDWI                    -900
                     ADDW                    _f
                     STW                     0xe0
-                    LDWI                    0x0aa0
+                    LDWI                    _page_0x0aa0
                     CALL                    giga_vAC
-0x0aa0              LDW                     0xe0
+_page_0x0aa0        LDW                     0xe0
                     STW                     0xd4
                     LDW                     0xd2
                     SUBW                    0xd4
@@ -327,9 +339,9 @@ _37                 LDI                     0
 
                     LDWI                    -2949
                     STW                     0xe0
-                    LDWI                    0x0ba0
+                    LDWI                    _page_0x0ba0
                     CALL                    giga_vAC
-0x0ba0              LDW                     0xe0
+_page_0x0ba0        LDW                     0xe0
                     ADDW                    _b
                     STW                     0xd0
                     LDWI                    300
@@ -371,9 +383,9 @@ _37                 LDI                     0
                     ADDW                    _f
                     STW                     0xd4
                     STW                     0xe0
-                    LDWI                    0x0ca0
+                    LDWI                    _page_0x0ca0
                     CALL                    giga_vAC
-0x0ca0              LDW                     0xe0
+_page_0x0ca0        LDW                     0xe0
                     LDW                     0xd2
                     SUBW                    0xd4
                     STW                     0xd4
@@ -416,9 +428,9 @@ _37                 LDI                     0
                     LDWI                    -2949
                     ADDW                    _b
                     STW                     0xe0
-                    LDWI                    0x0da0
+                    LDWI                    _page_0x0da0
                     CALL                    giga_vAC
-0x0da0              LDW                     0xe0
+_page_0x0da0        LDW                     0xe0
                     STW                     0xd0
                     LDWI                    300
                     ADDW                    _e
@@ -460,9 +472,9 @@ _37                 LDI                     0
                     STW                     0xd4
                     LDW                     0xd2
                     STW                     0xe0
-                    LDWI                    0x0ea0
+                    LDWI                    _page_0x0ea0
                     CALL                    giga_vAC
-0x0ea0              LDW                     0xe0
+_page_0x0ea0        LDW                     0xe0
                     SUBW                    0xd4
                     STW                     0xd4
                     LDW                     0xd0
@@ -505,9 +517,9 @@ _37                 LDI                     0
                     ADDW                    _b
                     STW                     0xd0
                     STW                     0xe0
-                    LDWI                    0x0fa0
+                    LDWI                    _page_0x0fa0
                     CALL                    giga_vAC
-0x0fa0              LDW                     0xe0
+_page_0x0fa0        LDW                     0xe0
                     LDWI                    300
                     ADDW                    _e
                     STW                     0xd2
@@ -549,9 +561,9 @@ _37                 LDI                     0
                     LDW                     0xd2
                     SUBW                    0xd4
                     STW                     0xe0
-                    LDWI                    0x10a0
+                    LDWI                    _page_0x10a0
                     CALL                    giga_vAC
-0x10a0              LDW                     0xe0
+_page_0x10a0        LDW                     0xe0
                     STW                     0xd4
                     LDW                     0xd0
                     SUBW                    0xd4
@@ -594,9 +606,9 @@ _37                 LDI                     0
                     STW                     0xd0
                     LDWI                    300
                     STW                     0xe0
-                    LDWI                    0x11a0
+                    LDWI                    _page_0x11a0
                     CALL                    giga_vAC
-0x11a0              LDW                     0xe0
+_page_0x11a0        LDW                     0xe0
                     ADDW                    _e
                     STW                     0xd2
                     LDWI                    -900
@@ -610,27 +622,27 @@ _37                 LDI                     0
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
                     PrintVarInt16           _a
-                    PrintString             usrStr_0x7ffa
+                    PrintString             usrStr_0x7ff9
                     PrintVarInt16           _b
-                    PrintString             usrStr_0x7ffa
+                    PrintString             usrStr_0x7ff9
                     PrintVarInt16           _d
                     STW                     0xe0
-                    LDWI                    0x12a0
+                    LDWI                    _page_0x12a0
                     CALL                    giga_vAC
-0x12a0              LDW                     0xe0
-                    PrintString             usrStr_0x7ffa
+_page_0x12a0        LDW                     0xe0
+                    PrintString             usrStr_0x7ff9
                     PrintVarInt16           _e
-                    PrintString             usrStr_0x7ffa
+                    PrintString             usrStr_0x7ff9
                     PrintVarInt16           _f
-                    PrintString             usrStr_0x7ffa
+                    PrintString             usrStr_0x7ff9
                     PrintVarInt16           _g
-                    PrintString             usrStr_0x7ffa
+                    PrintString             usrStr_0x7ff9
                     STW                     0xe0
-                    LDWI                    0x13a0
+                    LDWI                    _page_0x13a0
                     CALL                    giga_vAC
-0x13a0              LDW                     0xe0
+_page_0x13a0        LDW                     0xe0
                     PrintVarInt16           _z
-                    PrintString             usrStr_0x7ffa
+                    PrintString             usrStr_0x7ff9
                     PrintVarInt16           _cat
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print a;" ";b;" ";d;" ";e;" ";f;" ";g;" ";z;" ";cat
@@ -638,8 +650,8 @@ _37                 LDI                     0
 _40                 LDWI                    _10
                     CALL                    giga_vAC                        ; goto 10
 
-_end_39             BRA                     _end_39                         ; end
+_end_0x06fd         BRA                     _end_0x06fd                     ; end
 
-_end_40             BRA                     _end_40                         ; END
+_end_0x06ff         BRA                     _end_0x06ff                     ; END
 
 

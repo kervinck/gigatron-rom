@@ -1,37 +1,45 @@
 _startAddress_      EQU                     0x0200
-resetVideoTable     EQU                     0x7fa0
-clearRegion         EQU                     0x7ea0
-convertEqOp         EQU                     0x7fbc
-convertNeOp         EQU                     0x7fc5
-convertLeOp         EQU                     0x7fce
-convertGeOp         EQU                     0x7fd7
-convertLtOp         EQU                     0x7fe0
-convertGtOp         EQU                     0x7fe9
-multiply16bit       EQU                     0x7da0
-divide16bit         EQU                     0x7ca0
-random16bit         EQU                     0x7ff2
-shiftLeft4bit       EQU                     0x7eeb
-shiftLeft8bit       EQU                     0x7ef5
-shiftRight1bit      EQU                     0x7dc3
-shiftRight2bit      EQU                     0x7dcd
-shiftRight3bit      EQU                     0x7dd7
-shiftRight4bit      EQU                     0x7de1
-shiftRight5bit      EQU                     0x7deb
-shiftRight6bit      EQU                     0x7df5
-shiftRight7bit      EQU                     0x7cf6
-shiftRight8bit      EQU                     0x7ba0
-clearCursorRow      EQU                     0x7baa
-printText           EQU                     0x7aa0
-printDigit          EQU                     0x7ab9
-printInt16          EQU                     0x79a0
-printChar           EQU                     0x78a0
-printHexByte        EQU                     0x77a0
-printHexWord        EQU                     0x7be9
-newLineScroll       EQU                     0x76a0
-resetAudio          EQU                     0x77ca
-playMidi            EQU                     0x75a0
-playMidiAsync       EQU                     0x7ad9
-midiStartNote       EQU                     0x74a0
+convertEqOp         EQU                     0x7fa0
+convertNeOp         EQU                     0x7fa9
+convertLeOp         EQU                     0x7fb2
+convertGeOp         EQU                     0x7fbb
+convertLtOp         EQU                     0x7fc4
+convertGtOp         EQU                     0x7fcd
+multiply16bit       EQU                     0x7fd6
+divide16bit         EQU                     0x7ea0
+random16bit         EQU                     0x7ef6
+shiftLeft4bit       EQU                     0x7da0
+shiftLeft8bit       EQU                     0x7daa
+shiftRight1bit      EQU                     0x7db4
+shiftRight2bit      EQU                     0x7dbe
+shiftRight3bit      EQU                     0x7dc8
+shiftRight4bit      EQU                     0x7dd2
+shiftRight5bit      EQU                     0x7ddc
+shiftRight6bit      EQU                     0x7de6
+shiftRight7bit      EQU                     0x7df0
+shiftRight8bit      EQU                     0x7ca0
+resetVideoTable     EQU                     0x7caa
+scanlineMode        EQU                     0x7cc6
+waitVBlank          EQU                     0x7cda
+clearRegion         EQU                     0x7ba0
+clearCursorRow      EQU                     0x7aa0
+printText           EQU                     0x7adf
+printDigit          EQU                     0x79a0
+printInt16          EQU                     0x78a0
+printChar           EQU                     0x77a0
+printHexByte        EQU                     0x79c2
+printHexWord        EQU                     0x76a0
+newLineScroll       EQU                     0x75a0
+resetAudio          EQU                     0x76b9
+playMidi            EQU                     0x74a0
+playMidiAsync       EQU                     0x7beb
+midiStartNote       EQU                     0x73a0
+convertEqOpAddr     EQU                     0x00E2
+convertNeOpAddr     EQU                     0x00E4
+convertLeOpAddr     EQU                     0x00E6
+convertGeOpAddr     EQU                     0x00E8
+convertLtOpAddr     EQU                     0x00EA
+convertGtOpAddr     EQU                     0x00EC
 
 ; Internal variables
 register0           EQU                     0x00a0
@@ -55,38 +63,41 @@ frameCountPrev      EQU                     register0 + 0x1C
 %include            include/math.i
 %include            include/conv_conds.i
 %include            include/audio.i
+%include            include/graphics.i
 %include            include/clear_screen.i
-%include            include/print_text_CALLI.i
-%include            include/macros_CALLI.i
+%include            include/print_text.i
+%include            include/macros.i
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_9                  EQU                     0x022e
-_10                 EQU                     0x0241
-_20                 EQU                     0x025b
-_30                 EQU                     0x0267
-_31                 EQU                     0x022e
-_32                 EQU                     0x022e
-_33                 EQU                     0x022e
-_34                 EQU                     0x022e
-_35                 EQU                     0x022e
-_36                 EQU                     0x022e
-_end_0x026d         EQU                     0x0267
-_next_0x0253        EQU                     0x024f
+_9                  EQU                     0x024e
+_10                 EQU                     0x026b
+_20                 EQU                     0x027f
+_30                 EQU                     0x028e
+_31                 EQU                     0x024e
+_32                 EQU                     0x024e
+_33                 EQU                     0x024e
+_34                 EQU                     0x024e
+_35                 EQU                     0x024e
+_36                 EQU                     0x024e
+_end_0x0294         EQU                     0x028e
 
 ; Variables
 _P                  EQU                     0x0030
 _Q                  EQU                     0x0032
 _R                  EQU                     0x0034
 _X                  EQU                     0x0036
-_i                  EQU                     0x0038
 
 ; Strings
 
 ; Code
-_entryPoint_        Initialise                                              ; INIT
+_entryPoint_        Initialise              
+                    InitialiseCcOps                                         ; INIT
 
-_9                  LDWI                    257
+_9                  LDWI                    2
+                    STW                     graphicsMode
+                    ScanlineMode            
+                    LDWI                    257
                     STW                     _P
                     LDWI                    337
                     STW                     _Q
@@ -95,23 +106,23 @@ _9                  LDWI                    257
                     LDI                     0
                     STW                     _X                              ; MODE 2:P=257:Q=337:R=417:X=0
 
-_10                 LDI                     0
+_10                 LDWI                    1
+                    STW                     waitVBlankNum
+                    WaitVBlank              
+                    LDI                     0
                     SUBW                    _X
                     POKE                    _P
                     LD                      _X
-                    POKE                    _Q                              ; POKE P,-X:POKE Q,X
-
-                    LDI                     0
-                    STW                     _i
-_next_0x0253        ForNextLoopUp           _i _next_0x0253 50              ; for i=0 to 50:next i
+                    POKE                    _Q                              ; WAIT 1:POKE P,-X:POKE Q,X
 
 _20                 LD                      _X
                     POKE                    _R
                     LDW                     _X
                     SUBI                    1
                     STW                     _X
-                    BRA                     _10                             ; POKE R,X:X=X-1:GOTO 10
+                    LDWI                    _10
+                    CALL                    giga_vAC                        ; POKE R,X:X=X-1:GOTO 10
 
-_end_0x026d         BRA                     _end_0x026d                     ; END
+_end_0x0294         BRA                     _end_0x0294                     ; END
 
 

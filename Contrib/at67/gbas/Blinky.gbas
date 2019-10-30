@@ -1,8 +1,3 @@
-POKE &h0800,&hFF
-x = &h0801
-POKE x,&b00000011
-c = &b00001100
-POKE &h0802,c
 
 10'Blink center pixel
 20 X=160/2:Y=120/2:I=0

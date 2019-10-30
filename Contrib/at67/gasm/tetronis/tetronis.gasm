@@ -1,4 +1,4 @@
-%include ../macros/gigatron.i
+%include ../include/gigatron.i
 
 ; 0x30 -> 0x38  Vars
 ; 0x3A -> 0x45  Midi

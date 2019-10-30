@@ -8,7 +8,7 @@ rem original
 ' 20 poke 180,rnd MOD 64
 ' 29 rem Pen Color:
 ' 30 poke 181,rnd MOD 64
-' 40 at rnd MOD x,(rnd MOD y) + 8
+' 40 at rnd MOD x,(rnd MOD y)
 ' 50 print "Gigatron!";
 ' 60 goto 20
 
@@ -21,6 +21,6 @@ rem optimised
 20 poke 180,rnd AND 63
 29 rem Pen Color:
 30 poke 181,rnd AND 63
-40 at (rnd AND &h3F) + (rnd AND &h1F) + (rnd AND &h0F), (rnd AND &h3F) + (rnd AND &h1F) + (rnd AND &h0F) + (rnd AND &h07) + 8
+40 at (rnd AND &h3F) + (rnd AND &h1F) + (rnd AND &h07) + (rnd AND &h07), (rnd AND &h3F) + (rnd AND &h1F) + (rnd AND &h0F) + (rnd AND &h03)
 50 print "Gigatron!";
 60 goto 20

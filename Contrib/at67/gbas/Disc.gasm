@@ -1,0 +1,170 @@
+_startAddress_      EQU                     0x0200
+convertEqOp         EQU                     0x7fa0
+convertNeOp         EQU                     0x7fa9
+convertLeOp         EQU                     0x7fb2
+convertGeOp         EQU                     0x7fbb
+convertLtOp         EQU                     0x7fc4
+convertGtOp         EQU                     0x7fcd
+multiply16bit       EQU                     0x7fd6
+divide16bit         EQU                     0x7ea0
+random16bit         EQU                     0x7ef6
+shiftLeft4bit       EQU                     0x7da0
+shiftLeft8bit       EQU                     0x7daa
+shiftRight1bit      EQU                     0x7db4
+shiftRight2bit      EQU                     0x7dbe
+shiftRight3bit      EQU                     0x7dc8
+shiftRight4bit      EQU                     0x7dd2
+shiftRight5bit      EQU                     0x7ddc
+shiftRight6bit      EQU                     0x7de6
+shiftRight7bit      EQU                     0x7df0
+shiftRight8bit      EQU                     0x7ca0
+resetVideoTable     EQU                     0x7caa
+scanlineMode        EQU                     0x7cc6
+waitVBlank          EQU                     0x7cda
+clearRegion         EQU                     0x7ba0
+clearCursorRow      EQU                     0x7aa0
+drawLine            EQU                     0x79a0
+drawLineExt         EQU                     0x78a0
+drawLinePixel       EQU                     0x7cf1
+printText           EQU                     0x7adf
+printDigit          EQU                     0x77a0
+printInt16          EQU                     0x77c0
+printChar           EQU                     0x76a0
+printHexByte        EQU                     0x75a0
+printHexWord        EQU                     0x7beb
+newLineScroll       EQU                     0x74a0
+resetAudio          EQU                     0x75ca
+playMidi            EQU                     0x73a0
+playMidiAsync       EQU                     0x74ec
+midiStartNote       EQU                     0x72a0
+
+; Internal variables
+register0           EQU                     0x00a0
+register1           EQU                     register0 + 0x02
+register2           EQU                     register0 + 0x04
+register3           EQU                     register0 + 0x06
+register4           EQU                     register0 + 0x08
+register5           EQU                     register0 + 0x0A
+register6           EQU                     register0 + 0x0C
+register7           EQU                     register0 + 0x0E
+register8           EQU                     register0 + 0x10
+register9           EQU                     register0 + 0x12
+register10          EQU                     0x0024
+register11          EQU                     0x0026
+register12          EQU                     0x0028
+register13          EQU                     0x002A
+fgbgColour          EQU                     register0 + 0x14
+cursorXY            EQU                     register0 + 0x16
+midiStreamPtr       EQU                     register0 + 0x18
+midiDelay           EQU                     register0 + 0x1A
+frameCountPrev      EQU                     register0 + 0x1C
+textScroll          EQU                     register0 + 0x1E
+
+; Includes
+%include            include/gigatron.i
+%include            include/math.i
+%include            include/conv_conds.i
+%include            include/audio.i
+%include            include/graphics.i
+%include            include/clear_screen.i
+%include            include/print_text_CALLI.i
+%include            include/macros_CALLI.i
+
+; Labels
+_entryPoint_        EQU                     0x0200
+_10                 EQU                     0x0233
+_20                 EQU                     0x023f
+_30                 EQU                     0x027a
+_40                 EQU                     0x0295
+_50                 EQU                     0x02b0
+_60                 EQU                     0x02c0
+_70                 EQU                     0x02cb
+_80                 EQU                     0x02db
+_end_0x032a         EQU                     0x02e6
+_if_0x02fd          EQU                     0x02cb
+_if_0x032a          EQU                     0x02e6
+
+; Variables
+_x                  EQU                     0x0030
+_y                  EQU                     0x0032
+_u                  EQU                     0x0034
+_v                  EQU                     0x0036
+_w                  EQU                     0x0038
+
+; Strings
+
+; Code
+_entryPoint_        Initialise                                              ; INIT
+
+_10                 LDI                     80
+                    STW                     _x
+                    LDI                     60
+                    STW                     _y
+                    LDI                     45
+                    STW                     _u                              ; x=80:y=60:u=45:'Radius
+
+_20                 Initialise              
+                    LDI                     0
+                    STW                     _v
+                    LDI                     0
+                    STW                     _w                              ; cls:v=0:w=0
+
+_30                 LDW                     _x
+                    SUBW                    _u
+                    STW                     drawLine_x1
+                    LDW                     _y
+                    SUBW                    _v
+                    STW                     drawLine_y1
+                    LDW                     _x
+                    ADDW                    _u
+                    STW                     drawLine_x2
+                    LDW                     _y
+                    SUBW                    _v
+                    STW                     drawLine_y2
+                    DrawLine                                                ; line x-u, y-v, x+u, y-v
+
+_40                 LDW                     _x
+                    SUBW                    _u
+                    STW                     drawLine_x1
+                    LDW                     _y
+                    ADDW                    _v
+                    STW                     drawLine_y1
+                    LDW                     _x
+                    ADDW                    _u
+                    STW                     drawLine_x2
+                    LDW                     _y
+                    ADDW                    _v
+                    STW                     drawLine_y2
+                    DrawLine                                                ; line x-u, y+v, x+u, y+v
+
+_50                 LDW                     _w
+                    ADDW                    _v
+                    ADDW                    _v
+                    ADDI                    1
+                    STW                     _w
+                    LDW                     _v
+                    ADDI                    1
+                    STW                     _v                              ; w=w+v+v+1:v=v+1
+
+_60                 LDW                     _w
+                    CALLI                   convertLtOp
+                    BEQ                     _70                 
+                    CALLI                   _30                             ; if w<0 then goto 30
+
+_70                 LDW                     _w
+                    SUBW                    _u
+                    SUBW                    _u
+                    ADDI                    1
+                    STW                     _w
+                    LDW                     _u
+                    SUBI                    1
+                    STW                     _u                              ; w=w-u-u+1:u=u-1
+
+_80                 LDW                     _u
+                    CALLI                   convertGtOp
+                    BEQ                     _end_0x032a         
+                    CALLI                   _60                             ; if u>0 then goto 60
+
+_end_0x032a         BRA                     _end_0x032a                     ; END
+
+

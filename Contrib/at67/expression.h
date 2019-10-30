@@ -38,6 +38,7 @@ namespace Expression
     std::string::const_iterator findNonStringEquals(const std::string& input);
     void stripNonStringWhitespace(std::string& input);
     void stripWhitespace(std::string& input);
+    std::string stripStrings(const std::string& input);
     void trimWhitespace(std::string& input);
     std::string collapseWhitespace(std::string& input);
     std::string collapseWhitespaceNotStrings(std::string& input);

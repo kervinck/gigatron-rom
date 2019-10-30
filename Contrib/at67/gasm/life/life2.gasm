@@ -1,4 +1,4 @@
-; game of life by John Conway
+; game of life coded by at67, original algorithm by John Conway
 ; 32X32 runs about 1 fps on a 6.25MHz Gigatron TTL
 ; some optimisation, pointer arithmetic with offsets and a look up table to evalute neighbours count
 ; this world has boundaries

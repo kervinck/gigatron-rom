@@ -1,27 +1,38 @@
 _startAddress_      EQU                     0x0200
-resetVideoTable     EQU                     0x7fa0
-clearRegion         EQU                     0x7ea0
-convertEqOp         EQU                     0x7fbc
-convertNeOp         EQU                     0x7fc5
-convertLeOp         EQU                     0x7fce
-convertGeOp         EQU                     0x7fd7
-convertLtOp         EQU                     0x7fe0
-convertGtOp         EQU                     0x7fe9
-multiply16bit       EQU                     0x7da0
-divide16bit         EQU                     0x7ca0
-random16bit         EQU                     0x7ff2
-clearCursorRow      EQU                     0x7ba0
-printText           EQU                     0x7dc3
-printDigit          EQU                     0x7aa0
-printInt16          EQU                     0x79a0
-printChar           EQU                     0x78a0
-printHexByte        EQU                     0x7ac2
-printHexWord        EQU                     0x7de0
-newLineScroll       EQU                     0x77a0
-resetAudio          EQU                     0x76a0
-playMidi            EQU                     0x75a0
-playMidiAsync       EQU                     0x7eeb
-midiStartNote       EQU                     0x74a0
+convertEqOp         EQU                     0x7fa0
+convertNeOp         EQU                     0x7fa9
+convertLeOp         EQU                     0x7fb2
+convertGeOp         EQU                     0x7fbb
+convertLtOp         EQU                     0x7fc4
+convertGtOp         EQU                     0x7fcd
+multiply16bit       EQU                     0x7fd6
+divide16bit         EQU                     0x7ea0
+random16bit         EQU                     0x7ef6
+shiftLeft4bit       EQU                     0x7da0
+shiftLeft8bit       EQU                     0x7daa
+shiftRight1bit      EQU                     0x7db4
+shiftRight2bit      EQU                     0x7dbe
+shiftRight3bit      EQU                     0x7dc8
+shiftRight4bit      EQU                     0x7dd2
+shiftRight5bit      EQU                     0x7ddc
+shiftRight6bit      EQU                     0x7de6
+shiftRight7bit      EQU                     0x7df0
+shiftRight8bit      EQU                     0x7ca0
+resetVideoTable     EQU                     0x7caa
+scanlineMode        EQU                     0x7cc6
+clearRegion         EQU                     0x7ba0
+clearCursorRow      EQU                     0x7aa0
+printText           EQU                     0x7cda
+printDigit          EQU                     0x79a0
+printInt16          EQU                     0x78a0
+printChar           EQU                     0x77a0
+printHexByte        EQU                     0x79c2
+printHexWord        EQU                     0x7adf
+newLineScroll       EQU                     0x76a0
+resetAudio          EQU                     0x75a0
+playMidi            EQU                     0x74a0
+playMidiAsync       EQU                     0x7beb
+midiStartNote       EQU                     0x73a0
 convertEqOpAddr     EQU                     0x00E2
 convertNeOpAddr     EQU                     0x00E4
 convertLeOpAddr     EQU                     0x00E6
@@ -51,16 +62,17 @@ frameCountPrev      EQU                     register0 + 0x1C
 %include            include/math.i
 %include            include/conv_conds.i
 %include            include/audio.i
+%include            include/graphics.i
 %include            include/clear_screen.i
 %include            include/print_text.i
 %include            include/macros.i
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_end_9              EQU                     0x08b2
-_end_10             EQU                     0x08b4
+_end_0x0313         EQU                     0x08b2
+_end_0x0315         EQU                     0x08b4
 _next_0x0256        EQU                     0x0256
-0x08a0              EQU                     0x08a0
+_page_0x08a0        EQU                     0x08a0
 
 ; Variables
 _z                  EQU                     0x0030
@@ -72,8 +84,8 @@ _d                  EQU                     0x003a
 _e                  EQU                     0x003c
 
 ; Strings
-usrStr_0x7ffa       EQU                     0x7ffa
-usrStr_0x7ffa       DB                      1 ' '
+usrStr_0x7ff9       EQU                     0x7ff9
+usrStr_0x7ff9       DB                      1 ' '
 
 ; Code
 _entryPoint_        Initialise              
@@ -113,28 +125,28 @@ _next_0x0256        LDI                     16
                     STW                     _z                              ; z = z + 1
 
                     PrintVarInt16           _a
-                    PrintString             usrStr_0x7ffa
+                    PrintString             usrStr_0x7ff9
                     PrintVarInt16           _b
-                    PrintString             usrStr_0x7ffa
+                    PrintString             usrStr_0x7ff9
                     PrintVarInt16           _c
-                    PrintString             usrStr_0x7ffa
+                    PrintString             usrStr_0x7ff9
                     LDW                     _d
                     PrintAcHexByte          
-                    PrintString             usrStr_0x7ffa
+                    PrintString             usrStr_0x7ff9
                     LDW                     _e
                     PrintAcHexWord          
-                    PrintString             usrStr_0x7ffa
+                    PrintString             usrStr_0x7ff9
                     PrintVarInt16           _z
                     LDWI                    newLineScroll
                     STW                     0xe0
-                    LDWI                    0x08a0
+                    LDWI                    _page_0x08a0
                     CALL                    giga_vAC
-0x08a0              LDW                     0xe0
+_page_0x08a0        LDW                     0xe0
                     CALL                    giga_vAC
                     ForNextLoopUp           _i _next_0x0256 5               ; print a;" ";b;" ";c;" ";hex$(d);" ";hexw$(e);" ";z : next i
 
-_end_9              BRA                     _end_9                          ; END
+_end_0x0313         BRA                     _end_0x0313                     ; END
 
-_end_10             BRA                     _end_10                         ; END
+_end_0x0315         BRA                     _end_0x0315                     ; END
 
 

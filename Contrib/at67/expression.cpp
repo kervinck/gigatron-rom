@@ -185,6 +185,22 @@ namespace Expression
         input.erase(remove_if(input.begin(), input.end(), isspace), input.end());
     }
 
+    std::string stripStrings(const std::string& input)
+    {
+        size_t start = 0, end = 0;
+
+        std::string output = input;
+
+        while(start != std::string::npos  &&  end != std::string::npos)
+        {
+            start = input.find_first_of('"', end + 1);
+            end = input.find_first_of('"', start + 1);
+            if(start != std::string::npos) output.erase(start, end - start + 1);
+        }
+
+        return output;
+    }
+
     void trimWhitespace(std::string& input)
     {
         size_t start = input.find_first_not_of(" \n\r\f\t\v");
@@ -196,7 +212,7 @@ namespace Expression
         input = input.substr(start, size);
     }
 
-    std::string collapseWhitespace(std::string& input)
+    std::string collapseWhitespace(const std::string& input)
     {
         std::string output;
 

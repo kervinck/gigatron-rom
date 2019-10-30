@@ -1,27 +1,38 @@
 _startAddress_      EQU                     0x0200
-resetVideoTable     EQU                     0x7fa0
-clearRegion         EQU                     0x7ea0
-convertEqOp         EQU                     0x7fbc
-convertNeOp         EQU                     0x7fc5
-convertLeOp         EQU                     0x7fce
-convertGeOp         EQU                     0x7fd7
-convertLtOp         EQU                     0x7fe0
-convertGtOp         EQU                     0x7fe9
-multiply16bit       EQU                     0x7da0
-divide16bit         EQU                     0x7ca0
-random16bit         EQU                     0x7ff2
-clearCursorRow      EQU                     0x7ba0
-printText           EQU                     0x7dc3
-printDigit          EQU                     0x7ddc
-printInt16          EQU                     0x7aa0
-printChar           EQU                     0x79a0
-printHexByte        EQU                     0x78a0
-printHexWord        EQU                     0x7eeb
-newLineScroll       EQU                     0x77a0
-resetAudio          EQU                     0x78ca
-playMidi            EQU                     0x76a0
-playMidiAsync       EQU                     0x7bdf
-midiStartNote       EQU                     0x75a0
+convertEqOp         EQU                     0x7fa0
+convertNeOp         EQU                     0x7fa9
+convertLeOp         EQU                     0x7fb2
+convertGeOp         EQU                     0x7fbb
+convertLtOp         EQU                     0x7fc4
+convertGtOp         EQU                     0x7fcd
+multiply16bit       EQU                     0x7fd6
+divide16bit         EQU                     0x7ea0
+random16bit         EQU                     0x7ef6
+shiftLeft4bit       EQU                     0x7da0
+shiftLeft8bit       EQU                     0x7daa
+shiftRight1bit      EQU                     0x7db4
+shiftRight2bit      EQU                     0x7dbe
+shiftRight3bit      EQU                     0x7dc8
+shiftRight4bit      EQU                     0x7dd2
+shiftRight5bit      EQU                     0x7ddc
+shiftRight6bit      EQU                     0x7de6
+shiftRight7bit      EQU                     0x7df0
+shiftRight8bit      EQU                     0x7ca0
+resetVideoTable     EQU                     0x7caa
+scanlineMode        EQU                     0x7cc6
+clearRegion         EQU                     0x7ba0
+clearCursorRow      EQU                     0x7aa0
+printText           EQU                     0x7cda
+printDigit          EQU                     0x7adf
+printInt16          EQU                     0x79a0
+printChar           EQU                     0x78a0
+printHexByte        EQU                     0x77a0
+printHexWord        EQU                     0x7beb
+newLineScroll       EQU                     0x76a0
+resetAudio          EQU                     0x77ca
+playMidi            EQU                     0x75a0
+playMidiAsync       EQU                     0x79d9
+midiStartNote       EQU                     0x74a0
 
 ; Internal variables
 register0           EQU                     0x00a0
@@ -45,6 +56,7 @@ frameCountPrev      EQU                     register0 + 0x1C
 %include            include/math.i
 %include            include/conv_conds.i
 %include            include/audio.i
+%include            include/graphics.i
 %include            include/clear_screen.i
 %include            include/print_text_CALLI.i
 %include            include/macros_CALLI.i
@@ -56,7 +68,7 @@ _8                  EQU                     0x0260
 _15                 EQU                     0x02a7
 _16                 EQU                     0x02ad
 _20                 EQU                     0x02b3
-_end_8              EQU                     0x02b5
+_end_0x02e4         EQU                     0x02b6
 
 ; Variables
 _a                  EQU                     0x0030
@@ -66,10 +78,10 @@ _z                  EQU                     0x0036
 _j                  EQU                     0x0038
 
 ; Strings
-usrStr_0x7ffa       EQU                     0x7ffa
-usrStr_0x7ffa       DB                      1 ' '
-usrStr_0x7efa       EQU                     0x7efa
-usrStr_0x7efa       DB                      5 ' dog '
+usrStr_0x7ff9       EQU                     0x7ff9
+usrStr_0x7ff9       DB                      1 ' '
+usrStr_0x7dfa       EQU                     0x7dfa
+usrStr_0x7dfa       DB                      5 ' dog '
 
 ; Code
 _entryPoint_        Initialise                                              ; INIT
@@ -106,15 +118,15 @@ _8                  LDI                     2
                     SUBW                    _a
                     STW                     _j
                     PrintVarInt16           _a
-                    PrintString             usrStr_0x7ffa
+                    PrintString             usrStr_0x7ff9
                     PrintVarInt16           _b
-                    PrintString             usrStr_0x7ffa
+                    PrintString             usrStr_0x7ff9
                     LDI                     1
                     ADDW                    _b
                     PrintAcInt16            
-                    PrintString             usrStr_0x7efa
+                    PrintString             usrStr_0x7dfa
                     PrintVarInt16           _bb
-                    PrintString             usrStr_0x7ffa
+                    PrintString             usrStr_0x7ff9
                     LDW                     _z
                     SUBI                    20
                     CALLI                   convertGtOp
@@ -129,8 +141,8 @@ _16                 LDW                     _b
                     ADDI                    1
                     STW                     _b                              ; b = b+1
 
-_20                 BRA                     _1                              ; goto 1
+_20                 CALLI                   _1                              ; goto 1
 
-_end_8              BRA                     _end_8                          ; END
+_end_0x02e4         BRA                     _end_0x02e4                     ; END
 
 

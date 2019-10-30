@@ -1,37 +1,38 @@
 _startAddress_      EQU                     0x0200
-resetVideoTable     EQU                     0x7fa0
-clearRegion         EQU                     0x7ea0
-convertEqOp         EQU                     0x7fbc
-convertNeOp         EQU                     0x7fc5
-convertLeOp         EQU                     0x7fce
-convertGeOp         EQU                     0x7fd7
-convertLtOp         EQU                     0x7fe0
-convertGtOp         EQU                     0x7fe9
-multiply16bit       EQU                     0x7da0
-divide16bit         EQU                     0x7ca0
-random16bit         EQU                     0x7ff2
-shiftLeft4bit       EQU                     0x7eeb
-shiftLeft8bit       EQU                     0x7ef5
-shiftRight1bit      EQU                     0x7dc3
-shiftRight2bit      EQU                     0x7dcd
-shiftRight3bit      EQU                     0x7dd7
-shiftRight4bit      EQU                     0x7de1
-shiftRight5bit      EQU                     0x7deb
-shiftRight6bit      EQU                     0x7df5
-shiftRight7bit      EQU                     0x7cf6
-shiftRight8bit      EQU                     0x7ba0
-clearCursorRow      EQU                     0x7baa
-printText           EQU                     0x7aa0
-printDigit          EQU                     0x7abd
-printInt16          EQU                     0x79a0
-printChar           EQU                     0x78a0
-printHexByte        EQU                     0x77a0
+convertEqOp         EQU                     0x7fa0
+convertNeOp         EQU                     0x7fa9
+convertLeOp         EQU                     0x7fb2
+convertGeOp         EQU                     0x7fbb
+convertLtOp         EQU                     0x7fc4
+convertGtOp         EQU                     0x7fcd
+multiply16bit       EQU                     0x7fd6
+divide16bit         EQU                     0x7ea0
+random16bit         EQU                     0x7ef6
+shiftLeft4bit       EQU                     0x7da0
+shiftLeft8bit       EQU                     0x7daa
+shiftRight1bit      EQU                     0x7db4
+shiftRight2bit      EQU                     0x7dbe
+shiftRight3bit      EQU                     0x7dc8
+shiftRight4bit      EQU                     0x7dd2
+shiftRight5bit      EQU                     0x7ddc
+shiftRight6bit      EQU                     0x7de6
+shiftRight7bit      EQU                     0x7df0
+shiftRight8bit      EQU                     0x7ca0
+resetVideoTable     EQU                     0x7caa
+scanlineMode        EQU                     0x7cc6
+clearRegion         EQU                     0x7ba0
+clearCursorRow      EQU                     0x7aa0
+printText           EQU                     0x7cda
+printDigit          EQU                     0x79a0
+printInt16          EQU                     0x78a0
+printChar           EQU                     0x77a0
+printHexByte        EQU                     0x79c2
 printHexWord        EQU                     0x7adf
 newLineScroll       EQU                     0x76a0
-resetAudio          EQU                     0x77d0
-playMidi            EQU                     0x75a0
-playMidiAsync       EQU                     0x7be9
-midiStartNote       EQU                     0x74a0
+resetAudio          EQU                     0x75a0
+playMidi            EQU                     0x74a0
+playMidiAsync       EQU                     0x7beb
+midiStartNote       EQU                     0x73a0
 convertEqOpAddr     EQU                     0x00E2
 convertNeOpAddr     EQU                     0x00E4
 convertLeOpAddr     EQU                     0x00E6
@@ -61,6 +62,7 @@ frameCountPrev      EQU                     register0 + 0x1C
 %include            include/math.i
 %include            include/conv_conds.i
 %include            include/audio.i
+%include            include/graphics.i
 %include            include/clear_screen.i
 %include            include/print_text.i
 %include            include/macros.i
@@ -147,7 +149,7 @@ _5                  LDI                     1
                     STW                     _u
                     LDW                     _x
                     CALL                    convertLtOpAddr
-                    BEQ                     _if_0x032c
+                    BEQ                     _6                  
                     LDI                     0
                     SUBW                    _x
                     STW                     _x
@@ -155,7 +157,7 @@ _5                  LDI                     1
                     SUBW                    _u
                     STW                     _u                              ; u=1  :if x<0 then x=-x:u=-u
 
-_if_0x032c          LDWI                    256
+_6                  LDWI                    256
                     STW                     _v
                     LDW                     _y
                     STW                     0xe0
@@ -163,7 +165,7 @@ _if_0x032c          LDWI                    256
                     CALL                    giga_vAC
 _page_0x08a0        LDW                     0xe0
                     CALL                    convertLtOpAddr
-                    BEQ                     _if_0x034e
+                    BEQ                     _7                  
                     LDI                     0
                     SUBW                    _y
                     STW                     _y
@@ -171,7 +173,7 @@ _page_0x08a0        LDW                     0xe0
                     SUBW                    _v
                     STW                     _v                              ; v=256:if y<0 then y=-y:v=-v
 
-_if_0x034e          LDW                     _b
+_7                  LDW                     _b
                     STW                     mathShift
                     ShiftLeft8bit           
                     ADDW                    _a
@@ -179,9 +181,9 @@ _if_0x034e          LDW                     _b
                     LDW                     _y
                     SUBW                    _x
                     CALL                    convertLtOpAddr
-                    BEQ                     _if_0x036e                      ; p= a + (b LSL 8):if y< x then goto9
+                    BEQ                     _8                              ; p= a + (b LSL 8):if y< x then goto9
 
-_if_0x036e          LDW                     _x
+_8                  LDW                     _x
                     STW                     _t
                     LDW                     _y
                     STW                     _x
@@ -221,7 +223,7 @@ _11                 LDW                     _d
                     ADDW                    _y
                     STW                     _d
                     CALL                    convertGtOpAddr
-                    BEQ                     _if_0x03d5
+                    BEQ                     _12                 
                     LDW                     _d
                     SUBW                    _x
                     STW                     _d
@@ -229,7 +231,7 @@ _11                 LDW                     _d
                     ADDW                    _v
                     STW                     _p                              ; d=d+y:if d>0 then d=d-x:p=p+v
 
-_if_0x03d5          LDW                     _p
+_12                 LDW                     _p
                     ADDW                    _u
                     STW                     _p
                     ForNextLoopStepUp       _t _next_0x03ac 0xc0 0xc2

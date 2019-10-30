@@ -1,36 +1,37 @@
 _startAddress_      EQU                     0x0200
-resetVideoTable     EQU                     0x7fa0
-clearRegion         EQU                     0x7ea0
-convertEqOp         EQU                     0x7fbc
-convertNeOp         EQU                     0x7fc5
-convertLeOp         EQU                     0x7fce
-convertGeOp         EQU                     0x7fd7
-convertLtOp         EQU                     0x7fe0
-convertGtOp         EQU                     0x7fe9
-multiply16bit       EQU                     0x7da0
-divide16bit         EQU                     0x7ca0
-random16bit         EQU                     0x7ff2
-shiftLeft4bit       EQU                     0x7eeb
-shiftLeft8bit       EQU                     0x7ef5
-shiftRight1bit      EQU                     0x7dc3
-shiftRight2bit      EQU                     0x7dcd
-shiftRight3bit      EQU                     0x7dd7
-shiftRight4bit      EQU                     0x7de1
-shiftRight5bit      EQU                     0x7deb
-shiftRight6bit      EQU                     0x7df5
-shiftRight7bit      EQU                     0x7cf6
-shiftRight8bit      EQU                     0x7ba0
-clearCursorRow      EQU                     0x7baa
-printText           EQU                     0x7aa0
-printDigit          EQU                     0x7ab9
+convertEqOp         EQU                     0x7fa0
+convertNeOp         EQU                     0x7fa9
+convertLeOp         EQU                     0x7fb2
+convertGeOp         EQU                     0x7fbb
+convertLtOp         EQU                     0x7fc4
+convertGtOp         EQU                     0x7fcd
+multiply16bit       EQU                     0x7fd6
+divide16bit         EQU                     0x7ea0
+random16bit         EQU                     0x7ef6
+shiftLeft4bit       EQU                     0x7da0
+shiftLeft8bit       EQU                     0x7daa
+shiftRight1bit      EQU                     0x7db4
+shiftRight2bit      EQU                     0x7dbe
+shiftRight3bit      EQU                     0x7dc8
+shiftRight4bit      EQU                     0x7dd2
+shiftRight5bit      EQU                     0x7ddc
+shiftRight6bit      EQU                     0x7de6
+shiftRight7bit      EQU                     0x7df0
+shiftRight8bit      EQU                     0x7ca0
+resetVideoTable     EQU                     0x7caa
+scanlineMode        EQU                     0x7cc6
+clearRegion         EQU                     0x7ba0
+clearCursorRow      EQU                     0x7aa0
+printText           EQU                     0x7cda
+printDigit          EQU                     0x7adf
 printInt16          EQU                     0x79a0
 printChar           EQU                     0x78a0
 printHexByte        EQU                     0x77a0
-printHexWord        EQU                     0x7be9
+printHexWord        EQU                     0x7beb
 newLineScroll       EQU                     0x76a0
 resetAudio          EQU                     0x77ca
 playMidi            EQU                     0x75a0
-playMidiAsync       EQU                     0x7ad9
+playMidiAsync       EQU                     0x79d9
 midiStartNote       EQU                     0x74a0
 
 ; Internal variables
@@ -55,6 +56,7 @@ frameCountPrev      EQU                     register0 + 0x1C
 %include            include/math.i
 %include            include/conv_conds.i
 %include            include/audio.i
+%include            include/graphics.i
 %include            include/clear_screen.i
 %include            include/print_text_CALLI.i
 %include            include/macros_CALLI.i
@@ -62,11 +64,11 @@ frameCountPrev      EQU                     register0 + 0x1C
 ; Labels
 _entryPoint_        EQU                     0x0200
 _10                 EQU                     0x022e
-_blamo              EQU                     0x08b3
-_end_0x0329         EQU                     0x08b1
-_end_0x03b4         EQU                     0x09cc
+_blamo              EQU                     0x08bb
+_end_0x033f         EQU                     0x08b9
+_end_0x03c4         EQU                     0x09cc
 _page_0x08a0        EQU                     0x08a0
-_next_0x033d        EQU                     0x08c3
+_next_0x0353        EQU                     0x08cb
 _page_0x09a0        EQU                     0x09a0
 
 ; Variables
@@ -83,12 +85,12 @@ _g                  EQU                     0x0042
 _h                  EQU                     0x0044
 
 ; Strings
-usrStr_0x7ffa       EQU                     0x7ffa
-usrStr_0x7ffa       DB                      1 ' '
-usrStr_0x7bf8       EQU                     0x7bf8
-usrStr_0x7bf8       DB                      4 'test'
-usrStr_0x7ffc       EQU                     0x7ffc
-usrStr_0x7ffc       DB                      3 'dog'
+usrStr_0x7ff9       EQU                     0x7ff9
+usrStr_0x7ff9       DB                      1 ' '
+usrStr_0x7ffb       EQU                     0x7ffb
+usrStr_0x7ffb       DB                      4 'test'
+usrStr_0x7dfa       EQU                     0x7dfa
+usrStr_0x7dfa       DB                      3 'dog'
 
 ; Code
 _entryPoint_        Initialise                                              ; INIT
@@ -142,22 +144,22 @@ _10                 LDI                     33
 
                     LDW                     _a
                     PrintAcHexByte          
-                    PrintString             usrStr_0x7ffa
+                    PrintString             usrStr_0x7ff9
                     LDW                     _b
                     PrintAcHexWord          
-                    PrintString             usrStr_0x7ffa
+                    PrintString             usrStr_0x7ff9
                     LDWI                    13107
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hex$(a);" ";hexw$(b);" ";hexw$(&h1111 OR &h2222)
 
-                    PrintString             usrStr_0x7bf8
-                    PrintString             usrStr_0x7ffa
-                    PrintString             usrStr_0x7ffc
-                    PrintString             usrStr_0x7ffa
+                    PrintString             usrStr_0x7ffb
+                    PrintString             usrStr_0x7ff9
+                    PrintString             usrStr_0x7dfa
+                    PrintString             usrStr_0x7ff9
                     PrintInt16              0x0064
-                    PrintString             usrStr_0x7ffa
+                    PrintString             usrStr_0x7ff9
                     PrintVarInt16           _a
-                    PrintString             usrStr_0x7ffa
+                    PrintString             usrStr_0x7ff9
                     LDWI                    0x0021
                     PEEK                    
                     ANDI                    252
@@ -168,19 +170,27 @@ _10                 LDI                     33
                     STW                     _x                              ; x = &h0080
 
                     LDW                     _x
+                    ANDI                    63
                     STW                     mathShift
                     ShiftLeft8bit           
-                    STW                     _z                              ; z = x LSL 8
+                    STW                     _z                              ; z = (x AND &h3F) LSL 8
 
                     LDW                     _x
+                    ST                      cursorXY
+                    LDW                     _z
                     CALLI                   _page_0x08a0
-_page_0x08a0        PrintAcHexWord          
-                    PrintString             usrStr_0x7ffa
+_page_0x08a0        ANDI                    63
+                    ADDI                    0x08
+                    ST                      cursorXY + 1                    ; at x, (z AND &h3F)
+
+                    LDW                     _x
+                    PrintAcHexWord          
+                    PrintString             usrStr_0x7ff9
                     LDW                     _z
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(x);" ";hexw$(z)
 
-_end_0x0329         BRA                     _end_0x0329                     ; END
+_end_0x033f         BRA                     _end_0x033f                     ; END
 
 _blamo              PUSH                    
                     LDWI                    23205
@@ -193,7 +203,7 @@ _blamo              PUSH
                     LDI                     0
                     STW                     _i                              ; for i = 0 to 10
 
-_next_0x033d        LDWI                    usrStr_0x7ffa
+_next_0x0353        LDWI                    usrStr_0x7ff9
                     STW                     _c                              ; c = CHR$(32)
 
                     LDWI                    0x0000
@@ -215,14 +225,13 @@ _next_0x033d        LDWI                    usrStr_0x7ffa
                     STW                     _b                              ; b = -b
 
                     PrintVarInt16           _i
-                    PrintString             usrStr_0x7ffa
-                    PrintInt16              0x0000
+                    PrintString             usrStr_0x7ff9
                     CALLI                   _page_0x09a0
 _page_0x09a0        LDW                     _b
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print i; " " ; hexw$(b)
 
-                    ForNextLoopUp           _i _next_0x033d 10              ; next i
+                    ForNextLoopUp           _i _next_0x0353 10              ; next i
 
                     LDWI                    -1
                     SUBW                    _g
@@ -239,6 +248,6 @@ _page_0x09a0        LDW                     _b
                     POP                     
                     RET                                                     ; return
 
-_end_0x03b4         BRA                     _end_0x03b4                     ; END
+_end_0x03c4         BRA                     _end_0x03c4                     ; END
 
 

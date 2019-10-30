@@ -1,0 +1,36 @@
+1 mode 2:cls:z=2:gosub 198
+2 k=peek(16)
+3 if k>126 then goto 2
+4 gosub k
+5 poke p,a:poke p+1,b
+6 poke 44,30:goto2
+113 a=73 :b=8 :return:'C
+50  a=11 :b=9 :return:'C#
+119 a=80 :b=9 :return:'D
+51  a=25 :b=10:return:'D#
+101 a=103:b=10:return:'E
+114 a=57 :b=11:return:'F
+53  a=16 :b=12:return:'F#
+116 a=108:b=12:return:'G
+54  a=78 :b=13:return:'G#
+121 a=53 :b=14:return:'A
+55  a=35 :b=15:return:'A#
+117 a=23 :b=16:return:'B
+105 a=19 :b=17:return:'C
+57  a=21 :b=18:return:'C#
+111 a=31 :b=19:return:'D
+48  a=50 :b=20:return:'D#
+112 a=77 :b=21:return:'E
+122 z=(z+1)%4:goto200
+198 ?" 2 3   5 6 7   9 0"
+199 ?"Q W E R T Y U I O P
+200 for c=1 to 4
+201 p=256*c+252:pokep-1,z
+202 poke p,0:poke p+1,0
+203 next c
+204 at 2,24:print"Z: ";
+205 goto 206+z
+206 ?"Metallic":return
+207 ?"Triangle":return
+208 ?"Pulse   ":return
+209 ?"Sawtooth":return

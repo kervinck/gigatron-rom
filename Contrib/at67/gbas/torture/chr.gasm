@@ -1,27 +1,38 @@
 _startAddress_      EQU                     0x0200
-resetVideoTable     EQU                     0x7fa0
-clearRegion         EQU                     0x7ea0
-convertEqOp         EQU                     0x7fbc
-convertNeOp         EQU                     0x7fc5
-convertLeOp         EQU                     0x7fce
-convertGeOp         EQU                     0x7fd7
-convertLtOp         EQU                     0x7fe0
-convertGtOp         EQU                     0x7fe9
-multiply16bit       EQU                     0x7da0
-divide16bit         EQU                     0x7ca0
-random16bit         EQU                     0x7ff2
-clearCursorRow      EQU                     0x7ba0
-printText           EQU                     0x7dc3
-printDigit          EQU                     0x7ddc
-printInt16          EQU                     0x7aa0
-printChar           EQU                     0x79a0
-printHexByte        EQU                     0x78a0
-printHexWord        EQU                     0x7eeb
-newLineScroll       EQU                     0x77a0
-resetAudio          EQU                     0x78ca
-playMidi            EQU                     0x76a0
-playMidiAsync       EQU                     0x7bdf
-midiStartNote       EQU                     0x75a0
+convertEqOp         EQU                     0x7fa0
+convertNeOp         EQU                     0x7fa9
+convertLeOp         EQU                     0x7fb2
+convertGeOp         EQU                     0x7fbb
+convertLtOp         EQU                     0x7fc4
+convertGtOp         EQU                     0x7fcd
+multiply16bit       EQU                     0x7fd6
+divide16bit         EQU                     0x7ea0
+random16bit         EQU                     0x7ef6
+shiftLeft4bit       EQU                     0x7da0
+shiftLeft8bit       EQU                     0x7daa
+shiftRight1bit      EQU                     0x7db4
+shiftRight2bit      EQU                     0x7dbe
+shiftRight3bit      EQU                     0x7dc8
+shiftRight4bit      EQU                     0x7dd2
+shiftRight5bit      EQU                     0x7ddc
+shiftRight6bit      EQU                     0x7de6
+shiftRight7bit      EQU                     0x7df0
+shiftRight8bit      EQU                     0x7ca0
+resetVideoTable     EQU                     0x7caa
+scanlineMode        EQU                     0x7cc6
+clearRegion         EQU                     0x7ba0
+clearCursorRow      EQU                     0x7aa0
+printText           EQU                     0x7cda
+printDigit          EQU                     0x7adf
+printInt16          EQU                     0x79a0
+printChar           EQU                     0x78a0
+printHexByte        EQU                     0x77a0
+printHexWord        EQU                     0x7beb
+newLineScroll       EQU                     0x76a0
+resetAudio          EQU                     0x77ca
+playMidi            EQU                     0x75a0
+playMidiAsync       EQU                     0x79d9
+midiStartNote       EQU                     0x74a0
 
 ; Internal variables
 register0           EQU                     0x00a0
@@ -45,6 +56,7 @@ frameCountPrev      EQU                     register0 + 0x1C
 %include            include/math.i
 %include            include/conv_conds.i
 %include            include/audio.i
+%include            include/graphics.i
 %include            include/clear_screen.i
 %include            include/print_text_CALLI.i
 %include            include/macros_CALLI.i
@@ -53,13 +65,13 @@ frameCountPrev      EQU                     register0 + 0x1C
 _entryPoint_        EQU                     0x0200
 _10                 EQU                     0x022e
 _20                 EQU                     0x08ce
-_end_22             EQU                     0x08d1
+_end_0x0355         EQU                     0x08d1
 _next_0x0236        EQU                     0x0236
 _next_0x023a        EQU                     0x023a
 _next_0x023e        EQU                     0x023e
 _next_0x0260        EQU                     0x0260
 _next_0x0304        EQU                     0x02c2
-0x08a0              EQU                     0x08a0
+_page_0x08a0        EQU                     0x08a0
 
 ; Variables
 _a                  EQU                     0x0030
@@ -69,16 +81,16 @@ _i                  EQU                     0x0036
 _char               EQU                     0x0038
 
 ; Strings
-usrStr_0x7ad9       EQU                     0x7ad9
-usrStr_0x7ad9       DB                      28 'yahooowalllallllalalalwallla'
-usrStr_0x7ffa       EQU                     0x7ffa
-usrStr_0x7ffa       DB                      3 'yes'
-usrStr_0x7ffe       EQU                     0x7ffe
-usrStr_0x7ffe       DB                      1 ' '
-usrStr_0x74a0       EQU                     0x74a0
-usrStr_0x74a0       DB                      34 'wooooooooooooooooooooooooooooow!!!'
-usrStr_0x7efa       EQU                     0x7efa
-usrStr_0x7efa       DB                      3 'dog'
+usrStr_0x73a0       EQU                     0x73a0
+usrStr_0x73a0       DB                      28 'yahooowalllallllalalalwallla'
+usrStr_0x7ff9       EQU                     0x7ff9
+usrStr_0x7ff9       DB                      3 'yes'
+usrStr_0x7ffd       EQU                     0x7ffd
+usrStr_0x7ffd       DB                      1 ' '
+usrStr_0x73bd       EQU                     0x73bd
+usrStr_0x73bd       DB                      34 'wooooooooooooooooooooooooooooow!!!'
+usrStr_0x7dfa       EQU                     0x7dfa
+usrStr_0x7dfa       DB                      3 'dog'
 
 ; Code
 _entryPoint_        Initialise                                              ; INIT
@@ -95,13 +107,13 @@ _next_0x0236        LDI                     0
 _next_0x023a        LDI                     0
                     STW                     _i                              ; for i = 0 to 1
 
-_next_0x023e        PrintString             usrStr_0x7ad9                   ; print "yahooowalllallllalalalwallla";
+_next_0x023e        PrintString             usrStr_0x73a0                   ; print "yahooowalllallllalalalwallla";
 
-                    PrintString             usrStr_0x7ffa
-                    PrintString             usrStr_0x7ffe                   ; print "yes";" ";
+                    PrintString             usrStr_0x7ff9
+                    PrintString             usrStr_0x7ffd                   ; print "yes";" ";
 
                     PrintInt16              0x003d
-                    PrintString             usrStr_0x7ffe                   ; print 20*3+1;" ";
+                    PrintString             usrStr_0x7ffd                   ; print 20*3+1;" ";
 
                     LDI                     32
                     STW                     _char                           ; for char = 32 to 127
@@ -134,24 +146,24 @@ _next_0x0260        LDW                     _a
 
                     ForNextLoopUp           _k _next_0x0236 1               ; next k
 
-                    PrintString             usrStr_0x74a0
+                    PrintString             usrStr_0x73bd
                     CALLI                   newLineScroll                   ; print "wooooooooooooooooooooooooooooow!!!"
 
                     LDI                     0
                     STW                     _i                              ; for i = 0 to 6
 
-_next_0x0304        PrintString             usrStr_0x7efa
-                    PrintString             usrStr_0x7ffe
+_next_0x0304        PrintString             usrStr_0x7dfa
+                    PrintString             usrStr_0x7ffd
                     PrintVarInt16           _i
                     CALLI                   newLineScroll                   ; print "dog";" ";i
 
                     ForNextLoopUp           _i _next_0x0304 6               ; next i
 
-                    CALLI                   0x08a0
-0x08a0              Initialise                                              ; cls
+                    CALLI                   _page_0x08a0
+_page_0x08a0        Initialise                                              ; cls
 
 _20                 CALLI                   _10                             ; goto 10
 
-_end_22             BRA                     _end_22                         ; END
+_end_0x0355         BRA                     _end_0x0355                     ; END
 
 

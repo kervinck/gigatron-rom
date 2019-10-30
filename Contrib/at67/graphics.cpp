@@ -1052,6 +1052,17 @@ namespace Graphics
         renderText();
         renderTextWindow();
 
+#if 0
+        int x1 = rand() % 160;
+        int y1 = rand() % 120;
+        int x2 = rand() % 160;
+        int y2 = rand() % 120;
+
+        drawLineGiga(10,20, 65,30);
+        //drawLineGiga(x1, y1, x2, y2);
+        //drawLineGiga(x1, y1, x2, y2, 0x0F);
+#endif
+
         SDL_UpdateTexture(_screenTexture, NULL, _pixels, SCREEN_WIDTH * sizeof uint32_t);
         SDL_RenderCopy(_renderer, _screenTexture, NULL, NULL);
         renderHelpScreen();
@@ -1073,62 +1084,6 @@ namespace Graphics
         _pixels[screen + 0 + 3*SCREEN_WIDTH] = 0x00;   _pixels[screen + 1 + 3*SCREEN_WIDTH] = 0x00;   _pixels[screen + 2 + 3*SCREEN_WIDTH] = 0x00;
     }
 
-    void drawLine(int x, int y, int x2, int y2, uint32_t colour)
-    {
-        bool yLonger = false;
-        int shortLen = y2 - y;
-        int longLen = x2 - x;
-        
-        if(abs(shortLen) > abs(longLen))
-        {
-            uint8_t swap = shortLen;
-            shortLen = longLen;
-            longLen = swap;
-            yLonger = true;
-        }
-        
-        int decInc;
-        if(longLen ==0 ) decInc=0;
-        else decInc = (shortLen << 8) / longLen;
-        
-        if(yLonger)
-        {
-            if(longLen > 0)
-            {
-                longLen += y;
-                for(int j=0x80+(x<<8); y<=longLen; ++y)
-                {
-                    drawPixel(uint8_t(j>>8), uint8_t(y), colour);
-                    j+=decInc;
-                }
-                return;
-            }
-            longLen += y;
-            for(int j=0x80+(x<<8); y>=longLen; --y)
-            {
-                drawPixel(uint8_t(j>>8), uint8_t(y), colour);
-                j-=decInc;
-            }
-            return;	
-        }
-        
-        if(longLen>0)
-        {
-            longLen += x;
-            for(int j=0x80+(y<<8); x<=longLen; ++x)
-            {
-                drawPixel(uint8_t(x), uint8_t(j>>8), colour);
-                j+=decInc;
-            }
-            return;
-        }
-        longLen += x;
-        for(int j=0x80+(y<<8); x>=longLen;--x)
-        {
-            drawPixel(uint8_t(x), uint8_t(j>>8), colour);
-            j-=decInc;
-        }
-    }
 
     uint8_t getPixelGiga(uint8_t x, uint8_t y)
     {
@@ -1146,41 +1101,69 @@ namespace Graphics
         Cpu::setRAM(address, colour);
     }
 
-    void drawLineGiga(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint8_t colour)
+    void drawLineGiga(int x0, int y0, int x1, int y1)
     {
-        x1 = y1 = 0;
-        x2 = y2 = 5;
-
-        uint16_t w = x2 - x1;
-        uint16_t h = y2 - y1;
-        uint16_t dx1 = 1, dy1 = 1, dx2 = 0, dy2 = 0;
-
-        dx1 = dx2 = (w > 0x7FFF) ? 0xFFFF : 1;
-        dy1 = (h > 0x7FFF) ? 0xFFFF : dy1 = 1;
-
-        uint16_t absw = (w > 0x7FFF) ? 0 - w : w;
-        uint16_t absh = (h > 0x7FFF) ? 0 - h : h;
-
-        uint16_t longest = absw;
-        uint16_t shortest = absh;
-
-        if(longest < shortest) 
+        int dx =  abs(x1 - x0);
+        int sx = (x0 < x1) ? 1 : -1;
+        int dy = -abs(y1 - y0);
+        int sy = (y0 < y1) ? 1 : -1;
+        int err = dx + dy;  /* error value e_xy */
+        
+        for(;;)
         {
-            longest = absh;
-            shortest = absw; 
-            if(h > 0x7FFF) dy2 = 0xFFFF; 
-            else if (h > 0) dy2 = 1;
-            dx2 = 0;            
+            if(x0 == x1  &&  y0 == y1) break;
+            int e2 = 2*err;
+            if(e2 >= dy)
+            {
+                err += dy; /* e_xy+e_x > 0 */
+                x0 += sx;
+            }
+            if(e2 <= dx) /* e_xy+e_y < 0 */
+            {
+                err += dx;
+                y0 += sy;
+            }
+
+            drawPixelGiga(x0, y0, 0xFF);
+        }
+    }
+
+    void drawLineGiga(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint8_t colour)
+    {
+        int16_t sx = x2 - x1;
+        int16_t sy = y2 - y1;
+        int h = sy;
+        int16_t dx1 = 1, dx2 = 1, dy1 = 1, dy2 = 0;
+
+        if(sx & 0x8000)
+        {
+            dx1 = -1;
+            dx2 = -1;
+            sx = 0 - sx;
         }
 
-        uint16_t numerator = longest;// >> 1;
-        for(uint16_t i=0; i<=longest; i++) 
+        if(sy & 0x8000)
+        {
+            dy1 = -1;
+            sy = 0 - sy;
+            if(sx < sy) dy2 = -1;
+        }
+
+        if(sx < sy) 
+        {
+            dx2 = 0;
+            std::swap(sx, sy);
+            if(h > 0) dy2 = 1;
+        }
+
+        uint16_t numerator = sx >> 1;
+        for(uint16_t i=0; i<=sx; i++) 
         {
             drawPixelGiga(uint8_t(x1), uint8_t(y1), colour);
-            numerator += shortest;
-            if(numerator > longest) 
+            numerator += sy;
+            if(numerator > sx) 
             {
-                numerator -= longest;
+                numerator -= sx;
                 x1 += dx1;
                 y1 += dy1;
             }

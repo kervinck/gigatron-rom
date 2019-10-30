@@ -1,0 +1,239 @@
+_startAddress_      EQU                     0x0200
+convertEqOp         EQU                     0x7fa0
+convertNeOp         EQU                     0x7fa9
+convertLeOp         EQU                     0x7fb2
+convertGeOp         EQU                     0x7fbb
+convertLtOp         EQU                     0x7fc4
+convertGtOp         EQU                     0x7fcd
+multiply16bit       EQU                     0x7fd6
+divide16bit         EQU                     0x7ea0
+random16bit         EQU                     0x7ef6
+shiftLeft4bit       EQU                     0x7da0
+shiftLeft8bit       EQU                     0x7daa
+shiftRight1bit      EQU                     0x7db4
+shiftRight2bit      EQU                     0x7dbe
+shiftRight3bit      EQU                     0x7dc8
+shiftRight4bit      EQU                     0x7dd2
+shiftRight5bit      EQU                     0x7ddc
+shiftRight6bit      EQU                     0x7de6
+shiftRight7bit      EQU                     0x7df0
+shiftRight8bit      EQU                     0x7ca0
+resetVideoTable     EQU                     0x7caa
+scanlineMode        EQU                     0x7cc6
+waitVBlank          EQU                     0x7cda
+clearRegion         EQU                     0x7ba0
+clearCursorRow      EQU                     0x7aa0
+drawLine            EQU                     0x79a0
+drawLineExt         EQU                     0x78a0
+drawLinePixel       EQU                     0x7cf1
+printText           EQU                     0x7adf
+printDigit          EQU                     0x77a0
+printInt16          EQU                     0x76a0
+printChar           EQU                     0x75a0
+printHexByte        EQU                     0x77c2
+printHexWord        EQU                     0x74a0
+newLineScroll       EQU                     0x73a0
+resetAudio          EQU                     0x74b9
+playMidi            EQU                     0x72a0
+playMidiAsync       EQU                     0x7beb
+midiStartNote       EQU                     0x71a0
+convertEqOpAddr     EQU                     0x00E2
+convertNeOpAddr     EQU                     0x00E4
+convertLeOpAddr     EQU                     0x00E6
+convertGeOpAddr     EQU                     0x00E8
+convertLtOpAddr     EQU                     0x00EA
+convertGtOpAddr     EQU                     0x00EC
+
+; Internal variables
+register0           EQU                     0x00a0
+register1           EQU                     register0 + 0x02
+register2           EQU                     register0 + 0x04
+register3           EQU                     register0 + 0x06
+register4           EQU                     register0 + 0x08
+register5           EQU                     register0 + 0x0A
+register6           EQU                     register0 + 0x0C
+register7           EQU                     register0 + 0x0E
+register8           EQU                     register0 + 0x10
+register9           EQU                     register0 + 0x12
+register10          EQU                     0x0024
+register11          EQU                     0x0026
+register12          EQU                     0x0028
+register13          EQU                     0x002A
+fgbgColour          EQU                     register0 + 0x14
+cursorXY            EQU                     register0 + 0x16
+midiStreamPtr       EQU                     register0 + 0x18
+midiDelay           EQU                     register0 + 0x1A
+frameCountPrev      EQU                     register0 + 0x1C
+textScroll          EQU                     register0 + 0x1E
+
+; Includes
+%include            include/gigatron.i
+%include            include/math.i
+%include            include/conv_conds.i
+%include            include/audio.i
+%include            include/graphics.i
+%include            include/clear_screen.i
+%include            include/print_text.i
+%include            include/macros.i
+
+; Labels
+_entryPoint_        EQU                     0x0200
+_10                 EQU                     0x0253
+_20                 EQU                     0x029a
+_30                 EQU                     0x02a9
+_40                 EQU                     0x02c7
+_50                 EQU                     0x02e3
+_60                 EQU                     0x02e7
+_65                 EQU                     0x08b8
+_70                 EQU                     0x08c9
+_80                 EQU                     0x09ab
+_90                 EQU                     0x09cf
+_end_0x03c2         EQU                     0x09e2
+_next_0x02f7        EQU                     0x02e7
+_page_0x08a0        EQU                     0x08a0
+_if_0x031f          EQU                     0x08b8
+_if_0x033a          EQU                     0x08c9
+_page_0x09a0        EQU                     0x09a0
+
+; Variables
+_v                  EQU                     0x0030
+_p                  EQU                     0x0032
+_q                  EQU                     0x0034
+_y                  EQU                     0x0036
+_x                  EQU                     0x0038
+_w                  EQU                     0x003a
+_z                  EQU                     0x003c
+
+; Strings
+
+; Code
+_entryPoint_        Initialise              
+                    InitialiseCcOps                                         ; INIT
+
+_10                 LDWI                    42
+                    STW                     register0
+                    LDI                     0
+                    POKE                    register0
+                    LDWI                    43
+                    STW                     register0
+                    LDI                     63
+                    POKE                    register0
+                    Initialise                                              ; poke 42,0:poke 43,63:cls
+
+_20                 LDI                     0
+                    ST                      cursorXY
+                    LDI                     112
+                    ADDI                    0x08
+                    ST                      cursorXY + 1
+                    LDWI                    newLineScroll
+                    CALL                    giga_vAC                        ; at 0,112:print
+
+_30                 Random                  
+                    STW                     mathX
+                    LDI                     30
+                    STW                     mathY
+                    LDWI                    divide16bit
+                    CALL                    giga_vAC
+                    LDW                     mathRem
+                    SUBI                    80
+                    STW                     _v
+                    LDI                     5
+                    STW                     _p
+                    LDI                     128
+                    STW                     _q                              ; v=(rnd % 30)-80:p=5:q=128
+
+_40                 Random                  
+                    STW                     mathX
+                    LDWI                    700
+                    STW                     mathY
+                    LDWI                    divide16bit
+                    CALL                    giga_vAC
+                    LDW                     mathRem
+                    STW                     0xd0
+                    LDWI                    2000
+                    ADDW                    0xd0
+                    STW                     _y                              ; y=2000+(rnd % 700)
+
+_50                 LDI                     0
+                    STW                     _x                              ; for x=0 to 30
+
+_60                 LDW                     _y
+                    STW                     mathX
+                    LDW                     _q
+                    STW                     mathY
+                    STW                     0xe0
+                    LDWI                    _page_0x08a0
+                    CALL                    giga_vAC
+_page_0x08a0        LDW                     0xe0
+                    LDWI                    divide16bit
+                    CALL                    giga_vAC
+                    STW                     0xd0
+                    LDI                     10
+                    ADDW                    0xd0
+                    STW                     _w
+                    CALL                    convertGtOpAddr
+                    BEQ                     _65                 
+                    LDI                     0
+                    STW                     _w                              ; w=10+y/q:if w>0 then w=0
+
+_65                 LDWI                    0x0006
+                    PEEK                    
+                    SUBI                    128
+                    CALL                    convertLtOpAddr
+                    BEQ                     _70                 
+                    LDW                     _w
+                    ADDI                    1
+                    STW                     _w                              ; if peek(6)<128 then w=w+1
+
+_70                 LDW                     _x
+                    STW                     mathX
+                    LDI                     5
+                    STW                     mathY
+                    LDWI                    multiply16bit
+                    CALL                    giga_vAC
+                    STW                     drawLine_x1
+                    LDI                     112
+                    STW                     drawLine_y1
+                    LDW                     _x
+                    STW                     mathX
+                    LDI                     5
+                    STW                     mathY
+                    LDWI                    multiply16bit
+                    CALL                    giga_vAC
+                    ADDI                    5
+                    STW                     drawLine_x2
+                    LDI                     112
+                    ADDW                    _w
+                    STW                     0xe0
+                    LDWI                    _page_0x09a0
+                    CALL                    giga_vAC
+_page_0x09a0        LDW                     0xe0
+                    STW                     drawLine_y2
+                    DrawLine                
+                    STW                     _z                              ; line x*5,112, x*5+5,112+w-z:z=w
+
+_80                 LDW                     _p
+                    STW                     mathX
+                    LDW                     _v
+                    STW                     mathY
+                    LDWI                    multiply16bit
+                    CALL                    giga_vAC
+                    ADDW                    _y
+                    STW                     _y
+                    STW                     mathX
+                    LDW                     _q
+                    STW                     mathY
+                    LDWI                    divide16bit
+                    CALL                    giga_vAC
+                    STW                     0xd4
+                    LDW                     _v
+                    SUBW                    0xd4
+                    STW                     _v                              ; y=y+p*v:v=v-y/q
+
+_90                 ForNextLoopUp           _x _60                  30
+                    LDWI                    _20
+                    CALL                    giga_vAC                        ; next x:goto 20
+
+_end_0x03c2         BRA                     _end_0x03c2                     ; END
+
+
