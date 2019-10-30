@@ -242,7 +242,7 @@ L29F5:
         lda     POSX
         jsr     CONVPOSX
         txa
-        sbc     $2B ; v6502_Y
+        sbc     V6502_Y
 .endif
         bcc     L2A0D
 .ifndef CONFIG_11

@@ -293,6 +293,12 @@ L40EE:
         jmp     SYNERR
 .endif
 L40FA:
+.ifdef GT1
+        lda     MEMSIZE
+        cmp     #1
+        sbc     #0
+        sta     LINNUM+1
+.endif
         lda     LINNUM
         ldy     LINNUM+1
         sta     MEMSIZ

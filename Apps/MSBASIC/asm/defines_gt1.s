@@ -81,3 +81,6 @@ POS1:           dey
                 bcc     POS1
                 rts             ; v6502_Y at [$2B]
 
+MEMSIZE         = $01
+V6502_Y         = $2B
+
