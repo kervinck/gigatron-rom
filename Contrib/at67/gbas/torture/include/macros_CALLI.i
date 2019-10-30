@@ -186,15 +186,25 @@ _label_ CALLI   _label
         CALLI   scanlineMode
 %ENDM
 
+%MACRO  WaitVBlank
+        CALLI   waitVBlank
+%ENDM
+
+%MACRO  DrawLine
+        CALLI    drawLine
+%ENDM
+
 %MACRO  Initialise
         ClearRegionInit 0x2020 0 0 giga_xres giga_yres
         CALLI   clearRegion
 
         LDWI    0x0F20          ; yellow on blue
-        STW     textColour
+        STW     fgbgColour
         STW     giga_sysArg0
         LDWI    0x0802          ; starting cursor position
         STW     cursorXY
+        LDWI    0x0001          ; text scrolling enabled by default
+        STW     textScroll
 %ENDM
 
 %MACRO  ClearRegionInit  _colour _x _y _w _h

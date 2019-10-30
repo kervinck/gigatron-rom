@@ -228,16 +228,28 @@ _label_ CALL    giga_vAC
         CALL    giga_vAC
 %ENDM
 
+%MACRO  WaitVBlank
+        LDWI    waitVBlank
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  DrawLine
+        LDWI    drawLine
+        CALL    giga_vAC
+%ENDM
+
 %MACRO  Initialise
         ClearRegionInit 0x2020 0 0 giga_xres giga_yres
         LDWI    clearRegion
         CALL    giga_vAC
 
         LDWI    0x0F20          ; yellow on blue
-        STW     textColour
+        STW     fgbgColour
         STW     giga_sysArg0
         LDWI    0x0802          ; starting cursor position
         STW     cursorXY
+        LDWI    0x0001          ; text scrolling enabled by default
+        STW     textScroll
 %ENDM
 
 %MACRO  InitialiseCcOps

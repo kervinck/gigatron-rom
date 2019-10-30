@@ -152,7 +152,7 @@ printChar       PUSH
 
 printC_draw     LDWI    SYS_VDrawBits_134
                 STW     giga_sysFn
-                LDW     textColour
+                LDW     fgbgColour
                 STW     giga_sysArg0
                 LDWI    0x7FFF              ; mask out bottom row flag
                 ANDW    cursorXY
@@ -182,19 +182,23 @@ printC_exit     POP
 
 %SUB            newLineScroll
                 ; print from top row to bottom row, then start scrolling 
-newLineScroll   PUSH
+newLineScroll   LDW     textScroll
+                BNE     newLS_cont0
+                RET
+                
+newLS_cont0     PUSH
                 LDI     0x02                ; x offset slightly
                 ST      cursorXY
                 LD      cursorXY+1
                 ANDI    0x80                ; on bottom row flag
-                BNE     newLS_cont
+                BNE     newLS_cont1
                 LD      cursorXY+1
                 ADDI    8
                 ST      cursorXY+1
                 SUBI    128
                 BLT     newLS_exit
                 
-newLS_cont      LDWI    clearCursorRow
+newLS_cont1     LDWI    clearCursorRow
                 CALL    giga_vAC
                 
                 LDWI    giga_videoTable

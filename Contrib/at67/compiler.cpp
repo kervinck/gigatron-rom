@@ -3448,7 +3448,7 @@ namespace Compiler
             numLines++;
         }
 
-        if(vasmSize) fprintf(stderr, "%s : %s : opcode size : %d\n", filename.c_str(), subname.c_str(), vasmSize);
+        //if(vasmSize) fprintf(stderr, "%s : %s : opcode size : %d\n", filename.c_str(), subname.c_str(), vasmSize);
 
         return vasmSize;
     }
@@ -3465,6 +3465,8 @@ namespace Compiler
             {
                 // Save end of runtime/strings
                 if(address < _runtimeEnd) _runtimeEnd = address;
+
+                fprintf(stderr, "%s : %s : opcode size %d bytes : loaded at %04x\n", std::string("gbas/" + _subIncludes[includeIndex]).c_str(), _internalSubs[subIndex]._name.c_str(), size, address);
 
                 _internalSubs[subIndex]._address = address;
                 return true;
