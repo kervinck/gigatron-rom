@@ -18,7 +18,6 @@ gcl0x
 
         Open issues:
         XXX GET waits for key with cursor and echo
-        XXX Forbid overflow of 91 byte input buffer
 
         Implemented:
         - 9 digit floating point (40 bits)
@@ -1084,11 +1083,13 @@ _NOWRAP=*       #_RTS_
 +-----------------------------------------------------------------------}
 *=$2e00
 
-_LINEEDIT=*
-                #_CMPIM_ #$5f           {"_" or RUBOUT}
-                #_BNE_   #@_EDIT1
+_LINEEDIT=*     #_CMPIM_ #$5f           {"_" or RUBOUT}
+                #_BEQ_   #@_EDIT1
+                #_CPXIM_ #90            {Input buffer full?}
+                #_BCS_   #@_EDIT2
+                #_RTS_
 
-                #_TXA_                  {Rescue X}
+_EDIT1=*        #_TXA_                  {Rescue X}
                 #_PHA_
                 #_LDAZ_  #<p            {Go back}
                 #_SEC_
@@ -1097,25 +1098,21 @@ _LINEEDIT=*
                 #_PHA_
                 #_LDAIM_ #$a0           {Print space to remove spurious echo}
                 #_BRK_
-
                 #_PLA_                  {Go back again}
                 #_STAZ_  #<p
-
                 #_PLA_                  {Restore X}
                 #_TAX_
-                #_BEQ_   #@_EDIT1       {Nothing in buffer to delete}
-
-                #_LDAZ_  #<p            {Can we go back on this screen line?}
-                #_CMPIM_ #$66           {XXX POSX can make this simpler}
-                #_BCC_   #@_EDIT2       {Clear all when in the left-most column}
+                #_BEQ_   #@_EDIT3       {Nothing in buffer to delete}
+                #_DEX_                  {Remove from buffer}
+_EDIT2=*        #_LDAZ_  #<p            {Can we go back on this screen line?}
+                #_CMPIM_ #$66
+                #_BCC_   #@_EDIT4       {Clear all when in the left-most column}
                 #_SBCIM_ #6
                 #_STAZ_  #<p            {Go back}
-                #_DEX_                  {Remove from buffer}
                 #_LDAIM_ #0             {For caller}
-_EDIT1=*        #_RTS_
+_EDIT3=*        #_RTS_
 
-_EDIT2=*
-                #_LDAIM_ #$bf           {"?" to signal buffer clearing}
+_EDIT4=*        #_LDAIM_ #$bf           {"?" to signal buffer clearing}
                 #_BRK_
                 #_LDAIM_ #$8d           {Newline}
                 #_BRK_
