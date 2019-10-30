@@ -72,3 +72,12 @@ GETTIM:
                 sec             ; for FLOAT3
                 jmp     GETTIM1
 
+; convert POSX pixel position (A) to character position (Y), exit with C=1
+CONVPOSX:
+                ldy     #27
+                clc
+POS1:           dey
+                adc     #6
+                bcc     POS1
+                rts             ; v6502_Y at [$2B]
+

@@ -17,8 +17,6 @@ gcl0x
         --------------------------
 
         Open issues:
-        XXX Fix POS() and TAB() (needs proper POSX system variable)
-        XXX Lower STACK_BOT for more stack (3x nested FOR?). Move CHRGET?
         XXX Support 64K Gigatron
 
         Implemented:
