@@ -31,7 +31,12 @@ GIVAYF:
         ldx     #$90
         jmp     FLOAT1
 POS:
+.ifndef GT1
         ldy     POSX
+.else
+        lda     POSX
+        jsr     CONVPOSX
+.endif
 
 ; ----------------------------------------------------------------------------
 ; FLOAT (Y) INTO FAC, GIVING VALUE 0-255

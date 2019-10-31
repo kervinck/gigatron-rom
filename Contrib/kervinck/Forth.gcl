@@ -1,0 +1,670 @@
+gcl0x
+{-----------------------------------------------------------------------+
+|                                                                       |
+|       Forth74 -- Inner interpreter for a vCPU-based Forth             |
+|                                                                       |
+|       !!! WORK IN PROGRESS !!!                                        |
+|                                                                       |
++-----------------------------------------------------------------------}
+
+{
+  References:
+
+        https://colorforth.github.io/HOPL.html
+        Forth - The Early Years
+        Chuck Moore
+
+        http://forth.org/OffeteStore/1010_SystemsGuideToFigForth.pdf
+        Systems Guide to figForth
+        C.H.Ting, Ph.D
+
+        http://www.bradrodriguez.com/papers/moving1.htm
+        Moving Forth
+        Brad Rodriguez
+
+        https://www.sifflez.org/lectures/ASE/C3.pdf
+        ASE: Writing a forth interpreter from scratch
+        Pablo de Oliveira
+
+        https://users.ece.cmu.edu/~koopman/stack_computers/appb.html
+        A Glossery of Forth Primitives
+        Philip Koopman
+
+  Variables:
+
+        IP              Instruction pointer
+        RSP             Return stack
+        W i j           Work register(s)
+        DoColon         Fall into threaded code, save IP on stack
+        Next            Fetch and dispatch next threaded instruction
+        Pos             Cursor position in video memory (initialized by CR)
+
+  Other:
+        \vSP            Data stack
+}
+
+{-----------------------------------------------------------------------+
+|       Setup                                                           |
++-----------------------------------------------------------------------}
+*=$200
+
+_COLD=*
+
+  { Next }
+  [def
+    IP 2+ IP=                   {Advance IP}
+    deek call                   {Fetch address and dispatch}
+  ] Next=
+
+  { DoColon }
+  [def
+    RSP 2- RSP= IP RSP:         {Push IP on return stack}
+    \vLR; IP=                   {vLR points to address after CALL}
+    deek call                   {Fetch and execute first word}
+  ] DoColon=
+
+  { DoVar }
+  [def
+    push                        {Same as "\vLR; 2-- %0="}
+    Next!
+  ] DoVar=
+
+  0 RSP=                        {Clear return stack: top of memory}
+
+  DoColon!                      {The rest is hand compiled Forth}
+  ##_HELLO
+  ##_ABORT                      {Doesn't return}
+
+{-----------------------------------------------------------------------+
+|       ABORT                                                           |
++-----------------------------------------------------------------------}
+
+_ABORT=*
+  0 \vSP.                       {Clear data stack: top of page 0}
+  DoColon!
+  ##_Lit ##_FreeMem             {Select vocabulary}
+  ##_CP ##_Doke
+  ##_QUIT                       {Doesn't return}
+
+{-----------------------------------------------------------------------+
+|       QUIT                                                            |
++-----------------------------------------------------------------------}
+
+_QUIT=*
+  DoColon!
+  ##_Zero ##_RspStore           {Clear return stack: top of memory}
+  ##_CR
+  ##_TEST
+
+{-----------------------------------------------------------------------+
+|       "INTERPRET"                                                     |
++-----------------------------------------------------------------------}
+
+_Loop=*
+  ##_Byte #127 ##_Cursor        {Show cursor}
+  ##_KEY                        {Wait for key}
+  ##_Byte #32 ##_Cursor         {Hide cursor}
+  ##_EMIT                       {Echo character}
+  ##_Jump ##_Loop               {Loop forever}
+
+{-----------------------------------------------------------------------+
+|       Execution tokens not in dictionary                              |
++-----------------------------------------------------------------------}
+
+_Exit=*
+  RSP deek IP=                  {Address from return stack}
+  RSP 2+ RSP=                   {Pop return stack}
+  Next!
+
+_Lit=*
+  IP 2+ deek                    {Fetch immediate value}
+  2-- %0=                       {Push on stack}
+  IP 4+ IP=                     {Skip operand as well}
+  deek call                     {Same as Next}
+
+_Byte=*
+  IP 2+ peek                    {Fetch immediate byte}
+  2-- %0=                       {Push on stack}
+  IP 3+ IP=                     {Skip operand as well}
+  deek call                     {Same as Next}
+
+_PeekZp=*
+  IP 2+ peek                    {Fetch immediate byte}
+  peek 2-- %0=                  {Peek and put on stack}
+  IP 3+ IP=                     {Skip operand}
+  deek call                     {Same as Next}
+
+_RspStore=*
+  %0 2++ RSP=                   {Set Return Stack Pointer}
+  Next!
+
+_Escape=*                       {Eacape into vCPU}
+  IP 2+ \vLR:
+  RSP deek IP=                  {Same as _Exit}
+  RSP 2+ RSP=                   {Pop return stack}
+  [ret]                         {Note: Brackets suppress the Loader patch}
+
+_Cursor=*                       {Emit character and move back position}
+  DoColon!
+  ##_EMIT
+  ##_GoBack
+  ##_Exit
+
+_Jump=*
+  IP 2+ deek                    {Target address in operand}
+  IP= deek call                 {Same as Next}
+
+_JumpEq=*
+  %0 2++                        {Pop condition}
+  [if=0 IP 2+ deek              {Address in operand}
+   else IP 4+]                  {Address after operand}
+  IP= deek call                 {Same as Next}
+
+{-----------------------------------------------------------------------+
+|                       RAM page 3                                      |
++-----------------------------------------------------------------------}
+*=$300
+
+_JumpNe=*
+  %0 2++                        {Pop condition}
+  [if<>0 IP 2+ deek             {Address in operand}
+   else IP 4+]                  {Address after operand}
+  IP= deek call                 {Same as Next}
+
+{-----------------------------------------------------------------------+
+|       Dictionary                                                      |
++-----------------------------------------------------------------------}
+
+{
+                        |                       |
+            FreeMem --> |                       |               High memory
+                        +-----------------------+
+                        | Pointer to name 2     | ------.
+                        +-----------------------+       |
+                        | vCPU code and data 2  |       |
+                        |                       |       |
+                        |                       |       |
+                        ~                       ~       |
+    Execution token --> |                       |       |
+                        +-----------------------+       |
+                        | Name 2                |       |
+                        ~                       ~       |
+                        | Lenght of name 2      | <-----'
+                        +-----------------------+
+                        | Pointer to name 1     | ------.
+                        +-----------------------+       |
+                        |                       |       |
+                        |      Etc.             |       |
+                        ~                       ~       |
+    Execution token --> |                       |       |
+                        +-----------------------+       |
+                        | Name 1                |       |
+                        ~                       ~       |
+                        | Length of name 1      | <-----'
+                        +-----------------------+
+                        | Null                  |
+                        +-----------------------+
+                        |                       |
+                        | Primitives            |               Low memory
+                        |                       |
+
+}
+
+  ##0                           {Null}
+
+{-----------------------------------------------------------------------+
+|       Constants words                                                 |
++-----------------------------------------------------------------------}
+
+__Zero=*
+  #@_Zero `0                    {Name}
+_Zero=*
+  0 2-- %0= Next!
+  ##__Zero                      {Link}
+
+__One=*
+  #@_One `1                     {Name}
+_One=*
+  1 2-- %0= Next!
+  ##__One                       {Link}
+
+{-----------------------------------------------------------------------+
+|       Memory words                                                    |
++-----------------------------------------------------------------------}
+
+__Deek=*
+  #@_Deek `@                    {Name}
+_Deek=*
+  %0 deek %0= Next!
+  ##__Deek                      {Link}
+
+__Doke=*
+  #@_Doke `!                    {Name}
+_Doke=*
+  %0 W= %2 W: 4++ Next!
+  ##__Doke                      {Link}
+
+__Peek=*
+  #@_Peek `C@                   {Name}
+_Peek=*
+  %0 peek %0= Next!
+  ##__Peek                      {Link}
+
+{-----------------------------------------------------------------------+
+|       Operator words                                                  |
++-----------------------------------------------------------------------}
+
+__Add=*
+  #@_Add `+                     {Name}
+_Add=*
+  %0 2++ W= %0 W+ %0= Next!
+  ##__Add                       {Link}
+
+__Sub=*
+  #@_Sub `-                     {Name}
+_Sub=*
+  %0 2++ W= %0 W- %0= Next!
+  ##__Sub                       {Link}
+
+__AND=*
+  #@_AND `AND                   {Name}
+_AND=*
+  %0 2++ W= %0 W& %0= Next!
+  ##__AND                       {Link}
+
+__OR=*
+  #@_OR `OR                     {Name}
+_OR=*
+  %0 2++ W= %0 W| %0= Next!
+  ##__OR                        {Link}
+
+{-----------------------------------------------------------------------+
+|       Data stack words                                                |
++-----------------------------------------------------------------------}
+
+__DROP=*
+  #@_DROP `DROP                 {Name}
+_DROP=*
+  2++ Next!                     {Drop word from stack}
+  ##__DROP                      {Link}
+
+__DUP=*
+  #@_DUP `DUP                   {Name}
+_DUP=*
+  %0 2-- %0= Next!              {Duplication top of stack}
+  ##__DUP                       {Link}
+
+__OVER=*
+  #@_OVER `OVER                 {Name}
+_OVER=*
+  %2 2-- %0= Next!
+  ##__OVER                      {Link}
+
+__SWAP=*
+  #@_SWAP `SWAP                 {Name}
+_SWAP=*
+  %2 W= %0 %2= W %0= Next!
+  ##__SWAP                      {Link}
+
+__ROT=*
+  #@_ROT `ROT                   {Name}
+_ROT=*
+  %4 W= %2 %4= %0 %2= W %0= Next!
+{-----------------------------------------------------------------------+
+|                       RAM page 4                                      |
++-----------------------------------------------------------------------}
+*=$400
+  ##__ROT                       {Link}
+
+{-----------------------------------------------------------------------+
+|       CR ( -- ) Newline                                               |
++-----------------------------------------------------------------------}
+
+__CR=*
+  #@_CR `CR                     {Name}
+_CR=*
+
+  { Find the top text row }
+
+  2 <Pos.                       {Go to start of line, indent 2 pixels}
+  $fe+ i=                       {i=$100: start of the video table}
+  peek >Pos.                    {Go to what is now still the top row}
+
+  { Clear the text row }
+
+  0 \sysArgs0:                  {Set all black}
+  Pos 2- \sysArgs4:             {Set drawing position for clearing}
+  \SYS_VDrawBits_134 _sysFn=    {Prepare SYS calls}
+  [do
+    134!!                       {SYS call to draw 8 pixels vertically}
+    <\sysArgs4++                {Step 1 pixel right}
+    \sysArgs4, 160^ if<>0loop]  {Loop until end of pixel line}
+
+  {
+    Scroll everything up by modifying the video indirection table.
+    [This may be a cool effect to watch in slow motion?]
+  }
+  [do
+    i 16+ j=                    {j looks 8 entries ahead of i}
+    i, \sysArgs7.               {Swap scanlines}
+    j, i.
+    \sysArgs7, j.
+    <i++ <i++                   {Advance to next entry in video table}
+    <i, 224^ if<>0loop]         {Until all done}
+  { The cleared text row has now bubbled down to the bottom }
+
+  Next!
+  ##__CR                        {Link}
+
+{-----------------------------------------------------------------------+
+|       EMIT ( c -- ) Emit ASCII to video terminal                      |
++-----------------------------------------------------------------------}
+
+__EMIT=*
+  #@_EMIT `EMIT                 {Name}
+_EMIT=*
+
+  %0
+  10^ [if<>0 <Pos, 155- if>0 0] {Test for CR or line wrap}
+
+  [if=0
+    DoColon! ##_CR              {Move to next line}
+    ##_Escape]                  {Continue in vCPU}
+
+  %0 2++                        {Pop parameter}
+
+  [128- if<0 96+ if>=0          {Skip non-printables to prevent crashing}
+    {
+      Draw ASCII character (32..127) on screen in 5x8 pixels
+      and advance cursor position
+    }
+    50-                         {Map ASCII code to offset in font table}
+    [if<0 50+ i= \font32up      {ASCII 32..81}
+     else     i= \font82up]     {ASCII 82..127}
+    j= i 2<< i+                 {Multiply char code by 5}
+    j+ j=                       {Add to page address to reach bitmap data}
+
+    \SYS_VDrawBits_134 _sysFn=  {Prepare SYS calls}
+    $800 \sysArgs0:             {Green on black}
+    Pos \sysArgs4:              {Screen position for character}
+    W=                          {Hack! Remember position off stack for _GoBack}
+    6+ Pos=                     {Advance by 6 pixels}
+
+    5 [do i=                    {Draw character as 5 vertical bit slices}
+      j 0? \sysArgs2.           {Get bit slice as byte from ROM table}
+      134!!                     {SYS call to draw 8 pixels vertically}
+      <j++ <\sysArgs4++         {Advance to next byte}
+      i 1- if>0loop]            {Looping}
+  ]
+  Next!
+
+_GoBack=*
+  W Pos= Next!                  {Hack! Only works immediately after EMIT}
+
+  ##__EMIT                      {Link}
+
+{-----------------------------------------------------------------------+
+|       KEY ( -- c ) Wait for key stroke                                |
++-----------------------------------------------------------------------}
+
+__KEY=*
+  #@_KEY `KEY                   {Name}
+_KEY=*
+  DoColon!
+  ##_PeekZp #\serialRaw         {Reference}
+_key1=*
+  ##_PeekZp #\serialRaw         {Probe}
+  ##_SWAP ##_OVER ##_Sub        {Compare with reference}
+  ##_JumpEq ##_key1             {Loop if not changed}
+  ##_DUP ##_Byte #128 ##_AND    {Check high bit}
+  ##_JumpNe ##_key1             {Loop if keyboard idle}
+  ##_Exit
+{-----------------------------------------------------------------------+
+|                       RAM page 5                                      |
++-----------------------------------------------------------------------}
+*=$500
+  ##__KEY                       {Link}
+
+{-----------------------------------------------------------------------+
+|       0< ( n -- f ) True if top number negative                       |
++-----------------------------------------------------------------------}
+
+__IsNeg=*
+  #@_IsNeg `0<                  {Name}
+_IsNeg=*
+  %1 128& [if<>0 129-] %0=      {Set to -1 or 0}
+  Next!
+  ##__IsNeg
+
+{-----------------------------------------------------------------------+
+|       1+ ( n -- n+1 ) Add 1         i                                 |
++-----------------------------------------------------------------------}
+
+__Add1=*
+  #@_Add1 `1+                   {Name}
+_Add1=*
+  %0 1+ %0= Next!
+  ##__Add1                      {Link}
+
+{-----------------------------------------------------------------------+
+|       1- ( n -- n-1 ) Subtract 1                                      |
++-----------------------------------------------------------------------}
+
+__Sub1=*
+  #@_Sub1 `1-                   {Name}
+_Sub1=*
+  %0 1- %0= Next!
+  ##__Sub1                      {Link}
+
+{-----------------------------------------------------------------------+
+|       MINUS ( n -- -n ) Change sign                                   |
++-----------------------------------------------------------------------}
+
+__MINUS=*
+  #@_MINUS `MINUS               {Name}
+_MINUS=*
+  %0 W= 0 W- %0= Next!
+  ##__MINUS                     {Link}
+
+{-----------------------------------------------------------------------+
+|       Return Stack words                                              |
++-----------------------------------------------------------------------}
+
+{-----------------------------------------------------------------------+
+|       >R ( n -- ) Move top item to return stack                       |
++-----------------------------------------------------------------------}
+
+__ToR=*
+  #@_ToR `>R                    {Name}
+_ToR=*
+  RSP 2- RSP= %0 2++ RSP: Next! {Code}
+  ##__ToR                       {Link}
+
+{-----------------------------------------------------------------------+
+|       R> ( -- n ) Retrieve item from return stack                     |
++-----------------------------------------------------------------------}
+
+__FromR=*
+  #@_FromR `R>                  {Name}
+_FromR=*
+  RSP; 2-- %0= RSP 2+ RSP= Next!{Code}
+  ##__FromR                     {Link}
+
+{-----------------------------------------------------------------------+
+|       R ( -- n ) Copy top of return stack into stack                  |
++-----------------------------------------------------------------------}
+
+__R=*
+  #@_R `R                       {Name}
+_R=*
+  RSP; 2-- %0= Next!            {Code}
+  ##__R                         {Link}
+
+{-----------------------------------------------------------------------+
+|       SPACE ( -- ) Print one space                                    |
++-----------------------------------------------------------------------}
+
+__SPACE=*
+  #@_SPACE `SPACE               {Name}
+_SPACE=*
+  DoColon!
+  ##_Byte #32 ##__EMIT
+  ##_Exit
+  ##__SPACE                     {Link}
+
+{-----------------------------------------------------------------------+
+|       . ( n -- ) Print number                                         |
++-----------------------------------------------------------------------}
+
+__Dot=*
+  #@_Dot `.                     {Name}
+_Dot=*
+  DoColon!
+  ##_SPACE
+  ##_DUP ##_IsNeg               {Test sign}
+  ##_JumpEq ##_dot1
+  ##_Byte `- ##_EMIT            {Print "-"}
+  ##_MINUS
+_dot1=*
+  ##_Zero                       {Suppress leading zeroes}
+  ##_Lit ##10000 ##_Digit
+  ##_Lit ##1000 ##_Digit
+  ##_Byte #100 ##_Digit
+  ##_Byte #10 ##_Digit
+  ##_Byte #1 ##_Digit
+  ##_DROP ##_DROP
+  ##_Exit
+
+_Digit=*                        { n z r -- n-d*r z+d }
+  DoColon!
+  ##_ToR                        { n 0           | r }
+  ##_SWAP                       { 0 n           | r }
+_digit1=*
+  ##_R                          { 0 n r         | r }
+  ##_Sub                        { 0 m           | r }
+  ##_DUP                        { 0 m m         | r }
+  ##_IsNeg                      { 0 m sign      | r }
+  ##_JumpNe ##_digit2           { 0 m           | r }
+  ##_SWAP ##_Add1 ##_SWAP       { 1 m           | r }
+  ##_Jump ##_digit1
+_digit2=*
+  ##_FromR                      { 1 m r }
+  ##_Add                        { 1 m }
+  ##_SWAP                       { m 1 }
+  ##_DUP ##_JumpEq ##_digit3
+  ##_Byte #$30 ##_OR            { m '1' }
+_digit3=*
+  ##_EMIT                       { m }
+  ##_Byte #$30                  { m 0 }
+  ##_Exit
+{-----------------------------------------------------------------------+
+|                       RAM page 6                                      |
++-----------------------------------------------------------------------}
+*=$600
+  ##__Dot                       {Link}
+
+{-----------------------------------------------------------------------+
+|       HELLO ( -- ) Send text to terminal                              |
++-----------------------------------------------------------------------}
+
+__HELLO=*
+  #@_HELLO `HELLO               {Name}
+_HELLO=*
+  DoColon!
+  ##_CR                         {Activate terminal}
+  ##_Byte `F ##_EMIT
+  ##_Byte `o ##_EMIT
+  ##_Byte `r ##_EMIT
+  ##_Byte `t ##_EMIT
+  ##_Byte `h ##_EMIT
+  ##_Byte `7 ##_EMIT
+  ##_Byte `4 ##_EMIT
+  ##_Exit
+  ##__HELLO                     {Link}
+
+{-----------------------------------------------------------------------+
+|       TYPE ( addr u -- ) Type u characters starting at address        |
++-----------------------------------------------------------------------}
+
+__TYPE=*
+  #@_TYPE `TYPE                 {Name}
+_TYPE=*
+  DoColon!
+  ##_Jump ##_type2
+_type1=*
+  ##_SWAP
+  ##_DUP ##_Peek ##_EMIT
+  ##_Add1
+  ##_SWAP
+  ##_Sub1
+_type2=*
+  ##_DUP ##_JumpNe ##_type1
+  ##_DROP ##_DROP
+  ##_Exit
+  ##__TYPE                      {Link}
+
+{-----------------------------------------------------------------------+
+|       CP ( -- addr ) Variable to begin of free memory                 |
++-----------------------------------------------------------------------}
+
+__CP=*
+  #@_CP `CP                     {Name}
+_CP=*
+  DoVar!
+  ##0
+  ##__CP                        {Link}
+
+{-----------------------------------------------------------------------+
+|       HERE ( -- addr ) Return address above dictionary                |
++-----------------------------------------------------------------------}
+
+__HERE=*
+  #@_HERE `HERE                 {Name}
+_HERE=*
+  DoColon!
+  ##_CP ##_Deek ##_Exit
+  ##__HERE                      {Link}
+
+{-----------------------------------------------------------------------+
+|       WORDS ( -- ) Print names in dictionary                          |
++-----------------------------------------------------------------------}
+
+__WORDS=*
+  #@_WORDS `WORDS               {Name}
+_WORDS=*
+  DoColon!
+  ##_HERE
+  ##_Jump ##_words2
+_words1=*
+  ##_SPACE
+  ##_DUP ##_Add1
+  ##_OVER ##_Peek
+  ##_TYPE
+_words2=*
+  ##_Byte #2 ##_Sub ##_Deek
+  ##_DUP ##_JumpNe ##_words1
+  ##_DROP
+  ##_CR
+  ##_Exit
+  ##__WORDS                     {Link}
+
+{-----------------------------------------------------------------------+
+|       TEST ( -- ) Program under test                                  |
++-----------------------------------------------------------------------}
+
+__TEST=*
+  #@_TEST `TEST                 {Name}
+_TEST=*
+  DoColon!                      { : TEST -12345 . CR ; }
+  ##_Lit ##-12345
+  ##_Dot ##_CR
+  ##_WORDS
+  ##_Exit
+  ##__TEST                      {Link}
+
+_FreeMem=*
+
+{-----------------------------------------------------------------------+
+|                                                                       |
++-----------------------------------------------------------------------}
+

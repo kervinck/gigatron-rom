@@ -175,6 +175,10 @@ L29DD:
         rts
 L29DE:
         lda     POSX
+.ifdef GT1
+        jsr     CONVPOSX
+        tya
+.endif
 .ifndef CONFIG_NO_CR
   .ifdef KBD
         cmp     #$1A
@@ -231,8 +235,15 @@ L29F5:
         bne     L2A0A
   .endif
 .endif
+.ifndef GT1
         txa
         sbc     POSX
+.else
+        lda     POSX
+        jsr     CONVPOSX
+        txa
+        sbc     V6502_Y
+.endif
         bcc     L2A0D
 .ifndef CONFIG_11
         beq     L2A0D
