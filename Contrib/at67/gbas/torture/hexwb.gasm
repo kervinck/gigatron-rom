@@ -20,19 +20,23 @@ shiftRight7bit      EQU                     0x7df0
 shiftRight8bit      EQU                     0x7ca0
 resetVideoTable     EQU                     0x7caa
 scanlineMode        EQU                     0x7cc6
+waitVBlank          EQU                     0x7cda
 clearRegion         EQU                     0x7ba0
 clearCursorRow      EQU                     0x7aa0
-printText           EQU                     0x7cda
-printDigit          EQU                     0x79a0
-printInt16          EQU                     0x78a0
-printChar           EQU                     0x77a0
-printHexByte        EQU                     0x79c2
-printHexWord        EQU                     0x7adf
-newLineScroll       EQU                     0x76a0
-resetAudio          EQU                     0x75a0
-playMidi            EQU                     0x74a0
+drawLine            EQU                     0x79a0
+drawLineExt         EQU                     0x78a0
+drawLinePixel       EQU                     0x7cf1
+printText           EQU                     0x7adf
+printDigit          EQU                     0x77a0
+printInt16          EQU                     0x76a0
+printChar           EQU                     0x75a0
+printHexByte        EQU                     0x77c2
+printHexWord        EQU                     0x74a0
+newLineScroll       EQU                     0x73a0
+resetAudio          EQU                     0x74b9
+playMidi            EQU                     0x72a0
 playMidiAsync       EQU                     0x7beb
-midiStartNote       EQU                     0x73a0
+midiStartNote       EQU                     0x71a0
 convertEqOpAddr     EQU                     0x00E2
 convertNeOpAddr     EQU                     0x00E4
 convertLeOpAddr     EQU                     0x00E6
@@ -51,11 +55,16 @@ register6           EQU                     register0 + 0x0C
 register7           EQU                     register0 + 0x0E
 register8           EQU                     register0 + 0x10
 register9           EQU                     register0 + 0x12
-textColour          EQU                     register0 + 0x14
+register10          EQU                     0x0024
+register11          EQU                     0x0026
+register12          EQU                     0x0028
+register13          EQU                     0x002A
+fgbgColour          EQU                     register0 + 0x14
 cursorXY            EQU                     register0 + 0x16
 midiStreamPtr       EQU                     register0 + 0x18
 midiDelay           EQU                     register0 + 0x1A
 frameCountPrev      EQU                     register0 + 0x1C
+textScroll          EQU                     register0 + 0x1E
 
 ; Includes
 %include            include/gigatron.i
@@ -69,9 +78,9 @@ frameCountPrev      EQU                     register0 + 0x1C
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_end_0x0313         EQU                     0x08b2
-_end_0x0315         EQU                     0x08b4
-_next_0x0256        EQU                     0x0256
+_end_0x0318         EQU                     0x08c8
+_end_0x031a         EQU                     0x08ca
+_next_0x025b        EQU                     0x025b
 _page_0x08a0        EQU                     0x08a0
 
 ; Variables
@@ -97,7 +106,7 @@ _entryPoint_        Initialise
                     LDI                     0
                     STW                     _i                              ; for i=0 to 5
 
-_next_0x0256        LDI                     16
+_next_0x025b        LDI                     16
                     STW                     _a                              ; a = &h10
 
                     LDW                     _a
@@ -135,18 +144,18 @@ _next_0x0256        LDI                     16
                     PrintString             usrStr_0x7ff9
                     LDW                     _e
                     PrintAcHexWord          
-                    PrintString             usrStr_0x7ff9
-                    PrintVarInt16           _z
-                    LDWI                    newLineScroll
                     STW                     0xe0
                     LDWI                    _page_0x08a0
                     CALL                    giga_vAC
 _page_0x08a0        LDW                     0xe0
+                    PrintString             usrStr_0x7ff9
+                    PrintVarInt16           _z
+                    LDWI                    newLineScroll
                     CALL                    giga_vAC
-                    ForNextLoopUp           _i _next_0x0256 5               ; print a;" ";b;" ";c;" ";hex$(d);" ";hexw$(e);" ";z : next i
+                    ForNextLoopUp           _i _next_0x025b 5               ; print a;" ";b;" ";c;" ";hex$(d);" ";hexw$(e);" ";z : next i
 
-_end_0x0313         BRA                     _end_0x0313                     ; END
+_end_0x0318         BRA                     _end_0x0318                     ; END
 
-_end_0x0315         BRA                     _end_0x0315                     ; END
+_end_0x031a         BRA                     _end_0x031a                     ; END
 
 

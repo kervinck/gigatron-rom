@@ -92,80 +92,80 @@ random16bit     LDWI    SYS_Random_34
 
 %SUB            shiftLeft4bit
 shiftLeft4bit   LDWI    SYS_LSLW4_46
-                STW     giga_sysFn          ; 0xF7 = 270-max(14,46/2)
+                STW     giga_sysFn
                 LDW     mathShift
-                SYS     0xF7
+                SYS     0xF7                ; 0xF7 = 270-max(14,46/2)
                 RET
 %ENDS
 
 %SUB            shiftLeft8bit
 shiftLeft8bit   LDWI    SYS_LSLW8_24
-                STW     giga_sysFn          ; 0x00 = 270-max(14,24/2)
+                STW     giga_sysFn
                 LDW     mathShift
-                SYS     0x00
+                SYS     0x00                ; 0x00 = 270-max(14,24/2)
                 RET
 %ENDS
 
 %SUB            shiftRight1bit
 shiftRight1bit  LDWI    SYS_LSRW1_48
-                STW     giga_sysFn          ; 0xF6 = 270-max(14,48/2)
+                STW     giga_sysFn
                 LDW     mathShift
-                SYS     0xF6
+                SYS     0xF6                ; 0xF6 = 270-max(14,48/2)
                 RET
 %ENDS
 
 %SUB            shiftRight2bit
 shiftRight2bit  LDWI    SYS_LSRW2_52
-                STW     giga_sysFn          ; 0xF4 = 270-max(14,52/2)
+                STW     giga_sysFn
                 LDW     mathShift
-                SYS     0xF4
+                SYS     0xF4                ; 0xF4 = 270-max(14,52/2)
                 RET
 %ENDS
 
 %SUB            shiftRight3bit
 shiftRight3bit  LDWI    SYS_LSRW3_52
-                STW     giga_sysFn          ; 0xF4 = 270-max(14,52/2)
+                STW     giga_sysFn
                 LDW     mathShift
-                SYS     0xF4
+                SYS     0xF4                ; 0xF4 = 270-max(14,52/2)
                 RET
 %ENDS
 
 %SUB            shiftRight4bit
 shiftRight4bit  LDWI    SYS_LSRW4_50
-                STW     giga_sysFn          ; 0xF5 = 270-max(14,50/2)
+                STW     giga_sysFn
                 LDW     mathShift
-                SYS     0xF5
+                SYS     0xF5                ; 0xF5 = 270-max(14,50/2)
                 RET
 %ENDS
 
 %SUB            shiftRight5bit
 shiftRight5bit  LDWI    SYS_LSRW5_50
-                STW     giga_sysFn          ; 0xF5 = 270-max(14,50/2)
+                STW     giga_sysFn
                 LDW     mathShift
-                SYS     0xF5
+                SYS     0xF5                ; 0xF5 = 270-max(14,50/2)
                 RET
 %ENDS
 
 %SUB            shiftRight6bit
 shiftRight6bit  LDWI    SYS_LSRW6_48
-                STW     giga_sysFn          ; 0xF6 = 270-max(14,48/2)
+                STW     giga_sysFn
                 LDW     mathShift
-                SYS     0xF6
+                SYS     0xF6                ; 0xF6 = 270-max(14,48/2)
                 RET
 %ENDS
 
 %SUB            shiftRight7bit
 shiftRight7bit  LDWI    SYS_LSRW7_30
-                STW     giga_sysFn          ; 0xFF = 270-max(14,30/2)
+                STW     giga_sysFn
                 LDW     mathShift
-                SYS     0xFF
+                SYS     0xFF                ; 0xFF = 270-max(14,30/2)
                 RET
 %ENDS
 
 %SUB            shiftRight8bit
 shiftRight8bit  LDWI    SYS_LSRW8_24
-                STW     giga_sysFn          ; 0x00 = 270-max(14,24/2)
+                STW     giga_sysFn
                 LDW     mathShift
-                SYS     0x00
+                SYS     0x00                ; 0x00 = 270-max(14,24/2)
                 RET
 %ENDS

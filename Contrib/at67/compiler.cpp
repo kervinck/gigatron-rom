@@ -321,6 +321,8 @@ namespace Compiler
         //_keywords["MOD"   ] = {1, "NOT",    nullptr      };
         //_keywords["LSL"   ] = {1, "LSL",    nullptr      };
         //_keywords["LSR"   ] = {1, "LSR",    nullptr      };
+        //_keywords["<<"    ] = {1, "LSL",    nullptr      };
+        //_keywords[">>"    ] = {1, "LSR",    nullptr      };
 
         _keywordsWithEquals.push_back("FOR");
         _keywordsWithEquals.push_back("IF");
@@ -584,6 +586,8 @@ namespace Compiler
         if(mod.find("MOD") != std::string::npos) expressionType |= Expression::HasOperators;
         if(mod.find("LSL") != std::string::npos) expressionType |= Expression::HasOperators;
         if(mod.find("LSR") != std::string::npos) expressionType |= Expression::HasOperators;
+        if(mod.find("<<")  != std::string::npos) expressionType |= Expression::HasOperators;
+        if(mod.find(">>")  != std::string::npos) expressionType |= Expression::HasOperators;
 
         return expressionType;
     }
@@ -1459,7 +1463,7 @@ namespace Compiler
             if(!emitVcpuAsmUserVar("LDW", lhs._varName.c_str(), true)) return false;
         }
 
-        if(opcode != "LSLW") emitVcpuAsm("STW", "mathShift", false);
+        if(opcode != "LSLW"  &&  opcode != "<<") emitVcpuAsm("STW", "mathShift", false);
 
         lhs._value = uint8_t(_tempVarStart);
         lhs._isAddress = true;
@@ -2007,6 +2011,8 @@ namespace Compiler
             else if(Expression::find("OR"))  {            t = term(); result = operatorOR(result, t); }
             else if(Expression::find("LSL")) {            t = term(); result = operatorLSL(result, t);}
             else if(Expression::find("LSR")) {            t = term(); result = operatorLSR(result, t);}
+            else if(Expression::find("<<"))  {            t = term(); result = operatorLSL(result, t);}
+            else if(Expression::find(">>"))  {            t = term(); result = operatorLSR(result, t);}
             else if(Expression::find("="))   {            t = term(); result = operatorEQ(result, t); }
             else if(Expression::find("<>"))  {            t = term(); result = operatorNE(result, t); }
             else if(Expression::find("<="))  {            t = term(); result = operatorLE(result, t); }
@@ -2366,7 +2372,7 @@ namespace Compiler
             return false;
         }
 
-        std::vector<int16_t> params = {0, 0};
+        std::vector<int16_t> params = {0, 0, 0, 0};
         for(int i=0; i<tokens.size(); i++)
         {
             uint32_t expressionType = parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
@@ -3377,7 +3383,7 @@ namespace Compiler
         {0x0000, 0x0000, "clearCursorRow" },
         {0x0000, 0x0000, "drawLine"       },
         {0x0000, 0x0000, "drawLineExt"    },
-        {0x0000, 0x0000, "drawLinePixel"  },
+        {0x0000, 0x0000, "drawLineDelta1" },
         {0x0000, 0x0000, "printText"      },
         {0x0000, 0x0000, "printDigit"     },
         {0x0000, 0x0000, "printInt16"     },
@@ -3395,8 +3401,9 @@ namespace Compiler
         "include/math.i"            ,
         "include/conv_conds.i"      ,
         "include/audio.i"           ,
-        "include/graphics.i"        ,
         "include/clear_screen.i"    ,
+        "include/graphics.i"        ,
+        "include/graphics_CALLI.i"  ,
         "include/print_text.i"      ,
         "include/print_text_CALLI.i",
     };
@@ -3484,18 +3491,21 @@ namespace Compiler
     {
         for(int i=0; i<_internalSubs.size(); i++)
         {
-            for(int j=0; j<_subIncludes.size()-2; j++)
+            for(int j=0; j<_subIncludes.size()-4; j++)
             {
                 getInternalSub(i, j, _internalSubs[i]._name);
             }
 
             int includeIndex = int(_subIncludes.size());
+            // TODO: do this properly
             if(!Assembler::getUseOpcodeCALLI())
             {
+                getInternalSub(i, includeIndex-4, _internalSubs[i]._name);
                 getInternalSub(i, includeIndex-2, _internalSubs[i]._name);
             }
             else
             {
+                getInternalSub(i, includeIndex-3, _internalSubs[i]._name);
                 getInternalSub(i, includeIndex-1, _internalSubs[i]._name);
             }
         }
@@ -3555,15 +3565,18 @@ namespace Compiler
         _output.push_back("; Includes\n");
         _output.push_back("%include" + std::string(LABEL_TRUNC_SIZE - strlen("%include"), ' ') + "include/gigatron.i\n");
 
-        for(int i=0; i<_subIncludes.size()-2; i++) _output.push_back("%include" + std::string(LABEL_TRUNC_SIZE - strlen("%include"), ' ') + _subIncludes[i] + "\n");
+        for(int i=0; i<_subIncludes.size()-4; i++) _output.push_back("%include" + std::string(LABEL_TRUNC_SIZE - strlen("%include"), ' ') + _subIncludes[i] + "\n");
 
+        // TODO: do this properly
         if(!Assembler::getUseOpcodeCALLI())
         {
+            _output.push_back("%include" + std::string(LABEL_TRUNC_SIZE - strlen("%include"), ' ') + _subIncludes[_subIncludes.size()-4] + "\n");
             _output.push_back("%include" + std::string(LABEL_TRUNC_SIZE - strlen("%include"), ' ') + _subIncludes[_subIncludes.size()-2] + "\n");
             _output.push_back("%include" + std::string(LABEL_TRUNC_SIZE - strlen("%include"), ' ') + "include/macros.i\n");
         }
         else
         {
+            _output.push_back("%include" + std::string(LABEL_TRUNC_SIZE - strlen("%include"), ' ') + _subIncludes[_subIncludes.size()-3] + "\n");
             _output.push_back("%include" + std::string(LABEL_TRUNC_SIZE - strlen("%include"), ' ') + _subIncludes[_subIncludes.size()-1] + "\n");
             _output.push_back("%include" + std::string(LABEL_TRUNC_SIZE - strlen("%include"), ' ') + "include/macros_CALLI.i\n");
         }

@@ -90,10 +90,8 @@ drawL_dy        LDW     drawLine_y2
                 LDW     drawLine_dy1
                 STW     drawLine_dy2        ; if(sx < sy) dy2 = -1
 
-drawL_ext       LDWI    drawLineLoadXY
-                CALL    giga_vAC
-                LDWI    drawLineExt
-                CALL    giga_vAC
+drawL_ext       CALLI   drawLineLoadXY
+                CALLI   drawLineExt
 %ENDS
                 
 %SUB            drawLineExt
@@ -121,8 +119,7 @@ drawL_num       LDWI    SYS_LSRW1_48
                 STW     drawLine_count
                 INC     drawLine_count      ; for(count=sx>>1; counti>=0; --i)
                 
-                LDWI    drawLineLoadDXY
-                CALL    giga_vAC     
+                CALLI   drawLineLoadDXY
                 
 drawL_loop      LD      fgbgColour + 1
                 POKE    drawLine_xy1        ; plot start pixel
@@ -135,12 +132,10 @@ drawL_loop      LD      fgbgColour + 1
                 BLE     drawL_flip          ; if(numerator <= sx) goto flip
                 
                 STW     drawLine_num        ; numerator -= sx
-                LDWI    drawLineDelta1      ; x1 += dx1, y1 += dx1, x2 -= dx1, y2 -= dx1
-                CALL    giga_vAC
+                CALLI   drawLineDelta1      ; x1 += dx1, y1 += dx1, x2 -= dx1, y2 -= dx1
                 BRA     drawL_count
                 
-drawL_flip      LDWI    drawLineDelta2      ; x1 += dx2, y1 += dx2, x2 -= dx2, y2 -= dx2
-                CALL    giga_vAC
+drawL_flip      CALLI   drawLineDelta2      ; x1 += dx2, y1 += dx2, x2 -= dx2, y2 -= dx2
                 
 drawL_count     LDW     drawLine_count
                 SUBI    0x01

@@ -25,18 +25,18 @@ clearRegion         EQU                     0x7ba0
 clearCursorRow      EQU                     0x7aa0
 drawLine            EQU                     0x79a0
 drawLineExt         EQU                     0x78a0
-drawLineDelta1      EQU                     0x77a0
+drawLinePixel       EQU                     0x7cf1
 printText           EQU                     0x7adf
-printDigit          EQU                     0x76a0
-printInt16          EQU                     0x75a0
-printChar           EQU                     0x74a0
-printHexByte        EQU                     0x76c2
-printHexWord        EQU                     0x77e5
+printDigit          EQU                     0x77a0
+printInt16          EQU                     0x76a0
+printChar           EQU                     0x75a0
+printHexByte        EQU                     0x77c2
+printHexWord        EQU                     0x74a0
 newLineScroll       EQU                     0x73a0
-resetAudio          EQU                     0x72a0
-playMidi            EQU                     0x71a0
+resetAudio          EQU                     0x74b9
+playMidi            EQU                     0x72a0
 playMidiAsync       EQU                     0x7beb
-midiStartNote       EQU                     0x70a0
+midiStartNote       EQU                     0x71a0
 convertEqOpAddr     EQU                     0x00E2
 convertNeOpAddr     EQU                     0x00E4
 convertLeOpAddr     EQU                     0x00E6
@@ -71,21 +71,33 @@ textScroll          EQU                     register0 + 0x1E
 %include            include/math.i
 %include            include/conv_conds.i
 %include            include/audio.i
-%include            include/clear_screen.i
 %include            include/graphics.i
+%include            include/clear_screen.i
 %include            include/print_text.i
 %include            include/macros.i
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x0253
-_20                 EQU                     0x0291
-_30                 EQU                     0x02ae
-_40                 EQU                     0x02d8
-_50                 EQU                     0x02e1
-_end_0x02fa         EQU                     0x02e6
+_1                  EQU                     0x0253
+_2                  EQU                     0x0253
+_3                  EQU                     0x025f
+_4                  EQU                     0x0265
+_5                  EQU                     0x0265
+_6                  EQU                     0x026a
+_7                  EQU                     0x0270
+_8                  EQU                     0x0274
+_9                  EQU                     0x027e
+_10                 EQU                     0x027e
+_11                 EQU                     0x0284
+_12                 EQU                     0x0290
+_end_0x02a0         EQU                     0x029a
 
 ; Variables
+_a                  EQU                     0x0030
+_b                  EQU                     0x0032
+_c                  EQU                     0x0034
+_n                  EQU                     0x0036
+_j                  EQU                     0x0038
 
 ; Strings
 
@@ -93,49 +105,49 @@ _end_0x02fa         EQU                     0x02e6
 _entryPoint_        Initialise              
                     InitialiseCcOps                                         ; INIT
 
-_10                 LDWI                    180
-                    STW                     register0
-                    LDI                     42
-                    POKE                    register0
-                    Initialise                                              ; poke 180,42:cls:'Paper
+_2                  LDI                     0
+                    STW                     _a
+                    LDI                     1
+                    STW                     _b
+                    LDI                     0
+                    STW                     _c                              ; a(0)=0:b(0)=1:c(0)=0
 
-_20                 Random                  
-                    STW                     mathX
-                    LDI                     64
-                    STW                     mathY
-                    LDWI                    divide16bit
+_3                  LDW                     _n
+                    ADDI                    1
+                    STW                     _n                              ; n=n+1:printn;": ";
+
+_5                  LDWI                    newLineScroll
+                    CALL                    giga_vAC                        ; nexti:print:fori=0toj
+
+_6                  STW                     _c
+                    LDW                     _b
+                    STW                     _a                              ; c=a(i)+b(i)+c:a(i)=b(i)
+
+_7                  LDW                     _c
+                    STW                     _b                              ; b(i)=c:ifc<10 c=0:goto9
+
+_8                  LDW                     _c
+                    SUBI                    10
+                    STW                     _b
+                    LDI                     1
+                    STW                     _c                              ; b(i)=c-10:c=1
+
+_10                 LDW                     _j
+                    ADDI                    1
+                    STW                     _j                              ; j=j+1
+
+_11                 LDI                     0
+                    STW                     _a
+                    LDW                     _c
+                    STW                     _b
+                    LDI                     0
+                    STW                     _c                              ; a(j)=0:b(j)=c:c(j)=0
+
+_12                 LDWI                    newLineScroll
                     CALL                    giga_vAC
-                    LDW                     mathRem
-                    STW                     0xd0
-                    LDWI                    181
-                    STW                     register0
-                    LD                      0xd0
-                    POKE                    register0                       ; poke 181,rnd %64:'Pen
+                    LDWI                    _3
+                    CALL                    giga_vAC                        ; print:goto 3
 
-_30                 Random                  
-                    STW                     mathX
-                    LDI                     155
-                    STW                     mathY
-                    LDWI                    divide16bit
-                    CALL                    giga_vAC
-                    LDW                     mathRem
-                    ST                      cursorXY
-                    Random                  
-                    STW                     mathX
-                    LDI                     113
-                    STW                     mathY
-                    LDWI                    divide16bit
-                    CALL                    giga_vAC
-                    LDW                     mathRem
-                    ADDI                    0x08
-                    ST                      cursorXY + 1                    ; at rnd %155,rnd%113
-
-_40                 LDI                     127
-                    PrintAcChar                                             ; put 127:'Block
-
-_50                 LDWI                    _20
-                    CALL                    giga_vAC                        ; goto 20
-
-_end_0x02fa         BRA                     _end_0x02fa                     ; END
+_end_0x02a0         BRA                     _end_0x02a0                     ; END
 
 

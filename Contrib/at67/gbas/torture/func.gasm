@@ -20,19 +20,23 @@ shiftRight7bit      EQU                     0x7df0
 shiftRight8bit      EQU                     0x7ca0
 resetVideoTable     EQU                     0x7caa
 scanlineMode        EQU                     0x7cc6
+waitVBlank          EQU                     0x7cda
 clearRegion         EQU                     0x7ba0
 clearCursorRow      EQU                     0x7aa0
-printText           EQU                     0x7cda
-printDigit          EQU                     0x7adf
-printInt16          EQU                     0x79a0
-printChar           EQU                     0x78a0
-printHexByte        EQU                     0x77a0
+drawLine            EQU                     0x79a0
+drawLineExt         EQU                     0x78a0
+drawLinePixel       EQU                     0x7cf1
+printText           EQU                     0x7adf
+printDigit          EQU                     0x77a0
+printInt16          EQU                     0x77c0
+printChar           EQU                     0x76a0
+printHexByte        EQU                     0x75a0
 printHexWord        EQU                     0x7beb
-newLineScroll       EQU                     0x76a0
-resetAudio          EQU                     0x77ca
-playMidi            EQU                     0x75a0
-playMidiAsync       EQU                     0x79d9
-midiStartNote       EQU                     0x74a0
+newLineScroll       EQU                     0x74a0
+resetAudio          EQU                     0x75ca
+playMidi            EQU                     0x73a0
+playMidiAsync       EQU                     0x74ec
+midiStartNote       EQU                     0x72a0
 
 ; Internal variables
 register0           EQU                     0x00a0
@@ -45,11 +49,16 @@ register6           EQU                     register0 + 0x0C
 register7           EQU                     register0 + 0x0E
 register8           EQU                     register0 + 0x10
 register9           EQU                     register0 + 0x12
-textColour          EQU                     register0 + 0x14
+register10          EQU                     0x0024
+register11          EQU                     0x0026
+register12          EQU                     0x0028
+register13          EQU                     0x002A
+fgbgColour          EQU                     register0 + 0x14
 cursorXY            EQU                     register0 + 0x16
 midiStreamPtr       EQU                     register0 + 0x18
 midiDelay           EQU                     register0 + 0x1A
 frameCountPrev      EQU                     register0 + 0x1C
+textScroll          EQU                     register0 + 0x1E
 
 ; Includes
 %include            include/gigatron.i
@@ -63,12 +72,12 @@ frameCountPrev      EQU                     register0 + 0x1C
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x022e
-_blamo              EQU                     0x08bb
-_end_0x033f         EQU                     0x08b9
-_end_0x03c4         EQU                     0x09cc
+_10                 EQU                     0x0233
+_blamo              EQU                     0x08c1
+_end_0x0344         EQU                     0x08bf
+_end_0x03c9         EQU                     0x09d7
 _page_0x08a0        EQU                     0x08a0
-_next_0x0353        EQU                     0x08cb
+_next_0x0358        EQU                     0x08d1
 _page_0x09a0        EQU                     0x09a0
 
 ; Variables
@@ -175,11 +184,11 @@ _10                 LDI                     33
                     ShiftLeft8bit           
                     STW                     _z                              ; z = (x AND &h3F) LSL 8
 
-                    LDW                     _x
+                    CALLI                   _page_0x08a0
+_page_0x08a0        LDW                     _x
                     ST                      cursorXY
                     LDW                     _z
-                    CALLI                   _page_0x08a0
-_page_0x08a0        ANDI                    63
+                    ANDI                    63
                     ADDI                    0x08
                     ST                      cursorXY + 1                    ; at x, (z AND &h3F)
 
@@ -190,7 +199,7 @@ _page_0x08a0        ANDI                    63
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(x);" ";hexw$(z)
 
-_end_0x033f         BRA                     _end_0x033f                     ; END
+_end_0x0344         BRA                     _end_0x0344                     ; END
 
 _blamo              PUSH                    
                     LDWI                    23205
@@ -203,7 +212,7 @@ _blamo              PUSH
                     LDI                     0
                     STW                     _i                              ; for i = 0 to 10
 
-_next_0x0353        LDWI                    usrStr_0x7ff9
+_next_0x0358        LDWI                    usrStr_0x7ff9
                     STW                     _c                              ; c = CHR$(32)
 
                     LDWI                    0x0000
@@ -224,14 +233,14 @@ _next_0x0353        LDWI                    usrStr_0x7ff9
                     SUBW                    _b
                     STW                     _b                              ; b = -b
 
-                    PrintVarInt16           _i
-                    PrintString             usrStr_0x7ff9
                     CALLI                   _page_0x09a0
-_page_0x09a0        LDW                     _b
+_page_0x09a0        PrintVarInt16           _i
+                    PrintString             usrStr_0x7ff9
+                    LDW                     _b
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print i; " " ; hexw$(b)
 
-                    ForNextLoopUp           _i _next_0x0353 10              ; next i
+                    ForNextLoopUp           _i _next_0x0358 10              ; next i
 
                     LDWI                    -1
                     SUBW                    _g
@@ -248,6 +257,6 @@ _page_0x09a0        LDW                     _b
                     POP                     
                     RET                                                     ; return
 
-_end_0x03c4         BRA                     _end_0x03c4                     ; END
+_end_0x03c9         BRA                     _end_0x03c9                     ; END
 
 

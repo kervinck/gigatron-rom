@@ -2,33 +2,33 @@ _useOpcodeCALLI_
 
 1 x = 0 : y = 0
 10 for i=0 to 19
-20 gosub math 'x=4+8*i:y=3+6*i
+20 gosub math
 30 p=peek(181)+7 : poke 181,p
 40 line x,119, 159,119-y
 50 next i
 
 60 for i=19 to 0
-70 gosub math 'x=4+8*i:y=3+6*i
+70 gosub math
 80 p=peek(181)+7 : poke 181,p
 90 line 159,y, x,0
 100 next i
 
 110 for i=0 to 19
-120 gosub math 'x=4+8*i:y=3+6*i
+120 gosub math
 130 p=peek(181)+7 : poke 181,p
 140 line 0,y, 159-x,0
 150 next i
 
 160 for i=19 to 0
-170 gosub math 'x=4+8*i:y=3+6*i
+170 gosub math
 180 p=peek(181)+7 : poke 181,p
 190 line 159-x,119, 0,119-y
 200 next i
 
 goto 10
 
-
-math: t = (i LSL 1)+(i LSL 1)+(i LSL 1)
-      x = t + (i LSL 1) + 4
-      y = t + 3
+'x=4+8*i:y=3+6*i
+math: sh = (i<<1)
+      x = sh + sh + sh + sh + 4
+      y = sh + sh + sh + 3
       return

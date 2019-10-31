@@ -92,9 +92,6 @@ start           CALL    resetAudio
                 STW     vbase               ; vram base address
                 STW     pixels              ; pixel address
     
-                LDWI    giga_rand0
-                STW     random
-    
                 LDWI    skipLut
                 STW     skip
                 LDWI    xyAbsLut
@@ -143,7 +140,10 @@ rand_vel        CALL    randPos
                 CALL    loopInit
     
     
-loopInit        LDI     numStars
+loopInit        LDWI    giga_rand1
+                STW     random
+
+                LDI     numStars
                 ST      i
     
                 LDWI    xyPosArray

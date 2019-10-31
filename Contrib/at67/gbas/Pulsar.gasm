@@ -86,9 +86,9 @@ _50                 EQU                     0x02e3
 _60                 EQU                     0x02e7
 _65                 EQU                     0x08b8
 _70                 EQU                     0x08c9
-_80                 EQU                     0x09ab
-_90                 EQU                     0x09cf
-_end_0x03c2         EQU                     0x09e2
+_80                 EQU                     0x08e2
+_90                 EQU                     0x09b3
+_end_0x039e         EQU                     0x09c6
 _next_0x02f7        EQU                     0x02e7
 _page_0x08a0        EQU                     0x08a0
 _if_0x031f          EQU                     0x08b8
@@ -185,32 +185,17 @@ _65                 LDWI                    0x0006
                     ADDI                    1
                     STW                     _w                              ; if peek(6)<128 then w=w+1
 
-_70                 LDW                     _x
-                    STW                     mathX
-                    LDI                     5
-                    STW                     mathY
-                    LDWI                    multiply16bit
-                    CALL                    giga_vAC
+_70                 LDI                     0
                     STW                     drawLine_x1
                     LDI                     112
                     STW                     drawLine_y1
-                    LDW                     _x
-                    STW                     mathX
                     LDI                     5
-                    STW                     mathY
-                    LDWI                    multiply16bit
-                    CALL                    giga_vAC
-                    ADDI                    5
                     STW                     drawLine_x2
                     LDI                     112
                     ADDW                    _w
-                    STW                     0xe0
-                    LDWI                    _page_0x09a0
-                    CALL                    giga_vAC
-_page_0x09a0        LDW                     0xe0
                     STW                     drawLine_y2
                     DrawLine                
-                    STW                     _z                              ; line x*5,112, x*5+5,112+w-z:z=w
+                    STW                     _z                              ; line 0,112, 5,112+w-z:z=w
 
 _80                 LDW                     _p
                     STW                     mathX
@@ -221,6 +206,10 @@ _80                 LDW                     _p
                     ADDW                    _y
                     STW                     _y
                     STW                     mathX
+                    STW                     0xe0
+                    LDWI                    _page_0x09a0
+                    CALL                    giga_vAC
+_page_0x09a0        LDW                     0xe0
                     LDW                     _q
                     STW                     mathY
                     LDWI                    divide16bit
@@ -234,6 +223,6 @@ _90                 ForNextLoopUp           _x _60                  30
                     LDWI                    _20
                     CALL                    giga_vAC                        ; next x:goto 20
 
-_end_0x03c2         BRA                     _end_0x03c2                     ; END
+_end_0x039e         BRA                     _end_0x039e                     ; END
 
 

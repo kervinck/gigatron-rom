@@ -25,18 +25,18 @@ clearRegion         EQU                     0x7ba0
 clearCursorRow      EQU                     0x7aa0
 drawLine            EQU                     0x79a0
 drawLineExt         EQU                     0x78a0
-drawLinePixel       EQU                     0x7cf1
+drawLineDelta1      EQU                     0x77a0
 printText           EQU                     0x7adf
-printDigit          EQU                     0x77a0
-printInt16          EQU                     0x77c0
-printChar           EQU                     0x76a0
-printHexByte        EQU                     0x75a0
-printHexWord        EQU                     0x7beb
-newLineScroll       EQU                     0x74a0
-resetAudio          EQU                     0x75ca
-playMidi            EQU                     0x73a0
-playMidiAsync       EQU                     0x74ec
-midiStartNote       EQU                     0x72a0
+printDigit          EQU                     0x76a0
+printInt16          EQU                     0x76c0
+printChar           EQU                     0x75a0
+printHexByte        EQU                     0x74a0
+printHexWord        EQU                     0x7cf1
+newLineScroll       EQU                     0x73a0
+resetAudio          EQU                     0x74ca
+playMidi            EQU                     0x72a0
+playMidiAsync       EQU                     0x7beb
+midiStartNote       EQU                     0x71a0
 
 ; Internal variables
 register0           EQU                     0x00a0
@@ -65,8 +65,8 @@ textScroll          EQU                     register0 + 0x1E
 %include            include/math.i
 %include            include/conv_conds.i
 %include            include/audio.i
-%include            include/graphics.i
 %include            include/clear_screen.i
+%include            include/graphics_CALLI.i
 %include            include/print_text_CALLI.i
 %include            include/macros_CALLI.i
 
@@ -94,7 +94,7 @@ _180                EQU                     0x02ed
 _190                EQU                     0x08ab
 _200                EQU                     0x08c2
 _math               EQU                     0x08d3
-_end_0x0389         EQU                     0x08f8
+_end_0x0386         EQU                     0x08f1
 _next_0x023f        EQU                     0x023f
 _next_0x0282        EQU                     0x0278
 _next_0x02c1        EQU                     0x02b1
@@ -106,7 +106,7 @@ _x                  EQU                     0x0030
 _y                  EQU                     0x0032
 _i                  EQU                     0x0034
 _p                  EQU                     0x0036
-_t                  EQU                     0x0038
+_sh                 EQU                     0x0038
 
 ; Strings
 
@@ -116,12 +116,12 @@ _entryPoint_        Initialise                                              ; IN
 _1                  LDI                     0
                     STW                     _x
                     LDI                     0
-                    STW                     _y                              ; x= 0 : y = 0
+                    STW                     _y                              ; x = 0 : y = 0
 
 _10                 LDI                     0
                     STW                     _i                              ; for i=0 to 19
 
-_20                 CALLI                   _math                           ; gosub math 'x=4+8*i:y=3+6*i
+_20                 CALLI                   _math                           ; gosub math
 
 _30                 LDWI                    0x00b5
                     PEEK                    
@@ -148,7 +148,7 @@ _50                 ForNextLoopUp           _i _20                  19      ; ne
 _60                 LDI                     19
                     STW                     _i                              ; for i=19 to 0
 
-_70                 CALLI                   _math                           ; gosub math 'x=4+8*i:y=3+6*i
+_70                 CALLI                   _math                           ; gosub math
 
 _80                 LDWI                    0x00b5
                     PEEK                    
@@ -174,7 +174,7 @@ _100                ForNextLoopDown         _i _70                  0       ; ne
 _110                LDI                     0
                     STW                     _i                              ; for i=0 to 19
 
-_120                CALLI                   _math                           ; gosub math 'x=4+8*i:y=3+6*i
+_120                CALLI                   _math                           ; gosub math
 
 _130                LDWI                    0x00b5
                     PEEK                    
@@ -201,7 +201,7 @@ _150                ForNextLoopUp           _i _120                 19      ; ne
 _160                LDI                     19
                     STW                     _i                              ; for i=19 to 0
 
-_170                CALLI                   _math                           ; gosub math 'x=4+8*i:y=3+6*i
+_170                CALLI                   _math                           ; gosub math
 
 _180                LDWI                    0x00b5
                     PEEK                    
@@ -232,29 +232,24 @@ _200                ForNextLoopDown         _i _170                 0       ; ne
 _math               PUSH                    
                     LDW                     _i
                     LSLW                    
-                    STW                     0xd2
-                    LDW                     _i
-                    LSLW                    
-                    ADDW                    0xd2
-                    STW                     0xd6
-                    LDW                     _i
-                    LSLW                    
-                    ADDW                    0xd6
-                    STW                     _t                              ; t = (i LSL 1)+(i LSL 1)+(i LSL 1)
+                    STW                     _sh                             ; sh = (i<<1)
 
-                    LDW                     _i
-                    LSLW                    
-                    ADDW                    _t
+                    LDW                     _sh
+                    ADDW                    _sh
+                    ADDW                    _sh
+                    ADDW                    _sh
                     ADDI                    4
-                    STW                     _x                              ; x = t + (i LSL 1) + 4
+                    STW                     _x                              ; x = sh + sh + sh + sh + 4
 
-                    LDW                     _t
+                    LDW                     _sh
+                    ADDW                    _sh
+                    ADDW                    _sh
                     ADDI                    3
-                    STW                     _y                              ; y = t + 3
+                    STW                     _y                              ; y = sh + sh + sh + 3
 
                     POP                     
                     RET                                                     ; return
 
-_end_0x0389         BRA                     _end_0x0389                     ; END
+_end_0x0386         BRA                     _end_0x0386                     ; END
 
 

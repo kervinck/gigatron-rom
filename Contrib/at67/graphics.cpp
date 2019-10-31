@@ -1058,9 +1058,9 @@ namespace Graphics
         int x2 = rand() % 160;
         int y2 = rand() % 120;
 
-        drawLineGiga(10,20, 65,30);
-        //drawLineGiga(x1, y1, x2, y2);
-        //drawLineGiga(x1, y1, x2, y2, 0x0F);
+        //drawLineGiga(159,(6*12)+3, (8*12)+4,0, 0x0F);
+        drawLineGiga(x1, y1, x2, y2);
+        drawLineGiga(x1, y1, x2, y2, 0x0F);
 #endif
 
         SDL_UpdateTexture(_screenTexture, NULL, _pixels, SCREEN_WIDTH * sizeof uint32_t);
@@ -1156,21 +1156,35 @@ namespace Graphics
             if(h > 0) dy2 = 1;
         }
 
-        uint16_t numerator = sx >> 1;
-        for(uint16_t i=0; i<=sx; i++) 
+        int16_t numerator = sx >> 1;
+        int16_t xy1 = x1 | (y1<<8);
+        int16_t xy2 = x2 | (y2<<8);
+        int16_t dxy1 = dx1 + (dy1<<8);
+        int16_t dxy2 = dx2 + (dy2<<8);
+
+        for(uint16_t i=0; i<=sx/2; i++) 
         {
-            drawPixelGiga(uint8_t(x1), uint8_t(y1), colour);
+            drawPixelGiga(uint8_t(xy1), uint8_t(xy1>>8), colour);
+            drawPixelGiga(uint8_t(xy2), uint8_t(xy2>>8), colour);
             numerator += sy;
             if(numerator > sx) 
             {
                 numerator -= sx;
-                x1 += dx1;
-                y1 += dy1;
+                xy1 += dxy1;
+                xy2 -= dxy1;
+                //x1 += dx1;
+                //y1 += dy1;
+                //x2 -= dx1;
+                //y2 -= dy1;
             }
             else
             {
-                x1 += dx2;
-                y1 += dy2;
+                xy1 += dxy2;
+                xy2 -= dxy2;
+                //x1 += dx2;
+                //y1 += dy2;
+                //x2 -= dx2;
+                //y2 -= dy2;
             }
         }     
     }

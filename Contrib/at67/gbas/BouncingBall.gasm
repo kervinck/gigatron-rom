@@ -25,18 +25,18 @@ clearRegion         EQU                     0x7ba0
 clearCursorRow      EQU                     0x7aa0
 drawLine            EQU                     0x79a0
 drawLineExt         EQU                     0x78a0
-drawLinePixel       EQU                     0x7cf1
+drawLineDelta1      EQU                     0x77a0
 printText           EQU                     0x7adf
-printDigit          EQU                     0x77a0
-printInt16          EQU                     0x76a0
-printChar           EQU                     0x75a0
-printHexByte        EQU                     0x77c2
-printHexWord        EQU                     0x74a0
+printDigit          EQU                     0x76a0
+printInt16          EQU                     0x75a0
+printChar           EQU                     0x74a0
+printHexByte        EQU                     0x76c2
+printHexWord        EQU                     0x77e5
 newLineScroll       EQU                     0x73a0
-resetAudio          EQU                     0x74b9
-playMidi            EQU                     0x72a0
+resetAudio          EQU                     0x72a0
+playMidi            EQU                     0x71a0
 playMidiAsync       EQU                     0x7beb
-midiStartNote       EQU                     0x71a0
+midiStartNote       EQU                     0x70a0
 convertEqOpAddr     EQU                     0x00E2
 convertNeOpAddr     EQU                     0x00E4
 convertLeOpAddr     EQU                     0x00E6
@@ -71,8 +71,8 @@ textScroll          EQU                     register0 + 0x1E
 %include            include/math.i
 %include            include/conv_conds.i
 %include            include/audio.i
-%include            include/graphics.i
 %include            include/clear_screen.i
+%include            include/graphics.i
 %include            include/print_text.i
 %include            include/macros.i
 

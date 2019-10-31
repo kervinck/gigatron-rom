@@ -20,19 +20,29 @@ shiftRight7bit      EQU                     0x7df0
 shiftRight8bit      EQU                     0x7ca0
 resetVideoTable     EQU                     0x7caa
 scanlineMode        EQU                     0x7cc6
+waitVBlank          EQU                     0x7cda
 clearRegion         EQU                     0x7ba0
 clearCursorRow      EQU                     0x7aa0
-printText           EQU                     0x7cda
-printDigit          EQU                     0x7adf
-printInt16          EQU                     0x79a0
-printChar           EQU                     0x78a0
-printHexByte        EQU                     0x77a0
-printHexWord        EQU                     0x7beb
-newLineScroll       EQU                     0x76a0
-resetAudio          EQU                     0x77ca
-playMidi            EQU                     0x75a0
-playMidiAsync       EQU                     0x79d9
-midiStartNote       EQU                     0x74a0
+drawLine            EQU                     0x79a0
+drawLineExt         EQU                     0x78a0
+drawLineDelta1      EQU                     0x77a0
+printText           EQU                     0x7adf
+printDigit          EQU                     0x76a0
+printInt16          EQU                     0x75a0
+printChar           EQU                     0x74a0
+printHexByte        EQU                     0x76c2
+printHexWord        EQU                     0x77e5
+newLineScroll       EQU                     0x73a0
+resetAudio          EQU                     0x72a0
+playMidi            EQU                     0x71a0
+playMidiAsync       EQU                     0x7beb
+midiStartNote       EQU                     0x70a0
+convertEqOpAddr     EQU                     0x00E2
+convertNeOpAddr     EQU                     0x00E4
+convertLeOpAddr     EQU                     0x00E6
+convertGeOpAddr     EQU                     0x00E8
+convertLtOpAddr     EQU                     0x00EA
+convertGtOpAddr     EQU                     0x00EC
 
 ; Internal variables
 register0           EQU                     0x00a0
@@ -45,47 +55,53 @@ register6           EQU                     register0 + 0x0C
 register7           EQU                     register0 + 0x0E
 register8           EQU                     register0 + 0x10
 register9           EQU                     register0 + 0x12
-textColour          EQU                     register0 + 0x14
+register10          EQU                     0x0024
+register11          EQU                     0x0026
+register12          EQU                     0x0028
+register13          EQU                     0x002A
+fgbgColour          EQU                     register0 + 0x14
 cursorXY            EQU                     register0 + 0x16
 midiStreamPtr       EQU                     register0 + 0x18
 midiDelay           EQU                     register0 + 0x1A
 frameCountPrev      EQU                     register0 + 0x1C
+textScroll          EQU                     register0 + 0x1E
 
 ; Includes
 %include            include/gigatron.i
 %include            include/math.i
 %include            include/conv_conds.i
 %include            include/audio.i
-%include            include/graphics.i
 %include            include/clear_screen.i
-%include            include/print_text_CALLI.i
-%include            include/macros_CALLI.i
+%include            include/graphics.i
+%include            include/print_text.i
+%include            include/macros.i
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_1                  EQU                     0x022e
-_2                  EQU                     0x022e
-_3                  EQU                     0x022e
-_10                 EQU                     0x022e
-_19                 EQU                     0x0236
-_20                 EQU                     0x0236
-_29                 EQU                     0x0246
-_30                 EQU                     0x0246
-_40                 EQU                     0x0256
-_50                 EQU                     0x029c
-_60                 EQU                     0x02a2
-_end_0x02ed         EQU                     0x02a5
+_1                  EQU                     0x0253
+_2                  EQU                     0x0253
+_3                  EQU                     0x0253
+_10                 EQU                     0x0253
+_19                 EQU                     0x025b
+_20                 EQU                     0x025b
+_29                 EQU                     0x026d
+_30                 EQU                     0x026d
+_40                 EQU                     0x027f
+_50                 EQU                     0x02d5
+_60                 EQU                     0x02df
+_end_0x032c         EQU                     0x02e4
 
 ; Variables
 _x                  EQU                     0x0030
 _y                  EQU                     0x0032
 
 ; Strings
-usrStr_0x7cf3       EQU                     0x7cf3
-usrStr_0x7cf3       DB                      9 'Gigatron!'
+usrStr_0x7cf1       EQU                     0x7cf1
+usrStr_0x7cf1       DB                      9 'Gigatron!'
 
 ; Code
-_entryPoint_        Initialise                                              ; INIT
+_entryPoint_        Initialise              
+                    InitialiseCcOps                                         ; INIT
 
 _10                 LDI                     107
                     STW                     _x
@@ -140,10 +156,11 @@ _40                 Random
                     ADDI                    0x08
                     ST                      cursorXY + 1                    ; at (rnd AND &h3F) + (rnd AND &h1F) + (rnd AND &h07) + (rnd AND &h07), (rnd AND &h3F) + (rnd AND &h1F) + (rnd AND &h0F) + (rnd AND &h03)
 
-_50                 PrintString             usrStr_0x7cf3                   ; print "Gigatron!";
+_50                 PrintString             usrStr_0x7cf1                   ; print "Gigatron!";
 
-_60                 CALLI                   _20                             ; goto 20
+_60                 LDWI                    _20
+                    CALL                    giga_vAC                        ; goto 20
 
-_end_0x02ed         BRA                     _end_0x02ed                     ; END
+_end_0x032c         BRA                     _end_0x032c                     ; END
 
 

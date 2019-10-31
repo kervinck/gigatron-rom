@@ -15,8 +15,8 @@ rem original
 
 rem optimised
 1 cls:rem Lines demo
-2 a=(rnd AND &h7F) + (rnd AND &h1F) : b=rnd AND &h7F OR 8
-3 c=(rnd AND &h7F) + (rnd AND &h1F) : d=rnd AND &h7F OR 8
+2 a=(rnd AND &h7F) + (rnd AND &h1F) : b=(rnd AND &h3F) + (rnd AND &h3F) OR 8
+3 c=(rnd AND &h7F) + (rnd AND &h1F) : d=(rnd AND &h3F) + (rnd AND &h3F) OR 8
 4 x=c-a:y=d-b:q=rnd AND &h3F
 5 u=1  :if x<0 then x=-x:u=-u
 6 v=256:if y<0 then y=-y:v=-v

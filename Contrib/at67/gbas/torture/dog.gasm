@@ -20,19 +20,23 @@ shiftRight7bit      EQU                     0x7df0
 shiftRight8bit      EQU                     0x7ca0
 resetVideoTable     EQU                     0x7caa
 scanlineMode        EQU                     0x7cc6
+waitVBlank          EQU                     0x7cda
 clearRegion         EQU                     0x7ba0
 clearCursorRow      EQU                     0x7aa0
-printText           EQU                     0x7cda
-printDigit          EQU                     0x7adf
-printInt16          EQU                     0x79a0
-printChar           EQU                     0x78a0
-printHexByte        EQU                     0x77a0
+drawLine            EQU                     0x79a0
+drawLineExt         EQU                     0x78a0
+drawLinePixel       EQU                     0x7cf1
+printText           EQU                     0x7adf
+printDigit          EQU                     0x77a0
+printInt16          EQU                     0x77c0
+printChar           EQU                     0x76a0
+printHexByte        EQU                     0x75a0
 printHexWord        EQU                     0x7beb
-newLineScroll       EQU                     0x76a0
-resetAudio          EQU                     0x77ca
-playMidi            EQU                     0x75a0
-playMidiAsync       EQU                     0x79d9
-midiStartNote       EQU                     0x74a0
+newLineScroll       EQU                     0x74a0
+resetAudio          EQU                     0x75ca
+playMidi            EQU                     0x73a0
+playMidiAsync       EQU                     0x74ec
+midiStartNote       EQU                     0x72a0
 
 ; Internal variables
 register0           EQU                     0x00a0
@@ -45,11 +49,16 @@ register6           EQU                     register0 + 0x0C
 register7           EQU                     register0 + 0x0E
 register8           EQU                     register0 + 0x10
 register9           EQU                     register0 + 0x12
-textColour          EQU                     register0 + 0x14
+register10          EQU                     0x0024
+register11          EQU                     0x0026
+register12          EQU                     0x0028
+register13          EQU                     0x002A
+fgbgColour          EQU                     register0 + 0x14
 cursorXY            EQU                     register0 + 0x16
 midiStreamPtr       EQU                     register0 + 0x18
 midiDelay           EQU                     register0 + 0x1A
 frameCountPrev      EQU                     register0 + 0x1C
+textScroll          EQU                     register0 + 0x1E
 
 ; Includes
 %include            include/gigatron.i
@@ -63,12 +72,12 @@ frameCountPrev      EQU                     register0 + 0x1C
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_1                  EQU                     0x0236
-_8                  EQU                     0x0260
-_15                 EQU                     0x02a7
-_16                 EQU                     0x02ad
-_20                 EQU                     0x02b3
-_end_0x02e4         EQU                     0x02b6
+_1                  EQU                     0x023b
+_8                  EQU                     0x0265
+_15                 EQU                     0x02ac
+_16                 EQU                     0x02b2
+_20                 EQU                     0x02b8
+_end_0x02e9         EQU                     0x02bb
 
 ; Variables
 _a                  EQU                     0x0030
@@ -143,6 +152,6 @@ _16                 LDW                     _b
 
 _20                 CALLI                   _1                              ; goto 1
 
-_end_0x02e4         BRA                     _end_0x02e4                     ; END
+_end_0x02e9         BRA                     _end_0x02e9                     ; END
 
 

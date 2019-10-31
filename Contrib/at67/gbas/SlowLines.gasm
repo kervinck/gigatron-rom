@@ -20,19 +20,23 @@ shiftRight7bit      EQU                     0x7df0
 shiftRight8bit      EQU                     0x7ca0
 resetVideoTable     EQU                     0x7caa
 scanlineMode        EQU                     0x7cc6
+waitVBlank          EQU                     0x7cda
 clearRegion         EQU                     0x7ba0
 clearCursorRow      EQU                     0x7aa0
-printText           EQU                     0x7cda
-printDigit          EQU                     0x79a0
-printInt16          EQU                     0x78a0
-printChar           EQU                     0x77a0
-printHexByte        EQU                     0x79c2
-printHexWord        EQU                     0x7adf
-newLineScroll       EQU                     0x76a0
-resetAudio          EQU                     0x75a0
-playMidi            EQU                     0x74a0
+drawLine            EQU                     0x79a0
+drawLineExt         EQU                     0x78a0
+drawLineDelta1      EQU                     0x77a0
+printText           EQU                     0x7adf
+printDigit          EQU                     0x76a0
+printInt16          EQU                     0x75a0
+printChar           EQU                     0x74a0
+printHexByte        EQU                     0x76c2
+printHexWord        EQU                     0x77e5
+newLineScroll       EQU                     0x73a0
+resetAudio          EQU                     0x72a0
+playMidi            EQU                     0x71a0
 playMidiAsync       EQU                     0x7beb
-midiStartNote       EQU                     0x73a0
+midiStartNote       EQU                     0x70a0
 convertEqOpAddr     EQU                     0x00E2
 convertNeOpAddr     EQU                     0x00E4
 convertLeOpAddr     EQU                     0x00E6
@@ -51,44 +55,50 @@ register6           EQU                     register0 + 0x0C
 register7           EQU                     register0 + 0x0E
 register8           EQU                     register0 + 0x10
 register9           EQU                     register0 + 0x12
-textColour          EQU                     register0 + 0x14
+register10          EQU                     0x0024
+register11          EQU                     0x0026
+register12          EQU                     0x0028
+register13          EQU                     0x002A
+fgbgColour          EQU                     register0 + 0x14
 cursorXY            EQU                     register0 + 0x16
 midiStreamPtr       EQU                     register0 + 0x18
 midiDelay           EQU                     register0 + 0x1A
 frameCountPrev      EQU                     register0 + 0x1C
+textScroll          EQU                     register0 + 0x1E
 
 ; Includes
 %include            include/gigatron.i
 %include            include/math.i
 %include            include/conv_conds.i
 %include            include/audio.i
-%include            include/graphics.i
 %include            include/clear_screen.i
+%include            include/graphics.i
 %include            include/print_text.i
 %include            include/macros.i
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_1                  EQU                     0x024e
-_2                  EQU                     0x027e
-_3                  EQU                     0x029d
-_4                  EQU                     0x02bc
-_5                  EQU                     0x02d1
-_6                  EQU                     0x02e8
-_7                  EQU                     0x08b3
-_8                  EQU                     0x08c9
-_9                  EQU                     0x08e1
-_10                 EQU                     0x08f3
-_11                 EQU                     0x09b2
-_12                 EQU                     0x09c9
-_end_0x03f2         EQU                     0x09e4
-_if_0x032c          EQU                     0x02e8
+_1                  EQU                     0x0253
+_2                  EQU                     0x0288
+_3                  EQU                     0x02b2
+_4                  EQU                     0x02dc
+_5                  EQU                     0x08a2
+_6                  EQU                     0x08b9
+_7                  EQU                     0x08d1
+_8                  EQU                     0x08e7
+_9                  EQU                     0x09ac
+_10                 EQU                     0x09be
+_11                 EQU                     0x09ce
+_12                 EQU                     0x09e5
+_end_0x0420         EQU                     0x0ab9
 _page_0x08a0        EQU                     0x08a0
-_if_0x034e          EQU                     0x08b3
-_if_0x036e          EQU                     0x08c9
+_if_0x035c          EQU                     0x08b9
+_if_0x037e          EQU                     0x08d1
+_if_0x039e          EQU                     0x08e7
 _page_0x09a0        EQU                     0x09a0
-_next_0x03ac        EQU                     0x09ae
-_if_0x03d5          EQU                     0x09c9
+_next_0x03da        EQU                     0x09ca
+_if_0x0403          EQU                     0x09e5
+_page_0x0aa0        EQU                     0x0aa0
 
 ; Variables
 _a                  EQU                     0x0030
@@ -119,9 +129,13 @@ _2                  Random
                     ADDW                    0xd0
                     STW                     _a
                     Random                  
-                    ANDI                    127
+                    ANDI                    63
+                    STW                     0xd4
+                    Random                  
+                    ANDI                    63
+                    ADDW                    0xd4
                     ORI                     8
-                    STW                     _b                              ; a=(rnd AND &h7F) + (rnd AND &h1F) : b=rnd AND &h7F OR 8
+                    STW                     _b                              ; a=(rnd AND &h7F) + (rnd AND &h1F) : b=(rnd AND &h3F) + (rnd AND &h3F) OR 8
 
 _3                  Random                  
                     ANDI                    127
@@ -131,9 +145,13 @@ _3                  Random
                     ADDW                    0xd0
                     STW                     _c
                     Random                  
-                    ANDI                    127
+                    ANDI                    63
+                    STW                     0xd4
+                    Random                  
+                    ANDI                    63
+                    ADDW                    0xd4
                     ORI                     8
-                    STW                     _d                              ; c=(rnd AND &h7F) + (rnd AND &h1F) : d=rnd AND &h7F OR 8
+                    STW                     _d                              ; c=(rnd AND &h7F) + (rnd AND &h1F) : d=(rnd AND &h3F) + (rnd AND &h3F) OR 8
 
 _4                  LDW                     _c
                     SUBW                    _a
@@ -145,6 +163,10 @@ _4                  LDW                     _c
                     ANDI                    63
                     STW                     _q                              ; x=c-a:y=d-b:q=rnd AND &h3F
 
+                    STW                     0xe0
+                    LDWI                    _page_0x08a0
+                    CALL                    giga_vAC
+_page_0x08a0        LDW                     0xe0
 _5                  LDI                     1
                     STW                     _u
                     LDW                     _x
@@ -160,10 +182,6 @@ _5                  LDI                     1
 _6                  LDWI                    256
                     STW                     _v
                     LDW                     _y
-                    STW                     0xe0
-                    LDWI                    _page_0x08a0
-                    CALL                    giga_vAC
-_page_0x08a0        LDW                     0xe0
                     CALL                    convertLtOpAddr
                     BEQ                     _7                  
                     LDI                     0
@@ -190,6 +208,10 @@ _8                  LDW                     _x
                     LDW                     _t
                     STW                     _y
                     LDW                     _u
+                    STW                     0xe0
+                    LDWI                    _page_0x09a0
+                    CALL                    giga_vAC
+_page_0x09a0        LDW                     0xe0
                     STW                     _t
                     LDW                     _v
                     STW                     _u
@@ -207,16 +229,12 @@ _9                  LDI                     0
                     STW                     _y                              ; d=-x:x=x+x:y=y+y
 
 _10                 LDW                     _d
-                    STW                     0xe0
-                    LDWI                    _page_0x09a0
-                    CALL                    giga_vAC
-_page_0x09a0        LDW                     0xe0
                     STW                     _t
-                    LDWI                    0
+                    LDI                     0
                     STW                     0xc0
-                    LDWI                    1
+                    LDI                     1
                     STW                     0xc2
-_next_0x03ac        LD                      _q
+_next_0x03da        LD                      _q
                     POKE                    _p                              ; for t=d to 0:poke p,q
 
 _11                 LDW                     _d
@@ -233,11 +251,15 @@ _11                 LDW                     _d
 
 _12                 LDW                     _p
                     ADDW                    _u
+                    STW                     0xe0
+                    LDWI                    _page_0x0aa0
+                    CALL                    giga_vAC
+_page_0x0aa0        LDW                     0xe0
                     STW                     _p
-                    ForNextLoopStepUp       _t _next_0x03ac 0xc0 0xc2
+                    ForNextLoopStepUp       _t _next_0x03da 0xc0 0xc2
                     LDWI                    _2
                     CALL                    giga_vAC                        ; p=p+u:next t:goto 2
 
-_end_0x03f2         BRA                     _end_0x03f2                     ; END
+_end_0x0420         BRA                     _end_0x0420                     ; END
 
 
