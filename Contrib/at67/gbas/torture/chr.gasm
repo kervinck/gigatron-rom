@@ -25,18 +25,19 @@ clearRegion         EQU                     0x7ba0
 clearCursorRow      EQU                     0x7aa0
 drawLine            EQU                     0x79a0
 drawLineExt         EQU                     0x78a0
-drawLinePixel       EQU                     0x7cf1
+drawLineDelta1      EQU                     0x77a0
+drawLineCursor      EQU                     0x76a0
 printText           EQU                     0x7adf
-printDigit          EQU                     0x77a0
-printInt16          EQU                     0x77c0
-printChar           EQU                     0x76a0
-printHexByte        EQU                     0x75a0
-printHexWord        EQU                     0x7beb
-newLineScroll       EQU                     0x74a0
-resetAudio          EQU                     0x75ca
-playMidi            EQU                     0x73a0
-playMidiAsync       EQU                     0x74ec
-midiStartNote       EQU                     0x72a0
+printDigit          EQU                     0x76c9
+printInt16          EQU                     0x75a0
+printChar           EQU                     0x74a0
+printHexByte        EQU                     0x73a0
+printHexWord        EQU                     0x7cf1
+newLineScroll       EQU                     0x72a0
+resetAudio          EQU                     0x73ca
+playMidi            EQU                     0x71a0
+playMidiAsync       EQU                     0x7beb
+midiStartNote       EQU                     0x70a0
 
 ; Internal variables
 register0           EQU                     0x00a0
@@ -58,15 +59,15 @@ cursorXY            EQU                     register0 + 0x16
 midiStreamPtr       EQU                     register0 + 0x18
 midiDelay           EQU                     register0 + 0x1A
 frameCountPrev      EQU                     register0 + 0x1C
-textScroll          EQU                     register0 + 0x1E
+miscFlags           EQU                     register0 + 0x1E
 
 ; Includes
 %include            include/gigatron.i
 %include            include/math.i
 %include            include/conv_conds.i
 %include            include/audio.i
-%include            include/graphics.i
 %include            include/clear_screen.i
+%include            include/graphics_CALLI.i
 %include            include/print_text_CALLI.i
 %include            include/macros_CALLI.i
 
@@ -90,14 +91,14 @@ _i                  EQU                     0x0036
 _char               EQU                     0x0038
 
 ; Strings
-usrStr_0x71a0       EQU                     0x71a0
-usrStr_0x71a0       DB                      28 'yahooowalllallllalalalwallla'
+usrStr_0x75d9       EQU                     0x75d9
+usrStr_0x75d9       DB                      28 'yahooowalllallllalalalwallla'
 usrStr_0x7ff9       EQU                     0x7ff9
 usrStr_0x7ff9       DB                      3 'yes'
 usrStr_0x7ffd       EQU                     0x7ffd
 usrStr_0x7ffd       DB                      1 ' '
-usrStr_0x71bd       EQU                     0x71bd
-usrStr_0x71bd       DB                      34 'wooooooooooooooooooooooooooooow!!!'
+usrStr_0x6fa0       EQU                     0x6fa0
+usrStr_0x6fa0       DB                      34 'wooooooooooooooooooooooooooooow!!!'
 usrStr_0x7dfa       EQU                     0x7dfa
 usrStr_0x7dfa       DB                      3 'dog'
 
@@ -116,7 +117,7 @@ _next_0x023b        LDI                     0
 _next_0x023f        LDI                     0
                     STW                     _i                              ; for i = 0 to 1
 
-_next_0x0243        PrintString             usrStr_0x71a0                   ; print "yahooowalllallllalalalwallla";
+_next_0x0243        PrintString             usrStr_0x75d9                   ; print "yahooowalllallllalalalwallla";
 
                     PrintString             usrStr_0x7ff9
                     PrintString             usrStr_0x7ffd                   ; print "yes";" ";
@@ -155,7 +156,7 @@ _next_0x0265        LDW                     _a
 
                     ForNextLoopUp           _k _next_0x023b 1               ; next k
 
-                    PrintString             usrStr_0x71bd
+                    PrintString             usrStr_0x6fa0
                     CALLI                   newLineScroll                   ; print "wooooooooooooooooooooooooooooow!!!"
 
                     LDI                     0

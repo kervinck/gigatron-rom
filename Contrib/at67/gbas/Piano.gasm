@@ -25,18 +25,19 @@ clearRegion         EQU                     0x7ba0
 clearCursorRow      EQU                     0x7aa0
 drawLine            EQU                     0x79a0
 drawLineExt         EQU                     0x78a0
-drawLinePixel       EQU                     0x7cf1
+drawLineDelta1      EQU                     0x77a0
+drawLineCursor      EQU                     0x76a0
 printText           EQU                     0x7adf
-printDigit          EQU                     0x77a0
-printInt16          EQU                     0x76a0
-printChar           EQU                     0x75a0
-printHexByte        EQU                     0x77c2
-printHexWord        EQU                     0x74a0
-newLineScroll       EQU                     0x73a0
-resetAudio          EQU                     0x74b9
-playMidi            EQU                     0x72a0
+printDigit          EQU                     0x75a0
+printInt16          EQU                     0x74a0
+printChar           EQU                     0x73a0
+printHexByte        EQU                     0x75c2
+printHexWord        EQU                     0x77e5
+newLineScroll       EQU                     0x72a0
+resetAudio          EQU                     0x71a0
+playMidi            EQU                     0x70a0
 playMidiAsync       EQU                     0x7beb
-midiStartNote       EQU                     0x71a0
+midiStartNote       EQU                     0x6fa0
 convertEqOpAddr     EQU                     0x00E2
 convertNeOpAddr     EQU                     0x00E4
 convertLeOpAddr     EQU                     0x00E6
@@ -64,15 +65,15 @@ cursorXY            EQU                     register0 + 0x16
 midiStreamPtr       EQU                     register0 + 0x18
 midiDelay           EQU                     register0 + 0x1A
 frameCountPrev      EQU                     register0 + 0x1C
-textScroll          EQU                     register0 + 0x1E
+miscFlags           EQU                     register0 + 0x1E
 
 ; Includes
 %include            include/gigatron.i
 %include            include/math.i
 %include            include/conv_conds.i
 %include            include/audio.i
-%include            include/graphics.i
 %include            include/clear_screen.i
+%include            include/graphics.i
 %include            include/print_text.i
 %include            include/macros.i
 
@@ -109,12 +110,12 @@ _201                EQU                     0x09e8
 _202                EQU                     0x0aa6
 _203                EQU                     0x0ab4
 _204                EQU                     0x0ac2
-_205                EQU                     0x0acc
-_206                EQU                     0x0acc
-_207                EQU                     0x0ace
-_208                EQU                     0x0ad0
-_209                EQU                     0x0ad2
-_end_0x03dd         EQU                     0x0ad4
+_205                EQU                     0x0aca
+_206                EQU                     0x0aca
+_207                EQU                     0x0acc
+_208                EQU                     0x0ace
+_209                EQU                     0x0ad0
+_end_0x03db         EQU                     0x0ad2
 _if_0x02b4          EQU                     0x02ae
 _page_0x08a0        EQU                     0x08a0
 _page_0x09a0        EQU                     0x09a0
@@ -337,7 +338,6 @@ _203                ForNextLoopUp           _c _201                 4       ; ne
 _204                LDI                     2
                     ST                      cursorXY
                     LDI                     24
-                    ADDI                    0x08
                     ST                      cursorXY + 1                    ; at 2,24:print"Z: ";
 
 _206                POP                     
@@ -352,6 +352,6 @@ _208                POP
 _209                POP                     
                     RET                                                     ; ?"Sawtooth":return
 
-_end_0x03dd         BRA                     _end_0x03dd                     ; END
+_end_0x03db         BRA                     _end_0x03db                     ; END
 
 

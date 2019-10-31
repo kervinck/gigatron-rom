@@ -167,13 +167,13 @@ drawLineDelta2  LDW     drawLine_xy1
 drawLineLoadXY  LD      drawLine_x1
                 ST      drawLine_xy1
                 LD      drawLine_y1
-                ADDI    08
+                ADDI    8
                 ST      drawLine_xy1 + 1    ; xy1 = x1 | ((y1+8)<<8)
                 
                 LD      drawLine_x2
                 ST      drawLine_xy2
                 LD      drawLine_y2
-                ADDI    08
+                ADDI    8
                 ST      drawLine_xy2 + 1    ; xy2 = x2 | ((y2+8)<<8)
                 RET
                 
@@ -188,5 +188,44 @@ drawLineLoadDXY LDWI    SYS_LSLW8_24
                 SYS     0x00                ; 0x00 = 270-max(14,24/2)
                 ADDW    drawLine_dx2
                 STW     drawLine_dxy2       ; dxy2 = dx2 + (dy2<<8)
+                RET
+%ENDS
+
+%SUB            drawLineCursor
+drawLineCursor  LD      cursorXY
+                STW     drawLine_x1
+                SUBI    160
+                BLT     drawLC_skip0
+                LDI     0
+                STW     drawLine_x1
+                
+drawLC_skip0    LDW     drawLine_x1
+                ADDW    drawLine_x2
+                STW     drawLine_x2
+                SUBI    160
+                BLT     drawLC_skip1
+                LDI     0
+                STW     drawLine_x2
+                
+drawLC_skip1    LDW     drawLine_x2
+                ST      cursorXY
+                
+                LD      cursorXY + 1
+                STW     drawLine_y1
+                SUBI    120
+                BLT     drawLC_skip2
+                LDI     119
+                STW     drawLine_y1
+                
+drawLC_skip2    LDW     drawLine_y1
+                ADDW    drawLine_y2
+                STW     drawLine_y2
+                SUBI    120
+                BLT     drawLC_skip3
+                LDI     119
+                STW     drawLine_y2
+                
+drawLC_skip3    LDW     drawLine_y2            
+                ST      cursorXY + 1
                 RET
 %ENDS

@@ -25,18 +25,19 @@ clearRegion         EQU                     0x7ba0
 clearCursorRow      EQU                     0x7aa0
 drawLine            EQU                     0x79a0
 drawLineExt         EQU                     0x78a0
-drawLinePixel       EQU                     0x7cf1
+drawLineDelta1      EQU                     0x77a0
+drawLineCursor      EQU                     0x76a0
 printText           EQU                     0x7adf
-printDigit          EQU                     0x77a0
-printInt16          EQU                     0x76a0
-printChar           EQU                     0x75a0
-printHexByte        EQU                     0x77c2
-printHexWord        EQU                     0x74a0
-newLineScroll       EQU                     0x73a0
-resetAudio          EQU                     0x74b9
-playMidi            EQU                     0x72a0
+printDigit          EQU                     0x76c9
+printInt16          EQU                     0x75a0
+printChar           EQU                     0x74a0
+printHexByte        EQU                     0x73a0
+printHexWord        EQU                     0x77e5
+newLineScroll       EQU                     0x72a0
+resetAudio          EQU                     0x73d0
+playMidi            EQU                     0x71a0
 playMidiAsync       EQU                     0x7beb
-midiStartNote       EQU                     0x71a0
+midiStartNote       EQU                     0x70a0
 convertEqOpAddr     EQU                     0x00E2
 convertNeOpAddr     EQU                     0x00E4
 convertLeOpAddr     EQU                     0x00E6
@@ -64,32 +65,32 @@ cursorXY            EQU                     register0 + 0x16
 midiStreamPtr       EQU                     register0 + 0x18
 midiDelay           EQU                     register0 + 0x1A
 frameCountPrev      EQU                     register0 + 0x1C
-textScroll          EQU                     register0 + 0x1E
+miscFlags           EQU                     register0 + 0x1E
 
 ; Includes
 %include            include/gigatron.i
 %include            include/math.i
 %include            include/conv_conds.i
 %include            include/audio.i
-%include            include/graphics.i
 %include            include/clear_screen.i
+%include            include/graphics.i
 %include            include/print_text.i
 %include            include/macros.i
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_324532453245435435 EQU                     0x0259
-_10                 EQU                     0x025e
-_31                 EQU                     0x02ca
-_32                 EQU                     0x02e5
-_33                 EQU                     0x08b2
-_34                 EQU                     0x08cd
-_35                 EQU                     0x08e8
-_36                 EQU                     0x09b0
-_37                 EQU                     0x09cb
+_324532453245435435 EQU                     0x025b
+_10                 EQU                     0x0260
+_31                 EQU                     0x02cc
+_32                 EQU                     0x02e7
+_33                 EQU                     0x08b4
+_34                 EQU                     0x08cf
+_35                 EQU                     0x08ea
+_36                 EQU                     0x09b2
+_37                 EQU                     0x09cd
 _40                 EQU                     0x13cd
-_end_0x0702         EQU                     0x13d2
-_end_0x0704         EQU                     0x13d4
+_end_0x0704         EQU                     0x13d2
+_end_0x0706         EQU                     0x13d4
 _page_0x08a0        EQU                     0x08a0
 _page_0x09a0        EQU                     0x09a0
 _page_0x0aa0        EQU                     0x0aa0
@@ -124,6 +125,7 @@ _entryPoint_        Initialise
                     LDI                     1
                     STW                     _a                              ; init    :   a = 1
 
+                    LDW                     _a
                     STW                     _b                              ; b = a
 
 _324532453245435435 LDWI                    -3
@@ -206,11 +208,11 @@ _32                 LDI                     0
                     SUBW                    _g
                     STW                     0xd0
                     LDWI                    1000
-                    ADDW                    0xd0
                     STW                     0xe0
                     LDWI                    _page_0x08a0
                     CALL                    giga_vAC
 _page_0x08a0        LDW                     0xe0
+                    ADDW                    0xd0
                     STW                     0xd0
                     LDI                     24
                     SUBW                    _g
@@ -253,11 +255,11 @@ _35                 LDI                     0
                     STW                     0xd0
                     LDWI                    1000
                     ADDW                    0xd0
-                    STW                     0xd0
                     STW                     0xe0
                     LDWI                    _page_0x09a0
                     CALL                    giga_vAC
 _page_0x09a0        LDW                     0xe0
+                    STW                     0xd0
                     LDI                     24
                     SUBW                    _g
                     STW                     0xd2
@@ -659,8 +661,8 @@ _page_0x13a0        LDW                     0xe0
 _40                 LDWI                    _10
                     CALL                    giga_vAC                        ; goto 10
 
-_end_0x0702         BRA                     _end_0x0702                     ; end
+_end_0x0704         BRA                     _end_0x0704                     ; end
 
-_end_0x0704         BRA                     _end_0x0704                     ; END
+_end_0x0706         BRA                     _end_0x0706                     ; END
 
 

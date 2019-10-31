@@ -18,25 +18,28 @@ shiftRight5bit      EQU                     0x7ddc
 shiftRight6bit      EQU                     0x7de6
 shiftRight7bit      EQU                     0x7df0
 shiftRight8bit      EQU                     0x7ca0
-resetVideoTable     EQU                     0x7caa
-scanlineMode        EQU                     0x7cc6
-waitVBlank          EQU                     0x7cda
-clearRegion         EQU                     0x7ba0
-clearCursorRow      EQU                     0x7aa0
-drawLine            EQU                     0x79a0
-drawLineExt         EQU                     0x78a0
-drawLineDelta1      EQU                     0x77a0
-printText           EQU                     0x7adf
-printDigit          EQU                     0x76a0
-printInt16          EQU                     0x75a0
-printChar           EQU                     0x74a0
-printHexByte        EQU                     0x76c2
-printHexWord        EQU                     0x77e5
-newLineScroll       EQU                     0x73a0
-resetAudio          EQU                     0x72a0
-playMidi            EQU                     0x71a0
-playMidiAsync       EQU                     0x7beb
-midiStartNote       EQU                     0x70a0
+scanlineMode        EQU                     0x7caa
+waitVBlank          EQU                     0x7cbe
+resetVideoTable     EQU                     0x7ba0
+clearScreen         EQU                     0x7aa0
+clearRegion         EQU                     0x79a0
+clearCursorRow      EQU                     0x78a0
+drawLine            EQU                     0x77a0
+drawLineExt         EQU                     0x76a0
+drawLineDelta1      EQU                     0x75a0
+drawLineCursor      EQU                     0x74a0
+printText           EQU                     0x7cd5
+printDigit          EQU                     0x7bdd
+printInt16          EQU                     0x73a0
+printChar           EQU                     0x72a0
+printHexByte        EQU                     0x71a0
+printHexWord        EQU                     0x79e6
+newLineScroll       EQU                     0x70a0
+resetAudio          EQU                     0x71d0
+playMidi            EQU                     0x6fa0
+playMidiAsync       EQU                     0x78e2
+midiStartNote       EQU                     0x6ea0
+initialiseCcOps     EQU                     0x74e1
 convertEqOpAddr     EQU                     0x00E2
 convertNeOpAddr     EQU                     0x00E4
 convertLeOpAddr     EQU                     0x00E6
@@ -64,27 +67,27 @@ cursorXY            EQU                     register0 + 0x16
 midiStreamPtr       EQU                     register0 + 0x18
 midiDelay           EQU                     register0 + 0x1A
 frameCountPrev      EQU                     register0 + 0x1C
-textScroll          EQU                     register0 + 0x1E
+miscFlags           EQU                     register0 + 0x1E
 
 ; Includes
 %include            include/gigatron.i
 %include            include/math.i
-%include            include/conv_conds.i
 %include            include/audio.i
 %include            include/clear_screen.i
+%include            include/conv_conds.i
 %include            include/graphics.i
 %include            include/print_text.i
 %include            include/macros.i
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_1                  EQU                     0x0253
-_20                 EQU                     0x0253
-_3                  EQU                     0x0253
-_40                 EQU                     0x025f
-_5                  EQU                     0x0253
-_60                 EQU                     0x0284
-_end_0x02a3         EQU                     0x0293
+_1                  EQU                     0x0211
+_20                 EQU                     0x0211
+_3                  EQU                     0x0211
+_40                 EQU                     0x021d
+_5                  EQU                     0x0211
+_60                 EQU                     0x0242
+_end_0x0261         EQU                     0x0251
 
 ; Variables
 _X                  EQU                     0x0030
@@ -95,8 +98,7 @@ _P                  EQU                     0x0036
 ; Strings
 
 ; Code
-_entryPoint_        Initialise              
-                    InitialiseCcOps                                         ; INIT
+_entryPoint_        Initialise                                              ; INIT
 
 _20                 LDI                     80
                     STW                     _X
@@ -131,6 +133,6 @@ _60                 LD                      _I
                     LDWI                    _60
                     CALL                    giga_vAC                        ; POKE P,I:I=I+1:GOTO 60
 
-_end_0x02a3         BRA                     _end_0x02a3                     ; END
+_end_0x0261         BRA                     _end_0x0261                     ; END
 
 

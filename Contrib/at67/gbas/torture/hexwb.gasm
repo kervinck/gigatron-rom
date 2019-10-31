@@ -25,18 +25,19 @@ clearRegion         EQU                     0x7ba0
 clearCursorRow      EQU                     0x7aa0
 drawLine            EQU                     0x79a0
 drawLineExt         EQU                     0x78a0
-drawLinePixel       EQU                     0x7cf1
+drawLineDelta1      EQU                     0x77a0
+drawLineCursor      EQU                     0x76a0
 printText           EQU                     0x7adf
-printDigit          EQU                     0x77a0
-printInt16          EQU                     0x76a0
-printChar           EQU                     0x75a0
-printHexByte        EQU                     0x77c2
-printHexWord        EQU                     0x74a0
-newLineScroll       EQU                     0x73a0
-resetAudio          EQU                     0x74b9
-playMidi            EQU                     0x72a0
+printDigit          EQU                     0x76c9
+printInt16          EQU                     0x75a0
+printChar           EQU                     0x74a0
+printHexByte        EQU                     0x73a0
+printHexWord        EQU                     0x77e5
+newLineScroll       EQU                     0x72a0
+resetAudio          EQU                     0x73d0
+playMidi            EQU                     0x71a0
 playMidiAsync       EQU                     0x7beb
-midiStartNote       EQU                     0x71a0
+midiStartNote       EQU                     0x70a0
 convertEqOpAddr     EQU                     0x00E2
 convertNeOpAddr     EQU                     0x00E4
 convertLeOpAddr     EQU                     0x00E6
@@ -64,22 +65,22 @@ cursorXY            EQU                     register0 + 0x16
 midiStreamPtr       EQU                     register0 + 0x18
 midiDelay           EQU                     register0 + 0x1A
 frameCountPrev      EQU                     register0 + 0x1C
-textScroll          EQU                     register0 + 0x1E
+miscFlags           EQU                     register0 + 0x1E
 
 ; Includes
 %include            include/gigatron.i
 %include            include/math.i
 %include            include/conv_conds.i
 %include            include/audio.i
-%include            include/graphics.i
 %include            include/clear_screen.i
+%include            include/graphics.i
 %include            include/print_text.i
 %include            include/macros.i
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_end_0x0318         EQU                     0x08c8
-_end_0x031a         EQU                     0x08ca
+_end_0x031a         EQU                     0x08c8
+_end_0x031c         EQU                     0x08ca
 _next_0x025b        EQU                     0x025b
 _page_0x08a0        EQU                     0x08a0
 
@@ -119,6 +120,8 @@ _next_0x025b        LDI                     16
                     CALL                    convertNeOpAddr
                     STW                     _c
                     PEEK                    
+                    STW                     0xd2
+                    LDW                     _c
                     STW                     _d                              ; c = NOT a <> b : d = peek(c)
 
                     LDWI                    0xaa55
@@ -154,8 +157,8 @@ _page_0x08a0        LDW                     0xe0
                     CALL                    giga_vAC
                     ForNextLoopUp           _i _next_0x025b 5               ; print a;" ";b;" ";c;" ";hex$(d);" ";hexw$(e);" ";z : next i
 
-_end_0x0318         BRA                     _end_0x0318                     ; END
-
 _end_0x031a         BRA                     _end_0x031a                     ; END
+
+_end_0x031c         BRA                     _end_0x031c                     ; END
 
 

@@ -18,25 +18,34 @@ shiftRight5bit      EQU                     0x7ddc
 shiftRight6bit      EQU                     0x7de6
 shiftRight7bit      EQU                     0x7df0
 shiftRight8bit      EQU                     0x7ca0
-resetVideoTable     EQU                     0x7caa
-scanlineMode        EQU                     0x7cc6
-waitVBlank          EQU                     0x7cda
-clearRegion         EQU                     0x7ba0
-clearCursorRow      EQU                     0x7aa0
-drawLine            EQU                     0x79a0
-drawLineExt         EQU                     0x78a0
-drawLineDelta1      EQU                     0x77a0
-printText           EQU                     0x7adf
-printDigit          EQU                     0x76a0
-printInt16          EQU                     0x76c0
-printChar           EQU                     0x75a0
-printHexByte        EQU                     0x74a0
-printHexWord        EQU                     0x7cf1
-newLineScroll       EQU                     0x73a0
-resetAudio          EQU                     0x74ca
-playMidi            EQU                     0x72a0
-playMidiAsync       EQU                     0x7beb
-midiStartNote       EQU                     0x71a0
+scanlineMode        EQU                     0x7caa
+waitVBlank          EQU                     0x7cbe
+resetVideoTable     EQU                     0x7ba0
+clearScreen         EQU                     0x7aa0
+clearRegion         EQU                     0x79a0
+clearCursorRow      EQU                     0x78a0
+drawLine            EQU                     0x77a0
+drawLineExt         EQU                     0x76a0
+drawLineDelta1      EQU                     0x75a0
+drawLineCursor      EQU                     0x74a0
+printText           EQU                     0x7cd5
+printDigit          EQU                     0x7bdd
+printInt16          EQU                     0x73a0
+printChar           EQU                     0x72a0
+printHexByte        EQU                     0x71a0
+printHexWord        EQU                     0x79e6
+newLineScroll       EQU                     0x70a0
+resetAudio          EQU                     0x71d0
+playMidi            EQU                     0x6fa0
+playMidiAsync       EQU                     0x78e2
+midiStartNote       EQU                     0x6ea0
+initialiseCcOps     EQU                     0x74e1
+convertEqOpAddr     EQU                     0x00E2
+convertNeOpAddr     EQU                     0x00E4
+convertLeOpAddr     EQU                     0x00E6
+convertGeOpAddr     EQU                     0x00E8
+convertLtOpAddr     EQU                     0x00EA
+convertGtOpAddr     EQU                     0x00EC
 
 ; Internal variables
 register0           EQU                     0x00a0
@@ -58,47 +67,47 @@ cursorXY            EQU                     register0 + 0x16
 midiStreamPtr       EQU                     register0 + 0x18
 midiDelay           EQU                     register0 + 0x1A
 frameCountPrev      EQU                     register0 + 0x1C
-textScroll          EQU                     register0 + 0x1E
+miscFlags           EQU                     register0 + 0x1E
 
 ; Includes
 %include            include/gigatron.i
 %include            include/math.i
-%include            include/conv_conds.i
 %include            include/audio.i
 %include            include/clear_screen.i
-%include            include/graphics_CALLI.i
-%include            include/print_text_CALLI.i
-%include            include/macros_CALLI.i
+%include            include/conv_conds.i
+%include            include/graphics.i
+%include            include/print_text.i
+%include            include/macros.i
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_1                  EQU                     0x0233
-_10                 EQU                     0x023b
-_20                 EQU                     0x023f
-_30                 EQU                     0x0242
-_40                 EQU                     0x0253
-_50                 EQU                     0x0268
-_60                 EQU                     0x0274
-_70                 EQU                     0x0278
-_80                 EQU                     0x027b
-_90                 EQU                     0x028c
-_100                EQU                     0x029f
-_110                EQU                     0x02ad
-_120                EQU                     0x02b1
-_130                EQU                     0x02b4
-_140                EQU                     0x02c5
-_150                EQU                     0x02da
-_160                EQU                     0x02e6
-_170                EQU                     0x02ea
-_180                EQU                     0x02ed
-_190                EQU                     0x08ab
-_200                EQU                     0x08c2
-_math               EQU                     0x08d3
-_end_0x0386         EQU                     0x08f1
-_next_0x023f        EQU                     0x023f
-_next_0x0282        EQU                     0x0278
-_next_0x02c1        EQU                     0x02b1
-_next_0x0304        EQU                     0x02ea
+_1                  EQU                     0x0211
+_10                 EQU                     0x0219
+_20                 EQU                     0x021d
+_30                 EQU                     0x0222
+_40                 EQU                     0x0233
+_50                 EQU                     0x024a
+_60                 EQU                     0x0258
+_70                 EQU                     0x025c
+_80                 EQU                     0x0261
+_90                 EQU                     0x0272
+_100                EQU                     0x0287
+_110                EQU                     0x0297
+_120                EQU                     0x029b
+_130                EQU                     0x02a0
+_140                EQU                     0x02b1
+_150                EQU                     0x02c8
+_160                EQU                     0x02d6
+_170                EQU                     0x02da
+_180                EQU                     0x02df
+_190                EQU                     0x08a2
+_200                EQU                     0x08bb
+_math               EQU                     0x08d0
+_end_0x037e         EQU                     0x08ee
+_next_0x021d        EQU                     0x021d
+_next_0x0266        EQU                     0x025c
+_next_0x02ab        EQU                     0x029b
+_next_0x02f4        EQU                     0x02da
 _page_0x08a0        EQU                     0x08a0
 
 ; Variables
@@ -121,7 +130,8 @@ _1                  LDI                     0
 _10                 LDI                     0
                     STW                     _i                              ; for i=0 to 19
 
-_20                 CALLI                   _math                           ; gosub math
+_20                 LDWI                    _math
+                    CALL                    giga_vAC                        ; gosub math
 
 _30                 LDWI                    0x00b5
                     PEEK                    
@@ -148,7 +158,8 @@ _50                 ForNextLoopUp           _i _20                  19      ; ne
 _60                 LDI                     19
                     STW                     _i                              ; for i=19 to 0
 
-_70                 CALLI                   _math                           ; gosub math
+_70                 LDWI                    _math
+                    CALL                    giga_vAC                        ; gosub math
 
 _80                 LDWI                    0x00b5
                     PEEK                    
@@ -174,7 +185,8 @@ _100                ForNextLoopDown         _i _70                  0       ; ne
 _110                LDI                     0
                     STW                     _i                              ; for i=0 to 19
 
-_120                CALLI                   _math                           ; gosub math
+_120                LDWI                    _math
+                    CALL                    giga_vAC                        ; gosub math
 
 _130                LDWI                    0x00b5
                     PEEK                    
@@ -201,18 +213,22 @@ _150                ForNextLoopUp           _i _120                 19      ; ne
 _160                LDI                     19
                     STW                     _i                              ; for i=19 to 0
 
-_170                CALLI                   _math                           ; gosub math
+_170                LDWI                    _math
+                    CALL                    giga_vAC                        ; gosub math
 
 _180                LDWI                    0x00b5
                     PEEK                    
                     ADDI                    7
-                    CALLI                   _page_0x08a0
-_page_0x08a0        STW                     _p
+                    STW                     _p
                     LDWI                    181
                     STW                     register0
                     LD                      _p
                     POKE                    register0                       ; p=peek(181)+7 : poke 181,p
 
+                    STW                     0xe0
+                    LDWI                    _page_0x08a0
+                    CALL                    giga_vAC
+_page_0x08a0        LDW                     0xe0
 _190                LDI                     159
                     SUBW                    _x
                     STW                     drawLine_x1
@@ -227,7 +243,8 @@ _190                LDI                     159
 
 _200                ForNextLoopDown         _i _170                 0       ; next i
 
-                    CALLI                   _10                             ; goto 10
+                    LDWI                    _10
+                    CALL                    giga_vAC                        ; goto 10
 
 _math               PUSH                    
                     LDW                     _i
@@ -250,6 +267,6 @@ _math               PUSH
                     POP                     
                     RET                                                     ; return
 
-_end_0x0386         BRA                     _end_0x0386                     ; END
+_end_0x037e         BRA                     _end_0x037e                     ; END
 
 

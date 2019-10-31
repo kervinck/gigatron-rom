@@ -191,27 +191,22 @@ _label_ CALLI   _label
 %ENDM
 
 %MACRO  DrawLine
-        CALLI    drawLine
+        CALLI   drawLine
+%ENDM
+
+%MACRO  DrawLineCursor
+        CALLI   drawLineCursor
 %ENDM
 
 %MACRO  Initialise
-        ClearRegionInit 0x2020 0 0 giga_xres giga_yres
-        CALLI   clearRegion
-
-        LDWI    0x0F20          ; yellow on blue
+        LDWI    0x0F20                                  ; yellow on blue
         STW     fgbgColour
         STW     giga_sysArg0
-        LDWI    0x0802          ; starting cursor position
-        STW     cursorXY
-        LDWI    0x0001          ; text scrolling enabled by default
-        STW     textScroll
+
+        CALLI   clearScreen
 %ENDM
 
-%MACRO  ClearRegionInit  _colour _x _y _w _h
-        LDWI    _colour
-        STW     giga_sysArg0                            ; 4 pixels of colour
-        STW     giga_sysArg2
-
+%MACRO  ClearRegion _x _y _w _h
         LDI     _h / 2
         ST      ycount
         LDI     _w / 4
@@ -224,4 +219,5 @@ _label_ CALLI   _label
         LDWI    ((_h - 1) + _y)*256 + _x + giga_vram    ; bottom line
         STW     breset
         STW     bot
+        CALLI   clearRegion
 %ENDM

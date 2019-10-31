@@ -1,20 +1,3 @@
-%SUB            initialiseCcOps
-                ; (0x00E2 <-> 0x00ED), critical routines that can't straddle page boundaries
-initialiseCcOps LDWI    convertEqOp
-                STW     convertEqOpAddr
-                LDWI    convertNeOp
-                STW     convertNeOpAddr
-                LDWI    convertLeOp
-                STW     convertLeOpAddr
-                LDWI    convertGeOp
-                STW     convertGeOpAddr
-                LDWI    convertLtOp
-                STW     convertLtOpAddr
-                LDWI    convertGtOp
-                STW     convertGtOpAddr
-                RET
-%ENDS
-
 %SUB            convertEqOp
                 ; convert equal to into a boolean
 convertEqOp     BEQ     convertEq_1

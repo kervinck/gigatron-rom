@@ -25,18 +25,19 @@ clearRegion         EQU                     0x7ba0
 clearCursorRow      EQU                     0x7aa0
 drawLine            EQU                     0x79a0
 drawLineExt         EQU                     0x78a0
-drawLinePixel       EQU                     0x7cf1
+drawLineDelta1      EQU                     0x77a0
+drawLineCursor      EQU                     0x76a0
 printText           EQU                     0x7adf
-printDigit          EQU                     0x77a0
-printInt16          EQU                     0x77c0
-printChar           EQU                     0x76a0
-printHexByte        EQU                     0x75a0
-printHexWord        EQU                     0x7beb
-newLineScroll       EQU                     0x74a0
-resetAudio          EQU                     0x75ca
-playMidi            EQU                     0x73a0
-playMidiAsync       EQU                     0x74ec
-midiStartNote       EQU                     0x72a0
+printDigit          EQU                     0x76c9
+printInt16          EQU                     0x75a0
+printChar           EQU                     0x74a0
+printHexByte        EQU                     0x73a0
+printHexWord        EQU                     0x7cf1
+newLineScroll       EQU                     0x72a0
+resetAudio          EQU                     0x73ca
+playMidi            EQU                     0x71a0
+playMidiAsync       EQU                     0x7beb
+midiStartNote       EQU                     0x70a0
 
 ; Internal variables
 register0           EQU                     0x00a0
@@ -58,15 +59,15 @@ cursorXY            EQU                     register0 + 0x16
 midiStreamPtr       EQU                     register0 + 0x18
 midiDelay           EQU                     register0 + 0x1A
 frameCountPrev      EQU                     register0 + 0x1C
-textScroll          EQU                     register0 + 0x1E
+miscFlags           EQU                     register0 + 0x1E
 
 ; Includes
 %include            include/gigatron.i
 %include            include/math.i
 %include            include/conv_conds.i
 %include            include/audio.i
-%include            include/graphics.i
 %include            include/clear_screen.i
+%include            include/graphics_CALLI.i
 %include            include/print_text_CALLI.i
 %include            include/macros_CALLI.i
 
@@ -77,7 +78,7 @@ _test               EQU                     0x0cae
 _Big                EQU                     0x0eae
 _end_0x0488         EQU                     0x0bf0
 _end_0x049d         EQU                     0x0cac
-_end_0x4a16         EQU                     0x9a98
+_end_0x4a16         EQU                     0x9b66
 _page_0x08a0        EQU                     0x08a0
 _next_0x0335        EQU                     0x08c3
 _next_0x0339        EQU                     0x08c7
@@ -186,8 +187,6 @@ _page_0x6ba0        EQU                     0x6ba0
 _page_0x6ca0        EQU                     0x6ca0
 _page_0x6da0        EQU                     0x6da0
 _page_0x6ea0        EQU                     0x6ea0
-_page_0x6fa0        EQU                     0x6fa0
-_page_0x70a0        EQU                     0x70a0
 _page_0x8000        EQU                     0x8000
 _page_0x8100        EQU                     0x8100
 _page_0x8200        EQU                     0x8200
@@ -215,6 +214,7 @@ _page_0x9700        EQU                     0x9700
 _page_0x9800        EQU                     0x9800
 _page_0x9900        EQU                     0x9900
 _page_0x9a00        EQU                     0x9a00
+_page_0x9b00        EQU                     0x9b00
 
 ; Variables
 _frog$              EQU                     0x0030
@@ -246,8 +246,8 @@ usrStr_0x7efe       EQU                     0x7efe
 usrStr_0x7efe       DB                      1 '1'
 usrStr_0x7dfa       EQU                     0x7dfa
 usrStr_0x7dfa       DB                      2 '7f'
-usrStr_0x71a0       EQU                     0x71a0
-usrStr_0x71a0       DB                      25 'lalalalala23d455345634650'
+usrStr_0x77e5       EQU                     0x77e5
+usrStr_0x77e5       DB                      25 'lalalalala23d455345634650'
 
 ; Code
 _entryPoint_        Initialise                                              ; INIT
@@ -579,7 +579,7 @@ _page_0x0fa0        PrintVarInt16           _z
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     CALLI                   _page_0x10a0
 _page_0x10a0        LDW                     _a
@@ -640,7 +640,7 @@ _page_0x11a0        PrintAcInt16
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -701,7 +701,7 @@ _page_0x13a0        LDW                     _z
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -762,7 +762,7 @@ _page_0x14a0        PrintAcHexWord
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
                     CALLI                   _page_0x15a0
-_page_0x15a0        PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+_page_0x15a0        PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -822,7 +822,7 @@ _page_0x16a0        CALLI                   multiply16bit
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -883,7 +883,7 @@ _page_0x18a0        PrintAcInt16
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -944,7 +944,7 @@ _page_0x1aa0        LDWI                    -28785
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -1004,7 +1004,7 @@ _page_0x1ba0        LDWI                    -6
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -1065,7 +1065,7 @@ _page_0x1da0        STW                     mathX
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -1126,7 +1126,7 @@ _page_0x1fa0        CALLI                   divide16bit
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -1187,7 +1187,7 @@ _page_0x20a0        PrintString             usrStr_0x7ffe
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
                     CALLI                   _page_0x21a0
-_page_0x21a0        PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+_page_0x21a0        PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -1247,7 +1247,7 @@ _page_0x22a0        CALLI                   multiply16bit
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -1308,7 +1308,7 @@ _page_0x24a0        PrintAcInt16
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -1369,7 +1369,7 @@ _page_0x26a0        LDWI                    -28785
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -1429,7 +1429,7 @@ _page_0x27a0        LDWI                    -6
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -1490,7 +1490,7 @@ _page_0x29a0        STW                     mathX
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -1551,7 +1551,7 @@ _page_0x2ba0        CALLI                   divide16bit
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -1612,7 +1612,7 @@ _page_0x2ca0        PrintString             usrStr_0x7ffe
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
                     CALLI                   _page_0x2da0
-_page_0x2da0        PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+_page_0x2da0        PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -1672,7 +1672,7 @@ _page_0x2ea0        CALLI                   multiply16bit
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -1733,7 +1733,7 @@ _page_0x30a0        PrintAcInt16
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -1794,7 +1794,7 @@ _page_0x32a0        LDWI                    -28785
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -1854,7 +1854,7 @@ _page_0x33a0        LDWI                    -6
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -1915,7 +1915,7 @@ _page_0x35a0        STW                     mathX
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -1976,7 +1976,7 @@ _page_0x37a0        CALLI                   divide16bit
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -2037,7 +2037,7 @@ _page_0x38a0        PrintString             usrStr_0x7ffe
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
                     CALLI                   _page_0x39a0
-_page_0x39a0        PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+_page_0x39a0        PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -2097,7 +2097,7 @@ _page_0x3aa0        CALLI                   multiply16bit
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -2158,7 +2158,7 @@ _page_0x3ca0        PrintAcInt16
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -2219,7 +2219,7 @@ _page_0x3ea0        LDWI                    -28785
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -2279,7 +2279,7 @@ _page_0x3fa0        LDWI                    -6
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -2340,7 +2340,7 @@ _page_0x41a0        STW                     mathX
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -2401,7 +2401,7 @@ _page_0x43a0        CALLI                   divide16bit
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -2462,7 +2462,7 @@ _page_0x44a0        PrintString             usrStr_0x7ffe
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
                     CALLI                   _page_0x45a0
-_page_0x45a0        PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+_page_0x45a0        PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -2522,7 +2522,7 @@ _page_0x46a0        CALLI                   multiply16bit
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -2583,7 +2583,7 @@ _page_0x48a0        PrintAcInt16
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -2644,7 +2644,7 @@ _page_0x4aa0        LDWI                    -28785
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -2704,7 +2704,7 @@ _page_0x4ba0        LDWI                    -6
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -2765,7 +2765,7 @@ _page_0x4da0        STW                     mathX
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -2826,7 +2826,7 @@ _page_0x4fa0        CALLI                   divide16bit
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -2887,7 +2887,7 @@ _page_0x50a0        PrintString             usrStr_0x7ffe
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
                     CALLI                   _page_0x51a0
-_page_0x51a0        PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+_page_0x51a0        PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -2947,7 +2947,7 @@ _page_0x52a0        CALLI                   multiply16bit
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -3008,7 +3008,7 @@ _page_0x54a0        PrintAcInt16
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -3069,7 +3069,7 @@ _page_0x56a0        LDWI                    -28785
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -3129,7 +3129,7 @@ _page_0x57a0        LDWI                    -6
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -3190,7 +3190,7 @@ _page_0x59a0        STW                     mathX
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -3251,7 +3251,7 @@ _page_0x5ba0        CALLI                   divide16bit
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -3312,7 +3312,7 @@ _page_0x5ca0        PrintString             usrStr_0x7ffe
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
                     CALLI                   _page_0x5da0
-_page_0x5da0        PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+_page_0x5da0        PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -3372,7 +3372,7 @@ _page_0x5ea0        CALLI                   multiply16bit
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -3433,7 +3433,7 @@ _page_0x60a0        PrintAcInt16
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -3494,7 +3494,7 @@ _page_0x62a0        LDWI                    -28785
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -3554,7 +3554,7 @@ _page_0x63a0        LDWI                    -6
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -3615,7 +3615,7 @@ _page_0x65a0        STW                     mathX
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -3676,7 +3676,7 @@ _page_0x67a0        CALLI                   divide16bit
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -3737,7 +3737,7 @@ _page_0x68a0        PrintString             usrStr_0x7ffe
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
                     CALLI                   _page_0x69a0
-_page_0x69a0        PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+_page_0x69a0        PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -3797,7 +3797,7 @@ _page_0x6aa0        CALLI                   multiply16bit
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -3858,7 +3858,7 @@ _page_0x6ca0        PrintAcInt16
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -3919,7 +3919,7 @@ _page_0x6ea0        LDWI                    -28785
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -3950,78 +3950,17 @@ _page_0x6ea0        LDWI                    -28785
                     PrintString             usrStr_0x7ffe
                     PrintVarInt16           _z
                     PrintString             usrStr_0x7ffe
-                    CALLI                   _page_0x6fa0
-_page_0x6fa0        LDWI                    -6
-                    STW                     mathX
-                    LDW                     _z
-                    STW                     mathY
-                    CALLI                   multiply16bit
-                    PrintAcInt16            
-                    PrintString             usrStr_0x7ffe
-                    LDI                     0
-                    SUBW                    _z
-                    STW                     mathX
-                    LDI                     21
-                    STW                     mathY
-                    CALLI                   divide16bit
-                    PrintAcInt16            
-                    PrintString             usrStr_0x7ffe
-                    LDW                     _z
-                    STW                     mathX
-                    LDI                     21
-                    STW                     mathY
-                    CALLI                   divide16bit
-                    LDW                     mathRem
-                    PrintAcInt16            
-                    CALLI                   newLineScroll                   ; print hexw$(&hdead);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
-
-                    LDWI                    -28785
-                    PrintAcHexWord          
-                    CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
-
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
-
-                    LDW                     _a
-                    PrintAcHexByte          
-                    CALLI                   newLineScroll                   ; print hex$(a)
-
-                    CALLI                   _page_0x70a0
-_page_0x70a0        LDWI                    -1
-                    PrintAcHexWord          
-                    CALLI                   newLineScroll                   ; print hexw$(&hFFFF OR &h1111)
-
-                    LDWI                    4369
-                    STW                     _f                              ; f = &h1111
-
-                    LDWI                    -21846
-                    STW                     _g                              ; g = &hAAAA
-
-                    LDWI                    -1
-                    SUBW                    _g
-                    XORW                    _f
-                    STW                     _h                              ; h = NOT g XOR f
-
-                    LDW                     _h
-                    PrintAcHexWord          
-                    PrintString             usrStr_0x7ffe
-                    CALLI                   newLineScroll                   ; print hexw$(h);" ";56
-
-                    LDWI                    -8531
-                    PrintAcHexWord          
-                    PrintString             usrStr_0x7ffe
-                    PrintVarInt16           _z
-                    PrintString             usrStr_0x7ffe
-                    LDWI                    -6
-                    STW                     mathX
-                    LDW                     _z
-                    STW                     mathY
-                    CALLI                   multiply16bit
-                    PrintAcInt16            
-                    PrintString             usrStr_0x7ffe
-                    LDI                     0
-                    SUBW                    _z
                     CALLI                   _page_0x8000
-_page_0x8000        STW                     mathX
+_page_0x8000        LDWI                    -6
+                    STW                     mathX
+                    LDW                     _z
+                    STW                     mathY
+                    CALLI                   multiply16bit
+                    PrintAcInt16            
+                    PrintString             usrStr_0x7ffe
+                    LDI                     0
+                    SUBW                    _z
+                    STW                     mathX
                     LDI                     21
                     STW                     mathY
                     CALLI                   divide16bit
@@ -4040,7 +3979,7 @@ _page_0x8000        STW                     mathX
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -4099,7 +4038,7 @@ _page_0x8000        STW                     mathX
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -4111,22 +4050,22 @@ _page_0x8000        STW                     mathX
 
                     LDWI                    4369
                     STW                     _f                              ; f = &h1111
-
-                    LDWI                    -21846
-                    STW                     _g                              ; g = &hAAAA
-
-                    LDWI                    -1
-                    SUBW                    _g
-                    XORW                    _f
-                    STW                     _h                              ; h = NOT g XOR f
-
-                    LDW                     _h
-                    PrintAcHexWord          
-                    PrintString             usrStr_0x7ffe
-                    CALLI                   newLineScroll                   ; print hexw$(h);" ";56
 
                     CALLI                   _page_0x8100
-_page_0x8100        LDWI                    -8531
+_page_0x8100        LDWI                    -21846
+                    STW                     _g                              ; g = &hAAAA
+
+                    LDWI                    -1
+                    SUBW                    _g
+                    XORW                    _f
+                    STW                     _h                              ; h = NOT g XOR f
+
+                    LDW                     _h
+                    PrintAcHexWord          
+                    PrintString             usrStr_0x7ffe
+                    CALLI                   newLineScroll                   ; print hexw$(h);" ";56
+
+                    LDWI                    -8531
                     PrintAcHexWord          
                     PrintString             usrStr_0x7ffe
                     PrintVarInt16           _z
@@ -4159,7 +4098,7 @@ _page_0x8100        LDWI                    -8531
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -4208,20 +4147,20 @@ _page_0x8100        LDWI                    -8531
                     LDW                     _z
                     STW                     mathX
                     LDI                     21
-                    STW                     mathY
-                    CALLI                   divide16bit
-                    LDW                     mathRem
-                    PrintAcInt16            
-                    CALLI                   newLineScroll                   ; print hexw$(&hdead);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
-
-                    LDWI                    -28785
-                    PrintAcHexWord          
-                    CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
-
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
-
                     CALLI                   _page_0x8200
-_page_0x8200        LDW                     _a
+_page_0x8200        STW                     mathY
+                    CALLI                   divide16bit
+                    LDW                     mathRem
+                    PrintAcInt16            
+                    CALLI                   newLineScroll                   ; print hexw$(&hdead);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+
+                    LDWI                    -28785
+                    PrintAcHexWord          
+                    CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
+
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
+
+                    LDW                     _a
                     PrintAcHexByte          
                     CALLI                   newLineScroll                   ; print hex$(a)
 
@@ -4278,7 +4217,7 @@ _page_0x8200        LDW                     _a
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -4307,20 +4246,20 @@ _page_0x8200        LDW                     _a
                     LDWI                    -8531
                     PrintAcHexWord          
                     PrintString             usrStr_0x7ffe
-                    PrintVarInt16           _z
-                    PrintString             usrStr_0x7ffe
-                    LDWI                    -6
-                    STW                     mathX
-                    LDW                     _z
-                    STW                     mathY
-                    CALLI                   multiply16bit
-                    PrintAcInt16            
-                    PrintString             usrStr_0x7ffe
-                    LDI                     0
-                    SUBW                    _z
-                    STW                     mathX
                     CALLI                   _page_0x8300
-_page_0x8300        LDI                     21
+_page_0x8300        PrintVarInt16           _z
+                    PrintString             usrStr_0x7ffe
+                    LDWI                    -6
+                    STW                     mathX
+                    LDW                     _z
+                    STW                     mathY
+                    CALLI                   multiply16bit
+                    PrintAcInt16            
+                    PrintString             usrStr_0x7ffe
+                    LDI                     0
+                    SUBW                    _z
+                    STW                     mathX
+                    LDI                     21
                     STW                     mathY
                     CALLI                   divide16bit
                     PrintAcInt16            
@@ -4338,7 +4277,7 @@ _page_0x8300        LDI                     21
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -4397,73 +4336,14 @@ _page_0x8300        LDI                     21
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
                     CALLI                   newLineScroll                   ; print hex$(a)
-
-                    LDWI                    -1
-                    PrintAcHexWord          
-                    CALLI                   newLineScroll                   ; print hexw$(&hFFFF OR &h1111)
-
-                    LDWI                    4369
-                    STW                     _f                              ; f = &h1111
-
-                    LDWI                    -21846
-                    STW                     _g                              ; g = &hAAAA
-
-                    LDWI                    -1
-                    SUBW                    _g
-                    XORW                    _f
-                    STW                     _h                              ; h = NOT g XOR f
-
-                    LDW                     _h
-                    PrintAcHexWord          
-                    PrintString             usrStr_0x7ffe
-                    CALLI                   newLineScroll                   ; print hexw$(h);" ";56
 
                     CALLI                   _page_0x8400
-_page_0x8400        LDWI                    -8531
-                    PrintAcHexWord          
-                    PrintString             usrStr_0x7ffe
-                    PrintVarInt16           _z
-                    PrintString             usrStr_0x7ffe
-                    LDWI                    -6
-                    STW                     mathX
-                    LDW                     _z
-                    STW                     mathY
-                    CALLI                   multiply16bit
-                    PrintAcInt16            
-                    PrintString             usrStr_0x7ffe
-                    LDI                     0
-                    SUBW                    _z
-                    STW                     mathX
-                    LDI                     21
-                    STW                     mathY
-                    CALLI                   divide16bit
-                    PrintAcInt16            
-                    PrintString             usrStr_0x7ffe
-                    LDW                     _z
-                    STW                     mathX
-                    LDI                     21
-                    STW                     mathY
-                    CALLI                   divide16bit
-                    LDW                     mathRem
-                    PrintAcInt16            
-                    CALLI                   newLineScroll                   ; print hexw$(&hdead);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
-
-                    LDWI                    -28785
-                    PrintAcHexWord          
-                    CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
-
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
-
-                    LDW                     _a
-                    PrintAcHexByte          
-                    CALLI                   newLineScroll                   ; print hex$(a)
-
-                    LDWI                    -1
+_page_0x8400        LDWI                    -1
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&hFFFF OR &h1111)
 
@@ -4516,10 +4396,69 @@ _page_0x8400        LDWI                    -8531
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
+                    LDW                     _a
+                    PrintAcHexByte          
+                    CALLI                   newLineScroll                   ; print hex$(a)
+
+                    LDWI                    -1
+                    PrintAcHexWord          
+                    CALLI                   newLineScroll                   ; print hexw$(&hFFFF OR &h1111)
+
+                    LDWI                    4369
+                    STW                     _f                              ; f = &h1111
+
+                    LDWI                    -21846
+                    STW                     _g                              ; g = &hAAAA
+
+                    LDWI                    -1
+                    SUBW                    _g
+                    XORW                    _f
+                    STW                     _h                              ; h = NOT g XOR f
+
+                    LDW                     _h
+                    PrintAcHexWord          
+                    PrintString             usrStr_0x7ffe
+                    CALLI                   newLineScroll                   ; print hexw$(h);" ";56
+
+                    LDWI                    -8531
+                    PrintAcHexWord          
+                    PrintString             usrStr_0x7ffe
+                    PrintVarInt16           _z
+                    PrintString             usrStr_0x7ffe
+                    LDWI                    -6
+                    STW                     mathX
+                    LDW                     _z
+                    STW                     mathY
+                    CALLI                   multiply16bit
+                    PrintAcInt16            
+                    PrintString             usrStr_0x7ffe
+                    LDI                     0
+                    SUBW                    _z
+                    STW                     mathX
+                    LDI                     21
+                    STW                     mathY
                     CALLI                   _page_0x8500
-_page_0x8500        LDW                     _a
+_page_0x8500        CALLI                   divide16bit
+                    PrintAcInt16            
+                    PrintString             usrStr_0x7ffe
+                    LDW                     _z
+                    STW                     mathX
+                    LDI                     21
+                    STW                     mathY
+                    CALLI                   divide16bit
+                    LDW                     mathRem
+                    PrintAcInt16            
+                    CALLI                   newLineScroll                   ; print hexw$(&hdead);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+
+                    LDWI                    -28785
+                    PrintAcHexWord          
+                    CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
+
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
+
+                    LDW                     _a
                     PrintAcHexByte          
                     CALLI                   newLineScroll                   ; print hex$(a)
 
@@ -4576,7 +4515,7 @@ _page_0x8500        LDW                     _a
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -4602,23 +4541,23 @@ _page_0x8500        LDW                     _a
                     PrintString             usrStr_0x7ffe
                     CALLI                   newLineScroll                   ; print hexw$(h);" ";56
 
-                    LDWI                    -8531
-                    PrintAcHexWord          
-                    PrintString             usrStr_0x7ffe
-                    PrintVarInt16           _z
-                    PrintString             usrStr_0x7ffe
-                    LDWI                    -6
-                    STW                     mathX
-                    LDW                     _z
-                    STW                     mathY
-                    CALLI                   multiply16bit
-                    PrintAcInt16            
-                    PrintString             usrStr_0x7ffe
-                    LDI                     0
-                    SUBW                    _z
-                    STW                     mathX
                     CALLI                   _page_0x8600
-_page_0x8600        LDI                     21
+_page_0x8600        LDWI                    -8531
+                    PrintAcHexWord          
+                    PrintString             usrStr_0x7ffe
+                    PrintVarInt16           _z
+                    PrintString             usrStr_0x7ffe
+                    LDWI                    -6
+                    STW                     mathX
+                    LDW                     _z
+                    STW                     mathY
+                    CALLI                   multiply16bit
+                    PrintAcInt16            
+                    PrintString             usrStr_0x7ffe
+                    LDI                     0
+                    SUBW                    _z
+                    STW                     mathX
+                    LDI                     21
                     STW                     mathY
                     CALLI                   divide16bit
                     PrintAcInt16            
@@ -4636,7 +4575,7 @@ _page_0x8600        LDI                     21
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -4695,69 +4634,10 @@ _page_0x8600        LDI                     21
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
-
-                    LDW                     _a
-                    PrintAcHexByte          
-                    CALLI                   newLineScroll                   ; print hex$(a)
-
-                    LDWI                    -1
-                    PrintAcHexWord          
-                    CALLI                   newLineScroll                   ; print hexw$(&hFFFF OR &h1111)
-
-                    LDWI                    4369
-                    STW                     _f                              ; f = &h1111
-
-                    LDWI                    -21846
-                    STW                     _g                              ; g = &hAAAA
-
-                    LDWI                    -1
-                    SUBW                    _g
-                    XORW                    _f
-                    STW                     _h                              ; h = NOT g XOR f
-
-                    LDW                     _h
-                    PrintAcHexWord          
-                    PrintString             usrStr_0x7ffe
-                    CALLI                   newLineScroll                   ; print hexw$(h);" ";56
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     CALLI                   _page_0x8700
-_page_0x8700        LDWI                    -8531
-                    PrintAcHexWord          
-                    PrintString             usrStr_0x7ffe
-                    PrintVarInt16           _z
-                    PrintString             usrStr_0x7ffe
-                    LDWI                    -6
-                    STW                     mathX
-                    LDW                     _z
-                    STW                     mathY
-                    CALLI                   multiply16bit
-                    PrintAcInt16            
-                    PrintString             usrStr_0x7ffe
-                    LDI                     0
-                    SUBW                    _z
-                    STW                     mathX
-                    LDI                     21
-                    STW                     mathY
-                    CALLI                   divide16bit
-                    PrintAcInt16            
-                    PrintString             usrStr_0x7ffe
-                    LDW                     _z
-                    STW                     mathX
-                    LDI                     21
-                    STW                     mathY
-                    CALLI                   divide16bit
-                    LDW                     mathRem
-                    PrintAcInt16            
-                    CALLI                   newLineScroll                   ; print hexw$(&hdead);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
-
-                    LDWI                    -28785
-                    PrintAcHexWord          
-                    CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
-
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
-
-                    LDW                     _a
+_page_0x8700        LDW                     _a
                     PrintAcHexByte          
                     CALLI                   newLineScroll                   ; print hex$(a)
 
@@ -4814,10 +4694,69 @@ _page_0x8700        LDWI                    -8531
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
+                    LDW                     _a
+                    PrintAcHexByte          
+                    CALLI                   newLineScroll                   ; print hex$(a)
+
+                    LDWI                    -1
+                    PrintAcHexWord          
+                    CALLI                   newLineScroll                   ; print hexw$(&hFFFF OR &h1111)
+
+                    LDWI                    4369
+                    STW                     _f                              ; f = &h1111
+
+                    LDWI                    -21846
+                    STW                     _g                              ; g = &hAAAA
+
+                    LDWI                    -1
+                    SUBW                    _g
+                    XORW                    _f
+                    STW                     _h                              ; h = NOT g XOR f
+
+                    LDW                     _h
+                    PrintAcHexWord          
+                    PrintString             usrStr_0x7ffe
+                    CALLI                   newLineScroll                   ; print hexw$(h);" ";56
+
+                    LDWI                    -8531
+                    PrintAcHexWord          
+                    PrintString             usrStr_0x7ffe
+                    PrintVarInt16           _z
+                    PrintString             usrStr_0x7ffe
+                    LDWI                    -6
+                    STW                     mathX
+                    LDW                     _z
+                    STW                     mathY
+                    CALLI                   multiply16bit
+                    PrintAcInt16            
+                    PrintString             usrStr_0x7ffe
+                    LDI                     0
+                    SUBW                    _z
+                    STW                     mathX
                     CALLI                   _page_0x8800
-_page_0x8800        LDW                     _a
+_page_0x8800        LDI                     21
+                    STW                     mathY
+                    CALLI                   divide16bit
+                    PrintAcInt16            
+                    PrintString             usrStr_0x7ffe
+                    LDW                     _z
+                    STW                     mathX
+                    LDI                     21
+                    STW                     mathY
+                    CALLI                   divide16bit
+                    LDW                     mathRem
+                    PrintAcInt16            
+                    CALLI                   newLineScroll                   ; print hexw$(&hdead);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+
+                    LDWI                    -28785
+                    PrintAcHexWord          
+                    CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
+
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
+
+                    LDW                     _a
                     PrintAcHexByte          
                     CALLI                   newLineScroll                   ; print hex$(a)
 
@@ -4874,7 +4813,7 @@ _page_0x8800        LDW                     _a
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -4900,23 +4839,23 @@ _page_0x8800        LDW                     _a
                     PrintString             usrStr_0x7ffe
                     CALLI                   newLineScroll                   ; print hexw$(h);" ";56
 
-                    LDWI                    -8531
-                    PrintAcHexWord          
-                    PrintString             usrStr_0x7ffe
-                    PrintVarInt16           _z
-                    PrintString             usrStr_0x7ffe
-                    LDWI                    -6
-                    STW                     mathX
-                    LDW                     _z
-                    STW                     mathY
-                    CALLI                   multiply16bit
-                    PrintAcInt16            
-                    PrintString             usrStr_0x7ffe
-                    LDI                     0
-                    SUBW                    _z
-                    STW                     mathX
                     CALLI                   _page_0x8900
-_page_0x8900        LDI                     21
+_page_0x8900        LDWI                    -8531
+                    PrintAcHexWord          
+                    PrintString             usrStr_0x7ffe
+                    PrintVarInt16           _z
+                    PrintString             usrStr_0x7ffe
+                    LDWI                    -6
+                    STW                     mathX
+                    LDW                     _z
+                    STW                     mathY
+                    CALLI                   multiply16bit
+                    PrintAcInt16            
+                    PrintString             usrStr_0x7ffe
+                    LDI                     0
+                    SUBW                    _z
+                    STW                     mathX
+                    LDI                     21
                     STW                     mathY
                     CALLI                   divide16bit
                     PrintAcInt16            
@@ -4934,7 +4873,7 @@ _page_0x8900        LDI                     21
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -4993,69 +4932,10 @@ _page_0x8900        LDI                     21
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
-
-                    LDW                     _a
-                    PrintAcHexByte          
-                    CALLI                   newLineScroll                   ; print hex$(a)
-
-                    LDWI                    -1
-                    PrintAcHexWord          
-                    CALLI                   newLineScroll                   ; print hexw$(&hFFFF OR &h1111)
-
-                    LDWI                    4369
-                    STW                     _f                              ; f = &h1111
-
-                    LDWI                    -21846
-                    STW                     _g                              ; g = &hAAAA
-
-                    LDWI                    -1
-                    SUBW                    _g
-                    XORW                    _f
-                    STW                     _h                              ; h = NOT g XOR f
-
-                    LDW                     _h
-                    PrintAcHexWord          
-                    PrintString             usrStr_0x7ffe
-                    CALLI                   newLineScroll                   ; print hexw$(h);" ";56
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     CALLI                   _page_0x8a00
-_page_0x8a00        LDWI                    -8531
-                    PrintAcHexWord          
-                    PrintString             usrStr_0x7ffe
-                    PrintVarInt16           _z
-                    PrintString             usrStr_0x7ffe
-                    LDWI                    -6
-                    STW                     mathX
-                    LDW                     _z
-                    STW                     mathY
-                    CALLI                   multiply16bit
-                    PrintAcInt16            
-                    PrintString             usrStr_0x7ffe
-                    LDI                     0
-                    SUBW                    _z
-                    STW                     mathX
-                    LDI                     21
-                    STW                     mathY
-                    CALLI                   divide16bit
-                    PrintAcInt16            
-                    PrintString             usrStr_0x7ffe
-                    LDW                     _z
-                    STW                     mathX
-                    LDI                     21
-                    STW                     mathY
-                    CALLI                   divide16bit
-                    LDW                     mathRem
-                    PrintAcInt16            
-                    CALLI                   newLineScroll                   ; print hexw$(&hdead);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
-
-                    LDWI                    -28785
-                    PrintAcHexWord          
-                    CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
-
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
-
-                    LDW                     _a
+_page_0x8a00        LDW                     _a
                     PrintAcHexByte          
                     CALLI                   newLineScroll                   ; print hex$(a)
 
@@ -5112,10 +4992,69 @@ _page_0x8a00        LDWI                    -8531
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
+                    LDW                     _a
+                    PrintAcHexByte          
+                    CALLI                   newLineScroll                   ; print hex$(a)
+
+                    LDWI                    -1
+                    PrintAcHexWord          
+                    CALLI                   newLineScroll                   ; print hexw$(&hFFFF OR &h1111)
+
+                    LDWI                    4369
+                    STW                     _f                              ; f = &h1111
+
+                    LDWI                    -21846
+                    STW                     _g                              ; g = &hAAAA
+
+                    LDWI                    -1
+                    SUBW                    _g
+                    XORW                    _f
+                    STW                     _h                              ; h = NOT g XOR f
+
+                    LDW                     _h
+                    PrintAcHexWord          
+                    PrintString             usrStr_0x7ffe
+                    CALLI                   newLineScroll                   ; print hexw$(h);" ";56
+
+                    LDWI                    -8531
+                    PrintAcHexWord          
+                    PrintString             usrStr_0x7ffe
+                    PrintVarInt16           _z
+                    PrintString             usrStr_0x7ffe
+                    LDWI                    -6
+                    STW                     mathX
+                    LDW                     _z
+                    STW                     mathY
+                    CALLI                   multiply16bit
+                    PrintAcInt16            
+                    PrintString             usrStr_0x7ffe
+                    LDI                     0
+                    SUBW                    _z
+                    STW                     mathX
                     CALLI                   _page_0x8b00
-_page_0x8b00        LDW                     _a
+_page_0x8b00        LDI                     21
+                    STW                     mathY
+                    CALLI                   divide16bit
+                    PrintAcInt16            
+                    PrintString             usrStr_0x7ffe
+                    LDW                     _z
+                    STW                     mathX
+                    LDI                     21
+                    STW                     mathY
+                    CALLI                   divide16bit
+                    LDW                     mathRem
+                    PrintAcInt16            
+                    CALLI                   newLineScroll                   ; print hexw$(&hdead);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+
+                    LDWI                    -28785
+                    PrintAcHexWord          
+                    CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
+
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
+
+                    LDW                     _a
                     PrintAcHexByte          
                     CALLI                   newLineScroll                   ; print hex$(a)
 
@@ -5172,7 +5111,7 @@ _page_0x8b00        LDW                     _a
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -5198,23 +5137,23 @@ _page_0x8b00        LDW                     _a
                     PrintString             usrStr_0x7ffe
                     CALLI                   newLineScroll                   ; print hexw$(h);" ";56
 
-                    LDWI                    -8531
-                    PrintAcHexWord          
-                    PrintString             usrStr_0x7ffe
-                    PrintVarInt16           _z
-                    PrintString             usrStr_0x7ffe
-                    LDWI                    -6
-                    STW                     mathX
-                    LDW                     _z
-                    STW                     mathY
-                    CALLI                   multiply16bit
-                    PrintAcInt16            
-                    PrintString             usrStr_0x7ffe
-                    LDI                     0
-                    SUBW                    _z
-                    STW                     mathX
                     CALLI                   _page_0x8c00
-_page_0x8c00        LDI                     21
+_page_0x8c00        LDWI                    -8531
+                    PrintAcHexWord          
+                    PrintString             usrStr_0x7ffe
+                    PrintVarInt16           _z
+                    PrintString             usrStr_0x7ffe
+                    LDWI                    -6
+                    STW                     mathX
+                    LDW                     _z
+                    STW                     mathY
+                    CALLI                   multiply16bit
+                    PrintAcInt16            
+                    PrintString             usrStr_0x7ffe
+                    LDI                     0
+                    SUBW                    _z
+                    STW                     mathX
+                    LDI                     21
                     STW                     mathY
                     CALLI                   divide16bit
                     PrintAcInt16            
@@ -5232,7 +5171,7 @@ _page_0x8c00        LDI                     21
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -5291,69 +5230,10 @@ _page_0x8c00        LDI                     21
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
-
-                    LDW                     _a
-                    PrintAcHexByte          
-                    CALLI                   newLineScroll                   ; print hex$(a)
-
-                    LDWI                    -1
-                    PrintAcHexWord          
-                    CALLI                   newLineScroll                   ; print hexw$(&hFFFF OR &h1111)
-
-                    LDWI                    4369
-                    STW                     _f                              ; f = &h1111
-
-                    LDWI                    -21846
-                    STW                     _g                              ; g = &hAAAA
-
-                    LDWI                    -1
-                    SUBW                    _g
-                    XORW                    _f
-                    STW                     _h                              ; h = NOT g XOR f
-
-                    LDW                     _h
-                    PrintAcHexWord          
-                    PrintString             usrStr_0x7ffe
-                    CALLI                   newLineScroll                   ; print hexw$(h);" ";56
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     CALLI                   _page_0x8d00
-_page_0x8d00        LDWI                    -8531
-                    PrintAcHexWord          
-                    PrintString             usrStr_0x7ffe
-                    PrintVarInt16           _z
-                    PrintString             usrStr_0x7ffe
-                    LDWI                    -6
-                    STW                     mathX
-                    LDW                     _z
-                    STW                     mathY
-                    CALLI                   multiply16bit
-                    PrintAcInt16            
-                    PrintString             usrStr_0x7ffe
-                    LDI                     0
-                    SUBW                    _z
-                    STW                     mathX
-                    LDI                     21
-                    STW                     mathY
-                    CALLI                   divide16bit
-                    PrintAcInt16            
-                    PrintString             usrStr_0x7ffe
-                    LDW                     _z
-                    STW                     mathX
-                    LDI                     21
-                    STW                     mathY
-                    CALLI                   divide16bit
-                    LDW                     mathRem
-                    PrintAcInt16            
-                    CALLI                   newLineScroll                   ; print hexw$(&hdead);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
-
-                    LDWI                    -28785
-                    PrintAcHexWord          
-                    CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
-
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
-
-                    LDW                     _a
+_page_0x8d00        LDW                     _a
                     PrintAcHexByte          
                     CALLI                   newLineScroll                   ; print hex$(a)
 
@@ -5410,10 +5290,69 @@ _page_0x8d00        LDWI                    -8531
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
+                    LDW                     _a
+                    PrintAcHexByte          
+                    CALLI                   newLineScroll                   ; print hex$(a)
+
+                    LDWI                    -1
+                    PrintAcHexWord          
+                    CALLI                   newLineScroll                   ; print hexw$(&hFFFF OR &h1111)
+
+                    LDWI                    4369
+                    STW                     _f                              ; f = &h1111
+
+                    LDWI                    -21846
+                    STW                     _g                              ; g = &hAAAA
+
+                    LDWI                    -1
+                    SUBW                    _g
+                    XORW                    _f
+                    STW                     _h                              ; h = NOT g XOR f
+
+                    LDW                     _h
+                    PrintAcHexWord          
+                    PrintString             usrStr_0x7ffe
+                    CALLI                   newLineScroll                   ; print hexw$(h);" ";56
+
+                    LDWI                    -8531
+                    PrintAcHexWord          
+                    PrintString             usrStr_0x7ffe
+                    PrintVarInt16           _z
+                    PrintString             usrStr_0x7ffe
+                    LDWI                    -6
+                    STW                     mathX
+                    LDW                     _z
+                    STW                     mathY
+                    CALLI                   multiply16bit
+                    PrintAcInt16            
+                    PrintString             usrStr_0x7ffe
+                    LDI                     0
+                    SUBW                    _z
+                    STW                     mathX
                     CALLI                   _page_0x8e00
-_page_0x8e00        LDW                     _a
+_page_0x8e00        LDI                     21
+                    STW                     mathY
+                    CALLI                   divide16bit
+                    PrintAcInt16            
+                    PrintString             usrStr_0x7ffe
+                    LDW                     _z
+                    STW                     mathX
+                    LDI                     21
+                    STW                     mathY
+                    CALLI                   divide16bit
+                    LDW                     mathRem
+                    PrintAcInt16            
+                    CALLI                   newLineScroll                   ; print hexw$(&hdead);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+
+                    LDWI                    -28785
+                    PrintAcHexWord          
+                    CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
+
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
+
+                    LDW                     _a
                     PrintAcHexByte          
                     CALLI                   newLineScroll                   ; print hex$(a)
 
@@ -5470,7 +5409,7 @@ _page_0x8e00        LDW                     _a
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -5496,23 +5435,23 @@ _page_0x8e00        LDW                     _a
                     PrintString             usrStr_0x7ffe
                     CALLI                   newLineScroll                   ; print hexw$(h);" ";56
 
-                    LDWI                    -8531
-                    PrintAcHexWord          
-                    PrintString             usrStr_0x7ffe
-                    PrintVarInt16           _z
-                    PrintString             usrStr_0x7ffe
-                    LDWI                    -6
-                    STW                     mathX
-                    LDW                     _z
-                    STW                     mathY
-                    CALLI                   multiply16bit
-                    PrintAcInt16            
-                    PrintString             usrStr_0x7ffe
-                    LDI                     0
-                    SUBW                    _z
-                    STW                     mathX
                     CALLI                   _page_0x8f00
-_page_0x8f00        LDI                     21
+_page_0x8f00        LDWI                    -8531
+                    PrintAcHexWord          
+                    PrintString             usrStr_0x7ffe
+                    PrintVarInt16           _z
+                    PrintString             usrStr_0x7ffe
+                    LDWI                    -6
+                    STW                     mathX
+                    LDW                     _z
+                    STW                     mathY
+                    CALLI                   multiply16bit
+                    PrintAcInt16            
+                    PrintString             usrStr_0x7ffe
+                    LDI                     0
+                    SUBW                    _z
+                    STW                     mathX
+                    LDI                     21
                     STW                     mathY
                     CALLI                   divide16bit
                     PrintAcInt16            
@@ -5530,7 +5469,7 @@ _page_0x8f00        LDI                     21
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -5589,69 +5528,10 @@ _page_0x8f00        LDI                     21
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
-
-                    LDW                     _a
-                    PrintAcHexByte          
-                    CALLI                   newLineScroll                   ; print hex$(a)
-
-                    LDWI                    -1
-                    PrintAcHexWord          
-                    CALLI                   newLineScroll                   ; print hexw$(&hFFFF OR &h1111)
-
-                    LDWI                    4369
-                    STW                     _f                              ; f = &h1111
-
-                    LDWI                    -21846
-                    STW                     _g                              ; g = &hAAAA
-
-                    LDWI                    -1
-                    SUBW                    _g
-                    XORW                    _f
-                    STW                     _h                              ; h = NOT g XOR f
-
-                    LDW                     _h
-                    PrintAcHexWord          
-                    PrintString             usrStr_0x7ffe
-                    CALLI                   newLineScroll                   ; print hexw$(h);" ";56
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     CALLI                   _page_0x9000
-_page_0x9000        LDWI                    -8531
-                    PrintAcHexWord          
-                    PrintString             usrStr_0x7ffe
-                    PrintVarInt16           _z
-                    PrintString             usrStr_0x7ffe
-                    LDWI                    -6
-                    STW                     mathX
-                    LDW                     _z
-                    STW                     mathY
-                    CALLI                   multiply16bit
-                    PrintAcInt16            
-                    PrintString             usrStr_0x7ffe
-                    LDI                     0
-                    SUBW                    _z
-                    STW                     mathX
-                    LDI                     21
-                    STW                     mathY
-                    CALLI                   divide16bit
-                    PrintAcInt16            
-                    PrintString             usrStr_0x7ffe
-                    LDW                     _z
-                    STW                     mathX
-                    LDI                     21
-                    STW                     mathY
-                    CALLI                   divide16bit
-                    LDW                     mathRem
-                    PrintAcInt16            
-                    CALLI                   newLineScroll                   ; print hexw$(&hdead);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
-
-                    LDWI                    -28785
-                    PrintAcHexWord          
-                    CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
-
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
-
-                    LDW                     _a
+_page_0x9000        LDW                     _a
                     PrintAcHexByte          
                     CALLI                   newLineScroll                   ; print hex$(a)
 
@@ -5708,10 +5588,69 @@ _page_0x9000        LDWI                    -8531
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
+                    LDW                     _a
+                    PrintAcHexByte          
+                    CALLI                   newLineScroll                   ; print hex$(a)
+
+                    LDWI                    -1
+                    PrintAcHexWord          
+                    CALLI                   newLineScroll                   ; print hexw$(&hFFFF OR &h1111)
+
+                    LDWI                    4369
+                    STW                     _f                              ; f = &h1111
+
+                    LDWI                    -21846
+                    STW                     _g                              ; g = &hAAAA
+
+                    LDWI                    -1
+                    SUBW                    _g
+                    XORW                    _f
+                    STW                     _h                              ; h = NOT g XOR f
+
+                    LDW                     _h
+                    PrintAcHexWord          
+                    PrintString             usrStr_0x7ffe
+                    CALLI                   newLineScroll                   ; print hexw$(h);" ";56
+
+                    LDWI                    -8531
+                    PrintAcHexWord          
+                    PrintString             usrStr_0x7ffe
+                    PrintVarInt16           _z
+                    PrintString             usrStr_0x7ffe
+                    LDWI                    -6
+                    STW                     mathX
+                    LDW                     _z
+                    STW                     mathY
+                    CALLI                   multiply16bit
+                    PrintAcInt16            
+                    PrintString             usrStr_0x7ffe
+                    LDI                     0
+                    SUBW                    _z
+                    STW                     mathX
                     CALLI                   _page_0x9100
-_page_0x9100        LDW                     _a
+_page_0x9100        LDI                     21
+                    STW                     mathY
+                    CALLI                   divide16bit
+                    PrintAcInt16            
+                    PrintString             usrStr_0x7ffe
+                    LDW                     _z
+                    STW                     mathX
+                    LDI                     21
+                    STW                     mathY
+                    CALLI                   divide16bit
+                    LDW                     mathRem
+                    PrintAcInt16            
+                    CALLI                   newLineScroll                   ; print hexw$(&hdead);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+
+                    LDWI                    -28785
+                    PrintAcHexWord          
+                    CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
+
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
+
+                    LDW                     _a
                     PrintAcHexByte          
                     CALLI                   newLineScroll                   ; print hex$(a)
 
@@ -5768,7 +5707,7 @@ _page_0x9100        LDW                     _a
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -5794,23 +5733,23 @@ _page_0x9100        LDW                     _a
                     PrintString             usrStr_0x7ffe
                     CALLI                   newLineScroll                   ; print hexw$(h);" ";56
 
-                    LDWI                    -8531
-                    PrintAcHexWord          
-                    PrintString             usrStr_0x7ffe
-                    PrintVarInt16           _z
-                    PrintString             usrStr_0x7ffe
-                    LDWI                    -6
-                    STW                     mathX
-                    LDW                     _z
-                    STW                     mathY
-                    CALLI                   multiply16bit
-                    PrintAcInt16            
-                    PrintString             usrStr_0x7ffe
-                    LDI                     0
-                    SUBW                    _z
-                    STW                     mathX
                     CALLI                   _page_0x9200
-_page_0x9200        LDI                     21
+_page_0x9200        LDWI                    -8531
+                    PrintAcHexWord          
+                    PrintString             usrStr_0x7ffe
+                    PrintVarInt16           _z
+                    PrintString             usrStr_0x7ffe
+                    LDWI                    -6
+                    STW                     mathX
+                    LDW                     _z
+                    STW                     mathY
+                    CALLI                   multiply16bit
+                    PrintAcInt16            
+                    PrintString             usrStr_0x7ffe
+                    LDI                     0
+                    SUBW                    _z
+                    STW                     mathX
+                    LDI                     21
                     STW                     mathY
                     CALLI                   divide16bit
                     PrintAcInt16            
@@ -5828,7 +5767,7 @@ _page_0x9200        LDI                     21
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -5887,69 +5826,10 @@ _page_0x9200        LDI                     21
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
-
-                    LDW                     _a
-                    PrintAcHexByte          
-                    CALLI                   newLineScroll                   ; print hex$(a)
-
-                    LDWI                    -1
-                    PrintAcHexWord          
-                    CALLI                   newLineScroll                   ; print hexw$(&hFFFF OR &h1111)
-
-                    LDWI                    4369
-                    STW                     _f                              ; f = &h1111
-
-                    LDWI                    -21846
-                    STW                     _g                              ; g = &hAAAA
-
-                    LDWI                    -1
-                    SUBW                    _g
-                    XORW                    _f
-                    STW                     _h                              ; h = NOT g XOR f
-
-                    LDW                     _h
-                    PrintAcHexWord          
-                    PrintString             usrStr_0x7ffe
-                    CALLI                   newLineScroll                   ; print hexw$(h);" ";56
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     CALLI                   _page_0x9300
-_page_0x9300        LDWI                    -8531
-                    PrintAcHexWord          
-                    PrintString             usrStr_0x7ffe
-                    PrintVarInt16           _z
-                    PrintString             usrStr_0x7ffe
-                    LDWI                    -6
-                    STW                     mathX
-                    LDW                     _z
-                    STW                     mathY
-                    CALLI                   multiply16bit
-                    PrintAcInt16            
-                    PrintString             usrStr_0x7ffe
-                    LDI                     0
-                    SUBW                    _z
-                    STW                     mathX
-                    LDI                     21
-                    STW                     mathY
-                    CALLI                   divide16bit
-                    PrintAcInt16            
-                    PrintString             usrStr_0x7ffe
-                    LDW                     _z
-                    STW                     mathX
-                    LDI                     21
-                    STW                     mathY
-                    CALLI                   divide16bit
-                    LDW                     mathRem
-                    PrintAcInt16            
-                    CALLI                   newLineScroll                   ; print hexw$(&hdead);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
-
-                    LDWI                    -28785
-                    PrintAcHexWord          
-                    CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
-
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
-
-                    LDW                     _a
+_page_0x9300        LDW                     _a
                     PrintAcHexByte          
                     CALLI                   newLineScroll                   ; print hex$(a)
 
@@ -6006,10 +5886,69 @@ _page_0x9300        LDWI                    -8531
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
+                    LDW                     _a
+                    PrintAcHexByte          
+                    CALLI                   newLineScroll                   ; print hex$(a)
+
+                    LDWI                    -1
+                    PrintAcHexWord          
+                    CALLI                   newLineScroll                   ; print hexw$(&hFFFF OR &h1111)
+
+                    LDWI                    4369
+                    STW                     _f                              ; f = &h1111
+
+                    LDWI                    -21846
+                    STW                     _g                              ; g = &hAAAA
+
+                    LDWI                    -1
+                    SUBW                    _g
+                    XORW                    _f
+                    STW                     _h                              ; h = NOT g XOR f
+
+                    LDW                     _h
+                    PrintAcHexWord          
+                    PrintString             usrStr_0x7ffe
+                    CALLI                   newLineScroll                   ; print hexw$(h);" ";56
+
+                    LDWI                    -8531
+                    PrintAcHexWord          
+                    PrintString             usrStr_0x7ffe
+                    PrintVarInt16           _z
+                    PrintString             usrStr_0x7ffe
+                    LDWI                    -6
+                    STW                     mathX
+                    LDW                     _z
+                    STW                     mathY
+                    CALLI                   multiply16bit
+                    PrintAcInt16            
+                    PrintString             usrStr_0x7ffe
+                    LDI                     0
+                    SUBW                    _z
+                    STW                     mathX
                     CALLI                   _page_0x9400
-_page_0x9400        LDW                     _a
+_page_0x9400        LDI                     21
+                    STW                     mathY
+                    CALLI                   divide16bit
+                    PrintAcInt16            
+                    PrintString             usrStr_0x7ffe
+                    LDW                     _z
+                    STW                     mathX
+                    LDI                     21
+                    STW                     mathY
+                    CALLI                   divide16bit
+                    LDW                     mathRem
+                    PrintAcInt16            
+                    CALLI                   newLineScroll                   ; print hexw$(&hdead);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+
+                    LDWI                    -28785
+                    PrintAcHexWord          
+                    CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
+
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
+
+                    LDW                     _a
                     PrintAcHexByte          
                     CALLI                   newLineScroll                   ; print hex$(a)
 
@@ -6066,7 +6005,7 @@ _page_0x9400        LDW                     _a
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -6092,23 +6031,23 @@ _page_0x9400        LDW                     _a
                     PrintString             usrStr_0x7ffe
                     CALLI                   newLineScroll                   ; print hexw$(h);" ";56
 
-                    LDWI                    -8531
-                    PrintAcHexWord          
-                    PrintString             usrStr_0x7ffe
-                    PrintVarInt16           _z
-                    PrintString             usrStr_0x7ffe
-                    LDWI                    -6
-                    STW                     mathX
-                    LDW                     _z
-                    STW                     mathY
-                    CALLI                   multiply16bit
-                    PrintAcInt16            
-                    PrintString             usrStr_0x7ffe
-                    LDI                     0
-                    SUBW                    _z
-                    STW                     mathX
                     CALLI                   _page_0x9500
-_page_0x9500        LDI                     21
+_page_0x9500        LDWI                    -8531
+                    PrintAcHexWord          
+                    PrintString             usrStr_0x7ffe
+                    PrintVarInt16           _z
+                    PrintString             usrStr_0x7ffe
+                    LDWI                    -6
+                    STW                     mathX
+                    LDW                     _z
+                    STW                     mathY
+                    CALLI                   multiply16bit
+                    PrintAcInt16            
+                    PrintString             usrStr_0x7ffe
+                    LDI                     0
+                    SUBW                    _z
+                    STW                     mathX
+                    LDI                     21
                     STW                     mathY
                     CALLI                   divide16bit
                     PrintAcInt16            
@@ -6126,7 +6065,7 @@ _page_0x9500        LDI                     21
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -6185,69 +6124,10 @@ _page_0x9500        LDI                     21
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
-
-                    LDW                     _a
-                    PrintAcHexByte          
-                    CALLI                   newLineScroll                   ; print hex$(a)
-
-                    LDWI                    -1
-                    PrintAcHexWord          
-                    CALLI                   newLineScroll                   ; print hexw$(&hFFFF OR &h1111)
-
-                    LDWI                    4369
-                    STW                     _f                              ; f = &h1111
-
-                    LDWI                    -21846
-                    STW                     _g                              ; g = &hAAAA
-
-                    LDWI                    -1
-                    SUBW                    _g
-                    XORW                    _f
-                    STW                     _h                              ; h = NOT g XOR f
-
-                    LDW                     _h
-                    PrintAcHexWord          
-                    PrintString             usrStr_0x7ffe
-                    CALLI                   newLineScroll                   ; print hexw$(h);" ";56
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     CALLI                   _page_0x9600
-_page_0x9600        LDWI                    -8531
-                    PrintAcHexWord          
-                    PrintString             usrStr_0x7ffe
-                    PrintVarInt16           _z
-                    PrintString             usrStr_0x7ffe
-                    LDWI                    -6
-                    STW                     mathX
-                    LDW                     _z
-                    STW                     mathY
-                    CALLI                   multiply16bit
-                    PrintAcInt16            
-                    PrintString             usrStr_0x7ffe
-                    LDI                     0
-                    SUBW                    _z
-                    STW                     mathX
-                    LDI                     21
-                    STW                     mathY
-                    CALLI                   divide16bit
-                    PrintAcInt16            
-                    PrintString             usrStr_0x7ffe
-                    LDW                     _z
-                    STW                     mathX
-                    LDI                     21
-                    STW                     mathY
-                    CALLI                   divide16bit
-                    LDW                     mathRem
-                    PrintAcInt16            
-                    CALLI                   newLineScroll                   ; print hexw$(&hdead);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
-
-                    LDWI                    -28785
-                    PrintAcHexWord          
-                    CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
-
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
-
-                    LDW                     _a
+_page_0x9600        LDW                     _a
                     PrintAcHexByte          
                     CALLI                   newLineScroll                   ; print hex$(a)
 
@@ -6304,10 +6184,69 @@ _page_0x9600        LDWI                    -8531
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
+                    LDW                     _a
+                    PrintAcHexByte          
+                    CALLI                   newLineScroll                   ; print hex$(a)
+
+                    LDWI                    -1
+                    PrintAcHexWord          
+                    CALLI                   newLineScroll                   ; print hexw$(&hFFFF OR &h1111)
+
+                    LDWI                    4369
+                    STW                     _f                              ; f = &h1111
+
+                    LDWI                    -21846
+                    STW                     _g                              ; g = &hAAAA
+
+                    LDWI                    -1
+                    SUBW                    _g
+                    XORW                    _f
+                    STW                     _h                              ; h = NOT g XOR f
+
+                    LDW                     _h
+                    PrintAcHexWord          
+                    PrintString             usrStr_0x7ffe
+                    CALLI                   newLineScroll                   ; print hexw$(h);" ";56
+
+                    LDWI                    -8531
+                    PrintAcHexWord          
+                    PrintString             usrStr_0x7ffe
+                    PrintVarInt16           _z
+                    PrintString             usrStr_0x7ffe
+                    LDWI                    -6
+                    STW                     mathX
+                    LDW                     _z
+                    STW                     mathY
+                    CALLI                   multiply16bit
+                    PrintAcInt16            
+                    PrintString             usrStr_0x7ffe
+                    LDI                     0
+                    SUBW                    _z
+                    STW                     mathX
                     CALLI                   _page_0x9700
-_page_0x9700        LDW                     _a
+_page_0x9700        LDI                     21
+                    STW                     mathY
+                    CALLI                   divide16bit
+                    PrintAcInt16            
+                    PrintString             usrStr_0x7ffe
+                    LDW                     _z
+                    STW                     mathX
+                    LDI                     21
+                    STW                     mathY
+                    CALLI                   divide16bit
+                    LDW                     mathRem
+                    PrintAcInt16            
+                    CALLI                   newLineScroll                   ; print hexw$(&hdead);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+
+                    LDWI                    -28785
+                    PrintAcHexWord          
+                    CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
+
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
+
+                    LDW                     _a
                     PrintAcHexByte          
                     CALLI                   newLineScroll                   ; print hex$(a)
 
@@ -6364,7 +6303,7 @@ _page_0x9700        LDW                     _a
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -6390,23 +6329,23 @@ _page_0x9700        LDW                     _a
                     PrintString             usrStr_0x7ffe
                     CALLI                   newLineScroll                   ; print hexw$(h);" ";56
 
-                    LDWI                    -8531
-                    PrintAcHexWord          
-                    PrintString             usrStr_0x7ffe
-                    PrintVarInt16           _z
-                    PrintString             usrStr_0x7ffe
-                    LDWI                    -6
-                    STW                     mathX
-                    LDW                     _z
-                    STW                     mathY
-                    CALLI                   multiply16bit
-                    PrintAcInt16            
-                    PrintString             usrStr_0x7ffe
-                    LDI                     0
-                    SUBW                    _z
-                    STW                     mathX
                     CALLI                   _page_0x9800
-_page_0x9800        LDI                     21
+_page_0x9800        LDWI                    -8531
+                    PrintAcHexWord          
+                    PrintString             usrStr_0x7ffe
+                    PrintVarInt16           _z
+                    PrintString             usrStr_0x7ffe
+                    LDWI                    -6
+                    STW                     mathX
+                    LDW                     _z
+                    STW                     mathY
+                    CALLI                   multiply16bit
+                    PrintAcInt16            
+                    PrintString             usrStr_0x7ffe
+                    LDI                     0
+                    SUBW                    _z
+                    STW                     mathX
+                    LDI                     21
                     STW                     mathY
                     CALLI                   divide16bit
                     PrintAcInt16            
@@ -6424,7 +6363,7 @@ _page_0x9800        LDI                     21
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -6483,34 +6422,34 @@ _page_0x9800        LDI                     21
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
-
-                    LDW                     _a
-                    PrintAcHexByte          
-                    CALLI                   newLineScroll                   ; print hex$(a)
-
-                    LDWI                    -1
-                    PrintAcHexWord          
-                    CALLI                   newLineScroll                   ; print hexw$(&hFFFF OR &h1111)
-
-                    LDWI                    4369
-                    STW                     _f                              ; f = &h1111
-
-                    LDWI                    -21846
-                    STW                     _g                              ; g = &hAAAA
-
-                    LDWI                    -1
-                    SUBW                    _g
-                    XORW                    _f
-                    STW                     _h                              ; h = NOT g XOR f
-
-                    LDW                     _h
-                    PrintAcHexWord          
-                    PrintString             usrStr_0x7ffe
-                    CALLI                   newLineScroll                   ; print hexw$(h);" ";56
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     CALLI                   _page_0x9900
-_page_0x9900        LDWI                    -8531
+_page_0x9900        LDW                     _a
+                    PrintAcHexByte          
+                    CALLI                   newLineScroll                   ; print hex$(a)
+
+                    LDWI                    -1
+                    PrintAcHexWord          
+                    CALLI                   newLineScroll                   ; print hexw$(&hFFFF OR &h1111)
+
+                    LDWI                    4369
+                    STW                     _f                              ; f = &h1111
+
+                    LDWI                    -21846
+                    STW                     _g                              ; g = &hAAAA
+
+                    LDWI                    -1
+                    SUBW                    _g
+                    XORW                    _f
+                    STW                     _h                              ; h = NOT g XOR f
+
+                    LDW                     _h
+                    PrintAcHexWord          
+                    PrintString             usrStr_0x7ffe
+                    CALLI                   newLineScroll                   ; print hexw$(h);" ";56
+
+                    LDWI                    -8531
                     PrintAcHexWord          
                     PrintString             usrStr_0x7ffe
                     PrintVarInt16           _z
@@ -6543,7 +6482,67 @@ _page_0x9900        LDWI                    -8531
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
+
+                    LDW                     _a
+                    PrintAcHexByte          
+                    CALLI                   newLineScroll                   ; print hex$(a)
+
+                    LDWI                    -1
+                    PrintAcHexWord          
+                    CALLI                   newLineScroll                   ; print hexw$(&hFFFF OR &h1111)
+
+                    LDWI                    4369
+                    STW                     _f                              ; f = &h1111
+
+                    LDWI                    -21846
+                    STW                     _g                              ; g = &hAAAA
+
+                    LDWI                    -1
+                    SUBW                    _g
+                    XORW                    _f
+                    STW                     _h                              ; h = NOT g XOR f
+
+                    LDW                     _h
+                    PrintAcHexWord          
+                    PrintString             usrStr_0x7ffe
+                    CALLI                   newLineScroll                   ; print hexw$(h);" ";56
+
+                    LDWI                    -8531
+                    PrintAcHexWord          
+                    PrintString             usrStr_0x7ffe
+                    PrintVarInt16           _z
+                    PrintString             usrStr_0x7ffe
+                    LDWI                    -6
+                    STW                     mathX
+                    LDW                     _z
+                    STW                     mathY
+                    CALLI                   multiply16bit
+                    PrintAcInt16            
+                    PrintString             usrStr_0x7ffe
+                    LDI                     0
+                    SUBW                    _z
+                    STW                     mathX
+                    CALLI                   _page_0x9a00
+_page_0x9a00        LDI                     21
+                    STW                     mathY
+                    CALLI                   divide16bit
+                    PrintAcInt16            
+                    PrintString             usrStr_0x7ffe
+                    LDW                     _z
+                    STW                     mathX
+                    LDI                     21
+                    STW                     mathY
+                    CALLI                   divide16bit
+                    LDW                     mathRem
+                    PrintAcInt16            
+                    CALLI                   newLineScroll                   ; print hexw$(&hdead);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+
+                    LDWI                    -28785
+                    PrintAcHexWord          
+                    CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
+
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -6602,10 +6601,9 @@ _page_0x9900        LDWI                    -8531
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
-                    CALLI                   _page_0x9a00
-_page_0x9a00        LDW                     _a
+                    LDW                     _a
                     PrintAcHexByte          
                     CALLI                   newLineScroll                   ; print hex$(a)
 
@@ -6629,7 +6627,8 @@ _page_0x9a00        LDW                     _a
                     PrintString             usrStr_0x7ffe
                     CALLI                   newLineScroll                   ; print hexw$(h);" ";56
 
-                    LDWI                    -8531
+                    CALLI                   _page_0x9b00
+_page_0x9b00        LDWI                    -8531
                     PrintAcHexWord          
                     PrintString             usrStr_0x7ffe
                     PrintVarInt16           _z
@@ -6662,7 +6661,7 @@ _page_0x9a00        LDW                     _a
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                    PrintString             usrStr_0x71a0                   ; print "lalalalala23d455345634650";
+                    PrintString             usrStr_0x77e5                   ; print "lalalalala23d455345634650";
 
                     POP                     
                     RET                                                     ; return

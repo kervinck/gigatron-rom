@@ -1021,7 +1021,6 @@ namespace Compiler
         createLabel(_vasmPC, "_entryPoint_", "_entryPoint_\t", 0, label, false, false, false);
         if(createCodeLine("INIT", 0, 0, -1, VarInt16, false, false, codeLine)) _codeLines.push_back(codeLine);
         emitVcpuAsm("%Initialise", "", false, 0);
-        if(!Assembler::getUseOpcodeCALLI()) emitVcpuAsm("%InitialiseCcOps", "", false, 0);
 
         // GOSUB labels
         for(int i=0; i<numLines; i++)
@@ -2055,6 +2054,7 @@ namespace Compiler
             if(Expression::strToUpper(token) == "PRINT") return SingleStatementParsed;
             else if(Expression::strToUpper(token) == "FOR") return SingleStatementParsed;
             else if(Expression::strToUpper(token) == "AT") return SingleStatementParsed;
+            else if(Expression::strToUpper(token) == "LINE") return SingleStatementParsed;
             else if(Expression::strToUpper(token) == "IF") return MultiStatementParsed;
         }
 
@@ -2080,14 +2080,11 @@ namespace Compiler
         // Variable assignment
         if(codeLine._assignOperator)
         {
-            // Optimisation, (removes uneeded LDW's)
-            static int varIndexLhsPrev = -1;
-
             // Assignment with a var expression
             if(codeLine._containsVars)
             {
                 // Try and optimise LDW away if possible
-                if(varIndexRhs >= 0  &&  varIndexRhs != varIndexLhsPrev  &&  !(expressionType & Expression::HasOperators))
+                if(varIndexRhs >= 0  &&  !(expressionType & Expression::HasOperators))
                 {
                     emitVcpuAsm("LDW", "_" + _integerVars[varIndexRhs]._name, false, codeLineIndex);
                 }
@@ -2112,8 +2109,6 @@ namespace Compiler
                 }
                 emitVcpuAsm("STW", "_" + _integerVars[codeLine._varIndex]._name, false, codeLineIndex);
             }
-
-            varIndexLhsPrev = codeLine._varIndex;
         }
 
         return StatementExpression;
@@ -2225,7 +2220,7 @@ namespace Compiler
             else
             {
                 emitVcpuAsm("LDWI", "_" + gotoLabel, false, codeLineIndex);
-                emitVcpuAsm("CALL", "giga_vAC", false, codeLineIndex);
+                emitVcpuAsm("CALL", "giga_vAC",      false, codeLineIndex);
             }
         }
 
@@ -2234,7 +2229,8 @@ namespace Compiler
 
     bool keywordCLS(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        emitVcpuAsm("%Initialise", "", false, codeLineIndex);
+        emitVcpuAsm("LDWI", "clearScreen", false, codeLineIndex);
+        emitVcpuAsm("CALL", "giga_vAC",    false, codeLineIndex);
 
         return true;
     }
@@ -2301,8 +2297,8 @@ namespace Compiler
             uint32_t expressionType = parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
             switch(i)
             {
-                case 0: emitVcpuAsm("ST", "cursorXY", false, codeLineIndex);                                                        break;
-                case 1: emitVcpuAsm("ADDI", "0x08", false, codeLineIndex); emitVcpuAsm("ST", "cursorXY + 1", false, codeLineIndex); break;
+                case 0: emitVcpuAsm("ST", "cursorXY", false, codeLineIndex);     break;
+                case 1: emitVcpuAsm("ST", "cursorXY + 1", false, codeLineIndex); break;
             }
         }
 
@@ -2366,22 +2362,40 @@ namespace Compiler
     {
         std::vector<size_t> offsets;
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', offsets, false);
-        if(tokens.size() != 4)
+        if(tokens.size() !=2  &&  tokens.size() != 4)
         {
-            fprintf(stderr, "Compiler::keywordLINE() : syntax error, 'AT X' or 'AT X,Y', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Compiler::keywordLINE() : syntax error, 'LINE X,Y' or 'LINE X1,Y1,X2,Y2', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
 
-        std::vector<int16_t> params = {0, 0, 0, 0};
-        for(int i=0; i<tokens.size(); i++)
+        if(tokens.size() == 2)
         {
-            uint32_t expressionType = parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
-            switch(i)
+            std::vector<int16_t> params = {0, 0};
+            for(int i=0; i<tokens.size(); i++)
             {
-                case 0: emitVcpuAsm("STW", "drawLine_x1", false, codeLineIndex); break;
-                case 1: emitVcpuAsm("STW", "drawLine_y1", false, codeLineIndex); break;
-                case 2: emitVcpuAsm("STW", "drawLine_x2", false, codeLineIndex); break;
-                case 3: emitVcpuAsm("STW", "drawLine_y2", false, codeLineIndex); break;
+                uint32_t expressionType = parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
+                switch(i)
+                {
+                    case 0: emitVcpuAsm("STW", "drawLine_x2", false, codeLineIndex); break;
+                    case 1: emitVcpuAsm("STW", "drawLine_y2", false, codeLineIndex); break;
+                }
+            }
+
+            emitVcpuAsm("%DrawLineCursor", "", false, codeLineIndex);
+        }
+        else
+        {
+            std::vector<int16_t> params = {0, 0, 0, 0};
+            for(int i=0; i<tokens.size(); i++)
+            {
+                uint32_t expressionType = parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
+                switch(i)
+                {
+                    case 0: emitVcpuAsm("STW", "drawLine_x1", false, codeLineIndex); break;
+                    case 1: emitVcpuAsm("STW", "drawLine_y1", false, codeLineIndex); break;
+                    case 2: emitVcpuAsm("STW", "drawLine_x2", false, codeLineIndex); break;
+                    case 3: emitVcpuAsm("STW", "drawLine_y2", false, codeLineIndex); break;
+                }
             }
         }
 
@@ -2393,16 +2407,24 @@ namespace Compiler
     bool keywordSCROLL(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
         std::vector<size_t> offsets;
-        std::string expression = codeLine._code.substr(foundPos);
-        if(expression.size() == 0)
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', offsets, true);
+        if(tokens.size() != 1  ||  (tokens[0].find("ON") == std::string::npos  &&  tokens[0].find("OFF") == std::string::npos))
         {
-            fprintf(stderr, "Compiler::keywordSCROLL() : syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Compiler::keywordSCROLL() : syntax error, 'SCROLL ON' or 'SCROLL OFF', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
 
-        int16_t param;
-        uint32_t expressionType = parseExpression(codeLine, codeLineIndex, expression, param);
-        emitVcpuAsm("STW", "textScroll", false, codeLineIndex);
+        if(tokens[0].find("ON") != std::string::npos)
+        {
+            emitVcpuAsm("LDWI", "0x0001", false, codeLineIndex);
+            emitVcpuAsm("ORW", "miscFlags", false, codeLineIndex);
+        }
+        else
+        {
+            emitVcpuAsm("LDWI", "0xFFFE", false, codeLineIndex);
+            emitVcpuAsm("ANDW", "miscFlags", false, codeLineIndex);
+        }
+        emitVcpuAsm("STW", "miscFlags", false, codeLineIndex);
 
         return true;
     }
@@ -2411,12 +2433,6 @@ namespace Compiler
     {
         // Parse print tokens
         std::vector<std::string> tokens = Expression::tokeniseLine(codeLine._code.substr(foundPos), ";");
-        //std::vector<size_t> offsets;
-        //std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ';', offsets, false);
-
-        // First offset is always missing and last one is always incorrect
-        //offsets.insert(offsets.begin(), 0);
-        //offsets.pop_back();
 
         int16_t value;
         int varIndex, params;
@@ -3376,14 +3392,16 @@ namespace Compiler
         {0x0000, 0x0000, "shiftRight6bit" },
         {0x0000, 0x0000, "shiftRight7bit" },
         {0x0000, 0x0000, "shiftRight8bit" },
-        {0x0000, 0x0000, "resetVideoTable"},
         {0x0000, 0x0000, "scanlineMode"   },
         {0x0000, 0x0000, "waitVBlank"     },
+        {0x0000, 0x0000, "resetVideoTable"},
+        {0x0000, 0x0000, "clearScreen"    },
         {0x0000, 0x0000, "clearRegion"    },
         {0x0000, 0x0000, "clearCursorRow" },
         {0x0000, 0x0000, "drawLine"       },
         {0x0000, 0x0000, "drawLineExt"    },
         {0x0000, 0x0000, "drawLineDelta1" },
+        {0x0000, 0x0000, "drawLineCursor" },
         {0x0000, 0x0000, "printText"      },
         {0x0000, 0x0000, "printDigit"     },
         {0x0000, 0x0000, "printInt16"     },
@@ -3395,13 +3413,15 @@ namespace Compiler
         {0x0000, 0x0000, "playMidi"       },
         {0x0000, 0x0000, "playMidiAsync"  },
         {0x0000, 0x0000, "midiStartNote"  },
+        {0x0000, 0x0000, "initialiseCcOps"},
     };
     const std::vector<std::string> _subIncludes = 
     {
         "include/math.i"            ,
-        "include/conv_conds.i"      ,
         "include/audio.i"           ,
         "include/clear_screen.i"    ,
+        "include/conv_conds.i"      ,
+        "include/conv_conds_CALLI.i",
         "include/graphics.i"        ,
         "include/graphics_CALLI.i"  ,
         "include/print_text.i"      ,
@@ -3468,7 +3488,7 @@ namespace Compiler
             _internalSubs[subIndex]._size = size;
 
             uint16_t address;
-            if(Memory::giveFreeRAM(Memory::FitAscending, size, 0x6FA0, 0x7FFF, address))
+            if(Memory::giveFreeRAM(Memory::FitAscending, size, 0x60A0, 0x7FFF, address))
             {
                 // Save end of runtime/strings
                 if(address < _runtimeEnd) _runtimeEnd = address;
@@ -3491,7 +3511,7 @@ namespace Compiler
     {
         for(int i=0; i<_internalSubs.size(); i++)
         {
-            for(int j=0; j<_subIncludes.size()-4; j++)
+            for(int j=0; j<_subIncludes.size()-6; j++)
             {
                 getInternalSub(i, j, _internalSubs[i]._name);
             }
@@ -3500,11 +3520,13 @@ namespace Compiler
             // TODO: do this properly
             if(!Assembler::getUseOpcodeCALLI())
             {
+                getInternalSub(i, includeIndex-6, _internalSubs[i]._name);
                 getInternalSub(i, includeIndex-4, _internalSubs[i]._name);
                 getInternalSub(i, includeIndex-2, _internalSubs[i]._name);
             }
             else
             {
+                getInternalSub(i, includeIndex-5, _internalSubs[i]._name);
                 getInternalSub(i, includeIndex-3, _internalSubs[i]._name);
                 getInternalSub(i, includeIndex-1, _internalSubs[i]._name);
             }
@@ -3515,7 +3537,7 @@ namespace Compiler
 
     void outputInternalSubs(void)
     {
-        for(int i=0; i<_internalSubs.size(); i++)
+        for(int i=0; i<_internalSubs.size()-1; i++)
         {
             _output.push_back(_internalSubs[i]._name + std::string(LABEL_TRUNC_SIZE - _internalSubs[i]._name.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(_internalSubs[i]._address) + "\n");
         }
@@ -3523,6 +3545,7 @@ namespace Compiler
         // Zero page call table is not needed when using CALLI
         if(!Assembler::getUseOpcodeCALLI())
         {
+            _output.push_back("initialiseCcOps" + std::string(LABEL_TRUNC_SIZE - strlen("initialiseCcOps"), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(_internalSubs[_internalSubs.size()-1]._address) + "\n");
             _output.push_back("convertEqOpAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertEqOpAddr"), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x00E2\n");
             _output.push_back("convertNeOpAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertNeOpAddr"), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x00E4\n");
             _output.push_back("convertLeOpAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertLeOpAddr"), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x00E6\n");
@@ -3555,7 +3578,7 @@ namespace Compiler
         _output.push_back("midiStreamPtr"  + std::string(LABEL_TRUNC_SIZE - strlen("midiStreamPtr"), ' ')  + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x18\n");
         _output.push_back("midiDelay"      + std::string(LABEL_TRUNC_SIZE - strlen("midiDelay"), ' ')      + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x1A\n");
         _output.push_back("frameCountPrev" + std::string(LABEL_TRUNC_SIZE - strlen("frameCountPrev"), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x1C\n");
-        _output.push_back("textScroll"     + std::string(LABEL_TRUNC_SIZE - strlen("textScroll"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x1E\n");
+        _output.push_back("miscFlags"      + std::string(LABEL_TRUNC_SIZE - strlen("miscFlags"), ' ')      + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x1E\n");
 
         _output.push_back("\n");
     }
@@ -3565,17 +3588,19 @@ namespace Compiler
         _output.push_back("; Includes\n");
         _output.push_back("%include" + std::string(LABEL_TRUNC_SIZE - strlen("%include"), ' ') + "include/gigatron.i\n");
 
-        for(int i=0; i<_subIncludes.size()-4; i++) _output.push_back("%include" + std::string(LABEL_TRUNC_SIZE - strlen("%include"), ' ') + _subIncludes[i] + "\n");
+        for(int i=0; i<_subIncludes.size()-6; i++) _output.push_back("%include" + std::string(LABEL_TRUNC_SIZE - strlen("%include"), ' ') + _subIncludes[i] + "\n");
 
         // TODO: do this properly
         if(!Assembler::getUseOpcodeCALLI())
         {
+            _output.push_back("%include" + std::string(LABEL_TRUNC_SIZE - strlen("%include"), ' ') + _subIncludes[_subIncludes.size()-6] + "\n");
             _output.push_back("%include" + std::string(LABEL_TRUNC_SIZE - strlen("%include"), ' ') + _subIncludes[_subIncludes.size()-4] + "\n");
             _output.push_back("%include" + std::string(LABEL_TRUNC_SIZE - strlen("%include"), ' ') + _subIncludes[_subIncludes.size()-2] + "\n");
             _output.push_back("%include" + std::string(LABEL_TRUNC_SIZE - strlen("%include"), ' ') + "include/macros.i\n");
         }
         else
         {
+            _output.push_back("%include" + std::string(LABEL_TRUNC_SIZE - strlen("%include"), ' ') + _subIncludes[_subIncludes.size()-5] + "\n");
             _output.push_back("%include" + std::string(LABEL_TRUNC_SIZE - strlen("%include"), ' ') + _subIncludes[_subIncludes.size()-3] + "\n");
             _output.push_back("%include" + std::string(LABEL_TRUNC_SIZE - strlen("%include"), ' ') + _subIncludes[_subIncludes.size()-1] + "\n");
             _output.push_back("%include" + std::string(LABEL_TRUNC_SIZE - strlen("%include"), ' ') + "include/macros_CALLI.i\n");

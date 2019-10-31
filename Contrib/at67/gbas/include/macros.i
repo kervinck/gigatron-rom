@@ -238,40 +238,24 @@ _label_ CALL    giga_vAC
         CALL    giga_vAC
 %ENDM
 
-%MACRO  Initialise
-        ClearRegionInit 0x2020 0 0 giga_xres giga_yres
-        LDWI    clearRegion
+%MACRO  DrawLineCursor
+        LDWI    drawLineCursor
         CALL    giga_vAC
+%ENDM
 
-        LDWI    0x0F20          ; yellow on blue
+%MACRO  Initialise
+        LDWI    initialiseCcOps
+        CALL    giga_vAC
+        
+        LDWI    0x0F20                                  ; yellow on blue
         STW     fgbgColour
         STW     giga_sysArg0
-        LDWI    0x0802          ; starting cursor position
-        STW     cursorXY
-        LDWI    0x0001          ; text scrolling enabled by default
-        STW     textScroll
+
+        LDWI    clearScreen
+        CALL    giga_vAC
 %ENDM
 
-%MACRO  InitialiseCcOps
-        LDWI    convertEqOp     ; (0x00E2 <-> 0x00ED), critical routines that can't straddle page boundaries
-        STW     convertEqOpAddr
-        LDWI    convertNeOp
-        STW     convertNeOpAddr
-        LDWI    convertLeOp
-        STW     convertLeOpAddr
-        LDWI    convertGeOp
-        STW     convertGeOpAddr
-        LDWI    convertLtOp
-        STW     convertLtOpAddr
-        LDWI    convertGtOp
-        STW     convertGtOpAddr
-%ENDM
-
-%MACRO  ClearRegionInit  _colour _x _y _w _h
-        LDWI    _colour
-        STW     giga_sysArg0                            ; 4 pixels of colour
-        STW     giga_sysArg2
-
+%MACRO  ClearRegion _x _y _w _h
         LDI     _h / 2
         ST      ycount
         LDI     _w / 4
@@ -284,4 +268,6 @@ _label_ CALL    giga_vAC
         LDWI    ((_h - 1) + _y)*256 + _x + giga_vram    ; bottom line
         STW     breset
         STW     bot
+        LDWI    clearRegion
+        CALL    giga_vAC
 %ENDM
