@@ -21,7 +21,6 @@ gcl0x
         XXX RND(1) is different from PET
         XXX BabelFish is too fast for LOAD
         XXX Pi is also BabelFish's EOF marker
-        XXX Beep for CHR$(7)
         XXX SAVE/LOAD with SDC/MMC
 
         Implemented:
@@ -824,7 +823,9 @@ _CharOut=*
     \Newline call]              {Move to next line}
 
   %-2 $a0-                      {Apple 1 wants ASCII with bit 7 set}
-  [if<0 pop ret]                {Skip non-printables}
+  [if<0                         {Skip non-printables}
+    $19+ [if=0 6 \soundTimer.]  {Ring a bell for chr(7)}
+    pop ret]
 
   {
     Draw ASCII character (32..127) on screen in 5x8 pixels
@@ -995,23 +996,25 @@ _CHROUT=*
 +-----------------------------------------------------------------------}
 *=$2b00
 
-_GETIN=*
-                #_TXA_                  {Save registers}
+_GETIN=*        #_TXA_                  {Save registers}
                 #_PHA_
                 #_TYA_
                 #_PHA_
-
 _REDO=*         #_LDAIM_ #0             {0 means wait for key press}
                 #_BRK_
-                #_CMPIM_ #13
-                #_BCC_   #@_REDO        {Redo on control codes from Babelfish}
-                #_BEQ_   #@_SKIPECHO    {Except for ENTER}
+                #_CMPIM_ #7
+                #_BNE_   #@_NOBELL
+                #_ORAIM_ #128           {Echo bell but don't return}
+                #_BRK_
+                #_JMP_   ##_REDO
+_NOBELL=*       #_CMPIM_ #13            {Note: 10 was already mapped to 13}
+                #_BCC_   #@_REDO        {Redo on low control codes from Babelfish}
+                #_BEQ_   #@_SKIPECHO    {Skip echo for ENTER}
                 #_PHA_                  {Echo to screen}
                 #_ORAIM_ #128
                 #_BRK_
                 #_PLA_
-_SKIPECHO=*
-                #_STAZ_  #\vACH         {Safe spot (unless we use SBC)}
+_SKIPECHO=*     #_STAZ_  #\vACH         {Safe spot (unless we use SBC)}
                 #_PLA_                  {Restore registers}
                 #_TAY_
                 #_PLA_
