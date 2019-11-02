@@ -2813,12 +2813,8 @@ nop()                           #filler
 # Extension SYS_SendSerial1_v3_80
 #-----------------------------------------------------------------------
 
-# SYS functions for sending data over serial controller port using
+# SYS function for sending data over serial controller port using
 # pulse width modulation of the vertical sync signal.
-#
-# SYS_SendSerial1_vX_80 sends 1 bit per frame
-# SYS_SendSerial2_vX_110 sends 3 bits per frame
-# SYS_SendSerial2_vX_130 sends 4 bits per frame
 #
 # sysArgs[0:1] Source address               (destructive)
 # sysArgs[2]   Start bit mask (typically 1) (destructive)
@@ -2829,7 +2825,8 @@ nop()                           #filler
 # Returns 0 in case of all bits sent, or <>0 in case of abort
 #
 # This modulates the next upcoming X vertical pulses with the supplied
-# data. After that, the vPulse width falls back to 8 lines (idle).
+# data. A zero becomes a 7 line vPulse, a one will be  9 lines.
+# After that, the vPulse width falls back to 8 lines (idle).
 
 label('SYS_SendSerial1_v3_80')
 ld([videoY])                    #15

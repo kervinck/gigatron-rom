@@ -59,7 +59,7 @@ LINEEDIT        := $2E00        ; Delete character or line if needed
 MONCOUT         := CHROUT
 MONRDKEY        := GETIN
 LOAD            := SYNERR       ; Not implemented, give error
-SAVE            := SYNERR       ; Not implemented, give error
+SAVE            := $2F00
 VERIFY          := SYNERR       ; Not implemented, give error
 
 ; patches
