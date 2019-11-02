@@ -18,6 +18,7 @@ awk '
  /\.COLD_START$/{printf"_COLD_START=$%4s\n",$2}
  /\.STOP$/      {printf"_STOP=$%4s\n",$2}
  /\.LIST$/      {printf"_LIST=$%4s\n",$2}
+ /\.DIMFLG$/    {printf"_TMPZP=$%4s\n",$2}
 ' tmp/gigatron.lbl
 
 # Hex dump

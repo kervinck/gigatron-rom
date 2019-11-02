@@ -2863,7 +2863,6 @@ nop()                           #filler
 # sysArgs[0:1] Source address               (destructive)
 # sysArgs[2]   Start bit mask (typically 1) (destructive)
 # sysArgs[3]   Number of send frames X      (destructive)
-# sysArgs[4]   Scanline offset (SYS_SendSerial2_vX_110 only)
 #
 # The sending will abort if input data is detected on the serial port.
 # Returns 0 in case of all bits sent, or <>0 in case of abort

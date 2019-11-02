@@ -31,14 +31,16 @@ gcl0x
         Restrictions:
         - Stack space is severely limited
 
-        $30 - $37               GCL variables ($30 p, $32 CharOut, $34 i, $36 j)
-        $38 -                   MS BASIC variables, relocated
-
+        Memory map:
+        $30 - $37               GCL variables ($30 p, $32 CharOut, $34 j, $36 i)
+        $38 - $a7               MS BASIC variables, relocated
+        $a8 - $ff               Stack (88 bytes)
+        $100                    Video indirection table (modified)
         $200 -                  Version check / TI$ and floating point buffer
         $218  - $235f           (6502) Microsoft BASIC version 2 (Commodore PET)
         $2360 - $70ff           Video RAM for 11 text rows: 11*7+1 = 78 pages
         $2400 -                 Setup / Input buffer
-        $2500 -                 Setup continued
+        $2500 -                 Setup (cont'd)
         $2600 -                 Main vCPU loop (BRK call handling); DrawChar
         $2700 -                 CharOut; PiOut
         $2800 -                 Newline
@@ -48,6 +50,9 @@ gcl0x
         $2c00 -                 (6502) ISCNTC
         $2d00 -                 (6502) CLALL
         $2e00 -                 (6502) LINEEDIT
+        $2f00 -                 (6502) SAVE
+        $3000 -                 SaveChar
+        $3100 -                 (6502) LOAD
         $7100 - $7fff           Free RAM giving 3840 bytes user space
 }
 
@@ -80,11 +85,12 @@ _TISTR3=$203                    {Value of [frameCount] at last update}
 _COLD_START=$00228D
 _LIST=$00079C
 _STOP=$000926
+_TMPZP=$00003E
 
 *=$218
  #$27 #$09 #$3e #$08 #$90 #$0d #$e6 #$09
  #$51 #$0c #$c5 #$10 #$7f #$0c #$93 #$0a #$93 #$09 #$6b #$09 #$16 #$0a #$16 #$09
- #$76 #$09 #$c0 #$09 #$29 #$0a #$25 #$09 #$39 #$0a #$71 #$18 #$6d #$0f #$ff #$2e
+ #$76 #$09 #$c0 #$09 #$29 #$0a #$25 #$09 #$39 #$0a #$71 #$18 #$ff #$30 #$ff #$2e
  #$6d #$0f #$ee #$13 #$68 #$18 #$78 #$0b #$51 #$09 #$9b #$07 #$5d #$07 #$3f #$0c
  #$41 #$07 #$b1 #$1c #$44 #$1d #$d0 #$1c #$38 #$00 #$b8 #$13 #$d9 #$13 #$ca #$1f
  #$eb #$20 #$62 #$1a #$46 #$20 #$40 #$21 #$47 #$21 #$90 #$21 #$fe #$21 #$4a #$18
@@ -1024,9 +1030,9 @@ _QTICK=*
                 #_LDAZ_  #\frameCount
                 #_CMP_   ##_TISTR3
                 #_BPL_   #@_SKIPTICK    {Postpone work as much as possible}
-                #_STYZ_  #<j            {Park Y in idle GCL variable j}
+                #_STYZ_  #\TMPZP        {Park Y in idle ZP variable DIMFLG}
                 #_JSR_   ##_TICK
-                #_LDYZ_  #<j            {Restore Y for caller}
+                #_LDYZ_  #\TMPZP        {Restore Y for caller}
 _SKIPTICK=*     #_RTS_
 
 {
@@ -1125,7 +1131,7 @@ _EDIT4=*        #_LDAIM_ #$bf           {"?" to signal buffer clearing}
                 #_RTS_
 
 {-----------------------------------------------------------------------+
-|       SAVE (to BabelFish)                                             |
+|       SAVE                                                            |
 +-----------------------------------------------------------------------}
 *=$2f00
 
@@ -1146,8 +1152,8 @@ _save1=*        #_LDAAY_ ##_SaveMsg
                 #_STAZ_  #<j
                 #_LDAIM_ #10            {Previous char}
                 #_STAZ_  #>j
-                #_LDAIM_ #<\SAVECHAR    {Redirect BRK}
-                #_LDYIM_ #>\SAVECHAR
+                #_LDAIM_ #<\SaveChar    {Redirect BRK}
+                #_LDYIM_ #>\SaveChar
                 #_STAZ_  #\vPCL
                 #_STYZ_  #\vPCH
                 #_PLA_                  {Restore parsing state}
@@ -1167,39 +1173,57 @@ _SaveEnd=*
   ret                           {Return to MainLoop}
 ]
 
+{-----------------------------------------------------------------------+
+|       SaveChar                                                        |
++-----------------------------------------------------------------------}
 *=$3000
-{
-  Alternative "MainLoop" for while we're in SAVE. This catches the LIST
-  output and writes it to BabelFish. The end condition is recognized by
-  checking the first character on each line: unlike error messages and the
-  ready prompt, program lines are listed starting with a space.
-  Note: BASIC sends $0d $0a for newlines.
-}
-_SAVECHAR=$30fe                 {Because vCPU adds 2 and wraps to $3000}
+
+_SaveChar=$30fe                 {vCPU adds 2 and wraps to $3000}
 [do
-  %3 i.                         {Fetch original A from stack and put in buffer}
+  {
+    Alternative "MainLoop" for when we're in SAVE. This catches the LIST
+    output and writes it to BabelFish. The stop condition is recognized by
+    checking the first character on each line: unlike error messages and the
+    ready prompt, program lines are listed starting with a space.
+    Note: BASIC sends $0d $0a for newlines.
+  }
+  %3 i.                         {Grab original A from stack and put in buffer}
   >j, 10^ [if=0                 {First char on line?}
     i, 32- if>0                 {"ifgraph"?}
       push                      {Rescue v6502_PC}
-      \SaveEnd call]            {Exit loop}
-
+      \SaveEnd call             {Exit SAVE handler}
+  ]
   <j, 8+ <j.                    {Register 8 more bits}
-  i, <i++ >j. 10^               {Test for newline}
-  [if<>0 <j,]                   {Or buffer full}
+  i, >j.                        {Remember char}
+  <i++ 10^                      {Test for newline}
+  [if<>0 <j,]                   { or buffer full}
   [if=0
-    <j, \sysArgs3.              {Number of bits to transmit}
     \Buffer i= \sysArgs0:       {Buffer start}
-    $01 \sysArgs2.              {Initial bit mask}
+    $01 \sysArgs2.              {Init bit mask}
+    <j, \sysArgs3.              {Number of bits to send}
     \SYS_SendSerial1_v3_80 \sysFn:
     80!!                        {SYS call to send bits to serial port}
     [if<>0 3 \serialRaw.]       {Not a great hack: induce a break error}
     0 <j.                       {Reset bit counter}
   ]
-
   \SYS_Run6502_v4_80 \sysFn:
-  80!!                          {Resume 6502 mode}
+  80!!                          {Re-enter 6502 mode}
   loop
 ]
+
+{-----------------------------------------------------------------------+
+|       LOAD                                                            |
++-----------------------------------------------------------------------}
+*=$3100
+
+_LOAD=*         #_LDYIM_ #0             {Print message}
+_load1=*        #_LDAAY_ ##_LoadMsg
+                #_INY_
+                #_JSR_   ##_CHROUT
+                #_BNE_   #@_load1
+                #_JMP_   ##_STOP
+
+_LoadMsg=*      #13 `USE`BABELFISH`TO`LOAD #0
 
 {-----------------------------------------------------------------------+
 |                                                                       |
