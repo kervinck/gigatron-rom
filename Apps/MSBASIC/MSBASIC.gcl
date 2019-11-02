@@ -19,6 +19,10 @@ gcl0x
         Open issues:
         XXX GET waits for key with cursor and echo
         XXX RND(1) is different from PET
+        XXX BabelFish is too fast for LOAD
+        XXX Pi is also BabelFish's EOF marker
+        XXX Beep for CHR$(7)
+        XXX SAVE/LOAD with SDC/MMC
 
         Implemented:
         - 9 digit floating point (40 bits)

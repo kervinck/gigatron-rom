@@ -59,7 +59,7 @@ LINEEDIT        := $2E00        ; Delete character or line if needed
 MONCOUT         := CHROUT
 MONRDKEY        := GETIN
 LOAD            := $3100        ; Not implemented, give help message
-SAVE            := $2F00        ; Send progrm list to BabelFish
+SAVE            := $2F00        ; Send program list to BabelFish
 VERIFY          := SYNERR       ; Not implemented, give error
 
 ; patches
