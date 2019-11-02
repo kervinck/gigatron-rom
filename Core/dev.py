@@ -856,8 +856,13 @@ ld(-20/2)                       #17
 fillers(until=symbol('SYS_Out_22') & 255)
 
 #-----------------------------------------------------------------------
-# Extension SYS_Out_22: Send byte to output port
+# Extension SYS_Out_22
 #-----------------------------------------------------------------------
+
+# Send byte to output port
+#
+# Variables:
+#       vAC
 
 label('SYS_Out_22')
 ld([sysArgs+0],OUT)             #15
@@ -867,8 +872,13 @@ jmp(Y,'REENTER')                #18
 ld(-22/2)                       #19
 
 #-----------------------------------------------------------------------
-# Extension SYS_In_24: Read a byte from the input port
+# Extension SYS_In_24
 #-----------------------------------------------------------------------
+
+# Read a byte from the input port
+#
+# Variables:
+#       vAC
 
 label('SYS_In_24')
 st(IN, [vAC])                   #15
@@ -2111,6 +2121,10 @@ ld(-26/2)                       #23
 
 # This same algorithm runs automatically once per vertical blank.
 # Use this function to get numbers at a higher rate.
+#
+# Variables:
+#       vAC
+
 label('SYS_Random_34')
 ld([frameCount])                #15
 xora([entropy+1])               #16
@@ -2167,11 +2181,14 @@ jmp(Y,'REENTER')                #20
 ld(-24/2)                       #21
 
 #-----------------------------------------------------------------------
-# Extension SYS_Draw4_30:
+# Extension SYS_Draw4_30
 #-----------------------------------------------------------------------
 
-# sysArgs[0:3]  Pixels
-# sysArgs[4:5]  Position on screen
+# Draw 4 pixels on screen, horizontally next to each other
+#
+# Variables:
+#       sysArgs[0:3]    Pixels
+#       sysArgs[4:5]    Position on screen
 
 label('SYS_Draw4_30')
 ld([sysArgs+4],X)               #15
@@ -2192,11 +2209,13 @@ ld(-30/2)                       #27
 # Extension SYS_VDrawBits_134:
 #-----------------------------------------------------------------------
 
-# Draw slice of a character
-# sysArgs[0]    Color 0 (background)
-# sysArgs[1]    Color 1 (pen)
-# sysArgs[2]    8 bits, highest bit first (destructive)
-# sysArgs[4:5]  Position on screen
+# Draw slice of a character, 8 pixels vertical
+#
+# Variables:
+#       sysArgs[0]      Color 0 (background)
+#       sysArgs[1]      Color 1 (pen)
+#       sysArgs[2]      8 bits, highest bit first (destructive)
+#       sysArgs[4:5]    Position on screen
 
 label('SYS_VDrawBits_134')
 ld([sysArgs+4],X)               #15
@@ -2489,11 +2508,14 @@ jmp(Y,'REENTER')                #42
 #nop()                          #43
 
 #-----------------------------------------------------------------------
-# Extension SYS_Read3_40: Read 3 consecutive bytes from ROM
+# Extension SYS_Read3_40
 #-----------------------------------------------------------------------
 
-# sysArgs[0:2]  Bytes (output)
-# sysArgs[6:7]  ROM pointer (input)
+# Read 3 consecutive bytes from ROM
+#
+# Variables:
+#       sysArgs[0:2]    Bytes (output)
+#       sysArgs[6:7]    ROM pointer (input)
 
 label('SYS_Read3_40')
 ld([sysArgs+7],Y)               #15,32
@@ -2533,11 +2555,14 @@ def trampoline3b():
   align(1, 0x100)
 
 #-----------------------------------------------------------------------
-# Extension SYS_Unpack_56: Unpack 3 bytes into 4 pixels
+# Extension SYS_Unpack_56
 #-----------------------------------------------------------------------
 
-# sysArgs[0:2]  Packed bytes (input)
-# sysArgs[0:3]  Pixels (output)
+# Unpack 3 bytes into 4 pixels
+#
+# Variables:
+#       sysArgs[0:2]    Packed bytes (input)
+#       sysArgs[0:3]    Pixels (output)
 
 label('SYS_Unpack_56')
 ld(soundTable>>8,Y)             #15
@@ -2773,17 +2798,36 @@ trampoline()
 align(0x100, 0x100)
 
 #-----------------------------------------------------------------------
-# Extension SYS_SetMode_80
+# Extension SYS_SetMode_v2_80
 #-----------------------------------------------------------------------
 
-# vAC bit 0:1                   Mode:
-#                               0       "ABCD" -> Full mode (slowest)
-#                               1       "ABC-" -> Default mode after reset
-#                               2       "A-C-" -> at67's mode
-#                               3       "A---" -> HGM's mode
-# vAC bit 2:15                  Ignored bits and should be 0
+# Set video mode to 0 to 3 black scanlines per pixel line.
 #
-# vAC = 1975                    Zombie mode (no video signals, no input, no blinkenlights)
+# Mainly for making the MODE command available in Tiny BASIC, so that
+# the user can experiment. It's adviced to refrain from using
+# SYS_SetMode_v2_80 in regular applications. Video mode is a deeply
+# personal preference, and the programmer shouldn't overrule the user
+# in that choice. The Gigatron philisophy is that the end user has
+# the final say on what happens on the system, not the application,
+# even if that implies a degraded performance. This doesn't mean that
+# all applications must work well in all video modes: mode 1 is still
+# the default. If an application really doesn't work at all in that
+# mode, it's acceptable to change mode once after loading.
+#
+# There's no "SYS_GetMode" function.
+#
+# Variables:
+#       vAC bit 0:1     Mode:
+#                         0      "ABCD" -> Full mode (slowest)
+#                         1      "ABC-" -> Default mode after reset
+#                         2      "A-C-" -> at67's mode
+#                         3      "A---" -> HGM's mode
+#       vAC bit 2:15    Ignored bits and should be 0
+#
+# Special values (ROM v4):
+#       vAC = 1975      Zombie mode (no video signals, no input,
+#                        no blinkenlights).
+#       vAC = -1        Leave zombie mode and restore previous mode.
 
 # Actual duration is <80 cycles, but keep some room for future extensions
 label('SYS_SetMode_v2_80')
@@ -2825,7 +2869,7 @@ nop()                           #filler
 # Returns 0 in case of all bits sent, or <>0 in case of abort
 #
 # This modulates the next upcoming X vertical pulses with the supplied
-# data. A zero becomes a 7 line vPulse, a one will be  9 lines.
+# data. A zero becomes a 7 line vPulse, a one will be 9 lines.
 # After that, the vPulse width falls back to 8 lines (idle).
 
 label('SYS_SendSerial1_v3_80')
@@ -2838,6 +2882,7 @@ xora(videoYline0)               #17 First line of vertical blank
 #-----------------------------------------------------------------------
 
 # Sets the I/O and RAM expander's control register
+#
 # Intended for prototyping, and probably too low-level for most applications
 # Still there's a safeguard: it's not possible to disable RAM using this
 
@@ -2850,11 +2895,13 @@ ld([vAC])                       #17
 # Extension SYS_Run6502_v4_80
 #-----------------------------------------------------------------------
 
-# Immediately transfer control to v6502, without waiting for the current
-# time slice to end or first returning to vCPU.
+# Transfer control to v6502
 #
 # Calling 6502 code from vCPU goes (only) through this SYS function.
-# Directly modifying the vCPUselect variable is unreliable.
+# Directly modifying the vCPUselect variable is unreliable. The
+# control transfer is immediate, without waiting for the current
+# time slice to end or first returning to vCPU.
+#
 # vCPU code and v6502 code can interoperate without much hassle:
 # - The v6502 program counter is vLR, and v6502 doesn't touch vPC
 # - Returning to vCPU is with the BRK instruction
@@ -2864,14 +2911,27 @@ ld([vAC])                       #17
 # - vAC can indicate what the v6502 code wants. vAC+1 will be cleared
 # - Alternative is to leave a word in sysArgs[6:7] (v6502 X and Y registers)
 # - Another way is to set vPC before BRK, and vCPU will continue there(+2)
-
+#
 # Calling v6502 code from vCPU looks like this:
 #       LDWI  SYS_Run6502_v4_80
 #       STW   sysFn
 #       LDWI  $6502_start_address
 #       STW   vLR
 #       SYS   80
-
+#
+# Variables:
+#       vAC             Accumulator
+#       vLR             Program Counter
+#       vSP             Stack Pointer (+1)
+#       sysArgs[6]      Index Register X
+#       sysArgs[7]      Index Register Y
+# For info:
+#       sysArgs[0:1]    Address Register, free to clobber
+#       sysArgs[2]      Instruction Register, free to clobber
+#       sysArgs[3:5]    Flags, don't clobber
+#
+# Implementation details::
+#
 #  The time to reserve for this transition is the maximum time
 #  between NEXT and v6502_check. This is
 #       SYS call duration + 2*v6502_maxTicks + (v6502_overhead - vCPU_overhead)
@@ -3303,11 +3363,14 @@ align(0x100, 0x100)
 # Extension SYS_Sprite6xy_v3_64
 #-----------------------------------------------------------------------
 
-# vAC          Destination address in screen
-# sysArgs[0:1] Source address of 6xY pixels (colors 0..63) terminated by
-#              negative byte value N (typically N = -Y)
-# sysArgs[2:7] Scratch (user as copy buffer)
-
+# Blit sprite in screen memory
+#
+# Variables
+#       vAC             Destination address in screen
+#       sysArgs[0:1]    Source address of 6xY pixels (colors 0..63) terminated
+#                       by negative byte value N (typically N = -Y)
+#       sysArgs[2:7]    Scratch (user as copy buffer)
+#
 # This SYS function draws a sprite of 6 pixels wide and Y pixels high.
 # The pixel data is read sequentually from RAM, in horizontal chunks
 # of 6 pixels at a time, and then written to the screen through the
