@@ -17,7 +17,6 @@ gcl0x
         --------------------------
 
         Open issues:
-        XXX RND(1) is different from PET
         XXX BabelFish is too fast for LOAD
         XXX Pi is also BabelFish's EOF marker
         XXX SAVE/LOAD with SDC/MMC
