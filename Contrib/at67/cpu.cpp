@@ -61,6 +61,8 @@ namespace Cpu
     uint8_t* getPtrToROM(int& romSize) {romSize = sizeof _ROM; return (uint8_t*)_ROM;}
     RomType getRomType(void) {return _romType;}
 
+    const uint8_t _endianBytes[] = {0x00, 0x01, 0x02, 0x03};
+
 
 //#define COLLECT_INST_STATS
 #if defined(COLLECT_INST_STATS)
@@ -96,6 +98,26 @@ namespace Cpu
     }
 #endif
 
+    Endianess getHostEndianess(void)
+    {
+        return *((Endianess*)_endianBytes);
+    }
+
+    void swapEndianess(uint16_t& value)
+    {
+        value = (value >>8)  |  (value <<8);
+    }
+
+    void swapEndianess(uint32_t& value)
+    {
+        value = (value >>24)  |  ((value >>8) & 0x0000FF00)  |  ((value <<8) & 0x00FF0000)  |  (value <<24);
+    }
+
+    void swapEndianess(uint64_t& value)
+    {
+        value = (value >>56)  |  ((value >>40) & 0x000000000000FF00LL)  |  ((value >>24) & 0x0000000000FF0000LL)  |  ((value >>8) & 0x00000000FF000000LL)  |
+        ((value <<8) & 0x000000FF00000000LL)  |  ((value <<24) & 0x0000FF0000000000LL)  |  ((value <<40) & 0x00FF000000000000LL)  |  (value <<56);
+    }
 
     void initialiseInternalGt1s(void)
     {

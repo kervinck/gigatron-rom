@@ -161,7 +161,7 @@ printC_slice    LDW     textFont                        ; text font slice base a
                 LD      cursorXY
                 ADDI    0x06
                 ST      cursorXY
-                SUBI    158
+                SUBI    155                             ; 154 is last possible char in row
                 BLT     printC_exit
                 CALLI   newLineScroll ; next row, scroll at bottom
 printC_exit     POP
@@ -170,14 +170,14 @@ printC_exit     POP
     
 %SUB            newLineScroll
               ; print from top row to bottom row, then start scrolling 
-newLineScroll   LDWI    0x0001
+newLineScroll   LDI     0x02                            ; x offset slightly
+                ST      cursorXY
+                LDWI    0x0001
                 ANDW    miscFlags
-                BNE     newLS_cont0
+                BNE     newLS_cont0                     ; scroll on or off
                 RET
                 
 newLS_cont0     PUSH
-                LDI     0x02                            ; x offset slightly
-                ST      cursorXY
                 LDWI    0x8000
                 ANDW    miscFlags                       ; on bottom row flag
                 BNE     newLS_cont1
@@ -254,5 +254,32 @@ printHexWord    PUSH
                 LD      textScratch
                 CALLI   printHexByte
                 POP
+                RET
+%ENDS
+
+%SUB            printTextCursor
+printTextCursor LD      cursorXY
+                SUBI    155
+                BLT     drawTC_skip0
+                LDI     0
+                STW     cursorXY
+                
+drawTC_skip0    LD      cursorXY + 1
+                SUBI    113
+                BLT     drawTC_skip1
+                LDI     112
+                STW     cursorXY + 1
+                
+drawTC_skip1    LD      cursorXY + 1
+                SUBI    112
+                BGE     drawTC_skip2
+                LDWI    0x7FFF
+                ANDW    miscFlags
+                STW     miscFlags                       ; reset on bottom row flag
+                RET
+                
+drawTC_skip2    LDWI    0x8000
+                ORW     miscFlags
+                STW     miscFlags                       ; set on bottom row flag
                 RET
 %ENDS

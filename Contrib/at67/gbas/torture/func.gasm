@@ -18,26 +18,28 @@ shiftRight5bit      EQU                     0x7ddc
 shiftRight6bit      EQU                     0x7de6
 shiftRight7bit      EQU                     0x7df0
 shiftRight8bit      EQU                     0x7ca0
-resetVideoTable     EQU                     0x7caa
-scanlineMode        EQU                     0x7cc6
-waitVBlank          EQU                     0x7cda
-clearRegion         EQU                     0x7ba0
-clearCursorRow      EQU                     0x7aa0
-drawLine            EQU                     0x79a0
-drawLineExt         EQU                     0x78a0
-drawLineDelta1      EQU                     0x77a0
-drawLineCursor      EQU                     0x76a0
-printText           EQU                     0x7adf
-printDigit          EQU                     0x76c9
-printInt16          EQU                     0x75a0
-printChar           EQU                     0x74a0
-printHexByte        EQU                     0x73a0
-printHexWord        EQU                     0x7cf1
-newLineScroll       EQU                     0x72a0
-resetAudio          EQU                     0x73ca
-playMidi            EQU                     0x71a0
-playMidiAsync       EQU                     0x7beb
-midiStartNote       EQU                     0x70a0
+scanlineMode        EQU                     0x7caa
+waitVBlank          EQU                     0x7cbe
+resetVideoTable     EQU                     0x7ba0
+clearScreen         EQU                     0x7aa0
+clearRegion         EQU                     0x79a0
+clearCursorRow      EQU                     0x78a0
+drawLine            EQU                     0x77a0
+drawLineExt         EQU                     0x76a0
+drawLineDelta1      EQU                     0x75a0
+drawLineCursor      EQU                     0x74a0
+printText           EQU                     0x7cd5
+printDigit          EQU                     0x7bdf
+printInt16          EQU                     0x73a0
+printChar           EQU                     0x72a0
+printHexByte        EQU                     0x71a0
+printHexWord        EQU                     0x7cee
+printTextCursor     EQU                     0x71ca
+newLineScroll       EQU                     0x70a0
+resetAudio          EQU                     0x6fa0
+playMidi            EQU                     0x6ea0
+playMidiAsync       EQU                     0x79e6
+midiStartNote       EQU                     0x6da0
 
 ; Internal variables
 register0           EQU                     0x00a0
@@ -64,21 +66,21 @@ miscFlags           EQU                     register0 + 0x1E
 ; Includes
 %include            include/gigatron.i
 %include            include/math.i
-%include            include/conv_conds.i
 %include            include/audio.i
 %include            include/clear_screen.i
+%include            include/conv_conds_CALLI.i
 %include            include/graphics_CALLI.i
 %include            include/print_text_CALLI.i
 %include            include/macros_CALLI.i
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x0233
-_blamo              EQU                     0x08bf
-_end_0x0342         EQU                     0x08bd
-_end_0x03c7         EQU                     0x09d7
+_10                 EQU                     0x020f
+_blamo              EQU                     0x02f3
+_end_0x0323         EQU                     0x02f1
+_end_0x03a8         EQU                     0x09af
 _page_0x08a0        EQU                     0x08a0
-_next_0x0356        EQU                     0x08cf
+_next_0x0337        EQU                     0x08af
 _page_0x09a0        EQU                     0x09a0
 
 ; Variables
@@ -185,12 +187,13 @@ _10                 LDI                     33
                     ShiftLeft8bit           
                     STW                     _z                              ; z = (x AND &h3F) LSL 8
 
-                    CALLI                   _page_0x08a0
-_page_0x08a0        LDW                     _x
+                    LDW                     _x
                     ST                      cursorXY
                     LDW                     _z
                     ANDI                    63
-                    ST                      cursorXY + 1                    ; at x, (z AND &h3F)
+                    ST                      cursorXY + 1
+                    LDWI                    printTextCursor
+                    CALL                    giga_vAC                        ; at x, (z AND &h3F)
 
                     LDW                     _x
                     PrintAcHexWord          
@@ -199,10 +202,11 @@ _page_0x08a0        LDW                     _x
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(x);" ";hexw$(z)
 
-_end_0x0342         BRA                     _end_0x0342                     ; END
+_end_0x0323         BRA                     _end_0x0323                     ; END
 
 _blamo              PUSH                    
-                    LDWI                    23205
+                    CALLI                   _page_0x08a0
+_page_0x08a0        LDWI                    23205
                     STW                     _b                              ; b = &haa55 XOR &hF0F0
 
                     LDW                     _b
@@ -212,7 +216,7 @@ _blamo              PUSH
                     LDI                     0
                     STW                     _i                              ; for i = 0 to 10
 
-_next_0x0356        LDWI                    usrStr_0x7ff9
+_next_0x0337        LDWI                    usrStr_0x7ff9
                     STW                     _c                              ; c = CHR$(32)
 
                     LDWI                    0x0000
@@ -233,20 +237,20 @@ _next_0x0356        LDWI                    usrStr_0x7ff9
                     SUBW                    _b
                     STW                     _b                              ; b = -b
 
-                    CALLI                   _page_0x09a0
-_page_0x09a0        PrintVarInt16           _i
+                    PrintVarInt16           _i
                     PrintString             usrStr_0x7ff9
                     LDW                     _b
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print i; " " ; hexw$(b)
 
-                    ForNextLoopUp           _i _next_0x0356 10              ; next i
+                    ForNextLoopUp           _i _next_0x0337 10              ; next i
 
                     LDWI                    -1
                     SUBW                    _g
                     STW                     0xd0
                     LDW                     _z
-                    SUBW                    0xd0
+                    CALLI                   _page_0x09a0
+_page_0x09a0        SUBW                    0xd0
                     STW                     _g                              ; g = z - NOT g
 
                     LDWI                    -1
@@ -257,6 +261,6 @@ _page_0x09a0        PrintVarInt16           _i
                     POP                     
                     RET                                                     ; return
 
-_end_0x03c7         BRA                     _end_0x03c7                     ; END
+_end_0x03a8         BRA                     _end_0x03a8                     ; END
 
 

@@ -44,6 +44,9 @@
 
 namespace Loader
 {
+    bool _hostIsBigEndian = false;
+
+
     bool loadGt1File(const std::string& filename, Gt1File& gt1File)
     {
         std::ifstream infile(filename, std::ios::binary | std::ios::in);
@@ -329,6 +332,8 @@ namespace Loader
 
     void initialise(void)
     {
+        if(Cpu::getHostEndianess() == Cpu::BigEndian) _hostIsBigEndian = true;
+
         _numComPorts = comEnumerate();
         if(_numComPorts == 0) fprintf(stderr, "Loader::initialise() : no COM ports found.\n");
 
@@ -655,7 +660,6 @@ namespace Loader
             return false;
         }
 
-        // TODO: endian
         // Load counts
         uint16_t numCounts = 0;
         infile.read((char *)&numCounts, 2);
@@ -664,6 +668,7 @@ namespace Loader
             fprintf(stderr, "Loader::loadDataFile() : read error in number of counts in '%s'\n", filename.c_str());
             return false;
         }
+        if(_hostIsBigEndian) Cpu::swapEndianess(numCounts);
         for(int i=0; i<numCounts; i++)
         {
             uint16_t count;
@@ -673,10 +678,10 @@ namespace Loader
                 fprintf(stderr, "Loader::loadDataFile() : read error in counts of '%s'\n", filename.c_str());
                 return false;
             }
+            if(_hostIsBigEndian) Cpu::swapEndianess(count);
             sdata._counts[i] = count;
         }         
 
-        // TODO: endian
         // Load addresses
         uint16_t numAddresses = 0;
         infile.read((char *)&numAddresses, 2);
@@ -685,6 +690,7 @@ namespace Loader
             fprintf(stderr, "Loader::loadDataFile() : read error in number of addresses in '%s'\n", filename.c_str());
             return false;
         }
+        if(_hostIsBigEndian) Cpu::swapEndianess(numAddresses);
         for(int i=0; i<numAddresses; i++)
         {
             uint16_t address;
@@ -694,6 +700,7 @@ namespace Loader
                 fprintf(stderr, "Loader::loadDataFile() : read error in addresses of '%s'\n", filename.c_str());
                 return false;
             }
+            if(_hostIsBigEndian) Cpu::swapEndianess(address);
             sdata._addresses[i] = address;
         }         
 
@@ -728,7 +735,7 @@ namespace Loader
     }
 
     // Only for emulation
-    bool saveDataFile(const SaveData& saveData)
+    bool saveDataFile(SaveData& saveData)
     {
         std::string filename = saveData._filename + ".dat";
         std::ofstream outfile(filename, std::ios::binary | std::ios::out);
@@ -744,10 +751,11 @@ namespace Loader
             return false;
         }
 
-        // TODO: endian
         // Save counts
         uint16_t numCounts = uint16_t(saveData._counts.size());
+        if(_hostIsBigEndian) Cpu::swapEndianess(numCounts);
         outfile.write((char *)&numCounts, 2);
+        if(_hostIsBigEndian) Cpu::swapEndianess(numCounts);
         if(outfile.bad() || outfile.fail())
         {
             fprintf(stderr, "Loader::saveDataFile() : write error in number of counts of '%s'\n", filename.c_str());
@@ -755,7 +763,9 @@ namespace Loader
         }
         for(int i=0; i<numCounts; i++)
         {
+            if(_hostIsBigEndian) Cpu::swapEndianess(saveData._counts[i]);
             outfile.write((char *)&saveData._counts[i], 2);
+            if(_hostIsBigEndian) Cpu::swapEndianess(saveData._counts[i]);
             if(outfile.bad() || outfile.fail())
             {
                 fprintf(stderr, "Loader::saveDataFile() : write error in counts of '%s'\n", filename.c_str());
@@ -765,7 +775,9 @@ namespace Loader
 
         // Save addresses
         uint16_t numAddresses = uint16_t(saveData._addresses.size());
+        if(_hostIsBigEndian) Cpu::swapEndianess(numAddresses);
         outfile.write((char *)&numAddresses, 2);
+        if(_hostIsBigEndian) Cpu::swapEndianess(numAddresses);
         if(outfile.bad() || outfile.fail())
         {
             fprintf(stderr, "Loader::saveDataFile() : write error in number of addresses of '%s'\n", filename.c_str());
@@ -773,7 +785,9 @@ namespace Loader
         }
         for(int i=0; i<numAddresses; i++)
         {
+            if(_hostIsBigEndian) Cpu::swapEndianess(saveData._addresses[i]);
             outfile.write((char *)&saveData._addresses[i], 2);
+            if(_hostIsBigEndian) Cpu::swapEndianess(saveData._addresses[i]);
             if(outfile.bad() || outfile.fail())
             {
                 fprintf(stderr, "Loader::saveDataFile() : write error in addresses of '%s'\n", filename.c_str());

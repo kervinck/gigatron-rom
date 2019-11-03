@@ -18,26 +18,28 @@ shiftRight5bit      EQU                     0x7ddc
 shiftRight6bit      EQU                     0x7de6
 shiftRight7bit      EQU                     0x7df0
 shiftRight8bit      EQU                     0x7ca0
-resetVideoTable     EQU                     0x7caa
-scanlineMode        EQU                     0x7cc6
-waitVBlank          EQU                     0x7cda
-clearRegion         EQU                     0x7ba0
-clearCursorRow      EQU                     0x7aa0
-drawLine            EQU                     0x79a0
-drawLineExt         EQU                     0x78a0
-drawLineDelta1      EQU                     0x77a0
-drawLineCursor      EQU                     0x76a0
-printText           EQU                     0x7adf
-printDigit          EQU                     0x76c9
-printInt16          EQU                     0x75a0
-printChar           EQU                     0x74a0
-printHexByte        EQU                     0x73a0
-printHexWord        EQU                     0x7cf1
-newLineScroll       EQU                     0x72a0
-resetAudio          EQU                     0x73ca
-playMidi            EQU                     0x71a0
-playMidiAsync       EQU                     0x7beb
-midiStartNote       EQU                     0x70a0
+scanlineMode        EQU                     0x7caa
+waitVBlank          EQU                     0x7cbe
+resetVideoTable     EQU                     0x7ba0
+clearScreen         EQU                     0x7aa0
+clearRegion         EQU                     0x79a0
+clearCursorRow      EQU                     0x78a0
+drawLine            EQU                     0x77a0
+drawLineExt         EQU                     0x76a0
+drawLineDelta1      EQU                     0x75a0
+drawLineCursor      EQU                     0x74a0
+printText           EQU                     0x7cd5
+printDigit          EQU                     0x7bdf
+printInt16          EQU                     0x73a0
+printChar           EQU                     0x72a0
+printHexByte        EQU                     0x71a0
+printHexWord        EQU                     0x7cee
+printTextCursor     EQU                     0x71ca
+newLineScroll       EQU                     0x70a0
+resetAudio          EQU                     0x6fa0
+playMidi            EQU                     0x6ea0
+playMidiAsync       EQU                     0x79e6
+midiStartNote       EQU                     0x6da0
 
 ; Internal variables
 register0           EQU                     0x00a0
@@ -64,21 +66,21 @@ miscFlags           EQU                     register0 + 0x1E
 ; Includes
 %include            include/gigatron.i
 %include            include/math.i
-%include            include/conv_conds.i
 %include            include/audio.i
 %include            include/clear_screen.i
+%include            include/conv_conds_CALLI.i
 %include            include/graphics_CALLI.i
 %include            include/print_text_CALLI.i
 %include            include/macros_CALLI.i
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_1                  EQU                     0x023b
-_8                  EQU                     0x0265
-_15                 EQU                     0x02ac
-_16                 EQU                     0x02b2
-_20                 EQU                     0x02b8
-_end_0x02e9         EQU                     0x02bb
+_1                  EQU                     0x0217
+_8                  EQU                     0x0241
+_15                 EQU                     0x0288
+_16                 EQU                     0x028e
+_20                 EQU                     0x0294
+_end_0x02c4         EQU                     0x0296
 
 ; Variables
 _a                  EQU                     0x0030
@@ -151,8 +153,8 @@ _16                 LDW                     _b
                     ADDI                    1
                     STW                     _b                              ; b = b+1
 
-_20                 CALLI                   _1                              ; goto 1
+_20                 BRA                     _1                              ; goto 1
 
-_end_0x02e9         BRA                     _end_0x02e9                     ; END
+_end_0x02c4         BRA                     _end_0x02c4                     ; END
 
 

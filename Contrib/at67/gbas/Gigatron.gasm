@@ -29,16 +29,17 @@ drawLineExt         EQU                     0x76a0
 drawLineDelta1      EQU                     0x75a0
 drawLineCursor      EQU                     0x74a0
 printText           EQU                     0x7cd5
-printDigit          EQU                     0x7bdd
-printInt16          EQU                     0x73a0
-printChar           EQU                     0x72a0
-printHexByte        EQU                     0x71a0
-printHexWord        EQU                     0x79e6
-newLineScroll       EQU                     0x70a0
-resetAudio          EQU                     0x71d0
-playMidi            EQU                     0x6fa0
-playMidiAsync       EQU                     0x78e2
-midiStartNote       EQU                     0x6ea0
+printDigit          EQU                     0x73a0
+printInt16          EQU                     0x72a0
+printChar           EQU                     0x71a0
+printHexByte        EQU                     0x73c2
+printHexWord        EQU                     0x7bdf
+printTextCursor     EQU                     0x70a0
+newLineScroll       EQU                     0x6fa0
+resetAudio          EQU                     0x70cd
+playMidi            EQU                     0x6ea0
+playMidiAsync       EQU                     0x79e6
+midiStartNote       EQU                     0x6da0
 initialiseCcOps     EQU                     0x74e1
 convertEqOpAddr     EQU                     0x00E2
 convertNeOpAddr     EQU                     0x00E4
@@ -81,18 +82,18 @@ miscFlags           EQU                     register0 + 0x1E
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_1                  EQU                     0x0211
-_2                  EQU                     0x0211
-_3                  EQU                     0x0211
-_10                 EQU                     0x0211
-_19                 EQU                     0x0219
-_20                 EQU                     0x0219
-_29                 EQU                     0x022b
-_30                 EQU                     0x022b
-_40                 EQU                     0x023d
-_50                 EQU                     0x0291
-_60                 EQU                     0x029b
-_end_0x02e8         EQU                     0x02a0
+_1                  EQU                     0x0216
+_2                  EQU                     0x0216
+_3                  EQU                     0x0216
+_10                 EQU                     0x0216
+_19                 EQU                     0x021e
+_20                 EQU                     0x021e
+_29                 EQU                     0x0230
+_30                 EQU                     0x0230
+_40                 EQU                     0x0242
+_50                 EQU                     0x029b
+_60                 EQU                     0x02a5
+_end_0x02ef         EQU                     0x02a7
 
 ; Variables
 _x                  EQU                     0x0030
@@ -155,13 +156,14 @@ _40                 Random
                     Random                  
                     ANDI                    3
                     ADDW                    0xdc
-                    ST                      cursorXY + 1                    ; at (rnd AND &h3F) + (rnd AND &h1F) + (rnd AND &h07) + (rnd AND &h07), (rnd AND &h3F) + (rnd AND &h1F) + (rnd AND &h0F) + (rnd AND &h03)
+                    ST                      cursorXY + 1
+                    LDWI                    printTextCursor
+                    CALL                    giga_vAC                        ; at (rnd AND &h3F) + (rnd AND &h1F) + (rnd AND &h07) + (rnd AND &h07), (rnd AND &h3F) + (rnd AND &h1F) + (rnd AND &h0F) + (rnd AND &h03)
 
 _50                 PrintString             usrStr_0x7cf2                   ; print "Gigatron!";
 
-_60                 LDWI                    _20
-                    CALL                    giga_vAC                        ; goto 20
+_60                 BRA                     _20                             ; goto 20
 
-_end_0x02e8         BRA                     _end_0x02e8                     ; END
+_end_0x02ef         BRA                     _end_0x02ef                     ; END
 
 

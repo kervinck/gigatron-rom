@@ -202,6 +202,8 @@ _label_ CALLI   _label
         LDWI    0x0F20                                  ; yellow on blue
         STW     fgbgColour
         STW     giga_sysArg0
+        LDWI    0x0001                                  ; reset flags
+        STW     miscFlags
 
         CALLI   clearScreen
 %ENDM

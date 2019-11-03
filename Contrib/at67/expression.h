@@ -65,7 +65,7 @@ namespace Expression
     std::vector<std::string> tokenise(const std::string& text, char c, std::vector<size_t>& offsets, bool skipSpaces=true, bool toUpper=false);
     std::vector<std::string> tokeniseLine(std::string& line, const std::string& delimiters=" \n\r\f\t\v");
 
-    void replaceKeyword(std::string& expression, const std::string& keyword, const std::string& replace);
+    void replaceText(std::string& expression, const std::string& text, const std::string& replace);
 
     char* getExpression(void);
     const char* getExpressionToParse(void);

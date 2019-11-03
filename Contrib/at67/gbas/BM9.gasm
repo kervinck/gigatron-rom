@@ -29,16 +29,17 @@ drawLineExt         EQU                     0x76a0
 drawLineDelta1      EQU                     0x75a0
 drawLineCursor      EQU                     0x74a0
 printText           EQU                     0x7cd5
-printDigit          EQU                     0x7bdd
-printInt16          EQU                     0x73a0
-printChar           EQU                     0x72a0
-printHexByte        EQU                     0x71a0
-printHexWord        EQU                     0x79e6
-newLineScroll       EQU                     0x70a0
-resetAudio          EQU                     0x71d0
-playMidi            EQU                     0x6fa0
-playMidiAsync       EQU                     0x78e2
-midiStartNote       EQU                     0x6ea0
+printDigit          EQU                     0x73a0
+printInt16          EQU                     0x72a0
+printChar           EQU                     0x71a0
+printHexByte        EQU                     0x73c2
+printHexWord        EQU                     0x7bdf
+printTextCursor     EQU                     0x70a0
+newLineScroll       EQU                     0x6fa0
+resetAudio          EQU                     0x70cd
+playMidi            EQU                     0x6ea0
+playMidiAsync       EQU                     0x79e6
+midiStartNote       EQU                     0x6da0
 initialiseCcOps     EQU                     0x74e1
 convertEqOpAddr     EQU                     0x00E2
 convertNeOpAddr     EQU                     0x00E4
@@ -81,36 +82,35 @@ miscFlags           EQU                     register0 + 0x1E
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_100                EQU                     0x0211
-_101                EQU                     0x021b
-_102                EQU                     0x0225
-_103                EQU                     0x022f
-_104                EQU                     0x023e
-_105                EQU                     0x0248
-_110                EQU                     0x0257
-_120                EQU                     0x025b
-_130                EQU                     0x025f
-_140                EQU                     0x0270
-_150                EQU                     0x027f
-_160                EQU                     0x028b
-_170                EQU                     0x0299
-_180                EQU                     0x02a5
-_190                EQU                     0x02b1
-_200                EQU                     0x02bf
-_210                EQU                     0x02cd
-_220                EQU                     0x02db
-_230                EQU                     0x02e0
-_240                EQU                     0x02e5
-_250                EQU                     0x08a7
-_end_0x030e         EQU                     0x08a7
-_end_0x0310         EQU                     0x08a9
-_next_0x025b        EQU                     0x025b
-_next_0x025f        EQU                     0x025f
-_if_0x0295          EQU                     0x028b
-_if_0x02a7          EQU                     0x0299
-_if_0x02b9          EQU                     0x02a5
-_if_0x02cb          EQU                     0x02b1
-_page_0x08a0        EQU                     0x08a0
+_100                EQU                     0x0216
+_101                EQU                     0x0220
+_102                EQU                     0x022a
+_103                EQU                     0x0234
+_104                EQU                     0x0243
+_105                EQU                     0x024d
+_110                EQU                     0x025c
+_120                EQU                     0x0260
+_130                EQU                     0x0264
+_140                EQU                     0x0275
+_150                EQU                     0x0284
+_160                EQU                     0x028d
+_170                EQU                     0x0298
+_180                EQU                     0x02a1
+_190                EQU                     0x02aa
+_200                EQU                     0x02b8
+_210                EQU                     0x02c6
+_220                EQU                     0x02d4
+_230                EQU                     0x02d9
+_240                EQU                     0x02de
+_250                EQU                     0x02ed
+_end_0x0307         EQU                     0x02ed
+_end_0x0309         EQU                     0x02ef
+_next_0x0260        EQU                     0x0260
+_next_0x0264        EQU                     0x0264
+_if_0x0297          EQU                     0x028d
+_if_0x02a6          EQU                     0x0298
+_if_0x02b5          EQU                     0x02a1
+_if_0x02c4          EQU                     0x02aa
 
 ; Variables
 _N                  EQU                     0x0030
@@ -121,16 +121,16 @@ _L                  EQU                     0x0036
 ; Strings
 usrStr_0x7cf2       EQU                     0x7cf2
 usrStr_0x7cf2       DB                      13 'INTERFACE AGE'
-usrStr_0x75e5       EQU                     0x75e5
-usrStr_0x75e5       DB                      13 ' PRIME-NUMBER'
-usrStr_0x78f5       EQU                     0x78f5
-usrStr_0x78f5       DB                      10 ' BENCHMARK'
+usrStr_0x78e2       EQU                     0x78e2
+usrStr_0x78e2       DB                      13 ' PRIME-NUMBER'
+usrStr_0x78f0       EQU                     0x78f0
+usrStr_0x78f0       DB                      10 ' BENCHMARK'
 usrStr_0x77f5       EQU                     0x77f5
 usrStr_0x77f5       DB                      8 ' PROGRAM'
-usrStr_0x75f3       EQU                     0x75f3
-usrStr_0x75f3       DB                      12 'For Gigatron'
-usrStr_0x73ef       EQU                     0x73ef
-usrStr_0x73ef       DB                      9 ' gtBASIC '
+usrStr_0x75e5       EQU                     0x75e5
+usrStr_0x75e5       DB                      12 'For Gigatron'
+usrStr_0x75f2       EQU                     0x75f2
+usrStr_0x75f2       DB                      9 ' gtBASIC '
 usrStr_0x7ff9       EQU                     0x7ff9
 usrStr_0x7ff9       DB                      4 'DONE'
 
@@ -139,17 +139,17 @@ _entryPoint_        Initialise                                              ; IN
 
 _100                PrintString             usrStr_0x7cf2                   ; PRINT "INTERFACE AGE";
 
-_101                PrintString             usrStr_0x75e5                   ; PRINT " PRIME-NUMBER";
+_101                PrintString             usrStr_0x78e2                   ; PRINT " PRIME-NUMBER";
 
-_102                PrintString             usrStr_0x78f5                   ; PRINT " BENCHMARK";
+_102                PrintString             usrStr_0x78f0                   ; PRINT " BENCHMARK";
 
 _103                PrintString             usrStr_0x77f5
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; PRINT " PROGRAM"
 
-_104                PrintString             usrStr_0x75f3                   ; PRINT "For Gigatron";
+_104                PrintString             usrStr_0x75e5                   ; PRINT "For Gigatron";
 
-_105                PrintString             usrStr_0x73ef
+_105                PrintString             usrStr_0x75f2
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; PRINT " gtBASIC "
 
@@ -179,27 +179,23 @@ _140                LDW                     _N
 _150                LDW                     _L
                     CALL                    convertEqOpAddr
                     BEQ                     _160                
-                    LDWI                    _200
-                    CALL                    giga_vAC                        ; IF L=0 THEN GOTO 200
+                    BRA                     _200                            ; IF L=0 THEN GOTO 200
 
 _160                LDW                     _L
                     SUBI                    1
                     CALL                    convertEqOpAddr
                     BEQ                     _170                
-                    LDWI                    _190
-                    CALL                    giga_vAC                        ; IF L=1 THEN GOTO 190
+                    BRA                     _190                            ; IF L=1 THEN GOTO 190
 
 _170                LDW                     _M
                     CALL                    convertGtOpAddr
                     BEQ                     _180                
-                    LDWI                    _190
-                    CALL                    giga_vAC                        ; IF M>0 THEN GOTO 190
+                    BRA                     _190                            ; IF M>0 THEN GOTO 190
 
 _180                LDW                     _M
                     CALL                    convertEqOpAddr
                     BEQ                     _190                
-                    LDWI                    _210
-                    CALL                    giga_vAC                        ; IF M=0 THEN GOTO 210
+                    BRA                     _210                            ; IF M=0 THEN GOTO 210
 
 _190                ForNextLoopUp           _K _130                 100     ; NEXT K
 
@@ -216,15 +212,11 @@ _230                LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; PRINT
 
 _240                PrintString             usrStr_0x7ff9
-                    STW                     0xe0
-                    LDWI                    _page_0x08a0
-                    CALL                    giga_vAC
-_page_0x08a0        LDW                     0xe0
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; PRINT "DONE"
 
-_end_0x030e         BRA                     _end_0x030e                     ; END
+_end_0x0307         BRA                     _end_0x0307                     ; END
 
-_end_0x0310         BRA                     _end_0x0310                     ; END
+_end_0x0309         BRA                     _end_0x0309                     ; END
 
 

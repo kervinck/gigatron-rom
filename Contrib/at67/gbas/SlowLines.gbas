@@ -14,7 +14,7 @@ rem original
 ' 12 p=p+u:next t:goto 2
 
 rem optimised
-1 cls:rem Lines demo
+1 poke 180,63:cls:rem Lines demo
 2 a=(rnd AND &h7F) + (rnd AND &h1F) : b=(rnd AND &h3F) + (rnd AND &h3F) OR 8
 3 c=(rnd AND &h7F) + (rnd AND &h1F) : d=(rnd AND &h3F) + (rnd AND &h3F) OR 8
 4 x=c-a:y=d-b:q=rnd AND &h3F

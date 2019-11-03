@@ -84,7 +84,7 @@ namespace Loader
     void sendCommandToGiga(char cmd, bool wait);
 
     bool loadDataFile(SaveData& saveData);
-    bool saveDataFile(const SaveData& saveData);
+    bool saveDataFile(SaveData& saveData);
     void loadHighScore(void);
     bool saveHighScore(void);
     void updateHighScore(void);

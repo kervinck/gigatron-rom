@@ -1,43 +1,46 @@
 _startAddress_      EQU                     0x0200
-convertEqOp         EQU                     0x7fa0
-convertNeOp         EQU                     0x7fa9
-convertLeOp         EQU                     0x7fb2
-convertGeOp         EQU                     0x7fbb
-convertLtOp         EQU                     0x7fc4
-convertGtOp         EQU                     0x7fcd
-multiply16bit       EQU                     0x7fd6
-divide16bit         EQU                     0x7ea0
-random16bit         EQU                     0x7ef6
-shiftLeft4bit       EQU                     0x7da0
-shiftLeft8bit       EQU                     0x7daa
-shiftRight1bit      EQU                     0x7db4
-shiftRight2bit      EQU                     0x7dbe
-shiftRight3bit      EQU                     0x7dc8
-shiftRight4bit      EQU                     0x7dd2
-shiftRight5bit      EQU                     0x7ddc
-shiftRight6bit      EQU                     0x7de6
-shiftRight7bit      EQU                     0x7df0
+pageJumpBEQ         EQU                     0x7fa0
+convertEqOp         EQU                     0x7fa9
+convertNeOp         EQU                     0x7fb2
+convertLeOp         EQU                     0x7fbb
+convertGeOp         EQU                     0x7fc4
+convertLtOp         EQU                     0x7fcd
+convertGtOp         EQU                     0x7fd6
+multiply16bit       EQU                     0x7ea0
+divide16bit         EQU                     0x7da0
+random16bit         EQU                     0x7fdf
+shiftLeft4bit       EQU                     0x7fe7
+shiftLeft8bit       EQU                     0x7ff1
+shiftRight1bit      EQU                     0x7ec3
+shiftRight2bit      EQU                     0x7ecd
+shiftRight3bit      EQU                     0x7ed7
+shiftRight4bit      EQU                     0x7ee1
+shiftRight5bit      EQU                     0x7eeb
+shiftRight6bit      EQU                     0x7ef5
+shiftRight7bit      EQU                     0x7df6
 shiftRight8bit      EQU                     0x7ca0
-resetVideoTable     EQU                     0x7caa
-scanlineMode        EQU                     0x7cc6
-waitVBlank          EQU                     0x7cda
-clearRegion         EQU                     0x7ba0
-clearCursorRow      EQU                     0x7aa0
-drawLine            EQU                     0x79a0
-drawLineExt         EQU                     0x78a0
-drawLineDelta1      EQU                     0x77a0
-drawLineCursor      EQU                     0x76a0
-printText           EQU                     0x7adf
-printDigit          EQU                     0x75a0
-printInt16          EQU                     0x74a0
-printChar           EQU                     0x73a0
-printHexByte        EQU                     0x75c2
-printHexWord        EQU                     0x77e5
-newLineScroll       EQU                     0x72a0
-resetAudio          EQU                     0x71a0
-playMidi            EQU                     0x70a0
-playMidiAsync       EQU                     0x7beb
-midiStartNote       EQU                     0x6fa0
+scanlineMode        EQU                     0x7caa
+waitVBlank          EQU                     0x7cbe
+resetVideoTable     EQU                     0x7ba0
+clearScreen         EQU                     0x7aa0
+clearRegion         EQU                     0x79a0
+clearCursorRow      EQU                     0x78a0
+drawLine            EQU                     0x77a0
+drawLineExt         EQU                     0x76a0
+drawLineDelta1      EQU                     0x75a0
+drawLineCursor      EQU                     0x74a0
+printText           EQU                     0x7cd5
+printDigit          EQU                     0x7bdd
+printInt16          EQU                     0x73a0
+printChar           EQU                     0x72a0
+printHexByte        EQU                     0x71a0
+printHexWord        EQU                     0x79e6
+newLineScroll       EQU                     0x70a0
+resetAudio          EQU                     0x71d0
+playMidi            EQU                     0x6fa0
+playMidiAsync       EQU                     0x78e2
+midiStartNote       EQU                     0x6ea0
+initialiseCcOps     EQU                     0x74e1
 convertEqOpAddr     EQU                     0x00E2
 convertNeOpAddr     EQU                     0x00E4
 convertLeOpAddr     EQU                     0x00E6
@@ -70,57 +73,56 @@ miscFlags           EQU                     register0 + 0x1E
 ; Includes
 %include            include/gigatron.i
 %include            include/math.i
-%include            include/conv_conds.i
 %include            include/audio.i
 %include            include/clear_screen.i
+%include            include/conv_conds.i
 %include            include/graphics.i
 %include            include/print_text.i
 %include            include/macros.i
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_1                  EQU                     0x0253
-_2                  EQU                     0x029a
-_3                  EQU                     0x02a0
-_4                  EQU                     0x02ae
-_5                  EQU                     0x02ae
-_6                  EQU                     0x02c0
-_113                EQU                     0x02c9
-_50                 EQU                     0x02d3
-_119                EQU                     0x02dd
-_51                 EQU                     0x02e7
-_101                EQU                     0x08a2
-_114                EQU                     0x08ac
-_53                 EQU                     0x08b6
-_116                EQU                     0x08c0
-_54                 EQU                     0x08ca
-_121                EQU                     0x08d4
-_55                 EQU                     0x08de
-_117                EQU                     0x08e8
-_105                EQU                     0x08f2
-_57                 EQU                     0x09a8
-_111                EQU                     0x09b2
-_48                 EQU                     0x09bc
-_112                EQU                     0x09c6
-_122                EQU                     0x09d0
-_198                EQU                     0x09e3
-_199                EQU                     0x09e4
-_200                EQU                     0x09e4
-_201                EQU                     0x09e8
-_202                EQU                     0x0aa6
-_203                EQU                     0x0ab4
-_204                EQU                     0x0ac2
-_205                EQU                     0x0aca
-_206                EQU                     0x0aca
-_207                EQU                     0x0acc
-_208                EQU                     0x0ace
-_209                EQU                     0x0ad0
-_end_0x03db         EQU                     0x0ad2
-_if_0x02b4          EQU                     0x02ae
+_1                  EQU                     0x0211
+_2                  EQU                     0x0228
+_3                  EQU                     0x022e
+_4                  EQU                     0x023c
+_5                  EQU                     0x023c
+_6                  EQU                     0x024e
+_113                EQU                     0x0257
+_50                 EQU                     0x0261
+_119                EQU                     0x026b
+_51                 EQU                     0x0275
+_101                EQU                     0x027f
+_114                EQU                     0x0289
+_53                 EQU                     0x0293
+_116                EQU                     0x029d
+_54                 EQU                     0x02a7
+_121                EQU                     0x02b1
+_55                 EQU                     0x02bb
+_117                EQU                     0x02c5
+_105                EQU                     0x02cf
+_57                 EQU                     0x02d9
+_111                EQU                     0x02e3
+_48                 EQU                     0x02ed
+_112                EQU                     0x08aa
+_122                EQU                     0x08b4
+_198                EQU                     0x08c7
+_199                EQU                     0x08c8
+_200                EQU                     0x08c8
+_201                EQU                     0x08cc
+_202                EQU                     0x08de
+_203                EQU                     0x09a2
+_204                EQU                     0x09b0
+_205                EQU                     0x09b8
+_206                EQU                     0x09b8
+_207                EQU                     0x09ba
+_208                EQU                     0x09bc
+_209                EQU                     0x09be
+_end_0x0369         EQU                     0x09c0
+_if_0x0242          EQU                     0x023c
 _page_0x08a0        EQU                     0x08a0
+_next_0x0325        EQU                     0x08cc
 _page_0x09a0        EQU                     0x09a0
-_next_0x0397        EQU                     0x09e8
-_page_0x0aa0        EQU                     0x0aa0
 
 ; Variables
 _z                  EQU                     0x0030
@@ -133,13 +135,13 @@ _p                  EQU                     0x003a
 ; Strings
 
 ; Code
-_entryPoint_        Initialise              
-                    InitialiseCcOps                                         ; INIT
+_entryPoint_        Initialise                                              ; INIT
 
 _1                  LDI                     2
                     STW                     graphicsMode
                     ScanlineMode            
-                    Initialise              
+                    LDWI                    clearScreen
+                    CALL                    giga_vAC
                     LDI                     2
                     STW                     _z
                     LDWI                    _198
@@ -198,10 +200,6 @@ _51                 LDI                     25
                     POP                     
                     RET                                                     ; a=25 :b=10:return:'D#
 
-                    STW                     0xe0
-                    LDWI                    _page_0x08a0
-                    CALL                    giga_vAC
-_page_0x08a0        LDW                     0xe0
 _101                LDI                     103
                     STW                     _a
                     LDI                     10
@@ -260,10 +258,6 @@ _117                LDI                     23
 
 _105                LDI                     19
                     STW                     _a
-                    STW                     0xe0
-                    LDWI                    _page_0x09a0
-                    CALL                    giga_vAC
-_page_0x09a0        LDW                     0xe0
                     LDI                     17
                     STW                     _b
                     POP                     
@@ -284,6 +278,10 @@ _111                LDI                     31
                     RET                                                     ; a=31 :b=19:return:'D
 
 _48                 LDI                     50
+                    STW                     0xe0
+                    LDWI                    _page_0x08a0
+                    CALL                    giga_vAC
+_page_0x08a0        LDW                     0xe0
                     STW                     _a
                     LDI                     20
                     STW                     _b
@@ -318,10 +316,6 @@ _201                LDWI                    256
                     STW                     mathY
                     LDWI                    multiply16bit
                     CALL                    giga_vAC
-                    STW                     0xe0
-                    LDWI                    _page_0x0aa0
-                    CALL                    giga_vAC
-_page_0x0aa0        LDW                     0xe0
                     ADDI                    252
                     STW                     _p                              ; p=256*c+252:pokep-1,z
 
@@ -333,6 +327,10 @@ _202                LDI                     0
                     LDI                     0
                     POKE                    0xd0                            ; poke p,0:poke p+1,0
 
+                    STW                     0xe0
+                    LDWI                    _page_0x09a0
+                    CALL                    giga_vAC
+_page_0x09a0        LDW                     0xe0
 _203                ForNextLoopUp           _c _201                 4       ; next c
 
 _204                LDI                     2
@@ -352,6 +350,6 @@ _208                POP
 _209                POP                     
                     RET                                                     ; ?"Sawtooth":return
 
-_end_0x03db         BRA                     _end_0x03db                     ; END
+_end_0x0369         BRA                     _end_0x0369                     ; END
 
 

@@ -231,6 +231,7 @@ namespace Graphics
         return true;
     }
 
+
     void initialise(void)
     {
         // HLINE sync error bar

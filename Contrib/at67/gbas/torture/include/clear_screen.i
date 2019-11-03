@@ -33,8 +33,9 @@ initClearFuncs  PUSH
 
                 LDWI    0x0002                              ; starting cursor position
                 STW     cursorXY
-                LDWI    0x0001                              ; reset flags
-                STW     miscFlags
+                LDWI    0x7FFF
+                ANDW    miscFlags
+                STW     miscFlags                           ; reset on bottom row flag
         
                 LD      fgbgColour
                 ST      giga_sysArg0

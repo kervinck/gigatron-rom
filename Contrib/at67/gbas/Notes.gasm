@@ -29,16 +29,17 @@ drawLineExt         EQU                     0x76a0
 drawLineDelta1      EQU                     0x75a0
 drawLineCursor      EQU                     0x74a0
 printText           EQU                     0x7cd5
-printDigit          EQU                     0x7bdd
-printInt16          EQU                     0x73a0
-printChar           EQU                     0x72a0
-printHexByte        EQU                     0x71a0
-printHexWord        EQU                     0x79e6
-newLineScroll       EQU                     0x70a0
-resetAudio          EQU                     0x71d0
-playMidi            EQU                     0x6fa0
-playMidiAsync       EQU                     0x78e2
-midiStartNote       EQU                     0x6ea0
+printDigit          EQU                     0x73a0
+printInt16          EQU                     0x72a0
+printChar           EQU                     0x71a0
+printHexByte        EQU                     0x73c2
+printHexWord        EQU                     0x7bdf
+printTextCursor     EQU                     0x70a0
+newLineScroll       EQU                     0x6fa0
+resetAudio          EQU                     0x70cd
+playMidi            EQU                     0x6ea0
+playMidiAsync       EQU                     0x79e6
+midiStartNote       EQU                     0x6da0
 initialiseCcOps     EQU                     0x74e1
 convertEqOpAddr     EQU                     0x00E2
 convertNeOpAddr     EQU                     0x00E4
@@ -81,29 +82,31 @@ miscFlags           EQU                     register0 + 0x1E
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x0211
-_11                 EQU                     0x0215
-_12                 EQU                     0x0227
-_13                 EQU                     0x0231
-_14                 EQU                     0x023f
-_20                 EQU                     0x024d
-_21                 EQU                     0x0256
-_22                 EQU                     0x025f
-_23                 EQU                     0x0268
-_24                 EQU                     0x0271
-_25                 EQU                     0x027a
-_26                 EQU                     0x0283
-_30                 EQU                     0x028c
-_31                 EQU                     0x0290
-_32                 EQU                     0x02a8
-_33                 EQU                     0x02b7
-_34                 EQU                     0x02be
-_35                 EQU                     0x02cb
-_36                 EQU                     0x02d4
-_37                 EQU                     0x02d4
-_end_0x02f0         EQU                     0x02e2
-_next_0x0215        EQU                     0x0215
-_next_0x0296        EQU                     0x0290
+_10                 EQU                     0x0216
+_11                 EQU                     0x021a
+_12                 EQU                     0x022c
+_13                 EQU                     0x0236
+_14                 EQU                     0x0244
+_20                 EQU                     0x0252
+_21                 EQU                     0x025b
+_22                 EQU                     0x0264
+_23                 EQU                     0x026d
+_24                 EQU                     0x0276
+_25                 EQU                     0x027f
+_26                 EQU                     0x0288
+_30                 EQU                     0x0291
+_31                 EQU                     0x0295
+_32                 EQU                     0x02ad
+_33                 EQU                     0x02bc
+_34                 EQU                     0x02c3
+_35                 EQU                     0x02d0
+_36                 EQU                     0x02d9
+_37                 EQU                     0x08a2
+_end_0x030a         EQU                     0x08b0
+_next_0x021a        EQU                     0x021a
+_next_0x029b        EQU                     0x0295
+_page_0x08a0        EQU                     0x08a0
+_if_0x02fc          EQU                     0x08a2
 
 ; Variables
 _c                  EQU                     0x0030
@@ -212,8 +215,18 @@ _35                 LDWI                    44
                     LDI                     15
                     POKE                    register0                       ; poke 44,15:'0.25 secs
 
+_36                 LDWI                    0x002c
+                    PEEK                    
+                    CALL                    convertGtOpAddr
+                    BEQ                     _37                 
+                    BRA                     _36                             ; if peek(44)>0 then goto 36
+
+                    STW                     0xe0
+                    LDWI                    _page_0x08a0
+                    CALL                    giga_vAC
+_page_0x08a0        LDW                     0xe0
 _37                 ForNextLoopUp           _n _31                  95      ; next n
 
-_end_0x02f0         BRA                     _end_0x02f0                     ; END
+_end_0x030a         BRA                     _end_0x030a                     ; END
 
 

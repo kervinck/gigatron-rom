@@ -23,6 +23,7 @@
 #include "editor.h"
 #include "loader.h"
 #include "timing.h"
+#include "image.h"
 #include "graphics.h"
 #include "assembler.h"
 #include "expression.h"
@@ -1007,6 +1008,39 @@ namespace Editor
         return false;
     }
 
+
+    int gtRgbFileindex = 0;
+
+    void loadGtRgbFile(void)
+    {
+        static std::string names[] = {"Gamma", "Gigatron", "Juggler", "Mario"};
+
+        Image::TgaFile tgaFile;
+        Image::GtRgbFile gtRgbFile;
+
+        Image::loadTgaFile(names[gtRgbFileindex] + ".tga", tgaFile);
+        gtRgbFile._header = {GTRGB_IDENTIFIER, Image::GT_RGB_222, tgaFile._header._width, tgaFile._header._height};
+        Image::ditherRGB8toRGB2(tgaFile._data, gtRgbFile._data, tgaFile._header._width, tgaFile._header._height, tgaFile._imageOrigin);
+
+        uint16_t vram = 0x08A0;
+        for(int y=0; y<gtRgbFile._header._height; y++)
+        {
+            for(int x=0; x<gtRgbFile._header._width; x++)
+            {
+                uint8_t data = gtRgbFile._data[y*gtRgbFile._header._width + x];
+                Cpu::setRAM(vram++, data);
+                if((vram & 0x00FF) == 0x00) vram += 0x00A0;
+            }
+        }
+    }
+
+    void loadNextGtRgbFile(void)
+    {
+        gtRgbFileindex = (gtRgbFileindex + 1) % 4;
+        loadGtRgbFile();
+    }
+
+
     void handleKeyDown(void)
     {
         //fprintf(stderr, "Editor::handleKeyDown() : key=%d : mod=%04x\n", _sdlKeyScanCode, _sdlKeyModifier);
@@ -1047,6 +1081,50 @@ namespace Editor
         {
             double timingHack = Timing::getTimingHack() + VSYNC_TIMING_60*0.05;
             if(timingHack <= VSYNC_TIMING_60) {Timing::setTimingHack(timingHack); return;}
+        }
+        else if(_sdlKeyScanCode == SDLK_PAGEUP)
+        {
+            double gamma = Image::getGammaInput();
+            gamma += 0.1; if(gamma > 3.0) gamma = 3.0;
+            Image::setGammaInput(gamma);
+            fprintf(stderr, "GammaInput = %f\n", gamma);
+            loadGtRgbFile();
+        }
+        else if(_sdlKeyScanCode == SDLK_PAGEDOWN)
+        {
+            double gamma = Image::getGammaInput();
+            gamma -= 0.1; if(gamma < 0.5) gamma = 0.5;
+            Image::setGammaInput(gamma);
+            fprintf(stderr, "GammaInput = %f\n", gamma);
+            loadGtRgbFile();
+        }
+        else if(_sdlKeyScanCode == SDLK_INSERT)
+        {
+            Image::setGammaOutput(Image::getGammaOutput() + 0.1);
+            fprintf(stderr, "GammaOutput = %f\n", Image::getGammaOutput());
+            loadGtRgbFile();
+        }
+        else if(_sdlKeyScanCode == SDLK_DELETE)
+        {
+            Image::setGammaOutput(Image::getGammaOutput() - 0.1);
+            fprintf(stderr, "GammaOutput = %f\n", Image::getGammaOutput());
+            loadGtRgbFile();
+        }
+        else if(_sdlKeyScanCode == SDLK_END)
+        {
+            Image::setDiffusionScale(Image::getDiffusionScale() * 2.0);
+            fprintf(stderr, "DiffusionScale = %f\n", Image::getDiffusionScale());
+            loadGtRgbFile();
+        }
+        else if(_sdlKeyScanCode == SDLK_HOME)
+        {
+            loadNextGtRgbFile();
+        }
+        else if(_sdlKeyScanCode == SDLK_BACKSLASH)
+        {
+            Image::setDiffusionType(Image::getDiffusionType() + 1);
+            fprintf(stderr, "DiffusionType = %d\n", Image::getDiffusionType());
+            loadGtRgbFile();
         }
     }
 

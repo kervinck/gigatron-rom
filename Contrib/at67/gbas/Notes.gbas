@@ -25,5 +25,5 @@
 33 poke p,  usr(129):'Flo
 34 poke p+1,usr(129):'Fhi
 35 poke 44,15:'0.25 secs
-36 if peek(44)>0 goto 36
+36 if peek(44)>0 then goto 36
 37 next n

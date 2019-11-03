@@ -29,16 +29,17 @@ drawLineExt         EQU                     0x76a0
 drawLineDelta1      EQU                     0x75a0
 drawLineCursor      EQU                     0x74a0
 printText           EQU                     0x7cd5
-printDigit          EQU                     0x7bdd
-printInt16          EQU                     0x73a0
-printChar           EQU                     0x72a0
-printHexByte        EQU                     0x71a0
-printHexWord        EQU                     0x79e6
-newLineScroll       EQU                     0x70a0
-resetAudio          EQU                     0x71d0
-playMidi            EQU                     0x6fa0
-playMidiAsync       EQU                     0x78e2
-midiStartNote       EQU                     0x6ea0
+printDigit          EQU                     0x73a0
+printInt16          EQU                     0x72a0
+printChar           EQU                     0x71a0
+printHexByte        EQU                     0x73c2
+printHexWord        EQU                     0x7bdf
+printTextCursor     EQU                     0x70a0
+newLineScroll       EQU                     0x6fa0
+resetAudio          EQU                     0x70cd
+playMidi            EQU                     0x6ea0
+playMidiAsync       EQU                     0x79e6
+midiStartNote       EQU                     0x6da0
 initialiseCcOps     EQU                     0x74e1
 convertEqOpAddr     EQU                     0x00E2
 convertNeOpAddr     EQU                     0x00E4
@@ -81,17 +82,17 @@ miscFlags           EQU                     register0 + 0x1E
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_9                  EQU                     0x0211
-_10                 EQU                     0x022d
-_20                 EQU                     0x0240
-_30                 EQU                     0x024f
-_31                 EQU                     0x0211
-_32                 EQU                     0x0211
-_33                 EQU                     0x0211
-_34                 EQU                     0x0211
-_35                 EQU                     0x0211
-_36                 EQU                     0x0211
-_end_0x0255         EQU                     0x024f
+_9                  EQU                     0x0216
+_10                 EQU                     0x0232
+_20                 EQU                     0x0245
+_30                 EQU                     0x0251
+_31                 EQU                     0x0216
+_32                 EQU                     0x0216
+_33                 EQU                     0x0216
+_34                 EQU                     0x0216
+_35                 EQU                     0x0216
+_36                 EQU                     0x0216
+_end_0x0257         EQU                     0x0251
 
 ; Variables
 _P                  EQU                     0x0030
@@ -109,12 +110,12 @@ _9                  LDI                     2
                     ScanlineMode            
                     LDWI                    257
                     STW                     _P
-                    LDWI                    337
+                    LDWI                    385
                     STW                     _Q
-                    LDWI                    417
+                    LDWI                    387
                     STW                     _R
                     LDI                     0
-                    STW                     _X                              ; MODE 2:P=257:Q=337:R=417:X=0
+                    STW                     _X                              ; MODE 2:P=257:Q=385:R=387:X=0
 
 _10                 LDI                     1
                     STW                     waitVBlankNum
@@ -130,9 +131,8 @@ _20                 LD                      _X
                     LDW                     _X
                     SUBI                    1
                     STW                     _X
-                    LDWI                    _10
-                    CALL                    giga_vAC                        ; POKE R,X:X=X-1:GOTO 10
+                    BRA                     _10                             ; POKE R,X:X=X-1:GOTO 10
 
-_end_0x0255         BRA                     _end_0x0255                     ; END
+_end_0x0257         BRA                     _end_0x0257                     ; END
 
 

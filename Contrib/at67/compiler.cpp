@@ -2206,7 +2206,7 @@ namespace Compiler
 
         // Within same page
         // TODO: Optimiser messes this strategy completely up, FIX IT
-        if(0)//HI_MASK(_vasmPC) == HI_MASK(_labels[labelIndex]._address))
+        if(HI_MASK(_vasmPC) == HI_MASK(_labels[labelIndex]._address))
         {
             emitVcpuAsm("BRA", "_" + gotoLabel, false, codeLineIndex);
         }
@@ -2297,10 +2297,13 @@ namespace Compiler
             uint32_t expressionType = parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
             switch(i)
             {
-                case 0: emitVcpuAsm("ST", "cursorXY", false, codeLineIndex);     break;
+                case 0: emitVcpuAsm("ST", "cursorXY",     false, codeLineIndex); break;
                 case 1: emitVcpuAsm("ST", "cursorXY + 1", false, codeLineIndex); break;
             }
         }
+
+        emitVcpuAsm("LDWI", "printTextCursor", false, codeLineIndex);
+        emitVcpuAsm("CALL", "giga_vAC",        false, codeLineIndex);
 
         return true;
     }
@@ -3233,8 +3236,14 @@ namespace Compiler
                         adjustExclusionVasmAddresses(codeLineIndex, currPC, nextPC + restoreOffset, offset);
 
                         // Check for existing label, (after label adjustments)
-                        int pageJumpLabelIndex = findLabel(nextPC);
-                        if(pageJumpLabelIndex == -1)
+                        int labelIndex = -1;
+                        std::string labelName;
+                        if(findLabel(nextPC) >= 0)
+                        {
+                            labelIndex = findLabel(nextPC);
+                            labelName = _labels[labelIndex]._name;
+                        }
+                        if(labelIndex == -1)
                         {
                             // Create CALLI page jump label, (created later in outputCode())
                             if(Assembler::getUseOpcodeCALLI())
@@ -3251,17 +3260,16 @@ namespace Compiler
                         else
                         {
                             // Update CALLI page jump label
-                            std::string label = _labels[pageJumpLabelIndex]._name;
                             if(Assembler::getUseOpcodeCALLI())
                             {
                                 // Macro labels are underscored by default
-                                itCode->_vasm[itVasm - itCode->_vasm.begin()]._code = (label[0] == '_') ? "CALLI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + label : "CALLI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "_" + label;
+                                itCode->_vasm[itVasm - itCode->_vasm.begin()]._code = (labelName[0] == '_') ? "CALLI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + labelName : "CALLI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "_" + labelName;
                             }
                             // Update pre-CALLI page jump label
                             else
                             {
                                 // Macro labels are underscored by default
-                                itCode->_vasm[itVasm - itCode->_vasm.begin()]._code = (label[0] == '_') ? "LDWI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + label : "LDWI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "_" + label;
+                                itCode->_vasm[itVasm - itCode->_vasm.begin()]._code = (labelName[0] == '_') ? "LDWI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + labelName : "LDWI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "_" + labelName;
                             }
                         }
 
@@ -3277,6 +3285,51 @@ namespace Compiler
                 if(resetCheck) break;
 
                 itCode++;
+            }
+        }
+
+        return true;
+    }
+
+    bool checkBranchLabels(void)
+    {
+        for(int i=0; i<_codeLines.size(); i++)
+        {
+            for(int j=0; j<_codeLines[i]._vasm.size(); j++)
+            {
+                uint16_t vasmAddress = _codeLines[i]._vasm[j]._address;
+                std::string vasmCode = _codeLines[i]._vasm[j]._code;
+                std::string vasmLabel = _codeLines[i]._vasm[j]._internalLabel;
+
+                if(vasmCode == "BRA"  ||  vasmCode == "BEQ")
+                {
+                    size_t space = vasmCode.find_first_of("  \n\r\f\t\v");
+                    std::string operand = vasmCode.substr(space);
+
+                    // Is operand a label?
+                    int labelIndex = findLabel(operand);
+                    if(labelIndex >= 0)
+                    {
+                        if(HI_MASK(vasmAddress) != HI_MASK(_labels[labelIndex]._address))
+                        {
+                            fprintf(stderr, "Compiler::checkBranchLabels() : trying to branch to : %04x : from %04x in '%s' on line %d\n", _labels[labelIndex]._address, vasmAddress, vasmCode.c_str(), i);
+                            return false;
+                        }
+                    }
+                    else if(vasmLabel.size())
+                    // Check internal label
+                    {
+                        int labelIndex = findInternalLabel(operand);
+                        if(labelIndex >= 0)
+                        {
+                            if(HI_MASK(vasmAddress) != HI_MASK(_internalLabels[labelIndex]._address))
+                            {
+                                fprintf(stderr, "Compiler::checkBranchLabels() : trying to branch to : %04x : from %04x in '%s' on line %d\n", _internalLabels[labelIndex]._address, vasmAddress, vasmCode.c_str(), i);
+                                return false;
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -3329,7 +3382,7 @@ namespace Compiler
                     int labelIndex = findLabel(_internalLabels[k]._address);
                     if(labelIndex >= 0)
                     {   
-                        Expression::replaceKeyword(_codeLines[i]._vasm[j]._code, _internalLabels[k]._name, _labels[labelIndex]._output);
+                        Expression::replaceText(_codeLines[i]._vasm[j]._code, _internalLabels[k]._name, _labels[labelIndex]._output);
                     }
                 }
             }
@@ -3408,6 +3461,7 @@ namespace Compiler
         {0x0000, 0x0000, "printChar"      },
         {0x0000, 0x0000, "printHexByte"   },
         {0x0000, 0x0000, "printHexWord"   },
+        {0x0000, 0x0000, "printTextCursor"},
         {0x0000, 0x0000, "newLineScroll"  },
         {0x0000, 0x0000, "resetAudio"     },
         {0x0000, 0x0000, "playMidi"       },
@@ -3493,7 +3547,7 @@ namespace Compiler
                 // Save end of runtime/strings
                 if(address < _runtimeEnd) _runtimeEnd = address;
 
-                fprintf(stderr, "%s : %s : opcode size %d bytes : loaded at %04x\n", std::string("gbas/" + _subIncludes[includeIndex]).c_str(), _internalSubs[subIndex]._name.c_str(), size, address);
+                //fprintf(stderr, "%s : %s : opcode size %d bytes : loaded at %04x\n", std::string("gbas/" + _subIncludes[includeIndex]).c_str(), _internalSubs[subIndex]._name.c_str(), size, address);
 
                 _internalSubs[subIndex]._address = address;
                 return true;
@@ -3707,7 +3761,9 @@ namespace Compiler
         std::ifstream infile(inputFilename);
         if(!readInputFile(infile, inputFilename, numLines)) return false;
 
-        fprintf(stderr, "\nCompiling file '%s'\n", inputFilename.c_str());
+        fprintf(stderr, "\n\n****************************************************************************************************\n");
+        fprintf(stderr, "* Compiling file '%s'\n", inputFilename.c_str());
+        fprintf(stderr, "****************************************************************************************************\n");
 
         // Labels
         if(!parseLabels(numLines)) return false;
@@ -3723,6 +3779,9 @@ namespace Compiler
 
         // Check code exclusion zones
         if(!checkExclusionZones()) return false;
+
+        // Check branch labels
+        if(!checkBranchLabels()) return false;
 
         // Output
         outputReservedWords();

@@ -250,6 +250,8 @@ _label_ CALL    giga_vAC
         LDWI    0x0F20                                  ; yellow on blue
         STW     fgbgColour
         STW     giga_sysArg0
+        LDWI    0x0001                                  ; reset flags
+        STW     miscFlags
 
         LDWI    clearScreen
         CALL    giga_vAC

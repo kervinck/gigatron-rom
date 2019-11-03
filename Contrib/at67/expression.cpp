@@ -681,14 +681,14 @@ namespace Expression
         return tokens;
     }
 
-    void replaceKeyword(std::string& expression, const std::string& keyword, const std::string& replace)
+    void replaceText(std::string& expression, const std::string& text, const std::string& replace)
     {
         for(size_t foundPos=0; ; foundPos+=replace.size())
         {
-            foundPos = expression.find(keyword, foundPos);
+            foundPos = expression.find(text, foundPos);
             if(foundPos == std::string::npos) break;
 
-            expression.erase(foundPos, keyword.size());
+            expression.erase(foundPos, text.size());
             expression.insert(foundPos, replace);
         }
     }

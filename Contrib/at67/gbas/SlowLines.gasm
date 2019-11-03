@@ -29,16 +29,17 @@ drawLineExt         EQU                     0x76a0
 drawLineDelta1      EQU                     0x75a0
 drawLineCursor      EQU                     0x74a0
 printText           EQU                     0x7cd5
-printDigit          EQU                     0x7bdd
-printInt16          EQU                     0x73a0
-printChar           EQU                     0x72a0
-printHexByte        EQU                     0x71a0
-printHexWord        EQU                     0x79e6
-newLineScroll       EQU                     0x70a0
-resetAudio          EQU                     0x71d0
-playMidi            EQU                     0x6fa0
-playMidiAsync       EQU                     0x78e2
-midiStartNote       EQU                     0x6ea0
+printDigit          EQU                     0x73a0
+printInt16          EQU                     0x72a0
+printChar           EQU                     0x71a0
+printHexByte        EQU                     0x73c2
+printHexWord        EQU                     0x7bdf
+printTextCursor     EQU                     0x70a0
+newLineScroll       EQU                     0x6fa0
+resetAudio          EQU                     0x70cd
+playMidi            EQU                     0x6ea0
+playMidiAsync       EQU                     0x79e6
+midiStartNote       EQU                     0x6da0
 initialiseCcOps     EQU                     0x74e1
 convertEqOpAddr     EQU                     0x00E2
 convertNeOpAddr     EQU                     0x00E4
@@ -81,25 +82,25 @@ miscFlags           EQU                     register0 + 0x1E
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_1                  EQU                     0x0211
-_2                  EQU                     0x0216
-_3                  EQU                     0x0240
-_4                  EQU                     0x026a
-_5                  EQU                     0x027f
-_6                  EQU                     0x0296
-_7                  EQU                     0x02ae
-_8                  EQU                     0x02c4
-_9                  EQU                     0x02dc
-_10                 EQU                     0x02ee
-_11                 EQU                     0x08b0
-_12                 EQU                     0x08c7
-_end_0x03ae         EQU                     0x08e2
-_if_0x02ea          EQU                     0x0296
-_if_0x030c          EQU                     0x02ae
-_if_0x032c          EQU                     0x02c4
+_1                  EQU                     0x0216
+_2                  EQU                     0x0224
+_3                  EQU                     0x024e
+_4                  EQU                     0x0278
+_5                  EQU                     0x028d
+_6                  EQU                     0x02a4
+_7                  EQU                     0x02bc
+_8                  EQU                     0x02d2
+_9                  EQU                     0x02ea
+_10                 EQU                     0x08ae
+_11                 EQU                     0x08be
+_12                 EQU                     0x08d5
+_end_0x03bc         EQU                     0x08f0
+_if_0x02f8          EQU                     0x02a4
+_if_0x031a          EQU                     0x02bc
+_if_0x033a          EQU                     0x02d2
 _page_0x08a0        EQU                     0x08a0
-_next_0x0368        EQU                     0x08ac
-_if_0x0391          EQU                     0x08c7
+_next_0x0376        EQU                     0x08ba
+_if_0x039f          EQU                     0x08d5
 
 ; Variables
 _a                  EQU                     0x0030
@@ -119,8 +120,12 @@ _t                  EQU                     0x0044
 ; Code
 _entryPoint_        Initialise                                              ; INIT
 
-_1                  LDWI                    clearScreen
-                    CALL                    giga_vAC                        ; cls:rem Lines demo
+_1                  LDWI                    180
+                    STW                     register0
+                    LDI                     63
+                    POKE                    register0
+                    LDWI                    clearScreen
+                    CALL                    giga_vAC                        ; poke 180,63:cls:rem Lines demo
 
 _2                  Random                  
                     ANDI                    127
@@ -214,6 +219,10 @@ _8                  LDW                     _x
 _9                  LDI                     0
                     SUBW                    _x
                     STW                     _d
+                    STW                     0xe0
+                    LDWI                    _page_0x08a0
+                    CALL                    giga_vAC
+_page_0x08a0        LDW                     0xe0
                     LDW                     _x
                     ADDW                    _x
                     STW                     _x
@@ -222,16 +231,12 @@ _9                  LDI                     0
                     STW                     _y                              ; d=-x:x=x+x:y=y+y
 
 _10                 LDW                     _d
-                    STW                     0xe0
-                    LDWI                    _page_0x08a0
-                    CALL                    giga_vAC
-_page_0x08a0        LDW                     0xe0
                     STW                     _t
                     LDI                     0
                     STW                     0xc0
                     LDI                     1
                     STW                     0xc2
-_next_0x0368        LD                      _q
+_next_0x0376        LD                      _q
                     POKE                    _p                              ; for t=d to 0:poke p,q
 
 _11                 LDW                     _d
@@ -249,10 +254,10 @@ _11                 LDW                     _d
 _12                 LDW                     _p
                     ADDW                    _u
                     STW                     _p
-                    ForNextLoopStepUp       _t _next_0x0368 0xc0 0xc2
+                    ForNextLoopStepUp       _t _next_0x0376 0xc0 0xc2
                     LDWI                    _2
                     CALL                    giga_vAC                        ; p=p+u:next t:goto 2
 
-_end_0x03ae         BRA                     _end_0x03ae                     ; END
+_end_0x03bc         BRA                     _end_0x03bc                     ; END
 
 

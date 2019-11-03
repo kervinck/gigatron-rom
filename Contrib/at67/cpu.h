@@ -8,7 +8,7 @@
 
 
 #define MAJOR_VERSION "0.8"
-#define MINOR_VERSION "12"
+#define MINOR_VERSION "13"
 #define VERSION_STR "gtemuAT67 v" MAJOR_VERSION "." MINOR_VERSION
  
 #define ROM_INST 0
@@ -53,6 +53,7 @@ namespace Cpu
     enum RomType {ROMERR=0x00, ROMv1=0x1c, ROMv2=0x20, ROMv3=0x28, ROMv4=0x38, DEVROM=0xf8};
     enum ScanlineMode {Normal=0, VideoB, VideoC, VideoBC, NumScanlineModes};
     enum InternalGt1Id {SnakeGt1=0, RacerGt1=1, MandelbrotGt1=2, PicturesGt1=3, CreditsGt1=4, LoaderGt1=5, NumInternalGt1s};
+    enum Endianess {LittleEndian = 0x03020100ul, BigEndian = 0x00010203ul};
 
     struct State
     {
@@ -78,6 +79,11 @@ namespace Cpu
     
     void loadRom(int index);
     void swapRom(void);
+
+    Endianess getHostEndianess(void);
+    void swapEndianess(uint16_t& value);
+    void swapEndianess(uint32_t& value);
+    void swapEndianess(uint64_t& value);
 
     void initialiseInternalGt1s(void);
 

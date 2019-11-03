@@ -29,16 +29,17 @@ drawLineExt         EQU                     0x76a0
 drawLineDelta1      EQU                     0x75a0
 drawLineCursor      EQU                     0x74a0
 printText           EQU                     0x7cd5
-printDigit          EQU                     0x7bdd
-printInt16          EQU                     0x73a0
-printChar           EQU                     0x72a0
-printHexByte        EQU                     0x71a0
-printHexWord        EQU                     0x79e6
-newLineScroll       EQU                     0x70a0
-resetAudio          EQU                     0x71d0
-playMidi            EQU                     0x6fa0
-playMidiAsync       EQU                     0x78e2
-midiStartNote       EQU                     0x6ea0
+printDigit          EQU                     0x73a0
+printInt16          EQU                     0x72a0
+printChar           EQU                     0x71a0
+printHexByte        EQU                     0x73c2
+printHexWord        EQU                     0x7bdf
+printTextCursor     EQU                     0x70a0
+newLineScroll       EQU                     0x6fa0
+resetAudio          EQU                     0x70cd
+playMidi            EQU                     0x6ea0
+playMidiAsync       EQU                     0x79e6
+midiStartNote       EQU                     0x6da0
 initialiseCcOps     EQU                     0x74e1
 convertEqOpAddr     EQU                     0x00E2
 convertNeOpAddr     EQU                     0x00E4
@@ -81,18 +82,18 @@ miscFlags           EQU                     register0 + 0x1E
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x0211
-_20                 EQU                     0x0211
-_30                 EQU                     0x0219
-_40                 EQU                     0x022d
-_50                 EQU                     0x0231
-_60                 EQU                     0x023e
-_70                 EQU                     0x0244
-_80                 EQU                     0x0251
-_90                 EQU                     0x0268
-_100                EQU                     0x026e
-_end_0x0277         EQU                     0x0273
-_next_0x0231        EQU                     0x0231
+_10                 EQU                     0x0216
+_20                 EQU                     0x0216
+_30                 EQU                     0x021e
+_40                 EQU                     0x0237
+_50                 EQU                     0x023b
+_60                 EQU                     0x024d
+_70                 EQU                     0x0253
+_80                 EQU                     0x0265
+_90                 EQU                     0x027c
+_100                EQU                     0x0282
+_end_0x0288         EQU                     0x0284
+_next_0x023b        EQU                     0x023b
 
 ; Variables
 _X                  EQU                     0x0030
@@ -115,6 +116,8 @@ _30                 LDWI                    clearScreen
                     ST                      cursorXY
                     LDI                     60
                     ST                      cursorXY + 1
+                    LDWI                    printTextCursor
+                    CALL                    giga_vAC
                     LDWI                    0xFFFE
                     ANDW                    miscFlags
                     STW                     miscFlags                       ; CLS:AT X,60 : SCROLL OFF
@@ -124,6 +127,8 @@ _40                 LDI                     1
 
 _50                 LDW                     _X
                     ST                      cursorXY
+                    LDWI                    printTextCursor
+                    CALL                    giga_vAC
                     LDI                     32
                     PrintAcChar                                             ; AT X:PUT 32:REM CLEAR
 
@@ -133,6 +138,8 @@ _60                 LDW                     _X
 
 _70                 LDW                     _X
                     ST                      cursorXY
+                    LDWI                    printTextCursor
+                    CALL                    giga_vAC
                     LDI                     79
                     PrintAcChar                                             ; AT X:PUT 79:REM DRAW O
 
@@ -145,9 +152,8 @@ _90                 LDI                     0
                     SUBW                    _V
                     STW                     _V                              ; V=-V
 
-_100                LDWI                    _40
-                    CALL                    giga_vAC                        ; GOTO 40
+_100                BRA                     _40                             ; GOTO 40
 
-_end_0x0277         BRA                     _end_0x0277                     ; END
+_end_0x0288         BRA                     _end_0x0288                     ; END
 
 
