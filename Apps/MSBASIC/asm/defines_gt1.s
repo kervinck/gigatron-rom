@@ -58,8 +58,8 @@ CLALL           := TICK         ; Not implemented, do nothing
 LINEEDIT        := $2E00        ; Delete character or line if needed
 MONCOUT         := CHROUT
 MONRDKEY        := GETIN
-LOAD            := SYNERR       ; Not implemented, give error
-SAVE            := SYNERR       ; Not implemented, give error
+LOAD            := $3100        ; Not implemented, give help message
+SAVE            := $2F00        ; Send program list to BabelFish
 VERIFY          := SYNERR       ; Not implemented, give error
 
 ; patches

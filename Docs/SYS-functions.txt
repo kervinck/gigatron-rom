@@ -98,4 +98,305 @@ programmer to be reminded to verify the actual ROM version. A program
 must fail gracefully on older ROMs, or at least not crash. See also
 Docs/GT1-files.txt on using `romType' for this purpose.
 
+Function details
+----------------
+
+----------------------------------------------------------------------
+Extension SYS_Exec_88
+----------------------------------------------------------------------
+
+Load code from ROM into memory and execute it
+
+This loads the vCPU code with consideration of the current vSP
+Used during reset, but also for switching between applications or for
+loading data from ROM from within an application (overlays).
+
+ROM stream format is [<addrH> <addrL> <n&255> n*<byte>]* 0
+on top of lookup tables.
+
+Variables:
+        sysArgs[0:1]    ROM pointer (input set by caller)
+        sysArgs[2:3]    RAM pointer (variable)
+        sysArgs[4]      State counter (variable)
+        vLR             vCPU continues here (input set by caller)
+
+----------------------------------------------------------------------
+Extension SYS_Out_22
+----------------------------------------------------------------------
+
+Send byte to output port
+
+Variables:
+        vAC
+
+----------------------------------------------------------------------
+Extension SYS_In_24
+----------------------------------------------------------------------
+
+Read a byte from the input port
+
+Variables:
+        vAC
+
+----------------------------------------------------------------------
+Extension SYS_Random_34
+----------------------------------------------------------------------
+
+Update entropy and copy to vAC
+
+This same algorithm runs automatically once per vertical blank.
+Use this function to get numbers at a higher rate.
+
+Variables:
+        vAC
+
+----------------------------------------------------------------------
+Extension SYS_Unpack_56
+----------------------------------------------------------------------
+
+Unpack 3 bytes into 4 pixels
+
+Variables:
+        sysArgs[0:2]    Packed bytes (input)
+        sysArgs[0:3]    Pixels (output)
+
+----------------------------------------------------------------------
+Extension SYS_Draw4_30
+----------------------------------------------------------------------
+
+Draw 4 pixels on screen, horizontally next to each other
+
+Variables:
+        sysArgs[0:3]    Pixels
+        sysArgs[4:5]    Position on screen
+
+----------------------------------------------------------------------
+Extension SYS_VDrawBits_134
+----------------------------------------------------------------------
+
+Draw slice of a character, 8 pixels vertical
+
+Variables:
+        sysArgs[0]      Color 0 (background)
+        sysArgs[1]      Color 1 (pen)
+        sysArgs[2]      8 bits, highest bit first (destructive)
+        sysArgs[4:5]    Position on screen
+
+----------------------------------------------------------------------
+Extension SYS_LSRW1_48
+Extension SYS_LSRW2_52
+Extension SYS_LSRW3_52
+Extension SYS_LSRW4_50
+Extension SYS_LSRW5_50
+Extension SYS_LSRW6_48
+Extension SYS_LSRW7_30
+Extension SYS_LSRW8_24
+----------------------------------------------------------------------
+
+Shift right by 1..8 bits
+
+Variables:
+        vAC
+
+----------------------------------------------------------------------
+Extension SYS_LSLW4_46
+Extension SYS_LSLW8_24
+----------------------------------------------------------------------
+
+Shift left by 4 or 8 bits
+
+Variables:
+        vAC
+
+----------------------------------------------------------------------
+Extension SYS_Read3_40
+----------------------------------------------------------------------
+
+Read 3 consecutive bytes from ROM
+
+Variables:
+        sysArgs[0:2]    Bytes (output)
+        sysArgs[6:7]    ROM pointer (input)
+
+----------------------------------------------------------------------
+Extension SYS_SetMode_v2_80
+----------------------------------------------------------------------
+
+Set video mode to 0 to 3 black scanlines per pixel line.
+
+Mainly for making the MODE command available in Tiny BASIC, so that
+the user can experiment. It's adviced to refrain from using
+SYS_SetMode_v2_80 in regular applications. Video mode is a deeply
+personal preference, and the programmer shouldn't overrule the user
+in that choice. The Gigatron philisophy is that the end user has
+the final say on what happens on the system, not the application,
+even if that implies a degraded performance. This doesn't mean that
+all applications must work well in all video modes: mode 1 is still
+the default. If an application really doesn't work at all in that
+mode, it's acceptable to change mode once after loading.
+
+There's no "SYS_GetMode" function.
+
+Variables:
+        vAC bit 0:1     Mode:
+                         0      "ABCD" -> Full mode (slowest)
+                         1      "ABC-" -> Default mode after reset
+                         2      "A-C-" -> at67's mode
+                         3      "A---" -> HGM's mode
+        vAC bit 2:15    Ignored bits and should be 0
+
+Special values (ROM v4):
+        vAC = 1975      Zombie mode (no video signals, no input,
+                        no blinkenlights).
+        vAC = -1        Leave zombie mode and restore previous mode.
+
+----------------------------------------------------------------------
+Extension SYS_SetMemory_v2_54
+----------------------------------------------------------------------
+
+SYS function for setting 1..255 bytes
+
+Variables:
+        sysArgs[0]      Copy count (destructive)
+        sysArgs[1]      Copy value
+        sysArgs[2:3]    Destination address (destructive)
+
+----------------------------------------------------------------------
+Extension SYS_SendSerial1_v3_80
+----------------------------------------------------------------------
+
+SYS function for sending data over serial controller port using
+pulse width modulation of the vertical sync signal.
+
+Variables:
+        sysArgs[0:1]    Source address               (destructive)
+        sysArgs[2]      Start bit mask (typically 1) (destructive)
+        sysArgs[3]      Number of send frames X      (destructive)
+
+The sending will abort if input data is detected on the serial port.
+Returns 0 in case of all bits sent, or <>0 in case of abort
+
+This modulates the next upcoming X vertical pulses with the supplied
+data. A zero becomes a 7 line vPulse, a one will be 9 lines.
+After that, the vPulse width falls back to 8 lines (idle).
+
+----------------------------------------------------------------------
+Extension SYS_ExpanderControl_v4_40
+----------------------------------------------------------------------
+
+Sets the I/O and RAM expander's control register
+
+Intended for prototyping, and probably too low-level for most applications
+Still there's a safeguard: it's not possible to disable RAM using this
+
+----------------------------------------------------------------------
+Extension SYS_Run6502_v4_80
+----------------------------------------------------------------------
+
+Transfer control to v6502
+
+Calling 6502 code from vCPU goes (only) through this SYS function.
+Directly modifying the vCPUselect variable is unreliable. The
+control transfer is immediate, without waiting for the current
+time slice to end or first returning to vCPU.
+
+vCPU code and v6502 code can interoperate without much hassle:
+- The v6502 program counter is vLR, and v6502 doesn't touch vPC
+- Returning to vCPU is with the BRK instruction
+- BRK doesn't dump process state on the stack
+- vCPU can save/restore the vLR with PUSH/POP
+- Stacks are shared, vAC is shared
+- vAC can indicate what the v6502 code wants. vAC+1 will be cleared
+- Alternative is to leave a word in sysArgs[6:7] (v6502 X and Y registers)
+- Another way is to set vPC before BRK, and vCPU will continue there(+2)
+
+Calling v6502 code from vCPU looks like this:
+        LDWI  SYS_Run6502_v4_80
+        STW   sysFn
+        LDWI  $6502_start_address
+        STW   vLR
+        SYS   80
+
+Variables:
+        vAC             Accumulator
+        vLR             Program Counter
+        vSP             Stack Pointer (+1)
+        sysArgs[6]      Index Register X
+        sysArgs[7]      Index Register Y
+For info:
+        sysArgs[0:1]    Address Register, free to clobber
+        sysArgs[2]      Instruction Register, free to clobber
+        sysArgs[3:5]    Flags, don't clobber
+
+----------------------------------------------------------------------
+Extension SYS_ResetWaveforms_v4_50
+----------------------------------------------------------------------
+
+Setup the default sound waveforms in page 7
+
+soundTable[4x+0] = sawtooth, to be modified into metallic/noise
+soundTable[4x+1] = pulse
+soundTable[4x+2] = triangle
+soundTable[4x+3] = sawtooth, also useful to right shift 2 bits
+
+Used by cold and warm reset
+
+----------------------------------------------------------------------
+Extension SYS_ShuffleNoise_v4_46
+----------------------------------------------------------------------
+
+Use simple 6-bits variation of RC4 to permutate waveform 0 in soundTable
+
+Used by cold and warm reset
+
+----------------------------------------------------------------------
+Extension SYS_SpiExchangeBytes_v4_134
+----------------------------------------------------------------------
+
+Send and receive 1..256 bytes over SPI interface
+
+Variables:
+      sysArgs[0]      Page index start, for both send/receive (input, modified)
+      sysArgs[1]      Memory page for send data (input)
+      sysArgs[2]      Page index stop (input)
+      sysArgs[3]      Memory page for receive data (input)
+
+----------------------------------------------------------------------
+Extension SYS_Sprite6_v3_64
+Extension SYS_Sprite6x_v3_64
+Extension SYS_Sprite6y_v3_64
+Extension SYS_Sprite6xy_v3_64
+----------------------------------------------------------------------
+
+Blit sprite in screen memory
+
+Variables:
+        vAC             Destination address in screen
+        sysArgs[0:1]    Source address of 6xY pixels (colors 0..63) terminated
+                        by negative byte value N (typically N = -Y)
+        sysArgs[2:7]    Scratch (user as copy buffer)
+
+This SYS function draws a sprite of 6 pixels wide and Y pixels high.
+The pixel data is read sequentually from RAM, in horizontal chunks
+of 6 pixels at a time, and then written to the screen through the
+destination pointer (each chunk underneath the previous), thus
+drawing a 6xY stripe. Pixel values should be non-negative. The first
+negative byte N after a chunk signals the end of the sprite data.
+So the sprite's height Y is determined by the source data and is
+therefore flexible. This negative byte value, typically N == -Y,
+is then used to adjust the destination pointer's high byte, to make
+it easier to draw sprites wider than 6 pixels: just repeat the SYS
+call for as many 6-pixel wide stripes you need. All arguments are
+already left in place to facilitate this. After one call, the source
+pointer will point past that source data, effectively:
+      src += Y * 6 + 1
+The destination pointer will have been adjusted as:
+      dst += (Y + N) * 256 + 6
+(With arithmetic wrapping around on the same memory page)
+
+Y is only limited by source memory, not by CPU cycles. The
+implementation is such that the SYS function self-repeats, each
+time drawing the next 6-pixel chunk. It can typically draw 12
+pixels per scanline this way.
+
 -- End of document --

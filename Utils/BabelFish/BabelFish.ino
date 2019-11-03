@@ -247,6 +247,7 @@ const byte tetris_gt1[]    PROGMEM = {
 };
 
 const struct { const byte *gt1; const char *name; } gt1Files[] = {
+  // BASIC image in slot 0 for sendFile.py with .GTB files
   { TinyBASIC_gt1, "BASIC"                    }, // 3073 bytes
 #if maxStorage >= 10000
   { WozMon_gt1,    "WozMon"                   }, // 595 bytes
@@ -1097,9 +1098,10 @@ void sendSavedFile()
     word i = fileStart;
     do {
       byte nextByte = EEPROM.read(i);
-      if (nextByte == 255)
+      if (nextByte == 255) // TODO This is also Pi in MS BASIC
         break;
       sendController(nextByte, 1);
+      // TODO 70 is way too slow for MS BASIC. Should be >1000
       delay(nextByte == 10 ? 70 : 20);  // Allow Gigatron software to process byte
     } while (++i < EEPROM.length());
 }
