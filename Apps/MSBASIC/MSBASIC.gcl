@@ -17,7 +17,6 @@ gcl0x
         --------------------------
 
         Open issues:
-        XXX GET waits for key with cursor and echo
         XXX RND(1) is different from PET
         XXX BabelFish is too fast for LOAD
         XXX Pi is also BabelFish's EOF marker
@@ -45,9 +44,9 @@ gcl0x
         $2400 -                 Setup / Input buffer
         $2500 -                 Setup (cont'd)
         $2600 -                 Main vCPU loop (BRK call handling); DrawChar
-        $2700 -                 CharOut; PiOut
+        $2700 -                 CharOut
         $2800 -                 Newline
-        $2900 -                 WaitKey
+        $2900 -                 (6502) WAITKEY
         $2a00 -                 (6502) CHROUT
         $2b00 -                 (6502) GETIN
         $2c00 -                 (6502) ISCNTC
@@ -88,6 +87,7 @@ _TISTR3=$203                    {Value of [frameCount] at last update}
 _COLD_START=$00228D
 _LIST=$00079C
 _STOP=$000926
+_INPUTFLG=$000043
 _TMPZP=$00003E
 
 *=$218
@@ -707,7 +707,6 @@ _Setup=*
 
   \videoTable p=                {First variable at $30, will become p later}
   &_CharOut CharOut=            {Prepare for vCPU calls}
-
 ]
 
 \Setup1 call
@@ -738,7 +737,7 @@ _Setup1=*
   }
   6 [do
     \k.
-    $8d CharOut!                {Also prepares p for character printing}
+    13 CharOut!                 {Also prepares p for character printing}
     \k, 1- if>0loop]
 
   &_MainLoop _vLR=              {Prepare transfer to main loop}
@@ -759,18 +758,9 @@ _MainLoop=*
 _vLR=                           {Reset v6502 PC}
 [do
   \SYS_Run6502_v4_80 _sysFn=
-  \k,                           {Pass back resulting ASCII code in A}
   80!!                          {Run 6502 code until BRK}
   push                          {Save v6502 PC}
-  [if=0                         {A=0 reads char from keyboard}
-    \WaitKey call
-  else                          {A<>0 sends char to video terminal}
-    \k.                         {Store input for later return}
-    255^ [if<>0                 {Check for pi character code 255}
-      \k, CharOut!              {Either we can use the regalar function}
-    else
-      \PiOut call]              {Or we draw the pi character in a special way}
-  ]
+  CharOut!                      {Write character to screen}
   pop                           {Restore v6502 PC}
   loop]                         {Return to v6502 code}
 
@@ -785,7 +775,6 @@ _DrawChar=*
   \SYS_VDrawBits_134 _sysFn=    {Prepare SYS calls}
   $b00 \sysArgs0:               {Amber on black}
   p \sysArgs4:                  {Screen position for character}
-  %-2=                          {Remember this position}
   6+ p=                         {Advance by 6 pixels}
 
   5 [do i=                      {Draw character as 5 vertical bit slices}
@@ -794,8 +783,6 @@ _DrawChar=*
     134!!                       {SYS call to draw 8 pixels vertically}
     <j++ <\sysArgs4++           {Advance to next byte}
     i 1- if>0loop]              {Looping}
-
-  %-2                           {Return position for backspace}
 
   pop ret
 ]
@@ -816,14 +803,14 @@ _CharOut=*
   push
   %-2=                          {Park character in stack area}
 
-  $8d^ [if<>0 <p, 251- if>0 0]  {Test for CR or line wrap}
+  13^ [if<>0 <p, 251- if>0 0]   {Test for CR or line wrap}
 
   [if=0
     \SYS_VDrawBits_134 _sysFn=  {Prepare SYS calls}
     \Newline call]              {Move to next line}
 
-  %-2 $a0-                      {Apple 1 wants ASCII with bit 7 set}
-  [if<0                         {Skip non-printables}
+  %-2 32-
+  [if<0                         {Skip control codes}
     $19+ [if=0 6 \soundTimer.]  {Ring a bell for chr(7)}
     pop ret]
 
@@ -832,11 +819,16 @@ _CharOut=*
     and advance cursor position
   }
 
-  50-                           {Map ASCII code to offset in font table}
-  [if<0 50+ i= \font32up        {ASCII 32..81}
-   else     i= \font82up]       {ASCII 82..127}
-  j= i 2<< i+                   {Multiply char code by 5}
-  j+ j=                         {Add to page address to reach bitmap data}
+  100- [if<0
+    50+                         {Map ASCII code to offset in font table}
+    [if<0 50+ i= \font32up      {ASCII 32..81}
+     else     i= \font82up]     {ASCII 82..127}
+    j= i 2<< i+                 {Multiply char code by 5}
+    j+                          {Add to page address to reach bitmap data}
+  else
+    #\LDWI #12 #>\font82up      {Right half of 'T' and left half of 'U'}
+  ]
+  j=
 
   \DrawChar call                {Tail call: doesn't return here}
 ]
@@ -858,13 +850,6 @@ _CharOut=*
   |
   font82up
 }
-
-_PiOut=*
-[
-  push
-  #\LDWI #12 #>\font82up j=     {Right half of 'T' and left half of 'U'}
-  \DrawChar call                {Tail call: doesn't return here}
-]
 
 {-----------------------------------------------------------------------+
 |       Newline                                                         |
@@ -926,37 +911,53 @@ _Newline=*
 ]
 
 {-----------------------------------------------------------------------+
-|       WaitKey                                                         |
+|       WAITKEY                                                         |
 +-----------------------------------------------------------------------}
 *=$2900
 
-_WaitKey=*
-[
-  {
-    Wait for next key press and leave ASCII result in [\k]
-    Display blinking cursor and keep TI$ updated while waiting
-  }
-  push
-  \serialRaw, \k.
-  [do
-    \k, i=
-    \serialRaw, \k.
-    i^ [if=0                    {No state change}
-      \frameCount, 15& [if=0    {4 Hz cursor redraw rate}
-        \frameCount, 16&        {Blink at 2 Hz with 50% duty cycle}
-        [if=0 $a0 else $ff]     {Select space or cursor symbol}
-        CharOut! p=             {Display cursor and immediately move back}
-        \Tick call]             {Lacking interrupts, keep TI$ ticking}
-      loop]                     {Loop until key state changes}
-    \k, 255^ if=0loop]          {And also became pressed}
+{
+  Wait for next key press and return ASCII result
+  Display a blinking cursor and keep TI$ updated while waiting
+}
+_WAITKEY=*      #_LDAZ_  #\serialRaw
+_WAITKEY1=*     #_STAZ_  #\TMPZP        {Reference state before change}
+_WAITKEY2=*     #_LDAZ_  #\serialRaw
+                #_CMPZ_  #\TMPZP        {Keyboard state changed?}
+                #_BNE_   #@_WAITKEY4
 
-  $a0 CharOut! p=               {Overwrite cursor symbol with a space}
-  \k, $60- [if=0 $bf]           {Back tick to become pi}
-           [if>0 $40+ \k.]      {Map to upper case, DEL becomes rubout}
-  \k, 10^  [if=0 13 \k.]        {LF becomes CR}
+                #_LDAZ_  #\frameCount   {No change: handle cursor and time}
+                #_ANDIM_ #$0f
+                #_BNE_   #@_WAITKEY2    {4 Hz cursor redraw rate}
 
-  pop ret
-]
+                #_LDAZ_  #\frameCount   {Select space or cursor symbol}
+                #_ANDIM_ #$10
+                #_BNE_   #@_WAITKEY3
+                #_LDAIM_ #32            {Space}
+                #_BIT_
+_WAITKEY3=*     #_LDAIM_ #127           {Cursor}
+                #_BRK_                  {Display cursor}
+                #_JSR_   ##_GOBACK      {Move back}
+
+                #_JSR_   ##_TICK        {Lacking interrupts, keep TI$ ticking}
+                #_JMP_   ##_WAITKEY2
+
+_WAITKEY4=*     #_CMPIM_ #255           {Ignore key release}
+                #_BEQ_   #@_WAITKEY1
+
+                #_PHA_
+                #_LDAIM_ #$20           {Overwrite cursor symbol with a space}
+                #_BRK_
+                #_JSR_   ##_GOBACK      {Move back}
+                #_PLA_
+                #_RTS_
+
+_GOBACK=*       #_LDAZ_  #<p            {Go back}
+                #_SEC_
+                #_SBCIM_ #6
+                #_CMPIM_ #$60           {Check screen boundary}
+                #_BCC_   #@_GOBACK1
+                #_STAZ_  #<p
+_GOBACK1=*      #_RTS_
 
 {-----------------------------------------------------------------------+
 |                                                                       |
@@ -970,16 +971,15 @@ _WaitKey=*
 *=$2a00
 
 _CHROUT=*
-                #_STAZ_  #\vACH         {Safe spot (unless we use SBC)}
+                #_STAZ_  #_INPUTFLG     {!!! HACK !!! Forces GETIN out of GET mode}
                 #_PHA_                  {Save registers}
                 #_PHP_
                 #_TXA_
                 #_PHA_
                 #_TYA_
                 #_PHA_
-                #_LDAZ_  #\vACH         {Get back A}
+                #_LDAZ_  #_INPUTFLG     {Get back A}
 
-                #_ORAIM_ #128           {Set bit 7 for CharOut}
                 #_BRK_                  {Activate vCPU for I/O}
 
                 #_PLA_                  {Restore registers}
@@ -996,30 +996,52 @@ _CHROUT=*
 +-----------------------------------------------------------------------}
 *=$2b00
 
-_GETIN=*        #_TXA_                  {Save registers}
+_GETIN=*        #_BITZ_  #_INPUTFLG     {EDIT, INPUT or GET}
+                #_BVC_   #@_GETIN1
+
+                {
+                  Immediate return in GET mode
+                }
+                #_LDAZ_  #\serialRaw
+                #_CMPIM_ #255           {Map idle 255 pattern to 0}
+                #_ADCIM_ #0
+
+_MAPKEYCODE=*   #_CMPIM_ #$60           {Lower case?}
+                #_BNE_   #@_MAPKEYCODE1
+                #_LDAIM_ #$1f           {Back tick becomes pi ($1f-$20)}
+_MAPKEYCODE1=*  #_BCC_   #@_MAPKEYCODE2
+                #_SBCIM_ #$20           {Map to upper case, DEL becomes rubout}
+_MAPKEYCODE2=*  #_CMPIM_ #10
+                #_BNE_   #@_MAPKEYCODE3
+                #_LDAIM_ #13            {LF becomes CR}
+_MAPKEYCODE3=*  #_CLC_                  {Return OK}
+                #_RTS_
+
+                {
+                  Wait for key press with blinking cursor
+                }
+_GETIN1=*       #_TXA_                  {Save registers}
                 #_PHA_
                 #_TYA_
                 #_PHA_
-_REDO=*         #_LDAIM_ #0             {0 means wait for key press}
-                #_BRK_
+_REDO=*         #_JSR_   ##_WAITKEY
+                #_JSR_   ##_MAPKEYCODE
                 #_CMPIM_ #7
                 #_BNE_   #@_NOBELL
-                #_ORAIM_ #128           {Echo bell but don't return}
-                #_BRK_
+                #_BRK_                  {Echo bell but don't return}
                 #_JMP_   ##_REDO
 _NOBELL=*       #_CMPIM_ #13            {Note: 10 was already mapped to 13}
-                #_BCC_   #@_REDO        {Redo on low control codes from Babelfish}
+                #_BCC_   #@_REDO        {Redo low control codes from Babelfish}
                 #_BEQ_   #@_SKIPECHO    {Skip echo for ENTER}
                 #_PHA_                  {Echo to screen}
-                #_ORAIM_ #128
                 #_BRK_
                 #_PLA_
-_SKIPECHO=*     #_STAZ_  #\vACH         {Safe spot (unless we use SBC)}
+_SKIPECHO=*     #_STAZ_  #_TMPZP
                 #_PLA_                  {Restore registers}
                 #_TAY_
                 #_PLA_
                 #_TAX_
-                #_LDAZ_  #\vACH         {Get back A}
+                #_LDAZ_  #_TMPZP        {Get back A}
                 #_CLC_                  {Return OK}
                 #_RTS_
 
@@ -1037,24 +1059,10 @@ _QTICK=*
                 #_LDAZ_  #\frameCount
                 #_CMP_   ##_TISTR3
                 #_BPL_   #@_SKIPTICK    {Postpone work as much as possible}
-                #_STYZ_  #\TMPZP        {Park Y in idle ZP variable DIMFLG}
+                #_STYZ_  #_TMPZP        {Park Y in idle ZP variable DIMFLG}
                 #_JSR_   ##_TICK
-                #_LDYZ_  #\TMPZP        {Restore Y for caller}
+                #_LDYZ_  #_TMPZP        {Restore Y for caller}
 _SKIPTICK=*     #_RTS_
-
-{
-  Update TI$ from within vCPU
-}
-_Tick=*
-[
-  push
-  \SYS_Run6502_v4_80 _sysFn=
-  [def
-                #_JSR_   ##_TICK
-                #_BRK_
-  ] _vLR= 80!!
-  pop ret
-]
 
 {-----------------------------------------------------------------------+
 |       TICK                                                            |
@@ -1107,34 +1115,26 @@ _LINEEDIT=*     #_CMPIM_ #$5f           {"_" or RUBOUT}
                 #_BCS_   #@_EDIT2
                 #_RTS_
 
-_EDIT1=*        #_TXA_                  {Rescue X}
+_EDIT1=*        #_TXA_                  {Rescue buffer index X}
                 #_PHA_
-                #_LDAZ_  #<p            {Go back}
-                #_SEC_
-                #_SBCIM_ #6
-                #_STAZ_  #<p
-                #_PHA_
-                #_LDAIM_ #$a0           {Print space to remove spurious echo}
+                #_JSR_   ##_GOBACK      {Print space to remove spurious echo}
+                #_LDAIM_ #$20
                 #_BRK_
-                #_PLA_                  {Go back again}
-                #_STAZ_  #<p
+                #_JSR_   ##_GOBACK
                 #_PLA_                  {Restore X}
                 #_TAX_
                 #_BEQ_   #@_EDIT3       {Nothing in buffer to delete}
                 #_DEX_                  {Remove from buffer}
-_EDIT2=*        #_LDAZ_  #<p            {Can we go back on this screen line?}
-                #_CMPIM_ #$66
-                #_BCC_   #@_EDIT4       {Clear all when in the left-most column}
-                #_SBCIM_ #6
-                #_STAZ_  #<p            {Go back}
+_EDIT2=*        #_JSR_   ##_GOBACK      {Can we go back on this screen line?}
+                #_BCC_   #@_EDIT4       {Failed to go back}
                 #_LDAIM_ #0             {For caller}
 _EDIT3=*        #_RTS_
 
-_EDIT4=*        #_LDAIM_ #$bf           {"?" to signal buffer clearing}
+_EDIT4=*        #_LDAIM_ #$3f           {"?" to signal buffer clearing}
                 #_BRK_
-                #_LDAIM_ #$8d           {Newline}
+                #_LDAIM_ #13            {Newline}
                 #_BRK_
-                #_LDXIM_ #0             {Clear buffer}
+                #_LDXIM_ #0             {Clear buffer when in left-most column}
                 #_RTS_
 
 {-----------------------------------------------------------------------+
@@ -1174,7 +1174,7 @@ _SaveMsg=*      #13 `SENDING`TO`BABELFISH #13 #0
 }
 _SaveEnd=*
 [
-  i, 128| CharOut!              {Emit last char (typically "R" for "READY.")}
+  i, CharOut!                   {Emit last char (typically "R" for "READY.")}
   &_MainLoop _vLR=              {Restore video terminal}
   %0 2++                        {Read back v6502_PC value}
   ret                           {Return to MainLoop}

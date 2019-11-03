@@ -79,7 +79,7 @@ CONVPOSX:
 POS1:           dey
                 adc     #6
                 bcc     POS1
-                rts             ; v6502_Y at [$2B]
+                rts
 
 MEMSIZE         = $01
 V6502_Y         = $2B
