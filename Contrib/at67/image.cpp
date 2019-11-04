@@ -160,10 +160,7 @@ namespace Image
 
             if(_hostIsBigEndian)
             {
-                for(int i=0; i<numOptionalData; i++)
-                {
-                    Cpu::swapEndianess(gtRgbFile._optional[i]);
-                }
+                for(int i=0; i<numOptionalData; i++) Cpu::swapEndianess(gtRgbFile._optional[i]);
             }
         }
 
@@ -224,6 +221,14 @@ namespace Image
             return false;
         }
 
+        // Big endian conversion
+        if(_hostIsBigEndian)
+        {
+            Cpu::swapEndianess(gtRgbFile._header._format);
+            Cpu::swapEndianess(gtRgbFile._header._width);
+            Cpu::swapEndianess(gtRgbFile._header._height);
+        }
+
         // Write data
         outfile.write((char *)&gtRgbFile._data[0], gtRgbFile._data.size());
         if(outfile.bad() || outfile.fail())
@@ -231,6 +236,24 @@ namespace Image
             fprintf(stderr, "Loader::saveGtRgbFile() : write error in data of '%s'\n", filename.c_str());
             return false;
         }
+
+        // Write optional data
+        size_t numOptionalData = gtRgbFile._optional.size();
+        if(numOptionalData > 0)
+        {
+            if(_hostIsBigEndian)
+            {
+                for(int i=0; i<numOptionalData; i++) Cpu::swapEndianess(gtRgbFile._optional[i]);
+            }
+
+            outfile.write((char *)&gtRgbFile._optional[0], numOptionalData*2);
+
+            if(_hostIsBigEndian)
+            {
+                for(int i=0; i<numOptionalData; i++) Cpu::swapEndianess(gtRgbFile._optional[i]);
+            }
+        }
+
 
         return true;
     }

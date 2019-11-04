@@ -1,4 +1,3 @@
-_useOpcodeCALLI_
 
 frog$ = hexw$(&hb00b)
 print frog$

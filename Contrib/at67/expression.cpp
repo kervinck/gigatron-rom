@@ -168,10 +168,23 @@ namespace Expression
         return true;    
     }
 
+    bool hasNonStringColon(int chr)
+    {
+        if(chr == '"') _containsQuotes = !_containsQuotes;
+        if(chr != ':'  ||  _containsQuotes) return false;
+        return true;    
+    }
+
     std::string::const_iterator findNonStringEquals(const std::string& input)
     {
         _containsQuotes = false;
         return std::find_if(input.begin(), input.end(), hasNonStringEquals);
+    }
+
+    std::string::const_iterator findNonStringColon(const std::string& input)
+    {
+        _containsQuotes = false;
+        return std::find_if(input.begin(), input.end(), hasNonStringColon);
     }
 
     void stripNonStringWhitespace(std::string& input)
@@ -546,7 +559,7 @@ namespace Expression
         }
     }
 
-    // Tokenise using any char as a delimiter, returns tokens
+    // Tokenise using any char as a delimiter, returns tokens, preserve strings
     std::vector<std::string> tokenise(const std::string& text, char c, bool skipSpaces, bool toUpper)
     {
         std::vector<std::string> result;
@@ -556,7 +569,12 @@ namespace Expression
         {
             const char *begin = str;
 
-            while(*str  &&  *str != c) str++;
+            int numQuotes = 0;
+            while((*str  &&  *str != c)  ||  (numQuotes & 1))
+            {
+                if(*str == '"') numQuotes++;
+                str++;
+            }
 
             std::string s = std::string(begin, str);
             if(str > begin  &&  !(skipSpaces  &&  std::all_of(s.begin(), s.end(), isspace)))
@@ -570,7 +588,7 @@ namespace Expression
         return result;
     }
 
-    // Tokenise using any char as a delimiter, returns tokens and their offsets in original text
+    // Tokenise using any char as a delimiter, returns tokens and their offsets in original text, preserve strings
     std::vector<std::string> tokenise(const std::string& text, char c, std::vector<size_t>& offsets, bool skipSpaces, bool toUpper)
     {
         std::vector<std::string> result;
@@ -580,7 +598,12 @@ namespace Expression
         {
             const char *begin = str;
 
-            while(*str  &&  *str != c) str++;
+            int numQuotes = 0;
+            while((*str  &&  *str != c)  ||  (numQuotes & 1))
+            {
+                if(*str == '"') numQuotes++;
+                str++;
+            }
 
             std::string s = std::string(begin, str);
             if(str > begin  &&  !(skipSpaces  &&  std::all_of(s.begin(), s.end(), isspace)))
@@ -681,15 +704,15 @@ namespace Expression
         return tokens;
     }
 
-    void replaceText(std::string& expression, const std::string& text, const std::string& replace)
+    void replaceText(std::string& input, const std::string& text, const std::string& replace)
     {
         for(size_t foundPos=0; ; foundPos+=replace.size())
         {
-            foundPos = expression.find(text, foundPos);
+            foundPos = input.find(text, foundPos);
             if(foundPos == std::string::npos) break;
 
-            expression.erase(foundPos, text.size());
-            expression.insert(foundPos, replace);
+            input.erase(foundPos, text.size());
+            input.insert(foundPos, replace);
         }
     }
 

@@ -30,8 +30,7 @@ resetVT_loop        LDW     vramAddr
     
 %SUB                initClearFuncs
 initClearFuncs      PUSH
-                    LDWI    resetVideoTable
-                    CALL    giga_vAC
+                    CALLI   resetVideoTable
     
                     LDWI    0x0002                              ; starting cursor position
                     STW     cursorXY
@@ -54,8 +53,7 @@ initClearFuncs      PUSH
 %SUB                clearScreen
                     ; clears the viewable screen, (unrolled 4 times with a SYS call doing 4 pixels, so 16 pixels per loop)
 clearScreen         PUSH
-                    LDWI    initClearFuncs
-                    CALL    giga_vAC
+                    CALLI   initClearFuncs
                     
                     LDWI    giga_vram                           ; top line
                     STW     giga_sysArg4
@@ -89,8 +87,7 @@ clearS_loop         LD      giga_sysArg4
 %SUB                clearVertBlinds
                     ; clears the viewable screen using a vertical blinds effect
 clearVertBlinds     PUSH
-                    LDWI    initClearFuncs
-                    CALL    giga_vAC
+                    CALLI   initClearFuncs
 
                     LDWI    giga_vram                           ; top line
                     STW     giga_sysArg4
@@ -125,8 +122,7 @@ clearVB_loop        LD      top
 %SUB                clearRVertBlinds
                     ; clears a region using a vertical blinds effect
 clearRVertBlinds    PUSH
-                    LDWI    initClearFuncs
-                    CALL    giga_vAC
+                    CALLI   initClearFuncs
     
 clearRVB_loop       LDW     top
                     STW     giga_sysArg4                        ; top line

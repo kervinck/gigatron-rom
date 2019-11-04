@@ -1192,7 +1192,7 @@ namespace Editor
 
     void handleKeyUp(void)
     {
-        // Toggle help screen
+        // To`ggle help screen
         if(_sdlKeyScanCode == _emulator["Help"].scanCode  &&  _sdlKeyModifier == _emulator["Help"].modifier)
         {
             static bool helpScreen = false;

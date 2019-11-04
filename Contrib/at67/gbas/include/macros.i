@@ -243,17 +243,50 @@ _label_ CALL    giga_vAC
         CALL    giga_vAC
 %ENDM
 
-%MACRO  Initialise
-        LDWI    initialiseCcOps
-        CALL    giga_vAC
+%MACRO  PageJumpBEQ _label
+        BNE     _label_+2
+        LDWI    _label
+_label_ CALL    giga_vAC
+%ENDM
+
+%MACRO  InitEqOp
+        LDWI    convertEqOp
+        STW     convertEqOpAddr
+%ENDM
         
+%MACRO  InitNeOp
+        LDWI    convertNeOp
+        STW     convertNeOpAddr
+%ENDM
+
+%MACRO  InitLeOp
+        LDWI    convertLeOp
+        STW     convertLeOpAddr
+%ENDM
+        
+%MACRO  InitGeOp
+        LDWI    convertGeOp
+        STW     convertGeOpAddr
+%ENDM
+        
+%MACRO  InitLtOp
+        LDWI    convertLtOp
+        STW     convertLtOpAddr
+%ENDM
+        
+%MACRO  InitGtOp
+        LDWI    convertGtOp
+        STW     convertGtOpAddr
+%ENDM
+
+%MACRO  Initialise
         LDWI    0x0F20                                  ; yellow on blue
         STW     fgbgColour
         STW     giga_sysArg0
         LDWI    0x0001                                  ; reset flags
         STW     miscFlags
 
-        LDWI    clearScreen
+        LDWI    initClearFuncs
         CALL    giga_vAC
 %ENDM
 

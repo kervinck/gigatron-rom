@@ -34,8 +34,10 @@ namespace Expression
 
     bool hasNonStringWhiteSpace(int chr);
     bool hasNonStringEquals(int chr);
+    bool hasNonStringColon(int chr);
 
     std::string::const_iterator findNonStringEquals(const std::string& input);
+    std::string::const_iterator findNonStringColon(const std::string& input);
     void stripNonStringWhitespace(std::string& input);
     void stripWhitespace(std::string& input);
     std::string stripStrings(const std::string& input);

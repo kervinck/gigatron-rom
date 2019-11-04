@@ -1,52 +1,4 @@
 _startAddress_      EQU                     0x0200
-convertEqOp         EQU                     0x7fa0
-convertNeOp         EQU                     0x7fa9
-convertLeOp         EQU                     0x7fb2
-convertGeOp         EQU                     0x7fbb
-convertLtOp         EQU                     0x7fc4
-convertGtOp         EQU                     0x7fcd
-multiply16bit       EQU                     0x7fd6
-divide16bit         EQU                     0x7ea0
-random16bit         EQU                     0x7ef6
-shiftLeft4bit       EQU                     0x7da0
-shiftLeft8bit       EQU                     0x7daa
-shiftRight1bit      EQU                     0x7db4
-shiftRight2bit      EQU                     0x7dbe
-shiftRight3bit      EQU                     0x7dc8
-shiftRight4bit      EQU                     0x7dd2
-shiftRight5bit      EQU                     0x7ddc
-shiftRight6bit      EQU                     0x7de6
-shiftRight7bit      EQU                     0x7df0
-shiftRight8bit      EQU                     0x7ca0
-scanlineMode        EQU                     0x7caa
-waitVBlank          EQU                     0x7cbe
-resetVideoTable     EQU                     0x7ba0
-clearScreen         EQU                     0x7aa0
-clearRegion         EQU                     0x79a0
-clearCursorRow      EQU                     0x78a0
-drawLine            EQU                     0x77a0
-drawLineExt         EQU                     0x76a0
-drawLineDelta1      EQU                     0x75a0
-drawLineCursor      EQU                     0x74a0
-printText           EQU                     0x7cd5
-printDigit          EQU                     0x73a0
-printInt16          EQU                     0x72a0
-printChar           EQU                     0x71a0
-printHexByte        EQU                     0x73c2
-printHexWord        EQU                     0x7bdf
-printTextCursor     EQU                     0x70a0
-newLineScroll       EQU                     0x6fa0
-resetAudio          EQU                     0x70cd
-playMidi            EQU                     0x6ea0
-playMidiAsync       EQU                     0x79e6
-midiStartNote       EQU                     0x6da0
-initialiseCcOps     EQU                     0x74e1
-convertEqOpAddr     EQU                     0x00E2
-convertNeOpAddr     EQU                     0x00E4
-convertLeOpAddr     EQU                     0x00E6
-convertGeOpAddr     EQU                     0x00E8
-convertLtOpAddr     EQU                     0x00EA
-convertGtOpAddr     EQU                     0x00EC
 
 ; Internal variables
 register0           EQU                     0x00a0
@@ -72,29 +24,29 @@ miscFlags           EQU                     register0 + 0x1E
 
 ; Includes
 %include            include/gigatron.i
-%include            include/math.i
-%include            include/audio.i
-%include            include/clear_screen.i
-%include            include/conv_conds.i
-%include            include/graphics.i
-%include            include/print_text.i
 %include            include/macros.i
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x021d
-_20                 EQU                     0x022b
-_30                 EQU                     0x023d
-_40                 EQU                     0x026a
-_50                 EQU                     0x0273
-_end_0x0289         EQU                     0x0275
+_10                 EQU                     0x0236
+_20                 EQU                     0x0244
+_30                 EQU                     0x0256
+_40                 EQU                     0x0283
+_50                 EQU                     0x028c
+_end_0x02a5         EQU                     0x0291
 
 ; Variables
 
 ; Strings
 
 ; Code
-_entryPoint_        Initialise                                              ; INIT
+_entryPoint_        Initialise              
+                    InitEqOp                
+                    InitNeOp                
+                    InitLeOp                
+                    InitGeOp                
+                    InitLtOp                
+                    InitGtOp                                                ; INIT
 
                     LDWI                    0xFFFE
                     ANDW                    miscFlags
@@ -104,7 +56,7 @@ _10                 LDWI                    180
                     STW                     register0
                     LDI                     42
                     POKE                    register0
-                    LDWI                    clearScreen
+                    LDWI                    clearVertBlinds
                     CALL                    giga_vAC                        ; poke 180,42:cls:'Paper
 
 _20                 Random                  
@@ -137,8 +89,445 @@ _30                 Random
 _40                 LDI                     127
                     PrintAcChar                                             ; put 127:'Block
 
-_50                 BRA                     _20                             ; goto 20
+_50                 LDWI                    _20
+                    CALL                    giga_vAC                        ; goto 20
 
-_end_0x0289         BRA                     _end_0x0289                     ; END
+_end_0x02a5         BRA                     _end_0x02a5                     ; END
 
+
+
+;****************************************************************************************************************************************
+;****************************************************************************************************************************************
+;* Internal runtime, DO NOT MODIFY HERE, modifications must be made in the original include files                                       *
+;****************************************************************************************************************************************
+;****************************************************************************************************************************************
+
+convertEqOp         EQU     0x7fc3
+convertNeOp         EQU     0x7fcc
+convertLeOp         EQU     0x7fd5
+convertGeOp         EQU     0x7fde
+convertLtOp         EQU     0x7fe7
+convertGtOp         EQU     0x7ff0
+divide16bit         EQU     0x7da0
+random16bit         EQU     0x7ed8
+resetVideoTable     EQU     0x7ccd
+initClearFuncs      EQU     0x7fa0
+clearVertBlinds     EQU     0x7ea0
+clearCursorRow      EQU     0x7aa0
+printText           EQU     0x7ee0
+printChar           EQU     0x7ba0
+printTextCursor     EQU     0x7ca0
+newLineScroll       EQU     0x79a0
+convertEqOpAddr     EQU     0x00e2
+convertNeOpAddr     EQU     0x00e4
+convertLeOpAddr     EQU     0x00e6
+convertGeOpAddr     EQU     0x00e8
+convertLtOpAddr     EQU     0x00ea
+convertGtOpAddr     EQU     0x00ec
+
+
+onGgVar             EQU     register0
+onGgAddr            EQU     register1
+
+
+                    ; convert equal to into a boolean
+convertEqOp         BEQ     convertEq_1
+                    LDI     0
+                    RET
+convertEq_1         LDI     1
+                    RET
+
+
+                    ; convert not equal to into a boolean
+convertNeOp         BNE     convertNe_1
+                    LDI     0
+                    RET
+convertNe_1         LDI     1
+                    RET
+
+
+                    ; convert less than or equal to into a boolean
+convertLeOp         BLE     convertLe_1
+                    LDI     0
+                    RET
+convertLe_1         LDI     1
+                    RET
+
+
+                    ; convert greater than or equal to into a boolean
+convertGeOp         BGE     convertGe_1
+                    LDI     0
+                    RET
+convertGe_1         LDI     1
+                    RET
+
+
+                    ; convert less than into a boolean
+convertLtOp         BLT     convertLt_1
+                    LDI     0
+                    RET
+convertLt_1         LDI     1
+                    RET
+
+
+                    ; convert greater than into boolean
+convertGtOp         BGT     convertGt_1
+                    LDI     0
+                    RET
+convertGt_1         LDI     1
+                    RET
+
+
+mathX               EQU     register0
+mathY               EQU     register1
+mathSum             EQU     register2
+mathMask            EQU     register3
+mathRem             EQU     register4
+mathSign            EQU     register5
+mathScratch         EQU     register6
+mathShift           EQU     register7
+    
+    
+                    ; accumulator:mathRem = mathX / mathY, (results 16bit)
+divide16bit         LDW     mathX
+                    XORW    mathY
+                    STW     mathSign
+                    LDW     mathX
+                    BGE     divide16_skip0
+                    LDI     0
+                    SUBW    mathX
+                    STW     mathX
+                    
+divide16_skip0      LDW     mathY                     
+                    BGE     divide16_skip1
+                    LDI     0
+                    SUBW    mathY
+                    STW     mathY
+                    
+divide16_skip1      LDI     0
+                    STW     mathRem
+    
+divide16_loop       STW     mathScratch
+                    LDW     mathRem
+                    ADDW    mathRem
+                    STW     mathRem
+                    LDW     mathX
+                    BGE     divide16_skip3
+                    INC     mathRem
+                    
+divide16_skip3      LDW     mathX
+                    ADDW    mathX
+                    STW     mathX
+                    LDW     mathRem
+                    SUBW    mathY
+                    BLT     divide16_skip4
+                    STW     mathRem
+                    INC     mathX
+                    
+divide16_skip4      LDW     mathScratch
+                    ADDI    1
+                    ANDI    0x0F
+                    BNE     divide16_loop
+                    LDW     mathSign
+                    BGE     divide16_exit
+                    LDI     0
+                    SUBW    mathX
+                    RET
+                    
+divide16_exit       LDW     mathX
+                    RET
+
+
+random16bit         LDWI    SYS_Random_34
+                    STW     giga_sysFn
+                    SYS     0xFD
+                    RET
+
+
+
+xreset              EQU     register0
+xcount              EQU     register1
+ycount              EQU     register2
+treset              EQU     register3
+breset              EQU     register4
+top                 EQU     register5
+bot                 EQU     register6
+vramAddr            EQU     register7
+evenAddr            EQU     register8
+    
+    
+                    ; resets video table pointers
+resetVideoTable     LDWI    0x0008
+                    STW     vramAddr
+                    LDWI    giga_videoTable
+                    STW     evenAddr
+    
+resetVT_loop        LDW     vramAddr
+                    DOKE    evenAddr
+                    INC     evenAddr
+                    INC     evenAddr
+    
+                    INC     vramAddr
+                    LD      vramAddr
+                    SUBI    giga_yres+8
+                    BLT     resetVT_loop
+                    RET
+
+
+initClearFuncs      PUSH
+                    LDWI    resetVideoTable
+                    CALL    giga_vAC
+    
+                    LDWI    0x0002                              ; starting cursor position
+                    STW     cursorXY
+                    LDWI    0x7FFF
+                    ANDW    miscFlags
+                    STW     miscFlags                           ; reset on bottom row flag
+            
+                    LD      fgbgColour
+                    ST      giga_sysArg0
+                    ST      giga_sysArg0 + 1
+                    ST      giga_sysArg2
+                    ST      giga_sysArg2 + 1                    ; 4 pixels of fg colour
+    
+                    LDWI    SYS_Draw4_30                        ; setup 4 pixel SYS routine
+                    STW     giga_sysFn
+                    POP
+                    RET
+
+
+                    ; clears the viewable screen using a vertical blinds effect
+clearVertBlinds     PUSH
+                    LDWI    initClearFuncs
+                    CALL    giga_vAC
+
+                    LDWI    giga_vram                           ; top line
+                    STW     giga_sysArg4
+                    LD      giga_sysArg4 + 1
+                    ST      top
+    
+clearVB_loop        LD      top
+                    ST      giga_sysArg4 + 1                    ; top line
+                    SYS     0xFF                                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+    
+                    LDWI    giga_yres - 1 + 16
+                    SUBW    top
+                    ST      giga_sysArg4 + 1                    ; bottom line
+                    SYS     0xFF                                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+    
+                    LD      giga_sysArg4
+                    ADDI    0x04
+                    ST      giga_sysArg4
+                    SUBI    giga_xres
+                    BLT     clearVB_loop
+    
+                    LDI     0
+                    ST      giga_sysArg4
+                    INC     top                                 ; next top line
+                    LD      top
+                    SUBI    giga_yres / 2 + 8
+                    BLT     clearVB_loop
+                    POP
+                    RET
+
+
+textStr             EQU     register0
+textNum             EQU     register0
+textBak             EQU     register0
+textLen             EQU     register1
+textFont            EQU     register2
+textChr             EQU     register3
+textHex             EQU     register4
+textSlice           EQU     register5
+scanLine            EQU     register6
+digitMult           EQU     register7
+digitIndex          EQU     register8
+clearLoop           EQU     register9
+    
+    
+                    ; prints text string pointed to by the accumulator
+printText           PUSH
+                    LDW     textStr             
+                    PEEK
+                    ST      textLen                         ; first byte is length
+    
+printT_char         INC     textStr                         ; next char
+                    LDW     textStr             
+                    PEEK
+                    ST      textChr
+                    LDWI    printChar
+                    CALL    giga_vAC
+printT_loop         LoopCounter textLen printT_char
+                    POP
+                    RET
+
+
+
+                    ; prints char in textChr
+printChar           PUSH
+                    LD      textChr                         ; (char-32)*5 + 0x0700
+                    SUBI    32
+                    STW     textChr
+                    STW     textFont
+                    LSLW    
+                    LSLW    
+                    ADDW    textChr
+                    STW     textFont             
+                    LDWI    giga_text32
+                    ADDW    textFont
+                    STW     textFont                        ; text font slice base address for chars 32-81
+    
+                    LDW     textChr
+                    SUBI    50
+                    BLT     printC_draw
+                    LDW     textFont
+                    ADDI    0x06
+                    STW     textFont                        ; text font slice base address for chars 82+
+    
+printC_draw         LDWI    SYS_VDrawBits_134
+                    STW     giga_sysFn
+                    LDW     fgbgColour
+                    STW     giga_sysArg0
+                    LDWI    0x0800
+                    ADDW    cursorXY
+                    STW     giga_sysArg4                    ; xy position
+    
+                    LDI     0x05
+                    ST      textSlice
+    
+printC_slice        LDW     textFont                        ; text font slice base address
+                    LUP     0x00                            ; get ROM slice
+                    ST      giga_sysArg2        
+                    SYS     0xCB                            ; draw vertical slice, SYS_VDrawBits_134, 270 - 134/2 = 0xCB
+                    INC     textFont                        ; next vertical slice
+                    INC     giga_sysArg4                    ; next x
+                    LoopCounter textSlice printC_slice
+    
+                    LD      cursorXY
+                    ADDI    0x06
+                    ST      cursorXY
+                    SUBI    155                             ; 154 is last possible char in row
+                    BLT     printC_exit
+                    LDWI    newLineScroll                   ; next row, scroll at bottom
+                    CALL    giga_vAC
+printC_exit         POP
+                    RET
+
+
+printTextCursor     LD      cursorXY
+                    SUBI    155
+                    BLT     drawTC_skip0
+                    LDI     0
+                    STW     cursorXY
+                    
+drawTC_skip0        LD      cursorXY + 1
+                    SUBI    113
+                    BLT     drawTC_skip1
+                    LDI     112
+                    STW     cursorXY + 1
+                    
+drawTC_skip1        LD      cursorXY + 1
+                    SUBI    112
+                    BGE     drawTC_skip2
+                    LDWI    0x7FFF
+                    ANDW    miscFlags
+                    STW     miscFlags                       ; reset on bottom row flag
+                    RET
+                    
+drawTC_skip2        LDWI    0x8000
+                    ORW     miscFlags
+                    STW     miscFlags                       ; set on bottom row flag
+                    RET
+
+
+
+                    ; clears the top 8 lines of pixels in preparation of text scrolling
+clearCursorRow      LD      fgbgColour
+                    ST      giga_sysArg0
+                    ST      giga_sysArg0 + 1
+                    ST      giga_sysArg2
+                    ST      giga_sysArg2 + 1                ; 4 pixels of colour
+    
+                    LDWI    SYS_Draw4_30                    ; setup 4 pixel SYS routine
+                    STW     giga_sysFn
+    
+                    LDI     8
+                    ST      clearLoop
+    
+                    LDWI    giga_videoTable                 ; current cursor position
+                    PEEK
+                    ST      giga_sysArg4 + 1
+    
+clearCR_loopy       LDI     giga_xres
+                    
+clearCR_loopx       SUBI    4                               ; loop is unrolled 4 times
+                    ST      giga_sysArg4
+                    SYS     0xFF                            ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+                    SUBI    4
+                    ST      giga_sysArg4
+                    SYS     0xFF                            ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+                    SUBI    4
+                    ST      giga_sysArg4
+                    SYS     0xFF                            ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+                    SUBI    4
+                    ST      giga_sysArg4
+                    SYS     0xFF                            ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+                    BGT     clearCR_loopx
+    
+                    INC     giga_sysArg4 + 1                ; next line                
+                    LoopCounter clearLoop clearCR_loopy
+                    RET
+
+
+                    ; print from top row to bottom row, then start scrolling 
+newLineScroll       LDI     0x02                            ; x offset slightly
+                    ST      cursorXY
+                    LDWI    0x0001
+                    ANDW    miscFlags
+                    BNE     newLS_cont0                     ; scroll on or off
+                    RET
+                    
+newLS_cont0         PUSH
+                    LDWI    0x8000
+                    ANDW    miscFlags                       ; on bottom row flag
+                    BNE     newLS_cont1
+                    LD      cursorXY+1
+                    ADDI    8
+                    ST      cursorXY+1
+                    SUBI    120
+                    BLT     newLS_exit
+                    
+newLS_cont1         LDWI    clearCursorRow
+                    CALL    giga_vAC
+                    
+                    LDWI    giga_videoTable
+                    STW     scanLine
+    
+                    ; scroll all scan lines by 8 through 0x08 to 0x7F
+newLS_scroll        LDW     scanLine
+                    PEEK
+                    ADDI    8
+                    ANDI    0x7F
+                    SUBI    8
+                    BGE     newLS_adjust
+                    ADDI    8
+newLS_adjust        ADDI    8
+                    POKE    scanLine
+                    INC     scanLine                        ; scan line pointers are 16bits
+                    INC     scanLine
+                    LD      scanLine
+                    SUBI    0xF0                            ; scanline pointers end at 0x01EE
+                    BLT     newLS_scroll
+        
+                    LDWI    0x8000
+                    ORW     miscFlags
+                    STW     miscFlags                       ; set on bottom row flag
+                    
+                    ; read scan line pointer for last char row, use this as cursor position
+                    LDWI    giga_videoTable + 0x00E0
+                    PEEK
+                    SUBI    0x08                            ; corrected in printChar
+                    ST      cursorXY+1
+newLS_exit          POP
+                    RET
 

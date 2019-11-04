@@ -194,6 +194,11 @@ _label_ CALLI   _label
         CALLI   drawLine
 %ENDM
 
+%MACRO  PageJumpBEQ _label
+        BNE     _label_+3
+_label_ CALLI   _label
+%ENDM
+
 %MACRO  DrawLineCursor
         CALLI   drawLineCursor
 %ENDM
@@ -205,7 +210,7 @@ _label_ CALLI   _label
         LDWI    0x0001                                  ; reset flags
         STW     miscFlags
 
-        CALLI   clearScreen
+        CALLI   initClearFuncs
 %ENDM
 
 %MACRO  ClearRegion _x _y _w _h

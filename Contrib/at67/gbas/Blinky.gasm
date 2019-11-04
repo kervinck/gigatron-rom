@@ -1,52 +1,4 @@
 _startAddress_      EQU                     0x0200
-convertEqOp         EQU                     0x7fa0
-convertNeOp         EQU                     0x7fa9
-convertLeOp         EQU                     0x7fb2
-convertGeOp         EQU                     0x7fbb
-convertLtOp         EQU                     0x7fc4
-convertGtOp         EQU                     0x7fcd
-multiply16bit       EQU                     0x7fd6
-divide16bit         EQU                     0x7ea0
-random16bit         EQU                     0x7ef6
-shiftLeft4bit       EQU                     0x7da0
-shiftLeft8bit       EQU                     0x7daa
-shiftRight1bit      EQU                     0x7db4
-shiftRight2bit      EQU                     0x7dbe
-shiftRight3bit      EQU                     0x7dc8
-shiftRight4bit      EQU                     0x7dd2
-shiftRight5bit      EQU                     0x7ddc
-shiftRight6bit      EQU                     0x7de6
-shiftRight7bit      EQU                     0x7df0
-shiftRight8bit      EQU                     0x7ca0
-scanlineMode        EQU                     0x7caa
-waitVBlank          EQU                     0x7cbe
-resetVideoTable     EQU                     0x7ba0
-clearScreen         EQU                     0x7aa0
-clearRegion         EQU                     0x79a0
-clearCursorRow      EQU                     0x78a0
-drawLine            EQU                     0x77a0
-drawLineExt         EQU                     0x76a0
-drawLineDelta1      EQU                     0x75a0
-drawLineCursor      EQU                     0x74a0
-printText           EQU                     0x7cd5
-printDigit          EQU                     0x73a0
-printInt16          EQU                     0x72a0
-printChar           EQU                     0x71a0
-printHexByte        EQU                     0x73c2
-printHexWord        EQU                     0x7bdf
-printTextCursor     EQU                     0x70a0
-newLineScroll       EQU                     0x6fa0
-resetAudio          EQU                     0x70cd
-playMidi            EQU                     0x6ea0
-playMidiAsync       EQU                     0x79e6
-midiStartNote       EQU                     0x6da0
-initialiseCcOps     EQU                     0x74e1
-convertEqOpAddr     EQU                     0x00E2
-convertNeOpAddr     EQU                     0x00E4
-convertLeOpAddr     EQU                     0x00E6
-convertGeOpAddr     EQU                     0x00E8
-convertLtOpAddr     EQU                     0x00EA
-convertGtOpAddr     EQU                     0x00EC
 
 ; Internal variables
 register0           EQU                     0x00a0
@@ -72,23 +24,17 @@ miscFlags           EQU                     register0 + 0x1E
 
 ; Includes
 %include            include/gigatron.i
-%include            include/math.i
-%include            include/audio.i
-%include            include/clear_screen.i
-%include            include/conv_conds.i
-%include            include/graphics.i
-%include            include/print_text.i
 %include            include/macros.i
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_1                  EQU                     0x0216
-_20                 EQU                     0x0216
-_3                  EQU                     0x0216
-_40                 EQU                     0x0222
-_5                  EQU                     0x0216
-_60                 EQU                     0x0247
-_end_0x0263         EQU                     0x0253
+_10                 EQU                     0x022f
+_20                 EQU                     0x022f
+_30                 EQU                     0x022f
+_40                 EQU                     0x023b
+_50                 EQU                     0x022f
+_60                 EQU                     0x0260
+_end_0x027f         EQU                     0x026f
 
 ; Variables
 _X                  EQU                     0x0030
@@ -99,7 +45,13 @@ _P                  EQU                     0x0036
 ; Strings
 
 ; Code
-_entryPoint_        Initialise                                              ; INIT
+_entryPoint_        Initialise              
+                    InitEqOp                
+                    InitNeOp                
+                    InitLeOp                
+                    InitGeOp                
+                    InitLtOp                
+                    InitGtOp                                                ; INIT
 
 _20                 LDI                     80
                     STW                     _X
@@ -131,8 +83,169 @@ _60                 LD                      _I
                     LDW                     _I
                     ADDI                    1
                     STW                     _I
-                    BRA                     _60                             ; POKE P,I:I=I+1:GOTO 60
+                    LDWI                    _60
+                    CALL                    giga_vAC                        ; POKE P,I:I=I+1:GOTO 60
 
-_end_0x0263         BRA                     _end_0x0263                     ; END
+_end_0x027f         BRA                     _end_0x027f                     ; END
 
+
+
+;****************************************************************************************************************************************
+;****************************************************************************************************************************************
+;* Internal runtime, DO NOT MODIFY HERE, modifications must be made in the original include files                                       *
+;****************************************************************************************************************************************
+;****************************************************************************************************************************************
+
+convertEqOp         EQU     0x7fc3
+convertNeOp         EQU     0x7fcc
+convertLeOp         EQU     0x7fd5
+convertGeOp         EQU     0x7fde
+convertLtOp         EQU     0x7fe7
+convertGtOp         EQU     0x7ff0
+multiply16bit       EQU     0x7ea0
+resetVideoTable     EQU     0x7ec3
+initClearFuncs      EQU     0x7fa0
+convertEqOpAddr     EQU     0x00e2
+convertNeOpAddr     EQU     0x00e4
+convertLeOpAddr     EQU     0x00e6
+convertGeOpAddr     EQU     0x00e8
+convertLtOpAddr     EQU     0x00ea
+convertGtOpAddr     EQU     0x00ec
+
+
+onGgVar             EQU     register0
+onGgAddr            EQU     register1
+
+
+                    ; convert equal to into a boolean
+convertEqOp         BEQ     convertEq_1
+                    LDI     0
+                    RET
+convertEq_1         LDI     1
+                    RET
+
+
+                    ; convert not equal to into a boolean
+convertNeOp         BNE     convertNe_1
+                    LDI     0
+                    RET
+convertNe_1         LDI     1
+                    RET
+
+
+                    ; convert less than or equal to into a boolean
+convertLeOp         BLE     convertLe_1
+                    LDI     0
+                    RET
+convertLe_1         LDI     1
+                    RET
+
+
+                    ; convert greater than or equal to into a boolean
+convertGeOp         BGE     convertGe_1
+                    LDI     0
+                    RET
+convertGe_1         LDI     1
+                    RET
+
+
+                    ; convert less than into a boolean
+convertLtOp         BLT     convertLt_1
+                    LDI     0
+                    RET
+convertLt_1         LDI     1
+                    RET
+
+
+                    ; convert greater than into boolean
+convertGtOp         BGT     convertGt_1
+                    LDI     0
+                    RET
+convertGt_1         LDI     1
+                    RET
+
+
+mathX               EQU     register0
+mathY               EQU     register1
+mathSum             EQU     register2
+mathMask            EQU     register3
+mathRem             EQU     register4
+mathSign            EQU     register5
+mathScratch         EQU     register6
+mathShift           EQU     register7
+    
+    
+                    ; accumulator = mathX * mathY, (result 16bit)
+multiply16bit       LDI     0
+                    STW     mathSum
+                    LDI     1
+    
+multiply16_loop     STW     mathMask
+                    ANDW    mathY
+                    BEQ     multiply16_skip
+                    LDW     mathSum
+                    ADDW    mathX
+                    STW     mathSum
+                    
+multiply16_skip     LDW     mathX
+                    ADDW    mathX
+                    STW     mathX
+                    LDW     mathMask
+                    ADDW    mathMask
+                    BNE     multiply16_loop
+                    
+                    LDW     mathSum
+                    RET
+
+
+
+xreset              EQU     register0
+xcount              EQU     register1
+ycount              EQU     register2
+treset              EQU     register3
+breset              EQU     register4
+top                 EQU     register5
+bot                 EQU     register6
+vramAddr            EQU     register7
+evenAddr            EQU     register8
+    
+    
+                    ; resets video table pointers
+resetVideoTable     LDWI    0x0008
+                    STW     vramAddr
+                    LDWI    giga_videoTable
+                    STW     evenAddr
+    
+resetVT_loop        LDW     vramAddr
+                    DOKE    evenAddr
+                    INC     evenAddr
+                    INC     evenAddr
+    
+                    INC     vramAddr
+                    LD      vramAddr
+                    SUBI    giga_yres+8
+                    BLT     resetVT_loop
+                    RET
+
+
+initClearFuncs      PUSH
+                    LDWI    resetVideoTable
+                    CALL    giga_vAC
+    
+                    LDWI    0x0002                              ; starting cursor position
+                    STW     cursorXY
+                    LDWI    0x7FFF
+                    ANDW    miscFlags
+                    STW     miscFlags                           ; reset on bottom row flag
+            
+                    LD      fgbgColour
+                    ST      giga_sysArg0
+                    ST      giga_sysArg0 + 1
+                    ST      giga_sysArg2
+                    ST      giga_sysArg2 + 1                    ; 4 pixels of fg colour
+    
+                    LDWI    SYS_Draw4_30                        ; setup 4 pixel SYS routine
+                    STW     giga_sysFn
+                    POP
+                    RET
 
