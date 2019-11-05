@@ -50,13 +50,7 @@ _230                EQU                     0x08d1
 _240                EQU                     0x08d6
 _250                EQU                     0x08e5
 _end_0x0340         EQU                     0x08e5
-_next_0x0279        EQU                     0x0279
-_next_0x027d        EQU                     0x027d
-_if_0x02b8          EQU                     0x02ae
-_if_0x02cf          EQU                     0x02c1
-_if_0x02e6          EQU                     0x02d2
 _page_0x08a0        EQU                     0x08a0
-_if_0x02fd          EQU                     0x08a2
 
 ; Variables
 _N                  EQU                     0x0030
@@ -65,20 +59,22 @@ _M                  EQU                     0x0034
 _L                  EQU                     0x0036
 
 ; Strings
-usrStr_0x7fa0       EQU                     0x7fa0
-usrStr_0x7fa0       DB                      13 'INTERFACE AGE'
-usrStr_0x7fae       EQU                     0x7fae
-usrStr_0x7fae       DB                      13 ' PRIME-NUMBER'
-usrStr_0x7fbc       EQU                     0x7fbc
-usrStr_0x7fbc       DB                      10 ' BENCHMARK'
-usrStr_0x7fc7       EQU                     0x7fc7
-usrStr_0x7fc7       DB                      8 ' PROGRAM'
-usrStr_0x7fd0       EQU                     0x7fd0
-usrStr_0x7fd0       DB                      12 'For Gigatron'
-usrStr_0x7fdd       EQU                     0x7fdd
-usrStr_0x7fdd       DB                      9 ' gtBASIC '
-usrStr_0x7fe7       EQU                     0x7fe7
-usrStr_0x7fe7       DB                      4 'DONE'
+str_0x7fa0          EQU                     0x7fa0
+str_0x7fa0          DB                      13 'INTERFACE AGE'
+str_0x7fae          EQU                     0x7fae
+str_0x7fae          DB                      13 ' PRIME-NUMBER'
+str_0x7fbc          EQU                     0x7fbc
+str_0x7fbc          DB                      10 ' BENCHMARK'
+str_0x7fc7          EQU                     0x7fc7
+str_0x7fc7          DB                      8 ' PROGRAM'
+str_0x7fd0          EQU                     0x7fd0
+str_0x7fd0          DB                      12 'For Gigatron'
+str_0x7fdd          EQU                     0x7fdd
+str_0x7fdd          DB                      9 ' gtBASIC '
+str_0x7fe7          EQU                     0x7fe7
+str_0x7fe7          DB                      4 'DONE'
+
+; Lookup Tables
 
 ; Code
 _entryPoint_        Initialise              
@@ -89,19 +85,19 @@ _entryPoint_        Initialise
                     InitLtOp                
                     InitGtOp                                                ; INIT
 
-_100                PrintString             usrStr_0x7fa0                   ; PRINT "INTERFACE AGE";
+_100                PrintString             str_0x7fa0                      ; PRINT "INTERFACE AGE";
 
-_101                PrintString             usrStr_0x7fae                   ; PRINT " PRIME-NUMBER";
+_101                PrintString             str_0x7fae                      ; PRINT " PRIME-NUMBER";
 
-_102                PrintString             usrStr_0x7fbc                   ; PRINT " BENCHMARK";
+_102                PrintString             str_0x7fbc                      ; PRINT " BENCHMARK";
 
-_103                PrintString             usrStr_0x7fc7
+_103                PrintString             str_0x7fc7
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; PRINT " PROGRAM"
 
-_104                PrintString             usrStr_0x7fd0                   ; PRINT "For Gigatron";
+_104                PrintString             str_0x7fd0                      ; PRINT "For Gigatron";
 
-_105                PrintString             usrStr_0x7fdd
+_105                PrintString             str_0x7fdd
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; PRINT " gtBASIC "
 
@@ -171,7 +167,7 @@ _220                LDWI                    newLineScroll
 _230                LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; PRINT
 
-_240                PrintString             usrStr_0x7fe7
+_240                PrintString             str_0x7fe7
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; PRINT "DONE"
 
@@ -206,10 +202,6 @@ convertLeOpAddr     EQU     0x00e6
 convertGeOpAddr     EQU     0x00e8
 convertLtOpAddr     EQU     0x00ea
 convertGtOpAddr     EQU     0x00ec
-
-
-onGgVar             EQU     register0
-onGgAddr            EQU     register1
 
 
                     ; convert equal to into a boolean

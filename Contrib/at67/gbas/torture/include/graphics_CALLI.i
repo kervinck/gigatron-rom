@@ -1,100 +1,100 @@
-graphicsMode    EQU     register0
-waitVBlankNum   EQU     register0
-drawLine_x1     EQU     register0
-drawLine_y1     EQU     register1
-drawLine_x2     EQU     register2
-drawLine_y2     EQU     register3
-drawLine_xy1    EQU     register0
-drawLine_xy2    EQU     register1
-drawLine_dxy1   EQU     register2
-drawLine_dxy2   EQU     register3
-drawLine_dx1    EQU     register4
-drawLine_dy1    EQU     register5
-drawLine_dx2    EQU     register6
-drawLine_dy2    EQU     register7
-drawLine_sx     EQU     register8
-drawLine_sy     EQU     register9
-drawLine_h      EQU     register10
-drawLine_num    EQU     register11
-drawLine_count  EQU     register12
-drawLine_tmp    EQU     register13
-
-
-%SUB            scanlineMode
-scanlineMode    LDW     giga_romType
-                ANDI    0xF8
-                SUBI    romTypeValue_ROMv2
-                BGE     scanlineM_cont
-                RET
-
-scanlineM_cont  LDWI    SYS_SetMode_v2_80
-                STW     giga_sysFn
-                LDW     graphicsMode
-                SYS     0xE6                ; 270 - max(14,80/2)
-                RET
+graphicsMode        EQU     register0
+waitVBlankNum       EQU     register0
+drawLine_x1         EQU     register0
+drawLine_y1         EQU     register1
+drawLine_x2         EQU     register2
+drawLine_y2         EQU     register3
+drawLine_xy1        EQU     register0
+drawLine_xy2        EQU     register1
+drawLine_dxy1       EQU     register2
+drawLine_dxy2       EQU     register3
+drawLine_dx1        EQU     register4
+drawLine_dy1        EQU     register5
+drawLine_dx2        EQU     register6
+drawLine_dy2        EQU     register7
+drawLine_sx         EQU     register8
+drawLine_sy         EQU     register9
+drawLine_h          EQU     register10
+drawLine_num        EQU     register11
+drawLine_count      EQU     register12
+drawLine_tmp        EQU     register13
+    
+    
+%SUB                scanlineMode
+scanlineMode        LDW     giga_romType
+                    ANDI    0xF8
+                    SUBI    romTypeValue_ROMv2
+                    BGE     scanlineM_cont
+                    RET
+    
+scanlineM_cont      LDWI    SYS_SetMode_v2_80
+                    STW     giga_sysFn
+                    LDW     graphicsMode
+                    SYS     0xE6                ; 270 - max(14,80/2)
+                    RET
+%ENDS   
+    
+%SUB                waitVBlank
+waitVBlank          LD      waitVBlankNum
+                    SUBI    0x01
+                    ST      waitVBlankNum
+                    BGE     waitVB_start
+                    RET
+    
+waitVB_start        LD      giga_frameCount
+                    SUBW    frameCountPrev
+                    BEQ     waitVB_start
+                    LD      giga_frameCount
+                    STW     frameCountPrev
+                    BRA     waitVBlank
+%ENDS   
+    
+%SUB                drawLine
+drawLine            PUSH
+                    LDI     1
+                    STW     drawLine_dx1
+                    STW     drawLine_dx2
+                    STW     drawLine_dy1
+                    LDI     0
+                    STW     drawLine_dy2                
+    
+                    LDWI    0x8000
+                    STW     drawLine_tmp
+                    
+                    LDW     drawLine_x2         ; sx = x2 - x1
+                    SUBW    drawLine_x1
+                    STW     drawLine_sx
+                    ANDW    drawLine_tmp        
+                    BEQ     drawL_dy
+                    LDWI    -1
+                    STW     drawLine_dx1        
+                    STW     drawLine_dx2        ; dx1 = dx2 = (sx & 0x8000) ? -1 : 1
+                    LDI     0                   ; sx = (sx & 0x8000) ? 0 - sx : sx
+                    SUBW    drawLine_sx
+                    STW     drawLine_sx                
+                    
+drawL_dy            LDW     drawLine_y2
+                    SUBW    drawLine_y1
+                    STW     drawLine_sy
+                    STW     drawLine_h          ; h = sy
+                    ANDW    drawLine_tmp
+                    BEQ     drawL_ext
+                    
+                    LDWI    -1
+                    STW     drawLine_dy1        ; dy1 = (sy & 0x8000) ? -1 : 1
+                    LDI     0                   
+                    SUBW    drawLine_sy
+                    STW     drawLine_sy         ; sy = (sy & 0x8000) ? 0 - sy : sy
+                    SUBW    drawLine_sx
+                    BLE     drawL_ext           
+                    LDW     drawLine_dy1
+                    STW     drawLine_dy2        ; if(sx < sy) dy2 = -1
+    
+drawL_ext           CALLI   drawLineLoadXY
+                    CALLI   drawLineExt
 %ENDS
-
-%SUB            waitVBlank
-waitVBlank      LD      waitVBlankNum
-                SUBI    0x01
-                ST      waitVBlankNum
-                BGE     waitVB_start
-                RET
-
-waitVB_start    LD      giga_frameCount
-                SUBW    frameCountPrev
-                BEQ     waitVB_start
-                LD      giga_frameCount
-                STW     frameCountPrev
-                BRA     waitVBlank
-%ENDS
-
-%SUB            drawLine
-drawLine        PUSH
-                LDI     1
-                STW     drawLine_dx1
-                STW     drawLine_dx2
-                STW     drawLine_dy1
-                LDI     0
-                STW     drawLine_dy2                
-
-                LDWI    0x8000
-                STW     drawLine_tmp
                 
-                LDW     drawLine_x2         ; sx = x2 - x1
-                SUBW    drawLine_x1
-                STW     drawLine_sx
-                ANDW    drawLine_tmp        
-                BEQ     drawL_dy
-                LDWI    -1
-                STW     drawLine_dx1        
-                STW     drawLine_dx2        ; dx1 = dx2 = (sx & 0x8000) ? -1 : 1
-                LDI     0                   ; sx = (sx & 0x8000) ? 0 - sx : sx
-                SUBW    drawLine_sx
-                STW     drawLine_sx                
-                
-drawL_dy        LDW     drawLine_y2
-                SUBW    drawLine_y1
-                STW     drawLine_sy
-                STW     drawLine_h          ; h = sy
-                ANDW    drawLine_tmp
-                BEQ     drawL_ext
-                
-                LDWI    -1
-                STW     drawLine_dy1        ; dy1 = (sy & 0x8000) ? -1 : 1
-                LDI     0                   
-                SUBW    drawLine_sy
-                STW     drawLine_sy         ; sy = (sy & 0x8000) ? 0 - sy : sy
-                SUBW    drawLine_sx
-                BLE     drawL_ext           
-                LDW     drawLine_dy1
-                STW     drawLine_dy2        ; if(sx < sy) dy2 = -1
-
-drawL_ext       CALLI   drawLineLoadXY
-                CALLI   drawLineExt
-%ENDS
-                
-%SUB            drawLineExt
+%SUB                drawLineExt
 drawLineExt         LDW     drawLine_sy
                     SUBW    drawLine_sx
                     BLE     drawL_num
@@ -178,54 +178,54 @@ drawLineLoadXY      LD      drawLine_x1
                     RET
                     
 drawLineLoadDXY     LDWI    SYS_LSLW8_24
-                    STW     giga_sysFn          
+                    STW     giga_sysFn 
                     LDW     drawLine_dy1
-                    SYS     0x00                ; 0x00 = 270-max(14,24/2)
+                    SYS     0x00                ; LSL 8, 0x00 = 270-max(14,24/2)
                     ADDW    drawLine_dx1
                     STW     drawLine_dxy1       ; dxy1 = dx1 + (dy1<<8)
     
                     LDW     drawLine_dy2
-                    SYS     0x00                ; 0x00 = 270-max(14,24/2)
+                    SYS     0x00                ; LSL 8, 0x00 = 270-max(14,24/2)
                     ADDW    drawLine_dx2
                     STW     drawLine_dxy2       ; dxy2 = dx2 + (dy2<<8)
                     RET
 %ENDS   
     
-%SUB                drawLineCursor
-drawLineCursor      LD      cursorXY
+%SUB                atLineCursor
+atLineCursor        LD      cursorXY
                     STW     drawLine_x1
                     SUBI    160
-                    BLT     drawLC_skip0
+                    BLT     atLC_skip0
                     LDI     0
                     STW     drawLine_x1
                     
-drawLC_skip0        LDW     drawLine_x1
+atLC_skip0          LDW     drawLine_x1
                     ADDW    drawLine_x2
                     STW     drawLine_x2
                     SUBI    160
-                    BLT     drawLC_skip1
+                    BLT     atLC_skip1
                     LDI     0
                     STW     drawLine_x2
                     
-drawLC_skip1        LDW     drawLine_x2
+atLC_skip1          LDW     drawLine_x2
                     ST      cursorXY
                     
                     LD      cursorXY + 1
                     STW     drawLine_y1
                     SUBI    120
-                    BLT     drawLC_skip2
+                    BLT     atLC_skip2
                     LDI     119
                     STW     drawLine_y1
                     
-drawLC_skip2        LDW     drawLine_y1
+atLC_skip2          LDW     drawLine_y1
                     ADDW    drawLine_y2
                     STW     drawLine_y2
                     SUBI    120
-                    BLT     drawLC_skip3
+                    BLT     atLC_skip3
                     LDI     119
                     STW     drawLine_y2
                     
-drawLC_skip3        LDW     drawLine_y2            
+atLC_skip3          LDW     drawLine_y2            
                     ST      cursorXY + 1
                     RET
 %ENDS

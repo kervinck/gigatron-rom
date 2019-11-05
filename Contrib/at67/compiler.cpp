@@ -51,6 +51,7 @@ namespace Compiler
         std::string _name;
         std::string _output;
         int _codeLineIndex = -1;
+        bool _isNumeric = false;
         bool _pageJump = false;
         bool _gosub = false;
     };
@@ -205,6 +206,7 @@ namespace Compiler
     uint16_t _runtimeEnd     = 0xFFFF;
 
     bool _nextTempVar = true;
+    bool _createNumericLabelLut = false;
 
     int _currentLabelIndex = -1;
     int _currentCodeLineIndex = 0;
@@ -221,6 +223,7 @@ namespace Compiler
 
     std::vector<Label>         _labels;
     std::vector<std::string>   _gosubLabels;
+    std::vector<std::string>   _equateLabels;
     std::vector<InternalLabel> _internalLabels;
     std::vector<InternalLabel> _discardedLabels;
 
@@ -257,6 +260,8 @@ namespace Compiler
         {0x0000, 0x0000, "shiftRight6bit"   , "", false, false},
         {0x0000, 0x0000, "shiftRight7bit"   , "", false, false},
         {0x0000, 0x0000, "shiftRight8bit"   , "", false, false},
+        {0x0000, 0x0000, "gotoNumericLabel" , "", false, false},
+        {0x0000, 0x0000, "gosubNumericLabel", "", false, false},
         {0x0000, 0x0000, "scanlineMode"     , "", false, false},
         {0x0000, 0x0000, "waitVBlank"       , "", false, false},
         {0x0000, 0x0000, "resetVideoTable"  , "", false, false},
@@ -268,7 +273,7 @@ namespace Compiler
         {0x0000, 0x0000, "drawLine"         , "", false, false},
         {0x0000, 0x0000, "drawLineExt"      , "", false, false},
         {0x0000, 0x0000, "drawLineDelta1"   , "", false, false},
-        {0x0000, 0x0000, "drawLineCursor"   , "", false, false},
+        {0x0000, 0x0000, "atLineCursor"     , "", false, false},
         {0x0000, 0x0000, "printText"        , "", false, false},
         {0x0000, 0x0000, "printDigit"       , "", false, false},
         {0x0000, 0x0000, "printInt16"       , "", false, false},
@@ -284,17 +289,19 @@ namespace Compiler
     };
     const std::vector<std::string> _subIncludes = 
     {
-        "include/math.i"            ,
-        "include/audio.i"           ,
-        "include/clear_screen.i"    ,
-        "include/conv_conds.i"      ,
-        "include/graphics.i"        ,
-        "include/print_text.i"      ,
+        "include/math.i"        ,
+        "include/audio.i"       ,
+        "include/flow_control.i",
+        "include/clear_screen.i",
+        "include/conv_conds.i"  ,
+        "include/graphics.i"    ,
+        "include/print_text.i"  ,
     };
     const std::vector<std::string> _subIncludesCALLI = 
     {
         "include/math.i"              ,
         "include/audio.i"             ,
+        "include/flow_control_CALLI.i",
         "include/clear_screen_CALLI.i",
         "include/conv_conds_CALLI.i"  ,
         "include/graphics_CALLI.i"    ,
@@ -527,7 +534,7 @@ namespace Compiler
     }
 
 
-    void createLabel(uint16_t address, const std::string& name, const std::string& output, int codeLineIndex, Label& label, bool addUnderscore=true, bool pageJump=false, bool gosub=false)
+    void createLabel(uint16_t address, const std::string& name, const std::string& output, int codeLineIndex, Label& label, bool isNumeric=false, bool addUnderscore=true, bool pageJump=false, bool gosub=false)
     {
         std::string n = name;
         Expression::stripWhitespace(n);
@@ -540,7 +547,7 @@ namespace Compiler
             o[LABEL_TRUNC_SIZE - 1] = ' ';
         }
 
-        label = {address, n, o, codeLineIndex, pageJump, gosub};
+        label = {address, n, o, codeLineIndex, isNumeric, pageJump, gosub};
         Expression::stripWhitespace(label._name);
         _labels.push_back(label);
         _currentLabelIndex = int(_labels.size() - 1);
@@ -1067,7 +1074,7 @@ namespace Compiler
             // Create label
             std::string labelName = code.substr(0, space);
             bool foundGosub = isGosubLabel(labelName);
-            createLabel(_vasmPC, labelName, labelName, int(_codeLines.size()), label, true, false, foundGosub);
+            createLabel(_vasmPC, labelName, labelName, int(_codeLines.size()), label, true, true, false, foundGosub);
             if(createCodeLine(code, int(space + 1), _currentLabelIndex, -1, VarInt16, false, false, codeLine)) _codeLines.push_back(codeLine);
 
             return LabelFound;
@@ -1094,7 +1101,7 @@ namespace Compiler
             {
                 // Create label
                 bool foundGosub = isGosubLabel(labelName);
-                createLabel(_vasmPC, labelName, labelName, int(_codeLines.size()), label, true, false, foundGosub);
+                createLabel(_vasmPC, labelName, labelName, int(_codeLines.size()), label, false, true, false, foundGosub);
                 if(createCodeLine(code, int(colon1  + 1), _currentLabelIndex, -1, VarInt16, false, false, codeLine)) _codeLines.push_back(codeLine);
                 return LabelFound;
             }
@@ -1125,7 +1132,7 @@ namespace Compiler
         // Entry point initialisation
         Label label;
         CodeLine codeLine;
-        createLabel(_vasmPC, "_entryPoint_", "_entryPoint_\t", 0, label, false, false, false);
+        createLabel(_vasmPC, "_entryPoint_", "_entryPoint_\t", 0, label, false, false, false, false);
         if(createCodeLine("INIT", 0, 0, -1, VarInt16, false, false, codeLine)) _codeLines.push_back(codeLine);
         emitVcpuAsm("%Initialise", "", false, 0);
         if(!Assembler::getUseOpcodeCALLI())
@@ -1280,7 +1287,7 @@ namespace Compiler
             // Print constant, (without wasting memory)
             if(Expression::getEnablePrint())
             {
-                emitVcpuAsm("LDWI", std::to_string(numeric._value), false);
+                emitVcpuAsm("LDI", std::to_string(numeric._value), false);
                 emitVcpuAsm("%PrintAcChar", "", false);
                 return numeric;
             }
@@ -1349,7 +1356,7 @@ namespace Compiler
     {
         if(!numeric._isAddress)
         {
-            emitVcpuAsm("LDWI", Expression::wordToHexString(numeric._value), false);
+            (numeric._value >= 0  && numeric._value <= 255) ? emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(numeric._value)), false) : emitVcpuAsm("LDWI", Expression::wordToHexString(numeric._value), false);
         }
 
         getNextTempVar();
@@ -2109,6 +2116,7 @@ namespace Compiler
             else if(peek(false) == '/')      {get(false); f = factor(0); result = operatorDIV(result, f);}
             else if(peek(false) == '%')      {get(false); f = factor(0); result = operatorMOD(result, f);}
             else if(Expression::find("MOD")) {            f = factor(0); result = operatorMOD(result, f);}
+            else if(Expression::find("AND")) {            f = factor(0); result = operatorAND(result, f);}
             else return result;
         }
     }
@@ -2121,7 +2129,6 @@ namespace Compiler
         {
             if(peek(false) == '+')           {get(false); t = term(); result = operatorADD(result, t);}
             else if(peek(false) == '-')      {get(false); t = term(); result = operatorSUB(result, t);}
-            else if(Expression::find("AND")) {            t = term(); result = operatorAND(result, t);}
             else if(Expression::find("XOR")) {            t = term(); result = operatorXOR(result, t);}
             else if(Expression::find("OR"))  {            t = term(); result = operatorOR(result, t); }
             else if(Expression::find("LSL")) {            t = term(); result = operatorLSL(result, t);}
@@ -2157,16 +2164,14 @@ namespace Compiler
         return KeywordFound;
     }
 
-    StatementResult createVasmCode(CodeLine& codeLine, int codeLineIndex, bool startOfLine)
+    StatementResult createVasmCode(CodeLine& codeLine, int codeLineIndex, bool startOfLine, bool& pushed)
     {
         // Check for subroutine start
-        static bool pushed = false;
         if(!pushed  &&  startOfLine  &&  codeLine._labelIndex >= 0  &&  _labels[codeLine._labelIndex]._gosub)
         {
             pushed = true;
             emitVcpuAsm("PUSH", "", false, codeLineIndex);
         }
-        if(startOfLine == false) pushed = false;
 
         for(int i=0; i<codeLine._tokens.size(); i++)
         {
@@ -2243,13 +2248,14 @@ namespace Compiler
         CodeLine codeline = codeLine;
 
         // Tokenise and parse multi-statement lines
+        bool pushed = false;
         StatementResult statementResult;
         std::vector<std::string> tokens = Expression::tokenise(code, ':', false);
         for(int j=0; j<tokens.size(); j++)
         {
             createCodeLine(tokens[j], 0, _codeLines[codeLineIndex]._labelIndex, -1, VarInt16, false, false, codeline);
             createCodeVar(codeline, codeLineIndex, varIndex);
-            statementResult = createVasmCode(codeline, codeLineIndex, (j==0));
+            statementResult = createVasmCode(codeline, codeLineIndex, (j==0), pushed);
             if(statementResult == StatementError) return StatementError;
 
             // Some commands, (such as IF), process multi-statements themselves
@@ -2303,7 +2309,7 @@ namespace Compiler
     {
         Label label;
         std::string endName = "_end_" + Expression::wordToHexString(_vasmPC);
-        createLabel(_vasmPC, endName, "END\t", codeLineIndex, label, false, false, false);
+        createLabel(_vasmPC, endName, "END\t", codeLineIndex, label, false, false, false, false);
         _codeLines[codeLineIndex]._labelIndex = _currentLabelIndex;
         emitVcpuAsm("BRA", endName, false, codeLineIndex);
 
@@ -2396,30 +2402,46 @@ namespace Compiler
             return false;
         }
 
-        std::string gotoLabel = codeLine._tokens[1];
-        int labelIndex = findLabel(gotoLabel);
+        // Parse GOTO field
+        int16_t gotoValue = 0;
+        std::string gotoToken = codeLine._tokens[1];
+        int labelIndex = findLabel(gotoToken);
         if(labelIndex == -1)
         {
-            fprintf(stderr, "Compiler::keywordGOTO() : invalid label %s in '%s' on line %d\n", gotoLabel.c_str(), codeLine._text.c_str(), codeLineIndex + 1);
-            return false;
+            _createNumericLabelLut = true;
+
+            Expression::stripWhitespace(gotoToken);
+            uint32_t expressionType = parseExpression(codeLine, codeLineIndex, gotoToken, gotoValue);
+            emitVcpuAsm("STW", "numericLabel", false, codeLineIndex);
+            if(Assembler::getUseOpcodeCALLI())
+            {
+                emitVcpuAsm("CALLI", "gotoNumericLabel", false, codeLineIndex);
+            }
+            else
+            {
+                emitVcpuAsm("LDWI", "gotoNumericLabel", false, codeLineIndex);
+                emitVcpuAsm("CALL", "giga_vAC",         false, codeLineIndex);
+            }
+
+            return true;
         }
 
         // Within same page
         // TODO: Optimiser messes this strategy completely up, FIX IT
         if(0) //HI_MASK(_vasmPC) == HI_MASK(_labels[labelIndex]._address))
         {
-            emitVcpuAsm("BRA", "_" + gotoLabel, false, codeLineIndex);
+            emitVcpuAsm("BRA", "_" + gotoToken, false, codeLineIndex);
         }
         // Long jump
         else
         {
             if(Assembler::getUseOpcodeCALLI())
             {
-                emitVcpuAsm("CALLI", "_" + gotoLabel, false, codeLineIndex);
+                emitVcpuAsm("CALLI", "_" + gotoToken, false, codeLineIndex);
             }
             else
             {
-                emitVcpuAsm("LDWI", "_" + gotoLabel, false, codeLineIndex);
+                emitVcpuAsm("LDWI", "_" + gotoToken, false, codeLineIndex);
                 emitVcpuAsm("CALL", "giga_vAC",      false, codeLineIndex);
             }
         }
@@ -2435,23 +2457,39 @@ namespace Compiler
             return false;
         }
 
-        std::string gosubLabel = codeLine._tokens[1];
-        int labelIndex = findLabel(gosubLabel);
+        // Parse GOSUB field
+        int16_t gosubValue = 0;
+        std::string gosubToken = codeLine._tokens[1];
+        int labelIndex = findLabel(gosubToken);
         if(labelIndex == -1)
         {
-            fprintf(stderr, "Compiler::keywordGOSUB() : invalid label in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
-            return false;
+            _createNumericLabelLut = true;
+
+            Expression::stripWhitespace(gosubToken);
+            uint32_t expressionType = parseExpression(codeLine, codeLineIndex, gosubToken, gosubValue);
+            emitVcpuAsm("STW", "numericLabel", false, codeLineIndex);
+            if(Assembler::getUseOpcodeCALLI())
+            {
+                emitVcpuAsm("CALLI", "gosubNumericLabel", false, codeLineIndex);
+            }
+            else
+            {
+                emitVcpuAsm("LDWI", "gosubNumericLabel", false, codeLineIndex);
+                emitVcpuAsm("CALL", "giga_vAC",         false, codeLineIndex);
+            }
+
+            return true;
         }
 
         _labels[labelIndex]._gosub = true;
 
         if(Assembler::getUseOpcodeCALLI())
         {
-            emitVcpuAsm("CALLI", "_" + gosubLabel, false, codeLineIndex);
+            emitVcpuAsm("CALLI", "_" + gosubToken, false, codeLineIndex);
         }
         else
         {
-            emitVcpuAsm("LDWI", "_" + gosubLabel, false, codeLineIndex);
+            emitVcpuAsm("LDWI", "_" + gosubToken, false, codeLineIndex);
             emitVcpuAsm("CALL", "giga_vAC", false, codeLineIndex);
         }
 
@@ -2623,7 +2661,7 @@ namespace Compiler
                 }
             }
 
-            emitVcpuAsm("%DrawLineCursor", "", false, codeLineIndex);
+            emitVcpuAsm("%AtLineCursor", "", false, codeLineIndex);
         }
         else
         {
@@ -3393,7 +3431,7 @@ namespace Compiler
                     uint16_t nextPC;
                     bool excluded = checkExclusionZone(itVasm->_opcode, itVasm->_address, nextPC);
 
-                    if(itVasm->_pageJump == false  &&  excluded)
+                    if(!itVasm->_pageJump  &&  excluded)
                     {
                         std::vector<std::string> tokens;
                         uint16_t currPC = (vasmLineIndex > 0) ? itCode->_vasm[vasmLineIndex-1]._address : itVasm->_address;
@@ -3560,6 +3598,7 @@ namespace Compiler
         {
             std::string address = Expression::wordToHexString(_labels[i]._address);
             _output.push_back(_labels[i]._output + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + address + "\n");
+            _equateLabels.push_back(_labels[i]._name);
         }
 
         // Internal labels
@@ -3573,6 +3612,7 @@ namespace Compiler
                     std::string address = Expression::wordToHexString(_codeLines[i]._vasm[j]._address);
                     _output.push_back(internalLabel + std::string(LABEL_TRUNC_SIZE - internalLabel.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + address + "\n");
                     _internalLabels.push_back({_codeLines[i]._vasm[j]._address, internalLabel});
+                    _equateLabels.push_back(internalLabel);
                 }
             }
         }
@@ -3619,11 +3659,73 @@ namespace Compiler
         _output.push_back("\n");
     }
 
-    void outputLuts(void)
+    bool outputLuts(void)
     {
         _output.push_back("; Lookup Tables\n");
 
-        // Internal labels
+        // GOTO GOSUB with vars
+        if(_createNumericLabelLut)
+        {
+            std::vector<uint16_t> numericLabels;
+            std::vector<uint16_t> numericAddresses;
+            for(int i=0; i<_labels.size(); i++)
+            {
+                if(_labels[i]._isNumeric)
+                {
+                    uint16_t numericLabel;
+                    if(!Expression::stringToU16(_labels[i]._name, numericLabel))
+                    {
+                        fprintf(stderr, "Compiler::outputLuts() : bad numeric label %s : %04x\n", _labels[i]._name.c_str(), numericLabel);
+                        return false;
+                    }
+
+                    numericLabels.push_back(numericLabel);
+                    numericAddresses.push_back(_labels[i]._address);
+                }
+            }
+
+            // Create numeric labels lut
+            if(numericLabels.size())
+            {
+                // Numeric labels lut, (delimited by -1)
+                int lutSize = int(numericLabels.size()) * 2;
+                uint16_t lutAddress;
+                if(!Memory::giveFreeRAM(Memory::FitAscending, lutSize + 2, 0x0200, 0x7FFF, lutAddress))
+                {
+                    fprintf(stderr, "Compiler::outputLuts() : Not enough RAM for numeric labels LUT of size %d\n", lutSize + 2);
+                    return false;
+                }
+
+                std::string lutName = "lut_numericLabs";
+                _output.push_back(lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(lutAddress) + "\n");
+            
+                std::string dbString = lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+                for(int i=0; i<numericLabels.size(); i++)
+                {
+                    dbString += std::to_string(numericLabels[i]) + " ";
+                }
+                _output.push_back(dbString + "-1\n");
+
+                // Numeric label addresses lut
+                if(!Memory::giveFreeRAM(Memory::FitAscending, lutSize, 0x0200, 0x7FFF, lutAddress))
+                {
+                    fprintf(stderr, "Compiler::outputLuts() : Not enough RAM for numeric addresses LUT of size %d\n", lutSize);
+                    return false;
+                }
+
+                lutName = "lut_numericAddrs";
+                _output.push_back(lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(lutAddress) + "\n");
+            
+                dbString = lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+                for(int i=0; i<numericAddresses.size(); i++)
+                {
+                    dbString += Expression::wordToHexString(numericAddresses[i]) + " ";
+                }
+                _output.push_back(dbString + "\n");
+            }
+        }
+
+        // ON GOTO GOSUB labels
         for(int i=0; i<_codeLines.size(); i++)
         {
             // Dump LUT if it exists
@@ -3648,6 +3750,8 @@ namespace Compiler
         }
 
         _output.push_back("\n");
+
+        return true;
     }
 
     void outputStrs(void)
@@ -4022,6 +4126,50 @@ namespace Compiler
         _output.push_back("\n");
     }
 
+
+    void discardUnusedLabels(void)
+    {
+        for(int k=0; k<_equateLabels.size(); k++)
+        {
+            bool foundLabel = false;
+
+            for(int i=0; i<_codeLines.size(); i++)
+            {
+                // Valid BASIC code
+                if(_codeLines[i]._code.size() > 2  &&  _codeLines[i]._vasm.size())
+                {
+                    // Vasm code
+                    for(int j=0; j<_codeLines[i]._vasm.size(); j++)
+                    {
+                        if(_codeLines[i]._vasm[j]._code.find(_equateLabels[k]) != std::string::npos)
+                        {
+                            foundLabel = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Found a potential unused label to discard
+            if(!foundLabel)
+            {
+                // Can only discard internal labels
+                bool foundInternal = (_equateLabels[k].find("_if_") != std::string::npos  ||  _equateLabels[k].find("_next_") != std::string::npos  ||  _equateLabels[k].find("_page_") != std::string::npos);
+
+                for(int l=0; l<_output.size(); l++)
+                {
+                    // Find unused internal label in output and discard it
+                    if(foundInternal  &&  _output[l].find(_equateLabels[k]) != std::string::npos)
+                    {
+                        _output.erase(_output.begin() + l);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+
     void collectInternalRuntime(void)
     {
         std::vector<std::string> includeVarsDone;
@@ -4072,6 +4220,7 @@ RESTART:
         _runtimeEnd     = 0xFFFF;
 
         _nextTempVar = true;
+        _createNumericLabelLut = false;
 
         _currentLabelIndex = 0;
         _currentCodeLineIndex = 0;
@@ -4083,6 +4232,11 @@ RESTART:
         _runtime.clear();
 
         _labels.clear();
+        _gosubLabels.clear();
+        _equateLabels.clear();
+        _internalLabels.clear();
+        _discardedLabels.clear();
+
         _codeLines.clear();
         _integerVars.clear();
         _stringVars.clear();
@@ -4141,6 +4295,9 @@ RESTART:
         outputStrs();
         outputLuts();
         outputCode();
+
+        // Discard
+        discardUnusedLabels();
 
         // Re-linking is needed here as outputInternalRuntime can find new subs that need to be linked
         collectInternalRuntime();

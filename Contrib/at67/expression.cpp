@@ -849,6 +849,7 @@ namespace Expression
             if(peek() == '*')      {get(); f = factor(0); result = mul(result, f);}
             else if(peek() == '/') {get(); f = factor(0); result = div(result, f);}
             else if(peek() == '%') {get(); f = factor(0); result = mod(result, f);}
+            else if(peek() == '&') {get(); f = factor(0); result = and(result, f);}
             else return result;
         }
     }
@@ -861,7 +862,6 @@ namespace Expression
         {
             if(peek() == '+')      {get(); t = term(); result = add(result, t);}
             else if(peek() == '-') {get(); t = term(); result = sub(result, t);}
-            else if(peek() == '&') {get(); t = term(); result = and(result, t);}
             else if(peek() == '^') {get(); t = term(); result = xor(result, t);}
             else if(peek() == '|') {get(); t = term(); result = or(result, t); }
             else if(find("<<"))    {       t = term(); result = lsl(result, t);}

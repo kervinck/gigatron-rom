@@ -37,8 +37,6 @@ _60                 EQU                     0x0292
 _70                 EQU                     0x02a3
 _80                 EQU                     0x02b3
 _end_0x0308         EQU                     0x02c4
-_if_0x02d5          EQU                     0x02a3
-_if_0x0308          EQU                     0x02c4
 
 ; Variables
 _x                  EQU                     0x0030
@@ -48,6 +46,8 @@ _v                  EQU                     0x0036
 _w                  EQU                     0x0038
 
 ; Strings
+
+; Lookup Tables
 
 ; Code
 _entryPoint_        Initialise              
@@ -158,10 +158,6 @@ convertLeOpAddr     EQU     0x00e6
 convertGeOpAddr     EQU     0x00e8
 convertLtOpAddr     EQU     0x00ea
 convertGtOpAddr     EQU     0x00ec
-
-
-onGgVar             EQU     register0
-onGgAddr            EQU     register1
 
 
                     ; convert equal to into a boolean
@@ -456,12 +452,12 @@ drawLineLoadXY      LD      drawLine_x1
 drawLineLoadDXY     LDWI    SYS_LSLW8_24
                     STW     giga_sysFn          
                     LDW     drawLine_dy1
-                    SYS     0x00                ; 0x00 = 270-max(14,24/2)
+                    SYS     0x00                ; LSL 8, 0x00 = 270-max(14,24/2)
                     ADDW    drawLine_dx1
                     STW     drawLine_dxy1       ; dxy1 = dx1 + (dy1<<8)
     
                     LDW     drawLine_dy2
-                    SYS     0x00                ; 0x00 = 270-max(14,24/2)
+                    SYS     0x00                ; LSL 8, 0x00 = 270-max(14,24/2)
                     ADDW    drawLine_dx2
                     STW     drawLine_dxy2       ; dxy2 = dx2 + (dy2<<8)
                     RET

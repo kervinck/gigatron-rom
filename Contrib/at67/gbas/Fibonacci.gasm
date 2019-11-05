@@ -51,6 +51,8 @@ _j                  EQU                     0x0038
 
 ; Strings
 
+; Lookup Tables
+
 ; Code
 _entryPoint_        Initialise              
                     InitEqOp                

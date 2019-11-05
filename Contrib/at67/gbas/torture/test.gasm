@@ -64,8 +64,10 @@ _g                  EQU                     0x003c
 _z                  EQU                     0x003e
 
 ; Strings
-usrStr_0x7fa0       EQU                     0x7fa0
-usrStr_0x7fa0       DB                      1 ' '
+str_0x7fa0          EQU                     0x7fa0
+str_0x7fa0          DB                      1 ' '
+
+; Lookup Tables
 
 ; Code
 _entryPoint_        Initialise              
@@ -587,23 +589,23 @@ _page_0x10a0        LDW                     0xe0
                     CALL                    giga_vAC
 _page_0x11a0        LDW                     0xe0
                     PrintVarInt16           _a
-                    PrintString             usrStr_0x7fa0
+                    PrintString             str_0x7fa0
                     PrintVarInt16           _b
-                    PrintString             usrStr_0x7fa0
+                    PrintString             str_0x7fa0
                     PrintVarInt16           _d
-                    PrintString             usrStr_0x7fa0
+                    PrintString             str_0x7fa0
                     PrintVarInt16           _e
                     STW                     0xe0
                     LDWI                    _page_0x12a0
                     CALL                    giga_vAC
 _page_0x12a0        LDW                     0xe0
-                    PrintString             usrStr_0x7fa0
+                    PrintString             str_0x7fa0
                     PrintVarInt16           _f
-                    PrintString             usrStr_0x7fa0
+                    PrintString             str_0x7fa0
                     PrintVarInt16           _g
-                    PrintString             usrStr_0x7fa0
+                    PrintString             str_0x7fa0
                     PrintVarInt16           _z
-                    PrintString             usrStr_0x7fa0
+                    PrintString             str_0x7fa0
                     PrintVarInt16           _cat
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print a;" ";b;" ";d;" ";e;" ";f;" ";g;" ";z;" ";cat

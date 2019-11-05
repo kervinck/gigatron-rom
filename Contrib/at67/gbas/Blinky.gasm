@@ -44,6 +44,8 @@ _P                  EQU                     0x0036
 
 ; Strings
 
+; Lookup Tables
+
 ; Code
 _entryPoint_        Initialise              
                     InitEqOp                
@@ -111,10 +113,6 @@ convertLeOpAddr     EQU     0x00e6
 convertGeOpAddr     EQU     0x00e8
 convertLtOpAddr     EQU     0x00ea
 convertGtOpAddr     EQU     0x00ec
-
-
-onGgVar             EQU     register0
-onGgAddr            EQU     register1
 
 
                     ; convert equal to into a boolean

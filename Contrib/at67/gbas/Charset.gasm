@@ -35,8 +35,6 @@ _30                 EQU                     0x0246
 _40                 EQU                     0x025b
 _50                 EQU                     0x0274
 _end_0x028d         EQU                     0x0287
-_next_0x0233        EQU                     0x0233
-_next_0x0261        EQU                     0x025b
 
 ; Variables
 _Y                  EQU                     0x0030
@@ -45,6 +43,8 @@ _E                  EQU                     0x0034
 _C                  EQU                     0x0036
 
 ; Strings
+
+; Lookup Tables
 
 ; Code
 _entryPoint_        Initialise              
@@ -70,7 +70,7 @@ _20                 LDW                     _Y
 
 _30                 LDI                     32
                     ST                      cursorXY
-                    LDWI                    printTextCursor
+                    LDWI                    atTextCursor
                     CALL                    giga_vAC
                     LDW                     _D
                     STW                     _C
@@ -104,23 +104,18 @@ convertGeOp         EQU     0x7fde
 convertLtOp         EQU     0x7fe7
 convertGtOp         EQU     0x7ff0
 multiply16bit       EQU     0x7ea0
-resetVideoTable     EQU     0x7ee0
+resetVideoTable     EQU     0x7ba0
 initClearFuncs      EQU     0x7fa0
-clearCursorRow      EQU     0x7aa0
-printText           EQU     0x7ec3
-printChar           EQU     0x7ca0
-printTextCursor     EQU     0x7da0
-newLineScroll       EQU     0x7ba0
+clearCursorRow      EQU     0x7bbc
+printChar           EQU     0x7da0
+atTextCursor        EQU     0x7ec3
+newLineScroll       EQU     0x7ca0
 convertEqOpAddr     EQU     0x00e2
 convertNeOpAddr     EQU     0x00e4
 convertLeOpAddr     EQU     0x00e6
 convertGeOpAddr     EQU     0x00e8
 convertLtOpAddr     EQU     0x00ea
 convertGtOpAddr     EQU     0x00ec
-
-
-onGgVar             EQU     register0
-onGgAddr            EQU     register1
 
 
                     ; convert equal to into a boolean
@@ -270,23 +265,6 @@ digitIndex          EQU     register8
 clearLoop           EQU     register9
     
     
-                    ; prints text string pointed to by the accumulator
-printText           PUSH
-                    LDW     textStr             
-                    PEEK
-                    ST      textLen                         ; first byte is length
-    
-printT_char         INC     textStr                         ; next char
-                    LDW     textStr             
-                    PEEK
-                    ST      textChr
-                    LDWI    printChar
-                    CALL    giga_vAC
-printT_loop         LoopCounter textLen printT_char
-                    POP
-                    RET
-
-
                     ; prints char in textChr
 printChar           PUSH
                     LD      textChr                         ; (char-32)*5 + 0x0700
@@ -338,7 +316,7 @@ printC_exit         POP
                     RET
 
 
-printTextCursor     LD      cursorXY
+atTextCursor        LD      cursorXY
                     SUBI    155
                     BLT     drawTC_skip0
                     LDI     0

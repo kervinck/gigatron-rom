@@ -185,52 +185,52 @@ drawLineLoadXY      LD      drawLine_x1
 drawLineLoadDXY     LDWI    SYS_LSLW8_24
                     STW     giga_sysFn          
                     LDW     drawLine_dy1
-                    SYS     0x00                ; 0x00 = 270-max(14,24/2)
+                    SYS     0x00                ; LSL 8, 0x00 = 270-max(14,24/2)
                     ADDW    drawLine_dx1
                     STW     drawLine_dxy1       ; dxy1 = dx1 + (dy1<<8)
     
                     LDW     drawLine_dy2
-                    SYS     0x00                ; 0x00 = 270-max(14,24/2)
+                    SYS     0x00                ; LSL 8, 0x00 = 270-max(14,24/2)
                     ADDW    drawLine_dx2
                     STW     drawLine_dxy2       ; dxy2 = dx2 + (dy2<<8)
                     RET
 %ENDS   
     
-%SUB                drawLineCursor
-drawLineCursor      LD      cursorXY
+%SUB                atLineCursor
+atLineCursor        LD      cursorXY
                     STW     drawLine_x1
                     SUBI    160
-                    BLT     drawLC_skip0
+                    BLT     atLC_skip0
                     LDI     0
                     STW     drawLine_x1
                     
-drawLC_skip0        LDW     drawLine_x1
+atLC_skip0          LDW     drawLine_x1
                     ADDW    drawLine_x2
                     STW     drawLine_x2
                     SUBI    160
-                    BLT     drawLC_skip1
+                    BLT     atLC_skip1
                     LDI     0
                     STW     drawLine_x2
                     
-drawLC_skip1        LDW     drawLine_x2
+atLC_skip1          LDW     drawLine_x2
                     ST      cursorXY
                     
                     LD      cursorXY + 1
                     STW     drawLine_y1
                     SUBI    120
-                    BLT     drawLC_skip2
+                    BLT     atLC_skip2
                     LDI     119
                     STW     drawLine_y1
                     
-drawLC_skip2        LDW     drawLine_y1
+atLC_skip2          LDW     drawLine_y1
                     ADDW    drawLine_y2
                     STW     drawLine_y2
                     SUBI    120
-                    BLT     drawLC_skip3
+                    BLT     atLC_skip3
                     LDI     119
                     STW     drawLine_y2
                     
-drawLC_skip3        LDW     drawLine_y2            
+atLC_skip3          LDW     drawLine_y2            
                     ST      cursorXY + 1
                     RET
 %ENDS

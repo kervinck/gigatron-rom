@@ -28,12 +28,11 @@ miscFlags           EQU                     register0 + 0x1E
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x020f
-_blamo              EQU                     0x02f3
-_end_0x0323         EQU                     0x02f1
-_end_0x03a8         EQU                     0x09af
-_page_0x08a0        EQU                     0x08a0
-_next_0x0337        EQU                     0x08af
+_10                 EQU                     0x0214
+_blamo              EQU                     0x08a2
+_end_0x0327         EQU                     0x08a0
+_end_0x03ab         EQU                     0x09b1
+_next_0x033b        EQU                     0x08b2
 _page_0x09a0        EQU                     0x09a0
 
 ; Variables
@@ -50,15 +49,20 @@ _g                  EQU                     0x0042
 _h                  EQU                     0x0044
 
 ; Strings
-usrStr_0x7fa0       EQU                     0x7fa0
-usrStr_0x7fa0       DB                      1 ' '
-usrStr_0x7fa2       EQU                     0x7fa2
-usrStr_0x7fa2       DB                      4 'test'
-usrStr_0x7fa7       EQU                     0x7fa7
-usrStr_0x7fa7       DB                      3 'dog'
+str_0x7fa0          EQU                     0x7fa0
+str_0x7fa0          DB                      1 ' '
+str_0x7fa2          EQU                     0x7fa2
+str_0x7fa2          DB                      4 'test'
+str_0x7fa7          EQU                     0x7fa7
+str_0x7fa7          DB                      3 'dog'
+
+; Lookup Tables
 
 ; Code
 _entryPoint_        Initialise                                              ; INIT
+
+                    LDWI                    clearVertBlinds
+                    CALL                    giga_vAC                        ; cls
 
 _10                 LDI                     33
                     STW                     _addr                           ; addr = &h21
@@ -80,10 +84,10 @@ _10                 LDI                     33
                     LDW                     _addr
                     ANDW                    0xd4
                     PEEK                    
+                    ANDI                    252
                     STW                     0xd8
                     LDW                     0xd0
                     SUBW                    0xd8
-                    ANDI                    252
                     STW                     0xd8
                     LDW                     _addr
                     ADDI                    1
@@ -109,23 +113,23 @@ _10                 LDI                     33
 
                     LDW                     _a
                     PrintAcHexByte          
-                    PrintString             usrStr_0x7fa0
+                    PrintString             str_0x7fa0
                     LDW                     _b
                     PrintAcHexWord          
-                    PrintString             usrStr_0x7fa0
+                    PrintString             str_0x7fa0
                     LDWI                    13107
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hex$(a);" ";hexw$(b);" ";hexw$(&h1111 OR &h2222)
 
-                    PrintString             usrStr_0x7fa2
-                    PrintString             usrStr_0x7fa0
-                    PrintString             usrStr_0x7fa7
-                    PrintString             usrStr_0x7fa0
+                    PrintString             str_0x7fa2
+                    PrintString             str_0x7fa0
+                    PrintString             str_0x7fa7
+                    PrintString             str_0x7fa0
                     PrintInt16              0x0064
-                    PrintString             usrStr_0x7fa0
+                    PrintString             str_0x7fa0
                     PrintVarInt16           _a
-                    PrintString             usrStr_0x7fa0
-                    LDWI                    0x0021
+                    PrintString             str_0x7fa0
+                    LDI                     0x21
                     PEEK                    
                     ANDI                    252
                     PrintAcHexByte          
@@ -145,21 +149,21 @@ _10                 LDI                     33
                     LDW                     _z
                     ANDI                    63
                     ST                      cursorXY + 1
-                    LDWI                    printTextCursor
+                    LDWI                    atTextCursor
                     CALL                    giga_vAC                        ; at x, (z AND &h3F)
 
                     LDW                     _x
                     PrintAcHexWord          
-                    PrintString             usrStr_0x7fa0
+                    PrintString             str_0x7fa0
                     LDW                     _z
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(x);" ";hexw$(z)
 
-_end_0x0323         BRA                     _end_0x0323                     ; END
+                    CALLI                    _end_0x0327
+_end_0x0327         BRA                     _end_0x0327                     ; END
 
 _blamo              PUSH                    
-                    CALLI                   _page_0x08a0
-_page_0x08a0        LDWI                    23205
+                    LDWI                    23205
                     STW                     _b                              ; b = &haa55 XOR &hF0F0
 
                     LDW                     _b
@@ -169,10 +173,10 @@ _page_0x08a0        LDWI                    23205
                     LDI                     0
                     STW                     _i                              ; for i = 0 to 10
 
-_next_0x0337        LDWI                    usrStr_0x7fa0
+_next_0x033b        LDWI                    str_0x7fa0
                     STW                     _c                              ; c = CHR$(32)
 
-                    LDWI                    0x0000
+                    LDI                     0x00
                     PEEK                    
                     STW                     _f                              ; f = peek(0)
 
@@ -191,19 +195,19 @@ _next_0x0337        LDWI                    usrStr_0x7fa0
                     STW                     _b                              ; b = -b
 
                     PrintVarInt16           _i
-                    PrintString             usrStr_0x7fa0
+                    PrintString             str_0x7fa0
                     LDW                     _b
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print i; " " ; hexw$(b)
 
-                    ForNextLoopUp           _i _next_0x0337 10              ; next i
+                    ForNextLoopUp           _i _next_0x033b 10              ; next i
 
                     LDWI                    -1
                     SUBW                    _g
                     STW                     0xd0
-                    LDW                     _z
                     CALLI                   _page_0x09a0
-_page_0x09a0        SUBW                    0xd0
+_page_0x09a0        LDW                     _z
+                    SUBW                    0xd0
                     STW                     _g                              ; g = z - NOT g
 
                     LDWI                    -1
@@ -214,7 +218,7 @@ _page_0x09a0        SUBW                    0xd0
                     POP                     
                     RET                                                     ; return
 
-_end_0x03a8         BRA                     _end_0x03a8                     ; END
+_end_0x03ab         BRA                     _end_0x03ab                     ; END
 
 
 
@@ -224,23 +228,24 @@ _end_0x03a8         BRA                     _end_0x03a8                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-convertEqOp         EQU     0x7ef5
-convertNeOp         EQU     0x7df7
-convertLeOp         EQU     0x7cd9
-convertGeOp         EQU     0x7ce2
-convertLtOp         EQU     0x7ceb
-convertGtOp         EQU     0x7cf4
+convertEqOp         EQU     0x7df7
+convertNeOp         EQU     0x7cd9
+convertLeOp         EQU     0x7ce2
+convertGeOp         EQU     0x7ceb
+convertLtOp         EQU     0x7cf4
+convertGtOp         EQU     0x7bcd
 shiftLeft8bit       EQU     0x7ff6
-resetVideoTable     EQU     0x7ba0
+resetVideoTable     EQU     0x7bd6
 initClearFuncs      EQU     0x7fab
-clearCursorRow      EQU     0x7bbc
-printText           EQU     0x7ea0
-printDigit          EQU     0x7aa0
+clearVertBlinds     EQU     0x7ea0
+clearCursorRow      EQU     0x7aa0
+printText           EQU     0x7ed6
+printDigit          EQU     0x79a0
 printInt16          EQU     0x7ca0
-printChar           EQU     0x79a0
+printChar           EQU     0x78a0
 printHexByte        EQU     0x7fcc
-printHexWord        EQU     0x7eb9
-printTextCursor     EQU     0x7ec8
+printHexWord        EQU     0x7eef
+atTextCursor        EQU     0x7ba0
 newLineScroll       EQU     0x7da0
 
 
@@ -356,6 +361,40 @@ initClearFuncs      PUSH
     
                     LDWI    SYS_Draw4_30                        ; setup 4 pixel SYS routine
                     STW     giga_sysFn
+                    POP
+                    RET
+
+
+                    ; clears the viewable screen using a vertical blinds effect
+clearVertBlinds     PUSH
+                    CALLI   initClearFuncs
+
+                    LDWI    giga_vram                           ; top line
+                    STW     giga_sysArg4
+                    LD      giga_sysArg4 + 1
+                    ST      top
+    
+clearVB_loop        LD      top
+                    ST      giga_sysArg4 + 1                    ; top line
+                    SYS     0xFF                                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+    
+                    LDWI    giga_yres - 1 + 16
+                    SUBW    top
+                    ST      giga_sysArg4 + 1                    ; bottom line
+                    SYS     0xFF                                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+    
+                    LD      giga_sysArg4
+                    ADDI    0x04
+                    ST      giga_sysArg4
+                    SUBI    giga_xres
+                    BLT     clearVB_loop
+    
+                    LDI     0
+                    ST      giga_sysArg4
+                    INC     top                                 ; next top line
+                    LD      top
+                    SUBI    giga_yres / 2 + 8
+                    BLT     clearVB_loop
                     POP
                     RET
 
@@ -523,7 +562,7 @@ printHexWord        PUSH
                     RET
 
 
-printTextCursor     LD      cursorXY
+atTextCursor        LD      cursorXY
                     SUBI    155
                     BLT     drawTC_skip0
                     LDI     0

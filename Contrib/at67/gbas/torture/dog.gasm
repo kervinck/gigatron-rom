@@ -43,10 +43,12 @@ _z                  EQU                     0x0036
 _j                  EQU                     0x0038
 
 ; Strings
-usrStr_0x7fa0       EQU                     0x7fa0
-usrStr_0x7fa0       DB                      1 ' '
-usrStr_0x7fa2       EQU                     0x7fa2
-usrStr_0x7fa2       DB                      5 ' dog '
+str_0x7fa0          EQU                     0x7fa0
+str_0x7fa0          DB                      1 ' '
+str_0x7fa2          EQU                     0x7fa2
+str_0x7fa2          DB                      5 ' dog '
+
+; Lookup Tables
 
 ; Code
 _entryPoint_        Initialise                                              ; INIT
@@ -83,15 +85,15 @@ _8                  LDI                     2
                     SUBW                    _a
                     STW                     _j
                     PrintVarInt16           _a
-                    PrintString             usrStr_0x7fa0
+                    PrintString             str_0x7fa0
                     PrintVarInt16           _b
-                    PrintString             usrStr_0x7fa0
+                    PrintString             str_0x7fa0
                     LDI                     1
                     ADDW                    _b
                     PrintAcInt16            
-                    PrintString             usrStr_0x7fa2
+                    PrintString             str_0x7fa2
                     PrintVarInt16           _bb
-                    PrintString             usrStr_0x7fa0
+                    PrintString             str_0x7fa0
                     LDW                     _z
                     SUBI                    20
                     CALLI                   convertGtOp

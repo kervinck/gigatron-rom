@@ -1,5 +1,6 @@
 _useOpcodeCALLI_
 
+cls
 10 addr = &h21
 addr = addr AND &hFFFF
 a = NOT addr - peek(addr AND pEeK(&h0FFF OR peek(&hF000))) AND &hFC OR peek(addr+1) + 23 XOR &B00001111 - NOT 56 + NOT addr

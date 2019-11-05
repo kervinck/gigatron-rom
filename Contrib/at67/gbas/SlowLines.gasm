@@ -41,13 +41,9 @@ _10                 EQU                     0x08d6
 _11                 EQU                     0x08e6
 _12                 EQU                     0x09ae
 _end_0x03e9         EQU                     0x09c9
-_if_0x0316          EQU                     0x02c2
-_if_0x033d          EQU                     0x02df
 _page_0x08a0        EQU                     0x08a0
-_if_0x0362          EQU                     0x08ac
 _next_0x039e        EQU                     0x08e2
 _page_0x09a0        EQU                     0x09a0
-_if_0x03cc          EQU                     0x09ae
 
 ; Variables
 _a                  EQU                     0x0030
@@ -63,6 +59,8 @@ _p                  EQU                     0x0042
 _t                  EQU                     0x0044
 
 ; Strings
+
+; Lookup Tables
 
 ; Code
 _entryPoint_        Initialise              
@@ -242,10 +240,6 @@ convertLeOpAddr     EQU     0x00e6
 convertGeOpAddr     EQU     0x00e8
 convertLtOpAddr     EQU     0x00ea
 convertGtOpAddr     EQU     0x00ec
-
-
-onGgVar             EQU     register0
-onGgAddr            EQU     register1
 
 
                     ; convert equal to into a boolean

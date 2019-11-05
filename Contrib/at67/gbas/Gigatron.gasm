@@ -46,8 +46,10 @@ _x                  EQU                     0x0030
 _y                  EQU                     0x0032
 
 ; Strings
-usrStr_0x7fa0       EQU                     0x7fa0
-usrStr_0x7fa0       DB                      9 'Gigatron!'
+str_0x7fa0          EQU                     0x7fa0
+str_0x7fa0          DB                      9 'Gigatron!'
+
+; Lookup Tables
 
 ; Code
 _entryPoint_        Initialise              
@@ -109,10 +111,10 @@ _40                 Random
                     ANDI                    3
                     ADDW                    0xdc
                     ST                      cursorXY + 1
-                    LDWI                    printTextCursor
+                    LDWI                    atTextCursor
                     CALL                    giga_vAC                        ; at (rnd AND &h3F) + (rnd AND &h1F) + (rnd AND &h07) + (rnd AND &h07), (rnd AND &h3F) + (rnd AND &h1F) + (rnd AND &h0F) + (rnd AND &h03)
 
-_50                 PrintString             usrStr_0x7fa0                   ; print "Gigatron!";
+_50                 PrintString             str_0x7fa0                      ; print "Gigatron!";
 
 _60                 LDWI                    _20
                     CALL                    giga_vAC                        ; goto 20
@@ -137,9 +139,9 @@ random16bit         EQU     0x7ea9
 resetVideoTable     EQU     0x7da0
 initClearFuncs      EQU     0x7faa
 clearCursorRow      EQU     0x7dbc
-printText           EQU     0x7eb1
+printText           EQU     0x7ede
 printChar           EQU     0x7ca0
-printTextCursor     EQU     0x7ece
+atTextCursor        EQU     0x7eb1
 newLineScroll       EQU     0x7ba0
 convertEqOpAddr     EQU     0x00e2
 convertNeOpAddr     EQU     0x00e4
@@ -147,10 +149,6 @@ convertLeOpAddr     EQU     0x00e6
 convertGeOpAddr     EQU     0x00e8
 convertLtOpAddr     EQU     0x00ea
 convertGtOpAddr     EQU     0x00ec
-
-
-onGgVar             EQU     register0
-onGgAddr            EQU     register1
 
 
                     ; convert equal to into a boolean
@@ -353,7 +351,7 @@ printC_exit         POP
                     RET
 
 
-printTextCursor     LD      cursorXY
+atTextCursor        LD      cursorXY
                     SUBI    155
                     BLT     drawTC_skip0
                     LDI     0

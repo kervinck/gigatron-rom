@@ -32,30 +32,26 @@ _1                  EQU                     0x022f
 _10                 EQU                     0x0237
 _20                 EQU                     0x023b
 _30                 EQU                     0x0240
-_40                 EQU                     0x0251
-_50                 EQU                     0x0268
-_60                 EQU                     0x0276
-_70                 EQU                     0x027a
-_80                 EQU                     0x027f
-_90                 EQU                     0x0290
-_100                EQU                     0x02a5
-_110                EQU                     0x02b5
-_120                EQU                     0x02b9
-_130                EQU                     0x02be
-_140                EQU                     0x02cf
+_40                 EQU                     0x0250
+_50                 EQU                     0x0267
+_60                 EQU                     0x0275
+_70                 EQU                     0x0279
+_80                 EQU                     0x027e
+_90                 EQU                     0x028e
+_100                EQU                     0x02a3
+_110                EQU                     0x02b3
+_120                EQU                     0x02b7
+_130                EQU                     0x02bc
+_140                EQU                     0x02cc
 _150                EQU                     0x08a2
 _160                EQU                     0x08b0
 _170                EQU                     0x08b4
 _180                EQU                     0x08b9
-_190                EQU                     0x08ca
-_200                EQU                     0x08e3
+_190                EQU                     0x08c9
+_200                EQU                     0x08e2
 _math               EQU                     0x09a2
-_end_0x039c         EQU                     0x09c0
-_next_0x023b        EQU                     0x023b
-_next_0x0284        EQU                     0x027a
-_next_0x02c9        EQU                     0x02b9
+_end_0x0398         EQU                     0x09c0
 _page_0x08a0        EQU                     0x08a0
-_next_0x0312        EQU                     0x08b4
 _page_0x09a0        EQU                     0x09a0
 
 ; Variables
@@ -66,6 +62,8 @@ _p                  EQU                     0x0036
 _sh                 EQU                     0x0038
 
 ; Strings
+
+; Lookup Tables
 
 ; Code
 _entryPoint_        Initialise              
@@ -87,7 +85,7 @@ _10                 LDI                     0
 _20                 LDWI                    _math
                     CALL                    giga_vAC                        ; gosub math
 
-_30                 LDWI                    0x00b5
+_30                 LDI                     0xb5
                     PEEK                    
                     ADDI                    7
                     STW                     _p
@@ -115,7 +113,7 @@ _60                 LDI                     19
 _70                 LDWI                    _math
                     CALL                    giga_vAC                        ; gosub math
 
-_80                 LDWI                    0x00b5
+_80                 LDI                     0xb5
                     PEEK                    
                     ADDI                    7
                     STW                     _p
@@ -142,7 +140,7 @@ _110                LDI                     0
 _120                LDWI                    _math
                     CALL                    giga_vAC                        ; gosub math
 
-_130                LDWI                    0x00b5
+_130                LDI                     0xb5
                     PEEK                    
                     ADDI                    7
                     STW                     _p
@@ -174,7 +172,7 @@ _160                LDI                     19
 _170                LDWI                    _math
                     CALL                    giga_vAC                        ; gosub math
 
-_180                LDWI                    0x00b5
+_180                LDI                     0xb5
                     PEEK                    
                     ADDI                    7
                     STW                     _p
@@ -225,7 +223,7 @@ _math               PUSH
                     POP                     
                     RET                                                     ; return
 
-_end_0x039c         BRA                     _end_0x039c                     ; END
+_end_0x0398         BRA                     _end_0x0398                     ; END
 
 
 
@@ -252,10 +250,6 @@ convertLeOpAddr     EQU     0x00e6
 convertGeOpAddr     EQU     0x00e8
 convertLtOpAddr     EQU     0x00ea
 convertGtOpAddr     EQU     0x00ec
-
-
-onGgVar             EQU     register0
-onGgAddr            EQU     register1
 
 
                     ; convert equal to into a boolean
@@ -515,12 +509,12 @@ drawLineLoadXY      LD      drawLine_x1
 drawLineLoadDXY     LDWI    SYS_LSLW8_24
                     STW     giga_sysFn          
                     LDW     drawLine_dy1
-                    SYS     0x00                ; 0x00 = 270-max(14,24/2)
+                    SYS     0x00                ; LSL 8, 0x00 = 270-max(14,24/2)
                     ADDW    drawLine_dx1
                     STW     drawLine_dxy1       ; dxy1 = dx1 + (dy1<<8)
     
                     LDW     drawLine_dy2
-                    SYS     0x00                ; 0x00 = 270-max(14,24/2)
+                    SYS     0x00                ; LSL 8, 0x00 = 270-max(14,24/2)
                     ADDW    drawLine_dx2
                     STW     drawLine_dxy2       ; dxy2 = dx2 + (dy2<<8)
                     RET

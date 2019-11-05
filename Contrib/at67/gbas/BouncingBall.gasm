@@ -39,7 +39,6 @@ _80                 EQU                     0x027e
 _90                 EQU                     0x0295
 _100                EQU                     0x029b
 _end_0x02a4         EQU                     0x02a0
-_next_0x0254        EQU                     0x0254
 
 ; Variables
 _X                  EQU                     0x0030
@@ -47,6 +46,8 @@ _V                  EQU                     0x0032
 _I                  EQU                     0x0034
 
 ; Strings
+
+; Lookup Tables
 
 ; Code
 _entryPoint_        Initialise              
@@ -68,7 +69,7 @@ _30                 LDWI                    clearVertBlinds
                     ST                      cursorXY
                     LDI                     60
                     ST                      cursorXY + 1
-                    LDWI                    printTextCursor
+                    LDWI                    atTextCursor
                     CALL                    giga_vAC
                     LDWI                    0xFFFE
                     ANDW                    miscFlags
@@ -79,7 +80,7 @@ _40                 LDI                     1
 
 _50                 LDW                     _X
                     ST                      cursorXY
-                    LDWI                    printTextCursor
+                    LDWI                    atTextCursor
                     CALL                    giga_vAC
                     LDI                     32
                     PrintAcChar                                             ; AT X:PUT 32:REM CLEAR
@@ -90,7 +91,7 @@ _60                 LDW                     _X
 
 _70                 LDW                     _X
                     ST                      cursorXY
-                    LDWI                    printTextCursor
+                    LDWI                    atTextCursor
                     CALL                    giga_vAC
                     LDI                     79
                     PrintAcChar                                             ; AT X:PUT 79:REM DRAW O
@@ -123,14 +124,13 @@ convertLeOp         EQU     0x7fd5
 convertGeOp         EQU     0x7fde
 convertLtOp         EQU     0x7fe7
 convertGtOp         EQU     0x7ff0
-waitVBlank          EQU     0x7dcd
-resetVideoTable     EQU     0x7de4
+waitVBlank          EQU     0x7ed8
+resetVideoTable     EQU     0x7dcd
 initClearFuncs      EQU     0x7fa0
 clearVertBlinds     EQU     0x7ea0
 clearCursorRow      EQU     0x7ba0
-printText           EQU     0x7ed8
 printChar           EQU     0x7ca0
-printTextCursor     EQU     0x7da0
+atTextCursor        EQU     0x7da0
 newLineScroll       EQU     0x7aa0
 convertEqOpAddr     EQU     0x00e2
 convertNeOpAddr     EQU     0x00e4
@@ -138,10 +138,6 @@ convertLeOpAddr     EQU     0x00e6
 convertGeOpAddr     EQU     0x00e8
 convertLtOpAddr     EQU     0x00ea
 convertGtOpAddr     EQU     0x00ec
-
-
-onGgVar             EQU     register0
-onGgAddr            EQU     register1
 
 
                     ; convert equal to into a boolean
@@ -315,6 +311,7 @@ clearVB_loop        LD      top
                     RET
 
 
+
 textStr             EQU     register0
 textNum             EQU     register0
 textBak             EQU     register0
@@ -329,24 +326,6 @@ digitIndex          EQU     register8
 clearLoop           EQU     register9
     
     
-                    ; prints text string pointed to by the accumulator
-printText           PUSH
-                    LDW     textStr             
-                    PEEK
-                    ST      textLen                         ; first byte is length
-    
-printT_char         INC     textStr                         ; next char
-                    LDW     textStr             
-                    PEEK
-                    ST      textChr
-                    LDWI    printChar
-                    CALL    giga_vAC
-printT_loop         LoopCounter textLen printT_char
-                    POP
-                    RET
-
-
-
                     ; prints char in textChr
 printChar           PUSH
                     LD      textChr                         ; (char-32)*5 + 0x0700
@@ -398,7 +377,7 @@ printC_exit         POP
                     RET
 
 
-printTextCursor     LD      cursorXY
+atTextCursor        LD      cursorXY
                     SUBI    155
                     BLT     drawTC_skip0
                     LDI     0

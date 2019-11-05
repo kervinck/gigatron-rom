@@ -28,76 +28,58 @@ miscFlags           EQU                     register0 + 0x1E
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_1                  EQU                     0x020f
-_2                  EQU                     0x022f
-_3                  EQU                     0x0235
-_4                  EQU                     0x0245
-_5                  EQU                     0x0248
-_6                  EQU                     0x0256
-_198                EQU                     0x0262
-_199                EQU                     0x026c
-_200                EQU                     0x0275
-_201                EQU                     0x0279
-_202                EQU                     0x0291
-_203                EQU                     0x029f
-_204                EQU                     0x02ab
-_205                EQU                     0x02be
-_206                EQU                     0x02ce
-_207                EQU                     0x02d6
-_208                EQU                     0x02de
-_209                EQU                     0x02e6
-_1000               EQU                     0x02ee
-_1001               EQU                     0x08b3
-_1002               EQU                     0x08ca
-_1003               EQU                     0x08e1
-_1004               EQU                     0x08f8
-_1005               EQU                     0x09b5
-_1006               EQU                     0x09cc
-_1007               EQU                     0x09e3
-_1008               EQU                     0x0aa0
-_1009               EQU                     0x0ab7
-_1010               EQU                     0x0ace
-_1011               EQU                     0x0ae5
-_1012               EQU                     0x0ba2
-_1013               EQU                     0x0bb9
-_1014               EQU                     0x0bd0
-_1015               EQU                     0x0be7
-_1016               EQU                     0x0ca4
-_1017               EQU                     0x0cbb
-_1018               EQU                     0x0cdc
-_end_0x04fd         EQU                     0x0ce6
-_if_0x024b          EQU                     0x0245
-_next_0x027f        EQU                     0x0279
-_page_0x08a0        EQU                     0x08a0
-_if_0x0318          EQU                     0x08b3
-_if_0x0333          EQU                     0x08ca
-_if_0x034e          EQU                     0x08e1
-_if_0x0369          EQU                     0x08f8
+_2                  EQU                     0x0241
+_113                EQU                     0x0291
+_50                 EQU                     0x02aa
+_119                EQU                     0x02c3
+_51                 EQU                     0x02dc
+_101                EQU                     0x08a0
+_114                EQU                     0x08b9
+_53                 EQU                     0x08d2
+_116                EQU                     0x08eb
+_54                 EQU                     0x09ab
+_121                EQU                     0x09c4
+_55                 EQU                     0x09dd
+_117                EQU                     0x09f6
+_105                EQU                     0x0ab5
+_57                 EQU                     0x0ace
+_111                EQU                     0x0ae7
+_48                 EQU                     0x0ba7
+_112                EQU                     0x0bc0
+_122                EQU                     0x0bd9
+_198                EQU                     0x0ca0
+_200                EQU                     0x0cb3
+_206                EQU                     0x0db1
+_207                EQU                     0x0dbc
+_208                EQU                     0x0dc7
+_209                EQU                     0x0dd2
+_inverse            EQU                     0x0ddd
+_normal             EQU                     0x0df9
+_pchar              EQU                     0x0ebb
+_end_0x056e         EQU                     0x0ed3
+_if_0x0272          EQU                     0x0260
+_if_0x0286          EQU                     0x0270
 _page_0x09a0        EQU                     0x09a0
-_if_0x0384          EQU                     0x09b5
-_if_0x039f          EQU                     0x09cc
-_if_0x03ba          EQU                     0x09e3
-_if_0x03d5          EQU                     0x0aa0
-_if_0x03f0          EQU                     0x0ab7
-_if_0x040b          EQU                     0x0ace
-_if_0x0426          EQU                     0x0ae5
+_page_0x0aa0        EQU                     0x0aa0
 _page_0x0ba0        EQU                     0x0ba0
-_if_0x0441          EQU                     0x0ba2
-_if_0x045c          EQU                     0x0bb9
-_if_0x0477          EQU                     0x0bd0
-_if_0x0492          EQU                     0x0be7
-_page_0x0ca0        EQU                     0x0ca0
-_if_0x04ad          EQU                     0x0ca4
-_if_0x04c8          EQU                     0x0cbb
-_if_0x04f3          EQU                     0x0cdc
+_if_0x0477          EQU                     0x0bf2
+_next_0x0498        EQU                     0x0cb7
+_page_0x0da0        EQU                     0x0da0
+_page_0x0ea0        EQU                     0x0ea0
 
 ; Variables
-_a                  EQU                     0x0030
-_b                  EQU                     0x0032
-_p                  EQU                     0x0034
-_z                  EQU                     0x0036
-_k                  EQU                     0x0038
-_c                  EQU                     0x003a
+_inv                EQU                     0x0030
+_char               EQU                     0x0032
+_posx               EQU                     0x0034
+_posy               EQU                     0x0036
+_fg                 EQU                     0x0038
+_bg                 EQU                     0x003a
+_a                  EQU                     0x003c
+_b                  EQU                     0x003e
+_p                  EQU                     0x0040
+_z                  EQU                     0x0042
+_k                  EQU                     0x0044
+_c                  EQU                     0x0046
 
 ; Strings
 str_0x7fa0          EQU                     0x7fa0
@@ -106,25 +88,39 @@ str_0x7fb3          EQU                     0x7fb3
 str_0x7fb3          DB                      19 'Q W E R T Y U I O P'
 str_0x7fc7          EQU                     0x7fc7
 str_0x7fc7          DB                      3 'Z: '
-str_0x7fd3          EQU                     0x7fd3
-str_0x7fd3          DB                      8 'Metallic'
-str_0x7fdc          EQU                     0x7fdc
-str_0x7fdc          DB                      8 'Triangle'
-str_0x7fe5          EQU                     0x7fe5
-str_0x7fe5          DB                      8 'Pulse   '
-str_0x7fee          EQU                     0x7fee
-str_0x7fee          DB                      8 'Sawtooth'
+str_0x7fcb          EQU                     0x7fcb
+str_0x7fcb          DB                      8 'Metallic'
+str_0x7fd4          EQU                     0x7fd4
+str_0x7fd4          DB                      8 'Triangle'
+str_0x7fdd          EQU                     0x7fdd
+str_0x7fdd          DB                      8 'Pulse   '
+str_0x7fe6          EQU                     0x7fe6
+str_0x7fe6          DB                      8 'Sawtooth'
 
 ; Lookup Tables
-lut_0x7fcb          EQU                     0x7fcb
-lut_0x7fcb          DW                      0x02ce 0x02d6 0x02de 0x02e6 
+lut_numericLabs     EQU                     0x78a0
+lut_numericLabs     DW                      2 113 50 119 51 101 114 53 116 54 121 55 117 105 57 111 48 112 122 198 200 206 207 208 209 -1
+lut_numericAddrs    EQU                     0x77a0
+lut_numericAddrs    DW                      0x0241 0x0291 0x02aa 0x02c3 0x02dc 0x08a0 0x08b9 0x08d2 0x08eb 0x09ab 0x09c4 0x09dd 0x09f6 0x0ab5 0x0ace 0x0ae7 0x0ba7 0x0bc0 0x0bd9 0x0ca0 0x0cb3 0x0db1 0x0dbc 0x0dc7 0x0dd2 
 
 ; Code
 _entryPoint_        Initialise                                              ; INIT
 
-_1                  LDI                     0
-                    STW                     _a
                     LDI                     0
+                    STW                     _inv
+                    STW                     _char
+                    STW                     _posx
+                    STW                     _posy                           ; inv=0:char=inv:posx=char:posy=posx
+
+                    LDI                     0xb4
+                    PEEK                    
+                    STW                     _fg
+                    LDI                     0xb5
+                    PEEK                    
+                    STW                     _bg                             ; fg=peek(180) : bg=peek(181)
+
+                    LDI                     0
+                    STW                     _a
                     STW                     _b
                     LDWI                    508
                     STW                     _p
@@ -135,21 +131,34 @@ _1                  LDI                     0
                     CALL                    giga_vAC
                     LDI                     2
                     STW                     _z
-                    CALLI                   _198                            ; a=0:b=0:p=256+252:mode 2:cls:z=2:gosub 198
+                    CALLI                   _198                            ; a=0:b=a:p=256+252:mode 2:cls:z=2:gosub 198
 
-_2                  LDWI                    0x0010
+_2                  LDI                     0x10
                     PEEK                    
                     STW                     _k                              ; k=peek(16)
 
-_3                  LDW                     _k
+                    LDI                     2
+                    STW                     waitVBlankNum
+                    WaitVBlank                                              ; wait 2
+
+                    LDW                     _inv
+                    SUBI                    1
+                    CALLI                   convertEqOp
+                    PageJumpBEQ             _if_0x0272
+                    CALLI                   _normal
+                    CALLI                   _2                              ; if inv=1 then gosub normal: goto 2
+
+_if_0x0272          LDW                     _k
                     SUBI                    126
                     CALLI                   convertGtOp
-                    PageJumpBEQ             _4                  
+                    PageJumpBEQ             _if_0x0286
                     CALLI                   _2                              ; if k>126 then goto 2
 
-_4                  CALLI                   _1000                           ; gosub 1000
+_if_0x0286          LDW                     _k
+                    STW                     numericLabel
+                    CALLI                   gosubNumericLabel               ; gosub k
 
-_5                  LD                      _a
+                    LD                      _a
                     POKE                    _p
                     LDW                     _p
                     ADDI                    1
@@ -157,23 +166,283 @@ _5                  LD                      _a
                     LD                      _b
                     POKE                    0xd0                            ; poke p,a:poke p+1,b
 
-_6                  LDWI                    44
+                    LDWI                    44
                     STW                     register0
                     LDI                     30
                     POKE                    register0
                     CALLI                   _2                              ; poke 44,30:goto 2
 
+_113                LDI                     73
+                    STW                     _a
+                    LDI                     8
+                    STW                     _b
+                    LDI                     81
+                    STW                     _char
+                    LDI                     2
+                    STW                     _posx
+                    LDI                     8
+                    STW                     _posy
+                    CALLI                   _inverse
+                    POP                     
+                    RET                                                     ; a=73 :b=8 :char=81:posx=2  :posy=8:gosub inverse:return:'C
+
+_50                 LDI                     11
+                    STW                     _a
+                    LDI                     9
+                    STW                     _b
+                    LDI                     50
+                    STW                     _char
+                    LDI                     8
+                    STW                     _posx
+                    LDI                     0
+                    STW                     _posy
+                    CALLI                   _inverse
+                    POP                     
+                    RET                                                     ; a=11 :b=9 :char=50:posx=8  :posy=0:gosub inverse:return:'C#
+
+_119                LDI                     80
+                    STW                     _a
+                    LDI                     9
+                    STW                     _b
+                    LDI                     87
+                    STW                     _char
+                    LDI                     14
+                    STW                     _posx
+                    LDI                     8
+                    STW                     _posy
+                    CALLI                   _inverse
+                    POP                     
+                    RET                                                     ; a=80 :b=9 :char=87:posx=14 :posy=8:gosub inverse:return:'D
+
+_51                 LDI                     25
+                    STW                     _a
+                    LDI                     10
+                    STW                     _b
+                    LDI                     51
+                    STW                     _char
+                    LDI                     20
+                    STW                     _posx
+                    LDI                     0
+                    STW                     _posy
+                    CALLI                   _inverse
+                    POP                     
+                    RET                                                     ; a=25 :b=10:char=51:posx=20 :posy=0:gosub inverse:return:'D#
+
+                    CALLI                    _101
+_101                LDI                     103
+                    STW                     _a
+                    LDI                     10
+                    STW                     _b
+                    LDI                     69
+                    STW                     _char
+                    LDI                     26
+                    STW                     _posx
+                    LDI                     8
+                    STW                     _posy
+                    CALLI                   _inverse
+                    POP                     
+                    RET                                                     ; a=103:b=10:char=69:posx=26 :posy=8:gosub inverse:return:'E
+
+_114                LDI                     57
+                    STW                     _a
+                    LDI                     11
+                    STW                     _b
+                    LDI                     82
+                    STW                     _char
+                    LDI                     38
+                    STW                     _posx
+                    LDI                     8
+                    STW                     _posy
+                    CALLI                   _inverse
+                    POP                     
+                    RET                                                     ; a=57 :b=11:char=82:posx=38 :posy=8:gosub inverse:return:'F
+
+_53                 LDI                     16
+                    STW                     _a
+                    LDI                     12
+                    STW                     _b
+                    LDI                     53
+                    STW                     _char
+                    LDI                     44
+                    STW                     _posx
+                    LDI                     0
+                    STW                     _posy
+                    CALLI                   _inverse
+                    POP                     
+                    RET                                                     ; a=16 :b=12:char=53:posx=44 :posy=0:gosub inverse:return:'F#
+
+_116                LDI                     108
+                    STW                     _a
+                    LDI                     12
+                    STW                     _b
+                    LDI                     84
+                    STW                     _char
+                    LDI                     50
+                    CALLI                   _page_0x09a0
+_page_0x09a0        STW                     _posx
+                    LDI                     8
+                    STW                     _posy
+                    CALLI                   _inverse
+                    POP                     
+                    RET                                                     ; a=108:b=12:char=84:posx=50 :posy=8:gosub inverse:return:'G
+
+_54                 LDI                     78
+                    STW                     _a
+                    LDI                     13
+                    STW                     _b
+                    LDI                     54
+                    STW                     _char
+                    LDI                     56
+                    STW                     _posx
+                    LDI                     0
+                    STW                     _posy
+                    CALLI                   _inverse
+                    POP                     
+                    RET                                                     ; a=78 :b=13:char=54:posx=56 :posy=0:gosub inverse:return:'G#
+
+_121                LDI                     53
+                    STW                     _a
+                    LDI                     14
+                    STW                     _b
+                    LDI                     89
+                    STW                     _char
+                    LDI                     62
+                    STW                     _posx
+                    LDI                     8
+                    STW                     _posy
+                    CALLI                   _inverse
+                    POP                     
+                    RET                                                     ; a=53 :b=14:char=89:posx=62 :posy=8:gosub inverse:return:'A
+
+_55                 LDI                     35
+                    STW                     _a
+                    LDI                     15
+                    STW                     _b
+                    LDI                     55
+                    STW                     _char
+                    LDI                     68
+                    STW                     _posx
+                    LDI                     0
+                    STW                     _posy
+                    CALLI                   _inverse
+                    POP                     
+                    RET                                                     ; a=35 :b=15:char=55:posx=68 :posy=0:gosub inverse:return:'A#
+
+_117                LDI                     23
+                    STW                     _a
+                    CALLI                   _page_0x0aa0
+_page_0x0aa0        LDI                     16
+                    STW                     _b
+                    LDI                     85
+                    STW                     _char
+                    LDI                     74
+                    STW                     _posx
+                    LDI                     8
+                    STW                     _posy
+                    CALLI                   _inverse
+                    POP                     
+                    RET                                                     ; a=23 :b=16:char=85:posx=74 :posy=8:gosub inverse:return:'B
+
+_105                LDI                     19
+                    STW                     _a
+                    LDI                     17
+                    STW                     _b
+                    LDI                     73
+                    STW                     _char
+                    LDI                     86
+                    STW                     _posx
+                    LDI                     8
+                    STW                     _posy
+                    CALLI                   _inverse
+                    POP                     
+                    RET                                                     ; a=19 :b=17:char=73:posx=86 :posy=8:gosub inverse:return:'C
+
+_57                 LDI                     21
+                    STW                     _a
+                    LDI                     18
+                    STW                     _b
+                    LDI                     57
+                    STW                     _char
+                    LDI                     92
+                    STW                     _posx
+                    LDI                     0
+                    STW                     _posy
+                    CALLI                   _inverse
+                    POP                     
+                    RET                                                     ; a=21 :b=18:char=57:posx=92 :posy=0:gosub inverse:return:'C#
+
+_111                LDI                     31
+                    STW                     _a
+                    LDI                     19
+                    STW                     _b
+                    LDI                     79
+                    STW                     _char
+                    LDI                     98
+                    STW                     _posx
+                    LDI                     8
+                    CALLI                   _page_0x0ba0
+_page_0x0ba0        STW                     _posy
+                    CALLI                   _inverse
+                    POP                     
+                    RET                                                     ; a=31 :b=19:char=79:posx=98 :posy=8:gosub inverse:return:'D
+
+_48                 LDI                     50
+                    STW                     _a
+                    LDI                     20
+                    STW                     _b
+                    LDI                     48
+                    STW                     _char
+                    LDI                     104
+                    STW                     _posx
+                    LDI                     0
+                    STW                     _posy
+                    CALLI                   _inverse
+                    POP                     
+                    RET                                                     ; a=50 :b=20:char=48:posx=104:posy=0:gosub inverse:return:'D#
+
+_112                LDI                     77
+                    STW                     _a
+                    LDI                     21
+                    STW                     _b
+                    LDI                     80
+                    STW                     _char
+                    LDI                     110
+                    STW                     _posx
+                    LDI                     8
+                    STW                     _posy
+                    CALLI                   _inverse
+                    POP                     
+                    RET                                                     ; a=77 :b=21:char=80:posx=110:posy=8:gosub inverse:return:'E
+
+_122                LDI                     0x0f
+                    PEEK                    
+                    SUBI                    255
+                    CALLI                   convertEqOp
+                    PageJumpBEQ             _if_0x0477
+                    LDW                     _z
+                    ADDI                    1
+                    ANDI                    3
+                    STW                     _z
+                    CALLI                   _200                            ; if peek(15)=255 then z=(z+1)AND3:goto 200
+
+_if_0x0477          LDI                     0
+                    STW                     _a
+                    STW                     _b
+                    POP                     
+                    RET                                                     ; a=0:b=a:return
+
+                    CALLI                    _198
 _198                PUSH                    
                     PrintString             str_0x7fa0
                     CALLI                   newLineScroll                   ; print " 2 3   5 6 7   9 0"
 
-_199                PrintString             str_0x7fb3
+                    PrintString             str_0x7fb3
                     CALLI                   newLineScroll                   ; print "Q W E R T Y U I O P"
 
 _200                LDI                     1
                     STW                     _c                              ; for c=1 to 4
 
-_201                LDWI                    256
+_next_0x0498        LDWI                    256
                     STW                     mathX
                     LDW                     _c
                     STW                     mathY
@@ -185,7 +454,7 @@ _201                LDWI                    256
                     LD                      _z
                     POKE                    0xd2                            ; p=256*c+252:poke p-1,z
 
-_202                LDI                     0
+                    LDI                     0
                     POKE                    _p
                     LDW                     _p
                     ADDI                    1
@@ -193,256 +462,93 @@ _202                LDI                     0
                     LDI                     0
                     POKE                    0xd0                            ; poke p,0:poke p+1,0
 
-_203                ForNextLoopUp           _c _201                 4       ; next c
+                    ForNextLoopUp           _c _next_0x0498 4               ; next c
 
-_204                LDI                     2
+                    LDI                     2
                     ST                      cursorXY
                     LDI                     24
                     ST                      cursorXY + 1
                     LDWI                    atTextCursor
-                    CALL                    giga_vAC
+                    CALLI                   _page_0x0da0
+_page_0x0da0        CALL                    giga_vAC
                     PrintString             str_0x7fc7                      ; at 2,24:print "Z: ";
 
-_205                LDW                     _z
+                    LDI                     206
+                    ADDW                    _z
+                    STW                     numericLabel
+                    CALLI                   gotoNumericLabel                ; goto 206+z
+
+_206                PrintString             str_0x7fcb
+                    CALLI                   newLineScroll
+                    POP                     
+                    RET                                                     ; print "Metallic":return
+
+_207                PrintString             str_0x7fd4
+                    CALLI                   newLineScroll
+                    POP                     
+                    RET                                                     ; print "Triangle":return
+
+_208                PrintString             str_0x7fdd
+                    CALLI                   newLineScroll
+                    POP                     
+                    RET                                                     ; print "Pulse   ":return
+
+_209                PrintString             str_0x7fe6
+                    CALLI                   newLineScroll
+                    POP                     
+                    RET                                                     ; print "Sawtooth":return
+
+_inverse            PUSH                    
+                    LDI                     1
+                    STW                     _inv
+                    LDWI                    180
                     STW                     register0
-                    ADDW                    register0
+                    LD                      _bg
+                    POKE                    register0
+                    LDWI                    181
                     STW                     register0
-                    LDWI                    lut_0x7fcb
-                    ADDW                    register0
-                    DEEK                    
-                    CALL                    giga_vAC                        ; on z goto 206,207,208,209
+                    LD                      _fg
+                    POKE                    register0                       ; inv=1 : poke 180,bg : poke 181,fg
 
-_206                PrintString             str_0x7fd3
+                    CALLI                   _pchar                          ; gosub pchar
+
                     POP                     
-                    RET                                                     ; print "Metallic";:return
+                    RET                                                     ; return
 
-_207                PrintString             str_0x7fdc
+_normal             PUSH                    
+                    CALLI                   _page_0x0ea0
+_page_0x0ea0        LDI                     0
+                    STW                     _inv
+                    LDWI                    180
+                    STW                     register0
+                    LD                      _fg
+                    POKE                    register0
+                    LDWI                    181
+                    STW                     register0
+                    LD                      _bg
+                    POKE                    register0                       ; inv=0 : poke 180,fg : poke 181,bg
+
+                    CALLI                   _pchar                          ; gosub pchar
+
                     POP                     
-                    RET                                                     ; print "Triangle";:return
+                    RET                                                     ; return
 
-_208                PrintString             str_0x7fe5
+_pchar              PUSH                    
+                    LDW                     _posx
+                    ST                      cursorXY
+                    LDW                     _posy
+                    ST                      cursorXY + 1
+                    LDWI                    atTextCursor
+                    CALL                    giga_vAC                        ; at posx,posy
+
+                    LDW                     _char
+                    PrintAcChar             
+                    CALLI                   newLineScroll                   ; print chr$(char)
+
                     POP                     
-                    RET                                                     ; print "Pulse   ";:return
+                    RET                                                     ; return
 
-_209                PrintString             str_0x7fee
-                    POP                     
-                    RET                                                     ; print "Sawtooth";:return
-
-_1000               PUSH                    
-                    LDW                     _k
-                    SUBI                    113
-                    CALLI                   _page_0x08a0
-_page_0x08a0        CALLI                   convertEqOp
-                    PageJumpBEQ             _1001               
-                    LDI                     73
-                    STW                     _a
-                    LDI                     8
-                    STW                     _b
-                    POP                     
-                    RET                                                     ; if k=113 then a=73 :b=8 :return:'C
-
-_1001               LDW                     _k
-                    SUBI                    50
-                    CALLI                   convertEqOp
-                    PageJumpBEQ             _1002               
-                    LDI                     11
-                    STW                     _a
-                    LDI                     9
-                    STW                     _b
-                    POP                     
-                    RET                                                     ; if k=50  then a=11 :b=9 :return:'C#
-
-_1002               LDW                     _k
-                    SUBI                    119
-                    CALLI                   convertEqOp
-                    PageJumpBEQ             _1003               
-                    LDI                     80
-                    STW                     _a
-                    LDI                     9
-                    STW                     _b
-                    POP                     
-                    RET                                                     ; if k=119 then a=80 :b=9 :return:'D
-
-_1003               LDW                     _k
-                    SUBI                    51
-                    CALLI                   convertEqOp
-                    PageJumpBEQ             _1004               
-                    LDI                     25
-                    STW                     _a
-                    LDI                     10
-                    STW                     _b
-                    POP                     
-                    RET                                                     ; if k=51  then a=25 :b=10:return:'D#
-
-_1004               LDW                     _k
-                    CALLI                   _page_0x09a0
-_page_0x09a0        SUBI                    101
-                    CALLI                   convertEqOp
-                    PageJumpBEQ             _1005               
-                    LDI                     103
-                    STW                     _a
-                    LDI                     10
-                    STW                     _b
-                    POP                     
-                    RET                                                     ; if k=101 then a=103:b=10:return:'E
-
-_1005               LDW                     _k
-                    SUBI                    114
-                    CALLI                   convertEqOp
-                    PageJumpBEQ             _1006               
-                    LDI                     57
-                    STW                     _a
-                    LDI                     11
-                    STW                     _b
-                    POP                     
-                    RET                                                     ; if k=114 then a=57 :b=11:return:'F
-
-_1006               LDW                     _k
-                    SUBI                    53
-                    CALLI                   convertEqOp
-                    PageJumpBEQ             _1007               
-                    LDI                     16
-                    STW                     _a
-                    LDI                     12
-                    STW                     _b
-                    POP                     
-                    RET                                                     ; if k=53  then a=16 :b=12:return:'F#
-
-_1007               LDW                     _k
-                    SUBI                    116
-                    CALLI                   convertEqOp
-                    PageJumpBEQ             _1008               
-                    LDI                     108
-                    STW                     _a
-                    LDI                     12
-                    STW                     _b
-                    POP                     
-                    RET                                                     ; if k=116 then a=108:b=12:return:'G
-
-                    CALLI                    _1008
-_1008               LDW                     _k
-                    SUBI                    54
-                    CALLI                   convertEqOp
-                    PageJumpBEQ             _1009               
-                    LDI                     78
-                    STW                     _a
-                    LDI                     13
-                    STW                     _b
-                    POP                     
-                    RET                                                     ; if k=54  then a=78 :b=13:return:'G#
-
-_1009               LDW                     _k
-                    SUBI                    121
-                    CALLI                   convertEqOp
-                    PageJumpBEQ             _1010               
-                    LDI                     53
-                    STW                     _a
-                    LDI                     14
-                    STW                     _b
-                    POP                     
-                    RET                                                     ; if k=121 then a=53 :b=14:return:'A
-
-_1010               LDW                     _k
-                    SUBI                    55
-                    CALLI                   convertEqOp
-                    PageJumpBEQ             _1011               
-                    LDI                     35
-                    STW                     _a
-                    LDI                     15
-                    STW                     _b
-                    POP                     
-                    RET                                                     ; if k=55  then a=35 :b=15:return:'A#
-
-_1011               LDW                     _k
-                    SUBI                    117
-                    CALLI                   convertEqOp
-                    PageJumpBEQ             _1012               
-                    LDI                     23
-                    STW                     _a
-                    LDI                     16
-                    STW                     _b
-                    CALLI                   _page_0x0ba0
-_page_0x0ba0        POP                     
-                    RET                                                     ; if k=117 then a=23 :b=16:return:'B
-
-_1012               LDW                     _k
-                    SUBI                    105
-                    CALLI                   convertEqOp
-                    PageJumpBEQ             _1013               
-                    LDI                     19
-                    STW                     _a
-                    LDI                     17
-                    STW                     _b
-                    POP                     
-                    RET                                                     ; if k=105 then a=19 :b=17:return:'C
-
-_1013               LDW                     _k
-                    SUBI                    57
-                    CALLI                   convertEqOp
-                    PageJumpBEQ             _1014               
-                    LDI                     21
-                    STW                     _a
-                    LDI                     18
-                    STW                     _b
-                    POP                     
-                    RET                                                     ; if k=57  then a=21 :b=18:return:'C#
-
-_1014               LDW                     _k
-                    SUBI                    111
-                    CALLI                   convertEqOp
-                    PageJumpBEQ             _1015               
-                    LDI                     31
-                    STW                     _a
-                    LDI                     19
-                    STW                     _b
-                    POP                     
-                    RET                                                     ; if k=111 then a=31 :b=19:return:'D
-
-_1015               LDW                     _k
-                    SUBI                    48
-                    CALLI                   convertEqOp
-                    PageJumpBEQ             _1016               
-                    LDI                     50
-                    STW                     _a
-                    LDI                     20
-                    CALLI                   _page_0x0ca0
-_page_0x0ca0        STW                     _b
-                    POP                     
-                    RET                                                     ; if k=48  then a=50 :b=20:return:'D#
-
-_1016               LDW                     _k
-                    SUBI                    112
-                    CALLI                   convertEqOp
-                    PageJumpBEQ             _1017               
-                    LDI                     77
-                    STW                     _a
-                    LDI                     21
-                    STW                     _b
-                    POP                     
-                    RET                                                     ; if k=112 then a=77 :b=21:return:'E
-
-_1017               LDW                     _k
-                    SUBI                    122
-                    CALLI                   convertEqOp
-                    PageJumpBEQ             _1018               
-                    LDW                     _z
-                    ADDI                    1
-                    STW                     mathX
-                    LDI                     4
-                    STW                     mathY
-                    CALLI                   divide16bit
-                    LDW                     mathRem
-                    STW                     _z
-                    CALLI                   _200                            ; if k=122 then z=(z+1)%4:goto 200
-
-_1018               LDI                     0
-                    STW                     _a
-                    LDI                     0
-                    STW                     _b
-                    POP                     
-                    RET                                                     ; a=0:b=0:return
-
-_end_0x04fd         BRA                     _end_0x04fd                     ; END
+_end_0x056e         BRA                     _end_0x056e                     ; END
 
 
 
@@ -452,23 +558,25 @@ _end_0x04fd         BRA                     _end_0x04fd                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-convertEqOp         EQU     0x7eee
-convertNeOp         EQU     0x7ef7
-convertLeOp         EQU     0x7cf7
-convertGeOp         EQU     0x7bcd
-convertLtOp         EQU     0x7bd6
-convertGtOp         EQU     0x7ff7
-multiply16bit       EQU     0x7dd6
-divide16bit         EQU     0x7aa0
+convertEqOp         EQU     0x7fef
+convertNeOp         EQU     0x7ef5
+convertLeOp         EQU     0x7def
+convertGeOp         EQU     0x7cf5
+convertLtOp         EQU     0x7bf7
+convertGtOp         EQU     0x7eec
+multiply16bit       EQU     0x7cd2
+gotoNumericLabel    EQU     0x7acd
+gosubNumericLabel   EQU     0x7ca0
 scanlineMode        EQU     0x7ec1
-resetVideoTable     EQU     0x7bdf
+waitVBlank          EQU     0x7ed5
+resetVideoTable     EQU     0x78d4
 initClearFuncs      EQU     0x7ea0
 clearVertBlinds     EQU     0x7da0
-clearCursorRow      EQU     0x79a0
-printText           EQU     0x7ed5
-printChar           EQU     0x78a0
-atTextCursor        EQU     0x7ba0
-newLineScroll       EQU     0x7ca0
+clearCursorRow      EQU     0x76a0
+printText           EQU     0x7dd6
+printChar           EQU     0x79a0
+atTextCursor        EQU     0x7aa0
+newLineScroll       EQU     0x7ba0
 
 
                     ; convert equal to into a boolean
@@ -552,89 +660,121 @@ multiply16_skip     LDW     mathX
                     RET
 
 
-                    ; accumulator:mathRem = mathX / mathY, (results 16bit)
-divide16bit         LDW     mathX
-                    XORW    mathY
-                    STW     mathSign
-                    LDW     mathX
-                    BGE     divide16_skip0
-                    LDI     0
-                    SUBW    mathX
-                    STW     mathX
+numericLabel        EQU     register0
+lutLabs             EQU     register1
+lutAddrs            EQU     register2
+lutIndex            EQU     register3
+lutLabel            EQU     register4
+
+
+                    ; find numeric label and jump to it
+gotoNumericLabel    LDWI    lut_numericLabs
+                    STW     lutLabs
+                    STW     lutIndex
+                    LDWI    lut_numericAddrs
+                    STW     lutAddrs
                     
-divide16_skip0      LDW     mathY                     
-                    BGE     divide16_skip1
-                    LDI     0
-                    SUBW    mathY
-                    STW     mathY
+gotoNL_loop         LDW     lutIndex
+                    DEEK
+                    STW     lutLabel
+                    LD      lutLabel + 1
+                    ANDI    0x80                            ; check for -1
+                    BEQ     gotoNL_cont
+                    RET
                     
-divide16_skip1      LDI     0
-                    STW     mathRem
+gotoNL_cont         LDW     lutLabel
+                    SUBW    numericLabel
+                    BEQ     gotoNL_found
+                    INC     lutIndex
+                    INC     lutIndex                        ; loop through lut until found or -1
+                    BRA     gotoNL_loop
+                    
+gotoNL_found        LDW     lutIndex
+                    SUBW    lutLabs
+                    ADDW    lutAddrs
+                    DEEK
+                    CALL    giga_vAC                        ; fetch label address and jump, (note we never return from here)
+
+
+                    ; find numeric label and call it, (it had better return or welcome to lala land)
+gosubNumericLabel   LDWI    lut_numericLabs
+                    STW     lutLabs
+                    STW     lutIndex
+                    LDWI    lut_numericAddrs
+                    STW     lutAddrs
+                    
+gosubNL_loop        LDW     lutIndex
+                    DEEK
+                    STW     lutLabel
+                    LD      lutLabel + 1
+                    ANDI    0x80                            ; check for -1
+                    BEQ     gosubNL_cont
+                    RET
+                    
+gosubNL_cont        LDW     lutLabel
+                    SUBW    numericLabel
+                    BEQ     gosubNL_found
+                    INC     lutIndex
+                    INC     lutIndex                        ; loop through lut until found or -1
+                    BRA     gosubNL_loop
+                    
+gosubNL_found       LDW     lutIndex
+                    SUBW    lutLabs
+                    ADDW    lutAddrs
+                    DEEK
+                    PUSH
+                    CALL    giga_vAC                        ; fetch label address and call
+                    POP
+                    RET
+
+
+graphicsMode        EQU     register0
+waitVBlankNum       EQU     register0
+drawLine_x1         EQU     register0
+drawLine_y1         EQU     register1
+drawLine_x2         EQU     register2
+drawLine_y2         EQU     register3
+drawLine_xy1        EQU     register0
+drawLine_xy2        EQU     register1
+drawLine_dxy1       EQU     register2
+drawLine_dxy2       EQU     register3
+drawLine_dx1        EQU     register4
+drawLine_dy1        EQU     register5
+drawLine_dx2        EQU     register6
+drawLine_dy2        EQU     register7
+drawLine_sx         EQU     register8
+drawLine_sy         EQU     register9
+drawLine_h          EQU     register10
+drawLine_num        EQU     register11
+drawLine_count      EQU     register12
+drawLine_tmp        EQU     register13
     
-divide16_loop       STW     mathScratch
-                    LDW     mathRem
-                    ADDW    mathRem
-                    STW     mathRem
-                    LDW     mathX
-                    BGE     divide16_skip3
-                    INC     mathRem
-                    
-divide16_skip3      LDW     mathX
-                    ADDW    mathX
-                    STW     mathX
-                    LDW     mathRem
-                    SUBW    mathY
-                    BLT     divide16_skip4
-                    STW     mathRem
-                    INC     mathX
-                    
-divide16_skip4      LDW     mathScratch
-                    ADDI    1
-                    ANDI    0x0F
-                    BNE     divide16_loop
-                    LDW     mathSign
-                    BGE     divide16_exit
-                    LDI     0
-                    SUBW    mathX
+    
+scanlineMode        LDW     giga_romType
+                    ANDI    0xF8
+                    SUBI    romTypeValue_ROMv2
+                    BGE     scanlineM_cont
                     RET
-                    
-divide16_exit       LDW     mathX
+    
+scanlineM_cont      LDWI    SYS_SetMode_v2_80
+                    STW     giga_sysFn
+                    LDW     graphicsMode
+                    SYS     0xE6                ; 270 - max(14,80/2)
                     RET
 
 
-graphicsMode    EQU     register0
-waitVBlankNum   EQU     register0
-drawLine_x1     EQU     register0
-drawLine_y1     EQU     register1
-drawLine_x2     EQU     register2
-drawLine_y2     EQU     register3
-drawLine_xy1    EQU     register0
-drawLine_xy2    EQU     register1
-drawLine_dxy1   EQU     register2
-drawLine_dxy2   EQU     register3
-drawLine_dx1    EQU     register4
-drawLine_dy1    EQU     register5
-drawLine_dx2    EQU     register6
-drawLine_dy2    EQU     register7
-drawLine_sx     EQU     register8
-drawLine_sy     EQU     register9
-drawLine_h      EQU     register10
-drawLine_num    EQU     register11
-drawLine_count  EQU     register12
-drawLine_tmp    EQU     register13
-
-
-scanlineMode    LDW     giga_romType
-                ANDI    0xF8
-                SUBI    romTypeValue_ROMv2
-                BGE     scanlineM_cont
-                RET
-
-scanlineM_cont  LDWI    SYS_SetMode_v2_80
-                STW     giga_sysFn
-                LDW     graphicsMode
-                SYS     0xE6                ; 270 - max(14,80/2)
-                RET
+waitVBlank          LD      waitVBlankNum
+                    SUBI    0x01
+                    ST      waitVBlankNum
+                    BGE     waitVB_start
+                    RET
+    
+waitVB_start        LD      giga_frameCount
+                    SUBW    frameCountPrev
+                    BEQ     waitVB_start
+                    LD      giga_frameCount
+                    STW     frameCountPrev
+                    BRA     waitVBlank
 
 
 
@@ -720,7 +860,6 @@ clearVB_loop        LD      top
                     BLT     clearVB_loop
                     POP
                     RET
-
 
 
 textStr             EQU     register0

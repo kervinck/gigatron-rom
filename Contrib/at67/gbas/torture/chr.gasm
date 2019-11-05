@@ -45,16 +45,18 @@ _i                  EQU                     0x0036
 _char               EQU                     0x0038
 
 ; Strings
-usrStr_0x7fa0       EQU                     0x7fa0
-usrStr_0x7fa0       DB                      28 'yahooowalllallllalalalwallla'
-usrStr_0x7fbd       EQU                     0x7fbd
-usrStr_0x7fbd       DB                      3 'yes'
-usrStr_0x7fc1       EQU                     0x7fc1
-usrStr_0x7fc1       DB                      1 ' '
-usrStr_0x7fc3       EQU                     0x7fc3
-usrStr_0x7fc3       DB                      34 'wooooooooooooooooooooooooooooow!!!'
-usrStr_0x7fe6       EQU                     0x7fe6
-usrStr_0x7fe6       DB                      3 'dog'
+str_0x7fa0          EQU                     0x7fa0
+str_0x7fa0          DB                      28 'yahooowalllallllalalalwallla'
+str_0x7fbd          EQU                     0x7fbd
+str_0x7fbd          DB                      3 'yes'
+str_0x7fc1          EQU                     0x7fc1
+str_0x7fc1          DB                      1 ' '
+str_0x7fc3          EQU                     0x7fc3
+str_0x7fc3          DB                      34 'wooooooooooooooooooooooooooooow!!!'
+str_0x7fe6          EQU                     0x7fe6
+str_0x7fe6          DB                      3 'dog'
+
+; Lookup Tables
 
 ; Code
 _entryPoint_        Initialise                                              ; INIT
@@ -71,13 +73,13 @@ _next_0x0217        LDI                     0
 _next_0x021b        LDI                     0
                     STW                     _i                              ; for i = 0 to 1
 
-_next_0x021f        PrintString             usrStr_0x7fa0                   ; print "yahooowalllallllalalalwallla";
+_next_0x021f        PrintString             str_0x7fa0                      ; print "yahooowalllallllalalalwallla";
 
-                    PrintString             usrStr_0x7fbd
-                    PrintString             usrStr_0x7fc1                   ; print "yes";" ";
+                    PrintString             str_0x7fbd
+                    PrintString             str_0x7fc1                      ; print "yes";" ";
 
                     PrintInt16              0x003d
-                    PrintString             usrStr_0x7fc1                   ; print 20*3+1;" ";
+                    PrintString             str_0x7fc1                      ; print 20*3+1;" ";
 
                     LDI                     32
                     STW                     _char                           ; for char = 32 to 127
@@ -110,14 +112,14 @@ _next_0x0241        LDW                     _a
 
                     ForNextLoopUp           _k _next_0x0217 1               ; next k
 
-                    PrintString             usrStr_0x7fc3
+                    PrintString             str_0x7fc3
                     CALLI                   newLineScroll                   ; print "wooooooooooooooooooooooooooooow!!!"
 
                     LDI                     0
                     STW                     _i                              ; for i = 0 to 6
 
-_next_0x02e5        PrintString             usrStr_0x7fe6
-                    PrintString             usrStr_0x7fc1
+_next_0x02e5        PrintString             str_0x7fe6
+                    PrintString             str_0x7fc1
                     PrintVarInt16           _i
                     CALLI                   newLineScroll                   ; print "dog";" ";i
 

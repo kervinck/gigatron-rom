@@ -199,8 +199,8 @@ _label_ CALLI   _label
 _label_ CALLI   _label
 %ENDM
 
-%MACRO  DrawLineCursor
-        CALLI   drawLineCursor
+%MACRO  AtLineCursor
+        CALLI   atLineCursor
 %ENDM
 
 %MACRO  Initialise

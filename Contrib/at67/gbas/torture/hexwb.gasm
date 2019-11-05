@@ -28,7 +28,7 @@ miscFlags           EQU                     register0 + 0x1E
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_end_0x02f6         EQU                     0x02e4
+_end_0x02f6         EQU                     0x02e8
 _next_0x0237        EQU                     0x0237
 
 ; Variables
@@ -41,8 +41,10 @@ _d                  EQU                     0x003a
 _e                  EQU                     0x003c
 
 ; Strings
-usrStr_0x7fa0       EQU                     0x7fa0
-usrStr_0x7fa0       DB                      1 ' '
+str_0x7fa0          EQU                     0x7fa0
+str_0x7fa0          DB                      1 ' '
+
+; Lookup Tables
 
 ; Code
 _entryPoint_        Initialise              
@@ -78,10 +80,12 @@ _next_0x0237        LDI                     16
 
                     LDWI                    0xaa55
                     XORW                    _a
-                    ORW                     _c
                     STW                     0xd0
                     LDWI                    0xffff
-                    ANDW                    0xd0
+                    ANDW                    _c
+                    STW                     0xd2
+                    LDW                     0xd0
+                    ORW                     0xd2
                     STW                     _e                              ; e = &hAA55 XOR a OR c AND &hFFFF
 
                     LDW                     _z
@@ -89,17 +93,17 @@ _next_0x0237        LDI                     16
                     STW                     _z                              ; z = z + 1
 
                     PrintVarInt16           _a
-                    PrintString             usrStr_0x7fa0
+                    PrintString             str_0x7fa0
                     PrintVarInt16           _b
-                    PrintString             usrStr_0x7fa0
+                    PrintString             str_0x7fa0
                     PrintVarInt16           _c
-                    PrintString             usrStr_0x7fa0
+                    PrintString             str_0x7fa0
                     LDW                     _d
                     PrintAcHexByte          
-                    PrintString             usrStr_0x7fa0
+                    PrintString             str_0x7fa0
                     LDW                     _e
                     PrintAcHexWord          
-                    PrintString             usrStr_0x7fa0
+                    PrintString             str_0x7fa0
                     PrintVarInt16           _z
                     LDWI                    newLineScroll
                     CALL                    giga_vAC

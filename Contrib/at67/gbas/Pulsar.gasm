@@ -35,13 +35,10 @@ _40                 EQU                     0x027e
 _50                 EQU                     0x029a
 _60                 EQU                     0x029e
 _65                 EQU                     0x02c1
-_70                 EQU                     0x02d7
-_80                 EQU                     0x08a2
-_90                 EQU                     0x08c6
-_end_0x0358         EQU                     0x08d9
-_next_0x02ae        EQU                     0x029e
-_if_0x02db          EQU                     0x02c1
-_if_0x02fb          EQU                     0x02d7
+_70                 EQU                     0x02d6
+_80                 EQU                     0x02ee
+_90                 EQU                     0x08c4
+_end_0x0357         EQU                     0x08d7
 _page_0x08a0        EQU                     0x08a0
 
 ; Variables
@@ -85,7 +82,7 @@ _20                 LDI                     0
                     ST                      cursorXY
                     LDI                     112
                     ST                      cursorXY + 1
-                    LDWI                    printTextCursor
+                    LDWI                    atTextCursor
                     CALL                    giga_vAC
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; at 0,112:print
@@ -134,7 +131,7 @@ _60                 LDW                     _y
                     LDI                     0
                     STW                     _w                              ; w=10+y/q:if w>0 then w=0
 
-_65                 LDWI                    0x0006
+_65                 LDI                     0x06
                     PEEK                    
                     SUBI                    128
                     CALL                    convertLtOpAddr
@@ -148,16 +145,16 @@ _70                 LDI                     5
                     LDW                     _w
                     SUBW                    _z
                     STW                     drawLine_y2
-                    DrawLineCursor          
+                    AtLineCursor            
                     DrawLine                
                     LDW                     _w
                     STW                     _z                              ; line 5,w-z:z=w
 
+_80                 LDW                     _p
                     STW                     0xe0
                     LDWI                    _page_0x08a0
                     CALL                    giga_vAC
 _page_0x08a0        LDW                     0xe0
-_80                 LDW                     _p
                     STW                     mathX
                     LDW                     _v
                     STW                     mathY
@@ -179,7 +176,7 @@ _90                 ForNextLoopUp           _x _60                  30
                     LDWI                    _20
                     CALL                    giga_vAC                        ; next x:goto 20
 
-_end_0x0358         BRA                     _end_0x0358                     ; END
+_end_0x0357         BRA                     _end_0x0357                     ; END
 
 
 
@@ -197,18 +194,17 @@ convertLtOp         EQU     0x7fe7
 convertGtOp         EQU     0x7ff0
 multiply16bit       EQU     0x7dcd
 divide16bit         EQU     0x7ba0
-random16bit         EQU     0x7ef5
-resetVideoTable     EQU     0x79e1
+random16bit         EQU     0x7ed8
+resetVideoTable     EQU     0x7ee0
 initClearFuncs      EQU     0x7fa0
 clearVertBlinds     EQU     0x7ea0
 clearCursorRow      EQU     0x78a0
 drawLine            EQU     0x7aa0
 drawLineExt         EQU     0x77a0
 drawLineDelta1      EQU     0x76a0
-drawLineCursor      EQU     0x79a0
-printText           EQU     0x7ed8
+atLineCursor        EQU     0x79a0
 printChar           EQU     0x75a0
-printTextCursor     EQU     0x7da0
+atTextCursor        EQU     0x7da0
 newLineScroll       EQU     0x7ca0
 convertEqOpAddr     EQU     0x00e2
 convertNeOpAddr     EQU     0x00e4
@@ -599,54 +595,53 @@ drawLineLoadXY      LD      drawLine_x1
 drawLineLoadDXY     LDWI    SYS_LSLW8_24
                     STW     giga_sysFn          
                     LDW     drawLine_dy1
-                    SYS     0x00                ; 0x00 = 270-max(14,24/2)
+                    SYS     0x00                ; LSL 8, 0x00 = 270-max(14,24/2)
                     ADDW    drawLine_dx1
                     STW     drawLine_dxy1       ; dxy1 = dx1 + (dy1<<8)
     
                     LDW     drawLine_dy2
-                    SYS     0x00                ; 0x00 = 270-max(14,24/2)
+                    SYS     0x00                ; LSL 8, 0x00 = 270-max(14,24/2)
                     ADDW    drawLine_dx2
                     STW     drawLine_dxy2       ; dxy2 = dx2 + (dy2<<8)
                     RET
 
 
-drawLineCursor      LD      cursorXY
+atLineCursor        LD      cursorXY
                     STW     drawLine_x1
                     SUBI    160
-                    BLT     drawLC_skip0
+                    BLT     atLC_skip0
                     LDI     0
                     STW     drawLine_x1
                     
-drawLC_skip0        LDW     drawLine_x1
+atLC_skip0          LDW     drawLine_x1
                     ADDW    drawLine_x2
                     STW     drawLine_x2
                     SUBI    160
-                    BLT     drawLC_skip1
+                    BLT     atLC_skip1
                     LDI     0
                     STW     drawLine_x2
                     
-drawLC_skip1        LDW     drawLine_x2
+atLC_skip1          LDW     drawLine_x2
                     ST      cursorXY
                     
                     LD      cursorXY + 1
                     STW     drawLine_y1
                     SUBI    120
-                    BLT     drawLC_skip2
+                    BLT     atLC_skip2
                     LDI     119
                     STW     drawLine_y1
                     
-drawLC_skip2        LDW     drawLine_y1
+atLC_skip2          LDW     drawLine_y1
                     ADDW    drawLine_y2
                     STW     drawLine_y2
                     SUBI    120
-                    BLT     drawLC_skip3
+                    BLT     atLC_skip3
                     LDI     119
                     STW     drawLine_y2
                     
-drawLC_skip3        LDW     drawLine_y2            
+atLC_skip3          LDW     drawLine_y2            
                     ST      cursorXY + 1
                     RET
-
 
 
 textStr             EQU     register0
@@ -663,75 +658,7 @@ digitIndex          EQU     register8
 clearLoop           EQU     register9
     
     
-                    ; prints text string pointed to by the accumulator
-printText           PUSH
-                    LDW     textStr             
-                    PEEK
-                    ST      textLen                         ; first byte is length
-    
-printT_char         INC     textStr                         ; next char
-                    LDW     textStr             
-                    PEEK
-                    ST      textChr
-                    LDWI    printChar
-                    CALL    giga_vAC
-printT_loop         LoopCounter textLen printT_char
-                    POP
-                    RET
-
-
-                    ; prints char in textChr
-printChar           PUSH
-                    LD      textChr                         ; (char-32)*5 + 0x0700
-                    SUBI    32
-                    STW     textChr
-                    STW     textFont
-                    LSLW    
-                    LSLW    
-                    ADDW    textChr
-                    STW     textFont             
-                    LDWI    giga_text32
-                    ADDW    textFont
-                    STW     textFont                        ; text font slice base address for chars 32-81
-    
-                    LDW     textChr
-                    SUBI    50
-                    BLT     printC_draw
-                    LDW     textFont
-                    ADDI    0x06
-                    STW     textFont                        ; text font slice base address for chars 82+
-    
-printC_draw         LDWI    SYS_VDrawBits_134
-                    STW     giga_sysFn
-                    LDW     fgbgColour
-                    STW     giga_sysArg0
-                    LDWI    0x0800
-                    ADDW    cursorXY
-                    STW     giga_sysArg4                    ; xy position
-    
-                    LDI     0x05
-                    ST      textSlice
-    
-printC_slice        LDW     textFont                        ; text font slice base address
-                    LUP     0x00                            ; get ROM slice
-                    ST      giga_sysArg2        
-                    SYS     0xCB                            ; draw vertical slice, SYS_VDrawBits_134, 270 - 134/2 = 0xCB
-                    INC     textFont                        ; next vertical slice
-                    INC     giga_sysArg4                    ; next x
-                    LoopCounter textSlice printC_slice
-    
-                    LD      cursorXY
-                    ADDI    0x06
-                    ST      cursorXY
-                    SUBI    155                             ; 154 is last possible char in row
-                    BLT     printC_exit
-                    LDWI    newLineScroll                   ; next row, scroll at bottom
-                    CALL    giga_vAC
-printC_exit         POP
-                    RET
-
-
-printTextCursor     LD      cursorXY
+atTextCursor        LD      cursorXY
                     SUBI    155
                     BLT     drawTC_skip0
                     LDI     0
@@ -793,6 +720,58 @@ clearCR_loopx       SUBI    4                               ; loop is unrolled 4
     
                     INC     giga_sysArg4 + 1                ; next line                
                     LoopCounter clearLoop clearCR_loopy
+                    RET
+
+
+
+                    ; prints char in textChr
+printChar           PUSH
+                    LD      textChr                         ; (char-32)*5 + 0x0700
+                    SUBI    32
+                    STW     textChr
+                    STW     textFont
+                    LSLW    
+                    LSLW    
+                    ADDW    textChr
+                    STW     textFont             
+                    LDWI    giga_text32
+                    ADDW    textFont
+                    STW     textFont                        ; text font slice base address for chars 32-81
+    
+                    LDW     textChr
+                    SUBI    50
+                    BLT     printC_draw
+                    LDW     textFont
+                    ADDI    0x06
+                    STW     textFont                        ; text font slice base address for chars 82+
+    
+printC_draw         LDWI    SYS_VDrawBits_134
+                    STW     giga_sysFn
+                    LDW     fgbgColour
+                    STW     giga_sysArg0
+                    LDWI    0x0800
+                    ADDW    cursorXY
+                    STW     giga_sysArg4                    ; xy position
+    
+                    LDI     0x05
+                    ST      textSlice
+    
+printC_slice        LDW     textFont                        ; text font slice base address
+                    LUP     0x00                            ; get ROM slice
+                    ST      giga_sysArg2        
+                    SYS     0xCB                            ; draw vertical slice, SYS_VDrawBits_134, 270 - 134/2 = 0xCB
+                    INC     textFont                        ; next vertical slice
+                    INC     giga_sysArg4                    ; next x
+                    LoopCounter textSlice printC_slice
+    
+                    LD      cursorXY
+                    ADDI    0x06
+                    ST      cursorXY
+                    SUBI    155                             ; 154 is last possible char in row
+                    BLT     printC_exit
+                    LDWI    newLineScroll                   ; next row, scroll at bottom
+                    CALL    giga_vAC
+printC_exit         POP
                     RET
 
 

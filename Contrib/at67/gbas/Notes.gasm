@@ -47,12 +47,9 @@ _33                 EQU                     0x02d5
 _34                 EQU                     0x02dc
 _35                 EQU                     0x02e9
 _36                 EQU                     0x08a2
-_37                 EQU                     0x08b5
-_end_0x032b         EQU                     0x08c3
-_next_0x0233        EQU                     0x0233
-_next_0x02b4        EQU                     0x02ae
+_37                 EQU                     0x08b4
+_end_0x032a         EQU                     0x08c2
 _page_0x08a0        EQU                     0x08a0
-_if_0x031d          EQU                     0x08b5
 
 ; Variables
 _c                  EQU                     0x0030
@@ -60,8 +57,10 @@ _p                  EQU                     0x0032
 _n                  EQU                     0x0034
 
 ; Strings
-usrStr_0x7fa0       EQU                     0x7fa0
-usrStr_0x7fa0       DB                      12 'Playing note'
+str_0x7fa0          EQU                     0x7fa0
+str_0x7fa0          DB                      12 'Playing note'
+
+; Lookup Tables
 
 ; Code
 _entryPoint_        Initialise              
@@ -138,7 +137,7 @@ _26                 LDWI                    136
 _30                 LDI                     1
                     STW                     _n                              ; for n=1 to 95
 
-_31                 PrintString             usrStr_0x7fa0
+_31                 PrintString             str_0x7fa0
                     PrintVarInt16           _n
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print "Playing note",n
@@ -171,7 +170,7 @@ _35                 LDWI                    44
                     LDWI                    _page_0x08a0
                     CALL                    giga_vAC
 _page_0x08a0        LDW                     0xe0
-_36                 LDWI                    0x002c
+_36                 LDI                     0x2c
                     PEEK                    
                     CALL                    convertGtOpAddr
                     PageJumpBEQ             _37                 
@@ -180,7 +179,7 @@ _36                 LDWI                    0x002c
 
 _37                 ForNextLoopUp           _n _31                  95      ; next n
 
-_end_0x032b         BRA                     _end_0x032b                     ; END
+_end_0x032a         BRA                     _end_0x032a                     ; END
 
 
 
@@ -211,10 +210,6 @@ convertLeOpAddr     EQU     0x00e6
 convertGeOpAddr     EQU     0x00e8
 convertLtOpAddr     EQU     0x00ea
 convertGtOpAddr     EQU     0x00ec
-
-
-onGgVar             EQU     register0
-onGgAddr            EQU     register1
 
 
                     ; convert equal to into a boolean
