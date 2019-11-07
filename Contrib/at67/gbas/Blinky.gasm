@@ -1,7 +1,7 @@
 _startAddress_      EQU                     0x0200
 
 ; Internal variables
-register0           EQU                     0x00a0
+register0           EQU                     0x0084
 register1           EQU                     register0 + 0x02
 register2           EQU                     register0 + 0x04
 register3           EQU                     register0 + 0x06
@@ -68,9 +68,9 @@ _40                 LDI                     2
                     STW                     mathY
                     LDWI                    multiply16bit
                     CALL                    giga_vAC
-                    STW                     0xd0
+                    STW                     0xc0
                     LDWI                    256
-                    ADDW                    0xd0
+                    ADDW                    0xc0
                     PEEK                    
                     STW                     mathX
                     LDWI                    256
@@ -107,12 +107,12 @@ convertGtOp         EQU     0x7ff0
 multiply16bit       EQU     0x7ea0
 resetVideoTable     EQU     0x7ec3
 initClearFuncs      EQU     0x7fa0
-convertEqOpAddr     EQU     0x00e2
-convertNeOpAddr     EQU     0x00e4
-convertLeOpAddr     EQU     0x00e6
-convertGeOpAddr     EQU     0x00e8
-convertLtOpAddr     EQU     0x00ea
-convertGtOpAddr     EQU     0x00ec
+convertEqOpAddr     EQU     0x00d2
+convertNeOpAddr     EQU     0x00d4
+convertLeOpAddr     EQU     0x00d6
+convertGeOpAddr     EQU     0x00d8
+convertLtOpAddr     EQU     0x00da
+convertGtOpAddr     EQU     0x00dc
 
 
                     ; convert equal to into a boolean

@@ -770,7 +770,7 @@ namespace Graphics
                 uint32_t colour = (Editor::getHexEdit() && Editor::getMemoryMode() == Editor::RAM && onCursor) ? 0xFF00FF00 : 0xFFB0B0B0;
                 drawText(std::string(str), _pixels, HEX_START_X + i*HEX_CHAR_WIDE, FONT_CELL_Y*4 + j*(FONT_HEIGHT+FONT_GAP_Y), colour, onCursor, 2);
                 if(onCursor) cursorAddress = hexAddress;
-                hexAddress++;
+                hexAddress = (hexAddress + 1) & (Memory::getSizeRAM() - 1);
             }
         }
 
@@ -912,11 +912,22 @@ namespace Graphics
         uint32_t colour = (Editor::getHexEdit() && onHex) ? 0xFF00FF00 : 0xFFFFFFFF;
         drawText(std::string(str), _pixels, HEX_START, FONT_CELL_Y*3, colour, onHex, 4);
 
-        // Display native registers
-        sprintf(str, "PC:%04X  IR:%02X  OUT:%02X", Cpu::getStateS()._PC, Cpu::getStateT()._IR, Cpu::getStateT()._OUT);
-        drawText(std::string(str), _pixels, HEX_START_X, int(FONT_CELL_Y*2.0) + FONT_CELL_Y*HEX_CHARS_Y, 0xFF00FFFF, false, 0);
-        sprintf(str, "AC:%02X  X:%02X  Y:%02X  D:%02X", Cpu::getStateT()._AC, Cpu::getStateT()._X, Cpu::getStateT()._Y, Cpu::getStateT()._D);
-        drawText(std::string(str), _pixels, HEX_START_X, int(FONT_CELL_Y*3.0) + FONT_CELL_Y*HEX_CHARS_Y, 0xFF00FFFF, false, 0);
+        if(Editor::getMemoryMode() == Editor::RAM)
+        {
+            // Display vCPU registers
+            sprintf(str, "PC:%04X LR:%04X Fn:%04X", Cpu::getVPC(), Cpu::getRAM(0x001A) | (Cpu::getRAM(0x001B)<<8), Cpu::getRAM(0x0022) | (Cpu::getRAM(0x0023)<<8));
+            drawText(std::string(str), _pixels, HEX_START_X, int(FONT_CELL_Y*2.0) + FONT_CELL_Y*HEX_CHARS_Y, 0xFF00FFFF, false, 0);
+            sprintf(str, "AC:%04X SP:%02X Sr:%06X", Cpu::getRAM(0x0018) | (Cpu::getRAM(0x0019)<<8), Cpu::getRAM(0x001C), Cpu::getRAM(0x000F) | (Cpu::getRAM(0x0010)<<8) | (Cpu::getRAM(0x0011)<<16));
+            drawText(std::string(str), _pixels, HEX_START_X, int(FONT_CELL_Y*3.0) + FONT_CELL_Y*HEX_CHARS_Y, 0xFF00FFFF, false, 0);
+        }
+        else
+        {
+            // Display native registers
+            sprintf(str, "PC:%04X  IR:%02X  OUT:%02X", Cpu::getStateS()._PC, Cpu::getStateT()._IR, Cpu::getStateT()._OUT);
+            drawText(std::string(str), _pixels, HEX_START_X, int(FONT_CELL_Y*2.0) + FONT_CELL_Y*HEX_CHARS_Y, 0xFF00FFFF, false, 0);
+            sprintf(str, "AC:%02X  X:%02X  Y:%02X  D:%02X", Cpu::getStateT()._AC, Cpu::getStateT()._X, Cpu::getStateT()._Y, Cpu::getStateT()._D);
+            drawText(std::string(str), _pixels, HEX_START_X, int(FONT_CELL_Y*3.0) + FONT_CELL_Y*HEX_CHARS_Y, 0xFF00FFFF, false, 0);
+        }
     }
 
     void renderTextWindow(void)

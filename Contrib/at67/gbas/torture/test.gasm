@@ -1,7 +1,7 @@
 _startAddress_      EQU                     0x0200
 
 ; Internal variables
-register0           EQU                     0x00a0
+register0           EQU                     0x0084
 register1           EQU                     register0 + 0x02
 register2           EQU                     register0 + 0x04
 register3           EQU                     register0 + 0x06
@@ -89,30 +89,30 @@ _324532453245435435 LDWI                    -3
 
 _10                 LDW                     _d
                     ADDI                    5
-                    STW                     0xd0
+                    STW                     0xc0
                     LDI                     20
-                    ADDW                    0xd0
-                    STW                     0xd0
+                    ADDW                    0xc0
+                    STW                     0xc0
                     LDW                     _cat
                     SUBW                    _a
-                    ADDW                    0xd0
+                    ADDW                    0xc0
                     STW                     _d                              ; d = 20 + (d + 5) + (cat - a)
 
                     LDW                     _b
                     SUBI                    3
-                    STW                     0xd0
+                    STW                     0xc0
                     LDI                     25
                     SUBW                    _a
-                    ADDW                    0xd0
+                    ADDW                    0xc0
                     ADDW                    _d
                     SUBW                    _b
-                    STW                     0xd2
+                    STW                     0xc2
                     LDW                     _a
                     SUBW                    _cat
                     SUBW                    _d
-                    STW                     0xd4
-                    LDW                     0xd2
-                    SUBW                    0xd4
+                    STW                     0xc4
+                    LDW                     0xc2
+                    SUBW                    0xc4
                     STW                     _e                              ; e = b - 3 + (25 - a) + d - b - (a - cat - d)
 
                     LDI                     64
@@ -132,462 +132,462 @@ _10                 LDW                     _d
 
                     LDWI                    -2949
                     ADDW                    _b
-                    STW                     0xd0
+                    STW                     0xc0
                     LDWI                    300
                     ADDW                    _e
-                    STW                     0xd2
+                    STW                     0xc2
                     LDWI                    -900
                     ADDW                    _f
-                    STW                     0xd4
-                    LDW                     0xd2
-                    SUBW                    0xd4
-                    STW                     0xd4
-                    LDW                     0xd0
-                    SUBW                    0xd4
+                    STW                     0xc4
+                    LDW                     0xc2
+                    SUBW                    0xc4
+                    STW                     0xc4
+                    LDW                     0xc0
+                    SUBW                    0xc4
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
 _31                 LDI                     0
                     SUBW                    _g
-                    STW                     0xd0
+                    STW                     0xc0
                     LDWI                    1000
-                    ADDW                    0xd0
-                    STW                     0xd0
+                    ADDW                    0xc0
+                    STW                     0xc0
                     LDI                     24
                     SUBW                    _g
-                    STW                     0xd2
-                    LDW                     0xd0
-                    SUBW                    0xd2
+                    STW                     0xc2
+                    LDW                     0xc0
+                    SUBW                    0xc2
                     ADDW                    _f
                     STW                     _f                              ; f = -g +1000 -(24-g) +f
 
 _32                 LDI                     0
                     SUBW                    _g
-                    STW                     0xd0
+                    STW                     0xc0
                     LDWI                    1000
-                    ADDW                    0xd0
-                    STW                     0xd0
+                    ADDW                    0xc0
+                    STW                     0xc0
                     LDI                     24
                     SUBW                    _g
-                    STW                     0xd2
-                    LDW                     0xd0
-                    SUBW                    0xd2
+                    STW                     0xc2
+                    LDW                     0xc0
+                    SUBW                    0xc2
                     ADDW                    _f
                     STW                     _f                              ; f = -g +1000 -(24-g) +f
 
 _33                 LDI                     0
                     SUBW                    _g
-                    STW                     0xd0
+                    STW                     0xc0
                     LDWI                    1000
-                    ADDW                    0xd0
-                    STW                     0xd0
+                    ADDW                    0xc0
+                    STW                     0xc0
                     LDI                     24
                     SUBW                    _g
-                    STW                     0xe0
+                    STW                     0x82
                     LDWI                    _page_0x08a0
                     CALL                    giga_vAC
-_page_0x08a0        LDW                     0xe0
-                    STW                     0xd2
-                    LDW                     0xd0
-                    SUBW                    0xd2
+_page_0x08a0        LDW                     0x82
+                    STW                     0xc2
+                    LDW                     0xc0
+                    SUBW                    0xc2
                     ADDW                    _f
                     STW                     _f                              ; f = -g +1000 -(24-g) +f
 
 _34                 LDI                     0
                     SUBW                    _g
-                    STW                     0xd0
+                    STW                     0xc0
                     LDWI                    1000
-                    ADDW                    0xd0
-                    STW                     0xd0
+                    ADDW                    0xc0
+                    STW                     0xc0
                     LDI                     24
                     SUBW                    _g
-                    STW                     0xd2
-                    LDW                     0xd0
-                    SUBW                    0xd2
+                    STW                     0xc2
+                    LDW                     0xc0
+                    SUBW                    0xc2
                     ADDW                    _f
                     STW                     _f                              ; f = -g +1000 -(24-g) +f
 
 _35                 LDI                     0
                     SUBW                    _g
-                    STW                     0xd0
+                    STW                     0xc0
                     LDWI                    1000
-                    ADDW                    0xd0
-                    STW                     0xd0
+                    ADDW                    0xc0
+                    STW                     0xc0
                     LDI                     24
                     SUBW                    _g
-                    STW                     0xd2
-                    LDW                     0xd0
-                    SUBW                    0xd2
+                    STW                     0xc2
+                    LDW                     0xc0
+                    SUBW                    0xc2
                     ADDW                    _f
                     STW                     _f                              ; f = -g +1000 -(24-g) +f
 
 _36                 LDI                     0
                     SUBW                    _g
-                    STW                     0xd0
+                    STW                     0xc0
                     LDWI                    1000
-                    ADDW                    0xd0
-                    STW                     0xd0
+                    ADDW                    0xc0
+                    STW                     0xc0
                     LDI                     24
                     SUBW                    _g
-                    STW                     0xd2
-                    STW                     0xe0
+                    STW                     0xc2
+                    STW                     0x82
                     LDWI                    _page_0x09a0
                     CALL                    giga_vAC
-_page_0x09a0        LDW                     0xe0
-                    LDW                     0xd0
-                    SUBW                    0xd2
+_page_0x09a0        LDW                     0x82
+                    LDW                     0xc0
+                    SUBW                    0xc2
                     ADDW                    _f
                     STW                     _f                              ; f = -g +1000 -(24-g) +f
 
 _37                 LDI                     0
                     SUBW                    _g
-                    STW                     0xd0
+                    STW                     0xc0
                     LDWI                    1000
-                    ADDW                    0xd0
-                    STW                     0xd0
+                    ADDW                    0xc0
+                    STW                     0xc0
                     LDI                     24
                     SUBW                    _g
-                    STW                     0xd2
-                    LDW                     0xd0
-                    SUBW                    0xd2
+                    STW                     0xc2
+                    LDW                     0xc0
+                    SUBW                    0xc2
                     ADDW                    _f
                     STW                     _f                              ; f = -g +1000 -(24-g) +f
 
                     LDWI                    -2949
                     ADDW                    _b
-                    STW                     0xd0
+                    STW                     0xc0
                     LDWI                    300
                     ADDW                    _e
-                    STW                     0xd2
+                    STW                     0xc2
                     LDWI                    -900
                     ADDW                    _f
-                    STW                     0xd4
-                    LDW                     0xd2
-                    SUBW                    0xd4
-                    STW                     0xd4
-                    LDW                     0xd0
-                    SUBW                    0xd4
+                    STW                     0xc4
+                    LDW                     0xc2
+                    SUBW                    0xc4
+                    STW                     0xc4
+                    LDW                     0xc0
+                    SUBW                    0xc4
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
                     LDWI                    -2949
                     ADDW                    _b
-                    STW                     0xd0
+                    STW                     0xc0
                     LDWI                    300
                     ADDW                    _e
-                    STW                     0xd2
-                    STW                     0xe0
+                    STW                     0xc2
+                    STW                     0x82
                     LDWI                    _page_0x0aa0
                     CALL                    giga_vAC
-_page_0x0aa0        LDW                     0xe0
+_page_0x0aa0        LDW                     0x82
                     LDWI                    -900
                     ADDW                    _f
-                    STW                     0xd4
-                    LDW                     0xd2
-                    SUBW                    0xd4
-                    STW                     0xd4
-                    LDW                     0xd0
-                    SUBW                    0xd4
+                    STW                     0xc4
+                    LDW                     0xc2
+                    SUBW                    0xc4
+                    STW                     0xc4
+                    LDW                     0xc0
+                    SUBW                    0xc4
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
                     LDWI                    -2949
                     ADDW                    _b
-                    STW                     0xd0
+                    STW                     0xc0
                     LDWI                    300
                     ADDW                    _e
-                    STW                     0xd2
+                    STW                     0xc2
                     LDWI                    -900
                     ADDW                    _f
-                    STW                     0xd4
-                    LDW                     0xd2
-                    SUBW                    0xd4
-                    STW                     0xd4
-                    LDW                     0xd0
-                    SUBW                    0xd4
+                    STW                     0xc4
+                    LDW                     0xc2
+                    SUBW                    0xc4
+                    STW                     0xc4
+                    LDW                     0xc0
+                    SUBW                    0xc4
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
                     LDWI                    -2949
                     ADDW                    _b
-                    STW                     0xd0
+                    STW                     0xc0
                     LDWI                    300
                     ADDW                    _e
-                    STW                     0xd2
+                    STW                     0xc2
                     LDWI                    -900
                     ADDW                    _f
-                    STW                     0xd4
-                    LDW                     0xd2
-                    SUBW                    0xd4
-                    STW                     0xd4
-                    LDW                     0xd0
-                    SUBW                    0xd4
+                    STW                     0xc4
+                    LDW                     0xc2
+                    SUBW                    0xc4
+                    STW                     0xc4
+                    LDW                     0xc0
+                    SUBW                    0xc4
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
-                    STW                     0xe0
+                    STW                     0x82
                     LDWI                    _page_0x0ba0
                     CALL                    giga_vAC
-_page_0x0ba0        LDW                     0xe0
+_page_0x0ba0        LDW                     0x82
                     LDWI                    -2949
                     ADDW                    _b
-                    STW                     0xd0
+                    STW                     0xc0
                     LDWI                    300
                     ADDW                    _e
-                    STW                     0xd2
+                    STW                     0xc2
                     LDWI                    -900
                     ADDW                    _f
-                    STW                     0xd4
-                    LDW                     0xd2
-                    SUBW                    0xd4
-                    STW                     0xd4
-                    LDW                     0xd0
-                    SUBW                    0xd4
+                    STW                     0xc4
+                    LDW                     0xc2
+                    SUBW                    0xc4
+                    STW                     0xc4
+                    LDW                     0xc0
+                    SUBW                    0xc4
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
                     LDWI                    -2949
                     ADDW                    _b
-                    STW                     0xd0
+                    STW                     0xc0
                     LDWI                    300
                     ADDW                    _e
-                    STW                     0xd2
+                    STW                     0xc2
                     LDWI                    -900
                     ADDW                    _f
-                    STW                     0xd4
-                    LDW                     0xd2
-                    SUBW                    0xd4
-                    STW                     0xd4
-                    LDW                     0xd0
-                    SUBW                    0xd4
+                    STW                     0xc4
+                    LDW                     0xc2
+                    SUBW                    0xc4
+                    STW                     0xc4
+                    LDW                     0xc0
+                    SUBW                    0xc4
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
                     LDWI                    -2949
                     ADDW                    _b
-                    STW                     0xd0
+                    STW                     0xc0
                     LDWI                    300
                     ADDW                    _e
-                    STW                     0xd2
+                    STW                     0xc2
                     LDWI                    -900
-                    STW                     0xe0
+                    STW                     0x82
                     LDWI                    _page_0x0ca0
                     CALL                    giga_vAC
-_page_0x0ca0        LDW                     0xe0
+_page_0x0ca0        LDW                     0x82
                     ADDW                    _f
-                    STW                     0xd4
-                    LDW                     0xd2
-                    SUBW                    0xd4
-                    STW                     0xd4
-                    LDW                     0xd0
-                    SUBW                    0xd4
+                    STW                     0xc4
+                    LDW                     0xc2
+                    SUBW                    0xc4
+                    STW                     0xc4
+                    LDW                     0xc0
+                    SUBW                    0xc4
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
                     LDWI                    -2949
                     ADDW                    _b
-                    STW                     0xd0
+                    STW                     0xc0
                     LDWI                    300
                     ADDW                    _e
-                    STW                     0xd2
+                    STW                     0xc2
                     LDWI                    -900
                     ADDW                    _f
-                    STW                     0xd4
-                    LDW                     0xd2
-                    SUBW                    0xd4
-                    STW                     0xd4
-                    LDW                     0xd0
-                    SUBW                    0xd4
+                    STW                     0xc4
+                    LDW                     0xc2
+                    SUBW                    0xc4
+                    STW                     0xc4
+                    LDW                     0xc0
+                    SUBW                    0xc4
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
                     LDWI                    -2949
                     ADDW                    _b
-                    STW                     0xd0
+                    STW                     0xc0
                     LDWI                    300
                     ADDW                    _e
-                    STW                     0xd2
+                    STW                     0xc2
                     LDWI                    -900
                     ADDW                    _f
-                    STW                     0xd4
-                    LDW                     0xd2
-                    SUBW                    0xd4
-                    STW                     0xd4
-                    LDW                     0xd0
-                    SUBW                    0xd4
+                    STW                     0xc4
+                    LDW                     0xc2
+                    SUBW                    0xc4
+                    STW                     0xc4
+                    LDW                     0xc0
+                    SUBW                    0xc4
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
-                    STW                     0xe0
+                    STW                     0x82
                     LDWI                    _page_0x0da0
                     CALL                    giga_vAC
-_page_0x0da0        LDW                     0xe0
+_page_0x0da0        LDW                     0x82
                     LDWI                    -2949
                     ADDW                    _b
-                    STW                     0xd0
+                    STW                     0xc0
                     LDWI                    300
                     ADDW                    _e
-                    STW                     0xd2
+                    STW                     0xc2
                     LDWI                    -900
                     ADDW                    _f
-                    STW                     0xd4
-                    LDW                     0xd2
-                    SUBW                    0xd4
-                    STW                     0xd4
-                    LDW                     0xd0
-                    SUBW                    0xd4
+                    STW                     0xc4
+                    LDW                     0xc2
+                    SUBW                    0xc4
+                    STW                     0xc4
+                    LDW                     0xc0
+                    SUBW                    0xc4
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
                     LDWI                    -2949
                     ADDW                    _b
-                    STW                     0xd0
+                    STW                     0xc0
                     LDWI                    300
                     ADDW                    _e
-                    STW                     0xd2
+                    STW                     0xc2
                     LDWI                    -900
                     ADDW                    _f
-                    STW                     0xd4
-                    LDW                     0xd2
-                    SUBW                    0xd4
-                    STW                     0xd4
-                    LDW                     0xd0
-                    SUBW                    0xd4
+                    STW                     0xc4
+                    LDW                     0xc2
+                    SUBW                    0xc4
+                    STW                     0xc4
+                    LDW                     0xc0
+                    SUBW                    0xc4
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
                     LDWI                    -2949
                     ADDW                    _b
-                    STW                     0xd0
+                    STW                     0xc0
                     LDWI                    300
                     ADDW                    _e
-                    STW                     0xd2
+                    STW                     0xc2
                     LDWI                    -900
-                    STW                     0xe0
+                    STW                     0x82
                     LDWI                    _page_0x0ea0
                     CALL                    giga_vAC
-_page_0x0ea0        LDW                     0xe0
+_page_0x0ea0        LDW                     0x82
                     ADDW                    _f
-                    STW                     0xd4
-                    LDW                     0xd2
-                    SUBW                    0xd4
-                    STW                     0xd4
-                    LDW                     0xd0
-                    SUBW                    0xd4
+                    STW                     0xc4
+                    LDW                     0xc2
+                    SUBW                    0xc4
+                    STW                     0xc4
+                    LDW                     0xc0
+                    SUBW                    0xc4
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
                     LDWI                    -2949
                     ADDW                    _b
-                    STW                     0xd0
+                    STW                     0xc0
                     LDWI                    300
                     ADDW                    _e
-                    STW                     0xd2
+                    STW                     0xc2
                     LDWI                    -900
                     ADDW                    _f
-                    STW                     0xd4
-                    LDW                     0xd2
-                    SUBW                    0xd4
-                    STW                     0xd4
-                    LDW                     0xd0
-                    SUBW                    0xd4
+                    STW                     0xc4
+                    LDW                     0xc2
+                    SUBW                    0xc4
+                    STW                     0xc4
+                    LDW                     0xc0
+                    SUBW                    0xc4
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
                     LDWI                    -2949
                     ADDW                    _b
-                    STW                     0xd0
+                    STW                     0xc0
                     LDWI                    300
                     ADDW                    _e
-                    STW                     0xd2
+                    STW                     0xc2
                     LDWI                    -900
                     ADDW                    _f
-                    STW                     0xd4
-                    LDW                     0xd2
-                    SUBW                    0xd4
-                    STW                     0xd4
-                    LDW                     0xd0
-                    SUBW                    0xd4
+                    STW                     0xc4
+                    LDW                     0xc2
+                    SUBW                    0xc4
+                    STW                     0xc4
+                    LDW                     0xc0
+                    SUBW                    0xc4
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
-                    STW                     0xe0
+                    STW                     0x82
                     LDWI                    _page_0x0fa0
                     CALL                    giga_vAC
-_page_0x0fa0        LDW                     0xe0
+_page_0x0fa0        LDW                     0x82
                     LDWI                    -2949
                     ADDW                    _b
-                    STW                     0xd0
+                    STW                     0xc0
                     LDWI                    300
                     ADDW                    _e
-                    STW                     0xd2
+                    STW                     0xc2
                     LDWI                    -900
                     ADDW                    _f
-                    STW                     0xd4
-                    LDW                     0xd2
-                    SUBW                    0xd4
-                    STW                     0xd4
-                    LDW                     0xd0
-                    SUBW                    0xd4
+                    STW                     0xc4
+                    LDW                     0xc2
+                    SUBW                    0xc4
+                    STW                     0xc4
+                    LDW                     0xc0
+                    SUBW                    0xc4
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
                     LDWI                    -2949
                     ADDW                    _b
-                    STW                     0xd0
+                    STW                     0xc0
                     LDWI                    300
                     ADDW                    _e
-                    STW                     0xd2
+                    STW                     0xc2
                     LDWI                    -900
                     ADDW                    _f
-                    STW                     0xd4
-                    LDW                     0xd2
-                    SUBW                    0xd4
-                    STW                     0xd4
-                    LDW                     0xd0
-                    SUBW                    0xd4
+                    STW                     0xc4
+                    LDW                     0xc2
+                    SUBW                    0xc4
+                    STW                     0xc4
+                    LDW                     0xc0
+                    SUBW                    0xc4
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
                     LDWI                    -2949
                     ADDW                    _b
-                    STW                     0xd0
+                    STW                     0xc0
                     LDWI                    300
                     ADDW                    _e
-                    STW                     0xd2
+                    STW                     0xc2
                     LDWI                    -900
-                    STW                     0xe0
+                    STW                     0x82
                     LDWI                    _page_0x10a0
                     CALL                    giga_vAC
-_page_0x10a0        LDW                     0xe0
+_page_0x10a0        LDW                     0x82
                     ADDW                    _f
-                    STW                     0xd4
-                    LDW                     0xd2
-                    SUBW                    0xd4
-                    STW                     0xd4
-                    LDW                     0xd0
-                    SUBW                    0xd4
+                    STW                     0xc4
+                    LDW                     0xc2
+                    SUBW                    0xc4
+                    STW                     0xc4
+                    LDW                     0xc0
+                    SUBW                    0xc4
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
                     LDWI                    -2949
                     ADDW                    _b
-                    STW                     0xd0
+                    STW                     0xc0
                     LDWI                    300
                     ADDW                    _e
-                    STW                     0xd2
+                    STW                     0xc2
                     LDWI                    -900
                     ADDW                    _f
-                    STW                     0xd4
-                    LDW                     0xd2
-                    SUBW                    0xd4
-                    STW                     0xd4
-                    LDW                     0xd0
-                    SUBW                    0xd4
+                    STW                     0xc4
+                    LDW                     0xc2
+                    SUBW                    0xc4
+                    STW                     0xc4
+                    LDW                     0xc0
+                    SUBW                    0xc4
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
                     LDWI                    -2949
                     ADDW                    _b
-                    STW                     0xd0
+                    STW                     0xc0
                     LDWI                    300
                     ADDW                    _e
-                    STW                     0xd2
+                    STW                     0xc2
                     LDWI                    -900
                     ADDW                    _f
-                    STW                     0xd4
-                    LDW                     0xd2
-                    SUBW                    0xd4
-                    STW                     0xd4
-                    LDW                     0xd0
-                    SUBW                    0xd4
+                    STW                     0xc4
+                    LDW                     0xc2
+                    SUBW                    0xc4
+                    STW                     0xc4
+                    LDW                     0xc0
+                    SUBW                    0xc4
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
-                    STW                     0xe0
+                    STW                     0x82
                     LDWI                    _page_0x11a0
                     CALL                    giga_vAC
-_page_0x11a0        LDW                     0xe0
+_page_0x11a0        LDW                     0x82
                     PrintVarInt16           _a
                     PrintString             str_0x7fa0
                     PrintVarInt16           _b
@@ -595,10 +595,10 @@ _page_0x11a0        LDW                     0xe0
                     PrintVarInt16           _d
                     PrintString             str_0x7fa0
                     PrintVarInt16           _e
-                    STW                     0xe0
+                    STW                     0x82
                     LDWI                    _page_0x12a0
                     CALL                    giga_vAC
-_page_0x12a0        LDW                     0xe0
+_page_0x12a0        LDW                     0x82
                     PrintString             str_0x7fa0
                     PrintVarInt16           _f
                     PrintString             str_0x7fa0
@@ -613,10 +613,10 @@ _page_0x12a0        LDW                     0xe0
 _40                 LDWI                    _10
                     CALL                    giga_vAC                        ; goto 10
 
-                    STW                     0xe0
+                    STW                     0x82
                     LDWI                    _page_0x13a0
                     CALL                    giga_vAC
-_page_0x13a0        LDW                     0xe0
+_page_0x13a0        LDW                     0x82
 _end_0x06e0         BRA                     _end_0x06e0                     ; end
 
 _end_0x06e2         BRA                     _end_0x06e2                     ; END
@@ -638,17 +638,18 @@ convertGtOp         EQU     0x7ff2
 resetVideoTable     EQU     0x7dbd
 initClearFuncs      EQU     0x7fa2
 clearCursorRow      EQU     0x7ba0
+printInit           EQU     0x7eef
 printText           EQU     0x7da0
 printDigit          EQU     0x7dd9
 printInt16          EQU     0x7ea0
 printChar           EQU     0x7aa0
 newLineScroll       EQU     0x7ca0
-convertEqOpAddr     EQU     0x00e2
-convertNeOpAddr     EQU     0x00e4
-convertLeOpAddr     EQU     0x00e6
-convertGeOpAddr     EQU     0x00e8
-convertLtOpAddr     EQU     0x00ea
-convertGtOpAddr     EQU     0x00ec
+convertEqOpAddr     EQU     0x00d2
+convertNeOpAddr     EQU     0x00d4
+convertLeOpAddr     EQU     0x00d6
+convertGeOpAddr     EQU     0x00d8
+convertLtOpAddr     EQU     0x00da
+convertGtOpAddr     EQU     0x00dc
 
 
                     ; convert equal to into a boolean
@@ -844,6 +845,17 @@ printI16_pos        STW     textNum
                     RET
 
 
+
+printInit           LDWI    SYS_VDrawBits_134
+                    STW     giga_sysFn
+                    LDW     fgbgColour
+                    STW     giga_sysArg0
+                    LDWI    0x0800
+                    ADDW    cursorXY
+                    STW     giga_sysArg4                    ; xy position
+                    RET
+
+
                     ; prints char in textChr
 printChar           PUSH
                     LD      textChr                         ; (char-32)*5 + 0x0700
@@ -865,29 +877,25 @@ printChar           PUSH
                     ADDI    0x06
                     STW     textFont                        ; text font slice base address for chars 82+
     
-printC_draw         LDWI    SYS_VDrawBits_134
-                    STW     giga_sysFn
-                    LDW     fgbgColour
-                    STW     giga_sysArg0
-                    LDWI    0x0800
-                    ADDW    cursorXY
-                    STW     giga_sysArg4                    ; xy position
-    
+printC_draw         LDWI    printInit
+                    CALL    giga_vAC
                     LDI     0x05
                     ST      textSlice
     
 printC_slice        LDW     textFont                        ; text font slice base address
                     LUP     0x00                            ; get ROM slice
-                    ST      giga_sysArg2        
+                    ST      giga_sysArg2
                     SYS     0xCB                            ; draw vertical slice, SYS_VDrawBits_134, 270 - 134/2 = 0xCB
                     INC     textFont                        ; next vertical slice
                     INC     giga_sysArg4                    ; next x
                     LoopCounter textSlice printC_slice
+                    ST      giga_sysArg2                    ; result of loopCounter is always 0
+                    SYS     0xCB                            ; draw last blank slice
     
                     LD      cursorXY
                     ADDI    0x06
                     ST      cursorXY
-                    SUBI    155                             ; 154 is last possible char in row
+                    SUBI    giga_xres - 5                   ; giga_xres - 6, (154), is last possible char in row
                     BLT     printC_exit
                     LDWI    newLineScroll                   ; next row, scroll at bottom
                     CALL    giga_vAC
@@ -949,7 +957,7 @@ newLS_cont0         PUSH
                     LD      cursorXY+1
                     ADDI    8
                     ST      cursorXY+1
-                    SUBI    120
+                    SUBI    giga_yres
                     BLT     newLS_exit
                     
 newLS_cont1         LDWI    clearCursorRow

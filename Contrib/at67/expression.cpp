@@ -234,7 +234,7 @@ namespace Expression
         return output;
     }
 
-    std::string collapseWhitespaceNotStrings(std::string& input)
+    std::string collapseWhitespaceNotStrings(const std::string& input)
     {
         std::string output;
         int spaceCount = 0;        
@@ -383,7 +383,7 @@ namespace Expression
         if(it == s.end()) return std::string("");
 
         size_t start = it - s.begin();
-        size_t end = s.find_first_of("-+/*();,<>= ");
+        size_t end = s.find_first_of("-+/*%<>=();, ");
         if(end == std::string::npos) return s.substr(start);
 
         return s.substr(start, end - start);
@@ -725,6 +725,13 @@ namespace Expression
     std::string& getExpressionToParseString(void) {return _expressionToParse;}
     int getLineNumber(void) {return _lineNumber;}
 
+    void setExpression(const std::string& expression)
+    {
+        _advanceError = false;
+        _expressionToParse = expression;
+        _expression = (char*)_expressionToParse.c_str();
+    }
+
     char peek(void)
     {
         if(_advanceError) return 0;
@@ -737,6 +744,7 @@ namespace Expression
         if(_advanceError) return 0;
 
         char chr = *_expression;
+        //fprintf(stderr, "%s : %s : %c\n", _expressionToParse.c_str(), _expression, chr);
         advance(1);
         return chr;
     }
@@ -805,7 +813,7 @@ namespace Expression
             if(peek() != ')')
             {
                 fprintf(stderr, "Expression::factor() : Missing ')' in '%s' on line %d\n", _expressionToParse.c_str(), _lineNumber + 1);
-                numeric = Numeric(0, false, false, std::string(""));
+                numeric = Numeric(0, -1, false, false, std::string(""));
             }
             get();
         }
@@ -814,11 +822,11 @@ namespace Expression
             if(!number(value))
             {
                 fprintf(stderr, "Expression::factor() : Bad numeric data in '%s' on line %d\n", _expressionToParse.c_str(), _lineNumber + 1);
-                numeric = Numeric(0, false, false, std::string(""));
+                numeric = Numeric(0, -1, false, false, std::string(""));
             }
             else
             {
-                numeric = Numeric(value, true, false, std::string(""));
+                numeric = Numeric(value, -1, true, false, std::string(""));
             }
         }
         else
@@ -833,7 +841,7 @@ namespace Expression
                 case '-': get(); numeric = factor(0); numeric = neg(numeric); break;
                 case '~': get(); numeric = factor(0); numeric = not(numeric); break;
 
-                default: numeric = Numeric(defaultValue, true, true, std::string(_expression)); break;
+                default: numeric = Numeric(defaultValue, -1, true, true, std::string(_expression)); break;
             }
         }
 

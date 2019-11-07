@@ -1,7 +1,7 @@
 _startAddress_      EQU                     0x0200
 
 ; Internal variables
-register0           EQU                     0x00a0
+register0           EQU                     0x0084
 register1           EQU                     register0 + 0x02
 register2           EQU                     register0 + 0x04
 register3           EQU                     register0 + 0x06
@@ -28,11 +28,12 @@ miscFlags           EQU                     register0 + 0x1E
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x0214
-_blamo              EQU                     0x08a2
-_end_0x0327         EQU                     0x08a0
-_end_0x03ab         EQU                     0x09b1
-_next_0x033b        EQU                     0x08b2
+_10                 EQU                     0x0212
+_blamo              EQU                     0x02f3
+_end_0x0323         EQU                     0x02f1
+_end_0x03a7         EQU                     0x09ab
+_page_0x08a0        EQU                     0x08a0
+_next_0x0337        EQU                     0x08af
 _page_0x09a0        EQU                     0x09a0
 
 ; Variables
@@ -61,8 +62,7 @@ str_0x7fa7          DB                      3 'dog'
 ; Code
 _entryPoint_        Initialise                                              ; INIT
 
-                    LDWI                    clearVertBlinds
-                    CALL                    giga_vAC                        ; cls
+                    CALLI                   clearVertBlinds                 ; cls
 
 _10                 LDI                     33
                     STW                     _addr                           ; addr = &h21
@@ -73,37 +73,37 @@ _10                 LDI                     33
 
                     LDWI                    -1
                     SUBW                    _addr
-                    STW                     0xd0
+                    STW                     0xc0
                     LDWI                    0xf000
                     PEEK                    
-                    STW                     0xd2
+                    STW                     0xc2
                     LDWI                    0x0fff
-                    ORW                     0xd2
+                    ORW                     0xc2
                     PEEK                    
-                    STW                     0xd4
+                    STW                     0xc4
                     LDW                     _addr
-                    ANDW                    0xd4
+                    ANDW                    0xc4
                     PEEK                    
                     ANDI                    252
-                    STW                     0xd8
-                    LDW                     0xd0
-                    SUBW                    0xd8
-                    STW                     0xd8
+                    STW                     0xc8
+                    LDW                     0xc0
+                    SUBW                    0xc8
+                    STW                     0xc8
                     LDW                     _addr
                     ADDI                    1
                     PEEK                    
-                    STW                     0xdc
-                    LDW                     0xd8
-                    ORW                     0xdc
+                    STW                     0xcc
+                    LDW                     0xc8
+                    ORW                     0xcc
                     ADDI                    23
                     XORI                    15
-                    STW                     0xdc
+                    STW                     0xcc
                     LDWI                    -57
-                    ADDW                    0xdc
-                    STW                     0xdc
+                    ADDW                    0xcc
+                    STW                     0xcc
                     LDWI                    -1
                     SUBW                    _addr
-                    ADDW                    0xdc
+                    ADDW                    0xcc
                     STW                     _a                              ; a = NOT addr - peek(addr AND pEeK(&h0FFF OR peek(&hF000))) AND &hFC OR peek(addr+1) + 23 XOR &B00001111 - NOT 56 + NOT addr
 
                     LDI                     131
@@ -149,8 +149,7 @@ _10                 LDI                     33
                     LDW                     _z
                     ANDI                    63
                     ST                      cursorXY + 1
-                    LDWI                    atTextCursor
-                    CALL                    giga_vAC                        ; at x, (z AND &h3F)
+                    CALLI                   atTextCursor                    ; at x, (z AND &h3F)
 
                     LDW                     _x
                     PrintAcHexWord          
@@ -159,11 +158,11 @@ _10                 LDI                     33
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print hexw$(x);" ";hexw$(z)
 
-                    CALLI                    _end_0x0327
-_end_0x0327         BRA                     _end_0x0327                     ; END
+_end_0x0323         BRA                     _end_0x0323                     ; END
 
 _blamo              PUSH                    
-                    LDWI                    23205
+                    CALLI                   _page_0x08a0
+_page_0x08a0        LDWI                    23205
                     STW                     _b                              ; b = &haa55 XOR &hF0F0
 
                     LDW                     _b
@@ -173,7 +172,7 @@ _blamo              PUSH
                     LDI                     0
                     STW                     _i                              ; for i = 0 to 10
 
-_next_0x033b        LDWI                    str_0x7fa0
+_next_0x0337        LDWI                    str_0x7fa0
                     STW                     _c                              ; c = CHR$(32)
 
                     LDI                     0x00
@@ -200,17 +199,17 @@ _next_0x033b        LDWI                    str_0x7fa0
                     PrintAcHexWord          
                     CALLI                   newLineScroll                   ; print i; " " ; hexw$(b)
 
-                    ForNextLoopUp           _i _next_0x033b 10              ; next i
+                    ForNextLoopUp           _i _next_0x0337 10              ; next i
 
                     LDWI                    -1
                     SUBW                    _g
-                    STW                     0xd0
-                    CALLI                   _page_0x09a0
-_page_0x09a0        LDW                     _z
-                    SUBW                    0xd0
+                    STW                     0xc0
+                    LDW                     _z
+                    SUBW                    0xc0
                     STW                     _g                              ; g = z - NOT g
 
-                    LDWI                    -1
+                    CALLI                   _page_0x09a0
+_page_0x09a0        LDWI                    -1
                     SUBW                    _a
                     SUBW                    _d
                     STW                     _h                              ; h = NOT a - d
@@ -218,7 +217,7 @@ _page_0x09a0        LDW                     _z
                     POP                     
                     RET                                                     ; return
 
-_end_0x03ab         BRA                     _end_0x03ab                     ; END
+_end_0x03a7         BRA                     _end_0x03a7                     ; END
 
 
 
@@ -239,6 +238,7 @@ resetVideoTable     EQU     0x7bd6
 initClearFuncs      EQU     0x7fab
 clearVertBlinds     EQU     0x7ea0
 clearCursorRow      EQU     0x7aa0
+printInit           EQU     0x7ae2
 printText           EQU     0x7ed6
 printDigit          EQU     0x79a0
 printInt16          EQU     0x7ca0
@@ -478,6 +478,17 @@ printI16_pos        STW     textNum
                     RET
 
 
+
+printInit           LDWI    SYS_VDrawBits_134
+                    STW     giga_sysFn
+                    LDW     fgbgColour
+                    STW     giga_sysArg0
+                    LDWI    0x0800
+                    ADDW    cursorXY
+                    STW     giga_sysArg4                    ; xy position
+                    RET
+
+
                     ; prints char in the accumulator
 printChar           PUSH
                     ST      textChr                         ; (char-32)*5 + 0x0700
@@ -499,14 +510,7 @@ printChar           PUSH
                     ADDI    0x06
                     STW     textFont                        ; text font slice base address for chars 82+
             
-printC_draw         LDWI    SYS_VDrawBits_134
-                    STW     giga_sysFn
-                    LDW     fgbgColour
-                    STW     giga_sysArg0
-                    LDWI    0x0800
-                    ADDW    cursorXY
-                    STW     giga_sysArg4                    ; xy position
-            
+printC_draw         CALLI   printInit
                     LDI     0x05
                     ST      textSlice
             
@@ -517,11 +521,13 @@ printC_slice        LDW     textFont                        ; text font slice ba
                     INC     textFont                        ; next vertical slice
                     INC     giga_sysArg4                    ; next x
                     LoopCounter textSlice printC_slice
-            
+                    ST      giga_sysArg2                    ; result of loopCounter is always 0
+                    SYS     0xCB                            ; draw last blank slice
+
                     LD      cursorXY
                     ADDI    0x06
                     ST      cursorXY
-                    SUBI    155                             ; 154 is last possible char in row
+                    SUBI    giga_xres - 5                   ; giga_xres - 6, (154), is last possible char in row
                     BLT     printC_exit
                     CALLI   newLineScroll ; next row, scroll at bottom
 printC_exit         POP
@@ -563,26 +569,26 @@ printHexWord        PUSH
 
 
 atTextCursor        LD      cursorXY
-                    SUBI    155
-                    BLT     drawTC_skip0
+                    SUBI    giga_xres - 5
+                    BLT     atTC_skip0
                     LDI     0
                     STW     cursorXY
                     
-drawTC_skip0        LD      cursorXY + 1
-                    SUBI    113
-                    BLT     drawTC_skip1
-                    LDI     112
+atTC_skip0          LD      cursorXY + 1
+                    SUBI    giga_yres - 7
+                    BLT     atTC_skip1
+                    LDI     giga_yres - 8
                     STW     cursorXY + 1
                     
-drawTC_skip1        LD      cursorXY + 1
-                    SUBI    112
-                    BGE     drawTC_skip2
+atTC_skip1          LD      cursorXY + 1
+                    SUBI    giga_yres - 8
+                    BGE     atTC_skip2
                     LDWI    0x7FFF
                     ANDW    miscFlags
                     STW     miscFlags                       ; reset on bottom row flag
                     RET
                     
-drawTC_skip2        LDWI    0x8000
+atTC_skip2          LDWI    0x8000
                     ORW     miscFlags
                     STW     miscFlags                       ; set on bottom row flag
                     RET
@@ -627,7 +633,7 @@ clearCR_loopx       SUBI    4                               ; loop is unrolled 4
                     RET
 
 
-              ;     print from top row to bottom row, then start scrolling 
+                    ; print from top row to bottom row, then start scrolling 
 newLineScroll       LDI     0x02                            ; x offset slightly
                     ST      cursorXY
                     LDWI    0x0001
@@ -642,7 +648,7 @@ newLS_cont0         PUSH
                     LD      cursorXY+1
                     ADDI    8
                     ST      cursorXY+1
-                    SUBI    120
+                    SUBI    giga_yres
                     BLT     newLS_exit
                             
 newLS_cont1         CALLI   clearCursorRow
@@ -668,7 +674,7 @@ newLS_adjust        ADDI    8
     
                     LDWI    0x8000
                     ORW     miscFlags
-                    STW     miscFlags     
+                    STW     miscFlags                       ; set on bottom row flag
                     
                     ; read scan line pointer for last char row, use this as cursor position
                     LDWI    giga_videoTable + 0x00E0

@@ -1,7 +1,6 @@
-    _useOpcodeCALLI_
-    
+        
     inv=0:char=inv:posx=char:posy=posx
-    fg=peek(180) : bg=peek(181)
+    fg=peek(152) : bg=peek(153)
     a=0:b=a:p=256+252:mode 2:cls:z=2:gosub 198
     
 2   k=peek(16)
@@ -10,8 +9,8 @@
     if k>126 then goto 2
     gosub k
     poke p,a:poke p+1,b
-    poke 44,30:goto 2
-
+    goto 2
+    
 113 a=73 :b=8 :char=81:posx=2  :posy=8:gosub inverse:return:'C
 50  a=11 :b=9 :char=50:posx=8  :posy=0:gosub inverse:return:'C#
 119 a=80 :b=9 :char=87:posx=14 :posy=8:gosub inverse:return:'D
@@ -29,33 +28,35 @@
 111 a=31 :b=19:char=79:posx=98 :posy=8:gosub inverse:return:'D
 48  a=50 :b=20:char=48:posx=104:posy=0:gosub inverse:return:'D#
 112 a=77 :b=21:char=80:posx=110:posy=8:gosub inverse:return:'E
-122 if peek(15)=255 then z=(z+1)AND3:goto 200
+122 if peek(15)=255 then z=(z+1)AND3:a=0:b=a:goto 200
     a=0:b=a:return
 
 198 print " 2 3   5 6 7   9 0"
     print "Q W E R T Y U I O P"
 
 200 for c=1 to 4
-    p=256*c+252:poke p-1,z
-    poke p,0:poke p+1,0
+    p=256*c+252
+    poke p,0:poke p+1,0:poke p-1,z
     next c
     at 2,24:print "Z: ";
-    goto 206+z
+    gosub 206+z
+    return
 
 206 print "Metallic":return
 207 print "Triangle":return
 208 print "Pulse   ":return
 209 print "Sawtooth":return
 
-inverse: inv=1 : poke 180,bg : poke 181,fg
-         gosub pchar
+inverse: inv=1 : poke 152,bg : poke 153,fg
+         gosub printChr
          return
          
-normal:  inv=0 : poke 180,fg : poke 181,bg
-         gosub pchar
-         return
+normal: inv=0 : poke 152,fg : poke 153,bg
+        gosub printChr
+        return
          
-pchar:   at posx,posy
-         print chr$(char)
-         return
+printChr: at posx,posy
+          print chr$(char)
+          poke 44,15
+          return
          

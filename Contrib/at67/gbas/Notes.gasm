@@ -1,7 +1,7 @@
 _startAddress_      EQU                     0x0200
 
 ; Internal variables
-register0           EQU                     0x00a0
+register0           EQU                     0x0084
 register1           EQU                     register0 + 0x02
 register2           EQU                     register0 + 0x04
 register3           EQU                     register0 + 0x06
@@ -44,11 +44,11 @@ _30                 EQU                     0x02aa
 _31                 EQU                     0x02ae
 _32                 EQU                     0x02c6
 _33                 EQU                     0x02d5
-_34                 EQU                     0x02dc
-_35                 EQU                     0x02e9
+_34                 EQU                     0x02db
+_35                 EQU                     0x02e7
 _36                 EQU                     0x08a2
 _37                 EQU                     0x08b4
-_end_0x032a         EQU                     0x08c2
+_end_0x0328         EQU                     0x08c2
 _page_0x08a0        EQU                     0x08a0
 
 ; Variables
@@ -85,54 +85,54 @@ _11                 LDW                     _c
 
 _12                 LDW                     _p
                     SUBI                    1
-                    STW                     0xd0
+                    STW                     0xc0
                     LDI                     2
-                    POKE                    0xd0                            ; poke p-1,2:'Pulse
+                    POKE                    0xc0                            ; poke p-1,2:'Pulse
 
 _13                 LDI                     0
                     POKE                    _p
                     LDW                     _p
                     ADDI                    1
-                    STW                     0xd0
+                    STW                     0xc0
                     LDI                     0
-                    POKE                    0xd0                            ; poke p,0:poke p+1,0
+                    POKE                    0xc0                            ; poke p,0:poke p+1,0
 
-_14                 ForNextLoopUp           _c _11                  4       ; next c
+_14                 ForNextLoopUp           _c _11 4                        ; next c
 
-_20                 LDWI                    129
+_20                 LDWI                    120
                     STW                     register0
                     LDI                     17
-                    POKE                    register0                       ; poke 129,17:'LDWI $9xx
+                    POKE                    register0                       ; poke &h78,17:'LDWI $9xx
 
-_21                 LDWI                    131
+_21                 LDWI                    122
                     STW                     register0
                     LDI                     9
-                    POKE                    register0                       ; poke 131,9
+                    POKE                    register0                       ; poke &h7a,9
 
-_22                 LDWI                    132
+_22                 LDWI                    123
                     STW                     register0
                     LDI                     127
-                    POKE                    register0                       ; poke 132,127:'LUP 0
+                    POKE                    register0                       ; poke &h7b,127:'LUP 0
 
-_23                 LDWI                    133
+_23                 LDWI                    124
                     STW                     register0
                     LDI                     0
-                    POKE                    register0                       ; poke 133,0
+                    POKE                    register0                       ; poke &h7c,0
 
-_24                 LDWI                    134
+_24                 LDWI                    125
                     STW                     register0
                     LDI                     147
-                    POKE                    register0                       ; poke 134,147:'INC 130
+                    POKE                    register0                       ; poke &h7d,147:'INC &h79
 
-_25                 LDWI                    135
+_25                 LDWI                    126
                     STW                     register0
-                    LDI                     130
-                    POKE                    register0                       ; poke 135,130
+                    LDI                     121
+                    POKE                    register0                       ; poke &h7e,&h79
 
-_26                 LDWI                    136
+_26                 LDWI                    127
                     STW                     register0
                     LDI                     255
-                    POKE                    register0                       ; poke 136,255:'RET
+                    POKE                    register0                       ; poke &h7f,255:'RET
 
 _30                 LDI                     1
                     STW                     _n                              ; for n=1 to 95
@@ -144,42 +144,42 @@ _31                 PrintString             str_0x7fa0
 
 _32                 LDW                     _n
                     ADDW                    _n
-                    STW                     0xd0
-                    LDWI                    130
+                    STW                     0xc0
+                    LDWI                    121
                     STW                     register0
-                    LD                      0xd0
-                    POKE                    register0                       ; poke 130,n+n:'$900+n*2
+                    LD                      0xc0
+                    POKE                    register0                       ; poke &h79,n+n:'$900+n*2
 
-_33                 LDWI                    0x0081
+_33                 LDI                     0x78
                     CALL                    giga_vAC
-                    POKE                    _p                              ; poke p,  usr(129):'Flo
+                    POKE                    _p                              ; poke p,  usr(&h78):'Flo
 
 _34                 LDW                     _p
                     ADDI                    1
-                    STW                     0xd0
-                    LDWI                    0x0081
+                    STW                     0xc0
+                    LDI                     0x78
                     CALL                    giga_vAC
-                    POKE                    0xd0                            ; poke p+1,usr(129):'Fhi
+                    POKE                    0xc0                            ; poke p+1,usr(&h78):'Fhi
 
 _35                 LDWI                    44
                     STW                     register0
                     LDI                     15
                     POKE                    register0                       ; poke 44,15:'0.25 secs
 
-                    STW                     0xe0
+                    STW                     0x82
                     LDWI                    _page_0x08a0
                     CALL                    giga_vAC
-_page_0x08a0        LDW                     0xe0
+_page_0x08a0        LDW                     0x82
 _36                 LDI                     0x2c
                     PEEK                    
                     CALL                    convertGtOpAddr
-                    PageJumpBEQ             _37                 
+                    PageJumpBEQ             _37
                     LDWI                    _36
                     CALL                    giga_vAC                        ; if peek(44)>0 then goto 36
 
-_37                 ForNextLoopUp           _n _31                  95      ; next n
+_37                 ForNextLoopUp           _n _31 95                       ; next n
 
-_end_0x032a         BRA                     _end_0x032a                     ; END
+_end_0x0328         BRA                     _end_0x0328                     ; END
 
 
 
@@ -199,17 +199,18 @@ multiply16bit       EQU     0x7ea9
 resetVideoTable     EQU     0x7ba0
 initClearFuncs      EQU     0x7fad
 clearCursorRow      EQU     0x7bbc
+printInit           EQU     0x7ee9
 printText           EQU     0x7ecc
 printDigit          EQU     0x7aa0
 printInt16          EQU     0x7da0
 printChar           EQU     0x79a0
 newLineScroll       EQU     0x7ca0
-convertEqOpAddr     EQU     0x00e2
-convertNeOpAddr     EQU     0x00e4
-convertLeOpAddr     EQU     0x00e6
-convertGeOpAddr     EQU     0x00e8
-convertLtOpAddr     EQU     0x00ea
-convertGtOpAddr     EQU     0x00ec
+convertEqOpAddr     EQU     0x00d2
+convertNeOpAddr     EQU     0x00d4
+convertLeOpAddr     EQU     0x00d6
+convertGeOpAddr     EQU     0x00d8
+convertLtOpAddr     EQU     0x00da
+convertGtOpAddr     EQU     0x00dc
 
 
                     ; convert equal to into a boolean
@@ -438,6 +439,17 @@ printI16_pos        STW     textNum
                     RET
 
 
+
+printInit           LDWI    SYS_VDrawBits_134
+                    STW     giga_sysFn
+                    LDW     fgbgColour
+                    STW     giga_sysArg0
+                    LDWI    0x0800
+                    ADDW    cursorXY
+                    STW     giga_sysArg4                    ; xy position
+                    RET
+
+
                     ; prints char in textChr
 printChar           PUSH
                     LD      textChr                         ; (char-32)*5 + 0x0700
@@ -459,29 +471,25 @@ printChar           PUSH
                     ADDI    0x06
                     STW     textFont                        ; text font slice base address for chars 82+
     
-printC_draw         LDWI    SYS_VDrawBits_134
-                    STW     giga_sysFn
-                    LDW     fgbgColour
-                    STW     giga_sysArg0
-                    LDWI    0x0800
-                    ADDW    cursorXY
-                    STW     giga_sysArg4                    ; xy position
-    
+printC_draw         LDWI    printInit
+                    CALL    giga_vAC
                     LDI     0x05
                     ST      textSlice
     
 printC_slice        LDW     textFont                        ; text font slice base address
                     LUP     0x00                            ; get ROM slice
-                    ST      giga_sysArg2        
+                    ST      giga_sysArg2
                     SYS     0xCB                            ; draw vertical slice, SYS_VDrawBits_134, 270 - 134/2 = 0xCB
                     INC     textFont                        ; next vertical slice
                     INC     giga_sysArg4                    ; next x
                     LoopCounter textSlice printC_slice
+                    ST      giga_sysArg2                    ; result of loopCounter is always 0
+                    SYS     0xCB                            ; draw last blank slice
     
                     LD      cursorXY
                     ADDI    0x06
                     ST      cursorXY
-                    SUBI    155                             ; 154 is last possible char in row
+                    SUBI    giga_xres - 5                   ; giga_xres - 6, (154), is last possible char in row
                     BLT     printC_exit
                     LDWI    newLineScroll                   ; next row, scroll at bottom
                     CALL    giga_vAC
@@ -543,7 +551,7 @@ newLS_cont0         PUSH
                     LD      cursorXY+1
                     ADDI    8
                     ST      cursorXY+1
-                    SUBI    120
+                    SUBI    giga_yres
                     BLT     newLS_exit
                     
 newLS_cont1         LDWI    clearCursorRow

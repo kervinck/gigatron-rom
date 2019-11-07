@@ -1,7 +1,7 @@
 _startAddress_      EQU                     0x0200
 
 ; Internal variables
-register0           EQU                     0x00a0
+register0           EQU                     0x0084
 register1           EQU                     register0 + 0x02
 register2           EQU                     register0 + 0x04
 register3           EQU                     register0 + 0x06
@@ -29,43 +29,43 @@ miscFlags           EQU                     register0 + 0x1E
 ; Labels
 _entryPoint_        EQU                     0x0200
 _1                  EQU                     0x022f
-_2                  EQU                     0x0253
-_3                  EQU                     0x0258
-_4                  EQU                     0x026b
-_5                  EQU                     0x0270
-_6                  EQU                     0x027e
-_198                EQU                     0x028c
-_199                EQU                     0x029c
-_200                EQU                     0x02ab
-_201                EQU                     0x02af
-_202                EQU                     0x02c9
-_203                EQU                     0x02d7
-_204                EQU                     0x02e5
-_205                EQU                     0x08ae
-_206                EQU                     0x08be
-_207                EQU                     0x08ca
-_208                EQU                     0x08d6
-_209                EQU                     0x08e2
-_1000               EQU                     0x08ee
-_1001               EQU                     0x09b7
-_1002               EQU                     0x09cf
-_1003               EQU                     0x09e7
-_1004               EQU                     0x0aac
-_1005               EQU                     0x0ac4
-_1006               EQU                     0x0adc
-_1007               EQU                     0x0af4
-_1008               EQU                     0x0bb8
-_1009               EQU                     0x0bd0
-_1010               EQU                     0x0be8
-_1011               EQU                     0x0cac
-_1012               EQU                     0x0cc4
-_1013               EQU                     0x0cdc
-_1014               EQU                     0x0cf4
-_1015               EQU                     0x0db8
-_1016               EQU                     0x0dd0
-_1017               EQU                     0x0de8
-_1018               EQU                     0x0ebf
-_end_0x056a         EQU                     0x0ec9
+_2                  EQU                     0x0255
+_3                  EQU                     0x025a
+_4                  EQU                     0x026d
+_5                  EQU                     0x0274
+_6                  EQU                     0x0282
+_198                EQU                     0x0290
+_199                EQU                     0x029f
+_200                EQU                     0x02ae
+_201                EQU                     0x02b2
+_202                EQU                     0x02cc
+_203                EQU                     0x02da
+_204                EQU                     0x02e8
+_205                EQU                     0x08b4
+_206                EQU                     0x08c4
+_207                EQU                     0x08cf
+_208                EQU                     0x08da
+_209                EQU                     0x08e5
+_1000               EQU                     0x08f0
+_1001               EQU                     0x09b6
+_1002               EQU                     0x09cd
+_1003               EQU                     0x09e4
+_1004               EQU                     0x0aaa
+_1005               EQU                     0x0ac1
+_1006               EQU                     0x0ad8
+_1007               EQU                     0x0aef
+_1008               EQU                     0x0bb6
+_1009               EQU                     0x0bcd
+_1010               EQU                     0x0be4
+_1011               EQU                     0x0caa
+_1012               EQU                     0x0cc1
+_1013               EQU                     0x0cd8
+_1014               EQU                     0x0cef
+_1015               EQU                     0x0db6
+_1016               EQU                     0x0dcd
+_1017               EQU                     0x0de4
+_1018               EQU                     0x0ebc
+_end_0x0555         EQU                     0x0ec5
 _page_0x08a0        EQU                     0x08a0
 _page_0x09a0        EQU                     0x09a0
 _page_0x0aa0        EQU                     0x0aa0
@@ -100,7 +100,7 @@ str_0x7fee          DB                      8 'Sawtooth'
 
 ; Lookup Tables
 lut_0x7fcb          EQU                     0x7fcb
-lut_0x7fcb          DW                      0x08be 0x08ca 0x08d6 0x08e2 
+lut_0x7fcb          DW                      0x08c4 0x08cf 0x08da 0x08e5 
 
 ; Code
 _entryPoint_        Initialise              
@@ -124,8 +124,10 @@ _1                  LDI                     0
                     CALL                    giga_vAC
                     LDI                     2
                     STW                     _z
+                    PUSH                    
                     LDWI                    _198
-                    CALL                    giga_vAC                        ; a=0:b=0:p=256+252:mode 2:cls:z=2:gosub 198
+                    CALL                    giga_vAC
+                    POP                                                     ; a=0:b=0:p=256+252:mode 2:cls:z=2:gosub 198
 
 _2                  LDI                     0x10
                     PEEK                    
@@ -134,20 +136,22 @@ _2                  LDI                     0x10
 _3                  LDW                     _k
                     SUBI                    126
                     CALL                    convertGtOpAddr
-                    PageJumpBEQ             _4                  
+                    PageJumpBEQ             _4
                     LDWI                    _2
                     CALL                    giga_vAC                        ; if k>126 then goto 2
 
-_4                  LDWI                    _1000
-                    CALL                    giga_vAC                        ; gosub 1000
+_4                  PUSH                    
+                    LDWI                    _1000
+                    CALL                    giga_vAC
+                    POP                                                     ; gosub 1000
 
 _5                  LD                      _a
                     POKE                    _p
                     LDW                     _p
                     ADDI                    1
-                    STW                     0xd0
+                    STW                     0xc0
                     LD                      _b
-                    POKE                    0xd0                            ; poke p,a:poke p+1,b
+                    POKE                    0xc0                            ; poke p,a:poke p+1,b
 
 _6                  LDWI                    44
                     STW                     register0
@@ -156,8 +160,7 @@ _6                  LDWI                    44
                     LDWI                    _2
                     CALL                    giga_vAC                        ; poke 44,30:goto 2
 
-_198                PUSH                    
-                    PrintString             str_0x7fa0
+_198                PrintString             str_0x7fa0
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print " 2 3   5 6 7   9 0"
 
@@ -177,29 +180,31 @@ _201                LDWI                    256
                     ADDI                    252
                     STW                     _p
                     SUBI                    1
-                    STW                     0xd2
+                    STW                     0xc2
                     LD                      _z
-                    POKE                    0xd2                            ; p=256*c+252:poke p-1,z
+                    POKE                    0xc2                            ; p=256*c+252:poke p-1,z
 
 _202                LDI                     0
                     POKE                    _p
                     LDW                     _p
                     ADDI                    1
-                    STW                     0xd0
+                    STW                     0xc0
                     LDI                     0
-                    POKE                    0xd0                            ; poke p,0:poke p+1,0
+                    POKE                    0xc0                            ; poke p,0:poke p+1,0
 
-_203                ForNextLoopUp           _c _201                 4       ; next c
+_203                ForNextLoopUp           _c _201 4                       ; next c
 
 _204                LDI                     2
                     ST                      cursorXY
                     LDI                     24
+                    STW                     0x82
+                    LDWI                    _page_0x08a0
+                    PUSH                    
+                    CALL                    giga_vAC
+_page_0x08a0        POP                     
+                    LDW                     0x82
                     ST                      cursorXY + 1
                     LDWI                    atTextCursor
-                    STW                     0xe0
-                    LDWI                    _page_0x08a0
-                    CALL                    giga_vAC
-_page_0x08a0        LDW                     0xe0
                     CALL                    giga_vAC
                     PrintString             str_0x7fc7                      ; at 2,24:print "Z: ";
 
@@ -213,246 +218,235 @@ _205                LDW                     _z
                     CALL                    giga_vAC                        ; on z goto 206,207,208,209
 
 _206                PrintString             str_0x7fd3
-                    POP                     
                     RET                                                     ; print "Metallic";:return
 
 _207                PrintString             str_0x7fdc
-                    POP                     
                     RET                                                     ; print "Triangle";:return
 
 _208                PrintString             str_0x7fe5
-                    POP                     
                     RET                                                     ; print "Pulse   ";:return
 
 _209                PrintString             str_0x7fee
-                    POP                     
                     RET                                                     ; print "Sawtooth";:return
 
-_1000               PUSH                    
-                    LDW                     _k
+_1000               LDW                     _k
                     SUBI                    113
-                    STW                     0xe0
+                    STW                     0x82
                     LDWI                    _page_0x09a0
-                    CALL                    giga_vAC
-_page_0x09a0        LDW                     0xe0
-                    CALL                    convertEqOpAddr
-                    PageJumpBEQ             _1001               
                     PUSH                    
+                    CALL                    giga_vAC
+_page_0x09a0        POP                     
+                    LDW                     0x82
+                    CALL                    convertEqOpAddr
+                    PageJumpBEQ             _1001
                     LDI                     73
                     STW                     _a
                     LDI                     8
                     STW                     _b
-                    POP                     
                     RET                                                     ; if k=113 then a=73 :b=8 :return:'C
 
 _1001               LDW                     _k
                     SUBI                    50
                     CALL                    convertEqOpAddr
-                    PageJumpBEQ             _1002               
+                    PageJumpBEQ             _1002
                     LDI                     11
                     STW                     _a
                     LDI                     9
                     STW                     _b
-                    POP                     
                     RET                                                     ; if k=50  then a=11 :b=9 :return:'C#
 
 _1002               LDW                     _k
                     SUBI                    119
                     CALL                    convertEqOpAddr
-                    PageJumpBEQ             _1003               
+                    PageJumpBEQ             _1003
                     LDI                     80
                     STW                     _a
                     LDI                     9
                     STW                     _b
-                    POP                     
                     RET                                                     ; if k=119 then a=80 :b=9 :return:'D
 
 _1003               LDW                     _k
                     SUBI                    51
                     CALL                    convertEqOpAddr
-                    PageJumpBEQ             _1004               
-                    STW                     0xe0
-                    LDWI                    _page_0x0aa0
-                    CALL                    giga_vAC
-_page_0x0aa0        LDW                     0xe0
+                    PageJumpBEQ             _1004
                     LDI                     25
+                    STW                     0x82
+                    LDWI                    _page_0x0aa0
+                    PUSH                    
+                    CALL                    giga_vAC
+_page_0x0aa0        POP                     
+                    LDW                     0x82
                     STW                     _a
                     LDI                     10
                     STW                     _b
-                    POP                     
                     RET                                                     ; if k=51  then a=25 :b=10:return:'D#
 
 _1004               LDW                     _k
                     SUBI                    101
                     CALL                    convertEqOpAddr
-                    PageJumpBEQ             _1005               
+                    PageJumpBEQ             _1005
                     LDI                     103
                     STW                     _a
                     LDI                     10
                     STW                     _b
-                    POP                     
                     RET                                                     ; if k=101 then a=103:b=10:return:'E
 
 _1005               LDW                     _k
                     SUBI                    114
                     CALL                    convertEqOpAddr
-                    PageJumpBEQ             _1006               
+                    PageJumpBEQ             _1006
                     LDI                     57
                     STW                     _a
                     LDI                     11
                     STW                     _b
-                    POP                     
                     RET                                                     ; if k=114 then a=57 :b=11:return:'F
 
 _1006               LDW                     _k
                     SUBI                    53
                     CALL                    convertEqOpAddr
-                    PageJumpBEQ             _1007               
+                    PageJumpBEQ             _1007
                     LDI                     16
                     STW                     _a
                     LDI                     12
                     STW                     _b
-                    POP                     
                     RET                                                     ; if k=53  then a=16 :b=12:return:'F#
 
 _1007               LDW                     _k
-                    STW                     0xe0
-                    LDWI                    _page_0x0ba0
-                    CALL                    giga_vAC
-_page_0x0ba0        LDW                     0xe0
                     SUBI                    116
+                    STW                     0x82
+                    LDWI                    _page_0x0ba0
+                    PUSH                    
+                    CALL                    giga_vAC
+_page_0x0ba0        POP                     
+                    LDW                     0x82
                     CALL                    convertEqOpAddr
-                    PageJumpBEQ             _1008               
+                    PageJumpBEQ             _1008
                     LDI                     108
                     STW                     _a
                     LDI                     12
                     STW                     _b
-                    POP                     
                     RET                                                     ; if k=116 then a=108:b=12:return:'G
 
 _1008               LDW                     _k
                     SUBI                    54
                     CALL                    convertEqOpAddr
-                    PageJumpBEQ             _1009               
+                    PageJumpBEQ             _1009
                     LDI                     78
                     STW                     _a
                     LDI                     13
                     STW                     _b
-                    POP                     
                     RET                                                     ; if k=54  then a=78 :b=13:return:'G#
 
 _1009               LDW                     _k
                     SUBI                    121
                     CALL                    convertEqOpAddr
-                    PageJumpBEQ             _1010               
+                    PageJumpBEQ             _1010
                     LDI                     53
                     STW                     _a
                     LDI                     14
                     STW                     _b
-                    POP                     
                     RET                                                     ; if k=121 then a=53 :b=14:return:'A
 
 _1010               LDW                     _k
                     SUBI                    55
                     CALL                    convertEqOpAddr
-                    PageJumpBEQ             _1011               
-                    STW                     0xe0
-                    LDWI                    _page_0x0ca0
-                    CALL                    giga_vAC
-_page_0x0ca0        LDW                     0xe0
+                    PageJumpBEQ             _1011
                     LDI                     35
+                    STW                     0x82
+                    LDWI                    _page_0x0ca0
+                    PUSH                    
+                    CALL                    giga_vAC
+_page_0x0ca0        POP                     
+                    LDW                     0x82
                     STW                     _a
                     LDI                     15
                     STW                     _b
-                    POP                     
                     RET                                                     ; if k=55  then a=35 :b=15:return:'A#
 
 _1011               LDW                     _k
                     SUBI                    117
                     CALL                    convertEqOpAddr
-                    PageJumpBEQ             _1012               
+                    PageJumpBEQ             _1012
                     LDI                     23
                     STW                     _a
                     LDI                     16
                     STW                     _b
-                    POP                     
                     RET                                                     ; if k=117 then a=23 :b=16:return:'B
 
 _1012               LDW                     _k
                     SUBI                    105
                     CALL                    convertEqOpAddr
-                    PageJumpBEQ             _1013               
+                    PageJumpBEQ             _1013
                     LDI                     19
                     STW                     _a
                     LDI                     17
                     STW                     _b
-                    POP                     
                     RET                                                     ; if k=105 then a=19 :b=17:return:'C
 
 _1013               LDW                     _k
                     SUBI                    57
                     CALL                    convertEqOpAddr
-                    PageJumpBEQ             _1014               
+                    PageJumpBEQ             _1014
                     LDI                     21
                     STW                     _a
                     LDI                     18
                     STW                     _b
-                    POP                     
                     RET                                                     ; if k=57  then a=21 :b=18:return:'C#
 
 _1014               LDW                     _k
-                    STW                     0xe0
-                    LDWI                    _page_0x0da0
-                    CALL                    giga_vAC
-_page_0x0da0        LDW                     0xe0
                     SUBI                    111
+                    STW                     0x82
+                    LDWI                    _page_0x0da0
+                    PUSH                    
+                    CALL                    giga_vAC
+_page_0x0da0        POP                     
+                    LDW                     0x82
                     CALL                    convertEqOpAddr
-                    PageJumpBEQ             _1015               
+                    PageJumpBEQ             _1015
                     LDI                     31
                     STW                     _a
                     LDI                     19
                     STW                     _b
-                    POP                     
                     RET                                                     ; if k=111 then a=31 :b=19:return:'D
 
 _1015               LDW                     _k
                     SUBI                    48
                     CALL                    convertEqOpAddr
-                    PageJumpBEQ             _1016               
+                    PageJumpBEQ             _1016
                     LDI                     50
                     STW                     _a
                     LDI                     20
                     STW                     _b
-                    POP                     
                     RET                                                     ; if k=48  then a=50 :b=20:return:'D#
 
 _1016               LDW                     _k
                     SUBI                    112
                     CALL                    convertEqOpAddr
-                    PageJumpBEQ             _1017               
+                    PageJumpBEQ             _1017
                     LDI                     77
                     STW                     _a
                     LDI                     21
                     STW                     _b
-                    POP                     
                     RET                                                     ; if k=112 then a=77 :b=21:return:'E
 
 _1017               LDW                     _k
                     SUBI                    122
                     CALL                    convertEqOpAddr
-                    STW                     0xd0
+                    STW                     0xc0
                     LDI                     0x0f
                     PEEK                    
                     SUBI                    255
-                    STW                     0xe0
-                    LDWI                    _page_0x0ea0
-                    CALL                    giga_vAC
-_page_0x0ea0        LDW                     0xe0
                     CALL                    convertEqOpAddr
-                    STW                     0xd2
-                    LDW                     0xd0
-                    ANDW                    0xd2
-                    PageJumpBEQ             _1018               
+                    STW                     0xc2
+                    STW                     0x82
+                    LDWI                    _page_0x0ea0
+                    PUSH                    
+                    CALL                    giga_vAC
+_page_0x0ea0        POP                     
+                    LDW                     0x82
+                    LDW                     0xc0
+                    ANDW                    0xc2
+                    PageJumpBEQ             _1018
                     LDW                     _z
                     ADDI                    1
                     ANDI                    3
@@ -464,10 +458,9 @@ _1018               LDI                     0
                     STW                     _a
                     LDI                     0
                     STW                     _b
-                    POP                     
                     RET                                                     ; a=0:b=0:return
 
-_end_0x056a         BRA                     _end_0x056a                     ; END
+_end_0x0555         BRA                     _end_0x0555                     ; END
 
 
 
@@ -489,16 +482,17 @@ resetVideoTable     EQU     0x7ce0
 initClearFuncs      EQU     0x7ea0
 clearVertBlinds     EQU     0x7db4
 clearCursorRow      EQU     0x79a0
+printInit           EQU     0x7dec
 printText           EQU     0x7ca0
 printChar           EQU     0x78a0
 atTextCursor        EQU     0x7aa0
 newLineScroll       EQU     0x7ba0
-convertEqOpAddr     EQU     0x00e2
-convertNeOpAddr     EQU     0x00e4
-convertLeOpAddr     EQU     0x00e6
-convertGeOpAddr     EQU     0x00e8
-convertLtOpAddr     EQU     0x00ea
-convertGtOpAddr     EQU     0x00ec
+convertEqOpAddr     EQU     0x00d2
+convertNeOpAddr     EQU     0x00d4
+convertLeOpAddr     EQU     0x00d6
+convertGeOpAddr     EQU     0x00d8
+convertLtOpAddr     EQU     0x00da
+convertGtOpAddr     EQU     0x00dc
 
 
                     ; convert equal to into a boolean
@@ -736,6 +730,17 @@ printT_loop         LoopCounter textLen printT_char
                     RET
 
 
+
+printInit           LDWI    SYS_VDrawBits_134
+                    STW     giga_sysFn
+                    LDW     fgbgColour
+                    STW     giga_sysArg0
+                    LDWI    0x0800
+                    ADDW    cursorXY
+                    STW     giga_sysArg4                    ; xy position
+                    RET
+
+
                     ; prints char in textChr
 printChar           PUSH
                     LD      textChr                         ; (char-32)*5 + 0x0700
@@ -757,29 +762,25 @@ printChar           PUSH
                     ADDI    0x06
                     STW     textFont                        ; text font slice base address for chars 82+
     
-printC_draw         LDWI    SYS_VDrawBits_134
-                    STW     giga_sysFn
-                    LDW     fgbgColour
-                    STW     giga_sysArg0
-                    LDWI    0x0800
-                    ADDW    cursorXY
-                    STW     giga_sysArg4                    ; xy position
-    
+printC_draw         LDWI    printInit
+                    CALL    giga_vAC
                     LDI     0x05
                     ST      textSlice
     
 printC_slice        LDW     textFont                        ; text font slice base address
                     LUP     0x00                            ; get ROM slice
-                    ST      giga_sysArg2        
+                    ST      giga_sysArg2
                     SYS     0xCB                            ; draw vertical slice, SYS_VDrawBits_134, 270 - 134/2 = 0xCB
                     INC     textFont                        ; next vertical slice
                     INC     giga_sysArg4                    ; next x
                     LoopCounter textSlice printC_slice
+                    ST      giga_sysArg2                    ; result of loopCounter is always 0
+                    SYS     0xCB                            ; draw last blank slice
     
                     LD      cursorXY
                     ADDI    0x06
                     ST      cursorXY
-                    SUBI    155                             ; 154 is last possible char in row
+                    SUBI    giga_xres - 5                   ; giga_xres - 6, (154), is last possible char in row
                     BLT     printC_exit
                     LDWI    newLineScroll                   ; next row, scroll at bottom
                     CALL    giga_vAC
@@ -788,26 +789,26 @@ printC_exit         POP
 
 
 atTextCursor        LD      cursorXY
-                    SUBI    155
-                    BLT     drawTC_skip0
+                    SUBI    giga_xres - 5
+                    BLT     atTC_skip0
                     LDI     0
                     STW     cursorXY
                     
-drawTC_skip0        LD      cursorXY + 1
-                    SUBI    113
-                    BLT     drawTC_skip1
-                    LDI     112
+atTC_skip0          LD      cursorXY + 1
+                    SUBI    giga_yres - 7
+                    BLT     atTC_skip1
+                    LDI     giga_yres - 8
                     STW     cursorXY + 1
                     
-drawTC_skip1        LD      cursorXY + 1
-                    SUBI    112
-                    BGE     drawTC_skip2
+atTC_skip1          LD      cursorXY + 1
+                    SUBI    giga_yres - 8
+                    BGE     atTC_skip2
                     LDWI    0x7FFF
                     ANDW    miscFlags
                     STW     miscFlags                       ; reset on bottom row flag
                     RET
                     
-drawTC_skip2        LDWI    0x8000
+atTC_skip2          LDWI    0x8000
                     ORW     miscFlags
                     STW     miscFlags                       ; set on bottom row flag
                     RET
@@ -867,7 +868,7 @@ newLS_cont0         PUSH
                     LD      cursorXY+1
                     ADDI    8
                     ST      cursorXY+1
-                    SUBI    120
+                    SUBI    giga_yres
                     BLT     newLS_exit
                     
 newLS_cont1         LDWI    clearCursorRow

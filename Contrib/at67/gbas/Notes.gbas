@@ -9,21 +9,21 @@
 '
 ' Setup vCPU note lookup
 '
-20 poke 129,17:'LDWI $9xx
-21 poke 131,9
-22 poke 132,127:'LUP 0
-23 poke 133,0
-24 poke 134,147:'INC 130
-25 poke 135,130
-26 poke 136,255:'RET
+20 poke &h78,17:'LDWI $9xx
+21 poke &h7a,9
+22 poke &h7b,127:'LUP 0
+23 poke &h7c,0
+24 poke &h7d,147:'INC &h79
+25 poke &h7e,&h79
+26 poke &h7f,255:'RET
 '
 ' Play all notes
 '
 30 for n=1 to 95
 31 print "Playing note",n
-32 poke 130,n+n:'$900+n*2
-33 poke p,  usr(129):'Flo
-34 poke p+1,usr(129):'Fhi
+32 poke &h79,n+n:'$900+n*2
+33 poke p,  usr(&h78):'Flo
+34 poke p+1,usr(&h78):'Fhi
 35 poke 44,15:'0.25 secs
 36 if peek(44)>0 then goto 36
 37 next n

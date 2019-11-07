@@ -1,8 +1,9 @@
 numericLabel        EQU     register0
-lutLabs             EQU     register1
-lutAddrs            EQU     register2
-lutIndex            EQU     register3
-lutLabel            EQU     register4
+defaultLabel        EQU     register1
+lutLabs             EQU     register2
+lutAddrs            EQU     register3
+lutIndex            EQU     register4
+lutLabel            EQU     register5
 
 
 %SUB                gotoNumericLabel
@@ -19,7 +20,11 @@ gotoNL_loop         LDW     lutIndex
                     LD      lutLabel + 1
                     ANDI    0x80                            ; check for -1
                     BEQ     gotoNL_cont
-                    RET
+                    LDW     defaultLabel
+                    BEQ     gotoNL_exit
+                    CALL    defaultLabel                    ; fetch default address and jump, (note we never return from here)
+                    
+gotoNL_exit         RET
                     
 gotoNL_cont         LDW     lutLabel
                     SUBW    numericLabel
@@ -37,7 +42,8 @@ gotoNL_found        LDW     lutIndex
 
 %SUB                gosubNumericLabel
                     ; find numeric label and call it, (it had better return or welcome to lala land)
-gosubNumericLabel   LDWI    lut_numericLabs
+gosubNumericLabel   PUSH
+                    LDWI    lut_numericLabs
                     STW     lutLabs
                     STW     lutIndex
                     LDWI    lut_numericAddrs
@@ -49,7 +55,12 @@ gosubNL_loop        LDW     lutIndex
                     LD      lutLabel + 1
                     ANDI    0x80                            ; check for -1
                     BEQ     gosubNL_cont
-                    RET
+                    LDW     defaultLabel
+                    BEQ     gosubNL_exit
+                    CALL    defaultLabel                    ; fetch default address and call
+                    POP
+                    
+gosubNL_exit        RET
                     
 gosubNL_cont        LDW     lutLabel
                     SUBW    numericLabel
@@ -62,7 +73,6 @@ gosubNL_found       LDW     lutIndex
                     SUBW    lutLabs
                     ADDW    lutAddrs
                     DEEK
-                    PUSH
                     CALL    giga_vAC                        ; fetch label address and call
                     POP
                     RET

@@ -1,7 +1,7 @@
 _startAddress_      EQU                     0x0200
 
 ; Internal variables
-register0           EQU                     0x00a0
+register0           EQU                     0x0084
 register1           EQU                     register0 + 0x02
 register2           EQU                     register0 + 0x04
 register3           EQU                     register0 + 0x06
@@ -63,11 +63,11 @@ _entryPoint_        Initialise
                     InitLtOp                
                     InitGtOp                                                ; INIT
 
-_10                 LDWI                    180
+_10                 LDWI                    152
                     STW                     register0
                     LDI                     0
                     POKE                    register0
-                    LDWI                    181
+                    LDWI                    153
                     STW                     register0
                     LDI                     63
                     POKE                    register0
@@ -76,7 +76,7 @@ _10                 LDWI                    180
                     LDI                     0
                     STW                     _w
                     LDI                     0
-                    STW                     _z                              ; poke 180,0:poke 181,63:cls:w=0:z=0
+                    STW                     _z                              ; poke 152,0:poke 153,63:cls:w=0:z=0
 
 _20                 LDI                     0
                     ST                      cursorXY
@@ -108,9 +108,9 @@ _40                 Random
                     LDWI                    divide16bit
                     CALL                    giga_vAC
                     LDW                     mathRem
-                    STW                     0xd0
+                    STW                     0xc0
                     LDWI                    2000
-                    ADDW                    0xd0
+                    ADDW                    0xc0
                     STW                     _y                              ; y=2000+(rnd%700)
 
 _50                 LDI                     0
@@ -122,12 +122,12 @@ _60                 LDW                     _y
                     STW                     mathY
                     LDWI                    divide16bit
                     CALL                    giga_vAC
-                    STW                     0xd0
+                    STW                     0xc0
                     LDI                     10
-                    ADDW                    0xd0
+                    ADDW                    0xc0
                     STW                     _w
                     CALL                    convertGtOpAddr
-                    PageJumpBEQ             _65                 
+                    PageJumpBEQ             _65
                     LDI                     0
                     STW                     _w                              ; w=10+y/q:if w>0 then w=0
 
@@ -135,7 +135,7 @@ _65                 LDI                     0x06
                     PEEK                    
                     SUBI                    128
                     CALL                    convertLtOpAddr
-                    PageJumpBEQ             _70                 
+                    PageJumpBEQ             _70
                     LDW                     _w
                     ADDI                    1
                     STW                     _w                              ; if peek(6)<128 then w=w+1
@@ -151,10 +151,10 @@ _70                 LDI                     5
                     STW                     _z                              ; line 5,w-z:z=w
 
 _80                 LDW                     _p
-                    STW                     0xe0
+                    STW                     0x82
                     LDWI                    _page_0x08a0
                     CALL                    giga_vAC
-_page_0x08a0        LDW                     0xe0
+_page_0x08a0        LDW                     0x82
                     STW                     mathX
                     LDW                     _v
                     STW                     mathY
@@ -167,12 +167,12 @@ _page_0x08a0        LDW                     0xe0
                     STW                     mathY
                     LDWI                    divide16bit
                     CALL                    giga_vAC
-                    STW                     0xd4
+                    STW                     0xc4
                     LDW                     _v
-                    SUBW                    0xd4
+                    SUBW                    0xc4
                     STW                     _v                              ; y=y+p*v:v=v-y/q
 
-_90                 ForNextLoopUp           _x _60                  30
+_90                 ForNextLoopUp           _x _60 30
                     LDWI                    _20
                     CALL                    giga_vAC                        ; next x:goto 20
 
@@ -203,15 +203,16 @@ drawLine            EQU     0x7aa0
 drawLineExt         EQU     0x77a0
 drawLineDelta1      EQU     0x76a0
 atLineCursor        EQU     0x79a0
+printInit           EQU     0x79e1
 printChar           EQU     0x75a0
 atTextCursor        EQU     0x7da0
 newLineScroll       EQU     0x7ca0
-convertEqOpAddr     EQU     0x00e2
-convertNeOpAddr     EQU     0x00e4
-convertLeOpAddr     EQU     0x00e6
-convertGeOpAddr     EQU     0x00e8
-convertLtOpAddr     EQU     0x00ea
-convertGtOpAddr     EQU     0x00ec
+convertEqOpAddr     EQU     0x00d2
+convertNeOpAddr     EQU     0x00d4
+convertLeOpAddr     EQU     0x00d6
+convertGeOpAddr     EQU     0x00d8
+convertLtOpAddr     EQU     0x00da
+convertGtOpAddr     EQU     0x00dc
 
 
                     ; convert equal to into a boolean
@@ -659,26 +660,26 @@ clearLoop           EQU     register9
     
     
 atTextCursor        LD      cursorXY
-                    SUBI    155
-                    BLT     drawTC_skip0
+                    SUBI    giga_xres - 5
+                    BLT     atTC_skip0
                     LDI     0
                     STW     cursorXY
                     
-drawTC_skip0        LD      cursorXY + 1
-                    SUBI    113
-                    BLT     drawTC_skip1
-                    LDI     112
+atTC_skip0          LD      cursorXY + 1
+                    SUBI    giga_yres - 7
+                    BLT     atTC_skip1
+                    LDI     giga_yres - 8
                     STW     cursorXY + 1
                     
-drawTC_skip1        LD      cursorXY + 1
-                    SUBI    112
-                    BGE     drawTC_skip2
+atTC_skip1          LD      cursorXY + 1
+                    SUBI    giga_yres - 8
+                    BGE     atTC_skip2
                     LDWI    0x7FFF
                     ANDW    miscFlags
                     STW     miscFlags                       ; reset on bottom row flag
                     RET
                     
-drawTC_skip2        LDWI    0x8000
+atTC_skip2          LDWI    0x8000
                     ORW     miscFlags
                     STW     miscFlags                       ; set on bottom row flag
                     RET
@@ -724,6 +725,17 @@ clearCR_loopx       SUBI    4                               ; loop is unrolled 4
 
 
 
+
+printInit           LDWI    SYS_VDrawBits_134
+                    STW     giga_sysFn
+                    LDW     fgbgColour
+                    STW     giga_sysArg0
+                    LDWI    0x0800
+                    ADDW    cursorXY
+                    STW     giga_sysArg4                    ; xy position
+                    RET
+
+
                     ; prints char in textChr
 printChar           PUSH
                     LD      textChr                         ; (char-32)*5 + 0x0700
@@ -745,29 +757,25 @@ printChar           PUSH
                     ADDI    0x06
                     STW     textFont                        ; text font slice base address for chars 82+
     
-printC_draw         LDWI    SYS_VDrawBits_134
-                    STW     giga_sysFn
-                    LDW     fgbgColour
-                    STW     giga_sysArg0
-                    LDWI    0x0800
-                    ADDW    cursorXY
-                    STW     giga_sysArg4                    ; xy position
-    
+printC_draw         LDWI    printInit
+                    CALL    giga_vAC
                     LDI     0x05
                     ST      textSlice
     
 printC_slice        LDW     textFont                        ; text font slice base address
                     LUP     0x00                            ; get ROM slice
-                    ST      giga_sysArg2        
+                    ST      giga_sysArg2
                     SYS     0xCB                            ; draw vertical slice, SYS_VDrawBits_134, 270 - 134/2 = 0xCB
                     INC     textFont                        ; next vertical slice
                     INC     giga_sysArg4                    ; next x
                     LoopCounter textSlice printC_slice
+                    ST      giga_sysArg2                    ; result of loopCounter is always 0
+                    SYS     0xCB                            ; draw last blank slice
     
                     LD      cursorXY
                     ADDI    0x06
                     ST      cursorXY
-                    SUBI    155                             ; 154 is last possible char in row
+                    SUBI    giga_xres - 5                   ; giga_xres - 6, (154), is last possible char in row
                     BLT     printC_exit
                     LDWI    newLineScroll                   ; next row, scroll at bottom
                     CALL    giga_vAC
@@ -790,7 +798,7 @@ newLS_cont0         PUSH
                     LD      cursorXY+1
                     ADDI    8
                     ST      cursorXY+1
-                    SUBI    120
+                    SUBI    giga_yres
                     BLT     newLS_exit
                     
 newLS_cont1         LDWI    clearCursorRow

@@ -1,7 +1,7 @@
 _startAddress_      EQU                     0x0200
 
 ; Internal variables
-register0           EQU                     0x00a0
+register0           EQU                     0x0084
 register1           EQU                     register0 + 0x02
 register2           EQU                     register0 + 0x04
 register3           EQU                     register0 + 0x06
@@ -85,14 +85,14 @@ _10                 LDI                     0
 _20                 LDWI                    _math
                     CALL                    giga_vAC                        ; gosub math
 
-_30                 LDI                     0xb5
+_30                 LDI                     0x99
                     PEEK                    
                     ADDI                    7
                     STW                     _p
-                    LDWI                    181
+                    LDWI                    153
                     STW                     register0
                     LD                      _p
-                    POKE                    register0                       ; p=peek(181)+7 : poke 181,p
+                    POKE                    register0                       ; p=peek(153)+7 : poke 153,p
 
 _40                 LDW                     _x
                     STW                     drawLine_x1
@@ -105,7 +105,7 @@ _40                 LDW                     _x
                     STW                     drawLine_y2
                     DrawLine                                                ; line x,119, 159,119-y
 
-_50                 ForNextLoopUp           _i _20                  19      ; next i
+_50                 ForNextLoopUp           _i _20 19                       ; next i
 
 _60                 LDI                     19
                     STW                     _i                              ; for i=19 to 0
@@ -113,14 +113,14 @@ _60                 LDI                     19
 _70                 LDWI                    _math
                     CALL                    giga_vAC                        ; gosub math
 
-_80                 LDI                     0xb5
+_80                 LDI                     0x99
                     PEEK                    
                     ADDI                    7
                     STW                     _p
-                    LDWI                    181
+                    LDWI                    153
                     STW                     register0
                     LD                      _p
-                    POKE                    register0                       ; p=peek(181)+7 : poke 181,p
+                    POKE                    register0                       ; p=peek(153)+7 : poke 153,p
 
 _90                 LDI                     159
                     STW                     drawLine_x1
@@ -132,7 +132,7 @@ _90                 LDI                     159
                     STW                     drawLine_y2
                     DrawLine                                                ; line 159,y, x,0
 
-_100                ForNextLoopDown         _i _70                  0       ; next i
+_100                ForNextLoopDown         _i _70 0                        ; next i
 
 _110                LDI                     0
                     STW                     _i                              ; for i=0 to 19
@@ -140,14 +140,14 @@ _110                LDI                     0
 _120                LDWI                    _math
                     CALL                    giga_vAC                        ; gosub math
 
-_130                LDI                     0xb5
+_130                LDI                     0x99
                     PEEK                    
                     ADDI                    7
                     STW                     _p
-                    LDWI                    181
+                    LDWI                    153
                     STW                     register0
                     LD                      _p
-                    POKE                    register0                       ; p=peek(181)+7 : poke 181,p
+                    POKE                    register0                       ; p=peek(153)+7 : poke 153,p
 
 _140                LDI                     0
                     STW                     drawLine_x1
@@ -160,11 +160,11 @@ _140                LDI                     0
                     STW                     drawLine_y2
                     DrawLine                                                ; line 0,y, 159-x,0
 
-                    STW                     0xe0
+                    STW                     0x82
                     LDWI                    _page_0x08a0
                     CALL                    giga_vAC
-_page_0x08a0        LDW                     0xe0
-_150                ForNextLoopUp           _i _120                 19      ; next i
+_page_0x08a0        LDW                     0x82
+_150                ForNextLoopUp           _i _120 19                      ; next i
 
 _160                LDI                     19
                     STW                     _i                              ; for i=19 to 0
@@ -172,14 +172,14 @@ _160                LDI                     19
 _170                LDWI                    _math
                     CALL                    giga_vAC                        ; gosub math
 
-_180                LDI                     0xb5
+_180                LDI                     0x99
                     PEEK                    
                     ADDI                    7
                     STW                     _p
-                    LDWI                    181
+                    LDWI                    153
                     STW                     register0
                     LD                      _p
-                    POKE                    register0                       ; p=peek(181)+7 : poke 181,p
+                    POKE                    register0                       ; p=peek(153)+7 : poke 153,p
 
 _190                LDI                     159
                     SUBW                    _x
@@ -193,15 +193,15 @@ _190                LDI                     159
                     STW                     drawLine_y2
                     DrawLine                                                ; line 159-x,119, 0,119-y
 
-_200                ForNextLoopDown         _i _170                 0       ; next i
+_200                ForNextLoopDown         _i _170 0                       ; next i
 
                     LDWI                    _10
                     CALL                    giga_vAC                        ; goto 10
 
-                    STW                     0xe0
+                    STW                     0x82
                     LDWI                    _page_0x09a0
                     CALL                    giga_vAC
-_page_0x09a0        LDW                     0xe0
+_page_0x09a0        LDW                     0x82
 _math               PUSH                    
                     LDW                     _i
                     LSLW                    
@@ -244,12 +244,12 @@ initClearFuncs      EQU     0x7fa0
 drawLine            EQU     0x7ea0
 drawLineExt         EQU     0x7ca0
 drawLineDelta1      EQU     0x7ba0
-convertEqOpAddr     EQU     0x00e2
-convertNeOpAddr     EQU     0x00e4
-convertLeOpAddr     EQU     0x00e6
-convertGeOpAddr     EQU     0x00e8
-convertLtOpAddr     EQU     0x00ea
-convertGtOpAddr     EQU     0x00ec
+convertEqOpAddr     EQU     0x00d2
+convertNeOpAddr     EQU     0x00d4
+convertLeOpAddr     EQU     0x00d6
+convertGeOpAddr     EQU     0x00d8
+convertLtOpAddr     EQU     0x00da
+convertGtOpAddr     EQU     0x00dc
 
 
                     ; convert equal to into a boolean

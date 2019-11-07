@@ -1,7 +1,7 @@
 _startAddress_      EQU                     0x0200
 
 ; Internal variables
-register0           EQU                     0x00a0
+register0           EQU                     0x0084
 register1           EQU                     register0 + 0x02
 register2           EQU                     register0 + 0x04
 register3           EQU                     register0 + 0x06
@@ -99,7 +99,7 @@ _70                 LDW                     _X
 _80                 LDI                     1
                     STW                     waitVBlankNum
                     WaitVBlank              
-                    ForNextLoopUp           _I _50                  25      ; WAIT 1:NEXT I
+                    ForNextLoopUp           _I _50 25                       ; WAIT 1:NEXT I
 
 _90                 LDI                     0
                     SUBW                    _V
@@ -129,15 +129,16 @@ resetVideoTable     EQU     0x7dcd
 initClearFuncs      EQU     0x7fa0
 clearVertBlinds     EQU     0x7ea0
 clearCursorRow      EQU     0x7ba0
+printInit           EQU     0x7eef
 printChar           EQU     0x7ca0
 atTextCursor        EQU     0x7da0
 newLineScroll       EQU     0x7aa0
-convertEqOpAddr     EQU     0x00e2
-convertNeOpAddr     EQU     0x00e4
-convertLeOpAddr     EQU     0x00e6
-convertGeOpAddr     EQU     0x00e8
-convertLtOpAddr     EQU     0x00ea
-convertGtOpAddr     EQU     0x00ec
+convertEqOpAddr     EQU     0x00d2
+convertNeOpAddr     EQU     0x00d4
+convertLeOpAddr     EQU     0x00d6
+convertGeOpAddr     EQU     0x00d8
+convertLtOpAddr     EQU     0x00da
+convertGtOpAddr     EQU     0x00dc
 
 
                     ; convert equal to into a boolean
@@ -326,6 +327,17 @@ digitIndex          EQU     register8
 clearLoop           EQU     register9
     
     
+printInit           LDWI    SYS_VDrawBits_134
+                    STW     giga_sysFn
+                    LDW     fgbgColour
+                    STW     giga_sysArg0
+                    LDWI    0x0800
+                    ADDW    cursorXY
+                    STW     giga_sysArg4                    ; xy position
+                    RET
+
+
+
                     ; prints char in textChr
 printChar           PUSH
                     LD      textChr                         ; (char-32)*5 + 0x0700
@@ -347,29 +359,25 @@ printChar           PUSH
                     ADDI    0x06
                     STW     textFont                        ; text font slice base address for chars 82+
     
-printC_draw         LDWI    SYS_VDrawBits_134
-                    STW     giga_sysFn
-                    LDW     fgbgColour
-                    STW     giga_sysArg0
-                    LDWI    0x0800
-                    ADDW    cursorXY
-                    STW     giga_sysArg4                    ; xy position
-    
+printC_draw         LDWI    printInit
+                    CALL    giga_vAC
                     LDI     0x05
                     ST      textSlice
     
 printC_slice        LDW     textFont                        ; text font slice base address
                     LUP     0x00                            ; get ROM slice
-                    ST      giga_sysArg2        
+                    ST      giga_sysArg2
                     SYS     0xCB                            ; draw vertical slice, SYS_VDrawBits_134, 270 - 134/2 = 0xCB
                     INC     textFont                        ; next vertical slice
                     INC     giga_sysArg4                    ; next x
                     LoopCounter textSlice printC_slice
+                    ST      giga_sysArg2                    ; result of loopCounter is always 0
+                    SYS     0xCB                            ; draw last blank slice
     
                     LD      cursorXY
                     ADDI    0x06
                     ST      cursorXY
-                    SUBI    155                             ; 154 is last possible char in row
+                    SUBI    giga_xres - 5                   ; giga_xres - 6, (154), is last possible char in row
                     BLT     printC_exit
                     LDWI    newLineScroll                   ; next row, scroll at bottom
                     CALL    giga_vAC
@@ -378,26 +386,26 @@ printC_exit         POP
 
 
 atTextCursor        LD      cursorXY
-                    SUBI    155
-                    BLT     drawTC_skip0
+                    SUBI    giga_xres - 5
+                    BLT     atTC_skip0
                     LDI     0
                     STW     cursorXY
                     
-drawTC_skip0        LD      cursorXY + 1
-                    SUBI    113
-                    BLT     drawTC_skip1
-                    LDI     112
+atTC_skip0          LD      cursorXY + 1
+                    SUBI    giga_yres - 7
+                    BLT     atTC_skip1
+                    LDI     giga_yres - 8
                     STW     cursorXY + 1
                     
-drawTC_skip1        LD      cursorXY + 1
-                    SUBI    112
-                    BGE     drawTC_skip2
+atTC_skip1          LD      cursorXY + 1
+                    SUBI    giga_yres - 8
+                    BGE     atTC_skip2
                     LDWI    0x7FFF
                     ANDW    miscFlags
                     STW     miscFlags                       ; reset on bottom row flag
                     RET
                     
-drawTC_skip2        LDWI    0x8000
+atTC_skip2          LDWI    0x8000
                     ORW     miscFlags
                     STW     miscFlags                       ; set on bottom row flag
                     RET
@@ -457,7 +465,7 @@ newLS_cont0         PUSH
                     LD      cursorXY+1
                     ADDI    8
                     ST      cursorXY+1
-                    SUBI    120
+                    SUBI    giga_yres
                     BLT     newLS_exit
                     
 newLS_cont1         LDWI    clearCursorRow

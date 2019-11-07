@@ -207,7 +207,7 @@ namespace Loader
                 uint16_t address = gt1File._segments[i]._loAddress + (gt1File._segments[i]._hiAddress <<8);
                 int segmentSize = (gt1File._segments[i]._segmentSize == 0) ? 256 : gt1File._segments[i]._segmentSize;
                 if((address + segmentSize - 1) < Memory::getSizeRAM()) totalSize += segmentSize;
-                if((address & 0x00FF) + segmentSize > 256) fprintf(stderr, "Loader::printGt1Stats() : Page overflow, segment %4d : address 0x%04x : segmentSize %3d\n", i, address, segmentSize);
+                if((address & 0x00FF) + segmentSize > 256) fprintf(stderr, "Loader::printGt1Stats() : Page overflow, segment %d : address 0x%04x : segmentSize %3d\n", i, address, segmentSize);
             }
         }
         uint16_t startAddress = gt1File._loStart + (gt1File._hiStart <<8);
@@ -1219,7 +1219,7 @@ namespace Loader
                 Cpu::setRAM(0x001b, HI_BYTE(executeAddress));
 
                 // Reset stack
-                Cpu::setRAM(0x001c, 0xFE);
+                Cpu::setRAM(STACK_POINTER, 0x00);
             }
 
             //Editor::startDebugger();

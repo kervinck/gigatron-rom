@@ -12,10 +12,11 @@ namespace Expression
 
     struct Numeric
     {
-        Numeric() {_value = 0; _isValid = false; _isAddress = false; _varName="";}
-        Numeric(int16_t value, bool isValid, bool isAddress, std::string& varName) {_value = value; _isValid = isValid; _isAddress = isAddress; _varName = varName;}
+        Numeric() {_value = 0; _index = -1; _isValid = false; _isAddress = false; _varName="";}
+        Numeric(int16_t value, int16_t index, bool isValid, bool isAddress, std::string& varName) {_value = value; _index = index; _isValid = isValid; _isAddress = isAddress; _varName = varName;}
 
-        int16_t _value;
+        int16_t _value = 0;
+        int16_t _index = -1;
         bool _isValid = false;
         bool _isAddress = false;
         std::string _varName;
@@ -42,8 +43,8 @@ namespace Expression
     void stripWhitespace(std::string& input);
     std::string stripStrings(const std::string& input);
     void trimWhitespace(std::string& input);
-    std::string collapseWhitespace(std::string& input);
-    std::string collapseWhitespaceNotStrings(std::string& input);
+    std::string collapseWhitespace(const std::string& input);
+    std::string collapseWhitespaceNotStrings(const std::string& input);
     void padString(std::string &str, int num, char pad=' ');
     void addString(std::string &str, int num, char add=' ');
     int tabbedStringLength(const std::string& input, int tabSize);
@@ -73,6 +74,8 @@ namespace Expression
     const char* getExpressionToParse(void);
     std::string& getExpressionToParseString(void);
     int getLineNumber(void);
+
+    void setExpression(const std::string& expression);
 
     char peek(void);
     char get(void);

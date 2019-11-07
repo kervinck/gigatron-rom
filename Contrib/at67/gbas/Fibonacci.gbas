@@ -1,12 +1,39 @@
+_useOpcodeCALLI_
+
+'dim aa(20)=0:dim bb(20)=0:dim cc(20)=0
+'aa(3) = bb(3)
+'x = 0
+'y = 1
+'z = 48+aa(y+1):put z
+'z = aa(y+1)+48:put z
+'bb(x) = 1 + 1 + aa(x) + bb(y) + cc(1) + y
+'cc(y+1) = 1
+'j = x + y + z
+
+n=0:j=n:c=j:cls
 1 'Fibonacci with bignums
-2 a(0)=0:b(0)=1:c(0)=0
-3 n=n+1:printn;": ";
-4 fori=0toj:put48+b(j-i)
-5 nexti:print:fori=0toj
+2 dim a(50)=0:dim b(50)=0:b(0)=1
+3 n=n+1:print n;": ";
+4 for i=0 to j:put 48+b(j-i)
+5 next i:print:for i=0 to j
 6 c=a(i)+b(i)+c:a(i)=b(i)
-7 b(i)=c:ifc<10 c=0:goto9
+7 b(i)=c:if c<10 then c=0:goto 9
 8 b(i)=c-10:c=1
-9 nexti:ifc=0 goto12
-10 j=j+1
-11 a(j)=0:b(j)=c:c(j)=0
-12 print:goto 3
+9 next i:if c=0 then goto 12
+10 j=j+1:if j=50 then END
+11 a(j)=0:b(j)=c
+12 if (peek(15) = &hff) then goto 12
+13 wait 2:if (peek(15) = &hff) then goto 3
+14 goto 12
+
+'      cls
+'      dim f(50)=0
+'      c = 0;
+'      f(0) = 0
+'      f(1) = 1
+'      n = 1
+'LOOP: f(n+1) = f(n) + f(n-1)
+'      c = f(n+1)
+'      print n-1;": ";c
+'      n = n + 1
+'      if n<10 then goto LOOP
