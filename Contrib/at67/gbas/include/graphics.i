@@ -1,5 +1,16 @@
 graphicsMode        EQU     register0
 waitVBlankNum       EQU     register0
+
+drawHLine_x1        EQU     register0
+drawHLine_y1        EQU     register1
+drawHLine_x2        EQU     register2
+drawHLine_x4        EQU     register3
+
+drawVLine_x1        EQU     register0
+drawVLine_y1        EQU     register1
+drawVLine_y2        EQU     register2
+drawVLine_y8        EQU     register3
+
 drawLine_x1         EQU     register0
 drawLine_y1         EQU     register1
 drawLine_x2         EQU     register2
@@ -48,7 +59,87 @@ waitVB_start        LD      giga_frameCount
                     STW     frameCountPrev
                     BRA     waitVBlank
 %ENDS   
-    
+
+%SUB                drawHLine
+drawHLine           LD      drawHLine_x1
+                    ST      giga_sysArg4
+                    LD      drawHLine_y1
+                    ADDI    8
+                    ST      giga_sysArg4 + 1
+                    LDW     drawHLine_x2
+                    SUBW    drawHLine_x1
+                    SUBI    4
+                    BLT     drawHL_loop1
+                    
+                    LD      fgbgColour + 1
+                    ST      giga_sysArg0
+                    ST      giga_sysArg0 + 1
+                    ST      giga_sysArg2
+                    ST      giga_sysArg2 + 1    ; 4 pixels of fg colour
+                    LDWI    SYS_Draw4_30        ; setup 4 pixel SYS routine
+                    STW     giga_sysFn
+                    
+                    LDW     drawHLine_x2        
+                    SUBI    3
+                    STW     drawHLine_x4        ; 4 pixel chunks limit
+
+drawHL_loop0        SYS     0xFF                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+                    LD      giga_sysArg4
+                    ADDI    4
+                    ST      giga_sysArg4
+                    SUBW    drawHLine_x4
+                    BLT     drawHL_loop0        ; all 4 pixel chunks
+                    
+drawHL_loop1        LD      fgbgColour + 1
+                    POKE    giga_sysArg4
+                    INC     giga_sysArg4
+                    LD      giga_sysArg4
+                    SUBW    drawHLine_x2
+                    BLE     drawHL_loop1        ; remaining pixels
+                    RET
+%ENDS
+
+%SUB                drawVLine
+drawVLine           LD      drawVLine_x1
+                    ST      giga_sysArg4
+                    LD      drawVLine_y1
+                    ADDI    8
+                    ST      drawVLine_y1
+                    ST      giga_sysArg4 + 1
+                    LDW     drawVLine_y2
+                    ADDI    8
+                    ST      drawVLine_y2
+                    SUBW    drawVLine_y1
+                    SUBI    8
+                    BLT     drawVL_loop1
+                    
+                    LDW     fgbgColour
+                    STW     giga_sysArg0
+                    LDWI    SYS_VDrawBits_134
+                    STW     giga_sysFn          ; setup 8 pixel SYS routine
+                    
+                    LDW     drawVLine_y2
+                    SUBI    7
+                    STW     drawVLine_y8        ; 8 pixel chunks limit
+
+drawVL_loop0        LDI     0xFF
+                    ST      giga_sysArg2        ; 8 pixels of fg and bg colour
+                    SYS     0xCB                ; SYS_VDrawBits_134, 270 - 134/2 = 0xCB
+                    LD      giga_sysArg4 + 1
+                    ADDI    8
+                    ST      giga_sysArg4 + 1
+                    SUBW    drawVLine_y8
+                    BLT     drawVL_loop0        ; all 8 pixel chunks
+                    
+drawVL_loop1        LD      fgbgColour + 1
+                    POKE    giga_sysArg4
+                    INC     giga_sysArg4 + 1
+                    LD      giga_sysArg4 + 1
+                    SUBW    drawVLine_y2
+                    BLE     drawVL_loop1        ; remaining pixels
+                    RET
+%ENDS
+
 %SUB                drawLine
 drawLine            PUSH
                     LDI     1

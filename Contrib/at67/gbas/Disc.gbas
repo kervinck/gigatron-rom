@@ -1,10 +1,24 @@
+_useOpcodeCALLI_
+
+'cls : pos=10
+
+'line: at 2,0 : print pos : vline 10,10,pos 'hline 10,10,pos
+
+'input0: if (peek(15) = &hff) then goto input0
+'input1: if (peek(15) <> &hff) then goto input1
+
+'pos=pos+1 : goto line
 
 'Draw filled circle with
 'LINE statements
 10 x=80:y=60:u=45:'Radius
-20 cls:v=0:w=0
-30 line x-u, y-v, x+u, y-v
-40 line x-u, y+v, x+u, y+v
+20 cls:v=0:w=v
+'30 line x-u, y-v, x+u, y-v
+'40 line x-u, y+v, x+u, y+v
+'30 hline x-u, y-v, x+u
+'40 hline x-u, y+v, x+u
+30 vline x-v, y-u, y+u
+40 vline x+v, y-u, y+u
 50 w=w+v+v+1:v=v+1
 60 if w<0 then goto 30
 70 w=w-u-u+1:u=u-1

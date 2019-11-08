@@ -6,8 +6,12 @@ Written by Gigadave : https://forum.gigatron.io/viewtopic.php?f=4&t=96
 8 poke 153,a
 10 x=80:y=60:u=a
 20 v=0:w=0
-30 at x-u,y-v:line u+u,0
-40 at x-u,y+v:line u+u,0
+'30 at x-u,y-v:line u+u,0
+'40 at x-u,y+v:line u+u,0
+30 hline x-u,y-v,x+u
+40 hline x-u,y+v,x+u
+'30 vline x-v, y-u, y+u
+'40 vline x+v, y-u, y+u
 50 w=w+v+v+1:v=v+1
 60 if w<0 then goto 30
 70 w=w-u-u+1:u=u-1

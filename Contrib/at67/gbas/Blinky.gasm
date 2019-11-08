@@ -33,8 +33,8 @@ _20                 EQU                     0x022f
 _30                 EQU                     0x022f
 _40                 EQU                     0x023b
 _50                 EQU                     0x022f
-_60                 EQU                     0x0260
-_end_0x027f         EQU                     0x026f
+_60                 EQU                     0x024e
+_end_0x0271         EQU                     0x025d
 
 ; Variables
 _X                  EQU                     0x0030
@@ -62,23 +62,14 @@ _20                 LDI                     80
                     LDI                     0
                     STW                     _I                              ; X=160/2:Y=120/2:I=0
 
-_40                 LDI                     2
-                    STW                     mathX
-                    LDW                     _Y
-                    STW                     mathY
-                    LDWI                    multiply16bit
-                    CALL                    giga_vAC
-                    STW                     0xc0
-                    LDWI                    256
-                    ADDW                    0xc0
+_40                 LDWI                    256
+                    ADDW                    _Y
+                    ADDW                    _Y
                     PEEK                    
-                    STW                     mathX
-                    LDWI                    256
-                    STW                     mathY
-                    LDWI                    multiply16bit
-                    CALL                    giga_vAC
+                    STW                     mathShift
+                    ShiftLeft8bit           
                     ADDW                    _X
-                    STW                     _P                              ; P=PEEK(256+2*Y)*256+X
+                    STW                     _P                              ; P=(PEEK(256+Y+Y) LSL 8)+X
 
 _60                 LD                      _I
                     POKE                    _P
@@ -88,7 +79,7 @@ _60                 LD                      _I
                     LDWI                    _60
                     CALL                    giga_vAC                        ; POKE P,I:I=I+1:GOTO 60
 
-_end_0x027f         BRA                     _end_0x027f                     ; END
+_end_0x0271         BRA                     _end_0x0271                     ; END
 
 
 
@@ -104,8 +95,8 @@ convertLeOp         EQU     0x7fd5
 convertGeOp         EQU     0x7fde
 convertLtOp         EQU     0x7fe7
 convertGtOp         EQU     0x7ff0
-multiply16bit       EQU     0x7ea0
-resetVideoTable     EQU     0x7ec3
+shiftLeft8bit       EQU     0x7ea0
+resetVideoTable     EQU     0x7eaa
 initClearFuncs      EQU     0x7fa0
 convertEqOpAddr     EQU     0x00d2
 convertNeOpAddr     EQU     0x00d4
@@ -173,26 +164,10 @@ mathScratch         EQU     register6
 mathShift           EQU     register7
     
     
-                    ; accumulator = mathX * mathY, (result 16bit)
-multiply16bit       LDI     0
-                    STW     mathSum
-                    LDI     1
-    
-multiply16_loop     STW     mathMask
-                    ANDW    mathY
-                    BEQ     multiply16_skip
-                    LDW     mathSum
-                    ADDW    mathX
-                    STW     mathSum
-                    
-multiply16_skip     LDW     mathX
-                    ADDW    mathX
-                    STW     mathX
-                    LDW     mathMask
-                    ADDW    mathMask
-                    BNE     multiply16_loop
-                    
-                    LDW     mathSum
+shiftLeft8bit       LDWI    SYS_LSLW8_24
+                    STW     giga_sysFn
+                    LDW     mathShift
+                    SYS     0x00                ; 0x00 = 270-max(14,24/2)
                     RET
 
 

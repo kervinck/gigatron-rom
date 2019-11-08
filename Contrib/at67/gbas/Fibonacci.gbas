@@ -22,9 +22,10 @@ n=0:j=n:c=j:cls
 9 next i:if c=0 then goto 12
 10 j=j+1:if j=50 then END
 11 a(j)=0:b(j)=c
-12 if (peek(15) = &hff) then goto 12
-13 wait 2:if (peek(15) = &hff) then goto 3
-14 goto 12
+12 goto 3
+'12 if (peek(15) = &hff) then goto 12
+'13 wait 2:if (peek(15) = &hff) then goto 3
+'14 goto 12
 
 '      cls
 '      dim f(50)=0

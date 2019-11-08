@@ -24,19 +24,19 @@ miscFlags           EQU                     register0 + 0x1E
 
 ; Includes
 %include            include/gigatron.i
-%include            include/macros.i
+%include            include/macros_CALLI.i
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x022f
-_20                 EQU                     0x023b
-_30                 EQU                     0x0248
-_40                 EQU                     0x0265
-_50                 EQU                     0x0282
-_60                 EQU                     0x0292
-_70                 EQU                     0x02a3
-_80                 EQU                     0x02b3
-_end_0x0308         EQU                     0x02c4
+_10                 EQU                     0x020f
+_20                 EQU                     0x021b
+_30                 EQU                     0x0224
+_40                 EQU                     0x0239
+_50                 EQU                     0x024e
+_60                 EQU                     0x025e
+_70                 EQU                     0x026c
+_80                 EQU                     0x027c
+_end_0x02c8         EQU                     0x028a
 
 ; Variables
 _x                  EQU                     0x0030
@@ -50,13 +50,7 @@ _w                  EQU                     0x0038
 ; Lookup Tables
 
 ; Code
-_entryPoint_        Initialise              
-                    InitEqOp                
-                    InitNeOp                
-                    InitLeOp                
-                    InitGeOp                
-                    InitLtOp                
-                    InitGtOp                                                ; INIT
+_entryPoint_        Initialise                                              ; INIT
 
 _10                 LDI                     80
                     STW                     _x
@@ -65,40 +59,32 @@ _10                 LDI                     80
                     LDI                     45
                     STW                     _u                              ; x=80:y=60:u=45:'Radius
 
-_20                 LDWI                    clearVertBlinds
-                    CALL                    giga_vAC
+_20                 CALLI                   clearVertBlinds
                     LDI                     0
                     STW                     _v
-                    LDI                     0
-                    STW                     _w                              ; cls:v=0:w=0
+                    STW                     _w                              ; cls:v=0:w=v
 
 _30                 LDW                     _x
+                    SUBW                    _v
+                    STW                     drawVLine_x1
+                    LDW                     _y
                     SUBW                    _u
-                    STW                     drawLine_x1
+                    STW                     drawVLine_y1
                     LDW                     _y
-                    SUBW                    _v
-                    STW                     drawLine_y1
-                    LDW                     _x
                     ADDW                    _u
-                    STW                     drawLine_x2
-                    LDW                     _y
-                    SUBW                    _v
-                    STW                     drawLine_y2
-                    DrawLine                                                ; line x-u, y-v, x+u, y-v
+                    STW                     drawVLine_y2
+                    DrawVLine                                               ; vline x-v, y-u, y+u
 
 _40                 LDW                     _x
+                    ADDW                    _v
+                    STW                     drawVLine_x1
+                    LDW                     _y
                     SUBW                    _u
-                    STW                     drawLine_x1
+                    STW                     drawVLine_y1
                     LDW                     _y
-                    ADDW                    _v
-                    STW                     drawLine_y1
-                    LDW                     _x
                     ADDW                    _u
-                    STW                     drawLine_x2
-                    LDW                     _y
-                    ADDW                    _v
-                    STW                     drawLine_y2
-                    DrawLine                                                ; line x-u, y+v, x+u, y+v
+                    STW                     drawVLine_y2
+                    DrawVLine                                               ; vline x+v, y-u, y+u
 
 _50                 LDW                     _w
                     ADDW                    _v
@@ -110,10 +96,9 @@ _50                 LDW                     _w
                     STW                     _v                              ; w=w+v+v+1:v=v+1
 
 _60                 LDW                     _w
-                    CALL                    convertLtOpAddr
+                    CALLI                   convertLtOp
                     PageJumpBEQ             _70
-                    LDWI                    _30
-                    CALL                    giga_vAC                        ; if w<0 then goto 30
+                    CALLI                   _30                             ; if w<0 then goto 30
 
 _70                 LDW                     _w
                     SUBW                    _u
@@ -125,12 +110,11 @@ _70                 LDW                     _w
                     STW                     _u                              ; w=w-u-u+1:u=u-1
 
 _80                 LDW                     _u
-                    CALL                    convertGtOpAddr
-                    PageJumpBEQ             _end_0x0308
-                    LDWI                    _60
-                    CALL                    giga_vAC                        ; if u>0 then goto 60
+                    CALLI                   convertGtOp
+                    PageJumpBEQ             _end_0x02c8
+                    CALLI                   _60                             ; if u>0 then goto 60
 
-_end_0x0308         BRA                     _end_0x0308                     ; END
+_end_0x02c8         BRA                     _end_0x02c8                     ; END
 
 
 
@@ -140,24 +124,16 @@ _end_0x0308         BRA                     _end_0x0308                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-convertEqOp         EQU     0x7fc3
-convertNeOp         EQU     0x7fcc
-convertLeOp         EQU     0x7fd5
-convertGeOp         EQU     0x7fde
-convertLtOp         EQU     0x7fe7
-convertGtOp         EQU     0x7ff0
-resetVideoTable     EQU     0x7ed8
+convertEqOp         EQU     0x7ef0
+convertNeOp         EQU     0x7da0
+convertLeOp         EQU     0x7da9
+convertGeOp         EQU     0x7db2
+convertLtOp         EQU     0x7ff7
+convertGtOp         EQU     0x7ee7
+resetVideoTable     EQU     0x7dbb
 initClearFuncs      EQU     0x7fa0
-clearVertBlinds     EQU     0x7ea0
-drawLine            EQU     0x7da0
-drawLineExt         EQU     0x7ca0
-drawLineDelta1      EQU     0x7ba0
-convertEqOpAddr     EQU     0x00d2
-convertNeOpAddr     EQU     0x00d4
-convertLeOpAddr     EQU     0x00d6
-convertGeOpAddr     EQU     0x00d8
-convertLtOpAddr     EQU     0x00da
-convertGtOpAddr     EQU     0x00dc
+clearVertBlinds     EQU     0x7fc1
+drawVLine           EQU     0x7ea0
 
 
                     ; convert equal to into a boolean
@@ -239,8 +215,7 @@ resetVT_loop        LDW     vramAddr
 
 
 initClearFuncs      PUSH
-                    LDWI    resetVideoTable
-                    CALL    giga_vAC
+                    CALLI   resetVideoTable
     
                     LDWI    0x0002                              ; starting cursor position
                     STW     cursorXY
@@ -262,8 +237,7 @@ initClearFuncs      PUSH
 
                     ; clears the viewable screen using a vertical blinds effect
 clearVertBlinds     PUSH
-                    LDWI    initClearFuncs
-                    CALL    giga_vAC
+                    CALLI   initClearFuncs
 
                     LDWI    giga_vram                           ; top line
                     STW     giga_sysArg4
@@ -295,9 +269,19 @@ clearVB_loop        LD      top
                     RET
 
 
-
 graphicsMode        EQU     register0
 waitVBlankNum       EQU     register0
+
+drawHLine_x1        EQU     register0
+drawHLine_y1        EQU     register1
+drawHLine_x2        EQU     register2
+drawHLine_x4        EQU     register3
+
+drawVLine_x1        EQU     register0
+drawVLine_y1        EQU     register1
+drawVLine_y2        EQU     register2
+drawVLine_y8        EQU     register3
+
 drawLine_x1         EQU     register0
 drawLine_y1         EQU     register1
 drawLine_x2         EQU     register2
@@ -318,147 +302,42 @@ drawLine_count      EQU     register12
 drawLine_tmp        EQU     register13
     
     
-drawLine            PUSH
-                    LDI     1
-                    STW     drawLine_dx1
-                    STW     drawLine_dx2
-                    STW     drawLine_dy1
-                    LDI     0
-                    STW     drawLine_dy2                
-    
-                    LDWI    0x8000
-                    STW     drawLine_tmp
-                    
-                    LDW     drawLine_x2         ; sx = x2 - x1
-                    SUBW    drawLine_x1
-                    STW     drawLine_sx
-                    ANDW    drawLine_tmp        
-                    BEQ     drawL_dy
-                    LDWI    -1
-                    STW     drawLine_dx1        
-                    STW     drawLine_dx2        ; dx1 = dx2 = (sx & 0x8000) ? -1 : 1
-                    LDI     0                   ; sx = (sx & 0x8000) ? 0 - sx : sx
-                    SUBW    drawLine_sx
-                    STW     drawLine_sx                
-                    
-drawL_dy            LDW     drawLine_y2
-                    SUBW    drawLine_y1
-                    STW     drawLine_sy
-                    STW     drawLine_h          ; h = sy
-                    ANDW    drawLine_tmp
-                    BEQ     drawL_ext
-                    
-                    LDWI    -1
-                    STW     drawLine_dy1        ; dy1 = (sy & 0x8000) ? -1 : 1
-                    LDI     0                   
-                    SUBW    drawLine_sy
-                    STW     drawLine_sy         ; sy = (sy & 0x8000) ? 0 - sy : sy
-                    SUBW    drawLine_sx
-                    BLE     drawL_ext           
-                    LDW     drawLine_dy1
-                    STW     drawLine_dy2        ; if(sx < sy) dy2 = -1
-    
-drawL_ext           LDWI    drawLineLoadXY
-                    CALL    giga_vAC
-                    LDWI    drawLineExt
-                    CALL    giga_vAC
-
-
-
-drawLineExt         LDW     drawLine_sy
-                    SUBW    drawLine_sx
-                    BLE     drawL_num
-                    LDI     0
-                    STW     drawLine_dx2        ; if(sx < sy) dx2 = 0
-                    LDW     drawLine_sy       
-                    STW     drawLine_tmp
-                    LDW     drawLine_sx
-                    STW     drawLine_sy
-                    LDW     drawLine_tmp
-                    STW     drawLine_sx         ; swap sx with sy
-                    LDW     drawLine_h
-                    BLE     drawL_num
-                    LDI     1
-                    STW     drawLine_dy2        ; if(h > 0) dy2 = 1
-    
-drawL_num           LDWI    SYS_LSRW1_48
-                    STW     giga_sysFn          
-                    LDW     drawLine_sx
-                    SYS     0xF6                ; 0xF6 = 270-max(14,48/2)
-                    STW     drawLine_num        ; numerator = sx>>1
-                    STW     drawLine_count
-                    INC     drawLine_count      ; for(count=sx>>1; counti>=0; --i)
-                    
-                    LDWI    drawLineLoadDXY
-                    CALL    giga_vAC     
-                    
-drawL_loop          LD      fgbgColour + 1
-                    POKE    drawLine_xy1        ; plot start pixel
-                    POKE    drawLine_xy2        ; plot end pixel, (meet in middle)      
-                    
-                    LDW     drawLine_num        ; numerator += sy
-                    ADDW    drawLine_sy
-                    STW     drawLine_num
-                    SUBW    drawLine_sx
-                    BLE     drawL_flip          ; if(numerator <= sx) goto flip
-                    
-                    STW     drawLine_num        ; numerator -= sx
-                    LDWI    drawLineDelta1      ; x1 += dx1, y1 += dx1, x2 -= dx1, y2 -= dx1
-                    CALL    giga_vAC
-                    BRA     drawL_count
-                    
-drawL_flip          LDWI    drawLineDelta2      ; x1 += dx2, y1 += dx2, x2 -= dx2, y2 -= dx2
-                    CALL    giga_vAC
-                    
-drawL_count         LDW     drawLine_count
-                    SUBI    0x01
-                    STW     drawLine_count
-                    BGT     drawL_loop
-                    POP
-                    RET
-
-
-drawLineDelta1      LDW     drawLine_xy1
-                    ADDW    drawLine_dxy1
-                    STW     drawLine_xy1        ; xy1 += dxy1
-                    
-                    LDW     drawLine_xy2
-                    SUBW    drawLine_dxy1
-                    STW     drawLine_xy2        ; xy2 -= dxy1
-                    RET
-                    
-drawLineDelta2      LDW     drawLine_xy1        
-                    ADDW    drawLine_dxy2
-                    STW     drawLine_xy1        ; xy1 += dxy2
-                    
-                    LDW     drawLine_xy2        
-                    SUBW    drawLine_dxy2
-                    STW     drawLine_xy2        ; xy2 -= dxy2
-                    RET
-                    
-drawLineLoadXY      LD      drawLine_x1
-                    ST      drawLine_xy1
-                    LD      drawLine_y1
+drawVLine           LD      drawVLine_x1
+                    ST      giga_sysArg4
+                    LD      drawVLine_y1
                     ADDI    8
-                    ST      drawLine_xy1 + 1    ; xy1 = x1 | ((y1+8)<<8)
-                    
-                    LD      drawLine_x2
-                    ST      drawLine_xy2
-                    LD      drawLine_y2
+                    ST      drawVLine_y1
+                    ST      giga_sysArg4 + 1
+                    LDW     drawVLine_y2
                     ADDI    8
-                    ST      drawLine_xy2 + 1    ; xy2 = x2 | ((y2+8)<<8)
-                    RET
+                    ST      drawVLine_y2
+                    SUBW    drawVLine_y1
+                    SUBI    8
+                    BLT     drawVL_loop1
                     
-drawLineLoadDXY     LDWI    SYS_LSLW8_24
-                    STW     giga_sysFn          
-                    LDW     drawLine_dy1
-                    SYS     0x00                ; LSL 8, 0x00 = 270-max(14,24/2)
-                    ADDW    drawLine_dx1
-                    STW     drawLine_dxy1       ; dxy1 = dx1 + (dy1<<8)
-    
-                    LDW     drawLine_dy2
-                    SYS     0x00                ; LSL 8, 0x00 = 270-max(14,24/2)
-                    ADDW    drawLine_dx2
-                    STW     drawLine_dxy2       ; dxy2 = dx2 + (dy2<<8)
+                    LDW     fgbgColour
+                    STW     giga_sysArg0
+                    LDWI    SYS_VDrawBits_134
+                    STW     giga_sysFn          ; setup 8 pixel SYS routine
+                    
+                    LDW     drawVLine_y2
+                    SUBI    7
+                    STW     drawVLine_y8        ; 8 pixel chunks limit
+
+drawVL_loop0        LDI     0xFF
+                    ST      giga_sysArg2        ; 8 pixels of fg and bg colour
+                    SYS     0xCB                ; SYS_VDrawBits_134, 270 - 134/2 = 0xCB
+                    LD      giga_sysArg4 + 1
+                    ADDI    8
+                    ST      giga_sysArg4 + 1
+                    SUBW    drawVLine_y8
+                    BLT     drawVL_loop0        ; all 8 pixel chunks
+                    
+drawVL_loop1        LD      fgbgColour + 1
+                    POKE    giga_sysArg4
+                    INC     giga_sysArg4 + 1
+                    LD      giga_sysArg4 + 1
+                    SUBW    drawVLine_y2
+                    BLE     drawVL_loop1        ; remaining pixels
                     RET
 

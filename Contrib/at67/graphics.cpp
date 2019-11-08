@@ -1082,7 +1082,6 @@ namespace Graphics
         if(synchronise) Timing::synchronise();
     }
 
-
     void drawPixel(uint8_t x, uint8_t y, uint32_t colour)
     {
         x = x % GIGA_WIDTH;

@@ -58,9 +58,9 @@ gosubNL_loop        LDW     lutIndex
                     LDW     defaultLabel
                     BEQ     gosubNL_exit
                     CALL    defaultLabel                    ; fetch default address and call
-                    POP
                     
-gosubNL_exit        RET
+gosubNL_exit        POP
+                    RET
                     
 gosubNL_cont        LDW     lutLabel
                     SUBW    numericLabel

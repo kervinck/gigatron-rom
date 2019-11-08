@@ -238,6 +238,16 @@ _label_ CALL    giga_vAC
         CALL    giga_vAC
 %ENDM
 
+%MACRO  DrawHLine
+        LDWI    drawHLine
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  DrawVLine
+        LDWI    drawVLine
+        CALL    giga_vAC
+%ENDM
+
 %MACRO  AtLineCursor
         LDWI    atLineCursor
         CALL    giga_vAC

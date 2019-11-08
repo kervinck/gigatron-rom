@@ -194,6 +194,14 @@ _label_ CALLI   _label
         CALLI   drawLine
 %ENDM
 
+%MACRO  DrawHLine
+        CALLI   drawHLine
+%ENDM
+
+%MACRO  DrawVLine
+        CALLI   drawVLine
+%ENDM
+
 %MACRO  PageJumpBEQ _label
         BNE     _label_+3
 _label_ CALLI   _label

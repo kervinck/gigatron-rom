@@ -6,7 +6,7 @@ convertEqOp         BEQ     convertEq_1
 convertEq_1         LDI     1
                     RET
 %ENDS   
-                    
+
 %SUB                convertNeOp
                     ; convert not equal to into a boolean
 convertNeOp         BNE     convertNe_1
@@ -33,7 +33,7 @@ convertGeOp         BGE     convertGe_1
 convertGe_1         LDI     1
                     RET
 %ENDS   
-        
+
 %SUB                convertLtOp     
                     ; convert less than into a boolean
 convertLtOp         BLT     convertLt_1
@@ -42,7 +42,7 @@ convertLtOp         BLT     convertLt_1
 convertLt_1         LDI     1
                     RET
 %ENDS   
-        
+
 %SUB                convertGtOp     
                     ; convert greater than into boolean
 convertGtOp         BGT     convertGt_1
