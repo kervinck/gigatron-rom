@@ -72,6 +72,8 @@
 #define PS2_F11        (0xc0 + 11)
 #define PS2_F12        (0xc0 + 12)
 
+#define CTRLALTDEL     (255 ^ buttonStart)
+
 /*
  *  Keyboard layout mapping
  */
@@ -412,9 +414,9 @@ enum {
 #define nextPs2()\
  flags &= ~(breakFlag | extendedFlag)
 
-static word flags = 0;
-static byte ascii = 0;
-static word lastChange;
+static word flags = 0;          // Modifier keys and button state
+static byte ascii = 0;          // Current ASCII key press
+static word lastChange, hold;   // Babelfish controls the hold time for keys
 
 // XXX Put variables in a class for better scoping
 
@@ -523,13 +525,11 @@ byte keyboard_getState()
   for (;;) {
     word value = readPs2Buffer();
     if (value == 0) {                   // Buffer is empty
-      word hold = 35;                   // Hold ASCII keys for 3 frames (less than repetition rate)
-      if (ascii == (255^buttonStart))   // [Ctrl-Alt-Del] maps to [Start] for 2 seconds
-        hold = 2500;
-      if (now - lastChange > hold) 
+      if (now - lastChange > hold)      // Auto-release keys after `hold' milliseconds
         ascii = 0;
-      if (now - lastChange > 1000)      // Hold buttons longer than the repeat delay
-        flags &= ~255;
+      if (now - lastChange > 1000)      // Hold `buttons' a bit longer than the repeat delay. This
+        flags &= ~255;                  // is merely a safeguard against missing the break event
+                                        // and then ending up with a stuck virtual button press.
       break;
     }
 
@@ -575,7 +575,6 @@ byte keyboard_getState()
     // even if there are still bytes waiting in the buffer.
     byte button = 0;
     byte newAscii = 0;
-    lastChange = now;
 
     switch (value) {
       // Extended codes in "Set 2"
@@ -586,7 +585,7 @@ byte keyboard_getState()
       case 0x66:                                 // [BackSpace]
       case 0xe071: if ((flags & ctrlFlags)       // [Delete]
                     && (flags & altFlags))
-                     newAscii = 255^buttonStart; // [Ctrl-Alt-Del] for special reset
+                     newAscii = CTRLALTDEL;      // [Ctrl-Alt-Del] becomes [Start]
                    else
                      button = buttonA;    break; // ASCII DEL is 127 is ~buttonA
       case 0xe069: button = buttonA;      break; // [End]
@@ -626,17 +625,22 @@ byte keyboard_getState()
           }
     }
 
+    // Consolidate the `flags' and `ascii' states
     if (button) {               // Case 2: Simulated game controller buttons
+      lastChange = now;
       if (flags & breakFlag)
         flags &= ~button;       // Button released
       else
         flags |= button;        // Button pressed
       ascii = 0;
     } else {                    // Case 3: ASCII keys
-      if (~flags & breakFlag)
+      if (newAscii != ascii)
+        lastChange = now;
+      if (~flags & breakFlag)   // Ignore ASCII release events (use 'hold' instead)
         ascii = newAscii;       // ASCII pressed
-      else
-        {}                      // ASCII release (ignored)
+      hold = 35;                // Hold for 3 frames (less than the repeat rate)
+      if (ascii == CTRLALTDEL)  // At least 2 seconds for the [Start] signal
+        hold = max(500 + now - lastChange, 2500); // No accidental Easter Egg trigger (8b guy)
       flags &= ~255;
     }
     nextPs2();                  // Reset PS/2 sequence
@@ -705,4 +709,3 @@ void keyboard_send(word code)
   while (digitalRead(keyboardClockPin) == 0 || digitalRead(keyboardDataPin) == 0)
     ;
 }
-

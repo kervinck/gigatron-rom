@@ -17,8 +17,6 @@ gcl0x
         --------------------------
 
         Open issues:
-        XXX BabelFish is too fast for LOAD
-        XXX Pi is also BabelFish's EOF marker
         XXX SAVE/LOAD with SDC/MMC
 
         Implemented:
@@ -824,31 +822,31 @@ _CharOut=*
      else     i= \font82up]     {ASCII 82..127}
     j= i 2<< i+                 {Multiply char code by 5}
     j+                          {Add to page address to reach bitmap data}
-  else
-    #\LDWI #12 #>\font82up      {Right half of 'T' and left half of 'U'}
+  else                          {Anything from 132 will be rendered as Pi}
+    #\LDWI #12 #>\font82up      {Inline assembly to point to font82up+12}
+                                {Combining right half of 'T' and left half of 'U'}
+    {
+      R         S         T   pi    U
+      |         |         |   |     |
+      v         v         v   v     v
+      x x x x . . x x x . x x # # # # . . . x
+      x . . . x x . . . . . . # . . # . . . x
+      x . . . x x . . . . . . # . . # . . . x
+      x x x x . . x x x . . . # . . # . . . x
+      x . x . . . . . . x . . # . . # . . . x
+      x . . x . . . . . x . . # . . # . . . x
+      x . . . x x x x x . . . # . . . # x x .
+      . . . . . . . . . . . . . . . . . . . .
+      0 1 2 3 4 5 6 7 8 9 a b c d e f 1 1 1 1
+      ^                               0 1 2 3
+      |
+      font82up
+    }
   ]
   j=
 
   \DrawChar call                {Tail call: doesn't return here}
 ]
-
-{
-  R         S         T   pi    U
-  |         |         |   |     |
-  v         v         v   v     v
-  x x x x . . x x x . x x # # # # . . . x
-  x . . . x x . . . . . . # . . # . . . x
-  x . . . x x . . . . . . # . . # . . . x
-  x x x x . . x x x . . . # . . # . . . x
-  x . x . . . . . . x . . # . . # . . . x
-  x . . x . . . . . x . . # . . # . . . x
-  x . . . x x x x x . . . # . . . # x x .
-  . . . . . . . . . . . . . . . . . . . .
-  0 1 2 3 4 5 6 7 8 9 a b c d e f 1 1 1 1
-  ^                               0 1 2 3
-  |
-  font82up
-}
 
 {-----------------------------------------------------------------------+
 |       Newline                                                         |

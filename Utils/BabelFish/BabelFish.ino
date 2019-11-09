@@ -28,13 +28,16 @@
 //    For example to get a long BASIC program loaded into BASIC
 // 4. Controlling the Gigatron over USB from a PC/laptop
 // 5. Passing through of game controller signals (XXX currently broken)
-// 6. Receive data from Gigatron and store it in the EEPROM area
+// 6. Receive data from Gigatron and store it in the EEPROM area.
+//    If USB is connected, it also gets forwarded to the PC/laptop.
+// 7. Sending the EEPROM data back into the Gigatron as a series
+//    of keystrokes.
 //
 // Select one of the supported platforms in the Tools->Board menu.
 //
 // Supported:
 //      - Arduino/Genuino Uno
-//      - Arduino Nano
+//      - Arduino Nano XXX <-- This one has issues with ROMv4 (#122)
 //      - Arduino/Genuino Micro
 //      - ATtiny85 (8 MHz)
 //
@@ -109,7 +112,7 @@
  #define gigatronPinToBitMask digitalPinToBitMask // Regular Arduino pin numbers
 
  // Pins for Controller
- #define gameControllerDataPin 10 // PB2
+ #define gameControllerDataPin 10 // PB2 (XXX currently broken)
 
  // Pins for PS/2 keyboard
  #define keyboardClockPin 3 // Pin 2 or 3 for IRQ
@@ -261,7 +264,7 @@ const struct { const byte *gt1; const char *name; } gt1Files[] = {
   { bricks_gt1,    "Bricks game [xbx]"        }, // 1607 bytes
   { tetris_gt1,    "Tetris game [at67]"       }, // 9868 bytes
 #endif
-  { NULL,          "-SAVED-"                  },
+  { NULL,          "-SAVED-"                  }, // From EEPROM, not PROGMEM
 };
 
 /*----------------------------------------------------------------------+
@@ -365,7 +368,7 @@ void setup()
 void loop()
 {
   // Check Gigatron's vPulse for incoming data
-  static byte inByte, inBit, inLen;
+  static byte inByte, inBit, hasChars;
 
   critical();
   byte newValue = waitVSync();
@@ -381,8 +384,8 @@ void loop()
       inBit <<= 1;
 
       if (saveIndex >= EEPROM_length)  // EEPROM overflow
-        if (inLen > 0)                 // Only break if this can't be a new program
-          sendController(3, 10);       // Send long Ctrl-C back
+        if (hasChars)                  // Only break if this isn't an empty line
+          sendController(3, 10);       // Send long Ctrl-C back to stop LIST
 
       if (inBit != 0)
         break;
@@ -397,12 +400,12 @@ void loop()
       #endif
 
       if (inByte == 10) {              // End of line?
-        EEPROM.write(saveIndex, 255);  // Terminate, in case this was the last line
-        if (inLen == 0)                // An empty line clears the old program
+        EEPROM.write(saveIndex, 255);  // EOF terminator, in case this becomes the last line
+        if (!hasChars)                 // An empty line clears the old program
           saveIndex = fileStart;
-        inLen = 0;
-      } else
-        inLen++;
+        hasChars = false;
+      } else if (inByte != 13)         // Don't count CR towards line length
+        hasChars = true;
 
       inByte = 0;                      // Prepare for next byte
       inBit = 1;
@@ -411,7 +414,7 @@ void loop()
     default:
       inByte = 0;                      // Reset incoming data state
       inBit = 1;
-      inLen = 0;
+      hasChars = false;
       break;
   }
 
@@ -457,7 +460,7 @@ void loop()
       char next = Serial.read();
       sendEcho(next, last);
       if (lineIndex < sizeof line)
-        line[lineIndex++] = next;
+        line[lineIndex++] = next;       // Our command buffer is limited
       if (next == '\r' || next == '\n') {
         line[lineIndex-1] = '\0';
         doCommand(line);
@@ -500,7 +503,8 @@ void sendEcho(char next, char last)
     if (echo)
       switch (next) {
         case 127:  Serial.print("\b \b"); break;
-        case '\n': if (last == '\r')      break; // else FALL THROUGH
+        case '\n': if (last == '\r')      break;
+        // !!! FALL THROUGH !!!
         case '\r': Serial.println();      break;
         default: Serial.print(next);
       }
@@ -516,8 +520,13 @@ void doCommand(char line[])
   case 'R': doReset(arg);                     break;
   case 'L': doLoader();                       break;
   case 'M': doMapping();                      break;
-  case 'P': if (0 <= arg && arg < arrayLen(gt1Files))
-              doTransfer(gt1Files[arg].gt1);  break;
+  case 'P': if (0 <= arg && arg < arrayLen(gt1Files)) {
+              if (gt1Files[arg].gt1 != NULL)
+                doTransfer(gt1Files[arg].gt1);
+              else
+                sendSavedFile();
+            }
+            break;
   case 'U': doTransfer(NULL);                 break;
   case '.': doLine(&line[1]);                 break;
   case 'C': doEcho(!echo);                    break;
@@ -612,9 +621,12 @@ void doHelp()
     Serial.println(": R        Reset Gigatron");
     Serial.println(": L        Start Loader");
     Serial.println(": M        Show key mapping or menu in Loader screen");
-    Serial.println(": P[<n>]   Transfer object file from PROGMEM slot <n> [1..12]");
+    Serial.println(": P[<n>]   Transfer object file from PROGMEM slot <n>");
+    Serial.print  (": P");     Serial.print(arrayLen(gt1Files) - 1);
+    Serial.println(    "       Type saved EEPROM data back into Gigatron");
+    Serial.println(":          [Hint: Use '.SAVE' for saving, not 'T'-mode!]");
     Serial.println(": U        Transfer object file from USB");
-    Serial.println(": .<text>  Send text line as ASCII key strokes");
+    Serial.println(": .<text>  Send text line as ASCII keystrokes");
     Serial.println(": C        Toggle echo mode (default off)");
     Serial.println(": T        Enter terminal mode");
     Serial.println(": W/A/S/D  Up/left/down/right arrow");
@@ -660,11 +672,11 @@ void doLine(char *line)
 {
   // Pass through the line of text
   for (byte i=0; line[i]; i++) {
-    sendController(line[i], 1);
+    sendController(line[i], 2);
     delay(20); // Allow Gigatron software to process key code
   }
   // And terminal with a CR
-  sendController('\n', 1);
+  sendController('\n', 2);
   delay(50); // Allow Gigatron software to process line
 }
 
@@ -695,9 +707,9 @@ void doTerminal()
         switch (next) {
           case 4:                                  return;   // Ctrl-D (EOT)
           case 9: out = ~buttonB;                  break;    // Same as PS/2 above
-          case '\r': out = '\n';                   break;
-          case '\n': if (last == '\r')             continue; // Swallow
-          case '\e':                               continue; // ANSI escape sequence
+          case '\r': out = '\n';                   break;    // Treat as \n
+          case '\n': if (last == '\r') continue;   break;    // Swallow if after \r
+          case '\e':                               continue; // 999 escape sequence
           case '[': if (last == '\e') ansi = true; continue;
           case 'A': if (ansi) out = ~buttonUp;     break;    // Map cursor keys to buttons
           case 'B': if (ansi) out = ~buttonDown;   break;
@@ -785,6 +797,7 @@ void doTransfer(const byte *gt1)
       Serial.print("!Failed");
       return;
     }
+    Serial.println(":Sending from PROGMEM");
   #endif
 
   #if hasSerial
@@ -1095,14 +1108,23 @@ byte waitVSync()
 // Send a saved file as keystrokes to the Gigatron
 void sendSavedFile()
 {
-    word i = fileStart;
-    do {
-      byte nextByte = EEPROM.read(i);
-      if (nextByte == 255) // TODO This is also Pi in MS BASIC
-        break;
-      sendController(nextByte, 1);
-      // TODO 70 is way too slow for MS BASIC. Should be >1000
-      delay(nextByte == 10 ? 70 : 20);  // Allow Gigatron software to process byte
-    } while (++i < EEPROM.length());
+  #if hasSerial
+    Serial.println(":Sending from EEPROM");
+  #endif
+  word i = fileStart, j = 0;            // i is the file index. j is the line index
+  int lineDelay = 50;                   // Default extra delay time for "line feed"
+  do {
+    byte nextByte = EEPROM.read(i++);   // Fetch next byte from saved program
+    if (j++ == 0 && nextByte == 255)    // EOF. Note that in MSBASIC, 255 means Pi.
+      break;                            // So we only check this after a newline.
+    sendController(nextByte, 2);        // A single frame is sometimes too fast
+    if (nextByte == 13)                 // "A carriage return takes more time"
+      lineDelay = 300 + j * 50;         // Reality: Micro-Soft BASIC is s l o w
+    delay((j % 26) ? 20                 // Allow Gigatron software to draw the char
+                   : 300);              // And give more time at line wrap
+    if (nextByte == 10) {               // End of line
+      delay(lineDelay);                 // Allow some extra time for line processing
+      j = 0;                            // Start of new line
+    }
+  } while (i < EEPROM.length());        // There may be no space for an EOF symbol
 }
-

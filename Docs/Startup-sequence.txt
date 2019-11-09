@@ -1,0 +1,103 @@
+=========================
+Gigatron startup sequence
+=========================
+
+ROMv1..v4
+
+Hardware start
+--------------
+
+1. Power on
+   - The blinkenlight LEDs are in an arbitrary state.
+     This might be 4 lights on, or 4 lights off, or
+     some on and some off.
+
+2. The MCP resets the program counter to 0 and holds it
+   - The Power OK light will be "off"
+   - The system is repeatedly executing the first instruction,
+     because the clock circuit will startup anyway
+   - The blinkenlight LEDs hold their initial arbitrary state
+
+3. Wait until supply voltage is stable above 4.5V
+   - Some of the early kits wait for 4.75V because that was
+     needed for the original 74LS chips. Unfortunately this
+     requires a good combination of power supply and power
+     cable. The 74HCT chips can work with a lower voltage so
+     we changed this to 4.5V (MCP450 instead of MCP475).
+   - When the voltage is above 4.5V for one third of a
+     second, the MCP releases the reset line
+   - With that the "Power OK" lights up and the program
+     counter is allowed to run
+
+Software start
+--------------
+
+4. Switch all 4 blinkenlight LEDs off
+
+5. Reset the I/O and RAM expander in case it is present
+   - Not in ROMv1..3
+   - Enable RAM (it might be disabled after power on)
+   - Set bank to 1
+   - Disable any SPI devices
+
+6. Do the quick RAM check
+   - Counts the available memory (32K or 64K)
+   - Presence of 128K isn't detected
+
+7. Perform 10 ms delay loop
+   - This was originally for debouncing the reset button
+     on the breadboard version. The PCB kit version
+     doesn't have a hardware reset button, and the memory
+     scan that follows has the same effect anyway. We keep
+     it for historic reasons.
+
+8. Switch left-most LED on
+
+9. Full memory scan
+   - This collects entropy from the uninitialized memory
+
+10. Switch second LED on
+
+11. Test for cold or hot boot condition
+    - Only in ROMv1..3
+
+12. Setup vReset routine at RAM location 496
+
+13. Setup serial input
+
+14. Switch third LED on
+
+15. Setup the sound tables
+    - Only in ROMv1..3
+
+16. Switch last and right-most LED on
+
+17. Start video signal generation, including:
+    - Waveform synthesis for sound channels. This is
+      always active, even when the sound is off.
+    - Checking the input port 60 times per second
+    - Back-and-forth scanning LED pattern
+    - Updating the entropy bytes (addresses 6..8)
+      This is influenced by input events (value and time)
+    - From ROMv2 onwards, the initial video in MODE 3
+      for faster startup (3 black lines per pixel line)
+
+18. Load precompiled Reset.gcl from ROM and execute
+    - This clears the screen
+    - Then writes the top two lines:
+        +--------------------------+
+        | *** Gigatron 32K RAM *** |
+        | TTL microcomputer ROM v4 |
+        |                          |
+    - The detected memory size is reported on the first line
+    - In ROMv4 this also sets up the sound tables
+    - The sound channels are set with a G-major chord used
+      as the startup chime. But the sound isn't played yet.
+    - Change to MODE 1 (one black scanline per pixel line)
+
+19. Load and execute Main.gcl
+    - This plays the startup chime and shows the menu
+
+20. Wait for user input while flashing the arrow
+
+-- End of document --
