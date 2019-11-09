@@ -494,7 +494,7 @@ bool detectGigatron()
   float hSync = (T[0] + T[2]) / (96 * S / 800); // Standard hSync signal
 
   // Check that vSync and hSync characteristics look normal
-  return 0.95 <= vSync && vSync <= 1.20 && 0.90 <= hSync && hSync <= 1.10;
+  return 0.95 <= vSync && vSync <= 1.25 && 0.90 <= hSync && hSync <= 1.10;
 }
 
 void sendEcho(char next, char last)
