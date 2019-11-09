@@ -1,5 +1,3 @@
-_useOpcodeCALLI_
-
 cls
 10 addr = &h21
 addr = addr AND &hFFFF

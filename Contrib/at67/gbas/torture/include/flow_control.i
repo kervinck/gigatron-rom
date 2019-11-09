@@ -6,6 +6,17 @@ lutIndex            EQU     register4
 lutLabel            EQU     register5
 
 
+%SUB                realTimeProc
+                    ; runs real time, (time sliced), code at regular intervals
+realTimeProc        PUSH
+                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI/SPRITE etc routines
+                    CALL    giga_vAC
+                    POP
+                    RET
+                    
+realTimeStub        RET
+%ENDS
+
 %SUB                gotoNumericLabel
                     ; find numeric label and jump to it
 gotoNumericLabel    LDWI    lut_numericLabs

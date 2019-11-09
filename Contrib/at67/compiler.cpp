@@ -26,7 +26,8 @@
 #define INT_VAR_START     0x0084  // 44 bytes, (0x0084 <-> 0x00AF), internal register variables, used by the BASIC runtime
 #define LOOP_VAR_START    0x00B0  // 16 bytes, (0x00B0 <-> 0x00BF), reserved for loops, maximum of 4 nested loops
 #define TEMP_VAR_START    0x00C0  // 16 bytes, (0x00C0 <-> 0x00CF), reserved for temporary expression variables
-#define CONVERT_CC_OPS    0x00D2  // 12 bytes, (0x00D0 <-> 0x00DB), critical relational operator routines that can't straddle page boundaries
+#define CONVERT_CC_OPS    0x00D0  // 12 bytes, (0x00D0 <-> 0x00DB), critical relational operator routines that can't straddle page boundaries
+#define REAL_TIME_PROC    0x00DC  // 2 bytes,  (0x00DC <-> 0x00DD), critical time sliced routine that usually handles MIDI/SPRITES, etc
 #define USER_CODE_START   0x0200
 #define USER_VAR_END      0x007F
 
@@ -181,6 +182,18 @@ namespace Compiler
         bool _loaded = false;
     };
 
+    struct DefDataByte
+    {
+        uint16_t _address;
+        std::vector<uint8_t> _data;
+    };
+
+    struct DefDataWord
+    {
+        uint16_t _address;
+        std::vector<uint16_t> _data;
+    };
+
 
     uint16_t _vasmPC         = USER_CODE_START;
     uint16_t _tempVarStart   = TEMP_VAR_START;
@@ -222,6 +235,7 @@ namespace Compiler
 
     std::vector<InternalSub> _internalSubs =
     {
+        {0x0000, 0x0000, "realTimeProc"     , "", true,  false},
         {0x0000, 0x0000, "convertEqOp"      , "", true,  false},
         {0x0000, 0x0000, "convertNeOp"      , "", true,  false},
         {0x0000, 0x0000, "convertLeOp"      , "", true,  false},
@@ -230,7 +244,7 @@ namespace Compiler
         {0x0000, 0x0000, "convertGtOp"      , "", true,  false},
         {0x0000, 0x0000, "multiply16bit"    , "", false, false}, 
         {0x0000, 0x0000, "divide16bit"      , "", false, false},
-        {0x0000, 0x0000, "random16bit"      , "", false, false},
+        {0x0000, 0x0000, "rand16bit"        , "", false, false},
         {0x0000, 0x0000, "randMod16bit"     , "", false, false},
         {0x0000, 0x0000, "shiftLeft4bit"    , "", false, false},
         {0x0000, 0x0000, "shiftLeft8bit"    , "", false, false},
@@ -262,6 +276,9 @@ namespace Compiler
         {0x0000, 0x0000, "drawLineExt"      , "", false, false},
         {0x0000, 0x0000, "drawLineDelta1"   , "", false, false},
         {0x0000, 0x0000, "atLineCursor"     , "", false, false},
+        {0x0000, 0x0000, "resetAudio"       , "", false, false},
+        {0x0000, 0x0000, "playMidi"         , "", false, false},
+        {0x0000, 0x0000, "midiStartNote"    , "", false, false},
         {0x0000, 0x0000, "printInit"        , "", false, false},
         {0x0000, 0x0000, "printText"        , "", false, false},
         {0x0000, 0x0000, "printDigit"       , "", false, false},
@@ -271,10 +288,6 @@ namespace Compiler
         {0x0000, 0x0000, "printHexWord"     , "", false, false},
         {0x0000, 0x0000, "atTextCursor"     , "", false, false},
         {0x0000, 0x0000, "newLineScroll"    , "", false, false},
-        {0x0000, 0x0000, "resetAudio"       , "", false, false},
-        {0x0000, 0x0000, "playMidi"         , "", false, false},
-        {0x0000, 0x0000, "playMidiAsync"    , "", false, false},
-        {0x0000, 0x0000, "midiStartNote"    , "", false, false},
     };
     const std::vector<std::string> _subIncludes = 
     {
@@ -296,8 +309,11 @@ namespace Compiler
         "include/conv_conds_CALLI.i"  ,
         "include/graphics_CALLI.i"    ,
         "include/print_text_CALLI.i"  ,
-        "include/audio.i"             ,
+        "include/audio_CALLI.i"       ,
     };
+
+    std::vector<DefDataByte> _defDataBytes;
+    std::vector<DefDataWord> _defDataWords;
 
 
     bool keywordREM(CodeLine& codeLine,    int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
@@ -334,6 +350,7 @@ namespace Compiler
     bool keywordSCROLL(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordPOKE(CodeLine& codeLine,   int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordDOKE(CodeLine& codeLine,   int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
+    bool keywordPLAY(CodeLine& codeLine,   int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
 
     bool initialise(void)
     {
@@ -351,7 +368,7 @@ namespace Compiler
         _keywords["ELSE"  ] = {0, "ELSE",   nullptr      };
         _keywords["ELSEIF"] = {0, "ELSEIF", nullptr      };
         _keywords["DIM"   ] = {1, "DIM",    keywordDIM   };
-        _keywords["DEF"   ] = {0, "DEF",    nullptr      };
+        _keywords["DEF"   ] = {0, "DEF",    keywordDEF   };
         _keywords["INPUT" ] = {0, "INPUT",  nullptr      };
         _keywords["READ"  ] = {0, "READ",   nullptr      };
         _keywords["DATA"  ] = {0, "DATA",   nullptr      };
@@ -359,6 +376,7 @@ namespace Compiler
         _keywords["DEEK"  ] = {1, "DEEK",   nullptr      };
         _keywords["POKE"  ] = {1, "POKE",   keywordPOKE  };
         _keywords["DOKE"  ] = {1, "DOKE",   keywordDOKE  };
+        _keywords["PLAY"  ] = {1, "PLAY",   keywordPLAY  };
         _keywords["USR"   ] = {1, "USR",    nullptr      };
         _keywords["DO"    ] = {0, "DO",     nullptr      };
         _keywords["LOOP"  ] = {0, "LOOP",   nullptr      };
@@ -398,6 +416,7 @@ namespace Compiler
         _keywords["TIME$" ] = {1, "TIME$",  nullptr      };
 
         _keywordsWithEquals.push_back("DIM");
+        _keywordsWithEquals.push_back("DEF");
         _keywordsWithEquals.push_back("FOR");
         _keywordsWithEquals.push_back("IF");
 
@@ -571,22 +590,30 @@ namespace Compiler
 
     VarResult createCodeVar(CodeLine& codeLine, int codeLineIndex, int& varIndex)
     {
-        size_t equals1 = Expression::findNonStringEquals(codeLine._code) - codeLine._code.begin();
-        if(codeLine._code.size() > 2  &&  equals1 < codeLine._code.size())
+        size_t equals = Expression::findNonStringEquals(codeLine._code) - codeLine._code.begin();
+        if(codeLine._code.size() > 2  &&  equals < codeLine._code.size())
         {
-            std::string codeUC = codeLine._code;
-            Expression::strToUpper(codeUC);
-            for(int i=0; i<_keywordsWithEquals.size(); i++)
+            // Check all tokens individually, don't just do a find as a var may exist with a reserved keyword embedded within it
+            for(int i=0; i<codeLine._tokens.size(); i++)
             {
-                size_t keyword = codeUC.find(_keywordsWithEquals[i]);
-                if(keyword < equals1) return VarNotFound;
+                std::string token = codeLine._tokens[i];
+                Expression::stripWhitespace(token);
+                Expression::strToUpper(token);
+
+                // No need to check after the equals
+                if(token == "=") break;
+
+                // Check tokens that are reserved keywords using equals
+                for(int j=0; j<_keywordsWithEquals.size(); j++)
+                {
+                    size_t keyword = token.find(_keywordsWithEquals[j]);
+                    if(keyword != std::string::npos) return VarNotFound;
+                }
             }
 
             // Name and input
-            std::string varName = codeLine._code.substr(0, equals1);
+            std::string varName = codeLine._code.substr(0, equals);
             Expression::stripWhitespace(varName);
-
-            
 
             // Var already exists?
             varIndex = findVar(varName);
@@ -1201,6 +1228,10 @@ namespace Compiler
         emitVcpuAsm("%Initialise", "", false, 0);
         if(!Assembler::getUseOpcodeCALLI())
         {
+            // Handles time sliced, (real time), code such as MIDI and SPRITES
+            emitVcpuAsm("%InitRealTimeProc", "", false, 0);
+
+            // Handle relational operators
             emitVcpuAsm("%InitEqOp", "", false, 0);
             emitVcpuAsm("%InitNeOp", "", false, 0);
             emitVcpuAsm("%InitLeOp", "", false, 0);
@@ -1489,7 +1520,7 @@ namespace Compiler
             numeric._isAddress = true;
             numeric._varName = _tempVarStartStr;
 
-            emitVcpuAsm("%Random", "", false);
+            emitVcpuAsm("%Rand", "", false);
         }
 
         emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(_tempVarStart)), false);
@@ -2258,7 +2289,7 @@ namespace Compiler
                             numeric = Expression::Numeric(defaultValue, -1, true, true, varName);
                         }
                     }
-                    // Unknown text
+                    // Unknown symbol
                     else
                     {
                         numeric = Expression::Numeric(defaultValue, -1, false, false, std::string(""));
@@ -2364,8 +2395,10 @@ namespace Compiler
             else if(Expression::strToUpper(token) == "HLINE" ) return SingleStatementParsed;
             else if(Expression::strToUpper(token) == "VLINE" ) return SingleStatementParsed;
             else if(Expression::strToUpper(token) == "DIM"   ) return SingleStatementParsed;
+            else if(Expression::strToUpper(token) == "DEF"   ) return SingleStatementParsed;
             else if(Expression::strToUpper(token) == "POKE"  ) return SingleStatementParsed;
             else if(Expression::strToUpper(token) == "DOKE"  ) return SingleStatementParsed;
+            else if(Expression::strToUpper(token) == "PLAY"  ) return SingleStatementParsed;
             else if(Expression::strToUpper(token) == "IF"    ) return MultiStatementParsed;
         }
 
@@ -2527,7 +2560,7 @@ namespace Compiler
         size_t gosubOffset = code.find("GOSUB");
         if(gotoOffset == std::string::npos  &&  gosubOffset == std::string::npos)
         {
-            fprintf(stderr, "Compiler::keywordON() : syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Compiler::keywordON() : Syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
 
@@ -2546,7 +2579,7 @@ namespace Compiler
         std::vector<std::string> gotoTokens = Expression::tokenise(codeLine._code.substr(gOffset + gSize), ',', gOffsets, false);
         if(gotoTokens.size() < 1)
         {
-            fprintf(stderr, "Compiler::keywordON() : syntax error, must have at least one label after GOTO, in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Compiler::keywordON() : Syntax error, must have at least one label after GOTO, in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
 
@@ -2602,7 +2635,7 @@ namespace Compiler
         std::vector<std::string> gotoTokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', gotoOffsets, false);
         if(gotoTokens.size() < 1  ||  gotoTokens.size() > 2)
         {
-            fprintf(stderr, "Compiler::keywordGOTO() : syntax error, must have one or two parameters, e.g. 'GOTO 200' or 'GOTO k+1,default' : in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Compiler::keywordGOTO() : Syntax error, must have one or two parameters, e.g. 'GOTO 200' or 'GOTO k+1,default' : in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
 
@@ -2626,7 +2659,7 @@ namespace Compiler
                 int labelIndex = findLabel(defaultToken);
                 if(labelIndex == -1)
                 {
-                    fprintf(stderr, "Compiler::keywordGOTO() : default label does not exist : in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+                    fprintf(stderr, "Compiler::keywordGOTO() : Default label does not exist : in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
                     return false;
                 }
 
@@ -2697,7 +2730,7 @@ namespace Compiler
         std::vector<std::string> gosubTokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', gosubOffsets, false);
         if(gosubTokens.size() < 1  ||  gosubTokens.size() > 2)
         {
-            fprintf(stderr, "Compiler::keywordGOSUB() : syntax error, must have one or two parameters, e.g. 'GOSUB 200' or 'GOSUB k+1,default' : in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Compiler::keywordGOSUB() : Syntax error, must have one or two parameters, e.g. 'GOSUB 200' or 'GOSUB k+1,default' : in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
 
@@ -2724,7 +2757,7 @@ namespace Compiler
                 int labelIndex = findLabel(defaultToken);
                 if(labelIndex == -1)
                 {
-                    fprintf(stderr, "Compiler::keywordGOSUB() : default label does not exist : in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+                    fprintf(stderr, "Compiler::keywordGOSUB() : Default label does not exist : in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
                     return false;
                 }
 
@@ -2797,7 +2830,7 @@ namespace Compiler
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', offsets, false);
         if(tokens.size() != 2)
         {
-            fprintf(stderr, "Compiler::keywordPOKE() : syntax error, 'POKE A,X', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Compiler::keywordPOKE() : Syntax error, 'POKE A,X', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
 
@@ -2889,7 +2922,7 @@ namespace Compiler
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', offsets, false);
         if(tokens.size() < 1  &&  tokens.size() > 2)
         {
-            fprintf(stderr, "Compiler::keywordAT() : syntax error, 'AT X' or 'AT X,Y', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Compiler::keywordAT() : Syntax error, 'AT X' or 'AT X,Y', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
 
@@ -2923,7 +2956,7 @@ namespace Compiler
         std::string expression = codeLine._code.substr(foundPos);
         if(expression.size() == 0)
         {
-            fprintf(stderr, "Compiler::keywordPUT() : syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Compiler::keywordPUT() : Syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
 
@@ -2940,7 +2973,7 @@ namespace Compiler
         std::string expression = codeLine._code.substr(foundPos);
         if(expression.size() == 0)
         {
-            fprintf(stderr, "Compiler::keywordMODE() : syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Compiler::keywordMODE() : Syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
 
@@ -2958,7 +2991,7 @@ namespace Compiler
         std::string expression = codeLine._code.substr(foundPos);
         if(expression.size() == 0)
         {
-            fprintf(stderr, "Compiler::keywordWAIT() : syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Compiler::keywordWAIT() : Syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
 
@@ -2976,7 +3009,7 @@ namespace Compiler
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', offsets, false);
         if(tokens.size() !=2  &&  tokens.size() != 4)
         {
-            fprintf(stderr, "Compiler::keywordLINE() : syntax error, 'LINE X,Y' or 'LINE X1,Y1,X2,Y2', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Compiler::keywordLINE() : Syntax error, 'LINE X,Y' or 'LINE X1,Y1,X2,Y2', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
 
@@ -3022,7 +3055,7 @@ namespace Compiler
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', offsets, false);
         if(tokens.size() !=3)
         {
-            fprintf(stderr, "Compiler::keywordHLINE() : syntax error, 'HLINE X1,Y,X2', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Compiler::keywordHLINE() : Syntax error, 'HLINE X1,Y,X2', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
 
@@ -3049,7 +3082,7 @@ namespace Compiler
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', offsets, false);
         if(tokens.size() !=3)
         {
-            fprintf(stderr, "Compiler::keywordVLINE() : syntax error, 'VLINE X1,Y,X2', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Compiler::keywordVLINE() : Syntax error, 'VLINE X1,Y,X2', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
 
@@ -3070,17 +3103,53 @@ namespace Compiler
         return true;
     }
 
-    bool keywordSCROLL(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordPLAY(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
         std::vector<size_t> offsets;
-        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', offsets, true);
-        if(tokens.size() != 1  ||  (tokens[0].find("ON") == std::string::npos  &&  tokens[0].find("OFF") == std::string::npos))
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ' ', offsets, false);
+        if(tokens.size() != 2)
         {
-            fprintf(stderr, "Compiler::keywordSCROLL() : syntax error, 'SCROLL ON' or 'SCROLL OFF', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Compiler::keywordPLAY() : Syntax error, use 'PLAY MIDI <address>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
 
-        if(tokens[0].find("ON") != std::string::npos)
+        std::string midiToken = Expression::strToUpper(tokens[0]);
+        Expression::stripWhitespace(midiToken);
+        if(midiToken != "MIDI")
+        {
+            fprintf(stderr, "Compiler::keywordPLAY() : Syntax error, use 'PLAY MIDI <address>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        std::string addressToken = tokens[1];
+        Expression::stripWhitespace(addressToken);
+        int16_t param;
+        uint32_t expressionType = parseExpression(codeLine, codeLineIndex, addressToken, param);
+
+        emitVcpuAsm("%PlayMidi", "", false, codeLineIndex);
+
+        return true;
+    }
+
+    bool keywordSCROLL(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        std::vector<size_t> offsets;
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ' ', offsets, false);
+        if(tokens.size() != 1)
+        {
+            fprintf(stderr, "Compiler::keywordSCROLL() : Syntax error, 'SCROLL ON' or 'SCROLL OFF', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        std::string scrollToken = Expression::strToUpper(tokens[0]);
+        Expression::stripWhitespace(scrollToken);
+        if(scrollToken != "ON"  &&  scrollToken != "OFF")
+        {
+            fprintf(stderr, "Compiler::keywordSCROLL() : Syntax error, 'SCROLL ON' or 'SCROLL OFF', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        if(scrollToken == "ON")
         {
             emitVcpuAsm("LDWI", "0x0001", false, codeLineIndex);
             emitVcpuAsm("ORW", "miscFlags", false, codeLineIndex);
@@ -3203,12 +3272,12 @@ namespace Compiler
         size_t equals, to, step;
         if((equals = code.find("=")) == std::string::npos)
         {
-            fprintf(stderr, "Compiler::keywordFOR() : syntax error, (missing '='), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Compiler::keywordFOR() : Syntax error, (missing '='), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
         if((to = code.find("TO")) == std::string::npos)
         {
-            fprintf(stderr, "Compiler::keywordFOR() : syntax error, (missing '='), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Compiler::keywordFOR() : Syntax error, (missing '='), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
         step = code.find("STEP");
@@ -3241,14 +3310,14 @@ namespace Compiler
         }
         if(stepToken.size() != 0  &&  !Expression::stringToI16(stepToken, loopStep))
         {
-            fprintf(stderr, "Compiler::keywordFOR() : syntax error, STEP value must be a constant, in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Compiler::keywordFOR() : Syntax error, STEP value must be a constant, in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
 
         // Maximum of 4 nested loops
         if(_forNextDataStack.size() == 4)
         {
-            fprintf(stderr, "Compiler::keywordFOR() : syntax error, (maximum nested loops is 4), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Compiler::keywordFOR() : Syntax error, (maximum nested loops is 4), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
 
@@ -3297,7 +3366,7 @@ namespace Compiler
     {
         if(codeLine._tokens.size() != 2)
         {
-            fprintf(stderr, "Compiler::keywordNEXT() : syntax error, (wrong number of tokens), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Compiler::keywordNEXT() : Syntax error, (wrong number of tokens), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
 
@@ -3305,7 +3374,7 @@ namespace Compiler
         int varIndex = findVar(codeLine._tokens[1]);
         if(varIndex < 0)
         {
-            fprintf(stderr, "Compiler::keywordNEXT() : syntax error, (bad var), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Compiler::keywordNEXT() : Syntax error, (bad var), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
 
@@ -3316,7 +3385,7 @@ namespace Compiler
 
         if(varIndex != forNextData._varIndex)
         {
-            fprintf(stderr, "Compiler::keywordNEXT() : syntax error, (wrong var), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Compiler::keywordNEXT() : Syntax error, (wrong var), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
 
@@ -3362,7 +3431,7 @@ namespace Compiler
         size_t offsetTHEN = code.find("THEN");
         if(offsetTHEN == std::string::npos)
         {
-            fprintf(stderr, "Compiler::keywordIF() : syntax error, THEN missing, in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Compiler::keywordIF() : Syntax error, THEN missing, in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
 
@@ -3377,7 +3446,7 @@ namespace Compiler
         std::string actionToken = _codeLines[codeLineIndex]._code.substr(offsetIF + offsetTHEN + 4);
         if(actionToken.size() == 0)
         {
-            fprintf(stderr, "Compiler::keywordIF() : syntax error, IF THEN <action>, (missing action), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Compiler::keywordIF() : Syntax error, IF THEN <action>, (missing action), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
 
@@ -3412,9 +3481,9 @@ namespace Compiler
 
     bool keywordDIM(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        size_t lbra, rbra;
-        bool isVarArray = false;
         std::string dimText = codeLine._code.substr(foundPos);
+
+        size_t lbra, rbra;
         if(!Expression::findMatchingBrackets(codeLine._code, foundPos, lbra, rbra))
         {
             fprintf(stderr, "Compiler::keywordDIM() : Syntax error in DIM statement, must be DIM var(x), in : '%s' : on line %d\n", codeLine._code.c_str(), codeLineIndex + 1);
@@ -3430,7 +3499,9 @@ namespace Compiler
         }
 
         // Most BASIC's declared 0 to n elements, hence size = n + 1
+#ifndef ARRAY_INDICES_ONE
         arraySize++;
+#endif
 
         std::string varName = codeLine._code.substr(foundPos, lbra - foundPos);
         Expression::stripWhitespace(varName);
@@ -3471,6 +3542,128 @@ namespace Compiler
 
     bool keywordDEF(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
+        std::string defText = codeLine._code.substr(foundPos);
+
+        // Equals
+        size_t equalsPos = codeLine._code.find("=");
+        if(equalsPos == std::string::npos)
+        {
+            fprintf(stderr, "Compiler::keywordDEF() : Syntax error, missing equals sign, in : '%s' : on line %d\n", codeLine._code.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        // Address field
+        size_t typePos, lbra, rbra;
+        uint16_t address = 0;
+        bool foundAddress = false;
+        if(Expression::findMatchingBrackets(codeLine._code, foundPos, lbra, rbra))
+        {
+            std::string addrText = codeLine._code.substr(lbra + 1, rbra - (lbra + 1));
+            if(!Expression::stringToU16(addrText, address)  ||  address < DEFAULT_START_ADDRESS)
+            {
+                fprintf(stderr, "Compiler::keywordDEF() : Address field must be a constant or above %04x, found %s in : '%s' : on line %d\n", DEFAULT_START_ADDRESS, addrText.c_str(), codeLine._code.c_str(), codeLineIndex + 1);
+                return false;
+            }
+
+            foundAddress = true;
+            typePos = lbra;
+        }
+        else
+        {
+            typePos = equalsPos;
+        }
+
+        // Address
+        std::string typeText = codeLine._code.substr(foundPos, typePos - foundPos);
+        Expression::stripWhitespace(typeText);
+        Expression::strToUpper(typeText);
+        if(typeText != "BYTE"  &&  typeText != "WORD")
+        {
+            fprintf(stderr, "Compiler::keywordDEF() : Type field must be either BYTE or WORD, found %s in : '%s' : on line %d\n", typeText.c_str(), codeLine._code.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        // Data fields
+        std::vector<size_t> offsets;
+        std::vector<std::string> dataTokens = Expression::tokenise(codeLine._code.substr(equalsPos + 1), ',', offsets, true);
+        if(dataTokens.size() == 0)
+        {
+            fprintf(stderr, "Compiler::keywordDEF() : Syntax error, require at least one data field, in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        // BYTE or WORD
+        if(typeText == "BYTE")
+        {
+            std::vector<uint8_t> dataBytes;
+            for(int i=0; i<dataTokens.size(); i++)
+            {
+                uint8_t data;
+                Expression::stripWhitespace(dataTokens[i]);
+                if(!Expression::stringToU8(dataTokens[i], data))
+                {
+                    fprintf(stderr, "Compiler::keywordDEF() : Numeric error '%s', in '%s' on line %d\n", dataTokens[i].c_str(), codeLine._text.c_str(), codeLineIndex + 1);
+                    return false;
+                }
+                dataBytes.push_back(data);
+            }
+
+            // New address entry
+            if(foundAddress)
+            {
+                _defDataBytes.push_back({address, dataBytes});
+                if(!Memory::takeFreeRAM(address, int(dataBytes.size()))) return false;
+            }
+            // Update current address data
+            else
+            {
+                // Append data
+                address = _defDataBytes.back()._address + uint16_t(_defDataBytes.back()._data.size());
+                for(int i=0; i<dataBytes.size(); i++)
+                {
+                    _defDataBytes.back()._data.push_back(dataBytes[i]);
+                }
+
+                // Mark new RAM chunk as used
+                if(!Memory::takeFreeRAM(address, int(dataBytes.size()))) return false;
+            }
+        }
+        else if(typeText == "WORD")
+        {
+            std::vector<uint16_t> dataWords;
+            for(int i=0; i<dataTokens.size(); i++)
+            {
+                uint16_t data;
+                Expression::stripWhitespace(dataTokens[i]);
+                if(!Expression::stringToU16(dataTokens[i], data))
+                {
+                    fprintf(stderr, "Compiler::keywordDEF() : Numeric error '%s', in '%s' on line %d\n", dataTokens[i].c_str(), codeLine._text.c_str(), codeLineIndex + 1);
+                    return false;
+                }
+                dataWords.push_back(data);
+            }
+
+            // New address entry
+            if(foundAddress)
+            {
+                _defDataWords.push_back({address, dataWords});
+                if(!Memory::takeFreeRAM(address, int(dataWords.size()) * 2)) return false;
+            }
+            // Update current address data
+            else
+            {
+                // Append data
+                address = _defDataWords.back()._address + uint16_t(_defDataWords.back()._data.size()) * 2;
+                for(int i=0; i<dataWords.size(); i++)
+                {
+                    _defDataWords.back()._data.push_back(dataWords[i]);
+                }
+
+                // Mark new RAM chunk as used
+                if(!Memory::takeFreeRAM(address, int(dataWords.size()) * 2)) return false;
+            }
+        }
+
         return true;
     }
 
@@ -3574,7 +3767,7 @@ namespace Compiler
 
     bool optimiseCode(void)
     {
-        enum OptimiseTypes {StwLdwPair=0, StwLdPair, StwPair, ExtraStw, ExtraLdw, StwLdwAddw, StwLdwAddwVar, AddiZero, SubiZero, NumOptimiseTypes};
+        enum OptimiseTypes {StwLdwPair=0, StwLdPair, StwPair, ExtraStw, ExtraLdw, StwLdwAddw, StwLdwAddwVar, StwLdwAndw, StwLdwAndwVar, StwLdwXorw, StwLdwXorwVar, StwLdwOrw, StwLdwOrwVar, AddiZero, SubiZero, NumOptimiseTypes};
         struct MatchSequence
         {
             int firstIndex;
@@ -3591,6 +3784,12 @@ namespace Compiler
             {0, 1, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_",  "LDW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_"                                                          }},
             {0, 2, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x", "LDW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x", "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x"}},
             {0, 2, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x", "LDW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_",  "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x"}},
+            {0, 2, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x", "LDW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x", "ANDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x"}},
+            {0, 2, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x", "LDW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_",  "ANDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x"}},
+            {0, 2, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x", "LDW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x", "XORW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x"}},
+            {0, 2, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x", "LDW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_",  "XORW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x"}},
+            {0, 2, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x", "LDW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x", "ORW"  + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x"}},
+            {0, 2, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x", "LDW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_",  "ORW"  + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x"}},
             {0, 0, {"ADDI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ')       , ""                                                                                                             }},
             {0, 0, {"SUBI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ')       , ""                                                                                                             }},
         };
@@ -3703,6 +3902,126 @@ namespace Compiler
                                 std::string ldwOperand = _codeLines[i]._vasm[firstLine + 1]._code.substr(ldwSpace);
                                 Expression::stripWhitespace(ldwOperand);
                                 _codeLines[i]._vasm[firstLine + 2]._code = "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + ldwOperand;
+
+                                // Delete STW and LDW
+                                linesDeleted = true;
+                                itVasm = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine + 1);
+                                itVasm = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine);
+                                adjustLabelAddresses(_codeLines[i]._vasm[firstLine]._address, -4);
+                                adjustVasmAddresses(i, firstLine, -4);
+                            }
+                            // Match STW LDW ANDW, copy LDW operand to ANDW operand and delete STW LDW
+                            else if(j == StwLdwAndw)
+                            {
+                                // Only one of these can have an internal label
+                                if(!migrateInternalLabel(i, firstLine, firstLine + 2)) break;
+                                if(!migrateInternalLabel(i, firstLine + 1, firstLine + 2)) break;
+
+                                // ANDW's operand becomes the LDW's operand
+                                size_t ldwSpace = _codeLines[i]._vasm[firstLine + 1]._code.find_first_of("  \n\r\f\t\v");
+                                std::string ldwOperand = _codeLines[i]._vasm[firstLine + 1]._code.substr(ldwSpace);
+                                Expression::stripWhitespace(ldwOperand);
+                                _codeLines[i]._vasm[firstLine + 2]._code = matchSequences[j]._sequence[2] + ldwOperand.substr(2); // don't need the leading "0x"
+
+                                // Delete STW and LDW
+                                linesDeleted = true;
+                                itVasm = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine + 1);
+                                itVasm = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine);
+                                adjustLabelAddresses(_codeLines[i]._vasm[firstLine]._address, -4);
+                                adjustVasmAddresses(i, firstLine, -4);
+                            }
+                            // Match STW LDW ANDW, copy LDW operand to ANDW operand and delete STW LDW, (LDW is a var)
+                            else if(j == StwLdwAndwVar)
+                            {
+                                // Only one of these can have an internal label
+                                if(!migrateInternalLabel(i, firstLine, firstLine + 2)) break;
+                                if(!migrateInternalLabel(i, firstLine + 1, firstLine + 2)) break;
+
+                                // ANDW's operand becomes the LDW's operand
+                                size_t ldwSpace = _codeLines[i]._vasm[firstLine + 1]._code.find_first_of("  \n\r\f\t\v");
+                                std::string ldwOperand = _codeLines[i]._vasm[firstLine + 1]._code.substr(ldwSpace);
+                                Expression::stripWhitespace(ldwOperand);
+                                _codeLines[i]._vasm[firstLine + 2]._code = "ANDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + ldwOperand;
+
+                                // Delete STW and LDW
+                                linesDeleted = true;
+                                itVasm = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine + 1);
+                                itVasm = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine);
+                                adjustLabelAddresses(_codeLines[i]._vasm[firstLine]._address, -4);
+                                adjustVasmAddresses(i, firstLine, -4);
+                            }
+                            // Match STW LDW XORW, copy LDW operand to XORW operand and delete STW LDW
+                            else if(j == StwLdwXorw)
+                            {
+                                // Only one of these can have an internal label
+                                if(!migrateInternalLabel(i, firstLine, firstLine + 2)) break;
+                                if(!migrateInternalLabel(i, firstLine + 1, firstLine + 2)) break;
+
+                                // XORW's operand becomes the LDW's operand
+                                size_t ldwSpace = _codeLines[i]._vasm[firstLine + 1]._code.find_first_of("  \n\r\f\t\v");
+                                std::string ldwOperand = _codeLines[i]._vasm[firstLine + 1]._code.substr(ldwSpace);
+                                Expression::stripWhitespace(ldwOperand);
+                                _codeLines[i]._vasm[firstLine + 2]._code = matchSequences[j]._sequence[2] + ldwOperand.substr(2); // don't need the leading "0x"
+
+                                // Delete STW and LDW
+                                linesDeleted = true;
+                                itVasm = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine + 1);
+                                itVasm = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine);
+                                adjustLabelAddresses(_codeLines[i]._vasm[firstLine]._address, -4);
+                                adjustVasmAddresses(i, firstLine, -4);
+                            }
+                            // Match STW LDW XORW, copy LDW operand to XORW operand and delete STW LDW, (LDW is a var)
+                            else if(j == StwLdwXorwVar)
+                            {
+                                // Only one of these can have an internal label
+                                if(!migrateInternalLabel(i, firstLine, firstLine + 2)) break;
+                                if(!migrateInternalLabel(i, firstLine + 1, firstLine + 2)) break;
+
+                                // XORW's operand becomes the LDW's operand
+                                size_t ldwSpace = _codeLines[i]._vasm[firstLine + 1]._code.find_first_of("  \n\r\f\t\v");
+                                std::string ldwOperand = _codeLines[i]._vasm[firstLine + 1]._code.substr(ldwSpace);
+                                Expression::stripWhitespace(ldwOperand);
+                                _codeLines[i]._vasm[firstLine + 2]._code = "XORW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + ldwOperand;
+
+                                // Delete STW and LDW
+                                linesDeleted = true;
+                                itVasm = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine + 1);
+                                itVasm = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine);
+                                adjustLabelAddresses(_codeLines[i]._vasm[firstLine]._address, -4);
+                                adjustVasmAddresses(i, firstLine, -4);
+                            }
+                            // Match STW LDW ORW, copy LDW operand to ORW operand and delete STW LDW
+                            else if(j == StwLdwOrw)
+                            {
+                                // Only one of these can have an internal label
+                                if(!migrateInternalLabel(i, firstLine, firstLine + 2)) break;
+                                if(!migrateInternalLabel(i, firstLine + 1, firstLine + 2)) break;
+
+                                // ORW's operand becomes the LDW's operand
+                                size_t ldwSpace = _codeLines[i]._vasm[firstLine + 1]._code.find_first_of("  \n\r\f\t\v");
+                                std::string ldwOperand = _codeLines[i]._vasm[firstLine + 1]._code.substr(ldwSpace);
+                                Expression::stripWhitespace(ldwOperand);
+                                _codeLines[i]._vasm[firstLine + 2]._code = matchSequences[j]._sequence[2] + ldwOperand.substr(2); // don't need the leading "0x"
+
+                                // Delete STW and LDW
+                                linesDeleted = true;
+                                itVasm = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine + 1);
+                                itVasm = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine);
+                                adjustLabelAddresses(_codeLines[i]._vasm[firstLine]._address, -4);
+                                adjustVasmAddresses(i, firstLine, -4);
+                            }
+                            // Match STW LDW ORW, copy LDW operand to ORW operand and delete STW LDW, (LDW is a var)
+                            else if(j == StwLdwOrwVar)
+                            {
+                                // Only one of these can have an internal label
+                                if(!migrateInternalLabel(i, firstLine, firstLine + 2)) break;
+                                if(!migrateInternalLabel(i, firstLine + 1, firstLine + 2)) break;
+
+                                // ORW's operand becomes the LDW's operand
+                                size_t ldwSpace = _codeLines[i]._vasm[firstLine + 1]._code.find_first_of("  \n\r\f\t\v");
+                                std::string ldwOperand = _codeLines[i]._vasm[firstLine + 1]._code.substr(ldwSpace);
+                                Expression::stripWhitespace(ldwOperand);
+                                _codeLines[i]._vasm[firstLine + 2]._code = "ORW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + ldwOperand;
 
                                 // Delete STW and LDW
                                 linesDeleted = true;
@@ -4138,6 +4457,43 @@ namespace Compiler
         _output.push_back("\n");
     }
 
+    bool outputDefs(void)
+    {
+        _output.push_back("; Define Bytes\n");
+
+        // Create def byte data
+        for(int i=0; i<_defDataBytes.size(); i++)
+        {
+            std::string defName = "def_bytes_" + Expression::wordToHexString(_defDataBytes[i]._address);
+            _output.push_back(defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(_defDataBytes[i]._address) + "\n");
+            
+            std::string dbString = defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "DB" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+            for(int j=0; j<_defDataBytes[i]._data.size(); j++)
+            {
+                dbString += std::to_string(_defDataBytes[i]._data[j]) + " ";
+            }
+            _output.push_back(dbString + "\n");
+        }
+
+        // Create def word data
+        for(int i=0; i<_defDataWords.size(); i++)
+        {
+            std::string defName = "def_words_" + Expression::wordToHexString(_defDataWords[i]._address);
+            _output.push_back(defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(_defDataWords[i]._address) + "\n");
+            
+            std::string dwString = defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+            for(int j=0; j<_defDataWords[i]._data.size(); j++)
+            {
+                dwString += std::to_string(_defDataWords[i]._data[j]) + " ";
+            }
+            _output.push_back(dwString + "\n");
+        }
+
+        _output.push_back("\n");
+
+        return true;
+    }
+
     bool outputLuts(void)
     {
         _output.push_back("; Lookup Tables\n");
@@ -4195,12 +4551,12 @@ namespace Compiler
                 lutName = "lut_numericAddrs";
                 _output.push_back(lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(lutAddress) + "\n");
             
-                dbString = lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+                std::string dwString = lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
                 for(int i=0; i<numericAddresses.size(); i++)
                 {
-                    dbString += Expression::wordToHexString(numericAddresses[i]) + " ";
+                    dwString += Expression::wordToHexString(numericAddresses[i]) + " ";
                 }
-                _output.push_back(dbString + "\n");
+                _output.push_back(dwString + "\n");
             }
         }
 
@@ -4386,7 +4742,7 @@ namespace Compiler
             // Save end of runtime/strings
             if(address < _runtimeEnd) _runtimeEnd = address;
 
-            fprintf(stderr, "%-16s  :  0x%04x  :  %2d bytes\n", _internalSubs[subIndex]._name.c_str(), address, _internalSubs[subIndex]._size);
+            fprintf(stderr, "%-18s  :  0x%04x  :  %2d bytes\n", _internalSubs[subIndex]._name.c_str(), address, _internalSubs[subIndex]._size);
 
             _internalSubs[subIndex]._address = address;
             _internalSubs[subIndex]._inUse = true;
@@ -4480,14 +4836,17 @@ namespace Compiler
         // Zero page call table is not needed when using CALLI
         if(!Assembler::getUseOpcodeCALLI())
         {
+            if(_internalSubs[0]._inUse) {_output.push_back("realTimeProcAddr" + std::string(LABEL_TRUNC_SIZE - strlen("realTimeProcAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(REAL_TIME_PROC) + "\n");}
+
             uint16_t convertCcOpsAddr = CONVERT_CC_OPS;
-            if(_internalSubs[0]._inUse) {_output.push_back("convertEqOpAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertEqOpAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(convertCcOpsAddr) + "\n"); convertCcOpsAddr += 2;}
-            if(_internalSubs[1]._inUse) {_output.push_back("convertNeOpAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertNeOpAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(convertCcOpsAddr) + "\n"); convertCcOpsAddr += 2;}
-            if(_internalSubs[2]._inUse) {_output.push_back("convertLeOpAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertLeOpAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(convertCcOpsAddr) + "\n"); convertCcOpsAddr += 2;}
-            if(_internalSubs[3]._inUse) {_output.push_back("convertGeOpAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertGeOpAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(convertCcOpsAddr) + "\n"); convertCcOpsAddr += 2;}
-            if(_internalSubs[4]._inUse) {_output.push_back("convertLtOpAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertLtOpAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(convertCcOpsAddr) + "\n"); convertCcOpsAddr += 2;}
-            if(_internalSubs[5]._inUse) {_output.push_back("convertGtOpAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertGtOpAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(convertCcOpsAddr) + "\n"); convertCcOpsAddr += 2;}
+            if(_internalSubs[1]._inUse) {_output.push_back("convertEqOpAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertEqOpAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(convertCcOpsAddr) + "\n"); convertCcOpsAddr += 2;}
+            if(_internalSubs[2]._inUse) {_output.push_back("convertNeOpAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertNeOpAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(convertCcOpsAddr) + "\n"); convertCcOpsAddr += 2;}
+            if(_internalSubs[3]._inUse) {_output.push_back("convertLeOpAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertLeOpAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(convertCcOpsAddr) + "\n"); convertCcOpsAddr += 2;}
+            if(_internalSubs[4]._inUse) {_output.push_back("convertGeOpAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertGeOpAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(convertCcOpsAddr) + "\n"); convertCcOpsAddr += 2;}
+            if(_internalSubs[5]._inUse) {_output.push_back("convertLtOpAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertLtOpAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(convertCcOpsAddr) + "\n"); convertCcOpsAddr += 2;}
+            if(_internalSubs[6]._inUse) {_output.push_back("convertGtOpAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertGtOpAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(convertCcOpsAddr) + "\n"); convertCcOpsAddr += 2;}
         }
+
         _output.push_back("\n");
 
         for(int i=0; i<_runtime.size(); i++) _output.push_back(_runtime[i]);
@@ -4513,7 +4872,7 @@ namespace Compiler
         _output.push_back("register13"     + std::string(LABEL_TRUNC_SIZE - strlen("register13"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x002A\n");
         _output.push_back("fgbgColour"     + std::string(LABEL_TRUNC_SIZE - strlen("fgbgColour"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x14\n");
         _output.push_back("cursorXY"       + std::string(LABEL_TRUNC_SIZE - strlen("cursorXY"), ' ')       + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x16\n");
-        _output.push_back("midiStreamPtr"  + std::string(LABEL_TRUNC_SIZE - strlen("midiStreamPtr"), ' ')  + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x18\n");
+        _output.push_back("midiStream"     + std::string(LABEL_TRUNC_SIZE - strlen("midiStream"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x18\n");
         _output.push_back("midiDelay"      + std::string(LABEL_TRUNC_SIZE - strlen("midiDelay"), ' ')      + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x1A\n");
         _output.push_back("frameCountPrev" + std::string(LABEL_TRUNC_SIZE - strlen("frameCountPrev"), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x1C\n");
         _output.push_back("miscFlags"      + std::string(LABEL_TRUNC_SIZE - strlen("miscFlags"), ' ')      + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x1E\n");
@@ -4704,6 +5063,8 @@ RESTART:
         _codeLines.clear();
         _integerVars.clear();
         _stringVars.clear();
+        _defDataBytes.clear();
+        _defDataWords.clear();
 
         resetInternalSubs();
 
@@ -4756,6 +5117,7 @@ RESTART:
         outputLabels();
         outputVars();
         outputStrs();
+        outputDefs();
         outputLuts();
         outputCode();
 

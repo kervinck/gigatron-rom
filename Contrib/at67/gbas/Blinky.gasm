@@ -17,7 +17,7 @@ register12          EQU                     0x0028
 register13          EQU                     0x002A
 fgbgColour          EQU                     register0 + 0x14
 cursorXY            EQU                     register0 + 0x16
-midiStreamPtr       EQU                     register0 + 0x18
+midiStream          EQU                     register0 + 0x18
 midiDelay           EQU                     register0 + 0x1A
 frameCountPrev      EQU                     register0 + 0x1C
 miscFlags           EQU                     register0 + 0x1E
@@ -28,13 +28,13 @@ miscFlags           EQU                     register0 + 0x1E
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x022f
-_20                 EQU                     0x022f
-_30                 EQU                     0x022f
-_40                 EQU                     0x023b
-_50                 EQU                     0x022f
-_60                 EQU                     0x024e
-_end_0x0271         EQU                     0x025d
+_10                 EQU                     0x0239
+_20                 EQU                     0x0239
+_30                 EQU                     0x0239
+_40                 EQU                     0x0245
+_50                 EQU                     0x0239
+_60                 EQU                     0x0258
+_end_0x027b         EQU                     0x0267
 
 ; Variables
 _X                  EQU                     0x0030
@@ -48,6 +48,7 @@ _P                  EQU                     0x0036
 
 ; Code
 _entryPoint_        Initialise              
+                    InitRealTimeProc        
                     InitEqOp                
                     InitNeOp                
                     InitLeOp                
@@ -79,7 +80,7 @@ _60                 LD                      _I
                     LDWI                    _60
                     CALL                    giga_vAC                        ; POKE P,I:I=I+1:GOTO 60
 
-_end_0x0271         BRA                     _end_0x0271                     ; END
+_end_0x027b         BRA                     _end_0x027b                     ; END
 
 
 
@@ -89,21 +90,41 @@ _end_0x0271         BRA                     _end_0x0271                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-convertEqOp         EQU     0x7fc3
-convertNeOp         EQU     0x7fcc
-convertLeOp         EQU     0x7fd5
-convertGeOp         EQU     0x7fde
-convertLtOp         EQU     0x7fe7
-convertGtOp         EQU     0x7ff0
-shiftLeft8bit       EQU     0x7ea0
-resetVideoTable     EQU     0x7eaa
+realTimeProc        EQU     0x7fc3
+convertEqOp         EQU     0x7fcc
+convertNeOp         EQU     0x7fd5
+convertLeOp         EQU     0x7fde
+convertGeOp         EQU     0x7fe7
+convertLtOp         EQU     0x7ff0
+convertGtOp         EQU     0x7ea0
+shiftLeft8bit       EQU     0x7ea9
+resetVideoTable     EQU     0x7eb3
 initClearFuncs      EQU     0x7fa0
+realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d2
 convertNeOpAddr     EQU     0x00d4
 convertLeOpAddr     EQU     0x00d6
 convertGeOpAddr     EQU     0x00d8
 convertLtOpAddr     EQU     0x00da
 convertGtOpAddr     EQU     0x00dc
+
+
+numericLabel        EQU     register0
+defaultLabel        EQU     register1
+lutLabs             EQU     register2
+lutAddrs            EQU     register3
+lutIndex            EQU     register4
+lutLabel            EQU     register5
+
+
+                    ; runs real time, (time sliced), code at regular intervals
+realTimeProc        PUSH
+                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI/SPRITE etc routines
+                    CALL    giga_vAC
+                    POP
+                    RET
+                    
+realTimeStub        RET
 
 
                     ; convert equal to into a boolean

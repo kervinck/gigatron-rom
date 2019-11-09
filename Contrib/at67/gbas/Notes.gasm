@@ -17,7 +17,7 @@ register12          EQU                     0x0028
 register13          EQU                     0x002A
 fgbgColour          EQU                     register0 + 0x14
 cursorXY            EQU                     register0 + 0x16
-midiStreamPtr       EQU                     register0 + 0x18
+midiStream          EQU                     register0 + 0x18
 midiDelay           EQU                     register0 + 0x1A
 frameCountPrev      EQU                     register0 + 0x1C
 miscFlags           EQU                     register0 + 0x1E

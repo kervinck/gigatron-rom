@@ -1,5 +1,3 @@
-_useOpcodeCALLI_
-
 a = 1 : b = a + 1
 
 1 bb = (b <= 1) + (b >= 1) + (b = 33) + (b <> 32)

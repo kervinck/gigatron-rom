@@ -1,5 +1,7 @@
 
-1 x = 0 : y = 0
+play midi &h4fa0
+
+x=0 : y=0 : mode 2
 10 for i=0 to 19
 20 gosub math
 30 p=peek(153)+7 : poke 153,p
@@ -31,3 +33,12 @@ math: sh = (i<<1)
       x = sh + sh + sh + sh + 4
       y = sh + sh + sh + 3
       return
+      
+def byte(&h4fa0) = &h90, &h51, &h91, &h45, &h06, &h91, &h4f, &h90, &h43, &h05, &h90, &h51, &h91, &h45
+def byte         = &h56, &h80, &h81, &h0c, &h91, &h4f, &h90, &h43, &h05, &h90, &h4d, &h91, &h41
+def byte         = &h06, &h91, &h4c, &h90, &h40, &h06, &h90, &h4a, &h91, &h3e, &h05, &h91, &h49
+def byte         = &h90, &h3d, &h0b, &h90, &h4a, &h91, &h3e, &h17, &h80, &h81, &h78, &h91, &h45
+def byte         = &h90, &h39, &h06, &h90, &h43, &h91, &h37, &h05, &h91, &h45, &h90, &h39, &h56
+def byte         = &h80, &h81, &h0c, &h90, &h40, &h91, &h34, &h0b, &h91, &h41, &h90, &h35, &h0b
+def byte         = &h90, &h3d, &h91, &h31, &h0b, &h91, &h3e, &h90, &h32, &h17, &h80, &h81, &h82, &h83, &hd0, &h00, &h00
+      

@@ -1,4 +1,3 @@
-_useOpcodeCALLI_
         
 inv=0:char=inv:posx=char:posy=posx
 fg=peek(152):bg=peek(153)

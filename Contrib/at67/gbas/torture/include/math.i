@@ -83,8 +83,8 @@ divide16_exit       LDW     mathX
                     RET
 %ENDS   
     
-%SUB                random16bit
-random16bit         LDWI    SYS_Random_34
+%SUB                rand16bit
+rand16bit           LDWI    SYS_Random_34
                     STW     giga_sysFn
                     SYS     0xFD
                     RET

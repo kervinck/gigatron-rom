@@ -17,7 +17,7 @@ register12          EQU                     0x0028
 register13          EQU                     0x002A
 fgbgColour          EQU                     register0 + 0x14
 cursorXY            EQU                     register0 + 0x16
-midiStreamPtr       EQU                     register0 + 0x18
+midiStream          EQU                     register0 + 0x18
 midiDelay           EQU                     register0 + 0x1A
 frameCountPrev      EQU                     register0 + 0x1C
 miscFlags           EQU                     register0 + 0x1E
@@ -78,33 +78,33 @@ _1                  LDWI                    152
                     LDWI                    clearVertBlinds
                     CALL                    giga_vAC                        ; poke 152,63:cls:rem Lines demo
 
-_2                  Random                  
+_2                  Rand                    
                     ANDI                    127
                     STW                     0xc0
-                    Random                  
+                    Rand                    
                     ANDI                    31
                     ADDW                    0xc0
                     STW                     _a
-                    Random                  
+                    Rand                    
                     ANDI                    63
                     STW                     0xc4
-                    Random                  
+                    Rand                    
                     ANDI                    63
                     ADDW                    0xc4
                     ORI                     8
                     STW                     _b                              ; a=(rnd(0) AND &h7F) + (rnd(0) AND &h1F) : b=(rnd(0) AND &h3F) + (rnd(0) AND &h3F) OR 8
 
-_3                  Random                  
+_3                  Rand                    
                     ANDI                    127
                     STW                     0xc0
-                    Random                  
+                    Rand                    
                     ANDI                    31
                     ADDW                    0xc0
                     STW                     _c
-                    Random                  
+                    Rand                    
                     ANDI                    63
                     STW                     0xc4
-                    Random                  
+                    Rand                    
                     ANDI                    63
                     ADDW                    0xc4
                     ORI                     8
@@ -116,7 +116,7 @@ _4                  LDW                     _c
                     LDW                     _d
                     SUBW                    _b
                     STW                     _y
-                    Random                  
+                    Rand                    
                     ANDI                    63
                     STW                     _q                              ; x=c-a:y=d-b:q=rnd(0) AND 63
 
@@ -158,7 +158,7 @@ _page_0x08a0        LDW                     0x82
                     CALL                    convertLtOpAddr
                     PageJumpBEQ             _8
                     LDWI                    _9
-                    CALL                    giga_vAC                        ; p= a + (b LSL 8):if y< x then goto 9
+                    CALL                    giga_vAC                        ; p=a + (b LSL 8):if y< x then goto 9
 
 _8                  LDW                     _x
                     STW                     _t
@@ -231,7 +231,7 @@ convertLeOp         EQU     0x7fd5
 convertGeOp         EQU     0x7fde
 convertLtOp         EQU     0x7fe7
 convertGtOp         EQU     0x7ff0
-random16bit         EQU     0x7ed8
+rand16bit           EQU     0x7ed8
 shiftLeft8bit       EQU     0x7ee0
 resetVideoTable     EQU     0x7da0
 initClearFuncs      EQU     0x7fa0
@@ -302,7 +302,7 @@ mathScratch         EQU     register6
 mathShift           EQU     register7
     
     
-random16bit         LDWI    SYS_Random_34
+rand16bit           LDWI    SYS_Random_34
                     STW     giga_sysFn
                     SYS     0xFD
                     RET

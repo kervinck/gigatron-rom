@@ -217,7 +217,7 @@ drawL_num           LDWI    SYS_LSRW1_48
                     
 drawL_loop          LD      fgbgColour + 1
                     POKE    drawLine_xy1        ; plot start pixel
-                    POKE    drawLine_xy2        ; plot end pixel, (meet in middle)      
+                    POKE    drawLine_xy2        ; plot end pixel, (meet in middle)
                     
                     LDW     drawLine_num        ; numerator += sy
                     ADDW    drawLine_sy
@@ -249,6 +249,9 @@ drawLineDelta1      LDW     drawLine_xy1
                     LDW     drawLine_xy2
                     SUBW    drawLine_dxy1
                     STW     drawLine_xy2        ; xy2 -= dxy1
+                    PUSH
+                    CALL    realTimeProcAddr
+                    POP
                     RET
                     
 drawLineDelta2      LDW     drawLine_xy1        
@@ -258,6 +261,9 @@ drawLineDelta2      LDW     drawLine_xy1
                     LDW     drawLine_xy2        
                     SUBW    drawLine_dxy2
                     STW     drawLine_xy2        ; xy2 -= dxy2
+                    PUSH
+                    CALL    realTimeProcAddr
+                    POP
                     RET
                     
 drawLineLoadXY      LD      drawLine_x1

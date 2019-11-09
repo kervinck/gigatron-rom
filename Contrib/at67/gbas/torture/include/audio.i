@@ -1,150 +1,117 @@
-midiData            EQU     register0
-midiNote            EQU     register1
-midiCommand         EQU     register2
-midiChannel         EQU     register3
-numChannels         EQU     register4
-audioBase           EQU     register5
-channelsBase        EQU     register6
-notesBase           EQU     register7
-    
-    
+numChannels         EQU     register0
+audioPtr            EQU     register1           
+midiNote            EQU     register4           ; register4 to register7 are the only free registers during time slicing
+midiCommand         EQU     register5
+midiPtr             EQU     register6
+
+
 %SUB                resetAudio
 resetAudio          LDWI    0x0000
                     STW     midiDelay
-                    
+                    LDWI    giga_soundChan1
+                    STW     audioPtr
                     LDI     0x04
                     ST      numChannels
+                    
 resetA_loop         LDI     giga_soundChan1     ; reset low byte
-                    ST      audioBase
-                    LDWI    0x0300              
-                    DOKE    audioBase           ; wavA and wavX
-                    INC     audioBase
-                    INC     audioBase    
+                    ST      audioPtr
+                    LDWI    0x0200              ; waveform type
+                    DOKE    audioPtr            ; wavA and wavX
+                    INC     audioPtr
+                    INC     audioPtr    
                     LDWI    0x0000
-                    DOKE    audioBase           ; keyL and keyH
-                    INC     audioBase
-                    INC     audioBase
-                    DOKE    audioBase           ; oscL and oscH
-                    INC     audioBase + 1       ; increment high byte
+                    DOKE    audioPtr            ; keyL and keyH
+                    INC     audioPtr
+                    INC     audioPtr
+                    DOKE    audioPtr            ; oscL and oscH
+                    INC     audioPtr + 1        ; increment high byte
                     LoopCounter numChannels resetA_loop
                     RET
 %ENDS   
     
-%SUB                playMidiAsync
-playMidiAsync       LD      giga_frameCount
-                    SUBW    frameCountPrev
-                    BEQ     playMV_exit
-                    LD      giga_frameCount
-                    STW     frameCountPrev
-                    PUSH
-                    LDWI    playMidi
-                    CALL    giga_vAC
-                    POP
-playMV_exit         RET
-%ENDS   
-    
 %SUB                playMidi
-playMidi            LDWI    giga_soundChan1 + 2 ; keyL, keyH
-                    STW     channelsBase
-                    LDI     0x01                ; keep pumping soundTimer, so that global sound stays alive
+playMidi            LDW     midiStream
+                    BEQ     playM_exit0         ; 0x0000 = stop
+                    LDI     0x05                ; keep pumping soundTimer, so that global sound stays alive
                     ST      giga_soundTimer
-                    LDW     midiDelay
-                    BEQ     playM_process
-                    SUBI    0x01
-                    STW     midiDelay
-                    BEQ     playM_process    
-                    RET
-    
-playM_process       LDW     midiStreamPtr
+                    LD      giga_frameCount
+                    SUBW    midiDelay
+                    BEQ     playM_start
+playM_exit0         RET
+
+playM_start         PUSH
+playM_process       LDW     midiStream
                     PEEK                        ; get midi stream byte
-                    STW     midiData
-                    LDW     midiStreamPtr
-                    ADDI    0x01
-                    STW     midiStreamPtr
-                    LDW     midiData
-                    ANDI    0xF0
                     STW     midiCommand
+                    LDW     midiStream
+                    ADDI    0x01
+                    STW     midiStream
+                    LDI     0xF0
+                    ANDW    midiCommand
                     XORI    0x90                ; check for start note
                     BNE     playM_endnote
     
-                    PUSH
                     LDWI    midiStartNote
                     CALL    giga_vAC            ; start note
-                    POP
                     BRA     playM_process
                     
-playM_endnote       LDW     midiCommand 
-                    XORI    0x80                ; check for end note
+playM_endnote       XORI    0x10                ; check for end note
                     BNE     playM_segment
     
-                    PUSH
-                    LDWI    midiEndNote
-                    CALL    giga_vAC            ; end note
-                    POP
+                    LDWI    midiEndNote         ; end note
+                    CALL    giga_vAC
                     BRA     playM_process
-    
-    
-playM_segment       LDW     midiCommand
-                    XORI    0xD0                ; check for new segment
+
+playM_segment       XORI    0x50                ; check for new segment
                     BNE     playM_delay
     
-                    PUSH
-                    LDWI    midiSegment
-                    CALL    giga_vAC            ; new midi segment
-                    POP
+                    LDW     midiStream          ; midi score
+                    DEEK
+                    STW     midiStream          ; 0xD0 new midi segment address
+                    BEQ     playM_exit1         ; 0x0000 = stop
                     BRA     playM_process
     
-playM_delay         LDW     midiData            ; all that is left is delay
-                    STW     midiDelay
+playM_delay         LD      giga_frameCount     ; midiDelay = (midiCommand + peek(frameCount)) & 0x00FF 
+                    ADDW    midiCommand
+                    ST      midiDelay
+playM_exit1         POP
                     RET
-%ENDS   
-    
+%ENDS
+
 %SUB                midiStartNote
 midiStartNote       LDWI    giga_notesTable     ; note table in ROM
-                    STW     notesBase
-                    LDW     midiStreamPtr       ; midi score
+                    STW     midiPtr
+                    LDW     midiStream          ; midi score
                     PEEK
-                    SUBI    10
+                    SUBI    11
                     LSLW
-                    SUBI    2
-                    ADDW    notesBase
-                    STW     notesBase
+                    ADDW    midiPtr
+                    STW     midiPtr
                     LUP     0x00                ; get ROM midi note low byte
                     ST      midiNote
-                    LDW     notesBase
+                    LDW     midiPtr
                     LUP     0x01                ; get ROM midi note high byte
                     ST      midiNote + 1
-                    LDW     midiData
+                    LDW     midiCommand
                     ANDI    0x03                ; get channel
-                    ST      midiChannel + 1
-                    LDI     0x00
-                    ST      midiChannel
-                    LDW     midiChannel
-                    ADDW    channelsBase        ; channel address
-                    STW     midiChannel
+                    ADDI    0x01                
+                    ST      midiPtr + 1
+                    LDI     0xFC
+                    ST      midiPtr             ; channels address 0x01FC <-> 0x04FC
                     LDW     midiNote
-                    DOKE    midiChannel         ; set note
-                    LDW     midiStreamPtr
-                    ADDI    0x01                ; midiStreamPtr++
-                    STW     midiStreamPtr
+                    DOKE    midiPtr             ; set note
+                    LDW     midiStream
+                    ADDI    0x01                ; midiStream++
+                    STW     midiStream
                     RET
-    
-    
-midiEndNote         LDW     midiData
+                    
+midiEndNote         LDW     midiCommand
                     ANDI    0x03                ; get channel
-                    ST      midiChannel + 1
-                    LDI     0x00
-                    ST      midiChannel
-                    LDW     midiChannel
-                    ADDW    channelsBase        ; channel address
-                    STW     midiChannel
+                    ADDI    0x01                
+                    ST      midiPtr + 1
+                    LDI     0xFC
+                    ST      midiPtr             ; channels address 0x01FC <-> 0x04FC
                     LDWI    0x0000
-                    DOKE    midiChannel         ; end note
-                    RET
-    
-    
-midiSegment         LDW     midiStreamPtr       ; midi score
-                    DEEK
-                    STW     midiStreamPtr       ; 0xD0 new midi segment address
+                    DOKE    midiPtr             ; end note
                     RET
 %ENDS

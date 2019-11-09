@@ -1,5 +1,5 @@
 numChannels         EQU     register0
-audioPtr            EQU     register1           
+audioPtr            EQU     register1
 midiNote            EQU     register4           ; register4 to register7 are the only free registers during time slicing
 midiCommand         EQU     register5
 midiPtr             EQU     register6
@@ -51,15 +51,13 @@ playM_process       LDW     midiStream
                     XORI    0x90                ; check for start note
                     BNE     playM_endnote
     
-                    LDWI    midiStartNote
-                    CALL    giga_vAC            ; start note
+                    CALLI   midiStartNote       ; start note
                     BRA     playM_process
                     
 playM_endnote       XORI    0x10                ; check for end note
                     BNE     playM_segment
     
-                    LDWI    midiEndNote         ; end note
-                    CALL    giga_vAC
+                    CALLI   midiEndNote         ; end note
                     BRA     playM_process
 
 playM_segment       XORI    0x50                ; check for new segment

@@ -168,8 +168,8 @@ _label_ CALL    giga_vAC
         CALL    giga_vAC
 %ENDM
 
-%MACRO  Random
-        LDWI    random16bit
+%MACRO  Rand
+        LDWI    rand16bit
         CALL    giga_vAC
 %ENDM
 
@@ -259,6 +259,16 @@ _label_ CALL    giga_vAC
         CALL    giga_vAC
 %ENDM
 
+%MACRO  PlayMidi
+        STW     midiStream
+        LDWI    resetAudio
+        CALL    giga_vAC
+        LDWI    realTimeProc + 2
+        STW     register0
+        LDWI    playMidi
+        DOKE    register0                               ; self modifying code, replaces realTimeProc stub with playMidi routine
+%ENDM
+
 %MACRO  PageJumpBEQ _label
         BNE     _label_+2
         LDWI    _label
@@ -295,12 +305,19 @@ _label_ CALL    giga_vAC
         STW     convertGtOpAddr
 %ENDM
 
+%MACRO  InitRealTimeProc
+        LDWI    realTimeProc
+        STW     realTimeProcAddr
+%ENDM
+
 %MACRO  Initialise
         LDWI    0x0F20                                  ; yellow on blue
         STW     fgbgColour
         STW     giga_sysArg0
-        LDWI    0x0001                                  ; reset flags
-        STW     miscFlags
+        LDWI    0x0000
+        STW     midiStream                              ; reset MIDI
+        LDWI    0x0001
+        STW     miscFlags                               ; reset flags
 
         LDWI    initClearFuncs
         CALL    giga_vAC

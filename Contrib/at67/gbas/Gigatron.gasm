@@ -17,7 +17,7 @@ register12          EQU                     0x0028
 register13          EQU                     0x002A
 fgbgColour          EQU                     register0 + 0x14
 cursorXY            EQU                     register0 + 0x16
-midiStreamPtr       EQU                     register0 + 0x18
+midiStream          EQU                     register0 + 0x18
 midiDelay           EQU                     register0 + 0x1A
 frameCountPrev      EQU                     register0 + 0x1C
 miscFlags           EQU                     register0 + 0x1E
@@ -65,7 +65,7 @@ _10                 LDI                     107
                     LDI                     113
                     STW                     _y                              ; x=160-6*9+1:y=120-8+1
 
-_20                 Random                  
+_20                 Rand                    
                     ANDI                    63
                     STW                     0xc0
                     LDWI                    152
@@ -73,7 +73,7 @@ _20                 Random
                     LD                      0xc0
                     POKE                    register0                       ; poke 152,rnd(0) AND 63
 
-_30                 Random                  
+_30                 Rand                    
                     ANDI                    63
                     STW                     0xc0
                     LDWI                    153
@@ -81,33 +81,33 @@ _30                 Random
                     LD                      0xc0
                     POKE                    register0                       ; poke 153,rnd(0) AND 63
 
-_40                 Random                  
+_40                 Rand                    
                     ANDI                    63
                     STW                     0xc0
-                    Random                  
+                    Rand                    
                     ANDI                    31
                     ADDW                    0xc0
                     STW                     0xc2
-                    Random                  
+                    Rand                    
                     ANDI                    7
                     ADDW                    0xc2
                     STW                     0xc4
-                    Random                  
+                    Rand                    
                     ANDI                    7
                     ADDW                    0xc4
                     ST                      cursorXY
-                    Random                  
+                    Rand                    
                     ANDI                    63
                     STW                     0xc8
-                    Random                  
+                    Rand                    
                     ANDI                    31
                     ADDW                    0xc8
                     STW                     0xca
-                    Random                  
+                    Rand                    
                     ANDI                    15
                     ADDW                    0xca
                     STW                     0xcc
-                    Random                  
+                    Rand                    
                     ANDI                    3
                     ADDW                    0xcc
                     ST                      cursorXY + 1
@@ -135,7 +135,7 @@ convertLeOp         EQU     0x7fdf
 convertGeOp         EQU     0x7fe8
 convertLtOp         EQU     0x7ff1
 convertGtOp         EQU     0x7ea0
-random16bit         EQU     0x7ea9
+rand16bit           EQU     0x7ea9
 resetVideoTable     EQU     0x7da0
 initClearFuncs      EQU     0x7faa
 clearCursorRow      EQU     0x7dbc
@@ -210,7 +210,7 @@ mathScratch         EQU     register6
 mathShift           EQU     register7
     
     
-random16bit         LDWI    SYS_Random_34
+rand16bit           LDWI    SYS_Random_34
                     STW     giga_sysFn
                     SYS     0xFD
                     RET
