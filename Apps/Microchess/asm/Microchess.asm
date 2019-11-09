@@ -37,8 +37,6 @@
 ; Adapted for Gigatron TTL by Marcel van Kervinck, July 2019
 ;  DONE Adapt ZP and place stacks
 ;  DONE Change default to blitz or super blitz
-;  XXX  Absorb source in GCL file
-;  XXX  Add attribution to benlo.com
 ;
   ; 02F2 018B
 LEVEL = $00FF   ; Super Blitz   3 seconds
