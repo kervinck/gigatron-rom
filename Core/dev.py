@@ -96,19 +96,16 @@
 #  DONE Fix clobbering of 0x81 by SPI SYS functions #103
 #  DONE Control variable to black out the area at the top of the screen
 #  DONE Fix possible video timing error in Loader #100
-#  XXX  Formally Support SPI and RAM expander: publish in interface.json
-#  XXX  Add CALLI instruction to vCPU
+#  DONE Fix zero page usage in Bricks and Tetronis #41
+#  DONE Add CALLI instruction to vCPU
 #  XXX  Add CMPHS/CMPHU instructions to vCPU
+#  XXX  Formally Support SPI and RAM expander: publish in interface.json
 #  XXX  v6502: Test with Apple1 BASIC
 #  XXX  v6502: Stub D010-D013 with JSR targets for easier patching
-#  XXX  v6502: SYS_v6502_IRQ
-#  XXX  v6502: SYS_v6502_NMI
-#  XXX  v6502: SYS_v6502_RESET
 #  XXX  v6502: add 65c02 opcodes? http://nparker.llx.com/a2/opcodes.html
 #  XXX  Main: add Apple1 to main menu
-#  XXX  SPI: Boot from BOOT.GT1 file if SDC/MMC detected
+#  XXX  SPI: Boot from *.GT1 file if SDC/MMC detected
 #  XXX  SPI: Auto-detect banking, 64K and 128K
-#  XXX  Fix zero page usage in Bricks and Tetronis #41
 #  XXX  Discoverable ROM contents #46
 #  XXX  Racer: Make noise when crashing
 #  XXX  Racer: Control speed with up/down as well
