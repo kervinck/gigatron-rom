@@ -31,9 +31,9 @@ _entryPoint_        EQU                     0x0200
 _10                 EQU                     0x0236
 _20                 EQU                     0x0244
 _30                 EQU                     0x0256
-_40                 EQU                     0x0283
-_50                 EQU                     0x028c
-_end_0x02a5         EQU                     0x0291
+_40                 EQU                     0x0271
+_50                 EQU                     0x027a
+_end_0x028b         EQU                     0x027f
 
 ; Variables
 
@@ -67,26 +67,16 @@ _20                 Random
                     LDWI                    153
                     STW                     register0
                     LD                      0xc0
-                    POKE                    register0                       ; poke 153,rnd AND 63:'Pen
+                    POKE                    register0                       ; poke 153,rnd(0) AND 63:'Pen
 
-_30                 Random                  
-                    STW                     mathX
-                    LDI                     155
-                    STW                     mathY
-                    LDWI                    divide16bit
-                    CALL                    giga_vAC
-                    LDW                     mathRem
+_30                 LDI                     0x9b
+                    RandMod                 
                     ST                      cursorXY
-                    Random                  
-                    STW                     mathX
-                    LDI                     113
-                    STW                     mathY
-                    LDWI                    divide16bit
-                    CALL                    giga_vAC
-                    LDW                     mathRem
+                    LDI                     0x71
+                    RandMod                 
                     ST                      cursorXY + 1
                     LDWI                    atTextCursor
-                    CALL                    giga_vAC                        ; at rnd %155,rnd%113
+                    CALL                    giga_vAC                        ; at rnd(155),rnd(113)
 
 _40                 LDI                     127
                     PrintAcChar                                             ; put 127:'Block
@@ -94,7 +84,7 @@ _40                 LDI                     127
 _50                 LDWI                    _20
                     CALL                    giga_vAC                        ; goto 20
 
-_end_0x02a5         BRA                     _end_0x02a5                     ; END
+_end_0x028b         BRA                     _end_0x028b                     ; END
 
 
 
@@ -110,15 +100,16 @@ convertLeOp         EQU     0x7fd5
 convertGeOp         EQU     0x7fde
 convertLtOp         EQU     0x7fe7
 convertGtOp         EQU     0x7ff0
-divide16bit         EQU     0x7da0
+divide16bit         EQU     0x7ba0
 random16bit         EQU     0x7ed8
-resetVideoTable     EQU     0x7ee0
+randMod16bit        EQU     0x7ee0
+resetVideoTable     EQU     0x7dcd
 initClearFuncs      EQU     0x7fa0
 clearVertBlinds     EQU     0x7ea0
 clearCursorRow      EQU     0x7aa0
-printInit           EQU     0x7ccd
-printChar           EQU     0x7ba0
-atTextCursor        EQU     0x7ca0
+printInit           EQU     0x7de9
+printChar           EQU     0x7ca0
+atTextCursor        EQU     0x7da0
 newLineScroll       EQU     0x79a0
 convertEqOpAddr     EQU     0x00d2
 convertNeOpAddr     EQU     0x00d4
@@ -186,6 +177,13 @@ mathScratch         EQU     register6
 mathShift           EQU     register7
     
     
+random16bit         LDWI    SYS_Random_34
+                    STW     giga_sysFn
+                    SYS     0xFD
+                    RET
+
+
+
                     ; accumulator:mathRem = mathX / mathY, (results 16bit)
 divide16bit         LDW     mathX
                     XORW    mathY
@@ -236,9 +234,15 @@ divide16_exit       LDW     mathX
                     RET
 
 
-random16bit         LDWI    SYS_Random_34
+randMod16bit        PUSH
+                    LDWI    SYS_Random_34
                     STW     giga_sysFn
                     SYS     0xFD
+                    STW     mathX
+                    LDWI    divide16bit
+                    CALL    giga_vAC
+                    LDW     mathRem
+                    POP                    
                     RET
 
 

@@ -35,14 +35,14 @@ _4                  EQU                     0x0291
 _5                  EQU                     0x02a6
 _6                  EQU                     0x02c2
 _7                  EQU                     0x02df
-_8                  EQU                     0x08ac
-_9                  EQU                     0x08c4
-_10                 EQU                     0x08d6
-_11                 EQU                     0x08e6
-_12                 EQU                     0x09ae
-_end_0x03e9         EQU                     0x09c9
+_8                  EQU                     0x08b1
+_9                  EQU                     0x08c9
+_10                 EQU                     0x08db
+_11                 EQU                     0x08eb
+_12                 EQU                     0x09b8
+_end_0x03ee         EQU                     0x09d3
 _page_0x08a0        EQU                     0x08a0
-_next_0x039e        EQU                     0x08e2
+_next_0x03a3        EQU                     0x08e7
 _page_0x09a0        EQU                     0x09a0
 
 ; Variables
@@ -92,7 +92,7 @@ _2                  Random
                     ANDI                    63
                     ADDW                    0xc4
                     ORI                     8
-                    STW                     _b                              ; a=(rnd AND &h7F) + (rnd AND &h1F) : b=(rnd AND &h3F) + (rnd AND &h3F) OR 8
+                    STW                     _b                              ; a=(rnd(0) AND &h7F) + (rnd(0) AND &h1F) : b=(rnd(0) AND &h3F) + (rnd(0) AND &h3F) OR 8
 
 _3                  Random                  
                     ANDI                    127
@@ -108,7 +108,7 @@ _3                  Random
                     ANDI                    63
                     ADDW                    0xc4
                     ORI                     8
-                    STW                     _d                              ; c=(rnd AND &h7F) + (rnd AND &h1F) : d=(rnd AND &h3F) + (rnd AND &h3F) OR 8
+                    STW                     _d                              ; c=(rnd(0) AND &h7F) + (rnd(0) AND &h1F) : d=(rnd(0) AND &h3F) + (rnd(0) AND &h3F) OR 8
 
 _4                  LDW                     _c
                     SUBW                    _a
@@ -118,7 +118,7 @@ _4                  LDW                     _c
                     STW                     _y
                     Random                  
                     ANDI                    63
-                    STW                     _q                              ; x=c-a:y=d-b:q=rnd AND &h3F
+                    STW                     _q                              ; x=c-a:y=d-b:q=rnd(0) AND 63
 
 _5                  LDI                     1
                     STW                     _u
@@ -156,7 +156,9 @@ _7                  LDW                     _b
                     CALL                    giga_vAC
 _page_0x08a0        LDW                     0x82
                     CALL                    convertLtOpAddr
-                    PageJumpBEQ             _8                              ; p= a + (b LSL 8):if y< x then goto9
+                    PageJumpBEQ             _8
+                    LDWI                    _9
+                    CALL                    giga_vAC                        ; p= a + (b LSL 8):if y< x then goto 9
 
 _8                  LDW                     _x
                     STW                     _t
@@ -187,18 +189,18 @@ _10                 LDW                     _d
                     STW                     0xb0
                     LDI                     1
                     STW                     0xb2
-_next_0x039e        LD                      _q
+_next_0x03a3        LD                      _q
                     POKE                    _p                              ; for t=d to 0:poke p,q
 
 _11                 LDW                     _d
                     ADDW                    _y
                     STW                     _d
-                    CALL                    convertGtOpAddr
-                    PageJumpBEQ             _12
                     STW                     0x82
                     LDWI                    _page_0x09a0
                     CALL                    giga_vAC
 _page_0x09a0        LDW                     0x82
+                    CALL                    convertGtOpAddr
+                    PageJumpBEQ             _12
                     LDW                     _d
                     SUBW                    _x
                     STW                     _d
@@ -209,11 +211,11 @@ _page_0x09a0        LDW                     0x82
 _12                 LDW                     _p
                     ADDW                    _u
                     STW                     _p
-                    ForNextLoopStepUp       _t _next_0x039e 0xb0 0xb2
+                    ForNextLoopStepUp       _t _next_0x03a3 0xb0 0xb2
                     LDWI                    _2
                     CALL                    giga_vAC                        ; p=p+u:next t:goto 2
 
-_end_0x03e9         BRA                     _end_0x03e9                     ; END
+_end_0x03ee         BRA                     _end_0x03ee                     ; END
 
 
 

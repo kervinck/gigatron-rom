@@ -26,7 +26,7 @@
 
 goto 10
 
-'x=4+8*i:y=3+6*i
+rem x=4+8*i:y=3+6*i
 math: sh = (i<<1)
       x = sh + sh + sh + sh + 4
       y = sh + sh + sh + 3

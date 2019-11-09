@@ -871,15 +871,15 @@ namespace Expression
             if(peek() == '+')      {get(); t = term(); result = add(result, t);}
             else if(peek() == '-') {get(); t = term(); result = sub(result, t);}
             else if(peek() == '^') {get(); t = term(); result = xor(result, t);}
-            else if(peek() == '|') {get(); t = term(); result = or(result, t); }
+            else if(peek() == '|') {get(); t = term(); result = or(result,  t);}
             else if(find("<<"))    {       t = term(); result = lsl(result, t);}
             else if(find(">>"))    {       t = term(); result = lsr(result, t);}
-            else if(find("=="))    {       t = term(); result = eq(result, t); }
-            else if(find("!="))    {       t = term(); result = ne(result, t); }
-            else if(find("<="))    {       t = term(); result = le(result, t); }
-            else if(find(">="))    {       t = term(); result = ge(result, t); }
-            else if(peek() == '<') {get(); t = term(); result = lt(result, t); }
-            else if(peek() == '>') {get(); t = term(); result = gt(result, t); }
+            else if(find("=="))    {       t = term(); result = eq(result,  t);}
+            else if(find("!="))    {       t = term(); result = ne(result,  t);}
+            else if(find("<="))    {       t = term(); result = le(result,  t);}
+            else if(find(">="))    {       t = term(); result = ge(result,  t);}
+            else if(peek() == '<') {get(); t = term(); result = lt(result,  t);}
+            else if(peek() == '>') {get(); t = term(); result = gt(result,  t);}
             else return result;
         }
     }

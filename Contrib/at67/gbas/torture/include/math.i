@@ -88,8 +88,21 @@ random16bit         LDWI    SYS_Random_34
                     STW     giga_sysFn
                     SYS     0xFD
                     RET
-%ENDS   
-    
+%ENDS
+
+%SUB                randMod16bit
+randMod16bit        PUSH
+                    LDWI    SYS_Random_34
+                    STW     giga_sysFn
+                    SYS     0xFD
+                    STW     mathX
+                    LDWI    divide16bit
+                    CALL    giga_vAC
+                    LDW     mathRem
+                    POP                    
+                    RET
+%ENDS
+
 %SUB                shiftLeft4bit
 shiftLeft4bit       LDWI    SYS_LSLW4_46
                     STW     giga_sysFn

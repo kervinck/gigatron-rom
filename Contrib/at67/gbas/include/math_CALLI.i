@@ -96,10 +96,9 @@ randMod16bit        PUSH
                     STW     giga_sysFn
                     SYS     0xFD
                     STW     mathX
-                    LDWI    divide16bit
-                    CALL    giga_vAC
+                    CALLI   divide16bit
                     LDW     mathRem
-                    POP                    
+                    POP
                     RET
 %ENDS
 

@@ -171,52 +171,58 @@ _label_ CALL    giga_vAC
 %MACRO  Random
         LDWI    random16bit
         CALL    giga_vAC
+%ENDM
+
+%MACRO  RandMod
+        STW     mathY
+        LDWI    randMod16bit
+        CALL    giga_vAC
 %ENDM        
 
 %MACRO  ShiftLeft4bit
         LDWI    shiftLeft4bit
         CALL    giga_vAC
-%ENDM        
+%ENDM
 
 %MACRO  ShiftLeft8bit
         LDWI    shiftLeft8bit
         CALL    giga_vAC
-%ENDM        
+%ENDM
 
 %MACRO  ShiftRight1bit
         LDWI    shiftRight1bit
         CALL    giga_vAC
-%ENDM        
+%ENDM
 
 %MACRO  ShiftRight2bit
         LDWI    shiftRight2bit
         CALL    giga_vAC
-%ENDM        
+%ENDM
 
 %MACRO  ShiftRight3bit
         LDWI    shiftRight3bit
         CALL    giga_vAC
-%ENDM        
+%ENDM
 
 %MACRO  ShiftRight4bit
         LDWI    shiftRight4bit
         CALL    giga_vAC
-%ENDM        
+%ENDM
 
 %MACRO  ShiftRight5bit
         LDWI    shiftRight5bit
         CALL    giga_vAC
-%ENDM        
+%ENDM
 
 %MACRO  ShiftRight6bit
         LDWI    shiftRight6bit
         CALL    giga_vAC
-%ENDM        
+%ENDM
 
 %MACRO  ShiftRight7bit
         LDWI    shiftRight7bit
         CALL    giga_vAC
-%ENDM        
+%ENDM
 
 %MACRO  ShiftRight8bit
         LDWI    shiftRight8bit

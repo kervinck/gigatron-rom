@@ -3,8 +3,8 @@
 'in Joy Division style
 10 poke 152,0:poke 153,63:cls:w=0:z=0
 20 at 0,112:print
-30 v=(rnd%30)-80:p=5:q=128
-40 y=2000+(rnd%700)
+30 v=rnd(30)-80:p=5:q=128
+40 y=2000+rnd(700)
 50 for x=0 to 30
 60 w=10+y/q:if w>0 then w=0
 65 if peek(6)<128 then w=w+1

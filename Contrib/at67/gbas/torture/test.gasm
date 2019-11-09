@@ -28,6 +28,7 @@ miscFlags           EQU                     register0 + 0x1E
 
 ; Labels
 _entryPoint_        EQU                     0x0200
+_init               EQU                     0x022f
 _324532453245435435 EQU                     0x0237
 _10                 EQU                     0x023c
 _31                 EQU                     0x02a8
@@ -78,8 +79,8 @@ _entryPoint_        Initialise
                     InitLtOp                
                     InitGtOp                                                ; INIT
 
-                    LDI                     1
-                    STW                     _a                              ; init    :   a = 1
+_init               LDI                     1
+                    STW                     _a                              ; a = 1
 
                     LDW                     _a
                     STW                     _b                              ; b = a

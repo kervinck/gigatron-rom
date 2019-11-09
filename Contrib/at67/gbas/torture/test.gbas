@@ -1,4 +1,4 @@
-   init    :   a = 1
+init:   a = 1
         
      b = a
 

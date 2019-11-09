@@ -584,6 +584,17 @@ multiply16_skip     LDW     mathX
 
 graphicsMode        EQU     register0
 waitVBlankNum       EQU     register0
+
+drawHLine_x1        EQU     register0
+drawHLine_y1        EQU     register1
+drawHLine_x2        EQU     register2
+drawHLine_x4        EQU     register3
+
+drawVLine_x1        EQU     register0
+drawVLine_y1        EQU     register1
+drawVLine_y2        EQU     register2
+drawVLine_y8        EQU     register3
+
 drawLine_x1         EQU     register0
 drawLine_y1         EQU     register1
 drawLine_x2         EQU     register2

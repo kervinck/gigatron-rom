@@ -32,16 +32,16 @@ _1                  EQU                     0x020f
 _2                  EQU                     0x021a
 _3                  EQU                     0x0227
 _4                  EQU                     0x0238
-_5                  EQU                     0x0261
-_6                  EQU                     0x027e
-_7                  EQU                     0x02bf
-_8                  EQU                     0x02e8
-_9                  EQU                     0x08b1
-_10                 EQU                     0x08cd
-_11                 EQU                     0x08e0
-_12                 EQU                     0x09b1
-_end_0x035c         EQU                     0x08de
-_end_0x038b         EQU                     0x09b4
+_5                  EQU                     0x025b
+_6                  EQU                     0x0278
+_7                  EQU                     0x02b9
+_8                  EQU                     0x02e2
+_9                  EQU                     0x08ac
+_10                 EQU                     0x08c8
+_11                 EQU                     0x08db
+_12                 EQU                     0x09ad
+_end_0x0356         EQU                     0x08d9
+_end_0x0385         EQU                     0x09b0
 _next_0x024a        EQU                     0x0244
 _page_0x08a0        EQU                     0x08a0
 _page_0x09a0        EQU                     0x09a0
@@ -100,10 +100,7 @@ _next_0x024a        LDW                     _j
                     STW                     0xc2
                     LDI                     48
                     ADDW                    0xc2
-                    PrintAcChar             
-                    LDW                     _j
-                    SUBW                    _i
-                    STW                     0xc4                            ; for i=0 to j:put 48+b(j-i)
+                    PrintAcChar                                             ; for i=0 to j:put 48+b(j-i)
 
 _5                  ForNextLoopStepUp       _i _next_0x024a 0xb0 0xb2
                     CALLI                   newLineScroll
@@ -136,7 +133,7 @@ _6                  LDW                     _i
                     ADDW                    register2
                     ADDW                    register2
                     DEEK                    
-                    STW                     0xc4
+                    STW                     0xc6
                     STW                     register0
                     LDW                     _i
                     STW                     register1
@@ -171,10 +168,10 @@ _8                  LDW                     _c
                     STW                     register0
                     LDW                     _i
                     STW                     register1
+                    LDWI                    0x0566
+                    ADDW                    register1
                     CALLI                   _page_0x08a0
-_page_0x08a0        LDWI                    0x0566
-                    ADDW                    register1
-                    ADDW                    register1
+_page_0x08a0        ADDW                    register1
                     STW                     register1
                     LDW                     register0
                     DOKE                    register1
@@ -187,13 +184,13 @@ _9                  ForNextLoopStepUp       _i _6 0xb0 0xb2
                     PageJumpBEQ             _10
                     CALLI                   _12                             ; next i:if c=0 then goto 12
 
-_if_0x0343          LDW                     _j
+_if_0x033d          LDW                     _j
                     ADDI                    1
                     STW                     _j
                     SUBI                    50
                     CALLI                   convertEqOp
                     PageJumpBEQ             _11
-_end_0x035c         BRA                     _end_0x035c                     ; j=j+1:if j=50 then END
+_end_0x0356         BRA                     _end_0x0356                     ; j=j+1:if j=50 then END
 
 _11                 LDI                     0
                     STW                     register0
@@ -207,10 +204,10 @@ _11                 LDI                     0
                     DOKE                    register1
                     LDW                     _c
                     STW                     register0
-                    CALLI                   _page_0x09a0
-_page_0x09a0        LDW                     _j
+                    LDW                     _j
                     STW                     register1
-                    LDWI                    0x0566
+                    CALLI                   _page_0x09a0
+_page_0x09a0        LDWI                    0x0566
                     ADDW                    register1
                     ADDW                    register1
                     STW                     register1
@@ -219,7 +216,7 @@ _page_0x09a0        LDW                     _j
 
 _12                 CALLI                   _3                              ; goto 3
 
-_end_0x038b         BRA                     _end_0x038b                     ; END
+_end_0x0385         BRA                     _end_0x0385                     ; END
 
 
 

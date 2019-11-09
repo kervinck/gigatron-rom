@@ -231,6 +231,7 @@ namespace Compiler
         {0x0000, 0x0000, "multiply16bit"    , "", false, false}, 
         {0x0000, 0x0000, "divide16bit"      , "", false, false},
         {0x0000, 0x0000, "random16bit"      , "", false, false},
+        {0x0000, 0x0000, "randMod16bit"     , "", false, false},
         {0x0000, 0x0000, "shiftLeft4bit"    , "", false, false},
         {0x0000, 0x0000, "shiftLeft8bit"    , "", false, false},
         {0x0000, 0x0000, "shiftRight1bit"   , "", false, false},
@@ -278,24 +279,24 @@ namespace Compiler
     const std::vector<std::string> _subIncludes = 
     {
         "include/math.i"        ,
-        "include/audio.i"       ,
         "include/memory.i"      ,
         "include/flow_control.i",
         "include/clear_screen.i",
         "include/conv_conds.i"  ,
         "include/graphics.i"    ,
         "include/print_text.i"  ,
+        "include/audio.i"       ,
     };
     const std::vector<std::string> _subIncludesCALLI = 
     {
-        "include/math.i"              ,
-        "include/audio.i"             ,
+        "include/math_CALLI.i"        ,
         "include/memory_CALLI.i"      ,
         "include/flow_control_CALLI.i",
         "include/clear_screen_CALLI.i",
         "include/conv_conds_CALLI.i"  ,
         "include/graphics_CALLI.i"    ,
         "include/print_text_CALLI.i"  ,
+        "include/audio.i"             ,
     };
 
 
@@ -395,17 +396,6 @@ namespace Compiler
         _keywords["SPC$"  ] = {1, "SPC$",   nullptr      };
         _keywords["STR$"  ] = {1, "STR$",   nullptr      };
         _keywords["TIME$" ] = {1, "TIME$",  nullptr      };
-
-        // Operators
-        //_keywords["AND"   ] = {2, "AND",    nullptr      };
-        //_keywords["XOR"   ] = {2, "XOR",    nullptr      };
-        //_keywords["OR"    ] = {2, "OR",     nullptr      };
-        //_keywords["NOT"   ] = {1, "NOT",    nullptr      };
-        //_keywords["MOD"   ] = {1, "NOT",    nullptr      };
-        //_keywords["LSL"   ] = {1, "LSL",    nullptr      };
-        //_keywords["LSR"   ] = {1, "LSR",    nullptr      };
-        //_keywords["<<"    ] = {1, "LSL",    nullptr      };
-        //_keywords[">>"    ] = {1, "LSR",    nullptr      };
 
         _keywordsWithEquals.push_back("DIM");
         _keywordsWithEquals.push_back("FOR");
@@ -1473,13 +1463,35 @@ namespace Compiler
 
     Expression::Numeric functionRND(Expression::Numeric& numeric)
     {
+        bool useMod = true;
+        if(!numeric._isAddress)
+        {
+            // RND(0) skips the MOD call and allows you to filter the output manually
+            if(numeric._value == 0)
+            {
+                useMod = false;
+            }
+            else
+            {
+                (numeric._value > 0  && numeric._value <= 255) ? emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(numeric._value)), false) : emitVcpuAsm("LDWI", Expression::wordToHexString(numeric._value), false);
+            }
+        }
+
         getNextTempVar();
+        if(useMod)
+        {
+            handleSingleOp("LDW", numeric);
+            emitVcpuAsm("%RandMod", "", false);
+        }
+        else
+        {
+            numeric._value = uint8_t(_tempVarStart);
+            numeric._isAddress = true;
+            numeric._varName = _tempVarStartStr;
 
-        numeric._value = uint8_t(_tempVarStart);
-        numeric._isAddress = true;
-        numeric._varName = _tempVarStartStr;
+            emitVcpuAsm("%Random", "", false);
+        }
 
-        emitVcpuAsm("%Random", "", false);
         emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(_tempVarStart)), false);
 
         return numeric;
@@ -2108,10 +2120,10 @@ namespace Compiler
     // ********************************************************************************************
     // Recursive Descent Parser helpers
     // ********************************************************************************************
-    char peek(bool skipSpace)
+    char peek(bool dontSkipSpaces)
     {
         // Skipping spaces can attach hex numbers to variables, keywords, etc
-        while(!skipSpace  &&  Expression::peek() == ' ')
+        while(!dontSkipSpaces  &&  Expression::peek() == ' ')
         {
             if(!Expression::advance(1)) return 0;
         }
@@ -2119,10 +2131,10 @@ namespace Compiler
         return Expression::peek();
     }
 
-    char get(bool skipSpace)
+    char get(bool dontSkipSpaces)
     {
         // Skipping spaces can attach hex numbers to variables, keywords, etc
-        while(!skipSpace  &&  Expression::peek() == ' ')
+        while(!dontSkipSpaces  &&  Expression::peek() == ' ')
         {
             if(!Expression::advance(1)) return 0;
         }
@@ -2223,6 +2235,9 @@ namespace Compiler
                 case '+': get(false); numeric = factor(0);                                 break;
                 case '-': get(false); numeric = factor(0); numeric = operatorNEG(numeric); break;
 
+                // Reached end of expression
+                case 0: numeric = Expression::Numeric(defaultValue, -1, false, false, std::string("")); break;
+
                 default:
                 {
                     // Variables
@@ -2246,7 +2261,8 @@ namespace Compiler
                     // Unknown text
                     else
                     {
-                        numeric = Expression::Numeric(defaultValue, -1, false, false, std::string("")); 
+                        numeric = Expression::Numeric(defaultValue, -1, false, false, std::string(""));
+                        if(varName.size()) fprintf(stderr, "Compiler::factor() : Found an unknown symbol '%s' : in '%s' on line %d\n", varName.c_str(), _codeLines[_currentCodeLineIndex]._code.c_str(), Expression::getLineNumber() + 1);
                     }
                 }
                 break;
@@ -2329,26 +2345,36 @@ namespace Compiler
             KeywordFuncResult result;
             KeywordResult keywordResult = handleKeywords(codeLine, codeLine._tokens[i], codeLineIndex, result);
             std::string token = codeLine._tokens[i];
-            if(Expression::strToUpper(token)      == "PRINT") return SingleStatementParsed;
-            else if(Expression::strToUpper(token) == "ON"   ) return SingleStatementParsed;
-            else if(Expression::strToUpper(token) == "FOR"  ) return SingleStatementParsed;
-            else if(Expression::strToUpper(token) == "AT"   ) return SingleStatementParsed;
-            else if(Expression::strToUpper(token) == "LINE" ) return SingleStatementParsed;
-            else if(Expression::strToUpper(token) == "HLINE") return SingleStatementParsed;
-            else if(Expression::strToUpper(token) == "VLINE") return SingleStatementParsed;
-            else if(Expression::strToUpper(token) == "DIM"  ) return SingleStatementParsed;
-            else if(Expression::strToUpper(token) == "POKE" ) return SingleStatementParsed;
-            else if(Expression::strToUpper(token) == "DOKE" ) return SingleStatementParsed;
-            else if(Expression::strToUpper(token) == "GOTO" ) return SingleStatementParsed;
-            else if(Expression::strToUpper(token) == "GOSUB") return SingleStatementParsed;
-            else if(Expression::strToUpper(token) == "IF"   ) return MultiStatementParsed;
+            if(Expression::strToUpper(token)      == "REM"   ) return SingleStatementParsed;
+            else if(Expression::strToUpper(token) == "END"   ) return SingleStatementParsed;
+            else if(Expression::strToUpper(token) == "CLS"   ) return SingleStatementParsed;
+            else if(Expression::strToUpper(token) == "PUT"   ) return SingleStatementParsed;
+            else if(Expression::strToUpper(token) == "PRINT" ) return SingleStatementParsed;
+            else if(Expression::strToUpper(token) == "ON"    ) return SingleStatementParsed;
+            else if(Expression::strToUpper(token) == "FOR"   ) return SingleStatementParsed;
+            else if(Expression::strToUpper(token) == "NEXT"  ) return SingleStatementParsed;
+            else if(Expression::strToUpper(token) == "GOTO"  ) return SingleStatementParsed;
+            else if(Expression::strToUpper(token) == "GOSUB" ) return SingleStatementParsed;
+            else if(Expression::strToUpper(token) == "RETURN") return SingleStatementParsed;
+            else if(Expression::strToUpper(token) == "AT"    ) return SingleStatementParsed;
+            else if(Expression::strToUpper(token) == "MODE"  ) return SingleStatementParsed;
+            else if(Expression::strToUpper(token) == "WAIT"  ) return SingleStatementParsed;
+            else if(Expression::strToUpper(token) == "SCROLL") return SingleStatementParsed;
+            else if(Expression::strToUpper(token) == "LINE"  ) return SingleStatementParsed;
+            else if(Expression::strToUpper(token) == "HLINE" ) return SingleStatementParsed;
+            else if(Expression::strToUpper(token) == "VLINE" ) return SingleStatementParsed;
+            else if(Expression::strToUpper(token) == "DIM"   ) return SingleStatementParsed;
+            else if(Expression::strToUpper(token) == "POKE"  ) return SingleStatementParsed;
+            else if(Expression::strToUpper(token) == "DOKE"  ) return SingleStatementParsed;
+            else if(Expression::strToUpper(token) == "IF"    ) return MultiStatementParsed;
         }
 
-        int varIndexRhs, params;
-        int16_t value = 0;
         bool containsVars = false;
+        int varIndexRhs = -1, params = 0;
         uint32_t expressionType = isExpression(codeLine._expression, varIndexRhs, params);
         if(expressionType & Expression::HasVars) containsVars = true;
+
+        int16_t value = 0;
         Expression::parse(codeLine._expression, codeLineIndex, value);
         if(codeLine._varIndex != -1)
         {
@@ -2759,7 +2785,7 @@ namespace Compiler
         else
         {
             emitVcpuAsm("LDWI", "clearVertBlinds", false, codeLineIndex);
-            emitVcpuAsm("CALL", "giga_vAC",           false, codeLineIndex);
+            emitVcpuAsm("CALL", "giga_vAC",        false, codeLineIndex);
         }
 
         return true;

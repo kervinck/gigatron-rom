@@ -31,14 +31,14 @@ _entryPoint_        EQU                     0x0200
 _10                 EQU                     0x022f
 _20                 EQU                     0x024e
 _30                 EQU                     0x0260
-_40                 EQU                     0x027e
-_50                 EQU                     0x029a
-_60                 EQU                     0x029e
-_65                 EQU                     0x02c1
-_70                 EQU                     0x02d6
-_80                 EQU                     0x02ee
-_90                 EQU                     0x08c4
-_end_0x0357         EQU                     0x08d7
+_40                 EQU                     0x0275
+_50                 EQU                     0x0288
+_60                 EQU                     0x028c
+_65                 EQU                     0x02af
+_70                 EQU                     0x02c4
+_80                 EQU                     0x02dc
+_90                 EQU                     0x08b3
+_end_0x033d         EQU                     0x08c6
 _page_0x08a0        EQU                     0x08a0
 
 ; Variables
@@ -87,31 +87,21 @@ _20                 LDI                     0
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; at 0,112:print
 
-_30                 Random                  
-                    STW                     mathX
-                    LDI                     30
-                    STW                     mathY
-                    LDWI                    divide16bit
-                    CALL                    giga_vAC
-                    LDW                     mathRem
+_30                 LDI                     0x1e
+                    RandMod                 
                     SUBI                    80
                     STW                     _v
                     LDI                     5
                     STW                     _p
                     LDI                     128
-                    STW                     _q                              ; v=(rnd%30)-80:p=5:q=128
+                    STW                     _q                              ; v=rnd(30)-80:p=5:q=128
 
-_40                 Random                  
-                    STW                     mathX
-                    LDWI                    700
-                    STW                     mathY
-                    LDWI                    divide16bit
-                    CALL                    giga_vAC
-                    LDW                     mathRem
+_40                 LDWI                    0x02bc
+                    RandMod                 
                     STW                     0xc0
                     LDWI                    2000
                     ADDW                    0xc0
-                    STW                     _y                              ; y=2000+(rnd%700)
+                    STW                     _y                              ; y=2000+rnd(700)
 
 _50                 LDI                     0
                     STW                     _x                              ; for x=0 to 30
@@ -151,10 +141,6 @@ _70                 LDI                     5
                     STW                     _z                              ; line 5,w-z:z=w
 
 _80                 LDW                     _p
-                    STW                     0x82
-                    LDWI                    _page_0x08a0
-                    CALL                    giga_vAC
-_page_0x08a0        LDW                     0x82
                     STW                     mathX
                     LDW                     _v
                     STW                     mathY
@@ -163,6 +149,10 @@ _page_0x08a0        LDW                     0x82
                     ADDW                    _y
                     STW                     _y
                     STW                     mathX
+                    STW                     0x82
+                    LDWI                    _page_0x08a0
+                    CALL                    giga_vAC
+_page_0x08a0        LDW                     0x82
                     LDW                     _q
                     STW                     mathY
                     LDWI                    divide16bit
@@ -176,7 +166,7 @@ _90                 ForNextLoopUp           _x _60 30
                     LDWI                    _20
                     CALL                    giga_vAC                        ; next x:goto 20
 
-_end_0x0357         BRA                     _end_0x0357                     ; END
+_end_0x033d         BRA                     _end_0x033d                     ; END
 
 
 
@@ -194,8 +184,8 @@ convertLtOp         EQU     0x7fe7
 convertGtOp         EQU     0x7ff0
 multiply16bit       EQU     0x7dcd
 divide16bit         EQU     0x7ba0
-random16bit         EQU     0x7ed8
-resetVideoTable     EQU     0x7ee0
+randMod16bit        EQU     0x7ed8
+resetVideoTable     EQU     0x79e1
 initClearFuncs      EQU     0x7fa0
 clearVertBlinds     EQU     0x7ea0
 clearCursorRow      EQU     0x78a0
@@ -203,7 +193,7 @@ drawLine            EQU     0x7aa0
 drawLineExt         EQU     0x77a0
 drawLineDelta1      EQU     0x76a0
 atLineCursor        EQU     0x79a0
-printInit           EQU     0x79e1
+printInit           EQU     0x7eeb
 printChar           EQU     0x75a0
 atTextCursor        EQU     0x7da0
 newLineScroll       EQU     0x7ca0
@@ -346,9 +336,15 @@ divide16_exit       LDW     mathX
                     RET
 
 
-random16bit         LDWI    SYS_Random_34
+randMod16bit        PUSH
+                    LDWI    SYS_Random_34
                     STW     giga_sysFn
                     SYS     0xFD
+                    STW     mathX
+                    LDWI    divide16bit
+                    CALL    giga_vAC
+                    LDW     mathRem
+                    POP                    
                     RET
 
 
@@ -442,6 +438,17 @@ clearVB_loop        LD      top
 
 graphicsMode        EQU     register0
 waitVBlankNum       EQU     register0
+
+drawHLine_x1        EQU     register0
+drawHLine_y1        EQU     register1
+drawHLine_x2        EQU     register2
+drawHLine_x4        EQU     register3
+
+drawVLine_x1        EQU     register0
+drawVLine_y1        EQU     register1
+drawVLine_y2        EQU     register2
+drawVLine_y8        EQU     register3
+
 drawLine_x1         EQU     register0
 drawLine_y1         EQU     register1
 drawLine_x2         EQU     register2

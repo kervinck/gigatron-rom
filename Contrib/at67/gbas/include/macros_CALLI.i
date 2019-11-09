@@ -140,43 +140,48 @@ _label_ CALLI   _label
 
 %MACRO  Random
         CALLI   random16bit
-%ENDM        
+%ENDM
+
+%MACRO  RandMod
+        STW     mathY
+        CALLI   randMod16bit
+%ENDM
 
 %MACRO  ShiftLeft4bit
         CALLI   shiftLeft4bit
-%ENDM        
+%ENDM
 
 %MACRO  ShiftLeft8bit
         CALLI   shiftLeft8bit
-%ENDM        
+%ENDM
 
 %MACRO  ShiftRight1bit
         CALLI   shiftRight1bit
-%ENDM        
+%ENDM
 
 %MACRO  ShiftRight2bit
         CALLI   shiftRight2bit
-%ENDM        
+%ENDM
 
 %MACRO  ShiftRight3bit
         CALLI   shiftRight3bit
-%ENDM        
+%ENDM
 
 %MACRO  ShiftRight4bit
         CALLI   shiftRight4bit
-%ENDM        
+%ENDM
 
 %MACRO  ShiftRight5bit
         CALLI   shiftRight5bit
-%ENDM        
+%ENDM
 
 %MACRO  ShiftRight6bit
         CALLI   shiftRight6bit
-%ENDM        
+%ENDM
 
 %MACRO  ShiftRight7bit
         CALLI   shiftRight7bit
-%ENDM        
+%ENDM
 
 %MACRO  ShiftRight8bit
         CALLI   shiftRight8bit
