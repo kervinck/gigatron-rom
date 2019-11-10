@@ -2,10 +2,10 @@ mathX               EQU     register0
 mathY               EQU     register1
 mathSum             EQU     register2
 mathMask            EQU     register3
-mathRem             EQU     register4
-mathSign            EQU     register5
-mathScratch         EQU     register6
-mathShift           EQU     register7
+mathRem             EQU     register8
+mathSign            EQU     register9
+mathScratch         EQU     register10
+mathShift           EQU     register11
     
     
 %SUB                multiply16bit
@@ -27,7 +27,9 @@ multiply16_skip     LDW     mathX
                     LDW     mathMask
                     ADDW    mathMask
                     BNE     multiply16_loop
-                    
+                    PUSH
+                    CALL    realTimeProcAddr
+                    POP
                     LDW     mathSum
                     RET
 %ENDS   
@@ -69,7 +71,10 @@ divide16_skip3      LDW     mathX
                     STW     mathRem
                     INC     mathX
                     
-divide16_skip4      LDW     mathScratch
+divide16_skip4      PUSH
+                    CALL    realTimeProcAddr
+                    POP
+                    LDW     mathScratch
                     ADDI    1
                     ANDI    0x0F
                     BNE     divide16_loop

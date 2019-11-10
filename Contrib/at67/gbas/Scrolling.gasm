@@ -110,7 +110,7 @@ convertLtOp         EQU     0x7ff0
 convertGtOp         EQU     0x7ea0
 scanlineMode        EQU     0x7ea9
 waitVBlank          EQU     0x7ebd
-resetVideoTable     EQU     0x7ed4
+resetVideoTable     EQU     0x7ed8
 initClearFuncs      EQU     0x7fa0
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
@@ -244,6 +244,9 @@ waitVB_start        LD      giga_frameCount
                     BEQ     waitVB_start
                     LD      giga_frameCount
                     STW     frameCountPrev
+                    PUSH
+                    CALL    realTimeProcAddr
+                    POP
                     BRA     waitVBlank
 
 
@@ -252,11 +255,11 @@ xreset              EQU     register0
 xcount              EQU     register1
 ycount              EQU     register2
 treset              EQU     register3
-breset              EQU     register4
-top                 EQU     register5
-bot                 EQU     register6
-vramAddr            EQU     register7
-evenAddr            EQU     register8
+breset              EQU     register8
+top                 EQU     register9
+bot                 EQU     register10
+vramAddr            EQU     register11
+evenAddr            EQU     register12
     
     
                     ; resets video table pointers

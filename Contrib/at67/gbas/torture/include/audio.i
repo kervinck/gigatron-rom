@@ -1,5 +1,6 @@
 numChannels         EQU     register0
-audioPtr            EQU     register1           
+audioPtr            EQU     register1
+waveType            EQU     register2
 midiNote            EQU     register4           ; register4 to register7 are the only free registers during time slicing
 midiCommand         EQU     register5
 midiPtr             EQU     register6
@@ -10,12 +11,17 @@ resetAudio          LDWI    0x0000
                     STW     midiDelay
                     LDWI    giga_soundChan1
                     STW     audioPtr
+                    LD      waveType
+                    ANDI    0x03
+                    ST      waveType + 1
+                    LDI     0x00
+                    ST      waveType            ; waveform type
                     LDI     0x04
                     ST      numChannels
                     
 resetA_loop         LDI     giga_soundChan1     ; reset low byte
                     ST      audioPtr
-                    LDWI    0x0200              ; waveform type
+                    LDW     waveType
                     DOKE    audioPtr            ; wavA and wavX
                     INC     audioPtr
                     INC     audioPtr    
@@ -32,7 +38,7 @@ resetA_loop         LDI     giga_soundChan1     ; reset low byte
 %SUB                playMidi
 playMidi            LDW     midiStream
                     BEQ     playM_exit0         ; 0x0000 = stop
-                    LDI     0x05                ; keep pumping soundTimer, so that global sound stays alive
+                    LDI     0x08                ; keep pumping soundTimer, so that global sound stays alive
                     ST      giga_soundTimer
                     LD      giga_frameCount
                     SUBW    midiDelay

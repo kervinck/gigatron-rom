@@ -1,15 +1,15 @@
 textStr             EQU     register0
 textNum             EQU     register0
-textScratch         EQU     register0
+textBak             EQU     register0
 textLen             EQU     register1
 textFont            EQU     register2
 textChr             EQU     register3
-textHex             EQU     register4
-textSlice           EQU     register5
-scanLine            EQU     register6
-digitMult           EQU     register7
-digitIndex          EQU     register8
-clearLoop           EQU     register9
+textHex             EQU     register8
+textSlice           EQU     register9
+scanLine            EQU     register10
+digitMult           EQU     register11
+digitIndex          EQU     register12
+clearLoop           EQU     register13
     
     
 %SUB                clearCursorRow
@@ -30,7 +30,10 @@ clearCursorRow      LD      fgbgColour
                     PEEK
                     ST      giga_sysArg4 + 1
     
-clearCR_loopy       LDI     giga_xres
+clearCR_loopy       PUSH
+                    CALLI   realTimeProc
+                    POP
+                    LDI     giga_xres
                     
 clearCR_loopx       SUBI    4                               ; loop is unrolled 4 times
                     ST      giga_sysArg4
@@ -155,10 +158,10 @@ printH_skip1        ADDI    0x3A
 %SUB                printHexWord
                     ; print hex word in the accumulator
 printHexWord        PUSH
-                    STW     textScratch
-                    LD      textScratch + 1
+                    STW     textBak
+                    LD      textBak + 1
                     CALLI   printHexByte
-                    LD      textScratch
+                    LD      textBak
                     CALLI   printHexByte
                     POP
                     RET
@@ -199,7 +202,8 @@ printC_slice        LDW     textFont                        ; text font slice ba
                     LoopCounter textSlice printC_slice
                     ST      giga_sysArg2                    ; result of loopCounter is always 0
                     SYS     0xCB                            ; draw last blank slice
-
+                    CALLI   realTimeProc
+                    
                     LD      cursorXY
                     ADDI    0x06
                     ST      cursorXY
@@ -235,7 +239,8 @@ newLS_cont1         CALLI   clearCursorRow
                     STW     scanLine
             
                     ; scroll all scan lines by 8 through 0x08 to 0x7F
-newLS_scroll        LDW     scanLine
+newLS_scroll        CALLI   realTimeProc
+                    LDW     scanLine
                     PEEK
                     ADDI    8
                     ANDI    0x7F

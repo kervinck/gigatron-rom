@@ -57,11 +57,15 @@ waitVB_start        LD      giga_frameCount
                     BEQ     waitVB_start
                     LD      giga_frameCount
                     STW     frameCountPrev
+                    PUSH
+                    CALL    realTimeProcAddr
+                    POP
                     BRA     waitVBlank
 %ENDS   
 
 %SUB                drawHLine
-drawHLine           LD      drawHLine_x1
+drawHLine           PUSH
+                    LD      drawHLine_x1
                     ST      giga_sysArg4
                     LD      drawHLine_y1
                     ADDI    8
@@ -84,6 +88,7 @@ drawHLine           LD      drawHLine_x1
                     STW     drawHLine_x4        ; 4 pixel chunks limit
 
 drawHL_loop0        SYS     0xFF                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+                    CALL    realTimeProcAddr
                     LD      giga_sysArg4
                     ADDI    4
                     ST      giga_sysArg4
@@ -96,11 +101,13 @@ drawHL_loop1        LD      fgbgColour + 1
                     LD      giga_sysArg4
                     SUBW    drawHLine_x2
                     BLE     drawHL_loop1        ; remaining pixels
+                    POP
                     RET
 %ENDS
 
 %SUB                drawVLine
-drawVLine           LD      drawVLine_x1
+drawVLine           PUSH
+                    LD      drawVLine_x1
                     ST      giga_sysArg4
                     LD      drawVLine_y1
                     ADDI    8
@@ -125,6 +132,7 @@ drawVLine           LD      drawVLine_x1
 drawVL_loop0        LDI     0xFF
                     ST      giga_sysArg2        ; 8 pixels of fg and bg colour
                     SYS     0xCB                ; SYS_VDrawBits_134, 270 - 134/2 = 0xCB
+                    CALL    realTimeProcAddr
                     LD      giga_sysArg4 + 1
                     ADDI    8
                     ST      giga_sysArg4 + 1
@@ -137,6 +145,7 @@ drawVL_loop1        LD      fgbgColour + 1
                     LD      giga_sysArg4 + 1
                     SUBW    drawVLine_y2
                     BLE     drawVL_loop1        ; remaining pixels
+                    POP
                     RET
 %ENDS
 

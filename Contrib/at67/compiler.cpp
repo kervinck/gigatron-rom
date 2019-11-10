@@ -3105,9 +3105,8 @@ namespace Compiler
 
     bool keywordPLAY(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        std::vector<size_t> offsets;
-        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ' ', offsets, false);
-        if(tokens.size() != 2)
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), " ,", false);
+        if(tokens.size() != 2  &&  tokens.size() != 3)
         {
             fprintf(stderr, "Compiler::keywordPLAY() : Syntax error, use 'PLAY MIDI <address>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
@@ -3121,11 +3120,26 @@ namespace Compiler
             return false;
         }
 
+        // Midi wave type, (optional)
+        if(tokens.size() == 3)
+        {
+            std::string waveTypeToken = tokens[2];
+            Expression::stripWhitespace(waveTypeToken);
+            int16_t param;
+            uint32_t expressionType = parseExpression(codeLine, codeLineIndex, waveTypeToken, param);
+            emitVcpuAsm("ST", "waveType", false, codeLineIndex);
+        }
+        else
+        {
+            emitVcpuAsm("LDI", "2",       false, codeLineIndex);
+            emitVcpuAsm("ST", "waveType", false, codeLineIndex);
+        }
+
+        // Midi stream address
         std::string addressToken = tokens[1];
         Expression::stripWhitespace(addressToken);
         int16_t param;
         uint32_t expressionType = parseExpression(codeLine, codeLineIndex, addressToken, param);
-
         emitVcpuAsm("%PlayMidi", "", false, codeLineIndex);
 
         return true;

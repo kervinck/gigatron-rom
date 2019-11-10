@@ -507,13 +507,13 @@ namespace Assembler
                     {
                         sprintf(dasmText, "%04x  $%02x $%02x", address, instruction, data0);
                         dasmCode._address = address;
-                        address++;
+                        address = (address + 1) & (Memory::getSizeRAM() - 1);
                         break;
                     }
 
                     sprintf(dasmText, "%04x  %s", address, mnemonic);
                     dasmCode._address = address;
-                    address++;
+                    address = (address + 1) & (Memory::getSizeRAM() - 1);
                 }
                 break;
 
@@ -531,7 +531,7 @@ namespace Assembler
                     {
                         sprintf(dasmText, "%04x  $%02x", address, instruction);
                         dasmCode._address = address;
-                        address++;
+                        address = (address + 1) & (Memory::getSizeRAM() - 1);
                         break;
                     }
 
@@ -544,7 +544,7 @@ namespace Assembler
                         {
                             sprintf(dasmText, "%04x  $%02x", address, instruction);
                             dasmCode._address = address;
-                            address++;
+                            address = (address + 1) & (Memory::getSizeRAM() - 1);
                             break;
                         }
                         foundBranch = true;
@@ -558,7 +558,7 @@ namespace Assembler
                         case ThreeBytes: (foundBranch) ? sprintf(dasmText, "%04x  %-5s $%02x", address, _vcpuOpcodes[instruction]._mnemonic.c_str(), data1) : sprintf(dasmText, "%04x  %-5s $%02x%02x", address, _vcpuOpcodes[instruction]._mnemonic.c_str(), data1, data0); break;
                     }
                     dasmCode._address = address;
-                    address = address + byteSize;
+                    address = (address + byteSize) & (Memory::getSizeRAM() - 1);
 
                     // Save current and previous instruction sizes to allow scrolling
                     getDasmCurrAndPrevByteSize(dasmCode._address, byteSize);

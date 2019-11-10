@@ -2,11 +2,11 @@ xreset              EQU     register0
 xcount              EQU     register1
 ycount              EQU     register2
 treset              EQU     register3
-breset              EQU     register4
-top                 EQU     register5
-bot                 EQU     register6
-vramAddr            EQU     register7
-evenAddr            EQU     register8
+breset              EQU     register8
+top                 EQU     register9
+bot                 EQU     register10
+vramAddr            EQU     register11
+evenAddr            EQU     register12
     
     
 %SUB                resetVideoTable
@@ -58,7 +58,8 @@ clearScreen         PUSH
                     LDWI    giga_vram                           ; top line
                     STW     giga_sysArg4
     
-clearS_loop         LD      giga_sysArg4
+clearS_loop         CALLI   realTimeProc
+                    LD      giga_sysArg4
                     SYS     0xFF                                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
                     ADDI    0x04
                     ST      giga_sysArg4
@@ -94,7 +95,8 @@ clearVertBlinds     PUSH
                     LD      giga_sysArg4 + 1
                     ST      top
     
-clearVB_loop        LD      top
+clearVB_loop        CALLI   realTimeProc
+                    LD      top
                     ST      giga_sysArg4 + 1                    ; top line
                     SYS     0xFF                                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
     
@@ -124,7 +126,8 @@ clearVB_loop        LD      top
 clearRVertBlinds    PUSH
                     CALLI   initClearFuncs
     
-clearRVB_loop       LDW     top
+clearRVB_loop       CALLI   realTimeProc
+                    LDW     top
                     STW     giga_sysArg4                        ; top line
                     SYS     0xFF                                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
     

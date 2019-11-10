@@ -731,7 +731,7 @@ namespace Graphics
             drawText("K:", _pixels, 48, 472 - FONT_CELL_Y, 0xFFFFFFFF, false, 0);
             drawText(std::string(str), _pixels, 60, 472 - FONT_CELL_Y, 0xFF00FF00, false, 0);
 
-            sprintf(str, "%05d", Memory::getSizeFreeRAM());
+            sprintf(str, "%-5d", Memory::getSizeFreeRAM());
             drawText(std::string(str), _pixels, RAM_START, 472 - FONT_CELL_Y, 0xFF00FF00, false, 0);
             sprintf(str, " ROM %02x", Cpu::getRomType());
             drawText(std::string(VERSION_STR) + std::string(str), _pixels, 0, 472, 0xFFFFFFFF, false, 0);
