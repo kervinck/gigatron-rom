@@ -457,11 +457,10 @@ void loop()
         serialByte |= digitalRead(gameControllerDataPin);
         sendPulse(gameControllerPulsePin);
       }
-
-      if (serialByte == 255)
+      if (serialByte == 255)           // Skip if no button pressed
         break;
-      critical();                      // Forward byte to Gigatron
-      sendFirstByte(serialByte);
+      critical();
+      sendFirstByte(serialByte);       // Forward byte to Gigatron
       nonCritical();
     } // Loop locally while active to skip PS/2 and waitVSync
 
@@ -470,10 +469,6 @@ void loop()
   #else
     delay(15);
   #endif
-
-  // debugging
-  PORTB &= ~gigatronDataBit;
-  PORTB |= gigatronDataBit;
 
   // PS/2 keyboard events
   byte key = keyboard_getState();
