@@ -27,7 +27,7 @@
 // 3. Forward text from USB to Gigatron as keystrokes
 //    For example to get a long BASIC program loaded into BASIC
 // 4. Controlling the Gigatron over USB from a PC/laptop
-// 5. Passing through of game controller signals (XXX currently broken)
+// 5. Passing through of game controller signals
 // 6. Receive data from Gigatron and store it in the EEPROM area.
 //    If USB is connected, it also gets forwarded to the PC/laptop.
 // 7. Sending the EEPROM data back into the Gigatron as a series
@@ -37,7 +37,7 @@
 //
 // Supported:
 //      - Arduino/Genuino Uno
-//      - Arduino Nano XXX <-- This one has issues with ROMv4 (#122)
+//      - Arduino Nano
 //      - Arduino/Genuino Micro
 //      - ATtiny85 (8 MHz)
 //
@@ -115,7 +115,6 @@
 //        SER_PULSE  SER_LATCH
 
 #if defined(ARDUINO_AVR_NANO)
- // at67's setup
  #define platform "ArduinoNano"
  #define maxStorage 30720
 
@@ -130,7 +129,9 @@
  #define gigatronPinToBitMask digitalPinToBitMask // Regular Arduino pin numbers
 
  // Pins for Controller
- #define gameControllerDataPin 10 // PB2 (XXX currently broken)
+ #define gameControllerDataPin 10
+ #define gameControllerPulsePin 9
+ #define gameControllerLatchPin 8
 
  // Pins for PS/2 keyboard
  #define keyboardClockPin 3 // Pin 2 or 3 for IRQ
@@ -369,6 +370,8 @@ void setup()
 
   #if gameControllerDataPin >= 0
     pinMode(gameControllerDataPin, INPUT_PULLUP); // Force HIGH if disconnected
+    pinMode(gameControllerLatchPin, OUTPUT);
+    pinMode(gameControllerPulsePin, OUTPUT);
   #endif
 
   // Open upstream communication
@@ -444,13 +447,28 @@ void loop()
       break;
   }
 
-  // Game controller pass through (XXX currently broken)
+  // Game controller pass through (Courtesy norgate)
   #if gameControllerDataPin >= 0
-    digitalWrite(gigatronDataPin, digitalRead(gameControllerDataPin));
+    for (;;) {
+      byte serialByte = 0;
+      sendPulse(gameControllerLatchPin);
+      for (byte i=0; i<8; i++) {       // Shift in all 8 bits
+        serialByte <<= 1;
+        serialByte |= digitalRead(gameControllerDataPin);
+        sendPulse(gameControllerPulsePin);
+      }
+      if (serialByte == 255)           // Skip if no button pressed
+        break;
+      sendController(serialByte, 1);   // Forward byte to Gigatron
+    } // Loop locally while active to skip PS/2 and waitVSync
+
+    // Allow PS/2 interrupts for a reasonable window
+    delay(14);                         // The game controller probe takes 1 ms
+  #else
+    delay(15);
   #endif
 
   // PS/2 keyboard events
-  delay(15);                           // Allow PS/2 interrupts for a reasonable window
   byte key = keyboard_getState();
   if (key != 255) {
     byte f = fnKey(key ^ 64);          // Ctrl+Fn key?
@@ -1123,6 +1141,14 @@ byte waitVSync()
     count += 1;
   }
   return count;
+}
+
+void sendPulse(byte pin)
+{
+  digitalWrite(pin, HIGH);
+  delayMicroseconds(50);
+  digitalWrite(pin, LOW);
+  delayMicroseconds(50);
 }
 
 /*----------------------------------------------------------------------+
