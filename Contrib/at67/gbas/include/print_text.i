@@ -49,7 +49,7 @@ clearCR_loopx       SUBI    4                               ; loop is unrolled 4
                     INC     giga_sysArg4 + 1                ; next line                
                     LoopCounter clearLoop clearCR_loopy
                     RET
-%ENDS   
+%ENDS
 
 %SUB                printInit
 printInit           LDWI    SYS_VDrawBits_134

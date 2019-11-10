@@ -28,15 +28,15 @@ miscFlags           EQU                     register0 + 0x1E
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x022f
-_20                 EQU                     0x023b
-_30                 EQU                     0x0246
-_40                 EQU                     0x025d
-_50                 EQU                     0x0274
-_60                 EQU                     0x0284
-_70                 EQU                     0x0295
-_80                 EQU                     0x02a5
-_end_0x02f4         EQU                     0x02b6
+_10                 EQU                     0x0239
+_20                 EQU                     0x0245
+_30                 EQU                     0x0250
+_40                 EQU                     0x0267
+_50                 EQU                     0x027e
+_60                 EQU                     0x028e
+_70                 EQU                     0x029f
+_80                 EQU                     0x02af
+_end_0x02fe         EQU                     0x02c0
 
 ; Variables
 _x                  EQU                     0x0030
@@ -47,10 +47,13 @@ _w                  EQU                     0x0038
 
 ; Strings
 
+; Define Bytes
+
 ; Lookup Tables
 
 ; Code
 _entryPoint_        Initialise              
+                    InitRealTimeProc        
                     InitEqOp                
                     InitNeOp                
                     InitLeOp                
@@ -119,11 +122,11 @@ _70                 LDW                     _w
 
 _80                 LDW                     _u
                     CALL                    convertGtOpAddr
-                    PageJumpBEQ             _end_0x02f4
+                    PageJumpBEQ             _end_0x02fe
                     LDWI                    _60
                     CALL                    giga_vAC                        ; if u>0 then goto 60
 
-_end_0x02f4         BRA                     _end_0x02f4                     ; END
+_end_0x02fe         BRA                     _end_0x02fe                     ; END
 
 
 
@@ -133,22 +136,42 @@ _end_0x02f4         BRA                     _end_0x02f4                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-convertEqOp         EQU     0x7fc3
-convertNeOp         EQU     0x7fcc
-convertLeOp         EQU     0x7fd5
-convertGeOp         EQU     0x7fde
-convertLtOp         EQU     0x7fe7
-convertGtOp         EQU     0x7ff0
-resetVideoTable     EQU     0x7ed8
+realTimeProc        EQU     0x7fc3
+convertEqOp         EQU     0x7fcc
+convertNeOp         EQU     0x7fd5
+convertLeOp         EQU     0x7fde
+convertGeOp         EQU     0x7fe7
+convertLtOp         EQU     0x7ff0
+convertGtOp         EQU     0x7ea0
+resetVideoTable     EQU     0x7ee1
 initClearFuncs      EQU     0x7fa0
-clearVertBlinds     EQU     0x7ea0
+clearVertBlinds     EQU     0x7ea9
 drawVLine           EQU     0x7da0
-convertEqOpAddr     EQU     0x00d2
-convertNeOpAddr     EQU     0x00d4
-convertLeOpAddr     EQU     0x00d6
-convertGeOpAddr     EQU     0x00d8
-convertLtOpAddr     EQU     0x00da
-convertGtOpAddr     EQU     0x00dc
+realTimeProcAddr    EQU     0x00dc
+convertEqOpAddr     EQU     0x00d0
+convertNeOpAddr     EQU     0x00d2
+convertLeOpAddr     EQU     0x00d4
+convertGeOpAddr     EQU     0x00d6
+convertLtOpAddr     EQU     0x00d8
+convertGtOpAddr     EQU     0x00da
+
+
+numericLabel        EQU     register0
+defaultLabel        EQU     register1
+lutLabs             EQU     register2
+lutAddrs            EQU     register3
+lutIndex            EQU     register4
+lutLabel            EQU     register5
+
+
+                    ; runs real time, (time sliced), code at regular intervals
+realTimeProc        PUSH
+                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI/SPRITE etc routines
+                    CALL    giga_vAC
+                    POP
+                    RET
+                    
+realTimeStub        RET
 
 
                     ; convert equal to into a boolean

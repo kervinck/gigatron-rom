@@ -29,20 +29,20 @@ miscFlags           EQU                     register0 + 0x1E
 ; Labels
 _entryPoint_        EQU                     0x0200
 _1                  EQU                     0x0239
-_2                  EQU                     0x024d
-_3                  EQU                     0x025a
-_4                  EQU                     0x0273
-_5                  EQU                     0x029a
-_6                  EQU                     0x02bb
-_7                  EQU                     0x08af
-_8                  EQU                     0x08db
+_2                  EQU                     0x0246
+_3                  EQU                     0x0253
+_4                  EQU                     0x026c
+_5                  EQU                     0x0293
+_6                  EQU                     0x02b4
+_7                  EQU                     0x08a8
+_8                  EQU                     0x08d4
 _9                  EQU                     0x09a2
 _10                 EQU                     0x09c3
 _11                 EQU                     0x09d7
 _12                 EQU                     0x0aaf
-_end_0x03a2         EQU                     0x09d5
-_end_0x03d3         EQU                     0x0ab4
-_next_0x0285        EQU                     0x027f
+_end_0x039b         EQU                     0x09d5
+_end_0x03cc         EQU                     0x0ab4
+_next_0x027e        EQU                     0x0278
 _page_0x08a0        EQU                     0x08a0
 _page_0x09a0        EQU                     0x09a0
 _page_0x0aa0        EQU                     0x0aa0
@@ -61,6 +61,8 @@ _i                  EQU                     0x0036
 str_0x7fa0          EQU                     0x7fa0
 str_0x7fa0          DB                      2 ': '
 
+; Define Bytes
+
 ; Lookup Tables
 
 ; Code
@@ -72,10 +74,6 @@ _entryPoint_        Initialise
                     InitGeOp                
                     InitLtOp                
                     InitGtOp                                                ; INIT
-
-                    LDWI                    0x0001
-                    ORW                     miscFlags
-                    STW                     miscFlags                       ; scroll on
 
                     LDI                     0
                     STW                     _n
@@ -103,7 +101,7 @@ _4                  LDI                     0
                     STW                     0xb0
                     LDI                     1
                     STW                     0xb2
-_next_0x0285        LDW                     _j
+_next_0x027e        LDW                     _j
                     SUBW                    _i
                     STW                     register2
                     LDWI                    0x0566
@@ -115,7 +113,7 @@ _next_0x0285        LDW                     _j
                     ADDW                    0xc2
                     PrintAcChar                                             ; for i=0 to j:put 48+b(j-i)
 
-_5                  ForNextLoopStepUp       _i _next_0x0285 0xb0 0xb2
+_5                  ForNextLoopStepUp       _i _next_0x027e 0xb0 0xb2
                     LDWI                    newLineScroll
                     CALL                    giga_vAC
                     LDI                     0
@@ -151,13 +149,13 @@ _6                  LDW                     _i
                     STW                     register0
                     LDW                     _i
                     STW                     register1
+                    LDWI                    0x0500
+                    ADDW                    register1
+                    ADDW                    register1
                     STW                     0x82
                     LDWI                    _page_0x08a0
                     CALL                    giga_vAC
 _page_0x08a0        LDW                     0x82
-                    LDWI                    0x0500
-                    ADDW                    register1
-                    ADDW                    register1
                     STW                     register1
                     LDW                     register0
                     DOKE                    register1                       ; c=a(i)+b(i)+c:a(i)=b(i)
@@ -207,13 +205,13 @@ _9                  ForNextLoopStepUp       _i _6 0xb0 0xb2
                     LDWI                    _12
                     CALL                    giga_vAC                        ; next i:if c=0 then goto 12
 
-_if_0x0388          LDW                     _j
+_if_0x0381          LDW                     _j
                     ADDI                    1
                     STW                     _j
                     SUBI                    50
                     CALL                    convertEqOpAddr
                     PageJumpBEQ             _11
-_end_0x03a2         BRA                     _end_0x03a2                     ; j=j+1:if j=50 then END
+_end_0x039b         BRA                     _end_0x039b                     ; j=j+1:if j=50 then END
 
 _11                 LDI                     0
                     STW                     register0
@@ -243,7 +241,7 @@ _page_0x0aa0        LDW                     0x82
 _12                 LDWI                    _3
                     CALL                    giga_vAC                        ; goto 3
 
-_end_0x03d3         BRA                     _end_0x03d3                     ; END
+_end_0x03cc         BRA                     _end_0x03cc                     ; END
 
 
 
@@ -271,12 +269,12 @@ printInt16          EQU     0x7da0
 printChar           EQU     0x7ca0
 newLineScroll       EQU     0x7ba0
 realTimeProcAddr    EQU     0x00dc
-convertEqOpAddr     EQU     0x00d2
-convertNeOpAddr     EQU     0x00d4
-convertLeOpAddr     EQU     0x00d6
-convertGeOpAddr     EQU     0x00d8
-convertLtOpAddr     EQU     0x00da
-convertGtOpAddr     EQU     0x00dc
+convertEqOpAddr     EQU     0x00d0
+convertNeOpAddr     EQU     0x00d2
+convertLeOpAddr     EQU     0x00d4
+convertGeOpAddr     EQU     0x00d6
+convertLtOpAddr     EQU     0x00d8
+convertGtOpAddr     EQU     0x00da
 
 
 numericLabel        EQU     register0

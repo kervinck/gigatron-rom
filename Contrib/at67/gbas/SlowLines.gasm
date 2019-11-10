@@ -28,22 +28,22 @@ miscFlags           EQU                     register0 + 0x1E
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_1                  EQU                     0x022f
-_2                  EQU                     0x023d
-_3                  EQU                     0x0267
-_4                  EQU                     0x0291
-_5                  EQU                     0x02a6
-_6                  EQU                     0x02c2
-_7                  EQU                     0x02df
-_8                  EQU                     0x08b1
-_9                  EQU                     0x08c9
-_10                 EQU                     0x08db
-_11                 EQU                     0x08eb
-_12                 EQU                     0x09b8
-_end_0x03ee         EQU                     0x09d3
+_1                  EQU                     0x0239
+_2                  EQU                     0x0247
+_3                  EQU                     0x0271
+_4                  EQU                     0x029b
+_5                  EQU                     0x02b0
+_6                  EQU                     0x02cc
+_7                  EQU                     0x02e9
+_8                  EQU                     0x08c0
+_9                  EQU                     0x08d8
+_10                 EQU                     0x08ea
+_11                 EQU                     0x09a6
+_12                 EQU                     0x09c2
+_end_0x03f8         EQU                     0x09dd
 _page_0x08a0        EQU                     0x08a0
-_next_0x03a3        EQU                     0x08e7
 _page_0x09a0        EQU                     0x09a0
+_next_0x03ad        EQU                     0x09a2
 
 ; Variables
 _a                  EQU                     0x0030
@@ -60,10 +60,13 @@ _t                  EQU                     0x0044
 
 ; Strings
 
+; Define Bytes
+
 ; Lookup Tables
 
 ; Code
 _entryPoint_        Initialise              
+                    InitRealTimeProc        
                     InitEqOp                
                     InitNeOp                
                     InitLeOp                
@@ -145,16 +148,16 @@ _6                  LDWI                    256
                     STW                     _v                              ; v=256:if y<0 then y=-y:v=-v
 
 _7                  LDW                     _b
+                    STW                     0x82
+                    LDWI                    _page_0x08a0
+                    CALL                    giga_vAC
+_page_0x08a0        LDW                     0x82
                     STW                     mathShift
                     ShiftLeft8bit           
                     ADDW                    _a
                     STW                     _p
                     LDW                     _y
                     SUBW                    _x
-                    STW                     0x82
-                    LDWI                    _page_0x08a0
-                    CALL                    giga_vAC
-_page_0x08a0        LDW                     0x82
                     CALL                    convertLtOpAddr
                     PageJumpBEQ             _8
                     LDWI                    _9
@@ -189,16 +192,16 @@ _10                 LDW                     _d
                     STW                     0xb0
                     LDI                     1
                     STW                     0xb2
-_next_0x03a3        LD                      _q
+                    STW                     0x82
+                    LDWI                    _page_0x09a0
+                    CALL                    giga_vAC
+_page_0x09a0        LDW                     0x82
+_next_0x03ad        LD                      _q
                     POKE                    _p                              ; for t=d to 0:poke p,q
 
 _11                 LDW                     _d
                     ADDW                    _y
                     STW                     _d
-                    STW                     0x82
-                    LDWI                    _page_0x09a0
-                    CALL                    giga_vAC
-_page_0x09a0        LDW                     0x82
                     CALL                    convertGtOpAddr
                     PageJumpBEQ             _12
                     LDW                     _d
@@ -211,11 +214,11 @@ _page_0x09a0        LDW                     0x82
 _12                 LDW                     _p
                     ADDW                    _u
                     STW                     _p
-                    ForNextLoopStepUp       _t _next_0x03a3 0xb0 0xb2
+                    ForNextLoopStepUp       _t _next_0x03ad 0xb0 0xb2
                     LDWI                    _2
                     CALL                    giga_vAC                        ; p=p+u:next t:goto 2
 
-_end_0x03ee         BRA                     _end_0x03ee                     ; END
+_end_0x03f8         BRA                     _end_0x03f8                     ; END
 
 
 
@@ -225,23 +228,43 @@ _end_0x03ee         BRA                     _end_0x03ee                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-convertEqOp         EQU     0x7fc3
-convertNeOp         EQU     0x7fcc
-convertLeOp         EQU     0x7fd5
-convertGeOp         EQU     0x7fde
-convertLtOp         EQU     0x7fe7
-convertGtOp         EQU     0x7ff0
-rand16bit           EQU     0x7ed8
-shiftLeft8bit       EQU     0x7ee0
+realTimeProc        EQU     0x7fc3
+convertEqOp         EQU     0x7fcc
+convertNeOp         EQU     0x7fd5
+convertLeOp         EQU     0x7fde
+convertGeOp         EQU     0x7fe7
+convertLtOp         EQU     0x7ff0
+convertGtOp         EQU     0x7ea0
+rand16bit           EQU     0x7ee1
+shiftLeft8bit       EQU     0x7ee9
 resetVideoTable     EQU     0x7da0
 initClearFuncs      EQU     0x7fa0
-clearVertBlinds     EQU     0x7ea0
-convertEqOpAddr     EQU     0x00d2
-convertNeOpAddr     EQU     0x00d4
-convertLeOpAddr     EQU     0x00d6
-convertGeOpAddr     EQU     0x00d8
-convertLtOpAddr     EQU     0x00da
-convertGtOpAddr     EQU     0x00dc
+clearVertBlinds     EQU     0x7ea9
+realTimeProcAddr    EQU     0x00dc
+convertEqOpAddr     EQU     0x00d0
+convertNeOpAddr     EQU     0x00d2
+convertLeOpAddr     EQU     0x00d4
+convertGeOpAddr     EQU     0x00d6
+convertLtOpAddr     EQU     0x00d8
+convertGtOpAddr     EQU     0x00da
+
+
+numericLabel        EQU     register0
+defaultLabel        EQU     register1
+lutLabs             EQU     register2
+lutAddrs            EQU     register3
+lutIndex            EQU     register4
+lutLabel            EQU     register5
+
+
+                    ; runs real time, (time sliced), code at regular intervals
+realTimeProc        PUSH
+                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI/SPRITE etc routines
+                    CALL    giga_vAC
+                    POP
+                    RET
+                    
+realTimeStub        RET
 
 
                     ; convert equal to into a boolean

@@ -28,23 +28,23 @@ miscFlags           EQU                     register0 + 0x1E
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_loop               EQU                     0x0298
-_50                 EQU                     0x02af
-_51                 EQU                     0x02bf
-_53                 EQU                     0x02cf
-_54                 EQU                     0x02df
-_55                 EQU                     0x02ef
-_101                EQU                     0x08b1
-_105                EQU                     0x08c1
-_113                EQU                     0x08d1
-_114                EQU                     0x08e1
-_116                EQU                     0x08f1
-_117                EQU                     0x09ad
-_119                EQU                     0x09bd
-_121                EQU                     0x09cd
-_note               EQU                     0x09dd
-_end_0x03a3         EQU                     0x0aa2
-_next_0x023b        EQU                     0x0239
+_loop               EQU                     0x02a2
+_50                 EQU                     0x02b9
+_51                 EQU                     0x02c9
+_53                 EQU                     0x02d9
+_54                 EQU                     0x02e9
+_55                 EQU                     0x08ab
+_101                EQU                     0x08bb
+_105                EQU                     0x08cb
+_113                EQU                     0x08db
+_114                EQU                     0x08eb
+_116                EQU                     0x09a9
+_117                EQU                     0x09b9
+_119                EQU                     0x09c9
+_121                EQU                     0x09d9
+_note               EQU                     0x09e9
+_end_0x03ad         EQU                     0x0aad
+_next_0x0245        EQU                     0x0243
 _page_0x08a0        EQU                     0x08a0
 _page_0x09a0        EQU                     0x09a0
 _page_0x0aa0        EQU                     0x0aa0
@@ -62,14 +62,17 @@ str_0x7fa0          DB                      12 ' 2 3   5 6 7'
 str_0x7fad          EQU                     0x7fad
 str_0x7fad          DB                      15 'Q W E R T Y U I'
 
+; Define Bytes
+
 ; Lookup Tables
 lut_numericLabs     EQU                     0x7dd8
 lut_numericLabs     DW                      50 51 53 54 55 101 105 113 114 116 117 119 121 -1
 lut_numericAddrs    EQU                     0x7bda
-lut_numericAddrs    DW                      0x02af 0x02bf 0x02cf 0x02df 0x02ef 0x08b1 0x08c1 0x08d1 0x08e1 0x08f1 0x09ad 0x09bd 0x09cd 
+lut_numericAddrs    DW                      0x02b9 0x02c9 0x02d9 0x02e9 0x08ab 0x08bb 0x08cb 0x08db 0x08eb 0x09a9 0x09b9 0x09c9 0x09d9 
 
 ; Code
 _entryPoint_        Initialise              
+                    InitRealTimeProc        
                     InitEqOp                
                     InitNeOp                
                     InitLeOp                
@@ -84,7 +87,7 @@ _entryPoint_        Initialise
                     LDI                     1
                     STW                     _c                              ; for c=1 to 4
 
-_next_0x023b        LDW                     _c
+_next_0x0245        LDW                     _c
                     STW                     mathShift
                     ShiftLeft8bit           
                     ADDI                    252
@@ -98,7 +101,7 @@ _next_0x023b        LDW                     _c
                     LDI                     0
                     POKE                    0xc0                            ; poke p,0:poke p+1,0
 
-                    ForNextLoopUp           _c _next_0x023b 4               ; next c
+                    ForNextLoopUp           _c _next_0x0245 4               ; next c
 
                     LDI                     2
                     STW                     graphicsMode
@@ -168,6 +171,10 @@ _54                 PUSH
                     LDI                     78
                     STW                     _a
                     LDI                     13
+                    STW                     0x82
+                    LDWI                    _page_0x08a0
+                    CALL                    giga_vAC
+_page_0x08a0        LDW                     0x82
                     STW                     _b
                     LDWI                    _note
                     CALL                    giga_vAC
@@ -175,10 +182,6 @@ _54                 PUSH
                     RET                                                     ; a=78 :b=13:gosub note:return
 
 _55                 PUSH                    
-                    STW                     0x82
-                    LDWI                    _page_0x08a0
-                    CALL                    giga_vAC
-_page_0x08a0        LDW                     0x82
                     LDI                     35
                     STW                     _a
                     LDI                     15
@@ -223,6 +226,10 @@ _114                PUSH
                     STW                     _a
                     LDI                     11
                     STW                     _b
+                    STW                     0x82
+                    LDWI                    _page_0x09a0
+                    CALL                    giga_vAC
+_page_0x09a0        LDW                     0x82
                     LDWI                    _note
                     CALL                    giga_vAC
                     POP                     
@@ -231,10 +238,6 @@ _114                PUSH
 _116                PUSH                    
                     LDI                     108
                     STW                     _a
-                    STW                     0x82
-                    LDWI                    _page_0x09a0
-                    CALL                    giga_vAC
-_page_0x09a0        LDW                     0x82
                     LDI                     12
                     STW                     _b
                     LDWI                    _note
@@ -281,6 +284,10 @@ _note               PUSH
                     LD                      _b
                     POKE                    0xc0                            ; poke p,a:poke p+1,b
 
+                    STW                     0x82
+                    LDWI                    _page_0x0aa0
+                    CALL                    giga_vAC
+_page_0x0aa0        LDW                     0x82
                     LDWI                    44
                     STW                     register0
                     LDI                     15
@@ -289,11 +296,7 @@ _note               PUSH
                     POP                     
                     RET                                                     ; return
 
-                    STW                     0x82
-                    LDWI                    _page_0x0aa0
-                    CALL                    giga_vAC
-_page_0x0aa0        LDW                     0x82
-_end_0x03a3         BRA                     _end_0x03a3                     ; END
+_end_0x03ad         BRA                     _end_0x03ad                     ; END
 
 
 
@@ -303,29 +306,49 @@ _end_0x03a3         BRA                     _end_0x03a3                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-convertEqOp         EQU     0x7fe0
-convertNeOp         EQU     0x7fe9
-convertLeOp         EQU     0x7ff2
-convertGeOp         EQU     0x7ea0
-convertLtOp         EQU     0x7ea9
-convertGtOp         EQU     0x7eb2
-shiftLeft8bit       EQU     0x7ebb
+realTimeProc        EQU     0x7fe0
+convertEqOp         EQU     0x7fe9
+convertNeOp         EQU     0x7ff2
+convertLeOp         EQU     0x7ea0
+convertGeOp         EQU     0x7ea9
+convertLtOp         EQU     0x7eb2
+convertGtOp         EQU     0x7ebb
+shiftLeft8bit       EQU     0x7ec4
 gosubNumericLabel   EQU     0x7ba0
-scanlineMode        EQU     0x7ec5
+scanlineMode        EQU     0x7ece
 resetVideoTable     EQU     0x7aa0
 initClearFuncs      EQU     0x7fbd
 clearVertBlinds     EQU     0x7da0
 clearCursorRow      EQU     0x7abc
 printInit           EQU     0x79a0
-printText           EQU     0x7ed9
+printText           EQU     0x7ee2
 printChar           EQU     0x78a0
 newLineScroll       EQU     0x7ca0
-convertEqOpAddr     EQU     0x00d2
-convertNeOpAddr     EQU     0x00d4
-convertLeOpAddr     EQU     0x00d6
-convertGeOpAddr     EQU     0x00d8
-convertLtOpAddr     EQU     0x00da
-convertGtOpAddr     EQU     0x00dc
+realTimeProcAddr    EQU     0x00dc
+convertEqOpAddr     EQU     0x00d0
+convertNeOpAddr     EQU     0x00d2
+convertLeOpAddr     EQU     0x00d4
+convertGeOpAddr     EQU     0x00d6
+convertLtOpAddr     EQU     0x00d8
+convertGtOpAddr     EQU     0x00da
+
+
+numericLabel        EQU     register0
+defaultLabel        EQU     register1
+lutLabs             EQU     register2
+lutAddrs            EQU     register3
+lutIndex            EQU     register4
+lutLabel            EQU     register5
+
+
+                    ; runs real time, (time sliced), code at regular intervals
+realTimeProc        PUSH
+                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI/SPRITE etc routines
+                    CALL    giga_vAC
+                    POP
+                    RET
+                    
+realTimeStub        RET
 
 
                     ; convert equal to into a boolean
@@ -391,14 +414,6 @@ shiftLeft8bit       LDWI    SYS_LSLW8_24
                     LDW     mathShift
                     SYS     0x00                ; 0x00 = 270-max(14,24/2)
                     RET
-
-
-numericLabel        EQU     register0
-defaultLabel        EQU     register1
-lutLabs             EQU     register2
-lutAddrs            EQU     register3
-lutIndex            EQU     register4
-lutLabel            EQU     register5
 
 
                     ; find numeric label and call it, (it had better return or welcome to lala land)

@@ -28,15 +28,15 @@ miscFlags           EQU                     register0 + 0x1E
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x022f
-_20                 EQU                     0x08d7
-_end_0x0365         EQU                     0x08dc
-_next_0x0237        EQU                     0x0237
-_next_0x023b        EQU                     0x023b
-_next_0x023f        EQU                     0x023f
-_next_0x0275        EQU                     0x0275
+_10                 EQU                     0x0239
+_20                 EQU                     0x08db
+_end_0x036f         EQU                     0x08e0
+_next_0x0241        EQU                     0x0241
+_next_0x0245        EQU                     0x0245
+_next_0x0249        EQU                     0x0249
+_next_0x027f        EQU                     0x027f
 _page_0x08a0        EQU                     0x08a0
-_next_0x032b        EQU                     0x08a2
+_next_0x0335        EQU                     0x08a6
 
 ; Variables
 _a                  EQU                     0x0030
@@ -57,10 +57,13 @@ str_0x7fc3          DB                      34 'wooooooooooooooooooooooooooooow!
 str_0x7fe6          EQU                     0x7fe6
 str_0x7fe6          DB                      3 'dog'
 
+; Define Bytes
+
 ; Lookup Tables
 
 ; Code
 _entryPoint_        Initialise              
+                    InitRealTimeProc        
                     InitEqOp                
                     InitNeOp                
                     InitLeOp                
@@ -74,13 +77,13 @@ _10                 LDI                     1
                     LDI                     0
                     STW                     _k                              ; for k = 0 to 1
 
-_next_0x0237        LDI                     0
+_next_0x0241        LDI                     0
                     STW                     _j                              ; for j = 0 to 1
 
-_next_0x023b        LDI                     0
+_next_0x0245        LDI                     0
                     STW                     _i                              ; for i = 0 to 1
 
-_next_0x023f        PrintString             str_0x7fa0                      ; print "yahooowalllallllalalalwallla";
+_next_0x0249        PrintString             str_0x7fa0                      ; print "yahooowalllallllalalalwallla";
 
                     PrintString             str_0x7fbd
                     PrintString             str_0x7fc1                      ; print "yes";" ";
@@ -91,7 +94,7 @@ _next_0x023f        PrintString             str_0x7fa0                      ; pr
                     LDI                     32
                     STW                     _char                           ; for char = 32 to 127
 
-_next_0x0275        LDW                     _a
+_next_0x027f        LDW                     _a
                     ADDI                    1
                     STW                     _a                              ; a = a + 1
 
@@ -111,32 +114,32 @@ _next_0x0275        LDW                     _a
                     ADDW                    0xc0
                     PrintAcChar                                             ; print chr$(char+1 +a+a+a - 32*0 + 50/0 + a/0 + 3 - a -a -a -4 + j*0 + (k-k));
 
-                    ForNextLoopUp           _char _next_0x0275 127          ; next char
+                    ForNextLoopUp           _char _next_0x027f 127          ; next char
 
-                    ForNextLoopUp           _i _next_0x023f 1               ; next i
+                    ForNextLoopUp           _i _next_0x0249 1               ; next i
 
-                    ForNextLoopUp           _j _next_0x023b 1               ; next j
+                    ForNextLoopUp           _j _next_0x0245 1               ; next j
 
-                    ForNextLoopUp           _k _next_0x0237 1               ; next k
+                    ForNextLoopUp           _k _next_0x0241 1               ; next k
 
                     PrintString             str_0x7fc3
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print "wooooooooooooooooooooooooooooow!!!"
 
-                    LDI                     0
-                    STW                     _i                              ; for i = 0 to 6
-
                     STW                     0x82
                     LDWI                    _page_0x08a0
                     CALL                    giga_vAC
 _page_0x08a0        LDW                     0x82
-_next_0x032b        PrintString             str_0x7fe6
+                    LDI                     0
+                    STW                     _i                              ; for i = 0 to 6
+
+_next_0x0335        PrintString             str_0x7fe6
                     PrintString             str_0x7fc1
                     PrintVarInt16           _i
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print "dog";" ";i
 
-                    ForNextLoopUp           _i _next_0x032b 6               ; next i
+                    ForNextLoopUp           _i _next_0x0335 6               ; next i
 
                     LDWI                    clearVertBlinds
                     CALL                    giga_vAC                        ; cls
@@ -144,7 +147,7 @@ _next_0x032b        PrintString             str_0x7fe6
 _20                 LDWI                    _10
                     CALL                    giga_vAC                        ; goto 10
 
-_end_0x0365         BRA                     _end_0x0365                     ; END
+_end_0x036f         BRA                     _end_0x036f                     ; END
 
 
 
@@ -154,28 +157,48 @@ _end_0x0365         BRA                     _end_0x0365                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-convertEqOp         EQU     0x7fea
-convertNeOp         EQU     0x7ff3
-convertLeOp         EQU     0x7ec3
-convertGeOp         EQU     0x7ecc
-convertLtOp         EQU     0x7ed5
-convertGtOp         EQU     0x7ede
+realTimeProc        EQU     0x7fea
+convertEqOp         EQU     0x7ff3
+convertNeOp         EQU     0x7ec3
+convertLeOp         EQU     0x7ecc
+convertGeOp         EQU     0x7ed5
+convertLtOp         EQU     0x7ede
+convertGtOp         EQU     0x7ee7
 resetVideoTable     EQU     0x79a0
 initClearFuncs      EQU     0x7ea0
 clearVertBlinds     EQU     0x7dbd
 clearCursorRow      EQU     0x79bc
-printInit           EQU     0x7ee7
+printInit           EQU     0x7cef
 printText           EQU     0x7da0
 printDigit          EQU     0x78a0
 printInt16          EQU     0x7ca0
 printChar           EQU     0x7ba0
 newLineScroll       EQU     0x7aa0
-convertEqOpAddr     EQU     0x00d2
-convertNeOpAddr     EQU     0x00d4
-convertLeOpAddr     EQU     0x00d6
-convertGeOpAddr     EQU     0x00d8
-convertLtOpAddr     EQU     0x00da
-convertGtOpAddr     EQU     0x00dc
+realTimeProcAddr    EQU     0x00dc
+convertEqOpAddr     EQU     0x00d0
+convertNeOpAddr     EQU     0x00d2
+convertLeOpAddr     EQU     0x00d4
+convertGeOpAddr     EQU     0x00d6
+convertLtOpAddr     EQU     0x00d8
+convertGtOpAddr     EQU     0x00da
+
+
+numericLabel        EQU     register0
+defaultLabel        EQU     register1
+lutLabs             EQU     register2
+lutAddrs            EQU     register3
+lutIndex            EQU     register4
+lutLabel            EQU     register5
+
+
+                    ; runs real time, (time sliced), code at regular intervals
+realTimeProc        PUSH
+                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI/SPRITE etc routines
+                    CALL    giga_vAC
+                    POP
+                    RET
+                    
+realTimeStub        RET
 
 
                     ; convert equal to into a boolean

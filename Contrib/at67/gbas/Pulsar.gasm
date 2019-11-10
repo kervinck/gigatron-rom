@@ -28,17 +28,17 @@ miscFlags           EQU                     register0 + 0x1E
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x022f
-_20                 EQU                     0x024e
-_30                 EQU                     0x0260
-_40                 EQU                     0x0275
-_50                 EQU                     0x0288
-_60                 EQU                     0x028c
-_65                 EQU                     0x02af
-_70                 EQU                     0x02c4
-_80                 EQU                     0x02dc
-_90                 EQU                     0x08b3
-_end_0x033d         EQU                     0x08c6
+_10                 EQU                     0x0239
+_20                 EQU                     0x0258
+_30                 EQU                     0x026a
+_40                 EQU                     0x027f
+_50                 EQU                     0x0292
+_60                 EQU                     0x0296
+_65                 EQU                     0x02b9
+_70                 EQU                     0x02ce
+_80                 EQU                     0x02e6
+_90                 EQU                     0x08be
+_end_0x0347         EQU                     0x08d1
 _page_0x08a0        EQU                     0x08a0
 
 ; Variables
@@ -52,10 +52,13 @@ _x                  EQU                     0x003c
 
 ; Strings
 
+; Define Bytes
+
 ; Lookup Tables
 
 ; Code
 _entryPoint_        Initialise              
+                    InitRealTimeProc        
                     InitEqOp                
                     InitNeOp                
                     InitLeOp                
@@ -144,15 +147,15 @@ _80                 LDW                     _p
                     STW                     mathX
                     LDW                     _v
                     STW                     mathY
+                    STW                     0x82
+                    LDWI                    _page_0x08a0
+                    CALL                    giga_vAC
+_page_0x08a0        LDW                     0x82
                     LDWI                    multiply16bit
                     CALL                    giga_vAC
                     ADDW                    _y
                     STW                     _y
                     STW                     mathX
-                    STW                     0x82
-                    LDWI                    _page_0x08a0
-                    CALL                    giga_vAC
-_page_0x08a0        LDW                     0x82
                     LDW                     _q
                     STW                     mathY
                     LDWI                    divide16bit
@@ -166,7 +169,7 @@ _90                 ForNextLoopUp           _x _60 30
                     LDWI                    _20
                     CALL                    giga_vAC                        ; next x:goto 20
 
-_end_0x033d         BRA                     _end_0x033d                     ; END
+_end_0x0347         BRA                     _end_0x0347                     ; END
 
 
 
@@ -176,33 +179,53 @@ _end_0x033d         BRA                     _end_0x033d                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-convertEqOp         EQU     0x7fc3
-convertNeOp         EQU     0x7fcc
-convertLeOp         EQU     0x7fd5
-convertGeOp         EQU     0x7fde
-convertLtOp         EQU     0x7fe7
-convertGtOp         EQU     0x7ff0
+realTimeProc        EQU     0x7fc3
+convertEqOp         EQU     0x7fcc
+convertNeOp         EQU     0x7fd5
+convertLeOp         EQU     0x7fde
+convertGeOp         EQU     0x7fe7
+convertLtOp         EQU     0x7ff0
+convertGtOp         EQU     0x7ea0
 multiply16bit       EQU     0x7dcd
 divide16bit         EQU     0x7ba0
-randMod16bit        EQU     0x7ed8
+randMod16bit        EQU     0x7ee1
 resetVideoTable     EQU     0x79e1
 initClearFuncs      EQU     0x7fa0
-clearVertBlinds     EQU     0x7ea0
+clearVertBlinds     EQU     0x7ea9
 clearCursorRow      EQU     0x78a0
 drawLine            EQU     0x7aa0
 drawLineExt         EQU     0x77a0
 drawLineDelta1      EQU     0x76a0
 atLineCursor        EQU     0x79a0
-printInit           EQU     0x7eeb
+printInit           EQU     0x78e2
 printChar           EQU     0x75a0
 atTextCursor        EQU     0x7da0
 newLineScroll       EQU     0x7ca0
-convertEqOpAddr     EQU     0x00d2
-convertNeOpAddr     EQU     0x00d4
-convertLeOpAddr     EQU     0x00d6
-convertGeOpAddr     EQU     0x00d8
-convertLtOpAddr     EQU     0x00da
-convertGtOpAddr     EQU     0x00dc
+realTimeProcAddr    EQU     0x00dc
+convertEqOpAddr     EQU     0x00d0
+convertNeOpAddr     EQU     0x00d2
+convertLeOpAddr     EQU     0x00d4
+convertGeOpAddr     EQU     0x00d6
+convertLtOpAddr     EQU     0x00d8
+convertGtOpAddr     EQU     0x00da
+
+
+numericLabel        EQU     register0
+defaultLabel        EQU     register1
+lutLabs             EQU     register2
+lutAddrs            EQU     register3
+lutIndex            EQU     register4
+lutLabel            EQU     register5
+
+
+                    ; runs real time, (time sliced), code at regular intervals
+realTimeProc        PUSH
+                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI/SPRITE etc routines
+                    CALL    giga_vAC
+                    POP
+                    RET
+                    
+realTimeStub        RET
 
 
                     ; convert equal to into a boolean
@@ -545,7 +568,7 @@ drawL_num           LDWI    SYS_LSRW1_48
                     
 drawL_loop          LD      fgbgColour + 1
                     POKE    drawLine_xy1        ; plot start pixel
-                    POKE    drawLine_xy2        ; plot end pixel, (meet in middle)      
+                    POKE    drawLine_xy2        ; plot end pixel, (meet in middle)
                     
                     LDW     drawLine_num        ; numerator += sy
                     ADDW    drawLine_sy
@@ -576,6 +599,9 @@ drawLineDelta1      LDW     drawLine_xy1
                     LDW     drawLine_xy2
                     SUBW    drawLine_dxy1
                     STW     drawLine_xy2        ; xy2 -= dxy1
+                    PUSH
+                    CALL    realTimeProcAddr
+                    POP
                     RET
                     
 drawLineDelta2      LDW     drawLine_xy1        
@@ -585,6 +611,9 @@ drawLineDelta2      LDW     drawLine_xy1
                     LDW     drawLine_xy2        
                     SUBW    drawLine_dxy2
                     STW     drawLine_xy2        ; xy2 -= dxy2
+                    PUSH
+                    CALL    realTimeProcAddr
+                    POP
                     RET
                     
 drawLineLoadXY      LD      drawLine_x1

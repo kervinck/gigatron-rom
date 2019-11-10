@@ -44,6 +44,8 @@ _P                  EQU                     0x0036
 
 ; Strings
 
+; Define Bytes
+
 ; Lookup Tables
 
 ; Code
@@ -101,12 +103,12 @@ shiftLeft8bit       EQU     0x7ea9
 resetVideoTable     EQU     0x7eb3
 initClearFuncs      EQU     0x7fa0
 realTimeProcAddr    EQU     0x00dc
-convertEqOpAddr     EQU     0x00d2
-convertNeOpAddr     EQU     0x00d4
-convertLeOpAddr     EQU     0x00d6
-convertGeOpAddr     EQU     0x00d8
-convertLtOpAddr     EQU     0x00da
-convertGtOpAddr     EQU     0x00dc
+convertEqOpAddr     EQU     0x00d0
+convertNeOpAddr     EQU     0x00d2
+convertLeOpAddr     EQU     0x00d4
+convertGeOpAddr     EQU     0x00d6
+convertLtOpAddr     EQU     0x00d8
+convertGtOpAddr     EQU     0x00da
 
 
 numericLabel        EQU     register0

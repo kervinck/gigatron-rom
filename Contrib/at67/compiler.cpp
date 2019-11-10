@@ -4609,6 +4609,7 @@ namespace Compiler
         {
             std::getline(infile, lineToken._text);
             std::vector<std::string> tokens = Expression::tokeniseLine(lineToken._text);
+            for(int i=0; i<tokens.size(); i++) Expression::stripWhitespace(tokens[i]);
             if(!buildingSub  &&  tokens.size() >= 2  &&  tokens[0] == "%SUB"  &&  tokens[1] == subname)
             {
                 buildingSub = true;
@@ -4643,14 +4644,17 @@ namespace Compiler
         return vasmSize;
     }
 
-    void getInternalSubSize(const std::string& includeName, int subIndex)
+    bool getInternalSubSize(const std::string& includeName, int subIndex)
     {
         uint16_t size = getAsmOpcodeSizeSubInFile("gbas/" + includeName, _internalSubs[subIndex]._name);
         if(size)
         {
             _internalSubs[subIndex]._size = size;
             _internalSubs[subIndex]._includeName = includeName;
+            return true;
         }
+
+        return false;
     }
 
     bool getInternalSubCode(const std::string& includeName, const std::vector<std::string>& includeVarsDone, std::vector<std::string>& code, int subIndex)
@@ -4763,11 +4767,17 @@ namespace Compiler
         {
             if(!Assembler::getUseOpcodeCALLI())
             {
-                for(int j=0; j<_subIncludes.size(); j++) getInternalSubSize(_subIncludes[j], i);
+                for(int j=0; j<_subIncludes.size(); j++)
+                {
+                    if(getInternalSubSize(_subIncludes[j], i)) break;
+                }
             }
             else
             {
-                for(int j=0; j<_subIncludesCALLI.size(); j++) getInternalSubSize(_subIncludesCALLI[j], i);
+                for(int j=0; j<_subIncludesCALLI.size(); j++)
+                {
+                    if(getInternalSubSize(_subIncludesCALLI[j], i)) break;
+                }
             }
         }
 
@@ -4825,7 +4835,7 @@ namespace Compiler
         _output.push_back(";****************************************************************************************************************************************\n");
         _output.push_back("\n");
 
-        for(int i=0; i<_internalSubs.size()-1; i++)
+        for(int i=0; i<_internalSubs.size(); i++)
         {
             if(_internalSubs[i]._inUse)
             {
@@ -5031,7 +5041,7 @@ RESTART:
             _internalSubs[i]._loaded = false;
 
             // Relational init macros are always loaded
-            (i>=0  && i<6) ? _internalSubs[i]._inUse = true : _internalSubs[i]._inUse = false;
+            (i>=0  && i<7) ? _internalSubs[i]._inUse = true : _internalSubs[i]._inUse = false;
         }
     }
 

@@ -28,14 +28,15 @@ miscFlags           EQU                     register0 + 0x1E
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x0234
-_blamo              EQU                     0x09ca
-_end_0x0395         EQU                     0x09c8
-_end_0x0429         EQU                     0x0aef
+_10                 EQU                     0x023e
+_blamo              EQU                     0x09d4
+_end_0x039f         EQU                     0x09d2
+_end_0x0433         EQU                     0x0ba2
 _page_0x08a0        EQU                     0x08a0
 _page_0x09a0        EQU                     0x09a0
-_next_0x03a9        EQU                     0x09da
+_next_0x03b3        EQU                     0x09e4
 _page_0x0aa0        EQU                     0x0aa0
+_page_0x0ba0        EQU                     0x0ba0
 
 ; Variables
 _addr               EQU                     0x0030
@@ -58,10 +59,13 @@ str_0x7fa2          DB                      4 'test'
 str_0x7fa7          EQU                     0x7fa7
 str_0x7fa7          DB                      3 'dog'
 
+; Define Bytes
+
 ; Lookup Tables
 
 ; Code
 _entryPoint_        Initialise              
+                    InitRealTimeProc        
                     InitEqOp                
                     InitNeOp                
                     InitLeOp                
@@ -132,11 +136,11 @@ _10                 LDI                     33
                     PrintString             str_0x7fa2
                     PrintString             str_0x7fa0
                     PrintString             str_0x7fa7
-                    PrintString             str_0x7fa0
                     STW                     0x82
                     LDWI                    _page_0x08a0
                     CALL                    giga_vAC
 _page_0x08a0        LDW                     0x82
+                    PrintString             str_0x7fa0
                     PrintInt16              0x0064
                     PrintString             str_0x7fa0
                     PrintVarInt16           _a
@@ -157,15 +161,15 @@ _page_0x08a0        LDW                     0x82
                     ShiftLeft8bit           
                     STW                     _z                              ; z = (x AND &h3F) LSL 8
 
+                    STW                     0x82
+                    LDWI                    _page_0x09a0
+                    CALL                    giga_vAC
+_page_0x09a0        LDW                     0x82
                     LDW                     _x
                     ST                      cursorXY
                     LDW                     _z
                     ANDI                    63
                     ST                      cursorXY + 1
-                    STW                     0x82
-                    LDWI                    _page_0x09a0
-                    CALL                    giga_vAC
-_page_0x09a0        LDW                     0x82
                     LDWI                    atTextCursor
                     CALL                    giga_vAC                        ; at x, (z AND &h3F)
 
@@ -177,7 +181,7 @@ _page_0x09a0        LDW                     0x82
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print hexw$(x);" ";hexw$(z)
 
-_end_0x0395         BRA                     _end_0x0395                     ; END
+_end_0x039f         BRA                     _end_0x039f                     ; END
 
 _blamo              PUSH                    
                     LDWI                    23205
@@ -190,7 +194,7 @@ _blamo              PUSH
                     LDI                     0
                     STW                     _i                              ; for i = 0 to 10
 
-_next_0x03a9        LDWI                    str_0x7fa0
+_next_0x03b3        LDWI                    str_0x7fa0
                     STW                     _c                              ; c = CHR$(32)
 
                     LDI                     0x00
@@ -202,15 +206,15 @@ _next_0x03a9        LDWI                    str_0x7fa0
                     ANDW                    _a
                     STW                     _d                              ; d = c AND &hAA55 AND a
 
+                    STW                     0x82
+                    LDWI                    _page_0x0aa0
+                    CALL                    giga_vAC
+_page_0x0aa0        LDW                     0x82
                     LDW                     _a
                     ADDI                    5
                     ADDW                    _b
                     STW                     _z                              ; z = a + 5 + b
 
-                    STW                     0x82
-                    LDWI                    _page_0x0aa0
-                    CALL                    giga_vAC
-_page_0x0aa0        LDW                     0x82
                     LDI                     0
                     SUBW                    _b
                     STW                     _b                              ; b = -b
@@ -222,7 +226,7 @@ _page_0x0aa0        LDW                     0x82
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print i; " " ; hexw$(b)
 
-                    ForNextLoopUp           _i _next_0x03a9 10              ; next i
+                    ForNextLoopUp           _i _next_0x03b3 10              ; next i
 
                     LDWI                    -1
                     SUBW                    _g
@@ -239,7 +243,11 @@ _page_0x0aa0        LDW                     0x82
                     POP                     
                     RET                                                     ; return
 
-_end_0x0429         BRA                     _end_0x0429                     ; END
+                    STW                     0x82
+                    LDWI                    _page_0x0ba0
+                    CALL                    giga_vAC
+_page_0x0ba0        LDW                     0x82
+_end_0x0433         BRA                     _end_0x0433                     ; END
 
 
 
@@ -249,32 +257,52 @@ _end_0x0429         BRA                     _end_0x0429                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-convertEqOp         EQU     0x7fce
-convertNeOp         EQU     0x7fd7
-convertLeOp         EQU     0x7fe0
-convertGeOp         EQU     0x7fe9
-convertLtOp         EQU     0x7ff2
-convertGtOp         EQU     0x7ea0
-shiftLeft8bit       EQU     0x7de9
-resetVideoTable     EQU     0x7acd
+realTimeProc        EQU     0x7fce
+convertEqOp         EQU     0x7fd7
+convertNeOp         EQU     0x7fe0
+convertLeOp         EQU     0x7fe9
+convertGeOp         EQU     0x7ff2
+convertLtOp         EQU     0x7ea0
+convertGtOp         EQU     0x7ea9
+shiftLeft8bit       EQU     0x7eea
+resetVideoTable     EQU     0x79a0
 initClearFuncs      EQU     0x7fab
-clearVertBlinds     EQU     0x7ea9
-clearCursorRow      EQU     0x79a0
-printInit           EQU     0x7bef
-printText           EQU     0x7ee1
+clearVertBlinds     EQU     0x7eb2
+clearCursorRow      EQU     0x79bc
+printInit           EQU     0x7ded
+printText           EQU     0x7dd0
 printDigit          EQU     0x78a0
-printInt16          EQU     0x7ba0
+printInt16          EQU     0x7aa0
 printChar           EQU     0x77a0
 printHexByte        EQU     0x7da0
-printHexWord        EQU     0x7dd0
-atTextCursor        EQU     0x7aa0
-newLineScroll       EQU     0x7ca0
-convertEqOpAddr     EQU     0x00d2
-convertNeOpAddr     EQU     0x00d4
-convertLeOpAddr     EQU     0x00d6
-convertGeOpAddr     EQU     0x00d8
-convertLtOpAddr     EQU     0x00da
-convertGtOpAddr     EQU     0x00dc
+printHexWord        EQU     0x7ca0
+atTextCursor        EQU     0x7cb9
+newLineScroll       EQU     0x7ba0
+realTimeProcAddr    EQU     0x00dc
+convertEqOpAddr     EQU     0x00d0
+convertNeOpAddr     EQU     0x00d2
+convertLeOpAddr     EQU     0x00d4
+convertGeOpAddr     EQU     0x00d6
+convertLtOpAddr     EQU     0x00d8
+convertGtOpAddr     EQU     0x00da
+
+
+numericLabel        EQU     register0
+defaultLabel        EQU     register1
+lutLabs             EQU     register2
+lutAddrs            EQU     register3
+lutIndex            EQU     register4
+lutLabel            EQU     register5
+
+
+                    ; runs real time, (time sliced), code at regular intervals
+realTimeProc        PUSH
+                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI/SPRITE etc routines
+                    CALL    giga_vAC
+                    POP
+                    RET
+                    
+realTimeStub        RET
 
 
                     ; convert equal to into a boolean

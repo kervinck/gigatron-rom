@@ -28,13 +28,13 @@ miscFlags           EQU                     register0 + 0x1E
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_1                  EQU                     0x022f
-_10                 EQU                     0x022f
-_20                 EQU                     0x0233
-_30                 EQU                     0x0246
-_40                 EQU                     0x025b
-_50                 EQU                     0x0274
-_end_0x028d         EQU                     0x0287
+_1                  EQU                     0x0239
+_10                 EQU                     0x0239
+_20                 EQU                     0x023d
+_30                 EQU                     0x0250
+_40                 EQU                     0x0265
+_50                 EQU                     0x027e
+_end_0x0297         EQU                     0x0291
 
 ; Variables
 _Y                  EQU                     0x0030
@@ -44,10 +44,13 @@ _C                  EQU                     0x0036
 
 ; Strings
 
+; Define Bytes
+
 ; Lookup Tables
 
 ; Code
 _entryPoint_        Initialise              
+                    InitRealTimeProc        
                     InitEqOp                
                     InitNeOp                
                     InitLeOp                
@@ -87,7 +90,7 @@ _50                 LDWI                    newLineScroll
                     CALL                    giga_vAC
                     ForNextLoopUp           _Y _20 7                        ; PRINT: NEXT Y
 
-_end_0x028d         BRA                     _end_0x028d                     ; END
+_end_0x0297         BRA                     _end_0x0297                     ; END
 
 
 
@@ -97,26 +100,46 @@ _end_0x028d         BRA                     _end_0x028d                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-convertEqOp         EQU     0x7fc3
-convertNeOp         EQU     0x7fcc
-convertLeOp         EQU     0x7fd5
-convertGeOp         EQU     0x7fde
-convertLtOp         EQU     0x7fe7
-convertGtOp         EQU     0x7ff0
-multiply16bit       EQU     0x7ea0
+realTimeProc        EQU     0x7fc3
+convertEqOp         EQU     0x7fcc
+convertNeOp         EQU     0x7fd5
+convertLeOp         EQU     0x7fde
+convertGeOp         EQU     0x7fe7
+convertLtOp         EQU     0x7ff0
+convertGtOp         EQU     0x7ea0
+multiply16bit       EQU     0x7ea9
 resetVideoTable     EQU     0x7ba0
 initClearFuncs      EQU     0x7fa0
 clearCursorRow      EQU     0x7bbc
 printInit           EQU     0x7aa0
 printChar           EQU     0x7da0
-atTextCursor        EQU     0x7ec3
+atTextCursor        EQU     0x7ecc
 newLineScroll       EQU     0x7ca0
-convertEqOpAddr     EQU     0x00d2
-convertNeOpAddr     EQU     0x00d4
-convertLeOpAddr     EQU     0x00d6
-convertGeOpAddr     EQU     0x00d8
-convertLtOpAddr     EQU     0x00da
-convertGtOpAddr     EQU     0x00dc
+realTimeProcAddr    EQU     0x00dc
+convertEqOpAddr     EQU     0x00d0
+convertNeOpAddr     EQU     0x00d2
+convertLeOpAddr     EQU     0x00d4
+convertGeOpAddr     EQU     0x00d6
+convertLtOpAddr     EQU     0x00d8
+convertGtOpAddr     EQU     0x00da
+
+
+numericLabel        EQU     register0
+defaultLabel        EQU     register1
+lutLabs             EQU     register2
+lutAddrs            EQU     register3
+lutIndex            EQU     register4
+lutLabel            EQU     register5
+
+
+                    ; runs real time, (time sliced), code at regular intervals
+realTimeProc        PUSH
+                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI/SPRITE etc routines
+                    CALL    giga_vAC
+                    POP
+                    RET
+                    
+realTimeStub        RET
 
 
                     ; convert equal to into a boolean

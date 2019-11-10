@@ -74,6 +74,8 @@ str_0x7fdd          DB                      9 ' gtBASIC '
 str_0x7fe7          EQU                     0x7fe7
 str_0x7fe7          DB                      4 'DONE'
 
+; Define Bytes
+
 ; Lookup Tables
 
 ; Code
@@ -200,12 +202,12 @@ printInt16          EQU     0x7aa0
 printChar           EQU     0x77a0
 newLineScroll       EQU     0x7ca0
 realTimeProcAddr    EQU     0x00dc
-convertEqOpAddr     EQU     0x00d2
-convertNeOpAddr     EQU     0x00d4
-convertLeOpAddr     EQU     0x00d6
-convertGeOpAddr     EQU     0x00d8
-convertLtOpAddr     EQU     0x00da
-convertGtOpAddr     EQU     0x00dc
+convertEqOpAddr     EQU     0x00d0
+convertNeOpAddr     EQU     0x00d2
+convertLeOpAddr     EQU     0x00d4
+convertGeOpAddr     EQU     0x00d6
+convertLtOpAddr     EQU     0x00d8
+convertGtOpAddr     EQU     0x00da
 
 
 numericLabel        EQU     register0
