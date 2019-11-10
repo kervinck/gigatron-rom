@@ -1,17 +1,20 @@
+============================
 On serialRaw and buttonState
 ============================
-From: https://forum.gigatron.io/viewtopic.php?f=4&t=138
+
+[Adapted from: https://forum.gigatron.io/viewtopic.php?f=4&t=138]
 
 There are two system variables in page zero that appear to have the
 same function. At least, you may be fooled into believing that if
 you simply observe them in a simulator: [$000f] serialRaw and [$0011]
 buttonState. In reality they have a somewhat different function,
-and this difference is about to become significant.
+and this difference has become significant.
 
 In the README they're described as follows:
         000f      serialRaw     New raw serial read
         0011      buttonState   Edge-triggered and resettable input bits
 
+---------
 serialRaw
 ---------
 
@@ -24,11 +27,11 @@ action button [A] is sent as 127, and that is also ASCII Delete).
 
 The BabelFish software in Pluggy McPlugface normally sends ASCII
 codes 3 times in succession, so that even slower software doesn't
-have to miss a key while auto-repeat still works. It maps cursor
-keys to game controller bit patterns, and it sends those for as
-long as those keys are pressed down. BabelFish has a few more such
-tricks so that PS/2 keyboards not only work properly, but also act
-as a functional game controller replacement.
+have to miss a key, while also the keyboard's auto-repeat still
+works.  It maps cursor keys to game controller bit patterns, and
+it sends those for as long as those keys are pressed down. BabelFish
+has a few more such tricks so that PS/2 keyboards not only work
+properly, but also act as a functional game controller replacement.
 
 The game controller buttons are normally mapped to bits as follows:
         bit 0: buttonRight
@@ -44,6 +47,7 @@ These bits are normally 0 when pressed down, and 1 when idle. But
 this is not universally true anymore as far as serialRaw is concerned!
 Enter buttonState:
 
+-----------
 buttonState
 -----------
 
@@ -72,19 +76,19 @@ With that there's no need to do edge-detection yourself!
 
 New game controller types...
 
-Second, and the main reason for posting this now: as of recently
-we're supporting a second type of game controller. These controllers
-look and feel exactly the same, except they have a different chip
-inside that sends different raw signals. The vastly oversimplified
-story is: to keep software compatible, the input handler recognises
-these game controllers automatically, and converts their values to
-the "old" values in buttonState. But it doesn't do that for serialRaw,
-because then keyboards wouldn't work anymore. And with that, the
-bits in serialRaw and buttonState don't have the same meaning
-anymore...
+Second, of the summer of 2019 we're supporting a second type of
+game controller. These controllers look and feel exactly the same,
+except they have a different chip inside that sends different raw
+signals. The vastly oversimplified story is: to keep software
+compatible, the input handler recognises these game controllers
+automatically, and converts their values to the "old" values in
+buttonState. But it doesn't do that for serialRaw, because then
+keyboards wouldn't work anymore. And with that, the bits in serialRaw
+and buttonState don't have the same meaning anymore...
 
-Take-home message:
-------------------
+-----------------
+Take-home message
+-----------------
 
 If you want to process game controller buttons: look at buttonState: peek(17) or LD $11
 
@@ -93,6 +97,7 @@ If you want to process ASCII input: look at serialRaw: peek(15) or LD $0f
 P.S: Tetronis and Bricks were already using buttonState, so they
 remain compatible. But two of our own programs needed a fix.
 
+---------
 Follow-up
 ---------
 
