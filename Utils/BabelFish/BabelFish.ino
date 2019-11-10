@@ -459,9 +459,7 @@ void loop()
       }
       if (serialByte == 255)           // Skip if no button pressed
         break;
-      critical();
-      sendFirstByte(serialByte);       // Forward byte to Gigatron
-      nonCritical();
+      sendController(serialByte, 1);   // Forward byte to Gigatron
     } // Loop locally while active to skip PS/2 and waitVSync
 
     // Allow PS/2 interrupts for a reasonable window
