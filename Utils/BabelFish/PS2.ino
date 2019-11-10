@@ -40,7 +40,6 @@
 // XXX Test keymap for DE
 // XXX Test keymap for FR
 // XXX Test keymap for GB
-// XXX Test keymap for IT
 // XXX Test keymap for ES
 // XXX Issue: Sometimes keyboard starts injecting break codes
 //     when pressing [buttonA] + arrow keys, making it impossible
