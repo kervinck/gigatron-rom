@@ -90,11 +90,29 @@
 
 // Arduino   AVR    Gigatron Schematic Controller PCB              Gigatron Controller
 // Nano      Name   OUT bit            CD4021     74HC595 (U39)    DB9 (J4) DB9
-// -------   ------ -------- --------- ---------- ---------------- -------- -------
+// --------- ------ -------- --------- ---------- ---------------- -------- -------
 // Pin J2-15 PORTB5 None     SER_DATA  11 SER INP 14 SER           2        None
 // Pin J1-15 PORTB4 7 vSync  SER_LATCH  0 PAR/SER None             3        3
 // Pin J1-14 PORTB3 6 hSync  SER_PULSE 10 CLOCK   11 SRCLK 12 RCLK 4        4
 // Pin J1-13 PORTB2 None     None      None       None             None     2
+
+//                   SER_DATA
+//                   |
+//    O  O  O  O  O  O
+// --------------------+
+//                  D13|
+//  Arduino      +-------+
+//   Nano        |       |
+//    / \        |       |
+//   /   \       |  USB  |
+//   \   /       |       |
+//    \ /        |       |
+//               +-------+
+//              D11 D12|
+// --------------------+
+//    O  O  O  O  O  O
+//                |  |
+//        SER_PULSE  SER_LATCH
 
 #if defined(ARDUINO_AVR_NANO)
  // at67's setup
@@ -135,6 +153,9 @@
 // MISO    PORTB3 7 vSync  SER_LATCH  0 PAR/SER None             3
 // MOSI    PORTB2 6 hSync  SER_PULSE 10 CLOCK   11 SRCLK 12 RCLK 4
 
+//        SER_LATCH  SER_DATA
+//                |  |
+//    O  O  O  O  O  O
 // --------------------+
 //               Reset |
 // Arduino       +---+ |
@@ -146,6 +167,9 @@
 //        Port  .o o o |
 //               1 3 5 |
 // --------------------+
+//    O  O  O  O  O  O
+//                   |
+//                   SER_PULSE
 
 #if defined(ARDUINO_AVR_MICRO)
  // WattSekunde's setup
@@ -205,7 +229,7 @@
  #define gigatronPinToBitMask(pin) (1 << (pin))
 
  // Pins for Controller
- #define gameControllerDataPin -1 // XXX Maybe use ~RESET for this some day
+ #define gameControllerDataPin -1
 
  // Pins for PS/2 keyboard
  #define keyboardClockPin PB4
@@ -245,8 +269,8 @@ const byte life3_gt1[]     PROGMEM = {
 const byte starfield_gt1[] PROGMEM = {
   #include "starfield.h"
 };
-const byte tetris_gt1[]    PROGMEM = {
-  #include "tetris.h"
+const byte tetronis_gt1[]  PROGMEM = {
+  #include "tetronis.h"
 };
 
 const struct { const byte *gt1; const char *name; } gt1Files[] = {
@@ -262,7 +286,7 @@ const struct { const byte *gt1; const char *name; } gt1Files[] = {
 #endif
 #if maxStorage >= 30000
   { bricks_gt1,    "Bricks game [xbx]"        }, // 1607 bytes
-  { tetris_gt1,    "Tetris game [at67]"       }, // 9868 bytes
+  { tetronis_gt1,  "Tetronis game [at67]"     }, // 9840 bytes
 #endif
   { NULL,          "-SAVED-"                  }, // From EEPROM, not PROGMEM
 };
@@ -343,6 +367,10 @@ void setup()
   PORTB |= gigatronDataBit; // Send 1 when idle
   DDRB = gigatronDataBit;
 
+  #if gameControllerDataPin >= 0
+    pinMode(gameControllerDataPin, INPUT_PULLUP); // Force HIGH if disconnected
+  #endif
+
   // Open upstream communication
   #if hasSerial
     Serial.begin(115200);
@@ -375,11 +403,9 @@ void loop()
   nonCritical();
 
   switch (newValue) {
-
     case 9:                            // Received one bit
       inByte |= inBit;
       // !!! FALL THROUGH !!!
-
     case 7:                            // Received zero bit
       inBit <<= 1;
 
@@ -387,7 +413,7 @@ void loop()
         if (hasChars)                  // Only break if this isn't an empty line
           sendController(3, 10);       // Send long Ctrl-C back to stop LIST
 
-      if (inBit != 0)
+      if (inBit != 0)                  // Still a partial byte
         break;
 
       EEPROM.write(saveIndex++, inByte);// Store every full byte
@@ -453,17 +479,17 @@ void loop()
 
   // Commands from upstream USB (PC/laptop)
   #if hasSerial
-    static char line[32], next = 0, last;
+    #define lineBuffer outBuffer
+    static char next = 0, last;
     static byte lineIndex = 0;
     if (Serial.available()) {
       last = next;
       char next = Serial.read();
       sendEcho(next, last);
-      if (lineIndex < sizeof line)
-        line[lineIndex++] = next;       // Our command buffer is limited
+      lineBuffer[lineIndex++] = next;
       if (next == '\r' || next == '\n') {
-        line[lineIndex-1] = '\0';
-        doCommand(line);
+        lineBuffer[lineIndex-1] = '\0';
+        doCommand(lineBuffer);
         lineIndex = 0;
       }
     }
@@ -494,7 +520,7 @@ bool detectGigatron()
   float hSync = (T[0] + T[2]) / (96 * S / 800); // Standard hSync signal
 
   // Check that vSync and hSync characteristics look normal
-  return 0.95 <= vSync && vSync <= 1.20 && 0.90 <= hSync && hSync <= 1.10;
+  return 0.95 <= vSync && vSync <= 1.25 && 0.90 <= hSync && hSync <= 1.10;
 }
 
 void sendEcho(char next, char last)
@@ -642,7 +668,7 @@ void doReset(int n)
     Serial.println(":Resetting Gigatron");
     Serial.flush();
   #endif
-  sendController(~buttonStart, n ? n : 128+32);
+  sendController(~buttonStart, n ? n : 150);
 
   // Wait for main menu to be ready
   delay(1500);
@@ -709,7 +735,7 @@ void doTerminal()
           case 9: out = ~buttonB;                  break;    // Same as PS/2 above
           case '\r': out = '\n';                   break;    // Treat as \n
           case '\n': if (last == '\r') continue;   break;    // Swallow if after \r
-          case '\e':                               continue; // 999 escape sequence
+          case '\e':                               continue; // ANSI escape sequence
           case '[': if (last == '\e') ansi = true; continue;
           case 'A': if (ansi) out = ~buttonUp;     break;    // Map cursor keys to buttons
           case 'B': if (ansi) out = ~buttonDown;   break;
@@ -1119,7 +1145,7 @@ void sendSavedFile()
       break;                            // So we only check this after a newline.
     sendController(nextByte, 2);        // A single frame is sometimes too fast
     if (nextByte == 13)                 // "A carriage return takes more time"
-      lineDelay = 300 + j * 50;         // Reality: Micro-Soft BASIC is s l o w
+      lineDelay = 300 + j * 50;         // Reality: Micro-Soft BASIC is s-l-o-w
     delay((j % 26) ? 20                 // Allow Gigatron software to draw the char
                    : 300);              // And give more time at line wrap
     if (nextByte == 10) {               // End of line

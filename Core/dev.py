@@ -96,24 +96,24 @@
 #  DONE Fix clobbering of 0x81 by SPI SYS functions #103
 #  DONE Control variable to black out the area at the top of the screen
 #  DONE Fix possible video timing error in Loader #100
+#  DONE Fix zero page usage in Bricks and Tetronis #41
+#  DONE Add CALLI instruction to vCPU
+#  DONE Main: add Apple1 to main menu
+#  DONE Replace egg with MSBASIC
+#  XXX  Add CMPHS/CMPHU instructions to vCPU XXX Only needs testing
+#  XXX  SPI: Boot from *.GT1 file if SDC/MMC detected
+#  XXX  Reduce the Pictures application ROM footprint #120
+#  XXX  Discoverable ROM contents #46
 #  XXX  Formally Support SPI and RAM expander: publish in interface.json
-#  XXX  Add CALLI instruction to vCPU
-#  XXX  Add CMPHS/CMPHU instructions to vCPU
+#  XXX  SPI: Auto-detect banking, 64K and 128K
 #  XXX  v6502: Test with Apple1 BASIC
 #  XXX  v6502: Stub D010-D013 with JSR targets for easier patching
-#  XXX  v6502: SYS_v6502_IRQ
-#  XXX  v6502: SYS_v6502_NMI
-#  XXX  v6502: SYS_v6502_RESET
 #  XXX  v6502: add 65c02 opcodes? http://nparker.llx.com/a2/opcodes.html
-#  XXX  Main: add Apple1 to main menu
-#  XXX  SPI: Boot from BOOT.GT1 file if SDC/MMC detected
-#  XXX  SPI: Auto-detect banking, 64K and 128K
-#  XXX  Fix zero page usage in Bricks and Tetronis #41
-#  XXX  Discoverable ROM contents #46
 #  XXX  Racer: Make noise when crashing
 #  XXX  Racer: Control speed with up/down as well
 #  XXX  Main: Better startup chime
-#  XXX  Faster SYS_Exec_88, with start address?
+#  XXX  Main: Some startup logo as intro?
+#  XXX  Faster SYS_Exec_88, with start address (GT1)?
 #  XXX  Let SYS_Exec_88 clear channelMask when loading into live variables
 #
 #  Ideas for ROM v6+
@@ -5350,7 +5350,7 @@ for application in argv[1:]:
     if pc()&255 > 0:
       trampoline()
     print 'Convert type .rgb/parallel at $%04x' % pc()
-    f = open(application)
+    f = open(application, 'rb')
     raw = f.read()
     f.close()
     label(name)
@@ -5373,6 +5373,19 @@ for application in argv[1:]:
         else:
           trampoline3b()
     print ' Pixels %dx%d' % (width, height)
+
+  # XXX Provisionally bring ROMv1 egg back as placeholder for Pictures
+  elif application.endswith('/gigatron.rgb'):
+    print('Convert type gigatron.rgb at $%04x' % pc())
+    f = open(application, 'rb')
+    raw = f.read()
+    f.close()
+    label(name)
+    for i in xrange(len(raw)):
+      if i&255 < 251:
+        ld(ord(raw[i]))
+      elif i&255 == 251:
+        trampoline()
 
   else:
     assert False
