@@ -1,0 +1,118 @@
+============================
+On serialRaw and buttonState
+============================
+
+[Adapted from: https://forum.gigatron.io/viewtopic.php?f=4&t=138]
+
+There are two system variables in page zero that appear to have the
+same function. At least, you may be fooled into believing that if
+you simply observe them in a simulator: [$000f] serialRaw and [$0011]
+buttonState. In reality they have a somewhat different function,
+and this difference has become significant.
+
+In the README they're described as follows:
+        000f      serialRaw     New raw serial read
+        0011      buttonState   Edge-triggered and resettable input bits
+
+---------
+serialRaw
+---------
+
+serialRaw is the raw value of the 74HC595 shift register U39 as
+sampled 60 times per second. It reads 255 when idle or when there's
+no device connected. It reads an ASCII code when a key is pressed.
+Game controllers send byte values that are normally different from
+ASCII codes (but not always: the classic counterexample is that
+action button [A] is sent as 127, and that is also ASCII Delete).
+
+The BabelFish software in Pluggy McPlugface normally sends ASCII
+codes 3 times in succession, so that even slower software doesn't
+have to miss a key, while also the keyboard's auto-repeat still
+works.  It maps cursor keys to game controller bit patterns, and
+it sends those for as long as those keys are pressed down. BabelFish
+has a few more such tricks so that PS/2 keyboards not only work
+properly, but also act as a functional game controller replacement.
+
+The game controller buttons are normally mapped to bits as follows:
+        bit 0: buttonRight
+        bit 1: buttonLeft
+        bit 2: buttonDown
+        bit 3: buttonUp
+        bit 4: buttonStart
+        bit 5: buttonSelect
+        bit 6: buttonB
+        bit 7: buttonA
+
+These bits are normally 0 when pressed down, and 1 when idle. But
+this is not universally true anymore as far as serialRaw is concerned!
+Enter buttonState:
+
+-----------
+buttonState
+-----------
+
+First of all, buttonState typically follows serialRaw, but all the
+way back since ROM v1 it had an extra featue. [$0010] is an internal
+variable that hints at what's going on:
+
+        0010      (serialLast)  Previous serial read (used for edge detection)
+
+In short: buttonState responds only to button press changes: a bit
+becomes 0 if the corresponding button was just pressed down. And
+it becomes 1 again once it is released. The intent is that with
+this you can reset the bits yourself as soon as you've processed
+them. This extra feature is handy if you only want to take a single
+action each time a button is pressed down (instead of a continuous
+action while pressed):
+
+ 1. you detect a 0 bit, indicating a button was just pressed down
+ 2. you take your action for that button
+ 3. you reset only that bit to 1
+ 4. re-enter your I/O processing and handle the other bits
+ 5. even if that button is still pressed down, you see it as released
+    until the next press down
+
+With that there's no need to do edge-detection yourself!
+
+New game controller types...
+
+Second, of the summer of 2019 we're supporting a second type of
+game controller. These controllers look and feel exactly the same,
+except they have a different chip inside that sends different raw
+signals. The vastly oversimplified story is: to keep software
+compatible, the input handler recognises these game controllers
+automatically, and converts their values to the "old" values in
+buttonState. But it doesn't do that for serialRaw, because then
+keyboards wouldn't work anymore. And with that, the bits in serialRaw
+and buttonState don't have the same meaning anymore...
+
+-----------------
+Take-home message
+-----------------
+
+If you want to process game controller buttons: look at buttonState: peek(17) or LD $11
+
+If you want to process ASCII input: look at serialRaw: peek(15) or LD $0f
+
+P.S: Tetronis and Bricks were already using buttonState, so they
+remain compatible. But two of our own programs needed a fix.
+
+---------
+Follow-up
+---------
+
+Question:
+
+I tried to save some instructions while developing the Sprint Paint
+app and set the entire buttonState to $ff instead of individual
+bits -- then I realized I had turned off the soft reset functionality
+by doing so.
+
+Answer:
+
+So far I only set buttonState's individual bits, not the whole
+bunch. But a quick test in BASIC makes me believe that the soft
+reset function keeps working if you restore buttonState in one go
+with $ef (or $cf) instead of $ff.
+
+-- End of document --

@@ -95,8 +95,11 @@ Software start
       as the startup chime. But the sound isn't played yet.
     - Change to MODE 1 (one black scanline per pixel line)
 
-19. Load and execute Main.gcl
-    - This plays the startup chime and shows the menu
+19. Load and execute MainMenu.gcl
+    - Easter Egg activation is detected
+    - Four sound channels are enabled
+    - The startup chime is played
+    - The menu is shown
 
 20. Wait for user input while flashing the arrow
 
