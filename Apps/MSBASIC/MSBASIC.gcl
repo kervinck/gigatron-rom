@@ -21,18 +21,34 @@ gcl0x
 
         Implemented:
         - 9 digit floating point (40 bits)
-        - WAIT-6502 Easter Egg
+        - Simple line editing with blinking cursor
+        - Strings,LEFT$(), MID$(), ...
+        - Multidimensional arrays
+        - Break with Ctrl-C
+        - INPUT and GET work as expected
+        - POS() and TAB()
         - TIME and TIME$, wrapping after 23:59:59
-        - Simple line editing
         - SAVE to BabelFish
         - 64K support
+        - Pi symbol and constant: use backtick key (`) or CHR$(255)
+        - Ctrl-G, CHR$(7) a.k.a. "BEL" makes a sound
+        - WAIT-6502 Easter Egg
 
         Restrictions:
-        - Stack space is severely limited
+        - Uses ROM v4 or later (for v6502 of course)
+        - 11 text rows instead of 15, also on 64K
+        - Stack space is limited:
+          - GOSUB depth is about 8 levels
+          - FOR-TO-NEXT nesting upto three levels
+        - When sending a program from Pluggy McPlugface, you must
+          update BabelFish to get an adjusted typing rate (MSBASIC
+          needs time for tokenising)
+        - No file commands (OPEN, CLOSE, PRINT#, INPUT#, GET#, CMD)
+        - No SYS command
 
         Memory map:
         $30 - $37               GCL variables ($30 p, $32 CharOut, $34 j, $36 i)
-        $38 - $a7               MS BASIC variables, relocated
+        $38 - $a7               MS BASIC variables, relocated for Gigatron
         $a8 - $ff               Stack (88 bytes)
         $100                    Video indirection table (modified)
         $200 -                  Version check / TI$ and floating point buffer
@@ -54,9 +70,6 @@ gcl0x
         $3100 -                 (6502) LOAD
         $7100 - $7fff           Free RAM giving 3840 bytes user space
 }
-
-_k=$2a                          {Parking spot for keyboard handler: sysArgs6}
-                                {Note when using _k: sysArgs6 is also v6502_X!}
 
 _TISTR0=$200                    {Timer high byte}
 _TISTR1=$201                    {Timer middle byte}
@@ -733,9 +746,9 @@ _Setup1=*
     READY prompt is there, all garbage pixels are gone.
   }
   6 [do
-    \k.
+    \sysArgs6.
     13 CharOut!                 {Also prepares p for character printing}
-    \k, 1- if>0loop]
+    \sysArgs6, 1- if>0loop]
 
   &_MainLoop _vLR=              {Prepare transfer to main loop}
   &_COLD_START                  {Start address for 6502 program}

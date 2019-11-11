@@ -96,23 +96,25 @@
 // Pin J1-14 PORTB3 6 hSync  SER_PULSE 10 CLOCK   11 SRCLK 12 RCLK 4        4
 // Pin J1-13 PORTB2 None     None      None       None             None     2
 
-//                   SER_DATA
-//                   |
-//    O  O  O  O  O  O
-// --------------------+
-//                  D13|
-//  Arduino      +-------+
-//   Nano        |       |
-//    / \        |       |
-//   /   \       |  USB  |
-//   \   /       |       |
-//    \ /        |       |
-//               +-------+
-//              D11 D12|
-// --------------------+
-//    O  O  O  O  O  O
-//                |  |
-//        SER_PULSE  SER_LATCH
+//                     SER_DATA
+//                     |
+//      O  O  O  O  O  O
+//   --------------------+
+//                    13 |
+//    Arduino      +-------+
+//     Nano        |       |
+//      / \        |       |
+//     /   \       |  USB  |
+//     \   /       |       |
+//      \ /        |       |
+//                 +-------+
+//         8  9 10 11 12 |
+// ----------------------+
+//      O  O  O  O  O  O
+//         |  |  |  |  |
+// CTL_LATCH  |  |  |  SER_LATCH
+//    CTL_PULSE  |  SER_PULSE
+//        CTL_DATA
 
 #if defined(ARDUINO_AVR_NANO)
  #define platform "ArduinoNano"
