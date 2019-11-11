@@ -11,16 +11,18 @@ register6           EQU                     register0 + 0x0C
 register7           EQU                     register0 + 0x0E
 register8           EQU                     register0 + 0x10
 register9           EQU                     register0 + 0x12
-register10          EQU                     0x0024
-register11          EQU                     0x0026
-register12          EQU                     0x0028
-register13          EQU                     0x002A
-fgbgColour          EQU                     register0 + 0x14
-cursorXY            EQU                     register0 + 0x16
-midiStream          EQU                     register0 + 0x18
-midiDelay           EQU                     register0 + 0x1A
-frameCountPrev      EQU                     register0 + 0x1C
-miscFlags           EQU                     register0 + 0x1E
+register10          EQU                     register0 + 0x14
+register11          EQU                     register0 + 0x16
+register12          EQU                     register0 + 0x18
+register13          EQU                     register0 + 0x1A
+register14          EQU                     register0 + 0x1C
+register15          EQU                     register0 + 0x1E
+fgbgColour          EQU                     register0 + 0x20
+cursorXY            EQU                     register0 + 0x22
+midiStream          EQU                     register0 + 0x24
+midiDelay           EQU                     register0 + 0x26
+frameCountPrev      EQU                     register0 + 0x28
+miscFlags           EQU                     register0 + 0x2A
 
 ; Includes
 %include            include/gigatron.i
@@ -31,22 +33,22 @@ _entryPoint_        EQU                     0x0200
 _10                 EQU                     0x09c5
 _test               EQU                     0x10b2
 _Big                EQU                     0x14b4
-_end_0x0553         EQU                     0x0fe4
-_end_0x056c         EQU                     0x10b0
-_end_0x6996         EQU                     0xc7c2
+_end_0x0557         EQU                     0x0fe4
+_end_0x0570         EQU                     0x10b0
+_end_0x699a         EQU                     0xc7c2
 _page_0x08a0        EQU                     0x08a0
 _page_0x09a0        EQU                     0x09a0
-_next_0x0370        EQU                     0x09d5
-_next_0x0374        EQU                     0x09d9
-_next_0x0378        EQU                     0x09dd
-_next_0x037c        EQU                     0x09e1
+_next_0x0374        EQU                     0x09d5
+_next_0x0378        EQU                     0x09d9
+_next_0x037c        EQU                     0x09dd
+_next_0x0380        EQU                     0x09e1
 _page_0x0aa0        EQU                     0x0aa0
 _page_0x0ba0        EQU                     0x0ba0
 _page_0x0ca0        EQU                     0x0ca0
 _page_0x0da0        EQU                     0x0da0
 _page_0x0ea0        EQU                     0x0ea0
 _page_0x0fa0        EQU                     0x0fa0
-_next_0x0559        EQU                     0x0fea
+_next_0x055d        EQU                     0x0fea
 _page_0x10a0        EQU                     0x10a0
 _page_0x11a0        EQU                     0x11a0
 _page_0x12a0        EQU                     0x12a0
@@ -253,14 +255,14 @@ str_0x7fac          DB                      25 'lalalalala23d455345634650'
 ; Lookup Tables
 
 ; Code
-_entryPoint_        Initialise              
-                    InitRealTimeProc        
+_entryPoint_        InitRealTimeProc        
                     InitEqOp                
                     InitNeOp                
                     InitLeOp                
                     InitGeOp                
                     InitLtOp                
-                    InitGtOp                                                ; INIT
+                    InitGtOp                
+                    Initialise                                              ; INIT
 
                     LDWI                    str_0x7fa0
                     STW                     _frog$                          ; frog$ = hexw$(&hb00b)
@@ -374,16 +376,16 @@ _10                 LDW                     _z
                     LDI                     2
                     STW                     0xb2                            ; for i=z+1 to dog-1 step 2
 
-_next_0x0370        LDI                     1
+_next_0x0374        LDI                     1
                     STW                     _j                              ; for j = 1 to 0
 
-_next_0x0374        LDI                     1
+_next_0x0378        LDI                     1
                     STW                     _jj                             ; for jj = 1 to 2 step 1
 
-_next_0x0378        LDI                     1
+_next_0x037c        LDI                     1
                     STW                     _ss                             ; for ss = 1 to 5 step 1
 
-_next_0x037c        LDW                     _i
+_next_0x0380        LDW                     _i
                     STW                     mathX
                     LDI                     3
                     STW                     mathY
@@ -445,17 +447,17 @@ _page_0x0ca0        LDW                     0x82
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print i*3+1;" ";i/2;" ";j*3;" ";j+23;" ";i+55;" ";i+j;" ";i-j
 
-                    ForNextLoopUp           _ss _next_0x037c 5              ; next ss
+                    ForNextLoopUp           _ss _next_0x0380 5              ; next ss
 
-                    ForNextLoopUp           _jj _next_0x0378 2              ; next jj
+                    ForNextLoopUp           _jj _next_0x037c 2              ; next jj
 
-                    ForNextLoopDown         _j _next_0x0374 0               ; next j
+                    ForNextLoopDown         _j _next_0x0378 0               ; next j
 
                     STW                     0x82
                     LDWI                    _page_0x0da0
                     CALL                    giga_vAC
 _page_0x0da0        LDW                     0x82
-                    ForNextLoopStepUp       _i _next_0x0370 0xb0 0xb2       ; next i
+                    ForNextLoopStepUp       _i _next_0x0374 0xb0 0xb2       ; next i
 
                     LDWI                    _test
                     CALL                    giga_vAC                        ; gosub   test
@@ -502,21 +504,21 @@ _page_0x0fa0        LDW                     0x82
                     LDWI                    -16657
                     PrintAcHexWord                                          ; print hex$(80);" ";hexw$(&hdead);" ";hexw$(&hbeef);
 
-_end_0x0553         BRA                     _end_0x0553                     ; END
+_end_0x0557         BRA                     _end_0x0557                     ; END
 
                     LDI                     0
                     STW                     _ii                             ; for ii = 0 to 0 step 1
 
-_next_0x0559        LDWI                    _Big
+_next_0x055d        LDWI                    _Big
                     CALL                    giga_vAC                        ; gosub Big
 
                     STW                     0x82
                     LDWI                    _page_0x10a0
                     CALL                    giga_vAC
 _page_0x10a0        LDW                     0x82
-                    ForNextLoopUp           _ii _next_0x0559 0              ; next ii
+                    ForNextLoopUp           _ii _next_0x055d 0              ; next ii
 
-_end_0x056c         BRA                     _end_0x056c                     ; END
+_end_0x0570         BRA                     _end_0x0570                     ; END
 
 _test               PUSH                    
                     LDW                     _i
@@ -8397,7 +8399,7 @@ _page_0xc700        LDW                     0x82
                     POP                     
                     RET                                                     ; return
 
-_end_0x6996         BRA                     _end_0x6996                     ; END
+_end_0x699a         BRA                     _end_0x699a                     ; END
 
 
 
@@ -8407,25 +8409,25 @@ _end_0x6996         BRA                     _end_0x6996                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7fe9
-convertEqOp         EQU     0x7ff2
-convertNeOp         EQU     0x7ea0
-convertLeOp         EQU     0x7ea9
-convertGeOp         EQU     0x7eb2
-convertLtOp         EQU     0x7ebb
-convertGtOp         EQU     0x7ec4
+realTimeProc        EQU     0x7fc6
+convertEqOp         EQU     0x7fcf
+convertNeOp         EQU     0x7fd8
+convertLeOp         EQU     0x7fe1
+convertGeOp         EQU     0x7fea
+convertLtOp         EQU     0x7ff3
+convertGtOp         EQU     0x7ea0
 multiply16bit       EQU     0x7ca0
 divide16bit         EQU     0x7aa0
-resetVideoTable     EQU     0x7cdc
-initClearFuncs      EQU     0x7fc6
+resetVideoTable     EQU     0x7ce0
+initClearFuncs      EQU     0x7ea9
 clearCursorRow      EQU     0x77a0
-printInit           EQU     0x7eea
-printText           EQU     0x7ecd
+printInit           EQU     0x7ee9
+printText           EQU     0x7ecc
 printDigit          EQU     0x78d0
 printInt16          EQU     0x7ba0
 printChar           EQU     0x79a0
 printHexByte        EQU     0x78a0
-printHexWord        EQU     0x7cc3
+printHexWord        EQU     0x7cc7
 newLineScroll       EQU     0x7da0
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
@@ -8506,10 +8508,10 @@ mathX               EQU     register0
 mathY               EQU     register1
 mathSum             EQU     register2
 mathMask            EQU     register3
-mathRem             EQU     register4
-mathSign            EQU     register5
-mathScratch         EQU     register6
-mathShift           EQU     register7
+mathRem             EQU     register8
+mathSign            EQU     register9
+mathScratch         EQU     register10
+mathShift           EQU     register11
     
     
                     ; accumulator = mathX * mathY, (result 16bit)
@@ -8530,7 +8532,9 @@ multiply16_skip     LDW     mathX
                     LDW     mathMask
                     ADDW    mathMask
                     BNE     multiply16_loop
-                    
+                    PUSH
+                    CALL    realTimeProcAddr
+                    POP
                     LDW     mathSum
                     RET
 
@@ -8571,7 +8575,10 @@ divide16_skip3      LDW     mathX
                     STW     mathRem
                     INC     mathX
                     
-divide16_skip4      LDW     mathScratch
+divide16_skip4      PUSH
+                    CALL    realTimeProcAddr
+                    POP
+                    LDW     mathScratch
                     ADDI    1
                     ANDI    0x0F
                     BNE     divide16_loop
@@ -8590,20 +8597,22 @@ xreset              EQU     register0
 xcount              EQU     register1
 ycount              EQU     register2
 treset              EQU     register3
-breset              EQU     register4
-top                 EQU     register5
-bot                 EQU     register6
-vramAddr            EQU     register7
-evenAddr            EQU     register8
+breset              EQU     register8
+top                 EQU     register9
+bot                 EQU     register10
+vramAddr            EQU     register11
+evenAddr            EQU     register12
     
     
                     ; resets video table pointers
-resetVideoTable     LDWI    0x0008
+resetVideoTable     PUSH
+                    LDWI    0x0008
                     STW     vramAddr
                     LDWI    giga_videoTable
                     STW     evenAddr
     
-resetVT_loop        LDW     vramAddr
+resetVT_loop        CALL    realTimeProcAddr
+                    LDW     vramAddr
                     DOKE    evenAddr
                     INC     evenAddr
                     INC     evenAddr
@@ -8612,6 +8621,7 @@ resetVT_loop        LDW     vramAddr
                     LD      vramAddr
                     SUBI    giga_yres+8
                     BLT     resetVT_loop
+                    POP
                     RET
 
 
@@ -8643,12 +8653,12 @@ textBak             EQU     register0
 textLen             EQU     register1
 textFont            EQU     register2
 textChr             EQU     register3
-textHex             EQU     register4
-textSlice           EQU     register5
-scanLine            EQU     register6
-digitMult           EQU     register7
-digitIndex          EQU     register8
-clearLoop           EQU     register9
+textHex             EQU     register8
+textSlice           EQU     register9
+scanLine            EQU     register10
+digitMult           EQU     register11
+digitIndex          EQU     register12
+clearLoop           EQU     register13
     
     
                     ; prints text string pointed to by the accumulator
@@ -8702,9 +8712,9 @@ printInt16          PUSH
                     CALL    giga_vAC
                     LDWI    0
                     SUBW    textNum
-printI16_pos        STW     textNum    
+                    STW     textNum    
     
-                    LDWI    10000
+printI16_pos        LDWI    10000
                     STW     digitMult
                     LDWI    printDigit
                     CALL    giga_vAC
@@ -8770,12 +8780,12 @@ printC_slice        LDW     textFont                        ; text font slice ba
                     LUP     0x00                            ; get ROM slice
                     ST      giga_sysArg2
                     SYS     0xCB                            ; draw vertical slice, SYS_VDrawBits_134, 270 - 134/2 = 0xCB
-                    CALL    realTimeProcAddr
                     INC     textFont                        ; next vertical slice
                     INC     giga_sysArg4                    ; next x
                     LoopCounter textSlice printC_slice
                     ST      giga_sysArg2                    ; result of loopCounter is always 0
                     SYS     0xCB                            ; draw last blank slice
+                    CALL    realTimeProcAddr
     
                     LD      cursorXY
                     ADDI    0x06
@@ -8832,7 +8842,8 @@ printHexWord        PUSH
 
 
                     ; clears the top 8 lines of pixels in preparation of text scrolling
-clearCursorRow      LD      fgbgColour
+clearCursorRow      PUSH
+                    LD      fgbgColour
                     ST      giga_sysArg0
                     ST      giga_sysArg0 + 1
                     ST      giga_sysArg2
@@ -8848,7 +8859,8 @@ clearCursorRow      LD      fgbgColour
                     PEEK
                     ST      giga_sysArg4 + 1
     
-clearCR_loopy       LDI     giga_xres
+clearCR_loopy       CALL    realTimeProcAddr
+                    LDI     giga_xres
                     
 clearCR_loopx       SUBI    4                               ; loop is unrolled 4 times
                     ST      giga_sysArg4
@@ -8865,10 +8877,8 @@ clearCR_loopx       SUBI    4                               ; loop is unrolled 4
                     BGT     clearCR_loopx
     
                     INC     giga_sysArg4 + 1                ; next line
-                    PUSH
-                    ;CALL    realTimeProcAddr
-                    POP
                     LoopCounter clearLoop clearCR_loopy
+                    POP
                     RET
 
 

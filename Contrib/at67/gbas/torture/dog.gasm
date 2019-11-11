@@ -28,12 +28,12 @@ miscFlags           EQU                     register0 + 0x1E
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_1                  EQU                     0x0241
-_8                  EQU                     0x0267
-_15                 EQU                     0x02db
-_16                 EQU                     0x02e1
-_20                 EQU                     0x02e7
-_end_0x0312         EQU                     0x02ec
+_1                  EQU                     0x0245
+_8                  EQU                     0x026b
+_15                 EQU                     0x02df
+_16                 EQU                     0x02e5
+_20                 EQU                     0x02eb
+_end_0x0316         EQU                     0x02f0
 
 ; Variables
 _a                  EQU                     0x0030
@@ -53,14 +53,14 @@ str_0x7fa2          DB                      5 ' dog '
 ; Lookup Tables
 
 ; Code
-_entryPoint_        Initialise              
-                    InitRealTimeProc        
+_entryPoint_        InitRealTimeProc        
                     InitEqOp                
                     InitNeOp                
                     InitLeOp                
                     InitGeOp                
                     InitLtOp                
-                    InitGtOp                                                ; INIT
+                    InitGtOp                
+                    Initialise                                              ; INIT
 
                     LDI                     1
                     STW                     _a
@@ -123,7 +123,7 @@ _16                 LDW                     _b
 _20                 LDWI                    _1
                     CALL                    giga_vAC                        ; goto 1
 
-_end_0x0312         BRA                     _end_0x0312                     ; END
+_end_0x0316         BRA                     _end_0x0316                     ; END
 
 
 
@@ -133,18 +133,18 @@ _end_0x0312         BRA                     _end_0x0312                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7fcb
-convertEqOp         EQU     0x7fd4
-convertNeOp         EQU     0x7fdd
-convertLeOp         EQU     0x7fe6
-convertGeOp         EQU     0x7fef
-convertLtOp         EQU     0x7ea0
-convertGtOp         EQU     0x7ea9
-resetVideoTable     EQU     0x7ecf
-initClearFuncs      EQU     0x7fa8
+realTimeProc        EQU     0x7fa8
+convertEqOp         EQU     0x7fb1
+convertNeOp         EQU     0x7fba
+convertLeOp         EQU     0x7fc3
+convertGeOp         EQU     0x7fcc
+convertLtOp         EQU     0x7fd5
+convertGtOp         EQU     0x7fde
+resetVideoTable     EQU     0x7ee0
+initClearFuncs      EQU     0x7ea0
 clearCursorRow      EQU     0x7ba0
-printInit           EQU     0x7eeb
-printText           EQU     0x7eb2
+printInit           EQU     0x7fe7
+printText           EQU     0x7ec3
 printDigit          EQU     0x7aa0
 printInt16          EQU     0x7da0
 printChar           EQU     0x79a0
@@ -229,20 +229,22 @@ xreset              EQU     register0
 xcount              EQU     register1
 ycount              EQU     register2
 treset              EQU     register3
-breset              EQU     register4
-top                 EQU     register5
-bot                 EQU     register6
-vramAddr            EQU     register7
-evenAddr            EQU     register8
+breset              EQU     register8
+top                 EQU     register9
+bot                 EQU     register10
+vramAddr            EQU     register11
+evenAddr            EQU     register12
     
     
                     ; resets video table pointers
-resetVideoTable     LDWI    0x0008
+resetVideoTable     PUSH
+                    LDWI    0x0008
                     STW     vramAddr
                     LDWI    giga_videoTable
                     STW     evenAddr
     
-resetVT_loop        LDW     vramAddr
+resetVT_loop        CALL    realTimeProcAddr
+                    LDW     vramAddr
                     DOKE    evenAddr
                     INC     evenAddr
                     INC     evenAddr
@@ -251,6 +253,7 @@ resetVT_loop        LDW     vramAddr
                     LD      vramAddr
                     SUBI    giga_yres+8
                     BLT     resetVT_loop
+                    POP
                     RET
 
 
@@ -283,12 +286,12 @@ textBak             EQU     register0
 textLen             EQU     register1
 textFont            EQU     register2
 textChr             EQU     register3
-textHex             EQU     register4
-textSlice           EQU     register5
-scanLine            EQU     register6
-digitMult           EQU     register7
-digitIndex          EQU     register8
-clearLoop           EQU     register9
+textHex             EQU     register8
+textSlice           EQU     register9
+scanLine            EQU     register10
+digitMult           EQU     register11
+digitIndex          EQU     register12
+clearLoop           EQU     register13
     
     
                     ; prints text string pointed to by the accumulator
@@ -415,6 +418,7 @@ printC_slice        LDW     textFont                        ; text font slice ba
                     LoopCounter textSlice printC_slice
                     ST      giga_sysArg2                    ; result of loopCounter is always 0
                     SYS     0xCB                            ; draw last blank slice
+                    CALL    realTimeProcAddr
     
                     LD      cursorXY
                     ADDI    0x06
@@ -429,7 +433,8 @@ printC_exit         POP
 
 
                     ; clears the top 8 lines of pixels in preparation of text scrolling
-clearCursorRow      LD      fgbgColour
+clearCursorRow      PUSH
+                    LD      fgbgColour
                     ST      giga_sysArg0
                     ST      giga_sysArg0 + 1
                     ST      giga_sysArg2
@@ -445,7 +450,8 @@ clearCursorRow      LD      fgbgColour
                     PEEK
                     ST      giga_sysArg4 + 1
     
-clearCR_loopy       LDI     giga_xres
+clearCR_loopy       CALL    realTimeProcAddr
+                    LDI     giga_xres
                     
 clearCR_loopx       SUBI    4                               ; loop is unrolled 4 times
                     ST      giga_sysArg4
@@ -461,8 +467,9 @@ clearCR_loopx       SUBI    4                               ; loop is unrolled 4
                     SYS     0xFF                            ; SYS_Draw4_30, 270 - 30/2 = 0xFF
                     BGT     clearCR_loopx
     
-                    INC     giga_sysArg4 + 1                ; next line                
+                    INC     giga_sysArg4 + 1                ; next line
                     LoopCounter clearLoop clearCR_loopy
+                    POP
                     RET
 
 
@@ -491,7 +498,8 @@ newLS_cont1         LDWI    clearCursorRow
                     STW     scanLine
     
                     ; scroll all scan lines by 8 through 0x08 to 0x7F
-newLS_scroll        LDW     scanLine
+newLS_scroll        CALL    realTimeProcAddr
+                    LDW     scanLine
                     PEEK
                     ADDI    8
                     ANDI    0x7F

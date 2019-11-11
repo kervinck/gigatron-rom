@@ -11,16 +11,18 @@ register6           EQU                     register0 + 0x0C
 register7           EQU                     register0 + 0x0E
 register8           EQU                     register0 + 0x10
 register9           EQU                     register0 + 0x12
-register10          EQU                     0x0024
-register11          EQU                     0x0026
-register12          EQU                     0x0028
-register13          EQU                     0x002A
-fgbgColour          EQU                     register0 + 0x14
-cursorXY            EQU                     register0 + 0x16
-midiStream          EQU                     register0 + 0x18
-midiDelay           EQU                     register0 + 0x1A
-frameCountPrev      EQU                     register0 + 0x1C
-miscFlags           EQU                     register0 + 0x1E
+register10          EQU                     register0 + 0x14
+register11          EQU                     register0 + 0x16
+register12          EQU                     register0 + 0x18
+register13          EQU                     register0 + 0x1A
+register14          EQU                     register0 + 0x1C
+register15          EQU                     register0 + 0x1E
+fgbgColour          EQU                     register0 + 0x20
+cursorXY            EQU                     register0 + 0x22
+midiStream          EQU                     register0 + 0x24
+midiDelay           EQU                     register0 + 0x26
+frameCountPrev      EQU                     register0 + 0x28
+miscFlags           EQU                     register0 + 0x2A
 
 ; Includes
 %include            include/gigatron.i
@@ -28,22 +30,22 @@ miscFlags           EQU                     register0 + 0x1E
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_1                  EQU                     0x0239
-_2                  EQU                     0x0247
-_3                  EQU                     0x0271
-_4                  EQU                     0x029b
-_5                  EQU                     0x02b0
-_6                  EQU                     0x02cc
-_7                  EQU                     0x02e9
+_1                  EQU                     0x023d
+_2                  EQU                     0x024b
+_3                  EQU                     0x0275
+_4                  EQU                     0x029f
+_5                  EQU                     0x02b4
+_6                  EQU                     0x02d0
+_7                  EQU                     0x02ed
 _8                  EQU                     0x08c0
 _9                  EQU                     0x08d8
 _10                 EQU                     0x08ea
 _11                 EQU                     0x09a6
 _12                 EQU                     0x09c2
-_end_0x03f8         EQU                     0x09dd
+_end_0x03fc         EQU                     0x09dd
 _page_0x08a0        EQU                     0x08a0
 _page_0x09a0        EQU                     0x09a0
-_next_0x03ad        EQU                     0x09a2
+_next_0x03b1        EQU                     0x09a2
 
 ; Variables
 _a                  EQU                     0x0030
@@ -65,21 +67,21 @@ _t                  EQU                     0x0044
 ; Lookup Tables
 
 ; Code
-_entryPoint_        Initialise              
-                    InitRealTimeProc        
+_entryPoint_        InitRealTimeProc        
                     InitEqOp                
                     InitNeOp                
                     InitLeOp                
                     InitGeOp                
                     InitLtOp                
-                    InitGtOp                                                ; INIT
+                    InitGtOp                
+                    Initialise                                              ; INIT
 
-_1                  LDWI                    152
+_1                  LDWI                    164
                     STW                     register0
                     LDI                     63
                     POKE                    register0
                     LDWI                    clearVertBlinds
-                    CALL                    giga_vAC                        ; poke 152,63:cls:rem Lines demo
+                    CALL                    giga_vAC                        ; poke 164,63:cls:rem Lines demo
 
 _2                  Rand                    
                     ANDI                    127
@@ -127,7 +129,7 @@ _5                  LDI                     1
                     STW                     _u
                     LDW                     _x
                     CALL                    convertLtOpAddr
-                    PageJumpBEQ             _6
+                    JumpFalse               _6
                     LDI                     0
                     SUBW                    _x
                     STW                     _x
@@ -139,7 +141,7 @@ _6                  LDWI                    256
                     STW                     _v
                     LDW                     _y
                     CALL                    convertLtOpAddr
-                    PageJumpBEQ             _7
+                    JumpFalse               _7
                     LDI                     0
                     SUBW                    _y
                     STW                     _y
@@ -159,7 +161,7 @@ _page_0x08a0        LDW                     0x82
                     LDW                     _y
                     SUBW                    _x
                     CALL                    convertLtOpAddr
-                    PageJumpBEQ             _8
+                    JumpFalse               _8
                     LDWI                    _9
                     CALL                    giga_vAC                        ; p=a + (b LSL 8):if y< x then goto 9
 
@@ -196,14 +198,14 @@ _10                 LDW                     _d
                     LDWI                    _page_0x09a0
                     CALL                    giga_vAC
 _page_0x09a0        LDW                     0x82
-_next_0x03ad        LD                      _q
+_next_0x03b1        LD                      _q
                     POKE                    _p                              ; for t=d to 0:poke p,q
 
 _11                 LDW                     _d
                     ADDW                    _y
                     STW                     _d
                     CALL                    convertGtOpAddr
-                    PageJumpBEQ             _12
+                    JumpFalse               _12
                     LDW                     _d
                     SUBW                    _x
                     STW                     _d
@@ -214,11 +216,11 @@ _11                 LDW                     _d
 _12                 LDW                     _p
                     ADDW                    _u
                     STW                     _p
-                    ForNextLoopStepUp       _t _next_0x03ad 0xb0 0xb2
+                    ForNextLoopStepUp       _t _next_0x03b1 0xb0 0xb2
                     LDWI                    _2
                     CALL                    giga_vAC                        ; p=p+u:next t:goto 2
 
-_end_0x03f8         BRA                     _end_0x03f8                     ; END
+_end_0x03fc         BRA                     _end_0x03fc                     ; END
 
 
 
@@ -228,18 +230,18 @@ _end_0x03f8         BRA                     _end_0x03f8                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7fc3
-convertEqOp         EQU     0x7fcc
-convertNeOp         EQU     0x7fd5
-convertLeOp         EQU     0x7fde
-convertGeOp         EQU     0x7fe7
-convertLtOp         EQU     0x7ff0
-convertGtOp         EQU     0x7ea0
-rand16bit           EQU     0x7ee1
-shiftLeft8bit       EQU     0x7ee9
+realTimeProc        EQU     0x7fa0
+convertEqOp         EQU     0x7fa9
+convertNeOp         EQU     0x7fb2
+convertLeOp         EQU     0x7fbb
+convertGeOp         EQU     0x7fc4
+convertLtOp         EQU     0x7fcd
+convertGtOp         EQU     0x7fd6
+rand16bit           EQU     0x7fdf
+shiftLeft8bit       EQU     0x7fe7
 resetVideoTable     EQU     0x7da0
-initClearFuncs      EQU     0x7fa0
-clearVertBlinds     EQU     0x7ea9
+initClearFuncs      EQU     0x7ea0
+clearVertBlinds     EQU     0x7ec3
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -319,10 +321,10 @@ mathX               EQU     register0
 mathY               EQU     register1
 mathSum             EQU     register2
 mathMask            EQU     register3
-mathRem             EQU     register4
-mathSign            EQU     register5
-mathScratch         EQU     register6
-mathShift           EQU     register7
+mathRem             EQU     register8
+mathSign            EQU     register9
+mathScratch         EQU     register10
+mathShift           EQU     register11
     
     
 rand16bit           LDWI    SYS_Random_34
@@ -343,20 +345,22 @@ xreset              EQU     register0
 xcount              EQU     register1
 ycount              EQU     register2
 treset              EQU     register3
-breset              EQU     register4
-top                 EQU     register5
-bot                 EQU     register6
-vramAddr            EQU     register7
-evenAddr            EQU     register8
+breset              EQU     register8
+top                 EQU     register9
+bot                 EQU     register10
+vramAddr            EQU     register11
+evenAddr            EQU     register12
     
     
                     ; resets video table pointers
-resetVideoTable     LDWI    0x0008
+resetVideoTable     PUSH
+                    LDWI    0x0008
                     STW     vramAddr
                     LDWI    giga_videoTable
                     STW     evenAddr
     
-resetVT_loop        LDW     vramAddr
+resetVT_loop        CALL    realTimeProcAddr
+                    LDW     vramAddr
                     DOKE    evenAddr
                     INC     evenAddr
                     INC     evenAddr
@@ -365,6 +369,7 @@ resetVT_loop        LDW     vramAddr
                     LD      vramAddr
                     SUBI    giga_yres+8
                     BLT     resetVT_loop
+                    POP
                     RET
 
 
@@ -400,7 +405,8 @@ clearVertBlinds     PUSH
                     LD      giga_sysArg4 + 1
                     ST      top
     
-clearVB_loop        LD      top
+clearVB_loop        CALL    realTimeProcAddr
+                    LD      top
                     ST      giga_sysArg4 + 1                    ; top line
                     SYS     0xFF                                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
     

@@ -11,16 +11,18 @@ register6           EQU                     register0 + 0x0C
 register7           EQU                     register0 + 0x0E
 register8           EQU                     register0 + 0x10
 register9           EQU                     register0 + 0x12
-register10          EQU                     0x0024
-register11          EQU                     0x0026
-register12          EQU                     0x0028
-register13          EQU                     0x002A
-fgbgColour          EQU                     register0 + 0x14
-cursorXY            EQU                     register0 + 0x16
-midiStream          EQU                     register0 + 0x18
-midiDelay           EQU                     register0 + 0x1A
-frameCountPrev      EQU                     register0 + 0x1C
-miscFlags           EQU                     register0 + 0x1E
+register10          EQU                     register0 + 0x14
+register11          EQU                     register0 + 0x16
+register12          EQU                     register0 + 0x18
+register13          EQU                     register0 + 0x1A
+register14          EQU                     register0 + 0x1C
+register15          EQU                     register0 + 0x1E
+fgbgColour          EQU                     register0 + 0x20
+cursorXY            EQU                     register0 + 0x22
+midiStream          EQU                     register0 + 0x24
+midiDelay           EQU                     register0 + 0x26
+frameCountPrev      EQU                     register0 + 0x28
+miscFlags           EQU                     register0 + 0x2A
 
 ; Includes
 %include            include/gigatron.i
@@ -28,12 +30,12 @@ miscFlags           EQU                     register0 + 0x1E
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x0258
-_20                 EQU                     0x0266
-_30                 EQU                     0x0278
-_40                 EQU                     0x0293
-_50                 EQU                     0x029c
-_end_0x02ad         EQU                     0x02a1
+_10                 EQU                     0x025c
+_20                 EQU                     0x026a
+_30                 EQU                     0x027c
+_40                 EQU                     0x0297
+_50                 EQU                     0x02a0
+_end_0x02b1         EQU                     0x02a5
 
 ; Variables
 
@@ -220,14 +222,14 @@ def_bytes_0x67a0    DB                      10 128 129 131 208 160 16
 ; Lookup Tables
 
 ; Code
-_entryPoint_        Initialise              
-                    InitRealTimeProc        
+_entryPoint_        InitRealTimeProc        
                     InitEqOp                
                     InitNeOp                
                     InitLeOp                
                     InitGeOp                
                     InitLtOp                
-                    InitGtOp                                                ; INIT
+                    InitGtOp                
+                    Initialise                                              ; INIT
 
                     LDWI                    0xFFFE
                     ANDW                    miscFlags
@@ -238,20 +240,20 @@ _entryPoint_        Initialise
                     LDWI                    4256
                     PlayMidi                                                ; play midi &h10a0,3
 
-_10                 LDWI                    152
+_10                 LDWI                    164
                     STW                     register0
                     LDI                     42
                     POKE                    register0
                     LDWI                    clearVertBlinds
-                    CALL                    giga_vAC                        ; poke 152,42:cls:'Paper
+                    CALL                    giga_vAC                        ; poke 164,42:cls:'Paper
 
 _20                 Rand                    
                     ANDI                    63
                     STW                     0xc0
-                    LDWI                    153
+                    LDWI                    165
                     STW                     register0
                     LD                      0xc0
-                    POKE                    register0                       ; poke 153,rnd(0) AND 63:'Pen
+                    POKE                    register0                       ; poke 165,rnd(0) AND 63:'Pen
 
 _30                 LDI                     0x9b
                     RandMod                 
@@ -268,7 +270,7 @@ _40                 LDI                     127
 _50                 LDWI                    _20
                     CALL                    giga_vAC                        ; goto 20
 
-_end_0x02ad         BRA                     _end_0x02ad                     ; END
+_end_0x02b1         BRA                     _end_0x02b1                     ; END
 
 
 
@@ -278,21 +280,21 @@ _end_0x02ad         BRA                     _end_0x02ad                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7fc3
-convertEqOp         EQU     0x7fcc
-convertNeOp         EQU     0x7fd5
-convertLeOp         EQU     0x7fde
-convertGeOp         EQU     0x7fe7
-convertLtOp         EQU     0x7ff0
-convertGtOp         EQU     0x7ea0
+realTimeProc        EQU     0x7fa0
+convertEqOp         EQU     0x7fa9
+convertNeOp         EQU     0x7fb2
+convertLeOp         EQU     0x7fbb
+convertGeOp         EQU     0x7fc4
+convertLtOp         EQU     0x7fcd
+convertGtOp         EQU     0x7fd6
 divide16bit         EQU     0x79a0
-rand16bit           EQU     0x7ee4
-randMod16bit        EQU     0x7eec
+rand16bit           EQU     0x7fdf
+randMod16bit        EQU     0x7fe7
 resetVideoTable     EQU     0x7cda
-initClearFuncs      EQU     0x7fa0
+initClearFuncs      EQU     0x7ea0
 clearVertBlinds     EQU     0x7ca0
 clearCursorRow      EQU     0x78a0
-resetAudio          EQU     0x7ea9
+resetAudio          EQU     0x7ec3
 playMidi            EQU     0x7da0
 midiStartNote       EQU     0x77a0
 printInit           EQU     0x7bcd
@@ -469,12 +471,14 @@ evenAddr            EQU     register12
     
     
                     ; resets video table pointers
-resetVideoTable     LDWI    0x0008
+resetVideoTable     PUSH
+                    LDWI    0x0008
                     STW     vramAddr
                     LDWI    giga_videoTable
                     STW     evenAddr
     
-resetVT_loop        LDW     vramAddr
+resetVT_loop        CALL    realTimeProcAddr
+                    LDW     vramAddr
                     DOKE    evenAddr
                     INC     evenAddr
                     INC     evenAddr
@@ -483,6 +487,7 @@ resetVT_loop        LDW     vramAddr
                     LD      vramAddr
                     SUBI    giga_yres+8
                     BLT     resetVT_loop
+                    POP
                     RET
 
 
@@ -768,7 +773,8 @@ atTC_skip2          LDWI    0x8000
 
 
                     ; clears the top 8 lines of pixels in preparation of text scrolling
-clearCursorRow      LD      fgbgColour
+clearCursorRow      PUSH
+                    LD      fgbgColour
                     ST      giga_sysArg0
                     ST      giga_sysArg0 + 1
                     ST      giga_sysArg2
@@ -784,9 +790,7 @@ clearCursorRow      LD      fgbgColour
                     PEEK
                     ST      giga_sysArg4 + 1
     
-clearCR_loopy       PUSH
-                    CALL    realTimeProcAddr
-                    POP
+clearCR_loopy       CALL    realTimeProcAddr
                     LDI     giga_xres
                     
 clearCR_loopx       SUBI    4                               ; loop is unrolled 4 times
@@ -805,6 +809,7 @@ clearCR_loopx       SUBI    4                               ; loop is unrolled 4
     
                     INC     giga_sysArg4 + 1                ; next line
                     LoopCounter clearLoop clearCR_loopy
+                    POP
                     RET
 
 

@@ -1,3 +1,4 @@
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 mathX               EQU     register0
 mathY               EQU     register1
 mathSum             EQU     register2

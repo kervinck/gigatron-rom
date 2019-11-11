@@ -1,29 +1,28 @@
-
 play midi &h10a0,3
 
 x=0 : y=x : mode 2
 
 10 for i=0 to 19
 20 gosub math
-30 p=peek(153)+7 : poke 153,p
+30 p=peek(165)+7 : poke 165,p
 40 line x,119, 159,119-y
 50 next i
 
 60 for i=19 to 0
 70 gosub math
-80 p=peek(153)+7 : poke 153,p
+80 p=peek(165)+7 : poke 165,p
 90 line 159,y, x,0
 100 next i
 
 110 for i=0 to 19
 120 gosub math
-130 p=peek(153)+7 : poke 153,p
+130 p=peek(165)+7 : poke 165,p
 140 line 0,y, 159-x,0
 150 next i
 
 160 for i=19 to 0
 170 gosub math
-180 p=peek(153)+7 : poke 153,p
+180 p=peek(165)+7 : poke 165,p
 190 line 159-x,119, 0,119-y
 200 next i
 
@@ -376,4 +375,4 @@ def byte(&h40a0) =  &h7a, &h92, &h26, &h90, &h1a, &h91, &h41, &h93, &h3e, &h7a, 
 def byte         =  &h92, &h3a, &h7a, &h92, &h29, &h90, &h1d, &h91, &h3e, &h93, &h35, &h7a, &h93, &h2e, &h90, &h22,
 def byte         =  &h91, &h3e, &h92, &h3a, &h7a, &h92, &h26, &h90, &h1a, &h91, &h41, &h93, &h3e, &h7a, &h93, &h2b,
 def byte         =  &h90, &h1f, &h91, &h3e, &h92, &h3a, &h7a, &h92, &h29, &h90, &h1d, &h91, &h3e, &h93, &h35,
-def byte         =  &h7f, &h7f, &h7f, &h7f, &h7f, &h55, &h80, &h81, &h82, &h83, &hd0, &ha0, &h10,
+def byte         =  &h7f, &h7f, &h55, &h80, &h81, &h82, &h83, &hd0, &ha0, &h10,

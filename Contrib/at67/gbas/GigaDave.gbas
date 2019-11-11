@@ -2,10 +2,10 @@
 
 play midi &h10a0,3
 
-5 poke 153,0:cls
+5 poke 165,0:cls
 6 a=61
 7 a=a-1
-8 poke 153,a
+8 poke 165,a
 10 x=80:y=60:u=a
 20 v=0:w=0
 '30 at x-u,y-v:line u+u,0

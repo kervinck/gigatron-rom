@@ -1,6 +1,6 @@
         
 inv=0:char=inv:posx=char:posy=posx
-fg=peek(152):bg=peek(153)
+fg=peek(164):bg=peek(165)
 a=0:b=a:p=256+252:mode 2:cls:z=2:gosub text:gosub audio
     
 loop: k=peek(16)
@@ -50,11 +50,11 @@ audio: for c=1 to 4
 208 print "Pulse   ":return
 209 print "Sawtooth":return
 
-inverse: inv=1 : poke 152,bg : poke 153,fg
+inverse: inv=1 : poke 164,bg : poke 165,fg
          gosub printChr
          return
          
-normal: inv=0 : poke 152,fg : poke 153,bg
+normal: inv=0 : poke 164,fg : poke 165,bg
         gosub printChr
         return
          

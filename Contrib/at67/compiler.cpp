@@ -156,6 +156,20 @@ namespace Compiler
         uint16_t _varEnd;
         uint16_t _varStep;
         bool _optimise = false;
+        int _codeLineIndex;
+    };
+
+    struct WhileWendData
+    {
+        int _beqIndex;
+        std::string _labelName;
+        int _codeLineIndex;
+    };
+
+    struct DoUntilData
+    {
+        std::string _labelName;
+        int _codeLineIndex;
     };
 
     struct MacroNameEntry
@@ -226,11 +240,15 @@ namespace Compiler
     std::vector<IntegerVar> _integerVars;
     std::vector<StringVar>  _stringVars;
 
-    std::stack<ForNextData> _forNextDataStack;
+    std::stack<ForNextData>   _forNextDataStack;
+    std::stack<WhileWendData> _whileWendDataStack;
+    std::stack<DoUntilData>   _doUntilDataStack;
 
     std::vector<std::string> _macroLines;
     std::map<int, MacroNameEntry> _macroNameEntries;
     std::map<std::string, MacroIndexEntry> _macroIndexEntries;
+
+    std::map<std::string, std::vector<std::string>> _subIncludeFiles;
 
 
     std::vector<InternalSub> _internalSubs =
@@ -274,7 +292,8 @@ namespace Compiler
         {0x0000, 0x0000, "drawVLine"        , "", false, false},
         {0x0000, 0x0000, "drawLine"         , "", false, false},
         {0x0000, 0x0000, "drawLineExt"      , "", false, false},
-        {0x0000, 0x0000, "drawLineDelta1"   , "", false, false},
+        {0x0000, 0x0000, "drawLineLoop"     , "", false, false},
+        {0x0000, 0x0000, "drawLineLoadXY"   , "", false, false},
         {0x0000, 0x0000, "atLineCursor"     , "", false, false},
         {0x0000, 0x0000, "resetAudio"       , "", false, false},
         {0x0000, 0x0000, "playMidi"         , "", false, false},
@@ -291,25 +310,25 @@ namespace Compiler
     };
     const std::vector<std::string> _subIncludes = 
     {
-        "include/math.i"        ,
-        "include/memory.i"      ,
-        "include/flow_control.i",
-        "include/clear_screen.i",
-        "include/conv_conds.i"  ,
-        "include/graphics.i"    ,
-        "include/print_text.i"  ,
-        "include/audio.i"       ,
+        "math.i"        ,
+        "memory.i"      ,
+        "flow_control.i",
+        "clear_screen.i",
+        "conv_conds.i"  ,
+        "graphics.i"    ,
+        "print_text.i"  ,
+        "audio.i"       ,
     };
     const std::vector<std::string> _subIncludesCALLI = 
     {
-        "include/math_CALLI.i"        ,
-        "include/memory_CALLI.i"      ,
-        "include/flow_control_CALLI.i",
-        "include/clear_screen_CALLI.i",
-        "include/conv_conds_CALLI.i"  ,
-        "include/graphics_CALLI.i"    ,
-        "include/print_text_CALLI.i"  ,
-        "include/audio_CALLI.i"       ,
+        "math_CALLI.i"        ,
+        "memory_CALLI.i"      ,
+        "flow_control_CALLI.i",
+        "clear_screen_CALLI.i",
+        "conv_conds_CALLI.i"  ,
+        "graphics_CALLI.i"    ,
+        "print_text_CALLI.i"  ,
+        "audio_CALLI.i"       ,
     };
 
     std::vector<DefDataByte> _defDataBytes;
@@ -324,22 +343,19 @@ namespace Compiler
     bool keywordGOSUB(CodeLine& codeLine,  int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordRETURN(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordCLS(CodeLine& codeLine,    int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
+    bool keywordINPUT(CodeLine& codeLine,  int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordPRINT(CodeLine& codeLine,  int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordFOR(CodeLine& codeLine,    int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordNEXT(CodeLine& codeLine,   int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordIF(CodeLine& codeLine,     int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool keywordENDIF(CodeLine& codeLine,  int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordELSE(CodeLine& codeLine,   int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool keywordELSEIF(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
+    bool keywordENDIF(CodeLine& codeLine,  int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
+    bool keywordWHILE(CodeLine& codeLine,  int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
+    bool keywordWEND(CodeLine& codeLine,   int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
+    bool keywordDO(CodeLine& codeLine,     int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
+    bool keywordUNTIL(CodeLine& codeLine,  int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordDIM(CodeLine& codeLine,    int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordDEF(CodeLine& codeLine,    int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool keywordINPUT(CodeLine& codeLine,  int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool keywordREAD(CodeLine& codeLine,   int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool keywordDATA(CodeLine& codeLine,   int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool keywordDO(CodeLine& codeLine,     int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool keywordLOOP(CodeLine& codeLine,   int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool keywordWHILE(CodeLine& codeLine,  int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool keywordUNTIL(CodeLine& codeLine,  int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordAT(CodeLine& codeLine,     int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordPUT(CodeLine& codeLine,    int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordMODE(CodeLine& codeLine,   int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
@@ -360,28 +376,33 @@ namespace Compiler
         _keywords["GOSUB" ] = {1, "GOSUB",  keywordGOSUB };
         _keywords["RETURN"] = {0, "RETURN", keywordRETURN};
         _keywords["CLS"   ] = {0, "CLS",    keywordCLS   };
+        _keywords["INPUT" ] = {0, "INPUT",  nullptr      };
         _keywords["PRINT" ] = {0, "PRINT",  keywordPRINT };
         _keywords["FOR"   ] = {0, "FOR",    keywordFOR   };
         _keywords["NEXT"  ] = {0, "NEXT",   keywordNEXT  };
         _keywords["IF"    ] = {0, "IF",     keywordIF    };
-        _keywords["ENDIF" ] = {0, "ENDIF",  nullptr      };
         _keywords["ELSE"  ] = {0, "ELSE",   nullptr      };
-        _keywords["ELSEIF"] = {0, "ELSEIF", nullptr      };
+        _keywords["ENDIF" ] = {0, "ENDIF",  nullptr      };
+        _keywords["WHILE" ] = {0, "WHILE",  keywordWHILE };
+        _keywords["WEND"  ] = {0, "WEND",   keywordWEND  };
+        _keywords["DO"    ] = {0, "DO",     keywordDO    };
+        _keywords["UNTIL" ] = {0, "UNTIL",  keywordUNTIL };
         _keywords["DIM"   ] = {1, "DIM",    keywordDIM   };
         _keywords["DEF"   ] = {0, "DEF",    keywordDEF   };
-        _keywords["INPUT" ] = {0, "INPUT",  nullptr      };
-        _keywords["READ"  ] = {0, "READ",   nullptr      };
-        _keywords["DATA"  ] = {0, "DATA",   nullptr      };
-        _keywords["PEEK"  ] = {1, "PEEK",   nullptr      };
-        _keywords["DEEK"  ] = {1, "DEEK",   nullptr      };
+        _keywords["AT"    ] = {1, "AT",     keywordAT    };
+        _keywords["PUT"   ] = {1, "PUT",    keywordPUT   };
+        _keywords["MODE"  ] = {1, "MODE",   keywordMODE  };
+        _keywords["WAIT"  ] = {1, "WAIT",   keywordWAIT  };
+        _keywords["LINE"  ] = {1, "LINE",   keywordLINE  };
+        _keywords["HLINE" ] = {1, "HLINE",  keywordHLINE };
+        _keywords["VLINE" ] = {1, "VLINE",  keywordVLINE };
+        _keywords["SCROLL"] = {1, "SCROLL", keywordSCROLL};
         _keywords["POKE"  ] = {1, "POKE",   keywordPOKE  };
         _keywords["DOKE"  ] = {1, "DOKE",   keywordDOKE  };
         _keywords["PLAY"  ] = {1, "PLAY",   keywordPLAY  };
+        _keywords["PEEK"  ] = {1, "PEEK",   nullptr      };
+        _keywords["DEEK"  ] = {1, "DEEK",   nullptr      };
         _keywords["USR"   ] = {1, "USR",    nullptr      };
-        _keywords["DO"    ] = {0, "DO",     nullptr      };
-        _keywords["LOOP"  ] = {0, "LOOP",   nullptr      };
-        _keywords["WHILE" ] = {0, "WHILE",  nullptr      };
-        _keywords["UNTIL" ] = {0, "UNTIL",  nullptr      };
         _keywords["ABS"   ] = {1, "ABS",    nullptr      };
         _keywords["ACS"   ] = {1, "ACS",    nullptr      };
         _keywords["ASC"   ] = {1, "ASC",    nullptr      };
@@ -397,14 +418,6 @@ namespace Compiler
         _keywords["TAN"   ] = {1, "TAN",    nullptr      };
         _keywords["FRE"   ] = {1, "FRE",    nullptr      };
         _keywords["TIME"  ] = {1, "TIME",   nullptr      };
-        _keywords["AT"    ] = {1, "AT",     keywordAT    };
-        _keywords["PUT"   ] = {1, "PUT",    keywordPUT   };
-        _keywords["MODE"  ] = {1, "MODE",   keywordMODE  };
-        _keywords["WAIT"  ] = {1, "WAIT",   keywordWAIT  };
-        _keywords["LINE"  ] = {1, "LINE",   keywordLINE  };
-        _keywords["HLINE" ] = {1, "HLINE",  keywordHLINE };
-        _keywords["VLINE" ] = {1, "VLINE",  keywordVLINE };
-        _keywords["SCROLL"] = {1, "SCROLL", keywordSCROLL};
         _keywords["CHR$"  ] = {1, "CHR$",   nullptr      };
         _keywords["HEX$"  ] = {1, "HEX$",   nullptr      };
         _keywords["HEXW$" ] = {1, "HEXW$",  nullptr      };
@@ -426,7 +439,7 @@ namespace Compiler
 
     bool readInputFile(std::ifstream& infile, const std::string& filename, int& numLines)
     {
-        std::string line;
+        std::string lineToken;
 
         if(!infile.is_open())
         {
@@ -437,12 +450,12 @@ namespace Compiler
         // Read input .gbas file
         while(!infile.eof())
         {
-            std::getline(infile, line);
-            _input.push_back(line);
+            std::getline(infile, lineToken);
+            _input.push_back(lineToken);
 
             if(!infile.good() && !infile.eof())
             {
-                fprintf(stderr, "Compiler::readInputFile() : Bad line : '%s' : in '%s' : on line %d\n", line.c_str(), filename.c_str(), numLines+1);
+                fprintf(stderr, "Compiler::readInputFile() : Bad line : '%s' : in '%s' : on line %d\n", lineToken.c_str(), filename.c_str(), numLines+1);
                 return false;
             }
 
@@ -558,7 +571,7 @@ namespace Compiler
         _currentLabelIndex = int(_labels.size() - 1);
     }
 
-    void createIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars,  int& varIndex, VarType varType=VarInt16, uint16_t arrayStart=0x0000, int intSize=Int16, int arrSize=0)
+    void createIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, int& varIndex, VarType varType=VarInt16, uint16_t arrayStart=0x0000, int intSize=Int16, int arrSize=0)
     {
         // Create var
         varIndex = int(_integerVars.size());
@@ -591,7 +604,7 @@ namespace Compiler
     VarResult createCodeVar(CodeLine& codeLine, int codeLineIndex, int& varIndex)
     {
         size_t equals = Expression::findNonStringEquals(codeLine._code) - codeLine._code.begin();
-        if(codeLine._code.size() > 2  &&  equals < codeLine._code.size())
+        if(codeLine._code.size() >= 2  &&  equals < codeLine._code.size())
         {
             // Check all tokens individually, don't just do a find as a var may exist with a reserved keyword embedded within it
             for(int i=0; i<codeLine._tokens.size(); i++)
@@ -728,7 +741,7 @@ namespace Compiler
         codeLine = {text, codeText, tokens, vasm, expression, onGotoGosubLut, 0, labelIndex, varIndex, assign, vars, false};
         Expression::operatorReduction(codeLine._expression);
 
-        if(codeLine._code.size() < 3) return false; // anything too small is ignored
+        if(codeLine._code.size() < 2) return false; // anything too small is ignored
 
         return true;
     }
@@ -1225,7 +1238,6 @@ namespace Compiler
         CodeLine codeLine;
         createLabel(_vasmPC, "_entryPoint_", "_entryPoint_\t", 0, label, false, false, false, false);
         if(createCodeLine("INIT", 0, 0, -1, false, false, codeLine)) _codeLines.push_back(codeLine);
-        emitVcpuAsm("%Initialise", "", false, 0);
         if(!Assembler::getUseOpcodeCALLI())
         {
             // Handles time sliced, (real time), code such as MIDI and SPRITES
@@ -1239,6 +1251,7 @@ namespace Compiler
             emitVcpuAsm("%InitLtOp", "", false, 0);
             emitVcpuAsm("%InitGtOp", "", false, 0);
         }
+        emitVcpuAsm("%Initialise", "", false, 0);
 
         // GOSUB labels
         for(int i=0; i<numLines; i++)
@@ -2375,6 +2388,7 @@ namespace Compiler
         {
             KeywordFuncResult result;
             KeywordResult keywordResult = handleKeywords(codeLine, codeLine._tokens[i], codeLineIndex, result);
+            if(keywordResult == KeywordError) return StatementError;
             std::string token = codeLine._tokens[i];
             if(Expression::strToUpper(token)      == "REM"   ) return SingleStatementParsed;
             else if(Expression::strToUpper(token) == "END"   ) return SingleStatementParsed;
@@ -2384,6 +2398,10 @@ namespace Compiler
             else if(Expression::strToUpper(token) == "ON"    ) return SingleStatementParsed;
             else if(Expression::strToUpper(token) == "FOR"   ) return SingleStatementParsed;
             else if(Expression::strToUpper(token) == "NEXT"  ) return SingleStatementParsed;
+            else if(Expression::strToUpper(token) == "WHILE" ) return SingleStatementParsed;
+            else if(Expression::strToUpper(token) == "WEND"  ) return SingleStatementParsed;
+            else if(Expression::strToUpper(token) == "DO"    ) return SingleStatementParsed;
+            else if(Expression::strToUpper(token) == "UNTIL" ) return SingleStatementParsed;
             else if(Expression::strToUpper(token) == "GOTO"  ) return SingleStatementParsed;
             else if(Expression::strToUpper(token) == "GOSUB" ) return SingleStatementParsed;
             else if(Expression::strToUpper(token) == "RETURN") return SingleStatementParsed;
@@ -3178,6 +3196,11 @@ namespace Compiler
         return true;
     }
 
+    bool keywordINPUT(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        return true;
+    }
+
     bool keywordPRINT(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
         // Parse print tokens
@@ -3371,7 +3394,7 @@ namespace Compiler
         }
 
         _nextInternalLabel = "_next_" + Expression::wordToHexString(_vasmPC);
-        _forNextDataStack.push({varIndex, _nextInternalLabel, loopEnd, loopStep, varEnd, varStep, optimise});
+        _forNextDataStack.push({varIndex, _nextInternalLabel, loopEnd, loopStep, varEnd, varStep, optimise, codeLineIndex});
 
         return true;
     }
@@ -3393,7 +3416,11 @@ namespace Compiler
         }
 
         // Pop stack for this nested loop
-        if(_forNextDataStack.empty()) return false;
+        if(_forNextDataStack.empty())
+        {
+            fprintf(stderr, "Compiler::keywordNEXT() : Syntax error, missing FOR statement, for '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
         ForNextData forNextData = _forNextDataStack.top();
         _forNextDataStack.pop();
 
@@ -3453,8 +3480,8 @@ namespace Compiler
         int16_t condition = 0;
         std::string conditionToken = codeLine._code.substr(foundPos, offsetTHEN - foundPos);
         parseExpression(codeLine, codeLineIndex, conditionToken, condition);
-        emitVcpuAsm("%PageJumpBEQ", "", false, codeLineIndex);
-        int indexBEQ = int(_codeLines[codeLineIndex]._vasm.size()) - 1;
+        emitVcpuAsm("%JumpFalse", "", false, codeLineIndex);
+        int beqIndex = int(_codeLines[codeLineIndex]._vasm.size()) - 1;
 
         // Action
         std::string actionToken = _codeLines[codeLineIndex]._code.substr(offsetIF + offsetTHEN + 4);
@@ -3473,13 +3500,8 @@ namespace Compiler
 
         // Update branch's label, (check to see if a label already exists)
         _nextInternalLabel = "_if_" + Expression::wordToHexString(_vasmPC);
-        _codeLines[codeLineIndex]._vasm[indexBEQ]._code = "PageJumpBEQ" + std::string(OPCODE_TRUNC_SIZE - (sizeof("PageJumpBEQ")-1), ' ') + _nextInternalLabel;
+        _codeLines[codeLineIndex]._vasm[beqIndex]._code = "JumpFalse" + std::string(OPCODE_TRUNC_SIZE - (sizeof("JumpFalse")-1), ' ') + _nextInternalLabel;
 
-        return true;
-    }
-
-    bool keywordENDIF(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
-    {
         return true;
     }
 
@@ -3488,8 +3510,82 @@ namespace Compiler
         return true;
     }
 
-    bool keywordELSEIF(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordENDIF(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
+        return true;
+    }
+
+    bool keywordWHILE(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        _nextInternalLabel = "_while_" + Expression::wordToHexString(_vasmPC);
+        _whileWendDataStack.push({0, _nextInternalLabel, codeLineIndex});
+
+        // Condition
+        int16_t condition = 0;
+        std::string conditionToken = codeLine._code.substr(foundPos);
+        parseExpression(codeLine, codeLineIndex, conditionToken, condition);
+        emitVcpuAsm("%JumpFalse", "", false, codeLineIndex);
+        _whileWendDataStack.top()._beqIndex = int(_codeLines[codeLineIndex]._vasm.size()) - 1;
+
+        return true;
+    }
+
+    bool keywordWEND(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        // Pop stack for this WHILE loop
+        if(_whileWendDataStack.empty())
+        {
+            fprintf(stderr, "Compiler::keywordWEND() : Syntax error, missing WHILE statement, for '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+        WhileWendData whileWendData = _whileWendDataStack.top();
+        _whileWendDataStack.pop();
+
+        // Branch to WHILE and check condition again
+        if(Assembler::getUseOpcodeCALLI())
+        {
+            emitVcpuAsm("CALLI", whileWendData._labelName, false, codeLineIndex);
+        }
+        else
+        {
+            emitVcpuAsm("LDWI", whileWendData._labelName, false, codeLineIndex);
+            emitVcpuAsm("CALL", "giga_vAC",      false, codeLineIndex);
+        }
+
+        // Branch if condition false to instruction after WEND
+        _nextInternalLabel = "_wend_" + Expression::wordToHexString(_vasmPC);
+        _codeLines[whileWendData._codeLineIndex]._vasm[whileWendData._beqIndex]._code = "JumpFalse" + std::string(OPCODE_TRUNC_SIZE - (sizeof("JumpFalse")-1), ' ') + _nextInternalLabel;
+
+        return true;
+    }
+
+    bool keywordDO(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        _nextInternalLabel = "_do_" + Expression::wordToHexString(_vasmPC);
+        _doUntilDataStack.push({_nextInternalLabel, codeLineIndex});
+
+        return true;
+    }
+
+    bool keywordUNTIL(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        // Pop stack for this DO loop
+        if(_doUntilDataStack.empty())
+        {
+            fprintf(stderr, "Compiler::keywordUNTIL() : Syntax error, missing DO statement, for '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+        DoUntilData doUntilData = _doUntilDataStack.top();
+        _doUntilDataStack.pop();
+
+        // Condition
+        int16_t condition = 0;
+        std::string conditionToken = codeLine._code.substr(foundPos);
+        parseExpression(codeLine, codeLineIndex, conditionToken, condition);
+
+        // Branch if condition false to instruction after DO
+        emitVcpuAsm("%JumpFalse", doUntilData._labelName, false, codeLineIndex);
+
         return true;
     }
 
@@ -3681,41 +3777,6 @@ namespace Compiler
         return true;
     }
 
-    bool keywordINPUT(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
-    {
-        return true;
-    }
-
-    bool keywordREAD(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
-    {
-        return true;
-    }
-
-    bool keywordDATA(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
-    {
-        return true;
-    }
-
-    bool keywordDO(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
-    {
-        return true;
-    }
-
-    bool keywordLOOP(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
-    {
-        return true;
-    }
-
-    bool keywordWHILE(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
-    {
-        return true;
-    }
-
-    bool keywordUNTIL(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
-    {
-        return true;
-    }
-
 
     bool parseCode(void)
     {
@@ -3751,7 +3812,7 @@ namespace Compiler
             _currentCodeLineIndex = i;
 
             // First line of BASIC code is always a dummy INIT line, ignore it
-            if(i > 0  &&  _codeLines[i]._code.size() > 2)
+            if(i > 0  &&  _codeLines[i]._code.size() >= 2)
             {
                 // Adjust label address
                 if(_codeLines[i]._labelIndex >= 0) _labels[_codeLines[i]._labelIndex]._address = _vasmPC;
@@ -4359,6 +4420,47 @@ namespace Compiler
         return true;
     }
 
+    bool checkStatementBlocks(void)
+    {
+        bool success = true;
+
+        // Check FOR NEXT blocks
+        while(!_forNextDataStack.empty())
+        {
+            success = false;
+            ForNextData forNextData = _forNextDataStack.top();
+            int codeLineIndex = forNextData._codeLineIndex;
+            std::string code = _codeLines[codeLineIndex]._code;
+            fprintf(stderr, "Compiler::checkStatementBlocks() : Syntax error, missing NEXT statement, for '%s' on line %d\n", code.c_str(), codeLineIndex + 1);
+            _forNextDataStack.pop();
+        }
+        
+        // Check WHILE WEND blocks
+        while(!_whileWendDataStack.empty())
+        {
+            success = false;
+            WhileWendData whileWendData = _whileWendDataStack.top();
+            int codeLineIndex = whileWendData._codeLineIndex;
+            std::string code = _codeLines[codeLineIndex]._code;
+            fprintf(stderr, "Compiler::checkStatementBlocks() : Syntax error, missing WEND statement, for '%s' on line %d\n", code.c_str(), codeLineIndex + 1);
+            _whileWendDataStack.pop();
+        }
+
+        // Check DO UNTIL blocks
+        while(!_doUntilDataStack.empty())
+        {
+            success = false;
+            DoUntilData doUntilData = _doUntilDataStack.top();
+            int codeLineIndex = doUntilData._codeLineIndex;
+            std::string code = _codeLines[codeLineIndex]._code;
+            fprintf(stderr, "Compiler::checkStatementBlocks() : Syntax error, missing UNTIL statement, for '%s' on line %d\n", code.c_str(), codeLineIndex + 1);
+            _doUntilDataStack.pop();
+        }
+
+        return success;
+    }
+
+
     void outputReservedWords(void)
     {
         std::string line = "_startAddress_ ";
@@ -4604,27 +4706,23 @@ namespace Compiler
     }
 
 
-    int getAsmOpcodeSizeSubInFile(const std::string& filename, const std::string& subname)
+    int getAsmOpcodeSizeOfIncludeSub(const std::string& includeName, const std::string& subName)
     {
-        std::ifstream infile(filename);
-        if(!infile.is_open())
+        if(_subIncludeFiles.find(includeName) == _subIncludeFiles.end())
         {
-            fprintf(stderr, "Compiler::getAsmOpcodeSizeSubInFile() : Failed to open file : '%s'\n", filename.c_str());
+            fprintf(stderr, "Assembler::getAsmOpcodeSizeOfIncludeSub() : Include file was never loaded : '%s'\n", includeName.c_str());
             return -1;
         }
 
-        // Get file
+        // Find sub in include
         int numLines = 0;
         int vasmSize = 0;
         bool buildingSub = false;
-        Assembler::LineToken lineToken;
-
-        while(!infile.eof())
+        for(int i=0; i<_subIncludeFiles[includeName].size(); i++)
         {
-            std::getline(infile, lineToken._text);
-            std::vector<std::string> tokens = Expression::tokeniseLine(lineToken._text);
-            for(int i=0; i<tokens.size(); i++) Expression::stripWhitespace(tokens[i]);
-            if(!buildingSub  &&  tokens.size() >= 2  &&  tokens[0] == "%SUB"  &&  tokens[1] == subname)
+            std::vector<std::string> tokens = Expression::tokeniseLine(_subIncludeFiles[includeName][i]);
+            for(int j=0; j<tokens.size(); j++) Expression::stripWhitespace(tokens[j]);
+            if(!buildingSub  &&  tokens.size() >= 2  &&  tokens[0] == "%SUB"  &&  tokens[1] == subName)
             {
                 buildingSub = true;
             }
@@ -4644,23 +4742,17 @@ namespace Compiler
                 }
             }
 
-            if(!infile.good() && !infile.eof())
-            {
-                fprintf(stderr, "Assembler::getAsmOpcodeSizeSubInFile() : Bad lineToken : '%s' : in '%s' : on line %d\n", lineToken._text.c_str(), filename.c_str(), numLines+1);
-                return -1;
-            }
-
             numLines++;
         }
 
-        //if(vasmSize) fprintf(stderr, "%s : %s : opcode size : %d\n", filename.c_str(), subname.c_str(), vasmSize);
+        //if(vasmSize) fprintf(stderr, "%s : %s : opcode size : %d\n", filename.c_str(), subName.c_str(), vasmSize);
 
         return vasmSize;
     }
 
-    bool getInternalSubSize(const std::string& includeName, int subIndex)
+    bool getIncludeSubSize(const std::string& includeName, int subIndex)
     {
-        uint16_t size = getAsmOpcodeSizeSubInFile("gbas/" + includeName, _internalSubs[subIndex]._name);
+        uint16_t size = getAsmOpcodeSizeOfIncludeSub(includeName, _internalSubs[subIndex]._name);
         if(size)
         {
             _internalSubs[subIndex]._size = size;
@@ -4673,22 +4765,16 @@ namespace Compiler
 
     bool getInternalSubCode(const std::string& includeName, const std::vector<std::string>& includeVarsDone, std::vector<std::string>& code, int subIndex)
     {
-        std::string filename = "gbas/" + includeName;
-        std::string subname = _internalSubs[subIndex]._name;
-
-        std::ifstream infile(filename);
-        if(!infile.is_open())
+        if(_subIncludeFiles.find(includeName) == _subIncludeFiles.end())
         {
-            fprintf(stderr, "Assembler::getInternalSubCode() : Failed to open file : '%s'\n", filename.c_str());
+            fprintf(stderr, "Assembler::getInternalSubCode() : Include file was never loaded : '%s'\n", includeName.c_str());
             return false;
         }
 
-        // Get file
-        int numLines = 0;
-        bool varsDone = false;
-        bool buildingSub = false;
+        std::string subName = _internalSubs[subIndex]._name;
 
         // Check if include vars already done
+        bool varsDone = false;
         for(int i=0; i<includeVarsDone.size(); i++)
         {
             if(includeVarsDone[i] == includeName)
@@ -4698,17 +4784,19 @@ namespace Compiler
             }
         }
 
-        while(!infile.eof())
+        // Find sub in include
+        int numLines = 0;
+        bool buildingSub = false;
+        for(int i=0; i<_subIncludeFiles[includeName].size(); i++)
         {
-            std::string line;
-            std::getline(infile, line);
+            std::string line = _subIncludeFiles[includeName][i];
             bool foundSub = (line.find("%SUB") != std::string::npos);
             bool foundEnd = (line.find("%ENDS") != std::string::npos);
 
             if(!buildingSub  &&  foundSub)
             {
                 varsDone = true;
-                if(line.find(subname) != std::string::npos) buildingSub = true;
+                if(line.find(subName) != std::string::npos) buildingSub = true;
             }
             else if(buildingSub  &&  foundEnd)
             {
@@ -4719,16 +4807,16 @@ namespace Compiler
             else if(buildingSub)
             {
                 code.push_back(line);
-                for(int i=0; i<_internalSubs.size(); i++)
+                for(int j=0; j<_internalSubs.size(); j++)
                 {
-                    if(!_internalSubs[i]._inUse  &&  line.find(_internalSubs[i]._name) != std::string::npos)
+                    if(!_internalSubs[j]._inUse  &&  line.find(_internalSubs[j]._name) != std::string::npos)
                     {
-                        _internalSubs[i]._inUse = true;
+                        _internalSubs[j]._inUse = true;
                         return true;
                     }
                 }
             }
-            // Save all text up until the first %SUB
+            // Save all lines up until the first %SUB
             else if(!buildingSub  &&  !varsDone  &&  !foundSub  &&  !foundEnd)
             {
                 code.push_back(line);
@@ -4736,12 +4824,6 @@ namespace Compiler
             else if(!buildingSub  &&  !varsDone  &&  line.find_first_not_of("  \n\r\f\t\v") == std::string::npos)
             {
                 code.push_back("\n");
-            }
-
-            if(!infile.good() && !infile.eof())
-            {
-                fprintf(stderr, "Assembler::getInternalSubCode() : Bad lineToken : '%s' : in '%s' : on line %d\n", line.c_str(), filename.c_str(), numLines+1);
-                return false;
             }
 
             numLines++;
@@ -4775,22 +4857,70 @@ namespace Compiler
         return false;
     }
 
+    bool loadInclude(const std::string& filename)
+    {
+        // Include file already loaded
+        if(_subIncludeFiles.find(filename) != _subIncludeFiles.end()) return true;
+
+        std::ifstream infile("gbas/include/" + filename);
+        if(!infile.is_open())
+        {
+            fprintf(stderr, "Compiler::loadInclude() : Failed to open file : '%s'\n", filename.c_str());
+            return false;
+        }
+
+        int numLines = 0;
+        std::vector<std::string> lineTokens;
+        while(!infile.eof())
+        {
+            std::string lineToken;
+            std::getline(infile, lineToken);
+            lineTokens.push_back(lineToken);
+
+            if(!infile.good() && !infile.eof())
+            {
+                fprintf(stderr, "Assembler::loadInclude() : Bad lineToken : '%s' : in '%s' : on line %d\n", lineToken.c_str(), filename.c_str(), numLines+1);
+                return false;
+            }
+
+            numLines++;
+        }
+
+        _subIncludeFiles[filename] = lineTokens;
+
+        return true;
+    }
+
     bool parseIncludes(void)
     {
+        // Load include files into memory
+        for(int i=0; i<_subIncludes.size(); i++)
+        {
+            if(!Assembler::getUseOpcodeCALLI())
+            {
+                if(!loadInclude(_subIncludes[i])) return false;
+            }
+            else
+            {
+                if(!loadInclude(_subIncludesCALLI[i])) return false;
+            }
+        }
+
+        // Parse loaded includes
         for(int i=0; i<_internalSubs.size(); i++)
         {
             if(!Assembler::getUseOpcodeCALLI())
             {
                 for(int j=0; j<_subIncludes.size(); j++)
                 {
-                    if(getInternalSubSize(_subIncludes[j], i)) break;
+                    if(getIncludeSubSize(_subIncludes[j], i)) break;
                 }
             }
             else
             {
                 for(int j=0; j<_subIncludesCALLI.size(); j++)
                 {
-                    if(getInternalSubSize(_subIncludesCALLI[j], i)) break;
+                    if(getIncludeSubSize(_subIncludesCALLI[j], i)) break;
                 }
             }
         }
@@ -4803,7 +4933,7 @@ namespace Compiler
         for(int i=0; i<_codeLines.size(); i++)
         {
             // Valid BASIC code
-            if(_codeLines[i]._code.size() > 2  &&  _codeLines[i]._vasm.size())
+            if(_codeLines[i]._code.size() >= 2  &&  _codeLines[i]._vasm.size())
             {
                 // Vasm code
                 for(int j=0; j<_codeLines[i]._vasm.size(); j++)
@@ -4890,16 +5020,18 @@ namespace Compiler
         _output.push_back("register7"      + std::string(LABEL_TRUNC_SIZE - strlen("register7"), ' ')      + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x0E\n");
         _output.push_back("register8"      + std::string(LABEL_TRUNC_SIZE - strlen("register8"), ' ')      + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x10\n");
         _output.push_back("register9"      + std::string(LABEL_TRUNC_SIZE - strlen("register9"), ' ')      + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x12\n");
-        _output.push_back("register10"     + std::string(LABEL_TRUNC_SIZE - strlen("register10"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x0024\n");
-        _output.push_back("register11"     + std::string(LABEL_TRUNC_SIZE - strlen("register11"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x0026\n");
-        _output.push_back("register12"     + std::string(LABEL_TRUNC_SIZE - strlen("register12"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x0028\n");
-        _output.push_back("register13"     + std::string(LABEL_TRUNC_SIZE - strlen("register13"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x002A\n");
-        _output.push_back("fgbgColour"     + std::string(LABEL_TRUNC_SIZE - strlen("fgbgColour"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x14\n");
-        _output.push_back("cursorXY"       + std::string(LABEL_TRUNC_SIZE - strlen("cursorXY"), ' ')       + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x16\n");
-        _output.push_back("midiStream"     + std::string(LABEL_TRUNC_SIZE - strlen("midiStream"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x18\n");
-        _output.push_back("midiDelay"      + std::string(LABEL_TRUNC_SIZE - strlen("midiDelay"), ' ')      + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x1A\n");
-        _output.push_back("frameCountPrev" + std::string(LABEL_TRUNC_SIZE - strlen("frameCountPrev"), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x1C\n");
-        _output.push_back("miscFlags"      + std::string(LABEL_TRUNC_SIZE - strlen("miscFlags"), ' ')      + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x1E\n");
+        _output.push_back("register10"     + std::string(LABEL_TRUNC_SIZE - strlen("register10"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x14\n");
+        _output.push_back("register11"     + std::string(LABEL_TRUNC_SIZE - strlen("register11"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x16\n");
+        _output.push_back("register12"     + std::string(LABEL_TRUNC_SIZE - strlen("register12"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x18\n");
+        _output.push_back("register13"     + std::string(LABEL_TRUNC_SIZE - strlen("register13"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x1A\n");
+        _output.push_back("register14"     + std::string(LABEL_TRUNC_SIZE - strlen("register14"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x1C\n");
+        _output.push_back("register15"     + std::string(LABEL_TRUNC_SIZE - strlen("register15"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x1E\n");
+        _output.push_back("fgbgColour"     + std::string(LABEL_TRUNC_SIZE - strlen("fgbgColour"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x20\n");
+        _output.push_back("cursorXY"       + std::string(LABEL_TRUNC_SIZE - strlen("cursorXY"), ' ')       + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x22\n");
+        _output.push_back("midiStream"     + std::string(LABEL_TRUNC_SIZE - strlen("midiStream"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x24\n");
+        _output.push_back("midiDelay"      + std::string(LABEL_TRUNC_SIZE - strlen("midiDelay"), ' ')      + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x26\n");
+        _output.push_back("frameCountPrev" + std::string(LABEL_TRUNC_SIZE - strlen("frameCountPrev"), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x28\n");
+        _output.push_back("miscFlags"      + std::string(LABEL_TRUNC_SIZE - strlen("miscFlags"), ' ')      + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x2A\n");
 
         _output.push_back("\n");
     }
@@ -4932,7 +5064,7 @@ namespace Compiler
             int labelIndex = _codeLines[i]._labelIndex;
 
             // Valid BASIC code
-            if(_codeLines[i]._code.size() > 2  &&  _codeLines[i]._vasm.size())
+            if(_codeLines[i]._code.size() >= 2  &&  _codeLines[i]._vasm.size())
             {
                 // BASIC Label, (may not be owned by vasm line 0 as PAGE JUMPS may move labels)
                 std::string basicLabel = (labelIndex >= 0) ? _labels[labelIndex]._output : "";
@@ -4985,7 +5117,7 @@ namespace Compiler
             for(int i=0; i<_codeLines.size(); i++)
             {
                 // Valid BASIC code
-                if(_codeLines[i]._code.size() > 2  &&  _codeLines[i]._vasm.size())
+                if(_codeLines[i]._code.size() >= 2  &&  _codeLines[i]._vasm.size())
                 {
                     // Vasm code
                     for(int j=0; j<_codeLines[i]._vasm.size(); j++)
@@ -5023,7 +5155,7 @@ namespace Compiler
     {
         std::vector<std::string> includeVarsDone;
 
-RESTART:
+RESTART_COLLECTION:
         for(int i=0; i<_internalSubs.size(); i++)
         {
             if(_internalSubs[i]._inUse  &&  !_internalSubs[i]._loaded)
@@ -5031,7 +5163,7 @@ RESTART:
                 _runtime.push_back("\n");
                 std::vector<std::string> code;
 
-                if(getInternalSubCode(_internalSubs[i]._includeName, includeVarsDone, code, i)) goto RESTART;
+                if(getInternalSubCode(_internalSubs[i]._includeName, includeVarsDone, code, i)) goto RESTART_COLLECTION; // this is a BASIC compiler, it can't possibly work without at least one GOTO
 
                 includeVarsDone.push_back(_internalSubs[i]._includeName);
 
@@ -5054,7 +5186,7 @@ RESTART:
             _internalSubs[i]._includeName = "";
             _internalSubs[i]._loaded = false;
 
-            // Relational init macros are always loaded
+            // RealTimeProc macro and relational init macros are always loaded
             (i>=0  && i<7) ? _internalSubs[i]._inUse = true : _internalSubs[i]._inUse = false;
         }
     }
@@ -5096,7 +5228,9 @@ RESTART:
 
         Expression::setExprFunc(expression);
 
-        while(!_forNextDataStack.empty()) _forNextDataStack.pop();
+        while(!_forNextDataStack.empty())   _forNextDataStack.pop();
+        while(!_whileWendDataStack.empty()) _whileWendDataStack.pop();
+        while(!_doUntilDataStack.empty())   _doUntilDataStack.pop();
     }
 
     bool compile(const std::string& inputFilename, const std::string& outputFilename)
@@ -5131,6 +5265,9 @@ RESTART:
         // Check branch labels
         if(!checkBranchLabels()) return false;
 
+        // Check keywords that form statement blocks
+        if(!checkStatementBlocks()) return false;
+
         // Only link runtime subroutines that are referenced
         if(!linkInternalSubs()) return false;
 
@@ -5148,7 +5285,7 @@ RESTART:
         // Discard
         discardUnusedLabels();
 
-        // Re-linking is needed here as outputInternalRuntime can find new subs that need to be linked
+        // Re-linking is needed here as collectInternalRuntime() can find new subs that need to be linked
         collectInternalRuntime();
         relinkInternalSubs();
         outputInternalSubs();

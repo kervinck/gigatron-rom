@@ -1,3 +1,4 @@
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 textStr             EQU     register0
 textNum             EQU     register0
 textBak             EQU     register0
@@ -14,7 +15,8 @@ clearLoop           EQU     register13
     
 %SUB                clearCursorRow
                     ; clears the top 8 lines of pixels in preparation of text scrolling
-clearCursorRow      LD      fgbgColour
+clearCursorRow      PUSH
+                    LD      fgbgColour
                     ST      giga_sysArg0
                     ST      giga_sysArg0 + 1
                     ST      giga_sysArg2
@@ -30,9 +32,7 @@ clearCursorRow      LD      fgbgColour
                     PEEK
                     ST      giga_sysArg4 + 1
     
-clearCR_loopy       PUSH
-                    CALLI   realTimeProc
-                    POP
+clearCR_loopy       CALLI   realTimeProc
                     LDI     giga_xres
                     
 clearCR_loopx       SUBI    4                               ; loop is unrolled 4 times
@@ -51,6 +51,7 @@ clearCR_loopx       SUBI    4                               ; loop is unrolled 4
     
                     INC     giga_sysArg4 + 1                ; next line                
                     LoopCounter clearLoop clearCR_loopy
+                    POP                    
                     RET
 %ENDS
 
@@ -114,9 +115,9 @@ printInt16          PUSH
                     CALLI   printChar
                     LDWI    0
                     SUBW    textNum
-printI16_pos        STW     textNum    
-            
-                    LDWI    10000
+                    STW     textNum    
+
+printI16_pos        LDWI    10000
                     CALLI   printDigit
                     LDWI    1000
                     CALLI   printDigit

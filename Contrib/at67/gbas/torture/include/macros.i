@@ -269,7 +269,7 @@ _label_ CALL    giga_vAC
         DOKE    register0                               ; self modifying code, replaces realTimeProc stub with playMidi routine
 %ENDM
 
-%MACRO  PageJumpBEQ _label
+%MACRO  JumpFalse _label
         BNE     _label_+2
         LDWI    _label
 _label_ CALL    giga_vAC
@@ -318,6 +318,8 @@ _label_ CALL    giga_vAC
         STW     midiStream                              ; reset MIDI
         LDWI    0x0001
         STW     miscFlags                               ; reset flags
+        LDI     0x00
+        ST      giga_soundTimer                         ; reset soundTimer, (stops any current Audio)
 
         LDWI    initClearFuncs
         CALL    giga_vAC

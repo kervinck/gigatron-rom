@@ -220,7 +220,7 @@ _label_ CALLI   _label
         DOKE    register0                               ; self modifying code, replaces realTimeProc stub with playMidi routine
 %ENDM
 
-%MACRO  PageJumpBEQ _label
+%MACRO  JumpFalse _label
         BNE     _label_+3
 _label_ CALLI   _label
 %ENDM
@@ -233,6 +233,8 @@ _label_ CALLI   _label
         STW     midiStream                              ; reset MIDI
         LDWI    0x0001
         STW     miscFlags                               ; reset flags
+        LDI     0x00
+        ST      giga_soundTimer                         ; reset soundTimer, (stops any current Audio)
 
         CALLI   initClearFuncs
 %ENDM

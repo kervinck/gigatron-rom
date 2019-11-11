@@ -1,3 +1,4 @@
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 textStr             EQU     register0
 textNum             EQU     register0
 textBak             EQU     register0
@@ -14,7 +15,8 @@ clearLoop           EQU     register13
     
 %SUB                clearCursorRow
                     ; clears the top 8 lines of pixels in preparation of text scrolling
-clearCursorRow      LD      fgbgColour
+clearCursorRow      PUSH
+                    LD      fgbgColour
                     ST      giga_sysArg0
                     ST      giga_sysArg0 + 1
                     ST      giga_sysArg2
@@ -30,9 +32,7 @@ clearCursorRow      LD      fgbgColour
                     PEEK
                     ST      giga_sysArg4 + 1
     
-clearCR_loopy       PUSH
-                    CALL    realTimeProcAddr
-                    POP
+clearCR_loopy       CALL    realTimeProcAddr
                     LDI     giga_xres
                     
 clearCR_loopx       SUBI    4                               ; loop is unrolled 4 times
@@ -51,6 +51,7 @@ clearCR_loopx       SUBI    4                               ; loop is unrolled 4
     
                     INC     giga_sysArg4 + 1                ; next line
                     LoopCounter clearLoop clearCR_loopy
+                    POP
                     RET
 %ENDS
 
@@ -118,9 +119,9 @@ printInt16          PUSH
                     CALL    giga_vAC
                     LDWI    0
                     SUBW    textNum
-printI16_pos        STW     textNum    
+                    STW     textNum    
     
-                    LDWI    10000
+printI16_pos        LDWI    10000
                     STW     digitMult
                     LDWI    printDigit
                     CALL    giga_vAC
@@ -175,11 +176,14 @@ printH_skip1        ADDI    0x3A
 %SUB                printHexWord     
                     ; print hex word in textHex
 printHexWord        PUSH
-                    STW     textBak
-                    LD      textBak + 1
+                    LD      textHex
+                    ST      textBak
+                    LD      textHex + 1
+                    ST      textHex
                     LDWI    printHexByte
                     CALL    giga_vAC
                     LD      textBak
+                    ST      textHex
                     LDWI    printHexByte
                     CALL    giga_vAC
                     POP

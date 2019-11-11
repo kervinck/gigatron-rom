@@ -1,3 +1,4 @@
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 graphicsMode        EQU     register0
 waitVBlankNum       EQU     register0
 
@@ -150,7 +151,7 @@ drawVL_loop1        LD      fgbgColour + 1
 %ENDS
 
 %SUB                drawLine
-drawLine            PUSH
+drawLine            PUSH                        ; matches drawLineLoop's POP
                     LDI     1
                     STW     drawLine_dx1
                     STW     drawLine_dx2
@@ -217,14 +218,18 @@ drawL_num           LDWI    SYS_LSRW1_48
                     STW     giga_sysFn          
                     LDW     drawLine_sx
                     SYS     0xF6                ; 0xF6 = 270-max(14,48/2)
+                    ADDI    1
                     STW     drawLine_num        ; numerator = sx>>1
-                    STW     drawLine_count
-                    INC     drawLine_count      ; for(count=sx>>1; counti>=0; --i)
+                    STW     drawLine_count      ; for(count=sx>>1; counti>=0; --i)
                     
                     LDWI    drawLineLoadDXY
-                    CALL    giga_vAC     
-                    
-drawL_loop          LD      fgbgColour + 1
+                    CALL    giga_vAC
+                    LDWI    drawLineLoop
+                    CALL    giga_vAC
+%ENDS
+
+%SUB                drawLineLoop
+drawLineLoop        LD      fgbgColour + 1
                     POKE    drawLine_xy1        ; plot start pixel
                     POKE    drawLine_xy2        ; plot end pixel, (meet in middle)
                     
@@ -233,48 +238,35 @@ drawL_loop          LD      fgbgColour + 1
                     STW     drawLine_num
                     SUBW    drawLine_sx
                     BLE     drawL_flip          ; if(numerator <= sx) goto flip
-                    
                     STW     drawLine_num        ; numerator -= sx
-                    LDWI    drawLineDelta1      ; x1 += dx1, y1 += dx1, x2 -= dx1, y2 -= dx1
-                    CALL    giga_vAC
-                    BRA     drawL_count
                     
-drawL_flip          LDWI    drawLineDelta2      ; x1 += dx2, y1 += dx2, x2 -= dx2, y2 -= dx2
-                    CALL    giga_vAC
-                    
-drawL_count         LDW     drawLine_count
-                    SUBI    0x01
-                    STW     drawLine_count
-                    BGT     drawL_loop
-                    POP
-                    RET
-%ENDS   
-    
-%SUB                drawLineDelta1
-drawLineDelta1      LDW     drawLine_xy1
+                    LDW     drawLine_xy1
                     ADDW    drawLine_dxy1
                     STW     drawLine_xy1        ; xy1 += dxy1
                     
                     LDW     drawLine_xy2
                     SUBW    drawLine_dxy1
                     STW     drawLine_xy2        ; xy2 -= dxy1
-                    PUSH
-                    CALL    realTimeProcAddr
-                    POP
-                    RET
+                    BRA     drawL_count
                     
-drawLineDelta2      LDW     drawLine_xy1        
+drawL_flip          LDW     drawLine_xy1        
                     ADDW    drawLine_dxy2
                     STW     drawLine_xy1        ; xy1 += dxy2
                     
                     LDW     drawLine_xy2        
                     SUBW    drawLine_dxy2
                     STW     drawLine_xy2        ; xy2 -= dxy2
-                    PUSH
-                    CALL    realTimeProcAddr
-                    POP
-                    RET
                     
+drawL_count         CALL    realTimeProcAddr
+                    LDW     drawLine_count
+                    SUBI    0x01
+                    STW     drawLine_count
+                    BGT     drawLineLoop
+                    POP                         ; matches drawLine's PUSH
+                    RET
+%ENDS   
+    
+%SUB                drawLineLoadXY
 drawLineLoadXY      LD      drawLine_x1
                     ST      drawLine_xy1
                     LD      drawLine_y1

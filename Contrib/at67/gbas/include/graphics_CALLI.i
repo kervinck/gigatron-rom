@@ -1,3 +1,4 @@
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 graphicsMode        EQU     register0
 waitVBlankNum       EQU     register0
 
@@ -90,7 +91,7 @@ drawHLine           PUSH
 drawHL_loop0        SYS     0xFF                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
                     CALLI   realTimeProc
                     LD      giga_sysArg4
-                    ADDI    0x04
+                    ADDI    4
                     ST      giga_sysArg4
                     SUBW    drawHLine_x4
                     BLT     drawHL_loop0        ; all 4 pixel chunks
@@ -150,7 +151,7 @@ drawVL_loop1        LD      fgbgColour + 1
 %ENDS
 
 %SUB                drawLine
-drawLine            PUSH
+drawLine            PUSH                        ; matches drawLineLoop's POP
                     LDI     1
                     STW     drawLine_dx1
                     STW     drawLine_dx2
@@ -215,13 +216,16 @@ drawL_num           LDWI    SYS_LSRW1_48
                     STW     giga_sysFn          
                     LDW     drawLine_sx
                     SYS     0xF6                ; 0xF6 = 270-max(14,48/2)
+                    ADDI    1
                     STW     drawLine_num        ; numerator = sx>>1
-                    STW     drawLine_count
-                    INC     drawLine_count      ; for(count=sx>>1; counti>=0; --i)
+                    STW     drawLine_count      ; for(count=sx>>1; counti>=0; --i)
                     
                     CALLI   drawLineLoadDXY
-                    
-drawL_loop          LD      fgbgColour + 1
+                    CALLI   drawLineLoop
+%ENDS
+
+%SUB                drawLineLoop
+drawLineLoop        LD      fgbgColour + 1
                     POKE    drawLine_xy1        ; plot start pixel
                     POKE    drawLine_xy2        ; plot end pixel, (meet in middle)
                     
@@ -230,46 +234,35 @@ drawL_loop          LD      fgbgColour + 1
                     STW     drawLine_num
                     SUBW    drawLine_sx
                     BLE     drawL_flip          ; if(numerator <= sx) goto flip
-                    
                     STW     drawLine_num        ; numerator -= sx
-                    CALLI   drawLineDelta1      ; x1 += dx1, y1 += dx1, x2 -= dx1, y2 -= dx1
-                    BRA     drawL_count
-                    
-drawL_flip          CALLI   drawLineDelta2      ; x1 += dx2, y1 += dx2, x2 -= dx2, y2 -= dx2
-                    
-drawL_count         LDW     drawLine_count
-                    SUBI    0x01
-                    STW     drawLine_count
-                    BGT     drawL_loop
-                    POP
-                    RET
-%ENDS   
-    
-%SUB                drawLineDelta1
-drawLineDelta1      LDW     drawLine_xy1
+
+                    LDW     drawLine_xy1
                     ADDW    drawLine_dxy1
                     STW     drawLine_xy1        ; xy1 += dxy1
                     
                     LDW     drawLine_xy2
                     SUBW    drawLine_dxy1
                     STW     drawLine_xy2        ; xy2 -= dxy1
-                    PUSH
-                    CALLI   realTimeProc
-                    POP
-                    RET
+                    BRA     drawL_count
                     
-drawLineDelta2      LDW     drawLine_xy1        
+drawL_flip          LDW     drawLine_xy1        
                     ADDW    drawLine_dxy2
                     STW     drawLine_xy1        ; xy1 += dxy2
                     
                     LDW     drawLine_xy2        
                     SUBW    drawLine_dxy2
                     STW     drawLine_xy2        ; xy2 -= dxy2
-                    PUSH
-                    CALLI   realTimeProc
-                    POP
-                    RET
                     
+drawL_count         CALLI   realTimeProc
+                    LDW     drawLine_count
+                    SUBI    0x01
+                    STW     drawLine_count
+                    BGT     drawLineLoop
+                    POP                         ; matches drawLine's PUSH
+                    RET
+%ENDS   
+    
+%SUB                drawLineLoadXY
 drawLineLoadXY      LD      drawLine_x1
                     ST      drawLine_xy1
                     LD      drawLine_y1

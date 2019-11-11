@@ -28,17 +28,17 @@ miscFlags           EQU                     register0 + 0x1E
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_9                  EQU                     0x0239
-_10                 EQU                     0x0255
-_20                 EQU                     0x0268
-_30                 EQU                     0x0277
-_31                 EQU                     0x0239
-_32                 EQU                     0x0239
-_33                 EQU                     0x0239
-_34                 EQU                     0x0239
-_35                 EQU                     0x0239
-_36                 EQU                     0x0239
-_end_0x027d         EQU                     0x0277
+_9                  EQU                     0x023d
+_10                 EQU                     0x0259
+_20                 EQU                     0x026c
+_30                 EQU                     0x027b
+_31                 EQU                     0x023d
+_32                 EQU                     0x023d
+_33                 EQU                     0x023d
+_34                 EQU                     0x023d
+_35                 EQU                     0x023d
+_36                 EQU                     0x023d
+_end_0x0281         EQU                     0x027b
 
 ; Variables
 _P                  EQU                     0x0030
@@ -53,14 +53,14 @@ _X                  EQU                     0x0036
 ; Lookup Tables
 
 ; Code
-_entryPoint_        Initialise              
-                    InitRealTimeProc        
+_entryPoint_        InitRealTimeProc        
                     InitEqOp                
                     InitNeOp                
                     InitLeOp                
                     InitGeOp                
                     InitLtOp                
-                    InitGtOp                                                ; INIT
+                    InitGtOp                
+                    Initialise                                              ; INIT
 
 _9                  LDI                     2
                     STW                     graphicsMode
@@ -91,7 +91,7 @@ _20                 LD                      _X
                     LDWI                    _10
                     CALL                    giga_vAC                        ; POKE R,X:X=X-1:GOTO 10
 
-_end_0x027d         BRA                     _end_0x027d                     ; END
+_end_0x0281         BRA                     _end_0x0281                     ; END
 
 
 
@@ -101,17 +101,17 @@ _end_0x027d         BRA                     _end_0x027d                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7fc3
-convertEqOp         EQU     0x7fcc
-convertNeOp         EQU     0x7fd5
-convertLeOp         EQU     0x7fde
-convertGeOp         EQU     0x7fe7
-convertLtOp         EQU     0x7ff0
-convertGtOp         EQU     0x7ea0
-scanlineMode        EQU     0x7ea9
-waitVBlank          EQU     0x7ebd
-resetVideoTable     EQU     0x7ed8
-initClearFuncs      EQU     0x7fa0
+realTimeProc        EQU     0x7fa0
+convertEqOp         EQU     0x7fa9
+convertNeOp         EQU     0x7fb2
+convertLeOp         EQU     0x7fbb
+convertGeOp         EQU     0x7fc4
+convertLtOp         EQU     0x7fcd
+convertGtOp         EQU     0x7fd6
+scanlineMode        EQU     0x7fdf
+waitVBlank          EQU     0x7ec3
+resetVideoTable     EQU     0x7ede
+initClearFuncs      EQU     0x7ea0
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -263,12 +263,14 @@ evenAddr            EQU     register12
     
     
                     ; resets video table pointers
-resetVideoTable     LDWI    0x0008
+resetVideoTable     PUSH
+                    LDWI    0x0008
                     STW     vramAddr
                     LDWI    giga_videoTable
                     STW     evenAddr
     
-resetVT_loop        LDW     vramAddr
+resetVT_loop        CALL    realTimeProcAddr
+                    LDW     vramAddr
                     DOKE    evenAddr
                     INC     evenAddr
                     INC     evenAddr
@@ -277,6 +279,7 @@ resetVT_loop        LDW     vramAddr
                     LD      vramAddr
                     SUBI    giga_yres+8
                     BLT     resetVT_loop
+                    POP
                     RET
 
 

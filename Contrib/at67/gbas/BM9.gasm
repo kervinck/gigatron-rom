@@ -11,16 +11,18 @@ register6           EQU                     register0 + 0x0C
 register7           EQU                     register0 + 0x0E
 register8           EQU                     register0 + 0x10
 register9           EQU                     register0 + 0x12
-register10          EQU                     0x0024
-register11          EQU                     0x0026
-register12          EQU                     0x0028
-register13          EQU                     0x002A
-fgbgColour          EQU                     register0 + 0x14
-cursorXY            EQU                     register0 + 0x16
-midiStream          EQU                     register0 + 0x18
-midiDelay           EQU                     register0 + 0x1A
-frameCountPrev      EQU                     register0 + 0x1C
-miscFlags           EQU                     register0 + 0x1E
+register10          EQU                     register0 + 0x14
+register11          EQU                     register0 + 0x16
+register12          EQU                     register0 + 0x18
+register13          EQU                     register0 + 0x1A
+register14          EQU                     register0 + 0x1C
+register15          EQU                     register0 + 0x1E
+fgbgColour          EQU                     register0 + 0x20
+cursorXY            EQU                     register0 + 0x22
+midiStream          EQU                     register0 + 0x24
+midiDelay           EQU                     register0 + 0x26
+frameCountPrev      EQU                     register0 + 0x28
+miscFlags           EQU                     register0 + 0x2A
 
 ; Includes
 %include            include/gigatron.i
@@ -28,20 +30,20 @@ miscFlags           EQU                     register0 + 0x1E
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_100                EQU                     0x0239
-_101                EQU                     0x0243
-_102                EQU                     0x024d
-_103                EQU                     0x0257
-_104                EQU                     0x0266
-_105                EQU                     0x0270
-_110                EQU                     0x027f
-_120                EQU                     0x0283
-_130                EQU                     0x0287
-_140                EQU                     0x0298
-_150                EQU                     0x02a7
-_160                EQU                     0x02b8
-_170                EQU                     0x02cb
-_180                EQU                     0x02dc
+_100                EQU                     0x023d
+_101                EQU                     0x0247
+_102                EQU                     0x0251
+_103                EQU                     0x025b
+_104                EQU                     0x026a
+_105                EQU                     0x0274
+_110                EQU                     0x0283
+_120                EQU                     0x0287
+_130                EQU                     0x028b
+_140                EQU                     0x029c
+_150                EQU                     0x02ab
+_160                EQU                     0x02bc
+_170                EQU                     0x02cf
+_180                EQU                     0x02e0
 _190                EQU                     0x08a2
 _200                EQU                     0x08b0
 _210                EQU                     0x08be
@@ -49,7 +51,7 @@ _220                EQU                     0x08cc
 _230                EQU                     0x08d1
 _240                EQU                     0x08d6
 _250                EQU                     0x08e5
-_end_0x034a         EQU                     0x08e5
+_end_0x034e         EQU                     0x08e5
 _page_0x08a0        EQU                     0x08a0
 
 ; Variables
@@ -79,14 +81,14 @@ str_0x7fe7          DB                      4 'DONE'
 ; Lookup Tables
 
 ; Code
-_entryPoint_        Initialise              
-                    InitRealTimeProc        
+_entryPoint_        InitRealTimeProc        
                     InitEqOp                
                     InitNeOp                
                     InitLeOp                
                     InitGeOp                
                     InitLtOp                
-                    InitGtOp                                                ; INIT
+                    InitGtOp                
+                    Initialise                                              ; INIT
 
 _100                PrintString             str_0x7fa0                      ; PRINT "INTERFACE AGE";
 
@@ -129,26 +131,26 @@ _140                LDW                     _N
 
 _150                LDW                     _L
                     CALL                    convertEqOpAddr
-                    PageJumpBEQ             _160
+                    JumpFalse               _160
                     LDWI                    _200
                     CALL                    giga_vAC                        ; IF L=0 THEN GOTO 200
 
 _160                LDW                     _L
                     SUBI                    1
                     CALL                    convertEqOpAddr
-                    PageJumpBEQ             _170
+                    JumpFalse               _170
                     LDWI                    _190
                     CALL                    giga_vAC                        ; IF L=1 THEN GOTO 190
 
 _170                LDW                     _M
                     CALL                    convertGtOpAddr
-                    PageJumpBEQ             _180
+                    JumpFalse               _180
                     LDWI                    _190
                     CALL                    giga_vAC                        ; IF M>0 THEN GOTO 190
 
 _180                LDW                     _M
                     CALL                    convertEqOpAddr
-                    PageJumpBEQ             _190
+                    JumpFalse               _190
                     LDWI                    _210
                     CALL                    giga_vAC                        ; IF M=0 THEN GOTO 210
 
@@ -174,7 +176,7 @@ _240                PrintString             str_0x7fe7
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; PRINT "DONE"
 
-_end_0x034a         BRA                     _end_0x034a                     ; END
+_end_0x034e         BRA                     _end_0x034e                     ; END
 
 
 
@@ -186,16 +188,16 @@ _end_0x034a         BRA                     _end_0x034a                     ; EN
 
 realTimeProc        EQU     0x7fec
 convertEqOp         EQU     0x7ff5
-convertNeOp         EQU     0x7ec3
-convertLeOp         EQU     0x7ecc
-convertGeOp         EQU     0x7ed5
-convertLtOp         EQU     0x7ede
-convertGtOp         EQU     0x7ee7
+convertNeOp         EQU     0x7ea0
+convertLeOp         EQU     0x7ea9
+convertGeOp         EQU     0x7eb2
+convertLtOp         EQU     0x7ebb
+convertGtOp         EQU     0x7ec4
 divide16bit         EQU     0x7ba0
 resetVideoTable     EQU     0x7dbd
-initClearFuncs      EQU     0x7ea0
+initClearFuncs      EQU     0x7ecd
 clearCursorRow      EQU     0x79a0
-printInit           EQU     0x7dd9
+printInit           EQU     0x7ddd
 printText           EQU     0x7da0
 printDigit          EQU     0x78a0
 printInt16          EQU     0x7aa0
@@ -280,10 +282,10 @@ mathX               EQU     register0
 mathY               EQU     register1
 mathSum             EQU     register2
 mathMask            EQU     register3
-mathRem             EQU     register4
-mathSign            EQU     register5
-mathScratch         EQU     register6
-mathShift           EQU     register7
+mathRem             EQU     register8
+mathSign            EQU     register9
+mathScratch         EQU     register10
+mathShift           EQU     register11
     
     
                     ; accumulator:mathRem = mathX / mathY, (results 16bit)
@@ -322,7 +324,10 @@ divide16_skip3      LDW     mathX
                     STW     mathRem
                     INC     mathX
                     
-divide16_skip4      LDW     mathScratch
+divide16_skip4      PUSH
+                    CALL    realTimeProcAddr
+                    POP
+                    LDW     mathScratch
                     ADDI    1
                     ANDI    0x0F
                     BNE     divide16_loop
@@ -349,12 +354,14 @@ evenAddr            EQU     register12
     
     
                     ; resets video table pointers
-resetVideoTable     LDWI    0x0008
+resetVideoTable     PUSH
+                    LDWI    0x0008
                     STW     vramAddr
                     LDWI    giga_videoTable
                     STW     evenAddr
     
-resetVT_loop        LDW     vramAddr
+resetVT_loop        CALL    realTimeProcAddr
+                    LDW     vramAddr
                     DOKE    evenAddr
                     INC     evenAddr
                     INC     evenAddr
@@ -363,6 +370,7 @@ resetVT_loop        LDW     vramAddr
                     LD      vramAddr
                     SUBI    giga_yres+8
                     BLT     resetVT_loop
+                    POP
                     RET
 
 
@@ -454,9 +462,9 @@ printInt16          PUSH
                     CALL    giga_vAC
                     LDWI    0
                     SUBW    textNum
-printI16_pos        STW     textNum    
+                    STW     textNum    
     
-                    LDWI    10000
+printI16_pos        LDWI    10000
                     STW     digitMult
                     LDWI    printDigit
                     CALL    giga_vAC
@@ -542,7 +550,8 @@ printC_exit         POP
 
 
                     ; clears the top 8 lines of pixels in preparation of text scrolling
-clearCursorRow      LD      fgbgColour
+clearCursorRow      PUSH
+                    LD      fgbgColour
                     ST      giga_sysArg0
                     ST      giga_sysArg0 + 1
                     ST      giga_sysArg2
@@ -558,9 +567,7 @@ clearCursorRow      LD      fgbgColour
                     PEEK
                     ST      giga_sysArg4 + 1
     
-clearCR_loopy       PUSH
-                    CALL    realTimeProcAddr
-                    POP
+clearCR_loopy       CALL    realTimeProcAddr
                     LDI     giga_xres
                     
 clearCR_loopx       SUBI    4                               ; loop is unrolled 4 times
@@ -579,6 +586,7 @@ clearCR_loopx       SUBI    4                               ; loop is unrolled 4
     
                     INC     giga_sysArg4 + 1                ; next line
                     LoopCounter clearLoop clearCR_loopy
+                    POP
                     RET
 
 
