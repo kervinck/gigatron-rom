@@ -31,25 +31,25 @@ miscFlags           EQU                     register0 + 0x2A
 ; Labels
 _entryPoint_        EQU                     0x0200
 _loop               EQU                     0x0278
-_113                EQU                     0x02d2
-_50                 EQU                     0x02ee
-_119                EQU                     0x08bd
-_51                 EQU                     0x08d9
-_101                EQU                     0x08f5
-_114                EQU                     0x09bd
-_53                 EQU                     0x09d9
-_116                EQU                     0x09f5
-_54                 EQU                     0x0abd
-_121                EQU                     0x0ad9
-_55                 EQU                     0x0af5
-_117                EQU                     0x0bbd
-_105                EQU                     0x0bd9
-_57                 EQU                     0x0bf5
-_111                EQU                     0x0cbd
-_48                 EQU                     0x0cd9
-_112                EQU                     0x0cf5
-_122                EQU                     0x0dbd
-_default            EQU                     0x0dea
+_113                EQU                     0x02ce
+_50                 EQU                     0x02ea
+_119                EQU                     0x08b9
+_51                 EQU                     0x08d5
+_101                EQU                     0x08f1
+_114                EQU                     0x09b9
+_53                 EQU                     0x09d5
+_116                EQU                     0x09f1
+_54                 EQU                     0x0ab9
+_121                EQU                     0x0ad5
+_55                 EQU                     0x0af1
+_117                EQU                     0x0bb9
+_105                EQU                     0x0bd5
+_57                 EQU                     0x0bf1
+_111                EQU                     0x0cb9
+_48                 EQU                     0x0cd5
+_112                EQU                     0x0cf1
+_122                EQU                     0x0db9
+_default            EQU                     0x0de4
 _text               EQU                     0x0ea2
 _audio              EQU                     0x0ec3
 _206                EQU                     0x0fd8
@@ -59,18 +59,18 @@ _209                EQU                     0x10bb
 _inverse            EQU                     0x10cd
 _normal             EQU                     0x10eb
 _printChr           EQU                     0x11b6
-_end_0x0649         EQU                     0x11dd
-_if_0x02b0          EQU                     0x029e
-_if_0x02c7          EQU                     0x02b1
+_end_0x0643         EQU                     0x11dd
+_if_0x02ae          EQU                     0x029c
+_if_0x02c3          EQU                     0x02ad
 _page_0x08a0        EQU                     0x08a0
 _page_0x09a0        EQU                     0x09a0
 _page_0x0aa0        EQU                     0x0aa0
 _page_0x0ba0        EQU                     0x0ba0
 _page_0x0ca0        EQU                     0x0ca0
 _page_0x0da0        EQU                     0x0da0
-_if_0x04f9          EQU                     0x0de2
+_if_0x04f3          EQU                     0x0ddc
 _page_0x0ea0        EQU                     0x0ea0
-_next_0x0534        EQU                     0x0ec8
+_next_0x052e        EQU                     0x0ec8
 _page_0x0fa0        EQU                     0x0fa0
 _page_0x10a0        EQU                     0x10a0
 _page_0x11a0        EQU                     0x11a0
@@ -111,7 +111,7 @@ str_0x7fe6          DB                      8 'Sawtooth'
 lut_numericLabs     EQU                     0x79cd
 lut_numericLabs     DW                      113 50 119 51 101 114 53 116 54 121 55 117 105 57 111 48 112 122 206 207 208 209 -1
 lut_numericAddrs    EQU                     0x77a0
-lut_numericAddrs    DW                      0x02d2 0x02ee 0x08bd 0x08d9 0x08f5 0x09bd 0x09d9 0x09f5 0x0abd 0x0ad9 0x0af5 0x0bbd 0x0bd9 0x0bf5 0x0cbd 0x0cd9 0x0cf5 0x0dbd 0x0fd8 0x0fea 0x10a9 0x10bb 
+lut_numericAddrs    DW                      0x02ce 0x02ea 0x08b9 0x08d5 0x08f1 0x09b9 0x09d5 0x09f1 0x0ab9 0x0ad5 0x0af1 0x0bb9 0x0bd5 0x0bf1 0x0cb9 0x0cd5 0x0cf1 0x0db9 0x0fd8 0x0fea 0x10a9 0x10bb 
 
 ; Code
 _entryPoint_        InitRealTimeProc        
@@ -163,21 +163,19 @@ _loop               LDI                     0x10
 
                     LDW                     _inv
                     SUBI                    1
-                    CALL                    convertEqOpAddr
-                    JumpFalse               _if_0x02b0
+                    JumpEQ                  _if_0x02ae 0
                     LDWI                    _normal
                     CALL                    giga_vAC
                     LDWI                    _loop
-                    CALL                    giga_vAC                        ; if inv=1 then gosub normal:goto loop
+                    CALL                    giga_vAC                        ; if inv&=1 then gosub normal:goto loop
 
-_if_0x02b0          LDW                     _k
+_if_0x02ae          LDW                     _k
                     SUBI                    126
-                    CALL                    convertGtOpAddr
-                    JumpFalse               _if_0x02c7
+                    JumpGT                  _if_0x02c3 1
                     LDWI                    _loop
-                    CALL                    giga_vAC                        ; if k>126 then goto loop
+                    CALL                    giga_vAC                        ; if k&>126 then goto loop
 
-_if_0x02c7          LDW                     _k
+_if_0x02c3          LDW                     _k
                     STW                     numericLabel
                     LDWI                    _default
                     STW                     defaultLabel
@@ -212,12 +210,12 @@ _113                PUSH
                     RET                                                     ; a=73 :b=8 :char=81:posx=2  :posy=8:gosub inverse:return:'C
 
 _50                 PUSH                    
+                    LDI                     11
+                    STW                     _a
                     STW                     0x82
                     LDWI                    _page_0x08a0
                     CALL                    giga_vAC
 _page_0x08a0        LDW                     0x82
-                    LDI                     11
-                    STW                     _a
                     LDI                     9
                     STW                     _b
                     LDI                     50
@@ -264,12 +262,12 @@ _51                 PUSH
                     RET                                                     ; a=25 :b=10:char=51:posx=20 :posy=0:gosub inverse:return:'D#
 
 _101                PUSH                    
+                    LDI                     103
+                    STW                     _a
                     STW                     0x82
                     LDWI                    _page_0x09a0
                     CALL                    giga_vAC
 _page_0x09a0        LDW                     0x82
-                    LDI                     103
-                    STW                     _a
                     LDI                     10
                     STW                     _b
                     LDI                     69
@@ -316,12 +314,12 @@ _53                 PUSH
                     RET                                                     ; a=16 :b=12:char=53:posx=44 :posy=0:gosub inverse:return:'F#
 
 _116                PUSH                    
+                    LDI                     108
+                    STW                     _a
                     STW                     0x82
                     LDWI                    _page_0x0aa0
                     CALL                    giga_vAC
 _page_0x0aa0        LDW                     0x82
-                    LDI                     108
-                    STW                     _a
                     LDI                     12
                     STW                     _b
                     LDI                     84
@@ -368,12 +366,12 @@ _121                PUSH
                     RET                                                     ; a=53 :b=14:char=89:posx=62 :posy=8:gosub inverse:return:'A
 
 _55                 PUSH                    
+                    LDI                     35
+                    STW                     _a
                     STW                     0x82
                     LDWI                    _page_0x0ba0
                     CALL                    giga_vAC
 _page_0x0ba0        LDW                     0x82
-                    LDI                     35
-                    STW                     _a
                     LDI                     15
                     STW                     _b
                     LDI                     55
@@ -420,12 +418,12 @@ _105                PUSH
                     RET                                                     ; a=19 :b=17:char=73:posx=86 :posy=8:gosub inverse:return:'C
 
 _57                 PUSH                    
+                    LDI                     21
+                    STW                     _a
                     STW                     0x82
                     LDWI                    _page_0x0ca0
                     CALL                    giga_vAC
 _page_0x0ca0        LDW                     0x82
-                    LDI                     21
-                    STW                     _a
                     LDI                     18
                     STW                     _b
                     LDI                     57
@@ -472,12 +470,12 @@ _48                 PUSH
                     RET                                                     ; a=50 :b=20:char=48:posx=104:posy=0:gosub inverse:return:'D#
 
 _112                PUSH                    
+                    LDI                     77
+                    STW                     _a
                     STW                     0x82
                     LDWI                    _page_0x0da0
                     CALL                    giga_vAC
 _page_0x0da0        LDW                     0x82
-                    LDI                     77
-                    STW                     _a
                     LDI                     21
                     STW                     _b
                     LDI                     80
@@ -495,8 +493,7 @@ _122                PUSH
                     LDI                     0x0f
                     PEEK                    
                     SUBI                    255
-                    CALL                    convertEqOpAddr
-                    JumpFalse               _if_0x04f9
+                    JumpEQ                  _if_0x04f3 2
                     LDW                     _z
                     ADDI                    1
                     ANDI                    3
@@ -507,9 +504,9 @@ _122                PUSH
                     LDWI                    _audio
                     CALL                    giga_vAC
                     POP                     
-                    RET                                                     ; if peek(15)=255 then z=(z+1)AND3:a=0:b=a:gosub audio:return
+                    RET                                                     ; if peek(15)&=255 then z=(z+1)AND3:a=0:b=a:gosub audio:return
 
-_if_0x04f9          LDI                     0
+_if_0x04f3          LDI                     0
                     STW                     _a
                     STW                     _b
                     POP                     
@@ -542,7 +539,7 @@ _audio              PUSH
                     LDI                     1
                     STW                     _c                              ; for c=1 to 4
 
-_next_0x0534        LDWI                    256
+_next_0x052e        LDWI                    256
                     STW                     mathX
                     LDW                     _c
                     STW                     mathY
@@ -568,7 +565,7 @@ _next_0x0534        LDWI                    256
                     LDWI                    _page_0x0fa0
                     CALL                    giga_vAC
 _page_0x0fa0        LDW                     0x82
-                    ForNextLoopUp           _c _next_0x0534 4               ; next c
+                    ForNextLoopUp           _c _next_0x052e 4               ; next c
 
                     LDI                     2
                     ST                      cursorXY
@@ -682,7 +679,7 @@ _printChr           PUSH
                     POP                     
                     RET                                                     ; return
 
-_end_0x0649         BRA                     _end_0x0649                     ; END
+_end_0x0643         BRA                     _end_0x0643                     ; END
 
 
 
@@ -721,12 +718,13 @@ convertLtOpAddr     EQU     0x00d8
 convertGtOpAddr     EQU     0x00da
 
 
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 numericLabel        EQU     register0
 defaultLabel        EQU     register1
 lutLabs             EQU     register2
 lutAddrs            EQU     register3
-lutIndex            EQU     register4
-lutLabel            EQU     register5
+lutIndex            EQU     register8
+lutLabel            EQU     register9
 
 
                     ; runs real time, (time sliced), code at regular intervals
@@ -787,6 +785,7 @@ convertGt_1         LDI     1
                     RET
 
 
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 mathX               EQU     register0
 mathY               EQU     register1
 mathSum             EQU     register2
@@ -859,6 +858,7 @@ gosubNL_found       LDW     lutIndex
                     RET
 
 
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 graphicsMode        EQU     register0
 waitVBlankNum       EQU     register0
 
@@ -923,6 +923,7 @@ waitVB_start        LD      giga_frameCount
 
 
 
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 xreset              EQU     register0
 xcount              EQU     register1
 ycount              EQU     register2
@@ -1013,6 +1014,7 @@ clearVB_loop        CALL    realTimeProcAddr
                     RET
 
 
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 textStr             EQU     register0
 textNum             EQU     register0
 textBak             EQU     register0

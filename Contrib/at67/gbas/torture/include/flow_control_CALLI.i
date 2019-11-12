@@ -1,9 +1,10 @@
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 numericLabel        EQU     register0
 defaultLabel        EQU     register1
 lutLabs             EQU     register2
 lutAddrs            EQU     register3
-lutIndex            EQU     register4
-lutLabel            EQU     register5
+lutIndex            EQU     register8
+lutLabel            EQU     register9
 
 
 %SUB                realTimeProc

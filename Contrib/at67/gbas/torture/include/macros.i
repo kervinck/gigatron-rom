@@ -47,7 +47,7 @@
         INC     _var
         LD      _var
         SUBI    _end
-        BGT     _label_+2
+        BGT     _label_ + 2
         LDWI    _label
 _label_ CALL    giga_vAC
 %ENDM
@@ -57,7 +57,7 @@ _label_ CALL    giga_vAC
         SUBI    1
         ST      _var
         SUBI    _end
-        BLT     _label_+2
+        BLT     _label_ + 2
         LDWI    _label
 _label_ CALL    giga_vAC
 %ENDM
@@ -67,7 +67,7 @@ _label_ CALL    giga_vAC
         ADDW    _vStep
         STW     _var
         SUBW    _vEnd
-        BGT     _label_+2
+        BGT     _label_ + 2
         LDWI    _label
 _label_ CALL    giga_vAC
 %ENDM
@@ -77,7 +77,7 @@ _label_ CALL    giga_vAC
         ADDW    _vStep
         STW     _var
         SUBW    _vEnd
-        BLT     _label_+2
+        BLT     _label_ + 2
         LDWI    _label
 _label_ CALL    giga_vAC
 %ENDM
@@ -269,10 +269,46 @@ _label_ CALL    giga_vAC
         DOKE    register0                               ; self modifying code, replaces realTimeProc stub with playMidi routine
 %ENDM
 
-%MACRO  JumpFalse _label
-        BNE     _label_+2
+%MACRO  JumpFalse _label id
+        BNE     _id_ + 2                                ; unique id is used as an internal macro label
         LDWI    _label
-_label_ CALL    giga_vAC
+_id_    CALL    giga_vAC
+%ENDM
+
+%MACRO  JumpEQ _label id
+        BEQ     _id_ + 2
+        LDWI    _label
+_id_    CALL    giga_vAC
+%ENDM
+
+%MACRO  JumpNE _label id
+        BNE     _id_ + 2
+        LDWI    _label
+_id_    CALL    giga_vAC
+%ENDM
+
+%MACRO  JumpLE _label id
+        BLE     _id_ + 2
+        LDWI    _label
+_id_    CALL    giga_vAC
+%ENDM
+
+%MACRO  JumpGE _label id
+        BGE     _id_ + 2
+        LDWI    _label
+_id_    CALL    giga_vAC
+%ENDM
+
+%MACRO  JumpLT _label id
+        BLT     _id_ + 2
+        LDWI    _label
+_id_    CALL    giga_vAC
+%ENDM
+
+%MACRO  JumpGT _label id
+        BGT     _id_ + 2
+        LDWI    _label
+_id_    CALL    giga_vAC
 %ENDM
 
 %MACRO  InitEqOp

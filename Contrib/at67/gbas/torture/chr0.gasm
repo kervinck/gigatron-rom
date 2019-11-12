@@ -8438,12 +8438,13 @@ convertLtOpAddr     EQU     0x00d8
 convertGtOpAddr     EQU     0x00da
 
 
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 numericLabel        EQU     register0
 defaultLabel        EQU     register1
 lutLabs             EQU     register2
 lutAddrs            EQU     register3
-lutIndex            EQU     register4
-lutLabel            EQU     register5
+lutIndex            EQU     register8
+lutLabel            EQU     register9
 
 
                     ; runs real time, (time sliced), code at regular intervals
@@ -8504,6 +8505,7 @@ convertGt_1         LDI     1
                     RET
 
 
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 mathX               EQU     register0
 mathY               EQU     register1
 mathSum             EQU     register2
@@ -8593,6 +8595,7 @@ divide16_exit       LDW     mathX
 
 
 
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 xreset              EQU     register0
 xcount              EQU     register1
 ycount              EQU     register2
@@ -8647,6 +8650,7 @@ initClearFuncs      PUSH
                     RET
 
 
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 textStr             EQU     register0
 textNum             EQU     register0
 textBak             EQU     register0

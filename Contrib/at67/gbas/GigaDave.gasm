@@ -40,11 +40,11 @@ _30                 EQU                     0x028a
 _40                 EQU                     0x02a1
 _50                 EQU                     0x02b8
 _60                 EQU                     0x02c8
-_70                 EQU                     0x02d9
-_80                 EQU                     0x02e9
+_70                 EQU                     0x02d7
+_80                 EQU                     0x08a2
 _85                 EQU                     0x08b1
-_90                 EQU                     0x08c4
-_end_0x0354         EQU                     0x08c9
+_90                 EQU                     0x08c2
+_end_0x034e         EQU                     0x08c7
 _page_0x08a0        EQU                     0x08a0
 
 ; Variables
@@ -219,10 +219,9 @@ _50                 LDW                     _w
                     STW                     _v                              ; w=w+v+v+1:v=v+1
 
 _60                 LDW                     _w
-                    CALL                    convertLtOpAddr
-                    JumpFalse               _70
+                    JumpLT                  _70 0
                     LDWI                    _30
-                    CALL                    giga_vAC                        ; if w<0 then goto 30
+                    CALL                    giga_vAC                        ; if w&<0 then goto 30
 
 _70                 LDW                     _w
                     SUBW                    _u
@@ -233,27 +232,25 @@ _70                 LDW                     _w
                     SUBI                    1
                     STW                     _u                              ; w=w-u-u+1:u=u-1
 
-_80                 LDW                     _u
                     STW                     0x82
                     LDWI                    _page_0x08a0
                     CALL                    giga_vAC
 _page_0x08a0        LDW                     0x82
-                    CALL                    convertGtOpAddr
-                    JumpFalse               _85
+_80                 LDW                     _u
+                    JumpGT                  _85 1
                     LDWI                    _60
-                    CALL                    giga_vAC                        ; if u>0 then goto 60
+                    CALL                    giga_vAC                        ; if u&>0 then goto 60
 
 _85                 LDW                     _a
                     SUBI                    2
-                    CALL                    convertLtOpAddr
-                    JumpFalse               _90
+                    JumpLT                  _90 2
                     LDWI                    _5
-                    CALL                    giga_vAC                        ; if a<2 then goto 5
+                    CALL                    giga_vAC                        ; if a&<2 then goto 5
 
 _90                 LDWI                    _7
                     CALL                    giga_vAC                        ; goto 7
 
-_end_0x0354         BRA                     _end_0x0354                     ; END
+_end_0x034e         BRA                     _end_0x034e                     ; END
 
 
 
@@ -286,12 +283,13 @@ convertLtOpAddr     EQU     0x00d8
 convertGtOpAddr     EQU     0x00da
 
 
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 numericLabel        EQU     register0
 defaultLabel        EQU     register1
 lutLabs             EQU     register2
 lutAddrs            EQU     register3
-lutIndex            EQU     register4
-lutLabel            EQU     register5
+lutIndex            EQU     register8
+lutLabel            EQU     register9
 
 
                     ; runs real time, (time sliced), code at regular intervals
@@ -353,6 +351,7 @@ convertGt_1         LDI     1
 
 
 
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 xreset              EQU     register0
 xcount              EQU     register1
 ycount              EQU     register2
@@ -443,6 +442,7 @@ clearVB_loop        CALL    realTimeProcAddr
                     RET
 
 
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 graphicsMode        EQU     register0
 waitVBlankNum       EQU     register0
 

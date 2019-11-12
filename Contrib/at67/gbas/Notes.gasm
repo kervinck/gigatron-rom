@@ -49,8 +49,8 @@ _33                 EQU                     0x02e3
 _34                 EQU                     0x02e9
 _35                 EQU                     0x08a8
 _36                 EQU                     0x08b1
-_37                 EQU                     0x08c3
-_end_0x0336         EQU                     0x08d1
+_37                 EQU                     0x08c1
+_end_0x0334         EQU                     0x08cf
 _page_0x08a0        EQU                     0x08a0
 
 ; Variables
@@ -177,14 +177,13 @@ _35                 LDWI                    44
 
 _36                 LDI                     0x2c
                     PEEK                    
-                    CALL                    convertGtOpAddr
-                    JumpFalse               _37
+                    JumpGT                  _37 0
                     LDWI                    _36
-                    CALL                    giga_vAC                        ; if peek(44)>0 then goto 36
+                    CALL                    giga_vAC                        ; if peek(44)&>0 then goto 36
 
 _37                 ForNextLoopUp           _n _31 95                       ; next n
 
-_end_0x0336         BRA                     _end_0x0336                     ; END
+_end_0x0334         BRA                     _end_0x0334                     ; END
 
 
 
@@ -220,12 +219,13 @@ convertLtOpAddr     EQU     0x00d8
 convertGtOpAddr     EQU     0x00da
 
 
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 numericLabel        EQU     register0
 defaultLabel        EQU     register1
 lutLabs             EQU     register2
 lutAddrs            EQU     register3
-lutIndex            EQU     register4
-lutLabel            EQU     register5
+lutIndex            EQU     register8
+lutLabel            EQU     register9
 
 
                     ; runs real time, (time sliced), code at regular intervals
@@ -286,6 +286,7 @@ convertGt_1         LDI     1
                     RET
 
 
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 mathX               EQU     register0
 mathY               EQU     register1
 mathSum             EQU     register2
@@ -322,6 +323,7 @@ multiply16_skip     LDW     mathX
 
 
 
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 xreset              EQU     register0
 xcount              EQU     register1
 ycount              EQU     register2
@@ -377,6 +379,7 @@ initClearFuncs      PUSH
 
 
 
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 textStr             EQU     register0
 textNum             EQU     register0
 textBak             EQU     register0

@@ -5,8 +5,8 @@ a=0:b=a:p=256+252:mode 2:cls:z=2:gosub text:gosub audio
     
 loop: k=peek(16)
       wait 3
-      if inv=1 then gosub normal:goto loop
-      if k>126 then goto loop
+      if inv&=1 then gosub normal:goto loop
+      if k&>126 then goto loop
       gosub k,default
       poke p,a:poke p+1,b
       goto loop
@@ -28,7 +28,7 @@ loop: k=peek(16)
 111  a=31 :b=19:char=79:posx=98 :posy=8:gosub inverse:return:'D
 48   a=50 :b=20:char=48:posx=104:posy=0:gosub inverse:return:'D#
 112  a=77 :b=21:char=80:posx=110:posy=8:gosub inverse:return:'E
-122  if peek(15)=255 then z=(z+1)AND3:a=0:b=a:gosub audio:return
+122  if peek(15)&=255 then z=(z+1)AND3:a=0:b=a:gosub audio:return
      a=0:b=a:return
 
 default: a=0:b=a:return

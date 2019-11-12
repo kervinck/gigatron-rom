@@ -383,7 +383,7 @@ namespace Expression
         if(it == s.end()) return std::string("");
 
         size_t start = it - s.begin();
-        size_t end = s.find_first_of("-+/*%<>=();, ");
+        size_t end = s.find_first_of("-+/*%&<>=();, ");
         if(end == std::string::npos) return s.substr(start);
 
         return s.substr(start, end - start);

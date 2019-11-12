@@ -41,9 +41,9 @@ _120                EQU                     0x0287
 _130                EQU                     0x028b
 _140                EQU                     0x029c
 _150                EQU                     0x02ab
-_160                EQU                     0x02bc
-_170                EQU                     0x02cf
-_180                EQU                     0x02e0
+_160                EQU                     0x02ba
+_170                EQU                     0x02cb
+_180                EQU                     0x02da
 _190                EQU                     0x08a2
 _200                EQU                     0x08b0
 _210                EQU                     0x08be
@@ -51,7 +51,7 @@ _220                EQU                     0x08cc
 _230                EQU                     0x08d1
 _240                EQU                     0x08d6
 _250                EQU                     0x08e5
-_end_0x034e         EQU                     0x08e5
+_end_0x0346         EQU                     0x08e5
 _page_0x08a0        EQU                     0x08a0
 
 ; Variables
@@ -130,29 +130,25 @@ _140                LDW                     _N
                     STW                     _L                              ; L=N / K
 
 _150                LDW                     _L
-                    CALL                    convertEqOpAddr
-                    JumpFalse               _160
+                    JumpEQ                  _160 0
                     LDWI                    _200
-                    CALL                    giga_vAC                        ; IF L=0 THEN GOTO 200
+                    CALL                    giga_vAC                        ; IF L&=0 THEN GOTO 200
 
 _160                LDW                     _L
                     SUBI                    1
-                    CALL                    convertEqOpAddr
-                    JumpFalse               _170
+                    JumpEQ                  _170 1
                     LDWI                    _190
-                    CALL                    giga_vAC                        ; IF L=1 THEN GOTO 190
+                    CALL                    giga_vAC                        ; IF L&=1 THEN GOTO 190
 
 _170                LDW                     _M
-                    CALL                    convertGtOpAddr
-                    JumpFalse               _180
+                    JumpGT                  _180 2
                     LDWI                    _190
-                    CALL                    giga_vAC                        ; IF M>0 THEN GOTO 190
+                    CALL                    giga_vAC                        ; IF M&>0 THEN GOTO 190
 
 _180                LDW                     _M
-                    CALL                    convertEqOpAddr
-                    JumpFalse               _190
+                    JumpEQ                  _190 3
                     LDWI                    _210
-                    CALL                    giga_vAC                        ; IF M=0 THEN GOTO 210
+                    CALL                    giga_vAC                        ; IF M&=0 THEN GOTO 210
 
                     STW                     0x82
                     LDWI                    _page_0x08a0
@@ -176,7 +172,7 @@ _240                PrintString             str_0x7fe7
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; PRINT "DONE"
 
-_end_0x034e         BRA                     _end_0x034e                     ; END
+_end_0x0346         BRA                     _end_0x0346                     ; END
 
 
 
@@ -212,12 +208,13 @@ convertLtOpAddr     EQU     0x00d8
 convertGtOpAddr     EQU     0x00da
 
 
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 numericLabel        EQU     register0
 defaultLabel        EQU     register1
 lutLabs             EQU     register2
 lutAddrs            EQU     register3
-lutIndex            EQU     register4
-lutLabel            EQU     register5
+lutIndex            EQU     register8
+lutLabel            EQU     register9
 
 
                     ; runs real time, (time sliced), code at regular intervals
@@ -278,6 +275,7 @@ convertGt_1         LDI     1
                     RET
 
 
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 mathX               EQU     register0
 mathY               EQU     register1
 mathSum             EQU     register2
@@ -342,6 +340,7 @@ divide16_exit       LDW     mathX
 
 
 
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 xreset              EQU     register0
 xcount              EQU     register1
 ycount              EQU     register2
@@ -397,6 +396,7 @@ initClearFuncs      PUSH
 
 
 
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 textStr             EQU     register0
 textNum             EQU     register0
 textBak             EQU     register0

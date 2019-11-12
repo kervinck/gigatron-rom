@@ -11,16 +11,18 @@ register6           EQU                     register0 + 0x0C
 register7           EQU                     register0 + 0x0E
 register8           EQU                     register0 + 0x10
 register9           EQU                     register0 + 0x12
-register10          EQU                     0x0024
-register11          EQU                     0x0026
-register12          EQU                     0x0028
-register13          EQU                     0x002A
-fgbgColour          EQU                     register0 + 0x14
-cursorXY            EQU                     register0 + 0x16
-midiStream          EQU                     register0 + 0x18
-midiDelay           EQU                     register0 + 0x1A
-frameCountPrev      EQU                     register0 + 0x1C
-miscFlags           EQU                     register0 + 0x1E
+register10          EQU                     register0 + 0x14
+register11          EQU                     register0 + 0x16
+register12          EQU                     register0 + 0x18
+register13          EQU                     register0 + 0x1A
+register14          EQU                     register0 + 0x1C
+register15          EQU                     register0 + 0x1E
+fgbgColour          EQU                     register0 + 0x20
+cursorXY            EQU                     register0 + 0x22
+midiStream          EQU                     register0 + 0x24
+midiDelay           EQU                     register0 + 0x26
+frameCountPrev      EQU                     register0 + 0x28
+miscFlags           EQU                     register0 + 0x2A
 
 ; Includes
 %include            include/gigatron.i
@@ -35,13 +37,15 @@ _4                  EQU                     0x0270
 _5                  EQU                     0x0297
 _6                  EQU                     0x02b8
 _7                  EQU                     0x08ac
-_8                  EQU                     0x08d8
+_8                  EQU                     0x08d6
 _9                  EQU                     0x09a2
-_10                 EQU                     0x09c3
-_11                 EQU                     0x09d7
-_12                 EQU                     0x0aaf
-_end_0x039f         EQU                     0x09d5
-_end_0x03d0         EQU                     0x0ab4
+_10                 EQU                     0x09c1
+_11                 EQU                     0x09d3
+_12                 EQU                     0x0aaa
+_13                 EQU                     0x0abc
+_14                 EQU                     0x0ad7
+_end_0x0399         EQU                     0x09d1
+_end_0x0407         EQU                     0x0adc
 _next_0x0282        EQU                     0x027c
 _page_0x08a0        EQU                     0x08a0
 _page_0x09a0        EQU                     0x09a0
@@ -172,12 +176,11 @@ _7                  LDW                     _c
                     DOKE                    register1
                     LDW                     _c
                     SUBI                    10
-                    CALL                    convertLtOpAddr
-                    JumpFalse               _8
+                    JumpLT                  _8 0
                     LDI                     0
                     STW                     _c
                     LDWI                    _9
-                    CALL                    giga_vAC                        ; b(i)=c:if c<10 then c=0:goto 9
+                    CALL                    giga_vAC                        ; b(i)=c:if c&<10 then c=0:goto 9
 
 _8                  LDW                     _c
                     SUBI                    10
@@ -200,18 +203,16 @@ _8                  LDW                     _c
 _page_0x09a0        LDW                     0x82
 _9                  ForNextLoopStepUp       _i _6 0xb0 0xb2
                     LDW                     _c
-                    CALL                    convertEqOpAddr
-                    JumpFalse               _10
+                    JumpEQ                  _10 1
                     LDWI                    _12
-                    CALL                    giga_vAC                        ; next i:if c=0 then goto 12
+                    CALL                    giga_vAC                        ; next i:if c&=0 then goto 12
 
-_if_0x0385          LDW                     _j
+_if_0x0381          LDW                     _j
                     ADDI                    1
                     STW                     _j
                     SUBI                    50
-                    CALL                    convertEqOpAddr
-                    JumpFalse               _11
-_end_0x039f         BRA                     _end_0x039f                     ; j=j+1:if j=50 then END
+                    JumpEQ                  _11 2
+_end_0x0399         BRA                     _end_0x0399                     ; j=j+1:if j&=50 then END
 
 _11                 LDI                     0
                     STW                     register0
@@ -227,21 +228,38 @@ _11                 LDI                     0
                     STW                     register0
                     LDW                     _j
                     STW                     register1
+                    LDWI                    0x0566
+                    ADDW                    register1
                     STW                     0x82
                     LDWI                    _page_0x0aa0
                     CALL                    giga_vAC
 _page_0x0aa0        LDW                     0x82
-                    LDWI                    0x0566
-                    ADDW                    register1
                     ADDW                    register1
                     STW                     register1
                     LDW                     register0
                     DOKE                    register1                       ; a(j)=0:b(j)=c
 
-_12                 LDWI                    _3
-                    CALL                    giga_vAC                        ; goto 3
+_12                 LDI                     0x0f
+                    PEEK                    
+                    SUBI                    255
+                    JumpEQ                  _13 3
+                    LDWI                    _12
+                    CALL                    giga_vAC                        ; if (peek(15) &= &hff) then goto 12
 
-_end_0x03d0         BRA                     _end_0x03d0                     ; END
+_13                 LDI                     2
+                    STW                     waitVBlankNum
+                    WaitVBlank              
+                    LDI                     0x0f
+                    PEEK                    
+                    SUBI                    255
+                    JumpEQ                  _14 4
+                    LDWI                    _3
+                    CALL                    giga_vAC                        ; wait 2:if (peek(15) &= &hff) then goto 3
+
+_14                 LDWI                    _12
+                    CALL                    giga_vAC                        ; goto 12
+
+_end_0x0407         BRA                     _end_0x0407                     ; END
 
 
 
@@ -258,13 +276,14 @@ convertLeOp         EQU     0x7fbe
 convertGeOp         EQU     0x7fc7
 convertLtOp         EQU     0x7fd0
 convertGtOp         EQU     0x7fd9
-resetVideoTable     EQU     0x7aa0
+waitVBlank          EQU     0x7aa0
+resetVideoTable     EQU     0x7abb
 initClearFuncs      EQU     0x7ea0
 clearVertBlinds     EQU     0x7ec3
 clearCursorRow      EQU     0x79a0
 printInit           EQU     0x7def
 printText           EQU     0x7fe2
-printDigit          EQU     0x7ac0
+printDigit          EQU     0x7adb
 printInt16          EQU     0x7da0
 printChar           EQU     0x7ca0
 newLineScroll       EQU     0x7ba0
@@ -277,12 +296,13 @@ convertLtOpAddr     EQU     0x00d8
 convertGtOpAddr     EQU     0x00da
 
 
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 numericLabel        EQU     register0
 defaultLabel        EQU     register1
 lutLabs             EQU     register2
 lutAddrs            EQU     register3
-lutIndex            EQU     register4
-lutLabel            EQU     register5
+lutIndex            EQU     register8
+lutLabel            EQU     register9
 
 
                     ; runs real time, (time sliced), code at regular intervals
@@ -343,7 +363,59 @@ convertGt_1         LDI     1
                     RET
 
 
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+graphicsMode        EQU     register0
+waitVBlankNum       EQU     register0
 
+drawHLine_x1        EQU     register0
+drawHLine_y1        EQU     register1
+drawHLine_x2        EQU     register2
+drawHLine_x4        EQU     register3
+
+drawVLine_x1        EQU     register0
+drawVLine_y1        EQU     register1
+drawVLine_y2        EQU     register2
+drawVLine_y8        EQU     register3
+
+drawLine_x1         EQU     register0
+drawLine_y1         EQU     register1
+drawLine_x2         EQU     register2
+drawLine_y2         EQU     register3
+drawLine_xy1        EQU     register0
+drawLine_xy2        EQU     register1
+drawLine_dxy1       EQU     register2
+drawLine_dxy2       EQU     register3
+drawLine_dx1        EQU     register4
+drawLine_dy1        EQU     register5
+drawLine_dx2        EQU     register6
+drawLine_dy2        EQU     register7
+drawLine_sx         EQU     register8
+drawLine_sy         EQU     register9
+drawLine_h          EQU     register10
+drawLine_num        EQU     register11
+drawLine_count      EQU     register12
+drawLine_tmp        EQU     register13
+    
+    
+waitVBlank          LD      waitVBlankNum
+                    SUBI    0x01
+                    ST      waitVBlankNum
+                    BGE     waitVB_start
+                    RET
+    
+waitVB_start        LD      giga_frameCount
+                    SUBW    frameCountPrev
+                    BEQ     waitVB_start
+                    LD      giga_frameCount
+                    STW     frameCountPrev
+                    PUSH
+                    CALL    realTimeProcAddr
+                    POP
+                    BRA     waitVBlank
+
+
+
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 xreset              EQU     register0
 xcount              EQU     register1
 ycount              EQU     register2
@@ -434,6 +506,7 @@ clearVB_loop        CALL    realTimeProcAddr
                     RET
 
 
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 textStr             EQU     register0
 textNum             EQU     register0
 textBak             EQU     register0
@@ -499,9 +572,9 @@ printInt16          PUSH
                     CALL    giga_vAC
                     LDWI    0
                     SUBW    textNum
-printI16_pos        STW     textNum    
+                    STW     textNum    
     
-                    LDWI    10000
+printI16_pos        LDWI    10000
                     STW     digitMult
                     LDWI    printDigit
                     CALL    giga_vAC

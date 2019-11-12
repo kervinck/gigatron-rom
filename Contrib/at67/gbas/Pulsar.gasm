@@ -36,11 +36,11 @@ _30                 EQU                     0x026e
 _40                 EQU                     0x0283
 _50                 EQU                     0x0296
 _60                 EQU                     0x029a
-_65                 EQU                     0x02bd
-_70                 EQU                     0x02d2
-_80                 EQU                     0x02ea
-_90                 EQU                     0x08c0
-_end_0x034b         EQU                     0x08d3
+_65                 EQU                     0x02bb
+_70                 EQU                     0x02ce
+_80                 EQU                     0x02e6
+_90                 EQU                     0x08be
+_end_0x0347         EQU                     0x08d1
 _page_0x08a0        EQU                     0x08a0
 
 ; Variables
@@ -121,19 +121,17 @@ _60                 LDW                     _y
                     LDI                     10
                     ADDW                    0xc0
                     STW                     _w
-                    CALL                    convertGtOpAddr
-                    JumpFalse               _65
+                    JumpGT                  _65 0
                     LDI                     0
-                    STW                     _w                              ; w=10+y/q:if w>0 then w=0
+                    STW                     _w                              ; w=10+y/q:if w&>0 then w=0
 
 _65                 LDI                     0x06
                     PEEK                    
                     SUBI                    128
-                    CALL                    convertLtOpAddr
-                    JumpFalse               _70
+                    JumpLT                  _70 1
                     LDW                     _w
                     ADDI                    1
-                    STW                     _w                              ; if peek(6)<128 then w=w+1
+                    STW                     _w                              ; if peek(6)&<128 then w=w+1
 
 _70                 LDI                     5
                     STW                     drawLine_x2
@@ -148,11 +146,11 @@ _70                 LDI                     5
 _80                 LDW                     _p
                     STW                     mathX
                     LDW                     _v
+                    STW                     mathY
                     STW                     0x82
                     LDWI                    _page_0x08a0
                     CALL                    giga_vAC
 _page_0x08a0        LDW                     0x82
-                    STW                     mathY
                     LDWI                    multiply16bit
                     CALL                    giga_vAC
                     ADDW                    _y
@@ -171,7 +169,7 @@ _90                 ForNextLoopUp           _x _60 30
                     LDWI                    _20
                     CALL                    giga_vAC                        ; next x:goto 20
 
-_end_0x034b         BRA                     _end_0x034b                     ; END
+_end_0x0347         BRA                     _end_0x0347                     ; END
 
 
 
@@ -213,12 +211,13 @@ convertLtOpAddr     EQU     0x00d8
 convertGtOpAddr     EQU     0x00da
 
 
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 numericLabel        EQU     register0
 defaultLabel        EQU     register1
 lutLabs             EQU     register2
 lutAddrs            EQU     register3
-lutIndex            EQU     register4
-lutLabel            EQU     register5
+lutIndex            EQU     register8
+lutLabel            EQU     register9
 
 
                     ; runs real time, (time sliced), code at regular intervals
@@ -279,6 +278,7 @@ convertGt_1         LDI     1
                     RET
 
 
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 mathX               EQU     register0
 mathY               EQU     register1
 mathSum             EQU     register2
@@ -380,6 +380,7 @@ randMod16bit        PUSH
 
 
 
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 xreset              EQU     register0
 xcount              EQU     register1
 ycount              EQU     register2
@@ -473,6 +474,7 @@ clearVB_loop        CALL    realTimeProcAddr
 
 
 
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 graphicsMode        EQU     register0
 waitVBlankNum       EQU     register0
 
@@ -684,6 +686,7 @@ atLC_skip3          LDW     drawLine_y2
                     RET
 
 
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 textStr             EQU     register0
 textNum             EQU     register0
 textBak             EQU     register0

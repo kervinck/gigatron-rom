@@ -72,10 +72,10 @@ _10                 LDI                     107
 
 _20                 Rand                    
                     ANDI                    63
-                    STW                     0xc0
+                    STW                     0xc2
                     LDWI                    164
                     STW                     register0
-                    LD                      0xc0
+                    LD                      0xc2
                     POKE                    register0                       ; poke 164,rnd(0) AND 63
 
 _30                 Rand                    
@@ -159,12 +159,13 @@ convertLtOpAddr     EQU     0x00d8
 convertGtOpAddr     EQU     0x00da
 
 
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 numericLabel        EQU     register0
 defaultLabel        EQU     register1
 lutLabs             EQU     register2
 lutAddrs            EQU     register3
-lutIndex            EQU     register4
-lutLabel            EQU     register5
+lutIndex            EQU     register8
+lutLabel            EQU     register9
 
 
                     ; runs real time, (time sliced), code at regular intervals
@@ -225,6 +226,7 @@ convertGt_1         LDI     1
                     RET
 
 
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 mathX               EQU     register0
 mathY               EQU     register1
 mathSum             EQU     register2
@@ -242,6 +244,7 @@ rand16bit           LDWI    SYS_Random_34
 
 
 
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 xreset              EQU     register0
 xcount              EQU     register1
 ycount              EQU     register2
@@ -297,6 +300,7 @@ initClearFuncs      PUSH
 
 
 
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 textStr             EQU     register0
 textNum             EQU     register0
 textBak             EQU     register0

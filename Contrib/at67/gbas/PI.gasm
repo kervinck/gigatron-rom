@@ -38,11 +38,10 @@ _50                 EQU                     0x02a8
 _60                 EQU                     0x02da
 _70                 EQU                     0x08c8
 _80                 EQU                     0x08ef
-_90                 EQU                     0x09cc
-_end_0x03c7         EQU                     0x0aa7
+_90                 EQU                     0x09ca
+_end_0x03c3         EQU                     0x09f5
 _page_0x08a0        EQU                     0x08a0
 _page_0x09a0        EQU                     0x09a0
-_page_0x0aa0        EQU                     0x0aa0
 
 ; Variables
 _Z_array            EQU                     0x0500
@@ -204,9 +203,8 @@ _page_0x09a0        LDW                     0x82
                     PrintVarInt16           0xc0
                     LDW                     _M
                     SUBI                    88
-                    CALL                    convertEqOpAddr
-                    JumpFalse               _90
-                    PrintString             str_0x7fa4                      ; PRINT E/10;:IF M=88 THEN PRINT ".";
+                    JumpEQ                  _90 0
+                    PrintString             str_0x7fa4                      ; PRINT E/10;:IF M&=88 THEN PRINT ".";
 
 _90                 LDW                     _E
                     STW                     mathX
@@ -219,16 +217,11 @@ _90                 LDW                     _E
                     PrintVarInt16           0xc0
                     LDW                     _M
                     SUBI                    10
-                    CALL                    convertGtOpAddr
-                    JumpFalse               _end_0x03c7
-                    STW                     0x82
-                    LDWI                    _page_0x0aa0
-                    CALL                    giga_vAC
-_page_0x0aa0        LDW                     0x82
+                    JumpGT                  _end_0x03c3 1
                     LDWI                    _40
-                    CALL                    giga_vAC                        ; PRINT E%10;:IF M>10 THEN GOTO 40
+                    CALL                    giga_vAC                        ; PRINT E%10;:IF M&>10 THEN GOTO 40
 
-_end_0x03c7         BRA                     _end_0x03c7                     ; END
+_end_0x03c3         BRA                     _end_0x03c3                     ; END
 
 
 
@@ -266,12 +259,13 @@ convertLtOpAddr     EQU     0x00d8
 convertGtOpAddr     EQU     0x00da
 
 
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 numericLabel        EQU     register0
 defaultLabel        EQU     register1
 lutLabs             EQU     register2
 lutAddrs            EQU     register3
-lutIndex            EQU     register4
-lutLabel            EQU     register5
+lutIndex            EQU     register8
+lutLabel            EQU     register9
 
 
                     ; runs real time, (time sliced), code at regular intervals
@@ -332,6 +326,7 @@ convertGt_1         LDI     1
                     RET
 
 
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 mathX               EQU     register0
 mathY               EQU     register1
 mathSum             EQU     register2
@@ -421,6 +416,7 @@ divide16_exit       LDW     mathX
 
 
 
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 xreset              EQU     register0
 xcount              EQU     register1
 ycount              EQU     register2
@@ -512,6 +508,7 @@ clearVB_loop        CALL    realTimeProcAddr
 
 
 
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 textStr             EQU     register0
 textNum             EQU     register0
 textBak             EQU     register0

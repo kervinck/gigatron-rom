@@ -47,7 +47,7 @@
         INC     _var
         LD      _var
         SUBI    _end
-        BGT     _label_+3
+        BGT     _label_ + 3
 _label_ CALLI   _label
 %ENDM
 
@@ -56,7 +56,7 @@ _label_ CALLI   _label
         SUBI    1
         ST      _var
         SUBI    _end
-        BLT     _label_+3
+        BLT     _label_ + 3
 _label_ CALLI   _label
 %ENDM
 
@@ -65,7 +65,7 @@ _label_ CALLI   _label
         ADDW    _vStep
         STW     _var
         SUBW    _vEnd
-        BGT     _label_+3
+        BGT     _label_ + 3
 _label_ CALLI   _label
 %ENDM
 
@@ -74,7 +74,7 @@ _label_ CALLI   _label
         ADDW    _vStep
         STW     _var
         SUBW    _vEnd
-        BLT     _label_+3
+        BLT     _label_ + 3
 _label_ CALLI   _label
 %ENDM
 
@@ -220,9 +220,39 @@ _label_ CALLI   _label
         DOKE    register0                               ; self modifying code, replaces realTimeProc stub with playMidi routine
 %ENDM
 
-%MACRO  JumpFalse _label
-        BNE     _label_+3
-_label_ CALLI   _label
+%MACRO  JumpFalse _label id
+        BNE     _id_ + 3                                ; unique id is used as an internal macro label
+_id_    CALLI   _label
+%ENDM
+
+%MACRO  JumpEQ _label id
+        BEQ     _id_ + 3
+_id_    CALLI   _label
+%ENDM
+
+%MACRO  JumpNE _label id
+        BNE     _id_ + 3
+_id_    CALLI   _label
+%ENDM
+
+%MACRO  JumpLE _label id
+        BLE     _id_ + 3
+_id_    CALLI   _label
+%ENDM
+
+%MACRO  JumpGE _label id
+        BGE     _id_ + 3
+_id_    CALLI   _label
+%ENDM
+
+%MACRO  JumpLT _label id
+        BLT     _id_ + 3
+_id_    CALLI   _label
+%ENDM
+
+%MACRO  JumpGT _label id
+        BGT     _id_ + 3
+_id_    CALLI   _label
 %ENDM
 
 %MACRO  Initialise

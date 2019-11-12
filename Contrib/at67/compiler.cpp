@@ -215,10 +215,12 @@ namespace Compiler
     uint16_t _runtimeEnd     = 0xFFFF;
 
     bool _nextTempVar = true;
+    bool _usingLogicalOperator = true;
     bool _createNumericLabelLut = false;
 
     int _currentLabelIndex = -1;
     int _currentCodeLineIndex = 0;
+    int _jumpFalseUniqueId = 0;
 
     std::string _tempVarStartStr;
     std::string _nextInternalLabel;
@@ -656,7 +658,7 @@ namespace Compiler
         if(input.find("\"") != std::string::npos) expressionType |= Expression::HasStrings;
 
         std::string stripped = Expression::stripStrings(input);
-        std::vector<std::string> tokens = Expression::tokenise(stripped, "-+/*%<>=();, ", false);
+        std::vector<std::string> tokens = Expression::tokenise(stripped, "-+/*%&<>=();, ", false);
 
         // Check for keywords
         for(int i=0; i<tokens.size(); i++)
@@ -686,7 +688,7 @@ namespace Compiler
         }
 
         // Check for operators
-        if(stripped.find_first_of("-+/*%<>=") != std::string::npos) expressionType |= Expression::HasOperators;
+        if(stripped.find_first_of("-+/*%&<>=") != std::string::npos) expressionType |= Expression::HasOperators;
         std::string mod = stripped;
         Expression::strToUpper(mod);
         if(mod.find("AND") != std::string::npos) expressionType |= Expression::HasOperators;
@@ -1008,7 +1010,7 @@ namespace Compiler
             else
             {
 #ifdef SMALL_CODE_SIZE
-                // Saves 3 bytes per array access, but an extra 5 instructions in performance
+                // Saves 3 bytes per array access, but costs an extra 5 instructions in performance
                 emitVcpuAsm("STW",  "memIndex", false, codeLineIndex);
                 emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr), false, codeLineIndex);
                 emitVcpuAsm("STW",  "memAddr", false, codeLineIndex);
@@ -1562,7 +1564,7 @@ namespace Compiler
             handleSingleOp("LDW", numeric);
 
 #ifdef SMALL_CODE_SIZE
-            // Saves 2 bytes per array access but costs 2 extra instructions in performance
+            // Saves 2 bytes per array access but costs an extra 2 instructions in performance
             if(Assembler::getUseOpcodeCALLI())
             {
                 emitVcpuAsm("STW", "memIndex", false);
@@ -1852,8 +1854,10 @@ namespace Compiler
     // ********************************************************************************************
     // Conditional Operators
     // ********************************************************************************************
-    bool handleCondOp(Expression::Numeric& lhs, Expression::Numeric& rhs)
+    bool handleCondOp(Expression::Numeric& lhs, Expression::Numeric& rhs, bool logical)
     {
+        _usingLogicalOperator = logical;
+
         std::string opcode = "SUB";
 
         // Swap left and right to take advantage of LDWI for 16bit numbers
@@ -1922,7 +1926,7 @@ namespace Compiler
         return true;
     }
 
-    Expression::Numeric operatorEQ(Expression::Numeric& left, Expression::Numeric& right)
+    Expression::Numeric operatorEQ(Expression::Numeric& left, Expression::Numeric& right, bool logical)
     {
         if(!left._isAddress  &&  !right._isAddress)
         {
@@ -1930,16 +1934,24 @@ namespace Compiler
             return left;
         }
 
-        left._isValid = handleCondOp(left, right);
+        left._isValid = handleCondOp(left, right, logical);
 
         // Convert equals into a logical 1, (boolean conversion)
-        Assembler::getUseOpcodeCALLI() ? emitVcpuAsm("CALLI", "convertEqOp", false) : emitVcpuAsm("CALL", "convertEqOpAddr", false);
+        if(logical)
+        {
+            Assembler::getUseOpcodeCALLI() ? emitVcpuAsm("CALLI", "convertEqOp", false) : emitVcpuAsm("CALL", "convertEqOpAddr", false);
+        }
+        else
+        {
+            emitVcpuAsm("%JumpEQ", "", false);
+        }
+
         emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(_tempVarStart)), false);
 
         return left;
     }
 
-    Expression::Numeric operatorNE(Expression::Numeric& left, Expression::Numeric& right)
+    Expression::Numeric operatorNE(Expression::Numeric& left, Expression::Numeric& right, bool logical)
     {
         if(!left._isAddress  &&  !right._isAddress)
         {
@@ -1947,16 +1959,24 @@ namespace Compiler
             return left;
         }
 
-        left._isValid = handleCondOp(left, right);
+        left._isValid = handleCondOp(left, right, logical);
 
         // Convert equals into a logical 1, (boolean conversion)
-        Assembler::getUseOpcodeCALLI() ? emitVcpuAsm("CALLI", "convertNeOp", false) : emitVcpuAsm("CALL", "convertNeOpAddr", false);
+        if(logical)
+        {
+            Assembler::getUseOpcodeCALLI() ? emitVcpuAsm("CALLI", "convertNeOp", false) : emitVcpuAsm("CALL", "convertNeOpAddr", false);
+        }
+        else
+        {
+            emitVcpuAsm("%JumpNE", "", false);
+        }
+
         emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(_tempVarStart)), false);
 
         return left;
     }
 
-    Expression::Numeric operatorLE(Expression::Numeric& left, Expression::Numeric& right)
+    Expression::Numeric operatorLE(Expression::Numeric& left, Expression::Numeric& right, bool logical)
     {
         if(!left._isAddress  &&  !right._isAddress)
         {
@@ -1964,16 +1984,24 @@ namespace Compiler
             return left;
         }
 
-        left._isValid = handleCondOp(left, right);
+        left._isValid = handleCondOp(left, right, logical);
 
         // Convert less than or equals into a logical 1, (boolean conversion)
-        Assembler::getUseOpcodeCALLI() ? emitVcpuAsm("CALLI", "convertLeOp", false) : emitVcpuAsm("CALL", "convertLeOpAddr", false);
+        if(logical)
+        {
+            Assembler::getUseOpcodeCALLI() ? emitVcpuAsm("CALLI", "convertLeOp", false) : emitVcpuAsm("CALL", "convertLeOpAddr", false);
+        }
+        else
+        {
+            emitVcpuAsm("%JumpLE", "", false);
+        }
+
         emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(_tempVarStart)), false);
 
         return left;
     }
 
-    Expression::Numeric operatorGE(Expression::Numeric& left, Expression::Numeric& right)
+    Expression::Numeric operatorGE(Expression::Numeric& left, Expression::Numeric& right, bool logical)
     {
         if(!left._isAddress  &&  !right._isAddress)
         {
@@ -1981,16 +2009,24 @@ namespace Compiler
             return left;
         }
 
-        left._isValid = handleCondOp(left, right);
+        left._isValid = handleCondOp(left, right, logical);
 
         // Convert greater than or equals into a logical 1, (boolean conversion)
-        Assembler::getUseOpcodeCALLI() ? emitVcpuAsm("CALLI", "convertGeOp", false) : emitVcpuAsm("CALL", "convertGeOpAddr", false);
+        if(logical)
+        {
+            Assembler::getUseOpcodeCALLI() ? emitVcpuAsm("CALLI", "convertGeOp", false) : emitVcpuAsm("CALL", "convertGeOpAddr", false);
+        }
+        else
+        {
+            emitVcpuAsm("%JumpGE", "", false);
+        }
+
         emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(_tempVarStart)), false);
 
         return left;
     }
 
-    Expression::Numeric operatorLT(Expression::Numeric& left, Expression::Numeric& right)
+    Expression::Numeric operatorLT(Expression::Numeric& left, Expression::Numeric& right, bool logical)
     {
         if(!left._isAddress  &&  !right._isAddress)
         {
@@ -1998,16 +2034,24 @@ namespace Compiler
             return left;
         }
 
-        left._isValid = handleCondOp(left, right);
+        left._isValid = handleCondOp(left, right, logical);
 
         // Convert less than into a logical 1, (boolean conversion)
-        Assembler::getUseOpcodeCALLI() ? emitVcpuAsm("CALLI", "convertLtOp", false) : emitVcpuAsm("CALL", "convertLtOpAddr", false);
+        if(logical)
+        {
+            Assembler::getUseOpcodeCALLI() ? emitVcpuAsm("CALLI", "convertLtOp", false) : emitVcpuAsm("CALL", "convertLtOpAddr", false);
+        }
+        else
+        {
+            emitVcpuAsm("%JumpLT", "", false);
+        }
+
         emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(_tempVarStart)), false);
 
         return left;
     }
 
-    Expression::Numeric operatorGT(Expression::Numeric& left, Expression::Numeric& right)
+    Expression::Numeric operatorGT(Expression::Numeric& left, Expression::Numeric& right, bool logical)
     {
         if(!left._isAddress  &&  !right._isAddress)
         {
@@ -2015,10 +2059,18 @@ namespace Compiler
             return left;
         }
 
-        left._isValid = handleCondOp(left, right);
+        left._isValid = handleCondOp(left, right, logical);
 
         // Convert greater than into a logical 1, (boolean conversion)
-        Assembler::getUseOpcodeCALLI() ? emitVcpuAsm("CALLI", "convertGtOp", false) : emitVcpuAsm("CALL", "convertGtOpAddr", false);
+        if(logical)
+        {
+            Assembler::getUseOpcodeCALLI() ? emitVcpuAsm("CALLI", "convertGtOp", false) : emitVcpuAsm("CALL", "convertGtOpAddr", false);
+        }
+        else
+        {
+            emitVcpuAsm("%JumpGT", "", false);
+        }
+
         emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(_tempVarStart)), false);
 
         return left;
@@ -2337,20 +2389,26 @@ namespace Compiler
 
         for(;;)
         {
-            if(peek(false) == '+')           {get(false);t = term();result = operatorADD(result, t);}
-            else if(peek(false) == '-')      {get(false);t = term();result = operatorSUB(result, t);}
-            else if(Expression::find("XOR")) {           t = term();result = operatorXOR(result, t);}
-            else if(Expression::find("OR"))  {           t = term();result = operatorOR(result,  t);}
-            else if(Expression::find("LSL")) {           t = term();result = operatorLSL(result, t);}
-            else if(Expression::find("LSR")) {           t = term();result = operatorLSR(result, t);}
-            else if(Expression::find("<<"))  {           t = term();result = operatorLSL(result, t);}
-            else if(Expression::find(">>"))  {           t = term();result = operatorLSR(result, t);}
-            else if(Expression::find("="))   {           t = term();result = operatorEQ(result,  t);}
-            else if(Expression::find("<>"))  {           t = term();result = operatorNE(result,  t);}
-            else if(Expression::find("<="))  {           t = term();result = operatorLE(result,  t);}
-            else if(Expression::find(">="))  {           t = term();result = operatorGE(result,  t);}
-            else if(peek(false) == '<')      {get(false);t = term();result = operatorLT(result,  t);}
-            else if(peek(false) == '>')      {get(false);t = term();result = operatorGT(result,  t);}
+            if(peek(false) == '+')           {get(false);t = term();result = operatorADD(result, t       );}
+            else if(peek(false) == '-')      {get(false);t = term();result = operatorSUB(result, t       );}
+            else if(Expression::find("XOR")) {           t = term();result = operatorXOR(result, t       );}
+            else if(Expression::find("OR"))  {           t = term();result = operatorOR(result,  t       );}
+            else if(Expression::find("LSL")) {           t = term();result = operatorLSL(result, t       );}
+            else if(Expression::find("LSR")) {           t = term();result = operatorLSR(result, t       );}
+            else if(Expression::find("<<"))  {           t = term();result = operatorLSL(result, t       );}
+            else if(Expression::find(">>"))  {           t = term();result = operatorLSR(result, t       );}
+            else if(peek(false) == '=')      {get(false);t = term();result = operatorEQ(result,  t, true );}
+            else if(Expression::find("<>"))  {           t = term();result = operatorNE(result,  t, true );}
+            else if(Expression::find("<="))  {           t = term();result = operatorLE(result,  t, true );}
+            else if(Expression::find(">="))  {           t = term();result = operatorGE(result,  t, true );}
+            else if(peek(false) == '<')      {get(false);t = term();result = operatorLT(result,  t, true );}
+            else if(peek(false) == '>')      {get(false);t = term();result = operatorGT(result,  t, true );}
+            else if(Expression::find("&="))  {           t = term();result = operatorEQ(result,  t, false);}
+            else if(Expression::find("&<>")) {           t = term();result = operatorNE(result,  t, false);}
+            else if(Expression::find("&<=")) {           t = term();result = operatorLE(result,  t, false);}
+            else if(Expression::find("&>=")) {           t = term();result = operatorGE(result,  t, false);}
+            else if(Expression::find("&<"))  {           t = term();result = operatorLT(result,  t, false);}
+            else if(Expression::find("&>"))  {           t = term();result = operatorGT(result,  t, false);}
             else return result;
         }
     }
@@ -2514,6 +2572,27 @@ namespace Compiler
 
         return statementResult;
     }
+
+    void addLabelToJump(std::vector<VasmLine>& vasm, std::string& label)
+    {
+        for(int i=0; i<vasm.size(); i++)
+        {
+            if(vasm[i]._code.substr(0, 4) == "Jump")
+            {
+                vasm[i]._code += label;
+                return;
+            }
+        }
+    }
+
+    // If nextInternalLabel is already queued, add it to discarded labels so that it is fixed later in outputLabels
+    void nextInternalLabel(const std::string& label)
+    {
+        if(_nextInternalLabel.size()) _discardedLabels.push_back({_vasmPC, _nextInternalLabel});
+
+        _nextInternalLabel = label;
+    }
+
 
     // ********************************************************************************************
     // Keywords
@@ -3393,7 +3472,7 @@ namespace Compiler
             emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(varStep)), false, codeLineIndex);
         }
 
-        _nextInternalLabel = "_next_" + Expression::wordToHexString(_vasmPC);
+        nextInternalLabel("_next_" + Expression::wordToHexString(_vasmPC));
         _forNextDataStack.push({varIndex, _nextInternalLabel, loopEnd, loopStep, varEnd, varStep, optimise, codeLineIndex});
 
         return true;
@@ -3480,7 +3559,7 @@ namespace Compiler
         int16_t condition = 0;
         std::string conditionToken = codeLine._code.substr(foundPos, offsetTHEN - foundPos);
         parseExpression(codeLine, codeLineIndex, conditionToken, condition);
-        emitVcpuAsm("%JumpFalse", "", false, codeLineIndex);
+        if(_usingLogicalOperator) emitVcpuAsm("%JumpFalse", "", false, codeLineIndex);
         int beqIndex = int(_codeLines[codeLineIndex]._vasm.size()) - 1;
 
         // Action
@@ -3499,8 +3578,16 @@ namespace Compiler
         if(parseMultiStatements(actionText, codeLine, codeLineIndex, varIndex) == StatementError) return false;
 
         // Update branch's label, (check to see if a label already exists)
-        _nextInternalLabel = "_if_" + Expression::wordToHexString(_vasmPC);
-        _codeLines[codeLineIndex]._vasm[beqIndex]._code = "JumpFalse" + std::string(OPCODE_TRUNC_SIZE - (sizeof("JumpFalse")-1), ' ') + _nextInternalLabel;
+        nextInternalLabel("_if_" + Expression::wordToHexString(_vasmPC));
+        VasmLine* vasm = &_codeLines[codeLineIndex]._vasm[beqIndex];
+        if(_usingLogicalOperator)
+        {
+            vasm->_code = "JumpFalse" + std::string(OPCODE_TRUNC_SIZE - (sizeof("JumpFalse")-1), ' ') + _nextInternalLabel + " " + std::to_string(_jumpFalseUniqueId++);
+        }
+        else
+        {
+            addLabelToJump(_codeLines[codeLineIndex]._vasm, _nextInternalLabel + " " + std::to_string(_jumpFalseUniqueId++));
+        }
 
         return true;
     }
@@ -3517,14 +3604,14 @@ namespace Compiler
 
     bool keywordWHILE(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        _nextInternalLabel = "_while_" + Expression::wordToHexString(_vasmPC);
+        nextInternalLabel("_while_" + Expression::wordToHexString(_vasmPC));
         _whileWendDataStack.push({0, _nextInternalLabel, codeLineIndex});
 
         // Condition
         int16_t condition = 0;
         std::string conditionToken = codeLine._code.substr(foundPos);
         parseExpression(codeLine, codeLineIndex, conditionToken, condition);
-        emitVcpuAsm("%JumpFalse", "", false, codeLineIndex);
+        if(_usingLogicalOperator) emitVcpuAsm("%JumpFalse", "", false, codeLineIndex);
         _whileWendDataStack.top()._beqIndex = int(_codeLines[codeLineIndex]._vasm.size()) - 1;
 
         return true;
@@ -3553,15 +3640,23 @@ namespace Compiler
         }
 
         // Branch if condition false to instruction after WEND
-        _nextInternalLabel = "_wend_" + Expression::wordToHexString(_vasmPC);
-        _codeLines[whileWendData._codeLineIndex]._vasm[whileWendData._beqIndex]._code = "JumpFalse" + std::string(OPCODE_TRUNC_SIZE - (sizeof("JumpFalse")-1), ' ') + _nextInternalLabel;
+        nextInternalLabel("_wend_" + Expression::wordToHexString(_vasmPC));
+        VasmLine* vasm = &_codeLines[whileWendData._codeLineIndex]._vasm[whileWendData._beqIndex];
+        if(_usingLogicalOperator)
+        {
+            vasm->_code = "JumpFalse" + std::string(OPCODE_TRUNC_SIZE - (sizeof("JumpFalse")-1), ' ') + _nextInternalLabel + " " + std::to_string(_jumpFalseUniqueId++);
+        }
+        else
+        {
+            addLabelToJump(_codeLines[whileWendData._codeLineIndex]._vasm, _nextInternalLabel + " " + std::to_string(_jumpFalseUniqueId++));
+        }
 
         return true;
     }
 
     bool keywordDO(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        _nextInternalLabel = "_do_" + Expression::wordToHexString(_vasmPC);
+        nextInternalLabel("_do_" + Expression::wordToHexString(_vasmPC));
         _doUntilDataStack.push({_nextInternalLabel, codeLineIndex});
 
         return true;
@@ -3584,7 +3679,14 @@ namespace Compiler
         parseExpression(codeLine, codeLineIndex, conditionToken, condition);
 
         // Branch if condition false to instruction after DO
-        emitVcpuAsm("%JumpFalse", doUntilData._labelName, false, codeLineIndex);
+        if(_usingLogicalOperator)
+        {
+            emitVcpuAsm("%JumpFalse", doUntilData._labelName + " " + std::to_string(_jumpFalseUniqueId++), false, codeLineIndex);
+        }
+        else
+        {
+            addLabelToJump(_codeLines[codeLineIndex]._vasm, doUntilData._labelName + " " + std::to_string(_jumpFalseUniqueId++));
+        }
 
         return true;
     }
@@ -4518,7 +4620,10 @@ namespace Compiler
                     // Discarded internal label
                     for(int l=0; l<_discardedLabels.size(); l++)
                     {
-                        if(_internalLabels[k]._address == _discardedLabels[l]._address)
+                        // Use unique address embedded within names rather than discarded real address which can be out of date due to optimiser and relocater
+                        std::string internalName = _internalLabels[k]._name.substr(_internalLabels[k]._name.size() - 4, 4);
+                        std::string discardedName = _discardedLabels[l]._name.substr(_discardedLabels[l]._name.size() - 4, 4);
+                        if(internalName == discardedName)
                         {
                             Expression::replaceText(_codeLines[i]._vasm[j]._code, _discardedLabels[l]._name, _internalLabels[k]._name);
                         }
@@ -5199,10 +5304,12 @@ RESTART_COLLECTION:
         _runtimeEnd     = 0xFFFF;
 
         _nextTempVar = true;
+        _usingLogicalOperator = true;
         _createNumericLabelLut = false;
 
         _currentLabelIndex = -1;
         _currentCodeLineIndex = 0;
+        _jumpFalseUniqueId = 0;
 
         _tempVarStartStr = "";
 
