@@ -575,6 +575,7 @@ void doCommand(char line[])
             break;
   case 'U': doTransfer(NULL);                 break;
   case '.': doLine(&line[1]);                 break;
+  case 'B': doBytes(&line[1]);                break;
   case 'C': doEcho(!echo);                    break;
   case 'T': doTerminal();                     break;
   case 'W': sendController(~buttonUp,     2); break;
@@ -673,6 +674,7 @@ void doHelp()
     Serial.println(":          [Hint: Use '.SAVE' for saving, not 'T'-mode!]");
     Serial.println(": U        Transfer object file from USB");
     Serial.println(": .<text>  Send text line as ASCII keystrokes");
+    Serial.println(": B<n>...  Send list of bytes");
     Serial.println(": C        Toggle echo mode (default off)");
     Serial.println(": T        Enter terminal mode");
     Serial.println(": W/A/S/D  Up/left/down/right arrow");
@@ -724,6 +726,20 @@ void doLine(char *line)
   // And terminal with a CR
   sendController('\n', 2);
   delay(50); // Allow Gigatron software to process line
+}
+
+// Send list of decimal numbers as bytes
+void doBytes(char *line)
+{
+  do {
+    if (*line >= '0') {
+      byte b = 0;
+      do
+        b = (10 * b) + (*line++ - '0');
+      while (*line >= '0');
+      sendController(b, 1);
+    }
+  } while (*line++ != '\0');
 }
 
 // In terminal mode we transfer every incoming character to
