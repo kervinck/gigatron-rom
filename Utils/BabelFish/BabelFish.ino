@@ -401,52 +401,26 @@ void setup()
 void loop()
 {
   // Check Gigatron's vPulse for incoming data
-  static byte inByte, inBit, hasChars;
-
-  critical();
-  byte newValue = waitVSync();
-  nonCritical();
-
-  switch (newValue) {
-    case 9:                            // Received one bit
-      inByte |= inBit;
-      // !!! FALL THROUGH !!!
-    case 7:                            // Received zero bit
-      inBit <<= 1;
-
-      if (saveIndex >= EEPROM_length)  // EEPROM overflow
-        if (hasChars)                  // Only break if this isn't an empty line
-          sendController(3, 10);       // Send long Ctrl-C back to stop LIST
-
-      if (inBit != 0)                  // Still a partial byte
-        break;
-
-      EEPROM.write(saveIndex++, inByte);// Store every full byte
-
-      #if hasSerial
-        if (inByte == 10)
-          Serial.print('\r');
-        Serial.print((char)inByte);    // Forward to host
-        noInterrupts();
-      #endif
-
-      if (inByte == 10) {              // End of line?
-        EEPROM.write(saveIndex, 255);  // EOF terminator, in case this becomes the last line
-        if (!hasChars)                 // An empty line clears the old program
-          saveIndex = fileStart;
-        hasChars = false;
-      } else if (inByte != 13)         // Don't count CR towards line length
-        hasChars = true;
-
-      inByte = 0;                      // Prepare for next byte
-      inBit = 1;
-      break;
-
-    default:
-      inByte = 0;                      // Reset incoming data state
-      inBit = 1;
+  // Save it into the EEPROM area if data received
+  int inByte = vSyncByte();
+  static byte hasChars;                 // Keeps track of partial lines
+  if (inByte < 0) {
+    if (inByte == -1)                   // Idle
+      hasChars = false;                 // Be robust against partial lines
+  } else {                              // Full byte received
+    if (saveIndex < EEPROM_length)      // Store byte in EEPROM if possible
+      EEPROM.write(saveIndex++, inByte);
+    else if (hasChars)                  // Full, but only break if line is non-empty
+      sendController(3, 10);            // Send long Ctrl-C back to stop sender
+    if (inByte >= 32)
+      hasChars = true;                  // Mark printable characters as non-empty
+    else if (inByte == '\n') {
+      if (!hasChars)                    // Empty lines delete the old program
+        saveIndex = fileStart;
+      if (saveIndex < EEPROM_length)    // EOF terminator
+        EEPROM.write(saveIndex, 255);
       hasChars = false;
-      break;
+    }
   }
 
   // Game controller pass through (Courtesy norgate)
@@ -575,6 +549,7 @@ void doCommand(char line[])
             break;
   case 'U': doTransfer(NULL);                 break;
   case '.': doLine(&line[1]);                 break;
+  case 'B': doBytes(&line[1]);                break;
   case 'C': doEcho(!echo);                    break;
   case 'T': doTerminal();                     break;
   case 'W': sendController(~buttonUp,     2); break;
@@ -673,6 +648,7 @@ void doHelp()
     Serial.println(":          [Hint: Use '.SAVE' for saving, not 'T'-mode!]");
     Serial.println(": U        Transfer object file from USB");
     Serial.println(": .<text>  Send text line as ASCII keystrokes");
+    Serial.println(": B<n>...  Send list of bytes");
     Serial.println(": C        Toggle echo mode (default off)");
     Serial.println(": T        Enter terminal mode");
     Serial.println(": W/A/S/D  Up/left/down/right arrow");
@@ -726,6 +702,20 @@ void doLine(char *line)
   delay(50); // Allow Gigatron software to process line
 }
 
+// Send list of decimal numbers as byte stream
+void doBytes(char *line)
+{
+  do {
+    if (*line >= '0') {
+      byte b = 0;
+      do
+        b = (10 * b) + (*line++ - '0');
+      while (*line >= '0');
+      sendController(b, 1);
+    }
+  } while (*line++ != '\0');
+}
+
 // In terminal mode we transfer every incoming character to
 // the Gigatron, with some substitutions for convenience.
 // This lets you type directly into BASIC and WozMon from
@@ -740,10 +730,10 @@ void doTerminal()
     Serial.println(":Entering terminal mode");
     Serial.println(":Exit with Ctrl-D");
     char next = 0, last;
-    byte out;
     bool ansi = false;
     for (;;) {
       if (Serial.available()) {
+        byte out;
         last = next;
         next = Serial.read();
         sendEcho(next, last);
@@ -765,6 +755,16 @@ void doTerminal()
 
         sendController(out, 2);
         ansi = false;
+      } else {
+
+        // If we receive data in terminal mode, forward it all
+        // to the the host (instead of storing it into EEPROM)
+        int inByte = vSyncByte(); // Check for data carried with /vSync
+        if (inByte >= 0) {
+          if (inByte == 10)
+            Serial.print('\r');
+          Serial.print((char)inByte);
+        }
       }
     }
   #endif
@@ -1115,6 +1115,34 @@ void sendBits(byte value, byte n)
   checksum += value;
 }
 
+// Check Gigatron's vPulse for incoming data
+// Return each completed byte value, -1 for idle, < -1 for busy
+int vSyncByte()
+{
+  static byte inByte, inBit;
+
+  critical();
+  byte count = waitVSync();
+  nonCritical();
+
+  inByte &= ~inBit;                     // Clear current bit
+  switch (count) {
+    case 9:                             // Received a one bit
+      inByte |= inBit;
+      // !!! FALL THROUGH !!!
+    case 7:                             // Received a zero bit
+      inBit <<= 1;
+      if (!inBit) {
+        inBit = 1;                      // Prepare for next byte
+        return inByte;                  // Return full byte
+      }
+      break;
+    default:
+      inBit = 1;                        // Reset incoming data state
+  }
+  return -inBit;
+}
+
 // Count number of hSync pulses during vPulse
 // This is a way for the Gigatron to send information out
 byte waitVSync()
@@ -1145,6 +1173,7 @@ byte waitVSync()
   return count;
 }
 
+// For polling the game controller
 void sendPulse(byte pin)
 {
   digitalWrite(pin, HIGH);
@@ -1172,11 +1201,11 @@ void sendSavedFile()
     if (j++ == 0 && nextByte == 255)    // EOF. Note that in MSBASIC, 255 means Pi.
       break;                            // So we only check this after a newline.
     sendController(nextByte, 2);        // A single frame is sometimes too fast
-    if (nextByte == 13)                 // "A carriage return takes more time"
+    if (nextByte == '\r')               // "A carriage return takes more time"
       lineDelay = 300 + j * 50;         // Reality: Micro-Soft BASIC is s-l-o-w
     delay((j % 26) ? 20                 // Allow Gigatron software to draw the char
                    : 300);              // And give more time at line wrap
-    if (nextByte == 10) {               // End of line
+    if (nextByte == '\n') {             // End of line
       delay(lineDelay);                 // Allow some extra time for line processing
       j = 0;                            // Start of new line
     }
