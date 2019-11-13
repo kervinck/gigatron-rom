@@ -45,6 +45,7 @@ namespace Compiler
     enum KeywordResult {KeywordNotFound, KeywordError, KeywordFound};
     enum ConstantStrType {StrChar, StrHex, StrHexw};
     enum StatementResult {StatementError, StatementExpression, SingleStatementParsed, MultiStatementParsed};
+    enum IfElseEndType {IfBlock, ElseIfBlock, ElseBlock, EndIfBlock};
 
     struct Label
     {
@@ -94,19 +95,6 @@ namespace Compiler
         bool _assignOperator = false;
         bool _containsVars = false;
         bool _pushEmitted = false;
-
-        bool initialise(void)
-        {
-            _code.clear();
-            _tokens.clear();
-            _vasm.clear();
-            _expression.clear();
-            _vasmSize = 0;
-            _labelIndex = -1;
-            _varIndex = -1;
-            _assignOperator = false;
-            _containsVars = false;
-        }
     };
 
     struct IntegerVar
@@ -159,9 +147,23 @@ namespace Compiler
         int _codeLineIndex;
     };
 
+    struct ElseIfData
+    {
+        int _jmpIndex;
+        std::string _labelName;
+        int _codeLineIndex;
+        IfElseEndType _ifElseEndType;
+    };
+
+    struct EndIfData
+    {
+        int _jmpIndex;
+        int _codeLineIndex;
+    };
+
     struct WhileWendData
     {
-        int _beqIndex;
+        int _jmpIndex;
         std::string _labelName;
         int _codeLineIndex;
     };
@@ -225,8 +227,8 @@ namespace Compiler
     std::string _tempVarStartStr;
     std::string _nextInternalLabel;
 
-    std::map<std::string, Keyword> _keywords;
-    std::vector<std::string> _keywordsWithEquals;
+    std::map<std::string, Keyword> _keywords, _stringKeywords;
+    std::vector<std::string> _equalsKeywords;
 
     std::vector<std::string> _input;
     std::vector<std::string> _output;
@@ -243,6 +245,8 @@ namespace Compiler
     std::vector<StringVar>  _stringVars;
 
     std::stack<ForNextData>   _forNextDataStack;
+    std::stack<ElseIfData>    _elseIfDataStack;
+    std::stack<EndIfData>     _endIfDataStack;
     std::stack<WhileWendData> _whileWendDataStack;
     std::stack<DoUntilData>   _doUntilDataStack;
 
@@ -351,6 +355,7 @@ namespace Compiler
     bool keywordNEXT(CodeLine& codeLine,   int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordIF(CodeLine& codeLine,     int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordELSE(CodeLine& codeLine,   int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
+    bool keywordELSEIF(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordENDIF(CodeLine& codeLine,  int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordWHILE(CodeLine& codeLine,  int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordWEND(CodeLine& codeLine,   int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
@@ -383,8 +388,9 @@ namespace Compiler
         _keywords["FOR"   ] = {0, "FOR",    keywordFOR   };
         _keywords["NEXT"  ] = {0, "NEXT",   keywordNEXT  };
         _keywords["IF"    ] = {0, "IF",     keywordIF    };
-        _keywords["ELSE"  ] = {0, "ELSE",   nullptr      };
-        _keywords["ENDIF" ] = {0, "ENDIF",  nullptr      };
+        _keywords["ELSE"  ] = {0, "ELSE",   keywordELSE  };
+        _keywords["ELSEIF"] = {0, "ELSEIF", keywordELSEIF};
+        _keywords["ENDIF" ] = {0, "ENDIF",  keywordENDIF };
         _keywords["WHILE" ] = {0, "WHILE",  keywordWHILE };
         _keywords["WEND"  ] = {0, "WEND",   keywordWEND  };
         _keywords["DO"    ] = {0, "DO",     keywordDO    };
@@ -420,20 +426,21 @@ namespace Compiler
         _keywords["TAN"   ] = {1, "TAN",    nullptr      };
         _keywords["FRE"   ] = {1, "FRE",    nullptr      };
         _keywords["TIME"  ] = {1, "TIME",   nullptr      };
-        _keywords["CHR$"  ] = {1, "CHR$",   nullptr      };
-        _keywords["HEX$"  ] = {1, "HEX$",   nullptr      };
-        _keywords["HEXW$" ] = {1, "HEXW$",  nullptr      };
-        _keywords["MID$"  ] = {1, "MID$",   nullptr      };
-        _keywords["LEFT$" ] = {1, "LEFT$",  nullptr      };
-        _keywords["RIGHT$"] = {1, "RIGHT$", nullptr      };
-        _keywords["SPC$"  ] = {1, "SPC$",   nullptr      };
-        _keywords["STR$"  ] = {1, "STR$",   nullptr      };
-        _keywords["TIME$" ] = {1, "TIME$",  nullptr      };
 
-        _keywordsWithEquals.push_back("DIM");
-        _keywordsWithEquals.push_back("DEF");
-        _keywordsWithEquals.push_back("FOR");
-        _keywordsWithEquals.push_back("IF");
+        _stringKeywords["CHR$"  ] = {1, "CHR$",   nullptr};
+        _stringKeywords["HEX$"  ] = {1, "HEX$",   nullptr};
+        _stringKeywords["HEXW$" ] = {1, "HEXW$",  nullptr};
+        _stringKeywords["MID$"  ] = {1, "MID$",   nullptr};
+        _stringKeywords["LEFT$" ] = {1, "LEFT$",  nullptr};
+        _stringKeywords["RIGHT$"] = {1, "RIGHT$", nullptr};
+        _stringKeywords["SPC$"  ] = {1, "SPC$",   nullptr};
+        _stringKeywords["STR$"  ] = {1, "STR$",   nullptr};
+        _stringKeywords["TIME$" ] = {1, "TIME$",  nullptr};
+
+        _equalsKeywords.push_back("DIM");
+        _equalsKeywords.push_back("DEF");
+        _equalsKeywords.push_back("FOR");
+        _equalsKeywords.push_back("IF");
 
         return true;
     }
@@ -619,9 +626,9 @@ namespace Compiler
                 if(token == "=") break;
 
                 // Check tokens that are reserved keywords using equals
-                for(int j=0; j<_keywordsWithEquals.size(); j++)
+                for(int j=0; j<_equalsKeywords.size(); j++)
                 {
-                    size_t keyword = token.find(_keywordsWithEquals[j]);
+                    size_t keyword = token.find(_equalsKeywords[j]);
                     if(keyword != std::string::npos) return VarNotFound;
                 }
             }
@@ -659,6 +666,19 @@ namespace Compiler
 
         std::string stripped = Expression::stripStrings(input);
         std::vector<std::string> tokens = Expression::tokenise(stripped, "-+/*%&<>=();, ", false);
+
+        // Check for string keywords
+        for(int i=0; i<tokens.size(); i++)
+        {
+            std::string token = tokens[i];
+            Expression::strToUpper(token);
+            if(_stringKeywords.find(token) != _stringKeywords.end())
+            {
+                params = _stringKeywords[token]._params;
+                expressionType |= Expression::HasStringKeywords;
+                break;
+            }
+        }
 
         // Check for keywords
         for(int i=0; i<tokens.size(); i++)
@@ -957,7 +977,7 @@ namespace Compiler
         int varIndex, params;
         Expression::parse(expression, codeLineIndex, value);
         uint32_t expressionType = isExpression(expression, varIndex, params);
-        if(((expressionType & Expression::HasVars)  &&  (expressionType & Expression::HasOperators))  ||  (expressionType & Expression::HasKeywords))
+        if(((expressionType & Expression::HasVars)  &&  (expressionType & Expression::HasOperators))  ||  (expressionType & Expression::HasKeywords)  ||  (expressionType & Expression::HasStringKeywords))
         {
             emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(_tempVarStart)), false, codeLineIndex);
         }
@@ -1057,7 +1077,7 @@ namespace Compiler
         int varIndex, params;
         Expression::parse(expression, codeLineIndex, value);
         uint32_t expressionType = isExpression(expression, varIndex, params);
-        if(((expressionType & Expression::HasVars)  &&  (expressionType & Expression::HasOperators))  ||  (expressionType & Expression::HasKeywords))
+        if(((expressionType & Expression::HasVars)  &&  (expressionType & Expression::HasOperators))  ||  (expressionType & Expression::HasKeywords)  ||  (expressionType & Expression::HasStringKeywords))
         {
             operand = Expression::byteToHexString(uint8_t(_tempVarStart));
             return OperandTemp;
@@ -1078,7 +1098,7 @@ namespace Compiler
         int varIndex, params;
         Expression::parse(expression, codeLineIndex, value);
         uint32_t expressionType = isExpression(expression, varIndex, params);
-        if(((expressionType & Expression::HasVars)  &&  (expressionType & Expression::HasOperators))  ||  (expressionType & Expression::HasKeywords))
+        if(((expressionType & Expression::HasVars)  &&  (expressionType & Expression::HasOperators))  ||  (expressionType & Expression::HasKeywords)  ||  (expressionType & Expression::HasStringKeywords))
         {
             emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(_tempVarStart)), false, codeLineIndex);
         }
@@ -1100,7 +1120,7 @@ namespace Compiler
         int varIndex, params;
         Expression::parse(expression, codeLineIndex, value);
         uint32_t expressionType = isExpression(expression, varIndex, params);
-        if(((expressionType & Expression::HasVars)  &&  (expressionType & Expression::HasOperators))  ||  (expressionType & Expression::HasKeywords))
+        if(((expressionType & Expression::HasVars)  &&  (expressionType & Expression::HasOperators))  ||  (expressionType & Expression::HasKeywords)  ||  (expressionType & Expression::HasStringKeywords))
         {
             emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(_tempVarStart)), false, codeLineIndex);
         }
@@ -1276,8 +1296,16 @@ namespace Compiler
     }
 
     // Adjust label addresses for any labels with addresses higher than optimised vasm instruction address
-    void adjustLabelAddresses(uint16_t optimisedAddress, int offset)
+    void adjustLabelAddresses(int codeLineIndex, int vasmLineIndex, int offset)
     {
+        if(vasmLineIndex >= _codeLines[codeLineIndex]._vasm.size())
+        {
+            if(++codeLineIndex >= _codeLines.size()) return;
+            vasmLineIndex = 0;
+        }
+
+        uint16_t optimisedAddress = _codeLines[codeLineIndex]._vasm[vasmLineIndex]._address;
+
         for(int i=0; i<_labels.size(); i++)
         {
             if(_labels[i]._address >= optimisedAddress)
@@ -1290,6 +1318,12 @@ namespace Compiler
     // Adjust vasm code addresses
     void adjustVasmAddresses(int codeLineIndex, int vasmLineIndex, int offset)
     {
+        if(vasmLineIndex >= _codeLines[codeLineIndex]._vasm.size())
+        {
+            if(++codeLineIndex >= _codeLines.size()) return;
+            vasmLineIndex = 0;
+        }
+
         for(int i=codeLineIndex; i<_codeLines.size(); i++)
         {
             int start = (i == codeLineIndex) ? vasmLineIndex : 0;
@@ -2475,6 +2509,8 @@ namespace Compiler
             else if(Expression::strToUpper(token) == "POKE"  ) return SingleStatementParsed;
             else if(Expression::strToUpper(token) == "DOKE"  ) return SingleStatementParsed;
             else if(Expression::strToUpper(token) == "PLAY"  ) return SingleStatementParsed;
+            else if(Expression::strToUpper(token) == "ELSE"  ) return SingleStatementParsed;
+            else if(Expression::strToUpper(token) == "ENDIF" ) return SingleStatementParsed;
             else if(Expression::strToUpper(token) == "IF"    ) return MultiStatementParsed;
         }
 
@@ -2577,7 +2613,7 @@ namespace Compiler
     {
         for(int i=0; i<vasm.size(); i++)
         {
-            if(vasm[i]._code.substr(0, 4) == "Jump")
+            if(vasm[i]._code.substr(0, sizeof("Jump")-1) == "Jump")
             {
                 vasm[i]._code += label;
                 return;
@@ -2585,8 +2621,21 @@ namespace Compiler
         }
     }
 
-    // If nextInternalLabel is already queued, add it to discarded labels so that it is fixed later in outputLabels
-    void nextInternalLabel(const std::string& label)
+    void addLabelToLdwi(std::vector<VasmLine>& vasm, std::string& label)
+    {
+        for(int i=0; i<vasm.size(); i++)
+        {
+            if(vasm[i]._code.find("LDWI_JUMP") != std::string::npos)
+            {
+                vasm[i]._opcode = "LDWI";
+                vasm[i]._code = "LDWI" + std::string(OPCODE_TRUNC_SIZE - (sizeof("LDWI")-1), ' ') + label;
+                return;
+            }
+        }
+    }
+
+    // If _nextInternalLabel is already queued, add it to discarded labels so that it is fixed later in outputLabels
+    void setNextInternalLabel(const std::string& label)
     {
         if(_nextInternalLabel.size()) _discardedLabels.push_back({_vasmPC, _nextInternalLabel});
 
@@ -3292,7 +3341,7 @@ namespace Compiler
         {
             uint32_t expressionType = isExpression(tokens[i], varIndex, params);
 
-            if(expressionType & Expression::HasKeywords)
+            if(expressionType & Expression::HasStringKeywords)
             {
                 Expression::setEnablePrint(true);
                 Expression::parse(tokens[i], codeLineIndex, value);
@@ -3301,7 +3350,8 @@ namespace Compiler
             else if((expressionType & Expression::HasVars)  &&  (expressionType & Expression::HasOperators))
             {
                 Expression::parse(tokens[i], codeLineIndex, value);
-                emitVcpuAsm("%PrintVarInt16", Expression::byteToHexString(uint8_t(_tempVarStart)), false, codeLineIndex);
+                emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(_tempVarStart)), false, codeLineIndex);
+                emitVcpuAsm("%PrintAcInt16", "", false, codeLineIndex);
             }
             else if((expressionType & Expression::HasVars)  &&  !(expressionType & Expression::HasStrings))
             {
@@ -3310,7 +3360,8 @@ namespace Compiler
                 {
                     if(_integerVars[varIndex]._varType == VarArray)
                     {
-                        emitVcpuAsm("%PrintVarInt16", Expression::byteToHexString(uint8_t(_tempVarStart)), false, codeLineIndex);
+                        emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(_tempVarStart)), false, codeLineIndex);
+                        emitVcpuAsm("%PrintAcInt16", "", false, codeLineIndex);
                     }
                     else
                     {
@@ -3321,6 +3372,12 @@ namespace Compiler
                 {
                     emitVcpuAsm("%PrintAcInt16", "", false, codeLineIndex);
                 }
+            }
+            else if(expressionType & Expression::HasKeywords)
+            {
+                Expression::parse(tokens[i], codeLineIndex, value);
+                emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(_tempVarStart)), false, codeLineIndex);
+                emitVcpuAsm("%PrintAcInt16", "", false, codeLineIndex);
             }
             else if(expressionType & Expression::HasOperators)
             {
@@ -3472,7 +3529,7 @@ namespace Compiler
             emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(varStep)), false, codeLineIndex);
         }
 
-        nextInternalLabel("_next_" + Expression::wordToHexString(_vasmPC));
+        setNextInternalLabel("_next_" + Expression::wordToHexString(_vasmPC));
         _forNextDataStack.push({varIndex, _nextInternalLabel, loopEnd, loopStep, varEnd, varStep, optimise, codeLineIndex});
 
         return true;
@@ -3540,6 +3597,8 @@ namespace Compiler
 
     bool keywordIF(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
+        bool ifElseEndif = false;
+
         // IF
         std::string code = _codeLines[codeLineIndex]._code;
         Expression::strToUpper(code);
@@ -3549,18 +3608,21 @@ namespace Compiler
         code = codeLine._code;
         Expression::strToUpper(code);
         size_t offsetTHEN = code.find("THEN");
-        if(offsetTHEN == std::string::npos)
-        {
-            fprintf(stderr, "Compiler::keywordIF() : Syntax error, THEN missing, in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
-            return false;
-        }
+        if(offsetTHEN == std::string::npos) ifElseEndif = true;
 
         // Condition
         int16_t condition = 0;
         std::string conditionToken = codeLine._code.substr(foundPos, offsetTHEN - foundPos);
         parseExpression(codeLine, codeLineIndex, conditionToken, condition);
         if(_usingLogicalOperator) emitVcpuAsm("%JumpFalse", "", false, codeLineIndex);
-        int beqIndex = int(_codeLines[codeLineIndex]._vasm.size()) - 1;
+        int jmpIndex = int(_codeLines[codeLineIndex]._vasm.size()) - 1;
+
+        // Bail early as we assume this is an IF ELSE ENDIF block
+        if(ifElseEndif)
+        {
+            _elseIfDataStack.push({jmpIndex, "", codeLineIndex, IfBlock});
+            return true;
+        }
 
         // Action
         std::string actionToken = _codeLines[codeLineIndex]._code.substr(offsetIF + offsetTHEN + 4);
@@ -3577,34 +3639,180 @@ namespace Compiler
         int varIndex;
         if(parseMultiStatements(actionText, codeLine, codeLineIndex, varIndex) == StatementError) return false;
 
-        // Update branch's label, (check to see if a label already exists)
-        nextInternalLabel("_if_" + Expression::wordToHexString(_vasmPC));
-        VasmLine* vasm = &_codeLines[codeLineIndex]._vasm[beqIndex];
+        // Create label on next line of vasm code
+        setNextInternalLabel("_else_" + Expression::wordToHexString(_vasmPC));
+        std::string nextInternalLabel = _nextInternalLabel + " " + std::to_string(_jumpFalseUniqueId++);
+
+        // Update if's jump to this new label
+        VasmLine* vasm = &_codeLines[codeLineIndex]._vasm[jmpIndex];
         if(_usingLogicalOperator)
         {
-            vasm->_code = "JumpFalse" + std::string(OPCODE_TRUNC_SIZE - (sizeof("JumpFalse")-1), ' ') + _nextInternalLabel + " " + std::to_string(_jumpFalseUniqueId++);
+            vasm->_code = "JumpFalse" + std::string(OPCODE_TRUNC_SIZE - (sizeof("JumpFalse")-1), ' ') + nextInternalLabel;
         }
         else
         {
-            addLabelToJump(_codeLines[codeLineIndex]._vasm, _nextInternalLabel + " " + std::to_string(_jumpFalseUniqueId++));
+            addLabelToJump(_codeLines[codeLineIndex]._vasm, nextInternalLabel);
         }
+
+        return true;
+    }
+
+    bool keywordELSEIF(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        // Check stack for this IF ELSE ENDIF block
+        if(_elseIfDataStack.empty())
+        {
+            fprintf(stderr, "Compiler::keywordELSEIF() : Syntax error, missing IF statement, for '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        ElseIfData elseIfData = _elseIfDataStack.top();
+        int jmpIndex = elseIfData._jmpIndex;
+        int codeIndex = elseIfData._codeLineIndex;
+        _elseIfDataStack.pop();
+
+        if(elseIfData._ifElseEndType != IfBlock  &&  elseIfData._ifElseEndType != ElseIfBlock)
+        {
+            fprintf(stderr, "Compiler::keywordELSEIF() : Syntax error, ELSEIF follows IF or ELSEIF, for '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        // Jump to endif for previous BASIC line
+        emitVcpuAsm("LDWI", "LDWI_JUMP", false, codeLineIndex - 1);
+        emitVcpuAsm("CALL", "giga_vAC", false, codeLineIndex - 1);
+        _endIfDataStack.push({int(_codeLines[codeLineIndex - 1]._vasm.size()) - 2, codeLineIndex - 1});
+
+        // Create label on next line of vasm code
+        setNextInternalLabel("_elseif_" + Expression::wordToHexString(_vasmPC));
+        std::string nextInternalLabel = _nextInternalLabel + " " + std::to_string(_jumpFalseUniqueId++);
+
+        // Update if's jump to this new label
+        VasmLine* vasm = &_codeLines[codeIndex]._vasm[jmpIndex];
+        if(_usingLogicalOperator)
+        {
+            vasm->_code = "JumpFalse" + std::string(OPCODE_TRUNC_SIZE - (sizeof("JumpFalse")-1), ' ') + nextInternalLabel;
+        }
+        else
+        {
+            addLabelToJump(_codeLines[codeIndex]._vasm, nextInternalLabel);
+        }
+
+        // Condition
+        int16_t condition = 0;
+        std::string conditionToken = codeLine._code.substr(foundPos);
+        parseExpression(codeLine, codeLineIndex, conditionToken, condition);
+        if(_usingLogicalOperator) emitVcpuAsm("%JumpFalse", "", false, codeLineIndex);
+        jmpIndex = int(_codeLines[codeLineIndex]._vasm.size()) - 1;
+
+        _elseIfDataStack.push({jmpIndex, "", codeLineIndex, ElseIfBlock});
 
         return true;
     }
 
     bool keywordELSE(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
+        if(codeLine._tokens.size() != 1)
+        {
+            fprintf(stderr, "Compiler::keywordELSE() : Syntax error, (wrong number of tokens), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        // Check stack for this IF ELSE ENDIF block
+        if(_elseIfDataStack.empty())
+        {
+            fprintf(stderr, "Compiler::keywordELSE() : Syntax error, missing IF statement, for '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        ElseIfData elseIfData = _elseIfDataStack.top();
+        int jmpIndex = elseIfData._jmpIndex;
+        int codeIndex = elseIfData._codeLineIndex;
+        _elseIfDataStack.pop();
+
+        // Jump to endif for previous BASIC line
+        emitVcpuAsm("LDWI", "LDWI_JUMP", false, codeLineIndex - 1);
+        emitVcpuAsm("CALL", "giga_vAC", false, codeLineIndex - 1);
+        _endIfDataStack.push({int(_codeLines[codeLineIndex - 1]._vasm.size()) - 2, codeLineIndex - 1});
+
+        // Create label on next line of vasm code
+        setNextInternalLabel("_else_" + Expression::wordToHexString(_vasmPC));
+        std::string nextInternalLabel = _nextInternalLabel + " " + std::to_string(_jumpFalseUniqueId++);
+
+        // Update if's or elseif's jump to this new label
+        VasmLine* vasm = &_codeLines[codeIndex]._vasm[jmpIndex];
+        if(_usingLogicalOperator)
+        {
+            vasm->_code = "JumpFalse" + std::string(OPCODE_TRUNC_SIZE - (sizeof("JumpFalse")-1), ' ') + nextInternalLabel;
+        }
+        else
+        {
+            addLabelToJump(_codeLines[codeIndex]._vasm, nextInternalLabel);
+        }
+
+        _elseIfDataStack.push({jmpIndex, nextInternalLabel, codeIndex, ElseBlock});
+
         return true;
     }
 
     bool keywordENDIF(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
+        if(codeLine._tokens.size() != 1)
+        {
+            fprintf(stderr, "Compiler::keywordENDIF() : Syntax error, (wrong number of tokens), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        // Check stack for this IF ELSE ENDIF block
+        if(_elseIfDataStack.empty())
+        {
+            fprintf(stderr, "Compiler::keywordENDIF() : Syntax error, missing IF statement, for '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        ElseIfData elseIfData = _elseIfDataStack.top();
+        int jmpIndex = elseIfData._jmpIndex;
+        int codeIndex = elseIfData._codeLineIndex;
+        _elseIfDataStack.pop();
+
+        // Create label on next line of vasm code
+        setNextInternalLabel("_endif_" + Expression::wordToHexString(_vasmPC));
+        std::string nextInternalLabel = _nextInternalLabel + " " + std::to_string(_jumpFalseUniqueId++);
+
+        // Update if's or elseif's jump to this new label
+        VasmLine* vasm = &_codeLines[codeIndex]._vasm[jmpIndex];
+        if(_usingLogicalOperator)
+        {
+            vasm->_code = "JumpFalse" + std::string(OPCODE_TRUNC_SIZE - (sizeof("JumpFalse")-1), ' ') + nextInternalLabel;
+        }
+        else
+        {
+            addLabelToJump(_codeLines[codeIndex]._vasm, nextInternalLabel);
+        }
+
+        // Update elseif's and/or else's jump to endif label
+        while(!_endIfDataStack.empty())
+        {
+            int codeLine = _endIfDataStack.top()._codeLineIndex;
+            int jmpIndex = _endIfDataStack.top()._jmpIndex;
+            VasmLine* vasm = &_codeLines[codeLine]._vasm[jmpIndex];
+            if(_usingLogicalOperator)
+            {
+                vasm->_code = "LDWI" + std::string(OPCODE_TRUNC_SIZE - (sizeof("LDWI")-1), ' ') + _nextInternalLabel;
+            }
+            else
+            {
+                addLabelToLdwi(_codeLines[codeLine]._vasm, _nextInternalLabel);
+            }
+
+            _endIfDataStack.pop();
+        }
+
         return true;
     }
 
     bool keywordWHILE(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        nextInternalLabel("_while_" + Expression::wordToHexString(_vasmPC));
+        setNextInternalLabel("_while_" + Expression::wordToHexString(_vasmPC));
         _whileWendDataStack.push({0, _nextInternalLabel, codeLineIndex});
 
         // Condition
@@ -3612,7 +3820,7 @@ namespace Compiler
         std::string conditionToken = codeLine._code.substr(foundPos);
         parseExpression(codeLine, codeLineIndex, conditionToken, condition);
         if(_usingLogicalOperator) emitVcpuAsm("%JumpFalse", "", false, codeLineIndex);
-        _whileWendDataStack.top()._beqIndex = int(_codeLines[codeLineIndex]._vasm.size()) - 1;
+        _whileWendDataStack.top()._jmpIndex = int(_codeLines[codeLineIndex]._vasm.size()) - 1;
 
         return true;
     }
@@ -3640,8 +3848,8 @@ namespace Compiler
         }
 
         // Branch if condition false to instruction after WEND
-        nextInternalLabel("_wend_" + Expression::wordToHexString(_vasmPC));
-        VasmLine* vasm = &_codeLines[whileWendData._codeLineIndex]._vasm[whileWendData._beqIndex];
+        setNextInternalLabel("_wend_" + Expression::wordToHexString(_vasmPC));
+        VasmLine* vasm = &_codeLines[whileWendData._codeLineIndex]._vasm[whileWendData._jmpIndex];
         if(_usingLogicalOperator)
         {
             vasm->_code = "JumpFalse" + std::string(OPCODE_TRUNC_SIZE - (sizeof("JumpFalse")-1), ' ') + _nextInternalLabel + " " + std::to_string(_jumpFalseUniqueId++);
@@ -3656,7 +3864,7 @@ namespace Compiler
 
     bool keywordDO(CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        nextInternalLabel("_do_" + Expression::wordToHexString(_vasmPC));
+        setNextInternalLabel("_do_" + Expression::wordToHexString(_vasmPC));
         _doUntilDataStack.push({_nextInternalLabel, codeLineIndex});
 
         return true;
@@ -3747,7 +3955,7 @@ namespace Compiler
             return false;
         }
 
-        createIntVar(varName, 0, varInit, codeLine, codeLineIndex, false, varIndex, VarArray, arrayStart, VarInt16, arraySize);
+        createIntVar(varName, 0, varInit, codeLine, codeLineIndex, false, varIndex, VarArray, arrayStart, Int16, arraySize);
 
         return true;
     }
@@ -4030,7 +4238,7 @@ namespace Compiler
                                 linesDeleted = true;
                                 itVasm = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine + 1);
                                 itVasm = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine);
-                                adjustLabelAddresses(_codeLines[i]._vasm[firstLine]._address, -4);
+                                adjustLabelAddresses(i, firstLine, -4);
                                 adjustVasmAddresses(i, firstLine, -4);
                             }
                             
@@ -4043,7 +4251,7 @@ namespace Compiler
                                 // Delete LDW
                                 linesDeleted = true;
                                 itVasm = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine + 1);
-                                adjustLabelAddresses(_codeLines[i]._vasm[firstLine + 1]._address, -2);
+                                adjustLabelAddresses(i, firstLine + 1, -2);
                                 adjustVasmAddresses(i, firstLine + 1, -2);
                             }
 
@@ -4064,7 +4272,7 @@ namespace Compiler
                                 linesDeleted = true;
                                 itVasm = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine + 1);
                                 itVasm = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine);
-                                adjustLabelAddresses(_codeLines[i]._vasm[firstLine]._address, -4);
+                                adjustLabelAddresses(i, firstLine, -4);
                                 adjustVasmAddresses(i, firstLine, -4);
                             }
                             // Match STW LDW ADDW, copy LDW operand to ADDW operand and delete STW LDW, (LDW is a var)
@@ -4084,7 +4292,7 @@ namespace Compiler
                                 linesDeleted = true;
                                 itVasm = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine + 1);
                                 itVasm = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine);
-                                adjustLabelAddresses(_codeLines[i]._vasm[firstLine]._address, -4);
+                                adjustLabelAddresses(i, firstLine, -4);
                                 adjustVasmAddresses(i, firstLine, -4);
                             }
                             // Match STW LDW ANDW, copy LDW operand to ANDW operand and delete STW LDW
@@ -4104,7 +4312,7 @@ namespace Compiler
                                 linesDeleted = true;
                                 itVasm = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine + 1);
                                 itVasm = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine);
-                                adjustLabelAddresses(_codeLines[i]._vasm[firstLine]._address, -4);
+                                adjustLabelAddresses(i, firstLine, -4);
                                 adjustVasmAddresses(i, firstLine, -4);
                             }
                             // Match STW LDW ANDW, copy LDW operand to ANDW operand and delete STW LDW, (LDW is a var)
@@ -4124,7 +4332,7 @@ namespace Compiler
                                 linesDeleted = true;
                                 itVasm = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine + 1);
                                 itVasm = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine);
-                                adjustLabelAddresses(_codeLines[i]._vasm[firstLine]._address, -4);
+                                adjustLabelAddresses(i, firstLine, -4);
                                 adjustVasmAddresses(i, firstLine, -4);
                             }
                             // Match STW LDW XORW, copy LDW operand to XORW operand and delete STW LDW
@@ -4144,7 +4352,7 @@ namespace Compiler
                                 linesDeleted = true;
                                 itVasm = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine + 1);
                                 itVasm = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine);
-                                adjustLabelAddresses(_codeLines[i]._vasm[firstLine]._address, -4);
+                                adjustLabelAddresses(i, firstLine, -4);
                                 adjustVasmAddresses(i, firstLine, -4);
                             }
                             // Match STW LDW XORW, copy LDW operand to XORW operand and delete STW LDW, (LDW is a var)
@@ -4164,7 +4372,7 @@ namespace Compiler
                                 linesDeleted = true;
                                 itVasm = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine + 1);
                                 itVasm = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine);
-                                adjustLabelAddresses(_codeLines[i]._vasm[firstLine]._address, -4);
+                                adjustLabelAddresses(i, firstLine, -4);
                                 adjustVasmAddresses(i, firstLine, -4);
                             }
                             // Match STW LDW ORW, copy LDW operand to ORW operand and delete STW LDW
@@ -4184,7 +4392,7 @@ namespace Compiler
                                 linesDeleted = true;
                                 itVasm = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine + 1);
                                 itVasm = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine);
-                                adjustLabelAddresses(_codeLines[i]._vasm[firstLine]._address, -4);
+                                adjustLabelAddresses(i, firstLine, -4);
                                 adjustVasmAddresses(i, firstLine, -4);
                             }
                             // Match STW LDW ORW, copy LDW operand to ORW operand and delete STW LDW, (LDW is a var)
@@ -4204,7 +4412,7 @@ namespace Compiler
                                 linesDeleted = true;
                                 itVasm = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine + 1);
                                 itVasm = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine);
-                                adjustLabelAddresses(_codeLines[i]._vasm[firstLine]._address, -4);
+                                adjustLabelAddresses(i, firstLine, -4);
                                 adjustVasmAddresses(i, firstLine, -4);
                             }
                         }
@@ -4218,7 +4426,7 @@ namespace Compiler
                             // Delete first STW
                             linesDeleted = true;
                             itVasm = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + firstLine);
-                            adjustLabelAddresses(_codeLines[i]._vasm[firstLine]._address, -2);
+                            adjustLabelAddresses(i, firstLine, -2);
                             adjustVasmAddresses(i, firstLine, -2);
                         }
                     }
@@ -4239,7 +4447,7 @@ namespace Compiler
                                 // Delete ADD/SUB
                                 linesDeleted = true;
                                 itVasm = _codeLines[i]._vasm.erase(_codeLines[i]._vasm.begin() + vasmIndex);
-                                adjustLabelAddresses(_codeLines[i]._vasm[vasmIndex]._address, -2);
+                                adjustLabelAddresses(i, vasmIndex, -2);
                                 adjustVasmAddresses(i, vasmIndex, -2);
                             }
                         }
@@ -4535,6 +4743,28 @@ namespace Compiler
             std::string code = _codeLines[codeLineIndex]._code;
             fprintf(stderr, "Compiler::checkStatementBlocks() : Syntax error, missing NEXT statement, for '%s' on line %d\n", code.c_str(), codeLineIndex + 1);
             _forNextDataStack.pop();
+        }
+
+        // Check ELSE ELSEIF blocks
+        while(!_elseIfDataStack.empty())
+        {
+            success = false;
+            ElseIfData elseIfData = _elseIfDataStack.top();
+            int codeLineIndex = elseIfData._codeLineIndex;
+            std::string code = _codeLines[codeLineIndex]._code;
+            fprintf(stderr, "Compiler::checkStatementBlocks() : Syntax error, missing ELSE or ELSEIF statement, for '%s' on line %d\n", code.c_str(), codeLineIndex + 1);
+            _elseIfDataStack.pop();
+        }
+
+        // Check ENDIF blocks
+        while(!_endIfDataStack.empty())
+        {
+            success = false;
+            EndIfData endIfData = _endIfDataStack.top();
+            int codeLineIndex = endIfData._codeLineIndex;
+            std::string code = _codeLines[codeLineIndex]._code;
+            fprintf(stderr, "Compiler::checkStatementBlocks() : Syntax error, missing ENDIF statement, for '%s' on line %d\n", code.c_str(), codeLineIndex + 1);
+            _endIfDataStack.pop();
         }
         
         // Check WHILE WEND blocks
@@ -5079,7 +5309,7 @@ namespace Compiler
         _output.push_back("\n");
         _output.push_back(";****************************************************************************************************************************************\n");
         _output.push_back(";****************************************************************************************************************************************\n");
-        _output.push_back(";* Internal runtime, DO NOT MODIFY HERE, modifications must be made in the original include files                                       *\n");  
+        _output.push_back(";* Internal runtime, DO NOT MODIFY PAST THIS POINT, modifications must be made in the original include files                            *\n");  
         _output.push_back(";****************************************************************************************************************************************\n");
         _output.push_back(";****************************************************************************************************************************************\n");
         _output.push_back("\n");
@@ -5240,7 +5470,9 @@ namespace Compiler
             if(!foundLabel)
             {
                 // Can only discard internal labels
-                bool foundInternal = (_equateLabels[k].find("_if_") != std::string::npos  ||  _equateLabels[k].find("_next_") != std::string::npos  ||  _equateLabels[k].find("_page_") != std::string::npos);
+                bool foundInternal = (_equateLabels[k].find("_if_") != std::string::npos     ||  _equateLabels[k].find("_else_") != std::string::npos  ||  _equateLabels[k].find("_elseif_") != std::string::npos  ||
+                                      _equateLabels[k].find("_endif_") != std::string::npos  ||  _equateLabels[k].find("_while_") != std::string::npos ||  _equateLabels[k].find("_wend_") != std::string::npos    ||
+                                      _equateLabels[k].find("_do_") != std::string::npos     ||  _equateLabels[k].find("_next_") != std::string::npos  ||  _equateLabels[k].find("_page_") != std::string::npos);
 
                 for(int l=0; l<_output.size(); l++)
                 {
@@ -5336,6 +5568,8 @@ RESTART_COLLECTION:
         Expression::setExprFunc(expression);
 
         while(!_forNextDataStack.empty())   _forNextDataStack.pop();
+        while(!_elseIfDataStack.empty())    _elseIfDataStack.pop();
+        while(!_endIfDataStack.empty())     _endIfDataStack.pop();
         while(!_whileWendDataStack.empty()) _whileWendDataStack.pop();
         while(!_doUntilDataStack.empty())   _doUntilDataStack.pop();
     }
