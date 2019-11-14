@@ -514,9 +514,24 @@ namespace Loader
         return true;
     }
 
+    void openComPort(void)
+    {
+        openComPort(_currentComPort);
+    }
+
     void closeComPort(void)
     {
         comClose(_currentComPort);
+    }
+
+    bool readCharGiga(char* chr)
+    {
+        return (comRead(_currentComPort, chr, 1) == 1);
+    }
+
+    bool sendCharGiga(char chr)
+    {
+        return (comWrite(_currentComPort, &chr, 1) == 1);
     }
 
     bool readLineGiga(std::string& line)
@@ -527,7 +542,10 @@ namespace Loader
 
         while(buffer != '\n')
         {
-            if(comRead(_currentComPort, &buffer, 1)) line.push_back(buffer);
+            if(comRead(_currentComPort, &buffer, 1))
+            {
+                if((buffer >= 32  &&  buffer <= 126)  ||  buffer == '\n') line.push_back(buffer);
+            }
             double frameTime = double(SDL_GetPerformanceCounter() - prevFrameCounter) / double(SDL_GetPerformanceFrequency());
             if(frameTime > _configTimeOut) return false;
         }
@@ -544,13 +562,15 @@ namespace Loader
         {
             if(!readLineGiga(line))
             {
-                fprintf(stderr, "Loader::waitForPromptGiga() : timed out on serial port : '%s'\n", comGetPortName(_currentComPort));
+                fprintf(stderr, "Loader::waitForPromptGiga() : timed out on serial port : %s\n", comGetPortName(_currentComPort));
                 return false;
             }
 
+            //fprintf(stderr, "Loader::waitForPromptGiga() : %s\n", line.c_str());
+
             if(size_t e = line.find('!') != std::string::npos)
             {
-                fprintf(stderr, "Loader::waitForPromptGiga() : Arduino Error : '%s'\n", &line[e]);
+                fprintf(stderr, "Loader::waitForPromptGiga() : Arduino Error : %s\n", &line[e]);
                 return false;
             }
         }
@@ -558,7 +578,24 @@ namespace Loader
 
         return true;
     }
-    
+
+    bool readUntilPromptGiga(std::vector<std::string>& text)
+    {
+        std::string line;
+        do
+        {
+            if(!readLineGiga(line))
+            {
+                fprintf(stderr, "Loader::readUntilPromptGiga() : timed out on serial port : %s\n", comGetPortName(_currentComPort));
+                return false;
+            }
+
+            text.push_back(line);
+        }
+        while(line.find('?') == std::string::npos);
+
+        return true;
+    }
 
     void sendCommandToGiga(char cmd, std::string& line, bool wait)
     {
@@ -578,6 +615,19 @@ namespace Loader
 
         closeComPort();
     }
+
+    bool sendCommandToGiga(std::string& cmd, std::vector<std::string>& text)
+    {
+        if(!openComPort(_configComPort)) return false;
+
+        comWrite(_currentComPort, cmd.c_str(), cmd.size());
+        bool success = readUntilPromptGiga(text);
+
+        closeComPort();
+
+        return success;
+    }
+
 
     int uploadToGigaThread(void* userData)
     {

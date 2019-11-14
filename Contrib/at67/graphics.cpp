@@ -199,14 +199,27 @@ namespace Graphics
         }
 
         // Print text in lines with spaces as padding to the help screen surface
-        int maxLines = SCREEN_HEIGHT / FONT_HEIGHT;
+        int maxLines = SCREEN_HEIGHT / (FONT_HEIGHT + 2);
         int numLines = std::min(lines-1, maxLines);
+        uint32_t* pixels = (uint32_t*)_helpSurface->pixels;
+
         for(int i=0; i<numLines; i++)
         {
+            int y = i*(FONT_HEIGHT + 2) + (maxLines - numLines)/2 * (FONT_HEIGHT + 2);
             size_t nonWhiteSpace = lineTokens[i].find_first_not_of("  \n\r\f\t\v");
+
             if(nonWhiteSpace == std::string::npos) lineTokens[i] = std::string(MAX_CHARS_HELP, ' ');
             if(lineTokens[i].size() < MAX_CHARS_HELP) lineTokens[i] += std::string(MAX_CHARS_HELP - lineTokens[i].size(), ' ');
-            drawText(lineTokens[i], (uint32_t*)_helpSurface->pixels, 0, i*FONT_HEIGHT + (maxLines - numLines)/2 * FONT_HEIGHT, 0xFF00FF00, false, 0, false, -1, true, 0xFFFFFFFF, 0xFF00FFFF);
+            drawText(lineTokens[i], pixels, 0, y, 0xFF00FF00, false, 0, false, -1, true, 0xFFFFFFFF, 0xFF00FFFF);
+
+            // Fill in the gaps
+            for(int j=FONT_HEIGHT; j<FONT_HEIGHT+2; j++)
+            {
+                for(int k=0; k<SCREEN_WIDTH*3/4; k++)
+                {
+                    pixels[(y + j)*SCREEN_WIDTH + k] = 0xFF000000;
+                }
+            }
         }
 
         // Create help screen texture
@@ -532,6 +545,25 @@ namespace Graphics
         }
     }
 
+    void clearScreen(uint32_t colour, uint32_t commandLineColour)
+    {
+        for(int y=0; y<SCREEN_HEIGHT - (FONT_HEIGHT + 2); y++)
+        {
+            for(int x=0; x<SCREEN_WIDTH*3/4; x++)
+            {
+                _pixels[y*SCREEN_WIDTH + x] = colour;
+            }
+        }
+
+        for(int y=SCREEN_HEIGHT - (FONT_HEIGHT + 2); y<SCREEN_HEIGHT; y++)
+        {
+            for(int x=0; x<SCREEN_WIDTH*3/4; x++)
+            {
+                _pixels[y*SCREEN_WIDTH + x] = commandLineColour;
+            }
+        }
+    }
+
     void pixelReticle(const Cpu::State& S, int vgaX, int vgaY)
     {
         // Draw pixel reticle, but only for active pixels
@@ -566,7 +598,7 @@ namespace Graphics
     }
 
     // Simple text routine, font is a non proportional 6*8 font loaded from a 96*48 BMP file
-    bool drawText(const std::string& text, uint32_t* pixels, int x, int y, uint32_t colour, bool invert, int invertSize, bool colourKey, int size, bool fullscreen, uint32_t commentColour, uint32_t sectionColour)
+    bool drawText(const std::string& text, uint32_t* pixels, int x, int y, uint32_t colour, bool invert, int invertSize, bool colourKey, int numChars, bool fullscreen, uint32_t commentColour, uint32_t sectionColour)
     {
         if(!fullscreen)
         {
@@ -576,8 +608,8 @@ namespace Graphics
         if(x<0 || x>=SCREEN_WIDTH || y<0 || y>=SCREEN_HEIGHT) return false;
 
         uint32_t* fontPixels = (uint32_t*)_fontSurface->pixels;
-        size = (size == -1) ? int(text.size()) : size;
-        for(int i=0; i<size; i++)
+        numChars = (numChars == -1) ? int(text.size()) : numChars;
+        for(int i=0; i<numChars; i++)
         {
             if(sectionColour)
             {
@@ -625,6 +657,11 @@ namespace Graphics
         }
 
         return true;
+    }
+
+    bool drawText(const std::string& text, int x, int y, uint32_t colour, bool invert, int invertSize)
+    {
+        return drawText(text, _pixels, x, y, colour, invert, invertSize, true, -1, true, 0x00000000, 0x00000000);
     }
 
     void drawDigitBox(uint8_t digit, int x, int y, uint32_t colour)
@@ -716,6 +753,8 @@ namespace Graphics
                 case Editor::Rom:   (Editor::getSingleStepEnabled()) ? strcpy(str, "Debug ") : strcpy(str, "Rom   "); break;
                 case Editor::Load:  (Editor::getSingleStepEnabled()) ? strcpy(str, "Debug ") : strcpy(str, "Load  "); break;
                 case Editor::Dasm:  (Editor::getSingleStepEnabled()) ? strcpy(str, "Debug ") : strcpy(str, "Dasm  "); break;
+                case Editor::Term:  (Editor::getSingleStepEnabled()) ? strcpy(str, "Debug ") : strcpy(str, "Term  "); break;
+                case Editor::Image: (Editor::getSingleStepEnabled()) ? strcpy(str, "Debug ") : strcpy(str, "Image "); break;
                 default: strcpy(str, "     ");
             }
             drawText(std::string(str), _pixels, 12, 472 - FONT_CELL_Y, 0xFF00FF00, false, 0);
@@ -1081,6 +1120,26 @@ namespace Graphics
         SDL_RenderPresent(_renderer);
         if(synchronise) Timing::synchronise();
     }
+
+
+    void renderTerminal(bool synchronise)
+    {
+        drawLeds();
+        renderText();
+        renderTextWindow();
+
+        SDL_UpdateTexture(_screenTexture, NULL, _pixels, SCREEN_WIDTH * sizeof uint32_t);
+        SDL_RenderCopy(_renderer, _screenTexture, NULL, NULL);
+        renderHelpScreen();
+        SDL_RenderPresent(_renderer);
+        if(synchronise) Timing::synchronise();
+    }
+
+
+    void renderPixelEditor(void)
+    {
+    }
+
 
     void drawPixel(uint8_t x, uint8_t y, uint32_t colour)
     {

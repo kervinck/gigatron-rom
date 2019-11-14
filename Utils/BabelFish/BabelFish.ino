@@ -729,6 +729,7 @@ void doTerminal()
   #if hasSerial
     Serial.println(":Entering terminal mode");
     Serial.println(":Exit with Ctrl-D");
+    Serial.println("Cmd?");
     char next = 0, last;
     bool ansi = false;
     for (;;) {

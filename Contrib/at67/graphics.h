@@ -82,15 +82,19 @@ namespace Graphics
     void refreshPixel(const Cpu::State& S, int vgaX, int vgaY);
     void refreshScreen(void);
 
+    void clearScreen(uint32_t colour, uint32_t commandLineColour=0x22222222);
+
     void pixelReticle(const Cpu::State& S, int vgaX, int vgaY);
 
     void drawLeds(void);
-    bool drawText(const std::string& text, uint32_t* pixels, int x, int y, uint32_t colour, bool invert, int invertSize, bool colourKey=false, int size=-1, bool fullscreen=false, uint32_t commentColour=0x00000000, uint32_t sectionColour=0x00000000);
+    bool drawText(const std::string& text, int x, int y, uint32_t colour, bool invert, int invertSize);
+    bool drawText(const std::string& text, uint32_t* pixels, int x, int y, uint32_t colour, bool invert, int invertSize, bool colourKey=false, int numChars=-1, bool fullscreen=false, uint32_t commentColour=0x00000000, uint32_t sectionColour=0x00000000);
     void drawDigitBox(uint8_t digit, int x, int y, uint32_t colour);
 
     void renderText(void);
     void renderTextWindow(void);
     void render(bool synchronise=true);
+    void renderTerminal(bool synchronise=true);
 
     void drawLineGiga(int x0, int y0, int x1, int y1);
     void drawLineGiga(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint8_t colour);

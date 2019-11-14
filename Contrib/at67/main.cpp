@@ -75,7 +75,29 @@ int main(int argc, char* argv[])
 
     //Compiler::compile("gbas/test.gbas", "gbas/test.gasm");
 
-    while(Cpu::process());
+    while(1)
+    {
+        switch(Editor::getEditorMode())
+        {
+            case Editor::Term:
+            {
+                Editor::handleTerminalInput();
+                Graphics::renderTerminal(true);
+            }
+            break;
+
+            case Editor::Image:
+            {
+            }
+            break;
+
+            default:
+            {
+                Cpu::process();
+            }
+            break;
+        }
+    }
 
     return 0;
 }

@@ -8,7 +8,7 @@
 
 
 #define MAJOR_VERSION "0.8"
-#define MINOR_VERSION "14"
+#define MINOR_VERSION "15"
 #define VERSION_STR "gtemuAT67 v" MAJOR_VERSION "." MINOR_VERSION
  
 #define ROM_INST 0
@@ -128,7 +128,7 @@ namespace Cpu
     void softReset(void);
     void swapMemoryModel(void);
     void vCpuUsage(const State& S, const State& T);
-    bool process(void);
+    void process(void);
 #endif
 }
 

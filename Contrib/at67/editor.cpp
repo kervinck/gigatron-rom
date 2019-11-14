@@ -61,7 +61,6 @@ namespace Editor
     bool _pageDnButton = false;
     bool _delAllButton = false;
 
-
     bool _singleStep = false;
     bool _singleStepEnabled = false;
     SingleStepMode _singleStepMode = RunToBrk;
@@ -109,6 +108,16 @@ namespace Editor
     std::map<std::string, KeyCodeMod> _keyboard;
     std::map<std::string, KeyCodeMod> _hardware;
     std::map<std::string, KeyCodeMod> _debugger;
+
+    bool _terminalModeGiga = false;
+    int _terminalScrollOffset = 0;
+    int _terminalScrollDelta = 0;
+    int _terminalScrollIndex = 0;
+    const int _terminalScreenMaxIndex = (SCREEN_HEIGHT - (FONT_HEIGHT+2)*1)/(FONT_HEIGHT+2);
+    std::string _terminalCommandLine;
+    std::vector<int> _terminalTextSelected;
+    std::vector<std::string> _terminalText;
+
 
     int getCursorX(void) {return _cursorX;}
     int getCursorY(void) {return _cursorY;}
@@ -399,6 +408,8 @@ namespace Editor
         _emulator["RomType"]      = {SDLK_r, KMOD_LCTRL};
         _emulator["HexMonitor"]   = {SDLK_x, KMOD_LCTRL};
         _emulator["Disassembler"] = {SDLK_d, KMOD_LCTRL};
+        _emulator["Terminal"]     = {SDLK_t, KMOD_LCTRL};
+        _emulator["ImageEditor"]  = {SDLK_i, KMOD_LCTRL};
         _emulator["ScanlineMode"] = {SDLK_s, KMOD_LCTRL};
         _emulator["Reset"]        = {SDLK_F1, KMOD_LCTRL};
         _emulator["Execute"]      = {SDLK_F5, KMOD_LCTRL};
@@ -462,6 +473,8 @@ namespace Editor
                     scanCodeFromIniKey(sectionString, "RomType",      "CTRL+R",   _emulator["RomType"]);
                     scanCodeFromIniKey(sectionString, "HexMonitor",   "CTRL+X",   _emulator["HexMonitor"]);
                     scanCodeFromIniKey(sectionString, "Disassembler", "CTRL+D",   _emulator["Disassembler"]);
+                    scanCodeFromIniKey(sectionString, "Terminal",     "CTRL+T",   _emulator["Terminal"]);
+                    scanCodeFromIniKey(sectionString, "ImageEditor",  "CTRL+I",   _emulator["ImageEditor"]);
                     scanCodeFromIniKey(sectionString, "ScanlineMode", "CTRL+S",   _emulator["ScanlineMode"]);
                     scanCodeFromIniKey(sectionString, "Reset",        "CTRL+F1",  _emulator["Reset"]);
                     scanCodeFromIniKey(sectionString, "Execute",      "CTRL+F5",  _emulator["Execute"]);
@@ -1051,6 +1064,9 @@ namespace Editor
             exit(0);
         }
 
+        // Terminal mode
+        else if(_sdlKeyScanCode == _emulator["Terminal"].scanCode  &&  _sdlKeyModifier == _emulator["Terminal"].modifier) setEditorMode(Term);
+
         // Emulator reset
         else if(_sdlKeyScanCode == _emulator["Reset"].scanCode  &&  _sdlKeyModifier == _emulator["Reset"].modifier) {resetDebugger(); Cpu::reset(); return;}
 
@@ -1569,5 +1585,366 @@ namespace Editor
 
         // Updates current game's high score once per second, (assuming handleInput is called in vertical blank)
         Loader::updateHighScore();
+    }
+
+
+    void printTerminal(void)
+    {
+        _terminalScrollIndex = std::max(0, int(_terminalText.size()) - _terminalScreenMaxIndex);
+        if(_terminalScrollOffset >= _terminalScrollIndex) _terminalScrollOffset = _terminalScrollIndex;
+        if(_terminalScrollOffset < 0) _terminalScrollOffset = 0;
+
+        Graphics::clearScreen(0x22222222, 0x00000000);
+
+        // Terminal text
+        for(int i=_terminalScrollOffset; i<_terminalText.size(); i++)
+        {
+            if(i - _terminalScrollOffset >= _terminalScreenMaxIndex) break;
+
+            bool invert = false;
+            for(int j=0; j<_terminalTextSelected.size(); j++)
+            {
+                if(i == _terminalTextSelected[j])
+                {
+                    invert = true;
+                    break;
+                }
+            }
+            Graphics::drawText(_terminalText[i], FONT_WIDTH, (i-_terminalScrollOffset)*(FONT_HEIGHT+2), 0xAAAAAAAA, invert, 80);
+        }
+
+        // Command line
+        Graphics::drawText(_terminalCommandLine, FONT_WIDTH, _terminalScreenMaxIndex*(FONT_HEIGHT+2)+1, 0xFFFFFFFF, false, 80);
+    }
+
+    void handleTerminalMouseLeftButtonDown(int mouseX, int mouseY)
+    {
+        // Normalised mouse position
+        float mx = float(mouseX) / float(Graphics::getWidth());
+        float my = float(mouseY) / float(Graphics::getHeight());
+        mouseX = int(mx * float(SCREEN_WIDTH));
+        mouseY = int(my * float(SCREEN_HEIGHT));
+        //fprintf(stderr, "%d %d %f %f\n", mouseX, mouseY, mx, my);
+
+        int terminalTextSelected = (mouseY + 2) / (FONT_HEIGHT+2) + _terminalScrollOffset;
+
+        // Save selected text line as long as it doesn't already exist
+        bool saveText = true;
+        for(int i=0; i<_terminalTextSelected.size(); i++)
+        {
+            if(_terminalTextSelected[i] == terminalTextSelected)
+            {
+                saveText = false;
+                break;
+            }
+        }
+        if(saveText  &&  terminalTextSelected < _terminalText.size()) _terminalTextSelected.push_back(terminalTextSelected);
+
+        // Select everything between min and max as long as it doesn't already exist
+        int selectedMin = INT_MAX;
+        int selectedMax = INT_MIN;
+        for(int i=0; i<_terminalTextSelected.size(); i++)
+        {
+            if(_terminalTextSelected[i] > selectedMax) selectedMax = _terminalTextSelected[i];
+            if(_terminalTextSelected[i] < selectedMin) selectedMin = _terminalTextSelected[i];
+        }
+        for(int i=selectedMin+1; i<selectedMax; i++)
+        {
+            bool saveText = true;
+            for(int j=0; j<_terminalTextSelected.size(); j++)
+            {
+                if(_terminalTextSelected[j] == i)
+                {
+                    saveText = false;
+                    break;
+                }
+            }
+            if(saveText  &&  i < _terminalText.size()) _terminalTextSelected.push_back(i);
+        }
+
+        if(mouseY == 0) _terminalScrollOffset--;
+    }
+
+    void handleTerminalMouseRightButtonDown(int mouseX, int mouseY)
+    {
+    }
+
+    void handleTerminalMouseButtonDown(const SDL_Event& event)
+    {
+        _terminalTextSelected.clear();
+    }
+
+    void handleTerminalMouseButtonUp(const SDL_Event& event)
+    {
+    }
+
+    void handleTerminalMouseWheel(const SDL_Event& event)
+    {
+        if(event.wheel.y > 0) _terminalScrollOffset -= 3;
+        if(event.wheel.y < 0) _terminalScrollOffset += 3;
+    }
+
+    void handleTerminalKey(const SDL_Event& event)
+    {
+        _terminalScrollDelta = int(_terminalText.size());
+
+        char keyCode = event.text.text[0];
+        if(!_terminalModeGiga  &&  (keyCode == 't'  ||  keyCode == 'T'))
+        {
+            _terminalModeGiga = true;
+            std::string terminalCmd = "t\n";
+            Loader::sendCommandToGiga(terminalCmd, _terminalText);
+            Loader::openComPort();
+        }
+        else if(_terminalModeGiga)
+        {
+            Loader::sendCharGiga(keyCode);
+            if(keyCode >= 32  &&  keyCode <= 126) _terminalCommandLine += std::string(1, char(keyCode));
+        }
+        else if(keyCode >= 32  &&  keyCode <= 126)
+        {
+#define ONE_TOUCH_CONTROLS
+#ifdef ONE_TOUCH_CONTROLS
+            if(keyCode != SDLK_w  &&  keyCode != SDLK_a  &&  keyCode != SDLK_s  &&  keyCode != SDLK_d  &&  keyCode != SDLK_z  &&  keyCode != SDLK_x  &&  keyCode != SDLK_q  &&  keyCode != SDLK_e)
+#endif
+            {
+                _terminalCommandLine += std::string(1, char(keyCode));
+            }
+        }
+
+        if(_terminalCommandLine.size() >= 79) _terminalCommandLine.clear();
+
+        // How far PrintTerminal() needs to scroll
+        _terminalScrollDelta = int(_terminalText.size()) - _terminalScrollDelta;
+    }
+
+    void handleTerminalKeyDown(SDL_Keycode keyCode, Uint16 keyMod)
+    {
+        // Leave terminal mode
+        if(keyCode == _emulator["Terminal"].scanCode  &&  keyMod == _emulator["Terminal"].modifier)
+        {
+            setEditorMode(_editorModePrev);
+        }        
+        // Quit
+        else if(keyCode == _emulator["Quit"].scanCode  &&  keyMod == _emulator["Quit"].modifier)
+        {
+            if(_terminalModeGiga)
+            {
+                Loader::sendCharGiga('\4');
+                Loader::closeComPort();
+            }
+
+            Cpu::shutdown();
+            exit(0);
+        }
+
+        _terminalScrollDelta = int(_terminalText.size());
+
+        std::string cmd;
+        if(keyMod == 0x0000)
+        {
+            switch(keyCode)
+            {
+                case SDLK_PAGEUP:   _terminalScrollOffset -= _terminalScreenMaxIndex;      break;
+                case SDLK_PAGEDOWN: _terminalScrollOffset += _terminalScreenMaxIndex;      break;
+                case SDLK_UP:       _terminalScrollOffset -= 1;                            break;
+                case SDLK_DOWN:     _terminalScrollOffset += 1;                            break;
+                case SDLK_HOME:     _terminalScrollOffset = 0;                             break;
+                case SDLK_END:      _terminalScrollOffset = _terminalScrollIndex;          break;
+            }
+
+            if(!_terminalModeGiga)
+            {
+                switch(keyCode)
+                {
+#ifdef ONE_TOUCH_CONTROLS
+#if 0
+                    case SDLK_w: Loader::sendCommandToGiga(std::string("w\n"), _terminalText); break;
+                    case SDLK_a: Loader::sendCommandToGiga(std::string("a\n"), _terminalText); break;
+                    case SDLK_s: Loader::sendCommandToGiga(std::string("s\n"), _terminalText); break;
+                    case SDLK_d: Loader::sendCommandToGiga(std::string("d\n"), _terminalText); break;
+                    case SDLK_z: Loader::sendCommandToGiga(std::string("z\n"), _terminalText); break;
+                    case SDLK_x: Loader::sendCommandToGiga(std::string("x\n"), _terminalText); break;
+                    case SDLK_q: Loader::sendCommandToGiga(std::string("q\n"), _terminalText); break;
+                    case SDLK_e: Loader::sendCommandToGiga(std::string("e\n"), _terminalText); break;
+#else
+                    case SDLK_w: Loader::openComPort(); Loader::sendCharGiga('w');Loader::sendCharGiga('\n'); Loader::closeComPort(); break;
+                    case SDLK_a: Loader::openComPort(); Loader::sendCharGiga('a');Loader::sendCharGiga('\n'); Loader::closeComPort(); break;
+                    case SDLK_s: Loader::openComPort(); Loader::sendCharGiga('s');Loader::sendCharGiga('\n'); Loader::closeComPort(); break;
+                    case SDLK_d: Loader::openComPort(); Loader::sendCharGiga('d');Loader::sendCharGiga('\n'); Loader::closeComPort(); break;
+                    case SDLK_z: Loader::openComPort(); Loader::sendCharGiga('z');Loader::sendCharGiga('\n'); Loader::closeComPort(); break;
+                    case SDLK_x: Loader::openComPort(); Loader::sendCharGiga('x');Loader::sendCharGiga('\n'); Loader::closeComPort(); break;
+                    case SDLK_q: Loader::openComPort(); Loader::sendCharGiga('q');Loader::sendCharGiga('\n'); Loader::closeComPort(); break;
+                    case SDLK_e: Loader::openComPort(); Loader::sendCharGiga('e');Loader::sendCharGiga('\n'); Loader::closeComPort(); break;
+#endif
+#endif
+                }
+
+                if(keyCode == SDLK_BACKSPACE  ||  keyCode == SDLK_DELETE)
+                {
+                    if(_terminalCommandLine.size()) _terminalCommandLine.erase(_terminalCommandLine.end() - 1);
+                }
+                else if(keyCode == '\r'  ||  keyCode == '\n')
+                {
+                    Loader::sendCommandToGiga(_terminalCommandLine + "\n", _terminalText);
+                    _terminalCommandLine.clear();
+                }
+            }
+        }
+
+        if(_terminalModeGiga)
+        {
+            if(keyCode == SDLK_DELETE)
+            {
+                Loader::sendCharGiga(keyCode);
+                if(_terminalCommandLine.size()) _terminalCommandLine.erase(_terminalCommandLine.end() - 1);
+            }
+            else if(keyCode == '\r'  ||  keyCode == '\n')
+            {
+                Loader::sendCharGiga(keyCode);
+                _terminalCommandLine.clear();
+            }
+            // CTRL C for BASIC
+            else if(keyCode == SDLK_c  &&  keyMod & KMOD_LCTRL)
+            {
+                Loader::sendCharGiga('\3');
+            }
+            // Break giga terminal mode
+            else if(keyCode == SDLK_d  &&  keyMod & KMOD_LCTRL)
+            {
+                Loader::sendCharGiga('\4');
+                Loader::readUntilPromptGiga(_terminalText);
+                Loader::closeComPort();
+                _terminalModeGiga = false;
+            }
+        }
+
+        // How far PrintTerminal() needs to scroll
+        _terminalScrollDelta = int(_terminalText.size()) - _terminalScrollDelta;
+    }
+
+    void handleTerminalKeyUp(SDL_Keycode keyCode, Uint16 keyMod)
+    {
+        if(_terminalModeGiga)
+        {
+            return;
+        }
+        // Select all
+        else if(keyCode == SDLK_a  &&  keyMod & KMOD_LCTRL)
+        {
+            _terminalTextSelected.clear();
+            for(int i=0; i<_terminalText.size(); i++)
+            {
+                _terminalTextSelected.push_back(i);
+            }
+        }
+        // Copy to system clipboard
+        else if(keyCode == SDLK_c  &&  keyMod & KMOD_LCTRL)
+        {
+            // Copy selected text
+            if(_terminalTextSelected.size())
+            {
+                int clipboardTextSize = 0;
+                for(int i=0; i<_terminalText.size(); i++) clipboardTextSize += int(_terminalText[i].size());
+                char* clipboardText = new char[clipboardTextSize];
+
+                // Sort selected text
+                std::sort(_terminalTextSelected.begin(), _terminalTextSelected.end());
+
+                // Copy text line by line, char by char, skip trailing zero's
+                int clipboardTextIndex = 0;
+                for(int i=0; i<_terminalTextSelected.size(); i++)
+                {
+                    int index = _terminalTextSelected[i];
+                    for(int j=0; j<_terminalText[index].size()-1; j++)
+                    {
+                        clipboardText[clipboardTextIndex++] = _terminalText[index][j];
+                    }
+                }
+
+                // Append zero and save to system clipboard
+                clipboardText[clipboardTextIndex] = 0;
+                SDL_SetClipboardText(clipboardText);
+
+                delete [] clipboardText;
+            }
+        }
+        // Help screen
+        else if(keyCode == _emulator["Help"].scanCode  &&  keyMod == _emulator["Help"].modifier)
+        {
+            static bool helpScreen = false;
+            helpScreen = !helpScreen;
+            Graphics::setDisplayHelpScreen(helpScreen);
+        }
+    }
+
+    void handleTerminalInput(void)
+    {
+        static bool firstTime = true;
+        if(firstTime)
+        {
+            firstTime = false;
+            std::string cmd = "V\n";
+            Loader::sendCommandToGiga(cmd, _terminalText);
+        }
+
+        // Mouse button state
+        int mouseX, mouseY;
+        Uint32 mouseState = SDL_GetMouseState(&mouseX, &mouseY);
+        switch(mouseState)
+        {
+            case SDL_BUTTON_LEFT:  handleTerminalMouseLeftButtonDown(mouseX, mouseY);  break;
+            case SDL_BUTTON_RIGHT: handleTerminalMouseRightButtonDown(mouseX, mouseY); break;
+        }
+
+        SDL_Event event;
+        while(SDL_PollEvent(&event))
+        {
+            handleGuiEvents(event);
+
+            SDL_Keycode keyCode = event.key.keysym.sym;
+            Uint16 keyMod = event.key.keysym.mod & (KMOD_LCTRL | KMOD_LALT | KMOD_LSHIFT);
+
+            switch(event.type)
+            {
+                case SDL_MOUSEBUTTONDOWN: handleTerminalMouseButtonDown(event);   break;
+                case SDL_MOUSEBUTTONUP:   handleTerminalMouseButtonUp(event);     break;
+                case SDL_MOUSEWHEEL:      handleTerminalMouseWheel(event);        break;
+                case SDL_TEXTINPUT:       handleTerminalKey(event);               break;
+                case SDL_KEYDOWN:         handleTerminalKeyDown(keyCode, keyMod); break;
+                case SDL_KEYUP:           handleTerminalKeyUp(keyCode, keyMod);   break;
+            }
+        }
+
+        // Scroll text one line at a time until end is reached, (jump to end - delta if scroll index is not at end)
+        if(_terminalScrollDelta)
+        {
+            _terminalScrollOffset = _terminalScrollIndex - _terminalScrollDelta;
+            _terminalScrollDelta--;
+            _terminalScrollOffset++;
+        }
+
+        // Read chars back from Gigatron in terminal mode
+        if(_terminalModeGiga)
+        {
+            char chr = 0;
+            static std::string line;
+            if(Loader::readCharGiga(&chr))
+            {
+                if(chr >= 32  &&  chr <= 126) line.push_back(chr);
+                if(chr == '\r'  ||  chr == '\n')
+                {
+                    if(line.size())
+                    {
+                        _terminalScrollDelta = int(_terminalText.size());
+                        _terminalText.push_back(line);
+                        _terminalScrollDelta = int(_terminalText.size()) - _terminalScrollDelta;
+                    }
+                    line.clear();
+                }
+            }
+        }
+
+        printTerminal();
     }
 }

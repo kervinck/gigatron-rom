@@ -928,7 +928,7 @@ namespace Cpu
         }
     }
 
-    bool process(void)
+    void process(void)
     {
         // MCP100 Power-On Reset
         if(_clock < 0)
@@ -1054,8 +1054,6 @@ namespace Cpu
 
         _stateS = _stateT;
         _clock++;
-
-        return true;
     }
 
 #endif
