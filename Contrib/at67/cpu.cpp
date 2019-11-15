@@ -525,7 +525,7 @@ namespace Cpu
         {
             if(_romFiles[i])
             {
-                delete [] _romFiles[i];
+                delete[] _romFiles[i];
                 _romFiles[i] = nullptr;
             }
         }
@@ -603,11 +603,11 @@ namespace Cpu
             else
             {
                 // Load ROM file
-                uint8_t* rom = new uint8_t[sizeof _ROM];
+                uint8_t* rom = new (std::nothrow) uint8_t[sizeof _ROM];
                 if(!rom)
                 {
                     // This is fairly pointless as the code does not have any exception handling for the many std:: memory allocations that occur
-                    // If you're running out of memory running this application, (which requires a couple of Mbytes), then you need to leave the 80's
+                    // If you're running out of memory running this application, (which requires around 10 Mbytes), then you need to leave the 80's
                     shutdown();
                     fprintf(stderr, "Cpu::initialise() : out of memory!\n");
                     _EXIT_(EXIT_FAILURE);

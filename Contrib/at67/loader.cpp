@@ -516,11 +516,13 @@ namespace Loader
 
     void openComPort(void)
     {
-        openComPort(_currentComPort);
+        fprintf(stderr, "openComPort()\n");
+        openComPort(_configComPort);
     }
 
     void closeComPort(void)
     {
+        fprintf(stderr, "closeComPort()\n");
         comClose(_currentComPort);
     }
 
@@ -556,6 +558,38 @@ namespace Loader
         return true;
     }
 
+    bool readLineGiga(std::vector<std::string>& text)
+    {
+        std::string line;
+        if(!readLineGiga(line))
+        {
+            fprintf(stderr, "Loader::readLineGiga() : timed out on serial port : %s\n", comGetPortName(_currentComPort));
+            return false;
+        }
+
+        text.push_back(line);
+
+        return true;
+    }
+
+    bool readUntilPromptGiga(std::vector<std::string>& text)
+    {
+        std::string line;
+        do
+        {
+            if(!readLineGiga(line))
+            {
+                fprintf(stderr, "Loader::readUntilPromptGiga() : timed out on serial port : %s\n", comGetPortName(_currentComPort));
+                return false;
+            }
+
+            text.push_back(line);
+        }
+        while(line.find('?') == std::string::npos);
+
+        return true;
+    }
+
     bool waitForPromptGiga(std::string& line)
     {
         do
@@ -579,26 +613,10 @@ namespace Loader
         return true;
     }
 
-    bool readUntilPromptGiga(std::vector<std::string>& text)
-    {
-        std::string line;
-        do
-        {
-            if(!readLineGiga(line))
-            {
-                fprintf(stderr, "Loader::readUntilPromptGiga() : timed out on serial port : %s\n", comGetPortName(_currentComPort));
-                return false;
-            }
-
-            text.push_back(line);
-        }
-        while(line.find('?') == std::string::npos);
-
-        return true;
-    }
-
     void sendCommandToGiga(char cmd, std::string& line, bool wait)
     {
+        fprintf(stderr, "sendCommandToGiga() : 0\n");
+
         char command[2] = {cmd, '\n'};
         comWrite(_currentComPort, command, 2);
 
@@ -608,6 +626,8 @@ namespace Loader
 
     void sendCommandToGiga(char cmd, bool wait)
     {
+        fprintf(stderr, "sendCommandToGiga() : 1\n");
+
         if(!openComPort(_configComPort)) return;
 
         std::string line;
@@ -618,6 +638,8 @@ namespace Loader
 
     bool sendCommandToGiga(std::string& cmd, std::vector<std::string>& text)
     {
+        fprintf(stderr, "sendCommandToGiga() : 2\n");
+
         if(!openComPort(_configComPort)) return false;
 
         comWrite(_currentComPort, cmd.c_str(), cmd.size());

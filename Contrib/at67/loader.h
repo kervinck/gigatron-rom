@@ -87,6 +87,7 @@ namespace Loader
 
     bool readCharGiga(char* chr);
     bool readLineGiga(std::string& line);
+    bool readLineGiga(std::vector<std::string>& text);
     bool readUntilPromptGiga(std::vector<std::string>& text);
 
     bool sendCharGiga(char chr);

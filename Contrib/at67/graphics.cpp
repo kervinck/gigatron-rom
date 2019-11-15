@@ -210,7 +210,7 @@ namespace Graphics
 
             if(nonWhiteSpace == std::string::npos) lineTokens[i] = std::string(MAX_CHARS_HELP, ' ');
             if(lineTokens[i].size() < MAX_CHARS_HELP) lineTokens[i] += std::string(MAX_CHARS_HELP - lineTokens[i].size(), ' ');
-            drawText(lineTokens[i], pixels, 0, y, 0xFF00FF00, false, 0, false, -1, true, 0xFFFFFFFF, 0xFF00FFFF);
+            drawText(lineTokens[i], pixels, 0, y, 0xFF00FF00, false, 0, 0x00000000, false, -1, true, 0xFFFFFFFF, 0xFF00FFFF);
 
             // Fill in the gaps
             for(int j=FONT_HEIGHT; j<FONT_HEIGHT+2; j++)
@@ -598,7 +598,7 @@ namespace Graphics
     }
 
     // Simple text routine, font is a non proportional 6*8 font loaded from a 96*48 BMP file
-    bool drawText(const std::string& text, uint32_t* pixels, int x, int y, uint32_t colour, bool invert, int invertSize, bool colourKey, int numChars, bool fullscreen, uint32_t commentColour, uint32_t sectionColour)
+    bool drawText(const std::string& text, uint32_t* pixels, int x, int y, uint32_t fgColour, bool invert, int invertSize, uint32_t bgColour, bool colourKey, int numChars, bool fullscreen, uint32_t commentColour, uint32_t sectionColour)
     {
         if(!fullscreen)
         {
@@ -617,14 +617,14 @@ namespace Graphics
                 if(x == 0) useSectionColour = false;
                 if(text.c_str()[i] == '[') useSectionColour = true;
                 if(text.c_str()[i] == ']') useSectionColour = false;
-                if(useSectionColour) colour = sectionColour;
+                if(useSectionColour) fgColour = sectionColour;
             }
             if(commentColour)
             {
                 static bool useCommentColour = false;
                 if(x == 0) useCommentColour = false;
                 if(text.c_str()[i] == ';') useCommentColour = true;
-                if(useCommentColour) colour = commentColour;
+                if(useCommentColour) fgColour = commentColour;
             }
 
             uint8_t chr = text.c_str()[i] - 32;
@@ -646,11 +646,11 @@ namespace Graphics
                     uint32_t fontPixel = fontPixels[fontAddress] & 0x00FFFFFF;
                     if((invert  &&  i<invertSize) ? !fontPixel : fontPixel)
                     {
-                        pixels[pixelAddress] = 0xFF000000 | colour;
+                        pixels[pixelAddress] = 0xFF000000 | fgColour;
                     }
                     else
                     {
-                        if(!colourKey) pixels[pixelAddress] = 0xFF000000;
+                        if(!colourKey) pixels[pixelAddress] = 0xFF000000 | bgColour;
                     }
                 }
             }
@@ -659,9 +659,14 @@ namespace Graphics
         return true;
     }
 
-    bool drawText(const std::string& text, int x, int y, uint32_t colour, bool invert, int invertSize)
+    bool drawText(const std::string& text, int x, int y, uint32_t fgColour, bool invert, int invertSize)
     {
-        return drawText(text, _pixels, x, y, colour, invert, invertSize, true, -1, true, 0x00000000, 0x00000000);
+        return drawText(text, _pixels, x, y, fgColour, invert, invertSize, 0x00000000, true, -1, true, 0x00000000, 0x00000000);
+    }
+
+    bool drawMenu(const std::string& text, int x, int y, uint32_t fgColour, bool invert, int invertSize, uint32_t bgColour)
+    {
+        return drawText(text, _pixels, x, y, fgColour, invert, invertSize, bgColour, false, -1, true, 0x00000000, 0x00000000);
     }
 
     void drawDigitBox(uint8_t digit, int x, int y, uint32_t colour)
@@ -726,7 +731,7 @@ namespace Graphics
             sprintf(&uploadPercentage[MENU_TEXT_SIZE+1 - 6], " %3d%%\r", int(upload * 100.0f));
         }
 
-        drawText(uploadPercentage, _pixels, HEX_START_X, int(FONT_CELL_Y*4.4) + _uploadCursorY*FONT_CELL_Y, 0xFFB0B0B0, true, MENU_TEXT_SIZE+1, false, MENU_TEXT_SIZE+1);
+        drawText(uploadPercentage, _pixels, HEX_START_X, int(FONT_CELL_Y*4.4) + _uploadCursorY*FONT_CELL_Y, 0xFFB0B0B0, true, MENU_TEXT_SIZE+1, 0x00000000, false, MENU_TEXT_SIZE+1);
     }
 
     void renderText(void)
@@ -844,7 +849,7 @@ namespace Graphics
             int index = Editor::getRomEntriesIndex() + i;
             if(index >= int(Editor::getRomEntriesSize())) break;
             uint32_t colour = (i < NUM_INT_ROMS) ? 0xFFB0B0B0 : 0xFFFFFFFF;
-            drawText(*Editor::getRomEntryName(index), _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, colour, onCursor, MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
+            drawText(*Editor::getRomEntryName(index), _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, colour, onCursor, MENU_TEXT_SIZE, 0x00000000, false, MENU_TEXT_SIZE);
         }
 
         // ROM type
@@ -869,7 +874,7 @@ namespace Graphics
             int index = Editor::getFileEntriesIndex() + i;
             if(index >= int(Editor::getFileEntriesSize())) break;
             uint32_t colour = (Editor::getFileEntryType(index) == Editor::Dir) ? 0xFFB0B0B0 : 0xFFFFFFFF;
-            drawText(*Editor::getFileEntryName(index), _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, colour, onCursor, MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
+            drawText(*Editor::getFileEntryName(index), _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, colour, onCursor, MENU_TEXT_SIZE, 0x00000000, false, MENU_TEXT_SIZE);
         }
 
         // Load address
@@ -909,7 +914,7 @@ namespace Graphics
 
             // Program counter icon in debug mode
             bool onCursor = i == Editor::getCursorY();
-            if(onPC) drawText(">", _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y,  0xFF00FF00, onCursor, MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
+            if(onPC) drawText(">", _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y,  0xFF00FF00, onCursor, MENU_TEXT_SIZE, 0x00000000, false, MENU_TEXT_SIZE);
 
             // Breakpoint icons
             if(Editor::getMemoryMode() == Editor::RAM)
@@ -918,7 +923,7 @@ namespace Graphics
                 {
                     if(Assembler::getDisassembledCode(i)->_address == Editor::getVpcBreakPointAddress(j)  &&  Editor::getSingleStepEnabled())
                     {
-                        drawText("*", _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y,  0xFFC000C0, onCursor, MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
+                        drawText("*", _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y,  0xFFC000C0, onCursor, MENU_TEXT_SIZE, 0x00000000, false, MENU_TEXT_SIZE);
                         break;
                     }
                 }
@@ -929,7 +934,7 @@ namespace Graphics
                 {
                     if(Assembler::getDisassembledCode(i)->_address == Editor::getNtvBreakPointAddress(j)  &&  Editor::getSingleStepEnabled())
                     {
-                        drawText("*", _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y,  0xFFC0C000, onCursor, MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
+                        drawText("*", _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y,  0xFFC0C000, onCursor, MENU_TEXT_SIZE, 0x00000000, false, MENU_TEXT_SIZE);
                         break;
                     }
                 }
@@ -937,7 +942,7 @@ namespace Graphics
 
             // Mnemonic, highlight if on vPC and show cursor in debug mode
             uint32_t colour = (onPC) ? 0xFFFFFFFF : 0xFFB0B0B0;
-            drawText(Assembler::getDisassembledCode(i)->_text, _pixels, HEX_START_X+6, FONT_CELL_Y*4 + i*FONT_CELL_Y, colour, (onCursor || onPC)  &&  (Editor::getSingleStepEnabled()), MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
+            drawText(Assembler::getDisassembledCode(i)->_text, _pixels, HEX_START_X+6, FONT_CELL_Y*4 + i*FONT_CELL_Y, colour, (onCursor || onPC)  &&  (Editor::getSingleStepEnabled()), MENU_TEXT_SIZE, 0x00000000, false, MENU_TEXT_SIZE);
         }
 
         switch(Editor::getMemoryMode())

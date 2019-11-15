@@ -87,8 +87,9 @@ namespace Graphics
     void pixelReticle(const Cpu::State& S, int vgaX, int vgaY);
 
     void drawLeds(void);
-    bool drawText(const std::string& text, int x, int y, uint32_t colour, bool invert, int invertSize);
-    bool drawText(const std::string& text, uint32_t* pixels, int x, int y, uint32_t colour, bool invert, int invertSize, bool colourKey=false, int numChars=-1, bool fullscreen=false, uint32_t commentColour=0x00000000, uint32_t sectionColour=0x00000000);
+    bool drawText(const std::string& text, int x, int y, uint32_t fgColour, bool invert, int invertSize);
+    bool drawMenu(const std::string& text, int x, int y, uint32_t fgColour, bool invert, int invertSize, uint32_t bgColour);
+    bool drawText(const std::string& text, uint32_t* pixels, int x, int y, uint32_t fgColour, bool invert, int invertSize, uint32_t bgColour=0x00000000, bool colourKey=false, int numChars=-1, bool fullscreen=false, uint32_t commentColour=0x00000000, uint32_t sectionColour=0x00000000);
     void drawDigitBox(uint8_t digit, int x, int y, uint32_t colour);
 
     void renderText(void);

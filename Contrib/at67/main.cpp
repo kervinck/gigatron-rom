@@ -17,6 +17,7 @@
 #include "timing.h"
 #include "image.h"
 #include "graphics.h"
+#include "terminal.h"
 #include "expression.h"
 #include "assembler.h"
 #include "compiler.h"
@@ -81,8 +82,7 @@ int main(int argc, char* argv[])
         {
             case Editor::Term:
             {
-                Editor::handleTerminalInput();
-                Graphics::renderTerminal(true);
+                Terminal::process();
             }
             break;
 

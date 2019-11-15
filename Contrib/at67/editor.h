@@ -48,6 +48,14 @@ namespace Editor
     enum FileType {File=0, Dir, Fifo, Link, NumFileTypes};
     enum OnVarType {OnNone=0, OnCpuA, OnCpuB, OnHex, OnVars, OnWatch, NumOnVarTypes};
 
+#ifndef STAND_ALONE
+    struct KeyCodeMod
+    {
+        int _scanCode;
+        SDL_Keymod _keyMod;
+    };
+#endif
+
     struct MouseState
     {
         int _x, _y;
@@ -114,6 +122,7 @@ namespace Editor
     void addRomEntry(uint8_t type, std::string& name);
 
     void resetEditor(void);
+    void setEditorToPrevMode(void);
     void setEditorMode(EditorMode editorMode);
 
     void setCursorX(int x);
@@ -130,6 +139,10 @@ namespace Editor
 
     std::string getBrowserPath(bool removeSlash=false);
 
+    int getEmulatorScanCode(const std::string& keyWord);
+#ifndef STAND_ALONE
+    SDL_Keymod getEmulatorKeyMod(const std::string& keyWord);
+#endif
     void initialise(void);
     void browseDirectory(void);
 

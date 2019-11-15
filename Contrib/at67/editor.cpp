@@ -25,6 +25,7 @@
 #include "timing.h"
 #include "image.h"
 #include "graphics.h"
+#include "terminal.h"
 #include "assembler.h"
 #include "expression.h"
 #include "inih/INIReader.h"
@@ -33,12 +34,6 @@
 namespace Editor
 {
     enum SingleStepMode {RunToBrk=0, StepPC, StepWatch, NumSingleStepModes};
-
-    struct KeyCodeMod
-    {
-        int scanCode;
-        SDL_Keymod modifier;
-    };
 
     struct FileEntry
     {
@@ -109,15 +104,6 @@ namespace Editor
     std::map<std::string, KeyCodeMod> _hardware;
     std::map<std::string, KeyCodeMod> _debugger;
 
-    bool _terminalModeGiga = false;
-    int _terminalScrollOffset = 0;
-    int _terminalScrollDelta = 0;
-    int _terminalScrollIndex = 0;
-    const int _terminalScreenMaxIndex = (SCREEN_HEIGHT - (FONT_HEIGHT+2)*1)/(FONT_HEIGHT+2);
-    std::string _terminalCommandLine;
-    std::vector<int> _terminalTextSelected;
-    std::vector<std::string> _terminalText;
-
 
     int getCursorX(void) {return _cursorX;}
     int getCursorY(void) {return _cursorY;}
@@ -172,6 +158,7 @@ namespace Editor
     void addRomEntry(uint8_t type, std::string& name) {Editor::RomEntry romEntry = {type, name}; _romEntries.push_back(romEntry); return;}
 
     void resetEditor(void) {_memoryDigit = 0; _addressDigit = 0;}
+    void setEditorToPrevMode(void) {_editorMode = _editorModePrev;}
     void setEditorMode(EditorMode editorMode) {_editorModePrev = _editorMode; _editorMode = editorMode;}
 
     void setCursorX(int x) {_cursorX = x;}
@@ -234,7 +221,7 @@ namespace Editor
 
     bool scanCodeFromIniKey(const std::string& sectionString, const std::string& iniKey, const std::string& defaultKey, KeyCodeMod& keyCodeMod)
     {
-        keyCodeMod.modifier = KMOD_NONE;
+        keyCodeMod._keyMod = KMOD_NONE;
 
         std::string mod;
         std::string key = _configIniReader.Get(sectionString, iniKey, defaultKey);
@@ -246,20 +233,34 @@ namespace Editor
         {
             mod = key.substr(0, keyPos);
             key = key.substr(keyPos + 1);
-            if(mod == "ALT")  keyCodeMod.modifier = KMOD_LALT;
-            if(mod == "CTRL") keyCodeMod.modifier = KMOD_LCTRL;
+            if(mod == "ALT")  keyCodeMod._keyMod = KMOD_LALT;
+            if(mod == "CTRL") keyCodeMod._keyMod = KMOD_LCTRL;
         }
 
         if(_sdlKeys.find(key) == _sdlKeys.end())
         {
             fprintf(stderr, "Editor::scanCodeFromIniKey() : key %s not recognised in INI file '%s' : reverting to default key '%s'\n", key.c_str(), INPUT_CONFIG_INI, defaultKey.c_str());
-            keyCodeMod.scanCode = _sdlKeys[defaultKey];
+            keyCodeMod._scanCode = _sdlKeys[defaultKey];
             return false;
         }
 
-        keyCodeMod.scanCode = _sdlKeys[key];
-        //fprintf(stderr, "Editor::scanCodeFromIniKey() : %s : %s : %s : %s : key=%d : mod=%d\n", sectionString.c_str(), iniKey.c_str(), key.c_str(), mod.c_str(), keyCodeMod.scanCode, keyCodeMod.modifier);
+        keyCodeMod._scanCode = _sdlKeys[key];
+        //fprintf(stderr, "Editor::scanCodeFromIniKey() : %s : %s : %s : %s : key=%d : mod=%d\n", sectionString.c_str(), iniKey.c_str(), key.c_str(), mod.c_str(), keyCodeMod._scanCode, keyCodeMod._keyMod);
         return true;
+    }
+
+    int getEmulatorScanCode(const std::string& keyWord)
+    {
+        if(_emulator.find(keyWord) == _emulator.end()) return -1;
+
+        return _emulator[keyWord]._scanCode;
+    }
+
+    SDL_Keymod getEmulatorKeyMod(const std::string& keyWord)
+    {
+        if(_emulator.find(keyWord) == _emulator.end()) return KMOD_NONE;
+
+        return _emulator[keyWord]._keyMod;
     }
 
 
@@ -997,25 +998,25 @@ namespace Editor
     {
         if(_keyboardMode == Giga)
         {
-            if(_sdlKeyScanCode == _keyboard["Left"].scanCode  &&  _sdlKeyModifier == _keyboard["Left"].modifier)          {Cpu::setIN(Cpu::getIN() & ~INPUT_LEFT);   return true;}
-            else if(_sdlKeyScanCode == _keyboard["Right"].scanCode  &&  _sdlKeyModifier == _keyboard["Right"].modifier)   {Cpu::setIN(Cpu::getIN() & ~INPUT_RIGHT);  return true;}
-            else if(_sdlKeyScanCode == _keyboard["Up"].scanCode  &&  _sdlKeyModifier == _keyboard["Up"].modifier)         {Cpu::setIN(Cpu::getIN() & ~INPUT_UP);     return true;}
-            else if(_sdlKeyScanCode == _keyboard["Down"].scanCode  &&  _sdlKeyModifier == _keyboard["Down"].modifier)     {Cpu::setIN(Cpu::getIN() & ~INPUT_DOWN);   return true;}
-            else if(_sdlKeyScanCode == _keyboard["Start"].scanCode  &&  _sdlKeyModifier == _keyboard["Start"].modifier)   {Cpu::setIN(Cpu::getIN() & ~INPUT_START);  return true;}
-            else if(_sdlKeyScanCode == _keyboard["Select"].scanCode  &&  _sdlKeyModifier == _keyboard["Select"].modifier) {Cpu::setIN(Cpu::getIN() & ~INPUT_SELECT); return true;}
-            else if(_sdlKeyScanCode == _keyboard["A"].scanCode  &&  _sdlKeyModifier == _keyboard["A"].modifier)           {Cpu::setIN(Cpu::getIN() & ~INPUT_A);      return true;}
-            else if(_sdlKeyScanCode == _keyboard["B"].scanCode  &&  _sdlKeyModifier == _keyboard["B"].modifier)           {Cpu::setIN(Cpu::getIN() & ~INPUT_B);      return true;}
+            if(_sdlKeyScanCode == _keyboard["Left"]._scanCode  &&  _sdlKeyModifier == _keyboard["Left"]._keyMod)          {Cpu::setIN(Cpu::getIN() & ~INPUT_LEFT);   return true;}
+            else if(_sdlKeyScanCode == _keyboard["Right"]._scanCode  &&  _sdlKeyModifier == _keyboard["Right"]._keyMod)   {Cpu::setIN(Cpu::getIN() & ~INPUT_RIGHT);  return true;}
+            else if(_sdlKeyScanCode == _keyboard["Up"]._scanCode  &&  _sdlKeyModifier == _keyboard["Up"]._keyMod)         {Cpu::setIN(Cpu::getIN() & ~INPUT_UP);     return true;}
+            else if(_sdlKeyScanCode == _keyboard["Down"]._scanCode  &&  _sdlKeyModifier == _keyboard["Down"]._keyMod)     {Cpu::setIN(Cpu::getIN() & ~INPUT_DOWN);   return true;}
+            else if(_sdlKeyScanCode == _keyboard["Start"]._scanCode  &&  _sdlKeyModifier == _keyboard["Start"]._keyMod)   {Cpu::setIN(Cpu::getIN() & ~INPUT_START);  return true;}
+            else if(_sdlKeyScanCode == _keyboard["Select"]._scanCode  &&  _sdlKeyModifier == _keyboard["Select"]._keyMod) {Cpu::setIN(Cpu::getIN() & ~INPUT_SELECT); return true;}
+            else if(_sdlKeyScanCode == _keyboard["A"]._scanCode  &&  _sdlKeyModifier == _keyboard["A"]._keyMod)           {Cpu::setIN(Cpu::getIN() & ~INPUT_A);      return true;}
+            else if(_sdlKeyScanCode == _keyboard["B"]._scanCode  &&  _sdlKeyModifier == _keyboard["B"]._keyMod)           {Cpu::setIN(Cpu::getIN() & ~INPUT_B);      return true;}
         }
         else if(_keyboardMode == HwGiga)
         {
-            if(_sdlKeyScanCode == _keyboard["Left"].scanCode  &&  _sdlKeyModifier == _keyboard["Left"].modifier)          {Loader::sendCommandToGiga('A', true); return true;}
-            else if(_sdlKeyScanCode == _keyboard["Right"].scanCode  &&  _sdlKeyModifier == _keyboard["Right"].modifier)   {Loader::sendCommandToGiga('D', true); return true;}
-            else if(_sdlKeyScanCode == _keyboard["Up"].scanCode  &&  _sdlKeyModifier == _keyboard["Up"].modifier)         {Loader::sendCommandToGiga('W', true); return true;}
-            else if(_sdlKeyScanCode == _keyboard["Down"].scanCode  &&  _sdlKeyModifier == _keyboard["Down"].modifier)     {Loader::sendCommandToGiga('S', true); return true;}
-            else if(_sdlKeyScanCode == _keyboard["Start"].scanCode  &&  _sdlKeyModifier == _keyboard["Start"].modifier)   {Loader::sendCommandToGiga('E', true); return true;}
-            else if(_sdlKeyScanCode == _keyboard["Select"].scanCode  &&  _sdlKeyModifier == _keyboard["Select"].modifier) {Loader::sendCommandToGiga('Q', true); return true;}
-            else if(_sdlKeyScanCode == _keyboard["A"].scanCode  &&  _sdlKeyModifier == _keyboard["A"].modifier)           {Loader::sendCommandToGiga('Z', true); return true;}
-            else if(_sdlKeyScanCode == _keyboard["B"].scanCode  &&  _sdlKeyModifier == _keyboard["B"].modifier)           {Loader::sendCommandToGiga('X', true); return true;}
+            if(_sdlKeyScanCode == _keyboard["Left"]._scanCode  &&  _sdlKeyModifier == _keyboard["Left"]._keyMod)          {Loader::sendCommandToGiga('A', true); return true;}
+            else if(_sdlKeyScanCode == _keyboard["Right"]._scanCode  &&  _sdlKeyModifier == _keyboard["Right"]._keyMod)   {Loader::sendCommandToGiga('D', true); return true;}
+            else if(_sdlKeyScanCode == _keyboard["Up"]._scanCode  &&  _sdlKeyModifier == _keyboard["Up"]._keyMod)         {Loader::sendCommandToGiga('W', true); return true;}
+            else if(_sdlKeyScanCode == _keyboard["Down"]._scanCode  &&  _sdlKeyModifier == _keyboard["Down"]._keyMod)     {Loader::sendCommandToGiga('S', true); return true;}
+            else if(_sdlKeyScanCode == _keyboard["Start"]._scanCode  &&  _sdlKeyModifier == _keyboard["Start"]._keyMod)   {Loader::sendCommandToGiga('E', true); return true;}
+            else if(_sdlKeyScanCode == _keyboard["Select"]._scanCode  &&  _sdlKeyModifier == _keyboard["Select"]._keyMod) {Loader::sendCommandToGiga('Q', true); return true;}
+            else if(_sdlKeyScanCode == _keyboard["A"]._scanCode  &&  _sdlKeyModifier == _keyboard["A"]._keyMod)           {Loader::sendCommandToGiga('Z', true); return true;}
+            else if(_sdlKeyScanCode == _keyboard["B"]._scanCode  &&  _sdlKeyModifier == _keyboard["B"]._keyMod)           {Loader::sendCommandToGiga('X', true); return true;}
         }
 
         return false;
@@ -1058,23 +1059,28 @@ namespace Editor
     {
         //fprintf(stderr, "Editor::handleKeyDown() : key=%d : mod=%04x\n", _sdlKeyScanCode, _sdlKeyModifier);
 
-        if(_sdlKeyScanCode == _emulator["Quit"].scanCode  &&  _sdlKeyModifier == _emulator["Quit"].modifier)
+        if(_sdlKeyScanCode == _emulator["Quit"]._scanCode  &&  _sdlKeyModifier == _emulator["Quit"]._keyMod)
         {
             Cpu::shutdown();
             exit(0);
         }
 
         // Terminal mode
-        else if(_sdlKeyScanCode == _emulator["Terminal"].scanCode  &&  _sdlKeyModifier == _emulator["Terminal"].modifier) setEditorMode(Term);
+        else if(_sdlKeyScanCode == _emulator["Terminal"]._scanCode  &&  _sdlKeyModifier == _emulator["Terminal"]._keyMod)
+        {
+            setEditorMode(Term);
+            Loader::openComPort(); 
+            Terminal::scrollToEnd();
+        }
 
         // Emulator reset
-        else if(_sdlKeyScanCode == _emulator["Reset"].scanCode  &&  _sdlKeyModifier == _emulator["Reset"].modifier) {resetDebugger(); Cpu::reset(); return;}
+        else if(_sdlKeyScanCode == _emulator["Reset"]._scanCode  &&  _sdlKeyModifier == _emulator["Reset"]._keyMod) {resetDebugger(); Cpu::reset(); return;}
 
         // Hardware reset
-        else if(_sdlKeyScanCode == _hardware["Reset"].scanCode  &&  _sdlKeyModifier == _hardware["Reset"].modifier) {Loader::sendCommandToGiga('R', false); return;}
+        else if(_sdlKeyScanCode == _hardware["Reset"]._scanCode  &&  _sdlKeyModifier == _hardware["Reset"]._keyMod) {Loader::sendCommandToGiga('R', false); return;}
 
         // Scanline handler
-        else if(_sdlKeyScanCode == _emulator["ScanlineMode"].scanCode  &&  _sdlKeyModifier == _emulator["ScanlineMode"].modifier)
+        else if(_sdlKeyScanCode == _emulator["ScanlineMode"]._scanCode  &&  _sdlKeyModifier == _emulator["ScanlineMode"]._keyMod)
         {
             // ROMS after v1 have their own inbuilt scanline handlers
             if(Cpu::getRomType() != Cpu::ROMv1) {Cpu::setIN(Cpu::getIN() & ~INPUT_SELECT); return;}
@@ -1087,13 +1093,13 @@ namespace Editor
         else if(handleGigaKeyDown()) return;
 
         // Buffered audio locks the emulator to 60Hz
-        else if(Audio::getRealTimeAudio()  &&  _sdlKeyScanCode == _emulator["Speed+"].scanCode  &&  _sdlKeyModifier == _emulator["Speed+"].modifier)
+        else if(Audio::getRealTimeAudio()  &&  _sdlKeyScanCode == _emulator["Speed+"]._scanCode  &&  _sdlKeyModifier == _emulator["Speed+"]._keyMod)
         {
             double timingHack = Timing::getTimingHack() - VSYNC_TIMING_60*0.05;
             if(timingHack >= 0.0) {Timing::setTimingHack(timingHack); return;}
         }
 
-        else if(Audio::getRealTimeAudio()  &&  _sdlKeyScanCode == _emulator["Speed-"].scanCode  &&  _sdlKeyModifier == _emulator["Speed-"].modifier)
+        else if(Audio::getRealTimeAudio()  &&  _sdlKeyScanCode == _emulator["Speed-"]._scanCode  &&  _sdlKeyModifier == _emulator["Speed-"]._keyMod)
         {
             double timingHack = Timing::getTimingHack() + VSYNC_TIMING_60*0.05;
             if(timingHack <= VSYNC_TIMING_60) {Timing::setTimingHack(timingHack); return;}
@@ -1193,14 +1199,14 @@ namespace Editor
     {
         if(_keyboardMode == Giga)
         {
-            if(_sdlKeyScanCode == _keyboard["Left"].scanCode  &&  _sdlKeyModifier == _keyboard["Left"].modifier)          {Cpu::setIN(Cpu::getIN() | INPUT_LEFT);   return true;}
-            else if(_sdlKeyScanCode == _keyboard["Right"].scanCode  &&  _sdlKeyModifier == _keyboard["Right"].modifier)   {Cpu::setIN(Cpu::getIN() | INPUT_RIGHT);  return true;}
-            else if(_sdlKeyScanCode == _keyboard["Up"].scanCode  &&  _sdlKeyModifier == _keyboard["Up"].modifier)         {Cpu::setIN(Cpu::getIN() | INPUT_UP);     return true;}
-            else if(_sdlKeyScanCode == _keyboard["Down"].scanCode  &&  _sdlKeyModifier == _keyboard["Down"].modifier)     {Cpu::setIN(Cpu::getIN() | INPUT_DOWN);   return true;}
-            else if(_sdlKeyScanCode == _keyboard["Start"].scanCode  &&  _sdlKeyModifier == _keyboard["Start"].modifier)   {Cpu::setIN(Cpu::getIN() | INPUT_START);  return true;}
-            else if(_sdlKeyScanCode == _keyboard["Select"].scanCode  &&  _sdlKeyModifier == _keyboard["Select"].modifier) {Cpu::setIN(Cpu::getIN() | INPUT_SELECT); return true;}
-            else if(_sdlKeyScanCode == _keyboard["A"].scanCode  &&  _sdlKeyModifier == _keyboard["A"].modifier)           {Cpu::setIN(Cpu::getIN() | INPUT_A);      return true;}
-            else if(_sdlKeyScanCode == _keyboard["B"].scanCode  &&  _sdlKeyModifier == _keyboard["B"].modifier)           {Cpu::setIN(Cpu::getIN() | INPUT_B);      return true;}
+            if(_sdlKeyScanCode == _keyboard["Left"]._scanCode  &&  _sdlKeyModifier == _keyboard["Left"]._keyMod)          {Cpu::setIN(Cpu::getIN() | INPUT_LEFT);   return true;}
+            else if(_sdlKeyScanCode == _keyboard["Right"]._scanCode  &&  _sdlKeyModifier == _keyboard["Right"]._keyMod)   {Cpu::setIN(Cpu::getIN() | INPUT_RIGHT);  return true;}
+            else if(_sdlKeyScanCode == _keyboard["Up"]._scanCode  &&  _sdlKeyModifier == _keyboard["Up"]._keyMod)         {Cpu::setIN(Cpu::getIN() | INPUT_UP);     return true;}
+            else if(_sdlKeyScanCode == _keyboard["Down"]._scanCode  &&  _sdlKeyModifier == _keyboard["Down"]._keyMod)     {Cpu::setIN(Cpu::getIN() | INPUT_DOWN);   return true;}
+            else if(_sdlKeyScanCode == _keyboard["Start"]._scanCode  &&  _sdlKeyModifier == _keyboard["Start"]._keyMod)   {Cpu::setIN(Cpu::getIN() | INPUT_START);  return true;}
+            else if(_sdlKeyScanCode == _keyboard["Select"]._scanCode  &&  _sdlKeyModifier == _keyboard["Select"]._keyMod) {Cpu::setIN(Cpu::getIN() | INPUT_SELECT); return true;}
+            else if(_sdlKeyScanCode == _keyboard["A"]._scanCode  &&  _sdlKeyModifier == _keyboard["A"]._keyMod)           {Cpu::setIN(Cpu::getIN() | INPUT_A);      return true;}
+            else if(_sdlKeyScanCode == _keyboard["B"]._scanCode  &&  _sdlKeyModifier == _keyboard["B"]._keyMod)           {Cpu::setIN(Cpu::getIN() | INPUT_B);      return true;}
         }
 
         return false;
@@ -1209,7 +1215,7 @@ namespace Editor
     void handleKeyUp(void)
     {
         // To`ggle help screen
-        if(_sdlKeyScanCode == _emulator["Help"].scanCode  &&  _sdlKeyModifier == _emulator["Help"].modifier)
+        if(_sdlKeyScanCode == _emulator["Help"]._scanCode  &&  _sdlKeyModifier == _emulator["Help"]._keyMod)
         {
             static bool helpScreen = false;
             helpScreen = !helpScreen;
@@ -1217,7 +1223,7 @@ namespace Editor
         }
 
         // Disassembler
-        else if(_sdlKeyScanCode == _emulator["Disassembler"].scanCode  &&  _sdlKeyModifier == _emulator["Disassembler"].modifier)
+        else if(_sdlKeyScanCode == _emulator["Disassembler"]._scanCode  &&  _sdlKeyModifier == _emulator["Disassembler"]._keyMod)
         {
             if(_editorMode == Dasm)
             {
@@ -1232,13 +1238,13 @@ namespace Editor
         }
 
         // ROMS after v1 have their own inbuilt scanline handlers
-        else if(_sdlKeyScanCode == _emulator["ScanlineMode"].scanCode  &&  _sdlKeyModifier == _emulator["ScanlineMode"].modifier)
+        else if(_sdlKeyScanCode == _emulator["ScanlineMode"]._scanCode  &&  _sdlKeyModifier == _emulator["ScanlineMode"]._keyMod)
         {
             (Cpu::getRomType() != Cpu::ROMv1) ? Cpu::setIN(Cpu::getIN() | INPUT_SELECT) : Cpu::swapScanlineMode();
         }
 
         // Browse vCPU directory
-        else if(_sdlKeyScanCode == _emulator["Browse"].scanCode  &&  _sdlKeyModifier == _emulator["Browse"].modifier)
+        else if(_sdlKeyScanCode == _emulator["Browse"]._scanCode  &&  _sdlKeyModifier == _emulator["Browse"]._keyMod)
         {
             if(_editorMode == Load)
             {
@@ -1254,7 +1260,7 @@ namespace Editor
         }
 
         // ROM type
-        else if(_sdlKeyScanCode == _emulator["RomType"].scanCode  &&  _sdlKeyModifier == _emulator["RomType"].modifier)
+        else if(_sdlKeyScanCode == _emulator["RomType"]._scanCode  &&  _sdlKeyModifier == _emulator["RomType"]._keyMod)
         {
             if(_editorMode == Rom)
             {
@@ -1271,7 +1277,7 @@ namespace Editor
         }
 
         // ROM type
-        else if(_sdlKeyScanCode == _emulator["HexMonitor"].scanCode  &&  _sdlKeyModifier == _emulator["HexMonitor"].modifier)
+        else if(_sdlKeyScanCode == _emulator["HexMonitor"]._scanCode  &&  _sdlKeyModifier == _emulator["HexMonitor"]._keyMod)
         {
             if(_editorMode == Hex)
             {
@@ -1286,13 +1292,13 @@ namespace Editor
         }
 
         // Debug mode
-        else if(_sdlKeyScanCode == _debugger["Debug"].scanCode  &&  _sdlKeyModifier == _debugger["Debug"].modifier)
+        else if(_sdlKeyScanCode == _debugger["Debug"]._scanCode  &&  _sdlKeyModifier == _debugger["Debug"]._keyMod)
         {
             startDebugger();
         }
 
         // Keyboard mode
-        else if(_sdlKeyScanCode ==  _keyboard["Mode"].scanCode  &&  _sdlKeyModifier == _keyboard["Mode"].modifier)
+        else if(_sdlKeyScanCode ==  _keyboard["Mode"]._scanCode  &&  _sdlKeyModifier == _keyboard["Mode"]._keyMod)
         {
             int keyboardMode = _keyboardMode;
             keyboardMode = (++keyboardMode) % NumKeyboardModes;
@@ -1303,7 +1309,7 @@ namespace Editor
         }
 
         // RAM/ROM mode
-        else if(_sdlKeyScanCode ==  _emulator["MemoryMode"].scanCode  &&  _sdlKeyModifier == _emulator["MemoryMode"].modifier)
+        else if(_sdlKeyScanCode ==  _emulator["MemoryMode"]._scanCode  &&  _sdlKeyModifier == _emulator["MemoryMode"]._keyMod)
         {
             int memoryMode = _memoryMode;
             memoryMode = (_editorMode == Dasm) ? (++memoryMode) % (NumMemoryModes-1) : (++memoryMode) % NumMemoryModes;
@@ -1318,13 +1324,13 @@ namespace Editor
         }
 
         // RAM Size
-        else if(_sdlKeyScanCode ==  _emulator["MemorySize"].scanCode  &&  _sdlKeyModifier == _emulator["MemorySize"].modifier)
+        else if(_sdlKeyScanCode ==  _emulator["MemorySize"]._scanCode  &&  _sdlKeyModifier == _emulator["MemorySize"]._keyMod)
         {
             Cpu::swapMemoryModel();
         }
 
         // Hardware upload and execute
-        else if(_sdlKeyScanCode == _hardware["Execute"].scanCode  &&  _sdlKeyModifier == _hardware["Execute"].modifier)
+        else if(_sdlKeyScanCode == _hardware["Execute"]._scanCode  &&  _sdlKeyModifier == _hardware["Execute"]._keyMod)
         {
             Loader::setUploadTarget(Loader::Hardware);
         }
@@ -1491,7 +1497,7 @@ namespace Editor
                     case SDL_KEYUP:
                     {
                         // Leave debug mode
-                        if((_sdlKeyScanCode == _debugger["Debug"].scanCode  &&  _sdlKeyModifier == _debugger["Debug"].modifier))
+                        if((_sdlKeyScanCode == _debugger["Debug"]._scanCode  &&  _sdlKeyModifier == _debugger["Debug"]._keyMod))
                         {
                             resetDebugger();
                         }
@@ -1505,7 +1511,7 @@ namespace Editor
                     case SDL_KEYDOWN:
                     {
                         // Run to breakpoint, (vCPU or native)
-                        if(_sdlKeyScanCode == _debugger["RunToBrk"].scanCode  &&  _sdlKeyModifier == _debugger["RunToBrk"].modifier)
+                        if(_sdlKeyScanCode == _debugger["RunToBrk"]._scanCode  &&  _sdlKeyModifier == _debugger["RunToBrk"]._keyMod)
                         {
                             _singleStep = true;
                             _singleStepEnabled = false;
@@ -1513,7 +1519,7 @@ namespace Editor
                             _singleStepTicks = SDL_GetTicks();
                         }
                         // Single step on vPC or on PC, (vCPU or native)
-                        else if(_sdlKeyScanCode == _debugger["StepPC"].scanCode  &&  _sdlKeyModifier == _debugger["StepPC"].modifier)
+                        else if(_sdlKeyScanCode == _debugger["StepPC"]._scanCode  &&  _sdlKeyModifier == _debugger["StepPC"]._keyMod)
                         {
                             _singleStep = true;
                             _singleStepEnabled = false;
@@ -1523,7 +1529,7 @@ namespace Editor
                             _singleStepNtv = Cpu::getStateS()._PC;
                         }
                         // Single step on watch value, (vCPU or native)
-                        else if(_sdlKeyScanCode == _debugger["StepWatch"].scanCode  &&  _sdlKeyModifier == _debugger["StepWatch"].modifier)
+                        else if(_sdlKeyScanCode == _debugger["StepWatch"]._scanCode  &&  _sdlKeyModifier == _debugger["StepWatch"]._keyMod)
                         {
                             _singleStep = true;
                             _singleStepEnabled = false;
@@ -1585,366 +1591,5 @@ namespace Editor
 
         // Updates current game's high score once per second, (assuming handleInput is called in vertical blank)
         Loader::updateHighScore();
-    }
-
-
-    void printTerminal(void)
-    {
-        _terminalScrollIndex = std::max(0, int(_terminalText.size()) - _terminalScreenMaxIndex);
-        if(_terminalScrollOffset >= _terminalScrollIndex) _terminalScrollOffset = _terminalScrollIndex;
-        if(_terminalScrollOffset < 0) _terminalScrollOffset = 0;
-
-        Graphics::clearScreen(0x22222222, 0x00000000);
-
-        // Terminal text
-        for(int i=_terminalScrollOffset; i<_terminalText.size(); i++)
-        {
-            if(i - _terminalScrollOffset >= _terminalScreenMaxIndex) break;
-
-            bool invert = false;
-            for(int j=0; j<_terminalTextSelected.size(); j++)
-            {
-                if(i == _terminalTextSelected[j])
-                {
-                    invert = true;
-                    break;
-                }
-            }
-            Graphics::drawText(_terminalText[i], FONT_WIDTH, (i-_terminalScrollOffset)*(FONT_HEIGHT+2), 0xAAAAAAAA, invert, 80);
-        }
-
-        // Command line
-        Graphics::drawText(_terminalCommandLine, FONT_WIDTH, _terminalScreenMaxIndex*(FONT_HEIGHT+2)+1, 0xFFFFFFFF, false, 80);
-    }
-
-    void handleTerminalMouseLeftButtonDown(int mouseX, int mouseY)
-    {
-        // Normalised mouse position
-        float mx = float(mouseX) / float(Graphics::getWidth());
-        float my = float(mouseY) / float(Graphics::getHeight());
-        mouseX = int(mx * float(SCREEN_WIDTH));
-        mouseY = int(my * float(SCREEN_HEIGHT));
-        //fprintf(stderr, "%d %d %f %f\n", mouseX, mouseY, mx, my);
-
-        int terminalTextSelected = (mouseY + 2) / (FONT_HEIGHT+2) + _terminalScrollOffset;
-
-        // Save selected text line as long as it doesn't already exist
-        bool saveText = true;
-        for(int i=0; i<_terminalTextSelected.size(); i++)
-        {
-            if(_terminalTextSelected[i] == terminalTextSelected)
-            {
-                saveText = false;
-                break;
-            }
-        }
-        if(saveText  &&  terminalTextSelected < _terminalText.size()) _terminalTextSelected.push_back(terminalTextSelected);
-
-        // Select everything between min and max as long as it doesn't already exist
-        int selectedMin = INT_MAX;
-        int selectedMax = INT_MIN;
-        for(int i=0; i<_terminalTextSelected.size(); i++)
-        {
-            if(_terminalTextSelected[i] > selectedMax) selectedMax = _terminalTextSelected[i];
-            if(_terminalTextSelected[i] < selectedMin) selectedMin = _terminalTextSelected[i];
-        }
-        for(int i=selectedMin+1; i<selectedMax; i++)
-        {
-            bool saveText = true;
-            for(int j=0; j<_terminalTextSelected.size(); j++)
-            {
-                if(_terminalTextSelected[j] == i)
-                {
-                    saveText = false;
-                    break;
-                }
-            }
-            if(saveText  &&  i < _terminalText.size()) _terminalTextSelected.push_back(i);
-        }
-
-        if(mouseY == 0) _terminalScrollOffset--;
-    }
-
-    void handleTerminalMouseRightButtonDown(int mouseX, int mouseY)
-    {
-    }
-
-    void handleTerminalMouseButtonDown(const SDL_Event& event)
-    {
-        _terminalTextSelected.clear();
-    }
-
-    void handleTerminalMouseButtonUp(const SDL_Event& event)
-    {
-    }
-
-    void handleTerminalMouseWheel(const SDL_Event& event)
-    {
-        if(event.wheel.y > 0) _terminalScrollOffset -= 3;
-        if(event.wheel.y < 0) _terminalScrollOffset += 3;
-    }
-
-    void handleTerminalKey(const SDL_Event& event)
-    {
-        _terminalScrollDelta = int(_terminalText.size());
-
-        char keyCode = event.text.text[0];
-        if(!_terminalModeGiga  &&  (keyCode == 't'  ||  keyCode == 'T'))
-        {
-            _terminalModeGiga = true;
-            std::string terminalCmd = "t\n";
-            Loader::sendCommandToGiga(terminalCmd, _terminalText);
-            Loader::openComPort();
-        }
-        else if(_terminalModeGiga)
-        {
-            Loader::sendCharGiga(keyCode);
-            if(keyCode >= 32  &&  keyCode <= 126) _terminalCommandLine += std::string(1, char(keyCode));
-        }
-        else if(keyCode >= 32  &&  keyCode <= 126)
-        {
-#define ONE_TOUCH_CONTROLS
-#ifdef ONE_TOUCH_CONTROLS
-            if(keyCode != SDLK_w  &&  keyCode != SDLK_a  &&  keyCode != SDLK_s  &&  keyCode != SDLK_d  &&  keyCode != SDLK_z  &&  keyCode != SDLK_x  &&  keyCode != SDLK_q  &&  keyCode != SDLK_e)
-#endif
-            {
-                _terminalCommandLine += std::string(1, char(keyCode));
-            }
-        }
-
-        if(_terminalCommandLine.size() >= 79) _terminalCommandLine.clear();
-
-        // How far PrintTerminal() needs to scroll
-        _terminalScrollDelta = int(_terminalText.size()) - _terminalScrollDelta;
-    }
-
-    void handleTerminalKeyDown(SDL_Keycode keyCode, Uint16 keyMod)
-    {
-        // Leave terminal mode
-        if(keyCode == _emulator["Terminal"].scanCode  &&  keyMod == _emulator["Terminal"].modifier)
-        {
-            setEditorMode(_editorModePrev);
-        }        
-        // Quit
-        else if(keyCode == _emulator["Quit"].scanCode  &&  keyMod == _emulator["Quit"].modifier)
-        {
-            if(_terminalModeGiga)
-            {
-                Loader::sendCharGiga('\4');
-                Loader::closeComPort();
-            }
-
-            Cpu::shutdown();
-            exit(0);
-        }
-
-        _terminalScrollDelta = int(_terminalText.size());
-
-        std::string cmd;
-        if(keyMod == 0x0000)
-        {
-            switch(keyCode)
-            {
-                case SDLK_PAGEUP:   _terminalScrollOffset -= _terminalScreenMaxIndex;      break;
-                case SDLK_PAGEDOWN: _terminalScrollOffset += _terminalScreenMaxIndex;      break;
-                case SDLK_UP:       _terminalScrollOffset -= 1;                            break;
-                case SDLK_DOWN:     _terminalScrollOffset += 1;                            break;
-                case SDLK_HOME:     _terminalScrollOffset = 0;                             break;
-                case SDLK_END:      _terminalScrollOffset = _terminalScrollIndex;          break;
-            }
-
-            if(!_terminalModeGiga)
-            {
-                switch(keyCode)
-                {
-#ifdef ONE_TOUCH_CONTROLS
-#if 0
-                    case SDLK_w: Loader::sendCommandToGiga(std::string("w\n"), _terminalText); break;
-                    case SDLK_a: Loader::sendCommandToGiga(std::string("a\n"), _terminalText); break;
-                    case SDLK_s: Loader::sendCommandToGiga(std::string("s\n"), _terminalText); break;
-                    case SDLK_d: Loader::sendCommandToGiga(std::string("d\n"), _terminalText); break;
-                    case SDLK_z: Loader::sendCommandToGiga(std::string("z\n"), _terminalText); break;
-                    case SDLK_x: Loader::sendCommandToGiga(std::string("x\n"), _terminalText); break;
-                    case SDLK_q: Loader::sendCommandToGiga(std::string("q\n"), _terminalText); break;
-                    case SDLK_e: Loader::sendCommandToGiga(std::string("e\n"), _terminalText); break;
-#else
-                    case SDLK_w: Loader::openComPort(); Loader::sendCharGiga('w');Loader::sendCharGiga('\n'); Loader::closeComPort(); break;
-                    case SDLK_a: Loader::openComPort(); Loader::sendCharGiga('a');Loader::sendCharGiga('\n'); Loader::closeComPort(); break;
-                    case SDLK_s: Loader::openComPort(); Loader::sendCharGiga('s');Loader::sendCharGiga('\n'); Loader::closeComPort(); break;
-                    case SDLK_d: Loader::openComPort(); Loader::sendCharGiga('d');Loader::sendCharGiga('\n'); Loader::closeComPort(); break;
-                    case SDLK_z: Loader::openComPort(); Loader::sendCharGiga('z');Loader::sendCharGiga('\n'); Loader::closeComPort(); break;
-                    case SDLK_x: Loader::openComPort(); Loader::sendCharGiga('x');Loader::sendCharGiga('\n'); Loader::closeComPort(); break;
-                    case SDLK_q: Loader::openComPort(); Loader::sendCharGiga('q');Loader::sendCharGiga('\n'); Loader::closeComPort(); break;
-                    case SDLK_e: Loader::openComPort(); Loader::sendCharGiga('e');Loader::sendCharGiga('\n'); Loader::closeComPort(); break;
-#endif
-#endif
-                }
-
-                if(keyCode == SDLK_BACKSPACE  ||  keyCode == SDLK_DELETE)
-                {
-                    if(_terminalCommandLine.size()) _terminalCommandLine.erase(_terminalCommandLine.end() - 1);
-                }
-                else if(keyCode == '\r'  ||  keyCode == '\n')
-                {
-                    Loader::sendCommandToGiga(_terminalCommandLine + "\n", _terminalText);
-                    _terminalCommandLine.clear();
-                }
-            }
-        }
-
-        if(_terminalModeGiga)
-        {
-            if(keyCode == SDLK_DELETE)
-            {
-                Loader::sendCharGiga(keyCode);
-                if(_terminalCommandLine.size()) _terminalCommandLine.erase(_terminalCommandLine.end() - 1);
-            }
-            else if(keyCode == '\r'  ||  keyCode == '\n')
-            {
-                Loader::sendCharGiga(keyCode);
-                _terminalCommandLine.clear();
-            }
-            // CTRL C for BASIC
-            else if(keyCode == SDLK_c  &&  keyMod & KMOD_LCTRL)
-            {
-                Loader::sendCharGiga('\3');
-            }
-            // Break giga terminal mode
-            else if(keyCode == SDLK_d  &&  keyMod & KMOD_LCTRL)
-            {
-                Loader::sendCharGiga('\4');
-                Loader::readUntilPromptGiga(_terminalText);
-                Loader::closeComPort();
-                _terminalModeGiga = false;
-            }
-        }
-
-        // How far PrintTerminal() needs to scroll
-        _terminalScrollDelta = int(_terminalText.size()) - _terminalScrollDelta;
-    }
-
-    void handleTerminalKeyUp(SDL_Keycode keyCode, Uint16 keyMod)
-    {
-        if(_terminalModeGiga)
-        {
-            return;
-        }
-        // Select all
-        else if(keyCode == SDLK_a  &&  keyMod & KMOD_LCTRL)
-        {
-            _terminalTextSelected.clear();
-            for(int i=0; i<_terminalText.size(); i++)
-            {
-                _terminalTextSelected.push_back(i);
-            }
-        }
-        // Copy to system clipboard
-        else if(keyCode == SDLK_c  &&  keyMod & KMOD_LCTRL)
-        {
-            // Copy selected text
-            if(_terminalTextSelected.size())
-            {
-                int clipboardTextSize = 0;
-                for(int i=0; i<_terminalText.size(); i++) clipboardTextSize += int(_terminalText[i].size());
-                char* clipboardText = new char[clipboardTextSize];
-
-                // Sort selected text
-                std::sort(_terminalTextSelected.begin(), _terminalTextSelected.end());
-
-                // Copy text line by line, char by char, skip trailing zero's
-                int clipboardTextIndex = 0;
-                for(int i=0; i<_terminalTextSelected.size(); i++)
-                {
-                    int index = _terminalTextSelected[i];
-                    for(int j=0; j<_terminalText[index].size()-1; j++)
-                    {
-                        clipboardText[clipboardTextIndex++] = _terminalText[index][j];
-                    }
-                }
-
-                // Append zero and save to system clipboard
-                clipboardText[clipboardTextIndex] = 0;
-                SDL_SetClipboardText(clipboardText);
-
-                delete [] clipboardText;
-            }
-        }
-        // Help screen
-        else if(keyCode == _emulator["Help"].scanCode  &&  keyMod == _emulator["Help"].modifier)
-        {
-            static bool helpScreen = false;
-            helpScreen = !helpScreen;
-            Graphics::setDisplayHelpScreen(helpScreen);
-        }
-    }
-
-    void handleTerminalInput(void)
-    {
-        static bool firstTime = true;
-        if(firstTime)
-        {
-            firstTime = false;
-            std::string cmd = "V\n";
-            Loader::sendCommandToGiga(cmd, _terminalText);
-        }
-
-        // Mouse button state
-        int mouseX, mouseY;
-        Uint32 mouseState = SDL_GetMouseState(&mouseX, &mouseY);
-        switch(mouseState)
-        {
-            case SDL_BUTTON_LEFT:  handleTerminalMouseLeftButtonDown(mouseX, mouseY);  break;
-            case SDL_BUTTON_RIGHT: handleTerminalMouseRightButtonDown(mouseX, mouseY); break;
-        }
-
-        SDL_Event event;
-        while(SDL_PollEvent(&event))
-        {
-            handleGuiEvents(event);
-
-            SDL_Keycode keyCode = event.key.keysym.sym;
-            Uint16 keyMod = event.key.keysym.mod & (KMOD_LCTRL | KMOD_LALT | KMOD_LSHIFT);
-
-            switch(event.type)
-            {
-                case SDL_MOUSEBUTTONDOWN: handleTerminalMouseButtonDown(event);   break;
-                case SDL_MOUSEBUTTONUP:   handleTerminalMouseButtonUp(event);     break;
-                case SDL_MOUSEWHEEL:      handleTerminalMouseWheel(event);        break;
-                case SDL_TEXTINPUT:       handleTerminalKey(event);               break;
-                case SDL_KEYDOWN:         handleTerminalKeyDown(keyCode, keyMod); break;
-                case SDL_KEYUP:           handleTerminalKeyUp(keyCode, keyMod);   break;
-            }
-        }
-
-        // Scroll text one line at a time until end is reached, (jump to end - delta if scroll index is not at end)
-        if(_terminalScrollDelta)
-        {
-            _terminalScrollOffset = _terminalScrollIndex - _terminalScrollDelta;
-            _terminalScrollDelta--;
-            _terminalScrollOffset++;
-        }
-
-        // Read chars back from Gigatron in terminal mode
-        if(_terminalModeGiga)
-        {
-            char chr = 0;
-            static std::string line;
-            if(Loader::readCharGiga(&chr))
-            {
-                if(chr >= 32  &&  chr <= 126) line.push_back(chr);
-                if(chr == '\r'  ||  chr == '\n')
-                {
-                    if(line.size())
-                    {
-                        _terminalScrollDelta = int(_terminalText.size());
-                        _terminalText.push_back(line);
-                        _terminalScrollDelta = int(_terminalText.size()) - _terminalScrollDelta;
-                    }
-                    line.clear();
-                }
-            }
-        }
-
-        printTerminal();
     }
 }
