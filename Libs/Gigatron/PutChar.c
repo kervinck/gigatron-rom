@@ -16,6 +16,7 @@ void PutChar(int c)
     Newline();
 
   // Avoid writing outside screen memory
+  // This also forces a newline if ScreenPos is still 0 after startup
   i = ((byte*)&ScreenPos)[1]; // ScreenPos high byte
   if (((i-8) & 255) > 120-8)
     Newline();
