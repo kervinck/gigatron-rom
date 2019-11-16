@@ -30,7 +30,6 @@ namespace Compiler
     uint16_t _runtimeEnd     = 0xFFFF;
 
     bool _nextTempVar = true;
-    bool _usingLogicalOperator = true;
     bool _createNumericLabelLut = false;
 
     int _currentLabelIndex = -1;
@@ -71,7 +70,6 @@ namespace Compiler
     uint16_t getRuntimeEnd(void) {return _runtimeEnd;}
     uint16_t getTempVarStart(void) {return _tempVarStart;}
     int getCurrentLabelIndex(void) {return _currentLabelIndex;}
-    bool getUsingLogicalOperator(void) {return _usingLogicalOperator;}
     std::string& getNextInternalLabel(void) {return _nextInternalLabel;}
 
     void setRuntimeEnd(uint16_t runtimeEnd) {_runtimeEnd = runtimeEnd;}
@@ -621,10 +619,10 @@ namespace Compiler
     }
 
     // Generic LDW expression parser
-    uint32_t parseArrayVarExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, int16_t& value)
+    uint32_t parseArrayVarExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, Expression::Numeric& numeric)
     {
         int varIndex, params;
-        Expression::parse(expression, codeLineIndex, value);
+        Expression::parse(expression, codeLineIndex, numeric);
         uint32_t expressionType = isExpression(expression, varIndex, params);
         if(((expressionType & Expression::HasVars)  &&  (expressionType & Expression::HasOperators))  ||  (expressionType & Expression::HasKeywords)  ||  (expressionType & Expression::HasStringKeywords))
         {
@@ -650,7 +648,7 @@ namespace Compiler
         emitVcpuAsm("STW", "register0", false, codeLineIndex); // register0 = memValue, but can't use memValue here as include file is not guaranteed to be loaded
 
         // Array index from expression
-        int16_t arrIndex;
+        Expression::Numeric arrIndex;
         std::string arrText = codeLine._code.substr(lbra + 1, rbra - (lbra + 1));
         uint32_t expressionType = parseArrayVarExpression(codeLine, codeLineIndex, arrText, arrIndex);
 
@@ -660,7 +658,7 @@ namespace Compiler
         // Constant index
         if(!(expressionType & Expression::HasVars))
         {
-            emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr + arrIndex*intSize), false, codeLineIndex);
+            emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr + arrIndex._value*intSize), false, codeLineIndex);
             emitVcpuAsm("STW",  "register1", false, codeLineIndex);
             emitVcpuAsm("LDW",  "register0", false, codeLineIndex);
             emitVcpuAsm("DOKE", "register1", false, codeLineIndex);
@@ -719,11 +717,10 @@ namespace Compiler
     }
 
     // Generic expression parser
-    OperandType parseExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, std::string& operand)
+    OperandType parseExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, std::string& operand, Expression::Numeric& numeric)
     {
-        int16_t value;
         int varIndex, params;
-        Expression::parse(expression, codeLineIndex, value);
+        Expression::parse(expression, codeLineIndex, numeric);
         uint32_t expressionType = isExpression(expression, varIndex, params);
         if(((expressionType & Expression::HasVars)  &&  (expressionType & Expression::HasOperators))  ||  (expressionType & Expression::HasKeywords)  ||  (expressionType & Expression::HasStringKeywords))
         {
@@ -736,15 +733,15 @@ namespace Compiler
             return OperandVar;
         }
 
-        operand = std::to_string(value);
+        operand = std::to_string(numeric._value);
         return OperandConst;
     }
 
     // Generic LDW expression parser
-    uint32_t parseExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, int16_t& value)
+    uint32_t parseExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, Expression::Numeric& numeric)
     {
         int varIndex, params;
-        Expression::parse(expression, codeLineIndex, value);
+        Expression::parse(expression, codeLineIndex, numeric);
         uint32_t expressionType = isExpression(expression, varIndex, params);
         if(((expressionType & Expression::HasVars)  &&  (expressionType & Expression::HasOperators))  ||  (expressionType & Expression::HasKeywords)  ||  (expressionType & Expression::HasStringKeywords))
         {
@@ -756,17 +753,17 @@ namespace Compiler
         }
         else
         {
-            (value >= 0  &&  value <= 255) ? emitVcpuAsm("LDI", std::to_string(value), false, codeLineIndex) : emitVcpuAsm("LDWI", std::to_string(value), false, codeLineIndex);
+            (numeric._value >= 0  &&  numeric._value <= 255) ? emitVcpuAsm("LDI", std::to_string(numeric._value), false, codeLineIndex) : emitVcpuAsm("LDWI", std::to_string(numeric._value), false, codeLineIndex);
         }
 
         return expressionType;
     }
 
     // Loop specific parser
-    uint32_t parseExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, int16_t& value, int16_t replace)
+    uint32_t parseExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, Expression::Numeric& numeric, int16_t replace)
     {
         int varIndex, params;
-        Expression::parse(expression, codeLineIndex, value);
+        Expression::parse(expression, codeLineIndex, numeric);
         uint32_t expressionType = isExpression(expression, varIndex, params);
         if(((expressionType & Expression::HasVars)  &&  (expressionType & Expression::HasOperators))  ||  (expressionType & Expression::HasKeywords)  ||  (expressionType & Expression::HasStringKeywords))
         {
@@ -778,8 +775,8 @@ namespace Compiler
         }
         else
         {
-            if(value == 0  &&  replace != 0) value = replace;
-            (value >= 0  &&  value <= 255) ? emitVcpuAsm("LDI", std::to_string(value), false, codeLineIndex) : emitVcpuAsm("LDWI", std::to_string(value), false, codeLineIndex);
+            if(numeric._value == 0  &&  replace != 0) numeric._value = replace;
+            (numeric._value >= 0  &&  numeric._value <= 255) ? emitVcpuAsm("LDI", std::to_string(numeric._value), false, codeLineIndex) : emitVcpuAsm("LDWI", std::to_string(numeric._value), false, codeLineIndex);
         }
 
         return expressionType;
@@ -1499,7 +1496,7 @@ namespace Compiler
     // ********************************************************************************************
     bool handleCondOp(Expression::Numeric& lhs, Expression::Numeric& rhs, bool logical)
     {
-        _usingLogicalOperator = logical;
+        lhs._isLogical = logical;
 
         std::string opcode = "SUB";
 
@@ -1816,7 +1813,7 @@ namespace Compiler
         }
 
         // Optimise multiply with 0
-        if((!left._isAddress  &&  left._value == 0)  ||  (!right._isAddress  &&  right._value == 0)) return Expression::Numeric(0, -1, true, false, std::string(""));
+        if((!left._isAddress  &&  left._value == 0)  ||  (!right._isAddress  &&  right._value == 0)) return Expression::Numeric(0, -1, true, false, false, std::string(""));
 
         left._isValid = (Assembler::getUseOpcodeCALLI()) ? handleMathOp("CALLI", "multiply16bit", left, right) : handleMathOp("CALL", "multiply16bit", left, right);
 
@@ -1832,7 +1829,7 @@ namespace Compiler
         }
 
         // Optimise divide with 0, term() never lets denominator = 0
-        if((!left._isAddress  &&  left._value == 0)  ||  (!right._isAddress  &&  right._value == 0)) return Expression::Numeric(0, -1, true, false, std::string(""));
+        if((!left._isAddress  &&  left._value == 0)  ||  (!right._isAddress  &&  right._value == 0)) return Expression::Numeric(0, -1, true, false, false, std::string(""));
 
         left._isValid = (Assembler::getUseOpcodeCALLI()) ? handleMathOp("CALLI", "divide16bit", left, right) : handleMathOp("CALL", "divide16bit", left, right);
 
@@ -1848,7 +1845,7 @@ namespace Compiler
         }
 
         // Optimise divide with 0, term() never lets denominator = 0
-        if((!left._isAddress  &&  left._value == 0)  ||  (!right._isAddress  &&  right._value == 0)) return Expression::Numeric(0, -1, true, false, std::string(""));
+        if((!left._isAddress  &&  left._value == 0)  ||  (!right._isAddress  &&  right._value == 0)) return Expression::Numeric(0, -1, true, false, false, std::string(""));
 
         left._isValid = (Assembler::getUseOpcodeCALLI()) ? handleMathOp("CALLI", "divide16bit", left, right, true) : handleMathOp("CALL", "divide16bit", left, right, true);
 
@@ -1916,7 +1913,7 @@ namespace Compiler
             if(peek(false) != ')')
             {
                 fprintf(stderr, "Compiler::factor() : Found '%c' : expecting ')' in '%s' on line %d\n", peek(false), Expression::getExpressionToParse(), Expression::getLineNumber() + 1);
-                numeric = Expression::Numeric(0, -1, false, false, std::string(""));
+                numeric = Expression::Numeric(0, -1, false, false, false, std::string(""));
             }
             get(false);
         }
@@ -1925,11 +1922,11 @@ namespace Compiler
             if(!number(value))
             {
                 fprintf(stderr, "Compiler::factor() : Bad numeric data in '%s' on line %d\n", _codeLines[_currentCodeLineIndex]._code.c_str(), Expression::getLineNumber() + 1);
-                numeric = Expression::Numeric(0, -1, false, false, std::string(""));
+                numeric = Expression::Numeric(0, -1, false, false, false, std::string(""));
             }
             else
             {
-                numeric = Expression::Numeric(value, -1, true, false, std::string(""));
+                numeric = Expression::Numeric(value, -1, true, false, false, std::string(""));
             }
         }
         // Functions
@@ -1975,7 +1972,7 @@ namespace Compiler
                 case '-': get(false); numeric = factor(0); numeric = operatorNEG(numeric); break;
 
                 // Reached end of expression
-                case 0: numeric = Expression::Numeric(defaultValue, -1, false, false, std::string("")); break;
+                case 0: numeric = Expression::Numeric(defaultValue, -1, false, false, false, std::string("")); break;
 
                 default:
                 {
@@ -1994,13 +1991,13 @@ namespace Compiler
                         // Vars
                         else
                         {
-                            numeric = Expression::Numeric(defaultValue, -1, true, true, varName);
+                            numeric = Expression::Numeric(defaultValue, -1, true, true, false, varName);
                         }
                     }
                     // Unknown symbol
                     else
                     {
-                        numeric = Expression::Numeric(defaultValue, -1, false, false, std::string(""));
+                        numeric = Expression::Numeric(defaultValue, -1, false, false, false, std::string(""));
                         if(varName.size()) fprintf(stderr, "Compiler::factor() : Found an unknown symbol '%s' : in '%s' on line %d\n", varName.c_str(), _codeLines[_currentCodeLineIndex]._code.c_str(), Expression::getLineNumber() + 1);
                     }
                 }
@@ -2110,11 +2107,11 @@ namespace Compiler
         uint32_t expressionType = isExpression(codeLine._expression, varIndexRhs, params);
         if(expressionType & Expression::HasVars) containsVars = true;
 
-        int16_t value = 0;
+        Expression::Numeric value;
         Expression::parse(codeLine._expression, codeLineIndex, value);
         if(codeLine._varIndex != -1)
         {
-            updateVar(value, codeLine, codeLine._varIndex, containsVars);
+            updateVar(value._value, codeLine, codeLine._varIndex, containsVars);
         }
 
         // Check for matching brackets
@@ -2686,7 +2683,6 @@ namespace Compiler
         _runtimeEnd     = 0xFFFF;
 
         _nextTempVar = true;
-        _usingLogicalOperator = true;
         _createNumericLabelLut = false;
 
         _currentLabelIndex = -1;

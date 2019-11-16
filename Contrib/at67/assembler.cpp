@@ -735,7 +735,10 @@ namespace Assembler
         input.erase(remove_if(input.begin(), input.end(), isspace), input.end());
 
         // Parse expression and return with a result
-        return Expression::parse(input, _lineNumber, result);
+        Expression::Numeric numeric;
+        bool valid = Expression::parse(input, _lineNumber, numeric);
+        result = numeric._value;
+        return valid;
     }
 
     bool searchEquate(const std::string& token, Equate& equate)
@@ -1015,10 +1018,10 @@ namespace Assembler
                         // Normal expression
                         if(Expression::isExpression(tokens[i]) == Expression::HasOperators)
                         {
-                            int16_t value;
+                            Expression::Numeric value;
                             if(Expression::parse(tokens[i], _lineNumber, value))
                             {
-                                operand = uint8_t(value);
+                                operand = uint8_t(value._value);
                                 success = true;
                             }
                         }
@@ -1076,10 +1079,10 @@ namespace Assembler
                     // Normal expression
                     if(Expression::isExpression(tokens[i]) == Expression::HasOperators)
                     {
-                        int16_t value;
+                        Expression::Numeric value;
                         if(Expression::parse(tokens[i], _lineNumber, value))
                         {
-                            operand = value;
+                            operand = value._value;
                             success = true;
                         }
                     }
@@ -1966,10 +1969,10 @@ namespace Assembler
                     {
                         if(Expression::isExpression(token) == Expression::HasOperators)
                         {
-                            int16_t value;
+                            Expression::Numeric value;
                             if(Expression::parse(token, _lineNumber, value))
                             {
-                                data = value;
+                                data = value._value;
                                 success = true;
                             }
                         }
@@ -2413,11 +2416,11 @@ namespace Assembler
                                 }
                                 else if(Expression::isExpression(tokens[tokenIndex]) == Expression::HasOperators)
                                 {
-                                    int16_t value;
+                                    Expression::Numeric value;
                                     std::string input;
                                     preProcessExpression(tokens, tokenIndex, input, true);
                                     if(!Expression::parse(input, _lineNumber, value)) return false;
-                                    operand = uint8_t(value);
+                                    operand = uint8_t(value._value);
                                     operandValid = true;
                                 }
                                 else
@@ -2538,11 +2541,11 @@ namespace Assembler
                                 }
                                 else if(Expression::isExpression(tokens[tokenIndex]) == Expression::HasOperators)
                                 {
-                                    int16_t value;
+                                    Expression::Numeric value;
                                     std::string input;
                                     preProcessExpression(tokens, tokenIndex, input, true);
                                     if(!Expression::parse((char*)input.c_str(), _lineNumber, value)) return false;
-                                    operand = value;
+                                    operand = value._value;
                                     operandValid = true;
                                 }
                                 else

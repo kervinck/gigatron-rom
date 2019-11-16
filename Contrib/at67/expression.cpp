@@ -813,7 +813,7 @@ namespace Expression
             if(peek() != ')')
             {
                 fprintf(stderr, "Expression::factor() : Missing ')' in '%s' on line %d\n", _expressionToParse.c_str(), _lineNumber + 1);
-                numeric = Numeric(0, -1, false, false, std::string(""));
+                numeric = Numeric(0, -1, false, false, false, std::string(""));
             }
             get();
         }
@@ -822,11 +822,11 @@ namespace Expression
             if(!number(value))
             {
                 fprintf(stderr, "Expression::factor() : Bad numeric data in '%s' on line %d\n", _expressionToParse.c_str(), _lineNumber + 1);
-                numeric = Numeric(0, -1, false, false, std::string(""));
+                numeric = Numeric(0, -1, false, false, false, std::string(""));
             }
             else
             {
-                numeric = Numeric(value, -1, true, false, std::string(""));
+                numeric = Numeric(value, -1, true, false, false, std::string(""));
             }
         }
         else
@@ -841,7 +841,7 @@ namespace Expression
                 case '-': get(); numeric = factor(0); numeric = neg(numeric); break;
                 case '~': get(); numeric = factor(0); numeric = not(numeric); break;
 
-                default: numeric = Numeric(defaultValue, -1, true, true, std::string(_expression)); break;
+                default: numeric = Numeric(defaultValue, -1, true, true, false, std::string(_expression)); break;
             }
         }
 
@@ -885,7 +885,7 @@ namespace Expression
     }
 
 
-    bool parse(const std::string& expression, int lineNumber, int16_t& value)
+    bool parse(const std::string& expression, int lineNumber, Numeric& numeric)
     {
         _advanceError = false;
         _expressionToParse = expression;
@@ -893,7 +893,7 @@ namespace Expression
 
         _expression = (char*)_expressionToParse.c_str();
 
-        value = _exprFunc()._value;
+        numeric = _exprFunc();
         return _exprFunc()._isValid;
     }
 }

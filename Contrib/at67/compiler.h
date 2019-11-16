@@ -153,6 +153,7 @@ namespace Compiler
         std::string _labelName;
         int _codeLineIndex;
         IfElseEndType _ifElseEndType;
+        bool _isLogical;
     };
 
     struct EndIfData
@@ -166,6 +167,7 @@ namespace Compiler
         int _jmpIndex;
         std::string _labelName;
         int _codeLineIndex;
+        bool _isLogical;
     };
 
     struct RepeatUntilData
@@ -191,7 +193,6 @@ namespace Compiler
     uint16_t getRuntimeEnd(void);
     uint16_t getTempVarStart(void);
     int getCurrentLabelIndex(void);
-    bool getUsingLogicalOperator(void);
     std::string& getNextInternalLabel(void);
 
     void setRuntimeEnd(uint16_t runtimeEnd);
@@ -242,9 +243,9 @@ namespace Compiler
     void emitVcpuAsm(const std::string& opcodeStr, const std::string& operandStr, bool nextTempVar, int codeLineIdx=-1, const std::string& internalLabel="", bool pageJump=false);
 
     uint32_t isExpression(std::string& input, int& varIndex, int& params);
-    OperandType parseExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, std::string& operand);
-    uint32_t parseExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, int16_t& value);
-    uint32_t parseExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, int16_t& value, int16_t replace);
+    OperandType parseExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, std::string& operand, Expression::Numeric& numeric);
+    uint32_t parseExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, Expression::Numeric& numeric);
+    uint32_t parseExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, Expression::Numeric& numeric, int16_t replace);
     StatementResult parseMultiStatements(const std::string& code, CodeLine& codeLine, int codeLineIndex, int& varIndex);
 
     void addLabelToJump(std::vector<VasmLine>& vasm, std::string& label);

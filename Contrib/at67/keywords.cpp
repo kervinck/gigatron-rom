@@ -226,7 +226,7 @@ namespace Keywords
         size_t gOffset = (gotoOffset != std::string::npos) ? gotoOffset : gosubOffset;
 
         // Parse ON field
-        int16_t onValue = 0;
+        Expression::Numeric onValue;
         std::string onToken = codeLine._code.substr(foundPos, gOffset - (foundPos + 1));
         Expression::stripWhitespace(onToken);
         uint32_t expressionType = Compiler::parseExpression(codeLine, codeLineIndex, onToken, onValue);
@@ -298,7 +298,7 @@ namespace Keywords
         }
 
         // Parse GOTO field
-        int16_t gotoValue = 0;
+        Expression::Numeric gotoValue;
         std::string gotoToken = gotoTokens[0];
         Expression::stripWhitespace(gotoToken);
         int labelIndex = Compiler::findLabel(gotoToken);
@@ -379,7 +379,7 @@ namespace Keywords
         }
 
         // Parse GOSUB field
-        int16_t gosubValue = 0;
+        Expression::Numeric gosubValue;
         std::string gosubToken = gosubTokens[0];
         Expression::stripWhitespace(gosubToken);
         int labelIndex = Compiler::findLabel(gosubToken);
@@ -483,7 +483,8 @@ namespace Keywords
 
         for(int i=0; i<tokens.size(); i++)
         {
-            operandTypes[i] = parseExpression(codeLine, codeLineIndex, tokens[i], operands[i]);
+            Expression::Numeric numeric;
+            operandTypes[i] = parseExpression(codeLine, codeLineIndex, tokens[i], operands[i], numeric);
         }
 
         if((operandTypes[0] == Compiler::OperandVar  ||  operandTypes[0] == Compiler::OperandTemp)  &&  (operandTypes[1] == Compiler::OperandVar  ||  operandTypes[1] == Compiler::OperandTemp))
@@ -529,7 +530,8 @@ namespace Keywords
 
         for(int i=0; i<tokens.size(); i++)
         {
-            operandTypes[i] = parseExpression(codeLine, codeLineIndex, tokens[i], operands[i]);
+            Expression::Numeric numeric;
+            operandTypes[i] = parseExpression(codeLine, codeLineIndex, tokens[i], operands[i], numeric);
         }
 
         if((operandTypes[0] == Compiler::OperandVar  ||  operandTypes[0] == Compiler::OperandTemp)  &&  (operandTypes[1] == Compiler::OperandVar  ||  operandTypes[1] == Compiler::OperandTemp))
@@ -570,7 +572,7 @@ namespace Keywords
             return false;
         }
 
-        std::vector<int16_t> params = {0, 0};
+        std::vector<Expression::Numeric> params = {Expression::Numeric(), Expression::Numeric()};
         for(int i=0; i<tokens.size(); i++)
         {
             uint32_t expressionType = parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
@@ -604,7 +606,7 @@ namespace Keywords
             return false;
         }
 
-        int16_t param;
+        Expression::Numeric param;
         uint32_t expressionType = parseExpression(codeLine, codeLineIndex, expression, param);
         Compiler::emitVcpuAsm("%PrintAcChar", "", false, codeLineIndex);
 
@@ -621,7 +623,7 @@ namespace Keywords
             return false;
         }
 
-        int16_t param;
+        Expression::Numeric param;
         uint32_t expressionType = parseExpression(codeLine, codeLineIndex, expression, param);
         Compiler::emitVcpuAsm("STW", "graphicsMode", false, codeLineIndex);
         Compiler::emitVcpuAsm("%ScanlineMode", "",   false, codeLineIndex);
@@ -639,7 +641,7 @@ namespace Keywords
             return false;
         }
 
-        int16_t param;
+        Expression::Numeric param;
         uint32_t expressionType = parseExpression(codeLine, codeLineIndex, expression, param);
         Compiler::emitVcpuAsm("STW", "waitVBlankNum", false, codeLineIndex);
         Compiler::emitVcpuAsm("%WaitVBlank", "",      false, codeLineIndex);
@@ -659,7 +661,7 @@ namespace Keywords
 
         if(tokens.size() == 2)
         {
-            std::vector<int16_t> params = {0, 0};
+            std::vector<Expression::Numeric> params = {Expression::Numeric(), Expression::Numeric()};
             for(int i=0; i<tokens.size(); i++)
             {
                 uint32_t expressionType = parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
@@ -674,7 +676,7 @@ namespace Keywords
         }
         else
         {
-            std::vector<int16_t> params = {0, 0, 0, 0};
+            std::vector<Expression::Numeric> params = {Expression::Numeric(), Expression::Numeric(), Expression::Numeric(), Expression::Numeric()};
             for(int i=0; i<tokens.size(); i++)
             {
                 uint32_t expressionType = parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
@@ -703,7 +705,7 @@ namespace Keywords
             return false;
         }
 
-        std::vector<int16_t> params = {0, 0, 0};
+        std::vector<Expression::Numeric> params = {Expression::Numeric(), Expression::Numeric(), Expression::Numeric()};
         for(int i=0; i<tokens.size(); i++)
         {
             uint32_t expressionType = parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
@@ -730,7 +732,7 @@ namespace Keywords
             return false;
         }
 
-        std::vector<int16_t> params = {0, 0, 0};
+        std::vector<Expression::Numeric> params = {Expression::Numeric(), Expression::Numeric(), Expression::Numeric()};
         for(int i=0; i<tokens.size(); i++)
         {
             uint32_t expressionType = parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
@@ -769,7 +771,7 @@ namespace Keywords
         {
             std::string waveTypeToken = tokens[2];
             Expression::stripWhitespace(waveTypeToken);
-            int16_t param;
+            Expression::Numeric param;
             uint32_t expressionType = parseExpression(codeLine, codeLineIndex, waveTypeToken, param);
             Compiler::emitVcpuAsm("ST", "waveType", false, codeLineIndex);
         }
@@ -782,7 +784,7 @@ namespace Keywords
         // Midi stream address
         std::string addressToken = tokens[1];
         Expression::stripWhitespace(addressToken);
-        int16_t param;
+        Expression::Numeric param;
         uint32_t expressionType = parseExpression(codeLine, codeLineIndex, addressToken, param);
         Compiler::emitVcpuAsm("%PlayMidi", "", false, codeLineIndex);
 
@@ -832,7 +834,7 @@ namespace Keywords
         // Parse print tokens
         std::vector<std::string> tokens = Expression::tokeniseLine(codeLine._code.substr(foundPos), ";");
 
-        int16_t value;
+        Expression::Numeric value;
         int varIndex, params;
 
         for(int i=0; i<tokens.size(); i++)
@@ -880,7 +882,7 @@ namespace Keywords
             else if(expressionType & Expression::HasOperators)
             {
                 Expression::parse(tokens[i], codeLineIndex, value);
-                Compiler::emitVcpuAsm("%PrintInt16", Expression::wordToHexString(value), false, codeLineIndex);
+                Compiler::emitVcpuAsm("%PrintInt16", Expression::wordToHexString(value._value), false, codeLineIndex);
             }
             else if(expressionType & Expression::HasStrings)
             {
@@ -912,7 +914,7 @@ namespace Keywords
                 // If valid expression
                 if(Expression::parse(tokens[i], codeLineIndex, value))
                 {
-                    Compiler::emitVcpuAsm("%PrintInt16", Expression::wordToHexString(value), false, codeLineIndex);
+                    Compiler::emitVcpuAsm("%PrintInt16", Expression::wordToHexString(value._value), false, codeLineIndex);
                 }
             }
         }
@@ -1014,16 +1016,23 @@ namespace Keywords
         if(!optimise)
         {
             // Parse start field
-            uint32_t expressionType = parseExpression(codeLine, codeLineIndex, startToken, loopStart, 0);
+            Expression::Numeric numeric;
+            numeric._value = loopStart;
+            uint32_t expressionType = parseExpression(codeLine, codeLineIndex, startToken, numeric, 0);
+            loopStart = numeric._value;
             Compiler::emitVcpuAsm("STW", "_" + Compiler::getIntegerVars()[varIndex]._name, false, codeLineIndex);
 
             // Parse end field
-            expressionType = parseExpression(codeLine, codeLineIndex, endToken, loopEnd, 0);
+            numeric._value = loopEnd;
+            expressionType = parseExpression(codeLine, codeLineIndex, endToken, numeric, 0);
+            loopEnd = numeric._value;
             Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(varEnd)), false, codeLineIndex);
 
             // Parse step field
             int16_t replace = 1; // if step is 0, replace it with 1
-            expressionType = parseExpression(codeLine, codeLineIndex, stepToken, loopStep, replace);
+            numeric._value = loopStep;
+            expressionType = parseExpression(codeLine, codeLineIndex, stepToken, numeric, replace);
+            loopStep = numeric._value;
             Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(varStep)), false, codeLineIndex);
         }
 
@@ -1109,16 +1118,16 @@ namespace Keywords
         if(offsetTHEN == std::string::npos) ifElseEndif = true;
 
         // Condition
-        int16_t condition = 0;
+        Expression::Numeric condition;
         std::string conditionToken = codeLine._code.substr(foundPos, offsetTHEN - foundPos);
         parseExpression(codeLine, codeLineIndex, conditionToken, condition);
-        if(Compiler::getUsingLogicalOperator()) Compiler::emitVcpuAsm("%JumpFalse", "", false, codeLineIndex);
+        if(condition._isLogical) Compiler::emitVcpuAsm("%JumpFalse", "", false, codeLineIndex);
         int jmpIndex = int(Compiler::getCodeLines()[codeLineIndex]._vasm.size()) - 1;
 
         // Bail early as we assume this is an IF ELSE ENDIF block
         if(ifElseEndif)
         {
-            Compiler::getElseIfDataStack().push({jmpIndex, "", codeLineIndex, Compiler::IfBlock});
+            Compiler::getElseIfDataStack().push({jmpIndex, "", codeLineIndex, Compiler::IfBlock, condition._isLogical});
             return true;
         }
 
@@ -1143,7 +1152,7 @@ namespace Keywords
 
         // Update if's jump to this new label
         Compiler::VasmLine* vasm = &Compiler::getCodeLines()[codeLineIndex]._vasm[jmpIndex];
-        if(Compiler::getUsingLogicalOperator())
+        if(condition._isLogical)
         {
             vasm->_code = "JumpFalse" + std::string(OPCODE_TRUNC_SIZE - (sizeof("JumpFalse")-1), ' ') + nextInternalLabel;
         }
@@ -1167,6 +1176,7 @@ namespace Keywords
         Compiler::ElseIfData elseIfData = Compiler::getElseIfDataStack().top();
         int jmpIndex = elseIfData._jmpIndex;
         int codeIndex = elseIfData._codeLineIndex;
+        bool isLogical = elseIfData._isLogical;
         Compiler::getElseIfDataStack().pop();
 
         if(elseIfData._ifElseEndType != Compiler::IfBlock  &&  elseIfData._ifElseEndType != Compiler::ElseIfBlock)
@@ -1186,7 +1196,7 @@ namespace Keywords
 
         // Update if's jump to this new label
         Compiler::VasmLine* vasm = &Compiler::getCodeLines()[codeIndex]._vasm[jmpIndex];
-        if(Compiler::getUsingLogicalOperator())
+        if(isLogical)
         {
             vasm->_code = "JumpFalse" + std::string(OPCODE_TRUNC_SIZE - (sizeof("JumpFalse")-1), ' ') + nextInternalLabel;
         }
@@ -1196,13 +1206,13 @@ namespace Keywords
         }
 
         // Condition
-        int16_t condition = 0;
+        Expression::Numeric condition;
         std::string conditionToken = codeLine._code.substr(foundPos);
         parseExpression(codeLine, codeLineIndex, conditionToken, condition);
-        if(Compiler::getUsingLogicalOperator()) Compiler::emitVcpuAsm("%JumpFalse", "", false, codeLineIndex);
+        if(condition._isLogical) Compiler::emitVcpuAsm("%JumpFalse", "", false, codeLineIndex);
         jmpIndex = int(Compiler::getCodeLines()[codeLineIndex]._vasm.size()) - 1;
 
-        Compiler::getElseIfDataStack().push({jmpIndex, "", codeLineIndex, Compiler::ElseIfBlock});
+        Compiler::getElseIfDataStack().push({jmpIndex, "", codeLineIndex, Compiler::ElseIfBlock, condition._isLogical});
 
         return true;
     }
@@ -1225,6 +1235,7 @@ namespace Keywords
         Compiler::ElseIfData elseIfData = Compiler::getElseIfDataStack().top();
         int jmpIndex = elseIfData._jmpIndex;
         int codeIndex = elseIfData._codeLineIndex;
+        bool isLogical = elseIfData._isLogical;
         Compiler::getElseIfDataStack().pop();
 
         // Jump to endif for previous BASIC line
@@ -1238,7 +1249,7 @@ namespace Keywords
 
         // Update if's or elseif's jump to this new label
         Compiler::VasmLine* vasm = &Compiler::getCodeLines()[codeIndex]._vasm[jmpIndex];
-        if(Compiler::getUsingLogicalOperator())
+        if(isLogical)
         {
             vasm->_code = "JumpFalse" + std::string(OPCODE_TRUNC_SIZE - (sizeof("JumpFalse")-1), ' ') + nextInternalLabel;
         }
@@ -1247,7 +1258,7 @@ namespace Keywords
             addLabelToJump(Compiler::getCodeLines()[codeIndex]._vasm, nextInternalLabel);
         }
 
-        Compiler::getElseIfDataStack().push({jmpIndex, nextInternalLabel, codeIndex, Compiler::ElseBlock});
+        Compiler::getElseIfDataStack().push({jmpIndex, nextInternalLabel, codeIndex, Compiler::ElseBlock, isLogical});
 
         return true;
     }
@@ -1270,21 +1281,26 @@ namespace Keywords
         Compiler::ElseIfData elseIfData = Compiler::getElseIfDataStack().top();
         int jmpIndex = elseIfData._jmpIndex;
         int codeIndex = elseIfData._codeLineIndex;
+        Compiler::IfElseEndType ifElseEndType = elseIfData._ifElseEndType;
+        bool isLogical = elseIfData._isLogical;
         Compiler::getElseIfDataStack().pop();
 
         // Create label on next line of vasm code
         Compiler::setNextInternalLabel("_endif_" + Expression::wordToHexString(Compiler::getVasmPC()));
         std::string nextInternalLabel = Compiler::getNextInternalLabel() + " " + std::to_string(Compiler::incJumpFalseUniqueId());
 
-        // Update if's or elseif's jump to this new label
-        Compiler::VasmLine* vasm = &Compiler::getCodeLines()[codeIndex]._vasm[jmpIndex];
-        if(Compiler::getUsingLogicalOperator())
+        // Update elseif's jump to this new label
+        if(ifElseEndType == Compiler::ElseIfBlock)
         {
-            vasm->_code = "JumpFalse" + std::string(OPCODE_TRUNC_SIZE - (sizeof("JumpFalse")-1), ' ') + nextInternalLabel;
-        }
-        else
-        {
-            addLabelToJump(Compiler::getCodeLines()[codeIndex]._vasm, nextInternalLabel);
+            Compiler::VasmLine* vasm = &Compiler::getCodeLines()[codeIndex]._vasm[jmpIndex];
+            if(isLogical)
+            {
+                vasm->_code = "JumpFalse" + std::string(OPCODE_TRUNC_SIZE - (sizeof("JumpFalse")-1), ' ') + nextInternalLabel;
+            }
+            else
+            {
+                addLabelToJump(Compiler::getCodeLines()[codeIndex]._vasm, nextInternalLabel);
+            }
         }
 
         // Update elseif's and/or else's jump to endif label
@@ -1293,7 +1309,7 @@ namespace Keywords
             int codeLine = Compiler::getEndIfDataStack().top()._codeLineIndex;
             int jmpIndex = Compiler::getEndIfDataStack().top()._jmpIndex;
             Compiler::VasmLine* vasm = &Compiler::getCodeLines()[codeLine]._vasm[jmpIndex];
-            if(Compiler::getUsingLogicalOperator())
+            if(isLogical)
             {
                 vasm->_code = "LDWI" + std::string(OPCODE_TRUNC_SIZE - (sizeof("LDWI")-1), ' ') + Compiler::getNextInternalLabel();
             }
@@ -1311,14 +1327,14 @@ namespace Keywords
     bool keywordWHILE(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
         Compiler::setNextInternalLabel("_while_" + Expression::wordToHexString(Compiler::getVasmPC()));
-        Compiler::getWhileWendDataStack().push({0, Compiler::getNextInternalLabel(), codeLineIndex});
+        Compiler::getWhileWendDataStack().push({int(Compiler::getCodeLines()[codeLineIndex]._vasm.size()) - 1, Compiler::getNextInternalLabel(), codeLineIndex, false});
 
         // Condition
-        int16_t condition = 0;
+        Expression::Numeric condition;
         std::string conditionToken = codeLine._code.substr(foundPos);
         parseExpression(codeLine, codeLineIndex, conditionToken, condition);
-        if(Compiler::getUsingLogicalOperator()) Compiler::emitVcpuAsm("%JumpFalse", "", false, codeLineIndex);
-        Compiler::getWhileWendDataStack().top()._jmpIndex = int(Compiler::getCodeLines()[codeLineIndex]._vasm.size()) - 1;
+        if(condition._isLogical) Compiler::emitVcpuAsm("%JumpFalse", "", false, codeLineIndex);
+        Compiler::getWhileWendDataStack().top()._isLogical = condition._isLogical;
 
         return true;
     }
@@ -1348,7 +1364,7 @@ namespace Keywords
         // Branch if condition false to instruction after WEND
         Compiler::setNextInternalLabel("_wend_" + Expression::wordToHexString(Compiler::getVasmPC()));
         Compiler::VasmLine* vasm = &Compiler::getCodeLines()[whileWendData._codeLineIndex]._vasm[whileWendData._jmpIndex];
-        if(Compiler::getUsingLogicalOperator())
+        if(whileWendData._isLogical)
         {
             vasm->_code = "JumpFalse" + std::string(OPCODE_TRUNC_SIZE - (sizeof("JumpFalse")-1), ' ') + Compiler::getNextInternalLabel() + " " + std::to_string(Compiler::incJumpFalseUniqueId());
         }
@@ -1380,12 +1396,12 @@ namespace Keywords
         Compiler::getRepeatUntilDataStack().pop();
 
         // Condition
-        int16_t condition = 0;
+        Expression::Numeric condition;
         std::string conditionToken = codeLine._code.substr(foundPos);
         parseExpression(codeLine, codeLineIndex, conditionToken, condition);
 
         // Branch if condition false to instruction after REPEAT
-        if(Compiler::getUsingLogicalOperator())
+        if(condition._isLogical)
         {
             Compiler::emitVcpuAsm("%JumpFalse", repeatUntilData._labelName + " " + std::to_string(Compiler::incJumpFalseUniqueId()), false, codeLineIndex);
         }

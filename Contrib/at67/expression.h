@@ -12,13 +12,17 @@ namespace Expression
 
     struct Numeric
     {
-        Numeric() {_value = 0; _index = -1; _isValid = false; _isAddress = false; _varName="";}
-        Numeric(int16_t value, int16_t index, bool isValid, bool isAddress, std::string& varName) {_value = value; _index = index; _isValid = isValid; _isAddress = isAddress; _varName = varName;}
+        Numeric() {_value = 0; _index = -1; _isValid = false; _isAddress = false; _isLogical = false; _varName="";}
+        Numeric(int16_t value, int16_t index, bool isValid, bool isAddress, bool isLogical, std::string& varName)
+        {
+            _value = value; _index = index; _isValid = isValid; _isAddress = isAddress; _isLogical = isLogical; _varName = varName;
+        }
 
         int16_t _value = 0;
         int16_t _index = -1;
         bool _isValid = false;
         bool _isAddress = false;
+        bool _isLogical = false;
         std::string _varName;
     };
 
@@ -84,7 +88,7 @@ namespace Expression
 
     bool number(int16_t& value);
     Numeric expression(void);
-    bool parse(const std::string& expression, int lineNumber, int16_t& value);
+    bool parse(const std::string& expression, int lineNumber, Numeric& numeric);
 }
 
 #endif
