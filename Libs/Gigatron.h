@@ -26,6 +26,7 @@ enum {
 
 #define frameCount              (*(volatile byte*)0x000e)
 #define serialRaw               (*(volatile byte*)0x000f)
+#define buttonState             (*(volatile byte*)0x0011)
 #define vAC                     (*(word*)0x0018)
 #define romType                 (*(byte*)0x0021)
 #define sysFn                   (*(word*)0x0022)

@@ -50,7 +50,7 @@ int main(void)
     PutChar(' ');               // Remove cursor
     ScreenPos -= 6;             // Go back
 
-    switch (c) {                // Handle arrow keys
+    switch (buttonState) {      // Handle arrow keys
     case buttonLeft:  ScreenPos -=     1; break;
     case buttonRight: ScreenPos +=     1; break;
     case buttonUp:    ScreenPos -= 0x100; break;
