@@ -6,7 +6,7 @@
 
 #include "cpu.h"
 #include "image.h"
-#include "inih/INIReader.h"
+#include "graphics.h"
 
 
 namespace Image
@@ -625,5 +625,16 @@ namespace Image
         }
 
         return true;
+    }
+
+
+    void handleImageInput(void)
+    {
+    }
+
+    void process(void)
+    {
+        handleImageInput();
+        Graphics::render(true);
     }
 }

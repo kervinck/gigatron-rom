@@ -168,7 +168,7 @@ namespace Compiler
         int _codeLineIndex;
     };
 
-    struct DoUntilData
+    struct RepeatUntilData
     {
         std::string _labelName;
         int _codeLineIndex;
@@ -217,7 +217,7 @@ namespace Compiler
     std::stack<ElseIfData>& getElseIfDataStack(void);
     std::stack<EndIfData>& getEndIfDataStack(void);
     std::stack<WhileWendData>& getWhileWendDataStack(void);
-    std::stack<DoUntilData>& getDoUntilDataStack(void);
+    std::stack<RepeatUntilData>& getRepeatUntilDataStack(void);
 
     bool initialise(void);
     bool initialiseMacros(void);

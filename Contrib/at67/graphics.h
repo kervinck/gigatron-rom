@@ -95,7 +95,6 @@ namespace Graphics
     void renderText(void);
     void renderTextWindow(void);
     void render(bool synchronise=true);
-    void renderTerminal(bool synchronise=true);
 
     void drawLineGiga(int x0, int y0, int x1, int y1);
     void drawLineGiga(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint8_t colour);

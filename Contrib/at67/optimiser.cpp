@@ -14,7 +14,8 @@
 
 namespace Optimiser
 {
-    enum OptimiseTypes {StwLdwPair=0, StwLdPair, StwPair, StwPairReg, ExtraStw, ExtraLdw, StwLdwAddw, StwLdwAddwVar, StwLdwAndw, StwLdwAndwVar, StwLdwXorw, StwLdwXorwVar, StwLdwOrw, StwLdwOrwVar, AddiZero, SubiZero, NumOptimiseTypes};
+    enum OptimiseTypes {StwLdwPair=0, StwLdPair, StwPair, StwPairReg, ExtraStw, ExtraLdw, StwLdwAddw, StwLdwAddwVar,
+                        StwLdwAndw, StwLdwAndwVar, StwLdwXorw, StwLdwXorwVar, StwLdwOrw, StwLdwOrwVar, AddiZero, SubiZero, NumOptimiseTypes};
 
     struct MatchSequence
     {
@@ -50,7 +51,7 @@ namespace Optimiser
     }
 
 
-    // Migrate internal label for an instruction that has been deleted, (use it before the instuction is deleted)
+    // Migrate internal label for an instruction that has been deleted, (use this function before the instruction is deleted)
     bool migrateInternalLabel(int index, int oldLine, int newLine)
     {
         // If a label exists, move it to next available vasm line
@@ -67,11 +68,16 @@ namespace Optimiser
     // Adjust label addresses for any labels with addresses higher than optimised vasm instruction address
     void adjustLabelAddresses(int codeLineIndex, int vasmLineIndex, int offset)
     {
-        if(vasmLineIndex >= Compiler::getCodeLines()[codeLineIndex]._vasm.size())
+        // Loop through commented out code
+        do
         {
-            if(++codeLineIndex >= Compiler::getCodeLines().size()) return;
-            vasmLineIndex = 0;
+            if(vasmLineIndex >= Compiler::getCodeLines()[codeLineIndex]._vasm.size())
+            {
+                if(++codeLineIndex >= Compiler::getCodeLines().size()) return;
+                vasmLineIndex = 0;
+            }
         }
+        while(Compiler::getCodeLines()[codeLineIndex]._vasm.size() == 0);
 
         uint16_t optimisedAddress = Compiler::getCodeLines()[codeLineIndex]._vasm[vasmLineIndex]._address;
 
@@ -87,11 +93,16 @@ namespace Optimiser
     // Adjust vasm code addresses
     void adjustVasmAddresses(int codeLineIndex, int vasmLineIndex, int offset)
     {
-        if(vasmLineIndex >= Compiler::getCodeLines()[codeLineIndex]._vasm.size())
+        // Loop through commented out code
+        do
         {
-            if(++codeLineIndex >= Compiler::getCodeLines().size()) return;
-            vasmLineIndex = 0;
+            if(vasmLineIndex >= Compiler::getCodeLines()[codeLineIndex]._vasm.size())
+            {
+                if(++codeLineIndex >= Compiler::getCodeLines().size()) return;
+                vasmLineIndex = 0;
+            }
         }
+        while(Compiler::getCodeLines()[codeLineIndex]._vasm.size() == 0);
 
         for(int i=codeLineIndex; i<Compiler::getCodeLines().size(); i++)
         {

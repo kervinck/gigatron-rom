@@ -54,11 +54,11 @@ namespace Compiler
     std::vector<IntegerVar> _integerVars;
     std::vector<StringVar>  _stringVars;
 
-    std::stack<ForNextData>   _forNextDataStack;
-    std::stack<ElseIfData>    _elseIfDataStack;
-    std::stack<EndIfData>     _endIfDataStack;
-    std::stack<WhileWendData> _whileWendDataStack;
-    std::stack<DoUntilData>   _doUntilDataStack;
+    std::stack<ForNextData>     _forNextDataStack;
+    std::stack<ElseIfData>      _elseIfDataStack;
+    std::stack<EndIfData>       _endIfDataStack;
+    std::stack<WhileWendData>   _whileWendDataStack;
+    std::stack<RepeatUntilData> _repeatUntilDataStack;
 
     std::vector<std::string> _macroLines;
     std::map<int, MacroNameEntry> _macroNameEntries;
@@ -96,7 +96,7 @@ namespace Compiler
     std::stack<ElseIfData>& getElseIfDataStack(void) {return _elseIfDataStack;}
     std::stack<EndIfData>& getEndIfDataStack(void) {return _endIfDataStack;}
     std::stack<WhileWendData>& getWhileWendDataStack(void) {return _whileWendDataStack;}
-    std::stack<DoUntilData>& getDoUntilDataStack(void) {return _doUntilDataStack;}
+    std::stack<RepeatUntilData>& getRepeatUntilDataStack(void) {return _repeatUntilDataStack;}
 
 
     bool initialise(void)
@@ -2083,7 +2083,7 @@ namespace Compiler
             else if(Expression::strToUpper(token) == "NEXT"  ) return SingleStatementParsed;
             else if(Expression::strToUpper(token) == "WHILE" ) return SingleStatementParsed;
             else if(Expression::strToUpper(token) == "WEND"  ) return SingleStatementParsed;
-            else if(Expression::strToUpper(token) == "DO"    ) return SingleStatementParsed;
+            else if(Expression::strToUpper(token) == "REPEAT") return SingleStatementParsed;
             else if(Expression::strToUpper(token) == "UNTIL" ) return SingleStatementParsed;
             else if(Expression::strToUpper(token) == "GOTO"  ) return SingleStatementParsed;
             else if(Expression::strToUpper(token) == "GOSUB" ) return SingleStatementParsed;
@@ -2247,11 +2247,11 @@ namespace Compiler
             // ' is a shortcut for REM
             if((foundPos = _codeLines[i]._code.find_first_of('\'')) != std::string::npos  ||  Keywords::findKeyword(_codeLines[i]._code, "REM", foundPos))
             {
-                Keywords::keywordREM(_codeLines[i], 0, foundPos, result);
+                Keywords::keywordREM(_codeLines[i], i, foundPos, result);
             }
             else if(Keywords::findKeyword(_codeLines[i]._code, "LET", foundPos))
             {
-                Keywords::keywordLET(_codeLines[i], 0, foundPos - 3, result);
+                Keywords::keywordLET(_codeLines[i], i, foundPos - 3, result);
             }
         }
 
@@ -2662,7 +2662,7 @@ namespace Compiler
                 // Can only discard internal labels
                 bool foundInternal = (_equateLabels[k].find("_if_") != std::string::npos     ||  _equateLabels[k].find("_else_") != std::string::npos  ||  _equateLabels[k].find("_elseif_") != std::string::npos  ||
                                       _equateLabels[k].find("_endif_") != std::string::npos  ||  _equateLabels[k].find("_while_") != std::string::npos ||  _equateLabels[k].find("_wend_") != std::string::npos    ||
-                                      _equateLabels[k].find("_do_") != std::string::npos     ||  _equateLabels[k].find("_next_") != std::string::npos  ||  _equateLabels[k].find("_page_") != std::string::npos);
+                                      _equateLabels[k].find("_repeat_") != std::string::npos ||  _equateLabels[k].find("_next_") != std::string::npos  ||  _equateLabels[k].find("_page_") != std::string::npos);
 
                 for(int l=0; l<_output.size(); l++)
                 {
@@ -2717,11 +2717,11 @@ namespace Compiler
 
         Expression::setExprFunc(expression);
 
-        while(!_forNextDataStack.empty())   _forNextDataStack.pop();
-        while(!_elseIfDataStack.empty())    _elseIfDataStack.pop();
-        while(!_endIfDataStack.empty())     _endIfDataStack.pop();
-        while(!_whileWendDataStack.empty()) _whileWendDataStack.pop();
-        while(!_doUntilDataStack.empty())   _doUntilDataStack.pop();
+        while(!_forNextDataStack.empty())     _forNextDataStack.pop();
+        while(!_elseIfDataStack.empty())      _elseIfDataStack.pop();
+        while(!_endIfDataStack.empty())       _endIfDataStack.pop();
+        while(!_whileWendDataStack.empty())   _whileWendDataStack.pop();
+        while(!_repeatUntilDataStack.empty()) _repeatUntilDataStack.pop();
     }
 
     bool compile(const std::string& inputFilename, const std::string& outputFilename)

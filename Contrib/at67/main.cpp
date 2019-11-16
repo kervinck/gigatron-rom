@@ -97,6 +97,7 @@ int main(int argc, char* argv[])
 
             case Editor::Image:
             {
+                Image::process();
             }
             break;
 

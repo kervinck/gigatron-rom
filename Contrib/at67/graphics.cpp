@@ -1127,25 +1127,6 @@ namespace Graphics
     }
 
 
-    void renderTerminal(bool synchronise)
-    {
-        drawLeds();
-        renderText();
-        renderTextWindow();
-
-        SDL_UpdateTexture(_screenTexture, NULL, _pixels, SCREEN_WIDTH * sizeof uint32_t);
-        SDL_RenderCopy(_renderer, _screenTexture, NULL, NULL);
-        renderHelpScreen();
-        SDL_RenderPresent(_renderer);
-        if(synchronise) Timing::synchronise();
-    }
-
-
-    void renderPixelEditor(void)
-    {
-    }
-
-
     void drawPixel(uint8_t x, uint8_t y, uint32_t colour)
     {
         x = x % GIGA_WIDTH;

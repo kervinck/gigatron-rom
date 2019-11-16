@@ -337,14 +337,14 @@ namespace Validater
         }
 
         // Check DO UNTIL blocks
-        while(!Compiler::getDoUntilDataStack().empty())
+        while(!Compiler::getRepeatUntilDataStack().empty())
         {
             success = false;
-            Compiler::DoUntilData doUntilData = Compiler::getDoUntilDataStack().top();
-            int codeLineIndex = doUntilData._codeLineIndex;
+            Compiler::RepeatUntilData repeatUntilData = Compiler::getRepeatUntilDataStack().top();
+            int codeLineIndex = repeatUntilData._codeLineIndex;
             std::string code = Compiler::getCodeLines()[codeLineIndex]._code;
             fprintf(stderr, "Compiler::checkStatementBlocks() : Syntax error, missing UNTIL statement, for '%s' on line %d\n", code.c_str(), codeLineIndex + 1);
-            Compiler::getDoUntilDataStack().pop();
+            Compiler::getRepeatUntilDataStack().pop();
         }
 
         return success;

@@ -77,6 +77,8 @@ namespace Image
     bool convertRGBA8toRGB2(const std::vector<uint8_t>& src, std::vector<uint8_t>& dst, int width, int height, uint8_t imageOrigin);
     bool ditherRGB8toRGB2(std::vector<uint8_t>& src, std::vector<uint8_t>& dst, int width, int height, uint8_t imageOrigin);
     bool ditherRGBA8toRGB2(std::vector<uint8_t>& src, std::vector<uint8_t>& dst, int width, int height, uint8_t imageOrigin);
+
+    void process(void);
 }
 
 #endif

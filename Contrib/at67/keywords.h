@@ -55,7 +55,7 @@ namespace Keywords
     bool keywordENDIF(Compiler::CodeLine& codeLine,  int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordWHILE(Compiler::CodeLine& codeLine,  int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordWEND(Compiler::CodeLine& codeLine,   int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool keywordDO(Compiler::CodeLine& codeLine,     int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
+    bool keywordREPEAT(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordUNTIL(Compiler::CodeLine& codeLine,  int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordDIM(Compiler::CodeLine& codeLine,    int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordDEF(Compiler::CodeLine& codeLine,    int codeLineIndex, size_t foundPos, KeywordFuncResult& result);

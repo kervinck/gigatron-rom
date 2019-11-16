@@ -13,9 +13,6 @@
 #include "timing.h"
 #include "image.h"
 #include "graphics.h"
-#include "expression.h"
-#include "assembler.h"
-#include "inih/INIReader.h"
 
 
 #define MAX_TERM_COLS   80
@@ -601,6 +598,6 @@ namespace Terminal
     void process(void)
     {
         handleTerminalInput();
-        Graphics::renderTerminal(true);
+        Graphics::render(true);
     }
 }

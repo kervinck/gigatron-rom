@@ -38,7 +38,7 @@ namespace Keywords
         _keywords["ENDIF" ] = {0, "ENDIF",  keywordENDIF };
         _keywords["WHILE" ] = {0, "WHILE",  keywordWHILE };
         _keywords["WEND"  ] = {0, "WEND",   keywordWEND  };
-        _keywords["DO"    ] = {0, "DO",     keywordDO    };
+        _keywords["REPEAT"] = {0, "REPEAT", keywordREPEAT};
         _keywords["UNTIL" ] = {0, "UNTIL",  keywordUNTIL };
         _keywords["DIM"   ] = {1, "DIM",    keywordDIM   };
         _keywords["DEF"   ] = {0, "DEF",    keywordDEF   };
@@ -148,7 +148,7 @@ namespace Keywords
         size_t rem;
         std::string expr = codeLine._expression;
         Expression::strToUpper(expr);
-        if((rem = expr.find("REM")) != std::string::npos)
+        if((rem = expr.find("REM")) != std::string::npos  ||  (rem = expr.find("'")) != std::string::npos)
         {
             codeLine._expression.erase(rem, codeLine._expression.size() - rem);
         }
@@ -158,7 +158,7 @@ namespace Keywords
         {
             std::string str = codeLine._tokens[i];
             Expression::strToUpper(str);
-            if(str.find("REM") != std::string::npos)
+            if(str.find("REM") != std::string::npos  ||  str.find("'") != std::string::npos)
             {
                 codeLine._tokens.erase(codeLine._tokens.begin() + i, codeLine._tokens.end());
                 break;
@@ -172,6 +172,25 @@ namespace Keywords
     {
         // Remove LET from code
         codeLine._code.erase(foundPos, 3);
+
+        size_t let;
+        std::string expr = codeLine._expression;
+        Expression::strToUpper(expr);
+        if((let = expr.find("LET")) != std::string::npos)
+        {
+            codeLine._expression.erase(let, 3);
+        }
+
+        for(int i=0; i<codeLine._tokens.size(); i++)
+        {
+            std::string str = codeLine._tokens[i];
+            Expression::strToUpper(str);
+            if((let = expr.find("LET")) != std::string::npos)
+            {
+                codeLine._tokens[i].erase(let, 3);
+                break;
+            }
+        }
 
         return true;
     }
@@ -1341,38 +1360,38 @@ namespace Keywords
         return true;
     }
 
-    bool keywordDO(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordREPEAT(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        Compiler::setNextInternalLabel("_do_" + Expression::wordToHexString(Compiler::getVasmPC()));
-        Compiler::getDoUntilDataStack().push({Compiler::getNextInternalLabel(), codeLineIndex});
+        Compiler::setNextInternalLabel("_repeat_" + Expression::wordToHexString(Compiler::getVasmPC()));
+        Compiler::getRepeatUntilDataStack().push({Compiler::getNextInternalLabel(), codeLineIndex});
 
         return true;
     }
 
     bool keywordUNTIL(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        // Pop stack for this DO loop
-        if(Compiler::getDoUntilDataStack().empty())
+        // Pop stack for this REPEAT loop
+        if(Compiler::getRepeatUntilDataStack().empty())
         {
-            fprintf(stderr, "Compiler::keywordUNTIL() : Syntax error, missing DO statement, for '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Compiler::keywordUNTIL() : Syntax error, missing REPEAT statement, for '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
-        Compiler::DoUntilData doUntilData = Compiler::getDoUntilDataStack().top();
-        Compiler::getDoUntilDataStack().pop();
+        Compiler::RepeatUntilData repeatUntilData = Compiler::getRepeatUntilDataStack().top();
+        Compiler::getRepeatUntilDataStack().pop();
 
         // Condition
         int16_t condition = 0;
         std::string conditionToken = codeLine._code.substr(foundPos);
         parseExpression(codeLine, codeLineIndex, conditionToken, condition);
 
-        // Branch if condition false to instruction after DO
+        // Branch if condition false to instruction after REPEAT
         if(Compiler::getUsingLogicalOperator())
         {
-            Compiler::emitVcpuAsm("%JumpFalse", doUntilData._labelName + " " + std::to_string(Compiler::incJumpFalseUniqueId()), false, codeLineIndex);
+            Compiler::emitVcpuAsm("%JumpFalse", repeatUntilData._labelName + " " + std::to_string(Compiler::incJumpFalseUniqueId()), false, codeLineIndex);
         }
         else
         {
-            addLabelToJump(Compiler::getCodeLines()[codeLineIndex]._vasm, doUntilData._labelName + " " + std::to_string(Compiler::incJumpFalseUniqueId()));
+            addLabelToJump(Compiler::getCodeLines()[codeLineIndex]._vasm, repeatUntilData._labelName + " " + std::to_string(Compiler::incJumpFalseUniqueId()));
         }
 
         return true;
