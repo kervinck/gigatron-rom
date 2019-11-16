@@ -6,33 +6,28 @@
  +----------------------------------------------------------------------*/
 
 // Standard includes
-#include <limits.h>
 #include <stdio.h>
 
 // System include
 #include <Gigatron.h>
 
 /*----------------------------------------------------------------------+
- |      Declarations                                                    |
+ |      Definitions                                                     |
  +----------------------------------------------------------------------*/
 
-void setPhase(int phase);
+#define screenWidth 160
+#define screenHeight 120
+#define horizonY 32
+
+char title[] = "C on Gigatron TTL";
 
 /*----------------------------------------------------------------------+
  |      Main                                                            |
  +----------------------------------------------------------------------*/
 
-char title[] = "C on Gigatron TTL";
-
-#define horizonY 32
-
-#define screenWidth 160
-#define screenHeight 120
-
 int main(void)
 {
   int y, x, i, j;
-  byte *p;
 
   /*
    *  Compiled C code is still too slow for mode 1
