@@ -31,10 +31,7 @@ char title[] = "C on Gigatron TTL";
 int main(void)
 {
   int y, x, i, j, v = 8;
-
-  // Compiled C code from LCC is still too slow for mode 1
-  if (romType >= romTypeValue_ROMv2)
-    SetMode_v2(2);
+  byte *p, *q = &videoTable[240];
 
   #define makeEven(v) (((v) + 1) & ~1) // Odd pitches give jagged edges?
   #define calcPitch(y) makeEven((y) + maxPitch - screenHeight + 1)
@@ -50,7 +47,7 @@ int main(void)
         i = pitch - 1;
       screenMemory[y][x] = (i+i >= pitch) ? color1^j : color2^j;
     }
-    videoTop_DEVROM = y+y; // Safe no-op on ROMs without videoTop
+    videoTop_DEVROM = y+y;      // Safe no-op on ROMs without videoTop
   }
 
   // Write title centered in the sky
@@ -58,23 +55,23 @@ int main(void)
   x = screenWidth - (sizeof title - 1) * 6;
   ScreenPos = (int) &screenMemory[y/2][x/2];
   puts(title);
-  videoTop_DEVROM = 0; // Show all
+  videoTop_DEVROM = 0;          // Show all
 
   // Interactive animation
   for (x=0; ; x+=v) {
-    i = x & 255; // Phase i
+    i = x & 255;                // Phase i
 
     // Calculate horizontal shift j at horizon
     for (y=0,j=0; y<calcPitch(horizonY); y++)
       j += i;
 
     // Quickly update videoTable, in steps of 2 pixel lines for more speed
-    y = horizonY*2+1;
+    p = &videoTable[horizonY*2+1];
     i += i;
-    BusyWait(1); // Synchronize with vertical blank
-    for (; y<screenHeight*2; y+=4) {
-      videoTable[y] = j >> 8;   // LCC nicely emits LD vAC+1 for the shift
-      j = i + (j & 255);        // Fasted operand order for LCC...
+    BusyWait(1);                // Synchronize with vertical blank
+    for (; p<q; p+=4) {
+      *p = j >> 8;              // LCC nicely emits LD vAC+1 for the shift
+      j = i + (j & 255);        // Faster operand order for LCC...
     }
 
     // Change speed by game controller or keys
