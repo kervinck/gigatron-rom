@@ -1327,13 +1327,14 @@ namespace Keywords
     bool keywordWHILE(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
         Compiler::setNextInternalLabel("_while_" + Expression::wordToHexString(Compiler::getVasmPC()));
-        Compiler::getWhileWendDataStack().push({int(Compiler::getCodeLines()[codeLineIndex]._vasm.size()) - 1, Compiler::getNextInternalLabel(), codeLineIndex, false});
+        Compiler::getWhileWendDataStack().push({0, Compiler::getNextInternalLabel(), codeLineIndex, false});
 
         // Condition
         Expression::Numeric condition;
         std::string conditionToken = codeLine._code.substr(foundPos);
         parseExpression(codeLine, codeLineIndex, conditionToken, condition);
         if(condition._isLogical) Compiler::emitVcpuAsm("%JumpFalse", "", false, codeLineIndex);
+        Compiler::getWhileWendDataStack().top()._jmpIndex = int(Compiler::getCodeLines()[codeLineIndex]._vasm.size()) - 1;
         Compiler::getWhileWendDataStack().top()._isLogical = condition._isLogical;
 
         return true;
