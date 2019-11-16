@@ -441,7 +441,7 @@ _GoBack=*
   <Pos, 6- [if>=0 <Pos. 0]
   2-- %0= Next!
 
- ##__EMIT                       {Link}
+  ##__EMIT                      {Link}
 
 {-----------------------------------------------------------------------+
 |       KEY ( -- c ) Wait for key stroke                                |
@@ -726,9 +726,11 @@ _IN=*
 |       EXPECT ( addr n -- ) Let user edit line in buffer of size n     |
 +-----------------------------------------------------------------------}
 
-{ TODO Extra characters will be ignored, and not echoed }
-{ Delete at start of line simple clears the entire input }
-{ TODO Ring bell when delete gives error, or when buffer full }
+{
+  Line edditing with delete capability within the same terminal line.
+  Delete at beginning of a non-first line restarts the line entry completely.
+  Prevents buffer overflow and replaces final newline with a zero byte.
+}
 
 __EXPECT=*
   #@_EXPECT `EXPECT             {Name}
