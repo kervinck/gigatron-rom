@@ -44,9 +44,15 @@ gcl0x
 }
 
 {-----------------------------------------------------------------------+
-|       Setup                                                           |
+|                       RAM page 2                                      |
 +-----------------------------------------------------------------------}
 *=$200
+
+{-----------------------------------------------------------------------+
+|                                                                       |
+|       Inner or address interpreter                                    |
+|                                                                       |
++-----------------------------------------------------------------------}
 
 _COLD=*
 
@@ -71,41 +77,37 @@ _COLD=*
 
   0 RSP=                        {Clear return stack: top of memory}
 
-  DoColon!                      {The rest is hand compiled Forth}
-  ##_HELLO
-  ##_ABORT                      {Doesn't return}
-
 {-----------------------------------------------------------------------+
 |       ABORT                                                           |
 +-----------------------------------------------------------------------}
 
 _ABORT=*
   0 \vSP.                       {Clear data stack: top of page 0}
-  DoColon!
+  DoColon!                      {The rest is hand compiled Forth}
+  ##_HELLO
   ##_Lit ##_FreeMem             {Select vocabulary}
   ##_CP ##_Doke
+  ##_WORDS
   ##_QUIT                       {Doesn't return}
 
 {-----------------------------------------------------------------------+
 |       QUIT                                                            |
 +-----------------------------------------------------------------------}
 
+{ QUIT embeds the outer or text interpreter, a.k.a. INTERPRET }
+
 _QUIT=*
   DoColon!
   ##_Zero ##_RspStore           {Clear return stack: top of memory}
+_quit1=*
   ##_CR
-  ##_TEST
-
-{-----------------------------------------------------------------------+
-|       "INTERPRET"                                                     |
-+-----------------------------------------------------------------------}
-
-_Loop=*
-  ##_Byte #127 ##_Cursor        {Show cursor}
-  ##_KEY                        {Wait for key}
-  ##_Byte #32 ##_Cursor         {Hide cursor}
-  ##_EMIT                       {Echo character}
-  ##_Jump ##_Loop               {Loop forever}
+  ##_Byte `O ##_EMIT            {'Ok' prompt}
+  ##_Byte `k ##_EMIT
+  ##_Byte `> ##_EMIT
+  ##_Byte #32 ##_EMIT
+  ##_QUERY                      {Let user type something}
+  ##_DUMMY                      {Dummy interpreter just echoes}
+  ##_Jump ##_quit1
 
 {-----------------------------------------------------------------------+
 |       Execution tokens not in dictionary                              |
@@ -128,12 +130,6 @@ _Byte=*
   IP 3+ IP=                     {Skip operand as well}
   deek call                     {Same as Next}
 
-_PeekZp=*
-  IP 2+ peek                    {Fetch immediate byte}
-  peek 2-- %0=                  {Peek and put on stack}
-  IP 3+ IP=                     {Skip operand}
-  deek call                     {Same as Next}
-
 _RspStore=*
   %0 2++ RSP=                   {Set Return Stack Pointer}
   Next!
@@ -146,8 +142,7 @@ _Escape=*                       {Eacape into vCPU}
 
 _Cursor=*                       {Emit character and move back position}
   DoColon!
-  ##_EMIT
-  ##_GoBack
+  ##_EMIT ##_GoBack ##_DROP
   ##_Exit
 
 _Jump=*
@@ -160,11 +155,6 @@ _JumpEq=*
    else IP 4+]                  {Address after operand}
   IP= deek call                 {Same as Next}
 
-{-----------------------------------------------------------------------+
-|                       RAM page 3                                      |
-+-----------------------------------------------------------------------}
-*=$300
-
 _JumpNe=*
   %0 2++                        {Pop condition}
   [if<>0 IP 2+ deek             {Address in operand}
@@ -172,10 +162,19 @@ _JumpNe=*
   IP= deek call                 {Same as Next}
 
 {-----------------------------------------------------------------------+
+|                       RAM page 3                                      |
++-----------------------------------------------------------------------}
+*=$300
+
+{-----------------------------------------------------------------------+
+|                                                                       |
 |       Dictionary                                                      |
+|                                                                       |
 +-----------------------------------------------------------------------}
 
 {
+    From this point on, everything is part of the dictionary
+
                         |                       |
             FreeMem --> |                       |               High memory
                         +-----------------------+
@@ -208,12 +207,22 @@ _JumpNe=*
                         | Primitives            |               Low memory
                         |                       |
 
+    Naming convention for word labels:
+
+        _ALLCAPS        Standard Forth words listed as `ALLCAPS' in dictionary
+        _MixedCase      1. Internal word not in the dictionary, or
+                        2. Forth word with special chars (eg. _Add1 for 1+), or
+                        3. Gigatron-specific words in dictionary
+        _someword1..n   Internal labels for SOMEWORD/SomeWord implementation
+        __SomeWord      Internal label for linking dictionary items
 }
 
   ##0                           {Null}
 
 {-----------------------------------------------------------------------+
+|                                                                       |
 |       Constants words                                                 |
+|                                                                       |
 +-----------------------------------------------------------------------}
 
 __Zero=*
@@ -229,7 +238,9 @@ _One=*
   ##__One                       {Link}
 
 {-----------------------------------------------------------------------+
+|                                                                       |
 |       Memory words                                                    |
+|                                                                       |
 +-----------------------------------------------------------------------}
 
 __Deek=*
@@ -250,8 +261,16 @@ _Peek=*
   %0 peek %0= Next!
   ##__Peek                      {Link}
 
+__Poke=*
+  #@_Poke `C!                   {Name}
+_Poke=*
+  %0 W= %2 W. 4++ Next!
+  ##__Poke                      {Link}
+
 {-----------------------------------------------------------------------+
+|                                                                       |
 |       Operator words                                                  |
+|                                                                       |
 +-----------------------------------------------------------------------}
 
 __Add=*
@@ -279,7 +298,9 @@ _OR=*
   ##__OR                        {Link}
 
 {-----------------------------------------------------------------------+
+|                                                                       |
 |       Data stack words                                                |
+|                                                                       |
 +-----------------------------------------------------------------------}
 
 __DROP=*
@@ -317,6 +338,12 @@ _ROT=*
   ##__ROT                       {Link}
 
 {-----------------------------------------------------------------------+
+|                                                                       |
+|       Video terminal words                                            |
+|                                                                       |
++-----------------------------------------------------------------------}
+
+{-----------------------------------------------------------------------+
 |       CR ( -- ) Newline                                               |
 +-----------------------------------------------------------------------}
 
@@ -332,7 +359,7 @@ _CR=*
 
   { Clear the text row }
 
-  0 \sysArgs0:                  {Set all black}
+  $10 \sysArgs0. \sysArgs1.     {Both colors DarkBlue}
   Pos 2- \sysArgs4:             {Set drawing position for clearing}
   \SYS_VDrawBits_134 _sysFn=    {Prepare SYS calls}
   [do
@@ -360,13 +387,15 @@ _CR=*
 |       EMIT ( c -- ) Emit ASCII to video terminal                      |
 +-----------------------------------------------------------------------}
 
+{ XXX Doesn't do backspace }
+{ XXX Doesn't do bell }
+
 __EMIT=*
   #@_EMIT `EMIT                 {Name}
 _EMIT=*
 
-  %0
-  10^ [if<>0 <Pos, 155- if>0 0] {Test for CR or line wrap}
-
+  %0 10^ [if<>0                 {Test for explicit CR}
+           <Pos, 155- if>0 0]   {Or implicit line wrap}
   [if=0
     DoColon! ##_CR              {Move to next line}
     ##_Escape]                  {Continue in vCPU}
@@ -385,9 +414,8 @@ _EMIT=*
     j+ j=                       {Add to page address to reach bitmap data}
 
     \SYS_VDrawBits_134 _sysFn=  {Prepare SYS calls}
-    $800 \sysArgs0:             {Green on black}
+    $c10 \sysArgs0:             {LightGreen on DarkBlue}
     Pos \sysArgs4:              {Screen position for character}
-    W=                          {Hack! Remember position off stack for _GoBack}
     6+ Pos=                     {Advance by 6 pixels}
 
     5 [do i=                    {Draw character as 5 vertical bit slices}
@@ -398,8 +426,20 @@ _EMIT=*
   ]
   Next!
 
+{-----------------------------------------------------------------------+
+|                       RAM page 5                                      |
++-----------------------------------------------------------------------}
+*=$500
+
+{-----------------------------------------------------------------------+
+|       GoBack ( -- r ) Step character back on line if possible         |
++-----------------------------------------------------------------------}
+
+{ Returns 0 on success }
+
 _GoBack=*
-  W Pos= Next!                  {Hack! Only works immediately after EMIT}
+  <Pos, 6- [if>=0 <Pos. 0]
+  2-- %0= Next!
 
   ##__EMIT                      {Link}
 
@@ -410,19 +450,14 @@ _GoBack=*
 __KEY=*
   #@_KEY `KEY                   {Name}
 _KEY=*
-  DoColon!
-  ##_PeekZp #\serialRaw         {Reference}
-_key1=*
-  ##_PeekZp #\serialRaw         {Probe}
-  ##_SWAP ##_OVER ##_Sub        {Compare with reference}
-  ##_JumpEq ##_key1             {Loop if not changed}
-  ##_DUP ##_Byte #128 ##_AND    {Check high bit}
-  ##_JumpNe ##_key1             {Loop if keyboard idle}
-  ##_Exit
-{-----------------------------------------------------------------------+
-|                       RAM page 5                                      |
-+-----------------------------------------------------------------------}
-*=$500
+  \serialRaw, W=                {Reference}
+  2--                           {Make space on stack}
+  [do
+    \serialRaw, %0= W^          {Probe and compare with reference}
+    if=0loop                    {Loop if not changed}
+    %0 W= 128&                  {Check high bit}
+    if<>0loop]                  {Loop if no ASCII or keyboard idle}
+  Next!
   ##__KEY                       {Link}
 
 {-----------------------------------------------------------------------+
@@ -460,6 +495,8 @@ _Sub1=*
 |       MINUS ( n -- -n ) Change sign                                   |
 +-----------------------------------------------------------------------}
 
+{ Later Forths call this `NEGATE' }
+
 __MINUS=*
   #@_MINUS `MINUS               {Name}
 _MINUS=*
@@ -467,7 +504,9 @@ _MINUS=*
   ##__MINUS                     {Link}
 
 {-----------------------------------------------------------------------+
+|                                                                       |
 |       Return Stack words                                              |
+|                                                                       |
 +-----------------------------------------------------------------------}
 
 {-----------------------------------------------------------------------+
@@ -508,7 +547,7 @@ __SPACE=*
   #@_SPACE `SPACE               {Name}
 _SPACE=*
   DoColon!
-  ##_Byte #32 ##__EMIT
+  ##_Byte #32 ##_EMIT
   ##_Exit
   ##__SPACE                     {Link}
 
@@ -535,6 +574,12 @@ _dot1=*
   ##_DROP ##_DROP
   ##_Exit
 
+{-----------------------------------------------------------------------+
+|                       RAM page 6                                      |
++-----------------------------------------------------------------------}
+*=$600
+
+{ Helper for _Dot }
 _Digit=*                        { n z r -- n-d*r z+d }
   DoColon!
   ##_ToR                        { n 0           | r }
@@ -557,10 +602,6 @@ _digit3=*
   ##_EMIT                       { m }
   ##_Byte #$30                  { m 0 }
   ##_Exit
-{-----------------------------------------------------------------------+
-|                       RAM page 6                                      |
-+-----------------------------------------------------------------------}
-*=$600
   ##__Dot                       {Link}
 
 {-----------------------------------------------------------------------+
@@ -579,6 +620,7 @@ _HELLO=*
   ##_Byte `h ##_EMIT
   ##_Byte `7 ##_EMIT
   ##_Byte `4 ##_EMIT
+  ##_CR
   ##_Exit
   ##__HELLO                     {Link}
 
@@ -626,6 +668,12 @@ _HERE=*
   ##__HERE                      {Link}
 
 {-----------------------------------------------------------------------+
+|                                                                       |
+|       Text interpreter words                                          |
+|                                                                       |
++-----------------------------------------------------------------------}
+
+{-----------------------------------------------------------------------+
 |       WORDS ( -- ) Print names in dictionary                          |
 +-----------------------------------------------------------------------}
 
@@ -649,18 +697,126 @@ _words2=*
   ##__WORDS                     {Link}
 
 {-----------------------------------------------------------------------+
-|       TEST ( -- ) Program under test                                  |
+|       TIB (variable) Address of terminal input buffer                 |
 +-----------------------------------------------------------------------}
 
-__TEST=*
-  #@_TEST `TEST                 {Name}
-_TEST=*
-  DoColon!                      { : TEST -12345 . CR ; }
-  ##_Lit ##-12345
-  ##_Dot ##_CR
-  ##_WORDS
+__TIB=*
+  #@_TIB `TIB                   {Name}
+_TIB=*
+  DoVar!
+  ##\userVars2                  {Default in zero page}
+  ##__TIB                       {Link}
+
+{-----------------------------------------------------------------------+
+|       IN (variable) Input character counter                           |
++-----------------------------------------------------------------------}
+
+__IN=*
+  #@_IN `IN                     {Name}
+_IN=*
+  DoVar!
+  ##0
+{-----------------------------------------------------------------------+
+|                       RAM page 8                                      |
++-----------------------------------------------------------------------}
+*=$8a0
+  ##__IN                        {Link}
+
+{-----------------------------------------------------------------------+
+|       EXPECT ( addr n -- ) Let user edit line in buffer of size n     |
++-----------------------------------------------------------------------}
+
+{
+  Line edditing with delete capability within the same terminal line.
+  Delete at beginning of a non-first line restarts the line entry completely.
+  Prevents buffer overflow and replaces final newline with a zero byte.
+}
+
+__EXPECT=*
+  #@_EXPECT `EXPECT             {Name}
+_EXPECT=*
+  DoColon!
+  ##_OVER ##_Add ##_Sub1        {End of buffer}
+  ##_ToR                        {Place it on return stack}
+  ##_DUP                        {Active buffer pointer on top of stack}
+_expect1=*
+  ##_Byte #127 ##_Cursor        {Show cursor}
+  ##_KEY                        {Wait for key}
+  ##_Byte #32 ##_Cursor         {Hide cursor}
+
+  ##_DUP ##_Byte #127 ##_Sub    {Test for DEL}
+  ##_JumpNe ##_expect2
+  ##_DROP
+  ##_OVER ##_OVER ##_Sub        {Ignore DEL at start of buffer}
+  ##_JumpEq ##_expect1
+  ##_Sub1
+  ##_GoBack
+  ##_JumpEq ##_expect1          {Continue if DEL ok}
+  ##_Byte `? ##_EMIT ##_CR      {Display error indicator}
+  ##_DROP ##_DUP                {Clear buffer}
+  ##_Jump ##_expect1
+
+{-----------------------------------------------------------------------+
+|                       RAM page 9                                      |
++-----------------------------------------------------------------------}
+*=$9a0
+
+_expect2=*
+  ##_DUP ##_Byte #10 ##_Sub     {Test for '\n'}
+  ##_JumpEq ##_expect3
+  ##_OVER ##_R ##_Sub           {Test for buffer space}
+  ##_JumpNe ##_expect4
+  ##_DROP ##_Jump ##_expect1    {Ignore if buffer full}
+_expect4=*
+  ##_DUP ##_EMIT                {Echo character if all good}
+  ##_OVER ##_Poke               {And store in buffer}
+  ##_Add1                       {Advance buffer pointer}
+  ##_Jump ##_expect1
+_expect3=*
+  ##_EMIT                       {Emit and drop '\n'}
+  ##_Zero ##_SWAP ##_Poke       {Replace '\n' with '\0' terminator}
+  ##_DROP ##_FromR ##_DROP
   ##_Exit
-  ##__TEST                      {Link}
+  ##__EXPECT                    {Link}
+
+{-----------------------------------------------------------------------+
+|       QUERY ( -- ) Input 80 chars of text from video terminal         |
++-----------------------------------------------------------------------}
+
+__QUERY=*
+  #@_QUERY `QUERY               {Name}
+_QUERY=*
+  DoColon!
+  ##_TIB ##_Deek                {Address of input buffer}
+  ##_Byte #81 ##_EXPECT         {Get up to 80 characters plus '\0'}
+  ##_Zero ##_IN ##_Doke         {IN=0}
+  ##_Exit
+{-----------------------------------------------------------------------+
+|                       RAM page 10                                     |
++-----------------------------------------------------------------------}
+*=$aa0
+  ##__QUERY                     {Link}
+
+{-----------------------------------------------------------------------+
+|       DUMMY ( -- ) Dummy interpreter                                  |
++-----------------------------------------------------------------------}
+
+{ Simply type back the input buffer to screen }
+
+__DUMMY=*
+  #@_DUMMY `DUMMY               {Name}
+_DUMMY=*
+  DoColon!
+  ##_TIB ##_Deek
+_dummy1=*
+  ##_DUP ##_Peek
+  ##_JumpEq ##_dummy2
+  ##_DUP ##_Peek ##_EMIT
+  ##_Add1 ##_Jump ##_dummy1
+_dummy2=*
+  ##_DROP
+  ##_Exit
+  ##__DUMMY                     {Link}
 
 _FreeMem=*
 

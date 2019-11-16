@@ -16,14 +16,25 @@ typedef unsigned short word;
  |      Definitions from interface.json                                 |
  +----------------------------------------------------------------------*/
 
+enum {
+  romTypeValue_ROMv1            = 0x1c,
+  romTypeValue_ROMv2            = 0x20,
+  romTypeValue_ROMv3            = 0x28,
+  romTypeValue_ROMv4            = 0x38,
+  romTypeValue_DEVROM           = 0xf8,
+};
+
 #define frameCount              (*(volatile byte*)0x000e)
 #define serialRaw               (*(volatile byte*)0x000f)
+#define buttonState             (*(volatile byte*)0x0011)
 #define vAC                     (*(word*)0x0018)
+#define romType                 (*(byte*)0x0021)
 #define sysFn                   (*(word*)0x0022)
 #define sysArgs                 ( (byte*)0x0024)
 
 #define videoTable              ( (byte*)0x0100)
-#define screenMemory            ( (byte*)0x0800)
+#define videoTop_DEVROM         (*(byte*)0x01f9)
+#define screenMemory            ( (byte(*)[256])0x0800)
 
 #define font32up                ( (byte*)0x0700)
 #define font82up                ( (byte*)0x0800)
@@ -51,6 +62,15 @@ typedef unsigned short word;
  *  Update entropy[] and return 16 bits of it in vAC
  */
 #define SYS_Random_34           0x04a7
+
+/*
+ *  Set video mode to value in vAC
+ *       0..3   Full mode to fastest
+ *       1975   Disable video loop ("zombie mode")
+ *       -1     Enable video loop
+ *  Requires ROMv2+
+ */
+#define SYS_SetMode_v2_80       0xb00
 
 /*
  *  vReset() restarts the Gigatron and returns to the main menu
@@ -94,6 +114,7 @@ word Random(void);
 byte WaitKey(void);
 void BusyWait(int frames);
 void PutChar(int c);
+void SetMode_v2(int mode);
 
 // Not implemented and/or decided:
 void VideoScrollY(int dy);

@@ -40,8 +40,6 @@
 //      - Arduino Nano
 //      - Arduino/Genuino Micro
 //      - ATtiny85 (8 MHz)
-//
-// (not every microcontroller platform supports all functions)
 
 /*----------------------------------------------------------------------+
  |                                                                      |

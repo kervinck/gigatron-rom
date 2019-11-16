@@ -132,6 +132,7 @@ Address   Name          Description
 ....-00ff <stack>       Call and value stack for vCPU (also used by ROM loader)
 0100-01ef videoTable    Video indirection table (Y0,dX0,Y1,dX1,Y2,...,dX119)
 01f0-01f9 vReset        vCPU routine to load and start Reset sequence
+01f9      videoTop      (DEVROM) Blank top of screen. Must be even in [0..238].
 01fa      wavA[1]       Sound channel 1: Waveform modulation with `adda'
 01fb      wavX[1]       ...............: Waveform modulation with `xora'
 01fc      keyL[1]       ...............: Frequency low 7 bits (bit7 == 0)
