@@ -21,6 +21,7 @@
 #include "expression.h"
 #include "assembler.h"
 #include "compiler.h"
+#include "keywords.h"
 #include "optimiser.h"
 #include "validater.h"
 #include "linker.h"
@@ -39,6 +40,7 @@ int main(int argc, char* argv[])
     Expression::initialise();
     Assembler::initialise();
     Compiler::initialise();
+    Keywords::initialise();
     Optimiser::initialise();
     Validater::initialise();
     Linker::initialise();

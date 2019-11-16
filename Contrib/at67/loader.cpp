@@ -31,9 +31,10 @@
 #include "memory.h"
 #include "cpu.h"
 #include "loader.h"
-#include "compiler.h"
-#include "assembler.h"
 #include "expression.h"
+#include "assembler.h"
+#include "compiler.h"
+#include "keywords.h"
 
 
 #define DEFAULT_COM_BAUD_RATE 115200

@@ -26,8 +26,8 @@
 #include "image.h"
 #include "graphics.h"
 #include "terminal.h"
-#include "assembler.h"
 #include "expression.h"
+#include "assembler.h"
 #include "inih/INIReader.h"
 
 

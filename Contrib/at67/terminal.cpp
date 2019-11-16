@@ -13,8 +13,8 @@
 #include "timing.h"
 #include "image.h"
 #include "graphics.h"
-#include "assembler.h"
 #include "expression.h"
+#include "assembler.h"
 #include "inih/INIReader.h"
 
 
