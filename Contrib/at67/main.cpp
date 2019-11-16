@@ -1,8 +1,8 @@
 /*******************************************************************************/
-/* gtemuAT67 ver0.8.11                                                          */
+/* gtemuAT67 ver0.8.15                                                         */
 /*                                                                             */ 
 /* gtemuAT67 is an emulator, controller, assembler, (vCPU and Native code),    */
-/* disassembler, debugger and soon to be a BASIC compiler for the Gigatron TTL */
+/* disassembler, debugger and  BASIC compiler for the Gigatron TTL             */
 /* microcomputer. Written in C++ using SDL2 by Ari Tsironis, (see the LICENSE  */
 /* and README.md in Contrib\at67 for comprehensive documentation), this        */
 /* project provides Microsoft Windows, Linux and MacOS support.                */
@@ -21,6 +21,9 @@
 #include "expression.h"
 #include "assembler.h"
 #include "compiler.h"
+#include "optimiser.h"
+#include "validater.h"
+#include "linker.h"
 
 
 int main(int argc, char* argv[])
@@ -32,9 +35,13 @@ int main(int argc, char* argv[])
     Image::initialise();
     Graphics::initialise();
     Editor::initialise();
+    Terminal::initialise();
     Expression::initialise();
     Assembler::initialise();
     Compiler::initialise();
+    Optimiser::initialise();
+    Validater::initialise();
+    Linker::initialise();
 
     Image::TgaFile tgaFile;
     Image::GtRgbFile gtRgbFile;

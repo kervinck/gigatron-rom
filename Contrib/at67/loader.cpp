@@ -516,13 +516,11 @@ namespace Loader
 
     void openComPort(void)
     {
-        fprintf(stderr, "openComPort()\n");
         openComPort(_configComPort);
     }
 
     void closeComPort(void)
     {
-        fprintf(stderr, "closeComPort()\n");
         comClose(_currentComPort);
     }
 
@@ -615,8 +613,6 @@ namespace Loader
 
     void sendCommandToGiga(char cmd, std::string& line, bool wait)
     {
-        fprintf(stderr, "sendCommandToGiga() : 0\n");
-
         char command[2] = {cmd, '\n'};
         comWrite(_currentComPort, command, 2);
 
@@ -626,8 +622,6 @@ namespace Loader
 
     void sendCommandToGiga(char cmd, bool wait)
     {
-        fprintf(stderr, "sendCommandToGiga() : 1\n");
-
         if(!openComPort(_configComPort)) return;
 
         std::string line;
@@ -638,8 +632,6 @@ namespace Loader
 
     bool sendCommandToGiga(std::string& cmd, std::vector<std::string>& text)
     {
-        fprintf(stderr, "sendCommandToGiga() : 2\n");
-
         if(!openComPort(_configComPort)) return false;
 
         comWrite(_currentComPort, cmd.c_str(), cmd.size());
