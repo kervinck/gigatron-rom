@@ -22,7 +22,7 @@ char title[] = "C on Gigatron TTL";
 #define maxPitch (256 - screenWidth) // Aim for max possible pitch at bottom
 #define color1 White
 #define color2 LightRed
-#define maxV 64
+#define maxV 32
 
 /*----------------------------------------------------------------------+
  |      Main                                                            |
