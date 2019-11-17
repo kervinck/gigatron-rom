@@ -41,6 +41,13 @@
  "oneConst"             : "0x0080",
  "userVars2"            : "0x0081",
 
+ "v6502_PC"             : "0x001a",
+ "v6502_PCL"            : "0x001a",
+ "v6502_PCH"            : "0x001b",
+ "v6502_A"              : "0x0018",
+ "v6502_X"              : "0x002a",
+ "v6502_Y"              : "0x002b",
+
  "videoTable"           : "0x0100",
  "vReset"               : "0x01f0",
  "videoTop_DEVROM"      : "0x01f9",

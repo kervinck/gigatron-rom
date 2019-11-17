@@ -747,6 +747,7 @@ _Setup1=*
   }
   6 [do
     \sysArgs6.
+\sysArgs2.
     13 CharOut!                 {Also prepares p for character printing}
     \sysArgs6, 1- if>0loop]
 
@@ -765,7 +766,7 @@ _MainLoop=*
 
 { Main loop from the perspective of the Gigatron I/O system }
 
-_vLR=                           {Reset v6502 PC}
+_v6502_PC=                      {Reset v6502 PC}
 [do
   \SYS_Run6502_v4_80 _sysFn=
   80!!                          {Run 6502 code until BRK}
@@ -836,7 +837,7 @@ _CharOut=*
     j= i 2<< i+                 {Multiply char code by 5}
     j+                          {Add to page address to reach bitmap data}
   else                          {Anything from 132 will be rendered as Pi}
-    #\LDWI #12 #>\font82up      {Inline assembly to point to font82up+12}
+    #_LDWI #12 #>\font82up      {Inline assembly to point to font82up+12}
                                 {Combining right half of 'T' and left half of 'U'}
     {
       R         S         T   pi    U
@@ -873,7 +874,7 @@ _Newline=*
   }
 
   \sysArgs0.                    {vACL == <_Newline == 0 == Black}
- {\sysArgs2.}                   {Bit slice == sysArgs2 == v6502_IR == BRK == 0}
+  \sysArgs2.                    {Zero bit pattern}
 
   { Find the top text row }
 
@@ -929,17 +930,17 @@ _Newline=*
   Wait for next key press and return ASCII result
   Display a blinking cursor and keep TI$ updated while waiting
 }
-_WAITKEY=*      #_LDAZ_  #\serialRaw
-_WAITKEY1=*     #_STAZ_  #\TMPZP        {Reference state before change}
-_WAITKEY2=*     #_LDAZ_  #\serialRaw
-                #_CMPZ_  #\TMPZP        {Keyboard state changed?}
+_WAITKEY=*      #_LDAZ_  #_serialRaw
+_WAITKEY1=*     #_STAZ_  #_TMPZP        {Reference state before change}
+_WAITKEY2=*     #_LDAZ_  #_serialRaw
+                #_CMPZ_  #_TMPZP        {Keyboard state changed?}
                 #_BNE_   #@_WAITKEY4
 
-                #_LDAZ_  #\frameCount   {No change: handle cursor and time}
+                #_LDAZ_  #_frameCount   {No change: handle cursor and time}
                 #_ANDIM_ #$0f
                 #_BNE_   #@_WAITKEY2    {4 Hz cursor redraw rate}
 
-                #_LDAZ_  #\frameCount   {Select space or cursor symbol}
+                #_LDAZ_  #_frameCount   {Select space or cursor symbol}
                 #_ANDIM_ #$10
                 #_BNE_   #@_WAITKEY3
                 #_LDAIM_ #32            {Space}
@@ -1012,7 +1013,7 @@ _GETIN=*        #_BITZ_  #_INPUTFLG     {EDIT, INPUT or GET}
                 {
                   Immediate return in GET mode
                 }
-                #_LDAZ_  #\serialRaw
+                #_LDAZ_  #_serialRaw
                 #_CMPIM_ #255           {Map idle 255 pattern to 0}
                 #_ADCIM_ #0
 
@@ -1061,12 +1062,12 @@ _SKIPECHO=*     #_STAZ_  #_TMPZP
 *=$2c00
 
 _ISCNTC=*
-                #_LDAZ_  #\serialRaw
+                #_LDAZ_  #_serialRaw
                 #_CMPIM_ #3             {Ctrl-C}
                 #_BNE_   #@_QTICK
                 #_JMP_   ##_STOP
 _QTICK=*
-                #_LDAZ_  #\frameCount
+                #_LDAZ_  #_frameCount
                 #_CMP_   ##_TISTR3
                 #_BPL_   #@_SKIPTICK    {Postpone work as much as possible}
                 #_STYZ_  #_TMPZP        {Park Y in idle ZP variable DIMFLG}
@@ -1086,7 +1087,7 @@ _SKIPTICK=*     #_RTS_
   When running a program, there's the periodic check for Ctrl-C.
 }
 _TICK=*
-                #_LDAZ_  #\frameCount   {Actually 59.98 Hz}
+                #_LDAZ_  #_frameCount   {Actually 59.98 Hz}
                 #_TAY_                  {TAX would conflict with _k...}
                 #_SEC_
                 #_SBC_   ##_TISTR3
@@ -1171,8 +1172,8 @@ _save1=*        #_LDAAY_ ##_SaveMsg
                 #_STAZ_  #>j
                 #_LDAIM_ #<\SaveChar    {Redirect BRK}
                 #_LDYIM_ #>\SaveChar
-                #_STAZ_  #\vPCL
-                #_STYZ_  #\vPCH
+                #_STAZ_  #_vPCL
+                #_STYZ_  #_vPCH
                 #_PLA_                  {Restore parsing state}
                 #_PLP_
                 #_JMP_   ##_LIST        {Continue as LIST command}

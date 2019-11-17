@@ -112,9 +112,13 @@ Address   Name          Description
 0015      (vTicks)      Remaining interpreter ticks (=units of 2 CPU cycles)
 0016-0017 vPC           Interpreter program counter, points into RAM
 0018-0019 vAC           Interpreter accumulator, 16-bits
+0018      v6502_A       [v6502] Accumulator
+0019      (v6502_BI)    [v6502] B Input Register (used by SBC)
 001a-001b vLR           Return address, for returning after CALL
+001a-001b v6502_PC      [v6502] Program Counter
 001c      vSP           Stack pointer
-001d      (vTmp)        Scratch storage location for vCPU
+001c      (v6502_S)     [v6502] Stack Pointer (kept as "S+1")
+001d      (vTmp)        Scratch storage location for vCPU and v6502
 001e      (vReturn)     Return address (L) from vCPU into the loop (H is fixed)
 001f      (videoModeB)  ROMv2: Handler for every 2nd line (pixel burst or vCPU)
 0020      (videoModeC)  ROMv2: Handler for every 3rd line (pixel burst or vCPU)
@@ -122,6 +126,12 @@ Address   Name          Description
 0021      channelMask   Low bits set active channels (x011->4, x001->2, x000->1)
 0022-0023 sysFn         Address for SYS function call
 0024-002b sysArgs       Arguments for SYS functions
+0024      (v6502_ADL)   [v6502] Low Address Register
+0025      (v6502_ADH)   [v6502] High Address Register
+0026      v6502_IR)     [v6502] Instruction Register
+0027-0029 (v6502_P)     [v6502] Processor Status Register (V flag in bit 7)
+002a      v6502_X       [v6502] Index Register X
+002b      v6502_Y       [v6502] Index Register Y
 002c      soundTimer    Countdown timer for playing sound
 002d      (ledTimer)    Number of frames until next LED change
 002e      ledState      Current LED state machine value (branch offset)

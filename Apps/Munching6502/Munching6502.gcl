@@ -29,7 +29,7 @@ gcl0x
         #$a5 #$30               {       lda $30         }
         #$00                    {       brk             }
 
-] \vLR: { = v6502_PC }
+] _v6502_PC=
 
 { GCL notation for main loop }
 

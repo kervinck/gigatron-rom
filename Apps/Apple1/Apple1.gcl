@@ -47,19 +47,24 @@ gcl0x
 
 Zero page usage:
 $30-$31         Pos
-$32-$33         PrintChar
+$32-$33         CharOut
 $34-$3b         WozMon variables
 }
 
 _i=$3c          {2 bytes}
 _j=$3e          {2 bytes}
-_k=$3a          {1 bytes, share with wozmon YSAV}
+
+{-----------------------------------------------------------------------+
+|       Zero page data                                                  |
++-----------------------------------------------------------------------}
+
+*=$44           ##_RESET        {Sensible default argument to disassembler}
 
 {-----------------------------------------------------------------------+
 |       ROM type check                                                  |
 +-----------------------------------------------------------------------}
 
-*=\userCode
+*=$200
 
 \romType, \romTypeValue_ROMv4-  {Version check >= ROMv4, see Docs/GT1-files.txt}
 [if<0 do _frameCount _vPCH:     {https://forum.gigatron.io/viewtopic.php?f=4&t=130}
@@ -78,7 +83,7 @@ _k=$3a          {1 bytes, share with wozmon YSAV}
   Pos: <Pos++ <Pos++            {Y[y]=7+j and dX[y]=0}
   1+ 127^ if<>0loop]            {Next in range}
 
-&_PrintChar PrintChar=          {Forward reference}
+&_CharOut CharOut=              {Forward reference}
 
 &_Apple1 _vLR=                  {Prepare transfer to main loop}
 &_PRE_RESET                     {Start address for 6502 program}
@@ -151,38 +156,76 @@ _MSG=*
                   ' '.join('#$%02x'%(ord(c)+128) for c in reversed(s))
                 }
 
+*=$300
+
 {-----------------------------------------------------------------------+
-|       Main loop                                                       |
+|       WAITKEY                                                         |
 +-----------------------------------------------------------------------}
 
-*=$300
+{
+  Wait for next key press and return ASCII result
+  Display a blinking cursor while waiting
+}
+
+_WAITKEY=*      #_LDAZ_  #_serialRaw
+_WAITKEY1=*     #_TAX_                  {Reference state before change}
+_WAITKEY2=*     #_LDAZ_  #_serialRaw
+                #_CMPZ_  #_v6502_X      {Keyboard state changed? v6502's X is in memory...}
+                #_BNE_   #@_WAITKEY4
+
+                #_LDAZ_  #_frameCount   {No change: handle cursor and time}
+                #_ANDIM_ #$0f
+                #_BNE_   #@_WAITKEY2    {4 Hz cursor redraw rate}
+
+                #_LDAZ_  #_frameCount   {Select space or cursor symbol}
+                #_ANDIM_ #$30           {Flash at 1 Hz with 75% duty cycle}
+                #_BNE_   #@_WAITKEY3
+                #_LDAIM_ #$a0           {Space}
+                #_BIT_
+_WAITKEY3=*     #_LDAIM_ #$c0           {`@'}
+                #_BRK_                  {Display cursor}
+                #_JSR_   ##_GOBACK      {Move back}
+
+                #_JMP_   ##_WAITKEY2
+
+_WAITKEY4=*     #_CMPIM_ #255           {Ignore key release}
+                #_BEQ_   #@_WAITKEY1
+
+                #_PHA_
+                #_LDAIM_ #$a0           {Overwrite cursor symbol with a space}
+                #_BRK_
+                #_JSR_   ##_GOBACK      {Move back}
+                #_PLA_
+
+                #_CMPIM_ #$60           {Lower case?}
+                #_BCC_   #@_MAPKEYCODE1
+                #_SBCIM_ #$20           {Map to upper case, DEL becomes rubout}
+_MAPKEYCODE1=*  #_CMPIM_ #10
+                #_BNE_   #@_MAPKEYCODE2
+                #_LDAIM_ #13            {LF becomes CR}
+_MAPKEYCODE2=*  #_ORAIM_ #$80           {B7 should be '1'}
+                #_RTS_
+
+_GOBACK=*       #_LDAZ_  #<Pos          {Go back}
+                #_SEC_
+                #_SBCIM_ #6
+                #_STAZ_  #<Pos
+                #_RTS_
+
+{-----------------------------------------------------------------------+
+|       Main vCPU loop                                                  |
++-----------------------------------------------------------------------}
 
 _Apple1=*
 
-_vLR=                           {Reset v6502 PC}
+{ Main loop from the perspective of the Gigatron I/O system }
+
+_v6502_PC=                      {Reset v6502 PC}
 [do
   \SYS_Run6502_v4_80 _sysFn=
-  \k,                           {ASCII code in A}
-  80!                           {Run 6502 code until BRK}
+  80!!                          {Run 6502 code until BRK}
   push                          {Save v6502 PC}
-  [if=0                         {A=0 reads from keyboard}
-    [do
-      \serialRaw, 255^          {Wait for idle keyboard}
-      if<>0loop]
-    [do
-      \frameCount, 15& [if=0    {4 Hz cursor redraw rate}
-        \frameCount, 48&        {Flash at 1 Hz with 75% duty cycle}
-        [if=0 $a0 else $c0]     {Select space or '@'}
-        PrintChar! Pos=]        {Display cursor and move back}
-      \serialRaw, \k. 128&      {Key ready?}
-      if<>0loop]                {Loop until ready}
-    $a0 PrintChar! Pos=         {Overwrite '@' with a space}
-    \k, $60- [if>=0 $40+ \k.]   {Map to upper case, and DEL to rubout}
-    \k, 10^  [if=0  13   \k.]   {Map LF to CR}
-  else                          {A<>0 for echo}
-    \k.
-    PrintChar!
-  ]
+  CharOut!                      {Write character to screen}
   pop                           {Restore v6502 PC}
   loop]                         {Back to wozmon}
 
@@ -190,13 +233,13 @@ _vLR=                           {Reset v6502 PC}
 |       Character output with automatic scrolling                       |
 +-----------------------------------------------------------------------}
 
-_PrintChar=*
+_CharOut=*
 [
   {Minimalistic terminal output, with bit 7 set by WozMon}
 
   %-2=                          {Park character in stack area}
   \SYS_VDrawBits_134 _sysFn=    {Prepare SYS calls}
-  $800 \sysArgs0:               {Green on black}
+  $3f00 \sysArgs0:              {White on black}
 
   %-2                           {Get character back}
   $8d^ [if<>0                   {Test for CR...}
@@ -210,11 +253,14 @@ _PrintChar=*
 
     {Clear new line first}
 
-    $100 <Pos. peek >Pos. Pos   {Go to start of next line}
-    \sysArgs4:                  {Set screen position}
     \sysArgs2.                  {Set all-zero output pattern}
+    \sysArgs4.                  {Start of clear area, without the indentation}
+    1 <Pos.                     {Go to start of line, nicely indent by 2 pixels}
+    $ff+                        {=$0100: start of video table}
+    peek >Pos.                  {Go to what is now still the top text row}
+    \sysArgs5.                  {Set drawing position for clearing}
     [do
-      134!                      {SYS call to draw 8 pixels vertically}
+      134!!                     {SYS call to draw 8 pixels vertically}
       <\sysArgs4++              {Step 1 pixel right}
       \sysArgs4, 160^           {Test for end of line}
       if<>0loop]
@@ -233,7 +279,7 @@ _PrintChar=*
   [if>=0                        {If printable}
 
     {-------------------------------------------------------------------+
-    |       PrintChar                                                   |
+    |       DrawChar                                                    |
     +-------------------------------------------------------------------}
 
     { Draw ASCII character (32..127) on screen in 5x8 pixels }
@@ -251,7 +297,7 @@ _PrintChar=*
 
     5 [do _i=                   {Draw character as 5 vertical bit slices}
       _j 0? \sysArgs2.          {Get bit slice as byte from ROM table}
-      134!                      {SYS call to draw 8 pixels vertically}
+      134!!                     {SYS call to draw 8 pixels vertically}
       <_j++ <\sysArgs4++        {Advance to next byte}
       _i 1- if>0loop]           {Looping}
 
@@ -554,9 +600,8 @@ _GETLINE=*      #_LDAIM_ #$8D           { CR.                                   
                 #_LDYIM_ #$01           { Initiallize text index.                 }
 _BACKSPACE=*    #_DEY_                  { Back up text index.                     }
                 #_BMI_   #@_GETLINE     { Beyond start of line, reinitialize.     }
-_NEXTCHAR=*     #_LDAIM_ #$00           { [Gigatron] A=0 to read keyboard.        }
-                #_BRK_                  { [Gigatron] Transfer to vCPU for input.  }
-                #_ORAIM_ #$80           { [Gigatron] B7 should be '1'.            }
+_NEXTCHAR=*     #_JSR_   ##_WAITKEY     { [Gigatron] No KBDCR and KBD (yet!)      }
+                #_BPL_   #@_NEXTCHAR    { Loop until ready. [Gigatron] Never taken}
                 #_BIT_   ##_KBD         { [Gigatron] Was: LDA                     }
                 #_STAAY_ ##_IN          { Add to text buffer.                     }
                 #_JSR_   ##_ECHO        { Display character.                      }

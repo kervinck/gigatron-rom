@@ -1419,7 +1419,7 @@ _Line2=*
   to include a BASIC program and a first command for execution }
 
 *=$1ba0 _Buffer=*               {Must be the "line" before user program}
-       #<&_Buffer #>&_Buffer    {Point to self}
+       ##_Buffer                {Initial end pointer, points to startup command}
        `NEW #0                  {'NEW' to start interactive session}
 
 *=$1bc0 _BasicProgram=*         {BASIC program starts here}

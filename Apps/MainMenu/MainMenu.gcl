@@ -8,10 +8,10 @@ gcl0x
 +-----------------------------------------------------------------------}
 
 { Fall into Easter Egg if [Start] is pressed for >4 seconds }
-\buttonState;                   {Fetch buttonState and resetTimer}
+\buttonState;                   {Fetch buttonState and resetTimer in one go}
 [if>0                           {If resetTimer positive}
   16& [if=0                     {And [Start] pressed}
-  \Egg \sysArgs0: 88!]]         {Start program. SYS_Exec_88 still in sysFn}
+  \Egg _sysArgs0= 88!!]]        {Start program. SYS_Exec_88 still in sysFn}
 
 { Print ASCII character (32..127) on screen in 5x8 pixels }
 [def
@@ -28,7 +28,7 @@ gcl0x
   6+      Pos=
   \SYS_VDrawBits_134 \sysFn:
   $fb i= [do
-    fontData 0? <fontData++ \sysArgs2. 134!
+    fontData 0? <fontData++ \sysArgs2. 134!!
     <\sysArgs4++
     <i++ i if<>0loop]
   ret
@@ -102,28 +102,30 @@ gcl0x
 
     42 {Gray} Color= PrintArrow!
 
-    MenuItem [if=0 \Snake      else     {Map menu item to program}
-        1-   [if=0 \Racer      else
-        1-   [if=0 \Mandelbrot else
-        1-   [if=0 \Pictures   else
-        1-   [if=0 \Credits    else
-        1-   [if=0 \Loader     else
-        1-   [if=0 \Tetronis   else
-        1-   [if=0 \Bricks     else
-        2-   [if<=0 \TinyBASIC else     {TicTacToe and stand-alone BASIC}
-        1-   [if=0 \WozMon     else
-        1-   [if=0 \Apple1     else loop]]]]]]]]]]]
-    Program=
+    [def
+      ##\Snake
+      ##\Racer
+      ##\Mandelbrot
+      ##\Pictures
+      ##\Credits
+      ##\Loader
+
+      ##\Tetronis
+      ##\Bricks
+      ##\TicTac
+      ##\TinyBASIC
+      ##\MSBASIC
+      ##\Apple1
+    ]
+    MenuItem+ MenuItem+ deek Program=
   ]
   pop ret
-] {SelectMenu}
+] SelectMenu=
 
 {-----------------------------------------------------------------------+
 |}>_vLR++ ret{          RAM page 4                                      |
 +-----------------------------------------------------------------------}
 *=$0400
-
-SelectMenu=
 
 {Newline}
 [def
@@ -133,12 +135,12 @@ SelectMenu=
 ] Newline=
 
 [def
-  #9 `Snake #9 ``` #9 `Tetronis  #10
-  #9 `Racer #9 ``` #9 `Bricks    #10
-  #9 `Mandelbrot   #9 `TicTacToe #10
-  #9 `Pictures ``` #9 `BASIC     #10
-  #9 `Credits #9   #9 `WozMon    #10
-  #9 `Loader #9 `` #9 `Apple1    #10 #0
+  #9 `Snake #9 ``` #9 `Tetronis   #10
+  #9 `Racer #9 ``` #9 `Bricks     #10
+  #9 `Mandelbrot   #9 `TicTacToe  #10
+  #9 `Pictures ``` #9 `Tiny`BASIC #10
+  #9 `Credits #9   #9 `MS`BASIC   #10
+  #9 `Loader #9 `` #9 `Apple-1    #10 #0
 ] MainMenu=
 
 [def
@@ -179,18 +181,18 @@ PrintMenu!
 SelectMenu!                     {Let user navigate and select}
 
 { Wipe out everything but the selected and bottom line }
- $800 \sysArgs4:                {Pointer in screen memory}
+\screenMemory _sysArgs4=        {Start of screen memory}
 $8801 i=                        {Offset to next stripe}
 $ff80 j=                        {Mask for keeping the selected item}
 Pos 48+ j& q=                   {Box of current cursor}
-\SYS_VDrawBits_134 \sysFn:      {SYS function}
+\SYS_VDrawBits_134 _sysFn=      {SYS function}
 32 \sysArgs0. \sysArgs1.        {Colors}
 [do
-  \sysArgs4;
+  _sysArgs4
   [do
     48+ j& q^ [if<>0            {Don't clear selected item}
       >p, $78^ if<>0            {Also don't clear the bottom row}
-      134!]                     {Clears 8 pixels vertically}
+      134!!]                    {Clears 8 pixels vertically}
     $800
     #\ADDW #\sysArgs4           {Inline assembly}
     \sysArgs4:
@@ -199,27 +201,14 @@ Pos 48+ j& q=                   {Box of current cursor}
   255& 160^ if<>0loop]          {Next stripe}
 
 { Load and start the selected program }
-\SYS_Exec_88 \sysFn:            {ROM loader}
-Program \sysArgs0:              {ROM image}
+\SYS_Exec_88 _sysFn=            {ROM loader}
+Program _sysArgs0=              {ROM image}
 \userCode _vLR=                 {Start of execution address}
-MenuItem 8^ [if=0               {TicTacToe needs special launcher}
-  &_LaunchTicTacToe call]
-MenuItem 11^ [if=0              {Apple1 workaround}
-  \channelMask_v4, $f8&         { 1. Clear channelMask before loading}
+MenuItem 10- [if<>0 1-]         {XXX MSBASIC and Apple1 need workaround}
+[if=0
+  \channelMask_v4, $f8&         {Clear channelMask before loading}
   \channelMask_v4.]
-88!                             {Load from ROM and execute}
-
-{-----------------------------------------------------------------------+
-|       Tic Tac Toe launcher                                            |
-+-----------------------------------------------------------------------}
-
-*=$7fa0 _LaunchTicTacToe=*
-
-  11+ _vLR=                     {Return to this program after SYS}
-  \TinyBASIC \sysArgs0: 88!     {Load only, SYS_Exec_88 still in sysFn}
-                                {Return here}
-  \userCode _vLR=
-  \TicTac \sysArgs0: 88!        {Load Tic-Tac-Toe and execute BASIC}
+88!!                            {Load from ROM and execute}
 
 {-----------------------------------------------------------------------+
 |                                                                       |

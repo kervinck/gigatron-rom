@@ -95,7 +95,7 @@ Software start
       as the startup chime. But the sound isn't played yet.
     - Change to MODE 1 (one black scanline per pixel line)
 
-19. Load and execute MainMenu.gcl
+19. Load and execute MainMenu.gcl as Main
     - Easter Egg activation is detected
     - Four sound channels are enabled
     - The startup chime is played
