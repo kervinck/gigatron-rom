@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #-----------------------------------------------------------------------
 #
 #  compilegcl.py -- Compile GCL source to GT1 object file
@@ -88,7 +88,7 @@ gt1File = args.outputDir + '/' + stem + '.gt1' # Resulting object file
 
 print('Create file', gt1File)
 
-with open(gt1File, 'wb') as output:
+with open(gt1File, 'w') as output:
   output.write(data)
 
 print('OK size', len(data))
