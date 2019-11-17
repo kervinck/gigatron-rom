@@ -831,7 +831,7 @@ namespace Compiler
             // Force space between line numbers and line
             for(int i=1; i<space; i++)
             {
-                if(!isdigit(code[i])  &&  code[i] != ':')
+                if(!isdigit(code[i])  &&  code[i] != ':'  &&  code[i] != '!')
                 {
                     space = i;
                     code.insert(i, " ");
@@ -846,21 +846,29 @@ namespace Compiler
             }
 
             // Create label
+            bool numeric = false;
             bool foundGosub = false;
-            bool numericGosub = false;
             std::string labelName = code.substr(0, space);
             size_t colon = labelName.find(':');
+            size_t exclamation = labelName.find('!');
+
             if(colon != std::string::npos)
             {
+                numeric = true;
                 foundGosub = true;
-                numericGosub = true;
                 labelName.erase(colon, 1);
+            }
+            else if(exclamation != std::string::npos)
+            {
+                numeric = true;
+                foundGosub = false;
+                labelName.erase(exclamation, 1);
             }
             else
             {
                 foundGosub = isGosubLabel(labelName);
             }
-            createLabel(_vasmPC, labelName, labelName, int(_codeLines.size()), label, numericGosub, true, false, foundGosub);
+            createLabel(_vasmPC, labelName, labelName, int(_codeLines.size()), label, numeric, true, false, foundGosub);
             if(createCodeLine(code, int(space + 1), _currentLabelIndex, -1, false, false, codeLine)) _codeLines.push_back(codeLine);
 
             return LabelFound;
