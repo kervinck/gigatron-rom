@@ -27,7 +27,8 @@ namespace Compiler
     uint16_t _vasmPC         = USER_CODE_START;
     uint16_t _tempVarStart   = TEMP_VAR_START;
     uint16_t _userVarStart   = USER_VAR_START;
-    uint16_t _runtimeEnd     = 0xFFFF;
+    uint16_t _runtimeEnd     = 0x7FFF;
+    uint16_t _runtimeStart   = 0x7FFF;
 
     bool _nextTempVar = true;
     bool _createNumericLabelLut = false;
@@ -68,11 +69,13 @@ namespace Compiler
 
     uint16_t getVasmPC(void) {return _vasmPC;}
     uint16_t getRuntimeEnd(void) {return _runtimeEnd;}
+    uint16_t getRuntimeStart(void) {return _runtimeStart;}
     uint16_t getTempVarStart(void) {return _tempVarStart;}
     int getCurrentLabelIndex(void) {return _currentLabelIndex;}
     std::string& getNextInternalLabel(void) {return _nextInternalLabel;}
 
     void setRuntimeEnd(uint16_t runtimeEnd) {_runtimeEnd = runtimeEnd;}
+    void setRuntimeStart(uint16_t runtimeStart) {_runtimeStart = runtimeStart;}
     void setCreateNumericLabelLut(bool createNumericLabelLut) {_createNumericLabelLut = createNumericLabelLut;}
 
     int incJumpFalseUniqueId(void) {return _jumpFalseUniqueId++;}
@@ -206,7 +209,7 @@ namespace Compiler
     }
 
 
-    void createLabel(uint16_t address, const std::string& name, const std::string& output, int codeLineIndex, Label& label, bool isNumeric, bool addUnderscore, bool pageJump, bool gosub)
+    void createLabel(uint16_t address, const std::string& name, const std::string& output, int codeLineIndex, Label& label, bool numeric, bool addUnderscore, bool pageJump, bool gosub)
     {
         std::string n = name;
         Expression::stripWhitespace(n);
@@ -219,7 +222,7 @@ namespace Compiler
             o[LABEL_TRUNC_SIZE - 1] = ' ';
         }
 
-        label = {address, n, o, codeLineIndex, isNumeric, pageJump, gosub};
+        label = {address, n, o, codeLineIndex, numeric, pageJump, gosub};
         Expression::stripWhitespace(label._name);
         _labels.push_back(label);
         _currentLabelIndex = int(_labels.size() - 1);
@@ -356,15 +359,15 @@ namespace Compiler
         if(stripped.find_first_of("-+/*%&<>=") != std::string::npos) expressionType |= Expression::HasOperators;
         std::string mod = stripped;
         Expression::strToUpper(mod);
-        if(mod.find("AND") != std::string::npos) expressionType |= Expression::HasOperators;
-        if(mod.find("XOR") != std::string::npos) expressionType |= Expression::HasOperators;
-        if(mod.find("OR")  != std::string::npos) expressionType |= Expression::HasOperators;
-        if(mod.find("NOT") != std::string::npos) expressionType |= Expression::HasOperators;
-        if(mod.find("MOD") != std::string::npos) expressionType |= Expression::HasOperators;
-        if(mod.find("LSL") != std::string::npos) expressionType |= Expression::HasOperators;
-        if(mod.find("LSR") != std::string::npos) expressionType |= Expression::HasOperators;
-        if(mod.find("<<")  != std::string::npos) expressionType |= Expression::HasOperators;
-        if(mod.find(">>")  != std::string::npos) expressionType |= Expression::HasOperators;
+        if(mod.find(" AND ") != std::string::npos) expressionType |= Expression::HasOperators;
+        if(mod.find(" XOR ") != std::string::npos) expressionType |= Expression::HasOperators;
+        if(mod.find(" OR"  ) != std::string::npos) expressionType |= Expression::HasOperators;
+        if(mod.find(" NOT ") != std::string::npos) expressionType |= Expression::HasOperators;
+        if(mod.find(" MOD ") != std::string::npos) expressionType |= Expression::HasOperators;
+        if(mod.find(" LSL ") != std::string::npos) expressionType |= Expression::HasOperators;
+        if(mod.find(" LSR ") != std::string::npos) expressionType |= Expression::HasOperators;
+        if(mod.find("<<"   ) != std::string::npos) expressionType |= Expression::HasOperators;
+        if(mod.find(">>"   ) != std::string::npos) expressionType |= Expression::HasOperators;
 
         return expressionType;
     }
@@ -828,7 +831,7 @@ namespace Compiler
             // Force space between line numbers and line
             for(int i=1; i<space; i++)
             {
-                if(!isdigit(code[i]))
+                if(!isdigit(code[i])  &&  code[i] != ':')
                 {
                     space = i;
                     code.insert(i, " ");
@@ -843,9 +846,21 @@ namespace Compiler
             }
 
             // Create label
+            bool foundGosub = false;
+            bool numericGosub = false;
             std::string labelName = code.substr(0, space);
-            bool foundGosub = isGosubLabel(labelName);
-            createLabel(_vasmPC, labelName, labelName, int(_codeLines.size()), label, true, true, false, foundGosub);
+            size_t colon = labelName.find(':');
+            if(colon != std::string::npos)
+            {
+                foundGosub = true;
+                numericGosub = true;
+                labelName.erase(colon, 1);
+            }
+            else
+            {
+                foundGosub = isGosubLabel(labelName);
+            }
+            createLabel(_vasmPC, labelName, labelName, int(_codeLines.size()), label, numericGosub, true, false, foundGosub);
             if(createCodeLine(code, int(space + 1), _currentLabelIndex, -1, false, false, codeLine)) _codeLines.push_back(codeLine);
 
             return LabelFound;
@@ -890,9 +905,35 @@ namespace Compiler
         Assembler::setUseOpcodeCALLI(false);
         for(auto it=_input.begin(); it!=_input.end(); ++it)
         {
-            if(it->find("_useOpcodeCALLI_") != std::string::npos)
+            size_t calli;
+            if((calli = it->find("_useOpcodeCALLI_")) != std::string::npos)
             {
+                it->erase(calli, sizeof("_useOpcodeCALLI_"));
                 Assembler::setUseOpcodeCALLI(true);
+            }
+            size_t runtime;
+            if((runtime = it->find("_runtimeStart_")) != std::string::npos)
+            {
+                std::vector<size_t> offsets;
+                std::vector<std::string> tokens = Expression::tokenise(*it, ' ', offsets, false, false);
+                for(int i=0; i<tokens.size(); i++)
+                {
+                    Expression::stripWhitespace(tokens[i]);
+                }
+                if(tokens.size() != 2) 
+                {
+                    fprintf(stderr, "Compiler::parseLabels() : Syntax error, _runtimeStart_ <address>, found %s\n", it->c_str());
+                    return false;
+                }
+                uint16_t address;
+                if(!Expression::stringToU16(tokens[1], address))
+                {
+                    fprintf(stderr, "Compiler::parseLabels() : Syntax error, invalid address in _runtimeStart_ <address>, found %s\n", it->c_str());
+                    return false;
+                }
+                _runtimeStart = address;
+                it->erase(offsets[0] - sizeof("_runtimeStart_"), offsets[1] - (offsets[0] - sizeof("_runtimeStart_")));
+                
                 break;
             }
         }
@@ -966,7 +1007,7 @@ namespace Compiler
         }
         else
         {
-            if(!Memory::giveFreeRAM(Memory::FitAscending, int(str.size()) + 1, 0x0200, 0x7FFF, address))
+            if(!Memory::giveFreeRAM(Memory::FitAscending, int(str.size()) + 1, 0x0200, _runtimeStart, address))
             {
                 fprintf(stderr, "Compiler::createString() : Not enough RAM for string %s of size %d\n", str.c_str(), int(str.size()));
                 return false;
@@ -1467,22 +1508,41 @@ namespace Compiler
 
         if(left._isAddress  &&  !right._isAddress)
         {
-            std::string opcode;
-            switch(right._value)
+            if(right._value == 8)
             {
-                case 1: opcode = "%ShiftRight1bit"; break;
-                case 2: opcode = "%ShiftRight2bit"; break;
-                case 3: opcode = "%ShiftRight3bit"; break;
-                case 4: opcode = "%ShiftRight4bit"; break;
-                case 5: opcode = "%ShiftRight5bit"; break;
-                case 6: opcode = "%ShiftRight6bit"; break;
-                case 7: opcode = "%ShiftRight7bit"; break;
-                case 8: opcode = "%ShiftRight8bit"; break;
+                if(isdigit(left._varName[0]))
+                {
+                    emitVcpuAsm("LD", Expression::byteToHexString(uint8_t(left._value)) + " + 1", false);
+                }
+                else
+                {
+                    int varIndex = findVar(left._varName);
+                    if(varIndex == -1) fprintf(stderr, "Compiler::operatorLSR() : couldn't find variable name '%s'\n", left._varName.c_str());
+                    emitVcpuAsm("LD", "_" + left._varName + " + 1", false);
+                }
+
+                left._value = uint8_t(_tempVarStart);
+                left._isAddress = true;
+                left._varName = _tempVarStartStr;
             }
+            else
+            {
+                std::string opcode;
+                switch(right._value)
+                {
+                    case 1: opcode = "%ShiftRight1bit"; break;
+                    case 2: opcode = "%ShiftRight2bit"; break;
+                    case 3: opcode = "%ShiftRight3bit"; break;
+                    case 4: opcode = "%ShiftRight4bit"; break;
+                    case 5: opcode = "%ShiftRight5bit"; break;
+                    case 6: opcode = "%ShiftRight6bit"; break;
+                    case 7: opcode = "%ShiftRight7bit"; break;
+                    //case 8: opcode = "%ShiftRight8bit"; break;
+                }
 
-            handleLogicalOp(opcode, left, right);
-
-            emitVcpuAsm(opcode, "", false);
+                handleLogicalOp(opcode, left, right);
+                emitVcpuAsm(opcode, "", false);
+            }
         }
 
         emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(_tempVarStart)), false);
@@ -1494,17 +1554,16 @@ namespace Compiler
     // ********************************************************************************************
     // Conditional Operators
     // ********************************************************************************************
-    bool handleCondOp(Expression::Numeric& lhs, Expression::Numeric& rhs, bool logical)
+    bool handleCondOp(Expression::Numeric& lhs, Expression::Numeric& rhs, bool logical, bool& invertedLogic)
     {
         lhs._isLogical = logical;
 
-        std::string opcode = "SUB";
-
         // Swap left and right to take advantage of LDWI for 16bit numbers
+        invertedLogic = false;
         if(!rhs._isAddress  &&  uint16_t(rhs._value) > 255)
         {
             std::swap(lhs, rhs);
-            opcode = "ADD";
+            invertedLogic = true;
             if(lhs._value > 0) lhs._value = -lhs._value;
         }
 
@@ -1545,18 +1604,18 @@ namespace Compiler
             // Temporary variable address
             if(isdigit(rhs._varName[0]))
             {
-                emitVcpuAsm(opcode + "W", Expression::byteToHexString(uint8_t(rhs._value)), false);
+                emitVcpuAsm("SUBW", Expression::byteToHexString(uint8_t(rhs._value)), false);
             }
             // User variable address
             else
             {
-                if(!emitVcpuAsmUserVar(opcode + "W", rhs._varName.c_str(), _nextTempVar)) return false;
+                if(!emitVcpuAsmUserVar("SUBW", rhs._varName.c_str(), _nextTempVar)) return false;
                 _nextTempVar = false;
             }
         }
         else
         {
-            emitVcpuAsm(opcode + "I", std::to_string(rhs._value), false);
+            emitVcpuAsm("SUBI", std::to_string(rhs._value), false);
         }
 
         lhs._value = uint8_t(_tempVarStart);
@@ -1574,16 +1633,18 @@ namespace Compiler
             return left;
         }
 
-        left._isValid = handleCondOp(left, right, logical);
+        bool invertedLogic = false;
+        left._isValid = handleCondOp(left, right, logical, invertedLogic);
 
         // Convert equals into a logical 1, (boolean conversion)
+        std::string cc = (!invertedLogic) ? "Eq" : "Ne";
         if(logical)
         {
-            Assembler::getUseOpcodeCALLI() ? emitVcpuAsm("CALLI", "convertEqOp", false) : emitVcpuAsm("CALL", "convertEqOpAddr", false);
+            Assembler::getUseOpcodeCALLI() ? emitVcpuAsm("CALLI", "convert" + cc + "Op", false) : emitVcpuAsm("CALL", "convert" + cc + "OpAddr", false);
         }
         else
         {
-            emitVcpuAsm("%JumpEQ", "", false);
+            emitVcpuAsm("%Jump" + Expression::strToUpper(cc), "", false);
         }
 
         emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(_tempVarStart)), false);
@@ -1599,16 +1660,18 @@ namespace Compiler
             return left;
         }
 
-        left._isValid = handleCondOp(left, right, logical);
+        bool invertedLogic = false;
+        left._isValid = handleCondOp(left, right, logical, invertedLogic);
 
-        // Convert equals into a logical 1, (boolean conversion)
+        // Convert not equals into a logical 1, (boolean conversion)
+        std::string cc = (!invertedLogic) ? "Ne" : "Eq";
         if(logical)
         {
-            Assembler::getUseOpcodeCALLI() ? emitVcpuAsm("CALLI", "convertNeOp", false) : emitVcpuAsm("CALL", "convertNeOpAddr", false);
+            Assembler::getUseOpcodeCALLI() ? emitVcpuAsm("CALLI", "convert" + cc + "Op", false) : emitVcpuAsm("CALL", "convert" + cc + "OpAddr", false);
         }
         else
         {
-            emitVcpuAsm("%JumpNE", "", false);
+            emitVcpuAsm("%Jump" + Expression::strToUpper(cc), "", false);
         }
 
         emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(_tempVarStart)), false);
@@ -1624,16 +1687,18 @@ namespace Compiler
             return left;
         }
 
-        left._isValid = handleCondOp(left, right, logical);
+        bool invertedLogic = false;
+        left._isValid = handleCondOp(left, right, logical, invertedLogic);
 
         // Convert less than or equals into a logical 1, (boolean conversion)
+        std::string cc = (!invertedLogic) ? "Le" : "Gt";
         if(logical)
         {
-            Assembler::getUseOpcodeCALLI() ? emitVcpuAsm("CALLI", "convertLeOp", false) : emitVcpuAsm("CALL", "convertLeOpAddr", false);
+            Assembler::getUseOpcodeCALLI() ? emitVcpuAsm("CALLI", "convert" + cc + "Op", false) : emitVcpuAsm("CALL", "convert" + cc + "OpAddr", false);
         }
         else
         {
-            emitVcpuAsm("%JumpLE", "", false);
+            emitVcpuAsm("%Jump" + Expression::strToUpper(cc), "", false);
         }
 
         emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(_tempVarStart)), false);
@@ -1649,16 +1714,18 @@ namespace Compiler
             return left;
         }
 
-        left._isValid = handleCondOp(left, right, logical);
+        bool invertedLogic = false;
+        left._isValid = handleCondOp(left, right, logical, invertedLogic);
 
         // Convert greater than or equals into a logical 1, (boolean conversion)
+        std::string cc = (!invertedLogic) ? "Ge" : "Lt";
         if(logical)
         {
-            Assembler::getUseOpcodeCALLI() ? emitVcpuAsm("CALLI", "convertGeOp", false) : emitVcpuAsm("CALL", "convertGeOpAddr", false);
+            Assembler::getUseOpcodeCALLI() ? emitVcpuAsm("CALLI", "convert" + cc + "Op", false) : emitVcpuAsm("CALL", "convert" + cc + "OpAddr", false);
         }
         else
         {
-            emitVcpuAsm("%JumpGE", "", false);
+            emitVcpuAsm("%Jump" + Expression::strToUpper(cc), "", false);
         }
 
         emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(_tempVarStart)), false);
@@ -1674,16 +1741,18 @@ namespace Compiler
             return left;
         }
 
-        left._isValid = handleCondOp(left, right, logical);
+        bool invertedLogic = false;
+        left._isValid = handleCondOp(left, right, logical, invertedLogic);
 
         // Convert less than into a logical 1, (boolean conversion)
+        std::string cc = (!invertedLogic) ? "Lt" : "Ge";
         if(logical)
         {
-            Assembler::getUseOpcodeCALLI() ? emitVcpuAsm("CALLI", "convertLtOp", false) : emitVcpuAsm("CALL", "convertLtOpAddr", false);
+            Assembler::getUseOpcodeCALLI() ? emitVcpuAsm("CALLI", "convert" + cc + "Op", false) : emitVcpuAsm("CALL", "convert" + cc + "OpAddr", false);
         }
         else
         {
-            emitVcpuAsm("%JumpLT", "", false);
+            emitVcpuAsm("%Jump" + Expression::strToUpper(cc), "", false);
         }
 
         emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(_tempVarStart)), false);
@@ -1699,16 +1768,18 @@ namespace Compiler
             return left;
         }
 
-        left._isValid = handleCondOp(left, right, logical);
+        bool invertedLogic = false;
+        left._isValid = handleCondOp(left, right, logical, invertedLogic);
 
         // Convert greater than into a logical 1, (boolean conversion)
+        std::string cc = (!invertedLogic) ? "Gt" : "Le";
         if(logical)
         {
-            Assembler::getUseOpcodeCALLI() ? emitVcpuAsm("CALLI", "convertGtOp", false) : emitVcpuAsm("CALL", "convertGtOpAddr", false);
+            Assembler::getUseOpcodeCALLI() ? emitVcpuAsm("CALLI", "convert" + cc + "Op", false) : emitVcpuAsm("CALL", "convert" + cc + "OpAddr", false);
         }
         else
         {
-            emitVcpuAsm("%JumpGT", "", false);
+            emitVcpuAsm("%Jump" + Expression::strToUpper(cc), "", false);
         }
 
         emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(_tempVarStart)), false);
@@ -1991,14 +2062,17 @@ namespace Compiler
                         // Vars
                         else
                         {
-                            numeric = Expression::Numeric(defaultValue, -1, true, true, false, varName);
+                            // Numeric is now passed back to compiler, (rather than just numeric._value), so make sure all fields are valid
+                            numeric = Expression::Numeric(defaultValue, varIndex, true, true, false, varName);
                         }
                     }
                     // Unknown symbol
                     else
                     {
                         numeric = Expression::Numeric(defaultValue, -1, false, false, false, std::string(""));
-                        if(varName.size()) fprintf(stderr, "Compiler::factor() : Found an unknown symbol '%s' : in '%s' on line %d\n", varName.c_str(), _codeLines[_currentCodeLineIndex]._code.c_str(), Expression::getLineNumber() + 1);
+                        if(varName.size()) fprintf(stderr, "Compiler::factor() : Found an unknown symbol '%s' : in '%s' on line %d\n", varName.c_str(), 
+                                                                                                                                       _codeLines[_currentCodeLineIndex]._code.c_str(),
+                                                                                                                                       Expression::getLineNumber() + 1);
                     }
                 }
                 break;
@@ -2197,7 +2271,7 @@ namespace Compiler
         return statementResult;
     }
 
-    void addLabelToJump(std::vector<VasmLine>& vasm, std::string& label)
+    void addLabelToJumpCC(std::vector<VasmLine>& vasm, std::string& label)
     {
         for(int i=0; i<vasm.size(); i++)
         {
@@ -2209,15 +2283,27 @@ namespace Compiler
         }
     }
 
-    void addLabelToLdwi(std::vector<VasmLine>& vasm, std::string& label)
+    void addLabelToJump(std::vector<VasmLine>& vasm, std::string& label)
     {
         for(int i=0; i<vasm.size(); i++)
         {
-            if(vasm[i]._code.find("LDWI_JUMP") != std::string::npos)
+            if(Assembler::getUseOpcodeCALLI())
             {
-                vasm[i]._opcode = "LDWI";
-                vasm[i]._code = "LDWI" + std::string(OPCODE_TRUNC_SIZE - (sizeof("LDWI")-1), ' ') + label;
-                return;
+                if(vasm[i]._code.find("CALLI_JUMP") != std::string::npos)
+                {
+                    vasm[i]._opcode = "CALLI";
+                    vasm[i]._code = "CALLI" + std::string(OPCODE_TRUNC_SIZE - (sizeof("CALLI")-1), ' ') + label;
+                    return;
+                }
+            }
+            else
+            {
+                if(vasm[i]._code.find("LDWI_JUMP") != std::string::npos)
+                {
+                    vasm[i]._opcode = "LDWI";
+                    vasm[i]._code = "LDWI" + std::string(OPCODE_TRUNC_SIZE - (sizeof("LDWI")-1), ' ') + label;
+                    return;
+                }
             }
         }
     }
@@ -2443,7 +2529,7 @@ namespace Compiler
             std::vector<uint16_t> numericAddresses;
             for(int i=0; i<_labels.size(); i++)
             {
-                if(_labels[i]._isNumeric)
+                if(_labels[i]._numeric)
                 {
                     uint16_t numericLabel;
                     if(!Expression::stringToU16(_labels[i]._name, numericLabel))
@@ -2463,7 +2549,7 @@ namespace Compiler
                 // Numeric labels lut, (delimited by -1)
                 int lutSize = int(numericLabels.size()) * 2;
                 uint16_t lutAddress;
-                if(!Memory::giveFreeRAM(Memory::FitAscending, lutSize + 2, 0x0200, 0x7FFF, lutAddress))
+                if(!Memory::giveFreeRAM(Memory::FitAscending, lutSize + 2, 0x0200, _runtimeStart, lutAddress))
                 {
                     fprintf(stderr, "Compiler::outputLuts() : Not enough RAM for numeric labels LUT of size %d\n", lutSize + 2);
                     return false;
@@ -2480,7 +2566,7 @@ namespace Compiler
                 _output.push_back(dbString + "-1\n");
 
                 // Numeric label addresses lut
-                if(!Memory::giveFreeRAM(Memory::FitAscending, lutSize, 0x0200, 0x7FFF, lutAddress))
+                if(!Memory::giveFreeRAM(Memory::FitAscending, lutSize, 0x0200, _runtimeStart, lutAddress))
                 {
                     fprintf(stderr, "Compiler::outputLuts() : Not enough RAM for numeric addresses LUT of size %d\n", lutSize);
                     return false;
@@ -2680,7 +2766,8 @@ namespace Compiler
         _vasmPC         = USER_CODE_START;
         _tempVarStart   = TEMP_VAR_START;
         _userVarStart   = USER_VAR_START;
-        _runtimeEnd     = 0xFFFF;
+        _runtimeEnd     = 0x7FFF;
+        _runtimeStart   = 0x7FFF;
 
         _nextTempVar = true;
         _createNumericLabelLut = false;

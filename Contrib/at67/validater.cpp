@@ -67,20 +67,59 @@ namespace Validater
         nextPC = (hPC + 1) <<8;
 
         // Code page restrictions
-        uint16_t codeEnd0 = 0x0300;
-        uint16_t codePage1 = 0x0800;
-        uint16_t codeOffs1 = 0x00A0;
-        uint16_t codePage2 = 0x8000; // only available with 64K RAM
+        uint16_t codePage0 = 0x0200;
+        uint16_t codeEnd0 = 0x0500;
+
+        uint16_t codePage1 = 0x0500;
+        uint16_t codeEnd1 = 0x0700;
+
+        uint16_t codePage2 = 0x0800;
+        uint16_t codeEnd2 = 0x8000;
+
+        uint16_t codePage3 = 0x8000; // only available with 64K RAM
+        uint16_t codeEnd3 = 0x0000;
+
+        uint16_t codeSize = 250;
         if(nextPC == codeEnd0)
         {
-            nextPC = codePage1 + codeOffs1;
+            codeSize = 256;
         }
-        else
+        else if(nextPC == codeEnd1)
         {
-            if(nextPC >= codePage1  &&  nextPC < codePage2) nextPC += codeOffs1;
+            codeSize = 96;
+            nextPC = codePage2;
         }
+        else if(nextPC >= codePage2  &&  nextPC < codeEnd2)
+        {
+            codeSize = 96;
+            nextPC += 0x00A0;
+        }
+        else if(nextPC >= codePage3)
+        {
+            codeSize = 256;
+        }
+
         // Allow some padding for late linking of the runtime
-        if(nextPC >= (Compiler::getRuntimeEnd() - 0x1000)  &&  nextPC < codePage2) nextPC = codePage2;
+        if(nextPC >= (Compiler::getRuntimeEnd() - 0x0800)  &&  nextPC < codePage3)
+        {
+            nextPC = codePage3;
+            codeSize = 256;
+        }
+
+        if(nextPC == codePage3)
+        {
+            static bool firstTime = true;
+            if(firstTime)
+            {
+                firstTime = false;
+                fprintf(stderr, "Compiler::checkExclusionZone() : Warning, you have exceeded 32K of RAM\n");
+            }
+        }
+        if(nextPC == codeEnd3)
+        {
+            fprintf(stderr, "Compiler::checkExclusionZone() : Error, you have exceeded 64K of RAM\n");
+            _EXIT_(EXIT_FAILURE);
+        }
 
         // 3 bytes for CALLI PAGE JUMP
         if(Assembler::getUseOpcodeCALLI())

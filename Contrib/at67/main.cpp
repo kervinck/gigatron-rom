@@ -45,27 +45,29 @@ int main(int argc, char* argv[])
     Validater::initialise();
     Linker::initialise();
 
+#if 1
     Image::TgaFile tgaFile;
     Image::GtRgbFile gtRgbFile;
 
-    std::string imageName = "Gamma";
+    std::string imageName = "Clouds";
     Image::loadTgaFile(imageName + ".tga", tgaFile);
     gtRgbFile._header = {GTRGB_IDENTIFIER, Image::GT_RGB_222, tgaFile._header._width, tgaFile._header._height};
     //Image::convertRGB8toRGB2(tgaFile._data, gtRgbFile._data, tgaFile._header._width, tgaFile._header._height, tgaFile._imageOrigin);
     Image::ditherRGB8toRGB2(tgaFile._data, gtRgbFile._data, tgaFile._header._width, tgaFile._header._height, tgaFile._imageOrigin);
     Image::saveGtRgbFile(imageName + ".gtrgb", gtRgbFile);
     Image::loadGtRgbFile(imageName + ".gtrgb", gtRgbFile);
-    uint16_t vram = 0x08A0;
+    uint16_t vram = 0x0800;
     for(int y=0; y<gtRgbFile._header._height; y++)
     {
         for(int x=0; x<gtRgbFile._header._width; x++)
         {
             uint8_t data = gtRgbFile._data[y*gtRgbFile._header._width + x];
             Cpu::setRAM(vram++, data);
-            if((vram & 0x00FF) == 0x00) vram += 0x00A0;
+            if((vram & 0x00FF) == 0x00) vram += 0x0100;
         }
     }
 
+#if 0
     Image::loadTgaFile(imageName + ".tga", tgaFile);
     gtRgbFile._header = {GTRGB_IDENTIFIER, Image::GT_RGB_222, tgaFile._header._width, tgaFile._header._height};
     Image::convertRGB8toRGB2(tgaFile._data, gtRgbFile._data, tgaFile._header._width, tgaFile._header._height, tgaFile._imageOrigin);
@@ -82,6 +84,8 @@ int main(int argc, char* argv[])
             if((vram & 0x00FF) == 0x00) vram += 0x00A0;
         }
     }
+#endif
+#endif
 
     //Compiler::compile("gbas/test.gbas", "gbas/test.gasm");
 

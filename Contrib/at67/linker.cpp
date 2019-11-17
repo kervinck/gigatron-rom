@@ -236,7 +236,7 @@ namespace Linker
         if(!overwrite  &&  _internalSubs[subIndex]._address) return false;
 
         uint16_t address;
-        if(Memory::giveFreeRAM(Memory::FitAscending, _internalSubs[subIndex]._size, 0x60A0, 0x7FFF, address))
+        if(Memory::giveFreeRAM(Memory::FitAscending, _internalSubs[subIndex]._size, 0x0200, Compiler::getRuntimeStart(), address))
         {
             // Save end of runtime/strings
             if(address < Compiler::getRuntimeEnd()) Compiler::setRuntimeEnd(address);

@@ -73,7 +73,7 @@ namespace Compiler
         std::string _name;
         std::string _output;
         int _codeLineIndex = -1;
-        bool _isNumeric = false;
+        bool _numeric = false;
         bool _pageJump = false;
         bool _gosub = false;
     };
@@ -191,11 +191,13 @@ namespace Compiler
 
     uint16_t getVasmPC(void);
     uint16_t getRuntimeEnd(void);
+    uint16_t getRuntimeStart(void);
     uint16_t getTempVarStart(void);
     int getCurrentLabelIndex(void);
     std::string& getNextInternalLabel(void);
 
     void setRuntimeEnd(uint16_t runtimeEnd);
+    void setRuntimeStart(uint16_t runtimeStart);
     void setCreateNumericLabelLut(bool createNumericLabelLut);
     void setNextInternalLabel(const std::string& label);
 
@@ -231,7 +233,7 @@ namespace Compiler
     int findInternalLabel(uint16_t address);
     int findVar(std::string& varName);
 
-    void createLabel(uint16_t address, const std::string& name, const std::string& output, int codeLineIndex, Label& label, bool isNumeric=false, bool addUnderscore=true, bool pageJump=false, bool gosub=false);
+    void createLabel(uint16_t address, const std::string& name, const std::string& output, int codeLineIndex, Label& label, bool numeric=false, bool addUnderscore=true, bool pageJump=false, bool gosub=false);
     void createIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, int& varIndex, VarType varType=VarInt16, uint16_t arrayStart=0x0000, int intSize=Int16, int arrSize=0);
     bool createString(CodeLine& codeLine, int codeLineIndex, const std::string& str, std::string& name, uint16_t& address);
 
@@ -248,8 +250,8 @@ namespace Compiler
     uint32_t parseExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, Expression::Numeric& numeric, int16_t replace);
     StatementResult parseMultiStatements(const std::string& code, CodeLine& codeLine, int codeLineIndex, int& varIndex);
 
+    void addLabelToJumpCC(std::vector<VasmLine>& vasm, std::string& label);
     void addLabelToJump(std::vector<VasmLine>& vasm, std::string& label);
-    void addLabelToLdwi(std::vector<VasmLine>& vasm, std::string& label);
 
     bool compile(const std::string& inputFilename, const std::string& outputFilename);
 }

@@ -1027,7 +1027,7 @@ namespace Editor
 
     void loadGtRgbFile(void)
     {
-        static std::string names[] = {"Gamma", "Gigatron", "Juggler", "Mario"};
+        static std::string names[] = {"Clouds", "Clouds", "Clouds", "Clouds"}; //{"Gamma", "Gigatron", "Juggler", "Mario"};
 
         Image::TgaFile tgaFile;
         Image::GtRgbFile gtRgbFile;
@@ -1036,14 +1036,14 @@ namespace Editor
         gtRgbFile._header = {GTRGB_IDENTIFIER, Image::GT_RGB_222, tgaFile._header._width, tgaFile._header._height};
         Image::ditherRGB8toRGB2(tgaFile._data, gtRgbFile._data, tgaFile._header._width, tgaFile._header._height, tgaFile._imageOrigin);
 
-        uint16_t vram = 0x08A0;
+        uint16_t vram = 0x0800;
         for(int y=0; y<gtRgbFile._header._height; y++)
         {
             for(int x=0; x<gtRgbFile._header._width; x++)
             {
                 uint8_t data = gtRgbFile._data[y*gtRgbFile._header._width + x];
                 Cpu::setRAM(vram++, data);
-                if((vram & 0x00FF) == 0x00) vram += 0x00A0;
+                if((vram & 0x00FF) == 0x00) vram += 0x0000;
             }
         }
     }
@@ -1104,6 +1104,7 @@ namespace Editor
             double timingHack = Timing::getTimingHack() + VSYNC_TIMING_60*0.05;
             if(timingHack <= VSYNC_TIMING_60) {Timing::setTimingHack(timingHack); return;}
         }
+#if 1
         else if(_sdlKeyScanCode == SDLK_PAGEUP)
         {
             double gamma = Image::getGammaInput();
@@ -1148,6 +1149,7 @@ namespace Editor
             fprintf(stderr, "DiffusionType = %d\n", Image::getDiffusionType());
             loadGtRgbFile();
         }
+#endif
     }
 
     // PS2 Keyboard emulation mode

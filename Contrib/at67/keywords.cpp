@@ -86,23 +86,11 @@ namespace Keywords
         _equalsKeywords.push_back("DEF");
         _equalsKeywords.push_back("FOR");
         _equalsKeywords.push_back("IF");
+        _equalsKeywords.push_back("ELSEIF");
+        _equalsKeywords.push_back("WHILE");
+        _equalsKeywords.push_back("UNTIL");
 
         return true;
-    }
-
-    void checkLinesForReturn(void)
-    {
-        for(int i=0; i<Compiler::getLabels().size(); i++)
-        {
-            // Only check numbered lines
-            if(isdigit(Compiler::getLabels()[i]._name[0]))
-            {
-                int codeLineIndex = Compiler::getLabels()[i]._codeLineIndex;
-                std::string code = Compiler::getCodeLines()[codeLineIndex]._code;
-                Expression::strToUpper(code);
-                if(code.find("RETURN") != std::string::npos) Compiler::getLabels()[i]._gosub = true;
-            }
-        }
     }
 
     bool findKeyword(std::string code, const std::string& keyword, size_t& foundPos)
@@ -386,9 +374,6 @@ namespace Keywords
         if(labelIndex == -1)
         {
             Compiler::setCreateNumericLabelLut(true);
-
-            // Check numbered label lines for a return
-            checkLinesForReturn();
 
             uint32_t expressionType = parseExpression(codeLine, codeLineIndex, gosubToken, gosubValue);
             Compiler::emitVcpuAsm("STW", "numericLabel", false, codeLineIndex);
@@ -1158,7 +1143,7 @@ namespace Keywords
         }
         else
         {
-            addLabelToJump(Compiler::getCodeLines()[codeLineIndex]._vasm, nextInternalLabel);
+            addLabelToJumpCC(Compiler::getCodeLines()[codeLineIndex]._vasm, nextInternalLabel);
         }
 
         return true;
@@ -1186,9 +1171,17 @@ namespace Keywords
         }
 
         // Jump to endif for previous BASIC line
-        Compiler::emitVcpuAsm("LDWI", "LDWI_JUMP", false, codeLineIndex - 1);
-        Compiler::emitVcpuAsm("CALL", "giga_vAC", false, codeLineIndex - 1);
-        Compiler::getEndIfDataStack().push({int(Compiler::getCodeLines()[codeLineIndex - 1]._vasm.size()) - 2, codeLineIndex - 1});
+        if(Assembler::getUseOpcodeCALLI())
+        {
+            Compiler::emitVcpuAsm("CALLI", "CALLI_JUMP", false, codeLineIndex - 1);
+            Compiler::getEndIfDataStack().push({int(Compiler::getCodeLines()[codeLineIndex - 1]._vasm.size()) - 1, codeLineIndex - 1});
+        }
+        else
+        {
+            Compiler::emitVcpuAsm("LDWI", "LDWI_JUMP", false, codeLineIndex - 1);
+            Compiler::emitVcpuAsm("CALL", "giga_vAC", false, codeLineIndex - 1);
+            Compiler::getEndIfDataStack().push({int(Compiler::getCodeLines()[codeLineIndex - 1]._vasm.size()) - 2, codeLineIndex - 1});
+        }
 
         // Create label on next line of vasm code
         Compiler::setNextInternalLabel("_elseif_" + Expression::wordToHexString(Compiler::getVasmPC()));
@@ -1202,7 +1195,7 @@ namespace Keywords
         }
         else
         {
-            addLabelToJump(Compiler::getCodeLines()[codeIndex]._vasm, nextInternalLabel);
+            addLabelToJumpCC(Compiler::getCodeLines()[codeIndex]._vasm, nextInternalLabel);
         }
 
         // Condition
@@ -1239,9 +1232,17 @@ namespace Keywords
         Compiler::getElseIfDataStack().pop();
 
         // Jump to endif for previous BASIC line
-        Compiler::emitVcpuAsm("LDWI", "LDWI_JUMP", false, codeLineIndex - 1);
-        Compiler::emitVcpuAsm("CALL", "giga_vAC", false, codeLineIndex - 1);
-        Compiler::getEndIfDataStack().push({int(Compiler::getCodeLines()[codeLineIndex - 1]._vasm.size()) - 2, codeLineIndex - 1});
+        if(Assembler::getUseOpcodeCALLI())
+        {
+            Compiler::emitVcpuAsm("CALLI", "CALLI_JUMP", false, codeLineIndex - 1);
+            Compiler::getEndIfDataStack().push({int(Compiler::getCodeLines()[codeLineIndex - 1]._vasm.size()) - 1, codeLineIndex - 1});
+        }
+        else
+        {
+            Compiler::emitVcpuAsm("LDWI", "LDWI_JUMP", false, codeLineIndex - 1);
+            Compiler::emitVcpuAsm("CALL", "giga_vAC", false, codeLineIndex - 1);
+            Compiler::getEndIfDataStack().push({int(Compiler::getCodeLines()[codeLineIndex - 1]._vasm.size()) - 2, codeLineIndex - 1});
+        }
 
         // Create label on next line of vasm code
         Compiler::setNextInternalLabel("_else_" + Expression::wordToHexString(Compiler::getVasmPC()));
@@ -1255,7 +1256,7 @@ namespace Keywords
         }
         else
         {
-            addLabelToJump(Compiler::getCodeLines()[codeIndex]._vasm, nextInternalLabel);
+            addLabelToJumpCC(Compiler::getCodeLines()[codeIndex]._vasm, nextInternalLabel);
         }
 
         Compiler::getElseIfDataStack().push({jmpIndex, nextInternalLabel, codeIndex, Compiler::ElseBlock, isLogical});
@@ -1299,7 +1300,7 @@ namespace Keywords
             }
             else
             {
-                addLabelToJump(Compiler::getCodeLines()[codeIndex]._vasm, nextInternalLabel);
+                addLabelToJumpCC(Compiler::getCodeLines()[codeIndex]._vasm, nextInternalLabel);
             }
         }
 
@@ -1315,7 +1316,7 @@ namespace Keywords
             }
             else
             {
-                addLabelToLdwi(Compiler::getCodeLines()[codeLine]._vasm, Compiler::getNextInternalLabel());
+                addLabelToJump(Compiler::getCodeLines()[codeLine]._vasm, Compiler::getNextInternalLabel());
             }
 
             Compiler::getEndIfDataStack().pop();
@@ -1371,7 +1372,7 @@ namespace Keywords
         }
         else
         {
-            addLabelToJump(Compiler::getCodeLines()[whileWendData._codeLineIndex]._vasm, Compiler::getNextInternalLabel() + " " + std::to_string(Compiler::incJumpFalseUniqueId()));
+            addLabelToJumpCC(Compiler::getCodeLines()[whileWendData._codeLineIndex]._vasm, Compiler::getNextInternalLabel() + " " + std::to_string(Compiler::incJumpFalseUniqueId()));
         }
 
         return true;
@@ -1408,7 +1409,7 @@ namespace Keywords
         }
         else
         {
-            addLabelToJump(Compiler::getCodeLines()[codeLineIndex]._vasm, repeatUntilData._labelName + " " + std::to_string(Compiler::incJumpFalseUniqueId()));
+            addLabelToJumpCC(Compiler::getCodeLines()[codeLineIndex]._vasm, repeatUntilData._labelName + " " + std::to_string(Compiler::incJumpFalseUniqueId()));
         }
 
         return true;
