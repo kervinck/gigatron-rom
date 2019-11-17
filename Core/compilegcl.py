@@ -10,7 +10,6 @@
 #
 #-----------------------------------------------------------------------
 
-from __future__ import print_function
 import argparse
 import sys
 from sys import argv

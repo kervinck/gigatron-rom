@@ -129,7 +129,7 @@ def align(m=0x100, chunkSize=0x10000):
   """Insert nops to align with chunk boundary"""
   global _maxRomSize
   n = (m - pc()) % m
-  comment = 'filler' if n==1 else '%d fillers' % n
+  comment = 'filler' if n==1 else '{:d} fillers'.format(n)
   while pc() % m > 0:
     nop()
     comment = C(comment)
@@ -137,7 +137,7 @@ def align(m=0x100, chunkSize=0x10000):
 
 def wait(n):
   """Insert delay sequence of n cycles. Might clobber AC"""
-  comment = 'Wait %s cycle%s' % (n, '' if n==1 else 's')
+  comment = 'Wait {!s} cycle{!s}'.format(n, '' if n==1 else 's')
   assert n >= 0
   if n > 4:
     n -= 1
@@ -172,7 +172,7 @@ def zpReset(startFrom=1):
 def fillers(until=256, instruction=nop):
   """Insert fillers until given page offset"""
   n = until - (pc() & 255)
-  comment = 'filler' if n==1 else '%d fillers' % n
+  comment = 'filler' if n==1 else '{:d} fillers'.format(n)
   for i in range(n):
     instruction(0)
     comment = C(comment)
@@ -191,7 +191,7 @@ def trampoline():
   bra(253)                      #14
   C('|                                   |')
   ld(hi('lupReturn'), Y)        #15
-  C('| Trampoline for page $%04x lookups |' % (pc()&~255))
+  C('| Trampoline for page ${:04x} lookups |'.format((pc()&~255)))
   jmp(Y,lo('lupReturn'))        #17
   C('|                                   |')
   st([lo('vAC')])               #18
@@ -347,7 +347,7 @@ def _assemble(op, val, to=AC, addr=None):
 _mnemonics = [ 'ld', 'anda', 'ora', 'xora', 'adda', 'suba', 'st', 'j' ]
 
 def _hexString(val):
-  return '$%02x' % val
+  return '${:02x}'.format(val)
 
 def disassemble(opcode, operand, address=None, lastOpcode=None):
   text = _mnemonics[opcode >> 5] # (74LS155)
@@ -355,16 +355,16 @@ def disassemble(opcode, operand, address=None, lastOpcode=None):
 
   # Decode addressing and register mode (74LS138)
   if text != 'j':
-    if opcode & _maskMode == _ea0DregAC:    _ea, reg = '[%s]' % _hexString(operand), 'ac'
+    if opcode & _maskMode == _ea0DregAC:    _ea, reg = '[{!s}]'.format(_hexString(operand)), 'ac'
     if opcode & _maskMode == _ea0XregAC:    _ea, reg = '[x]', 'ac'
-    if opcode & _maskMode == _eaYDregAC:    _ea, reg = '[y,%s]' % _hexString(operand), 'ac'
+    if opcode & _maskMode == _eaYDregAC:    _ea, reg = '[y,{!s}]'.format(_hexString(operand)), 'ac'
     if opcode & _maskMode == _eaYXregAC:    _ea, reg = '[y,x]', 'ac'
-    if opcode & _maskMode == _ea0DregX:     _ea, reg = '[%s]' % _hexString(operand), 'x'
-    if opcode & _maskMode == _ea0DregY:     _ea, reg = '[%s]' % _hexString(operand), 'y'
-    if opcode & _maskMode == _ea0DregOUT:   _ea, reg = '[%s]' % _hexString(operand), 'out'
+    if opcode & _maskMode == _ea0DregX:     _ea, reg = '[{!s}]'.format(_hexString(operand)), 'x'
+    if opcode & _maskMode == _ea0DregY:     _ea, reg = '[{!s}]'.format(_hexString(operand)), 'y'
+    if opcode & _maskMode == _ea0DregOUT:   _ea, reg = '[{!s}]'.format(_hexString(operand)), 'out'
     if opcode & _maskMode == _eaYXregOUTIX: _ea, reg = '[y,x++]', 'out'
   else:
-    _ea = '[%s]' % _hexString(operand)
+    _ea = '[{!s}]'.format(_hexString(operand))
 
   # Decode bus mode (74LS139)
   if opcode & _maskBus == _busD:   bus = _hexString(operand)
@@ -389,28 +389,28 @@ def disassemble(opcode, operand, address=None, lastOpcode=None):
         hi = (hi + 1) & 255
       destination = (hi << 8) + operand
       if lastOpcode & (_maskOp|_maskCc) == _opJ|_jL:
-        bus = '$%02x' % operand
+        bus = '${:02x}'.format(operand)
       elif destination in _labels:
         bus = _labels[destination][-1]
       else:
-        bus = '$%04x' % destination
+        bus = '${:04x}'.format(destination)
     text += bus
   else:
     # Compose string
     if isStore:
       if bus == 'ac':
-        text = '%-4s %s' % (text, _ea)
+        text = '{:4} {!s}'.format(text, _ea)
       else:
-        text = '%-4s %s,%s' % (text, bus, _ea)
+        text = '{:4} {!s},{!s}'.format(text, bus, _ea)
       if bus is None:                  # Write/read combination means I/O control
-         text = 'ctrl %s' % _ea[1:-1]  # Strip the brackets
+         text = 'ctrl {!s}'.format(_ea[1:-1])  # Strip the brackets
       if reg != 'ac' and reg != 'out': # X and Y are not muted
         text += ',' + reg
     else:
       if reg == 'ac':
-        text = '%-4s %s' % (text, bus)
+        text = '{:4} {!s}'.format(text, bus)
       else:
-        text = '%-4s %s,%s' % (text, bus, reg)
+        text = '{:4} {!s},{!s}'.format(text, bus, reg)
       # Specials
       if opcode == _opLD | _busAC: text = 'nop'
 
@@ -421,7 +421,7 @@ def _emit(opcode, operand):
   global _romSize, _maxRomSize, _errors
   if _romSize >= _maxRomSize:
       disassembly = disassemble(opcode, operand)
-      print('{%04x} {%02x%02x}  {!s}'.format(_romSize, opcode, operand, disassembly))
+      print('{:04x} {:02x:02x}  {!s}'.format(_romSize, opcode, operand, disassembly))
       print('Error: Program size limit exceeded')
       _errors += 1
       _maxRomSize = 0x10000 # Extend to full address space to prevent more of the same errors
@@ -441,7 +441,7 @@ def _emit(opcode, operand):
     opcode & _maskBus == _busRAM and\
     opcode & _maskCc in [ _jGT, _jLT, _jNE, _jEQ, _jGE, _jLE ]:
     disassembly = disassemble(opcode, operand)
-    print('{%04x} {%02x%02x}  {!s}'.format(_romSize, opcode, operand, disassembly))
+    print('{:04x} {:02x:02x}  {!s}'.format(_romSize, opcode, operand, disassembly))
     print('Warning: large propagation delay (conditional branch with RAM on bus)')
 
 def loadBindings(symfile):
@@ -465,7 +465,7 @@ def writeRomFiles(sourceFile):
 
   # Disassemble for readability
   filename = stem + '.asm'
-  print('Create file {!s}'.foramt(filename))
+  print('Create file {!s}'.format(filename))
   with open(filename, 'w') as file:
     file.write('              address\n'
                '              |    encoding\n'
@@ -500,26 +500,26 @@ def writeRomFiles(sourceFile):
         opcode, operand = instruction
         disassembly = disassemble(opcode, operand, address, lastOpcode)
         if comment:
-          line = '%-13s %04x %02x%02x  %-16s ;%s\n' % (label, address, opcode, operand, disassembly, comment)
+          line = '{:13} {:04x} {:02x}{:02x}  {:16} ;{!s}\n'.format(label, address, opcode, operand, disassembly, comment)
         else:
-          line = '%-13s %04x %02x%02x  %s\n' % (label, address, opcode, operand, disassembly)
+          line = '{:13} {:04x} {:02x}{:02x}  {!s}\n'.format(label, address, opcode, operand, disassembly)
 
       if repeats < maxRepeat:
         file.write(line) # always write first N
         if comment:
           for extra in _comments[address][1:]:
-            file.write(42*' ' + ';%s\n' % extra)
+            file.write(42*' ' + ';{!s}\n'.format(extra))
       if repeats == maxRepeat:
         postponed = line # if this turns out to  be the last repeat, emit the line
       if repeats > maxRepeat: # now it makes sense to abbreviate the output
-        postponed = 14*' '+'* %d times\n' % (1+repeats)
+        postponed = 14*' '+'* {:d} times\n'.format(1+repeats)
 
       address += 1
       lastOpcode = opcode
 
     if postponed:
       file.write(postponed)
-    file.write(14*' '+'%04x\n' % address)
+    file.write(14*' '+'{:04x}\n'.format(address))
     assert len(_rom0) == _romSize
     assert len(_rom1) == _romSize
 

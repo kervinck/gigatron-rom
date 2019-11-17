@@ -99,7 +99,7 @@ class Program:
       self.dumpVars()
 
   def dumpVars(self):
-    print(' Variables count %d bytes %d end $%04x' % (len(self.vars), 2*len(self.vars), zpByte(0)))
+    print(' Variables count {:d} bytes {:d} end ${:04x}'.format(len(self.vars), 2*len(self.vars), zpByte(0)))
     line = ' :'
     for var in sorted(self.vars.keys()):
       if var in self.lengths and self.lengths[var]:
