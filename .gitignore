@@ -4,5 +4,4 @@ Docs/gtemu
 Libs/*/*.o
 dev.rom
 dev.asm
-Apps/Horizon/*.gt1
 Apps/Horizon/*.o
