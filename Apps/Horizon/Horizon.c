@@ -11,11 +11,6 @@
 // System include
 #include <Gigatron.h>
 
-/*----------------------------------------------------------------------+
- |      Definitions                                                     |
- +----------------------------------------------------------------------*/
-
-char title[] = "C on Gigatron TTL";
 #define screenWidth 160
 #define screenHeight 120
 #define horizonY 32
@@ -23,10 +18,6 @@ char title[] = "C on Gigatron TTL";
 #define color1 White
 #define color2 LightRed
 #define maxV 32
-
-/*----------------------------------------------------------------------+
- |      Main                                                            |
- +----------------------------------------------------------------------*/
 
 int main(void)
 {
@@ -49,12 +40,6 @@ int main(void)
     }
     videoTop_DEVROM = y+y;      // Safe no-op on ROMs without videoTop
   }
-
-  // Write title centered in the sky
-  y = horizonY - 8;
-  x = screenWidth - (sizeof title - 1) * 6;
-  ScreenPos = (int) &screenMemory[y/2][x/2];
-  puts(title);
   videoTop_DEVROM = 0;          // Show all
 
   // Interactive animation
@@ -83,6 +68,3 @@ int main(void)
   }
 }
 
-/*----------------------------------------------------------------------+
- |                                                                      |
- +----------------------------------------------------------------------*/
