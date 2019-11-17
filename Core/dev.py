@@ -140,7 +140,7 @@ from os  import getenv
 
 from asm import *
 import gcl0x as gcl
-import font_v3 as font
+import font_vX as font
 
 # Pre-loading the formal interface as a way to get warnings when
 # accidentally redefined with a different value
