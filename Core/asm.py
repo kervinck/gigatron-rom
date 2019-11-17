@@ -219,8 +219,7 @@ def end():
       _errors += 1
 
   if _errors:
-    print('{:d} error(s)'.format(_errors))
-    print
+    print('{:d} error(s)\n'.format(_errors))
     exit()
 
   align(1)
