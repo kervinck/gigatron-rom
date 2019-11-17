@@ -140,7 +140,7 @@ from os  import getenv
 
 from asm import *
 import gcl0x as gcl
-import font_v3 as font
+import font_vX as font
 
 # Pre-loading the formal interface as a way to get warnings when
 # accidentally redefined with a different value
@@ -425,6 +425,7 @@ assert runVcpu_overhead ==       5
 #-----------------------------------------------------------------------
 
 # Registers are zero page variables
+v6502_PC        = vLR           # Program Counter
 v6502_PCL       = vLR+0         # Program Counter Low
 v6502_PCH       = vLR+1         # Program Counter High
 v6502_S         = vSP           # Stack Pointer (kept as "S+1")
@@ -5205,7 +5206,12 @@ define('keyH',       keyH)
 define('oscL',       oscL)
 define('oscH',       oscH)
 define('maxTicks',   maxTicks)
-
+define('v6502_PC',   v6502_PC)
+define('v6502_PCL',  v6502_PCL)
+define('v6502_PCH',  v6502_PCH)
+define('v6502_A',    v6502_A)
+define('v6502_X',    v6502_X)
+define('v6502_Y',    v6502_Y)
 define('buttonRight',buttonRight)
 define('buttonLeft', buttonLeft)
 define('buttonDown', buttonDown)
@@ -5296,6 +5302,7 @@ for application in argv[1:]:
     zpReset(userVars)
     label(name)
     program = gcl.Program(name)
+    # BasicProgram comes from TinyBASIC.gcl
     address = symbol('BasicProgram')
     if not has(address):
       print ' Error: TinyBASIC must be compiled-in first'
@@ -5315,6 +5322,7 @@ for application in argv[1:]:
       if address & 255 == 0:
         address += 160
     basicLine(address+2, None, 'RUN')           # Startup command
+    # Buffer comes from TinyBASIC.gcl
     basicLine(symbol('Buffer'), address, None)  # End of program
     program.putInRomTable(0)
     program.end()

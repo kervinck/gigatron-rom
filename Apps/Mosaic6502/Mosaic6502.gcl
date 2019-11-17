@@ -66,7 +66,7 @@ gcl0x
         #$e6 #$31               {       inc $31         }
         #$d0 #$ce               {       bne *-50 loopA  }
         #$60                    {       rts             }
-] \vLR: { = v6502_PC }
+] _v6502_PC=
 
 { GCL notation for main loop }
 

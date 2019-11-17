@@ -1,0 +1,18 @@
+gcl0x
+
+{
+  Loading Tic-Tac-Toe as a BASIC program requires loading Tiny BASIC first,
+  and after that the GTB lines as GT1 segments. The GTB includer has converted
+  every basic line to a segment in memory. It also adds a segment that
+  overwrites BASIC's initial end-of-program pointer, hence this load order.
+  Keep knowledge of this two-stage process out of MainMenu.
+}
+
+  \SYS_Exec_88 _sysFn=          {Make no assumption on what's in sysFn}
+  \returnHere _vLR=             {Return to this location after SYS}
+  \TinyBASIC _sysArgs0= 88!!    {Load TinyBASIC image but don't execute yet}
+
+*=$ffa0                         {Unclobberd location: Tiny BASIC's SAVE buffer}
+_returnHere=*
+  \userCode _vLR=               {TinyBASIC uses the standard start address}
+  \TicTacGtb _sysArgs0= 88!!    {Load Tic-Tac-Toe and start BASIC when done}
