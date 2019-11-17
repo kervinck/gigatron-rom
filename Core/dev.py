@@ -391,9 +391,9 @@ def runVcpu(n, ref=None, returnTo=None):
     # Set to maximum time slice
     n = (128 + minTicks-1) * 2 + overhead
 
-  comment = 'Run vCPU for %s cycles gross' % n
+  comment = 'Run vCPU for {!s} cycles gross'.format(n)
   if ref:
-    comment += ' (%s)' % ref
+    comment += ' ({!s})'.format(ref)
 
   if n % 2 != (runVcpu_overhead + vCPU_overhead) % 2:
     nop()                       # tick alignment
@@ -407,7 +407,7 @@ def runVcpu(n, ref=None, returnTo=None):
 
   n -= overhead
 
-  print 'runVcpu at $%04x net cycles %3s info %s' % (pc(), n, ref)
+  print('runVcpu at ${:04x} net cycles {:>3} info {!s}'.format(pc(), n, ref))
   n -= 2*maxTicks
 
   assert n >= 0 and n % 2 == 0
@@ -2286,7 +2286,7 @@ for ix in range(255):
     if ~ix & (1 << (n-1)):
       break
   pattern = ['x' if i<n else '1' if ix&(1<<i) else '0' for i in range(8)]
-  ld(ix>>n); C('0b%s >> %d' % (''.join(reversed(pattern)), n))
+  ld(ix>>n); C('0b{!s} >> {:d}'.format(''.join(reversed(pattern)), n))
 
 assert pc()&255 == 255
 bra([vTmp]);                    C('Jumps back into next page')
@@ -2300,7 +2300,7 @@ st([vTmp])                      #18
 ld([vAC])                       #19
 anda(0b11111110)                #20
 jmp(Y,AC)                       #21
-bra(255);                       C('bra $%04x' % (shiftTable+255))#22
+bra(255);                       C('bra ${:04x}'.format(shiftTable+255))#22
 label('.sysLsrw1a')
 st([vAC])                       #26
 ld([vAC+1]);                    C('Transfer bit 8')#27
@@ -2314,7 +2314,7 @@ st([vTmp])                      #34
 ld([vAC+1])                     #35
 anda(0b11111110)                #36
 jmp(Y,AC)                       #37
-bra(255);                       C('bra $%04x' % (shiftTable+255))#38
+bra(255);                       C('bra ${:04x}'.format(shiftTable+255))#38
 label('.sysLsrw1b')
 st([vAC+1])                     #42
 ld(hi('REENTER'),Y)             #43
@@ -2329,7 +2329,7 @@ ld([vAC])                       #18
 anda(0b11111100)                #19
 ora( 0b00000001)                #20
 jmp(Y,AC)                       #21
-bra(255);                       C('bra $%04x' % (shiftTable+255))#22
+bra(255);                       C('bra ${:04x}'.format(shiftTable+255))#22
 label('.sysLsrw2a')
 st([vAC])                       #26
 ld([vAC+1]);                    C('Transfer bit 8:9')#27
@@ -2347,7 +2347,7 @@ ld([vAC+1])                     #38
 anda(0b11111100)                #39
 ora( 0b00000001)                #40
 jmp(Y,AC)                       #41
-bra(255);                       C('bra $%04x' % (shiftTable+255))#42
+bra(255);                       C('bra ${:04x}'.format(shiftTable+255))#42
 label('.sysLsrw2b')
 st([vAC+1])                     #46
 ld(hi('REENTER'),Y)             #47
@@ -2362,7 +2362,7 @@ ld([vAC])                       #18
 anda(0b11111000)                #19
 ora( 0b00000011)                #20
 jmp(Y,AC)                       #21
-bra(255);                       C('bra $%04x' % (shiftTable+255))#22
+bra(255);                       C('bra ${:04x}'.format(shiftTable+255))#22
 label('.sysLsrw3a')
 st([vAC])                       #26
 ld([vAC+1]);                    C('Transfer bit 8:10')#27
@@ -2379,7 +2379,7 @@ ld([vAC+1])                     #37
 anda(0b11111000)                #38
 ora( 0b00000011)                #39
 jmp(Y,AC)                       #40
-bra(255);                       C('bra $%04x' % (shiftTable+255))#41
+bra(255);                       C('bra ${:04x}'.format(shiftTable+255))#41
 label('.sysLsrw3b')
 st([vAC+1])                     #45
 ld(-52/2)                       #46
@@ -2395,7 +2395,7 @@ ld([vAC])                       #18
 anda(0b11110000)                #19
 ora( 0b00000111)                #20
 jmp(Y,AC)                       #21
-bra(255);                       C('bra $%04x' % (shiftTable+255))#22
+bra(255);                       C('bra ${:04x}'.format(shiftTable+255))#22
 label('.sysLsrw4a')
 st([vAC])                       #26
 ld([vAC+1]);                    C('Transfer bit 8:11')#27
@@ -2411,7 +2411,7 @@ ld([vAC+1])                     #36
 anda(0b11110000)                #37
 ora( 0b00000111)                #38
 jmp(Y,AC)                       #39
-bra(255);                       C('bra $%04x' % (shiftTable+255))#40
+bra(255);                       C('bra ${:04x}'.format(shiftTable+255))#40
 label('.sysLsrw4b')
 st([vAC+1])                     #44
 ld(hi('REENTER'),Y)             #45
@@ -2426,7 +2426,7 @@ ld([vAC])                       #18
 anda(0b11100000)                #19
 ora( 0b00001111)                #20
 jmp(Y,AC)                       #21
-bra(255);                       C('bra $%04x' % (shiftTable+255))#22
+bra(255);                       C('bra ${:04x}'.format(shiftTable+255))#22
 label('.sysLsrw5a')
 st([vAC])                       #26
 ld([vAC+1]);                    C('Transfer bit 8:13')#27
@@ -2441,7 +2441,7 @@ ld([vAC+1])                     #35
 anda(0b11100000)                #36
 ora( 0b00001111)                #37
 jmp(Y,AC)                       #38
-bra(255);                       C('bra $%04x' % (shiftTable+255))#39
+bra(255);                       C('bra ${:04x}'.format(shiftTable+255))#39
 label('.sysLsrw5b')
 st([vAC+1])                     #44
 ld(-50/2)                       #45
@@ -2457,7 +2457,7 @@ ld([vAC])                       #18
 anda(0b11000000)                #19
 ora( 0b00011111)                #20
 jmp(Y,AC)                       #21
-bra(255);                       C('bra $%04x' % (shiftTable+255))#22
+bra(255);                       C('bra ${:04x}'.format(shiftTable+255))#22
 label('.sysLsrw6a')
 st([vAC])                       #26
 ld([vAC+1]);                    C('Transfer bit 8:13')#27
@@ -2471,7 +2471,7 @@ ld([vAC+1])                     #34
 anda(0b11000000)                #35
 ora( 0b00011111)                #36
 jmp(Y,AC)                       #37
-bra(255);                       C('bra $%04x' % (shiftTable+255))#38
+bra(255);                       C('bra ${:04x}'.format(shiftTable+255))#38
 label('.sysLsrw6b')
 st([vAC+1])                     #42
 ld(hi('REENTER'),Y)             #43
@@ -2492,7 +2492,7 @@ ld([vAC])                       #24
 anda(0b11110000)                #25
 ora( 0b00000111)                #26
 jmp(Y,AC)                       #27
-bra(255);                       C('bra $%04x' % (shiftTable+255))#28
+bra(255);                       C('bra ${:04x}'.format(shiftTable+255))#28
 label('.sysLsrl4')
 ora([vAC+1])                    #32
 st([vAC+1])                     #33
@@ -2532,7 +2532,7 @@ def trampoline3a():
   while pc()&255 < 128-7:
     nop()
   bra(AC)                       #18
-  C('Trampoline for page $%02x00 reading (entry)' % (pc()>>8))
+  C('Trampoline for page ${:02x}00 reading (entry)'.format(pc()>>8))
   bra(123)                      #19
   st([sysArgs+0])               #21
   ld([sysArgs+6])               #22
@@ -2546,7 +2546,7 @@ def trampoline3b():
   while pc()&255 < 256-6:
     nop()
   st([sysArgs+1])               #27
-  C('Trampoline for page $%02x00 reading (continue)' % (pc()>>8))
+  C('Trampoline for page ${:02x}00 reading (continue)'.format(pc()>>8))
   ld([sysArgs+6])               #28
   adda(2)                       #29
   ld(hi('txReturn'),Y)          #30
@@ -2650,7 +2650,7 @@ align(0x100, 0x100)
 
 label('font32up')
 for ch in range(32, 32+50):
-  comment = 'Char %s' % repr(chr(ch))
+  comment = 'Char {!s}'.format(repr(chr(ch)))
   for byte in font.font[ch-32]:
     ld(byte)
     comment = C(comment)
@@ -2663,7 +2663,7 @@ align(0x100, 0x100)
 
 label('font82up')
 for ch in range(32+50, 132):
-  comment = 'Char %s' % repr(chr(ch))
+  comment = 'Char {!s}'.format(repr(chr(ch)))
   for byte in font.font[ch-32]:
     ld(byte)
     comment = C(comment)
@@ -2689,7 +2689,7 @@ for i in range(0, 250, 2):
     key = int(round(32768 * freq / sampleRate))
     octave, note = j/12, notes[j%12]
     sharp = '-' if notes[j%12-1] != note else '#'
-    comment = '%s%s%s (%0.1f Hz)' % (note, sharp, octave, freq)
+    comment = '{!s}{!s}{!s} ({:0.1f} Hz)'.format(note, sharp, octave, freq)
     ld(key&127); C(comment)
     ld(key>>7)
 
@@ -3707,7 +3707,7 @@ ld([sysArgs+1],Y)               #18
 ld([Y,X])                       #19
 
 for i in range(8):
-  st([vTmp],Y);                 C('Bit %d' % (7-i))#20+i*12
+  st([vTmp],Y);                 C('Bit {:d}'.format(7-i))#20+i*12
   ld([ctrlBits],X);             #21+i*12
   ctrl(Y,Xpp);                  C('Set MOSI')#22+i*12
   ctrl(Y,Xpp);                  C('Raise SCLK')#23+i*12
@@ -3792,7 +3792,7 @@ ld([Y,X]);                      #30
 anda(~1)                        #31
 ld(hi('shiftTable'),Y);         #32
 jmp(Y,AC)                       #33
-bra(255);                       C('bra $%04x' % (shiftTable+255))#34
+bra(255);                       C('bra ${:04x}'.format(shiftTable+255))#34
 label('.recheck17')
 ld(hi('v6502_check'),Y)         #17 Go back to time check before dispatch
 jmp(Y,'v6502_check')            #18
@@ -3814,7 +3814,7 @@ ld([Y,X]);                      #22
 anda(~1)                        #23
 ld(hi('shiftTable'),Y);         #24
 jmp(Y,AC)                       #25
-bra(255);                       C('bra $%04x' % (shiftTable+255))#26
+bra(255);                       C('bra ${:04x}'.format(shiftTable+255))#26
 
 label('v6502_rol')
 assert v6502_Cflag == 1
@@ -5171,7 +5171,7 @@ align(0x100)
 # We're redefining them here to get a consistency check.
 define('memSize',    memSize)
 for i in range(3):
-  define('entropy%d' % i, entropy+i)
+  define('entropy{:d}'.format(i), entropy+i)
 define('videoY',     videoY)
 define('frameCount', frameCount)
 define('serialRaw',  serialRaw)
@@ -5186,7 +5186,7 @@ define('vTmp',       vTmp)      # Not in interface.json
 define('romType',    romType)
 define('sysFn',      sysFn)
 for i in range(8):
-  define('sysArgs%d' % i, sysArgs+i)
+  define('sysArgs{:d}'.format(i), sysArgs+i)
 define('soundTimer', soundTimer)
 define('ledTimer',   ledTimer)
 define('ledState_v2',ledState_v2)
@@ -5253,15 +5253,15 @@ for application in argv[1:]:
     # Label derived from filename itself
     name = application.rsplit('.', 1)[0] # Remove extension
     name = name.rsplit('/', 1)[-1]       # Remove path
-  print 'Processing file %s label %s' % (application, name)
+  print 'Processing file {!s} label {!s}'.format(application, name)
 
   C('+-----------------------------------+')
-  C('| %-33s |' % application)
+  C('| {:.33s} |'.format(application))
   C('+-----------------------------------+')
 
   # Pre-compiled GT1 files
   if application.endswith(('.gt1', '.gt1x')):
-    print 'Load type .gt1 at $%04x' % pc()
+    print 'Load type .gt1 at ${:04x}'.format(pc())
     with open(application, 'rb') as f:
       raw = f.read()
     label(name)
@@ -5275,7 +5275,7 @@ for application in argv[1:]:
 
   # GCL files
   elif application.endswith('.gcl'):
-    print 'Compile type .gcl at $%04x' % pc()
+    print 'Compile type .gcl at ${:04x}'.format(pc())
     label(name)
     program = gcl.Program(name)
     program.org(userCode)
@@ -5286,13 +5286,13 @@ for application in argv[1:]:
 
   # Application-specific SYS extensions
   elif application.endswith('.py'):
-    print 'Include type .py at $%04x' % pc()
+    print 'Include type .py at ${:04x}'.format(pc())
     label(name)
     importlib.import_module(name)
 
   # GTB files
   elif application.endswith('.gtb'):
-    print 'Link type .gtb at $%04x' % pc()
+    print 'Link type .gtb at ${:04x}'.format(pc())
     zpReset(userVars)
     label(name)
     program = gcl.Program(name)
@@ -5323,7 +5323,7 @@ for application in argv[1:]:
   # Simple sequential RGB file
   elif application.endswith('-256x16.rgb'):
     width, height = 256, 16
-    print 'Convert type .rgb/sequential at $%04x' % pc()
+    print 'Convert type .rgb/sequential at ${:04x}'.format(pc())
     f = open(application, 'rb')
     raw = f.read()
     f.close()
@@ -5342,21 +5342,21 @@ for application in argv[1:]:
       ld(packed[i])
       if pc()&255 == 251:
         trampoline()
-    print ' Pixels %dx%d' % (width, height)
+    print ' Pixels {:d}x{:d}'.format(width, height)
 
   # Random access RGB files (for Pictures application)
   elif application.endswith('-160x120.rgb'):
     width, height = 160, 120
     if pc()&255 > 0:
       trampoline()
-    print 'Convert type .rgb/parallel at $%04x' % pc()
+    print 'Convert type .rgb/parallel at $%{:04x}'.format(pc())
     f = open(application, 'rb')
     raw = f.read()
     f.close()
     label(name)
     for y in range(0, height, 2):
       for j in range(2):
-        comment = 'Pixels for %s line %s' % (name, y+j)
+        comment = 'Pixels for {!s} line {!s}'.format(name, y+j)
         for x in range(0, width, 4):
           bytes = []
           for i in range(4):
@@ -5372,11 +5372,11 @@ for application in argv[1:]:
           trampoline3a()
         else:
           trampoline3b()
-    print ' Pixels %dx%d' % (width, height)
+    print ' Pixels {:d}x{:d}'.format(width, height)
 
   # XXX Provisionally bring ROMv1 egg back as placeholder for Pictures
   elif application.endswith('/gigatron.rgb'):
-    print('Convert type gigatron.rgb at $%04x' % pc())
+    print('Convert type gigatron.rgb at ${:04x}'.format(pc()))
     f = open(application, 'rb')
     raw = f.read()
     f.close()
@@ -5390,8 +5390,8 @@ for application in argv[1:]:
   else:
     assert False
 
-  C('End of %s, size %d' % (application, pc() - symbol(name)))
-  print ' Size %s' % (pc() - symbol(name))
+  C('End of {!s}, size {:d}'.format(application, pc() - symbol(name)))
+  print ' Size {!s}'.format(pc() - symbol(name))
 
 print
 

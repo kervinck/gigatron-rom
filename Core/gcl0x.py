@@ -64,7 +64,7 @@ class Program:
         self.word(nextWord)
         nextWord = ''
         if nextChar == '{': self.comments.append(self.lineNumber)
-        elif nextChar == '}': self.error('Spurious %s' % repr(nextChar))
+        elif nextChar == '}': self.error('Spurious {!s}'.format(repr(nextChar)))
         elif nextChar == '[':
            self.openBlocks.append(self.nextBlockId)
            self.elses[self.nextBlockId] = 0
@@ -76,11 +76,11 @@ class Program:
           b = self.openBlocks.pop()
           if self.start[b]>>8 != (self.vPC-1)>>8:
             self.error('Block crosses page boundary')
-          define('__%s_%d_cond%d__' % (self.name, b, self.elses[b]), prev(self.vPC))
+          define('__{!s}_{:d}_cond{:d}__'.format(self.name, b, self.elses[b]), prev(self.vPC))
           del self.elses[b]
           if b in self.defs:
             self.lengths[self.thisBlock()] = self.vPC - self.defs[b] + 2
-            define('__%s_%#04x_def__' % (self.name, self.defs[b]), prev(self.vPC))
+            define('__{!s}_{:#04x}_def__'.format(self.name, self.defs[b]), prev(self.vPC))
             del self.defs[b]
         elif nextChar == '(': pass
         elif nextChar == ')': pass
@@ -103,7 +103,7 @@ class Program:
     line = ' :'
     for var in sorted(self.vars.keys()):
       if var in self.lengths and self.lengths[var]:
-        var += ' [%s]' % self.lengths[var]
+        var += ' [{!s}]'.format(self.lengths[var])
       if len(line + var) + 1 > 72:
         print(line)
         line = ' :'
@@ -121,7 +121,7 @@ class Program:
       if word in ['gcl0x']:
         self.version = word
       else:
-        self.error('(%s) Invalid GCL version' % word)
+        self.error('({!s}) Invalid GCL version'.format(word))
     elif word == 'def':       self.emitDef()
     elif word == 'do':        self.loops[self.thisBlock()] = self.vPC
     elif word == 'loop':      self.emitLoop()
@@ -138,7 +138,7 @@ class Program:
     elif word == 'if>=0loop': self.emitIfLoop('GE')
     elif word == 'if<=0loop': self.emitIfLoop('LE')
     elif word == 'else':      self.emitElse()
-    elif word == 'call':      self.emitOp('CALL').emit(symbol('vAC'), '%04x vAC' % prev(self.vPC, 1))
+    elif word == 'call':      self.emitOp('CALL').emit(symbol('vAC'), '{:04x} vAC'.format(prev(self.vPC, 1)))
     elif word == 'push':      self.emitOp('PUSH')
     elif word == 'pop':       self.emitOp('POP')
     elif word == 'ret':       self.emitOp('RET'); self.needPatch = self.needPatch or len(self.openBlocks) == 1 # Top-level use of 'ret' --> apply patch
@@ -151,7 +151,7 @@ class Program:
       if has(var) and has(con):
         if op == '=': self.defSymbol(var, con)
         else:
-          self.error("Invalid operator '%s' with name and constant" % op)
+          self.error("Invalid operator '{!s}' with name and constant" % op)
 
       # Words with constant value as operand
       elif has(con):
@@ -202,7 +202,7 @@ class Program:
         elif op == '%=':   self.emitOp('STLW');         #self.depr('i%=', '%i=')
         elif op == '%':    self.emitOp('LDLW');         #self.depr('i%', %i')
         else:
-          self.error("Invalid operator '%s' with constant" % op)
+          self.error("Invalid operator '{!s}' with constant" % op)
         if has(con):
           self.emit(con)
 
@@ -242,7 +242,7 @@ class Program:
         elif op == '<.':   self.emitOp('ST');              #self.depr('X<.', '<X.')
         elif op == '>.':   self.emitOp('ST'); offset = 1;  #self.depr('X>.', '>X.')
         else:
-          self.error("Invalid operator '%s' with variable or symbol '%s'" % (op, var))
+          self.error("Invalid operator '{!s}' with variable or symbol '{!s}'" % (op, var))
         if has(var):
           self.emitVar(var, offset)
 
@@ -343,7 +343,7 @@ class Program:
   def sysTicks(self, con):
     # Convert maximum Gigatron cycles to the negative of excess ticks
     if con & 1:
-      self.error('Invalid value (must be even, got %d)' % con)
+      self.error('Invalid value (must be even, got {:d})'.format(con))
     extraTicks = con/2 - symbol('maxTicks')
     return 256 - extraTicks if extraTicks > 0 else 0
 
@@ -355,7 +355,7 @@ class Program:
     else:
       d = '`' # And symbol becomes a backquote
     for c in d:
-      comment = '%04x %s' % (self.vPC, repr(c))
+      comment = '{:04x} {!s}'.format(self.vPC, repr(c))
       self.emit(ord(c), comment=comment)
 
   def emitDef(self):
@@ -364,7 +364,7 @@ class Program:
       if b in self.defs:
         self.error('Second DEF in block')
       self.defs[b] = self.vPC
-      self.emit(lo('__%s_%#04x_def__' % (self.name, self.vPC)))
+      self.emit(lo('__{!s}_{:#04x}_def__'.format(self.name, self.vPC)))
 
   def updateDefInfo(self, var):
     # Heuristically track `def' lengths for reporting on stdout
@@ -388,7 +388,7 @@ class Program:
       self.emitOp('BCC')
       self.emitOp(cond)
       b = self.thisBlock()
-      self.emit(lo('__%s_%d_cond%d__' % (self.name, b, self.elses[b])))
+      self.emit(lo('__{!s}_{:d}_cond{:d}__'.format(self.name, b, self.elses[b])))
 
   def emitIfLoop(self, cond):
       to = [blockId for blockId in self.openBlocks if blockId in self.loops]
@@ -406,14 +406,14 @@ class Program:
       self.emitOp('BRA')
       b = self.thisBlock()
       i = self.elses[b]
-      self.emit(lo('__%s_%d_cond%d__' % (self.name, b, i+1)))
-      define('__%s_%d_cond%d__' % (self.name, b, i), prev(self.vPC))
+      self.emit(lo('__{!s}_{:d}_cond{:d}__'.format(self.name, b, i+1)))
+      define('__{!s}_{:d}_cond{:d}__'.format(self.name, b, i), prev(self.vPC))
       self.elses[b] = i+1
 
   def emitOp(self, ins):
     # Emit vCPU opcode
     self.prepareSegment()
-    self.putInRomTable(lo(ins), '%04x %s' % (self.vPC, ins))
+    self.putInRomTable(lo(ins), '{:04x} {!s}'.format(self.vPC, ins))
     self.vPC += 1
     return self
 
@@ -429,11 +429,11 @@ class Program:
       if var not in self.vars:
         self.vars[var] = zpByte(2)
       address = self.vars[var]
-    comment = '%04x %s' % (prev(self.vPC, 1), repr(var))
-    comment += '%+d' % offset if offset else ''
+    comment = '{:04x} {!s}'.format(prev(self.vPC, 1), repr(var))
+    comment += '{}'.format(offset if offset else '')
     byte = address + offset
     if byte < -128 or byte >= 256:
-      self.error('Value %s out of range (must be -128..255)' % repr(byte))
+      self.error('Value {!s} out of range (must be -128..255)'.format(repr(byte)))
     self.putInRomTable(byte, comment)
     self.vPC += 1
     return self
@@ -456,7 +456,7 @@ class Program:
       if half is hi:
         address += 1
         var = '>' + var
-    self.putInRomTable(address, '%04x %s' % (self.vPC, var))
+    self.putInRomTable(address, '{:04x} {!s}'.format(self.vPC, var))
     self.vPC += 1
     return self
 
@@ -467,7 +467,7 @@ class Program:
     # Check if there's space in the current segment
     if self.vPC >= self.segEnd:
       severity = self.warning if self.vPC & 255 > 0 else self.error
-      severity('Out of code space ($%04x)' % self.vPC)
+      severity('Out of code space (${:04x})'.format(self.vPC))
 
     # And write header bytes for a new segment
     if self.segStart == self.vPC:
@@ -480,13 +480,13 @@ class Program:
       self.putInRomTable(address>>8, '| RAM segment address (high byte first)')
       self.putInRomTable(address&255, '|')
       # Fill in the length through the symbol table
-      self.putInRomTable(lo('__%s_seg%d__' % (self.name, self.segId)), '| Length (1..256)')
+      self.putInRomTable(lo('__{!s}_seg{:d}__'.format(self.name, self.segId)), '| Length (1..256)')
 
   def emit(self, byte, comment=None):
     # Next program byte in RAM
     self.prepareSegment()
     if byte < -128 or byte >= 256:
-      self.error('Value %s out of range (must be -128..255)' % repr(byte))
+      self.error('Value {!s} out of range (must be -128..255)'.format(repr(byte)))
     self.putInRomTable(byte, comment)
     self.vPC += 1
     return self
@@ -494,19 +494,19 @@ class Program:
   def closeSegment(self):
     # Register length of GT1 segment
     if self.vPC != self.segStart:
-      print(' Segment at $%04x size %3d used %3d unused %3d' % (
+      print(' Segment at ${:04x} size {:3d} used {:3d} unused {:3d}'.format(
         self.segStart,
         self.segEnd - self.segStart,
         self.vPC - self.segStart,
         self.segEnd - self.vPC))
       length = self.vPC - self.segStart
       assert 1 <= length <= 256
-      define('__%s_seg%d__' % (self.name, self.segId), length)
+      define('__{!s}_seg{:d}__'.format(self.name, self.segId), length)
       self.segId += 1
 
   def putInRomTable(self, byte, comment=None):
     if byte < -128 or byte >= 256:
-      self.error('Value %s out of range (must be -128..255)' % repr(byte))
+      self.error('Value {!s} out of range (must be -128..255)'.format(repr(byte)))
     ld(byte)
     if comment:
       C(comment)
@@ -517,7 +517,7 @@ class Program:
     var, con, _op = self.parseWord(self.lastWord)
     old = old.replace(' ', str(con) if has(con) else var)
     new = new.replace(' ', str(con) if has(con) else var)
-    self.warning('%s is deprecated, please use %s' % (old, new))
+    self.warning('{!s} is deprecated, please use {!s}'.format(old, new))
 
   def warning(self, message):
     print(self.prefix('Warning'), message)
@@ -529,17 +529,17 @@ class Program:
   def prefix(self, prefix):
     # Informative line prefix for warning and error messages
     if has(self.filename):
-       prefix += ' file %s' % repr(self.filename)
+       prefix += ' file {!s}'.format(repr(self.filename))
     if self.lineNumber != 0:
-      prefix += ':%s' % self.lineNumber
+      prefix += ':{!s}'.format(self.lineNumber)
     if has(self.lastWord):
-      prefix += ' (%s)' % self.lastWord
+      prefix += ' ({!s})'.format(self.lastWord)
     return prefix + ':'
 
   def defSymbol(self, name, value):
     # Define a label from GCL in the systems symbol table
     if name[0] != '_':
-      self.error('Symbol \'%s\' must begin with underscore (\'_\')' % name)
+      self.error('Symbol \'{!s}\' must begin with underscore (\'_\')'.format(name))
     define(name[1:], value)
 
 def prev(address, step=2):
