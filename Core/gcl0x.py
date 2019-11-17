@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-from __future__ import print_function
+#!/usr/bin/env python3
 
 # XXX Change to Python3
 # XXX Backquoted words should have precedence over grouping
@@ -157,7 +156,7 @@ class Program:
       # Words with constant value as operand
       elif has(con):
         if not has(op):
-          if 0 <= con < 256:
+          if isinstance(con, int) and 0 <= con < 256:
             self.emitOp('LDI')
           else:
             self.emitOp('LDWI').emit(lo(con)); con = hi(con)
@@ -335,6 +334,10 @@ class Program:
         self.error('Unable to negate')
 
     op += word[ix:-1]                   # Also strips sentinel '\0'
+    
+    if number is not None and not isinstance(number, str):
+      number = int(number)
+
     return (name, number, op if len(op)>0 else None)
 
   def sysTicks(self, con):

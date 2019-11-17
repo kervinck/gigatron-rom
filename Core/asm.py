@@ -100,7 +100,7 @@ def define(name, newValue):
   if name in _symbols:
     oldValue =  _symbols[name]
     if newValue != oldValue:
-      print('Warning: redefining {%s} (old {%s} new {%s})'.format(name, oldValue, newValue))
+      print('Warning: redefining {!s} (old {!s} new {!s})'.format(name, oldValue, newValue))
   _symbols[name] = newValue
 
 def symbol(name):
@@ -207,7 +207,7 @@ def end():
       _rom1[where] += _symbols[name] # adding allows some label tricks
       _rom1[where] &= 255
     else:
-      print('Error: Undefined symbol {%s}'.format(repr(name)))
+      print('Error: Undefined symbol {!s}'.format(repr(name)))
       _symbols[name] = 0 # No more errors
       _errors += 1
 
@@ -215,11 +215,11 @@ def end():
     if name in _symbols:
       _rom1[where] += _symbols[name] >> 8
     else:
-      print('Error: Undefined symbol {%s}'.format(repr(name)))
+      print('Error: Undefined symbol {!s}'.format(repr(name)))
       _errors += 1
 
   if _errors:
-    print('{%d} error(s)'.format(_errors))
+    print('{:d} error(s)'.format(_errors))
     print
     exit()
 
@@ -421,7 +421,7 @@ def _emit(opcode, operand):
   global _romSize, _maxRomSize, _errors
   if _romSize >= _maxRomSize:
       disassembly = disassemble(opcode, operand)
-      print('{%04x} {%02x%02x}  {%s}'.format(_romSize, opcode, operand, disassembly))
+      print('{%04x} {%02x%02x}  {!s}'.format(_romSize, opcode, operand, disassembly))
       print('Error: Program size limit exceeded')
       _errors += 1
       _maxRomSize = 0x10000 # Extend to full address space to prevent more of the same errors
@@ -441,7 +441,7 @@ def _emit(opcode, operand):
     opcode & _maskBus == _busRAM and\
     opcode & _maskCc in [ _jGT, _jLT, _jNE, _jEQ, _jGE, _jLE ]:
     disassembly = disassemble(opcode, operand)
-    print('{%04x} {%02x%02x}  {%s}'.format(_romSize, opcode, operand, disassembly))
+    print('{%04x} {%02x%02x}  {!s}'.format(_romSize, opcode, operand, disassembly))
     print('Warning: large propagation delay (conditional branch with RAM on bus)')
 
 def loadBindings(symfile):
@@ -465,7 +465,7 @@ def writeRomFiles(sourceFile):
 
   # Disassemble for readability
   filename = stem + '.asm'
-  print('Create file {%s}'.foramt(filename))
+  print('Create file {!s}'.foramt(filename))
   with open(filename, 'w') as file:
     file.write('              address\n'
                '              |    encoding\n'
@@ -536,7 +536,7 @@ def writeRomFiles(sourceFile):
 
   # 16-bit version for 27C1024, little endian
   filename = stem + '.rom'
-  print('Create file {%s}'.format(filename))
+  print('Create file {!s}'.format(filename))
   _rom2 = []
   for x, y in zip(_rom0, _rom1):
     _rom2.append(x)
@@ -548,5 +548,5 @@ def writeRomFiles(sourceFile):
   with open(filename, 'wb') as file:
     file.write(''.join([chr(byte) for byte in _rom2]))
 
-  print('OK used {%d} free {%d} size {%d}'.format(_romSize, _maxRomSize-_romSize, len(_rom2)))
+  print('OK used {:d} free {:d} size {:d}'.format(_romSize, _maxRomSize-_romSize, len(_rom2)))
 
