@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #-----------------------------------------------------------------------
 #
 #  compilegcl.py -- Compile GCL source to GT1 object file
@@ -10,7 +10,6 @@
 #
 #-----------------------------------------------------------------------
 
-from __future__ import print_function
 import argparse
 import sys
 from sys import argv
@@ -41,7 +40,7 @@ asm.loadBindings(args.sym)
 userCode = asm.symbol('userCode')
 userVars = asm.symbol('userVars')
 
-print('Compiling file %s' % args.gclSource)
+print('Compiling file {!s}'.format(args.gclSource))
 program = gcl.Program('Main', forRom=False)
 program.org(userCode)
 asm.align(1)          # Forces default maximum ROM size
@@ -62,7 +61,7 @@ address = program.execute
 # See: https://forum.gigatron.io/viewtopic.php?p=27#p27
 if program.needPatch:
   patchArea = 0x5b86 # Somewhere after the ROMv1 Loader's buffer
-  print('Apply patch $%04x' % patchArea)
+  print('Apply patch ${:04x}'.format(patchArea))
   data = data[:-1] # Remove terminating zero
   data += ''.join(chr(byte) for byte in [
     patchArea>>8, patchArea&255, 6,   # Patch segment, 6 bytes at $5b80
@@ -75,7 +74,7 @@ if program.needPatch:
   address = patchArea
 
 # Final two bytes are execution address
-print('Execute at $%04x' % address)
+print('Execute at ${:04x}'.format(address))
 data += chr(address>>8)
 data += chr(address&255)
 
@@ -88,7 +87,7 @@ gt1File = args.outputDir + '/' + stem + '.gt1' # Resulting object file
 
 print('Create file', gt1File)
 
-with open(gt1File, 'wb') as output:
+with open(gt1File, 'w') as output:
   output.write(data)
 
 print('OK size', len(data))

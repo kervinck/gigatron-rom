@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #-----------------------------------------------------------------------
 #
 # sendFile.py -- Send file to Gigatron through Arduino as interface
@@ -19,7 +19,6 @@
 #
 #-----------------------------------------------------------------------
 
-from __future__ import print_function
 import argparse
 import glob
 import serial # pySerial: http://pyserial.readthedocs.io/en/latest/index.html
@@ -27,7 +26,7 @@ import sys
 from time import sleep
 
 # One-for-all error handler (don't throw scary stack traces at the user)
-sys.excepthook = lambda exType, exValue, exTrace: print('%s: %s' % (exType.__name__,  exValue))
+sys.excepthook = lambda exType, exValue, exTrace: print('{!s}: {!s}'.format(exType.__name__,  exValue))
 
 #-----------------------------------------------------------------------
 #       Command line arguments
@@ -111,7 +110,7 @@ if not args.port:
   if len(serPorts) == 0:
     raise Exception('No USB device detected')
   if len(serPorts) > 1:
-    raise Exception('More than one USB device detected: %s' % ' '.join(serPorts))
+    raise Exception('More than one USB device detected: {!s}'.format(' '.join(serPorts)))
   port = serPorts[0]
 else:
   port = args.port
@@ -137,7 +136,7 @@ print('Starting Loader')
 sendCommand('L')
 
 if args.filename and args.filename.lower().endswith(('.gt1', '.gt1x')):
-  print('Sending program %s' % repr(args.filename))
+  print('Sending program {!s}'.format(repr(args.filename)))
   sendGt1(fp)
 else:
   isBasic = args.filename and args.filename.lower().endswith(('.gtb', 'gtbx', '.bas'))
@@ -145,7 +144,7 @@ else:
     print('Loading BASIC')
     sendCommand('P')
     sleep(2) # BASIC takes a while on 64K
-  print('Sending text %s' % (repr(args.filename) if args.filename else 'from stdin'))
+  print('Sending text {!s}'.format(repr(args.filename) if args.filename else 'from stdin'))
   for line in fp:
     line = line.strip()
     if len(line) > 25:

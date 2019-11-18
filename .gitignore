@@ -1,0 +1,7 @@
+__pycache__
+Utils/lcc/build/*
+Docs/gtemu
+Libs/*/*.o
+dev.rom
+dev.asm
+Apps/Horizon/*.o

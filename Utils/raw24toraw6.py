@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import argparse, itertools, os, struct, sys
 from os import path
@@ -69,28 +69,28 @@ with open(gclfile, 'w') as output:
 
     output.write('gcl0x\n\n')
     n_seg = 0
-    for segment in [raw[i:i + split] for i in xrange(0, len(raw), split)]:
+    for segment in [raw[i:i + split] for i in range(0, len(raw), split)]:
         n_seg += 1
 
         if args.start_address is not None:
-            output.write('$%04x:' % (seg_start))
+            output.write('${:04x}:'.format((seg_start)))
             seg_start += 0x100
 
         if args.size_limit and len(raw) > args.size_limit:
-            output.write('\n%s{packed%s%02d}\n' % (defs_prefix, stem, n_seg))
+            output.write("\n{!s}{{packed{!s}{:02d}}}\n".format(defs_prefix, stem, n_seg))
         else:
-            output.write('\n%s{packed%s}\n' % (defs_prefix, stem))
+            output.write("\n{!s}{{packed{!s}}}\n".format(defs_prefix, stem))
 
         n_bytes = 0;
         for val in segment:
             if n_bytes == args.output_width:
                 output.write('\n')
                 n_bytes = 0
-            output.write(' $%02x#' % (val))
+            output.write(' ${:02d}#'.format(val))
             n_bytes += 1
 
         if args.add_defs:
-            output.write('] packed%s%02d=\n' % (stem, n_seg))
+            output.write("] packed{!s}{:02d}=\n".format(stem, n_seg))
             if split < len(raw):
                 output.write('\n\\vLR>++ ret\n')
         else:
