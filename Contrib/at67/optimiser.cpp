@@ -15,7 +15,7 @@
 namespace Optimiser
 {
     enum OptimiseTypes {StwLdwPair=0, StwLdPair, StwPair, StwPairReg, ExtraStw, ExtraLdw, StwLdwAddw, StwLdwAddwVar, StwLdwAndw, StwLdwAndwVar, StwLdwXorw, StwLdwXorwVar,
-                        StwLdwOrw, StwLdwOrwVar, PokeArray, DokeArray, PokeVarArray, DokeVarArray, PokeTmpArray, DokeTmpArray, AddiZero, SubiZero, NumOptimiseTypes};
+                        StwLdwOrw, StwLdwOrwVar, PeekArray, DeekArray, PokeArray, DokeArray, PokeVarArray, DokeVarArray, PokeTmpArray, DokeTmpArray, AddiZero, SubiZero, NumOptimiseTypes};
 
     struct MatchSequence
     {
@@ -89,6 +89,20 @@ namespace Optimiser
         {0, 2, {"STW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x", 
                 "LDW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_",
                 "ORW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x"}},
+
+        // PeekArray
+        {0, 0, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg", 
+                "LDWI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x", 
+                "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "reg", 
+                "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "reg", 
+                "PEEK" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + ""}},
+
+        // DeekArray
+        {0, 0, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg", 
+                "LDWI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x", 
+                "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "reg", 
+                "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "reg", 
+                "DEEK" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + ""}},
 
         // PokeArray
         {0, 0, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg", 
@@ -460,10 +474,36 @@ namespace Optimiser
                                 adjustLabelAddresses(i, firstLine, -4);
                                 adjustVasmAddresses(i, firstLine, -4);
                             }
+                            // Match STW LDWI ADDW ADDW PEEK/DEEK
+                            else if(j == PeekArray  ||  j == DeekArray)
+                            {
+                                // Save previous line LDW, if opcode is not LDW then can't optimise
+                                Compiler::VasmLine savedLDW = Compiler::getCodeLines()[i]._vasm[firstLine - 1];
+                                if(savedLDW._opcode != "LDW") break;
+
+                                // Migrate it's label if it has one
+                                if(!migrateInternalLabel(i, firstLine - 1, firstLine + 1)) break;
+
+                                // Get saved LD<X>'s operand
+                                size_t ldwSpace = savedLDW._code.find_first_of("  \n\r\f\t\v");
+                                std::string ldwOperand = savedLDW._code.substr(ldwSpace);
+                                Expression::stripWhitespace(ldwOperand);
+
+                                // Delete previous line LD<X> and first STW
+                                linesDeleted = true;
+                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine - 1);
+                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(itVasm);
+
+                                // Replace operand of both ADDW's
+                                (itVasm + 1)->_code = "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + ldwOperand;
+                                (itVasm + 2)->_code = "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + ldwOperand;
+                                adjustLabelAddresses(i, firstLine - 1, -4);
+                                adjustVasmAddresses(i, firstLine - 1, -4);
+                            }
                             // Match STW LDWI STW LDW POKE/DOKE
                             else if(j == PokeArray  ||  j == DokeArray)
                             {
-                                // Save previous line LD<X>, if opcode is not some sort of LD, then can't optimise
+                                // Save previous line LD<X>, if opcode is not some sort of LD then can't optimise
                                 Compiler::VasmLine savedLD = Compiler::getCodeLines()[i]._vasm[firstLine - 1];
                                 if(savedLD._opcode.find("LD") == std::string::npos) break;
 
@@ -486,7 +526,7 @@ namespace Optimiser
                             // Match STW LDW STW LDWI ADDW ADDW STW LDW POKE/DOKE
                             else if(j == PokeVarArray  ||  j == DokeVarArray  ||  j == PokeTmpArray  ||  j == DokeTmpArray)
                             {
-                                // Save previous line LD<X>, if opcode is not some sort of LD, then can't optimise
+                                // Save previous line LD<X>, if opcode is not some sort of LD then can't optimise
                                 Compiler::VasmLine savedLD = Compiler::getCodeLines()[i]._vasm[firstLine - 1];
                                 if(savedLD._opcode.find("LD") == std::string::npos) break;
 

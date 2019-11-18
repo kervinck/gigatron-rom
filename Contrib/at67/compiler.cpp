@@ -179,7 +179,7 @@ namespace Compiler
 
     int findInternalLabel(const std::string& labelName)
     {
-        for(int i=0; i<_labels.size(); i++)
+        for(int i=0; i<_internalLabels.size(); i++)
         {
             if(_internalLabels[i]._name == labelName) return i;
         }
@@ -189,7 +189,7 @@ namespace Compiler
     
     int findInternalLabel(uint16_t address)
     {
-        for(int i=0; i<_labels.size(); i++)
+        for(int i=0; i<_internalLabels.size(); i++)
         {
             if(_internalLabels[i]._address == address) return i;
         }
@@ -2721,6 +2721,11 @@ namespace Compiler
                         line += (label.size()) ?  "\n" + label + std::string(LABEL_TRUNC_SIZE - label.size(), ' ') + vasmCode : "\n" + std::string(LABEL_TRUNC_SIZE, ' ') + vasmCode;
                     }
 
+                    if(vasmAddress == 0x03fd)
+                    {
+                        int a = 1;
+                    }
+
                     if(vasmSize) Memory::takeFreeRAM(vasmAddress, vasmSize);
                 }
 
@@ -2859,9 +2864,6 @@ namespace Compiler
         // Check code exclusion zones
         if(!Validater::checkExclusionZones()) return false;
 
-        // Check branch labels
-        if(!Validater::checkBranchLabels()) return false;
-
         // Check keywords that form statement blocks
         if(!Validater::checkStatementBlocks()) return false;
 
@@ -2873,6 +2875,11 @@ namespace Compiler
         outputInternalVars();
         outputIncludes();
         outputLabels();
+
+        // TODO: doesn't work, page jumps have already been defined by now
+        // Check branch labels
+        //if(!Validater::checkBranchLabels()) return false;
+
         outputVars();
         outputStrs();
         outputDefs();

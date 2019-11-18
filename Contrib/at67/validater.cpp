@@ -19,7 +19,7 @@ namespace Validater
         return true;
     }
 
-    void adjustExclusionLabelAddresses(uint16_t address, int offset)
+    void adjustLabelAddresses(uint16_t address, int offset)
     {
         // Adjust addresses for any non page jump labels with addresses higher than start label, (labels can be stored out of order)
         for(int i=0; i<Compiler::getLabels().size(); i++)
@@ -29,9 +29,17 @@ namespace Validater
                 Compiler::getLabels()[i]._address += offset;
             }
         }
+
+        for(int i=0; i<Compiler::getInternalLabels().size(); i++)
+        {
+            if(Compiler::getInternalLabels()[i]._address >= address)
+            {
+                Compiler::getInternalLabels()[i]._address += offset;
+            }
+        }
     }
 
-    void adjustExclusionVasmAddresses(int codeLineIndex, uint16_t address, uint16_t page, int offset)
+    void adjustVasmAddresses(int codeLineIndex, uint16_t address, int offset)
     {
         for(int i=codeLineIndex; i<Compiler::getCodeLines().size(); i++)
         {
@@ -214,8 +222,8 @@ namespace Validater
 
                         // Fix labels and addresses
                         int offset = nextPC + restoreOffset - currPC;
-                        adjustExclusionLabelAddresses(currPC, offset);
-                        adjustExclusionVasmAddresses(codeLineIndex, currPC, nextPC + restoreOffset, offset);
+                        adjustLabelAddresses(currPC, offset);
+                        adjustVasmAddresses(codeLineIndex, currPC, offset);
 
                         // Check for existing label, (after label adjustments)
                         int labelIndex = -1;
@@ -288,35 +296,47 @@ namespace Validater
         {
             for(int j=0; j<Compiler::getCodeLines()[i]._vasm.size(); j++)
             {
-                uint16_t vasmAddress = Compiler::getCodeLines()[i]._vasm[j]._address;
-                std::string vasmCode = Compiler::getCodeLines()[i]._vasm[j]._code;
-                std::string vasmLabel = Compiler::getCodeLines()[i]._vasm[j]._internalLabel;
+                uint16_t address = Compiler::getCodeLines()[i]._vasm[j]._address;
+                std::string opcode = Compiler::getCodeLines()[i]._vasm[j]._opcode;
+                std::string code = Compiler::getCodeLines()[i]._vasm[j]._code;
+                std::string label = Compiler::getCodeLines()[i]._vasm[j]._internalLabel;
 
-                if(vasmCode == "BRA")
+                if(opcode == "%JumpFalse")
                 {
-                    size_t space = vasmCode.find_first_of("  \n\r\f\t\v");
-                    std::string operand = vasmCode.substr(space);
+                    std::vector<std::string> tokens = Expression::tokenise(code, " ", false);
+                    if(tokens.size() < 2) continue;
+
+                    Expression::stripWhitespace(tokens[1]);
+                    std::string operand = tokens[1];
 
                     // Is operand a label?
                     int labelIndex = Compiler::findLabel(operand);
                     if(labelIndex >= 0)
                     {
-                        if(HI_MASK(vasmAddress) != HI_MASK(Compiler::getLabels()[labelIndex]._address))
+                        if(HI_MASK(address) == HI_MASK(Compiler::getLabels()[labelIndex]._address))
                         {
-                            fprintf(stderr, "Compiler::checkBranchLabels() : trying to branch to : %04x : from %04x in '%s' on line %d\n", Compiler::getLabels()[labelIndex]._address, vasmAddress, vasmCode.c_str(), i);
-                            return false;
+                            Compiler::getCodeLines()[i]._vasm[j]._opcode = "BEQ";
+                            Compiler::getCodeLines()[i]._vasm[j]._code = "BEQ" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Compiler::getLabels()[labelIndex]._name;
+                            Compiler::getCodeLines()[i]._vasm[j]._vasmSize = 3;
+
+                            adjustLabelAddresses(address+3, -5);
+                            adjustVasmAddresses(i, address+3, -5);
                         }
                     }
-                    else if(vasmLabel.size())
                     // Check internal label
+                    else
                     {
                         int labelIndex = Compiler::findInternalLabel(operand);
                         if(labelIndex >= 0)
                         {
-                            if(HI_MASK(vasmAddress) != HI_MASK(Compiler::getInternalLabels()[labelIndex]._address))
+                            if(HI_MASK(address) == HI_MASK(Compiler::getInternalLabels()[labelIndex]._address))
                             {
-                                fprintf(stderr, "Compiler::checkBranchLabels() : trying to branch to : %04x : from %04x in '%s' on line %d\n", Compiler::getInternalLabels()[labelIndex]._address, vasmAddress, vasmCode.c_str(), i);
-                                return false;
+                                Compiler::getCodeLines()[i]._vasm[j]._opcode = "BEQ";
+                                Compiler::getCodeLines()[i]._vasm[j]._code = "BEQ" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Compiler::getInternalLabels()[labelIndex]._name;
+                                Compiler::getCodeLines()[i]._vasm[j]._vasmSize = 3;
+
+                                adjustLabelAddresses(address+3, -5);
+                                adjustVasmAddresses(i, address+3, -5);
                             }
                         }
                     }
