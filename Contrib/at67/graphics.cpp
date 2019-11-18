@@ -253,19 +253,11 @@ namespace Graphics
         // Colour palette
         for(int i=0; i<COLOUR_PALETTE; i++)
         {
-            int r = (i>>0) & 3;
-            int g = (i>>2) & 3;
-            int b = (i>>4) & 3;
+            uint8_t r = uint8_t(double((i & 0x03) >>0) / 3.0 * 255.0);
+            uint8_t g = uint8_t(double((i & 0x0C) >>2) / 3.0 * 255.0);
+            uint8_t b = uint8_t(double((i & 0x30) >>4) / 3.0 * 255.0);
 
-            r = r | (r << 2) | (r << 4) | (r << 6);
-            g = g | (g << 2) | (g << 4) | (g << 6);
-            b = b | (b << 2) | (b << 4) | (b << 6);
-
-            uint32_t p = 0xFF000000;
-            p |= r << 16;
-            p |= g << 8;
-            p |= b << 0;
-            _colours[i] = p;
+            _colours[i] = 0xFF000000 | (r <<16) | (g <<8) | b;
         }
 
         // Safe resolution by default

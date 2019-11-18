@@ -33,16 +33,26 @@ namespace Memory
     {
         _freeRam.clear();
 
+        // 0x0200 <-> 0x0400
         _freeRam.push_back({RAM_PAGE_START_0, RAM_PAGE_SIZE_0});
         _freeRam.push_back({RAM_PAGE_START_1, RAM_PAGE_SIZE_1});
         _freeRam.push_back({RAM_PAGE_START_2, RAM_PAGE_SIZE_2});
-        _freeRam.push_back({RAM_PAGE_START_3, RAM_PAGE_SIZE_3+RAM_PAGE_SIZE_4});
 
+        // 0x0500 <-> 0x0600
+        _freeRam.push_back({RAM_PAGE_START_3, RAM_PAGE_SIZE_3});
+        _freeRam.push_back({RAM_PAGE_START_4, RAM_PAGE_SIZE_4});
 
+        // 0x08A0 <-> 0c7FA0
         for(uint16_t i=RAM_SEGMENTS_START; i<=RAM_SEGMENTS_END; i+=RAM_SEGMENTS_OFS) _freeRam.push_back({i, RAM_SEGMENTS_SIZE});
 
-        // 64K
-        if(_sizeRAM == RAM_SIZE_HI) _freeRam.push_back({RAM_EXPANSION_START, RAM_EXPANSION_SIZE});
+        // 0x8000 <-> 0xFF00
+        if(_sizeRAM == RAM_SIZE_HI)
+        {
+            for(uint32_t a=RAM_EXPANSION_START; a<RAM_EXPANSION_START + RAM_EXPANSION_SIZE; a+=RAM_EXPANSION_SEG)
+            {
+                _freeRam.push_back({uint16_t(a), RAM_EXPANSION_SEG});
+            }
+        }
 
         _baseFreeRAM = _sizeRAM - RAM_USED_DEFAULT;
         _sizeFreeRAM = _baseFreeRAM;
@@ -51,6 +61,14 @@ namespace Memory
     void updateSizeFreeRAM(void)
     {
         _sizeFreeRAM = 0;
+
+        // Sort by address
+        std::sort(_freeRam.begin(), _freeRam.end(), [](const RamEntry& ramEntryA, const RamEntry& ramEntryB)
+        {
+            uint16_t addressA = ramEntryA._address;
+            uint16_t addressB = ramEntryB._address;
+            return (addressA < addressB);
+        });
 
         for(int i=0; i<_freeRam.size(); i++)
         {

@@ -384,13 +384,17 @@ RESTART_COLLECTION:
 
     void relinkInternalSubs(void)
     {
+        uint16_t runtimeSize = 0;
         for(int i=0; i<_internalSubs.size(); i++)
         {
             // Check for internal sub directly
             if(_internalSubs[i]._inUse  &&  _internalSubs[i]._loaded  &&  _internalSubs[i]._address == 0x0000) loadInternalSub(i);
+
+            // Runtime size
+            if(_internalSubs[i]._inUse  &&  _internalSubs[i]._loaded  &&  _internalSubs[i]._address) runtimeSize += _internalSubs[i]._size;
         }
 
-        fprintf(stderr, "Compiler::linkInternalSubs() : runtime END %04x\n", Compiler::getRuntimeEnd());
+        fprintf(stderr, "Compiler::relinkInternalSubs() : runtime START 0x%04x : runtime END 0x%04x : runtime SIZE %d bytes\n", Compiler::getRuntimeStart(), Compiler::getRuntimeEnd(), runtimeSize);
     }
 
     void outputInternalSubs(void)

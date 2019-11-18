@@ -253,7 +253,7 @@ namespace Keywords
         // Allocate giga memory for LUT
         int size = int(gotoTokens.size()) * 2;
         uint16_t address;
-        if(!Memory::giveFreeRAM(Memory::FitAscending, size, 0x0200, 0x7FFF, address))
+        if(!Memory::giveFreeRAM(Memory::FitAscending, size, 0x0200, Compiler::getRuntimeStart(), address))
         {
             fprintf(stderr, "Compiler::keywordON() : Not enough RAM for onGotoGosub LUT of size %d\n", size);
             return false;
@@ -1465,7 +1465,7 @@ namespace Keywords
 
         arraySize *= 2;
         uint16_t arrayStart = 0x0000;
-        if(!Memory::giveFreeRAM(Memory::FitAscending, arraySize, 0x0200, 0x7FFF, arrayStart))
+        if(!Memory::giveFreeRAM(Memory::FitAscending, arraySize, 0x0200, Compiler::getRuntimeStart(), arrayStart))
         {
             fprintf(stderr, "Compiler::keywordDIM() : Not enough RAM for int array of size %d in : '%s' : on line %d\n", arraySize, codeLine._code.c_str(), codeLineIndex + 1);
             return false;

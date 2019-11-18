@@ -27,8 +27,8 @@ namespace Compiler
     uint16_t _vasmPC         = USER_CODE_START;
     uint16_t _tempVarStart   = TEMP_VAR_START;
     uint16_t _userVarStart   = USER_VAR_START;
-    uint16_t _runtimeEnd     = 0x7FFF;
-    uint16_t _runtimeStart   = 0x7FFF;
+    uint16_t _runtimeEnd     = 0xFFFF;
+    uint16_t _runtimeStart   = 0xFFFF;
 
     bool _nextTempVar = true;
     bool _createNumericLabelLut = false;
@@ -2774,8 +2774,8 @@ namespace Compiler
         _vasmPC         = USER_CODE_START;
         _tempVarStart   = TEMP_VAR_START;
         _userVarStart   = USER_VAR_START;
-        _runtimeEnd     = 0x7FFF;
-        _runtimeStart   = 0x7FFF;
+        _runtimeEnd     = 0xFFFF;
+        _runtimeStart   = 0xFFFF;
 
         _nextTempVar = true;
         _createNumericLabelLut = false;
