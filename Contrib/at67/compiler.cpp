@@ -1453,7 +1453,7 @@ namespace Compiler
 
     bool handleLogicalOp(const std::string& opcode, Expression::Numeric& lhs, Expression::Numeric& rhs)
     {
-        // SYS shift function need this preamble, LSLW doesn't
+        // SYS shift function needs this preamble, LSLW doesn't
         // Temporary variable address
         if(isdigit(lhs._varName[0]))
         {
@@ -1489,14 +1489,30 @@ namespace Compiler
             std::string opcode;
             switch(right._value)
             {
-                case 1: opcode = "LSLW"; break;
-                case 4: opcode = "%ShiftLeft4bit"; break;
+                case 1:
+                case 2:
+                case 3: opcode = "LSLW"; break;
+
+                case 4:
+                case 5:
+                case 6:
+                case 7: opcode = "%ShiftLeft4bit"; break;
+
                 case 8: opcode = "%ShiftLeft8bit"; break;
             }
 
             handleLogicalOp(opcode, left, right);
 
             emitVcpuAsm(opcode, "", false);
+
+            switch(right._value)
+            {
+                case 2: emitVcpuAsm("LSLW", "", false);                                                                 break;
+                case 3: emitVcpuAsm("LSLW", "", false); emitVcpuAsm("LSLW", "", false);                                 break;
+                case 5: emitVcpuAsm("LSLW", "", false);                                                                 break;
+                case 6: emitVcpuAsm("LSLW", "", false); emitVcpuAsm("LSLW", "", false);                                 break;
+                case 7: emitVcpuAsm("LSLW", "", false); emitVcpuAsm("LSLW", "", false); emitVcpuAsm("LSLW", "", false); break;
+            }
         }
 
         emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(_tempVarStart)), false);
@@ -1545,7 +1561,6 @@ namespace Compiler
                     case 5: opcode = "%ShiftRight5bit"; break;
                     case 6: opcode = "%ShiftRight6bit"; break;
                     case 7: opcode = "%ShiftRight7bit"; break;
-                    //case 8: opcode = "%ShiftRight8bit"; break;
                 }
 
                 handleLogicalOp(opcode, left, right);

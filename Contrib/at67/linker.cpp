@@ -394,7 +394,7 @@ RESTART_COLLECTION:
             if(_internalSubs[i]._inUse  &&  _internalSubs[i]._loaded  &&  _internalSubs[i]._address) runtimeSize += _internalSubs[i]._size;
         }
 
-        fprintf(stderr, "Compiler::relinkInternalSubs() : runtime START 0x%04x : runtime END 0x%04x : runtime SIZE %d bytes\n", Compiler::getRuntimeStart(), Compiler::getRuntimeEnd(), runtimeSize);
+        fprintf(stderr, "Compiler::relinkInternalSubs() : runtime START 0x%04x : runtime END 0x%04x : runtime SIZE %d bytes\n", Compiler::getRuntimeStart() & Memory::getSizeRAM() - 1, Compiler::getRuntimeEnd(), runtimeSize);
     }
 
     void outputInternalSubs(void)

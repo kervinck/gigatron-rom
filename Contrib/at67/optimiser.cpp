@@ -14,34 +14,142 @@
 
 namespace Optimiser
 {
-    enum OptimiseTypes {StwLdwPair=0, StwLdPair, StwPair, StwPairReg, ExtraStw, ExtraLdw, StwLdwAddw, StwLdwAddwVar,
-                        StwLdwAndw, StwLdwAndwVar, StwLdwXorw, StwLdwXorwVar, StwLdwOrw, StwLdwOrwVar, AddiZero, SubiZero, NumOptimiseTypes};
+    enum OptimiseTypes {StwLdwPair=0, StwLdPair, StwPair, StwPairReg, ExtraStw, ExtraLdw, StwLdwAddw, StwLdwAddwVar, StwLdwAndw, StwLdwAndwVar, StwLdwXorw, StwLdwXorwVar,
+                        StwLdwOrw, StwLdwOrwVar, PokeArray, DokeArray, PokeVarArray, DokeVarArray, PokeTmpArray, DokeTmpArray, AddiZero, SubiZero, NumOptimiseTypes};
 
     struct MatchSequence
     {
-        int firstIndex;
-        int secondIndex;
+        int _firstIndex;
+        int _secondIndex;
         std::vector<std::string> _sequence;
     };
 
     std::vector<MatchSequence> matchSequences = 
     {
-        {0, 1, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x", "LDW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x"                                                         }},
-        {0, 1, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x", "LD"  + std::string(OPCODE_TRUNC_SIZE - 2, ' ') + "0x"                                                         }},
-        {0, 1, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x", "STW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x"                                                         }},
-        {0, 1, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x", "STW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg"                                                        }},
-        {0, 1, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x", "STW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_"                                                          }},
-        {0, 1, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_",  "LDW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_"                                                          }},
-        {0, 2, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x", "LDW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x", "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x"}},
-        {0, 2, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x", "LDW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_",  "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x"}},
-        {0, 2, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x", "LDW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x", "ANDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x"}},
-        {0, 2, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x", "LDW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_",  "ANDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x"}},
-        {0, 2, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x", "LDW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x", "XORW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x"}},
-        {0, 2, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x", "LDW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_",  "XORW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x"}},
-        {0, 2, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x", "LDW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x", "ORW"  + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x"}},
-        {0, 2, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x", "LDW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_",  "ORW"  + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x"}},
-        {0, 0, {"ADDI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ')       , ""                                                                                                             }},
-        {0, 0, {"SUBI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ')       , ""                                                                                                             }},
+        // StwLdwPair
+        {0, 1, {"STW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x",
+                "LDW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x" }},
+
+        // StwLdPair
+        {0, 1, {"STW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x",
+                "LD"  + std::string(OPCODE_TRUNC_SIZE - 2, ' ') + "0x" }},
+
+        // StwPair
+        {0, 1, {"STW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x",
+                "STW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x" }},
+
+        // StwPairReg
+        {0, 1, {"STW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x",
+                "STW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg"}},
+
+        // ExtraStw
+        {0, 1, {"STW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x", 
+                "STW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_"  }},
+
+        // ExtraLdw
+        {0, 1, {"STW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_",  
+                "LDW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_"  }},
+
+        // StwLdwAddw
+        {0, 2, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x", 
+                "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x", 
+                "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x"}},
+
+        // StwLdwAddwVar
+        {0, 2, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x",
+                "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_", 
+                "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x"}},
+
+        // StwLdwAndw
+        {0, 2, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x",
+                "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x",
+                "ANDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x"}},
+
+        // StwLdwAndwVar
+        {0, 2, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x",
+                "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_",
+                "ANDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x"}},
+
+        // StwLdwXorw
+        {0, 2, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x",
+                "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x",
+                "XORW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x"}},
+
+        // StwLdwXorwVar
+        {0, 2, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x",
+                "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_",
+                "XORW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x"}},
+
+        // StwLdwOrw
+        {0, 2, {"STW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x",
+                "LDW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x",
+                "ORW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x"}},
+
+        // StwLdwOrwVar
+        {0, 2, {"STW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x", 
+                "LDW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_",
+                "ORW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x"}},
+
+        // PokeArray
+        {0, 0, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg", 
+                "LDWI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x", 
+                "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg", 
+                "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg", 
+                "POKE" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "reg"}},
+
+        // DokeArray
+        {0, 0, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
+                "LDWI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x",
+                "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
+                "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
+                "DOKE" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "reg"}},
+
+        // PokeVarArray
+        {0, 0, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
+                "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_",
+                "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
+                "LDWI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x",
+                "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "reg",
+                "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "reg",
+                "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
+                "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
+                "POKE" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "reg"}},
+
+        // DokeVarArray
+        {0, 0, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
+                "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_",
+                "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
+                "LDWI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x",
+                "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "reg",
+                "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "reg",
+                "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
+                "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
+                "DOKE" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "reg"}},
+
+        // PokeTmpArray
+        {0, 0, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
+                "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x",
+                "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
+                "LDWI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x",
+                "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "reg",
+                "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "reg",
+                "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
+                "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
+                "POKE" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "reg"}},
+
+        // DokeTmpArray
+        {0, 0, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
+                "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x",
+                "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
+                "LDWI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x",
+                "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "reg",
+                "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "reg",
+                "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
+                "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
+                "DOKE" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "reg"}},
+
+        {0, 0, {"ADDI" + std::string(OPCODE_TRUNC_SIZE - 4, ' '), ""}},
+        {0, 0, {"SUBI" + std::string(OPCODE_TRUNC_SIZE - 4, ' '), ""}},
     };
 
 
@@ -148,14 +256,14 @@ namespace Optimiser
                     if(foundOpcodeMatch)
                     {
                         // First operand
-                        int firstIndex = matchSequences[j].firstIndex;
+                        int firstIndex = matchSequences[j]._firstIndex;
                         int firstLine = vasmIndex + firstIndex;
                         size_t firstSpace = Compiler::getCodeLines()[i]._vasm[firstLine]._code.find_first_of("  \n\r\f\t\v");
                         std::string firstOperand = Compiler::getCodeLines()[i]._vasm[firstLine]._code.substr(firstSpace);
                         Expression::stripWhitespace(firstOperand);
 
                         // Second operand
-                        int secondIndex = matchSequences[j].secondIndex;
+                        int secondIndex = matchSequences[j]._secondIndex;
                         int secondLine = vasmIndex + secondIndex;
                         size_t secondSpace = Compiler::getCodeLines()[i]._vasm[secondLine]._code.find_first_of("  \n\r\f\t\v");
                         std::string secondOperand = Compiler::getCodeLines()[i]._vasm[secondLine]._code.substr(secondSpace);
@@ -351,6 +459,52 @@ namespace Optimiser
                                 itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine);
                                 adjustLabelAddresses(i, firstLine, -4);
                                 adjustVasmAddresses(i, firstLine, -4);
+                            }
+                            // Match STW LDWI STW LDW POKE/DOKE
+                            else if(j == PokeArray  ||  j == DokeArray)
+                            {
+                                // Save previous line LD<X>, if opcode is not some sort of LD, then can't optimise
+                                Compiler::VasmLine savedLD = Compiler::getCodeLines()[i]._vasm[firstLine - 1];
+                                if(savedLD._opcode.find("LD") == std::string::npos) break;
+
+                                // Discard it's label, (it's no longer needed), and adjust it's address
+                                if(!migrateInternalLabel(i, firstLine - 1, firstLine + 1)) break;
+                                savedLD._internalLabel = "";
+                                savedLD._address += 9;
+
+                                // Delete previous line LD<X>, first STW and LDW
+                                linesDeleted = true;
+                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine - 1);
+                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(itVasm);
+                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(itVasm + 2);
+
+                                // Replace LDW with saved opcode and operand
+                                itVasm = Compiler::getCodeLines()[i]._vasm.insert(itVasm, savedLD);
+                                adjustLabelAddresses(i, firstLine - 1, -4);
+                                adjustVasmAddresses(i, firstLine - 1, -4);
+                            }
+                            // Match STW LDW STW LDWI ADDW ADDW STW LDW POKE/DOKE
+                            else if(j == PokeVarArray  ||  j == DokeVarArray  ||  j == PokeTmpArray  ||  j == DokeTmpArray)
+                            {
+                                // Save previous line LD<X>, if opcode is not some sort of LD, then can't optimise
+                                Compiler::VasmLine savedLD = Compiler::getCodeLines()[i]._vasm[firstLine - 1];
+                                if(savedLD._opcode.find("LD") == std::string::npos) break;
+
+                                // Discard it's label, (it's no longer needed), and adjust it's address
+                                if(!migrateInternalLabel(i, firstLine - 1, firstLine + 1)) break;
+                                savedLD._internalLabel = "";
+                                savedLD._address += 17;
+
+                                // Delete previous line LDX<X>, first STW and last LDW
+                                linesDeleted = true;
+                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine - 1);
+                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(itVasm);
+                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(itVasm + 6);
+
+                                // Replace LDW with saved opcode and operand
+                                itVasm = Compiler::getCodeLines()[i]._vasm.insert(itVasm, savedLD);
+                                adjustLabelAddresses(i, firstLine - 1, -4);
+                                adjustVasmAddresses(i, firstLine - 1, -4);
                             }
                         }
 

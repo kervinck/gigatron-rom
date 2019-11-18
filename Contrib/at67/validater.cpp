@@ -73,7 +73,7 @@ namespace Validater
         uint16_t codePage1 = 0x0500;
         uint16_t codeEnd1 = 0x0700;
 
-        uint16_t codePage2 = 0x0800;
+        uint16_t codePage2 = 0x08A0;
         uint16_t codeEnd2 = 0x8000;
 
         uint16_t codePage3 = 0x8000; // only available with 64K RAM
