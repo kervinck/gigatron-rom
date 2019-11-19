@@ -7,7 +7,7 @@
 
 namespace Expression
 {
-    enum ExpressionType {Invalid=0x8000, HasNumbers=0x0000, HasStrings=0x0001, HasOperators=0x0002, HasVars=0x0004, HasKeywords=0x0008, HasStringKeywords=0x0010};
+    enum ExpressionType {Invalid=0x8000, HasNumbers=0x0000, HasStrings=0x0001, HasOperators=0x0002, HasVars=0x0004, HasKeywords=0x0008, HasStringKeywords=0x0010, HasFunctions=0x0020};
     enum NumericType {BadBase=-1, Decimal, HexaDecimal, Octal, Binary};
 
     struct Numeric

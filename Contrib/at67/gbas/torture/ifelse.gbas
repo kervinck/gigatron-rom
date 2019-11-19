@@ -1,0 +1,15 @@
+cls
+
+loop: b=peek(15)
+
+if b&=49
+    at 2,40 : print "one  ";
+elseif b&=50
+    at 2,40 : print "two  ";
+elseif b&=51
+    at 2,40 : print "three";
+else
+    at 2,40 : print "none ";
+endif
+
+goto loop

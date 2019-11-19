@@ -22,13 +22,13 @@ namespace Keywords
 
     struct Keyword
     {
-        int _params;
         std::string _name;
         KeywordFuncPtr _func;
     };
 
 
     std::map<std::string, Keyword>& getKeywords(void);
+    std::map<std::string, Keyword>& getFunctions(void);
     std::map<std::string, Keyword>& getStringKeywords(void);
     std::vector<std::string>& getEqualsKeywords(void);
 
@@ -36,6 +36,15 @@ namespace Keywords
 
     bool findKeyword(std::string code, const std::string& keyword, size_t& foundPos);
     KeywordResult handleKeywords(Compiler::CodeLine& codeLine, const std::string& keyword, int codeLineIndex, KeywordFuncResult& result);
+
+    Expression::Numeric functionCHR$(Expression::Numeric&  numeric);
+    Expression::Numeric functionHEX$(Expression::Numeric&  numeric);
+    Expression::Numeric functionHEXW$(Expression::Numeric& numeric);
+    Expression::Numeric functionPEEK(Expression::Numeric&  numeric);
+    Expression::Numeric functionDEEK(Expression::Numeric&  numeric);
+    Expression::Numeric functionUSR(Expression::Numeric&   numeric);
+    Expression::Numeric functionRND(Expression::Numeric&   numeric);
+    Expression::Numeric functionARR(Expression::Numeric&   numeric);
 
     bool keywordREM(Compiler::CodeLine& codeLine,    int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordLET(Compiler::CodeLine& codeLine,    int codeLineIndex, size_t foundPos, KeywordFuncResult& result);

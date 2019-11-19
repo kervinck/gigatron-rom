@@ -39,9 +39,9 @@ _60                 EQU                     0x029a
 _65                 EQU                     0x02bb
 _70                 EQU                     0x02ce
 _80                 EQU                     0x02e6
-_90                 EQU                     0x08be
-_end_0x0347         EQU                     0x08d1
-_page_0x08a0        EQU                     0x08a0
+_90                 EQU                     0x031e
+_end_0x0347         EQU                     0x0331
+_page_0x0300        EQU                     0x0300
 
 ; Variables
 _w                  EQU                     0x0030
@@ -148,9 +148,9 @@ _80                 LDW                     _p
                     LDW                     _v
                     STW                     mathY
                     STW                     0x82
-                    LDWI                    _page_0x08a0
+                    LDWI                    _page_0x0300
                     CALL                    giga_vAC
-_page_0x08a0        LDW                     0x82
+_page_0x0300        LDW                     0x82
                     LDWI                    multiply16bit
                     CALL                    giga_vAC
                     ADDW                    _y
@@ -175,33 +175,33 @@ _end_0x0347         BRA                     _end_0x0347                     ; EN
 
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
-;* Internal runtime, DO NOT MODIFY HERE, modifications must be made in the original include files                                       *
+;* Internal runtime, DO NOT MODIFY PAST THIS POINT, modifications must be made in the original include files                            *
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7fa0
-convertEqOp         EQU     0x7fa9
-convertNeOp         EQU     0x7fb2
-convertLeOp         EQU     0x7fbb
-convertGeOp         EQU     0x7fc4
-convertLtOp         EQU     0x7fcd
-convertGtOp         EQU     0x7fd6
-multiply16bit       EQU     0x7dcd
-divide16bit         EQU     0x7ba0
-randMod16bit        EQU     0x7fdf
-resetVideoTable     EQU     0x78a0
-initClearFuncs      EQU     0x7ea0
-clearVertBlinds     EQU     0x7ec3
-clearCursorRow      EQU     0x77a0
-drawLine            EQU     0x7aa0
-drawLineExt         EQU     0x78c0
-drawLineLoop        EQU     0x76a0
-drawLineLoadXY      EQU     0x75a0
-atLineCursor        EQU     0x79a0
-printInit           EQU     0x79e1
-printChar           EQU     0x74a0
-atTextCursor        EQU     0x7da0
-newLineScroll       EQU     0x7ca0
+realTimeProc        EQU     0xff00
+convertEqOp         EQU     0xff09
+convertNeOp         EQU     0xff12
+convertLeOp         EQU     0xff1b
+convertGeOp         EQU     0xff24
+convertLtOp         EQU     0xff2d
+convertGtOp         EQU     0xff36
+multiply16bit       EQU     0xfd55
+divide16bit         EQU     0xfe5b
+randMod16bit        EQU     0xffc9
+resetVideoTable     EQU     0xffdc
+initClearFuncs      EQU     0xff3f
+clearVertBlinds     EQU     0xff62
+clearCursorRow      EQU     0xfd7c
+drawLine            EQU     0xfd00
+drawLineExt         EQU     0xfdc2
+drawLineLoop        EQU     0xfc00
+drawLineLoadXY      EQU     0xfc3a
+atLineCursor        EQU     0xfeb5
+printInit           EQU     0xfc65
+printChar           EQU     0xfc76
+atTextCursor        EQU     0xff9c
+newLineScroll       EQU     0xfe00
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2

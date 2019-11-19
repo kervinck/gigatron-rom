@@ -44,15 +44,15 @@ _150                EQU                     0x02ab
 _160                EQU                     0x02ba
 _170                EQU                     0x02cb
 _180                EQU                     0x02da
-_190                EQU                     0x08a2
-_200                EQU                     0x08b0
-_210                EQU                     0x08be
-_220                EQU                     0x08cc
-_230                EQU                     0x08d1
-_240                EQU                     0x08d6
-_250                EQU                     0x08e5
-_end_0x0346         EQU                     0x08e5
-_page_0x08a0        EQU                     0x08a0
+_190                EQU                     0x0302
+_200                EQU                     0x0310
+_210                EQU                     0x031e
+_220                EQU                     0x032c
+_230                EQU                     0x0331
+_240                EQU                     0x0336
+_250                EQU                     0x0345
+_end_0x0346         EQU                     0x0345
+_page_0x0300        EQU                     0x0300
 
 ; Variables
 _N                  EQU                     0x0030
@@ -151,9 +151,9 @@ _180                LDW                     _M
                     CALL                    giga_vAC                        ; IF M&=0 THEN GOTO 210
 
                     STW                     0x82
-                    LDWI                    _page_0x08a0
+                    LDWI                    _page_0x0300
                     CALL                    giga_vAC
-_page_0x08a0        LDW                     0x82
+_page_0x0300        LDW                     0x82
 _190                ForNextLoopUp           _K _130 100                     ; NEXT K
 
 _200                PrintVarInt16           _N
@@ -178,7 +178,7 @@ _end_0x0346         BRA                     _end_0x0346                     ; EN
 
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
-;* Internal runtime, DO NOT MODIFY HERE, modifications must be made in the original include files                                       *
+;* Internal runtime, DO NOT MODIFY PAST THIS POINT, modifications must be made in the original include files                            *
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 

@@ -32,10 +32,10 @@ miscFlags           EQU                     register0 + 0x2A
 _entryPoint_        EQU                     0x0200
 _1                  EQU                     0x0245
 _8                  EQU                     0x026b
-_15                 EQU                     0x02df
-_16                 EQU                     0x02e5
-_20                 EQU                     0x02eb
-_end_0x0316         EQU                     0x02f0
+_15                 EQU                     0x02d7
+_16                 EQU                     0x02dd
+_20                 EQU                     0x02e3
+_end_0x0316         EQU                     0x02e8
 
 ; Variables
 _a                  EQU                     0x0030
@@ -101,16 +101,14 @@ _8                  LDI                     2
                     PrintString             str_0x7fa0
                     LDI                     1
                     ADDW                    _b
-                    STW                     0xc4
-                    PrintVarInt16           0xc4
+                    PrintAcInt16            
                     PrintString             str_0x7fa2
                     PrintVarInt16           _bb
                     PrintString             str_0x7fa0
                     LDW                     _z
                     SUBI                    20
                     CALL                    convertGtOpAddr
-                    STW                     0xc6
-                    PrintVarInt16           0xc6
+                    PrintAcInt16            
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; z = 2 + a + 0 : j = z + 23 -a : print a;" ";b;" ";1 + b;" dog ";bb;" ";(z > 20)
 
@@ -131,7 +129,7 @@ _end_0x0316         BRA                     _end_0x0316                     ; EN
 
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
-;* Internal runtime, DO NOT MODIFY HERE, modifications must be made in the original include files                                       *
+;* Internal runtime, DO NOT MODIFY PAST THIS POINT, modifications must be made in the original include files                            *
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 

@@ -21,6 +21,7 @@
 #include "expression.h"
 #include "assembler.h"
 #include "compiler.h"
+#include "operators.h"
 #include "keywords.h"
 #include "optimiser.h"
 #include "validater.h"
@@ -40,12 +41,13 @@ int main(int argc, char* argv[])
     Expression::initialise();
     Assembler::initialise();
     Compiler::initialise();
+    Operators::initialise();
     Keywords::initialise();
     Optimiser::initialise();
     Validater::initialise();
     Linker::initialise();
 
-#if 1
+#if 0
     Image::TgaFile tgaFile;
     Image::GtRgbFile gtRgbFile;
 

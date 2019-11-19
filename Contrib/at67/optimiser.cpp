@@ -484,12 +484,12 @@ namespace Optimiser
                                 // Migrate it's label if it has one
                                 if(!migrateInternalLabel(i, firstLine - 1, firstLine + 1)) break;
 
-                                // Get saved LD<X>'s operand
+                                // Get saved LDW's operand
                                 size_t ldwSpace = savedLDW._code.find_first_of("  \n\r\f\t\v");
                                 std::string ldwOperand = savedLDW._code.substr(ldwSpace);
                                 Expression::stripWhitespace(ldwOperand);
 
-                                // Delete previous line LD<X> and first STW
+                                // Delete previous line LDW and first STW
                                 linesDeleted = true;
                                 itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine - 1);
                                 itVasm = Compiler::getCodeLines()[i]._vasm.erase(itVasm);

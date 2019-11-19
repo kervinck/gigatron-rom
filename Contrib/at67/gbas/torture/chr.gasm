@@ -31,15 +31,14 @@ miscFlags           EQU                     register0 + 0x2A
 ; Labels
 _entryPoint_        EQU                     0x0200
 _10                 EQU                     0x0255
-_20                 EQU                     0x09a2
-_end_0x038b         EQU                     0x09a7
+_20                 EQU                     0x0358
+_end_0x038b         EQU                     0x035d
 _next_0x025d        EQU                     0x025d
 _next_0x0261        EQU                     0x0261
 _next_0x0265        EQU                     0x0265
 _next_0x029b        EQU                     0x029b
-_page_0x08a0        EQU                     0x08a0
-_next_0x0351        EQU                     0x08c3
-_page_0x09a0        EQU                     0x09a0
+_page_0x0300        EQU                     0x0300
+_next_0x0351        EQU                     0x0323
 
 ; Variables
 _a                  EQU                     0x0030
@@ -305,9 +304,9 @@ _next_0x029b        LDW                     _a
                     ForNextLoopUp           _j _next_0x0261 1               ; next j
 
                     STW                     0x82
-                    LDWI                    _page_0x08a0
+                    LDWI                    _page_0x0300
                     CALL                    giga_vAC
-_page_0x08a0        LDW                     0x82
+_page_0x0300        LDW                     0x82
                     ForNextLoopUp           _k _next_0x025d 1               ; next k
 
                     PrintString             str_0x7fc3
@@ -328,10 +327,6 @@ _next_0x0351        PrintString             str_0x7fe6
                     LDWI                    clearVertBlinds
                     CALL                    giga_vAC                        ; cls
 
-                    STW                     0x82
-                    LDWI                    _page_0x09a0
-                    CALL                    giga_vAC
-_page_0x09a0        LDW                     0x82
 _20                 LDWI                    _10
                     CALL                    giga_vAC                        ; goto 10
 
@@ -341,7 +336,7 @@ _end_0x038b         BRA                     _end_0x038b                     ; EN
 
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
-;* Internal runtime, DO NOT MODIFY HERE, modifications must be made in the original include files                                       *
+;* Internal runtime, DO NOT MODIFY PAST THIS POINT, modifications must be made in the original include files                            *
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 

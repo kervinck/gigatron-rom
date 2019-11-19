@@ -43,17 +43,16 @@ _100                EQU                     0x02d0
 _110                EQU                     0x02e0
 _120                EQU                     0x02e4
 _130                EQU                     0x02e9
-_140                EQU                     0x08ab
-_150                EQU                     0x08c2
-_160                EQU                     0x08d0
-_170                EQU                     0x08d4
-_180                EQU                     0x08d9
-_190                EQU                     0x08e9
-_200                EQU                     0x09af
-_math               EQU                     0x09c4
-_end_0x03c7         EQU                     0x09e2
-_page_0x08a0        EQU                     0x08a0
-_page_0x09a0        EQU                     0x09a0
+_140                EQU                     0x030b
+_150                EQU                     0x0322
+_160                EQU                     0x0330
+_170                EQU                     0x0334
+_180                EQU                     0x0339
+_190                EQU                     0x0349
+_200                EQU                     0x0362
+_math               EQU                     0x0377
+_end_0x03c7         EQU                     0x0395
+_page_0x0300        EQU                     0x0300
 
 ; Variables
 _x                  EQU                     0x0030
@@ -254,9 +253,9 @@ _130                LDI                     0xa5
                     ADDI                    7
                     STW                     _p
                     STW                     0x82
-                    LDWI                    _page_0x08a0
+                    LDWI                    _page_0x0300
                     CALL                    giga_vAC
-_page_0x08a0        LDW                     0x82
+_page_0x0300        LDW                     0x82
                     LDWI                    165
                     STW                     register0
                     LD                      _p
@@ -296,10 +295,6 @@ _190                LDI                     159
                     LDI                     119
                     STW                     drawLine_y1
                     LDI                     0
-                    STW                     0x82
-                    LDWI                    _page_0x09a0
-                    CALL                    giga_vAC
-_page_0x09a0        LDW                     0x82
                     STW                     drawLine_x2
                     LDI                     119
                     SUBW                    _y
@@ -338,27 +333,27 @@ _end_0x03c7         BRA                     _end_0x03c7                     ; EN
 
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
-;* Internal runtime, DO NOT MODIFY HERE, modifications must be made in the original include files                                       *
+;* Internal runtime, DO NOT MODIFY PAST THIS POINT, modifications must be made in the original include files                            *
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7fa0
-convertEqOp         EQU     0x7fa9
-convertNeOp         EQU     0x7fb2
-convertLeOp         EQU     0x7fbb
-convertGeOp         EQU     0x7fc4
-convertLtOp         EQU     0x7fcd
-convertGtOp         EQU     0x7fd6
-scanlineMode        EQU     0x7fdf
-resetVideoTable     EQU     0x7ba0
-initClearFuncs      EQU     0x7ea0
-drawLine            EQU     0x7ca0
-drawLineExt         EQU     0x7bc0
-drawLineLoop        EQU     0x7aa0
-drawLineLoadXY      EQU     0x79a0
-resetAudio          EQU     0x7ec3
-playMidi            EQU     0x7da0
-midiStartNote       EQU     0x78a0
+realTimeProc        EQU     0xff00
+convertEqOp         EQU     0xff09
+convertNeOp         EQU     0xff12
+convertLeOp         EQU     0xff1b
+convertGeOp         EQU     0xff24
+convertLtOp         EQU     0xff2d
+convertGtOp         EQU     0xff36
+scanlineMode        EQU     0xfe00
+resetVideoTable     EQU     0xfe69
+initClearFuncs      EQU     0xff3f
+drawLine            EQU     0xfe14
+drawLineExt         EQU     0xfe89
+drawLineLoop        EQU     0xfec2
+drawLineLoadXY      EQU     0xfd00
+resetAudio          EQU     0xff62
+playMidi            EQU     0xff9d
+midiStartNote       EQU     0xfd2b
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2

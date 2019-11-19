@@ -32,32 +32,28 @@ miscFlags           EQU                     register0 + 0x2A
 _entryPoint_        EQU                     0x0200
 _1                  EQU                     0x023d
 _2                  EQU                     0x024a
-_3                  EQU                     0x0257
-_4                  EQU                     0x0270
-_5                  EQU                     0x0297
-_6                  EQU                     0x02b8
-_7                  EQU                     0x08ac
-_8                  EQU                     0x08d6
-_9                  EQU                     0x09a2
-_10                 EQU                     0x09c1
-_11                 EQU                     0x09d3
-_12                 EQU                     0x0aaa
-_13                 EQU                     0x0abc
-_14                 EQU                     0x0ad7
-_end_0x0399         EQU                     0x09d1
-_end_0x0407         EQU                     0x0adc
-_next_0x0282        EQU                     0x027c
-_page_0x08a0        EQU                     0x08a0
-_page_0x09a0        EQU                     0x09a0
-_page_0x0aa0        EQU                     0x0aa0
+_3                  EQU                     0x0253
+_4                  EQU                     0x026c
+_5                  EQU                     0x028f
+_6                  EQU                     0x02b0
+_7                  EQU                     0x02e3
+_8                  EQU                     0x031b
+_9                  EQU                     0x0336
+_10                 EQU                     0x0355
+_11                 EQU                     0x0367
+_12                 EQU                     0x0389
+_end_0x0399         EQU                     0x0365
+_end_0x03ca         EQU                     0x038e
+_next_0x0282        EQU                     0x0278
+_page_0x0300        EQU                     0x0300
 
 ; Variables
 _n                  EQU                     0x0030
 _j                  EQU                     0x0032
 _c                  EQU                     0x0034
-_a_array            EQU                     0x0500
+_a_array            EQU                     0x0600
 _a_array            DW                      0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_b_array            EQU                     0x0566
+_b_array            EQU                     0x0666
 _b_array            DW                      0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
 _i                  EQU                     0x0036
 
@@ -86,11 +82,9 @@ _entryPoint_        InitRealTimeProc
                     LDWI                    clearVertBlinds
                     CALL                    giga_vAC                        ; n=0:j=n:c=j:cls
 
-_2                  LDI                     1
-                    STW                     register0
-                    LDWI                    0x0566
+_2                  LDWI                    0x0666
                     STW                     register1
-                    LDW                     register0
+                    LDI                     1
                     DOKE                    register1                       ; dim a(50)=0:dim b(50)=0:b(0)=1
 
 _3                  LDW                     _n
@@ -108,14 +102,12 @@ _4                  LDI                     0
 _next_0x0282        LDW                     _j
                     SUBW                    _i
                     STW                     register2
-                    LDWI                    0x0566
+                    LDWI                    0x0666
                     ADDW                    register2
                     ADDW                    register2
                     DEEK                    
-                    STW                     0xc2
-                    LDI                     48
-                    ADDW                    0xc2
-                    PrintAcChar                                             ; for i=0 to j:put 48+b(j-i)
+                    ADDI                    48
+                    PrintAcChar                                             ; for i=0 to j:put b(j-i)+48
 
 _5                  ForNextLoopStepUp       _i _next_0x0282 0xb0 0xb2
                     LDWI                    newLineScroll
@@ -127,52 +119,43 @@ _5                  ForNextLoopStepUp       _i _next_0x0282 0xb0 0xb2
                     LDI                     1
                     STW                     0xb2                            ; next i:print:for i=0 to j
 
-_6                  LDW                     _i
-                    STW                     register2
-                    LDWI                    0x0500
-                    ADDW                    register2
-                    ADDW                    register2
+_6                  LDWI                    0x0600
+                    ADDW                    _i
+                    ADDW                    _i
                     DEEK                    
                     STW                     0xc0
-                    LDW                     _i
-                    STW                     register2
-                    LDWI                    0x0566
-                    ADDW                    register2
-                    ADDW                    register2
+                    LDWI                    0x0666
+                    ADDW                    _i
+                    ADDW                    _i
                     DEEK                    
                     ADDW                    0xc0
                     ADDW                    _c
                     STW                     _c
-                    LDW                     _i
-                    STW                     register2
-                    LDWI                    0x0566
-                    ADDW                    register2
-                    ADDW                    register2
+                    LDWI                    0x0666
+                    ADDW                    _i
+                    ADDW                    _i
                     DEEK                    
-                    STW                     0xc6
                     STW                     register0
                     LDW                     _i
                     STW                     register1
-                    LDWI                    0x0500
-                    STW                     0x82
-                    LDWI                    _page_0x08a0
-                    CALL                    giga_vAC
-_page_0x08a0        LDW                     0x82
+                    LDWI                    0x0600
                     ADDW                    register1
                     ADDW                    register1
                     STW                     register1
                     LDW                     register0
                     DOKE                    register1                       ; c=a(i)+b(i)+c:a(i)=b(i)
 
-_7                  LDW                     _c
-                    STW                     register0
-                    LDW                     _i
+_7                  LDW                     _i
                     STW                     register1
-                    LDWI                    0x0566
+                    LDWI                    0x0666
                     ADDW                    register1
                     ADDW                    register1
                     STW                     register1
-                    LDW                     register0
+                    STW                     0x82
+                    LDWI                    _page_0x0300
+                    CALL                    giga_vAC
+_page_0x0300        LDW                     0x82
+                    LDW                     _c
                     DOKE                    register1
                     LDW                     _c
                     SUBI                    10
@@ -184,11 +167,10 @@ _7                  LDW                     _c
 
 _8                  LDW                     _c
                     SUBI                    10
-                    STW                     0xc0
                     STW                     register0
                     LDW                     _i
                     STW                     register1
-                    LDWI                    0x0566
+                    LDWI                    0x0666
                     ADDW                    register1
                     ADDW                    register1
                     STW                     register1
@@ -197,75 +179,46 @@ _8                  LDW                     _c
                     LDI                     1
                     STW                     _c                              ; b(i)=c-10:c=1
 
-                    STW                     0x82
-                    LDWI                    _page_0x09a0
-                    CALL                    giga_vAC
-_page_0x09a0        LDW                     0x82
 _9                  ForNextLoopStepUp       _i _6 0xb0 0xb2
                     LDW                     _c
                     JumpEQ                  _10 1
                     LDWI                    _12
                     CALL                    giga_vAC                        ; next i:if c&=0 then goto 12
 
-_if_0x0381          LDW                     _j
+_else_0x0381        LDW                     _j
                     ADDI                    1
                     STW                     _j
                     SUBI                    50
                     JumpEQ                  _11 2
 _end_0x0399         BRA                     _end_0x0399                     ; j=j+1:if j&=50 then END
 
-_11                 LDI                     0
-                    STW                     register0
-                    LDW                     _j
+_11                 LDW                     _j
                     STW                     register1
-                    LDWI                    0x0500
+                    LDWI                    0x0600
                     ADDW                    register1
                     ADDW                    register1
                     STW                     register1
-                    LDW                     register0
+                    LDI                     0
                     DOKE                    register1
-                    LDW                     _c
-                    STW                     register0
                     LDW                     _j
                     STW                     register1
-                    LDWI                    0x0566
+                    LDWI                    0x0666
                     ADDW                    register1
-                    STW                     0x82
-                    LDWI                    _page_0x0aa0
-                    CALL                    giga_vAC
-_page_0x0aa0        LDW                     0x82
                     ADDW                    register1
                     STW                     register1
-                    LDW                     register0
+                    LDW                     _c
                     DOKE                    register1                       ; a(j)=0:b(j)=c
 
-_12                 LDI                     0x0f
-                    PEEK                    
-                    SUBI                    255
-                    JumpEQ                  _13 3
-                    LDWI                    _12
-                    CALL                    giga_vAC                        ; if (peek(15) &= &hff) then goto 12
+_12                 LDWI                    _3
+                    CALL                    giga_vAC                        ; goto 3
 
-_13                 LDI                     2
-                    STW                     waitVBlankNum
-                    WaitVBlank              
-                    LDI                     0x0f
-                    PEEK                    
-                    SUBI                    255
-                    JumpEQ                  _14 4
-                    LDWI                    _3
-                    CALL                    giga_vAC                        ; wait 2:if (peek(15) &= &hff) then goto 3
-
-_14                 LDWI                    _12
-                    CALL                    giga_vAC                        ; goto 12
-
-_end_0x0407         BRA                     _end_0x0407                     ; END
+_end_0x03ca         BRA                     _end_0x03ca                     ; END
 
 
 
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
-;* Internal runtime, DO NOT MODIFY HERE, modifications must be made in the original include files                                       *
+;* Internal runtime, DO NOT MODIFY PAST THIS POINT, modifications must be made in the original include files                            *
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
@@ -276,14 +229,13 @@ convertLeOp         EQU     0x7fbe
 convertGeOp         EQU     0x7fc7
 convertLtOp         EQU     0x7fd0
 convertGtOp         EQU     0x7fd9
-waitVBlank          EQU     0x7aa0
-resetVideoTable     EQU     0x7abb
+resetVideoTable     EQU     0x7aa0
 initClearFuncs      EQU     0x7ea0
 clearVertBlinds     EQU     0x7ec3
 clearCursorRow      EQU     0x79a0
 printInit           EQU     0x7def
 printText           EQU     0x7fe2
-printDigit          EQU     0x7adb
+printDigit          EQU     0x7ac0
 printInt16          EQU     0x7da0
 printChar           EQU     0x7ca0
 newLineScroll       EQU     0x7ba0
@@ -361,57 +313,6 @@ convertGtOp         BGT     convertGt_1
                     RET
 convertGt_1         LDI     1
                     RET
-
-
-; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
-graphicsMode        EQU     register0
-waitVBlankNum       EQU     register0
-
-drawHLine_x1        EQU     register0
-drawHLine_y1        EQU     register1
-drawHLine_x2        EQU     register2
-drawHLine_x4        EQU     register3
-
-drawVLine_x1        EQU     register0
-drawVLine_y1        EQU     register1
-drawVLine_y2        EQU     register2
-drawVLine_y8        EQU     register3
-
-drawLine_x1         EQU     register0
-drawLine_y1         EQU     register1
-drawLine_x2         EQU     register2
-drawLine_y2         EQU     register3
-drawLine_xy1        EQU     register0
-drawLine_xy2        EQU     register1
-drawLine_dxy1       EQU     register2
-drawLine_dxy2       EQU     register3
-drawLine_dx1        EQU     register4
-drawLine_dy1        EQU     register5
-drawLine_dx2        EQU     register6
-drawLine_dy2        EQU     register7
-drawLine_sx         EQU     register8
-drawLine_sy         EQU     register9
-drawLine_h          EQU     register10
-drawLine_num        EQU     register11
-drawLine_count      EQU     register12
-drawLine_tmp        EQU     register13
-    
-    
-waitVBlank          LD      waitVBlankNum
-                    SUBI    0x01
-                    ST      waitVBlankNum
-                    BGE     waitVB_start
-                    RET
-    
-waitVB_start        LD      giga_frameCount
-                    SUBW    frameCountPrev
-                    BEQ     waitVB_start
-                    LD      giga_frameCount
-                    STW     frameCountPrev
-                    PUSH
-                    CALL    realTimeProcAddr
-                    POP
-                    BRA     waitVBlank
 
 
 

@@ -41,40 +41,36 @@ _199                EQU                     0x02a8
 _200                EQU                     0x02b7
 _201                EQU                     0x02bb
 _202                EQU                     0x02d5
-_203                EQU                     0x08a2
-_204                EQU                     0x08b0
-_205                EQU                     0x08c7
-_206                EQU                     0x08d7
-_207                EQU                     0x08e3
-_208                EQU                     0x09a2
-_209                EQU                     0x09ae
-_1000               EQU                     0x09ba
-_1001               EQU                     0x09d1
-_1002               EQU                     0x09e7
-_1003               EQU                     0x0aaa
-_1004               EQU                     0x0ac0
-_1005               EQU                     0x0ad6
-_1006               EQU                     0x0aec
-_1007               EQU                     0x0bb6
-_1008               EQU                     0x0bcc
-_1009               EQU                     0x0be2
-_1010               EQU                     0x0ca4
-_1011               EQU                     0x0cba
-_1012               EQU                     0x0cd0
-_1013               EQU                     0x0ce6
-_1014               EQU                     0x0da8
-_1015               EQU                     0x0dbe
-_1016               EQU                     0x0dd4
-_1017               EQU                     0x0dea
-_1018               EQU                     0x0ebd
-_end_0x0553         EQU                     0x0ec7
-_page_0x08a0        EQU                     0x08a0
-_page_0x09a0        EQU                     0x09a0
-_page_0x0aa0        EQU                     0x0aa0
-_page_0x0ba0        EQU                     0x0ba0
-_page_0x0ca0        EQU                     0x0ca0
-_page_0x0da0        EQU                     0x0da0
-_page_0x0ea0        EQU                     0x0ea0
+_203                EQU                     0x0302
+_204                EQU                     0x0310
+_205                EQU                     0x0327
+_206                EQU                     0x0337
+_207                EQU                     0x0343
+_208                EQU                     0x034f
+_209                EQU                     0x035b
+_1000               EQU                     0x0367
+_1001               EQU                     0x037e
+_1002               EQU                     0x0394
+_1003               EQU                     0x03aa
+_1004               EQU                     0x03c0
+_1005               EQU                     0x03d6
+_1006               EQU                     0x03ec
+_1007               EQU                     0x0416
+_1008               EQU                     0x042c
+_1009               EQU                     0x0442
+_1010               EQU                     0x0458
+_1011               EQU                     0x046e
+_1012               EQU                     0x0484
+_1013               EQU                     0x049a
+_1014               EQU                     0x04b0
+_1015               EQU                     0x04c6
+_1016               EQU                     0x04dc
+_1017               EQU                     0x0504
+_1018               EQU                     0x052a
+_end_0x0553         EQU                     0x0534
+_page_0x0300        EQU                     0x0300
+_page_0x0400        EQU                     0x0400
+_page_0x0500        EQU                     0x0500
 
 ; Variables
 _a                  EQU                     0x0030
@@ -85,26 +81,26 @@ _k                  EQU                     0x0038
 _c                  EQU                     0x003a
 
 ; Strings
-str_0x7fa0          EQU                     0x7fa0
-str_0x7fa0          DB                      18 ' 2 3   5 6 7   9 0'
-str_0x7fb3          EQU                     0x7fb3
-str_0x7fb3          DB                      19 'Q W E R T Y U I O P'
-str_0x7fc7          EQU                     0x7fc7
-str_0x7fc7          DB                      3 'Z: '
-str_0x7fd3          EQU                     0x7fd3
-str_0x7fd3          DB                      8 'Metallic'
-str_0x7fdc          EQU                     0x7fdc
-str_0x7fdc          DB                      8 'Triangle'
-str_0x7fe5          EQU                     0x7fe5
-str_0x7fe5          DB                      8 'Pulse   '
-str_0x7fee          EQU                     0x7fee
-str_0x7fee          DB                      8 'Sawtooth'
+str_0xff00          EQU                     0xff00
+str_0xff00          DB                      18 ' 2 3   5 6 7   9 0'
+str_0xff13          EQU                     0xff13
+str_0xff13          DB                      19 'Q W E R T Y U I O P'
+str_0xff27          EQU                     0xff27
+str_0xff27          DB                      3 'Z: '
+str_0xff33          EQU                     0xff33
+str_0xff33          DB                      8 'Metallic'
+str_0xff3c          EQU                     0xff3c
+str_0xff3c          DB                      8 'Triangle'
+str_0xff45          EQU                     0xff45
+str_0xff45          DB                      8 'Pulse   '
+str_0xff4e          EQU                     0xff4e
+str_0xff4e          DB                      8 'Sawtooth'
 
 ; Define Bytes
 
 ; Lookup Tables
-lut_0x7fcb          EQU                     0x7fcb
-lut_0x7fcb          DW                      0x08d7 0x08e3 0x09a2 0x09ae 
+lut_0xff2b          EQU                     0xff2b
+lut_0xff2b          DW                      0x0337 0x0343 0x034f 0x035b 
 
 ; Code
 _entryPoint_        InitRealTimeProc        
@@ -161,11 +157,11 @@ _6                  LDWI                    44
                     CALL                    giga_vAC                        ; poke 44,30:goto 2
 
 _198                PUSH                    
-                    PrintString             str_0x7fa0
+                    PrintString             str_0xff00
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print " 2 3   5 6 7   9 0"
 
-_199                PrintString             str_0x7fb3
+_199                PrintString             str_0xff13
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print "Q W E R T Y U I O P"
 
@@ -194,9 +190,9 @@ _202                LDI                     0
                     POKE                    0xc0                            ; poke p,0:poke p+1,0
 
                     STW                     0x82
-                    LDWI                    _page_0x08a0
+                    LDWI                    _page_0x0300
                     CALL                    giga_vAC
-_page_0x08a0        LDW                     0x82
+_page_0x0300        LDW                     0x82
 _203                ForNextLoopUp           _c _201 4                       ; next c
 
 _204                LDI                     2
@@ -205,34 +201,30 @@ _204                LDI                     2
                     ST                      cursorXY + 1
                     LDWI                    atTextCursor
                     CALL                    giga_vAC
-                    PrintString             str_0x7fc7                      ; at 2,24:print "Z: ";
+                    PrintString             str_0xff27                      ; at 2,24:print "Z: ";
 
 _205                LDW                     _z
                     STW                     register0
                     ADDW                    register0
                     STW                     register0
-                    LDWI                    lut_0x7fcb
+                    LDWI                    lut_0xff2b
                     ADDW                    register0
                     DEEK                    
                     CALL                    giga_vAC                        ; on z goto 206,207,208,209
 
-_206                PrintString             str_0x7fd3
+_206                PrintString             str_0xff33
                     POP                     
                     RET                                                     ; print "Metallic";:return
 
-_207                PrintString             str_0x7fdc
+_207                PrintString             str_0xff3c
                     POP                     
                     RET                                                     ; print "Triangle";:return
 
-                    STW                     0x82
-                    LDWI                    _page_0x09a0
-                    CALL                    giga_vAC
-_page_0x09a0        LDW                     0x82
-_208                PrintString             str_0x7fe5
+_208                PrintString             str_0xff45
                     POP                     
                     RET                                                     ; print "Pulse   ";:return
 
-_209                PrintString             str_0x7fee
+_209                PrintString             str_0xff4e
                     POP                     
                     RET                                                     ; print "Sawtooth";:return
 
@@ -261,10 +253,6 @@ _1002               LDW                     _k
                     SUBI                    119
                     JumpEQ                  _1003 3
                     LDI                     80
-                    STW                     0x82
-                    LDWI                    _page_0x0aa0
-                    CALL                    giga_vAC
-_page_0x0aa0        LDW                     0x82
                     STW                     _a
                     LDI                     9
                     STW                     _b
@@ -303,9 +291,9 @@ _1005               LDW                     _k
 
 _1006               LDW                     _k
                     STW                     0x82
-                    LDWI                    _page_0x0ba0
+                    LDWI                    _page_0x0400
                     CALL                    giga_vAC
-_page_0x0ba0        LDW                     0x82
+_page_0x0400        LDW                     0x82
                     SUBI                    53
                     JumpEQ                  _1007 7
                     LDI                     16
@@ -342,10 +330,6 @@ _1009               LDW                     _k
                     STW                     _a
                     LDI                     14
                     STW                     _b
-                    STW                     0x82
-                    LDWI                    _page_0x0ca0
-                    CALL                    giga_vAC
-_page_0x0ca0        LDW                     0x82
                     POP                     
                     RET                                                     ; if k&=121 then a=53 :b=14:return:'A
 
@@ -384,10 +368,6 @@ _1013               LDW                     _k
                     JumpEQ                  _1014 14
                     LDI                     21
                     STW                     _a
-                    STW                     0x82
-                    LDWI                    _page_0x0da0
-                    CALL                    giga_vAC
-_page_0x0da0        LDW                     0x82
                     LDI                     18
                     STW                     _b
                     POP                     
@@ -420,6 +400,10 @@ _1016               LDW                     _k
                     STW                     _a
                     LDI                     21
                     STW                     _b
+                    STW                     0x82
+                    LDWI                    _page_0x0500
+                    CALL                    giga_vAC
+_page_0x0500        LDW                     0x82
                     POP                     
                     RET                                                     ; if k&=112 then a=77 :b=21:return:'E
 
@@ -429,10 +413,6 @@ _1017               LDW                     _k
                     STW                     0xc0
                     LDI                     0x0f
                     PEEK                    
-                    STW                     0x82
-                    LDWI                    _page_0x0ea0
-                    CALL                    giga_vAC
-_page_0x0ea0        LDW                     0x82
                     SUBI                    255
                     CALL                    convertEqOpAddr
                     ANDW                    0xc0
@@ -457,28 +437,28 @@ _end_0x0553         BRA                     _end_0x0553                     ; EN
 
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
-;* Internal runtime, DO NOT MODIFY HERE, modifications must be made in the original include files                                       *
+;* Internal runtime, DO NOT MODIFY PAST THIS POINT, modifications must be made in the original include files                            *
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7ff7
-convertEqOp         EQU     0x7ea0
-convertNeOp         EQU     0x7ea9
-convertLeOp         EQU     0x7eb2
-convertGeOp         EQU     0x7ebb
-convertLtOp         EQU     0x7ec4
-convertGtOp         EQU     0x7ecd
-multiply16bit       EQU     0x7cbd
-scanlineMode        EQU     0x7da0
-resetVideoTable     EQU     0x7acd
-initClearFuncs      EQU     0x7ed6
-clearVertBlinds     EQU     0x7db4
-clearCursorRow      EQU     0x79a0
-printInit           EQU     0x7dee
-printText           EQU     0x7ca0
-printChar           EQU     0x78a0
-atTextCursor        EQU     0x7aa0
-newLineScroll       EQU     0x7ba0
+realTimeProc        EQU     0xff57
+convertEqOp         EQU     0xff60
+convertNeOp         EQU     0xff69
+convertLeOp         EQU     0xff72
+convertGeOp         EQU     0xff7b
+convertLtOp         EQU     0xff84
+convertGtOp         EQU     0xff8d
+multiply16bit       EQU     0xfe95
+scanlineMode        EQU     0xffb9
+resetVideoTable     EQU     0xfd00
+initClearFuncs      EQU     0xff96
+clearVertBlinds     EQU     0xfe00
+clearCursorRow      EQU     0xfd20
+printInit           EQU     0xffea
+printText           EQU     0xffcd
+printChar           EQU     0xfd66
+atTextCursor        EQU     0xfebc
+newLineScroll       EQU     0xfe3a
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2

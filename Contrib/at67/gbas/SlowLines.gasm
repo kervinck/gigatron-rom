@@ -37,15 +37,14 @@ _4                  EQU                     0x029f
 _5                  EQU                     0x02b4
 _6                  EQU                     0x02d0
 _7                  EQU                     0x02ed
-_8                  EQU                     0x08c0
-_9                  EQU                     0x08d8
-_10                 EQU                     0x08ea
-_11                 EQU                     0x09a6
-_12                 EQU                     0x09c2
-_end_0x03fc         EQU                     0x09dd
-_page_0x08a0        EQU                     0x08a0
-_page_0x09a0        EQU                     0x09a0
-_next_0x03b1        EQU                     0x09a2
+_8                  EQU                     0x0320
+_9                  EQU                     0x0338
+_10                 EQU                     0x034a
+_11                 EQU                     0x035a
+_12                 EQU                     0x0376
+_end_0x03fc         EQU                     0x0391
+_page_0x0300        EQU                     0x0300
+_next_0x03b1        EQU                     0x0356
 
 ; Variables
 _a                  EQU                     0x0030
@@ -129,7 +128,7 @@ _5                  LDI                     1
                     STW                     _u
                     LDW                     _x
                     CALL                    convertLtOpAddr
-                    JumpFalse               _6
+                    JumpFalse               _6 0
                     LDI                     0
                     SUBW                    _x
                     STW                     _x
@@ -141,7 +140,7 @@ _6                  LDWI                    256
                     STW                     _v
                     LDW                     _y
                     CALL                    convertLtOpAddr
-                    JumpFalse               _7
+                    JumpFalse               _7 1
                     LDI                     0
                     SUBW                    _y
                     STW                     _y
@@ -151,9 +150,9 @@ _6                  LDWI                    256
 
 _7                  LDW                     _b
                     STW                     0x82
-                    LDWI                    _page_0x08a0
+                    LDWI                    _page_0x0300
                     CALL                    giga_vAC
-_page_0x08a0        LDW                     0x82
+_page_0x0300        LDW                     0x82
                     STW                     mathShift
                     ShiftLeft8bit           
                     ADDW                    _a
@@ -161,7 +160,7 @@ _page_0x08a0        LDW                     0x82
                     LDW                     _y
                     SUBW                    _x
                     CALL                    convertLtOpAddr
-                    JumpFalse               _8
+                    JumpFalse               _8 2
                     LDWI                    _9
                     CALL                    giga_vAC                        ; p=a + (b LSL 8):if y< x then goto 9
 
@@ -194,10 +193,6 @@ _10                 LDW                     _d
                     STW                     0xb0
                     LDI                     1
                     STW                     0xb2
-                    STW                     0x82
-                    LDWI                    _page_0x09a0
-                    CALL                    giga_vAC
-_page_0x09a0        LDW                     0x82
 _next_0x03b1        LD                      _q
                     POKE                    _p                              ; for t=d to 0:poke p,q
 
@@ -205,7 +200,7 @@ _11                 LDW                     _d
                     ADDW                    _y
                     STW                     _d
                     CALL                    convertGtOpAddr
-                    JumpFalse               _12
+                    JumpFalse               _12 3
                     LDW                     _d
                     SUBW                    _x
                     STW                     _d
@@ -226,22 +221,22 @@ _end_0x03fc         BRA                     _end_0x03fc                     ; EN
 
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
-;* Internal runtime, DO NOT MODIFY HERE, modifications must be made in the original include files                                       *
+;* Internal runtime, DO NOT MODIFY PAST THIS POINT, modifications must be made in the original include files                            *
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7fa0
-convertEqOp         EQU     0x7fa9
-convertNeOp         EQU     0x7fb2
-convertLeOp         EQU     0x7fbb
-convertGeOp         EQU     0x7fc4
-convertLtOp         EQU     0x7fcd
-convertGtOp         EQU     0x7fd6
-rand16bit           EQU     0x7fdf
-shiftLeft8bit       EQU     0x7fe7
-resetVideoTable     EQU     0x7da0
-initClearFuncs      EQU     0x7ea0
-clearVertBlinds     EQU     0x7ec3
+realTimeProc        EQU     0xff00
+convertEqOp         EQU     0xff09
+convertNeOp         EQU     0xff12
+convertLeOp         EQU     0xff1b
+convertGeOp         EQU     0xff24
+convertLtOp         EQU     0xff2d
+convertGtOp         EQU     0xff36
+rand16bit           EQU     0xff9c
+shiftLeft8bit       EQU     0xffa4
+resetVideoTable     EQU     0xffae
+initClearFuncs      EQU     0xff3f
+clearVertBlinds     EQU     0xff62
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2

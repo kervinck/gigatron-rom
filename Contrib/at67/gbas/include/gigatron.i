@@ -6,6 +6,7 @@ giga_notesTable                 EQU     0x0900
 ; RAM
 giga_vram                       EQU     0x0800
 giga_videoTable                 EQU     0x0100
+giga_videoTop                   EQU     0x01F9
 giga_soundChan1                 EQU     0x01FA
 giga_soundChan2                 EQU     0x02FA
 giga_soundChan3                 EQU     0x03FA
@@ -86,3 +87,15 @@ SYS_ExpanderControl_v4_40       EQU     0x0b09
 SYS_ResetWaveforms_v4_50        EQU     0x0b0f
 SYS_ShuffleNoise_v4_46          EQU     0x0b12
 SYS_SpiExchangeBytes_v4_134     EQU     0x0b15
+
+Black                           EQU     0x00
+DarkRed                         EQU     0x01
+Red                             EQU     0x02
+LightRed                        EQU     0x03
+DarkGreen                       EQU     0x04
+Green                           EQU     0x08
+LightGreen                      EQU     0x0c
+DarkBlue                        EQU     0x10
+Blue                            EQU     0x20
+LightBlue                       EQU     0x30
+White                           EQU     0x3f

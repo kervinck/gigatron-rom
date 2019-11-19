@@ -30,9 +30,9 @@ miscFlags           EQU                     register0 + 0x2A
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_end_0x0304         EQU                     0x08b2
+_end_0x0304         EQU                     0x0312
 _next_0x0245        EQU                     0x0245
-_page_0x08a0        EQU                     0x08a0
+_page_0x0300        EQU                     0x0300
 
 ; Variables
 _z                  EQU                     0x0030
@@ -89,9 +89,7 @@ _next_0x0245        LDI                     16
                     STW                     0xc0
                     LDWI                    0xffff
                     ANDW                    _c
-                    STW                     0xc2
-                    LDW                     0xc0
-                    ORW                     0xc2
+                    ORW                     0xc0
                     STW                     _e                              ; e = &hAA55 XOR a OR c AND &hFFFF
 
                     LDW                     _z
@@ -113,9 +111,9 @@ _next_0x0245        LDI                     16
                     PrintVarInt16           _z
                     LDWI                    newLineScroll
                     STW                     0x82
-                    LDWI                    _page_0x08a0
+                    LDWI                    _page_0x0300
                     CALL                    giga_vAC
-_page_0x08a0        LDW                     0x82
+_page_0x0300        LDW                     0x82
                     CALL                    giga_vAC
                     ForNextLoopUp           _i _next_0x0245 5               ; print a;" ";b;" ";c;" ";hex$(d);" ";hexw$(e);" ";z : next i
 
@@ -125,7 +123,7 @@ _end_0x0304         BRA                     _end_0x0304                     ; EN
 
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
-;* Internal runtime, DO NOT MODIFY HERE, modifications must be made in the original include files                                       *
+;* Internal runtime, DO NOT MODIFY PAST THIS POINT, modifications must be made in the original include files                            *
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 

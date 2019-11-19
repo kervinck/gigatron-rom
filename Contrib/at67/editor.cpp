@@ -1027,7 +1027,7 @@ namespace Editor
 
     void loadGtRgbFile(void)
     {
-        static std::string names[] = {"Clouds", "Clouds", "Clouds", "Clouds"}; //{"Gamma", "Gigatron", "Juggler", "Mario"};
+        static std::string names[] = {"Gamma_hi", "Gigatron_hi", "Juggler_hi", "Mario_hi"}; //{"Clouds", "Clouds", "Clouds", "Clouds"};
 
         Image::TgaFile tgaFile;
         Image::GtRgbFile gtRgbFile;
@@ -1043,7 +1043,8 @@ namespace Editor
             {
                 uint8_t data = gtRgbFile._data[y*gtRgbFile._header._width + x];
                 Cpu::setRAM(vram++, data);
-                if((vram & 0x00FF) == 0x00) vram += 0x0000;
+                //if((vram & 0x00FF) == 0x00) vram += 0x00A0;
+                if((vram & 0x00FF) == 0xA0) vram = (vram + 0x0100) & 0xFF00;
             }
         }
     }

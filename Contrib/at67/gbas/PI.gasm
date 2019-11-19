@@ -33,18 +33,17 @@ _entryPoint_        EQU                     0x0200
 _10                 EQU                     0x0246
 _20                 EQU                     0x0246
 _30                 EQU                     0x0258
-_40                 EQU                     0x0287
-_50                 EQU                     0x02a8
-_60                 EQU                     0x02da
-_70                 EQU                     0x08c8
-_80                 EQU                     0x08ef
-_90                 EQU                     0x09ca
-_end_0x03c3         EQU                     0x09f5
-_page_0x08a0        EQU                     0x08a0
-_page_0x09a0        EQU                     0x09a0
+_40                 EQU                     0x0283
+_50                 EQU                     0x02a4
+_60                 EQU                     0x02d2
+_70                 EQU                     0x0319
+_80                 EQU                     0x0340
+_90                 EQU                     0x036a
+_end_0x03c3         EQU                     0x0391
+_page_0x0300        EQU                     0x0300
 
 ; Variables
-_Z_array            EQU                     0x0500
+_Z_array            EQU                     0xff00
 _Z_array            DW                      0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
 _D                  EQU                     0x0030
 _M                  EQU                     0x0032
@@ -54,10 +53,10 @@ _J                  EQU                     0x0038
 _A                  EQU                     0x003a
 
 ; Strings
-str_0x7fa0          EQU                     0x7fa0
-str_0x7fa0          DB                      3 'PI='
-str_0x7fa4          EQU                     0x7fa4
-str_0x7fa4          DB                      1 '.'
+str_0xffbe          EQU                     0xffbe
+str_0xffbe          DB                      3 'PI='
+str_0xffc2          EQU                     0xffc2
+str_0xffc2          DB                      1 '.'
 
 ; Define Bytes
 
@@ -88,18 +87,16 @@ _20                 LDI                     94
                     LDI                     1
                     STW                     0xb2                            ; M=94:FOR I=0 TO M-1
 
-_30                 LDI                     20
-                    STW                     register0
-                    LDW                     _I
+_30                 LDW                     _I
                     STW                     register1
-                    LDWI                    0x0500
+                    LDWI                    0xff00
                     ADDW                    register1
                     ADDW                    register1
                     STW                     register1
-                    LDW                     register0
+                    LDI                     20
                     DOKE                    register1
                     ForNextLoopStepUp       _I _30 0xb0 0xb2
-                    PrintString             str_0x7fa0                      ; Z(I)=20:NEXT I:PRINT "PI=";
+                    PrintString             str_0xffbe                      ; Z(I)=20:NEXT I:PRINT "PI=";
 
 _40                 LDW                     _D
                     STW                     mathX
@@ -129,11 +126,9 @@ _50                 LDW                     _M
                     CALL                    giga_vAC
                     ADDW                    _D
                     STW                     0xc4
-                    LDW                     _J
-                    STW                     register2
-                    LDWI                    0x0500
-                    ADDW                    register2
-                    ADDW                    register2
+                    LDWI                    0xff00
+                    ADDW                    _J
+                    ADDW                    _J
                     DEEK                    
                     STW                     mathX
                     LDI                     100
@@ -153,20 +148,17 @@ _60                 LDW                     _J
                     STW                     mathY
                     LDWI                    divide16bit
                     CALL                    giga_vAC
-                    STW                     0x82
-                    LDWI                    _page_0x08a0
-                    CALL                    giga_vAC
-_page_0x08a0        LDW                     0x82
-                    LDW                     mathRem
-                    STW                     0xc2
-                    STW                     register0
                     LDW                     _J
                     STW                     register1
-                    LDWI                    0x0500
+                    LDWI                    0xff00
                     ADDW                    register1
+                    STW                     0x82
+                    LDWI                    _page_0x0300
+                    CALL                    giga_vAC
+_page_0x0300        LDW                     0x82
                     ADDW                    register1
                     STW                     register1
-                    LDW                     register0
+                    LDW                     mathRem
                     DOKE                    register1
                     LDW                     _D
                     STW                     mathX
@@ -192,19 +184,14 @@ _70                 ForNextLoopStepUp       _I _50 0xb0 0xb2
 _80                 LDW                     _E
                     STW                     mathX
                     LDI                     10
-                    STW                     0x82
-                    LDWI                    _page_0x09a0
-                    CALL                    giga_vAC
-_page_0x09a0        LDW                     0x82
                     STW                     mathY
                     LDWI                    divide16bit
                     CALL                    giga_vAC
-                    STW                     0xc0
-                    PrintVarInt16           0xc0
+                    PrintAcInt16            
                     LDW                     _M
                     SUBI                    88
                     JumpEQ                  _90 0
-                    PrintString             str_0x7fa4                      ; PRINT E/10;:IF M&=88 THEN PRINT ".";
+                    PrintString             str_0xffc2                      ; PRINT E/10;:IF M&=88 THEN PRINT ".";
 
 _90                 LDW                     _E
                     STW                     mathX
@@ -213,8 +200,7 @@ _90                 LDW                     _E
                     LDWI                    divide16bit
                     CALL                    giga_vAC
                     LDW                     mathRem
-                    STW                     0xc0
-                    PrintVarInt16           0xc0
+                    PrintAcInt16            
                     LDW                     _M
                     SUBI                    10
                     JumpGT                  _end_0x03c3 1
@@ -227,29 +213,29 @@ _end_0x03c3         BRA                     _end_0x03c3                     ; EN
 
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
-;* Internal runtime, DO NOT MODIFY HERE, modifications must be made in the original include files                                       *
+;* Internal runtime, DO NOT MODIFY PAST THIS POINT, modifications must be made in the original include files                            *
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7fa6
-convertEqOp         EQU     0x7faf
-convertNeOp         EQU     0x7fb8
-convertLeOp         EQU     0x7fc1
-convertGeOp         EQU     0x7fca
-convertLtOp         EQU     0x7fd3
-convertGtOp         EQU     0x7fdc
-multiply16bit       EQU     0x7dbd
-divide16bit         EQU     0x7ca0
-resetVideoTable     EQU     0x7aa0
-initClearFuncs      EQU     0x7ea0
-clearVertBlinds     EQU     0x7ec3
-clearCursorRow      EQU     0x79a0
-printInit           EQU     0x7fe5
-printText           EQU     0x7da0
-printDigit          EQU     0x7ac0
-printInt16          EQU     0x7ba0
-printChar           EQU     0x78a0
-newLineScroll       EQU     0x77a0
+realTimeProc        EQU     0xffc4
+convertEqOp         EQU     0xffcd
+convertNeOp         EQU     0xffd6
+convertLeOp         EQU     0xffdf
+convertGeOp         EQU     0xffe8
+convertLtOp         EQU     0xfff1
+convertGtOp         EQU     0xfe00
+multiply16bit       EQU     0xfd00
+divide16bit         EQU     0xfe83
+resetVideoTable     EQU     0xfedd
+initClearFuncs      EQU     0xfe09
+clearVertBlinds     EQU     0xfe2c
+clearCursorRow      EQU     0xfd76
+printInit           EQU     0xfdbc
+printText           EQU     0xfe66
+printDigit          EQU     0xfdcd
+printInt16          EQU     0xfd27
+printChar           EQU     0xfc00
+newLineScroll       EQU     0xfc59
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2

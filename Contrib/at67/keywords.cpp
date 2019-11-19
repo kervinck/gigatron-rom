@@ -7,80 +7,83 @@
 #include "cpu.h"
 #include "assembler.h"
 #include "keywords.h"
+#include "operators.h"
 
 
 namespace Keywords
 {
-    std::map<std::string, Keyword> _keywords, _stringKeywords;
+    std::map<std::string, Keyword> _keywords, _functions, _stringKeywords;
     std::vector<std::string> _equalsKeywords;
 
 
     std::map<std::string, Keyword>& getKeywords(void) {return _keywords;}
+    std::map<std::string, Keyword>& getFunctions(void) {return _functions;}
     std::map<std::string, Keyword>& getStringKeywords(void) {return _stringKeywords;}
     std::vector<std::string>& getEqualsKeywords(void) {return _equalsKeywords;}
 
 
     bool initialise(void)
     {
-        _keywords["END"   ] = {0, "END",    keywordEND   };
-        _keywords["ON"    ] = {4, "ON",     keywordON    };
-        _keywords["GOTO"  ] = {1, "GOTO",   keywordGOTO  };
-        _keywords["GOSUB" ] = {1, "GOSUB",  keywordGOSUB };
-        _keywords["RETURN"] = {0, "RETURN", keywordRETURN};
-        _keywords["CLS"   ] = {0, "CLS",    keywordCLS   };
-        _keywords["INPUT" ] = {0, "INPUT",  nullptr      };
-        _keywords["PRINT" ] = {0, "PRINT",  keywordPRINT };
-        _keywords["FOR"   ] = {0, "FOR",    keywordFOR   };
-        _keywords["NEXT"  ] = {0, "NEXT",   keywordNEXT  };
-        _keywords["IF"    ] = {0, "IF",     keywordIF    };
-        _keywords["ELSE"  ] = {0, "ELSE",   keywordELSE  };
-        _keywords["ELSEIF"] = {0, "ELSEIF", keywordELSEIF};
-        _keywords["ENDIF" ] = {0, "ENDIF",  keywordENDIF };
-        _keywords["WHILE" ] = {0, "WHILE",  keywordWHILE };
-        _keywords["WEND"  ] = {0, "WEND",   keywordWEND  };
-        _keywords["REPEAT"] = {0, "REPEAT", keywordREPEAT};
-        _keywords["UNTIL" ] = {0, "UNTIL",  keywordUNTIL };
-        _keywords["DIM"   ] = {1, "DIM",    keywordDIM   };
-        _keywords["DEF"   ] = {0, "DEF",    keywordDEF   };
-        _keywords["AT"    ] = {1, "AT",     keywordAT    };
-        _keywords["PUT"   ] = {1, "PUT",    keywordPUT   };
-        _keywords["MODE"  ] = {1, "MODE",   keywordMODE  };
-        _keywords["WAIT"  ] = {1, "WAIT",   keywordWAIT  };
-        _keywords["LINE"  ] = {1, "LINE",   keywordLINE  };
-        _keywords["HLINE" ] = {1, "HLINE",  keywordHLINE };
-        _keywords["VLINE" ] = {1, "VLINE",  keywordVLINE };
-        _keywords["SCROLL"] = {1, "SCROLL", keywordSCROLL};
-        _keywords["POKE"  ] = {1, "POKE",   keywordPOKE  };
-        _keywords["DOKE"  ] = {1, "DOKE",   keywordDOKE  };
-        _keywords["PLAY"  ] = {1, "PLAY",   keywordPLAY  };
-        _keywords["PEEK"  ] = {1, "PEEK",   nullptr      };
-        _keywords["DEEK"  ] = {1, "DEEK",   nullptr      };
-        _keywords["USR"   ] = {1, "USR",    nullptr      };
-        _keywords["ABS"   ] = {1, "ABS",    nullptr      };
-        _keywords["ACS"   ] = {1, "ACS",    nullptr      };
-        _keywords["ASC"   ] = {1, "ASC",    nullptr      };
-        _keywords["ASN"   ] = {1, "ASN",    nullptr      };
-        _keywords["ATN"   ] = {1, "ATN",    nullptr      };
-        _keywords["COS"   ] = {1, "COS",    nullptr      };
-        _keywords["EXP"   ] = {1, "EXP",    nullptr      };
-        _keywords["INT"   ] = {1, "INT",    nullptr      };
-        _keywords["LOG"   ] = {1, "LOG",    nullptr      };
-        _keywords["RND"   ] = {1, "RND",    nullptr      };
-        _keywords["SIN"   ] = {1, "SIN",    nullptr      };
-        _keywords["SQR"   ] = {1, "SQR",    nullptr      };
-        _keywords["TAN"   ] = {1, "TAN",    nullptr      };
-        _keywords["FRE"   ] = {1, "FRE",    nullptr      };
-        _keywords["TIME"  ] = {1, "TIME",   nullptr      };
+        _keywords["END"   ] = {"END",    keywordEND   };
+        _keywords["ON"    ] = {"ON",     keywordON    };
+        _keywords["GOTO"  ] = {"GOTO",   keywordGOTO  };
+        _keywords["GOSUB" ] = {"GOSUB",  keywordGOSUB };
+        _keywords["RETURN"] = {"RETURN", keywordRETURN};
+        _keywords["CLS"   ] = {"CLS",    keywordCLS   };
+        _keywords["INPUT" ] = {"INPUT",  nullptr      };
+        _keywords["PRINT" ] = {"PRINT",  keywordPRINT };
+        _keywords["FOR"   ] = {"FOR",    keywordFOR   };
+        _keywords["NEXT"  ] = {"NEXT",   keywordNEXT  };
+        _keywords["IF"    ] = {"IF",     keywordIF    };
+        _keywords["ELSE"  ] = {"ELSE",   keywordELSE  };
+        _keywords["ELSEIF"] = {"ELSEIF", keywordELSEIF};
+        _keywords["ENDIF" ] = {"ENDIF",  keywordENDIF };
+        _keywords["WHILE" ] = {"WHILE",  keywordWHILE };
+        _keywords["WEND"  ] = {"WEND",   keywordWEND  };
+        _keywords["REPEAT"] = {"REPEAT", keywordREPEAT};
+        _keywords["UNTIL" ] = {"UNTIL",  keywordUNTIL };
+        _keywords["DIM"   ] = {"DIM",    keywordDIM   };
+        _keywords["DEF"   ] = {"DEF",    keywordDEF   };
+        _keywords["AT"    ] = {"AT",     keywordAT    };
+        _keywords["PUT"   ] = {"PUT",    keywordPUT   };
+        _keywords["MODE"  ] = {"MODE",   keywordMODE  };
+        _keywords["WAIT"  ] = {"WAIT",   keywordWAIT  };
+        _keywords["LINE"  ] = {"LINE",   keywordLINE  };
+        _keywords["HLINE" ] = {"HLINE",  keywordHLINE };
+        _keywords["VLINE" ] = {"VLINE",  keywordVLINE };
+        _keywords["SCROLL"] = {"SCROLL", keywordSCROLL};
+        _keywords["POKE"  ] = {"POKE",   keywordPOKE  };
+        _keywords["DOKE"  ] = {"DOKE",   keywordDOKE  };
+        _keywords["PLAY"  ] = {"PLAY",   keywordPLAY  };
 
-        _stringKeywords["CHR$"  ] = {1, "CHR$",   nullptr};
-        _stringKeywords["HEX$"  ] = {1, "HEX$",   nullptr};
-        _stringKeywords["HEXW$" ] = {1, "HEXW$",  nullptr};
-        _stringKeywords["MID$"  ] = {1, "MID$",   nullptr};
-        _stringKeywords["LEFT$" ] = {1, "LEFT$",  nullptr};
-        _stringKeywords["RIGHT$"] = {1, "RIGHT$", nullptr};
-        _stringKeywords["SPC$"  ] = {1, "SPC$",   nullptr};
-        _stringKeywords["STR$"  ] = {1, "STR$",   nullptr};
-        _stringKeywords["TIME$" ] = {1, "TIME$",  nullptr};
+        _functions["PEEK"  ] = {"PEEK", nullptr};
+        _functions["DEEK"  ] = {"DEEK", nullptr};
+        _functions["USR"   ] = {"USR",  nullptr};
+        _functions["ABS"   ] = {"ABS",  nullptr};
+        _functions["ACS"   ] = {"ACS",  nullptr};
+        _functions["ASC"   ] = {"ASC",  nullptr};
+        _functions["ASN"   ] = {"ASN",  nullptr};
+        _functions["ATN"   ] = {"ATN",  nullptr};
+        _functions["COS"   ] = {"COS",  nullptr};
+        _functions["EXP"   ] = {"EXP",  nullptr};
+        _functions["INT"   ] = {"INT",  nullptr};
+        _functions["LOG"   ] = {"LOG",  nullptr};
+        _functions["RND"   ] = {"RND",  nullptr};
+        _functions["SIN"   ] = {"SIN",  nullptr};
+        _functions["SQR"   ] = {"SQR",  nullptr};
+        _functions["TAN"   ] = {"TAN",  nullptr};
+        _functions["FRE"   ] = {"FRE",  nullptr};
+        _functions["TIME"  ] = {"TIME", nullptr};
+
+        _stringKeywords["CHR$"  ] = {"CHR$",   nullptr};
+        _stringKeywords["HEX$"  ] = {"HEX$",   nullptr};
+        _stringKeywords["HEXW$" ] = {"HEXW$",  nullptr};
+        _stringKeywords["MID$"  ] = {"MID$",   nullptr};
+        _stringKeywords["LEFT$" ] = {"LEFT$",  nullptr};
+        _stringKeywords["RIGHT$"] = {"RIGHT$", nullptr};
+        _stringKeywords["SPC$"  ] = {"SPC$",   nullptr};
+        _stringKeywords["STR$"  ] = {"STR$",   nullptr};
+        _stringKeywords["TIME$" ] = {"TIME$",  nullptr};
 
         _equalsKeywords.push_back("DIM");
         _equalsKeywords.push_back("DEF");
@@ -92,6 +95,7 @@ namespace Keywords
 
         return true;
     }
+
 
     bool findKeyword(std::string code, const std::string& keyword, size_t& foundPos)
     {
@@ -121,6 +125,211 @@ namespace Keywords
         }
 
         return KeywordFound;
+    }
+
+
+    // ********************************************************************************************
+    // Functions
+    // ********************************************************************************************
+    Expression::Numeric functionCHR$(Expression::Numeric& numeric)
+    {
+        if(!numeric._isAddress)
+        {
+            // Print constant, (without wasting memory)
+            if(Expression::getEnablePrint())
+            {
+                Compiler::emitVcpuAsm("LDI", std::to_string(numeric._value), false);
+                Compiler::emitVcpuAsm("%PrintAcChar", "", false);
+                return numeric;
+            }
+
+            // Create constant string
+            Compiler::createConstantString(Compiler::StrChar, numeric._value);
+            return numeric;
+        }
+
+        Compiler::getNextTempVar();
+        Operators::handleSingleOp("LDW", numeric);
+        if(Expression::getEnablePrint()) Compiler::emitVcpuAsm("%PrintAcChar", "", false);
+
+        return numeric;
+    }
+
+    Expression::Numeric functionHEX$(Expression::Numeric& numeric)
+    {
+        // Print constant, (without wasting memory)
+        if(!numeric._isAddress)
+        {
+            if(Expression::getEnablePrint())
+            {
+                Compiler::emitVcpuAsm("LDI", std::to_string(numeric._value), false);
+                Compiler::emitVcpuAsm("%PrintAcHexByte", "", false);
+                return numeric;
+            }
+
+            // Create constant string
+            Compiler::createConstantString(Compiler::StrHex, numeric._value);
+            return numeric;
+        }
+
+        Compiler::getNextTempVar();
+        Operators::handleSingleOp("LDW", numeric);
+        if(Expression::getEnablePrint()) Compiler::emitVcpuAsm("%PrintAcHexByte", "", false);
+
+        return numeric;
+    }
+
+    Expression::Numeric functionHEXW$(Expression::Numeric& numeric)
+    {
+        if(!numeric._isAddress)
+        {
+            // Print constant, (without wasting memory)
+            if(Expression::getEnablePrint())
+            {
+                Compiler::emitVcpuAsm("LDWI", std::to_string(numeric._value), false);
+                Compiler::emitVcpuAsm("%PrintAcHexWord", "", false);
+                return numeric;
+            }
+
+            // Create constant string
+            Compiler::createConstantString(Compiler::StrHexw, numeric._value);
+            return numeric;
+        }
+
+        Compiler::getNextTempVar();
+        Operators::handleSingleOp("LDW", numeric);
+        if(Expression::getEnablePrint()) Compiler::emitVcpuAsm("%PrintAcHexWord", "", false);
+
+        return numeric;
+    }
+
+    Expression::Numeric functionPEEK(Expression::Numeric& numeric)
+    {
+        if(!numeric._isAddress)
+        {
+            (numeric._value >= 0  && numeric._value <= 255) ? Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(numeric._value)), false) : 
+                                                              Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(numeric._value), false);
+        }
+
+        Compiler::getNextTempVar();
+        Operators::handleSingleOp("LDW", numeric);
+        Compiler::emitVcpuAsm("PEEK", "", false);
+        Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
+
+        return numeric;
+    }
+
+    Expression::Numeric functionDEEK(Expression::Numeric& numeric)
+    {
+        if(!numeric._isAddress)
+        {
+            (numeric._value >= 0  && numeric._value <= 255) ? Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(numeric._value)), false) : 
+                                                              Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(numeric._value), false);
+        }
+
+        Compiler::getNextTempVar();
+        Operators::handleSingleOp("LDW", numeric);
+        Compiler::emitVcpuAsm("DEEK", "", false);
+        Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
+
+        return numeric;
+    }
+
+    Expression::Numeric functionUSR(Expression::Numeric& numeric)
+    {
+        if(!numeric._isAddress)
+        {
+            (numeric._value >= 0  && numeric._value <= 255) ? Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(numeric._value)), false) : 
+                                                              Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(numeric._value), false);
+        }
+
+        Compiler::getNextTempVar();
+        Operators::handleSingleOp("LDW", numeric);
+        Compiler::emitVcpuAsm("CALL", "giga_vAC", false);
+        Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
+
+        return numeric;
+    }
+
+    Expression::Numeric functionRND(Expression::Numeric& numeric)
+    {
+        bool useMod = true;
+        if(!numeric._isAddress)
+        {
+            // RND(0) skips the MOD call and allows you to filter the output manually
+            if(numeric._value == 0)
+            {
+                useMod = false;
+            }
+            else
+            {
+                (numeric._value > 0  && numeric._value <= 255) ? Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(numeric._value)), false) : 
+                                                                 Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(numeric._value), false);
+            }
+        }
+
+        Compiler::getNextTempVar();
+        if(useMod)
+        {
+            Operators::handleSingleOp("LDW", numeric);
+            Compiler::emitVcpuAsm("%RandMod", "", false);
+        }
+        else
+        {
+            numeric._value = uint8_t(Compiler::getTempVarStart());
+            numeric._isAddress = true;
+            numeric._varName = Compiler::getTempVarStartStr();
+
+            Compiler::emitVcpuAsm("%Rand", "", false);
+        }
+
+        Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
+
+        return numeric;
+    }
+
+    Expression::Numeric functionARR(Expression::Numeric& numeric)
+    {
+        Compiler::getNextTempVar();
+
+        int intSize = Compiler::getIntegerVars()[numeric._index]._intSize;
+        uint16_t arrayPtr = Compiler::getIntegerVars()[numeric._index]._array;
+
+        if(!numeric._isAddress)
+        {
+            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr + numeric._value*intSize), false);
+            Compiler::emitVcpuAsm("DEEK", "", false);
+
+            numeric._value = uint8_t(Compiler::getTempVarStart());
+            numeric._isAddress = true;
+            numeric._varName = Compiler::getTempVarStartStr();
+        }
+        else
+        {
+            Operators::handleSingleOp("LDW", numeric);
+
+#ifdef SMALL_CODE_SIZE
+            // Saves 2 bytes per array access but costs an extra 2 instructions in performance
+            if(Assembler::getUseOpcodeCALLI())
+            {
+                Compiler::emitVcpuAsm("STW", "memIndex", false);
+                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr), false);
+                Compiler::emitVcpuAsm("CALLI", "getArrayInt16", false);
+            }
+            else
+#endif
+            {
+                Compiler::emitVcpuAsm("STW", "register2", false);
+                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr), false);
+                Compiler::emitVcpuAsm("ADDW", "register2", false);
+                Compiler::emitVcpuAsm("ADDW", "register2", false);
+                Compiler::emitVcpuAsm("DEEK", "",          false);
+            }
+        }
+
+        Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
+
+        return numeric;
     }
 
 
@@ -474,19 +683,19 @@ namespace Keywords
 
         if((operandTypes[0] == Compiler::OperandVar  ||  operandTypes[0] == Compiler::OperandTemp)  &&  (operandTypes[1] == Compiler::OperandVar  ||  operandTypes[1] == Compiler::OperandTemp))
         {
-            (operandTypes[1] == Compiler::OperandVar) ? Compiler::emitVcpuAsm("LD", "_" + operands[1], false, codeLineIndex) : Compiler::emitVcpuAsm("LD", "" + operands[1], false, codeLineIndex);
-            (operandTypes[0] == Compiler::OperandVar) ? Compiler::emitVcpuAsm("POKE", "_" + operands[0], false, codeLineIndex) : Compiler::emitVcpuAsm("POKE", "" + operands[0], false, codeLineIndex);
+            (operandTypes[1] == Compiler::OperandVar) ? Compiler::emitVcpuAsm("LD", "_" + operands[1], false, codeLineIndex) : Compiler::emitVcpuAsm("LD", operands[1], false, codeLineIndex);
+            (operandTypes[0] == Compiler::OperandVar) ? Compiler::emitVcpuAsm("POKE", "_" + operands[0], false, codeLineIndex) : Compiler::emitVcpuAsm("POKE", operands[0], false, codeLineIndex);
         }
         else if((operandTypes[0] == Compiler::OperandVar  ||  operandTypes[0] == Compiler::OperandTemp)  &&  operandTypes[1] == Compiler::OperandConst)
         {
             Compiler::emitVcpuAsm("LDI", operands[1], false, codeLineIndex);
-            (operandTypes[0] == Compiler::OperandVar) ? Compiler::emitVcpuAsm("POKE", "_" + operands[0], false, codeLineIndex) : Compiler::emitVcpuAsm("POKE", "" + operands[0], false, codeLineIndex);
+            (operandTypes[0] == Compiler::OperandVar) ? Compiler::emitVcpuAsm("POKE", "_" + operands[0], false, codeLineIndex) : Compiler::emitVcpuAsm("POKE", operands[0], false, codeLineIndex);
         }
         else if(operandTypes[0] == Compiler::OperandConst  &&  (operandTypes[1] == Compiler::OperandVar  ||  operandTypes[1] == Compiler::OperandTemp))
         {
             Compiler::emitVcpuAsm("LDWI", operands[0], false, codeLineIndex);
             Compiler::emitVcpuAsm("STW", "register0", false, codeLineIndex);
-            (operandTypes[1] == Compiler::OperandVar) ? Compiler::emitVcpuAsm("LD", "_" + operands[1], false, codeLineIndex) : Compiler::emitVcpuAsm("LD", "" + operands[1], false, codeLineIndex);
+            (operandTypes[1] == Compiler::OperandVar) ? Compiler::emitVcpuAsm("LD", "_" + operands[1], false, codeLineIndex) : Compiler::emitVcpuAsm("LD", operands[1], false, codeLineIndex);
             Compiler::emitVcpuAsm("POKE", "register0", false, codeLineIndex);
         }
         else
@@ -819,12 +1028,11 @@ namespace Keywords
         // Parse print tokens
         std::vector<std::string> tokens = Expression::tokeniseLine(codeLine._code.substr(foundPos), ";");
 
-        Expression::Numeric value;
-        int varIndex, params;
-
         for(int i=0; i<tokens.size(); i++)
         {
-            uint32_t expressionType = Compiler::isExpression(tokens[i], varIndex, params);
+            int varIndex;
+            Expression::Numeric value;
+            uint32_t expressionType = Compiler::isExpression(tokens[i], varIndex);
 
             if(expressionType & Expression::HasStringKeywords)
             {

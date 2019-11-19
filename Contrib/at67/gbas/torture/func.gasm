@@ -31,14 +31,12 @@ miscFlags           EQU                     register0 + 0x2A
 ; Labels
 _entryPoint_        EQU                     0x0200
 _10                 EQU                     0x0242
-_blamo              EQU                     0x09dd
-_end_0x03a3         EQU                     0x09db
-_end_0x0437         EQU                     0x0bad
-_page_0x08a0        EQU                     0x08a0
-_page_0x09a0        EQU                     0x09a0
-_next_0x03b7        EQU                     0x09ed
-_page_0x0aa0        EQU                     0x0aa0
-_page_0x0ba0        EQU                     0x0ba0
+_blamo              EQU                     0x0387
+_end_0x03a3         EQU                     0x0385
+_end_0x043a         EQU                     0x0415
+_page_0x0300        EQU                     0x0300
+_next_0x03b7        EQU                     0x0397
+_page_0x0400        EQU                     0x0400
 
 ; Variables
 _addr               EQU                     0x0030
@@ -104,9 +102,7 @@ _10                 LDI                     33
                     LDW                     _addr
                     ADDI                    1
                     PEEK                    
-                    STW                     0xcc
-                    LDW                     0xc8
-                    ORW                     0xcc
+                    ORW                     0xc8
                     ADDI                    23
                     XORI                    15
                     STW                     0xcc
@@ -137,11 +133,11 @@ _10                 LDI                     33
 
                     PrintString             str_0x7fa2
                     PrintString             str_0x7fa0
-                    STW                     0x82
-                    LDWI                    _page_0x08a0
-                    CALL                    giga_vAC
-_page_0x08a0        LDW                     0x82
                     PrintString             str_0x7fa7
+                    STW                     0x82
+                    LDWI                    _page_0x0300
+                    CALL                    giga_vAC
+_page_0x0300        LDW                     0x82
                     PrintString             str_0x7fa0
                     PrintInt16              0x0064
                     PrintString             str_0x7fa0
@@ -159,10 +155,6 @@ _page_0x08a0        LDW                     0x82
 
                     LDW                     _x
                     ANDI                    63
-                    STW                     0x82
-                    LDWI                    _page_0x09a0
-                    CALL                    giga_vAC
-_page_0x09a0        LDW                     0x82
                     STW                     mathShift
                     ShiftLeft8bit           
                     STW                     _z                              ; z = (x AND &h3F) LSL 8
@@ -197,16 +189,13 @@ _blamo              PUSH
                     STW                     _i                              ; for i = 0 to 10
 
 _next_0x03b7        LDWI                    str_0x7fa0
+                    LDWI                    32672
                     STW                     _c                              ; c = CHR$(32)
 
                     LDI                     0x00
                     PEEK                    
                     STW                     _f                              ; f = peek(0)
 
-                    STW                     0x82
-                    LDWI                    _page_0x0aa0
-                    CALL                    giga_vAC
-_page_0x0aa0        LDW                     0x82
                     LDWI                    0xaa55
                     ANDW                    _c
                     ANDW                    _a
@@ -232,15 +221,15 @@ _page_0x0aa0        LDW                     0x82
 
                     LDWI                    -1
                     SUBW                    _g
+                    STW                     0x82
+                    LDWI                    _page_0x0400
+                    CALL                    giga_vAC
+_page_0x0400        LDW                     0x82
                     STW                     0xc0
                     LDW                     _z
                     SUBW                    0xc0
                     STW                     _g                              ; g = z - NOT g
 
-                    STW                     0x82
-                    LDWI                    _page_0x0ba0
-                    CALL                    giga_vAC
-_page_0x0ba0        LDW                     0x82
                     LDWI                    -1
                     SUBW                    _a
                     SUBW                    _d
@@ -249,13 +238,13 @@ _page_0x0ba0        LDW                     0x82
                     POP                     
                     RET                                                     ; return
 
-_end_0x0437         BRA                     _end_0x0437                     ; END
+_end_0x043a         BRA                     _end_0x043a                     ; END
 
 
 
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
-;* Internal runtime, DO NOT MODIFY HERE, modifications must be made in the original include files                                       *
+;* Internal runtime, DO NOT MODIFY PAST THIS POINT, modifications must be made in the original include files                            *
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 

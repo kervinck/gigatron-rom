@@ -1,0 +1,17 @@
+cls
+
+LET a=0
+
+repeat
+    a=a+1
+    print a
+until a&=8    
+
+while a>1
+    a=a-1
+    if a&=1
+        print a;
+    else
+        print a
+    endif
+wend

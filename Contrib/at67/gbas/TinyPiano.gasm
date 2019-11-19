@@ -35,21 +35,19 @@ _50                 EQU                     0x02bd
 _51                 EQU                     0x02cd
 _53                 EQU                     0x02dd
 _54                 EQU                     0x02ed
-_55                 EQU                     0x08af
-_101                EQU                     0x08bf
-_105                EQU                     0x08cf
-_113                EQU                     0x08df
-_114                EQU                     0x08ef
-_116                EQU                     0x09ab
-_117                EQU                     0x09bb
-_119                EQU                     0x09cb
-_121                EQU                     0x09db
-_note               EQU                     0x09eb
-_end_0x03b1         EQU                     0x0ab1
+_55                 EQU                     0x030f
+_101                EQU                     0x031f
+_105                EQU                     0x032f
+_113                EQU                     0x033f
+_114                EQU                     0x034f
+_116                EQU                     0x035f
+_117                EQU                     0x036f
+_119                EQU                     0x037f
+_121                EQU                     0x038f
+_note               EQU                     0x039f
+_end_0x03b1         EQU                     0x03b9
 _next_0x0249        EQU                     0x0247
-_page_0x08a0        EQU                     0x08a0
-_page_0x09a0        EQU                     0x09a0
-_page_0x0aa0        EQU                     0x0aa0
+_page_0x0300        EQU                     0x0300
 
 ; Variables
 _a                  EQU                     0x0030
@@ -59,18 +57,18 @@ _p                  EQU                     0x0036
 _k                  EQU                     0x0038
 
 ; Strings
-str_0x7fa0          EQU                     0x7fa0
-str_0x7fa0          DB                      12 ' 2 3   5 6 7'
-str_0x7fad          EQU                     0x7fad
-str_0x7fad          DB                      15 'Q W E R T Y U I'
+str_0xff00          EQU                     0xff00
+str_0xff00          DB                      12 ' 2 3   5 6 7'
+str_0xff0d          EQU                     0xff0d
+str_0xff0d          DB                      15 'Q W E R T Y U I'
 
 ; Define Bytes
 
 ; Lookup Tables
-lut_numericLabs     EQU                     0x7dda
+lut_numericLabs     EQU                     0xfe95
 lut_numericLabs     DW                      50 51 53 54 55 101 105 113 114 116 117 119 121 -1
-lut_numericAddrs    EQU                     0x7bda
-lut_numericAddrs    DW                      0x02bd 0x02cd 0x02dd 0x02ed 0x08af 0x08bf 0x08cf 0x08df 0x08ef 0x09ab 0x09bb 0x09cb 0x09db 
+lut_numericAddrs    EQU                     0xfeb1
+lut_numericAddrs    DW                      0x02bd 0x02cd 0x02dd 0x02ed 0x030f 0x031f 0x032f 0x033f 0x034f 0x035f 0x036f 0x037f 0x038f 
 
 ; Code
 _entryPoint_        InitRealTimeProc        
@@ -111,11 +109,11 @@ _next_0x0249        LDW                     _c
                     LDWI                    clearVertBlinds
                     CALL                    giga_vAC                        ; mode 2:cls
 
-                    PrintString             str_0x7fa0
+                    PrintString             str_0xff00
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print " 2 3   5 6 7"
 
-                    PrintString             str_0x7fad
+                    PrintString             str_0xff0d
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print "Q W E R T Y U I"
 
@@ -172,9 +170,9 @@ _53                 PUSH
 _54                 PUSH                    
                     LDI                     78
                     STW                     0x82
-                    LDWI                    _page_0x08a0
+                    LDWI                    _page_0x0300
                     CALL                    giga_vAC
-_page_0x08a0        LDW                     0x82
+_page_0x0300        LDW                     0x82
                     STW                     _a
                     LDI                     13
                     STW                     _b
@@ -227,10 +225,6 @@ _114                PUSH
                     LDI                     57
                     STW                     _a
                     LDI                     11
-                    STW                     0x82
-                    LDWI                    _page_0x09a0
-                    CALL                    giga_vAC
-_page_0x09a0        LDW                     0x82
                     STW                     _b
                     LDWI                    _note
                     CALL                    giga_vAC
@@ -283,10 +277,6 @@ _note               PUSH
                     LDW                     _p
                     ADDI                    1
                     STW                     0xc0
-                    STW                     0x82
-                    LDWI                    _page_0x0aa0
-                    CALL                    giga_vAC
-_page_0x0aa0        LDW                     0x82
                     LD                      _b
                     POKE                    0xc0                            ; poke p,a:poke p+1,b
 
@@ -304,28 +294,28 @@ _end_0x03b1         BRA                     _end_0x03b1                     ; EN
 
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
-;* Internal runtime, DO NOT MODIFY HERE, modifications must be made in the original include files                                       *
+;* Internal runtime, DO NOT MODIFY PAST THIS POINT, modifications must be made in the original include files                            *
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7fbd
-convertEqOp         EQU     0x7fc6
-convertNeOp         EQU     0x7fcf
-convertLeOp         EQU     0x7fd8
-convertGeOp         EQU     0x7fe1
-convertLtOp         EQU     0x7fea
-convertGtOp         EQU     0x7ff3
-shiftLeft8bit       EQU     0x7ec3
-gosubNumericLabel   EQU     0x7ba0
-scanlineMode        EQU     0x7ecd
-resetVideoTable     EQU     0x7aa0
-initClearFuncs      EQU     0x7ea0
-clearVertBlinds     EQU     0x7da0
-clearCursorRow      EQU     0x79a0
-printInit           EQU     0x7ac0
-printText           EQU     0x7ee1
-printChar           EQU     0x78a0
-newLineScroll       EQU     0x7ca0
+realTimeProc        EQU     0xff1d
+convertEqOp         EQU     0xff26
+convertNeOp         EQU     0xff2f
+convertLeOp         EQU     0xff38
+convertGeOp         EQU     0xff41
+convertLtOp         EQU     0xff4a
+convertGtOp         EQU     0xff53
+shiftLeft8bit       EQU     0xff7f
+gosubNumericLabel   EQU     0xfe5b
+scanlineMode        EQU     0xff89
+resetVideoTable     EQU     0xfecb
+initClearFuncs      EQU     0xff5c
+clearVertBlinds     EQU     0xff9d
+clearCursorRow      EQU     0xfd00
+printInit           EQU     0xfeeb
+printText           EQU     0xffd7
+printChar           EQU     0xfd46
+newLineScroll       EQU     0xfe00
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2

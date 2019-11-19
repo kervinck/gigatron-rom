@@ -41,11 +41,11 @@ _40                 EQU                     0x02a1
 _50                 EQU                     0x02b8
 _60                 EQU                     0x02c8
 _70                 EQU                     0x02d7
-_80                 EQU                     0x08a2
-_85                 EQU                     0x08b1
-_90                 EQU                     0x08c2
-_end_0x034e         EQU                     0x08c7
-_page_0x08a0        EQU                     0x08a0
+_80                 EQU                     0x0302
+_85                 EQU                     0x0311
+_90                 EQU                     0x0322
+_end_0x034e         EQU                     0x0327
+_page_0x0300        EQU                     0x0300
 
 ; Variables
 _a                  EQU                     0x0030
@@ -233,9 +233,9 @@ _70                 LDW                     _w
                     STW                     _u                              ; w=w-u-u+1:u=u-1
 
                     STW                     0x82
-                    LDWI                    _page_0x08a0
+                    LDWI                    _page_0x0300
                     CALL                    giga_vAC
-_page_0x08a0        LDW                     0x82
+_page_0x0300        LDW                     0x82
 _80                 LDW                     _u
                     JumpGT                  _85 1
                     LDWI                    _60
@@ -256,7 +256,7 @@ _end_0x034e         BRA                     _end_0x034e                     ; EN
 
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
-;* Internal runtime, DO NOT MODIFY HERE, modifications must be made in the original include files                                       *
+;* Internal runtime, DO NOT MODIFY PAST THIS POINT, modifications must be made in the original include files                            *
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 

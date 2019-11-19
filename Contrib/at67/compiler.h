@@ -33,6 +33,7 @@ namespace Compiler
 {
     enum VarType {VarInt8=0, VarInt16, VarInt32, VarFloat16, VarFloat32, VarArray};
     enum IntSize {Int8=1, Int16=2, Int32=4};
+    enum ConstantStrType {StrChar, StrHex, StrHexw};
     enum IfElseEndType {IfBlock, ElseIfBlock, ElseBlock, EndIfBlock};
     enum OperandType {OperandVar, OperandTemp, OperandConst};
     enum StatementResult {StatementError, StatementExpression, SingleStatementParsed, MultiStatementParsed};
@@ -193,11 +194,13 @@ namespace Compiler
     uint16_t getRuntimeEnd(void);
     uint16_t getRuntimeStart(void);
     uint16_t getTempVarStart(void);
+    std::string& getTempVarStartStr(void);
     int getCurrentLabelIndex(void);
     std::string& getNextInternalLabel(void);
 
     void setRuntimeEnd(uint16_t runtimeEnd);
     void setRuntimeStart(uint16_t runtimeStart);
+    void setNextTempVar(uint16_t nextTempVar);
     void setCreateNumericLabelLut(bool createNumericLabelLut);
     void setNextInternalLabel(const std::string& label);
 
@@ -236,6 +239,7 @@ namespace Compiler
     void createLabel(uint16_t address, const std::string& name, const std::string& output, int codeLineIndex, Label& label, bool numeric=false, bool addUnderscore=true, bool pageJump=false, bool gosub=false);
     void createIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, int& varIndex, VarType varType=VarInt16, uint16_t arrayStart=0x0000, int intSize=Int16, int arrSize=0);
     bool createString(CodeLine& codeLine, int codeLineIndex, const std::string& str, std::string& name, uint16_t& address);
+    void createConstantString(ConstantStrType constantStrType, int16_t& value);
 
     void updateVar(int16_t data, CodeLine& codeLine, int varIndex, bool containsVars);
 
@@ -243,8 +247,10 @@ namespace Compiler
     int getMacroSize(const std::string& macroName);
     int createVcpuAsm(const std::string& opcodeStr, const std::string& operandStr, int codeLineIdx, std::string& line);
     void emitVcpuAsm(const std::string& opcodeStr, const std::string& operandStr, bool nextTempVar, int codeLineIdx=-1, const std::string& internalLabel="", bool pageJump=false);
+    bool emitVcpuAsmUserVar(const std::string& opcodeStr, const char* varNamePtr, bool nextTempVar);
+    void getNextTempVar(void);
 
-    uint32_t isExpression(std::string& input, int& varIndex, int& params);
+    uint32_t isExpression(std::string& input, int& varIndex);
     OperandType parseExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, std::string& operand, Expression::Numeric& numeric);
     uint32_t parseExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, Expression::Numeric& numeric);
     uint32_t parseExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, Expression::Numeric& numeric, int16_t replace);
