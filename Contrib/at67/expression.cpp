@@ -813,7 +813,7 @@ namespace Expression
             if(peek() != ')')
             {
                 fprintf(stderr, "Expression::factor() : Missing ')' in '%s' on line %d\n", _expressionToParse.c_str(), _lineNumber + 1);
-                numeric = Numeric(0, -1, false, false, false, std::string(""));
+                numeric = Numeric(0, -1, false, false, NormalCC, std::string(""));
             }
             get();
         }
@@ -822,11 +822,11 @@ namespace Expression
             if(!number(value))
             {
                 fprintf(stderr, "Expression::factor() : Bad numeric data in '%s' on line %d\n", _expressionToParse.c_str(), _lineNumber + 1);
-                numeric = Numeric(0, -1, false, false, false, std::string(""));
+                numeric = Numeric(0, -1, false, false, NormalCC, std::string(""));
             }
             else
             {
-                numeric = Numeric(value, -1, true, false, false, std::string(""));
+                numeric = Numeric(value, -1, true, false, NormalCC, std::string(""));
             }
         }
         else
@@ -841,7 +841,7 @@ namespace Expression
                 case '-': get(); numeric = factor(0); numeric = neg(numeric); break;
                 case '~': get(); numeric = factor(0); numeric = not(numeric); break;
 
-                default: numeric = Numeric(defaultValue, -1, true, true, false, std::string(_expression)); break;
+                default: numeric = Numeric(defaultValue, -1, true, true, NormalCC, std::string(_expression)); break;
             }
         }
 

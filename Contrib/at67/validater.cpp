@@ -290,18 +290,31 @@ namespace Validater
         return true;
     }
 
+    bool opcodeIsBranch(const std::string& opcode)
+    {
+        if(opcode == "BRA") return true;
+        if(opcode == "BEQ") return true;
+        if(opcode == "BNE") return true;
+        if(opcode == "BGE") return true;
+        if(opcode == "BLE") return true;
+        if(opcode == "BGT") return true;
+        if(opcode == "BLT") return true;
+
+        return false;
+    }
+
     bool checkBranchLabels(void)
     {
         for(int i=0; i<Compiler::getCodeLines().size(); i++)
         {
             for(int j=0; j<Compiler::getCodeLines()[i]._vasm.size(); j++)
             {
-                uint16_t address = Compiler::getCodeLines()[i]._vasm[j]._address;
+                uint16_t opcAddr = Compiler::getCodeLines()[i]._vasm[j]._address;
                 std::string opcode = Compiler::getCodeLines()[i]._vasm[j]._opcode;
                 std::string code = Compiler::getCodeLines()[i]._vasm[j]._code;
                 std::string label = Compiler::getCodeLines()[i]._vasm[j]._internalLabel;
 
-                if(opcode == "%JumpFalse")
+                if(opcodeIsBranch(opcode))
                 {
                     std::vector<std::string> tokens = Expression::tokenise(code, " ", false);
                     if(tokens.size() < 2) continue;
@@ -313,14 +326,10 @@ namespace Validater
                     int labelIndex = Compiler::findLabel(operand);
                     if(labelIndex >= 0)
                     {
-                        if(HI_MASK(address) == HI_MASK(Compiler::getLabels()[labelIndex]._address))
+                        uint16_t labAddr = Compiler::getLabels()[labelIndex]._address;
+                        if(HI_MASK(opcAddr) != HI_MASK(labAddr))
                         {
-                            Compiler::getCodeLines()[i]._vasm[j]._opcode = "BEQ";
-                            Compiler::getCodeLines()[i]._vasm[j]._code = "BEQ" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Compiler::getLabels()[labelIndex]._name;
-                            Compiler::getCodeLines()[i]._vasm[j]._vasmSize = 3;
-
-                            adjustLabelAddresses(address+3, -5);
-                            adjustVasmAddresses(i, address+3, -5);
+                            fprintf(stderr, "Compiler::checkBranchLabels() : Warning, %s is branching from 0x%04x to 0x%04x, for '%s' on line %d\n", opcode.c_str(), opcAddr, labAddr, code.c_str(), i + 1);
                         }
                     }
                     // Check internal label
@@ -329,14 +338,10 @@ namespace Validater
                         int labelIndex = Compiler::findInternalLabel(operand);
                         if(labelIndex >= 0)
                         {
-                            if(HI_MASK(address) == HI_MASK(Compiler::getInternalLabels()[labelIndex]._address))
+                            uint16_t labAddr = Compiler::getInternalLabels()[labelIndex]._address;
+                            if(HI_MASK(opcAddr) != HI_MASK(labAddr))
                             {
-                                Compiler::getCodeLines()[i]._vasm[j]._opcode = "BEQ";
-                                Compiler::getCodeLines()[i]._vasm[j]._code = "BEQ" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Compiler::getInternalLabels()[labelIndex]._name;
-                                Compiler::getCodeLines()[i]._vasm[j]._vasmSize = 3;
-
-                                adjustLabelAddresses(address+3, -5);
-                                adjustVasmAddresses(i, address+3, -5);
+                                fprintf(stderr, "Compiler::checkBranchLabels() : Warning, %s is branching from 0x%04x to 0x%04x, for '%s' on line %d\n", opcode.c_str(), opcAddr, labAddr, code.c_str(), i + 1);
                             }
                         }
                     }

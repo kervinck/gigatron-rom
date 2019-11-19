@@ -144,10 +144,17 @@ namespace Operators
         return true;
     }
 
-    bool handleCondOp(Expression::Numeric& lhs, Expression::Numeric& rhs, bool logical, bool& invertedLogic)
+    void emitConditionType(Expression::ConditionType conditionType, std::string& cc)
     {
-        lhs._isLogical = logical;
-
+        switch(conditionType)
+        {
+            case Expression::BooleanCC: (Assembler::getUseOpcodeCALLI()) ? Compiler::emitVcpuAsm("CALLI", "convert" + cc + "Op", false) : Compiler::emitVcpuAsm("CALL", "convert" + cc + "OpAddr", false); break;
+            case Expression::NormalCC: Compiler::emitVcpuAsm("%Jump" + Expression::strToUpper(cc), "", false); break;
+            case Expression::FastCC: Compiler::emitVcpuAsm("B" + Expression::strToUpper(cc), "", false); break;
+        }
+    }
+    bool handleConditionOp(Expression::Numeric& lhs, Expression::Numeric& rhs, Expression::ConditionType conditionType, bool& invertedLogic)
+    {
         // Swap left and right to take advantage of LDWI for 16bit numbers
         invertedLogic = false;
         if(!rhs._isAddress  &&  uint16_t(rhs._value) > 255)
@@ -156,6 +163,10 @@ namespace Operators
             invertedLogic = true;
             if(lhs._value > 0) lhs._value = -lhs._value;
         }
+
+        // JumpCC and BCC are inverses of each other
+        lhs._conditionType = conditionType;
+        if(conditionType == Expression::FastCC) invertedLogic = !invertedLogic;
 
         // LHS
         if(lhs._isAddress)
@@ -506,7 +517,7 @@ namespace Operators
     // ********************************************************************************************
     // Conditional Operators
     // ********************************************************************************************
-    Expression::Numeric operatorEQ(Expression::Numeric& left, Expression::Numeric& right, bool logical)
+    Expression::Numeric operatorEQ(Expression::Numeric& left, Expression::Numeric& right, Expression::ConditionType conditionType)
     {
         if(!left._isAddress  &&  !right._isAddress)
         {
@@ -515,25 +526,18 @@ namespace Operators
         }
 
         bool invertedLogic = false;
-        left._isValid = handleCondOp(left, right, logical, invertedLogic);
+        left._isValid = handleConditionOp(left, right, conditionType, invertedLogic);
 
-        // Convert equals into a logical 1, (boolean conversion)
+        // Convert EQ into one of the condition types of branch instruction
         std::string cc = (!invertedLogic) ? "Eq" : "Ne";
-        if(logical)
-        {
-            Assembler::getUseOpcodeCALLI() ? Compiler::emitVcpuAsm("CALLI", "convert" + cc + "Op", false) : Compiler::emitVcpuAsm("CALL", "convert" + cc + "OpAddr", false);
-        }
-        else
-        {
-            Compiler::emitVcpuAsm("%Jump" + Expression::strToUpper(cc), "", false);
-        }
+        emitConditionType(conditionType, cc);
 
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
 
         return left;
     }
 
-    Expression::Numeric operatorNE(Expression::Numeric& left, Expression::Numeric& right, bool logical)
+    Expression::Numeric operatorNE(Expression::Numeric& left, Expression::Numeric& right, Expression::ConditionType conditionType)
     {
         if(!left._isAddress  &&  !right._isAddress)
         {
@@ -542,25 +546,18 @@ namespace Operators
         }
 
         bool invertedLogic = false;
-        left._isValid = handleCondOp(left, right, logical, invertedLogic);
+        left._isValid = handleConditionOp(left, right, conditionType, invertedLogic);
 
-        // Convert not equals into a logical 1, (boolean conversion)
+        // Convert NE into one of the condition types of branch instruction
         std::string cc = (!invertedLogic) ? "Ne" : "Eq";
-        if(logical)
-        {
-            Assembler::getUseOpcodeCALLI() ? Compiler::emitVcpuAsm("CALLI", "convert" + cc + "Op", false) : Compiler::emitVcpuAsm("CALL", "convert" + cc + "OpAddr", false);
-        }
-        else
-        {
-            Compiler::emitVcpuAsm("%Jump" + Expression::strToUpper(cc), "", false);
-        }
+        emitConditionType(conditionType, cc);
 
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
 
         return left;
     }
 
-    Expression::Numeric operatorLE(Expression::Numeric& left, Expression::Numeric& right, bool logical)
+    Expression::Numeric operatorLE(Expression::Numeric& left, Expression::Numeric& right, Expression::ConditionType conditionType)
     {
         if(!left._isAddress  &&  !right._isAddress)
         {
@@ -569,25 +566,18 @@ namespace Operators
         }
 
         bool invertedLogic = false;
-        left._isValid = handleCondOp(left, right, logical, invertedLogic);
+        left._isValid = handleConditionOp(left, right, conditionType, invertedLogic);
 
-        // Convert less than or equals into a logical 1, (boolean conversion)
+        // Convert LE into one of the condition types of branch instruction
         std::string cc = (!invertedLogic) ? "Le" : "Gt";
-        if(logical)
-        {
-            Assembler::getUseOpcodeCALLI() ? Compiler::emitVcpuAsm("CALLI", "convert" + cc + "Op", false) : Compiler::emitVcpuAsm("CALL", "convert" + cc + "OpAddr", false);
-        }
-        else
-        {
-            Compiler::emitVcpuAsm("%Jump" + Expression::strToUpper(cc), "", false);
-        }
+        emitConditionType(conditionType, cc);
 
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
 
         return left;
     }
 
-    Expression::Numeric operatorGE(Expression::Numeric& left, Expression::Numeric& right, bool logical)
+    Expression::Numeric operatorGE(Expression::Numeric& left, Expression::Numeric& right, Expression::ConditionType conditionType)
     {
         if(!left._isAddress  &&  !right._isAddress)
         {
@@ -596,25 +586,18 @@ namespace Operators
         }
 
         bool invertedLogic = false;
-        left._isValid = handleCondOp(left, right, logical, invertedLogic);
+        left._isValid = handleConditionOp(left, right, conditionType, invertedLogic);
 
-        // Convert greater than or equals into a logical 1, (boolean conversion)
+        // Convert GE into one of the condition types of branch instruction
         std::string cc = (!invertedLogic) ? "Ge" : "Lt";
-        if(logical)
-        {
-            Assembler::getUseOpcodeCALLI() ? Compiler::emitVcpuAsm("CALLI", "convert" + cc + "Op", false) : Compiler::emitVcpuAsm("CALL", "convert" + cc + "OpAddr", false);
-        }
-        else
-        {
-            Compiler::emitVcpuAsm("%Jump" + Expression::strToUpper(cc), "", false);
-        }
+        emitConditionType(conditionType, cc);
 
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
 
         return left;
     }
 
-    Expression::Numeric operatorLT(Expression::Numeric& left, Expression::Numeric& right, bool logical)
+    Expression::Numeric operatorLT(Expression::Numeric& left, Expression::Numeric& right, Expression::ConditionType conditionType)
     {
         if(!left._isAddress  &&  !right._isAddress)
         {
@@ -623,25 +606,18 @@ namespace Operators
         }
 
         bool invertedLogic = false;
-        left._isValid = handleCondOp(left, right, logical, invertedLogic);
+        left._isValid = handleConditionOp(left, right, conditionType, invertedLogic);
 
-        // Convert less than into a logical 1, (boolean conversion)
+        // Convert LT into one of the condition types of branch instruction
         std::string cc = (!invertedLogic) ? "Lt" : "Ge";
-        if(logical)
-        {
-            Assembler::getUseOpcodeCALLI() ? Compiler::emitVcpuAsm("CALLI", "convert" + cc + "Op", false) : Compiler::emitVcpuAsm("CALL", "convert" + cc + "OpAddr", false);
-        }
-        else
-        {
-            Compiler::emitVcpuAsm("%Jump" + Expression::strToUpper(cc), "", false);
-        }
+        emitConditionType(conditionType, cc);
 
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
 
         return left;
     }
 
-    Expression::Numeric operatorGT(Expression::Numeric& left, Expression::Numeric& right, bool logical)
+    Expression::Numeric operatorGT(Expression::Numeric& left, Expression::Numeric& right, Expression::ConditionType conditionType)
     {
         if(!left._isAddress  &&  !right._isAddress)
         {
@@ -650,18 +626,11 @@ namespace Operators
         }
 
         bool invertedLogic = false;
-        left._isValid = handleCondOp(left, right, logical, invertedLogic);
+        left._isValid = handleConditionOp(left, right, conditionType, invertedLogic);
 
-        // Convert greater than into a logical 1, (boolean conversion)
+        // Convert GT into one of the condition types of branch instruction
         std::string cc = (!invertedLogic) ? "Gt" : "Le";
-        if(logical)
-        {
-            Assembler::getUseOpcodeCALLI() ? Compiler::emitVcpuAsm("CALLI", "convert" + cc + "Op", false) : Compiler::emitVcpuAsm("CALL", "convert" + cc + "OpAddr", false);
-        }
-        else
-        {
-            Compiler::emitVcpuAsm("%Jump" + Expression::strToUpper(cc), "", false);
-        }
+        emitConditionType(conditionType, cc);
 
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
 
@@ -681,7 +650,7 @@ namespace Operators
         }
 
         // Optimise multiply with 0
-        if((!left._isAddress  &&  left._value == 0)  ||  (!right._isAddress  &&  right._value == 0)) return Expression::Numeric(0, -1, true, false, false, std::string(""));
+        if((!left._isAddress  &&  left._value == 0)  ||  (!right._isAddress  &&  right._value == 0)) return Expression::Numeric(0, -1, true, false, Expression::BooleanCC, std::string(""));
 
         left._isValid = (Assembler::getUseOpcodeCALLI()) ? handleMathOp("CALLI", "multiply16bit", left, right) : handleMathOp("CALL", "multiply16bit", left, right);
 
@@ -697,7 +666,7 @@ namespace Operators
         }
 
         // Optimise divide with 0, term() never lets denominator = 0
-        if((!left._isAddress  &&  left._value == 0)  ||  (!right._isAddress  &&  right._value == 0)) return Expression::Numeric(0, -1, true, false, false, std::string(""));
+        if((!left._isAddress  &&  left._value == 0)  ||  (!right._isAddress  &&  right._value == 0)) return Expression::Numeric(0, -1, true, false, Expression::BooleanCC, std::string(""));
 
         left._isValid = (Assembler::getUseOpcodeCALLI()) ? handleMathOp("CALLI", "divide16bit", left, right) : handleMathOp("CALL", "divide16bit", left, right);
 
@@ -713,7 +682,7 @@ namespace Operators
         }
 
         // Optimise divide with 0, term() never lets denominator = 0
-        if((!left._isAddress  &&  left._value == 0)  ||  (!right._isAddress  &&  right._value == 0)) return Expression::Numeric(0, -1, true, false, false, std::string(""));
+        if((!left._isAddress  &&  left._value == 0)  ||  (!right._isAddress  &&  right._value == 0)) return Expression::Numeric(0, -1, true, false, Expression::BooleanCC, std::string(""));
 
         left._isValid = (Assembler::getUseOpcodeCALLI()) ? handleMathOp("CALLI", "divide16bit", left, right, true) : handleMathOp("CALL", "divide16bit", left, right, true);
 

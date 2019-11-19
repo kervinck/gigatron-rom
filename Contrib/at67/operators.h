@@ -5,6 +5,7 @@
 #include <vector>
 #include <map>
 
+#include "expression.h"
 #include "compiler.h"
 
 
@@ -29,12 +30,12 @@ namespace Operators
     Expression::Numeric operatorLSL(Expression::Numeric& left, Expression::Numeric& right);
     Expression::Numeric operatorLSR(Expression::Numeric& left, Expression::Numeric& right);
 
-    Expression::Numeric operatorEQ(Expression::Numeric& left, Expression::Numeric& right, bool logical);
-    Expression::Numeric operatorNE(Expression::Numeric& left, Expression::Numeric& right, bool logical);
-    Expression::Numeric operatorLE(Expression::Numeric& left, Expression::Numeric& right, bool logical);
-    Expression::Numeric operatorGE(Expression::Numeric& left, Expression::Numeric& right, bool logical);
-    Expression::Numeric operatorLT(Expression::Numeric& left, Expression::Numeric& right, bool logical);
-    Expression::Numeric operatorGT(Expression::Numeric& left, Expression::Numeric& right, bool logical);
+    Expression::Numeric operatorEQ(Expression::Numeric& left, Expression::Numeric& right, Expression::ConditionType conditionType);
+    Expression::Numeric operatorNE(Expression::Numeric& left, Expression::Numeric& right, Expression::ConditionType conditionType);
+    Expression::Numeric operatorLE(Expression::Numeric& left, Expression::Numeric& right, Expression::ConditionType conditionType);
+    Expression::Numeric operatorGE(Expression::Numeric& left, Expression::Numeric& right, Expression::ConditionType conditionType);
+    Expression::Numeric operatorLT(Expression::Numeric& left, Expression::Numeric& right, Expression::ConditionType conditionType);
+    Expression::Numeric operatorGT(Expression::Numeric& left, Expression::Numeric& right, Expression::ConditionType conditionType);
 }
 
 #endif

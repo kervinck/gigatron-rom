@@ -1314,13 +1314,13 @@ namespace Keywords
         Expression::Numeric condition;
         std::string conditionToken = codeLine._code.substr(foundPos, offsetTHEN - foundPos);
         parseExpression(codeLine, codeLineIndex, conditionToken, condition);
-        if(condition._isLogical) Compiler::emitVcpuAsm("%JumpFalse", "", false, codeLineIndex);
+        if(condition._conditionType == Expression::BooleanCC) Compiler::emitVcpuAsm("%JumpFalse", "", false, codeLineIndex); // Boolean condition requires this extra check
         int jmpIndex = int(Compiler::getCodeLines()[codeLineIndex]._vasm.size()) - 1;
 
         // Bail early as we assume this is an IF ELSE ENDIF block
         if(ifElseEndif)
         {
-            Compiler::getElseIfDataStack().push({jmpIndex, "", codeLineIndex, Compiler::IfBlock, condition._isLogical});
+            Compiler::getElseIfDataStack().push({jmpIndex, "", codeLineIndex, Compiler::IfBlock, condition._conditionType});
             return true;
         }
 
@@ -1345,13 +1345,11 @@ namespace Keywords
 
         // Update if's jump to this new label
         Compiler::VasmLine* vasm = &Compiler::getCodeLines()[codeLineIndex]._vasm[jmpIndex];
-        if(condition._isLogical)
+        switch(condition._conditionType)
         {
-            vasm->_code = "JumpFalse" + std::string(OPCODE_TRUNC_SIZE - (sizeof("JumpFalse")-1), ' ') + nextInternalLabel;
-        }
-        else
-        {
-            addLabelToJumpCC(Compiler::getCodeLines()[codeLineIndex]._vasm, nextInternalLabel);
+            case Expression::BooleanCC: vasm->_code = "JumpFalse" + std::string(OPCODE_TRUNC_SIZE - (sizeof("JumpFalse")-1), ' ') + nextInternalLabel; break;
+            case Expression::NormalCC:  addLabelToJumpCC(Compiler::getCodeLines()[codeLineIndex]._vasm, nextInternalLabel);                            break;
+            case Expression::FastCC:    addLabelToJumpCC(Compiler::getCodeLines()[codeLineIndex]._vasm, Compiler::getNextInternalLabel());             break;
         }
 
         return true;
@@ -1369,7 +1367,7 @@ namespace Keywords
         Compiler::ElseIfData elseIfData = Compiler::getElseIfDataStack().top();
         int jmpIndex = elseIfData._jmpIndex;
         int codeIndex = elseIfData._codeLineIndex;
-        bool isLogical = elseIfData._isLogical;
+        Expression::ConditionType conditionType = elseIfData._conditionType;
         Compiler::getElseIfDataStack().pop();
 
         if(elseIfData._ifElseEndType != Compiler::IfBlock  &&  elseIfData._ifElseEndType != Compiler::ElseIfBlock)
@@ -1386,9 +1384,18 @@ namespace Keywords
         }
         else
         {
-            Compiler::emitVcpuAsm("LDWI", "LDWI_JUMP", false, codeLineIndex - 1);
-            Compiler::emitVcpuAsm("CALL", "giga_vAC", false, codeLineIndex - 1);
-            Compiler::getEndIfDataStack().push({int(Compiler::getCodeLines()[codeLineIndex - 1]._vasm.size()) - 2, codeLineIndex - 1});
+            // There are no checks to see if this BRA's destination is in the same page, programmer discretion required when using this feature
+            if(conditionType == Expression::FastCC)
+            {
+                Compiler::emitVcpuAsm("BRA", "BRA_JUMP", false, codeLineIndex - 1);
+                Compiler::getEndIfDataStack().push({int(Compiler::getCodeLines()[codeLineIndex - 1]._vasm.size()) - 1, codeLineIndex - 1});
+            }
+            else
+            {
+                Compiler::emitVcpuAsm("LDWI", "LDWI_JUMP", false, codeLineIndex - 1);
+                Compiler::emitVcpuAsm("CALL", "giga_vAC", false, codeLineIndex - 1);
+                Compiler::getEndIfDataStack().push({int(Compiler::getCodeLines()[codeLineIndex - 1]._vasm.size()) - 2, codeLineIndex - 1});
+            }
         }
 
         // Create label on next line of vasm code
@@ -1397,23 +1404,21 @@ namespace Keywords
 
         // Update if's jump to this new label
         Compiler::VasmLine* vasm = &Compiler::getCodeLines()[codeIndex]._vasm[jmpIndex];
-        if(isLogical)
+        switch(conditionType)
         {
-            vasm->_code = "JumpFalse" + std::string(OPCODE_TRUNC_SIZE - (sizeof("JumpFalse")-1), ' ') + nextInternalLabel;
-        }
-        else
-        {
-            addLabelToJumpCC(Compiler::getCodeLines()[codeIndex]._vasm, nextInternalLabel);
+            case Expression::BooleanCC: vasm->_code = "JumpFalse" + std::string(OPCODE_TRUNC_SIZE - (sizeof("JumpFalse")-1), ' ') + nextInternalLabel; break;
+            case Expression::NormalCC:  addLabelToJumpCC(Compiler::getCodeLines()[codeIndex]._vasm, nextInternalLabel);                                break;
+            case Expression::FastCC:    addLabelToJumpCC(Compiler::getCodeLines()[codeIndex]._vasm, Compiler::getNextInternalLabel());                 break;
         }
 
         // Condition
         Expression::Numeric condition;
         std::string conditionToken = codeLine._code.substr(foundPos);
         parseExpression(codeLine, codeLineIndex, conditionToken, condition);
-        if(condition._isLogical) Compiler::emitVcpuAsm("%JumpFalse", "", false, codeLineIndex);
+        if(condition._conditionType == Expression::BooleanCC) Compiler::emitVcpuAsm("%JumpFalse", "", false, codeLineIndex); // Boolean condition requires this extra check
         jmpIndex = int(Compiler::getCodeLines()[codeLineIndex]._vasm.size()) - 1;
 
-        Compiler::getElseIfDataStack().push({jmpIndex, "", codeLineIndex, Compiler::ElseIfBlock, condition._isLogical});
+        Compiler::getElseIfDataStack().push({jmpIndex, "", codeLineIndex, Compiler::ElseIfBlock, condition._conditionType});
 
         return true;
     }
@@ -1436,7 +1441,7 @@ namespace Keywords
         Compiler::ElseIfData elseIfData = Compiler::getElseIfDataStack().top();
         int jmpIndex = elseIfData._jmpIndex;
         int codeIndex = elseIfData._codeLineIndex;
-        bool isLogical = elseIfData._isLogical;
+        Expression::ConditionType conditionType = elseIfData._conditionType;
         Compiler::getElseIfDataStack().pop();
 
         // Jump to endif for previous BASIC line
@@ -1447,9 +1452,18 @@ namespace Keywords
         }
         else
         {
-            Compiler::emitVcpuAsm("LDWI", "LDWI_JUMP", false, codeLineIndex - 1);
-            Compiler::emitVcpuAsm("CALL", "giga_vAC", false, codeLineIndex - 1);
-            Compiler::getEndIfDataStack().push({int(Compiler::getCodeLines()[codeLineIndex - 1]._vasm.size()) - 2, codeLineIndex - 1});
+            // There are no checks to see if this BRA's destination is in the same page, programmer discretion required when using this feature
+            if(conditionType == Expression::FastCC)
+            {
+                Compiler::emitVcpuAsm("BRA", "BRA_JUMP", false, codeLineIndex - 1);
+                Compiler::getEndIfDataStack().push({int(Compiler::getCodeLines()[codeLineIndex - 1]._vasm.size()) - 1, codeLineIndex - 1});
+            }
+            else
+            {
+                Compiler::emitVcpuAsm("LDWI", "LDWI_JUMP", false, codeLineIndex - 1);
+                Compiler::emitVcpuAsm("CALL", "giga_vAC", false, codeLineIndex - 1);
+                Compiler::getEndIfDataStack().push({int(Compiler::getCodeLines()[codeLineIndex - 1]._vasm.size()) - 2, codeLineIndex - 1});
+            }
         }
 
         // Create label on next line of vasm code
@@ -1458,16 +1472,14 @@ namespace Keywords
 
         // Update if's or elseif's jump to this new label
         Compiler::VasmLine* vasm = &Compiler::getCodeLines()[codeIndex]._vasm[jmpIndex];
-        if(isLogical)
+        switch(conditionType)
         {
-            vasm->_code = "JumpFalse" + std::string(OPCODE_TRUNC_SIZE - (sizeof("JumpFalse")-1), ' ') + nextInternalLabel;
-        }
-        else
-        {
-            addLabelToJumpCC(Compiler::getCodeLines()[codeIndex]._vasm, nextInternalLabel);
+            case Expression::BooleanCC: vasm->_code = "JumpFalse" + std::string(OPCODE_TRUNC_SIZE - (sizeof("JumpFalse")-1), ' ') + nextInternalLabel; break;
+            case Expression::NormalCC:  addLabelToJumpCC(Compiler::getCodeLines()[codeIndex]._vasm, nextInternalLabel);                                break;
+            case Expression::FastCC:    addLabelToJumpCC(Compiler::getCodeLines()[codeIndex]._vasm, Compiler::getNextInternalLabel());                 break;
         }
 
-        Compiler::getElseIfDataStack().push({jmpIndex, nextInternalLabel, codeIndex, Compiler::ElseBlock, isLogical});
+        Compiler::getElseIfDataStack().push({jmpIndex, nextInternalLabel, codeIndex, Compiler::ElseBlock, conditionType});
 
         return true;
     }
@@ -1491,7 +1503,7 @@ namespace Keywords
         int jmpIndex = elseIfData._jmpIndex;
         int codeIndex = elseIfData._codeLineIndex;
         Compiler::IfElseEndType ifElseEndType = elseIfData._ifElseEndType;
-        bool isLogical = elseIfData._isLogical;
+        Expression::ConditionType conditionType = elseIfData._conditionType;
         Compiler::getElseIfDataStack().pop();
 
         // Create label on next line of vasm code
@@ -1502,13 +1514,11 @@ namespace Keywords
         if(ifElseEndType == Compiler::ElseIfBlock)
         {
             Compiler::VasmLine* vasm = &Compiler::getCodeLines()[codeIndex]._vasm[jmpIndex];
-            if(isLogical)
+            switch(conditionType)
             {
-                vasm->_code = "JumpFalse" + std::string(OPCODE_TRUNC_SIZE - (sizeof("JumpFalse")-1), ' ') + nextInternalLabel;
-            }
-            else
-            {
-                addLabelToJumpCC(Compiler::getCodeLines()[codeIndex]._vasm, nextInternalLabel);
+                case Expression::BooleanCC: vasm->_code = "JumpFalse" + std::string(OPCODE_TRUNC_SIZE - (sizeof("JumpFalse")-1), ' ') + nextInternalLabel; break;
+                case Expression::NormalCC:  addLabelToJumpCC(Compiler::getCodeLines()[codeIndex]._vasm, nextInternalLabel);                                break;
+                case Expression::FastCC:    addLabelToJumpCC(Compiler::getCodeLines()[codeIndex]._vasm, Compiler::getNextInternalLabel());                 break;
             }
         }
 
@@ -1518,13 +1528,11 @@ namespace Keywords
             int codeLine = Compiler::getEndIfDataStack().top()._codeLineIndex;
             int jmpIndex = Compiler::getEndIfDataStack().top()._jmpIndex;
             Compiler::VasmLine* vasm = &Compiler::getCodeLines()[codeLine]._vasm[jmpIndex];
-            if(isLogical)
+            switch(conditionType)
             {
-                vasm->_code = "LDWI" + std::string(OPCODE_TRUNC_SIZE - (sizeof("LDWI")-1), ' ') + Compiler::getNextInternalLabel();
-            }
-            else
-            {
-                addLabelToJump(Compiler::getCodeLines()[codeLine]._vasm, Compiler::getNextInternalLabel());
+                case Expression::BooleanCC: vasm->_code = "LDWI" + std::string(OPCODE_TRUNC_SIZE - (sizeof("LDWI")-1), ' ') + Compiler::getNextInternalLabel(); break;
+                case Expression::NormalCC:  addLabelToJump(Compiler::getCodeLines()[codeLine]._vasm, Compiler::getNextInternalLabel());                         break;
+                case Expression::FastCC:    addLabelToJump(Compiler::getCodeLines()[codeLine]._vasm, Compiler::getNextInternalLabel());                         break;
             }
 
             Compiler::getEndIfDataStack().pop();
@@ -1536,15 +1544,15 @@ namespace Keywords
     bool keywordWHILE(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
         Compiler::setNextInternalLabel("_while_" + Expression::wordToHexString(Compiler::getVasmPC()));
-        Compiler::getWhileWendDataStack().push({0, Compiler::getNextInternalLabel(), codeLineIndex, false});
+        Compiler::getWhileWendDataStack().push({0, Compiler::getNextInternalLabel(), codeLineIndex, Expression::BooleanCC});
 
         // Condition
         Expression::Numeric condition;
         std::string conditionToken = codeLine._code.substr(foundPos);
         parseExpression(codeLine, codeLineIndex, conditionToken, condition);
-        if(condition._isLogical) Compiler::emitVcpuAsm("%JumpFalse", "", false, codeLineIndex);
+        if(condition._conditionType == Expression::BooleanCC) Compiler::emitVcpuAsm("%JumpFalse", "", false, codeLineIndex); // Boolean condition requires this extra check
         Compiler::getWhileWendDataStack().top()._jmpIndex = int(Compiler::getCodeLines()[codeLineIndex]._vasm.size()) - 1;
-        Compiler::getWhileWendDataStack().top()._isLogical = condition._isLogical;
+        Compiler::getWhileWendDataStack().top()._conditionType = condition._conditionType;
 
         return true;
     }
@@ -1567,20 +1575,26 @@ namespace Keywords
         }
         else
         {
-            Compiler::emitVcpuAsm("LDWI", whileWendData._labelName, false, codeLineIndex);
-            Compiler::emitVcpuAsm("CALL", "giga_vAC",      false, codeLineIndex);
+            // There are no checks to see if this BRA's destination is in the same page, programmer discretion required when using this feature
+            if(whileWendData._conditionType == Expression::FastCC)
+            {
+                Compiler::emitVcpuAsm("BRA", whileWendData._labelName, false, codeLineIndex);
+            }
+            else
+            {
+                Compiler::emitVcpuAsm("LDWI", whileWendData._labelName, false, codeLineIndex);
+                Compiler::emitVcpuAsm("CALL", "giga_vAC",      false, codeLineIndex);
+            }
         }
 
         // Branch if condition false to instruction after WEND
         Compiler::setNextInternalLabel("_wend_" + Expression::wordToHexString(Compiler::getVasmPC()));
         Compiler::VasmLine* vasm = &Compiler::getCodeLines()[whileWendData._codeLineIndex]._vasm[whileWendData._jmpIndex];
-        if(whileWendData._isLogical)
+        switch(whileWendData._conditionType)
         {
-            vasm->_code = "JumpFalse" + std::string(OPCODE_TRUNC_SIZE - (sizeof("JumpFalse")-1), ' ') + Compiler::getNextInternalLabel() + " " + std::to_string(Compiler::incJumpFalseUniqueId());
-        }
-        else
-        {
-            addLabelToJumpCC(Compiler::getCodeLines()[whileWendData._codeLineIndex]._vasm, Compiler::getNextInternalLabel() + " " + std::to_string(Compiler::incJumpFalseUniqueId()));
+            case Expression::BooleanCC: vasm->_code = "JumpFalse" + std::string(OPCODE_TRUNC_SIZE - (sizeof("JumpFalse")-1), ' ') + Compiler::getNextInternalLabel() + " " + std::to_string(Compiler::incJumpFalseUniqueId()); break;
+            case Expression::NormalCC:  addLabelToJumpCC(Compiler::getCodeLines()[whileWendData._codeLineIndex]._vasm, Compiler::getNextInternalLabel() + " " + std::to_string(Compiler::incJumpFalseUniqueId()));             break;
+            case Expression::FastCC:    addLabelToJumpCC(Compiler::getCodeLines()[whileWendData._codeLineIndex]._vasm, Compiler::getNextInternalLabel());                                                                      break;
         }
 
         return true;
@@ -1611,13 +1625,11 @@ namespace Keywords
         parseExpression(codeLine, codeLineIndex, conditionToken, condition);
 
         // Branch if condition false to instruction after REPEAT
-        if(condition._isLogical)
+        switch(condition._conditionType)
         {
-            Compiler::emitVcpuAsm("%JumpFalse", repeatUntilData._labelName + " " + std::to_string(Compiler::incJumpFalseUniqueId()), false, codeLineIndex);
-        }
-        else
-        {
-            addLabelToJumpCC(Compiler::getCodeLines()[codeLineIndex]._vasm, repeatUntilData._labelName + " " + std::to_string(Compiler::incJumpFalseUniqueId()));
+            case Expression::BooleanCC: Compiler::emitVcpuAsm("%JumpFalse", repeatUntilData._labelName + " " + std::to_string(Compiler::incJumpFalseUniqueId()), false, codeLineIndex);       break;
+            case Expression::NormalCC:  addLabelToJumpCC(Compiler::getCodeLines()[codeLineIndex]._vasm, repeatUntilData._labelName + " " + std::to_string(Compiler::incJumpFalseUniqueId())); break;
+            case Expression::FastCC:    addLabelToJumpCC(Compiler::getCodeLines()[codeLineIndex]._vasm, repeatUntilData._labelName);                                                          break;
         }
 
         return true;

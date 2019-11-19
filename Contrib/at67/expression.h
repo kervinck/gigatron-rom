@@ -9,20 +9,21 @@ namespace Expression
 {
     enum ExpressionType {Invalid=0x8000, HasNumbers=0x0000, HasStrings=0x0001, HasOperators=0x0002, HasVars=0x0004, HasKeywords=0x0008, HasStringKeywords=0x0010, HasFunctions=0x0020};
     enum NumericType {BadBase=-1, Decimal, HexaDecimal, Octal, Binary};
+    enum ConditionType {BooleanCC, NormalCC, FastCC};
 
     struct Numeric
     {
-        Numeric() {_value = 0; _index = -1; _isValid = false; _isAddress = false; _isLogical = false; _varName="";}
-        Numeric(int16_t value, int16_t index, bool isValid, bool isAddress, bool isLogical, std::string& varName)
+        Numeric() {_value = 0; _index = -1; _isValid = false; _isAddress = false; _conditionType = NormalCC; _varName="";}
+        Numeric(int16_t value, int16_t index, bool isValid, bool isAddress, ConditionType conditionType, std::string& varName)
         {
-            _value = value; _index = index; _isValid = isValid; _isAddress = isAddress; _isLogical = isLogical; _varName = varName;
+            _value = value; _index = index; _isValid = isValid; _isAddress = isAddress; _conditionType = conditionType; _varName = varName;
         }
 
         int16_t _value = 0;
         int16_t _index = -1;
         bool _isValid = false;
         bool _isAddress = false;
-        bool _isLogical = false;
+        ConditionType _conditionType = NormalCC;
         std::string _varName;
     };
 

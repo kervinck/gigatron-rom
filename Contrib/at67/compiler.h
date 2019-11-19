@@ -154,7 +154,7 @@ namespace Compiler
         std::string _labelName;
         int _codeLineIndex;
         IfElseEndType _ifElseEndType;
-        bool _isLogical;
+        Expression::ConditionType _conditionType;
     };
 
     struct EndIfData
@@ -168,7 +168,7 @@ namespace Compiler
         int _jmpIndex;
         std::string _labelName;
         int _codeLineIndex;
-        bool _isLogical;
+        Expression::ConditionType _conditionType;
     };
 
     struct RepeatUntilData
@@ -200,7 +200,6 @@ namespace Compiler
 
     void setRuntimeEnd(uint16_t runtimeEnd);
     void setRuntimeStart(uint16_t runtimeStart);
-    void setNextTempVar(uint16_t nextTempVar);
     void setCreateNumericLabelLut(bool createNumericLabelLut);
     void setNextInternalLabel(const std::string& label);
 

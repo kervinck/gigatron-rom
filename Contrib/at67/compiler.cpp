@@ -937,7 +937,7 @@ namespace Compiler
             size_t calli;
             if((calli = it->find("_useOpcodeCALLI_")) != std::string::npos)
             {
-                it->erase(calli, sizeof("_useOpcodeCALLI_"));
+                it->erase(calli, sizeof("_useOpcodeCALLI_")-1);
                 Assembler::setUseOpcodeCALLI(true);
             }
             size_t runtime;
@@ -1134,7 +1134,7 @@ namespace Compiler
             if(peek(false) != ')')
             {
                 fprintf(stderr, "Compiler::factor() : Found '%c' : expecting ')' in '%s' on line %d\n", peek(false), Expression::getExpressionToParse(), Expression::getLineNumber() + 1);
-                numeric = Expression::Numeric(0, -1, false, false, false, std::string(""));
+                numeric = Expression::Numeric(0, -1, false, false, Expression::NormalCC, std::string(""));
             }
             get(false);
         }
@@ -1143,11 +1143,11 @@ namespace Compiler
             if(!number(value))
             {
                 fprintf(stderr, "Compiler::factor() : Bad numeric data in '%s' on line %d\n", _codeLines[_currentCodeLineIndex]._code.c_str(), Expression::getLineNumber() + 1);
-                numeric = Expression::Numeric(0, -1, false, false, false, std::string(""));
+                numeric = Expression::Numeric(0, -1, false, false, Expression::NormalCC, std::string(""));
             }
             else
             {
-                numeric = Expression::Numeric(value, -1, true, false, false, std::string(""));
+                numeric = Expression::Numeric(value, -1, true, false, Expression::NormalCC, std::string(""));
             }
         }
         // Functions
@@ -1193,7 +1193,7 @@ namespace Compiler
                 case '-': get(false); numeric = factor(0); numeric = Operators::operatorNEG(numeric); break;
 
                 // Reached end of expression
-                case 0: numeric = Expression::Numeric(defaultValue, -1, false, false, false, std::string("")); break;
+                case 0: numeric = Expression::Numeric(defaultValue, -1, false, false, Expression::NormalCC, std::string("")); break;
 
                 default:
                 {
@@ -1213,13 +1213,13 @@ namespace Compiler
                         else
                         {
                             // Numeric is now passed back to compiler, (rather than just numeric._value), so make sure all fields are valid
-                            numeric = Expression::Numeric(defaultValue, varIndex, true, true, false, varName);
+                            numeric = Expression::Numeric(defaultValue, varIndex, true, true, Expression::NormalCC, varName);
                         }
                     }
                     // Unknown symbol
                     else
                     {
-                        numeric = Expression::Numeric(defaultValue, -1, false, false, false, std::string(""));
+                        numeric = Expression::Numeric(defaultValue, -1, false, false, Expression::NormalCC, std::string(""));
                         if(varName.size()) fprintf(stderr, "Compiler::factor() : Found an unknown symbol '%s' : in '%s' on line %d\n", varName.c_str(), 
                                                                                                                                        _codeLines[_currentCodeLineIndex]._code.c_str(),
                                                                                                                                        Expression::getLineNumber() + 1);
@@ -1253,26 +1253,40 @@ namespace Compiler
 
         for(;;)
         {
-            if(peek(false) == '+')           {get(false);t = term();result = Operators::operatorADD(result, t       );}
-            else if(peek(false) == '-')      {get(false);t = term();result = Operators::operatorSUB(result, t       );}
-            else if(Expression::find("XOR")) {           t = term();result = Operators::operatorXOR(result, t       );}
-            else if(Expression::find("OR"))  {           t = term();result = Operators::operatorOR(result,  t       );}
-            else if(Expression::find("LSL")) {           t = term();result = Operators::operatorLSL(result, t       );}
-            else if(Expression::find("LSR")) {           t = term();result = Operators::operatorLSR(result, t       );}
-            else if(Expression::find("<<"))  {           t = term();result = Operators::operatorLSL(result, t       );}
-            else if(Expression::find(">>"))  {           t = term();result = Operators::operatorLSR(result, t       );}
-            else if(peek(false) == '=')      {get(false);t = term();result = Operators::operatorEQ(result,  t, true );}
-            else if(Expression::find("<>"))  {           t = term();result = Operators::operatorNE(result,  t, true );}
-            else if(Expression::find("<="))  {           t = term();result = Operators::operatorLE(result,  t, true );}
-            else if(Expression::find(">="))  {           t = term();result = Operators::operatorGE(result,  t, true );}
-            else if(peek(false) == '<')      {get(false);t = term();result = Operators::operatorLT(result,  t, true );}
-            else if(peek(false) == '>')      {get(false);t = term();result = Operators::operatorGT(result,  t, true );}
-            else if(Expression::find("&="))  {           t = term();result = Operators::operatorEQ(result,  t, false);}
-            else if(Expression::find("&<>")) {           t = term();result = Operators::operatorNE(result,  t, false);}
-            else if(Expression::find("&<=")) {           t = term();result = Operators::operatorLE(result,  t, false);}
-            else if(Expression::find("&>=")) {           t = term();result = Operators::operatorGE(result,  t, false);}
-            else if(Expression::find("&<"))  {           t = term();result = Operators::operatorLT(result,  t, false);}
-            else if(Expression::find("&>"))  {           t = term();result = Operators::operatorGT(result,  t, false);}
+            if(peek(false) == '+')            {get(false);t = term();result = Operators::operatorADD(result, t);}
+            else if(peek(false) == '-')       {get(false);t = term();result = Operators::operatorSUB(result, t);}
+                                                                                                              
+            else if(Expression::find("XOR"))  {t = term();result = Operators::operatorXOR(result, t);}
+            else if(Expression::find("OR"))   {t = term();result = Operators::operatorOR(result,  t);}
+            else if(Expression::find("LSL"))  {t = term();result = Operators::operatorLSL(result, t);}
+            else if(Expression::find("LSR"))  {t = term();result = Operators::operatorLSR(result, t);}
+            else if(Expression::find("<<"))   {t = term();result = Operators::operatorLSL(result, t);}
+            else if(Expression::find(">>"))   {t = term();result = Operators::operatorLSR(result, t);}
+
+            // Boolean conditionals
+            else if(peek(false) == '=')       {get(false);t = term();result = Operators::operatorEQ(result,  t, Expression::BooleanCC);}
+            else if(Expression::find("<>"))   {           t = term();result = Operators::operatorNE(result,  t, Expression::BooleanCC);}
+            else if(Expression::find("<="))   {           t = term();result = Operators::operatorLE(result,  t, Expression::BooleanCC);}
+            else if(Expression::find(">="))   {           t = term();result = Operators::operatorGE(result,  t, Expression::BooleanCC);}
+            else if(peek(false) == '<')       {get(false);t = term();result = Operators::operatorLT(result,  t, Expression::BooleanCC);}
+            else if(peek(false) == '>')       {get(false);t = term();result = Operators::operatorGT(result,  t, Expression::BooleanCC);}
+
+            // Normal conditionals
+            else if(Expression::find("&="))   {t = term();result = Operators::operatorEQ(result,  t, Expression::NormalCC);}
+            else if(Expression::find("&<>"))  {t = term();result = Operators::operatorNE(result,  t, Expression::NormalCC);}
+            else if(Expression::find("&<="))  {t = term();result = Operators::operatorLE(result,  t, Expression::NormalCC);}
+            else if(Expression::find("&>="))  {t = term();result = Operators::operatorGE(result,  t, Expression::NormalCC);}
+            else if(Expression::find("&<"))   {t = term();result = Operators::operatorLT(result,  t, Expression::NormalCC);}
+            else if(Expression::find("&>"))   {t = term();result = Operators::operatorGT(result,  t, Expression::NormalCC);}
+
+            // Fast conditionals
+            else if(Expression::find("&&="))  {t = term();result = Operators::operatorEQ(result,  t, Expression::FastCC);}
+            else if(Expression::find("&&<>")) {t = term();result = Operators::operatorNE(result,  t, Expression::FastCC);}
+            else if(Expression::find("&&<=")) {t = term();result = Operators::operatorLE(result,  t, Expression::FastCC);}
+            else if(Expression::find("&&>=")) {t = term();result = Operators::operatorGE(result,  t, Expression::FastCC);}
+            else if(Expression::find("&&<"))  {t = term();result = Operators::operatorLT(result,  t, Expression::FastCC);}
+            else if(Expression::find("&&>"))  {t = term();result = Operators::operatorGT(result,  t, Expression::FastCC);}
+
             else return result;
         }
     }
@@ -1287,7 +1301,7 @@ namespace Compiler
             emitVcpuAsm("PUSH", "", false, codeLineIndex);
         }
 
-        // Specific parsing requirments for most keywords, (*NOT* functions), some keywords like IF will also parse multi-statements
+        // Specific parsing requirements for most keywords, (*NOT* functions), some keywords like IF will also parse multi-statements
         for(int i=0; i<codeLine._tokens.size(); i++)
         {
             Keywords::KeywordFuncResult result;
@@ -1425,7 +1439,7 @@ namespace Compiler
     {
         for(int i=0; i<vasm.size(); i++)
         {
-            if(vasm[i]._code.substr(0, sizeof("Jump")-1) == "Jump")
+            if(vasm[i]._code.substr(0, sizeof("Jump")-1) == "Jump"  ||  vasm[i]._code.substr(0, sizeof("B")-1) == "B")
             {
                 vasm[i]._code += label;
                 return;
@@ -1448,7 +1462,13 @@ namespace Compiler
             }
             else
             {
-                if(vasm[i]._code.find("LDWI_JUMP") != std::string::npos)
+                if(vasm[i]._code.find("BRA_JUMP") != std::string::npos)
+                {
+                    vasm[i]._opcode = "BRA";
+                    vasm[i]._code = "BRA" + std::string(OPCODE_TRUNC_SIZE - (sizeof("BRA")-1), ' ') + label;
+                    return;
+                }
+                else if(vasm[i]._code.find("LDWI_JUMP") != std::string::npos)
                 {
                     vasm[i]._opcode = "LDWI";
                     vasm[i]._code = "LDWI" + std::string(OPCODE_TRUNC_SIZE - (sizeof("LDWI")-1), ' ') + label;
@@ -2002,11 +2022,6 @@ namespace Compiler
         outputInternalVars();
         outputIncludes();
         outputLabels();
-
-        // TODO: doesn't work, page jumps have already been defined by now
-        // Check branch labels
-        //if(!Validater::checkBranchLabels()) return false;
-
         outputVars();
         outputStrs();
         outputDefs();
@@ -2020,6 +2035,8 @@ namespace Compiler
         Linker::collectInternalRuntime();
         Linker::relinkInternalSubs();
         Linker::outputInternalSubs();
+
+        Validater::checkBranchLabels();
 
         //Memory::printFreeRamList(Memory::SizeAscending);
 

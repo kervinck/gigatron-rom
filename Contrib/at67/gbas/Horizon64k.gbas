@@ -1,5 +1,7 @@
+_useOpcodeCALLI_
 _runtimeStart_ &hFFFF
 
+poke &h01F9, 240 'disables video output, cls becomes almost instant
 cls
 
 y=0 : x=y : i=x : j=i : pitch=j : yy=pitch
@@ -14,12 +16,12 @@ fade=0 : cIndex=fade : decay=54
 for y=119 to horizonY step -1
     color1 = c1(cIndex) : color2 = c2(cIndex)
     fade = fade + 1
-    if fade &= decay then cIndex = cIndex + 1 : fade = 0 : decay = decay LSR 1
+    if fade &&= decay then cIndex = cIndex + 1 : fade = 0 : decay = decay LSR 1
     
     yy = y
     gosub calcPitch
 
-    if ((400 / (y-horizonY+40)) AND 1) &= 0
+    if ((400 / (y-horizonY+40)) AND 1) &&= 0
         j = color1 XOR color2
     else
         j = 0
@@ -29,13 +31,13 @@ for y=119 to horizonY step -1
     a = ((y + 8) LSL 8)
 
     for x=0 to pitch + 159
-        if i &= 0
+        if i &&= 0
             i = pitch - 1
         else
             i = i - 1
         endif
 
-        if i+i &>= pitch
+        if i+i &&>= pitch
             p = color1 XOR j
         else
             p = color2 XOR j
@@ -52,7 +54,7 @@ dim sky(2)=0 : sky(0)=&h10 : sky(1)=&h20 : sky(2)=&h30
 fade=0 : cIndex=fade : decay = 5
 for y=horizonY-1 to 0 step -1
     fade = fade + 1
-    if fade &= decay then cIndex = cIndex + 1 : fade = 0 : decay = decay LSL 1
+    if fade &&= decay then cIndex = cIndex + 1 : fade = 0 : decay = decay LSL 1
 
     for x=0 to 159
         a = ((y + 8) LSL 8)
@@ -81,16 +83,16 @@ loop:   i = x AND 255
         repeat
             poke p, j LSR 8
             j = i + (j AND 255)
-        p = p + 4 : until p &>= q
+        p = p + 4 : until p &&>= q
         
         gosub peek(17)
         
         x = x + v
 goto loop
 
-254: v = v + 1 : if v &> 32 then v = 32
+254: v = v + 1 : if v &&> 32 then v = 32
      return
-253: v = v - 1 : if v &< -32 then v = -32
+253: v = v - 1 : if v &&< -32 then v = -32
      return
 191: v = 0 : return
 127: v = 0 : return
