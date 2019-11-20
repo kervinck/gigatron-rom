@@ -629,6 +629,9 @@ namespace Compiler
         // NEXT and THEN don't know where the next vasm instruction is, so they use _nextInternalLabel, (which has priority over internalLabel)
         std::string label = (_nextInternalLabel.size()) ? _nextInternalLabel : internalLabel;
 
+        // Discarded labels are replaced correctly later in outputLabels()
+        if(_nextInternalLabel.size()  &&  internalLabel.size()) _discardedLabels.push_back({_vasmPC, internalLabel});
+
         _codeLines[codeLineIdx]._vasm.push_back({uint16_t(_vasmPC - vasmSize), opcodeStr, line, label, pageJump, vasmSize});
         _codeLines[codeLineIdx]._vasmSize += vasmSize;
 
@@ -1220,9 +1223,10 @@ namespace Compiler
                     else
                     {
                         numeric = Expression::Numeric(defaultValue, -1, false, false, Expression::NormalCC, std::string(""));
-                        if(varName.size()) fprintf(stderr, "Compiler::factor() : Found an unknown symbol '%s' : in '%s' on line %d\n", varName.c_str(), 
-                                                                                                                                       _codeLines[_currentCodeLineIndex]._code.c_str(),
-                                                                                                                                       Expression::getLineNumber() + 1);
+                        if(varName.size()) fprintf(stderr, "\nCompiler::factor() : Found an unknown symbol '%s' : in '%s' on line %d\n\n", varName.c_str(), 
+                                                                                                                                         _codeLines[_currentCodeLineIndex]._code.c_str(),
+                                                                                                                                         Expression::getLineNumber() + 1);
+                        _PAUSE_
                     }
                 }
                 break;

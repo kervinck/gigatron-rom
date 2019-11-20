@@ -314,13 +314,17 @@ namespace Validater
                 std::string code = Compiler::getCodeLines()[i]._vasm[j]._code;
                 std::string label = Compiler::getCodeLines()[i]._vasm[j]._internalLabel;
 
+                Expression::stripWhitespace(opcode);
                 if(opcodeIsBranch(opcode))
                 {
                     std::vector<std::string> tokens = Expression::tokenise(code, " ", false);
-                    if(tokens.size() < 2) continue;
+                    if(tokens.size() != 2) continue;
 
                     Expression::stripWhitespace(tokens[1]);
                     std::string operand = tokens[1];
+
+                    // Remove underscores from BASIC labels for matching
+                    if(operand.size() > 1  &&  operand[0] == '_') operand.erase(0, 1);
 
                     // Is operand a label?
                     int labelIndex = Compiler::findLabel(operand);
@@ -329,19 +333,24 @@ namespace Validater
                         uint16_t labAddr = Compiler::getLabels()[labelIndex]._address;
                         if(HI_MASK(opcAddr) != HI_MASK(labAddr))
                         {
-                            fprintf(stderr, "Compiler::checkBranchLabels() : Warning, %s is branching from 0x%04x to 0x%04x, for '%s' on line %d\n", opcode.c_str(), opcAddr, labAddr, code.c_str(), i + 1);
+                            fprintf(stderr, "\nCompiler::checkBranchLabels() : *** Warning ***, %s is branching from 0x%04x to 0x%04x, for '%s' on line %d\n\n", opcode.c_str(), opcAddr, labAddr, code.c_str(), i + 1);
+                            _PAUSE_
                         }
                     }
                     // Check internal label
                     else
                     {
+                        // Internal labels always have underscores, so put it back
+                        operand.insert(0, 1, '_');
+
                         int labelIndex = Compiler::findInternalLabel(operand);
                         if(labelIndex >= 0)
                         {
                             uint16_t labAddr = Compiler::getInternalLabels()[labelIndex]._address;
                             if(HI_MASK(opcAddr) != HI_MASK(labAddr))
                             {
-                                fprintf(stderr, "Compiler::checkBranchLabels() : Warning, %s is branching from 0x%04x to 0x%04x, for '%s' on line %d\n", opcode.c_str(), opcAddr, labAddr, code.c_str(), i + 1);
+                                fprintf(stderr, "\nCompiler::checkBranchLabels() : *** Warning ***, %s is branching from 0x%04x to 0x%04x, for '%s' on line %d\n\n", opcode.c_str(), opcAddr, labAddr, code.c_str(), i + 1);
+                                _PAUSE_
                             }
                         }
                     }

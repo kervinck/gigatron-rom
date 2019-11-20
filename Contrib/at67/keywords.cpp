@@ -394,11 +394,8 @@ namespace Keywords
 
     bool keywordEND(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        Compiler::Label label;
-        std::string endName = "_end_" + Expression::wordToHexString(Compiler::getVasmPC());
-        Compiler::createLabel(Compiler::getVasmPC(), endName, "END\t", codeLineIndex, label, false, false, false, false);
-        Compiler::getCodeLines()[codeLineIndex]._labelIndex = Compiler::getCurrentLabelIndex();
-        Compiler::emitVcpuAsm("BRA", endName, false, codeLineIndex);
+        std::string labelName = "_end_" + Expression::wordToHexString(Compiler::getVasmPC());
+        Compiler::emitVcpuAsm("BRA", labelName, false, codeLineIndex, labelName);
 
         return true;
     }
@@ -498,6 +495,14 @@ namespace Keywords
         Expression::Numeric gotoValue;
         std::string gotoToken = gotoTokens[0];
         Expression::stripWhitespace(gotoToken);
+
+        bool useBRA = false;
+        if(gotoToken[0] == '&')
+        {
+            useBRA = true;
+            gotoToken.erase(0, 1);
+        }
+
         int labelIndex = Compiler::findLabel(gotoToken);
         if(labelIndex == -1)
         {
@@ -541,9 +546,8 @@ namespace Keywords
             return true;
         }
 
-        // Within same page
-        // TODO: Optimiser messes this strategy up, FIX IT
-        if(0) //HI_MASK(Compiler::getVasmPC()) == HI_MASK(Compiler::getLabels()[labelIndex]._address))
+        // Within same page, (validation check on same page branch may fail after outputCode(), user will be warned)
+        if(useBRA)
         {
             Compiler::emitVcpuAsm("BRA", "_" + gotoToken, false, codeLineIndex);
         }
@@ -683,7 +687,7 @@ namespace Keywords
 
         if((operandTypes[0] == Compiler::OperandVar  ||  operandTypes[0] == Compiler::OperandTemp)  &&  (operandTypes[1] == Compiler::OperandVar  ||  operandTypes[1] == Compiler::OperandTemp))
         {
-            (operandTypes[1] == Compiler::OperandVar) ? Compiler::emitVcpuAsm("LD", "_" + operands[1], false, codeLineIndex) : Compiler::emitVcpuAsm("LD", operands[1], false, codeLineIndex);
+            (operandTypes[1] == Compiler::OperandVar) ? Compiler::emitVcpuAsm("LDW", "_" + operands[1], false, codeLineIndex) : Compiler::emitVcpuAsm("LDW", operands[1], false, codeLineIndex);
             (operandTypes[0] == Compiler::OperandVar) ? Compiler::emitVcpuAsm("POKE", "_" + operands[0], false, codeLineIndex) : Compiler::emitVcpuAsm("POKE", operands[0], false, codeLineIndex);
         }
         else if((operandTypes[0] == Compiler::OperandVar  ||  operandTypes[0] == Compiler::OperandTemp)  &&  operandTypes[1] == Compiler::OperandConst)
@@ -695,7 +699,7 @@ namespace Keywords
         {
             Compiler::emitVcpuAsm("LDWI", operands[0], false, codeLineIndex);
             Compiler::emitVcpuAsm("STW", "register0", false, codeLineIndex);
-            (operandTypes[1] == Compiler::OperandVar) ? Compiler::emitVcpuAsm("LD", "_" + operands[1], false, codeLineIndex) : Compiler::emitVcpuAsm("LD", operands[1], false, codeLineIndex);
+            (operandTypes[1] == Compiler::OperandVar) ? Compiler::emitVcpuAsm("LDW", "_" + operands[1], false, codeLineIndex) : Compiler::emitVcpuAsm("LDW", operands[1], false, codeLineIndex);
             Compiler::emitVcpuAsm("POKE", "register0", false, codeLineIndex);
         }
         else

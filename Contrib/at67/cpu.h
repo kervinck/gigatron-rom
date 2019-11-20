@@ -37,9 +37,18 @@
     system("pause");\
     exit(f);
 #else
-#define _EXIT_(f)   \
-    system("read"); \
+#define _EXIT_(f)  \
+    system("read");\
     exit(f);
+#endif
+
+#if defined(_WIN32)
+#define _PAUSE_     \
+    system("pause");
+#else
+#define _PAUSE_                                         \
+    fprintf(stderr, "Press any key to continue. . .\n");\
+    system("read");
 #endif
 
 // At least on Windows, _X is a constant defined somewhere before here
