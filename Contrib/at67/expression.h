@@ -7,7 +7,8 @@
 
 namespace Expression
 {
-    enum ExpressionType {Invalid=0x8000, HasNumbers=0x0000, HasStrings=0x0001, HasOperators=0x0002, HasVars=0x0004, HasKeywords=0x0008, HasStringKeywords=0x0010, HasFunctions=0x0020};
+    enum ExpressionType {Invalid=0x8000, HasNumbers=0x0000, HasStrings=0x0001, HasOperators=0x0002, HasIntConsts=0x0004, HasStrConsts=0x0008, HasVars=0x0010,
+                         HasKeywords=0x0020, HasStringKeywords=0x0040, HasFunctions=0x0080};
     enum NumericType {BadBase=-1, Decimal, HexaDecimal, Octal, Binary};
     enum ConditionType {BooleanCC, NormalCC, FastCC};
 
@@ -37,6 +38,8 @@ namespace Expression
     void initialise(void);
 
     ExpressionType isExpression(const std::string& input);
+    bool isVarNameValid(const std::string& varName);
+    bool isValidString(const std::string& input);
 
     bool hasNonStringWhiteSpace(int chr);
     bool hasNonStringEquals(int chr);

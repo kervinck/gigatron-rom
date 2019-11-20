@@ -124,16 +124,6 @@ namespace Expression
         return left;
     }
 
-
-    ExpressionType isExpression(const std::string& input)
-    {
-        if(input.find_first_of("[]") != std::string::npos) return Invalid;
-        if(input.find("++") != std::string::npos) return Invalid;
-        if(input.find("--") != std::string::npos) return Invalid;
-        if(input.find_first_of("-+/%*()&|^") != std::string::npos) return HasOperators;
-        return HasNumbers;
-    }
-
     bool getEnablePrint(void) {return _enablePrint;}
 
     void setExprFunc(exprFuncPtr exprFunc) {_exprFunc = exprFunc;}
@@ -154,6 +144,48 @@ namespace Expression
     // ****************************************************************************************************************
     // Strings
     // ****************************************************************************************************************
+    ExpressionType isExpression(const std::string& input)
+    {
+        if(input.find_first_of("[]") != std::string::npos) return Invalid;
+        if(input.find("++") != std::string::npos) return Invalid;
+        if(input.find("--") != std::string::npos) return Invalid;
+        if(input.find_first_of("-+/%*()&|^") != std::string::npos) return HasOperators;
+        return HasNumbers;
+    }
+
+    bool isVarNameValid(const std::string& varName)
+    {
+        if(varName.size() == 0)  return false;
+        if(!isalpha(varName[0])) return false;
+
+        for(int i=1; i<varName.size()-1; i++)
+        {
+            if(!isalnum(varName[i])) return false;
+        }
+
+        if(!isalnum(varName[varName.size() - 1])  &&  varName[varName.size() - 1] != '$') return false;
+
+        return true;
+    }
+
+    bool isValidString(const std::string& input)
+    {
+        std::string str = input;
+        stripNonStringWhitespace(str);
+        if(str.size() < 3) return false;
+        if(str[0] == '"'  &&  str.back() == '"')
+        {
+            for(int i=1; i<str.size()-1; i++)
+            {
+                if(str[i] == '"') return false;
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
     bool hasNonStringWhiteSpace(int chr)
     {
         if(chr == '"') _containsQuotes = !_containsQuotes;

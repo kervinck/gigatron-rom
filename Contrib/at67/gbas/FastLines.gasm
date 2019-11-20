@@ -51,8 +51,8 @@ _180                EQU                     0x0339
 _190                EQU                     0x0349
 _200                EQU                     0x0362
 _math               EQU                     0x0377
-_end_0x03c7         EQU                     0x0395
 _page_0x0300        EQU                     0x0300
+_end_0x03c7         EQU                     0x0395
 
 ; Variables
 _x                  EQU                     0x0030
@@ -199,7 +199,7 @@ _30                 LDI                     0xa5
                     STW                     _p
                     LDWI                    165
                     STW                     register0
-                    LD                      _p
+                    LDW                     _p
                     POKE                    register0                       ; p=peek(165)+7 : poke 165,p
 
 _40                 LDW                     _x
@@ -227,7 +227,7 @@ _80                 LDI                     0xa5
                     STW                     _p
                     LDWI                    165
                     STW                     register0
-                    LD                      _p
+                    LDW                     _p
                     POKE                    register0                       ; p=peek(165)+7 : poke 165,p
 
 _90                 LDI                     159
@@ -258,7 +258,7 @@ _130                LDI                     0xa5
 _page_0x0300        LDW                     0x82
                     LDWI                    165
                     STW                     register0
-                    LD                      _p
+                    LDW                     _p
                     POKE                    register0                       ; p=peek(165)+7 : poke 165,p
 
 _140                LDI                     0
@@ -286,7 +286,7 @@ _180                LDI                     0xa5
                     STW                     _p
                     LDWI                    165
                     STW                     register0
-                    LD                      _p
+                    LDW                     _p
                     POKE                    register0                       ; p=peek(165)+7 : poke 165,p
 
 _190                LDI                     159

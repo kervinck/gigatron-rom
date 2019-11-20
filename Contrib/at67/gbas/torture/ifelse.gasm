@@ -31,24 +31,24 @@ miscFlags           EQU                     register0 + 0x2A
 ; Labels
 _entryPoint_        EQU                     0x0200
 _loop               EQU                     0x0242
-_end_0x02e9         EQU                     0x02db
 _elseif_0x0275      EQU                     0x026f
 _elseif_0x02a1      EQU                     0x0297
 _else_0x02cd        EQU                     0x02bf
 _endif_0x02e4       EQU                     0x02d6
+_end_0x02e9         EQU                     0x02db
 
 ; Variables
 _b                  EQU                     0x0030
 
 ; Strings
-str_0x7fa0          EQU                     0x7fa0
-str_0x7fa0          DB                      5 'one  '
-str_0x7fa6          EQU                     0x7fa6
-str_0x7fa6          DB                      5 'two  '
-str_0x7fac          EQU                     0x7fac
-str_0x7fac          DB                      5 'three'
-str_0x7fb2          EQU                     0x7fb2
-str_0x7fb2          DB                      5 'none '
+_str_0xff00         EQU                     0xff00
+_str_0xff00         DB                      5 'one  '
+_str_0xff06         EQU                     0xff06
+_str_0xff06         DB                      5 'two  '
+_str_0xff0c         EQU                     0xff0c
+_str_0xff0c         DB                      5 'three'
+_str_0xff12         EQU                     0xff12
+_str_0xff12         DB                      5 'none '
 
 ; Define Bytes
 
@@ -81,7 +81,7 @@ _loop               LDI                     0x0f
                     ST                      cursorXY + 1
                     LDWI                    atTextCursor
                     CALL                    giga_vAC
-                    PrintString             str_0x7fa0
+                    PrintString             _str_0xff00
                     LDWI                    _endif_0x02e4
                     CALL                    giga_vAC                        ; at 2,40 : print "one  ";
 
@@ -95,7 +95,7 @@ _elseif_0x0275      LDW                     _b
                     ST                      cursorXY + 1
                     LDWI                    atTextCursor
                     CALL                    giga_vAC
-                    PrintString             str_0x7fa6
+                    PrintString             _str_0xff06
                     LDWI                    _endif_0x02e4
                     CALL                    giga_vAC                        ; at 2,40 : print "two  ";
 
@@ -109,7 +109,7 @@ _elseif_0x02a1      LDW                     _b
                     ST                      cursorXY + 1
                     LDWI                    atTextCursor
                     CALL                    giga_vAC
-                    PrintString             str_0x7fac
+                    PrintString             _str_0xff0c
                     LDWI                    _endif_0x02e4
                     CALL                    giga_vAC                        ; at 2,40 : print "three";
 
@@ -119,7 +119,7 @@ _else_0x02cd        LDI                     2
                     ST                      cursorXY + 1
                     LDWI                    atTextCursor
                     CALL                    giga_vAC
-                    PrintString             str_0x7fb2                      ; at 2,40 : print "none ";
+                    PrintString             _str_0xff12                     ; at 2,40 : print "none ";
 
 _endif_0x02e4       LDWI                    _loop
                     CALL                    giga_vAC                        ; goto loop
@@ -134,22 +134,22 @@ _end_0x02e9         BRA                     _end_0x02e9                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7fb8
-convertEqOp         EQU     0x7fc1
-convertNeOp         EQU     0x7fca
-convertLeOp         EQU     0x7fd3
-convertGeOp         EQU     0x7fdc
-convertLtOp         EQU     0x7fe5
-convertGtOp         EQU     0x7fee
-resetVideoTable     EQU     0x7ca0
-initClearFuncs      EQU     0x7ea0
-clearVertBlinds     EQU     0x7ec3
-clearCursorRow      EQU     0x7ba0
-printInit           EQU     0x7dea
-printText           EQU     0x7dcd
-printChar           EQU     0x7aa0
-atTextCursor        EQU     0x7da0
-newLineScroll       EQU     0x79a0
+realTimeProc        EQU     0xff18
+convertEqOp         EQU     0xff21
+convertNeOp         EQU     0xff2a
+convertLeOp         EQU     0xff33
+convertGeOp         EQU     0xff3c
+convertLtOp         EQU     0xff45
+convertGtOp         EQU     0xff4e
+resetVideoTable     EQU     0xfe00
+initClearFuncs      EQU     0xff57
+clearVertBlinds     EQU     0xff7a
+clearCursorRow      EQU     0xfe20
+printInit           EQU     0xfe66
+printText           EQU     0xffe1
+printChar           EQU     0xfe77
+atTextCursor        EQU     0xffb4
+newLineScroll       EQU     0xfd00
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2

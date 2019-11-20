@@ -33,14 +33,13 @@ _entryPoint_        EQU                     0x0200
 _9                  EQU                     0x023d
 _10                 EQU                     0x0259
 _20                 EQU                     0x026c
-_30                 EQU                     0x027b
 _31                 EQU                     0x023d
 _32                 EQU                     0x023d
 _33                 EQU                     0x023d
 _34                 EQU                     0x023d
 _35                 EQU                     0x023d
 _36                 EQU                     0x023d
-_end_0x0281         EQU                     0x027b
+_end_0x027e         EQU                     0x0276
 
 ; Variables
 _P                  EQU                     0x0030
@@ -82,18 +81,16 @@ _10                 LDI                     1
                     LDI                     0
                     SUBW                    _X
                     POKE                    _P
-                    LD                      _X
+                    LDW                     _X
                     POKE                    _Q                              ; WAIT 1:POKE P,-X:POKE Q,X
 
-_20                 LD                      _X
+_20                 LDW                     _X
                     POKE                    _R
-                    LDW                     _X
                     SUBI                    1
                     STW                     _X
-                    LDWI                    _10
-                    CALL                    giga_vAC                        ; POKE R,X:X=X-1:GOTO 10
+                    BRA                     _10                             ; POKE R,X:X=X-1:GOTO &10
 
-_end_0x0281         BRA                     _end_0x0281                     ; END
+_end_0x027e         BRA                     _end_0x027e                     ; END
 
 
 
@@ -237,9 +234,9 @@ scanlineM_cont      LDWI    SYS_SetMode_v2_80
                     RET
 
 
-waitVBlank          LD      waitVBlankNum
+waitVBlank          LDW     waitVBlankNum
                     SUBI    0x01
-                    ST      waitVBlankNum
+                    STW     waitVBlankNum
                     BGE     waitVB_start
                     RET
     

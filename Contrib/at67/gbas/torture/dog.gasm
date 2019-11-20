@@ -45,10 +45,10 @@ _z                  EQU                     0x0036
 _j                  EQU                     0x0038
 
 ; Strings
-str_0x7fa0          EQU                     0x7fa0
-str_0x7fa0          DB                      1 ' '
-str_0x7fa2          EQU                     0x7fa2
-str_0x7fa2          DB                      5 ' dog '
+_str_0xff00         EQU                     0xff00
+_str_0xff00         DB                      1 ' '
+_str_0xff02         EQU                     0xff02
+_str_0xff02         DB                      5 ' dog '
 
 ; Define Bytes
 
@@ -96,15 +96,15 @@ _8                  LDI                     2
                     SUBW                    _a
                     STW                     _j
                     PrintVarInt16           _a
-                    PrintString             str_0x7fa0
+                    PrintString             _str_0xff00
                     PrintVarInt16           _b
-                    PrintString             str_0x7fa0
+                    PrintString             _str_0xff00
                     LDI                     1
                     ADDW                    _b
                     PrintAcInt16            
-                    PrintString             str_0x7fa2
+                    PrintString             _str_0xff02
                     PrintVarInt16           _bb
-                    PrintString             str_0x7fa0
+                    PrintString             _str_0xff00
                     LDW                     _z
                     SUBI                    20
                     CALL                    convertGtOpAddr
@@ -133,22 +133,22 @@ _end_0x0316         BRA                     _end_0x0316                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7fa8
-convertEqOp         EQU     0x7fb1
-convertNeOp         EQU     0x7fba
-convertLeOp         EQU     0x7fc3
-convertGeOp         EQU     0x7fcc
-convertLtOp         EQU     0x7fd5
-convertGtOp         EQU     0x7fde
-resetVideoTable     EQU     0x7ee0
-initClearFuncs      EQU     0x7ea0
-clearCursorRow      EQU     0x7ba0
-printInit           EQU     0x7fe7
-printText           EQU     0x7ec3
-printDigit          EQU     0x7aa0
-printInt16          EQU     0x7da0
-printChar           EQU     0x79a0
-newLineScroll       EQU     0x7ca0
+realTimeProc        EQU     0xff08
+convertEqOp         EQU     0xff11
+convertNeOp         EQU     0xff1a
+convertLeOp         EQU     0xff23
+convertGeOp         EQU     0xff2c
+convertLtOp         EQU     0xff35
+convertGtOp         EQU     0xff3e
+resetVideoTable     EQU     0xffd6
+initClearFuncs      EQU     0xff47
+clearCursorRow      EQU     0xfe5b
+printInit           EQU     0xfea1
+printText           EQU     0xffb9
+printDigit          EQU     0xfeb2
+printInt16          EQU     0xff6a
+printChar           EQU     0xfd00
+newLineScroll       EQU     0xfe00
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2

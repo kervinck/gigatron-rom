@@ -1,11 +1,18 @@
 _useOpcodeCALLI_
 _runtimeStart_ &hFFFF
 
+const aaa$ = "doggy"
+
+print aaa$
+wait 120
+
 poke &h01F9, 240 'disables video output, cls becomes almost instant
 cls
 
+const horizonY = 32
+
 y=0 : x=y : i=x : j=i : pitch=j : yy=pitch
-color1 = &h3F : color2 = &h03 : horizonY = 32
+color1 = &h3F : color2 = &h03
 
 dim c1(2)=0 : c1(0)=&h3F : c1(1)=&h2A : c1(2)=&h15
 dim c2(2)=0 : c2(0)=&h03 : c2(1)=&h02 : c2(2)=&h01
@@ -21,7 +28,7 @@ for y=119 to horizonY step -1
     yy = y
     gosub calcPitch
 
-    if ((400 / (y-horizonY+40)) AND 1) &&= 0
+    if ((400 / (y-horizonY+40)) AND 1) &= 0
         j = color1 XOR color2
     else
         j = 0

@@ -19,10 +19,10 @@ realTimeStub        RET
 
 %SUB                gotoNumericLabel
                     ; find numeric label and jump to it
-gotoNumericLabel    LDWI    lut_numericLabs
+gotoNumericLabel    LDWI    _lut_numericLabs
                     STW     lutLabs
                     STW     lutIndex
-                    LDWI    lut_numericAddrs
+                    LDWI    _lut_numericAddrs
                     STW     lutAddrs
                     
 gotoNL_loop         LDW     lutIndex
@@ -54,10 +54,10 @@ gotoNL_found        LDW     lutIndex
 %SUB                gosubNumericLabel
                     ; find numeric label and call it, (it had better return or welcome to lala land)
 gosubNumericLabel   PUSH
-                    LDWI    lut_numericLabs
+                    LDWI    _lut_numericLabs
                     STW     lutLabs
                     STW     lutIndex
-                    LDWI    lut_numericAddrs
+                    LDWI    _lut_numericAddrs
                     STW     lutAddrs
                     
 gosubNL_loop        LDW     lutIndex

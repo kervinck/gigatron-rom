@@ -33,10 +33,20 @@ namespace Compiler
 {
     enum VarType {VarInt8=0, VarInt16, VarInt32, VarFloat16, VarFloat32, VarArray};
     enum IntSize {Int8=1, Int16=2, Int32=4};
+    enum ConstantType {ConstInt16, ConstStr};
     enum ConstantStrType {StrChar, StrHex, StrHexw};
     enum IfElseEndType {IfBlock, ElseIfBlock, ElseBlock, EndIfBlock};
     enum OperandType {OperandVar, OperandTemp, OperandConst};
     enum StatementResult {StatementError, StatementExpression, SingleStatementParsed, MultiStatementParsed};
+
+    struct Constant
+    {
+        int16_t _data;
+        uint16_t _address;
+        std::string _name;
+        std::string _internalName;
+        ConstantType _constantType;
+    };
 
     struct IntegerVar
     {
@@ -206,6 +216,7 @@ namespace Compiler
     int incJumpFalseUniqueId(void);
 
     std::vector<Label>& getLabels(void);
+    std::vector<Constant>& getConstants(void);
     std::vector<CodeLine>& getCodeLines(void);
     std::vector<IntegerVar>& getIntegerVars(void);
     std::vector<StringVar>& getStringVars(void);
@@ -249,7 +260,7 @@ namespace Compiler
     bool emitVcpuAsmUserVar(const std::string& opcodeStr, const char* varNamePtr, bool nextTempVar);
     void getNextTempVar(void);
 
-    uint32_t isExpression(std::string& input, int& varIndex);
+    uint32_t isExpression(std::string& input, int& varIndex, int& constIndex);
     OperandType parseExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, std::string& operand, Expression::Numeric& numeric);
     uint32_t parseExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, Expression::Numeric& numeric);
     uint32_t parseExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, Expression::Numeric& numeric, int16_t replace);

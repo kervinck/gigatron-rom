@@ -36,12 +36,12 @@ _30                 EQU                     0x026e
 _40                 EQU                     0x0283
 _50                 EQU                     0x0296
 _60                 EQU                     0x029a
-_65                 EQU                     0x02bb
-_70                 EQU                     0x02ce
-_80                 EQU                     0x02e6
-_90                 EQU                     0x031e
-_end_0x0347         EQU                     0x0331
+_65                 EQU                     0x02b6
+_70                 EQU                     0x02c4
+_80                 EQU                     0x02dc
+_90                 EQU                     0x0313
 _page_0x0300        EQU                     0x0300
+_end_0x033d         EQU                     0x0326
 
 ; Variables
 _w                  EQU                     0x0030
@@ -121,17 +121,17 @@ _60                 LDW                     _y
                     LDI                     10
                     ADDW                    0xc0
                     STW                     _w
-                    JumpGT                  _65 0
+                    BLE                     _65
                     LDI                     0
-                    STW                     _w                              ; w=10+y/q:if w&>0 then w=0
+                    STW                     _w                              ; w=10+y/q:if w &&> 0 then w=0
 
 _65                 LDI                     0x06
                     PEEK                    
                     SUBI                    128
-                    JumpLT                  _70 1
+                    BGE                     _70
                     LDW                     _w
                     ADDI                    1
-                    STW                     _w                              ; if peek(6)&<128 then w=w+1
+                    STW                     _w                              ; if peek(6) &&< 128 then w=w+1
 
 _70                 LDI                     5
                     STW                     drawLine_x2
@@ -147,15 +147,15 @@ _80                 LDW                     _p
                     STW                     mathX
                     LDW                     _v
                     STW                     mathY
-                    STW                     0x82
-                    LDWI                    _page_0x0300
-                    CALL                    giga_vAC
-_page_0x0300        LDW                     0x82
                     LDWI                    multiply16bit
                     CALL                    giga_vAC
                     ADDW                    _y
                     STW                     _y
                     STW                     mathX
+                    STW                     0x82
+                    LDWI                    _page_0x0300
+                    CALL                    giga_vAC
+_page_0x0300        LDW                     0x82
                     LDW                     _q
                     STW                     mathY
                     LDWI                    divide16bit
@@ -169,7 +169,7 @@ _90                 ForNextLoopUp           _x _60 30
                     LDWI                    _20
                     CALL                    giga_vAC                        ; next x:goto 20
 
-_end_0x0347         BRA                     _end_0x0347                     ; END
+_end_0x033d         BRA                     _end_0x033d                     ; END
 
 
 

@@ -41,12 +41,12 @@ _35                 EQU                     0x0334
 _36                 EQU                     0x034f
 _37                 EQU                     0x036a
 _40                 EQU                     0x06bc
-_end_0x06ee         EQU                     0x06c1
-_end_0x06f0         EQU                     0x06c3
 _page_0x0300        EQU                     0x0300
 _page_0x0400        EQU                     0x0400
 _page_0x0500        EQU                     0x0500
 _page_0x0600        EQU                     0x0600
+_end_0x06ee         EQU                     0x06c1
+_end_0x06f0         EQU                     0x06c3
 
 ; Variables
 _a                  EQU                     0x0030
@@ -59,8 +59,8 @@ _g                  EQU                     0x003c
 _z                  EQU                     0x003e
 
 ; Strings
-str_0x7fa0          EQU                     0x7fa0
-str_0x7fa0          DB                      1 ' '
+_str_0xff00         EQU                     0xff00
+_str_0xff00         DB                      1 ' '
 
 ; Define Bytes
 
@@ -563,19 +563,19 @@ _page_0x0600        LDW                     0x82
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
                     PrintVarInt16           _a
-                    PrintString             str_0x7fa0
+                    PrintString             _str_0xff00
                     PrintVarInt16           _b
-                    PrintString             str_0x7fa0
+                    PrintString             _str_0xff00
                     PrintVarInt16           _d
-                    PrintString             str_0x7fa0
+                    PrintString             _str_0xff00
                     PrintVarInt16           _e
-                    PrintString             str_0x7fa0
+                    PrintString             _str_0xff00
                     PrintVarInt16           _f
-                    PrintString             str_0x7fa0
+                    PrintString             _str_0xff00
                     PrintVarInt16           _g
-                    PrintString             str_0x7fa0
+                    PrintString             _str_0xff00
                     PrintVarInt16           _z
-                    PrintString             str_0x7fa0
+                    PrintString             _str_0xff00
                     PrintVarInt16           _cat
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print a;" ";b;" ";d;" ";e;" ";f;" ";g;" ";z;" ";cat
@@ -595,22 +595,22 @@ _end_0x06f0         BRA                     _end_0x06f0                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7fa2
-convertEqOp         EQU     0x7fab
-convertNeOp         EQU     0x7fb4
-convertLeOp         EQU     0x7fbd
-convertGeOp         EQU     0x7fc6
-convertLtOp         EQU     0x7fcf
-convertGtOp         EQU     0x7fd8
-resetVideoTable     EQU     0x7ec3
-initClearFuncs      EQU     0x7ea0
-clearCursorRow      EQU     0x7ba0
-printInit           EQU     0x7ee3
-printText           EQU     0x7fe1
-printDigit          EQU     0x7aa0
-printInt16          EQU     0x7da0
-printChar           EQU     0x79a0
-newLineScroll       EQU     0x7ca0
+realTimeProc        EQU     0xff02
+convertEqOp         EQU     0xff0b
+convertNeOp         EQU     0xff14
+convertLeOp         EQU     0xff1d
+convertGeOp         EQU     0xff26
+convertLtOp         EQU     0xff2f
+convertGtOp         EQU     0xff38
+resetVideoTable     EQU     0xffd0
+initClearFuncs      EQU     0xff41
+clearCursorRow      EQU     0xfe5b
+printInit           EQU     0xfea1
+printText           EQU     0xffb3
+printDigit          EQU     0xfeb2
+printInt16          EQU     0xff64
+printChar           EQU     0xfd00
+newLineScroll       EQU     0xfe00
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2

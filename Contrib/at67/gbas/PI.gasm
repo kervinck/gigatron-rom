@@ -38,9 +38,9 @@ _50                 EQU                     0x02a4
 _60                 EQU                     0x02d2
 _70                 EQU                     0x0319
 _80                 EQU                     0x0340
-_90                 EQU                     0x036a
-_end_0x03c3         EQU                     0x0391
+_90                 EQU                     0x0365
 _page_0x0300        EQU                     0x0300
+_else_0x03b9        EQU                     0x0387
 
 ; Variables
 _Z_array            EQU                     0xff00
@@ -53,10 +53,10 @@ _J                  EQU                     0x0038
 _A                  EQU                     0x003a
 
 ; Strings
-str_0xffbe          EQU                     0xffbe
-str_0xffbe          DB                      3 'PI='
-str_0xffc2          EQU                     0xffc2
-str_0xffc2          DB                      1 '.'
+_str_0xffbe         EQU                     0xffbe
+_str_0xffbe         DB                      3 'PI='
+_str_0xffc2         EQU                     0xffc2
+_str_0xffc2         DB                      1 '.'
 
 ; Define Bytes
 
@@ -96,7 +96,7 @@ _30                 LDW                     _I
                     LDI                     20
                     DOKE                    register1
                     ForNextLoopStepUp       _I _30 0xb0 0xb2
-                    PrintString             str_0xffbe                      ; Z(I)=20:NEXT I:PRINT "PI=";
+                    PrintString             _str_0xffbe                     ; Z(I)=20:NEXT I:PRINT "PI=";
 
 _40                 LDW                     _D
                     STW                     mathX
@@ -190,8 +190,8 @@ _80                 LDW                     _E
                     PrintAcInt16            
                     LDW                     _M
                     SUBI                    88
-                    JumpEQ                  _90 0
-                    PrintString             str_0xffc2                      ; PRINT E/10;:IF M&=88 THEN PRINT ".";
+                    BNE                     _90
+                    PrintString             _str_0xffc2                     ; PRINT E/10;:IF M &&= 88 THEN PRINT ".";
 
 _90                 LDW                     _E
                     STW                     mathX
@@ -203,11 +203,11 @@ _90                 LDW                     _E
                     PrintAcInt16            
                     LDW                     _M
                     SUBI                    10
-                    JumpGT                  _end_0x03c3 1
+                    BLE                     _else_0x03b9
                     LDWI                    _40
-                    CALL                    giga_vAC                        ; PRINT E%10;:IF M&>10 THEN GOTO 40
+                    CALL                    giga_vAC                        ; PRINT E%10;:IF M &&> 10 THEN GOTO 40
 
-_end_0x03c3         BRA                     _end_0x03c3                     ; END
+_else_0x03b9        BRA                     _else_0x03b9                    ; END
 
 
 

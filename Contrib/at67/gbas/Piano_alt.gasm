@@ -67,10 +67,10 @@ _1015               EQU                     0x04c6
 _1016               EQU                     0x04dc
 _1017               EQU                     0x0504
 _1018               EQU                     0x052a
-_end_0x0553         EQU                     0x0534
 _page_0x0300        EQU                     0x0300
 _page_0x0400        EQU                     0x0400
 _page_0x0500        EQU                     0x0500
+_end_0x0553         EQU                     0x0534
 
 ; Variables
 _a                  EQU                     0x0030
@@ -81,20 +81,20 @@ _k                  EQU                     0x0038
 _c                  EQU                     0x003a
 
 ; Strings
-str_0xff00          EQU                     0xff00
-str_0xff00          DB                      18 ' 2 3   5 6 7   9 0'
-str_0xff13          EQU                     0xff13
-str_0xff13          DB                      19 'Q W E R T Y U I O P'
-str_0xff27          EQU                     0xff27
-str_0xff27          DB                      3 'Z: '
-str_0xff33          EQU                     0xff33
-str_0xff33          DB                      8 'Metallic'
-str_0xff3c          EQU                     0xff3c
-str_0xff3c          DB                      8 'Triangle'
-str_0xff45          EQU                     0xff45
-str_0xff45          DB                      8 'Pulse   '
-str_0xff4e          EQU                     0xff4e
-str_0xff4e          DB                      8 'Sawtooth'
+_str_0xff00         EQU                     0xff00
+_str_0xff00         DB                      18 ' 2 3   5 6 7   9 0'
+_str_0xff13         EQU                     0xff13
+_str_0xff13         DB                      19 'Q W E R T Y U I O P'
+_str_0xff27         EQU                     0xff27
+_str_0xff27         DB                      3 'Z: '
+_str_0xff33         EQU                     0xff33
+_str_0xff33         DB                      8 'Metallic'
+_str_0xff3c         EQU                     0xff3c
+_str_0xff3c         DB                      8 'Triangle'
+_str_0xff45         EQU                     0xff45
+_str_0xff45         DB                      8 'Pulse   '
+_str_0xff4e         EQU                     0xff4e
+_str_0xff4e         DB                      8 'Sawtooth'
 
 ; Define Bytes
 
@@ -141,12 +141,12 @@ _3                  LDW                     _k
 _4                  LDWI                    _1000
                     CALL                    giga_vAC                        ; gosub 1000
 
-_5                  LD                      _a
+_5                  LDW                     _a
                     POKE                    _p
                     LDW                     _p
                     ADDI                    1
                     STW                     0xc0
-                    LD                      _b
+                    LDW                     _b
                     POKE                    0xc0                            ; poke p,a:poke p+1,b
 
 _6                  LDWI                    44
@@ -157,11 +157,11 @@ _6                  LDWI                    44
                     CALL                    giga_vAC                        ; poke 44,30:goto 2
 
 _198                PUSH                    
-                    PrintString             str_0xff00
+                    PrintString             _str_0xff00
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print " 2 3   5 6 7   9 0"
 
-_199                PrintString             str_0xff13
+_199                PrintString             _str_0xff13
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print "Q W E R T Y U I O P"
 
@@ -178,7 +178,7 @@ _201                LDWI                    256
                     STW                     _p
                     SUBI                    1
                     STW                     0xc2
-                    LD                      _z
+                    LDW                     _z
                     POKE                    0xc2                            ; p=256*c+252:poke p-1,z
 
 _202                LDI                     0
@@ -201,7 +201,7 @@ _204                LDI                     2
                     ST                      cursorXY + 1
                     LDWI                    atTextCursor
                     CALL                    giga_vAC
-                    PrintString             str_0xff27                      ; at 2,24:print "Z: ";
+                    PrintString             _str_0xff27                     ; at 2,24:print "Z: ";
 
 _205                LDW                     _z
                     STW                     register0
@@ -212,19 +212,19 @@ _205                LDW                     _z
                     DEEK                    
                     CALL                    giga_vAC                        ; on z goto 206,207,208,209
 
-_206                PrintString             str_0xff33
+_206                PrintString             _str_0xff33
                     POP                     
                     RET                                                     ; print "Metallic";:return
 
-_207                PrintString             str_0xff3c
+_207                PrintString             _str_0xff3c
                     POP                     
                     RET                                                     ; print "Triangle";:return
 
-_208                PrintString             str_0xff45
+_208                PrintString             _str_0xff45
                     POP                     
                     RET                                                     ; print "Pulse   ";:return
 
-_209                PrintString             str_0xff4e
+_209                PrintString             _str_0xff4e
                     POP                     
                     RET                                                     ; print "Sawtooth";:return
 

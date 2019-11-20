@@ -6,8 +6,8 @@
 30 v=rnd(30)-80:p=5:q=128
 40 y=2000+rnd(700)
 50 for x=0 to 30
-60 w=10+y/q:if w&>0 then w=0
-65 if peek(6)&<128 then w=w+1
+60 w=10+y/q:if w &&> 0 then w=0
+65 if peek(6) &&< 128 then w=w+1
 70 line 5,w-z:z=w
 80 y=y+p*v:v=v-y/q
 90 next x:goto 20

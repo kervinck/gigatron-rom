@@ -40,7 +40,7 @@ _70                 EQU                     0x027a
 _80                 EQU                     0x028c
 _90                 EQU                     0x02a3
 _100                EQU                     0x02a9
-_end_0x02b2         EQU                     0x02ae
+_end_0x02af         EQU                     0x02ab
 
 ; Variables
 _X                  EQU                     0x0030
@@ -72,13 +72,13 @@ _30                 LDWI                    clearVertBlinds
                     CALL                    giga_vAC
                     LDW                     _X
                     ST                      cursorXY
-                    LDI                     60
+                    LDI                     56
                     ST                      cursorXY + 1
                     LDWI                    atTextCursor
                     CALL                    giga_vAC
                     LDWI                    0xFFFE
                     ANDW                    miscFlags
-                    STW                     miscFlags                       ; CLS:AT X,60 : SCROLL OFF
+                    STW                     miscFlags                       ; CLS:AT X,56 : SCROLL OFF
 
 _40                 LDI                     1
                     STW                     _I                              ; FOR I=1 TO 25
@@ -110,10 +110,9 @@ _90                 LDI                     0
                     SUBW                    _V
                     STW                     _V                              ; V=-V
 
-_100                LDWI                    _40
-                    CALL                    giga_vAC                        ; GOTO 40
+_100                BRA                     _40                             ; GOTO &40
 
-_end_0x02b2         BRA                     _end_0x02b2                     ; END
+_end_0x02af         BRA                     _end_0x02af                     ; END
 
 
 
@@ -123,22 +122,22 @@ _end_0x02b2         BRA                     _end_0x02b2                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7fa0
-convertEqOp         EQU     0x7fa9
-convertNeOp         EQU     0x7fb2
-convertLeOp         EQU     0x7fbb
-convertGeOp         EQU     0x7fc4
-convertLtOp         EQU     0x7fcd
-convertGtOp         EQU     0x7fd6
-waitVBlank          EQU     0x7fdf
-resetVideoTable     EQU     0x7dcd
-initClearFuncs      EQU     0x7ea0
-clearVertBlinds     EQU     0x7ec3
-clearCursorRow      EQU     0x7ba0
-printInit           EQU     0x7ded
-printChar           EQU     0x7ca0
-atTextCursor        EQU     0x7da0
-newLineScroll       EQU     0x7aa0
+realTimeProc        EQU     0xff00
+convertEqOp         EQU     0xff09
+convertNeOp         EQU     0xff12
+convertLeOp         EQU     0xff1b
+convertGeOp         EQU     0xff24
+convertLtOp         EQU     0xff2d
+convertGtOp         EQU     0xff36
+waitVBlank          EQU     0xffc9
+resetVideoTable     EQU     0xfe59
+initClearFuncs      EQU     0xff3f
+clearVertBlinds     EQU     0xff62
+clearCursorRow      EQU     0xfe79
+printInit           EQU     0xffe4
+printChar           EQU     0xfe00
+atTextCursor        EQU     0xff9c
+newLineScroll       EQU     0xfd00
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -249,9 +248,9 @@ drawLine_count      EQU     register12
 drawLine_tmp        EQU     register13
     
     
-waitVBlank          LD      waitVBlankNum
+waitVBlank          LDW     waitVBlankNum
                     SUBI    0x01
-                    ST      waitVBlankNum
+                    STW     waitVBlankNum
                     BGE     waitVB_start
                     RET
     

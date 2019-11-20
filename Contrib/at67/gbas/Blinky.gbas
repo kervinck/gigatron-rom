@@ -3,4 +3,4 @@
 30'Video table lookup
 40P=(PEEK(256+Y+Y) LSL 8)+X
 50'Main loop
-60POKE P,I:I=I+1:GOTO 60
+60POKE P,I:I=I+1:GOTO &60

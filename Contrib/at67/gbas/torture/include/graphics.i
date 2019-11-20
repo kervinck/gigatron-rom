@@ -47,9 +47,9 @@ scanlineM_cont      LDWI    SYS_SetMode_v2_80
 %ENDS   
     
 %SUB                waitVBlank
-waitVBlank          LD      waitVBlankNum
+waitVBlank          LDW     waitVBlankNum
                     SUBI    0x01
-                    ST      waitVBlankNum
+                    STW     waitVBlankNum
                     BGE     waitVB_start
                     RET
     

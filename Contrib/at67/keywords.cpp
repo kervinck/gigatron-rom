@@ -42,6 +42,7 @@ namespace Keywords
         _keywords["WEND"  ] = {"WEND",   keywordWEND  };
         _keywords["REPEAT"] = {"REPEAT", keywordREPEAT};
         _keywords["UNTIL" ] = {"UNTIL",  keywordUNTIL };
+        _keywords["CONST" ] = {"CONST",  keywordCONST };
         _keywords["DIM"   ] = {"DIM",    keywordDIM   };
         _keywords["DEF"   ] = {"DEF",    keywordDEF   };
         _keywords["AT"    ] = {"AT",     keywordAT    };
@@ -85,6 +86,7 @@ namespace Keywords
         _stringKeywords["STR$"  ] = {"STR$",   nullptr};
         _stringKeywords["TIME$" ] = {"TIME$",  nullptr};
 
+        _equalsKeywords.push_back("CONST");
         _equalsKeywords.push_back("DIM");
         _equalsKeywords.push_back("DEF");
         _equalsKeywords.push_back("FOR");
@@ -668,8 +670,7 @@ namespace Keywords
 
     bool keywordPOKE(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        std::vector<size_t> offsets;
-        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', offsets, false);
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() != 2)
         {
             fprintf(stderr, "Compiler::keywordPOKE() : Syntax error, 'POKE A,X', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
@@ -715,8 +716,7 @@ namespace Keywords
 
     bool keywordDOKE(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        std::vector<size_t> offsets;
-        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', offsets, false);
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() != 2)
         {
             fprintf(stderr, "Compiler::keywordDOKE() : syntax error, 'DOKE A,X', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
@@ -762,8 +762,7 @@ namespace Keywords
 
     bool keywordAT(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        std::vector<size_t> offsets;
-        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', offsets, false);
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() < 1  &&  tokens.size() > 2)
         {
             fprintf(stderr, "Compiler::keywordAT() : Syntax error, 'AT X' or 'AT X,Y', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
@@ -796,7 +795,6 @@ namespace Keywords
 
     bool keywordPUT(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        std::vector<size_t> offsets;
         std::string expression = codeLine._code.substr(foundPos);
         if(expression.size() == 0)
         {
@@ -813,7 +811,6 @@ namespace Keywords
 
     bool keywordMODE(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        std::vector<size_t> offsets;
         std::string expression = codeLine._code.substr(foundPos);
         if(expression.size() == 0)
         {
@@ -831,7 +828,6 @@ namespace Keywords
 
     bool keywordWAIT(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        std::vector<size_t> offsets;
         std::string expression = codeLine._code.substr(foundPos);
         if(expression.size() == 0)
         {
@@ -849,8 +845,7 @@ namespace Keywords
 
     bool keywordLINE(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        std::vector<size_t> offsets;
-        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', offsets, false);
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() !=2  &&  tokens.size() != 4)
         {
             fprintf(stderr, "Compiler::keywordLINE() : Syntax error, 'LINE X,Y' or 'LINE X1,Y1,X2,Y2', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
@@ -895,8 +890,7 @@ namespace Keywords
 
     bool keywordHLINE(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        std::vector<size_t> offsets;
-        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', offsets, false);
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() !=3)
         {
             fprintf(stderr, "Compiler::keywordHLINE() : Syntax error, 'HLINE X1,Y,X2', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
@@ -922,8 +916,7 @@ namespace Keywords
 
     bool keywordVLINE(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        std::vector<size_t> offsets;
-        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', offsets, false);
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() !=3)
         {
             fprintf(stderr, "Compiler::keywordVLINE() : Syntax error, 'VLINE X1,Y,X2', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
@@ -991,8 +984,7 @@ namespace Keywords
 
     bool keywordSCROLL(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        std::vector<size_t> offsets;
-        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ' ', offsets, false);
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ' ', false);
         if(tokens.size() != 1)
         {
             fprintf(stderr, "Compiler::keywordSCROLL() : Syntax error, 'SCROLL ON' or 'SCROLL OFF', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
@@ -1034,9 +1026,9 @@ namespace Keywords
 
         for(int i=0; i<tokens.size(); i++)
         {
-            int varIndex;
+            int varIndex, constIndex;
             Expression::Numeric value;
-            uint32_t expressionType = Compiler::isExpression(tokens[i], varIndex);
+            uint32_t expressionType = Compiler::isExpression(tokens[i], varIndex, constIndex);
 
             if(expressionType & Expression::HasStringKeywords)
             {
@@ -1105,6 +1097,12 @@ namespace Keywords
                         Compiler::emitVcpuAsm("%PrintVarString", "_" + Compiler::getIntegerVars()[varIndex]._name, false, codeLineIndex);
                     }
                 }
+            }
+            else if(expressionType == Expression::HasStrConsts)
+            {
+                // Print string
+                std::string internalName = Compiler::getConstants()[constIndex]._internalName;
+                Compiler::emitVcpuAsm("%PrintString", internalName, false, codeLineIndex);
             }
             else if(expressionType == Expression::HasNumbers)
             {
@@ -1639,6 +1637,59 @@ namespace Keywords
         return true;
     }
 
+    bool keywordCONST(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), '=', true);
+        if(tokens.size() != 2)
+        {
+            fprintf(stderr, "Compiler::keywordCONST() : Syntax error, require a variable and an int or str constant, e.g. CONST a=50 or CONST a$=\"doggy\", in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        Expression::stripWhitespace(tokens[0]);
+        if(!Expression::isVarNameValid(tokens[0]))
+        {
+            fprintf(stderr, "Compiler::keywordCONST() : Syntax error, name must contain only alphanumerics and '$', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        // String
+        if(tokens[0].back() == '$')
+        {
+            if(!Expression::isValidString(tokens[1]))
+            {
+                fprintf(stderr, "Compiler::keywordCONST() : Syntax error, invalid string, in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+                return false;
+            }
+
+            uint16_t address;
+            std::string internalName;
+
+            // Strip whitespace and quotes
+            Expression::stripNonStringWhitespace(tokens[1]);
+            tokens[1].erase(0, 1);
+            tokens[1].erase(tokens[1].size()-1, 1);
+
+            Compiler::createString(codeLine, codeLineIndex, tokens[1], internalName, address);
+            Compiler::getConstants().push_back({0, address, tokens[0], internalName, Compiler::ConstStr});
+        }
+        // Integer
+        else
+        {
+            int16_t data = 0;
+            Expression::stripWhitespace(tokens[1]);
+            if(tokens[1].size() == 0  ||  !Expression::stringToI16(tokens[1], data))
+            {
+                fprintf(stderr, "Compiler::keywordCONST() : Syntax error, invalid integer, in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+                return false;
+            }
+
+            Compiler::getConstants().push_back({data, 0x0000, tokens[0], "_" + tokens[0], Compiler::ConstInt16});
+        }
+
+        return true;
+    }
+
     bool keywordDIM(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
         std::string dimText = codeLine._code.substr(foundPos);
@@ -1744,8 +1795,7 @@ namespace Keywords
         }
 
         // Data fields
-        std::vector<size_t> offsets;
-        std::vector<std::string> dataTokens = Expression::tokenise(codeLine._code.substr(equalsPos + 1), ',', offsets, true);
+        std::vector<std::string> dataTokens = Expression::tokenise(codeLine._code.substr(equalsPos + 1), ',', true);
         if(dataTokens.size() == 0)
         {
             fprintf(stderr, "Compiler::keywordDEF() : Syntax error, require at least one data field, in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);

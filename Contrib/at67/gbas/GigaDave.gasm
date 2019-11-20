@@ -40,12 +40,12 @@ _30                 EQU                     0x028a
 _40                 EQU                     0x02a1
 _50                 EQU                     0x02b8
 _60                 EQU                     0x02c8
-_70                 EQU                     0x02d7
-_80                 EQU                     0x0302
-_85                 EQU                     0x0311
-_90                 EQU                     0x0322
-_end_0x034e         EQU                     0x0327
+_70                 EQU                     0x02cf
+_80                 EQU                     0x02df
+_85                 EQU                     0x02e6
+_90                 EQU                     0x02ef
 _page_0x0300        EQU                     0x0300
+_end_0x0333         EQU                     0x0302
 
 ; Variables
 _a                  EQU                     0x0030
@@ -172,7 +172,7 @@ _7                  LDW                     _a
 
 _8                  LDWI                    165
                     STW                     register0
-                    LD                      _a
+                    LDW                     _a
                     POKE                    register0                       ; poke 165,a
 
 _10                 LDI                     80
@@ -219,9 +219,8 @@ _50                 LDW                     _w
                     STW                     _v                              ; w=w+v+v+1:v=v+1
 
 _60                 LDW                     _w
-                    JumpLT                  _70 0
-                    LDWI                    _30
-                    CALL                    giga_vAC                        ; if w&<0 then goto 30
+                    BGE                     _70
+                    BRA                     _30                             ; if w &&< 0 then goto &30
 
 _70                 LDW                     _w
                     SUBW                    _u
@@ -232,25 +231,22 @@ _70                 LDW                     _w
                     SUBI                    1
                     STW                     _u                              ; w=w-u-u+1:u=u-1
 
+_80                 LDW                     _u
+                    BLE                     _85
+                    BRA                     _60                             ; if u &&> 0 then goto &60
+
+_85                 LDW                     _a
+                    SUBI                    2
+                    BGE                     _90
+                    BRA                     _5                              ; if a &&< 2 then goto &5
+
+_90                 BRA                     _7                              ; goto &7
+
                     STW                     0x82
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0x82
-_80                 LDW                     _u
-                    JumpGT                  _85 1
-                    LDWI                    _60
-                    CALL                    giga_vAC                        ; if u&>0 then goto 60
-
-_85                 LDW                     _a
-                    SUBI                    2
-                    JumpLT                  _90 2
-                    LDWI                    _5
-                    CALL                    giga_vAC                        ; if a&<2 then goto 5
-
-_90                 LDWI                    _7
-                    CALL                    giga_vAC                        ; goto 7
-
-_end_0x034e         BRA                     _end_0x034e                     ; END
+_end_0x0333         BRA                     _end_0x0333                     ; END
 
 
 
@@ -260,20 +256,20 @@ _end_0x034e         BRA                     _end_0x034e                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7fa0
-convertEqOp         EQU     0x7fa9
-convertNeOp         EQU     0x7fb2
-convertLeOp         EQU     0x7fbb
-convertGeOp         EQU     0x7fc4
-convertLtOp         EQU     0x7fcd
-convertGtOp         EQU     0x7fd6
-resetVideoTable     EQU     0x7fdf
-initClearFuncs      EQU     0x7ea0
-clearVertBlinds     EQU     0x7ca0
-drawHLine           EQU     0x7ba0
-resetAudio          EQU     0x7ec3
-playMidi            EQU     0x7da0
-midiStartNote       EQU     0x7aa0
+realTimeProc        EQU     0xff00
+convertEqOp         EQU     0xff09
+convertNeOp         EQU     0xff12
+convertLeOp         EQU     0xff1b
+convertGeOp         EQU     0xff24
+convertLtOp         EQU     0xff2d
+convertGtOp         EQU     0xff36
+resetVideoTable     EQU     0xfe81
+initClearFuncs      EQU     0xff3f
+clearVertBlinds     EQU     0xfe00
+drawHLine           EQU     0xfe3a
+resetAudio          EQU     0xff62
+playMidi            EQU     0xff9d
+midiStartNote       EQU     0xfea1
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2

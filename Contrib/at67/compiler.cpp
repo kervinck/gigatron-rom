@@ -50,6 +50,7 @@ namespace Compiler
     std::vector<InternalLabel> _discardedLabels;
 
     std::vector<CodeLine>   _codeLines;
+    std::vector<Constant>   _constants;
     std::vector<IntegerVar> _integerVars;
     std::vector<StringVar>  _stringVars;
 
@@ -82,6 +83,7 @@ namespace Compiler
     int incJumpFalseUniqueId(void) {return _jumpFalseUniqueId++;}
 
     std::vector<Label>& getLabels(void) {return _labels;}
+    std::vector<Constant>& getConstants(void) {return _constants;}
     std::vector<CodeLine>& getCodeLines(void) {return _codeLines;}
     std::vector<IntegerVar>& getIntegerVars(void) {return _integerVars;}
     std::vector<StringVar>& getStringVars(void) {return _stringVars;}
@@ -198,6 +200,17 @@ namespace Compiler
         return -1;
     }
 
+    int findConst(std::string& constName)
+    {
+        constName = Expression::getSubAlpha(constName);
+        for(int i=0; i<_constants.size(); i++)
+        {
+            if(_constants[i]._name == constName) return i;
+        }
+
+        return -1;
+    }
+
     int findVar(std::string& varName)
     {
         varName = Expression::getSubAlpha(varName);
@@ -305,12 +318,12 @@ namespace Compiler
         return VarNotFound;
     }
 
-    uint32_t isExpression(std::string& input, int& varIndex)
+    uint32_t isExpression(std::string& input, int& varIndex, int& constIndex)
     {
         uint32_t expressionType = 0x0000;
 
         // Check for strings
-        if(input.find("$") != std::string::npos) expressionType |= Expression::HasStrings;
+        //if(input.find("$") != std::string::npos) expressionType |= Expression::HasStrings;
         if(input.find("\"") != std::string::npos) expressionType |= Expression::HasStrings;
 
         std::string stripped = Expression::stripStrings(input);
@@ -349,6 +362,25 @@ namespace Compiler
             {
                 expressionType |= Expression::HasStringKeywords;
                 break;
+            }
+        }
+
+        // Check for consts
+        for(int i=0; i<tokens.size(); i++)
+        {
+            constIndex = findConst(tokens[i]);
+            if(constIndex != -1)
+            {
+                if(_constants[constIndex]._constantType == ConstInt16)
+                {
+                    expressionType |= Expression::HasIntConsts;
+                    break;
+                }
+                if(_constants[constIndex]._constantType == ConstStr)
+                {
+                    expressionType |= Expression::HasStrConsts;
+                    break;
+                }
             }
         }
 
@@ -642,9 +674,9 @@ namespace Compiler
     // Generic LDW expression parser
     uint32_t parseArrayVarExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, Expression::Numeric& numeric)
     {
-        int varIndex;
+        int varIndex, constIndex;
         Expression::parse(expression, codeLineIndex, numeric);
-        uint32_t expressionType = isExpression(expression, varIndex);
+        uint32_t expressionType = isExpression(expression, varIndex, constIndex);
         if(((expressionType & Expression::HasVars)  &&  (expressionType & Expression::HasOperators))  ||  (expressionType & Expression::HasKeywords)  ||  (expressionType & Expression::HasStringKeywords))
         {
             emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(_tempVarStart)), false, codeLineIndex);
@@ -740,9 +772,9 @@ namespace Compiler
     // Generic expression parser
     OperandType parseExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, std::string& operand, Expression::Numeric& numeric)
     {
-        int varIndex;
+        int varIndex, constIndex;
         Expression::parse(expression, codeLineIndex, numeric);
-        uint32_t expressionType = isExpression(expression, varIndex);
+        uint32_t expressionType = isExpression(expression, varIndex, constIndex);
 
         if(((expressionType & Expression::HasVars)  &&  (expressionType & Expression::HasOperators))  ||  (expressionType & Expression::HasKeywords)  ||  
             (expressionType & Expression::HasStringKeywords)  ||  (expressionType & Expression::HasFunctions))
@@ -763,9 +795,9 @@ namespace Compiler
     // Generic LDW expression parser
     uint32_t parseExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, Expression::Numeric& numeric)
     {
-        int varIndex;
+        int varIndex, constIndex;
         Expression::parse(expression, codeLineIndex, numeric);
-        uint32_t expressionType = isExpression(expression, varIndex);
+        uint32_t expressionType = isExpression(expression, varIndex, constIndex);
 
         if(((expressionType & Expression::HasVars)  &&  (expressionType & Expression::HasOperators))  ||  (expressionType & Expression::HasKeywords)  ||
             (expressionType & Expression::HasStringKeywords)  ||  (expressionType & Expression::HasFunctions))
@@ -787,9 +819,9 @@ namespace Compiler
     // Loop specific parser
     uint32_t parseExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, Expression::Numeric& numeric, int16_t replace)
     {
-        int varIndex;
+        int varIndex, constIndex;
         Expression::parse(expression, codeLineIndex, numeric);
-        uint32_t expressionType = isExpression(expression, varIndex);
+        uint32_t expressionType = isExpression(expression, varIndex, constIndex);
 
         if(((expressionType & Expression::HasVars)  &&  (expressionType & Expression::HasOperators))  ||  (expressionType & Expression::HasKeywords)  ||
             (expressionType & Expression::HasStringKeywords)  ||  (expressionType & Expression::HasFunctions))
@@ -1048,7 +1080,7 @@ namespace Compiler
             // Save end of runtime/strings
             if(address < _runtimeEnd) _runtimeEnd = address;
 
-            name = "str_" + Expression::wordToHexString(address);
+            name = "_str_" + Expression::wordToHexString(address);
             StringVar stringVar = {uint8_t(str.size()), address, str, name, name + std::string(LABEL_TRUNC_SIZE - name.size(), ' '), -1};
             _stringVars.push_back(stringVar);
         }
@@ -1203,6 +1235,7 @@ namespace Compiler
                     // Variables
                     std::string varName = Expression::getExpression();
                     int varIndex = findVar(varName);
+                    int constIndex = findConst(varName);
                     if(varIndex != -1)
                     {
                         Expression::advance(varName.size());
@@ -1217,6 +1250,19 @@ namespace Compiler
                         {
                             // Numeric is now passed back to compiler, (rather than just numeric._value), so make sure all fields are valid
                             numeric = Expression::Numeric(defaultValue, varIndex, true, true, Expression::NormalCC, varName);
+                        }
+                    }
+                    // Constants
+                    else if(constIndex != -1)
+                    {
+                        Expression::advance(varName.size());
+                        
+                        switch(_constants[constIndex]._constantType)
+                        {
+                            // Numeric is now passed back to compiler, (rather than just numeric._value), so make sure all fields are valid
+                            case ConstInt16: numeric = Expression::Numeric(_constants[constIndex]._data, -1, true, false, Expression::NormalCC, varName); break;
+
+                            case ConstStr: break;
                         }
                     }
                     // Unknown symbol
@@ -1334,6 +1380,7 @@ namespace Compiler
             else if(Expression::strToUpper(token) == "LINE"  ) return SingleStatementParsed;
             else if(Expression::strToUpper(token) == "HLINE" ) return SingleStatementParsed;
             else if(Expression::strToUpper(token) == "VLINE" ) return SingleStatementParsed;
+            else if(Expression::strToUpper(token) == "CONST" ) return SingleStatementParsed;
             else if(Expression::strToUpper(token) == "DIM"   ) return SingleStatementParsed;
             else if(Expression::strToUpper(token) == "DEF"   ) return SingleStatementParsed;
             else if(Expression::strToUpper(token) == "POKE"  ) return SingleStatementParsed;
@@ -1345,8 +1392,8 @@ namespace Compiler
         }
 
         bool containsVars = false;
-        int varIndexRhs = -1;
-        uint32_t expressionType = isExpression(codeLine._expression, varIndexRhs);
+        int varIndexRhs = -1, constIndexRhs = -1;
+        uint32_t expressionType = isExpression(codeLine._expression, varIndexRhs, constIndexRhs);
         if(expressionType & Expression::HasVars) containsVars = true;
 
         Expression::Numeric value;
@@ -1597,15 +1644,45 @@ namespace Compiler
                     // Discarded internal label
                     for(int l=0; l<_discardedLabels.size(); l++)
                     {
-                        // Use unique address embedded within names rather than discarded real address which can be out of date due to optimiser and relocater
+                        // Match on unique address embedded within names or the real address
                         std::string internalName = _internalLabels[k]._name.substr(_internalLabels[k]._name.size() - 4, 4);
                         std::string discardedName = _discardedLabels[l]._name.substr(_discardedLabels[l]._name.size() - 4, 4);
-                        if(internalName == discardedName)
+                        if(internalName == discardedName  ||  _internalLabels[k]._address ==  _discardedLabels[l]._address)
                         {
                             Expression::replaceText(_codeLines[i]._vasm[j]._code, _discardedLabels[l]._name, _internalLabels[k]._name);
                         }
                     }
                 }
+            }
+        }
+
+        _output.push_back("\n");
+    }
+
+    void outputConsts(void)
+    {
+        _output.push_back("; Constants\n");
+
+        for(int i=0; i<_constants.size(); i++)
+        {
+            int16_t data = _constants[i]._data;
+            uint16_t address = _constants[i]._address;
+            std::string name = _constants[i]._name;
+            std::string internalName = _constants[i]._internalName;
+            ConstantType constantType = _constants[i]._constantType;
+
+            switch(constantType)
+            {
+                case ConstInt16:
+                {
+                    _output.push_back(internalName + std::string(LABEL_TRUNC_SIZE - internalName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(data) + "\n");
+                }
+                break;
+    
+                case ConstStr:
+                {
+                }
+                break;
             }
         }
 
@@ -1618,24 +1695,28 @@ namespace Compiler
 
         for(int i=0; i<_integerVars.size(); i++)
         {
-            // Int var
-            if(_integerVars[i]._varType == VarInt16)
+            switch(_integerVars[i]._varType)
             {
-                std::string address = Expression::wordToHexString(_integerVars[i]._address);
-                _output.push_back(_integerVars[i]._output + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + address + "\n");
-            }
-            // Array var
-            else if(_integerVars[i]._varType == VarArray)
-            {
-                std::string arrName = "_" + _integerVars[i]._name + "_array";
-                _output.push_back(arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(_integerVars[i]._array) + "\n");
-            
-                std::string dbString = arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
-                for(int j=0; j<_integerVars[i]._arrSize/2; j++)
+                case VarInt16:
                 {
-                    dbString += Expression::wordToHexString(_integerVars[i]._init) + " ";
+                    std::string address = Expression::wordToHexString(_integerVars[i]._address);
+                    _output.push_back(_integerVars[i]._output + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + address + "\n");
                 }
-                _output.push_back(dbString + "\n");
+                break;
+
+                case VarArray:
+                {
+                    std::string arrName = "_" + _integerVars[i]._name + "_array";
+                    _output.push_back(arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(_integerVars[i]._array) + "\n");
+            
+                    std::string dbString = arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+                    for(int j=0; j<_integerVars[i]._arrSize/2; j++)
+                    {
+                        dbString += Expression::wordToHexString(_integerVars[i]._init) + " ";
+                    }
+                    _output.push_back(dbString + "\n");
+                }
+                break;
             }
         }
 
@@ -1729,7 +1810,7 @@ namespace Compiler
                     return false;
                 }
 
-                std::string lutName = "lut_numericLabs";
+                std::string lutName = "_lut_numericLabs";
                 _output.push_back(lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(lutAddress) + "\n");
             
                 std::string dbString = lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
@@ -1746,7 +1827,7 @@ namespace Compiler
                     return false;
                 }
 
-                lutName = "lut_numericAddrs";
+                lutName = "_lut_numericAddrs";
                 _output.push_back(lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(lutAddress) + "\n");
             
                 std::string dwString = lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
@@ -1967,6 +2048,7 @@ namespace Compiler
         _discardedLabels.clear();
 
         _codeLines.clear();
+        _constants.clear();
         _integerVars.clear();
         _stringVars.clear();
         _defDataBytes.clear();
@@ -2026,6 +2108,7 @@ namespace Compiler
         outputInternalVars();
         outputIncludes();
         outputLabels();
+        //outputConsts();
         outputVars();
         outputStrs();
         outputDefs();

@@ -35,16 +35,16 @@ _2                  EQU                     0x024b
 _3                  EQU                     0x0275
 _4                  EQU                     0x029f
 _5                  EQU                     0x02b4
-_6                  EQU                     0x02d0
-_7                  EQU                     0x02ed
-_8                  EQU                     0x0320
-_9                  EQU                     0x0338
-_10                 EQU                     0x034a
-_11                 EQU                     0x035a
-_12                 EQU                     0x0376
-_end_0x03fc         EQU                     0x0391
+_6                  EQU                     0x02c9
+_7                  EQU                     0x02df
+_8                  EQU                     0x0307
+_9                  EQU                     0x031f
+_10                 EQU                     0x0331
+_11                 EQU                     0x0341
+_12                 EQU                     0x0356
 _page_0x0300        EQU                     0x0300
-_next_0x03b1        EQU                     0x0356
+_next_0x0399        EQU                     0x033d
+_end_0x03dd         EQU                     0x0371
 
 ; Variables
 _a                  EQU                     0x0030
@@ -80,7 +80,7 @@ _1                  LDWI                    164
                     LDI                     63
                     POKE                    register0
                     LDWI                    clearVertBlinds
-                    CALL                    giga_vAC                        ; poke 164,63:cls:rem Lines demo
+                    CALL                    giga_vAC                        ; poke 164,63 : cls : rem Lines demo
 
 _2                  Rand                    
                     ANDI                    127
@@ -122,47 +122,43 @@ _4                  LDW                     _c
                     STW                     _y
                     Rand                    
                     ANDI                    63
-                    STW                     _q                              ; x=c-a:y=d-b:q=rnd(0) AND 63
+                    STW                     _q                              ; x=c-a : y=d-b : q=rnd(0) AND 63
 
 _5                  LDI                     1
                     STW                     _u
                     LDW                     _x
-                    CALL                    convertLtOpAddr
-                    JumpFalse               _6 0
+                    BGE                     _6
                     LDI                     0
                     SUBW                    _x
                     STW                     _x
                     LDI                     0
                     SUBW                    _u
-                    STW                     _u                              ; u=1  :if x<0 then x=-x:u=-u
+                    STW                     _u                              ; u=1 : if x&&<0 then x=-x : u=-u
 
 _6                  LDWI                    256
                     STW                     _v
                     LDW                     _y
-                    CALL                    convertLtOpAddr
-                    JumpFalse               _7 1
+                    BGE                     _7
                     LDI                     0
                     SUBW                    _y
                     STW                     _y
                     LDI                     0
                     SUBW                    _v
-                    STW                     _v                              ; v=256:if y<0 then y=-y:v=-v
+                    STW                     _v                              ; v=256 : if y&&<0 then y=-y : v=-v
 
 _7                  LDW                     _b
-                    STW                     0x82
-                    LDWI                    _page_0x0300
-                    CALL                    giga_vAC
-_page_0x0300        LDW                     0x82
                     STW                     mathShift
                     ShiftLeft8bit           
                     ADDW                    _a
                     STW                     _p
                     LDW                     _y
                     SUBW                    _x
-                    CALL                    convertLtOpAddr
-                    JumpFalse               _8 2
-                    LDWI                    _9
-                    CALL                    giga_vAC                        ; p=a + (b LSL 8):if y< x then goto 9
+                    STW                     0x82
+                    LDWI                    _page_0x0300
+                    CALL                    giga_vAC
+_page_0x0300        LDW                     0x82
+                    BGE                     _8
+                    BRA                     _9                              ; p=a + (b LSL 8) : if y&&< x then goto &9
 
 _8                  LDW                     _x
                     STW                     _t
@@ -175,7 +171,7 @@ _8                  LDW                     _x
                     LDW                     _v
                     STW                     _u
                     LDW                     _t
-                    STW                     _v                              ; t=x:x=y:y=t:t=u:u=v:v=t
+                    STW                     _v                              ; t=x : x=y : y=t : t=u : u=v : v=t
 
 _9                  LDI                     0
                     SUBW                    _x
@@ -185,7 +181,7 @@ _9                  LDI                     0
                     STW                     _x
                     LDW                     _y
                     ADDW                    _y
-                    STW                     _y                              ; d=-x:x=x+x:y=y+y
+                    STW                     _y                              ; d=-x : x=x+x : y=y+y
 
 _10                 LDW                     _d
                     STW                     _t
@@ -193,29 +189,28 @@ _10                 LDW                     _d
                     STW                     0xb0
                     LDI                     1
                     STW                     0xb2
-_next_0x03b1        LD                      _q
-                    POKE                    _p                              ; for t=d to 0:poke p,q
+_next_0x0399        LDW                     _q
+                    POKE                    _p                              ; for t=d to 0 : poke p,q
 
 _11                 LDW                     _d
                     ADDW                    _y
                     STW                     _d
-                    CALL                    convertGtOpAddr
-                    JumpFalse               _12 3
+                    BLE                     _12
                     LDW                     _d
                     SUBW                    _x
                     STW                     _d
                     LDW                     _p
                     ADDW                    _v
-                    STW                     _p                              ; d=d+y:if d>0 then d=d-x:p=p+v
+                    STW                     _p                              ; d=d+y : if d&&>0 then d=d-x : p=p+v
 
 _12                 LDW                     _p
                     ADDW                    _u
                     STW                     _p
-                    ForNextLoopStepUp       _t _next_0x03b1 0xb0 0xb2
+                    ForNextLoopStepUp       _t _next_0x0399 0xb0 0xb2
                     LDWI                    _2
-                    CALL                    giga_vAC                        ; p=p+u:next t:goto 2
+                    CALL                    giga_vAC                        ; p=p+u : next t : goto 2
 
-_end_0x03fc         BRA                     _end_0x03fc                     ; END
+_end_0x03dd         BRA                     _end_0x03dd                     ; END
 
 
 

@@ -32,13 +32,13 @@ miscFlags           EQU                     register0 + 0x2A
 _entryPoint_        EQU                     0x0200
 _10                 EQU                     0x0255
 _20                 EQU                     0x0358
-_end_0x038b         EQU                     0x035d
 _next_0x025d        EQU                     0x025d
 _next_0x0261        EQU                     0x0261
 _next_0x0265        EQU                     0x0265
 _next_0x029b        EQU                     0x029b
 _page_0x0300        EQU                     0x0300
 _next_0x0351        EQU                     0x0323
+_end_0x038b         EQU                     0x035d
 
 ; Variables
 _a                  EQU                     0x0030

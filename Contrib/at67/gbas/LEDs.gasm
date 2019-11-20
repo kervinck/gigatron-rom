@@ -73,7 +73,7 @@ _30                 LDI                     0
 
 _40                 LDWI                    20
                     STW                     register0
-                    LD                      _N
+                    LDW                     _N
                     POKE                    register0                       ; POKE 20,N
 
 _50                 LDWI                    14

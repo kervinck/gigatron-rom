@@ -15,11 +15,11 @@ play midi &h10a0,3
 '30 vline x-v, y-u, y+u
 '40 vline x+v, y-u, y+u
 50 w=w+v+v+1:v=v+1
-60 if w&<0 then goto 30
+60 if w &&< 0 then goto &30
 70 w=w-u-u+1:u=u-1
-80 if u&>0 then goto 60
-85 if a&<2 then goto 5
-90 goto 7
+80 if u &&> 0 then goto &60
+85 if a &&< 2 then goto &5
+90 goto &7
 
 
 def byte(&h10a0) =  &h90, &h2d, &h26, &h80, &h14, &h90, &h2f, &h09, &h90, &h30, &h0a, &h90, &h32, &h13, &h90, &h30,

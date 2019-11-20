@@ -50,8 +50,8 @@ _34                 EQU                     0x02e9
 _35                 EQU                     0x0308
 _36                 EQU                     0x0311
 _37                 EQU                     0x0321
-_end_0x0334         EQU                     0x032f
 _page_0x0300        EQU                     0x0300
+_end_0x0334         EQU                     0x032f
 
 ; Variables
 _c                  EQU                     0x0030
@@ -59,8 +59,8 @@ _p                  EQU                     0x0032
 _n                  EQU                     0x0034
 
 ; Strings
-str_0xff00          EQU                     0xff00
-str_0xff00          DB                      12 'Playing note'
+_str_0xff00         EQU                     0xff00
+_str_0xff00         DB                      12 'Playing note'
 
 ; Define Bytes
 
@@ -142,7 +142,7 @@ _26                 LDWI                    127
 _30                 LDI                     1
                     STW                     _n                              ; for n=1 to 95
 
-_31                 PrintString             str_0xff00
+_31                 PrintString             _str_0xff00
                     PrintVarInt16           _n
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print "Playing note",n
@@ -152,7 +152,7 @@ _32                 LDW                     _n
                     STW                     0xc0
                     LDWI                    121
                     STW                     register0
-                    LD                      0xc0
+                    LDW                     0xc0
                     POKE                    register0                       ; poke &h79,n+n:'$900+n*2
 
 _33                 LDI                     0x78

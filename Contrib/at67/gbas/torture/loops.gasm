@@ -30,11 +30,11 @@ miscFlags           EQU                     register0 + 0x2A
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_end_0x02b7         EQU                     0x02a7
 _repeat_0x0246      EQU                     0x0246
 _while_0x026c       EQU                     0x0266
 _else_0x02a4        EQU                     0x0294
 _endif_0x02b2       EQU                     0x02a2
+_wend_0x02b7        EQU                     0x02a7
 
 ; Variables
 _a                  EQU                     0x0030
@@ -76,7 +76,7 @@ _repeat_0x0246      LDW                     _a
 _while_0x026c       LDW                     _a
                     SUBI                    1
                     CALL                    convertGtOpAddr
-                    JumpFalse               _end_0x02b7 3                   ; while a>1
+                    JumpFalse               _wend_0x02b7 3                  ; while a>1
 
                     LDW                     _a
                     SUBI                    1
@@ -97,7 +97,7 @@ _else_0x02a4        PrintVarInt16           _a
 _endif_0x02b2       LDWI                    _while_0x026c
                     CALL                    giga_vAC                        ; wend
 
-_end_0x02b7         BRA                     _end_0x02b7                     ; END
+_wend_0x02b7        BRA                     _wend_0x02b7                    ; END
 
 
 
@@ -107,22 +107,22 @@ _end_0x02b7         BRA                     _end_0x02b7                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7fa0
-convertEqOp         EQU     0x7fa9
-convertNeOp         EQU     0x7fb2
-convertLeOp         EQU     0x7fbb
-convertGeOp         EQU     0x7fc4
-convertLtOp         EQU     0x7fcd
-convertGtOp         EQU     0x7fd6
-resetVideoTable     EQU     0x7fdf
-initClearFuncs      EQU     0x7ea0
-clearVertBlinds     EQU     0x7ec3
-clearCursorRow      EQU     0x7ba0
-printInit           EQU     0x7def
-printDigit          EQU     0x7aa0
-printInt16          EQU     0x7da0
-printChar           EQU     0x79a0
-newLineScroll       EQU     0x7ca0
+realTimeProc        EQU     0xff00
+convertEqOp         EQU     0xff09
+convertNeOp         EQU     0xff12
+convertLeOp         EQU     0xff1b
+convertGeOp         EQU     0xff24
+convertLtOp         EQU     0xff2d
+convertGtOp         EQU     0xff36
+resetVideoTable     EQU     0xfe5b
+initClearFuncs      EQU     0xff3f
+clearVertBlinds     EQU     0xff62
+clearCursorRow      EQU     0xfe7b
+printInit           EQU     0xffeb
+printDigit          EQU     0xfec1
+printInt16          EQU     0xff9c
+printChar           EQU     0xfd00
+newLineScroll       EQU     0xfe00
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2

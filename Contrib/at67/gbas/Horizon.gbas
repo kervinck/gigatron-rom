@@ -14,12 +14,12 @@ fade=0 : cIndex=fade : decay = 54
 for y=119 to horizonY step -1
     color1 = c1(cIndex) : color2 = c2(cIndex)
     fade = fade + 1
-    if fade = decay then cIndex = cIndex + 1 : fade = 0 : decay = decay LSR 1
+    if fade &= decay then cIndex = cIndex + 1 : fade = 0 : decay = decay LSR 1
 
     yy = y
     gosub calcPitch
 
-    if ((400 / (y-horizonY+40)) AND 1) = 0
+    if ((400 / (y-horizonY+40)) AND 1) &&= 0
         j = color1 XOR color2
     else
         j = 0
@@ -29,13 +29,13 @@ for y=119 to horizonY step -1
     a = ((y + 8) LSL 8)
 
     for x=0 to pitch + 159
-        if i = 0
+        if i &&= 0
             i = pitch - 1
         else
             i = i - 1
         endif
 
-        if i+i &>= pitch
+        if i+i &&>= pitch
             p = color1 XOR j
         else
             p = color2 XOR j
@@ -71,9 +71,9 @@ loop:   i = x AND 255
         x = x + v
 goto loop
 
-254: v = v + 1 : if v &> 32 then v = 32
+254: v = v + 1 : if v &&> 32 then v = 32
      return
-253: v = v - 1 : if v &< -32 then v = -32
+253: v = v - 1 : if v &&< -32 then v = -32
      return
 191: v = 0 : return
 127: v = 0 : return

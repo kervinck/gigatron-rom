@@ -45,9 +45,9 @@ _117                EQU                     0x036f
 _119                EQU                     0x037f
 _121                EQU                     0x038f
 _note               EQU                     0x039f
-_end_0x03b1         EQU                     0x03b9
 _next_0x0249        EQU                     0x0247
 _page_0x0300        EQU                     0x0300
+_end_0x03b1         EQU                     0x03b9
 
 ; Variables
 _a                  EQU                     0x0030
@@ -57,18 +57,18 @@ _p                  EQU                     0x0036
 _k                  EQU                     0x0038
 
 ; Strings
-str_0xff00          EQU                     0xff00
-str_0xff00          DB                      12 ' 2 3   5 6 7'
-str_0xff0d          EQU                     0xff0d
-str_0xff0d          DB                      15 'Q W E R T Y U I'
+_str_0xff00         EQU                     0xff00
+_str_0xff00         DB                      12 ' 2 3   5 6 7'
+_str_0xff0d         EQU                     0xff0d
+_str_0xff0d         DB                      15 'Q W E R T Y U I'
 
 ; Define Bytes
 
 ; Lookup Tables
-lut_numericLabs     EQU                     0xfe95
-lut_numericLabs     DW                      50 51 53 54 55 101 105 113 114 116 117 119 121 -1
-lut_numericAddrs    EQU                     0xfeb1
-lut_numericAddrs    DW                      0x02bd 0x02cd 0x02dd 0x02ed 0x030f 0x031f 0x032f 0x033f 0x034f 0x035f 0x036f 0x037f 0x038f 
+_lut_numericLabs    EQU                     0xfe95
+_lut_numericLabs    DW                      50 51 53 54 55 101 105 113 114 116 117 119 121 -1
+_lut_numericAddrs   EQU                     0xfeb1
+_lut_numericAddrs   DW                      0x02bd 0x02cd 0x02dd 0x02ed 0x030f 0x031f 0x032f 0x033f 0x034f 0x035f 0x036f 0x037f 0x038f 
 
 ; Code
 _entryPoint_        InitRealTimeProc        
@@ -109,11 +109,11 @@ _next_0x0249        LDW                     _c
                     LDWI                    clearVertBlinds
                     CALL                    giga_vAC                        ; mode 2:cls
 
-                    PrintString             str_0xff00
+                    PrintString             _str_0xff00
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print " 2 3   5 6 7"
 
-                    PrintString             str_0xff0d
+                    PrintString             _str_0xff0d
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print "Q W E R T Y U I"
 
@@ -272,12 +272,12 @@ _121                PUSH
                     RET                                                     ; a=53 :b=14:gosub note:return
 
 _note               PUSH                    
-                    LD                      _a
+                    LDW                     _a
                     POKE                    _p
                     LDW                     _p
                     ADDI                    1
                     STW                     0xc0
-                    LD                      _b
+                    LDW                     _b
                     POKE                    0xc0                            ; poke p,a:poke p+1,b
 
                     LDWI                    44
@@ -412,10 +412,10 @@ shiftLeft8bit       LDWI    SYS_LSLW8_24
 
                     ; find numeric label and call it, (it had better return or welcome to lala land)
 gosubNumericLabel   PUSH
-                    LDWI    lut_numericLabs
+                    LDWI    _lut_numericLabs
                     STW     lutLabs
                     STW     lutIndex
-                    LDWI    lut_numericAddrs
+                    LDWI    _lut_numericAddrs
                     STW     lutAddrs
                     
 gosubNL_loop        LDW     lutIndex
