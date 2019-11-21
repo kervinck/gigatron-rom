@@ -792,7 +792,7 @@ namespace Compiler
         return OperandConst;
     }
 
-    // Generic LDW expression parser
+    // LDW expression parser
     uint32_t parseExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, Expression::Numeric& numeric)
     {
         int varIndex, constIndex;
@@ -810,17 +810,17 @@ namespace Compiler
         }
         else
         {
-            (numeric._value >= 0  &&  numeric._value <= 255) ? emitVcpuAsm("LDI", std::to_string(numeric._value), false, codeLineIndex) : emitVcpuAsm("LDWI", std::to_string(numeric._value), false, codeLineIndex);
+            int16_t value = numeric._value;
+            (value >= 0  &&  value <= 255) ? emitVcpuAsm("LDI", std::to_string(value), false, codeLineIndex) : emitVcpuAsm("LDWI", std::to_string(value), false, codeLineIndex);
         }
 
         return expressionType;
     }
 
-    // Loop specific parser
-    uint32_t parseExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, Expression::Numeric& numeric, int16_t replace)
+    // Handle expression, (use this when expression has already been parsed)
+    uint32_t handleExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, Expression::Numeric numeric)
     {
         int varIndex, constIndex;
-        Expression::parse(expression, codeLineIndex, numeric);
         uint32_t expressionType = isExpression(expression, varIndex, constIndex);
 
         if(((expressionType & Expression::HasVars)  &&  (expressionType & Expression::HasOperators))  ||  (expressionType & Expression::HasKeywords)  ||
@@ -834,8 +834,8 @@ namespace Compiler
         }
         else
         {
-            if(numeric._value == 0  &&  replace != 0) numeric._value = replace;
-            (numeric._value >= 0  &&  numeric._value <= 255) ? emitVcpuAsm("LDI", std::to_string(numeric._value), false, codeLineIndex) : emitVcpuAsm("LDWI", std::to_string(numeric._value), false, codeLineIndex);
+            int16_t value = numeric._value;
+            (value >= 0  &&  value <= 255) ? emitVcpuAsm("LDI", std::to_string(value), false, codeLineIndex) : emitVcpuAsm("LDWI", std::to_string(value), false, codeLineIndex);
         }
 
         return expressionType;
@@ -1647,7 +1647,7 @@ namespace Compiler
                         // Match on unique address embedded within names or the real address
                         std::string internalName = _internalLabels[k]._name.substr(_internalLabels[k]._name.size() - 4, 4);
                         std::string discardedName = _discardedLabels[l]._name.substr(_discardedLabels[l]._name.size() - 4, 4);
-                        if(internalName == discardedName  ||  _internalLabels[k]._address ==  _discardedLabels[l]._address)
+                        if(internalName == discardedName  ||  _internalLabels[k]._address == _discardedLabels[l]._address)
                         {
                             Expression::replaceText(_codeLines[i]._vasm[j]._code, _discardedLabels[l]._name, _internalLabels[k]._name);
                         }

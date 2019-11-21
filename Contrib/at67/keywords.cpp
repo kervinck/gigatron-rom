@@ -1092,9 +1092,10 @@ namespace Keywords
                 }
                 else
                 {
-                    if(varIndex >= 0  &&  Compiler::getIntegerVars()[varIndex]._name.find("$") != std::string::npos)
+                    std::string varName = Compiler::getIntegerVars()[varIndex]._name;
+                    if(varIndex >= 0  &&  varName.find("$") != std::string::npos)
                     {
-                        Compiler::emitVcpuAsm("%PrintVarString", "_" + Compiler::getIntegerVars()[varIndex]._name, false, codeLineIndex);
+                        Compiler::emitVcpuAsm("%PrintVarString", "_" + varName, false, codeLineIndex);
                     }
                 }
             }
@@ -1133,6 +1134,10 @@ namespace Keywords
 
     bool keywordFOR(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
+        bool optimise = true;
+        int varIndex, constIndex;
+        uint32_t expressionType;
+
         // Parse first line of FOR loop
         bool foundStep = false;
         std::string code = codeLine._code;
@@ -1150,38 +1155,6 @@ namespace Keywords
         }
         step = code.find("STEP");
 
-        // Loop start
-        int16_t loopStart = 0;
-        std::string startToken = codeLine._code.substr(equals + 1, to - (equals + 1));
-        Expression::stripWhitespace(startToken);
-
-        // Var counter, (create or update if being reused)
-        std::string var = codeLine._code.substr(foundPos, equals - foundPos);
-        Expression::stripWhitespace(var);
-        int varIndex = Compiler::findVar(var);
-        (varIndex < 0) ? Compiler::createIntVar(var, loopStart, 0, codeLine, codeLineIndex, false, varIndex) : Compiler::updateVar(loopStart, codeLine, varIndex, false);
-
-        // Loop end
-        int16_t loopEnd = 0;
-        size_t end = (step == std::string::npos) ? codeLine._code.size() : step;
-        std::string endToken = codeLine._code.substr(to + 2, end - (to + 2));
-        Expression::stripWhitespace(endToken);
-
-        // Loop step
-        int16_t loopStep = 1;
-        std::string stepToken;
-        if(step != std::string::npos)
-        {
-            end = codeLine._code.size();
-            stepToken = codeLine._code.substr(step + 4, end - (step + 4));
-            Expression::stripWhitespace(stepToken);
-        }
-        if(stepToken.size() != 0  &&  !Expression::stringToI16(stepToken, loopStep))
-        {
-            fprintf(stderr, "Compiler::keywordFOR() : Syntax error, STEP value must be a constant, in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
-            return false;
-        }
-
         // Maximum of 4 nested loops
         if(Compiler::getForNextDataStack().size() == 4)
         {
@@ -1194,45 +1167,110 @@ namespace Keywords
         uint16_t varEnd = LOOP_VAR_START + offset;
         uint16_t varStep = LOOP_VAR_START + offset + 2;
 
-        // Optimised case for 8bit constants
-        bool optimise = false;
-        if(Expression::stringToI16(startToken, loopStart)  &&  Expression::stringToI16(endToken, loopEnd))
+        // Loop start
+        int16_t loopStart = 0;
+        std::string startToken = codeLine._code.substr(equals + 1, to - (equals + 1));
+        Expression::stripWhitespace(startToken);
+        expressionType = Compiler::isExpression(startToken, varIndex, constIndex);
+        if((expressionType & Expression::HasVars)  ||  (expressionType & Expression::HasKeywords)  ||  (expressionType & Expression::HasFunctions)) optimise = false;
+
+        // Var counter, (create or update if being reused)
+        std::string var = codeLine._code.substr(foundPos, equals - foundPos);
+        Expression::stripWhitespace(var);
+        int varCounter = Compiler::findVar(var);
+        (varCounter < 0) ? Compiler::createIntVar(var, loopStart, 0, codeLine, codeLineIndex, false, varCounter) : Compiler::updateVar(loopStart, codeLine, varCounter, false);
+
+        // Loop end
+        int16_t loopEnd = 0;
+        size_t end = (step == std::string::npos) ? codeLine._code.size() : step;
+        std::string endToken = codeLine._code.substr(to + 2, end - (to + 2));
+        Expression::stripWhitespace(endToken);
+        expressionType = Compiler::isExpression(endToken, varIndex, constIndex);
+        if((expressionType & Expression::HasVars)  ||  (expressionType & Expression::HasKeywords)  ||  (expressionType & Expression::HasFunctions)) optimise = false;
+
+        // Loop step
+        int16_t loopStep = 1;
+        std::string stepToken;
+        if(step != std::string::npos)
         {
-            if(loopStart >=0  &&  loopStart <= 255  &&  loopEnd >=0  &&  loopEnd <= 255  &&  abs(loopStep) == 1)
-            {
-                optimise = true;
-                loopStep = (loopEnd >= loopStart) ? 1 : -1; // auto step based on start and end
-                Compiler::emitVcpuAsm("LDI", std::to_string(loopStart), false, codeLineIndex);
-                Compiler::emitVcpuAsm("STW", "_" + Compiler::getIntegerVars()[varIndex]._name, false, codeLineIndex);
-            }
+            end = codeLine._code.size();
+            stepToken = codeLine._code.substr(step + 4, end - (step + 4));
+            Expression::stripWhitespace(stepToken);
+            expressionType = Compiler::isExpression(stepToken, varIndex, constIndex);
+            if((expressionType & Expression::HasVars)  ||  (expressionType & Expression::HasKeywords)  ||  (expressionType & Expression::HasFunctions)) optimise = false;
         }
 
-        // General purpose supports 16bit, expressions and variables
-        if(!optimise)
+        Expression::Numeric startNumeric, endNumeric, stepNumeric;
+        if(optimise)
         {
-            // Parse start field
-            Expression::Numeric numeric;
-            numeric._value = loopStart;
-            uint32_t expressionType = parseExpression(codeLine, codeLineIndex, startToken, numeric, 0);
-            loopStart = numeric._value;
-            Compiler::emitVcpuAsm("STW", "_" + Compiler::getIntegerVars()[varIndex]._name, false, codeLineIndex);
+            // Parse start
+            Expression::parse(startToken, codeLineIndex, startNumeric);
+            loopStart = startNumeric._value;
 
-            // Parse end field
-            numeric._value = loopEnd;
-            expressionType = parseExpression(codeLine, codeLineIndex, endToken, numeric, 0);
-            loopEnd = numeric._value;
+            // Parse end
+            Expression::parse(endToken, codeLineIndex, endNumeric);
+            loopEnd = endNumeric._value;
+
+            // Parse step
+            if(stepToken.size())
+            {
+                Expression::parse(stepToken, codeLineIndex, stepNumeric);
+                loopStep = stepNumeric._value;
+            }
+            else
+            {
+                // Auto step based on start and end
+                loopStep = (loopEnd >= loopStart) ? 1 : -1;
+            }
+
+            // Optimised case for 8bit constants
+            if(optimise  &&  startNumeric._isValid  &&  loopStart >= 0  &&  loopStart <= 255  &&  endNumeric._isValid  &&  loopEnd >= 0  &&  loopEnd <= 255)
+            {
+                Compiler::emitVcpuAsm("LDI", std::to_string(loopStart), false, codeLineIndex);
+                Compiler::emitVcpuAsm("STW", "_" + Compiler::getIntegerVars()[varCounter]._name, false, codeLineIndex);
+            }
+            // 16bit constants
+            else
+            {
+                optimise = false;
+
+                Compiler::emitVcpuAsm("LDWI", std::to_string(loopStart), false, codeLineIndex);
+                Compiler::emitVcpuAsm("STW", "_" + Compiler::getIntegerVars()[varCounter]._name, false, codeLineIndex);
+                Compiler::emitVcpuAsm("LDWI", std::to_string(loopEnd), false, codeLineIndex);
+                Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(varEnd)), false, codeLineIndex);
+                Compiler::emitVcpuAsm("LDWI", std::to_string(loopStep), false, codeLineIndex);
+                Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(varStep)), false, codeLineIndex);
+            }
+        }
+        else
+        {
+            // Parse start
+            parseExpression(codeLine, codeLineIndex, startToken, startNumeric);
+            loopStart = startNumeric._value;
+            Compiler::emitVcpuAsm("STW", "_" + Compiler::getIntegerVars()[varCounter]._name, false, codeLineIndex);
+
+            // Parse end
+            parseExpression(codeLine, codeLineIndex, endToken, endNumeric);
+            loopEnd = endNumeric._value;
             Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(varEnd)), false, codeLineIndex);
 
-            // Parse step field
-            int16_t replace = 1; // if step is 0, replace it with 1
-            numeric._value = loopStep;
-            expressionType = parseExpression(codeLine, codeLineIndex, stepToken, numeric, replace);
-            loopStep = numeric._value;
+            // Parse step
+            if(stepToken.size())
+            {
+                parseExpression(codeLine, codeLineIndex, stepToken, stepNumeric);
+                loopStep = stepNumeric._value;
+            }
+            else
+            {
+                loopStep = 1;
+                Compiler::emitVcpuAsm("LDI", std::to_string(loopStep), false, codeLineIndex);
+            }
             Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(varStep)), false, codeLineIndex);
         }
 
+        // Label and stack
         Compiler::setNextInternalLabel("_next_" + Expression::wordToHexString(Compiler::getVasmPC()));
-        Compiler::getForNextDataStack().push({varIndex, Compiler::getNextInternalLabel(), loopEnd, loopStep, varEnd, varStep, optimise, codeLineIndex});
+        Compiler::getForNextDataStack().push({varCounter, Compiler::getNextInternalLabel(), loopEnd, loopStep, varEnd, varStep, optimise, codeLineIndex});
 
         return true;
     }
@@ -1268,17 +1306,23 @@ namespace Keywords
             return false;
         }
 
+        std::string varName = Compiler::getIntegerVars()[varIndex]._name;
+        std::string labName = forNextData._labelName;
+        int16_t loopEnd = forNextData._loopEnd;
+        uint16_t varEnd = forNextData._varEnd;
+        uint16_t varStep = forNextData._varStep;
+
         if(forNextData._optimise)
         {
             // Positive step
             if(forNextData._loopStep > 0)
             {
-                Compiler::emitVcpuAsm("%ForNextLoopUp", "_" + Compiler::getIntegerVars()[varIndex]._name + " " + forNextData._labelName + " " + std::to_string(forNextData._loopEnd), false, codeLineIndex);
+                Compiler::emitVcpuAsm("%ForNextLoopUp", "_" + varName + " " + labName + " " + std::to_string(loopEnd), false, codeLineIndex);
             }
             // Negative step
             else
             {
-                Compiler::emitVcpuAsm("%ForNextLoopDown", "_" + Compiler::getIntegerVars()[varIndex]._name + " " + forNextData._labelName + " " + std::to_string(forNextData._loopEnd), false, codeLineIndex);
+                Compiler::emitVcpuAsm("%ForNextLoopDown", "_" + varName + " " + labName + " " + std::to_string(loopEnd), false, codeLineIndex);
             }
         }
         else
@@ -1286,11 +1330,11 @@ namespace Keywords
             // Positive step
             if(forNextData._loopStep > 0)
             {
-                Compiler::emitVcpuAsm("%ForNextLoopStepUp", "_" + Compiler::getIntegerVars()[varIndex]._name + " " + forNextData._labelName + " " + Expression::byteToHexString(uint8_t(forNextData._varEnd)) + " " + Expression::byteToHexString(uint8_t(forNextData._varStep)), false, codeLineIndex);
+                Compiler::emitVcpuAsm("%ForNextLoopStepUp", "_" + varName + " " + labName + " " + Expression::byteToHexString(uint8_t(varEnd)) + " " + Expression::byteToHexString(uint8_t(varStep)), false, codeLineIndex);
             }
             else
             {
-                Compiler::emitVcpuAsm("%ForNextLoopStepDown", "_" + Compiler::getIntegerVars()[varIndex]._name + " " + forNextData._labelName + " " + Expression::byteToHexString(uint8_t(forNextData._varEnd)) + " " + Expression::byteToHexString(uint8_t(forNextData._varStep)), false, codeLineIndex);
+                Compiler::emitVcpuAsm("%ForNextLoopStepDown", "_" + varName + " " + labName + " " + Expression::byteToHexString(uint8_t(varEnd)) + " " + Expression::byteToHexString(uint8_t(varStep)), false, codeLineIndex);
             }
         }
 
@@ -1512,8 +1556,8 @@ namespace Keywords
         Compiler::setNextInternalLabel("_endif_" + Expression::wordToHexString(Compiler::getVasmPC()));
         std::string nextInternalLabel = Compiler::getNextInternalLabel() + " " + std::to_string(Compiler::incJumpFalseUniqueId());
 
-        // Update elseif's jump to this new label
-        if(ifElseEndType == Compiler::ElseIfBlock)
+        // Update if's/elseif's jump to this new label
+        if(ifElseEndType == Compiler::IfBlock  ||  ifElseEndType == Compiler::ElseIfBlock)
         {
             Compiler::VasmLine* vasm = &Compiler::getCodeLines()[codeIndex]._vasm[jmpIndex];
             switch(conditionType)
@@ -1676,15 +1720,17 @@ namespace Keywords
         // Integer
         else
         {
-            int16_t data = 0;
             Expression::stripWhitespace(tokens[1]);
-            if(tokens[1].size() == 0  ||  !Expression::stringToI16(tokens[1], data))
+
+            Expression::Numeric numeric;
+            Expression::parse(tokens[1], codeLineIndex, numeric);
+            if(tokens[1].size() == 0  ||  !numeric._isValid  ||  numeric._isAddress)
             {
-                fprintf(stderr, "Compiler::keywordCONST() : Syntax error, invalid integer, in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+                fprintf(stderr, "Compiler::keywordCONST() : Syntax error, invalid constant expression, in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
                 return false;
             }
 
-            Compiler::getConstants().push_back({data, 0x0000, tokens[0], "_" + tokens[0], Compiler::ConstInt16});
+            Compiler::getConstants().push_back({numeric._value, 0x0000, tokens[0], "_" + tokens[0], Compiler::ConstInt16});
         }
 
         return true;
