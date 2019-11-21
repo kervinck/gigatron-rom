@@ -1188,44 +1188,44 @@ namespace Compiler
         // Functions
         else if(Expression::find("CHR$"))
         {
-            numeric = factor(0); numeric = Keywords::functionCHR$(numeric);
+            numeric = Keywords::functionCHR$(factor(0));
         }
         else if(Expression::find("HEX$"))
         {
-            numeric = factor(0); numeric = Keywords::functionHEX$(numeric);
+            numeric = Keywords::functionHEX$(factor(0));
         }
         else if(Expression::find("HEXW$"))
         {
-            numeric = factor(0); numeric = Keywords::functionHEXW$(numeric);
+            numeric = Keywords::functionHEXW$(factor(0));
         }
         else if(Expression::find("PEEK"))
         {
-            numeric = factor(0); numeric = Keywords::functionPEEK(numeric);
+            numeric = Keywords::functionPEEK(factor(0));
         }
         else if(Expression::find("DEEK"))
         {
-            numeric = factor(0); numeric = Keywords::functionDEEK(numeric);
+            numeric = Keywords::functionDEEK(factor(0));
         }
         else if(Expression::find("USR"))
         {
-            numeric = factor(0); numeric = Keywords::functionUSR(numeric);
+            numeric = Keywords::functionUSR(factor(0));
         }
         else if(Expression::find("RND"))
         {
-            numeric = factor(0); numeric = Keywords::functionRND(numeric);
+            numeric = Keywords::functionRND(factor(0));
         }
         // Unary operators
         else if(Expression::find("NOT"))
         {
-            numeric = factor(0); numeric = Operators::operatorNOT(numeric);
+            numeric = Operators::operatorNOT(factor(0));
         }
         else
         {
             switch(peek(false))
             {
                 // Unary operators
-                case '+': get(false); numeric = factor(0);                                            break;
-                case '-': get(false); numeric = factor(0); numeric = Operators::operatorNEG(numeric); break;
+                case '+': get(false); numeric = factor(0);                         break;
+                case '-': get(false); numeric = Operators::operatorNEG(factor(0)); break;
 
                 // Reached end of expression
                 case 0: numeric = Expression::Numeric(defaultValue, -1, false, false, Expression::NormalCC, std::string("")); break;
@@ -1243,7 +1243,9 @@ namespace Compiler
                         // Arrays
                         if(_integerVars[varIndex]._varType == VarArray)
                         {
-                            numeric = factor(0); numeric._index = varIndex; numeric = Keywords::functionARR(numeric);
+                            numeric = factor(0); 
+                            numeric._index = varIndex;
+                            numeric = Keywords::functionARR(numeric);
                         }
                         // Vars
                         else
@@ -1270,8 +1272,8 @@ namespace Compiler
                     {
                         numeric = Expression::Numeric(defaultValue, -1, false, false, Expression::NormalCC, std::string(""));
                         if(varName.size()) fprintf(stderr, "\nCompiler::factor() : Found an unknown symbol '%s' : in '%s' on line %d\n\n", varName.c_str(), 
-                                                                                                                                         _codeLines[_currentCodeLineIndex]._code.c_str(),
-                                                                                                                                         Expression::getLineNumber() + 1);
+                                                                                                                                           _codeLines[_currentCodeLineIndex]._code.c_str(),
+                                                                                                                                           Expression::getLineNumber() + 1);
                         _PAUSE_
                     }
                 }
@@ -1284,58 +1286,78 @@ namespace Compiler
 
     Expression::Numeric term(void)
     {
-        Expression::Numeric f, result = factor(0);
+        Expression::Numeric result = factor(0);
 
         for(;;)
         {
-            if(peek(false) == '*')           {get(false);f = factor(0);result = Operators::operatorMUL(result, f);}
-            else if(peek(false) == '/')      {get(false);f = factor(0);result = Operators::operatorDIV(result, f);}
-            else if(peek(false) == '%')      {get(false);f = factor(0);result = Operators::operatorMOD(result, f);}
-            else if(Expression::find("MOD")) {           f = factor(0);result = Operators::operatorMOD(result, f);}
-            else if(Expression::find("AND")) {           f = factor(0);result = Operators::operatorAND(result, f);}
+            if(peek(false) == '*')           {get(false); result = Operators::operatorMUL(result, factor(0));}
+            else if(peek(false) == '/')      {get(false); result = Operators::operatorDIV(result, factor(0));}
+            else if(peek(false) == '%')      {get(false); result = Operators::operatorMOD(result, factor(0));}
+            else if(Expression::find("MOD")) {            result = Operators::operatorMOD(result, factor(0));}
+            else return result;
+        }
+    }
+
+    Expression::Numeric expr(void)
+    {
+        Expression::Numeric result = term();
+
+        for(;;)
+        {
+            if(peek(false) == '+')      {get(false); result = Operators::operatorADD(result, term());}
+            else if(peek(false) == '-') {get(false); result = Operators::operatorSUB(result, term());}
+
+            else return result;
+        }
+    }
+
+    Expression::Numeric logical(void)
+    {
+        Expression::Numeric result = expr();
+
+        for(;;)
+        {
+            if(Expression::find("AND"))      {result = Operators::operatorAND(result, expr());}
+            else if(Expression::find("XOR")) {result = Operators::operatorXOR(result, expr());}
+            else if(Expression::find("OR"))  {result = Operators::operatorOR(result,  expr());}
+            else if(Expression::find("LSL")) {result = Operators::operatorLSL(result, expr());}
+            else if(Expression::find("LSR")) {result = Operators::operatorLSR(result, expr());}
+            else if(Expression::find("<<"))  {result = Operators::operatorLSL(result, expr());}
+            else if(Expression::find(">>"))  {result = Operators::operatorLSR(result, expr());}
+
             else return result;
         }
     }
 
     Expression::Numeric expression(void)
     {
-        Expression::Numeric t, result = term();
+        Expression::Numeric result = logical();
 
         for(;;)
         {
-            if(peek(false) == '+')            {get(false);t = term();result = Operators::operatorADD(result, t);}
-            else if(peek(false) == '-')       {get(false);t = term();result = Operators::operatorSUB(result, t);}
-                                                                                                              
-            else if(Expression::find("XOR"))  {t = term();result = Operators::operatorXOR(result, t);}
-            else if(Expression::find("OR"))   {t = term();result = Operators::operatorOR(result,  t);}
-            else if(Expression::find("LSL"))  {t = term();result = Operators::operatorLSL(result, t);}
-            else if(Expression::find("LSR"))  {t = term();result = Operators::operatorLSR(result, t);}
-            else if(Expression::find("<<"))   {t = term();result = Operators::operatorLSL(result, t);}
-            else if(Expression::find(">>"))   {t = term();result = Operators::operatorLSR(result, t);}
-
             // Boolean conditionals
-            else if(peek(false) == '=')       {get(false);t = term();result = Operators::operatorEQ(result,  t, Expression::BooleanCC);}
-            else if(Expression::find("<>"))   {           t = term();result = Operators::operatorNE(result,  t, Expression::BooleanCC);}
-            else if(Expression::find("<="))   {           t = term();result = Operators::operatorLE(result,  t, Expression::BooleanCC);}
-            else if(Expression::find(">="))   {           t = term();result = Operators::operatorGE(result,  t, Expression::BooleanCC);}
-            else if(peek(false) == '<')       {get(false);t = term();result = Operators::operatorLT(result,  t, Expression::BooleanCC);}
-            else if(peek(false) == '>')       {get(false);t = term();result = Operators::operatorGT(result,  t, Expression::BooleanCC);}
+            if(peek(false) == '=')          {get(false); result = Operators::operatorEQ(result, logical(), Expression::BooleanCC);}
+            else if(Expression::find("<>")) {            result = Operators::operatorNE(result, logical(), Expression::BooleanCC);}
+            else if(Expression::find("<=")) {            result = Operators::operatorLE(result, logical(), Expression::BooleanCC);}
+            else if(Expression::find(">=")) {            result = Operators::operatorGE(result, logical(), Expression::BooleanCC);}
+            else if(peek(false) == '<')     {get(false); result = Operators::operatorLT(result, logical(), Expression::BooleanCC);}
+            else if(peek(false) == '>')     {get(false); result = Operators::operatorGT(result, logical(), Expression::BooleanCC);}
 
             // Normal conditionals
-            else if(Expression::find("&="))   {t = term();result = Operators::operatorEQ(result,  t, Expression::NormalCC);}
-            else if(Expression::find("&<>"))  {t = term();result = Operators::operatorNE(result,  t, Expression::NormalCC);}
-            else if(Expression::find("&<="))  {t = term();result = Operators::operatorLE(result,  t, Expression::NormalCC);}
-            else if(Expression::find("&>="))  {t = term();result = Operators::operatorGE(result,  t, Expression::NormalCC);}
-            else if(Expression::find("&<"))   {t = term();result = Operators::operatorLT(result,  t, Expression::NormalCC);}
-            else if(Expression::find("&>"))   {t = term();result = Operators::operatorGT(result,  t, Expression::NormalCC);}
+            else if(Expression::find("&="))  {result = Operators::operatorEQ(result, logical(), Expression::NormalCC);}
+            else if(Expression::find("&<>")) {result = Operators::operatorNE(result, logical(), Expression::NormalCC);}
+            else if(Expression::find("&<=")) {result = Operators::operatorLE(result, logical(), Expression::NormalCC);}
+            else if(Expression::find("&>=")) {result = Operators::operatorGE(result, logical(), Expression::NormalCC);}
+            else if(Expression::find("&<"))  {result = Operators::operatorLT(result, logical(), Expression::NormalCC);}
+            else if(Expression::find("&>"))  {result = Operators::operatorGT(result, logical(), Expression::NormalCC);}
 
             // Fast conditionals
-            else if(Expression::find("&&="))  {t = term();result = Operators::operatorEQ(result,  t, Expression::FastCC);}
-            else if(Expression::find("&&<>")) {t = term();result = Operators::operatorNE(result,  t, Expression::FastCC);}
-            else if(Expression::find("&&<=")) {t = term();result = Operators::operatorLE(result,  t, Expression::FastCC);}
-            else if(Expression::find("&&>=")) {t = term();result = Operators::operatorGE(result,  t, Expression::FastCC);}
-            else if(Expression::find("&&<"))  {t = term();result = Operators::operatorLT(result,  t, Expression::FastCC);}
-            else if(Expression::find("&&>"))  {t = term();result = Operators::operatorGT(result,  t, Expression::FastCC);}
+            else if(Expression::find("&&="))  {result = Operators::operatorEQ(result, logical(), Expression::FastCC);}
+            else if(Expression::find("&&<>")) {result = Operators::operatorNE(result, logical(), Expression::FastCC);}
+            else if(Expression::find("&&<=")) {result = Operators::operatorLE(result, logical(), Expression::FastCC);}
+            else if(Expression::find("&&>=")) {result = Operators::operatorGE(result, logical(), Expression::FastCC);}
+            else if(Expression::find("&&<"))  {result = Operators::operatorLT(result, logical(), Expression::FastCC);}
+            else if(Expression::find("&&>"))  {result = Operators::operatorGT(result, logical(), Expression::FastCC);}
 
             else return result;
         }

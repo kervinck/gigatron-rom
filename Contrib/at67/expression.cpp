@@ -864,7 +864,6 @@ namespace Expression
         else
         {
             // Functions
-            
 
             // Unary operators
             switch(peek())
@@ -873,6 +872,7 @@ namespace Expression
                 case '-': get(); numeric = factor(0); numeric = neg(numeric); break;
                 case '~': get(); numeric = factor(0); numeric = not(numeric); break;
 
+                // Unknown
                 default: numeric = Numeric(defaultValue, -1, true, true, NormalCC, std::string(_expression)); break;
             }
         }
@@ -882,40 +882,59 @@ namespace Expression
 
     Numeric term(void)
     {
-        Numeric f, result = factor(0);
+        Numeric result = factor(0);
 
         for(;;)
         {
-            if(peek() == '*')      {get(); f = factor(0); result = mul(result, f);}
-            else if(peek() == '/') {get(); f = factor(0); result = div(result, f);}
-            else if(peek() == '%') {get(); f = factor(0); result = mod(result, f);}
-            else if(peek() == '&') {get(); f = factor(0); result = and(result, f);}
+            if(peek() == '*')      {get(); result = mul(result, factor(0));}
+            else if(peek() == '/') {get(); result = div(result, factor(0));}
+            else if(peek() == '%') {get(); result = mod(result, factor(0));}
+            else return result;
+        }
+    }
+
+    Numeric expr(void)
+    {
+        Numeric result = term();
+    
+        for(;;)
+        {
+            if(peek() == '+')      {get(); result = add(result, term());}
+            else if(peek() == '-') {get(); result = sub(result, term());}
+            else return result;
+        }
+    }
+
+    Numeric logical(void)
+    {
+        Numeric result = expr();
+    
+        for(;;)
+        {
+            if(peek() == '&')      {get(); result = and(result, expr());}
+            else if(peek() == '^') {get(); result = xor(result, expr());}
+            else if(peek() == '|') {get(); result = or(result,  expr());}
+            else if(find("<<"))    {       result = lsl(result, expr());}
+            else if(find(">>"))    {       result = lsr(result, expr());}
             else return result;
         }
     }
 
     Numeric expression(void)
     {
-        Numeric t, result = term();
+        Numeric result = logical();
     
         for(;;)
         {
-            if(peek() == '+')      {get(); t = term(); result = add(result, t);}
-            else if(peek() == '-') {get(); t = term(); result = sub(result, t);}
-            else if(peek() == '^') {get(); t = term(); result = xor(result, t);}
-            else if(peek() == '|') {get(); t = term(); result = or(result,  t);}
-            else if(find("<<"))    {       t = term(); result = lsl(result, t);}
-            else if(find(">>"))    {       t = term(); result = lsr(result, t);}
-            else if(find("=="))    {       t = term(); result = eq(result,  t);}
-            else if(find("!="))    {       t = term(); result = ne(result,  t);}
-            else if(find("<="))    {       t = term(); result = le(result,  t);}
-            else if(find(">="))    {       t = term(); result = ge(result,  t);}
-            else if(peek() == '<') {get(); t = term(); result = lt(result,  t);}
-            else if(peek() == '>') {get(); t = term(); result = gt(result,  t);}
+            if(find("=="))         {       result = eq(result, logical());}
+            else if(find("!="))    {       result = ne(result, logical());}
+            else if(find("<="))    {       result = le(result, logical());}
+            else if(find(">="))    {       result = ge(result, logical());}
+            else if(peek() == '<') {get(); result = lt(result, logical());}
+            else if(peek() == '>') {get(); result = gt(result, logical());}
             else return result;
         }
     }
-
 
     bool parse(const std::string& expression, int lineNumber, Numeric& numeric)
     {
