@@ -104,6 +104,7 @@
 #  DONE MSBASIC
 #  XXX  MSBASIC spurious pi-symbols
 #  XXX  MSBASIC QT_BASIC
+#  DONE Speed up SetMemory by 300% using bursts #126
 #  XXX  Add CMPHS/CMPHU instructions to vCPU XXX Only needs testing
 #  XXX  SPI: Boot from any *.GT1 file if SDC/MMC detected
 #  XXX  SPI: Tutorial on formatting FAT32 partitions
@@ -127,7 +128,6 @@
 #  XXX  Main: Some startup logo as intro?
 #  XXX  Faster SYS_Exec_88, with start address (GT1)?
 #  XXX  Let SYS_Exec_88 clear channelMask when loading into live variables
-#  XXX  Speed up SetMemory by 300% using bursts #126
 #  XXX  Use `inspect' to make program listing with original comments
 #  XXX  ROM functions: SYS_PrintString, control codes, SYS_DrawChar  SYS_Newline
 #  XXX  Babelfish freeze at power-on?
@@ -2526,6 +2526,12 @@ jmp(Y,'REENTER')                #42
 #-----------------------------------------------------------------------
 
 # Read 3 consecutive bytes from ROM
+#
+# Note: This function a bit obsolete, as it has very limited use. It's
+#       effectively an application-specific SYS function for the Pictures
+#       application from ROM v1. It requires the ROM data be organized
+#       with trampoline3a and trampoline3b fragments, and their address
+#       in ROM to be known. Better avoid using this.
 #
 # Variables:
 #       sysArgs[0:2]    Bytes (output)
