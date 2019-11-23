@@ -99,26 +99,42 @@
 #  DONE Fix zero page usage in Bricks and Tetronis #41
 #  DONE Add CALLI instruction to vCPU
 #  DONE Main: add Apple1 to main menu
-#  DONE Replace egg with MSBASIC
+#  DONE Replace egg with something new
+#  DONE Split interface.json and interface-dev.json
+#  DONE MSBASIC
+#  XXX  MSBASIC spurious pi-symbols
+#  XXX  MSBASIC QT_BASIC
 #  XXX  Add CMPHS/CMPHU instructions to vCPU XXX Only needs testing
-#  XXX  SPI: Boot from *.GT1 file if SDC/MMC detected
+#  XXX  SPI: Boot from any *.GT1 file if SDC/MMC detected
+#  XXX  SPI: Tutorial on formatting FAT32 partitions
+#  XXX  SPI: Simple command line interface (solve "EXE vs COM" dilemma)
 #  XXX  Reduce the Pictures application ROM footprint #120
 #  XXX  Discoverable ROM contents #46
 #  XXX  Formally Support SPI and RAM expander: publish in interface.json
 #  XXX  SPI: Auto-detect banking, 64K and 128K
+#  XXX  Vertical blank interrupt #125
 #  XXX  v6502: Test with Apple1 BASIC
-#  XXX  v6502: Stub D010-D013 with JSR targets for easier patching
+#  XXX  v6502: Memory mapped PIA emulation using interrupt (D010-D013)
 #  XXX  v6502: add 65c02 opcodes? http://nparker.llx.com/a2/opcodes.html
+#  XXX  Apple-1: Include A1 BASIC
+#  XXX  Apple-1: More blueish font?
+#  XXX  Apple-1: Original 2514 font? Suppress lower case?
+#  XXX  Apple-1: Include assembler
+#  XXX  Apple-1: Intercept cassette interface
 #  XXX  Racer: Make noise when crashing
 #  XXX  Racer: Control speed with up/down as well
 #  XXX  Main: Better startup chime
 #  XXX  Main: Some startup logo as intro?
 #  XXX  Faster SYS_Exec_88, with start address (GT1)?
 #  XXX  Let SYS_Exec_88 clear channelMask when loading into live variables
+#  XXX  Speed up SetMemory by 300% using bursts #126
+#  XXX  Use `inspect' to make program listing with original comments
+#  XXX  ROM functions: SYS_PrintString, control codes, SYS_DrawChar  SYS_Newline
+#  XXX  Babelfish freeze at power-on?
 #
 #  Ideas for ROM v6+
 #  XXX  Pucrunch (well documented) or eximozer 3.0.2 (better compression)
-#  XXX  SPI: Think about SPI modes
+#  XXX  SPI: Think about SPI modes (polarities)
 #  XXX  Reset.c and Main.c (that is: port these from GCL to C)
 #  XXX  Sprites by scan line 4 reset method? ("videoG"=graphics)
 #  XXX  Need keymaps in ROM? (perhaps undocumented if not tested)
@@ -145,6 +161,7 @@ import font_vX as font
 # Pre-loading the formal interface as a way to get warnings when
 # accidentally redefined with a different value
 loadBindings('interface.json')
+loadBindings('Core/interface-dev.json') # Provisional values for DEVROM
 
 # ROM type (see also Docs/GT1-files.txt)
 romTypeValue = symbol('romTypeValue_DEVROM')
@@ -379,39 +396,41 @@ def runVcpu(n, ref=None, returnTo=None):
   - If another interpreter than vCPU is active (v6502...), that one
     must adjust for the timing differences, because runVcpu wouldn't know."""
 
-  if returnTo is None:
-    # Return to next instruction
-    returnTo = pc() + 5
-
   overhead = runVcpu_overhead + vCPU_overhead
-  if returnTo == 0x100: # Special case for videoZ
+  if returnTo == 0x100:         # Special case for videoZ
     overhead -= 2
 
   if n is None:
-    # Set to maximum time slice
-    n = (128 + minTicks-1) * 2 + overhead
+    # (Clumsily) create a maximum time slice, corresponding to a vTicks
+    # value of 127 (giving 282 cycles). A higher value doesn't work because
+    # then SYS functions that just need 28 cycles (0 excess) won't start.
+    n = (127 + maxTicks) * 2 + overhead
 
   comment = 'Run vCPU for %s cycles gross' % n
   if ref:
     comment += ' (%s)' % ref
 
-  if n % 2 != (runVcpu_overhead + vCPU_overhead) % 2:
-    nop()                       # tick alignment
+  n -= overhead
+  assert n > 0
+
+  if n % 2 == 1:
+    nop()                       # Tick alignment
     comment = C(comment)
-    overhead += 1
+    n -= 1
+  assert n % 2 == 0
+
+  print 'runVcpu at $%04x net cycles %3s info %s' % (pc(), n, ref)
 
   if returnTo != 0x100:
+    if returnTo is None:
+      returnTo = pc() + 5       # Next instruction
     ld(returnTo&255)            #0
     comment = C(comment)
     st([vReturn])               #1
 
-  n -= overhead
-
-  print 'runVcpu at $%04x net cycles %3s info %s' % (pc(), n, ref)
-  n -= 2*maxTicks
-
-  assert n >= 0 and n % 2 == 0
   n /= 2
+  n -= maxTicks                 # First instruction always runs
+  assert n < 128
   assert n >= v6502_adjust
 
   ld([vCPUselect],Y)            #2
@@ -496,24 +515,24 @@ ctrl(0b01111100);               C('SCLK=0; Disable SPI slaves; Bank=01; Enable R
 #      `--------- B1
 # bit15 --------- MOSI = 0
 
-# Simple RAM test and size check by writing to [1<<n] and see if [0] changes.
-ld(1);                          C('RAM test and count')
+# Simple RAM test and size check by writing to [1<<n] and see if [0] changes or not.
+ld(1);                          C('Quick RAM test and count')
 label('.countMem0')
-st([memSize],Y)
+st([memSize],Y);                C('Store in RAM and load AC in Y')
 ld(255)
-xora([Y,0])
-st([Y,0])                       # Test if we can change and read back ok
-st([0])                         # Preserve (inverted) memory value in [0]
-xora([Y,0])
-bne(pc())                       # Just hang here on apparent RAM failure
+xora([Y,0]);                    C('Invert value from memory')
+st([Y,0]);                      C('Test RAM by writing the new value')
+st([0]);                        C('Copy result in [0]')
+xora([Y,0]);                    C('Read back and compare if written ok')
+bne(pc());                      C('Loop forever on RAM failure here')
 ld(255)
-xora([Y,0])
-st([Y,0])
-xora([0])
-beq('.countMem1')               # Wrapped and [0] changed as well
+xora([Y,0]);                    C('Invert memory value again')
+st([Y,0]);                      C('To restore original value')
+xora([0]);                      C('Compare with inverted copy')
+beq('.countMem1');              C('If equal, we wrapped around')
 ld([memSize])
-bra('.countMem0')
-adda(AC)
+bra('.countMem0');              C('Loop to test next address line')
+adda(AC);                       C('Executes in the branch delay slot!')
 label('.countMem1')
 
 # Momentarily wait to allow for debouncing of the reset switch by spinning
@@ -527,10 +546,10 @@ ld(255);                        C('Debounce reset button')
 label('.debounce')
 st([0])
 bne(pc())
-suba(1)
+suba(1);                        C('Branch delay slot')
 ld([0])
 bne('.debounce')
-suba(1)
+suba(1);                        C('Branch delay slot')
 
 # Update LEDs (memory is present and counted, reset is stable)
 ld(0b0001);                     C('LEDs |*OOO|')
@@ -603,7 +622,7 @@ ld(syncBits^hSync,OUT)
 ld(syncBits,OUT)
 
 ld(0)
-st([0]);                        C('Carry lookup ([0x80] in first line of vBlank)')
+st([0]);                        C('Carry lookup ([0x80] in 1st line of vBlank)')
 st([channel])
 st([soundTimer])
 
@@ -656,7 +675,7 @@ ld([vPC]);                      C('Force second SYS call')#35
 suba(2)                         #36
 st([vPC])                       #37
 nop()                           #38
-# Return to interprete7
+# Return to interpreter
 ld(hi('REENTER'),Y)             #39
 jmp(Y,'REENTER')                #40
 ld(-44/2)                       #41
@@ -1409,6 +1428,7 @@ bra('.next2')                   #0 Enter at '.next2' (so no startup overhead)
 C('vCPU interpreter')
 # --- Page boundary ---
 align(0x100,0x100)
+label('NEXTY')                  # Alternative for REENTER
 ld([vPC+1],Y)                   #1
 
 # Fetch next instruction and execute it, but only if there are sufficient
@@ -1453,14 +1473,14 @@ bra('NEXT')                     #18
 label('LD')
 ld(AC,X)                        #10,19
 ld([X])                         #11
-ld(hi('ld'),Y)                  #12
-jmp(Y,'ld')                     #13
+ld(hi('ld#15'),Y)               #12
+jmp(Y,'ld#15')                  #13
 st([vAC])                       #14
 
 # Instruction CMPHS: Adjust high byte for signed compare (vACH=XXX), 28 cycles
 label('CMPHS_DEVROM')
-ld(hi('cmphs'),Y)               #10
-jmp(Y,'cmphs')                  #11
+ld(hi('cmphs#13'),Y)            #10
+jmp(Y,'cmphs#13')               #11
 #ld(AC,X)                       #12 Overlap
 #
 # Instruction LDW: Load word from zero page (vAC=[D]+256*[D+1]), 20 cycles
@@ -1475,8 +1495,7 @@ ld([X])                         #16
 st([vAC+1])                     #17
 bra('NEXT')                     #18
 ld(-20/2)                       #19
-#dummy()                        #20 Overlap
-#
+
 # Instruction STW: Store word in zero page ([D],[D+1]=vAC&255,vAC>>8), 20 cycles
 label('STW')
 ld(AC,X)                        #10,20
@@ -1560,19 +1579,17 @@ label('LDI')
 st([vAC])                       #10
 ld(0)                           #11
 st([vAC+1])                     #12
-ld(-16/2)                       #13
-bra('NEXT')                     #14
-#dummy()                        #15 Overlap
-#
+bra('NEXTY')                    #13
+ld(-16/2)                       #14
+
 # Instruction ST: Store byte in zero page ([D]=vAC&255), 16 cycles
 label('ST')
 ld(AC,X)                        #10,15
 ld([vAC])                       #11
 st([X])                         #12
-ld(-16/2)                       #13
-bra('NEXT')                     #14
-#dummy()                        #15 Overlap
-#
+bra('NEXTY')                    #13
+ld(-16/2)                       #14
+
 # Instruction POP: Pop address from stack (vLR,vSP==[vSP]+256*[vSP+1],vSP+2), 26 cycles
 label('POP')
 ld([vSP],X)                     #10,15
@@ -1589,10 +1606,9 @@ label('.pop#20')
 ld([vPC])                       #20
 suba(1)                         #21
 st([vPC])                       #22
-ld(-26/2)                       #23
-bra('NEXT')                     #24
-#dummy()                        #25 Overlap
-#
+bra('NEXTY')                    #23
+ld(-26/2)                       #24
+
 # Conditional NE: Branch if not zero (if(vACL!=0)vPCL=D)
 label('NE')
 beq('.bcc#22')                  #20,25
@@ -1620,14 +1636,14 @@ adda([vAC])                     #12
 
 # Instruction ANDI: Logical-AND with small constant (vAC&=D), 22 cycles
 label('ANDI')
-ld(hi('andi'),Y)                #10
-jmp(Y,'andi')                   #11
+ld(hi('andi#13'),Y)             #10
+jmp(Y,'andi#13')                #11
 anda([vAC])                     #12
 
 # Instruction CALLI: Goto immediate address and remember vPC (vLR,vPC=vPC+3,$HHLL-2), 28 cycles
 label('CALLI_DEVROM')
-ld(hi('calli'),Y)               #10
-jmp(Y,'calli')                  #11
+ld(hi('calli#13'),Y)            #10
+jmp(Y,'calli#13')               #11
 ld([vPC])                       #12
 
 # Instruction ORI: Logical-OR with small constant (vAC|=D), 14 cycles
@@ -1647,21 +1663,20 @@ ld(-14/2)                       #13
 # Instruction BRA: Branch unconditionally (vPC=(vPC&0xff00)+D), 14 cycles
 label('BRA')
 st([vPC])                       #10
-ld(-14/2)                       #11
-bra('NEXT')                     #12
-#dummy()                        #13 Overlap
-#
-# Instruction INC: Increment zero page byte ([D]++), 22 cycles
+bra('NEXTY')                    #11
+ld(-14/2)                       #12
+
+# Instruction INC: Increment zero page byte ([D]++), 20 cycles
 label('INC')
 ld(AC,X)                        #10,13
-ld(hi('inc'),Y)                 #11
-jmp(Y,'inc')                    #12
+ld(hi('inc#14'),Y)              #11
+jmp(Y,'inc#14')                 #12
 ld(1)                           #13
 
 # Instruction CMPHU: Adjust high byte for unsigned compare (vACH=XXX), 28 cycles
 label('CMPHU_DEVROM')
-ld(hi('cmphu'),Y)               #10
-jmp(Y,'cmphu')                  #11
+ld(hi('cmphu#13'),Y)            #10
+jmp(Y,'cmphu#13')               #11
 #ld(AC,X)                       #12 Overlap
 #
 # Instruction ADDW: Word addition with zero page (vAC+=[D]+256*[D+1]), 28 cycles
@@ -1756,10 +1771,10 @@ label('REENTER')
 bra('NEXT');                    C('Return from SYS calls')#26
 ld([vPC+1],Y)                   #27
 
-# Instruction DEF: Define data or code (vAC,vPC=vPC+2,(vPC&0xff00)+D), 18 cycles
+# Instruction DEF: Define data or code (vAC,vPC=vPC+2,(vPC&0xff00)+D), 24 cycles
 label('DEF')
-ld(hi('def'),Y)                 #10
-jmp(Y,'def')                    #11
+ld(hi('def#13'),Y)              #10
+jmp(Y,'def#13')                 #11
 #st([vTmp])                     #12 Overlap
 #
 # Instruction CALL: Goto address and remember vPC (vLR,vPC=vPC+2,[D]+256*[D+1]-2), 26 cycles
@@ -1887,7 +1902,7 @@ jmp(Y,'REENTER')                #16
 ld(-20/2)                       #17
 
 # DEF implementation
-label('def')
+label('def#13')
 ld([vPC])                       #13
 adda(2)                         #14
 st([vAC])                       #15
@@ -1895,17 +1910,16 @@ ld([vPC+1])                     #16
 st([vAC+1])                     #17
 ld([vTmp])                      #18
 st([vPC])                       #19
-ld(hi('REENTER'),Y)             #20
-ld(-26/2)                       #21
-jmp(Y,'REENTER')                #22
-#nop()                          #23 Overlap
-#
+ld(hi('NEXTY'),Y)               #20
+jmp(Y,'NEXTY')                  #21
+ld(-24/2)                       #22
+
 # Clear vACH (continuation of ANDI and LD instructions)
-label('andi')
-nop()                           #13,23
+label('andi#13')
+nop()                           #13
 st([vAC])                       #14
 #
-label('ld')
+label('ld#15')
 ld(0)                           #15 Clear high byte
 st([vAC+1])                     #16
 ld(hi('REENTER'),Y)             #17
@@ -2016,7 +2030,7 @@ ld([vAC],X)                     #15
 ld([vAC+1],Y)                   #16
 ld([Y,X])                       #17
 st([vAC])                       #18
-label('lupReturn')              #Nice coincidence that lupReturn can be here
+label('lupReturn#19')           #Nice coincidence that lupReturn can be here
 ld(0)                           #19
 st([vAC+1])                     #20
 ld(hi('REENTER'),Y)             #21
@@ -2034,7 +2048,7 @@ ld(AC,X)                        #18
 ld([vAC])                       #19
 st([Y,Xpp])                     #20
 ld([vAC+1])                     #21
-st([Y,X])                       #22
+st([Y,X])                       #22 Not a suitable to use with REENTER_28
 ld(hi('REENTER'),Y)             #23
 jmp(Y,'REENTER')                #24
 ld(-28/2)                       #25
@@ -2246,13 +2260,12 @@ ld(-134/2)                      #131
 #-----------------------------------------------------------------------
 
 # INC implementation
-label('inc')
+label('inc#14')
 adda([X])                       #14
 st([X])                         #15
-ld(-22/2)                       #16
-ld(hi('REENTER'),Y)             #17
-jmp(Y,'REENTER')                #18
-nop()                           #19
+ld(hi('NEXTY'),Y)               #16
+jmp(Y,'NEXTY')                  #17
+ld(-20/2)                       #18
 
 #-----------------------------------------------------------------------
 #
@@ -3245,12 +3258,12 @@ st([vPC])                       #39
 ld(-46/2 - 3)                   #40
 ld(hi('REENTER'),Y)             #41
 jmp(Y,'REENTER')                #42
-#adda(3)                        #43 Overlap
+#dummy()                        #43 Overlap
 #
 #-----------------------------------------------------------------------
 #
-# CALLI implementation
-label('calli')
+# CALLI implementation (vCPU instruction)
+label('calli#13')
 adda(3)                         #13,43
 st([vLR])                       #14
 ld([vPC+1])                     #15
@@ -3264,8 +3277,8 @@ ld(hi('REENTER_28'),Y)          #22
 jmp(Y,'REENTER_28')             #23
 st([vPC+1])                     #24
 
-# CMPHS implementation
-label('cmphs')
+# CMPHS implementation (vCPU instruction)
+label('cmphs#13')
 ld(hi('REENTER'),Y)             #13
 ld([X])                         #14
 xora([vAC+1])                   #15
@@ -3282,8 +3295,8 @@ st([vAC+1])                     #22
 jmp(Y,'REENTER_28')             #23
 #dummy()                        #24 Overlap
 #
-# CMPHS implementation
-label('cmphu')
+# CMPHS implementation (vCPU instruction)
+label('cmphu#13')
 ld(hi('REENTER'),Y)             #13,24
 ld([X])                         #14
 xora([vAC+1])                   #15

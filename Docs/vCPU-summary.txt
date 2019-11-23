@@ -58,7 +58,7 @@ PUSH  $75       26 Push vLR on stack ([vSP-2],v[vSP-1],vSP=vLR&255,vLR>>8,vLR-2)
 POP   $63       26 Pop address from stack (vLR,vSP=[vSP]+256*[vSP+1],vSP+2)
 ALLOC $DF DD    14 Create or destroy stack frame (vSP+=D)
 SYS   $B4 DD   20+ Native function call using at most 2*T cycles, D=270-max(14,T)
-DEF   $CD DD    18 Define data or code (vAC,vPC=vPC+2,(vPC&0xff00)+D)
+DEF   $CD DD    26 Define data or code (vAC,vPC=vPC+2,(vPC&0xff00)+D)
 
 ----------------------------------------
 Experimental vCPU instructions in DEVROM
@@ -77,5 +77,6 @@ Changed cycle times
 LD    $1A DD    22 (was 18)
 INC   $93 DD    22 (was 16)
 ANDI  $82 DD    22 (was 16)
+DEF   $CD DD    24 (was 26)
 
 -- End of document --

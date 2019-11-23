@@ -309,24 +309,24 @@ ld(0b0000);                     C('LEDs |OOOO|')
 ld(syncBits^hSync, OUT)         # Prepare XOUT update, hSync goes down, RGB to black
 ld(syncBits, OUT)               # hSync goes up, updating XOUT
 
-# Simple RAM test and size check by writing to [1<<n] and see if [0] changes.
-ld(1);                          C('RAM test and count')
+# Simple RAM test and size check by writing to [1<<n] and see if [0] changes or not.
+ld(1);                          C('Quick RAM test and count')
 label('.countMem0')
-st([memSize], Y)
+st([memSize],Y);                C('Store in RAM and load AC in Y')
 ld(255)
-xora([Y,0])
-st([Y,0])                       # Test if we can change and read back ok
-st([0])                         # Preserve (inverted) memory value in [0]
-xora([Y,0])
-bne(pc())                       # Just hang here on apparent RAM failure
+xora([Y,0]);                    C('Invert value from memory')
+st([Y,0]);                      C('Test RAM by writing the new value')
+st([0]);                        C('Copy result in [0]')
+xora([Y,0]);                    C('Read back and compare if written ok')
+bne(pc());                      C('Loop forever on RAM failure here')
 ld(255)
-xora([Y,0])
-st([Y,0])
-xora([0])
-beq('.countMem1')               # Wrapped and [0] changed as well
+xora([Y,0]);                    C('Invert memory value again')
+st([Y,0]);                      C('To restore original value')
+xora([0]);                      C('Compare with inverted copy')
+beq('.countMem1');              C('If equal, we wrapped around')
 ld([memSize])
-bra('.countMem0')
-adda(AC)
+bra('.countMem0');              C('Loop to test next address line')
+adda(AC);                       C('Executes in the branch delay slot!')
 label('.countMem1')
 
 # Momentarily wait to allow for debouncing of the reset switch by spinning
@@ -1223,8 +1223,7 @@ ld([X])                         #16
 st([vAC+1])                     #17
 bra('NEXT')                     #18
 ld(-20/2)                       #19
-#nop()                          #(20)
-#
+
 # Instruction STW: Store word in zero page ([D],[D+1]=vAC&255,vAC>>8), 20 cycles
 label('STW')
 ld(AC, X)                       #10,20 (overlap with LDW)
@@ -1747,7 +1746,7 @@ ld([vAC], X)                    #15
 ld([vAC+1], Y)                  #16
 ld([Y,X])                       #17
 st([vAC])                       #18
-label('lupReturn')              #Nice coincidence that lupReturn can be here
+label('lupReturn#19')           #Nice coincidence that lupReturn can be here
 ld(0)                           #19
 st([vAC+1])                     #20
 ld(hi('REENTER'), Y)            #21
@@ -2437,7 +2436,7 @@ ld([vAC])                       #17
 # Extension SYS_SetMemory_v2_54
 #-----------------------------------------------------------------------
 
-# SYS function for setting 1..255 bytes
+# SYS function for setting 1..256 bytes
 #
 # sysArgs[0]   Copy count (destructive)
 # sysArgs[1]   Copy value

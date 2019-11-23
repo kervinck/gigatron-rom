@@ -128,8 +128,8 @@ Address   Name          Description
 0024-002b sysArgs       Arguments for SYS functions
 0024      (v6502_ADL)   [v6502] Low Address Register
 0025      (v6502_ADH)   [v6502] High Address Register
-0026      v6502_IR)     [v6502] Instruction Register
-0027-0029 (v6502_P)     [v6502] Processor Status Register (V flag in bit 7)
+0026      (v6502_IR)    [v6502] Instruction Register
+0027-0029 (v6502_P)     [v6502] Processor Status Register
 002a      v6502_X       [v6502] Index Register X
 002b      v6502_Y       [v6502] Index Register Y
 002c      soundTimer    Countdown timer for playing sound

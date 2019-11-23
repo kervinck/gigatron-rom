@@ -1,0 +1,9 @@
+
+Our online BASIC tutorial doesn't just talk about BASIC. It also explains
+some of the Gigatron internals, such as video and sound essentials.
+
+https://gigatron.io/?page_id=1234
+
+All example programs are in the BASIC/ directory
+
+-- End of document --
