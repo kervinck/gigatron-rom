@@ -2607,7 +2607,7 @@ ld([vReturn])                   #17
 # Extension SYS_SetMemory_v2_54
 #-----------------------------------------------------------------------
 
-# SYS function for setting 1..255 bytes
+# SYS function for setting 1..256 bytes
 #
 # sysArgs[0]   Copy count (destructive)
 # sysArgs[1]   Copy value

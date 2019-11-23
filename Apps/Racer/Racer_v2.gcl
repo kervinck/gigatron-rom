@@ -59,7 +59,7 @@ XXX Image compression?
   Pos     \sysArgs4:
   \SYS_VDrawBits_134 \sysFn:
   $fb i= [do
-    fontData 0? <fontData++ \sysArgs2. 134!
+    fontData 0? <fontData++ \sysArgs2. 134!!
     <\sysArgs4++
     <i++ i if<>0loop]
   Pos ret
@@ -209,12 +209,12 @@ XXX Image compression?
   {Draw side road segment of 2*Width pixels}
   Width 1<< \sysArgs0.          {Road width}
   Pos Width- p= \sysArgs2:      {Start point for left curb and road}
-  21 \sysArgs1. 54!             {Dark grey and call SYS_SetMemory_v2_54}
+  21 \sysArgs1. 54!!            {Dark grey and call SYS_SetMemory_v2_54}
 
   {Draw grass}
   128 Width- 1<< \sysArgs0.     {All remaining pixels become grass}
   Pos Width+ q= \sysArgs2:      {Start point for right curb and grass}
-  GrassColor \sysArgs1. 54!     {Green and call SYS_SetMemory_v2_54}
+  GrassColor \sysArgs1. 54!!    {Green and call SYS_SetMemory_v2_54}
 
   {Draw curbs of Width/8 pixels inwards}
   Width [do 8- if>0 tmp=
@@ -335,7 +335,7 @@ XXX Image compression?
   >HorizonX, s.
 
   {Copy to video table. This is most timing-critical for a smooth road update}
-  \SYS_RacerUpdateVideoX_40 \sysFn: 40!
+  \SYS_RacerUpdateVideoX_40 \sysFn: 40!!
   {This SYS call self-repeats for a total of 47 times and is equivalent to:
     [do
       q, X- p. p 4- p=
@@ -465,7 +465,7 @@ XXX Image compression?
   \SYS_RacerUpdateVideoY_40 \sysFn:
   [do
     q 8?
-    Distance+ \sysArgs3. 40!
+    Distance+ \sysArgs3. 40!!
     <q++
     if<>0loop]
 
@@ -533,7 +533,7 @@ XXX Image compression?
   $800    \sysArgs4:
   \SYS_VDrawBits_134 \sysFn:
   [do
-    134!
+    134!!
     <\sysArgs4++
     \sysArgs4, 160^ if<>0loop]
 
@@ -610,8 +610,8 @@ XXX Image compression?
   [do
     p 0? \sysArgs0. tmp!
       0? \sysArgs1. tmp!
-      0? \sysArgs2. tmp! \SYS_Unpack_56 \sysFn: 56!
-      q \sysArgs4: 4+ q= \SYS_Draw4_30  \sysFn: 30!
+      0? \sysArgs2. tmp! \SYS_Unpack_56 \sysFn: 56!!
+      q \sysArgs4: 4+ q= \SYS_Draw4_30  \sysFn: 30!!
     >q, $20^ if<>0loop]
 
   pop ret

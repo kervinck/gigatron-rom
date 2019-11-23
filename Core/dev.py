@@ -2853,19 +2853,20 @@ ld([vReturn])                   #17
 # Extension SYS_SetMemory_v2_54
 #-----------------------------------------------------------------------
 
-# SYS function for setting 1..255 bytes
+# SYS function for setting 1..256 bytes
 #
 # sysArgs[0]   Copy count (destructive)
 # sysArgs[1]   Copy value
 # sysArgs[2:3] Destination address (destructive)
 #
-# Sets up to 4 bytes per invocation before restarting itself through vCPU.
-# Doesn't wrap around page boundary.
+# Sets up to 8 bytes per invocation before restarting itself through vCPU.
+# Doesn't wrap around page boundary. Can run 3 times per 148-cycle time slice.
+# All combined that gives a 300% speedup over ROMv4 and before.
 
 label('SYS_SetMemory_v2_54')
-bra('sys_SetMemory')            #15
-ld([sysArgs+0])                 #16
-nop()                           #filler
+ld([sysArgs+0])                 #15
+bra('sys_SetMemory#18')         #16
+ld([sysArgs+2],X)               #17
 
 #-----------------------------------------------------------------------
 # Extension SYS_SendSerial1_v3_80
@@ -3028,58 +3029,69 @@ ld([sysArgs+0],X);              C('Fetch byte to send')#17
 #-----------------------------------------------------------------------
 
 # SYS_SetMemory_54 implementation
-label('sys_SetMemory')
-suba(1)                         #17
-st([sysArgs+0])                 #18
-ld([sysArgs+2],X)               #19
-ld([sysArgs+3],Y)               #20
-ld([sysArgs+1])                 #21
-st([Y,Xpp]);                    C('Copy byte 1')#22
-ld([sysArgs+0])                 #23
-beq('.sysSb1')                  #24
-suba(1)                         #25
-st([sysArgs+0])                 #26
-ld([sysArgs+1])                 #27
-st([Y,Xpp]);                    C('Copy byte 2')#28
-ld([sysArgs+0])                 #29
-beq('.sysSb2')                  #30
-suba(1)                         #31
-st([sysArgs+0])                 #32
-ld([sysArgs+1])                 #33
-st([Y,Xpp]);                    C('Copy byte 3')#34
+label('sys_SetMemory#18')
+ld([sysArgs+3],Y)               #18
+ble('.sysSb#21')                #19 Enter fast lane if >=128 or at 0 (-> 256)
+suba(8)                         #20
+bge('.sysSb#23')                #21 Or when >=8
+st([sysArgs+0])                 #22
+anda(4)                         #23
+beq('.sysSb#26')                #24
+ld([sysArgs+1]);                C('Set 4 pixels')#25
+st([Y,Xpp])                     #26
+st([Y,Xpp])                     #27
+st([Y,Xpp])                     #28
+bra('.sysSb#31')                #29
+st([Y,Xpp])                     #30
+label('.sysSb#26')
+wait(31-26)                     #26
+label('.sysSb#31')
+ld([sysArgs+0])                 #31
+anda(2)                         #32
+beq('.sysSb#35')                #33
+ld([sysArgs+1]);                C('Set 2 pixels')#34
+st([Y,Xpp])                     #35
+bra('.sysSb#38')                #36
+st([Y,Xpp])                     #37
+label('.sysSb#35')
+wait(38-35)                     #35
+label('.sysSb#38')
+ld([sysArgs+0])                 #38
+anda(1)                         #39
+beq(pc()+3)                     #40
+bra(pc()+3)                     #41
+ld([sysArgs+1]);                C('Set 1 pixel')#42
+ld([Y,X])                       #42(!) No change
+st([Y,X])                       #43
+ld(hi('NEXTY'),Y)               #44 Return
+jmp(Y,'NEXTY');                 C('All done')#45
+ld(-48/2)                       #46
+label('.sysSb#21')
+nop()                           #21
+st([sysArgs+0])                 #22
+label('.sysSb#23')
+ld([sysArgs+1]);                C('Set 8 pixels')#23
+st([Y,Xpp])                     #24
+st([Y,Xpp])                     #25
+st([Y,Xpp])                     #26
+st([Y,Xpp])                     #27
+st([Y,Xpp])                     #28
+st([Y,Xpp])                     #29
+st([Y,Xpp])                     #30
+st([Y,Xpp])                     #31
+ld([sysArgs+2])                 #32 Advance write pointer
+adda(8)                         #33
+st([sysArgs+2])                 #34
 ld([sysArgs+0])                 #35
-beq('.sysSb3')                  #36
-suba(1)                         #37
-st([sysArgs+0])                 #38
-ld([sysArgs+1])                 #39
-st([Y,Xpp]);                    C('Copy byte 4')#40
-ld([sysArgs+0])                 #41
-beq('.sysSb4')                  #42
-ld([vPC])                       #43 Self-restarting SYS call
-suba(2)                         #44
-st([vPC])                       #45
-ld([sysArgs+2])                 #46
-adda(4)                         #47
-st([sysArgs+2])                 #48
-ld(hi('REENTER'),Y)             #49 Return fragments
-jmp(Y,'REENTER')                #50
-label('.sysSb1')
-ld(-54/2)                       #51,26
-ld(hi('REENTER'),Y)             #27
-jmp(Y,'REENTER')                #28
-label('.sysSb2')
-ld(-32/2)                       #29,32
-ld(hi('REENTER'),Y)             #33
-jmp(Y,'REENTER')                #34
-label('.sysSb3')
-ld(-38/2)                       #35,38
-ld(hi('REENTER'),Y)             #39
-jmp(Y,'REENTER')                #40
-label('.sysSb4')
-ld(-44/2)                       #41,44
-ld(hi('REENTER'),Y)             #45
-jmp(Y,'REENTER')                #46
-ld(-50/2)                       #47
+beq(pc()+3)                     #36
+bra(pc()+3)                     #37
+ld(-2);                         C('Self-restart when more to do')#38
+ld(0)                           #38(!)
+adda([vPC])                     #39
+st([vPC])                       #40
+ld(hi('REENTER'),Y)             #41
+jmp(Y,'REENTER')                #42
+ld(-46/2)                       #43
 
 # SYS_SetMode_80 implementation
 label('sys_SetMode')
@@ -3190,78 +3202,6 @@ st([vAC+1])                     #41
 jmp(Y,'REENTER')                #42
 ld(-46/2)                       #43
 
-#-----------------------------------------------------------------------
-
-# SYS_ResetWaveforms_v4_50 implementation
-label('sys_ResetWaveforms')
-ld([vAC+0]);                    C('X=4i')#18
-adda(AC)                        #19
-adda(AC,X)                      #20
-ld([vAC+0]);                    #21
-st([Y,Xpp]);                    C('Sawtooth: T[4i+0] = i')#22
-anda(0x20);                     C('Triangle: T[4i+1] = 2i if i<32 else 127-2i')#23
-bne(pc()+3)                     #24
-ld([vAC+0])                     #25
-bra(pc()+3)                     #26
-adda([vAC+0])                   #26,27
-xora(127)                       #27
-st([Y,Xpp])                     #28
-ld([vAC+0]);                    C('Pulse: T[4i+2] = 0 if i<32 else 63')#29
-anda(0x20)                      #30
-bne(pc()+3)                     #31
-bra(pc()+3)                     #32
-ld(0)                           #33
-ld(63)                          #33(!)
-st([Y,Xpp])                     #34
-ld([vAC+0]);                    C('Sawtooth: T[4i+3] = i')#35
-st([Y,X])                       #36
-adda(1);                        C('i += 1')#37
-st([vAC+0])                     #38
-xora(64);                       C('For 64 iterations')#39
-beq(pc()+3);                    #40
-bra(pc()+3)                     #41
-ld(-2)                          #42
-ld(0)                           #42(!)
-adda([vPC])                     #43
-st([vPC])                       #44
-ld(hi('REENTER'),Y)             #45
-jmp(Y,'REENTER')                #46
-ld(-50/2)                       #47
-
-#-----------------------------------------------------------------------
-
-# SYS_ShuffleNoise_v4_46 implementation
-label('sys_ShuffleNoise')
-ld([vAC+0],X);                  C('tmp = T[4j]');#18
-ld([Y,X]);                      #19
-st([vTmp])                      #20
-ld([vAC+1],X);                  C('T[4j] = T[4i]')#21
-ld([Y,X])                       #22
-ld([vAC+0],X)                   #23
-st([Y,X])                       #24
-adda(AC);                       C('j += T[4i]')#25
-adda(AC,)                       #26
-adda([vAC+0])                   #27
-st([vAC+0])                     #28
-ld([vAC+1],X);                  C('T[4i] = tmp')#29
-ld([vTmp])                      #30
-st([Y,X])                       #31
-ld([vAC+1]);                    C('i += 1');#32
-adda(4)                         #33
-st([vAC+1])                     #34
-beq(pc()+3);                    C('For 64 iterations')#35
-bra(pc()+3)                     #36
-ld(-2)                          #37
-ld(0)                           #37(!)
-adda([vPC])                     #38
-st([vPC])                       #39
-ld(-46/2 - 3)                   #40
-ld(hi('REENTER'),Y)             #41
-jmp(Y,'REENTER')                #42
-#dummy()                        #43 Overlap
-#
-#-----------------------------------------------------------------------
-#
 # CALLI implementation (vCPU instruction)
 label('calli#13')
 adda(3)                         #13,43
@@ -3277,43 +3217,9 @@ ld(hi('REENTER_28'),Y)          #22
 jmp(Y,'REENTER_28')             #23
 st([vPC+1])                     #24
 
-# CMPHS implementation (vCPU instruction)
-label('cmphs#13')
-ld(hi('REENTER'),Y)             #13
-ld([X])                         #14
-xora([vAC+1])                   #15
-bpl('.cmphu#18')                #16 Skip if same sign
-ld([vAC+1])                     #17
-bmi(pc()+3)                     #18
-bra(pc()+3)                     #19
-label('.cmphs#20')
-ld(+1)                          #20    vAC < variable
-ld(-1)                          #20(!) vAC > variable
-label('.cmphs#21')
-adda([X])                       #21
-st([vAC+1])                     #22
-jmp(Y,'REENTER_28')             #23
-#dummy()                        #24 Overlap
-#
-# CMPHS implementation (vCPU instruction)
-label('cmphu#13')
-ld(hi('REENTER'),Y)             #13,24
-ld([X])                         #14
-xora([vAC+1])                   #15
-bpl('.cmphu#18')                #16 Skip if same sign
-ld([vAC+1])                     #17
-bmi('.cmphs#20')                #18
-bra('.cmphs#21')                #19
-ld(-1)                          #20    vAC > variable
-
-# No-operation for CMPHS/CMPHU when high bits are equal
-label('.cmphu#18')
-jmp(Y,'REENTER')                #18
-ld(-22/2)                       #19
-
-# ----------------------------------------------------------------
-# On vCPU instructions for comparisons between two 16-bit operands
-# ----------------------------------------------------------------
+# -------------------------------------------------------------
+# vCPU instructions for comparisons between two 16-bit operands
+# -------------------------------------------------------------
 #
 # vCPU's conditional branching (BCC) always compares vAC against 0,
 # treating vAC as a two's complement 16-bit number. When we need to
@@ -3357,6 +3263,40 @@ ld(-22/2)                       #19
 #         1     0   | varH-1 varH+1     narrowing the range
 #         1     1   |  vACH   vACH      no change needed
 #       ---------------------------
+
+# CMPHS implementation (vCPU instruction)
+label('cmphs#13')
+ld(hi('REENTER'),Y)             #13
+ld([X])                         #14
+xora([vAC+1])                   #15
+bpl('.cmphu#18')                #16 Skip if same sign
+ld([vAC+1])                     #17
+bmi(pc()+3)                     #18
+bra(pc()+3)                     #19
+label('.cmphs#20')
+ld(+1)                          #20    vAC < variable
+ld(-1)                          #20(!) vAC > variable
+label('.cmphs#21')
+adda([X])                       #21
+st([vAC+1])                     #22
+jmp(Y,'REENTER_28')             #23
+#dummy()                        #24 Overlap
+#
+# CMPHS implementation (vCPU instruction)
+label('cmphu#13')
+ld(hi('REENTER'),Y)             #13,24
+ld([X])                         #14
+xora([vAC+1])                   #15
+bpl('.cmphu#18')                #16 Skip if same sign
+ld([vAC+1])                     #17
+bmi('.cmphs#20')                #18
+bra('.cmphs#21')                #19
+ld(-1)                          #20    vAC > variable
+
+# No-operation for CMPHS/CMPHU when high bits are equal
+label('.cmphu#18')
+jmp(Y,'REENTER')                #18
+ld(-22/2)                       #19
 
 #-----------------------------------------------------------------------
 #
@@ -5168,11 +5108,70 @@ ld(hi('REENTER'),Y)             #83
 jmp(Y,'REENTER')                #84
 ld(-88/2)                       #85
 
-#-----------------------------------------------------------------------
+# SYS_ResetWaveforms_v4_50 implementation
+label('sys_ResetWaveforms')
+ld([vAC+0]);                    C('X=4i')#18
+adda(AC)                        #19
+adda(AC,X)                      #20
+ld([vAC+0]);                    #21
+st([Y,Xpp]);                    C('Sawtooth: T[4i+0] = i')#22
+anda(0x20);                     C('Triangle: T[4i+1] = 2i if i<32 else 127-2i')#23
+bne(pc()+3)                     #24
+ld([vAC+0])                     #25
+bra(pc()+3)                     #26
+adda([vAC+0])                   #26,27
+xora(127)                       #27
+st([Y,Xpp])                     #28
+ld([vAC+0]);                    C('Pulse: T[4i+2] = 0 if i<32 else 63')#29
+anda(0x20)                      #30
+bne(pc()+3)                     #31
+bra(pc()+3)                     #32
+ld(0)                           #33
+ld(63)                          #33(!)
+st([Y,Xpp])                     #34
+ld([vAC+0]);                    C('Sawtooth: T[4i+3] = i')#35
+st([Y,X])                       #36
+adda(1);                        C('i += 1')#37
+st([vAC+0])                     #38
+xora(64);                       C('For 64 iterations')#39
+beq(pc()+3);                    #40
+bra(pc()+3)                     #41
+ld(-2)                          #42
+ld(0)                           #42(!)
+adda([vPC])                     #43
+st([vPC])                       #44
+ld(hi('REENTER'),Y)             #45
+jmp(Y,'REENTER')                #46
+ld(-50/2)                       #47
 
-# XXX Lots of space here
-
-align(0x100)
+# SYS_ShuffleNoise_v4_46 implementation
+label('sys_ShuffleNoise')
+ld([vAC+0],X);                  C('tmp = T[4j]');#18
+ld([Y,X]);                      #19
+st([vTmp])                      #20
+ld([vAC+1],X);                  C('T[4j] = T[4i]')#21
+ld([Y,X])                       #22
+ld([vAC+0],X)                   #23
+st([Y,X])                       #24
+adda(AC);                       C('j += T[4i]')#25
+adda(AC,)                       #26
+adda([vAC+0])                   #27
+st([vAC+0])                     #28
+ld([vAC+1],X);                  C('T[4i] = tmp')#29
+ld([vTmp])                      #30
+st([Y,X])                       #31
+ld([vAC+1]);                    C('i += 1');#32
+adda(4)                         #33
+st([vAC+1])                     #34
+beq(pc()+3);                    C('For 64 iterations')#35
+bra(pc()+3)                     #36
+ld(-2)                          #37
+ld(0)                           #37(!)
+adda([vPC])                     #38
+st([vPC])                       #39
+ld(hi('NEXTY'),Y)               #40
+jmp(Y,'NEXTY')                  #41
+ld(-44/2)                       #42
 
 #-----------------------------------------------------------------------
 #
@@ -5255,7 +5254,6 @@ def basicLine(address, number, text):
 
 if pc()&255 > 251:              # Don't start in a trampoline region
   align(0x100)
-align(1, 0x100)                 # Only pages from here
 
 #-----------------------------------------------------------------------
 #       Embedded programs must be given on the command line
@@ -5341,7 +5339,7 @@ for application in argv[1:]:
     program.end()
     print ' Lines', i
 
-  # Simple sequential RGB file
+  # Simple sequential RGB file (for Racer horizon image)
   elif application.endswith('-256x16.rgb'):
     width, height = 256, 16
     print 'Convert type .rgb/sequential at $%04x' % pc()
@@ -5365,36 +5363,6 @@ for application in argv[1:]:
         trampoline()
     print ' Pixels %dx%d' % (width, height)
 
-  # Random access RGB files (for Pictures application)
-  elif application.endswith('-160x120.rgb'):
-    width, height = 160, 120
-    if pc()&255 > 0:
-      trampoline()
-    print 'Convert type .rgb/parallel at $%04x' % pc()
-    f = open(application, 'rb')
-    raw = f.read()
-    f.close()
-    label(name)
-    for y in range(0, height, 2):
-      for j in range(2):
-        comment = 'Pixels for %s line %s' % (name, y+j)
-        for x in range(0, width, 4):
-          bytes = []
-          for i in range(4):
-            R = ord(raw[3 * ((y + j) * width + x + i) + 0])
-            G = ord(raw[3 * ((y + j) * width + x + i) + 1])
-            B = ord(raw[3 * ((y + j) * width + x + i) + 2])
-            bytes.append( (R/85) + 4*(G/85) + 16*(B/85) )
-          # Pack 4 pixels in 3 bytes
-          ld( ((bytes[0]&0b111111)>>0) + ((bytes[1]&0b000011)<<6) ); comment = C(comment)
-          ld( ((bytes[1]&0b111100)>>2) + ((bytes[2]&0b001111)<<4) )
-          ld( ((bytes[2]&0b110000)>>4) + ((bytes[3]&0b111111)<<2) )
-        if j==0:
-          trampoline3a()
-        else:
-          trampoline3b()
-    print ' Pixels %dx%d' % (width, height)
-
   # XXX Provisionally bring ROMv1 egg back as placeholder for Pictures
   elif application.endswith('/gigatron.rgb'):
     print('Convert type gigatron.rgb at $%04x' % pc())
@@ -5403,9 +5371,9 @@ for application in argv[1:]:
     f.close()
     label(name)
     for i in xrange(len(raw)):
-      if i&255 < 251:
+      if pc()&255 < 251:
         ld(ord(raw[i]))
-      elif i&255 == 251:
+      elif pc()&255 == 251:
         trampoline()
 
   else:

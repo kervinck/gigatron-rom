@@ -3,8 +3,8 @@
 #
 # This is not an assembler -in- Python. This about using Python -itself- as an
 # assembler! Specifically, asm.py is just the back end, while the Python
-# interpreter acts as the front end. By using Python as the front end we get
-# gives parsing and a powerful macro system for free. Assembly source files are
+# interpreter acts as the front end. By using Python in this way, we get
+# parsing and a powerful macro system for free. Assembly source files are
 # simple .py files, not .asm files. (But we can produce .asm files as a program
 # listing in a more conventional notation.)
 
