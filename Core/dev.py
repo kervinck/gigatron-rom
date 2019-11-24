@@ -1271,7 +1271,7 @@ st([nextVideo])                 #30
 ld(videoTable>>8,Y)             #31
 ld([videoY],X)                  #32
 ld([Y,X])                       #33
-st([Y,Xpp])                     #34 Just to increment X
+st([Y,Xpp]);                    C('(Just X++)')#34
 st([frameY])                    #35
 ld([Y,X])                       #36
 adda([frameX],X)                #37
@@ -1442,7 +1442,7 @@ ld([vPC]);                      C('Advance vPC')#3
 adda(2)                         #4
 st([vPC],X)                     #5
 ld([Y,X]);                      C('Fetch opcode')#6 Fetch opcode (actually a branch target)
-st([Y,Xpp]);                    #7 Just X++
+st([Y,Xpp]);                    C('(Just X++)')#7
 bra(AC);                        C('Dispatch')#8
 ld([Y,X]);                      C('Prefetch operand')#9
 
@@ -1459,7 +1459,7 @@ assert vCPU_overhead ==          9
 # Instruction LDWI: Load immediate word constant (vAC=D), 20 cycles
 label('LDWI')
 st([vAC])                       #10
-st([Y,Xpp])                     #11 Just to increment X
+st([Y,Xpp]);                    C('(Just X++)')#11
 ld([Y,X])                       #12 Fetch second operand
 st([vAC+1])                     #13
 ld([vPC])                       #14 Advance vPC one more
@@ -1543,7 +1543,7 @@ ld([vPC]);                      C('False condition')#22
 bra('.bcc#25')                  #23
 adda(1)                         #24
 label('.bcc#23')
-st([Y,Xpp]);                    C('True condition')#23 Just X++
+st([Y,Xpp]);                    C('(Just X++) True condition')#23 Just X++
 ld([Y,X])                       #24
 label('.bcc#25')
 st([vPC])                       #25
@@ -2048,7 +2048,7 @@ ld(AC,X)                        #18
 ld([vAC])                       #19
 st([Y,Xpp])                     #20
 ld([vAC+1])                     #21
-st([Y,X])                       #22 Not a suitable to use with REENTER_28
+st([Y,X])                       #22 Incompatible with REENTER_28
 ld(hi('REENTER'),Y)             #23
 jmp(Y,'REENTER')                #24
 ld(-28/2)                       #25
@@ -2061,7 +2061,7 @@ st([vPC])                       #15
 ld([vAC],X)                     #16
 ld([vAC+1],Y)                   #17
 ld([Y,X])                       #18
-st([Y,Xpp])                     #19
+st([Y,Xpp]);                    C('(Just X++)')#19
 st([vAC])                       #20
 ld([Y,X])                       #21
 ld(hi('REENTER_28'),Y)          #22
@@ -3215,7 +3215,7 @@ st([vLR])                       #14
 ld([vPC+1])                     #15
 st([vLR+1],Y)                   #16
 ld([Y,X])                       #17
-st([Y,Xpp])                     #18 Just to increment X
+st([Y,Xpp]);                    C('(Just X++)')#18
 suba(2)                         #19
 st([vPC])                       #20
 ld([Y,X])                       #21
@@ -3359,7 +3359,7 @@ ld([sysArgs+0],X);              C('Pixel data source address')#15
 ld([sysArgs+1],Y)               #16
 ld([Y,X]);                      C('Next pixel or stop')#17
 bpl('.sysDpx0')                 #18
-st([Y,Xpp])                     #19
+st([Y,Xpp]);                    C('(Just X++)')#19
 
 adda([vAC+1]);                  C('Adjust dst for convenience')#20
 st([vAC+1])                     #21
@@ -3377,19 +3377,19 @@ ld(-34/2)                       #31
 label('.sysDpx0')
 st([sysArgs+2]);                C('Gobble 6 pixels into buffer')#20
 ld([Y,X])                       #21
-st([Y,Xpp])                     #22
+st([Y,Xpp]);                    C('(Just X++)')#22
 st([sysArgs+3])                 #23
 ld([Y,X])                       #24
-st([Y,Xpp])                     #25
+st([Y,Xpp]);                    C('(Just X++)')#25
 st([sysArgs+4])                 #26
 ld([Y,X])                       #27
-st([Y,Xpp])                     #28
+st([Y,Xpp]);                    C('(Just X++)')#28
 st([sysArgs+5])                 #29
 ld([Y,X])                       #30
-st([Y,Xpp])                     #31
+st([Y,Xpp]);                    C('(Just X++)')#31
 st([sysArgs+6])                 #32
 ld([Y,X])                       #33
-st([Y,Xpp])                     #34
+st([Y,Xpp]);                    C('(Just X++)')#34
 st([sysArgs+7])                 #35
 
 ld([vAC],X);                    C('Screen memory destination address')#36
@@ -3428,7 +3428,7 @@ ld([sysArgs+0],X);              C('Pixel data source address')#15
 ld([sysArgs+1],Y)               #16
 ld([Y,X]);                      C('Next pixel or stop')#17
 bpl('.sysDpx1')                 #18
-st([Y,Xpp])                     #19
+st([Y,Xpp]);                    C('(Just X++)')#19
 
 adda([vAC+1]);                  C('Adjust dst for convenience')#20
 st([vAC+1])                     #21
@@ -3446,19 +3446,19 @@ ld(-34/2)                       #31
 label('.sysDpx1')
 st([sysArgs+7]);                C('Gobble 6 pixels into buffer (backwards)')#20
 ld([Y,X])                       #21
-st([Y,Xpp])                     #22
+st([Y,Xpp]);                    C('(Just X++)')#22
 st([sysArgs+6])                 #23
 ld([Y,X])                       #24
-st([Y,Xpp])                     #25
+st([Y,Xpp]);                    C('(Just X++)')#25
 st([sysArgs+5])                 #26
 ld([Y,X])                       #27
-st([Y,Xpp])                     #28
+st([Y,Xpp]);                    C('(Just X++)')#28
 st([sysArgs+4])                 #29
 ld([Y,X])                       #30
-st([Y,Xpp])                     #31
+st([Y,Xpp]);                    C('(Just X++)')#31
 st([sysArgs+3])                 #32
 ld([Y,X])                       #33
-st([Y,Xpp])                     #34
+st([Y,Xpp]);                    C('(Just X++)')#34
 
 ld([vAC],X);                    C('Screen memory destination address')#35
 ld([vAC+1],Y)                   #36
@@ -3495,7 +3495,7 @@ ld([sysArgs+0],X);              C('Pixel data source address')#15
 ld([sysArgs+1],Y)               #16
 ld([Y,X]);                      C('Next pixel or stop')#17
 bpl('.sysDpx2')                 #18
-st([Y,Xpp])                     #19
+st([Y,Xpp]);                    C('(Just X++)')#19
 
 xora(255);                      C('Adjust dst for convenience')#20
 adda(1)                         #21
@@ -3515,19 +3515,19 @@ ld(-36/2)                       #33
 label('.sysDpx2')
 st([sysArgs+2]);                C('Gobble 6 pixels into buffer')#20
 ld([Y,X])                       #21
-st([Y,Xpp])                     #22
+st([Y,Xpp]);                    C('(Just X++)')#22
 st([sysArgs+3])                 #23
 ld([Y,X])                       #24
-st([Y,Xpp])                     #25
+st([Y,Xpp]);                    C('(Just X++)')#25
 st([sysArgs+4])                 #26
 ld([Y,X])                       #27
-st([Y,Xpp])                     #28
+st([Y,Xpp]);                    C('(Just X++)')#28
 st([sysArgs+5])                 #29
 ld([Y,X])                       #30
-st([Y,Xpp])                     #31
+st([Y,Xpp]);                    C('(Just X++)')#31
 st([sysArgs+6])                 #32
 ld([Y,X])                       #33
-st([Y,Xpp])                     #34
+st([Y,Xpp]);                    C('(Just X++)')#34
 st([sysArgs+7])                 #35
 
 ld([vAC],X);                    C('Screen memory destination address')#36
@@ -3566,7 +3566,7 @@ ld([sysArgs+0],X);              C('Pixel data source address')#15
 ld([sysArgs+1],Y)               #16
 ld([Y,X]);                      C('Next pixel or stop')#17
 bpl('.sysDpx3')                 #18
-st([Y,Xpp])                     #19
+st([Y,Xpp]);                    C('(Just X++)')#19
 
 xora(255);                      C('Adjust dst for convenience')#20
 adda(1)                         #21
@@ -3586,19 +3586,19 @@ ld(-36/2)                       #33
 label('.sysDpx3')
 st([sysArgs+7]);                C('Gobble 6 pixels into buffer (backwards)')#20
 ld([Y,X])                       #21
-st([Y,Xpp])                     #22
+st([Y,Xpp]);                    C('(Just X++)')#22
 st([sysArgs+6])                 #23
 ld([Y,X])                       #24
-st([Y,Xpp])                     #25
+st([Y,Xpp]);                    C('(Just X++)')#25
 st([sysArgs+5])                 #26
 ld([Y,X])                       #27
-st([Y,Xpp])                     #28
+st([Y,Xpp]);                    C('(Just X++)')#28
 st([sysArgs+4])                 #29
 ld([Y,X])                       #30
-st([Y,Xpp])                     #31
+st([Y,Xpp]);                    C('(Just X++)')#31
 st([sysArgs+3])                 #32
 ld([Y,X])                       #33
-st([Y,Xpp])                     #34
+st([Y,Xpp]);                    C('(Just X++)')#32
 
 ld([vAC],X);                    C('Screen memory destination address')#35
 ld([vAC+1],Y)                   #36
@@ -3822,7 +3822,7 @@ label('v6502_jmp2')
 nop()                           #12
 ld([v6502_ADH],Y)               #13
 ld([Y,X])                       #14
-st([Y,Xpp]);                    C('Wrap around: bug compatible with NMOS')#15
+st([Y,Xpp]);                    C('(Just X++) Wrap around: bug compatible with NMOS')#15
 st([v6502_PCL])                 #16
 ld([Y,X])                       #17
 st([v6502_PCH])                 #18
@@ -4107,7 +4107,7 @@ ld(1)                           #32(!)
 adda([v6502_PCH])               #33
 st([v6502_PCH])                 #34
 ld([Y,X]);                      C('Read word from zero-page')#35
-st([Y,Xpp])                     #36 Wrap-around is correct
+st([Y,Xpp]);                    C('(Just X++)')#36 Wrap-around is correct
 st([v6502_ADL])                 #37
 ld([Y,X])                       #38
 st([v6502_ADH])                 #39
@@ -4912,7 +4912,7 @@ adda(2)                         #14
 st([v6502_S])                   #15
 ld(0,Y)                         #16
 ld([Y,X])                       #17
-st([Y,Xpp])                     #18
+st([Y,Xpp]);                    C('(Just X++)')#18
 adda(1)                         #19
 st([v6502_PCL])                 #20
 beq(pc()+3)                     #21
@@ -5021,12 +5021,12 @@ xora(v6502_Zflag)               #19
 st([v6502_Qz]);                 C('Z flag')#20
 ld(0,Y)                         #21
 ld([Y,X])                       #22
-st([Y,Xpp])                     #23
+st([Y,Xpp]);                    C('(Just X++)')#23
 anda(~v6502_Vemu);              C('V to bit 7')#24
 adda(v6502_Vflag)               #25
 st([v6502_P]);                  C('All other flags')#26
 ld([Y,X])                       #27
-st([Y,Xpp])                     #28
+st([Y,Xpp]);                    C('(Just X++)')#28
 st([v6502_PCL])                 #29
 ld([Y,X])                       #30
 st([v6502_PCH])                 #31
