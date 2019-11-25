@@ -1,7 +1,7 @@
 _startAddress_      EQU                     0x0200
 
 ; Internal variables
-register0           EQU                     0x0084
+register0           EQU                     0x0082
 register1           EQU                     register0 + 0x02
 register2           EQU                     register0 + 0x04
 register3           EQU                     register0 + 0x06
@@ -23,6 +23,7 @@ midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
 frameCountPrev      EQU                     register0 + 0x28
 miscFlags           EQU                     register0 + 0x2A
+highByteMask        EQU                     register0 + 0x2C
 
 ; Includes
 %include            include/gigatron.i
@@ -30,18 +31,18 @@ miscFlags           EQU                     register0 + 0x2A
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x023d
-_20                 EQU                     0x025c
-_30                 EQU                     0x026e
-_40                 EQU                     0x0283
-_50                 EQU                     0x0296
-_60                 EQU                     0x029a
-_65                 EQU                     0x02b6
-_70                 EQU                     0x02c4
-_80                 EQU                     0x02dc
-_90                 EQU                     0x0313
+_10                 EQU                     0x0242
+_20                 EQU                     0x0261
+_30                 EQU                     0x0273
+_40                 EQU                     0x0288
+_50                 EQU                     0x029b
+_60                 EQU                     0x029f
+_65                 EQU                     0x02bb
+_70                 EQU                     0x02c9
+_80                 EQU                     0x02e1
+_90                 EQU                     0x0317
 _page_0x0300        EQU                     0x0300
-_end_0x033d         EQU                     0x0326
+_end_0x0342         EQU                     0x032a
 
 ; Variables
 _w                  EQU                     0x0030
@@ -68,11 +69,11 @@ _entryPoint_        InitRealTimeProc
                     InitGtOp                
                     Initialise                                              ; INIT
 
-_10                 LDWI                    164
+_10                 LDWI                    162
                     STW                     register0
                     LDI                     0
                     POKE                    register0
-                    LDWI                    165
+                    LDWI                    163
                     STW                     register0
                     LDI                     63
                     POKE                    register0
@@ -81,7 +82,7 @@ _10                 LDWI                    164
                     LDI                     0
                     STW                     _w
                     LDI                     0
-                    STW                     _z                              ; poke 164,0:poke 165,63:cls:w=0:z=0
+                    STW                     _z                              ; poke 162,0:poke 163,63:cls:w=0:z=0
 
 _20                 LDI                     0
                     ST                      cursorXY
@@ -139,7 +140,7 @@ _70                 LDI                     5
                     SUBW                    _z
                     STW                     drawLine_y2
                     AtLineCursor            
-                    DrawLine                
+                    DrawVTLine              
                     LDW                     _w
                     STW                     _z                              ; line 5,w-z:z=w
 
@@ -150,12 +151,12 @@ _80                 LDW                     _p
                     LDWI                    multiply16bit
                     CALL                    giga_vAC
                     ADDW                    _y
-                    STW                     _y
-                    STW                     mathX
-                    STW                     0x82
+                    STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
-_page_0x0300        LDW                     0x82
+_page_0x0300        LDW                     0xde
+                    STW                     _y
+                    STW                     mathX
                     LDW                     _q
                     STW                     mathY
                     LDWI                    divide16bit
@@ -169,7 +170,7 @@ _90                 ForNextLoopUp           _x _60 30
                     LDWI                    _20
                     CALL                    giga_vAC                        ; next x:goto 20
 
-_end_0x033d         BRA                     _end_0x033d                     ; END
+_end_0x0342         BRA                     _end_0x0342                     ; END
 
 
 
@@ -186,20 +187,18 @@ convertLeOp         EQU     0xff1b
 convertGeOp         EQU     0xff24
 convertLtOp         EQU     0xff2d
 convertGtOp         EQU     0xff36
-multiply16bit       EQU     0xfd55
-divide16bit         EQU     0xfe5b
+multiply16bit       EQU     0xfd5a
+divide16bit         EQU     0xfe5f
 randMod16bit        EQU     0xffc9
 resetVideoTable     EQU     0xffdc
 initClearFuncs      EQU     0xff3f
 clearVertBlinds     EQU     0xff62
-clearCursorRow      EQU     0xfd7c
-drawLine            EQU     0xfd00
-drawLineExt         EQU     0xfdc2
-drawLineLoop        EQU     0xfc00
-drawLineLoadXY      EQU     0xfc3a
-atLineCursor        EQU     0xfeb5
-printInit           EQU     0xfc65
-printChar           EQU     0xfc76
+clearCursorRow      EQU     0xfd81
+drawVTLine          EQU     0xfd00
+drawVTLineExt       EQU     0xfdc7
+drawVTLineLoop      EQU     0xfc00
+drawVTLineLoadXY    EQU     0xfc53
+atLineCursor        EQU     0xfeb9
 atTextCursor        EQU     0xff9c
 newLineScroll       EQU     0xfe00
 realTimeProcAddr    EQU     0x00dc
@@ -473,7 +472,6 @@ clearVB_loop        CALL    realTimeProcAddr
 
 
 
-
 ; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 graphicsMode        EQU     register0
 waitVBlankNum       EQU     register0
@@ -505,10 +503,13 @@ drawLine_sy         EQU     register9
 drawLine_h          EQU     register10
 drawLine_num        EQU     register11
 drawLine_count      EQU     register12
-drawLine_tmp        EQU     register13
+drawLine_addr       EQU     register13
+drawLine_tmp        EQU     register14
     
     
-drawLine            PUSH                        ; matches drawLineLoop's POP
+drawVTLine          PUSH                        ; matches drawVTLineLoop's POP
+                    LDWI    giga_videoTable
+                    STW     drawLine_addr
                     LDI     1
                     STW     drawLine_dx1
                     STW     drawLine_dx2
@@ -523,7 +524,7 @@ drawLine            PUSH                        ; matches drawLineLoop's POP
                     SUBW    drawLine_x1
                     STW     drawLine_sx
                     ANDW    drawLine_tmp        
-                    BEQ     drawL_dy
+                    BEQ     drawVTL_dy
                     LDWI    -1
                     STW     drawLine_dx1        
                     STW     drawLine_dx2        ; dx1 = dx2 = (sx & 0x8000) ? -1 : 1
@@ -531,12 +532,12 @@ drawLine            PUSH                        ; matches drawLineLoop's POP
                     SUBW    drawLine_sx
                     STW     drawLine_sx                
                     
-drawL_dy            LDW     drawLine_y2
+drawVTL_dy          LDW     drawLine_y2
                     SUBW    drawLine_y1
                     STW     drawLine_sy
                     STW     drawLine_h          ; h = sy
                     ANDW    drawLine_tmp
-                    BEQ     drawL_ext
+                    BEQ     drawVTL_ext
                     
                     LDWI    -1
                     STW     drawLine_dy1        ; dy1 = (sy & 0x8000) ? -1 : 1
@@ -544,19 +545,20 @@ drawL_dy            LDW     drawLine_y2
                     SUBW    drawLine_sy
                     STW     drawLine_sy         ; sy = (sy & 0x8000) ? 0 - sy : sy
                     SUBW    drawLine_sx
-                    BLE     drawL_ext           
+                    BLE     drawVTL_ext           
                     LDW     drawLine_dy1
                     STW     drawLine_dy2        ; if(sx < sy) dy2 = -1
     
-drawL_ext           LDWI    drawLineLoadXY
+drawVTL_ext         LDWI    drawVTLineLoadXY
                     CALL    giga_vAC
-                    LDWI    drawLineExt
+                    LDWI    drawVTLineExt
                     CALL    giga_vAC
 
 
-drawLineExt         LDW     drawLine_sy
+
+drawVTLineExt       LDW     drawLine_sy
                     SUBW    drawLine_sx
-                    BLE     drawL_num
+                    BLE     drawVTL_num
                     LDI     0
                     STW     drawLine_dx2        ; if(sx < sy) dx2 = 0
                     LDW     drawLine_sy       
@@ -566,11 +568,11 @@ drawLineExt         LDW     drawLine_sy
                     LDW     drawLine_tmp
                     STW     drawLine_sx         ; swap sx with sy
                     LDW     drawLine_h
-                    BLE     drawL_num
+                    BLE     drawVTL_num
                     LDI     1
                     STW     drawLine_dy2        ; if(h > 0) dy2 = 1
     
-drawL_num           LDWI    SYS_LSRW1_48
+drawVTL_num         LDWI    SYS_LSRW1_48
                     STW     giga_sysFn          
                     LDW     drawLine_sx
                     SYS     0xF6                ; 0xF6 = 270-max(14,48/2)
@@ -578,21 +580,27 @@ drawL_num           LDWI    SYS_LSRW1_48
                     STW     drawLine_num        ; numerator = sx>>1
                     STW     drawLine_count      ; for(count=sx>>1; counti>=0; --i)
                     
-                    LDWI    drawLineLoadDXY
+                    LDWI    drawVTLineLoadDXY
                     CALL    giga_vAC
-                    LDWI    drawLineLoop
+                    LDWI    drawVTLineLoop
                     CALL    giga_vAC
 
 
-drawLineLoop        LD      fgbgColour + 1
-                    POKE    drawLine_xy1        ; plot start pixel
-                    POKE    drawLine_xy2        ; plot end pixel, (meet in middle)
+drawVTLineLoop      LDW     drawLine_xy1
+                    STW     drawLine_tmp
+                    LDWI    drawVTLineAddress
+                    CALL    giga_vAC            ; plot start pixel
+
+                    LDW     drawLine_xy2
+                    STW     drawLine_tmp
+                    LDWI    drawVTLineAddress
+                    CALL    giga_vAC            ; plot end pixel, (meet in middle)
                     
                     LDW     drawLine_num        ; numerator += sy
                     ADDW    drawLine_sy
                     STW     drawLine_num
                     SUBW    drawLine_sx
-                    BLE     drawL_flip          ; if(numerator <= sx) goto flip
+                    BLE     drawVTL_flip        ; if(numerator <= sx) goto flip
                     STW     drawLine_num        ; numerator -= sx
                     
                     LDW     drawLine_xy1
@@ -602,9 +610,9 @@ drawLineLoop        LD      fgbgColour + 1
                     LDW     drawLine_xy2
                     SUBW    drawLine_dxy1
                     STW     drawLine_xy2        ; xy2 -= dxy1
-                    BRA     drawL_count
+                    BRA     drawVTL_count
                     
-drawL_flip          LDW     drawLine_xy1        
+drawVTL_flip        LDW     drawLine_xy1        
                     ADDW    drawLine_dxy2
                     STW     drawLine_xy1        ; xy1 += dxy2
                     
@@ -612,29 +620,36 @@ drawL_flip          LDW     drawLine_xy1
                     SUBW    drawLine_dxy2
                     STW     drawLine_xy2        ; xy2 -= dxy2
                     
-drawL_count         CALL    realTimeProcAddr
+drawVTL_count       CALL    realTimeProcAddr
                     LDW     drawLine_count
                     SUBI    0x01
                     STW     drawLine_count
-                    BGT     drawLineLoop
-                    POP                         ; matches drawLine's PUSH
+                    BGT     drawVTLineLoop
+                    POP                         ; matches drawVTLine's PUSH
+                    RET
+                    
+drawVTLineAddress   LD      drawLine_tmp + 1
+                    LSLW
+                    ADDW    drawLine_addr
+                    PEEK
+                    ST      drawLine_tmp + 1
+                    LD      fgbgColour + 1
+                    POKE    drawLine_tmp
                     RET
 
 
-drawLineLoadXY      LD      drawLine_x1
+drawVTLineLoadXY    LD      drawLine_x1
                     ST      drawLine_xy1
                     LD      drawLine_y1
-                    ADDI    8
-                    ST      drawLine_xy1 + 1    ; xy1 = x1 | ((y1+8)<<8)
+                    ST      drawLine_xy1 + 1    ; xy1 = x1 | (y1<<8)
                     
                     LD      drawLine_x2
                     ST      drawLine_xy2
                     LD      drawLine_y2
-                    ADDI    8
-                    ST      drawLine_xy2 + 1    ; xy2 = x2 | ((y2+8)<<8)
+                    ST      drawLine_xy2 + 1    ; xy2 = x2 | (y2<<8)
                     RET
                     
-drawLineLoadDXY     LDWI    SYS_LSLW8_24
+drawVTLineLoadDXY   LDWI    SYS_LSLW8_24
                     STW     giga_sysFn          
                     LDW     drawLine_dy1
                     SYS     0x00                ; LSL 8, 0x00 = 270-max(14,24/2)
@@ -650,38 +665,36 @@ drawLineLoadDXY     LDWI    SYS_LSLW8_24
 
 atLineCursor        LD      cursorXY
                     STW     drawLine_x1
-                    SUBI    160
-                    BLT     atLC_skip0
+                    SUBI    giga_xres
+                    BLT     atLC_x1good
                     LDI     0
                     STW     drawLine_x1
                     
-atLC_skip0          LDW     drawLine_x1
+atLC_x1good         LD      cursorXY
                     ADDW    drawLine_x2
-                    STW     drawLine_x2
-                    SUBI    160
-                    BLT     atLC_skip1
-                    LDI     0
-                    STW     drawLine_x2
+                    SUBI    giga_xres
+                    BLT     atLC_x2good
+                    LDWI    -giga_xres
                     
-atLC_skip1          LDW     drawLine_x2
+atLC_x2good         ADDI    giga_xres
+                    STW     drawLine_x2
                     ST      cursorXY
-                    
+
                     LD      cursorXY + 1
                     STW     drawLine_y1
-                    SUBI    120
-                    BLT     atLC_skip2
-                    LDI     119
+                    SUBI    giga_yres
+                    BLT     atLC_y1good
+                    LDI     giga_yres - 1
                     STW     drawLine_y1
                     
-atLC_skip2          LDW     drawLine_y1
+atLC_y1good         LD      cursorXY + 1
                     ADDW    drawLine_y2
-                    STW     drawLine_y2
-                    SUBI    120
-                    BLT     atLC_skip3
-                    LDI     119
-                    STW     drawLine_y2
+                    SUBI    giga_yres
+                    BLT     atLC_y2good
+                    LDWI    -1
                     
-atLC_skip3          LDW     drawLine_y2            
+atLC_y2good         ADDI    giga_yres
+                    STW     drawLine_y2
                     ST      cursorXY + 1
                     RET
 
@@ -702,16 +715,16 @@ clearLoop           EQU     register13
     
     
 atTextCursor        LD      cursorXY
-                    SUBI    giga_xres - 5
+                    SUBI    giga_xres
                     BLT     atTC_skip0
                     LDI     0
-                    STW     cursorXY
+                    ST      cursorXY
                     
 atTC_skip0          LD      cursorXY + 1
-                    SUBI    giga_yres - 7
+                    SUBI    giga_yres
                     BLT     atTC_skip1
-                    LDI     giga_yres - 8
-                    STW     cursorXY + 1
+                    LDI     giga_yres - 1
+                    ST      cursorXY + 1
                     
 atTC_skip1          LD      cursorXY + 1
                     SUBI    giga_yres - 8
@@ -769,69 +782,10 @@ clearCR_loopx       SUBI    4                               ; loop is unrolled 4
                     RET
 
 
-
-
-printInit           LDWI    SYS_VDrawBits_134
-                    STW     giga_sysFn
-                    LDW     fgbgColour
-                    STW     giga_sysArg0
-                    LDWI    0x0800
-                    ADDW    cursorXY
-                    STW     giga_sysArg4                    ; xy position
-                    RET
-
-
-                    ; prints char in textChr
-printChar           PUSH
-                    LD      textChr                         ; (char-32)*5 + 0x0700
-                    SUBI    32
-                    STW     textChr
-                    STW     textFont
-                    LSLW    
-                    LSLW    
-                    ADDW    textChr
-                    STW     textFont             
-                    LDWI    giga_text32
-                    ADDW    textFont
-                    STW     textFont                        ; text font slice base address for chars 32-81
-    
-                    LDW     textChr
-                    SUBI    50
-                    BLT     printC_draw
-                    LDW     textFont
-                    ADDI    0x06
-                    STW     textFont                        ; text font slice base address for chars 82+
-    
-printC_draw         LDWI    printInit
-                    CALL    giga_vAC
-                    LDI     0x05
-                    ST      textSlice
-    
-printC_slice        LDW     textFont                        ; text font slice base address
-                    LUP     0x00                            ; get ROM slice
-                    ST      giga_sysArg2
-                    SYS     0xCB                            ; draw vertical slice, SYS_VDrawBits_134, 270 - 134/2 = 0xCB
-                    INC     textFont                        ; next vertical slice
-                    INC     giga_sysArg4                    ; next x
-                    LoopCounter textSlice printC_slice
-                    ST      giga_sysArg2                    ; result of loopCounter is always 0
-                    SYS     0xCB                            ; draw last blank slice
-                    CALL    realTimeProcAddr
-    
-                    LD      cursorXY
-                    ADDI    0x06
-                    ST      cursorXY
-                    SUBI    giga_xres - 5                   ; giga_xres - 6, (154), is last possible char in row
-                    BLT     printC_exit
-                    LDWI    newLineScroll                   ; next row, scroll at bottom
-                    CALL    giga_vAC
-printC_exit         POP
-                    RET
-
-
                     ; print from top row to bottom row, then start scrolling 
 newLineScroll       LDI     0x02                            ; x offset slightly
                     ST      cursorXY
+                    ST      giga_sysArg4
                     LDWI    0x0001
                     ANDW    miscFlags
                     BNE     newLS_cont0                     ; scroll on or off
@@ -841,11 +795,16 @@ newLS_cont0         PUSH
                     LDWI    0x8000
                     ANDW    miscFlags                       ; on bottom row flag
                     BNE     newLS_cont1
-                    LD      cursorXY+1
+                    LD      giga_sysArg4 + 1
                     ADDI    8
-                    ST      cursorXY+1
+                    ST      giga_sysArg4 + 1
+                    LD      cursorXY + 1
+                    ADDI    8
+                    ST      cursorXY + 1
                     SUBI    giga_yres
                     BLT     newLS_exit
+                    LDI     giga_yres - 8
+                    ST      cursorXY + 1
                     
 newLS_cont1         LDWI    clearCursorRow
                     CALL    giga_vAC
@@ -873,12 +832,6 @@ newLS_adjust        ADDI    8
                     LDWI    0x8000
                     ORW     miscFlags
                     STW     miscFlags                       ; set on bottom row flag
-                    
-                    ; read scan line pointer for last char row, use this as cursor position
-                    LDWI    giga_videoTable + 0x00E0
-                    PEEK
-                    SUBI    0x08                            ; corrected in printChar
-                    ST      cursorXY+1
 newLS_exit          POP
                     RET
 

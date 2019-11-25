@@ -80,16 +80,16 @@ _label_ CALLI   _label
 
 %MACRO  PrintChar _chr
         LDI     _chr
-        CALLI   printChar
+        CALLI   printChr
 %ENDM
 
 %MACRO  PrintAcChar
-        CALLI   printChar
+        CALLI   printChr
 %ENDM
 
 %MACRO  PrintVarChar _var
         LD      _var
-        CALLI   printChar
+        CALLI   printChr
 %ENDM
 
 %MACRO  PrintAcHexByte
@@ -136,6 +136,38 @@ _label_ CALLI   _label
 %MACRO  PrintVarInt16 _var
         LDW     _var
         CALLI   printInt16
+%ENDM
+
+%MACRO  StringChr
+        CALLI   stringChr
+%ENDM
+
+%MACRO  StringHex
+        CALLI   stringHex
+%ENDM
+
+%MACRO  StringHexw
+        CALLI   stringHexw
+%ENDM
+
+%MACRO  StringCopy
+        CALLI   stringCopy
+%ENDM
+
+%MACRO  StringAdd
+        CALLI   stringAdd
+%ENDM
+
+%MACRO  StringMid
+        CALLI   stringMid
+%ENDM
+
+%MACRO  StringLeft
+        CALLI   stringLeft
+%ENDM
+
+%MACRO  StringRight
+        CALLI   stringRight
 %ENDM
 
 %MACRO  Rand
@@ -197,6 +229,10 @@ _label_ CALLI   _label
 
 %MACRO  DrawLine
         CALLI   drawLine
+%ENDM
+
+%MACRO  DrawVTLine
+        CALLI   drawVTLine
 %ENDM
 
 %MACRO  DrawHLine
@@ -263,6 +299,8 @@ _id_    CALLI   _label
         STW     midiStream                              ; reset MIDI
         LDWI    0x0001
         STW     miscFlags                               ; reset flags
+        LDWI    0xFF00
+        STW     highByteMask
         LDI     0x00
         ST      giga_soundTimer                         ; reset soundTimer, (stops any current Audio)
 

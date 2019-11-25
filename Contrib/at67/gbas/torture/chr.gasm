@@ -1,7 +1,7 @@
 _startAddress_      EQU                     0x0200
 
 ; Internal variables
-register0           EQU                     0x0084
+register0           EQU                     0x0082
 register1           EQU                     register0 + 0x02
 register2           EQU                     register0 + 0x04
 register3           EQU                     register0 + 0x06
@@ -23,6 +23,7 @@ midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
 frameCountPrev      EQU                     register0 + 0x28
 miscFlags           EQU                     register0 + 0x2A
+highByteMask        EQU                     register0 + 0x2C
 
 ; Includes
 %include            include/gigatron.i
@@ -30,15 +31,15 @@ miscFlags           EQU                     register0 + 0x2A
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x0255
-_20                 EQU                     0x0358
-_next_0x025d        EQU                     0x025d
-_next_0x0261        EQU                     0x0261
-_next_0x0265        EQU                     0x0265
-_next_0x029b        EQU                     0x029b
+_10                 EQU                     0x025a
+_20                 EQU                     0x0366
+_next_0x0262        EQU                     0x0262
+_next_0x0266        EQU                     0x0266
+_next_0x026a        EQU                     0x026a
+_next_0x02a0        EQU                     0x02a0
 _page_0x0300        EQU                     0x0300
-_next_0x0351        EQU                     0x0323
-_end_0x038b         EQU                     0x035d
+_next_0x0356        EQU                     0x0331
+_end_0x0390         EQU                     0x036b
 
 ; Variables
 _a                  EQU                     0x0030
@@ -48,16 +49,16 @@ _i                  EQU                     0x0036
 _char               EQU                     0x0038
 
 ; Strings
-str_0x7fa0          EQU                     0x7fa0
-str_0x7fa0          DB                      28 'yahooowalllallllalalalwallla'
-str_0x7fbd          EQU                     0x7fbd
-str_0x7fbd          DB                      3 'yes'
-str_0x7fc1          EQU                     0x7fc1
-str_0x7fc1          DB                      1 ' '
-str_0x7fc3          EQU                     0x7fc3
-str_0x7fc3          DB                      34 'wooooooooooooooooooooooooooooow!!!'
-str_0x7fe6          EQU                     0x7fe6
-str_0x7fe6          DB                      3 'dog'
+_str_0xff00          EQU                     0xff00
+_str_0xff00          DB                      28 'yahooowalllallllalalalwallla'
+_str_0xff1d          EQU                     0xff1d
+_str_0xff1d          DB                      3 'yes'
+_str_0xff21          EQU                     0xff21
+_str_0xff21          DB                      1 ' '
+_str_0xff23          EQU                     0xff23
+_str_0xff23          DB                      34 'wooooooooooooooooooooooooooooow!!!'
+_str_0xff46          EQU                     0xff46
+_str_0xff46          DB                      3 'dog'
 
 ; Define Bytes
 def_bytes_0x10a0    EQU                     0x10a0
@@ -260,24 +261,24 @@ _10                 LDI                     1
                     LDI                     0
                     STW                     _k                              ; for k = 0 to 1
 
-_next_0x025d        LDI                     0
+_next_0x0262        LDI                     0
                     STW                     _j                              ; for j = 0 to 1
 
-_next_0x0261        LDI                     0
+_next_0x0266        LDI                     0
                     STW                     _i                              ; for i = 0 to 1
 
-_next_0x0265        PrintString             str_0x7fa0                      ; print "yahooowalllallllalalalwallla";
+_next_0x026a        PrintString             _str_0xff00                     ; print "yahooowalllallllalalalwallla";
 
-                    PrintString             str_0x7fbd
-                    PrintString             str_0x7fc1                      ; print "yes";" ";
+                    PrintString             _str_0xff1d
+                    PrintString             _str_0xff21                     ; print "yes";" ";
 
                     PrintInt16              0x003d
-                    PrintString             str_0x7fc1                      ; print 20*3+1;" ";
+                    PrintString             _str_0xff21                     ; print 20*3+1;" ";
 
                     LDI                     32
                     STW                     _char                           ; for char = 32 to 127
 
-_next_0x029b        LDW                     _a
+_next_0x02a0        LDW                     _a
                     ADDI                    1
                     STW                     _a                              ; a = a + 1
 
@@ -297,32 +298,32 @@ _next_0x029b        LDW                     _a
                     ADDW                    0xc0
                     PrintAcChar                                             ; print chr$(char+1 +a+a+a - 32*0 + 50/0 + a/0 + 3 - a -a -a -4 + j*0 + (k-k));
 
-                    ForNextLoopUp           _char _next_0x029b 127          ; next char
+                    ForNextLoopUp           _char _next_0x02a0 127          ; next char
 
-                    ForNextLoopUp           _i _next_0x0265 1               ; next i
+                    ForNextLoopUp           _i _next_0x026a 1               ; next i
 
-                    ForNextLoopUp           _j _next_0x0261 1               ; next j
-
-                    STW                     0x82
+                    STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
-_page_0x0300        LDW                     0x82
-                    ForNextLoopUp           _k _next_0x025d 1               ; next k
+_page_0x0300        LDW                     0xde
+                    ForNextLoopUp           _j _next_0x0266 1               ; next j
 
-                    PrintString             str_0x7fc3
+                    ForNextLoopUp           _k _next_0x0262 1               ; next k
+
+                    PrintString             _str_0xff23
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print "wooooooooooooooooooooooooooooow!!!"
 
                     LDI                     0
                     STW                     _i                              ; for i = 0 to 6
 
-_next_0x0351        PrintString             str_0x7fe6
-                    PrintString             str_0x7fc1
+_next_0x0356        PrintString             _str_0xff46
+                    PrintString             _str_0xff21
                     PrintVarInt16           _i
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print "dog";" ";i
 
-                    ForNextLoopUp           _i _next_0x0351 6               ; next i
+                    ForNextLoopUp           _i _next_0x0356 6               ; next i
 
                     LDWI                    clearVertBlinds
                     CALL                    giga_vAC                        ; cls
@@ -330,7 +331,7 @@ _next_0x0351        PrintString             str_0x7fe6
 _20                 LDWI                    _10
                     CALL                    giga_vAC                        ; goto 10
 
-_end_0x038b         BRA                     _end_0x038b                     ; END
+_end_0x0390         BRA                     _end_0x0390                     ; END
 
 
 
@@ -340,26 +341,27 @@ _end_0x038b         BRA                     _end_0x038b                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7fea
-convertEqOp         EQU     0x7ff3
-convertNeOp         EQU     0x7ea0
-convertLeOp         EQU     0x7ea9
-convertGeOp         EQU     0x7eb2
-convertLtOp         EQU     0x7ebb
-convertGtOp         EQU     0x7ec4
-resetVideoTable     EQU     0x78da
-initClearFuncs      EQU     0x7ecd
-clearVertBlinds     EQU     0x78a0
-clearCursorRow      EQU     0x77a0
-resetAudio          EQU     0x7da0
-playMidi            EQU     0x7ca0
-midiStartNote       EQU     0x76a0
-printInit           EQU     0x7bef
-printText           EQU     0x7ddb
-printDigit          EQU     0x75a0
-printInt16          EQU     0x7ba0
-printChar           EQU     0x7aa0
-newLineScroll       EQU     0x79a0
+realTimeProc        EQU     0xff4a
+convertEqOp         EQU     0xff53
+convertNeOp         EQU     0xff5c
+convertLeOp         EQU     0xff65
+convertGeOp         EQU     0xff6e
+convertLtOp         EQU     0xff77
+convertGtOp         EQU     0xff80
+resetVideoTable     EQU     0xfd5f
+initClearFuncs      EQU     0xff89
+clearVertBlinds     EQU     0xfec6
+clearCursorRow      EQU     0xfd7f
+resetAudio          EQU     0xffac
+playMidi            EQU     0xfe00
+midiStartNote       EQU     0xfc00
+printInit           EQU     0xfdc5
+printText           EQU     0xfe50
+printDigit          EQU     0xfc42
+printInt16          EQU     0xfe72
+printChr            EQU     0xffe7
+printChar           EQU     0xfc64
+newLineScroll       EQU     0xfd00
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -650,6 +652,7 @@ midiEndNote         LDW     midiCommand
                     RET
 
 
+
 ; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 textStr             EQU     register0
 textNum             EQU     register0
@@ -665,8 +668,28 @@ digitIndex          EQU     register12
 clearLoop           EQU     register13
     
     
+printInit           LDWI    SYS_VDrawBits_134
+                    STW     giga_sysFn
+                    LDW     fgbgColour
+                    STW     giga_sysArg0
+                    
+                    LDWI    giga_videoTable
+                    STW     giga_sysArg4
+                    LD      cursorXY + 1
+                    LSLW
+                    ADDW    giga_sysArg4
+                    PEEK
+                    ST      giga_sysArg4 + 1
+                    LD      cursorXY
+                    ST      giga_sysArg4                    ; xy position
+                    RET
+
+
+
                     ; prints text string pointed to by the accumulator
 printText           PUSH
+                    LDWI    printInit
+                    CALL    giga_vAC
                     LDW     textStr             
                     PEEK
                     ST      textLen                         ; first byte is length
@@ -706,6 +729,8 @@ printD_exit         POP
 
                     ; prints 16bit int in textNum
 printInt16          PUSH
+                    LDWI    printInit
+                    CALL    giga_vAC
                     LDI     0
                     ST      digitIndex
                     LDW     textNum
@@ -743,14 +768,13 @@ printI16_pos        LDWI    10000
                     RET
 
 
-
-printInit           LDWI    SYS_VDrawBits_134
-                    STW     giga_sysFn
-                    LDW     fgbgColour
-                    STW     giga_sysArg0
-                    LDWI    0x0800
-                    ADDW    cursorXY
-                    STW     giga_sysArg4                    ; xy position
+                    ; prints char in textChr for standalone calls
+printChr            PUSH
+                    LDWI    printInit
+                    CALL    giga_vAC
+                    LDWI    printChar
+                    CALL    giga_vAC
+                    POP
                     RET
 
 
@@ -768,16 +792,14 @@ printChar           PUSH
                     ADDW    textFont
                     STW     textFont                        ; text font slice base address for chars 32-81
     
-                    LDW     textChr
+                    LD      textChr
                     SUBI    50
                     BLT     printC_draw
                     LDW     textFont
                     ADDI    0x06
                     STW     textFont                        ; text font slice base address for chars 82+
     
-printC_draw         LDWI    printInit
-                    CALL    giga_vAC
-                    LDI     0x05
+printC_draw         LDI     0x05
                     ST      textSlice
     
 printC_slice        LDW     textFont                        ; text font slice base address
@@ -789,6 +811,7 @@ printC_slice        LDW     textFont                        ; text font slice ba
                     LoopCounter textSlice printC_slice
                     ST      giga_sysArg2                    ; result of loopCounter is always 0
                     SYS     0xCB                            ; draw last blank slice
+                    INC     giga_sysArg4                    ; using sysArg4 as a temporary cursor address for multiple char prints
                     CALL    realTimeProcAddr
     
                     LD      cursorXY
@@ -798,6 +821,7 @@ printC_slice        LDW     textFont                        ; text font slice ba
                     BLT     printC_exit
                     LDWI    newLineScroll                   ; next row, scroll at bottom
                     CALL    giga_vAC
+
 printC_exit         POP
                     RET
 
@@ -847,6 +871,7 @@ clearCR_loopx       SUBI    4                               ; loop is unrolled 4
                     ; print from top row to bottom row, then start scrolling 
 newLineScroll       LDI     0x02                            ; x offset slightly
                     ST      cursorXY
+                    ST      giga_sysArg4
                     LDWI    0x0001
                     ANDW    miscFlags
                     BNE     newLS_cont0                     ; scroll on or off
@@ -856,11 +881,16 @@ newLS_cont0         PUSH
                     LDWI    0x8000
                     ANDW    miscFlags                       ; on bottom row flag
                     BNE     newLS_cont1
-                    LD      cursorXY+1
+                    LD      giga_sysArg4 + 1
                     ADDI    8
-                    ST      cursorXY+1
+                    ST      giga_sysArg4 + 1
+                    LD      cursorXY + 1
+                    ADDI    8
+                    ST      cursorXY + 1
                     SUBI    giga_yres
                     BLT     newLS_exit
+                    LDI     giga_yres - 8
+                    ST      cursorXY + 1
                     
 newLS_cont1         LDWI    clearCursorRow
                     CALL    giga_vAC
@@ -888,12 +918,6 @@ newLS_adjust        ADDI    8
                     LDWI    0x8000
                     ORW     miscFlags
                     STW     miscFlags                       ; set on bottom row flag
-                    
-                    ; read scan line pointer for last char row, use this as cursor position
-                    LDWI    giga_videoTable + 0x00E0
-                    PEEK
-                    SUBI    0x08                            ; corrected in printChar
-                    ST      cursorXY+1
 newLS_exit          POP
                     RET
 

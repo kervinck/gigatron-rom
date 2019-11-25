@@ -12,88 +12,104 @@
 
 namespace Keywords
 {
-    std::map<std::string, Keyword> _keywords, _functions, _stringKeywords;
-    std::vector<std::string> _equalsKeywords;
+    enum EmitStringResult {SyntaxError, InvalidStringVar, ValidStringVar};
+
+    std::map<std::string, Keyword> _keywords;
+    std::map<std::string, std::string> _functions;
+    std::map<std::string, std::string> _stringKeywords;
+    std::map<std::string, std::string> _equalsKeywords;
 
 
     std::map<std::string, Keyword>& getKeywords(void) {return _keywords;}
-    std::map<std::string, Keyword>& getFunctions(void) {return _functions;}
-    std::map<std::string, Keyword>& getStringKeywords(void) {return _stringKeywords;}
-    std::vector<std::string>& getEqualsKeywords(void) {return _equalsKeywords;}
+    std::map<std::string, std::string>& getFunctions(void) {return _functions;}
+    std::map<std::string, std::string>& getStringKeywords(void) {return _stringKeywords;}
+    std::map<std::string, std::string>& getEqualsKeywords(void) {return _equalsKeywords;}
 
 
     bool initialise(void)
     {
-        _keywords["END"   ] = {"END",    keywordEND   };
-        _keywords["ON"    ] = {"ON",     keywordON    };
-        _keywords["GOTO"  ] = {"GOTO",   keywordGOTO  };
-        _keywords["GOSUB" ] = {"GOSUB",  keywordGOSUB };
-        _keywords["RETURN"] = {"RETURN", keywordRETURN};
-        _keywords["CLS"   ] = {"CLS",    keywordCLS   };
-        _keywords["INPUT" ] = {"INPUT",  nullptr      };
-        _keywords["PRINT" ] = {"PRINT",  keywordPRINT };
-        _keywords["FOR"   ] = {"FOR",    keywordFOR   };
-        _keywords["NEXT"  ] = {"NEXT",   keywordNEXT  };
-        _keywords["IF"    ] = {"IF",     keywordIF    };
-        _keywords["ELSE"  ] = {"ELSE",   keywordELSE  };
-        _keywords["ELSEIF"] = {"ELSEIF", keywordELSEIF};
-        _keywords["ENDIF" ] = {"ENDIF",  keywordENDIF };
-        _keywords["WHILE" ] = {"WHILE",  keywordWHILE };
-        _keywords["WEND"  ] = {"WEND",   keywordWEND  };
-        _keywords["REPEAT"] = {"REPEAT", keywordREPEAT};
-        _keywords["UNTIL" ] = {"UNTIL",  keywordUNTIL };
-        _keywords["CONST" ] = {"CONST",  keywordCONST };
-        _keywords["DIM"   ] = {"DIM",    keywordDIM   };
-        _keywords["DEF"   ] = {"DEF",    keywordDEF   };
-        _keywords["AT"    ] = {"AT",     keywordAT    };
-        _keywords["PUT"   ] = {"PUT",    keywordPUT   };
-        _keywords["MODE"  ] = {"MODE",   keywordMODE  };
-        _keywords["WAIT"  ] = {"WAIT",   keywordWAIT  };
-        _keywords["LINE"  ] = {"LINE",   keywordLINE  };
-        _keywords["HLINE" ] = {"HLINE",  keywordHLINE };
-        _keywords["VLINE" ] = {"VLINE",  keywordVLINE };
-        _keywords["SCROLL"] = {"SCROLL", keywordSCROLL};
-        _keywords["POKE"  ] = {"POKE",   keywordPOKE  };
-        _keywords["DOKE"  ] = {"DOKE",   keywordDOKE  };
-        _keywords["PLAY"  ] = {"PLAY",   keywordPLAY  };
+        _keywords["REM"   ] = {"REM",    keywordREM,    Compiler::SingleStatementParsed};
+        _keywords["LET"   ] = {"LET",    keywordLET,    Compiler::SingleStatementParsed};
+        _keywords["END"   ] = {"END",    keywordEND,    Compiler::SingleStatementParsed};
+        _keywords["ON"    ] = {"ON",     keywordON,     Compiler::SingleStatementParsed};
+        _keywords["GOTO"  ] = {"GOTO",   keywordGOTO,   Compiler::SingleStatementParsed};
+        _keywords["GOSUB" ] = {"GOSUB",  keywordGOSUB,  Compiler::SingleStatementParsed};
+        _keywords["RETURN"] = {"RETURN", keywordRETURN, Compiler::SingleStatementParsed};
+        _keywords["CLS"   ] = {"CLS",    keywordCLS,    Compiler::SingleStatementParsed};
+        _keywords["PRINT" ] = {"PRINT",  keywordPRINT,  Compiler::SingleStatementParsed};
+        _keywords["INPUT" ] = {"INPUT",  keywordINPUT,  Compiler::SingleStatementParsed};
+        _keywords["CHR$"  ] = {"CHR$",   keywordCHR,    Compiler::SingleStatementParsed};
+        _keywords["HEX$"  ] = {"HEX$",   keywordHEX,    Compiler::SingleStatementParsed};
+        _keywords["HEXW$" ] = {"HEXW$",  keywordHEXW,   Compiler::SingleStatementParsed};
+        _keywords["COPY$" ] = {"COPY$",  keywordCOPY,   Compiler::SingleStatementParsed};
+        _keywords["ADD$"  ] = {"ADD$",   keywordADD,    Compiler::SingleStatementParsed};
+        _keywords["MID$"  ] = {"MID$",   keywordMID,    Compiler::SingleStatementParsed};
+        _keywords["LEFT$" ] = {"LEFT$",  keywordLEFT,   Compiler::SingleStatementParsed};
+        _keywords["RIGHT$"] = {"RIGHT$", keywordRIGHT,  Compiler::SingleStatementParsed};
+        _keywords["FOR"   ] = {"FOR",    keywordFOR,    Compiler::SingleStatementParsed};
+        _keywords["NEXT"  ] = {"NEXT",   keywordNEXT,   Compiler::SingleStatementParsed};
+        _keywords["IF"    ] = {"IF",     keywordIF,     Compiler::MultiStatementParsed };
+        _keywords["ELSEIF"] = {"ELSEIF", keywordELSEIF, Compiler::SingleStatementParsed};
+        _keywords["ELSE"  ] = {"ELSE",   keywordELSE,   Compiler::SingleStatementParsed};
+        _keywords["ENDIF" ] = {"ENDIF",  keywordENDIF,  Compiler::SingleStatementParsed};
+        _keywords["WHILE" ] = {"WHILE",  keywordWHILE,  Compiler::SingleStatementParsed};
+        _keywords["WEND"  ] = {"WEND",   keywordWEND,   Compiler::SingleStatementParsed};
+        _keywords["REPEAT"] = {"REPEAT", keywordREPEAT, Compiler::SingleStatementParsed};
+        _keywords["UNTIL" ] = {"UNTIL",  keywordUNTIL,  Compiler::SingleStatementParsed};
+        _keywords["CONST" ] = {"CONST",  keywordCONST,  Compiler::SingleStatementParsed};
+        _keywords["DIM"   ] = {"DIM",    keywordDIM,    Compiler::SingleStatementParsed};
+        _keywords["DEF"   ] = {"DEF",    keywordDEF,    Compiler::SingleStatementParsed};
+        _keywords["AT"    ] = {"AT",     keywordAT,     Compiler::SingleStatementParsed};
+        _keywords["PUT"   ] = {"PUT",    keywordPUT,    Compiler::SingleStatementParsed};
+        _keywords["MODE"  ] = {"MODE",   keywordMODE,   Compiler::SingleStatementParsed};
+        _keywords["WAIT"  ] = {"WAIT",   keywordWAIT,   Compiler::SingleStatementParsed};
+        _keywords["LINE"  ] = {"LINE",   keywordLINE,   Compiler::SingleStatementParsed};
+        _keywords["HLINE" ] = {"HLINE",  keywordHLINE,  Compiler::SingleStatementParsed};
+        _keywords["VLINE" ] = {"VLINE",  keywordVLINE,  Compiler::SingleStatementParsed};
+        _keywords["SCROLL"] = {"SCROLL", keywordSCROLL, Compiler::SingleStatementParsed};
+        _keywords["POKE"  ] = {"POKE",   keywordPOKE,   Compiler::SingleStatementParsed};
+        _keywords["DOKE"  ] = {"DOKE",   keywordDOKE,   Compiler::SingleStatementParsed};
+        _keywords["PLAY"  ] = {"PLAY",   keywordPLAY,   Compiler::SingleStatementParsed};
 
-        _functions["PEEK"  ] = {"PEEK", nullptr};
-        _functions["DEEK"  ] = {"DEEK", nullptr};
-        _functions["USR"   ] = {"USR",  nullptr};
-        _functions["ABS"   ] = {"ABS",  nullptr};
-        _functions["ACS"   ] = {"ACS",  nullptr};
-        _functions["ASC"   ] = {"ASC",  nullptr};
-        _functions["ASN"   ] = {"ASN",  nullptr};
-        _functions["ATN"   ] = {"ATN",  nullptr};
-        _functions["COS"   ] = {"COS",  nullptr};
-        _functions["EXP"   ] = {"EXP",  nullptr};
-        _functions["INT"   ] = {"INT",  nullptr};
-        _functions["LOG"   ] = {"LOG",  nullptr};
-        _functions["RND"   ] = {"RND",  nullptr};
-        _functions["SIN"   ] = {"SIN",  nullptr};
-        _functions["SQR"   ] = {"SQR",  nullptr};
-        _functions["TAN"   ] = {"TAN",  nullptr};
-        _functions["FRE"   ] = {"FRE",  nullptr};
-        _functions["TIME"  ] = {"TIME", nullptr};
+        _functions["PEEK"] = {"PEEK"};
+        _functions["DEEK"] = {"DEEK"};
+        _functions["USR" ] = {"USR" };
+        _functions["ABS" ] = {"ABS" };
+        _functions["ACS" ] = {"ACS" };
+        _functions["ASC" ] = {"ASC" };
+        _functions["ASN" ] = {"ASN" };
+        _functions["ATN" ] = {"ATN" };
+        _functions["COS" ] = {"COS" };
+        _functions["EXP" ] = {"EXP" };
+        _functions["INT" ] = {"INT" };
+        _functions["LOG" ] = {"LOG" };
+        _functions["RND" ] = {"RND" };
+        _functions["SIN" ] = {"SIN" };
+        _functions["SQR" ] = {"SQR" };
+        _functions["TAN" ] = {"TAN" };
+        _functions["FRE" ] = {"FRE" };
+        _functions["TIME"] = {"TIME"};
 
-        _stringKeywords["CHR$"  ] = {"CHR$",   nullptr};
-        _stringKeywords["HEX$"  ] = {"HEX$",   nullptr};
-        _stringKeywords["HEXW$" ] = {"HEXW$",  nullptr};
-        _stringKeywords["MID$"  ] = {"MID$",   nullptr};
-        _stringKeywords["LEFT$" ] = {"LEFT$",  nullptr};
-        _stringKeywords["RIGHT$"] = {"RIGHT$", nullptr};
-        _stringKeywords["SPC$"  ] = {"SPC$",   nullptr};
-        _stringKeywords["STR$"  ] = {"STR$",   nullptr};
-        _stringKeywords["TIME$" ] = {"TIME$",  nullptr};
+        _stringKeywords["CHR$"  ] = {"CHR$"  };
+        _stringKeywords["HEX$"  ] = {"HEX$"  };
+        _stringKeywords["HEXW$" ] = {"HEXW$" };
+        _stringKeywords["COPY$" ] = {"COPY$" };
+        _stringKeywords["ADD$"  ] = {"ADD$"  };
+        _stringKeywords["MID$"  ] = {"MID$"  };
+        _stringKeywords["LEFT$" ] = {"LEFT$" };
+        _stringKeywords["RIGHT$"] = {"RIGHT$"};
+        _stringKeywords["SPC$"  ] = {"SPC$"  };
+        _stringKeywords["STR$"  ] = {"STR$"  };
+        _stringKeywords["TIME$" ] = {"TIME$" };
 
-        _equalsKeywords.push_back("CONST");
-        _equalsKeywords.push_back("DIM");
-        _equalsKeywords.push_back("DEF");
-        _equalsKeywords.push_back("FOR");
-        _equalsKeywords.push_back("IF");
-        _equalsKeywords.push_back("ELSEIF");
-        _equalsKeywords.push_back("WHILE");
-        _equalsKeywords.push_back("UNTIL");
+        _equalsKeywords["CONST" ] = {"CONST" };
+        _equalsKeywords["DIM"   ] = {"DIM"   };
+        _equalsKeywords["DEF"   ] = {"DEF"   };
+        _equalsKeywords["FOR"   ] = {"FOR"   };
+        _equalsKeywords["IF"    ] = {"IF"    };
+        _equalsKeywords["ELSEIF"] = {"ELSEIF"};
+        _equalsKeywords["WHILE" ] = {"WHILE" };
+        _equalsKeywords["UNTIL" ] = {"UNTIL" };
 
         return true;
     }
@@ -127,6 +143,58 @@ namespace Keywords
         }
 
         return KeywordFound;
+    }
+
+    EmitStringResult emitStringAddr(const std::string& token, const std::string& operand)
+    {
+        std::string strToken = token;
+        Expression::stripNonStringWhitespace(strToken);
+        if(strToken.back() == '$'  &&  Expression::isVarNameValid(strToken))
+        {
+            uint16_t srcAddr;
+            int strIndexSrc = Compiler::findStr(strToken);
+            if(strIndexSrc >= 0)
+            {
+                srcAddr = Compiler::getStringVars()[strIndexSrc]._address;
+            }
+            else
+            {
+                strIndexSrc = Compiler::findConst(strToken);
+                if(strIndexSrc == -1) return SyntaxError;
+                
+                srcAddr = Compiler::getConstants()[strIndexSrc]._address;
+            }
+
+            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr), false);
+            Compiler::emitVcpuAsm("STW", operand, false);
+
+            return ValidStringVar;
+        }
+
+        return InvalidStringVar;
+    }
+
+    bool handlePrintKeywords(Compiler::CodeLine& codeLine, int codeLineIndex, const std::string& token)
+    {
+        size_t lbra, rbra;
+        if(!Expression::findMatchingBrackets(token, 0, lbra, rbra)) return false;
+
+        std::string keywordToken = token.substr(0, lbra);
+        Expression::strToUpper(keywordToken);
+        Expression::stripWhitespace(keywordToken);
+        if(_stringKeywords.find(keywordToken) == _stringKeywords.end()) return false;
+
+        KeywordFuncResult result;
+        Compiler::CodeLine codeline;
+        Compiler::createCodeLine(token, 0, codeLine._labelIndex, -1, false, false, codeline);
+        if(keywordToken == "CHR$")       keywordCHR(codeline,  codeLineIndex, 0, result);
+        else if(keywordToken == "HEX$")  keywordHEX(codeline,  codeLineIndex, 0, result);
+        else if(keywordToken == "HEXW$") keywordHEXW(codeline, codeLineIndex, 0, result);
+        else return false;
+
+        Compiler::emitVcpuAsm("%PrintString", Expression::wordToHexString(Compiler::getStrWorkArea()), false, codeLineIndex);
+
+        return true;
     }
 
 
@@ -668,357 +736,6 @@ namespace Keywords
         return true;
     }
 
-    bool keywordPOKE(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
-    {
-        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
-        if(tokens.size() != 2)
-        {
-            fprintf(stderr, "Compiler::keywordPOKE() : Syntax error, 'POKE A,X', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
-            return false;
-        }
-
-        std::vector<std::string> operands = {"", ""};
-        std::vector<Compiler::OperandType> operandTypes {Compiler::OperandConst, Compiler::OperandConst};
-
-        for(int i=0; i<tokens.size(); i++)
-        {
-            Expression::Numeric numeric;
-            operandTypes[i] = parseExpression(codeLine, codeLineIndex, tokens[i], operands[i], numeric);
-        }
-
-        if((operandTypes[0] == Compiler::OperandVar  ||  operandTypes[0] == Compiler::OperandTemp)  &&  (operandTypes[1] == Compiler::OperandVar  ||  operandTypes[1] == Compiler::OperandTemp))
-        {
-            (operandTypes[1] == Compiler::OperandVar) ? Compiler::emitVcpuAsm("LDW", "_" + operands[1], false, codeLineIndex) : Compiler::emitVcpuAsm("LDW", operands[1], false, codeLineIndex);
-            (operandTypes[0] == Compiler::OperandVar) ? Compiler::emitVcpuAsm("POKE", "_" + operands[0], false, codeLineIndex) : Compiler::emitVcpuAsm("POKE", operands[0], false, codeLineIndex);
-        }
-        else if((operandTypes[0] == Compiler::OperandVar  ||  operandTypes[0] == Compiler::OperandTemp)  &&  operandTypes[1] == Compiler::OperandConst)
-        {
-            Compiler::emitVcpuAsm("LDI", operands[1], false, codeLineIndex);
-            (operandTypes[0] == Compiler::OperandVar) ? Compiler::emitVcpuAsm("POKE", "_" + operands[0], false, codeLineIndex) : Compiler::emitVcpuAsm("POKE", operands[0], false, codeLineIndex);
-        }
-        else if(operandTypes[0] == Compiler::OperandConst  &&  (operandTypes[1] == Compiler::OperandVar  ||  operandTypes[1] == Compiler::OperandTemp))
-        {
-            Compiler::emitVcpuAsm("LDWI", operands[0], false, codeLineIndex);
-            Compiler::emitVcpuAsm("STW", "register0", false, codeLineIndex);
-            (operandTypes[1] == Compiler::OperandVar) ? Compiler::emitVcpuAsm("LDW", "_" + operands[1], false, codeLineIndex) : Compiler::emitVcpuAsm("LDW", operands[1], false, codeLineIndex);
-            Compiler::emitVcpuAsm("POKE", "register0", false, codeLineIndex);
-        }
-        else
-        {
-            Compiler::emitVcpuAsm("LDWI", operands[0], false, codeLineIndex);
-            Compiler::emitVcpuAsm("STW",  "register0", false, codeLineIndex);
-            Compiler::emitVcpuAsm("LDI",  operands[1], false, codeLineIndex);
-            Compiler::emitVcpuAsm("POKE", "register0", false, codeLineIndex);
-        }
-
-        return true;
-    }
-
-    bool keywordDOKE(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
-    {
-        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
-        if(tokens.size() != 2)
-        {
-            fprintf(stderr, "Compiler::keywordDOKE() : syntax error, 'DOKE A,X', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
-            return false;
-        }
-
-        std::vector<std::string> operands = {"", ""};
-        std::vector<Compiler::OperandType> operandTypes {Compiler::OperandConst, Compiler::OperandConst};
-
-        for(int i=0; i<tokens.size(); i++)
-        {
-            Expression::Numeric numeric;
-            operandTypes[i] = parseExpression(codeLine, codeLineIndex, tokens[i], operands[i], numeric);
-        }
-
-        if((operandTypes[0] == Compiler::OperandVar  ||  operandTypes[0] == Compiler::OperandTemp)  &&  (operandTypes[1] == Compiler::OperandVar  ||  operandTypes[1] == Compiler::OperandTemp))
-        {
-            (operandTypes[1] == Compiler::OperandVar) ? Compiler::emitVcpuAsm("LDW", "_" + operands[1], false, codeLineIndex) : Compiler::emitVcpuAsm("LDW", "" + operands[1], false, codeLineIndex);
-            (operandTypes[0] == Compiler::OperandVar) ? Compiler::emitVcpuAsm("DOKE", "_" + operands[0], false, codeLineIndex) : Compiler::emitVcpuAsm("DOKE", "" + operands[0], false, codeLineIndex);
-        }
-        else if((operandTypes[0] == Compiler::OperandVar  ||  operandTypes[0] == Compiler::OperandTemp)  &&  operandTypes[1] == Compiler::OperandConst)
-        {
-            Compiler::emitVcpuAsm("LDWI", operands[1], false, codeLineIndex);
-            (operandTypes[0] == Compiler::OperandVar) ? Compiler::emitVcpuAsm("DOKE", "_" + operands[0], false, codeLineIndex) : Compiler::emitVcpuAsm("DOKE", "" + operands[0], false, codeLineIndex);
-        }
-        else if(operandTypes[0] == Compiler::OperandConst  &&  (operandTypes[1] == Compiler::OperandVar  ||  operandTypes[1] == Compiler::OperandTemp))
-        {
-            Compiler::emitVcpuAsm("LDWI", operands[0], false, codeLineIndex);
-            Compiler::emitVcpuAsm("STW", "register0", false, codeLineIndex);
-            (operandTypes[1] == Compiler::OperandVar) ? Compiler::emitVcpuAsm("LDW", "_" + operands[1], false, codeLineIndex) : Compiler::emitVcpuAsm("LDW", "" + operands[1], false, codeLineIndex);
-            Compiler::emitVcpuAsm("DOKE", "register0", false, codeLineIndex);
-        }
-        else
-        {
-            Compiler::emitVcpuAsm("LDWI", operands[0], false, codeLineIndex);
-            Compiler::emitVcpuAsm("STW",  "register0", false, codeLineIndex);
-            Compiler::emitVcpuAsm("LDWI", operands[1], false, codeLineIndex);
-            Compiler::emitVcpuAsm("DOKE", "register0", false, codeLineIndex);
-        }
-
-        return true;
-    }
-
-    bool keywordAT(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
-    {
-        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
-        if(tokens.size() < 1  &&  tokens.size() > 2)
-        {
-            fprintf(stderr, "Compiler::keywordAT() : Syntax error, 'AT X' or 'AT X,Y', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
-            return false;
-        }
-
-        std::vector<Expression::Numeric> params = {Expression::Numeric(), Expression::Numeric()};
-        for(int i=0; i<tokens.size(); i++)
-        {
-            uint32_t expressionType = parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
-            switch(i)
-            {
-                case 0: Compiler::emitVcpuAsm("ST", "cursorXY",     false, codeLineIndex); break;
-                case 1: Compiler::emitVcpuAsm("ST", "cursorXY + 1", false, codeLineIndex); break;
-            }
-        }
-
-        if(Assembler::getUseOpcodeCALLI())
-        {
-            Compiler::emitVcpuAsm("CALLI", "atTextCursor", false, codeLineIndex);
-        }
-        else
-        {
-            Compiler::emitVcpuAsm("LDWI", "atTextCursor", false, codeLineIndex);
-            Compiler::emitVcpuAsm("CALL", "giga_vAC",     false, codeLineIndex);
-        }
-
-        return true;
-    }
-
-    bool keywordPUT(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
-    {
-        std::string expression = codeLine._code.substr(foundPos);
-        if(expression.size() == 0)
-        {
-            fprintf(stderr, "Compiler::keywordPUT() : Syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
-            return false;
-        }
-
-        Expression::Numeric param;
-        uint32_t expressionType = parseExpression(codeLine, codeLineIndex, expression, param);
-        Compiler::emitVcpuAsm("%PrintAcChar", "", false, codeLineIndex);
-
-        return true;
-    }
-
-    bool keywordMODE(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
-    {
-        std::string expression = codeLine._code.substr(foundPos);
-        if(expression.size() == 0)
-        {
-            fprintf(stderr, "Compiler::keywordMODE() : Syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
-            return false;
-        }
-
-        Expression::Numeric param;
-        uint32_t expressionType = parseExpression(codeLine, codeLineIndex, expression, param);
-        Compiler::emitVcpuAsm("STW", "graphicsMode", false, codeLineIndex);
-        Compiler::emitVcpuAsm("%ScanlineMode", "",   false, codeLineIndex);
-
-        return true;
-    }
-
-    bool keywordWAIT(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
-    {
-        std::string expression = codeLine._code.substr(foundPos);
-        if(expression.size() == 0)
-        {
-            fprintf(stderr, "Compiler::keywordWAIT() : Syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
-            return false;
-        }
-
-        Expression::Numeric param;
-        uint32_t expressionType = parseExpression(codeLine, codeLineIndex, expression, param);
-        Compiler::emitVcpuAsm("STW", "waitVBlankNum", false, codeLineIndex);
-        Compiler::emitVcpuAsm("%WaitVBlank", "",      false, codeLineIndex);
-
-        return true;
-    }
-
-    bool keywordLINE(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
-    {
-        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
-        if(tokens.size() !=2  &&  tokens.size() != 4)
-        {
-            fprintf(stderr, "Compiler::keywordLINE() : Syntax error, 'LINE X,Y' or 'LINE X1,Y1,X2,Y2', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
-            return false;
-        }
-
-        if(tokens.size() == 2)
-        {
-            std::vector<Expression::Numeric> params = {Expression::Numeric(), Expression::Numeric()};
-            for(int i=0; i<tokens.size(); i++)
-            {
-                uint32_t expressionType = parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
-                switch(i)
-                {
-                    case 0: Compiler::emitVcpuAsm("STW", "drawLine_x2", false, codeLineIndex); break;
-                    case 1: Compiler::emitVcpuAsm("STW", "drawLine_y2", false, codeLineIndex); break;
-                }
-            }
-
-            Compiler::emitVcpuAsm("%AtLineCursor", "", false, codeLineIndex);
-        }
-        else
-        {
-            std::vector<Expression::Numeric> params = {Expression::Numeric(), Expression::Numeric(), Expression::Numeric(), Expression::Numeric()};
-            for(int i=0; i<tokens.size(); i++)
-            {
-                uint32_t expressionType = parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
-                switch(i)
-                {
-                    case 0: Compiler::emitVcpuAsm("STW", "drawLine_x1", false, codeLineIndex); break;
-                    case 1: Compiler::emitVcpuAsm("STW", "drawLine_y1", false, codeLineIndex); break;
-                    case 2: Compiler::emitVcpuAsm("STW", "drawLine_x2", false, codeLineIndex); break;
-                    case 3: Compiler::emitVcpuAsm("STW", "drawLine_y2", false, codeLineIndex); break;
-                }
-            }
-        }
-
-        Compiler::emitVcpuAsm("%DrawLine", "", false, codeLineIndex);
-
-        return true;
-    }
-
-    bool keywordHLINE(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
-    {
-        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
-        if(tokens.size() !=3)
-        {
-            fprintf(stderr, "Compiler::keywordHLINE() : Syntax error, 'HLINE X1,Y,X2', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
-            return false;
-        }
-
-        std::vector<Expression::Numeric> params = {Expression::Numeric(), Expression::Numeric(), Expression::Numeric()};
-        for(int i=0; i<tokens.size(); i++)
-        {
-            uint32_t expressionType = parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
-            switch(i)
-            {
-                case 0: Compiler::emitVcpuAsm("STW", "drawHLine_x1", false, codeLineIndex); break;
-                case 1: Compiler::emitVcpuAsm("STW", "drawHLine_y1", false, codeLineIndex); break;
-                case 2: Compiler::emitVcpuAsm("STW", "drawHLine_x2", false, codeLineIndex); break;
-            }
-        }
-
-        Compiler::emitVcpuAsm("%DrawHLine", "", false, codeLineIndex);
-
-        return true;
-    }
-
-    bool keywordVLINE(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
-    {
-        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
-        if(tokens.size() !=3)
-        {
-            fprintf(stderr, "Compiler::keywordVLINE() : Syntax error, 'VLINE X1,Y,X2', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
-            return false;
-        }
-
-        std::vector<Expression::Numeric> params = {Expression::Numeric(), Expression::Numeric(), Expression::Numeric()};
-        for(int i=0; i<tokens.size(); i++)
-        {
-            uint32_t expressionType = parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
-            switch(i)
-            {
-                case 0: Compiler::emitVcpuAsm("STW", "drawVLine_x1", false, codeLineIndex); break;
-                case 1: Compiler::emitVcpuAsm("STW", "drawVLine_y1", false, codeLineIndex); break;
-                case 2: Compiler::emitVcpuAsm("STW", "drawVLine_y2", false, codeLineIndex); break;
-            }
-        }
-
-        Compiler::emitVcpuAsm("%DrawVLine", "", false, codeLineIndex);
-
-        return true;
-    }
-
-    bool keywordPLAY(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
-    {
-        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), " ,", false);
-        if(tokens.size() != 2  &&  tokens.size() != 3)
-        {
-            fprintf(stderr, "Compiler::keywordPLAY() : Syntax error, use 'PLAY MIDI <address>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
-            return false;
-        }
-
-        std::string midiToken = Expression::strToUpper(tokens[0]);
-        Expression::stripWhitespace(midiToken);
-        if(midiToken != "MIDI")
-        {
-            fprintf(stderr, "Compiler::keywordPLAY() : Syntax error, use 'PLAY MIDI <address>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
-            return false;
-        }
-
-        // Midi wave type, (optional)
-        if(tokens.size() == 3)
-        {
-            std::string waveTypeToken = tokens[2];
-            Expression::stripWhitespace(waveTypeToken);
-            Expression::Numeric param;
-            uint32_t expressionType = parseExpression(codeLine, codeLineIndex, waveTypeToken, param);
-            Compiler::emitVcpuAsm("ST", "waveType", false, codeLineIndex);
-        }
-        else
-        {
-            Compiler::emitVcpuAsm("LDI", "2",       false, codeLineIndex);
-            Compiler::emitVcpuAsm("ST", "waveType", false, codeLineIndex);
-        }
-
-        // Midi stream address
-        std::string addressToken = tokens[1];
-        Expression::stripWhitespace(addressToken);
-        Expression::Numeric param;
-        uint32_t expressionType = parseExpression(codeLine, codeLineIndex, addressToken, param);
-        Compiler::emitVcpuAsm("%PlayMidi", "", false, codeLineIndex);
-
-        return true;
-    }
-
-    bool keywordSCROLL(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
-    {
-        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ' ', false);
-        if(tokens.size() != 1)
-        {
-            fprintf(stderr, "Compiler::keywordSCROLL() : Syntax error, 'SCROLL ON' or 'SCROLL OFF', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
-            return false;
-        }
-
-        std::string scrollToken = Expression::strToUpper(tokens[0]);
-        Expression::stripWhitespace(scrollToken);
-        if(scrollToken != "ON"  &&  scrollToken != "OFF")
-        {
-            fprintf(stderr, "Compiler::keywordSCROLL() : Syntax error, 'SCROLL ON' or 'SCROLL OFF', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
-            return false;
-        }
-
-        if(scrollToken == "ON")
-        {
-            Compiler::emitVcpuAsm("LDWI", "0x0001", false, codeLineIndex);
-            Compiler::emitVcpuAsm("ORW", "miscFlags", false, codeLineIndex);
-        }
-        else
-        {
-            Compiler::emitVcpuAsm("LDWI", "0xFFFE", false, codeLineIndex);
-            Compiler::emitVcpuAsm("ANDW", "miscFlags", false, codeLineIndex);
-        }
-        Compiler::emitVcpuAsm("STW", "miscFlags", false, codeLineIndex);
-
-        return true;
-    }
-
-    bool keywordINPUT(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
-    {
-        return true;
-    }
-
     bool keywordPRINT(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
         // Parse print tokens
@@ -1026,23 +743,29 @@ namespace Keywords
 
         for(int i=0; i<tokens.size(); i++)
         {
-            int varIndex, constIndex;
+            int varIndex = -1, constIndex = -1, strIndex = -1;
             Expression::Numeric value;
-            uint32_t expressionType = Compiler::isExpression(tokens[i], varIndex, constIndex);
+            uint32_t expressionType = Compiler::isExpression(tokens[i], varIndex, constIndex, strIndex);
 
             if(expressionType & Expression::HasStringKeywords)
             {
+#if 0
+                // Gigatron creates and prints strings
+                handlePrintKeywords(codeLine, codeLineIndex, tokens[i]);
+#else
+                // Gigatron prints text on the fly without creating strings
                 Expression::setEnablePrint(true);
                 Expression::parse(tokens[i], codeLineIndex, value);
                 Expression::setEnablePrint(false);
+#endif
             }
-            else if((expressionType & Expression::HasVars)  &&  (expressionType & Expression::HasOperators))
+            else if((expressionType & Expression::HasIntVars)  &&  (expressionType & Expression::HasOperators))
             {
                 Expression::parse(tokens[i], codeLineIndex, value);
                 Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false, codeLineIndex);
                 Compiler::emitVcpuAsm("%PrintAcInt16", "", false, codeLineIndex);
             }
-            else if((expressionType & Expression::HasVars)  &&  !(expressionType & Expression::HasStrings))
+            else if(expressionType & Expression::HasIntVars)
             {
                 Expression::parse(tokens[i], codeLineIndex, value);
                 if(varIndex >= 0)
@@ -1060,6 +783,14 @@ namespace Keywords
                 else
                 {
                     Compiler::emitVcpuAsm("%PrintAcInt16", "", false, codeLineIndex);
+                }
+            }
+            else if(expressionType & Expression::HasStrVars)
+            {
+                if(strIndex >= 0)
+                {
+                    std::string strName = Compiler::getStringVars()[strIndex]._name;
+                    Compiler::emitVcpuAsm("%PrintString", "_" + strName, false, codeLineIndex);
                 }
             }
             else if(expressionType & Expression::HasKeywords)
@@ -1088,22 +819,14 @@ namespace Keywords
                     if(!Compiler::createString(codeLine, codeLineIndex, str, name, address)) return false;
 
                     // Print string
-                    Compiler::emitVcpuAsm("%PrintString", name, false, codeLineIndex);
-                }
-                else
-                {
-                    std::string varName = Compiler::getIntegerVars()[varIndex]._name;
-                    if(varIndex >= 0  &&  varName.find("$") != std::string::npos)
-                    {
-                        Compiler::emitVcpuAsm("%PrintVarString", "_" + varName, false, codeLineIndex);
-                    }
+                    Compiler::emitVcpuAsm("%PrintString", "_" + name, false, codeLineIndex);
                 }
             }
             else if(expressionType == Expression::HasStrConsts)
             {
                 // Print string
                 std::string internalName = Compiler::getConstants()[constIndex]._internalName;
-                Compiler::emitVcpuAsm("%PrintString", internalName, false, codeLineIndex);
+                Compiler::emitVcpuAsm("%PrintString", "_" + internalName, false, codeLineIndex);
             }
             else if(expressionType == Expression::HasNumbers)
             {
@@ -1132,10 +855,532 @@ namespace Keywords
         return true;
     }
 
+    bool keywordINPUT(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        return true;
+    }
+
+    bool keywordCHR(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        size_t equals = Expression::findNonStringEquals(codeLine._code) - codeLine._code.begin();
+
+        // Find brackets
+        size_t lbra, rbra;
+        if(!Expression::findMatchingBrackets(codeLine._code, foundPos, lbra, rbra))
+        {
+            fprintf(stderr, "Compiler::keywordCHR() : Syntax error in CHR$ statement, must be 'CHR$(x)', in : '%s' : on line %d\n", codeLine._code.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        // Get params in brackets
+        std::string params = codeLine._code.substr(lbra + 1, rbra - (lbra + 1));
+        std::vector<std::string> tokens = Expression::tokenise(params, ",", false);
+        if(tokens.size() != 1)
+        {
+            fprintf(stderr, "Compiler::keywordCHR() : Syntax error, incorrect number of parameters, must be 'CHR$(x)', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        Expression::Numeric numeric;
+        std::string chrToken = tokens[0];
+        Expression::stripWhitespace(chrToken);
+        parseExpression(codeLine, codeLineIndex, chrToken, numeric);
+        Compiler::emitVcpuAsm("STW", "strChr", false, codeLineIndex);
+
+        // Create variable string
+        if(equals < codeLine._code.size())
+        {
+            std::string strVar = codeLine._code.substr(0, equals);
+            Expression::stripNonStringWhitespace(strVar);
+            if(strVar.back() == '$'  &&  Expression::isVarNameValid(strVar))
+            {
+                int strIndexDst = Compiler::findStr(strVar);
+                if(strIndexDst == -1)
+                {
+                    fprintf(stderr, "Compiler::keywordCHR() : Syntax error, string assignment variable '%s' does not exist, in '%s' on line %d\n", strVar.c_str(), codeLine._text.c_str(), codeLineIndex + 1);
+                    return false;
+                }
+
+                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStringVars()[strIndexDst]._address), false, codeLineIndex);
+                Compiler::emitVcpuAsm("STW", "strDstAddr", false, codeLineIndex);
+            }
+
+            Compiler::emitVcpuAsm("%StringChr", "", false, codeLineIndex);
+        }
+        // Create temporary string
+        else
+        {
+            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStrWorkArea()), false, codeLineIndex);
+            Compiler::emitVcpuAsm("STW", "strDstAddr", false, codeLineIndex);
+            Compiler::emitVcpuAsm("%StringChr", "", false, codeLineIndex);
+        }
+
+        return true;
+    }
+
+    bool keywordHEX(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        size_t equals = Expression::findNonStringEquals(codeLine._code) - codeLine._code.begin();
+
+         // Find brackets
+        size_t lbra, rbra;
+        if(!Expression::findMatchingBrackets(codeLine._code, foundPos, lbra, rbra))
+        {
+            fprintf(stderr, "Compiler::keywordHEX() : Syntax error in HEX$ statement, must be 'HEX$(x)', in : '%s' : on line %d\n", codeLine._code.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        // Get params in brackets
+        std::string params = codeLine._code.substr(lbra + 1, rbra - (lbra + 1));
+        std::vector<std::string> tokens = Expression::tokenise(params, ",", false);
+        if(tokens.size() != 1)
+        {
+            fprintf(stderr, "Compiler::keywordHEX() : Syntax error, incorrect number of parameters, must be 'HEX$(x)', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        Expression::Numeric numeric;
+        std::string hexToken = tokens[0];
+        Expression::stripWhitespace(hexToken);
+        parseExpression(codeLine, codeLineIndex, hexToken, numeric);
+        Compiler::emitVcpuAsm("STW", "strChr", false, codeLineIndex);
+
+        if(equals < codeLine._code.size())
+        {
+            std::string strVar = codeLine._code.substr(0, equals);
+            Expression::stripNonStringWhitespace(strVar);
+            if(strVar.back() == '$'  &&  Expression::isVarNameValid(strVar))
+            {
+                int strIndexDst = Compiler::findStr(strVar);
+                if(strIndexDst == -1)
+                {
+                    fprintf(stderr, "Compiler::keywordHEX() : Syntax error, string assignment variable '%s' does not exist, in '%s' on line %d\n", strVar.c_str(), codeLine._text.c_str(), codeLineIndex + 1);
+                    return false;
+                }
+
+                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStringVars()[strIndexDst]._address), false, codeLineIndex);
+                Compiler::emitVcpuAsm("STW", "strDstAddr", false, codeLineIndex);
+            }
+
+            Compiler::emitVcpuAsm("%StringHex", "", false, codeLineIndex);
+        }
+        // Create temporary string
+        else
+        {
+            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStrWorkArea()), false, codeLineIndex);
+            Compiler::emitVcpuAsm("STW", "strDstAddr", false, codeLineIndex);
+            Compiler::emitVcpuAsm("%StringHex", "", false, codeLineIndex);
+        }
+
+        return true;
+    }
+
+    bool keywordHEXW(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        size_t equals = Expression::findNonStringEquals(codeLine._code) - codeLine._code.begin();
+
+         // Find brackets
+        size_t lbra, rbra;
+        if(!Expression::findMatchingBrackets(codeLine._code, foundPos, lbra, rbra))
+        {
+            fprintf(stderr, "Compiler::keywordHEXW() : Syntax error in HEXW$ statement, must be 'HEXW$(x)', in : '%s' : on line %d\n", codeLine._code.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        // Get params in brackets
+        std::string params = codeLine._code.substr(lbra + 1, rbra - (lbra + 1));
+        std::vector<std::string> tokens = Expression::tokenise(params, ",", false);
+        if(tokens.size() != 1)
+        {
+            fprintf(stderr, "Compiler::keywordHEXW() : Syntax error, incorrect number of parameters, must be 'HEXW$(x)', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        Expression::Numeric numeric;
+        std::string hexToken = tokens[0];
+        Expression::stripWhitespace(hexToken);
+        parseExpression(codeLine, codeLineIndex, hexToken, numeric);
+        Compiler::emitVcpuAsm("STW", "strHex", false, codeLineIndex);
+
+        if(equals < codeLine._code.size())
+        {
+            std::string strVar = codeLine._code.substr(0, equals);
+            Expression::stripNonStringWhitespace(strVar);
+            if(strVar.back() == '$'  &&  Expression::isVarNameValid(strVar))
+            {
+                int strIndexDst = Compiler::findStr(strVar);
+                if(strIndexDst == -1)
+                {
+                    fprintf(stderr, "Compiler::keywordHEXW() : Syntax error, string assignment variable '%s' does not exist, in '%s' on line %d\n", strVar.c_str(), codeLine._text.c_str(), codeLineIndex + 1);
+                    return false;
+                }
+
+                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStringVars()[strIndexDst]._address), false, codeLineIndex);
+                Compiler::emitVcpuAsm("STW", "strDstAddr", false, codeLineIndex);
+            }
+
+            Compiler::emitVcpuAsm("%StringHexw", "", false, codeLineIndex);
+        }
+        // Create temporary string
+        else
+        {
+            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStrWorkArea()), false, codeLineIndex);
+            Compiler::emitVcpuAsm("STW", "strDstAddr", false, codeLineIndex);
+            Compiler::emitVcpuAsm("%StringHexw", "", false, codeLineIndex);
+        }
+
+        return true;
+    }
+
+    bool keywordCOPY(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        size_t equals = Expression::findNonStringEquals(codeLine._code) - codeLine._code.begin();
+
+        // Find brackets
+        size_t lbra, rbra;
+        if(!Expression::findMatchingBrackets(codeLine._code, foundPos, lbra, rbra))
+        {
+            fprintf(stderr, "Compiler::keywordCOPY() : Syntax error in COPY$ statement, must be 'COPY$(x$)', in : '%s' : on line %d\n", codeLine._code.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        // Get params in brackets
+        std::string params = codeLine._code.substr(lbra + 1, rbra - (lbra + 1));
+        std::vector<std::string> tokens = Expression::tokenise(params, ",", false);
+        if(tokens.size() != 1)
+        {
+            fprintf(stderr, "Compiler::keywordCOPY() : Syntax error, incorrect number of parameters, must be 'COPY$(x$)', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        // Variable string
+        EmitStringResult emitStringResult = emitStringAddr(tokens[0], "strSrcAddr");
+        if(emitStringResult == SyntaxError)
+        {
+            fprintf(stderr, "Compiler::keywordCOPY() : Syntax error, string variable '%s' does not exist, in '%s' on line %d\n", tokens[0].c_str(), codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        // Copy source string to destination string
+        if(equals < codeLine._code.size())
+        {
+            std::string strVar = codeLine._code.substr(0, equals);
+            Expression::stripNonStringWhitespace(strVar);
+            if(strVar.back() == '$'  &&  Expression::isVarNameValid(strVar))
+            {
+                int strIndexDst = Compiler::findStr(strVar);
+                if(strIndexDst == -1)
+                {
+                    fprintf(stderr, "Compiler::keywordCOPY() : Syntax error, string assignment variable '%s' does not exist, in '%s' on line %d\n", strVar.c_str(), codeLine._text.c_str(), codeLineIndex + 1);
+                    return false;
+                }
+
+                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStringVars()[strIndexDst]._address), false, codeLineIndex);
+                Compiler::emitVcpuAsm("STW", "strDstAddr", false, codeLineIndex);
+            }
+
+            Compiler::emitVcpuAsm("%StringCopy", "", false, codeLineIndex);
+        }
+
+        return true;
+    }
+
+    bool keywordADD(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        size_t equals = Expression::findNonStringEquals(codeLine._code) - codeLine._code.begin();
+
+        // Find brackets
+        size_t lbra, rbra;
+        if(!Expression::findMatchingBrackets(codeLine._code, foundPos, lbra, rbra))
+        {
+            fprintf(stderr, "Compiler::keywordADD() : Syntax error in ADD$ statement, must be 'ADD$(x$, y$)', in : '%s' : on line %d\n", codeLine._code.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        // Get params in brackets
+        std::string params = codeLine._code.substr(lbra + 1, rbra - (lbra + 1));
+        std::vector<std::string> tokens = Expression::tokenise(params, ",", false);
+        if(tokens.size() != 2)
+        {
+            fprintf(stderr, "Compiler::keywordADD() : Syntax error, incorrect number of parameters, must be 'ADD$(x$, y$)', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        // Variable string0
+        EmitStringResult emitStringResult = emitStringAddr(tokens[0], "strSrcAddr");
+        if(emitStringResult == SyntaxError)
+        {
+            fprintf(stderr, "Compiler::keywordADD() : Syntax error, string variable '%s' does not exist, in '%s' on line %d\n", tokens[0].c_str(), codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        // Variable string1
+        emitStringResult = emitStringAddr(tokens[1], "strSrcAddr2");
+        if(emitStringResult == SyntaxError)
+        {
+            fprintf(stderr, "Compiler::keywordADD() : Syntax error, string variable '%s' does not exist, in '%s' on line %d\n", tokens[1].c_str(), codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        // Concatenate two source strings to string work area
+        Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStrWorkArea()), false, codeLineIndex);
+        Compiler::emitVcpuAsm("STW", "strDstAddr", false, codeLineIndex);
+        Compiler::emitVcpuAsm("%StringAdd", "", false, codeLineIndex);
+
+        // Copy string work area to var
+        if(equals < codeLine._code.size())
+        {
+            std::string strVar = codeLine._code.substr(0, equals);
+            Expression::stripNonStringWhitespace(strVar);
+            if(strVar.back() == '$'  &&  Expression::isVarNameValid(strVar))
+            {
+                int strIndexDst = Compiler::findStr(strVar);
+                if(strIndexDst == -1)
+                {
+                    fprintf(stderr, "Compiler::keywordADD() : Syntax error, string assignment variable '%s' does not exist, in '%s' on line %d\n", strVar.c_str(), codeLine._text.c_str(), codeLineIndex + 1);
+                    return false;
+                }
+
+                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStringVars()[strIndexDst]._address), false, codeLineIndex);
+                Compiler::emitVcpuAsm("STW", "strDstAddr", false, codeLineIndex);
+            }
+
+            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStrWorkArea()), false, codeLineIndex);
+            Compiler::emitVcpuAsm("STW", "strSrcAddr", false, codeLineIndex);
+            Compiler::emitVcpuAsm("%StringCopy", "", false, codeLineIndex);
+        }
+
+        return true;
+    }
+
+    bool keywordMID(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        size_t equals = Expression::findNonStringEquals(codeLine._code) - codeLine._code.begin();
+
+        // Find brackets
+        size_t lbra, rbra;
+        if(!Expression::findMatchingBrackets(codeLine._code, foundPos, lbra, rbra))
+        {
+            fprintf(stderr, "Compiler::keywordMID() : Syntax error in MID$ statement, must be 'MID$(x$, o, n)', in : '%s' : on line %d\n", codeLine._code.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        // Get params in brackets
+        std::string params = codeLine._code.substr(lbra + 1, rbra - (lbra + 1));
+        std::vector<std::string> tokens = Expression::tokenise(params, ",", false);
+        if(tokens.size() != 3)
+        {
+            fprintf(stderr, "Compiler::keywordMID() : Syntax error, incorrect number of parameters, must be 'MID$(x$, o, n)', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        // Variable string
+        EmitStringResult emitStringResult = emitStringAddr(tokens[0], "strSrcAddr");
+        if(emitStringResult == SyntaxError)
+        {
+            fprintf(stderr, "Compiler::keywordMID() : Syntax error, string variable '%s' does not exist, in '%s' on line %d\n", tokens[0].c_str(), codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        if(emitStringResult == InvalidStringVar)
+        {
+            // Constant string
+            if(Expression::isValidString(tokens[0]))
+            {
+            }
+        }
+
+        Expression::Numeric numeric;
+        std::string ofsToken = tokens[1];
+        Expression::stripWhitespace(ofsToken);
+        parseExpression(codeLine, codeLineIndex, ofsToken, numeric);
+        Compiler::emitVcpuAsm("STW", "strOffset", false, codeLineIndex);
+
+        std::string lenToken = tokens[2];
+        Expression::stripWhitespace(lenToken);
+        parseExpression(codeLine, codeLineIndex, lenToken, numeric);
+        Compiler::emitVcpuAsm("STW", "strLength", false, codeLineIndex);
+
+        // Variable assignment
+        if(equals < codeLine._code.size())
+        {
+            std::string strVar = codeLine._code.substr(0, equals);
+            Expression::stripNonStringWhitespace(strVar);
+            if(strVar.back() == '$'  &&  Expression::isVarNameValid(strVar))
+            {
+                int strIndexDst = Compiler::findStr(strVar);
+                if(strIndexDst == -1)
+                {
+                    fprintf(stderr, "Compiler::keywordMID() : Syntax error, string assignment variable '%s' does not exist, in '%s' on line %d\n", strVar.c_str(), codeLine._text.c_str(), codeLineIndex + 1);
+                    return false;
+                }
+
+                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStringVars()[strIndexDst]._address), false, codeLineIndex);
+                Compiler::emitVcpuAsm("STW", "strDstAddr", false, codeLineIndex);
+            }
+        }
+        // Temporary string work area assignment
+        else
+        {
+            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStrWorkArea()), false, codeLineIndex);
+            Compiler::emitVcpuAsm("STW", "strDstAddr", false, codeLineIndex);
+        }
+
+        Compiler::emitVcpuAsm("%StringMid", "", false, codeLineIndex);
+
+        return true;
+    }
+
+    bool keywordLEFT(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        size_t equals = Expression::findNonStringEquals(codeLine._code) - codeLine._code.begin();
+
+        // Find brackets
+        size_t lbra, rbra;
+        if(!Expression::findMatchingBrackets(codeLine._code, foundPos, lbra, rbra))
+        {
+            fprintf(stderr, "Compiler::keywordLEFT() : Syntax error in LEFT$ statement, must be 'LEFT$(x$, n)', in : '%s' : on line %d\n", codeLine._code.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        // Get params in brackets
+        std::string params = codeLine._code.substr(lbra + 1, rbra - (lbra + 1));
+        std::vector<std::string> tokens = Expression::tokenise(params, ",", false);
+        if(tokens.size() != 2)
+        {
+            fprintf(stderr, "Compiler::keywordLEFT() : Syntax error, incorrect number of parameters, must be 'LEFT$(x$, n)', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        // Variable string
+        EmitStringResult emitStringResult = emitStringAddr(tokens[0], "strSrcAddr");
+        if(emitStringResult == SyntaxError)
+        {
+            fprintf(stderr, "Compiler::keywordLEFT() : Syntax error, string variable '%s' does not exist, in '%s' on line %d\n", tokens[0].c_str(), codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        if(emitStringResult == InvalidStringVar)
+        {
+            // Constant string
+            if(Expression::isValidString(tokens[0]))
+            {
+            }
+        }
+
+        Expression::Numeric numeric;
+        std::string lenToken = tokens[1];
+        Expression::stripWhitespace(lenToken);
+        parseExpression(codeLine, codeLineIndex, lenToken, numeric);
+        Compiler::emitVcpuAsm("STW", "strLength", false, codeLineIndex);
+
+        // Variable assignment
+        if(equals < codeLine._code.size())
+        {
+            std::string strVar = codeLine._code.substr(0, equals);
+            Expression::stripNonStringWhitespace(strVar);
+            if(strVar.back() == '$'  &&  Expression::isVarNameValid(strVar))
+            {
+                int strIndexDst = Compiler::findStr(strVar);
+                if(strIndexDst == -1)
+                {
+                    fprintf(stderr, "Compiler::keywordLEFT() : Syntax error, string assignment variable '%s' does not exist, in '%s' on line %d\n", strVar.c_str(), codeLine._text.c_str(), codeLineIndex + 1);
+                    return false;
+                }
+
+                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStringVars()[strIndexDst]._address), false, codeLineIndex);
+                Compiler::emitVcpuAsm("STW", "strDstAddr", false, codeLineIndex);
+            }
+        }
+        // Temporary string work area assignment
+        else
+        {
+            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStrWorkArea()), false, codeLineIndex);
+            Compiler::emitVcpuAsm("STW", "strDstAddr", false, codeLineIndex);
+        }
+
+        Compiler::emitVcpuAsm("%StringLeft", "", false, codeLineIndex);
+
+        return true;
+    }
+
+    bool keywordRIGHT(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        size_t equals = Expression::findNonStringEquals(codeLine._code) - codeLine._code.begin();
+
+        // Find brackets
+        size_t lbra, rbra;
+        if(!Expression::findMatchingBrackets(codeLine._code, foundPos, lbra, rbra))
+        {
+            fprintf(stderr, "Compiler::keywordRIGHT() : Syntax error in RIGHT$ statement, must be 'RIGHT$(x$, n)', in : '%s' : on line %d\n", codeLine._code.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        // Get params in brackets
+        std::string params = codeLine._code.substr(lbra + 1, rbra - (lbra + 1));
+        std::vector<std::string> tokens = Expression::tokenise(params, ",", false);
+        if(tokens.size() != 2)
+        {
+            fprintf(stderr, "Compiler::keywordRIGHT() : Syntax error, incorrect number of parameters, must be 'RIGHT$(x$, n)', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        // Variable string
+        EmitStringResult emitStringResult = emitStringAddr(tokens[0], "strSrcAddr");
+        if(emitStringResult == SyntaxError)
+        {
+            fprintf(stderr, "Compiler::keywordRIGHT() : Syntax error, string variable '%s' does not exist, in '%s' on line %d\n", tokens[0].c_str(), codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        if(emitStringResult == InvalidStringVar)
+        {
+            // Constant string
+            if(Expression::isValidString(tokens[0]))
+            {
+            }
+        }
+
+        Expression::Numeric numeric;
+        std::string lenToken = tokens[1];
+        Expression::stripWhitespace(lenToken);
+        parseExpression(codeLine, codeLineIndex, lenToken, numeric);
+        Compiler::emitVcpuAsm("STW", "strLength", false, codeLineIndex);
+
+        // Variable assignment
+        if(equals < codeLine._code.size())
+        {
+            std::string strVar = codeLine._code.substr(0, equals);
+            Expression::stripNonStringWhitespace(strVar);
+            if(strVar.back() == '$'  &&  Expression::isVarNameValid(strVar))
+            {
+                int strIndexDst = Compiler::findStr(strVar);
+                if(strIndexDst == -1)
+                {
+                    fprintf(stderr, "Compiler::keywordRIGHT() : Syntax error, string assignment variable '%s' does not exist, in '%s' on line %d\n", strVar.c_str(), codeLine._text.c_str(), codeLineIndex + 1);
+                    return false;
+                }
+
+                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStringVars()[strIndexDst]._address), false, codeLineIndex);
+                Compiler::emitVcpuAsm("STW", "strDstAddr", false, codeLineIndex);
+            }
+        }
+        // Temporary string work area assignment
+        else
+        {
+            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStrWorkArea()), false, codeLineIndex);
+            Compiler::emitVcpuAsm("STW", "strDstAddr", false, codeLineIndex);
+        }
+
+        Compiler::emitVcpuAsm("%StringRight", "", false, codeLineIndex);
+
+        return true;
+    }
+
     bool keywordFOR(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
         bool optimise = true;
-        int varIndex, constIndex;
+        int varIndex, constIndex, strIndex;
         uint32_t expressionType;
 
         // Parse first line of FOR loop
@@ -1171,8 +1416,8 @@ namespace Keywords
         int16_t loopStart = 0;
         std::string startToken = codeLine._code.substr(equals + 1, to - (equals + 1));
         Expression::stripWhitespace(startToken);
-        expressionType = Compiler::isExpression(startToken, varIndex, constIndex);
-        if((expressionType & Expression::HasVars)  ||  (expressionType & Expression::HasKeywords)  ||  (expressionType & Expression::HasFunctions)) optimise = false;
+        expressionType = Compiler::isExpression(startToken, varIndex, constIndex, strIndex);
+        if((expressionType & Expression::HasIntVars)  ||  (expressionType & Expression::HasKeywords)  ||  (expressionType & Expression::HasFunctions)) optimise = false;
 
         // Var counter, (create or update if being reused)
         std::string var = codeLine._code.substr(foundPos, equals - foundPos);
@@ -1185,8 +1430,8 @@ namespace Keywords
         size_t end = (step == std::string::npos) ? codeLine._code.size() : step;
         std::string endToken = codeLine._code.substr(to + 2, end - (to + 2));
         Expression::stripWhitespace(endToken);
-        expressionType = Compiler::isExpression(endToken, varIndex, constIndex);
-        if((expressionType & Expression::HasVars)  ||  (expressionType & Expression::HasKeywords)  ||  (expressionType & Expression::HasFunctions)) optimise = false;
+        expressionType = Compiler::isExpression(endToken, varIndex, constIndex, strIndex);
+        if((expressionType & Expression::HasIntVars)  ||  (expressionType & Expression::HasKeywords)  ||  (expressionType & Expression::HasFunctions)) optimise = false;
 
         // Loop step
         int16_t loopStep = 1;
@@ -1196,8 +1441,8 @@ namespace Keywords
             end = codeLine._code.size();
             stepToken = codeLine._code.substr(step + 4, end - (step + 4));
             Expression::stripWhitespace(stepToken);
-            expressionType = Compiler::isExpression(stepToken, varIndex, constIndex);
-            if((expressionType & Expression::HasVars)  ||  (expressionType & Expression::HasKeywords)  ||  (expressionType & Expression::HasFunctions)) optimise = false;
+            expressionType = Compiler::isExpression(stepToken, varIndex, constIndex, strIndex);
+            if((expressionType & Expression::HasIntVars)  ||  (expressionType & Expression::HasKeywords)  ||  (expressionType & Expression::HasFunctions)) optimise = false;
         }
 
         Expression::Numeric startNumeric, endNumeric, stepNumeric;
@@ -1382,8 +1627,8 @@ namespace Keywords
         std::string actionText = Expression::collapseWhitespaceNotStrings(actionToken);
 
         // Multi-statements
-        int varIndex;
-        if(Compiler::parseMultiStatements(actionText, codeLine, codeLineIndex, varIndex) == Compiler::StatementError) return false;
+        int varIndex, strIndex;
+        if(Compiler::parseMultiStatements(actionText, codeLine, codeLineIndex, varIndex, strIndex) == Compiler::StatementError) return false;
 
         // Create label on next line of vasm code
         Compiler::setNextInternalLabel("_else_" + Expression::wordToHexString(Compiler::getVasmPC()));
@@ -1700,22 +1945,59 @@ namespace Keywords
         // String
         if(tokens[0].back() == '$')
         {
-            if(!Expression::isValidString(tokens[1]))
-            {
-                fprintf(stderr, "Compiler::keywordCONST() : Syntax error, invalid string, in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
-                return false;
-            }
-
-            uint16_t address;
-            std::string internalName;
-
-            // Strip whitespace and quotes
+            // Strip whitespace
             Expression::stripNonStringWhitespace(tokens[1]);
-            tokens[1].erase(0, 1);
-            tokens[1].erase(tokens[1].size()-1, 1);
+            if(Expression::isValidString(tokens[1]))
+            {
+                uint16_t address;
+                std::string internalName;
 
-            Compiler::createString(codeLine, codeLineIndex, tokens[1], internalName, address);
-            Compiler::getConstants().push_back({0, address, tokens[0], internalName, Compiler::ConstStr});
+                // Strip quotes
+                tokens[1].erase(0, 1);
+                tokens[1].erase(tokens[1].size()-1, 1);
+
+                Compiler::createString(codeLine, codeLineIndex, tokens[1], internalName, address);
+                Compiler::getConstants().push_back({0, address, tokens[0], internalName, Compiler::ConstStr});
+            }
+            // String keyword
+            else
+            {
+                size_t lbra, rbra;
+                if(!Expression::findMatchingBrackets(tokens[1], 0, lbra, rbra))
+                {
+                    fprintf(stderr, "Compiler::keywordCONST() : Syntax error, invalid string or keyword, in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+                    return false;
+                }
+
+                std::string keywordToken = tokens[1].substr(0, lbra);
+                std::string paramToken = tokens[1].substr(lbra + 1, rbra - (lbra + 1));
+                Expression::strToUpper(keywordToken);
+                if(_stringKeywords.find(keywordToken) == _stringKeywords.end())
+                {
+                    fprintf(stderr, "Compiler::keywordCONST() : Syntax error, invalid string or keyword, in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+                    return false;
+                }
+
+                int16_t param;
+                if(!Expression::stringToI16(paramToken, param))
+                {
+                    fprintf(stderr, "Compiler::keywordCONST() : Syntax error, keyword param must be a constant number, in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+                    return false;
+                }
+
+                // Create constant string
+                uint16_t address = 0x0000;
+                if(keywordToken == "CHR$")       address = Compiler::createConstantString(Compiler::StrChar, param);
+                else if(keywordToken == "HEX$")  address = Compiler::createConstantString(Compiler::StrHex,  param);
+                else if(keywordToken == "HEXW$") address = Compiler::createConstantString(Compiler::StrHexw, param);
+
+                // Create constant
+                if(address)
+                {
+                    std::string internalName = Compiler::getStringVars().back()._name;
+                    Compiler::getConstants().push_back({0, address, tokens[0], internalName, Compiler::ConstStr});
+                }
+            }
         }
         // Integer
         else
@@ -1765,7 +2047,7 @@ namespace Keywords
 
         // Var already exists?
         int varIndex = Compiler::findVar(varName);
-        if(varIndex != -1)
+        if(varIndex >= 0)
         {
             fprintf(stderr, "Compiler::keywordDIM() : Var %s already exists in : '%s' : on line %d\n", varName.c_str(), codeLine._code.c_str(), codeLineIndex + 1);
             return false;
@@ -1919,6 +2201,353 @@ namespace Keywords
                 if(!Memory::takeFreeRAM(address, int(dataWords.size()) * 2)) return false;
             }
         }
+
+        return true;
+    }
+
+    bool keywordAT(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
+        if(tokens.size() < 1  &&  tokens.size() > 2)
+        {
+            fprintf(stderr, "Compiler::keywordAT() : Syntax error, 'AT X' or 'AT X,Y', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        std::vector<Expression::Numeric> params = {Expression::Numeric(), Expression::Numeric()};
+        for(int i=0; i<tokens.size(); i++)
+        {
+            uint32_t expressionType = parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
+            switch(i)
+            {
+                case 0: Compiler::emitVcpuAsm("ST", "cursorXY",     false, codeLineIndex); break;
+                case 1: Compiler::emitVcpuAsm("ST", "cursorXY + 1", false, codeLineIndex); break;
+            }
+        }
+
+        if(Assembler::getUseOpcodeCALLI())
+        {
+            Compiler::emitVcpuAsm("CALLI", "atTextCursor", false, codeLineIndex);
+        }
+        else
+        {
+            Compiler::emitVcpuAsm("LDWI", "atTextCursor", false, codeLineIndex);
+            Compiler::emitVcpuAsm("CALL", "giga_vAC",     false, codeLineIndex);
+        }
+
+        return true;
+    }
+
+    bool keywordPUT(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        std::string expression = codeLine._code.substr(foundPos);
+        if(expression.size() == 0)
+        {
+            fprintf(stderr, "Compiler::keywordPUT() : Syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        Expression::Numeric param;
+        uint32_t expressionType = parseExpression(codeLine, codeLineIndex, expression, param);
+        Compiler::emitVcpuAsm("%PrintAcChar", "", false, codeLineIndex);
+
+        return true;
+    }
+
+    bool keywordMODE(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        std::string expression = codeLine._code.substr(foundPos);
+        if(expression.size() == 0)
+        {
+            fprintf(stderr, "Compiler::keywordMODE() : Syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        Expression::Numeric param;
+        uint32_t expressionType = parseExpression(codeLine, codeLineIndex, expression, param);
+        Compiler::emitVcpuAsm("STW", "graphicsMode", false, codeLineIndex);
+        Compiler::emitVcpuAsm("%ScanlineMode", "",   false, codeLineIndex);
+
+        return true;
+    }
+
+    bool keywordWAIT(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        std::string expression = codeLine._code.substr(foundPos);
+        if(expression.size() == 0)
+        {
+            fprintf(stderr, "Compiler::keywordWAIT() : Syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        Expression::Numeric param;
+        uint32_t expressionType = parseExpression(codeLine, codeLineIndex, expression, param);
+        Compiler::emitVcpuAsm("STW", "waitVBlankNum", false, codeLineIndex);
+        Compiler::emitVcpuAsm("%WaitVBlank", "",      false, codeLineIndex);
+
+        return true;
+    }
+
+    bool keywordLINE(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
+        if(tokens.size() !=2  &&  tokens.size() != 4)
+        {
+            fprintf(stderr, "Compiler::keywordLINE() : Syntax error, 'LINE X,Y' or 'LINE X1,Y1,X2,Y2', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        if(tokens.size() == 2)
+        {
+            std::vector<Expression::Numeric> params = {Expression::Numeric(), Expression::Numeric()};
+            for(int i=0; i<tokens.size(); i++)
+            {
+                uint32_t expressionType = parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
+                switch(i)
+                {
+                    case 0: Compiler::emitVcpuAsm("STW", "drawLine_x2", false, codeLineIndex); break;
+                    case 1: Compiler::emitVcpuAsm("STW", "drawLine_y2", false, codeLineIndex); break;
+                }
+            }
+
+            Compiler::emitVcpuAsm("%AtLineCursor", "", false, codeLineIndex);
+            Compiler::emitVcpuAsm("%DrawVTLine", "", false, codeLineIndex);
+        }
+        else
+        {
+            std::vector<Expression::Numeric> params = {Expression::Numeric(), Expression::Numeric(), Expression::Numeric(), Expression::Numeric()};
+            for(int i=0; i<tokens.size(); i++)
+            {
+                uint32_t expressionType = parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
+                switch(i)
+                {
+                    case 0: Compiler::emitVcpuAsm("STW", "drawLine_x1", false, codeLineIndex); break;
+                    case 1: Compiler::emitVcpuAsm("STW", "drawLine_y1", false, codeLineIndex); break;
+                    case 2: Compiler::emitVcpuAsm("STW", "drawLine_x2", false, codeLineIndex); break;
+                    case 3: Compiler::emitVcpuAsm("STW", "drawLine_y2", false, codeLineIndex); break;
+                }
+            }
+
+            Compiler::emitVcpuAsm("%DrawLine", "", false, codeLineIndex);
+        }
+
+        return true;
+    }
+
+    bool keywordHLINE(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
+        if(tokens.size() !=3)
+        {
+            fprintf(stderr, "Compiler::keywordHLINE() : Syntax error, 'HLINE X1,Y,X2', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        std::vector<Expression::Numeric> params = {Expression::Numeric(), Expression::Numeric(), Expression::Numeric()};
+        for(int i=0; i<tokens.size(); i++)
+        {
+            uint32_t expressionType = parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
+            switch(i)
+            {
+                case 0: Compiler::emitVcpuAsm("STW", "drawHLine_x1", false, codeLineIndex); break;
+                case 1: Compiler::emitVcpuAsm("STW", "drawHLine_y1", false, codeLineIndex); break;
+                case 2: Compiler::emitVcpuAsm("STW", "drawHLine_x2", false, codeLineIndex); break;
+            }
+        }
+
+        Compiler::emitVcpuAsm("%DrawHLine", "", false, codeLineIndex);
+
+        return true;
+    }
+
+    bool keywordVLINE(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
+        if(tokens.size() !=3)
+        {
+            fprintf(stderr, "Compiler::keywordVLINE() : Syntax error, 'VLINE X1,Y,X2', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        std::vector<Expression::Numeric> params = {Expression::Numeric(), Expression::Numeric(), Expression::Numeric()};
+        for(int i=0; i<tokens.size(); i++)
+        {
+            uint32_t expressionType = parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
+            switch(i)
+            {
+                case 0: Compiler::emitVcpuAsm("STW", "drawVLine_x1", false, codeLineIndex); break;
+                case 1: Compiler::emitVcpuAsm("STW", "drawVLine_y1", false, codeLineIndex); break;
+                case 2: Compiler::emitVcpuAsm("STW", "drawVLine_y2", false, codeLineIndex); break;
+            }
+        }
+
+        Compiler::emitVcpuAsm("%DrawVLine", "", false, codeLineIndex);
+
+        return true;
+    }
+
+    bool keywordSCROLL(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ' ', false);
+        if(tokens.size() != 1)
+        {
+            fprintf(stderr, "Compiler::keywordSCROLL() : Syntax error, 'SCROLL ON' or 'SCROLL OFF', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        std::string scrollToken = Expression::strToUpper(tokens[0]);
+        Expression::stripWhitespace(scrollToken);
+        if(scrollToken != "ON"  &&  scrollToken != "OFF")
+        {
+            fprintf(stderr, "Compiler::keywordSCROLL() : Syntax error, 'SCROLL ON' or 'SCROLL OFF', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        if(scrollToken == "ON")
+        {
+            Compiler::emitVcpuAsm("LDWI", "0x0001", false, codeLineIndex);
+            Compiler::emitVcpuAsm("ORW", "miscFlags", false, codeLineIndex);
+        }
+        else
+        {
+            Compiler::emitVcpuAsm("LDWI", "0xFFFE", false, codeLineIndex);
+            Compiler::emitVcpuAsm("ANDW", "miscFlags", false, codeLineIndex);
+        }
+        Compiler::emitVcpuAsm("STW", "miscFlags", false, codeLineIndex);
+
+        return true;
+    }
+
+    bool keywordPOKE(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
+        if(tokens.size() != 2)
+        {
+            fprintf(stderr, "Compiler::keywordPOKE() : Syntax error, 'POKE A,X', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        std::vector<std::string> operands = {"", ""};
+        std::vector<Compiler::OperandType> operandTypes {Compiler::OperandConst, Compiler::OperandConst};
+
+        for(int i=0; i<tokens.size(); i++)
+        {
+            Expression::Numeric numeric;
+            operandTypes[i] = parseExpression(codeLine, codeLineIndex, tokens[i], operands[i], numeric);
+        }
+
+        if((operandTypes[0] == Compiler::OperandVar  ||  operandTypes[0] == Compiler::OperandTemp)  &&  (operandTypes[1] == Compiler::OperandVar  ||  operandTypes[1] == Compiler::OperandTemp))
+        {
+            (operandTypes[1] == Compiler::OperandVar) ? Compiler::emitVcpuAsm("LDW", "_" + operands[1], false, codeLineIndex) : Compiler::emitVcpuAsm("LDW", operands[1], false, codeLineIndex);
+            (operandTypes[0] == Compiler::OperandVar) ? Compiler::emitVcpuAsm("POKE", "_" + operands[0], false, codeLineIndex) : Compiler::emitVcpuAsm("POKE", operands[0], false, codeLineIndex);
+        }
+        else if((operandTypes[0] == Compiler::OperandVar  ||  operandTypes[0] == Compiler::OperandTemp)  &&  operandTypes[1] == Compiler::OperandConst)
+        {
+            Compiler::emitVcpuAsm("LDI", operands[1], false, codeLineIndex);
+            (operandTypes[0] == Compiler::OperandVar) ? Compiler::emitVcpuAsm("POKE", "_" + operands[0], false, codeLineIndex) : Compiler::emitVcpuAsm("POKE", operands[0], false, codeLineIndex);
+        }
+        else if(operandTypes[0] == Compiler::OperandConst  &&  (operandTypes[1] == Compiler::OperandVar  ||  operandTypes[1] == Compiler::OperandTemp))
+        {
+            Compiler::emitVcpuAsm("LDWI", operands[0], false, codeLineIndex);
+            Compiler::emitVcpuAsm("STW", "register0", false, codeLineIndex);
+            (operandTypes[1] == Compiler::OperandVar) ? Compiler::emitVcpuAsm("LDW", "_" + operands[1], false, codeLineIndex) : Compiler::emitVcpuAsm("LDW", operands[1], false, codeLineIndex);
+            Compiler::emitVcpuAsm("POKE", "register0", false, codeLineIndex);
+        }
+        else
+        {
+            Compiler::emitVcpuAsm("LDWI", operands[0], false, codeLineIndex);
+            Compiler::emitVcpuAsm("STW",  "register0", false, codeLineIndex);
+            Compiler::emitVcpuAsm("LDI",  operands[1], false, codeLineIndex);
+            Compiler::emitVcpuAsm("POKE", "register0", false, codeLineIndex);
+        }
+
+        return true;
+    }
+
+    bool keywordDOKE(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
+        if(tokens.size() != 2)
+        {
+            fprintf(stderr, "Compiler::keywordDOKE() : syntax error, 'DOKE A,X', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        std::vector<std::string> operands = {"", ""};
+        std::vector<Compiler::OperandType> operandTypes {Compiler::OperandConst, Compiler::OperandConst};
+
+        for(int i=0; i<tokens.size(); i++)
+        {
+            Expression::Numeric numeric;
+            operandTypes[i] = parseExpression(codeLine, codeLineIndex, tokens[i], operands[i], numeric);
+        }
+
+        if((operandTypes[0] == Compiler::OperandVar  ||  operandTypes[0] == Compiler::OperandTemp)  &&  (operandTypes[1] == Compiler::OperandVar  ||  operandTypes[1] == Compiler::OperandTemp))
+        {
+            (operandTypes[1] == Compiler::OperandVar) ? Compiler::emitVcpuAsm("LDW", "_" + operands[1], false, codeLineIndex) : Compiler::emitVcpuAsm("LDW", "" + operands[1], false, codeLineIndex);
+            (operandTypes[0] == Compiler::OperandVar) ? Compiler::emitVcpuAsm("DOKE", "_" + operands[0], false, codeLineIndex) : Compiler::emitVcpuAsm("DOKE", "" + operands[0], false, codeLineIndex);
+        }
+        else if((operandTypes[0] == Compiler::OperandVar  ||  operandTypes[0] == Compiler::OperandTemp)  &&  operandTypes[1] == Compiler::OperandConst)
+        {
+            Compiler::emitVcpuAsm("LDWI", operands[1], false, codeLineIndex);
+            (operandTypes[0] == Compiler::OperandVar) ? Compiler::emitVcpuAsm("DOKE", "_" + operands[0], false, codeLineIndex) : Compiler::emitVcpuAsm("DOKE", "" + operands[0], false, codeLineIndex);
+        }
+        else if(operandTypes[0] == Compiler::OperandConst  &&  (operandTypes[1] == Compiler::OperandVar  ||  operandTypes[1] == Compiler::OperandTemp))
+        {
+            Compiler::emitVcpuAsm("LDWI", operands[0], false, codeLineIndex);
+            Compiler::emitVcpuAsm("STW", "register0", false, codeLineIndex);
+            (operandTypes[1] == Compiler::OperandVar) ? Compiler::emitVcpuAsm("LDW", "_" + operands[1], false, codeLineIndex) : Compiler::emitVcpuAsm("LDW", "" + operands[1], false, codeLineIndex);
+            Compiler::emitVcpuAsm("DOKE", "register0", false, codeLineIndex);
+        }
+        else
+        {
+            Compiler::emitVcpuAsm("LDWI", operands[0], false, codeLineIndex);
+            Compiler::emitVcpuAsm("STW",  "register0", false, codeLineIndex);
+            Compiler::emitVcpuAsm("LDWI", operands[1], false, codeLineIndex);
+            Compiler::emitVcpuAsm("DOKE", "register0", false, codeLineIndex);
+        }
+
+        return true;
+    }
+
+    bool keywordPLAY(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), " ,", false);
+        if(tokens.size() != 2  &&  tokens.size() != 3)
+        {
+            fprintf(stderr, "Compiler::keywordPLAY() : Syntax error, use 'PLAY MIDI <address>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        std::string midiToken = Expression::strToUpper(tokens[0]);
+        Expression::stripWhitespace(midiToken);
+        if(midiToken != "MIDI")
+        {
+            fprintf(stderr, "Compiler::keywordPLAY() : Syntax error, use 'PLAY MIDI <address>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        // Midi wave type, (optional)
+        if(tokens.size() == 3)
+        {
+            std::string waveTypeToken = tokens[2];
+            Expression::stripWhitespace(waveTypeToken);
+            Expression::Numeric param;
+            uint32_t expressionType = parseExpression(codeLine, codeLineIndex, waveTypeToken, param);
+            Compiler::emitVcpuAsm("ST", "waveType", false, codeLineIndex);
+        }
+        else
+        {
+            Compiler::emitVcpuAsm("LDI", "2",       false, codeLineIndex);
+            Compiler::emitVcpuAsm("ST", "waveType", false, codeLineIndex);
+        }
+
+        // Midi stream address
+        std::string addressToken = tokens[1];
+        Expression::stripWhitespace(addressToken);
+        Expression::Numeric param;
+        uint32_t expressionType = parseExpression(codeLine, codeLineIndex, addressToken, param);
+        Compiler::emitVcpuAsm("%PlayMidi", "", false, codeLineIndex);
 
         return true;
     }

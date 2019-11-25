@@ -1,7 +1,7 @@
 _startAddress_      EQU                     0x0200
 
 ; Internal variables
-register0           EQU                     0x0084
+register0           EQU                     0x0082
 register1           EQU                     register0 + 0x02
 register2           EQU                     register0 + 0x04
 register3           EQU                     register0 + 0x06
@@ -23,6 +23,7 @@ midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
 frameCountPrev      EQU                     register0 + 0x28
 miscFlags           EQU                     register0 + 0x2A
+highByteMask        EQU                     register0 + 0x2C
 
 ; Includes
 %include            include/gigatron.i
@@ -30,19 +31,19 @@ miscFlags           EQU                     register0 + 0x2A
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x023d
-_20                 EQU                     0x023d
-_30                 EQU                     0x0246
-_39                 EQU                     0x023d
-_40                 EQU                     0x024a
-_49                 EQU                     0x023d
-_50                 EQU                     0x0253
-_59                 EQU                     0x023d
-_60                 EQU                     0x025c
-_70                 EQU                     0x0270
-_80                 EQU                     0x023d
-_90                 EQU                     0x027e
-_end_0x028f         EQU                     0x0287
+_10                 EQU                     0x0242
+_20                 EQU                     0x0242
+_30                 EQU                     0x024b
+_39                 EQU                     0x0242
+_40                 EQU                     0x024f
+_49                 EQU                     0x0242
+_50                 EQU                     0x0258
+_59                 EQU                     0x0242
+_60                 EQU                     0x0261
+_70                 EQU                     0x0275
+_80                 EQU                     0x0242
+_90                 EQU                     0x0283
+_end_0x0294         EQU                     0x028c
 
 ; Variables
 _N                  EQU                     0x0030
@@ -96,7 +97,7 @@ _90                 LDWI                    46
                     LDI                     0
                     POKE                    register0                       ; POKE 46,0
 
-_end_0x028f         BRA                     _end_0x028f                     ; END
+_end_0x0294         BRA                     _end_0x0294                     ; END
 
 
 

@@ -24,13 +24,14 @@ namespace Keywords
     {
         std::string _name;
         KeywordFuncPtr _func;
+        Compiler::StatementResult _result;
     };
 
 
     std::map<std::string, Keyword>& getKeywords(void);
-    std::map<std::string, Keyword>& getFunctions(void);
-    std::map<std::string, Keyword>& getStringKeywords(void);
-    std::vector<std::string>& getEqualsKeywords(void);
+    std::map<std::string, std::string>& getFunctions(void);
+    std::map<std::string, std::string>& getStringKeywords(void);
+    std::map<std::string, std::string>& getEqualsKeywords(void);
 
     bool initialise(void);
 
@@ -54,13 +55,21 @@ namespace Keywords
     bool keywordGOSUB(Compiler::CodeLine& codeLine,  int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordRETURN(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordCLS(Compiler::CodeLine& codeLine,    int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool keywordINPUT(Compiler::CodeLine& codeLine,  int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordPRINT(Compiler::CodeLine& codeLine,  int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
+    bool keywordINPUT(Compiler::CodeLine& codeLine,  int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
+    bool keywordCHR(Compiler::CodeLine& codeLine,    int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
+    bool keywordHEX(Compiler::CodeLine& codeLine,    int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
+    bool keywordHEXW(Compiler::CodeLine& codeLine,   int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
+    bool keywordCOPY(Compiler::CodeLine& codeLine,   int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
+    bool keywordADD(Compiler::CodeLine& codeLine,    int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
+    bool keywordMID(Compiler::CodeLine& codeLine,    int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
+    bool keywordLEFT(Compiler::CodeLine& codeLine,   int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
+    bool keywordRIGHT(Compiler::CodeLine& codeLine,  int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordFOR(Compiler::CodeLine& codeLine,    int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordNEXT(Compiler::CodeLine& codeLine,   int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordIF(Compiler::CodeLine& codeLine,     int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
-    bool keywordELSE(Compiler::CodeLine& codeLine,   int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordELSEIF(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
+    bool keywordELSE(Compiler::CodeLine& codeLine,   int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordENDIF(Compiler::CodeLine& codeLine,  int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordWHILE(Compiler::CodeLine& codeLine,  int codeLineIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordWEND(Compiler::CodeLine& codeLine,   int codeLineIndex, size_t foundPos, KeywordFuncResult& result);

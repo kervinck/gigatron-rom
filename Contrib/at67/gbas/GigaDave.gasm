@@ -1,7 +1,7 @@
 _startAddress_      EQU                     0x0200
 
 ; Internal variables
-register0           EQU                     0x0084
+register0           EQU                     0x0082
 register1           EQU                     register0 + 0x02
 register2           EQU                     register0 + 0x04
 register3           EQU                     register0 + 0x06
@@ -23,6 +23,7 @@ midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
 frameCountPrev      EQU                     register0 + 0x28
 miscFlags           EQU                     register0 + 0x2A
+highByteMask        EQU                     register0 + 0x2C
 
 ; Includes
 %include            include/gigatron.i
@@ -30,22 +31,22 @@ miscFlags           EQU                     register0 + 0x2A
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_5                  EQU                     0x0255
-_6                  EQU                     0x0263
-_7                  EQU                     0x0267
-_8                  EQU                     0x026d
-_10                 EQU                     0x0276
-_20                 EQU                     0x0282
-_30                 EQU                     0x028a
-_40                 EQU                     0x02a1
-_50                 EQU                     0x02b8
-_60                 EQU                     0x02c8
-_70                 EQU                     0x02cf
-_80                 EQU                     0x02df
-_85                 EQU                     0x02e6
-_90                 EQU                     0x02ef
+_5                  EQU                     0x025a
+_6                  EQU                     0x0268
+_7                  EQU                     0x026c
+_8                  EQU                     0x0272
+_10                 EQU                     0x027b
+_20                 EQU                     0x0287
+_30                 EQU                     0x028f
+_40                 EQU                     0x02a6
+_50                 EQU                     0x02bd
+_60                 EQU                     0x02cd
+_70                 EQU                     0x02d4
+_80                 EQU                     0x02e4
+_85                 EQU                     0x02eb
+_90                 EQU                     0x030a
 _page_0x0300        EQU                     0x0300
-_end_0x0333         EQU                     0x0302
+_end_0x033e         EQU                     0x030f
 
 ; Variables
 _a                  EQU                     0x0030
@@ -156,12 +157,12 @@ _entryPoint_        InitRealTimeProc
                     LDWI                    4256
                     PlayMidi                                                ; play midi &h10a0,3
 
-_5                  LDWI                    165
+_5                  LDWI                    163
                     STW                     register0
                     LDI                     0
                     POKE                    register0
                     LDWI                    clearVertBlinds
-                    CALL                    giga_vAC                        ; poke 165,0:cls
+                    CALL                    giga_vAC                        ; poke 163,0:cls
 
 _6                  LDI                     61
                     STW                     _a                              ; a=61
@@ -170,10 +171,10 @@ _7                  LDW                     _a
                     SUBI                    1
                     STW                     _a                              ; a=a-1
 
-_8                  LDWI                    165
+_8                  LDWI                    163
                     STW                     register0
                     LDW                     _a
-                    POKE                    register0                       ; poke 165,a
+                    POKE                    register0                       ; poke 163,a
 
 _10                 LDI                     80
                     STW                     _x
@@ -237,16 +238,18 @@ _80                 LDW                     _u
 
 _85                 LDW                     _a
                     SUBI                    2
-                    BGE                     _90
-                    BRA                     _5                              ; if a &&< 2 then goto &5
-
-_90                 BRA                     _7                              ; goto &7
-
-                    STW                     0x82
+                    STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
-_page_0x0300        LDW                     0x82
-_end_0x0333         BRA                     _end_0x0333                     ; END
+_page_0x0300        LDW                     0xde
+                    BGE                     _90
+                    LDWI                    _5
+                    CALL                    giga_vAC                        ; if a &&< 2 then goto 5
+
+_90                 LDWI                    _7
+                    CALL                    giga_vAC                        ; goto 7
+
+_end_0x033e         BRA                     _end_0x033e                     ; END
 
 
 
@@ -469,7 +472,8 @@ drawLine_sy         EQU     register9
 drawLine_h          EQU     register10
 drawLine_num        EQU     register11
 drawLine_count      EQU     register12
-drawLine_tmp        EQU     register13
+drawLine_addr       EQU     register13
+drawLine_tmp        EQU     register14
     
     
 drawHLine           PUSH

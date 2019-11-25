@@ -142,6 +142,14 @@ namespace Loader
             {
                 int j = 0;
                 int seg = gt1File._segments[i]._loAddress - start;
+                if(page0._dataBytes.size() < seg + gt1File._segments[i]._dataBytes.size())
+                {
+                    fprintf(stderr, "* Can't Merge: start: 0x%0x  end: 0x%02x  size: 0x%02x\n", gt1File._segments[0]._loAddress, 
+                                                                                                gt1File._segments[0]._loAddress + uint8_t(gt1File._segments[0]._dataBytes.size()) - 1, 
+                                                                                                uint8_t(gt1File._segments[0]._dataBytes.size()));
+                    return false;
+                }
+
                 for(int k=seg; k<seg+gt1File._segments[i]._dataBytes.size(); k++)
                 {
                     page0._dataBytes[k] = gt1File._segments[i]._dataBytes[j++];
@@ -1240,7 +1248,14 @@ namespace Loader
 
             // Don't save gt1 file for any asm files that contain native rom code
             std::string gt1FileName;
-            if(!hasRomCode  &&  !saveGt1File(filepath, gt1File, gt1FileName)) return;
+            if(!hasRomCode)
+            {
+                if(!saveGt1File(filepath, gt1File, gt1FileName))
+                {
+                    Cpu::reset();
+                    return;
+                }
+            }
 
             gt1FileBuilt = true;
         }

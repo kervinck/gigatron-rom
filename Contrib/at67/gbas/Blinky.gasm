@@ -1,7 +1,7 @@
 _startAddress_      EQU                     0x0200
 
 ; Internal variables
-register0           EQU                     0x0084
+register0           EQU                     0x0082
 register1           EQU                     register0 + 0x02
 register2           EQU                     register0 + 0x04
 register3           EQU                     register0 + 0x06
@@ -23,6 +23,7 @@ midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
 frameCountPrev      EQU                     register0 + 0x28
 miscFlags           EQU                     register0 + 0x2A
+highByteMask        EQU                     register0 + 0x2C
 
 ; Includes
 %include            include/gigatron.i
@@ -30,13 +31,13 @@ miscFlags           EQU                     register0 + 0x2A
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x023d
-_20                 EQU                     0x023d
-_30                 EQU                     0x023d
-_40                 EQU                     0x0249
-_50                 EQU                     0x023d
-_60                 EQU                     0x025c
-_end_0x027c         EQU                     0x0266
+_10                 EQU                     0x0242
+_20                 EQU                     0x0242
+_30                 EQU                     0x0242
+_40                 EQU                     0x024e
+_50                 EQU                     0x0242
+_60                 EQU                     0x0260
+_end_0x0280         EQU                     0x026a
 
 ; Variables
 _X                  EQU                     0x0030
@@ -71,8 +72,9 @@ _40                 LDWI                    256
                     ADDW                    _Y
                     ADDW                    _Y
                     PEEK                    
-                    STW                     mathShift
-                    ShiftLeft8bit           
+                    ST                      0xc4 + 1
+                    LDW                     0xc4
+                    ANDW                    highByteMask
                     ADDW                    _X
                     STW                     _P                              ; P=(PEEK(256+Y+Y) LSL 8)+X
 
@@ -82,7 +84,7 @@ _60                 LDW                     _I
                     STW                     _I
                     BRA                     _60                             ; POKE P,I:I=I+1:GOTO &60
 
-_end_0x027c         BRA                     _end_0x027c                     ; END
+_end_0x0280         BRA                     _end_0x0280                     ; END
 
 
 
@@ -99,8 +101,7 @@ convertLeOp         EQU     0xff1b
 convertGeOp         EQU     0xff24
 convertLtOp         EQU     0xff2d
 convertGtOp         EQU     0xff36
-shiftLeft8bit       EQU     0xff62
-resetVideoTable     EQU     0xff6c
+resetVideoTable     EQU     0xff62
 initClearFuncs      EQU     0xff3f
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
@@ -175,24 +176,6 @@ convertGtOp         BGT     convertGt_1
                     LDI     0
                     RET
 convertGt_1         LDI     1
-                    RET
-
-
-; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
-mathX               EQU     register0
-mathY               EQU     register1
-mathSum             EQU     register2
-mathMask            EQU     register3
-mathRem             EQU     register8
-mathSign            EQU     register9
-mathScratch         EQU     register10
-mathShift           EQU     register11
-    
-    
-shiftLeft8bit       LDWI    SYS_LSLW8_24
-                    STW     giga_sysFn
-                    LDW     mathShift
-                    SYS     0x00                ; 0x00 = 270-max(14,24/2)
                     RET
 
 

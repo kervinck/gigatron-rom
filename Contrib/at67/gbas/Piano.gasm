@@ -1,7 +1,7 @@
 _startAddress_      EQU                     0x0200
 
 ; Internal variables
-register0           EQU                     0x0084
+register0           EQU                     0x0082
 register1           EQU                     register0 + 0x02
 register2           EQU                     register0 + 0x04
 register3           EQU                     register0 + 0x06
@@ -23,6 +23,7 @@ midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
 frameCountPrev      EQU                     register0 + 0x28
 miscFlags           EQU                     register0 + 0x2A
+highByteMask        EQU                     register0 + 0x2C
 
 ; Includes
 %include            include/gigatron.i
@@ -30,26 +31,26 @@ miscFlags           EQU                     register0 + 0x2A
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_loop               EQU                     0x0278
-_113                EQU                     0x02bb
-_50                 EQU                     0x02d7
-_119                EQU                     0x0306
-_51                 EQU                     0x0322
-_101                EQU                     0x033e
-_114                EQU                     0x035a
-_53                 EQU                     0x0376
-_116                EQU                     0x0392
-_54                 EQU                     0x03ae
-_121                EQU                     0x03ca
-_55                 EQU                     0x03e6
-_117                EQU                     0x0415
-_105                EQU                     0x0431
-_57                 EQU                     0x044d
-_111                EQU                     0x0469
-_48                 EQU                     0x0485
-_112                EQU                     0x04a1
-_122                EQU                     0x04bd
-_default            EQU                     0x04e3
+_loop               EQU                     0x027d
+_113                EQU                     0x02c0
+_50                 EQU                     0x02dc
+_119                EQU                     0x030b
+_51                 EQU                     0x0327
+_101                EQU                     0x0343
+_114                EQU                     0x035f
+_53                 EQU                     0x037b
+_116                EQU                     0x0397
+_54                 EQU                     0x03b3
+_121                EQU                     0x03cf
+_55                 EQU                     0x03eb
+_117                EQU                     0x0419
+_105                EQU                     0x0435
+_57                 EQU                     0x0451
+_111                EQU                     0x046d
+_48                 EQU                     0x0489
+_112                EQU                     0x04a5
+_122                EQU                     0x04c1
+_default            EQU                     0x04e7
 _text               EQU                     0x0502
 _audio              EQU                     0x0523
 _206                EQU                     0x0588
@@ -59,15 +60,15 @@ _209                EQU                     0x05be
 _inverse            EQU                     0x05d0
 _normal             EQU                     0x05ee
 _printChr           EQU                     0x0618
-_else_0x02a6        EQU                     0x0294
-_else_0x02b3        EQU                     0x029d
+_else_0x02ab        EQU                     0x0299
+_else_0x02b8        EQU                     0x02a2
 _page_0x0300        EQU                     0x0300
 _page_0x0400        EQU                     0x0400
-_else_0x04db        EQU                     0x04db
+_else_0x04e0        EQU                     0x04df
 _page_0x0500        EQU                     0x0500
-_next_0x0516        EQU                     0x0528
+_next_0x051b        EQU                     0x0528
 _page_0x0600        EQU                     0x0600
-_end_0x062b         EQU                     0x063f
+_end_0x0630         EQU                     0x063f
 
 ; Variables
 _inv                EQU                     0x0030
@@ -84,28 +85,28 @@ _k                  EQU                     0x0044
 _c                  EQU                     0x0046
 
 ; Strings
-_str_0xff00         EQU                     0xff00
-_str_0xff00         DB                      18 ' 2 3   5 6 7   9 0'
-_str_0xff13         EQU                     0xff13
-_str_0xff13         DB                      19 'Q W E R T Y U I O P'
-_str_0xff27         EQU                     0xff27
-_str_0xff27         DB                      3 'Z: '
-_str_0xff2b         EQU                     0xff2b
-_str_0xff2b         DB                      8 'Metallic'
-_str_0xff34         EQU                     0xff34
-_str_0xff34         DB                      8 'Triangle'
-_str_0xff3d         EQU                     0xff3d
-_str_0xff3d         DB                      8 'Pulse   '
-_str_0xff46         EQU                     0xff46
-_str_0xff46         DB                      8 'Sawtooth'
+_str_0xff00          EQU                     0xff00
+_str_0xff00          DB                      18 ' 2 3   5 6 7   9 0'
+_str_0xff13          EQU                     0xff13
+_str_0xff13          DB                      19 'Q W E R T Y U I O P'
+_str_0xff27          EQU                     0xff27
+_str_0xff27          DB                      3 'Z: '
+_str_0xff2b          EQU                     0xff2b
+_str_0xff2b          DB                      8 'Metallic'
+_str_0xff34          EQU                     0xff34
+_str_0xff34          DB                      8 'Triangle'
+_str_0xff3d          EQU                     0xff3d
+_str_0xff3d          DB                      8 'Pulse   '
+_str_0xff46          EQU                     0xff46
+_str_0xff46          DB                      8 'Sawtooth'
 
 ; Define Bytes
 
 ; Lookup Tables
-_lut_numericLabs    EQU                     0xfd86
+_lut_numericLabs    EQU                     0xfd3a
 _lut_numericLabs    DW                      113 50 119 51 101 114 53 116 54 121 55 117 105 57 111 48 112 122 206 207 208 209 -1
-_lut_numericAddrs   EQU                     0xfdb4
-_lut_numericAddrs   DW                      0x02bb 0x02d7 0x0306 0x0322 0x033e 0x035a 0x0376 0x0392 0x03ae 0x03ca 0x03e6 0x0415 0x0431 0x044d 0x0469 0x0485 0x04a1 0x04bd 0x0588 0x059a 0x05ac 0x05be 
+_lut_numericAddrs   EQU                     0xfd68
+_lut_numericAddrs   DW                      0x02c0 0x02dc 0x030b 0x0327 0x0343 0x035f 0x037b 0x0397 0x03b3 0x03cf 0x03eb 0x0419 0x0435 0x0451 0x046d 0x0489 0x04a5 0x04c1 0x0588 0x059a 0x05ac 0x05be 
 
 ; Code
 _entryPoint_        InitRealTimeProc        
@@ -123,12 +124,12 @@ _entryPoint_        InitRealTimeProc
                     STW                     _posx
                     STW                     _posy                           ; inv=0:char=inv:posx=char:posy=posx
 
-                    LDI                     0xa4
+                    LDI                     0xa2
                     PEEK                    
                     STW                     _fg
-                    LDI                     0xa5
+                    LDI                     0xa3
                     PEEK                    
-                    STW                     _bg                             ; fg=peek(164):bg=peek(165)
+                    STW                     _bg                             ; fg=peek(162):bg=peek(163)
 
                     LDI                     0
                     STW                     _a
@@ -157,17 +158,17 @@ _loop               LDI                     0x10
 
                     LDW                     _inv
                     SUBI                    1
-                    BNE                     _else_0x02a6
+                    BNE                     _else_0x02ab
                     LDWI                    _normal
                     CALL                    giga_vAC
                     BRA                     _loop                           ; if inv &&= 1 then gosub normal:goto &loop
 
-_else_0x02a6        LDW                     _k
+_else_0x02ab        LDW                     _k
                     SUBI                    126
-                    BLE                     _else_0x02b3
+                    BLE                     _else_0x02b8
                     BRA                     _loop                           ; if k &&> 126 then goto &loop
 
-_else_0x02b3        LDW                     _k
+_else_0x02b8        LDW                     _k
                     STW                     numericLabel
                     LDWI                    _default
                     STW                     defaultLabel
@@ -210,12 +211,12 @@ _50                 PUSH
                     LDI                     8
                     STW                     _posx
                     LDI                     0
-                    STW                     _posy
-                    LDWI                    _inverse
-                    STW                     0x82
+                    STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
-_page_0x0300        LDW                     0x82
+_page_0x0300        LDW                     0xde
+                    STW                     _posy
+                    LDWI                    _inverse
                     CALL                    giga_vAC
                     POP                     
                     RET                                                     ; a=11 :b=9 :char=50:posx=8  :posy=0:gosub inverse:return:'C#
@@ -351,12 +352,12 @@ _121                PUSH
 _55                 PUSH                    
                     LDI                     35
                     STW                     _a
-                    LDI                     15
-                    STW                     _b
-                    STW                     0x82
+                    STW                     0xde
                     LDWI                    _page_0x0400
                     CALL                    giga_vAC
-_page_0x0400        LDW                     0x82
+_page_0x0400        LDW                     0xde
+                    LDI                     15
+                    STW                     _b
                     LDI                     55
                     STW                     _char
                     LDI                     68
@@ -468,7 +469,7 @@ _122                PUSH
                     LDI                     0x0f
                     PEEK                    
                     SUBI                    255
-                    BNE                     _else_0x04db
+                    BNE                     _else_0x04e0
                     LDW                     _z
                     ADDI                    1
                     ANDI                    3
@@ -481,7 +482,7 @@ _122                PUSH
                     POP                     
                     RET                                                     ; if peek(15) &&= 255 then z=(z+1)AND3:a=0:b=a:gosub audio:return
 
-_else_0x04db        LDI                     0
+_else_0x04e0        LDI                     0
                     STW                     _a
                     STW                     _b
                     POP                     
@@ -494,10 +495,10 @@ _default            PUSH
                     POP                     
                     RET                                                     ; a=0:b=a:return
 
-                    STW                     0x82
+                    STW                     0xde
                     LDWI                    _page_0x0500
                     CALL                    giga_vAC
-_page_0x0500        LDW                     0x82
+_page_0x0500        LDW                     0xde
 _text               PUSH                    
                     PrintString             _str_0xff00
                     LDWI                    newLineScroll
@@ -514,7 +515,7 @@ _audio              PUSH
                     LDI                     1
                     STW                     _c                              ; for c=1 to 4
 
-_next_0x0516        LDWI                    256
+_next_0x051b        LDWI                    256
                     STW                     mathX
                     LDW                     _c
                     STW                     mathY
@@ -536,7 +537,7 @@ _next_0x0516        LDWI                    256
                     LDW                     _z
                     POKE                    0xc2                            ; poke p,0:poke p+1,0:poke p-1,z
 
-                    ForNextLoopUp           _c _next_0x0516 4               ; next c
+                    ForNextLoopUp           _c _next_0x051b 4               ; next c
 
                     LDI                     2
                     ST                      cursorXY
@@ -588,14 +589,14 @@ _209                PUSH
 _inverse            PUSH                    
                     LDI                     1
                     STW                     _inv
-                    LDWI                    164
+                    LDWI                    162
                     STW                     register0
                     LDW                     _bg
                     POKE                    register0
-                    LDWI                    165
+                    LDWI                    163
                     STW                     register0
                     LDW                     _fg
-                    POKE                    register0                       ; inv=1 : poke 164,bg : poke 165,fg
+                    POKE                    register0                       ; inv=1 : poke 162,bg : poke 163,fg
 
                     LDWI                    _printChr
                     CALL                    giga_vAC                        ; gosub printChr
@@ -606,18 +607,18 @@ _inverse            PUSH
 _normal             PUSH                    
                     LDI                     0
                     STW                     _inv
-                    LDWI                    164
-                    STW                     0x82
+                    LDWI                    162
+                    STW                     0xde
                     LDWI                    _page_0x0600
                     CALL                    giga_vAC
-_page_0x0600        LDW                     0x82
+_page_0x0600        LDW                     0xde
                     STW                     register0
                     LDW                     _fg
                     POKE                    register0
-                    LDWI                    165
+                    LDWI                    163
                     STW                     register0
                     LDW                     _bg
-                    POKE                    register0                       ; inv=0 : poke 164,fg : poke 165,bg
+                    POKE                    register0                       ; inv=0 : poke 162,fg : poke 163,bg
 
                     LDWI                    _printChr
                     CALL                    giga_vAC                        ; gosub printChr
@@ -646,7 +647,7 @@ _printChr           PUSH
                     POP                     
                     RET                                                     ; return
 
-_end_0x062b         BRA                     _end_0x062b                     ; END
+_end_0x0630         BRA                     _end_0x0630                     ; END
 
 
 
@@ -663,19 +664,20 @@ convertLeOp         EQU     0xff6a
 convertGeOp         EQU     0xff73
 convertLtOp         EQU     0xff7c
 convertGtOp         EQU     0xff85
-multiply16bit       EQU     0xfecd
+multiply16bit       EQU     0xfed6
 gosubNumericLabel   EQU     0xfe1b
 scanlineMode        EQU     0xffb1
 waitVBlank          EQU     0xfe00
-resetVideoTable     EQU     0xfde0
+resetVideoTable     EQU     0xfd94
 initClearFuncs      EQU     0xff8e
 clearVertBlinds     EQU     0xffc5
-clearCursorRow      EQU     0xfc00
-printInit           EQU     0xfc46
+clearCursorRow      EQU     0xfdb4
+printInit           EQU     0xfc00
 printText           EQU     0xfe55
-printChar           EQU     0xfd2d
+printChr            EQU     0xfd2d
+printChar           EQU     0xfc1b
 atTextCursor        EQU     0xfd00
-newLineScroll       EQU     0xfe72
+newLineScroll       EQU     0xfe77
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -856,7 +858,8 @@ drawLine_sy         EQU     register9
 drawLine_h          EQU     register10
 drawLine_num        EQU     register11
 drawLine_count      EQU     register12
-drawLine_tmp        EQU     register13
+drawLine_addr       EQU     register13
+drawLine_tmp        EQU     register14
     
     
 scanlineMode        LDW     giga_romType
@@ -981,6 +984,7 @@ clearVB_loop        CALL    realTimeProcAddr
                     RET
 
 
+
 ; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 textStr             EQU     register0
 textNum             EQU     register0
@@ -996,8 +1000,28 @@ digitIndex          EQU     register12
 clearLoop           EQU     register13
     
     
+printInit           LDWI    SYS_VDrawBits_134
+                    STW     giga_sysFn
+                    LDW     fgbgColour
+                    STW     giga_sysArg0
+                    
+                    LDWI    giga_videoTable
+                    STW     giga_sysArg4
+                    LD      cursorXY + 1
+                    LSLW
+                    ADDW    giga_sysArg4
+                    PEEK
+                    ST      giga_sysArg4 + 1
+                    LD      cursorXY
+                    ST      giga_sysArg4                    ; xy position
+                    RET
+
+
+
                     ; prints text string pointed to by the accumulator
 printText           PUSH
+                    LDWI    printInit
+                    CALL    giga_vAC
                     LDW     textStr             
                     PEEK
                     ST      textLen                         ; first byte is length
@@ -1013,14 +1037,13 @@ printT_loop         LoopCounter textLen printT_char
                     RET
 
 
-
-printInit           LDWI    SYS_VDrawBits_134
-                    STW     giga_sysFn
-                    LDW     fgbgColour
-                    STW     giga_sysArg0
-                    LDWI    0x0800
-                    ADDW    cursorXY
-                    STW     giga_sysArg4                    ; xy position
+                    ; prints char in textChr for standalone calls
+printChr            PUSH
+                    LDWI    printInit
+                    CALL    giga_vAC
+                    LDWI    printChar
+                    CALL    giga_vAC
+                    POP
                     RET
 
 
@@ -1038,16 +1061,14 @@ printChar           PUSH
                     ADDW    textFont
                     STW     textFont                        ; text font slice base address for chars 32-81
     
-                    LDW     textChr
+                    LD      textChr
                     SUBI    50
                     BLT     printC_draw
                     LDW     textFont
                     ADDI    0x06
                     STW     textFont                        ; text font slice base address for chars 82+
     
-printC_draw         LDWI    printInit
-                    CALL    giga_vAC
-                    LDI     0x05
+printC_draw         LDI     0x05
                     ST      textSlice
     
 printC_slice        LDW     textFont                        ; text font slice base address
@@ -1059,6 +1080,7 @@ printC_slice        LDW     textFont                        ; text font slice ba
                     LoopCounter textSlice printC_slice
                     ST      giga_sysArg2                    ; result of loopCounter is always 0
                     SYS     0xCB                            ; draw last blank slice
+                    INC     giga_sysArg4                    ; using sysArg4 as a temporary cursor address for multiple char prints
                     CALL    realTimeProcAddr
     
                     LD      cursorXY
@@ -1068,21 +1090,22 @@ printC_slice        LDW     textFont                        ; text font slice ba
                     BLT     printC_exit
                     LDWI    newLineScroll                   ; next row, scroll at bottom
                     CALL    giga_vAC
+
 printC_exit         POP
                     RET
 
 
 atTextCursor        LD      cursorXY
-                    SUBI    giga_xres - 5
+                    SUBI    giga_xres
                     BLT     atTC_skip0
                     LDI     0
-                    STW     cursorXY
+                    ST      cursorXY
                     
 atTC_skip0          LD      cursorXY + 1
-                    SUBI    giga_yres - 7
+                    SUBI    giga_yres
                     BLT     atTC_skip1
-                    LDI     giga_yres - 8
-                    STW     cursorXY + 1
+                    LDI     giga_yres - 1
+                    ST      cursorXY + 1
                     
 atTC_skip1          LD      cursorXY + 1
                     SUBI    giga_yres - 8
@@ -1143,6 +1166,7 @@ clearCR_loopx       SUBI    4                               ; loop is unrolled 4
                     ; print from top row to bottom row, then start scrolling 
 newLineScroll       LDI     0x02                            ; x offset slightly
                     ST      cursorXY
+                    ST      giga_sysArg4
                     LDWI    0x0001
                     ANDW    miscFlags
                     BNE     newLS_cont0                     ; scroll on or off
@@ -1152,11 +1176,16 @@ newLS_cont0         PUSH
                     LDWI    0x8000
                     ANDW    miscFlags                       ; on bottom row flag
                     BNE     newLS_cont1
-                    LD      cursorXY+1
+                    LD      giga_sysArg4 + 1
                     ADDI    8
-                    ST      cursorXY+1
+                    ST      giga_sysArg4 + 1
+                    LD      cursorXY + 1
+                    ADDI    8
+                    ST      cursorXY + 1
                     SUBI    giga_yres
                     BLT     newLS_exit
+                    LDI     giga_yres - 8
+                    ST      cursorXY + 1
                     
 newLS_cont1         LDWI    clearCursorRow
                     CALL    giga_vAC
@@ -1184,12 +1213,6 @@ newLS_adjust        ADDI    8
                     LDWI    0x8000
                     ORW     miscFlags
                     STW     miscFlags                       ; set on bottom row flag
-                    
-                    ; read scan line pointer for last char row, use this as cursor position
-                    LDWI    giga_videoTable + 0x00E0
-                    PEEK
-                    SUBI    0x08                            ; corrected in printChar
-                    ST      cursorXY+1
 newLS_exit          POP
                     RET
 

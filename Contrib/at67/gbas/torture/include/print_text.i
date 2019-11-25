@@ -60,15 +60,24 @@ printInit           LDWI    SYS_VDrawBits_134
                     STW     giga_sysFn
                     LDW     fgbgColour
                     STW     giga_sysArg0
-                    LDWI    0x0800
-                    ADDW    cursorXY
-                    STW     giga_sysArg4                    ; xy position
+                    
+                    LDWI    giga_videoTable
+                    STW     giga_sysArg4
+                    LD      cursorXY + 1
+                    LSLW
+                    ADDW    giga_sysArg4
+                    PEEK
+                    ST      giga_sysArg4 + 1
+                    LD      cursorXY
+                    ST      giga_sysArg4                    ; xy position
                     RET
 %ENDS
-
+                    
 %SUB                printText
                     ; prints text string pointed to by the accumulator
 printText           PUSH
+                    LDWI    printInit
+                    CALL    giga_vAC
                     LDW     textStr             
                     PEEK
                     ST      textLen                         ; first byte is length
@@ -109,6 +118,8 @@ printD_exit         POP
 %SUB                printInt16
                     ; prints 16bit int in textNum
 printInt16          PUSH
+                    LDWI    printInit
+                    CALL    giga_vAC
                     LDI     0
                     ST      digitIndex
                     LDW     textNum
@@ -158,6 +169,8 @@ printHexByte        PUSH
                     ADDI    7
 printH_skip0        ADDI    0x3A
                     ST      textChr
+                    LDWI    printInit
+                    CALL    giga_vAC
                     LDWI    printChar
                     CALL    giga_vAC
                     LD      textHex
@@ -190,6 +203,17 @@ printHexWord        PUSH
                     RET
 %ENDS   
 
+%SUB                printChr
+                    ; prints char in textChr for standalone calls
+printChr            PUSH
+                    LDWI    printInit
+                    CALL    giga_vAC
+                    LDWI    printChar
+                    CALL    giga_vAC
+                    POP
+                    RET
+%ENDS
+
 %SUB                printChar
                     ; prints char in textChr
 printChar           PUSH
@@ -205,16 +229,14 @@ printChar           PUSH
                     ADDW    textFont
                     STW     textFont                        ; text font slice base address for chars 32-81
     
-                    LDW     textChr
+                    LD      textChr
                     SUBI    50
                     BLT     printC_draw
                     LDW     textFont
                     ADDI    0x06
                     STW     textFont                        ; text font slice base address for chars 82+
     
-printC_draw         LDWI    printInit
-                    CALL    giga_vAC
-                    LDI     0x05
+printC_draw         LDI     0x05
                     ST      textSlice
     
 printC_slice        LDW     textFont                        ; text font slice base address
@@ -226,6 +248,7 @@ printC_slice        LDW     textFont                        ; text font slice ba
                     LoopCounter textSlice printC_slice
                     ST      giga_sysArg2                    ; result of loopCounter is always 0
                     SYS     0xCB                            ; draw last blank slice
+                    INC     giga_sysArg4                    ; using sysArg4 as a temporary cursor address for multiple char prints
                     CALL    realTimeProcAddr
     
                     LD      cursorXY
@@ -235,6 +258,7 @@ printC_slice        LDW     textFont                        ; text font slice ba
                     BLT     printC_exit
                     LDWI    newLineScroll                   ; next row, scroll at bottom
                     CALL    giga_vAC
+
 printC_exit         POP
                     RET
 %ENDS   
@@ -243,6 +267,7 @@ printC_exit         POP
                     ; print from top row to bottom row, then start scrolling 
 newLineScroll       LDI     0x02                            ; x offset slightly
                     ST      cursorXY
+                    ST      giga_sysArg4
                     LDWI    0x0001
                     ANDW    miscFlags
                     BNE     newLS_cont0                     ; scroll on or off
@@ -252,11 +277,16 @@ newLS_cont0         PUSH
                     LDWI    0x8000
                     ANDW    miscFlags                       ; on bottom row flag
                     BNE     newLS_cont1
-                    LD      cursorXY+1
+                    LD      giga_sysArg4 + 1
                     ADDI    8
-                    ST      cursorXY+1
+                    ST      giga_sysArg4 + 1
+                    LD      cursorXY + 1
+                    ADDI    8
+                    ST      cursorXY + 1
                     SUBI    giga_yres
                     BLT     newLS_exit
+                    LDI     giga_yres - 8
+                    ST      cursorXY + 1
                     
 newLS_cont1         LDWI    clearCursorRow
                     CALL    giga_vAC
@@ -284,28 +314,22 @@ newLS_adjust        ADDI    8
                     LDWI    0x8000
                     ORW     miscFlags
                     STW     miscFlags                       ; set on bottom row flag
-                    
-                    ; read scan line pointer for last char row, use this as cursor position
-                    LDWI    giga_videoTable + 0x00E0
-                    PEEK
-                    SUBI    0x08                            ; corrected in printChar
-                    ST      cursorXY+1
 newLS_exit          POP
                     RET
 %ENDS   
 
 %SUB                atTextCursor
 atTextCursor        LD      cursorXY
-                    SUBI    giga_xres - 5
+                    SUBI    giga_xres
                     BLT     atTC_skip0
                     LDI     0
-                    STW     cursorXY
+                    ST      cursorXY
                     
 atTC_skip0          LD      cursorXY + 1
-                    SUBI    giga_yres - 7
+                    SUBI    giga_yres
                     BLT     atTC_skip1
-                    LDI     giga_yres - 8
-                    STW     cursorXY + 1
+                    LDI     giga_yres - 1
+                    ST      cursorXY + 1
                     
 atTC_skip1          LD      cursorXY + 1
                     SUBI    giga_yres - 8

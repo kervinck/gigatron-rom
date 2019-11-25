@@ -15,6 +15,7 @@ namespace Operators
 
     bool handleSingleOp(const std::string& opcodeStr, Expression::Numeric& numeric);
 
+    Expression::Numeric operatorPOS(Expression::Numeric& numeric);
     Expression::Numeric operatorNEG(Expression::Numeric& numeric);
     Expression::Numeric operatorNOT(Expression::Numeric& numeric);
 

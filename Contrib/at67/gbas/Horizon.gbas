@@ -2,7 +2,7 @@ _runtimeStart_ &h26FF
 
 cls
 
-y=0 : x=y : i=x : j=i : pitch=j : yy=pitch
+y=0 : x=y : i=x : j=i : a=j : pitch=a : yy=pitch
 color1 = &h3F : color2 = &h03 : horizonY = 32
 
 dim c1(4)=0 : c1(0)=&h3F : c1(1)=&h2A : c1(2)=&h15 : c1(3)=&h00

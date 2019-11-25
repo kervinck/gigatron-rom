@@ -238,9 +238,12 @@ namespace Expression
 
         while(start != std::string::npos  &&  end != std::string::npos)
         {
-            start = input.find_first_of('"', end + 1);
-            end = input.find_first_of('"', start + 1);
-            if(start != std::string::npos) output.erase(start, end - start + 1);
+            start = output.find_first_of('"', end + 1);
+            end = output.find_first_of('"', start + 1);
+            if(start == std::string::npos  ||  end == std::string::npos) break;
+
+            output.erase(start, end - start + 1);
+            start = 0, end = 0;
         }
 
         return output;
@@ -326,10 +329,37 @@ namespace Expression
 
     bool findMatchingBrackets(const std::string& input, size_t start, size_t& lbra, size_t& rbra)
     {
-        lbra = input.find_first_of("(", start);
-        rbra = input.find_first_of(")", lbra + 1);
-        if(lbra == std::string::npos  ||  rbra == std::string::npos) return false;
-        return true;
+        lbra = -1;
+        rbra = -1;
+
+        int matched = 0;
+        bool startMatching = false;
+
+        for(size_t i=start; i<input.size(); i++)
+        {
+            if(input[i] == '(')
+            {
+                if(!startMatching)
+                {
+                    lbra = i;
+                    startMatching = true;
+                }
+                matched++;
+            }
+
+            if(input[i] == ')')
+            {
+                rbra = i;
+                matched--;
+            }
+
+            if(startMatching  &&  matched == 0) return true;
+        }
+
+        lbra = -1;
+        rbra = -1;
+
+        return false;
     }
 
     void operatorReduction(std::string& input)
@@ -651,7 +681,7 @@ namespace Expression
     }
 
     // Tokenise using whitespace and quotes, preserves strings
-    std::vector<std::string> tokeniseLine(std::string& line, const std::string& delimiters)
+    std::vector<std::string> tokeniseLine(const std::string& line, const std::string& delimiters)
     {
         std::string token = "";
         bool delimiterStart = true;

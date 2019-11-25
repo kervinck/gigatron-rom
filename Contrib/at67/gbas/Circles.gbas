@@ -1,0 +1,45 @@
+cls : mode 2
+
+ch0=0 : ch1=ch0 : ch2=ch1 : ch3=ch2
+
+loop: cx = rnd(100) - 50 + 80
+      cy = rnd(60) - 30 + 60
+      r = rnd(30) + 1
+      c = rnd(0) AND &h3F
+
+gosub circle
+goto loop
+
+END
+
+
+circle: d = 1 - r
+        x = 0
+        y = r
+
+        repeat
+            ch0 = (cy + y + 8) LSL 8
+            ch1 = (cy - y + 8) LSL 8
+            ch2 = (cy + x + 8) LSL 8
+            ch3 = (cy - x + 8) LSL 8
+        
+            a = cx + x + ch0 : poke a, c
+            a = cx - x + ch0 : poke a, c
+            a = cx + x + ch1 : poke a, c
+            a = cx - x + ch1 : poke a, c
+            a = cx + y + ch2 : poke a, c
+            a = cx - y + ch2 : poke a, c
+            a = cx + y + ch3 : poke a, c
+            a = cx - y + ch3 : poke a, c            
+
+            if d &&< 0
+                d = d + (x LSL 2) + 3
+            else
+                d = d + ((x - y) LSL 2) + 5
+                y = y - 1
+            endif
+            
+            x = x + 1
+        until x &> y
+        
+        return

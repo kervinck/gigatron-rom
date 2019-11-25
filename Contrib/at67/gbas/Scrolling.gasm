@@ -1,7 +1,7 @@
 _startAddress_      EQU                     0x0200
 
 ; Internal variables
-register0           EQU                     0x0084
+register0           EQU                     0x0082
 register1           EQU                     register0 + 0x02
 register2           EQU                     register0 + 0x04
 register3           EQU                     register0 + 0x06
@@ -23,6 +23,7 @@ midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
 frameCountPrev      EQU                     register0 + 0x28
 miscFlags           EQU                     register0 + 0x2A
+highByteMask        EQU                     register0 + 0x2C
 
 ; Includes
 %include            include/gigatron.i
@@ -30,16 +31,16 @@ miscFlags           EQU                     register0 + 0x2A
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_9                  EQU                     0x023d
-_10                 EQU                     0x0259
-_20                 EQU                     0x026c
-_31                 EQU                     0x023d
-_32                 EQU                     0x023d
-_33                 EQU                     0x023d
-_34                 EQU                     0x023d
-_35                 EQU                     0x023d
-_36                 EQU                     0x023d
-_end_0x027e         EQU                     0x0276
+_9                  EQU                     0x0242
+_10                 EQU                     0x025e
+_20                 EQU                     0x0271
+_31                 EQU                     0x0242
+_32                 EQU                     0x0242
+_33                 EQU                     0x0242
+_34                 EQU                     0x0242
+_35                 EQU                     0x0242
+_36                 EQU                     0x0242
+_end_0x0283         EQU                     0x027b
 
 ; Variables
 _P                  EQU                     0x0030
@@ -90,7 +91,7 @@ _20                 LDW                     _X
                     STW                     _X
                     BRA                     _10                             ; POKE R,X:X=X-1:GOTO &10
 
-_end_0x027e         BRA                     _end_0x027e                     ; END
+_end_0x0283         BRA                     _end_0x0283                     ; END
 
 
 
@@ -218,7 +219,8 @@ drawLine_sy         EQU     register9
 drawLine_h          EQU     register10
 drawLine_num        EQU     register11
 drawLine_count      EQU     register12
-drawLine_tmp        EQU     register13
+drawLine_addr       EQU     register13
+drawLine_tmp        EQU     register14
     
     
 scanlineMode        LDW     giga_romType

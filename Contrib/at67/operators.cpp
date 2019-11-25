@@ -314,6 +314,21 @@ namespace Operators
     // ********************************************************************************************
     // Unary Operators
     // ********************************************************************************************
+    Expression::Numeric operatorPOS(Expression::Numeric& numeric)
+    {
+        if(!numeric._isAddress)
+        {
+            numeric._value = +numeric._value;
+            return numeric;
+        }
+
+        Compiler::getNextTempVar();
+        handleSingleOp("LDW", numeric);
+        Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
+        
+        return numeric;
+    }
+
     Expression::Numeric operatorNEG(Expression::Numeric& numeric)
     {
         if(!numeric._isAddress)
@@ -426,36 +441,58 @@ namespace Operators
 
         if(left._isAddress  &&  !right._isAddress)
         {
-            std::string opcode;
-            switch(right._value)
+            if(right._value == 8)
             {
-                case 1:
-                case 2:
-                case 3: opcode = "LSLW"; break;
+                if(isdigit(left._varName[0]))
+                {
+                    Compiler::emitVcpuAsm("LD", Expression::byteToHexString(uint8_t(left._value)), false);
+                }
+                else
+                {
+                    int varIndex = Compiler::findVar(left._varName);
+                    if(varIndex == -1) fprintf(stderr, "Compiler::operatorLSL() : couldn't find variable name '%s'\n", left._varName.c_str());
+                    Compiler::emitVcpuAsm("LD", "_" + left._varName, false);
+                }
 
-                case 4:
-                case 5:
-                case 6:
-                case 7: opcode = "%ShiftLeft4bit"; break;
+                left._value = uint8_t(Compiler::getTempVarStart());
+                left._isAddress = true;
+                left._varName = Compiler::getTempVarStartStr();
 
-                case 8: opcode = "%ShiftLeft8bit"; break;
+                Compiler::emitVcpuAsm("ST", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())) + " + 1", false);
+                Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
+                Compiler::emitVcpuAsm("ANDW", "highByteMask", false);
+            }
+            else
+            {
+                std::string opcode;
+                switch(right._value)
+                {
+                    case 1:
+                    case 2:
+                    case 3: opcode = "LSLW"; break;
+
+                    case 4:
+                    case 5:
+                    case 6:
+                    case 7: opcode = "%ShiftLeft4bit"; break;
+                }
+
+                handleLogicalOp(opcode, left, right);
+
+                Compiler::emitVcpuAsm(opcode, "", false);
+
+                switch(right._value)
+                {
+                    case 2: Compiler::emitVcpuAsm("LSLW", "", false);                                                                                     break;
+                    case 3: Compiler::emitVcpuAsm("LSLW", "", false); Compiler::emitVcpuAsm("LSLW", "", false);                                           break;
+                    case 5: Compiler::emitVcpuAsm("LSLW", "", false);                                                                                     break;
+                    case 6: Compiler::emitVcpuAsm("LSLW", "", false); Compiler::emitVcpuAsm("LSLW", "", false);                                           break;
+                    case 7: Compiler::emitVcpuAsm("LSLW", "", false); Compiler::emitVcpuAsm("LSLW", "", false); Compiler::emitVcpuAsm("LSLW", "", false); break;
+                }
             }
 
-            handleLogicalOp(opcode, left, right);
-
-            Compiler::emitVcpuAsm(opcode, "", false);
-
-            switch(right._value)
-            {
-                case 2: Compiler::emitVcpuAsm("LSLW", "", false);                                                                                     break;
-                case 3: Compiler::emitVcpuAsm("LSLW", "", false); Compiler::emitVcpuAsm("LSLW", "", false);                                           break;
-                case 5: Compiler::emitVcpuAsm("LSLW", "", false);                                                                                     break;
-                case 6: Compiler::emitVcpuAsm("LSLW", "", false); Compiler::emitVcpuAsm("LSLW", "", false);                                           break;
-                case 7: Compiler::emitVcpuAsm("LSLW", "", false); Compiler::emitVcpuAsm("LSLW", "", false); Compiler::emitVcpuAsm("LSLW", "", false); break;
-            }
+            Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
         }
-
-        Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
 
         return left;
     }

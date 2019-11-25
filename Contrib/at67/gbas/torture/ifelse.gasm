@@ -1,7 +1,7 @@
 _startAddress_      EQU                     0x0200
 
 ; Internal variables
-register0           EQU                     0x0084
+register0           EQU                     0x0082
 register1           EQU                     register0 + 0x02
 register2           EQU                     register0 + 0x04
 register3           EQU                     register0 + 0x06
@@ -23,6 +23,7 @@ midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
 frameCountPrev      EQU                     register0 + 0x28
 miscFlags           EQU                     register0 + 0x2A
+highByteMask        EQU                     register0 + 0x2C
 
 ; Includes
 %include            include/gigatron.i
@@ -30,25 +31,25 @@ miscFlags           EQU                     register0 + 0x2A
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_loop               EQU                     0x0242
-_elseif_0x0275      EQU                     0x026f
-_elseif_0x02a1      EQU                     0x0297
-_else_0x02cd        EQU                     0x02bf
-_endif_0x02e4       EQU                     0x02d6
-_end_0x02e9         EQU                     0x02db
+_loop               EQU                     0x0247
+_elseif_0x0272      EQU                     0x026c
+_elseif_0x0296      EQU                     0x028c
+_else_0x02ba        EQU                     0x02ac
+_endif_0x02d1       EQU                     0x02c3
+_end_0x02d6         EQU                     0x02c8
 
 ; Variables
-_b                  EQU                     0x0030
+_p                  EQU                     0x0030
 
 ; Strings
-_str_0xff00         EQU                     0xff00
-_str_0xff00         DB                      5 'one  '
-_str_0xff06         EQU                     0xff06
-_str_0xff06         DB                      5 'two  '
-_str_0xff0c         EQU                     0xff0c
-_str_0xff0c         DB                      5 'three'
-_str_0xff12         EQU                     0xff12
-_str_0xff12         DB                      5 'none '
+_str_0xff00          EQU                     0xff00
+_str_0xff00          DB                      5 'one  '
+_str_0xff06          EQU                     0xff06
+_str_0xff06          DB                      5 'two  '
+_str_0xff0c          EQU                     0xff0c
+_str_0xff0c          DB                      5 'three'
+_str_0xff12          EQU                     0xff12
+_str_0xff12          DB                      5 'none '
 
 ; Define Bytes
 
@@ -69,11 +70,11 @@ _entryPoint_        InitRealTimeProc
 
 _loop               LDI                     0x0f
                     PEEK                    
-                    STW                     _b                              ; b=peek(15)
+                    STW                     _p                              ; p=peek(15)
 
-                    LDW                     _b
+                    LDW                     _p
                     SUBI                    49
-                    JumpEQ                  _elseif_0x0275 0                ; if b&=49
+                    BNE                     _elseif_0x0272                  ; if p &&= 49
 
                     LDI                     2
                     ST                      cursorXY
@@ -82,12 +83,11 @@ _loop               LDI                     0x0f
                     LDWI                    atTextCursor
                     CALL                    giga_vAC
                     PrintString             _str_0xff00
-                    LDWI                    _endif_0x02e4
-                    CALL                    giga_vAC                        ; at 2,40 : print "one  ";
+                    BRA                     _endif_0x02d1                   ; at 2,40 : print "one  ";
 
-_elseif_0x0275      LDW                     _b
+_elseif_0x0272      LDW                     _p
                     SUBI                    50
-                    JumpEQ                  _elseif_0x02a1 1                ; elseif b&=50
+                    BNE                     _elseif_0x0296                  ; elseif p &&= 50
 
                     LDI                     2
                     ST                      cursorXY
@@ -96,12 +96,11 @@ _elseif_0x0275      LDW                     _b
                     LDWI                    atTextCursor
                     CALL                    giga_vAC
                     PrintString             _str_0xff06
-                    LDWI                    _endif_0x02e4
-                    CALL                    giga_vAC                        ; at 2,40 : print "two  ";
+                    BRA                     _endif_0x02d1                   ; at 2,40 : print "two  ";
 
-_elseif_0x02a1      LDW                     _b
+_elseif_0x0296      LDW                     _p
                     SUBI                    51
-                    JumpEQ                  _else_0x02cd 2                  ; elseif b&=51
+                    BNE                     _else_0x02ba                    ; elseif p &&= 51
 
                     LDI                     2
                     ST                      cursorXY
@@ -110,10 +109,9 @@ _elseif_0x02a1      LDW                     _b
                     LDWI                    atTextCursor
                     CALL                    giga_vAC
                     PrintString             _str_0xff0c
-                    LDWI                    _endif_0x02e4
-                    CALL                    giga_vAC                        ; at 2,40 : print "three";
+                    BRA                     _endif_0x02d1                   ; at 2,40 : print "three";
 
-_else_0x02cd        LDI                     2
+_else_0x02ba        LDI                     2
                     ST                      cursorXY
                     LDI                     40
                     ST                      cursorXY + 1
@@ -121,10 +119,10 @@ _else_0x02cd        LDI                     2
                     CALL                    giga_vAC
                     PrintString             _str_0xff12                     ; at 2,40 : print "none ";
 
-_endif_0x02e4       LDWI                    _loop
+_endif_0x02d1       LDWI                    _loop
                     CALL                    giga_vAC                        ; goto loop
 
-_end_0x02e9         BRA                     _end_0x02e9                     ; END
+_end_0x02d6         BRA                     _end_0x02d6                     ; END
 
 
 
@@ -141,13 +139,13 @@ convertLeOp         EQU     0xff33
 convertGeOp         EQU     0xff3c
 convertLtOp         EQU     0xff45
 convertGtOp         EQU     0xff4e
-resetVideoTable     EQU     0xfe00
+resetVideoTable     EQU     0xfe22
 initClearFuncs      EQU     0xff57
 clearVertBlinds     EQU     0xff7a
-clearCursorRow      EQU     0xfe20
-printInit           EQU     0xfe66
-printText           EQU     0xffe1
-printChar           EQU     0xfe77
+clearCursorRow      EQU     0xfe42
+printInit           EQU     0xffe1
+printText           EQU     0xfe00
+printChar           EQU     0xfe88
 atTextCursor        EQU     0xffb4
 newLineScroll       EQU     0xfd00
 realTimeProcAddr    EQU     0x00dc
@@ -334,8 +332,28 @@ digitIndex          EQU     register12
 clearLoop           EQU     register13
     
     
+printInit           LDWI    SYS_VDrawBits_134
+                    STW     giga_sysFn
+                    LDW     fgbgColour
+                    STW     giga_sysArg0
+                    
+                    LDWI    giga_videoTable
+                    STW     giga_sysArg4
+                    LD      cursorXY + 1
+                    LSLW
+                    ADDW    giga_sysArg4
+                    PEEK
+                    ST      giga_sysArg4 + 1
+                    LD      cursorXY
+                    ST      giga_sysArg4                    ; xy position
+                    RET
+
+
+
                     ; prints text string pointed to by the accumulator
 printText           PUSH
+                    LDWI    printInit
+                    CALL    giga_vAC
                     LDW     textStr             
                     PEEK
                     ST      textLen                         ; first byte is length
@@ -348,17 +366,6 @@ printT_char         INC     textStr                         ; next char
                     CALL    giga_vAC
 printT_loop         LoopCounter textLen printT_char
                     POP
-                    RET
-
-
-
-printInit           LDWI    SYS_VDrawBits_134
-                    STW     giga_sysFn
-                    LDW     fgbgColour
-                    STW     giga_sysArg0
-                    LDWI    0x0800
-                    ADDW    cursorXY
-                    STW     giga_sysArg4                    ; xy position
                     RET
 
 
@@ -377,16 +384,14 @@ printChar           PUSH
                     ADDW    textFont
                     STW     textFont                        ; text font slice base address for chars 32-81
     
-                    LDW     textChr
+                    LD      textChr
                     SUBI    50
                     BLT     printC_draw
                     LDW     textFont
                     ADDI    0x06
                     STW     textFont                        ; text font slice base address for chars 82+
     
-printC_draw         LDWI    printInit
-                    CALL    giga_vAC
-                    LDI     0x05
+printC_draw         LDI     0x05
                     ST      textSlice
     
 printC_slice        LDW     textFont                        ; text font slice base address
@@ -398,6 +403,7 @@ printC_slice        LDW     textFont                        ; text font slice ba
                     LoopCounter textSlice printC_slice
                     ST      giga_sysArg2                    ; result of loopCounter is always 0
                     SYS     0xCB                            ; draw last blank slice
+                    INC     giga_sysArg4                    ; using sysArg4 as a temporary cursor address for multiple char prints
                     CALL    realTimeProcAddr
     
                     LD      cursorXY
@@ -407,21 +413,22 @@ printC_slice        LDW     textFont                        ; text font slice ba
                     BLT     printC_exit
                     LDWI    newLineScroll                   ; next row, scroll at bottom
                     CALL    giga_vAC
+
 printC_exit         POP
                     RET
 
 
 atTextCursor        LD      cursorXY
-                    SUBI    giga_xres - 5
+                    SUBI    giga_xres
                     BLT     atTC_skip0
                     LDI     0
-                    STW     cursorXY
+                    ST      cursorXY
                     
 atTC_skip0          LD      cursorXY + 1
-                    SUBI    giga_yres - 7
+                    SUBI    giga_yres
                     BLT     atTC_skip1
-                    LDI     giga_yres - 8
-                    STW     cursorXY + 1
+                    LDI     giga_yres - 1
+                    ST      cursorXY + 1
                     
 atTC_skip1          LD      cursorXY + 1
                     SUBI    giga_yres - 8
@@ -482,6 +489,7 @@ clearCR_loopx       SUBI    4                               ; loop is unrolled 4
                     ; print from top row to bottom row, then start scrolling 
 newLineScroll       LDI     0x02                            ; x offset slightly
                     ST      cursorXY
+                    ST      giga_sysArg4
                     LDWI    0x0001
                     ANDW    miscFlags
                     BNE     newLS_cont0                     ; scroll on or off
@@ -491,11 +499,16 @@ newLS_cont0         PUSH
                     LDWI    0x8000
                     ANDW    miscFlags                       ; on bottom row flag
                     BNE     newLS_cont1
-                    LD      cursorXY+1
+                    LD      giga_sysArg4 + 1
                     ADDI    8
-                    ST      cursorXY+1
+                    ST      giga_sysArg4 + 1
+                    LD      cursorXY + 1
+                    ADDI    8
+                    ST      cursorXY + 1
                     SUBI    giga_yres
                     BLT     newLS_exit
+                    LDI     giga_yres - 8
+                    ST      cursorXY + 1
                     
 newLS_cont1         LDWI    clearCursorRow
                     CALL    giga_vAC
@@ -523,12 +536,6 @@ newLS_adjust        ADDI    8
                     LDWI    0x8000
                     ORW     miscFlags
                     STW     miscFlags                       ; set on bottom row flag
-                    
-                    ; read scan line pointer for last char row, use this as cursor position
-                    LDWI    giga_videoTable + 0x00E0
-                    PEEK
-                    SUBI    0x08                            ; corrected in printChar
-                    ST      cursorXY+1
 newLS_exit          POP
                     RET
 

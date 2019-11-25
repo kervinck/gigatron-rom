@@ -2,33 +2,33 @@ play midi &h10a0,3
 
 x=0 : y=x : mode 2
 
-10 for i=0 to 19
-20 gosub math
-30 p=peek(165)+7 : poke 165,p
-40 line x,119, 159,119-y
-50 next i
+loop: for i=0 to 19
+      gosub math
+      p=peek(163)+7 : poke 163,p
+      line x,119, 159,119-y
+      next i
+      
+      for i=19 to 0
+      gosub math
+      p=peek(163)+7 : poke 163,p
+      line 159,y, x,0
+      next i
+      
+      for i=0 to 19
+      gosub math
+      p=peek(163)+7 : poke 163,p
+      line 0,y, 159-x,0
+      next i
+      
+      for i=19 to 0
+      gosub math
+      p=peek(163)+7 : poke 163,p
+      line 159-x,119, 0,119-y
+      next i
+      
+      goto  loop
 
-60 for i=19 to 0
-70 gosub math
-80 p=peek(165)+7 : poke 165,p
-90 line 159,y, x,0
-100 next i
-
-110 for i=0 to 19
-120 gosub math
-130 p=peek(165)+7 : poke 165,p
-140 line 0,y, 159-x,0
-150 next i
-
-160 for i=19 to 0
-170 gosub math
-180 p=peek(165)+7 : poke 165,p
-190 line 159-x,119, 0,119-y
-200 next i
-
-goto 10
-
-rem x=4+8*i:y=3+6*i
+' x=4+8*i:y=3+6*i
 math: sh = (i<<1)
       x = sh + sh + sh + sh + 4
       y = sh + sh + sh + 3

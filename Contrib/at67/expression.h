@@ -7,8 +7,8 @@
 
 namespace Expression
 {
-    enum ExpressionType {Invalid=0x8000, HasNumbers=0x0000, HasStrings=0x0001, HasOperators=0x0002, HasIntConsts=0x0004, HasStrConsts=0x0008, HasVars=0x0010,
-                         HasKeywords=0x0020, HasStringKeywords=0x0040, HasFunctions=0x0080};
+    enum ExpressionType {Invalid=0x8000, HasNumbers=0x0000, HasStrings=0x0001, HasOperators=0x0002, HasIntConsts=0x0004, HasStrConsts=0x0008,
+                         HasIntVars=0x0010, HasStrVars=0x0020, HasKeywords=0x0040, HasStringKeywords=0x0080, HasFunctions=0x0100};
     enum NumericType {BadBase=-1, Decimal, HexaDecimal, Octal, Binary};
     enum ConditionType {BooleanCC, NormalCC, FastCC};
 
@@ -74,7 +74,7 @@ namespace Expression
     std::vector<std::string> tokenise(const std::string& text, const std::string& delimiters, bool toUpper=false);
     std::vector<std::string> tokenise(const std::string& text, char c, bool skipSpaces=true, bool toUpper=false);
     std::vector<std::string> tokenise(const std::string& text, char c, std::vector<size_t>& offsets, bool skipSpaces=true, bool toUpper=false);
-    std::vector<std::string> tokeniseLine(std::string& line, const std::string& delimiters=" \n\r\f\t\v");
+    std::vector<std::string> tokeniseLine(const std::string& line, const std::string& delimiters=" \n\r\f\t\v");
 
     void replaceText(std::string& expression, const std::string& text, const std::string& replace);
 

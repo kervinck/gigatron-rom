@@ -1,7 +1,7 @@
 _startAddress_      EQU                     0x0200
 
 ; Internal variables
-register0           EQU                     0x0084
+register0           EQU                     0x0082
 register1           EQU                     register0 + 0x02
 register2           EQU                     register0 + 0x04
 register3           EQU                     register0 + 0x06
@@ -23,6 +23,7 @@ midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
 frameCountPrev      EQU                     register0 + 0x28
 miscFlags           EQU                     register0 + 0x2A
+highByteMask        EQU                     register0 + 0x2C
 
 ; Includes
 %include            include/gigatron.i
@@ -30,21 +31,21 @@ miscFlags           EQU                     register0 + 0x2A
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_1                  EQU                     0x023d
-_2                  EQU                     0x024b
-_3                  EQU                     0x0275
-_4                  EQU                     0x029f
-_5                  EQU                     0x02b4
-_6                  EQU                     0x02c9
-_7                  EQU                     0x02df
-_8                  EQU                     0x0307
-_9                  EQU                     0x031f
-_10                 EQU                     0x0331
-_11                 EQU                     0x0341
-_12                 EQU                     0x0356
+_1                  EQU                     0x0242
+_2                  EQU                     0x0250
+_3                  EQU                     0x027a
+_4                  EQU                     0x02a4
+_5                  EQU                     0x02b9
+_6                  EQU                     0x02ce
+_7                  EQU                     0x02e4
+_8                  EQU                     0x030b
+_9                  EQU                     0x0323
+_10                 EQU                     0x0335
+_11                 EQU                     0x0345
+_12                 EQU                     0x035a
 _page_0x0300        EQU                     0x0300
-_next_0x0399        EQU                     0x033d
-_end_0x03dd         EQU                     0x0371
+_next_0x039d        EQU                     0x0341
+_end_0x03e1         EQU                     0x0375
 
 ; Variables
 _a                  EQU                     0x0030
@@ -146,17 +147,18 @@ _6                  LDWI                    256
                     SUBW                    _v
                     STW                     _v                              ; v=256 : if y&&<0 then y=-y : v=-v
 
-_7                  LDW                     _b
-                    STW                     mathShift
-                    ShiftLeft8bit           
+_7                  LD                      _b
+                    ST                      0xc0 + 1
+                    LDW                     0xc0
+                    ANDW                    highByteMask
                     ADDW                    _a
                     STW                     _p
-                    LDW                     _y
-                    SUBW                    _x
-                    STW                     0x82
+                    STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
-_page_0x0300        LDW                     0x82
+_page_0x0300        LDW                     0xde
+                    LDW                     _y
+                    SUBW                    _x
                     BGE                     _8
                     BRA                     _9                              ; p=a + (b LSL 8) : if y&&< x then goto &9
 
@@ -189,7 +191,7 @@ _10                 LDW                     _d
                     STW                     0xb0
                     LDI                     1
                     STW                     0xb2
-_next_0x0399        LDW                     _q
+_next_0x039d        LDW                     _q
                     POKE                    _p                              ; for t=d to 0 : poke p,q
 
 _11                 LDW                     _d
@@ -206,11 +208,11 @@ _11                 LDW                     _d
 _12                 LDW                     _p
                     ADDW                    _u
                     STW                     _p
-                    ForNextLoopStepUp       _t _next_0x0399 0xb0 0xb2
+                    ForNextLoopStepUp       _t _next_0x039d 0xb0 0xb2
                     LDWI                    _2
                     CALL                    giga_vAC                        ; p=p+u : next t : goto 2
 
-_end_0x03dd         BRA                     _end_0x03dd                     ; END
+_end_0x03e1         BRA                     _end_0x03e1                     ; END
 
 
 
@@ -228,8 +230,7 @@ convertGeOp         EQU     0xff24
 convertLtOp         EQU     0xff2d
 convertGtOp         EQU     0xff36
 rand16bit           EQU     0xff9c
-shiftLeft8bit       EQU     0xffa4
-resetVideoTable     EQU     0xffae
+resetVideoTable     EQU     0xffa4
 initClearFuncs      EQU     0xff3f
 clearVertBlinds     EQU     0xff62
 realTimeProcAddr    EQU     0x00dc
@@ -322,13 +323,6 @@ mathShift           EQU     register11
 rand16bit           LDWI    SYS_Random_34
                     STW     giga_sysFn
                     SYS     0xFD
-                    RET
-
-
-shiftLeft8bit       LDWI    SYS_LSLW8_24
-                    STW     giga_sysFn
-                    LDW     mathShift
-                    SYS     0x00                ; 0x00 = 270-max(14,24/2)
                     RET
 
 

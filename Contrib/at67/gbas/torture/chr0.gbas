@@ -29,8 +29,7 @@ dog = 39
 
     gosub   test
     
-    pong$ = y
-    print bb;" ";w;" ";hexw$(x);" ";pong$;" ";chr$(bb+60);" ";chr$(&h30);" ";hex$(peek(&h21) AND &hFC);" ";
+    print bb;" ";w;" ";hexw$(x);" ";y;" ";chr$(bb+60);" ";chr$(&h30);" ";hex$(peek(&h21) AND &hFC);" ";
     print hex$(80);" ";hexw$(&hdead);" ";hexw$(&hbeef);
 
     END

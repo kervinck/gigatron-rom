@@ -1,7 +1,7 @@
 _startAddress_      EQU                     0x0200
 
 ; Internal variables
-register0           EQU                     0x0084
+register0           EQU                     0x0082
 register1           EQU                     register0 + 0x02
 register2           EQU                     register0 + 0x04
 register3           EQU                     register0 + 0x06
@@ -23,6 +23,7 @@ midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
 frameCountPrev      EQU                     register0 + 0x28
 miscFlags           EQU                     register0 + 0x2A
+highByteMask        EQU                     register0 + 0x2C
 
 ; Includes
 %include            include/gigatron.i
@@ -30,23 +31,23 @@ miscFlags           EQU                     register0 + 0x2A
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_init               EQU                     0x023d
-_324532453245435435 EQU                     0x0245
-_10                 EQU                     0x024a
-_31                 EQU                     0x02b6
-_32                 EQU                     0x02d1
-_33                 EQU                     0x02ec
-_34                 EQU                     0x0319
-_35                 EQU                     0x0334
-_36                 EQU                     0x034f
-_37                 EQU                     0x036a
-_40                 EQU                     0x06bc
+_init               EQU                     0x0242
+_324532453245435435 EQU                     0x024a
+_10                 EQU                     0x024f
+_31                 EQU                     0x02bb
+_32                 EQU                     0x02d6
+_33                 EQU                     0x0302
+_34                 EQU                     0x031d
+_35                 EQU                     0x0338
+_36                 EQU                     0x0353
+_37                 EQU                     0x036e
+_40                 EQU                     0x06c0
 _page_0x0300        EQU                     0x0300
 _page_0x0400        EQU                     0x0400
 _page_0x0500        EQU                     0x0500
 _page_0x0600        EQU                     0x0600
-_end_0x06ee         EQU                     0x06c1
-_end_0x06f0         EQU                     0x06c3
+_end_0x06f3         EQU                     0x06c5
+_end_0x06f5         EQU                     0x06c7
 
 ; Variables
 _a                  EQU                     0x0030
@@ -59,8 +60,8 @@ _g                  EQU                     0x003c
 _z                  EQU                     0x003e
 
 ; Strings
-_str_0xff00         EQU                     0xff00
-_str_0xff00         DB                      1 ' '
+_str_0xff00          EQU                     0xff00
+_str_0xff00          DB                      1 ' '
 
 ; Define Bytes
 
@@ -172,12 +173,12 @@ _32                 LDI                     0
                     ADDW                    _f
                     STW                     _f                              ; f = -g +1000 -(24-g) +f
 
-_33                 LDI                     0
-                    SUBW                    _g
-                    STW                     0x82
+                    STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
-_page_0x0300        LDW                     0x82
+_page_0x0300        LDW                     0xde
+_33                 LDI                     0
+                    SUBW                    _g
                     STW                     0xc0
                     LDWI                    1000
                     ADDW                    0xc0
@@ -295,26 +296,10 @@ _37                 LDI                     0
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
                     LDWI                    -2949
-                    ADDW                    _b
-                    STW                     0xc0
-                    STW                     0x82
+                    STW                     0xde
                     LDWI                    _page_0x0400
                     CALL                    giga_vAC
-_page_0x0400        LDW                     0x82
-                    LDWI                    300
-                    ADDW                    _e
-                    STW                     0xc2
-                    LDWI                    -900
-                    ADDW                    _f
-                    STW                     0xc4
-                    LDW                     0xc2
-                    SUBW                    0xc4
-                    STW                     0xc4
-                    LDW                     0xc0
-                    SUBW                    0xc4
-                    STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
-
-                    LDWI                    -2949
+_page_0x0400        LDW                     0xde
                     ADDW                    _b
                     STW                     0xc0
                     LDWI                    300
@@ -416,24 +401,24 @@ _page_0x0400        LDW                     0x82
                     LDWI                    300
                     ADDW                    _e
                     STW                     0xc2
-                    STW                     0x82
+                    LDWI                    -900
+                    ADDW                    _f
+                    STW                     0xc4
+                    LDW                     0xc2
+                    SUBW                    0xc4
+                    STW                     0xc4
+                    LDW                     0xc0
+                    SUBW                    0xc4
+                    STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
+
+                    LDWI                    -2949
+                    ADDW                    _b
+                    STW                     0xc0
+                    LDWI                    300
+                    STW                     0xde
                     LDWI                    _page_0x0500
                     CALL                    giga_vAC
-_page_0x0500        LDW                     0x82
-                    LDWI                    -900
-                    ADDW                    _f
-                    STW                     0xc4
-                    LDW                     0xc2
-                    SUBW                    0xc4
-                    STW                     0xc4
-                    LDW                     0xc0
-                    SUBW                    0xc4
-                    STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
-
-                    LDWI                    -2949
-                    ADDW                    _b
-                    STW                     0xc0
-                    LDWI                    300
+_page_0x0500        LDW                     0xde
                     ADDW                    _e
                     STW                     0xc2
                     LDWI                    -900
@@ -538,10 +523,26 @@ _page_0x0500        LDW                     0x82
                     LDW                     0xc2
                     SUBW                    0xc4
                     STW                     0xc4
-                    STW                     0x82
+                    LDW                     0xc0
+                    SUBW                    0xc4
+                    STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
+
+                    LDWI                    -2949
+                    ADDW                    _b
+                    STW                     0xc0
+                    LDWI                    300
+                    ADDW                    _e
+                    STW                     0xc2
+                    LDWI                    -900
+                    ADDW                    _f
+                    STW                     0xc4
+                    LDW                     0xc2
+                    STW                     0xde
                     LDWI                    _page_0x0600
                     CALL                    giga_vAC
-_page_0x0600        LDW                     0x82
+_page_0x0600        LDW                     0xde
+                    SUBW                    0xc4
+                    STW                     0xc4
                     LDW                     0xc0
                     SUBW                    0xc4
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
@@ -583,9 +584,9 @@ _page_0x0600        LDW                     0x82
 _40                 LDWI                    _10
                     CALL                    giga_vAC                        ; goto 10
 
-_end_0x06ee         BRA                     _end_0x06ee                     ; end
+_end_0x06f3         BRA                     _end_0x06f3                     ; end
 
-_end_0x06f0         BRA                     _end_0x06f0                     ; END
+_end_0x06f5         BRA                     _end_0x06f5                     ; END
 
 
 
@@ -602,12 +603,12 @@ convertLeOp         EQU     0xff1d
 convertGeOp         EQU     0xff26
 convertLtOp         EQU     0xff2f
 convertGtOp         EQU     0xff38
-resetVideoTable     EQU     0xffd0
+resetVideoTable     EQU     0xffda
 initClearFuncs      EQU     0xff41
-clearCursorRow      EQU     0xfe5b
-printInit           EQU     0xfea1
-printText           EQU     0xffb3
-printDigit          EQU     0xfeb2
+clearCursorRow      EQU     0xfe5f
+printInit           EQU     0xfea5
+printText           EQU     0xffb8
+printDigit          EQU     0xfec0
 printInt16          EQU     0xff64
 printChar           EQU     0xfd00
 newLineScroll       EQU     0xfe00
@@ -759,8 +760,28 @@ digitIndex          EQU     register12
 clearLoop           EQU     register13
     
     
+printInit           LDWI    SYS_VDrawBits_134
+                    STW     giga_sysFn
+                    LDW     fgbgColour
+                    STW     giga_sysArg0
+                    
+                    LDWI    giga_videoTable
+                    STW     giga_sysArg4
+                    LD      cursorXY + 1
+                    LSLW
+                    ADDW    giga_sysArg4
+                    PEEK
+                    ST      giga_sysArg4 + 1
+                    LD      cursorXY
+                    ST      giga_sysArg4                    ; xy position
+                    RET
+
+
+
                     ; prints text string pointed to by the accumulator
 printText           PUSH
+                    LDWI    printInit
+                    CALL    giga_vAC
                     LDW     textStr             
                     PEEK
                     ST      textLen                         ; first byte is length
@@ -800,6 +821,8 @@ printD_exit         POP
 
                     ; prints 16bit int in textNum
 printInt16          PUSH
+                    LDWI    printInit
+                    CALL    giga_vAC
                     LDI     0
                     ST      digitIndex
                     LDW     textNum
@@ -837,17 +860,6 @@ printI16_pos        LDWI    10000
                     RET
 
 
-
-printInit           LDWI    SYS_VDrawBits_134
-                    STW     giga_sysFn
-                    LDW     fgbgColour
-                    STW     giga_sysArg0
-                    LDWI    0x0800
-                    ADDW    cursorXY
-                    STW     giga_sysArg4                    ; xy position
-                    RET
-
-
                     ; prints char in textChr
 printChar           PUSH
                     LD      textChr                         ; (char-32)*5 + 0x0700
@@ -862,16 +874,14 @@ printChar           PUSH
                     ADDW    textFont
                     STW     textFont                        ; text font slice base address for chars 32-81
     
-                    LDW     textChr
+                    LD      textChr
                     SUBI    50
                     BLT     printC_draw
                     LDW     textFont
                     ADDI    0x06
                     STW     textFont                        ; text font slice base address for chars 82+
     
-printC_draw         LDWI    printInit
-                    CALL    giga_vAC
-                    LDI     0x05
+printC_draw         LDI     0x05
                     ST      textSlice
     
 printC_slice        LDW     textFont                        ; text font slice base address
@@ -883,6 +893,7 @@ printC_slice        LDW     textFont                        ; text font slice ba
                     LoopCounter textSlice printC_slice
                     ST      giga_sysArg2                    ; result of loopCounter is always 0
                     SYS     0xCB                            ; draw last blank slice
+                    INC     giga_sysArg4                    ; using sysArg4 as a temporary cursor address for multiple char prints
                     CALL    realTimeProcAddr
     
                     LD      cursorXY
@@ -892,6 +903,7 @@ printC_slice        LDW     textFont                        ; text font slice ba
                     BLT     printC_exit
                     LDWI    newLineScroll                   ; next row, scroll at bottom
                     CALL    giga_vAC
+
 printC_exit         POP
                     RET
 
@@ -941,6 +953,7 @@ clearCR_loopx       SUBI    4                               ; loop is unrolled 4
                     ; print from top row to bottom row, then start scrolling 
 newLineScroll       LDI     0x02                            ; x offset slightly
                     ST      cursorXY
+                    ST      giga_sysArg4
                     LDWI    0x0001
                     ANDW    miscFlags
                     BNE     newLS_cont0                     ; scroll on or off
@@ -950,11 +963,16 @@ newLS_cont0         PUSH
                     LDWI    0x8000
                     ANDW    miscFlags                       ; on bottom row flag
                     BNE     newLS_cont1
-                    LD      cursorXY+1
+                    LD      giga_sysArg4 + 1
                     ADDI    8
-                    ST      cursorXY+1
+                    ST      giga_sysArg4 + 1
+                    LD      cursorXY + 1
+                    ADDI    8
+                    ST      cursorXY + 1
                     SUBI    giga_yres
                     BLT     newLS_exit
+                    LDI     giga_yres - 8
+                    ST      cursorXY + 1
                     
 newLS_cont1         LDWI    clearCursorRow
                     CALL    giga_vAC
@@ -982,12 +1000,6 @@ newLS_adjust        ADDI    8
                     LDWI    0x8000
                     ORW     miscFlags
                     STW     miscFlags                       ; set on bottom row flag
-                    
-                    ; read scan line pointer for last char row, use this as cursor position
-                    LDWI    giga_videoTable + 0x00E0
-                    PEEK
-                    SUBI    0x08                            ; corrected in printChar
-                    ST      cursorXY+1
 newLS_exit          POP
                     RET
 

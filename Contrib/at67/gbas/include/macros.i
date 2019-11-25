@@ -85,20 +85,20 @@ _label_ CALL    giga_vAC
 %MACRO  PrintChar _chr
         LDI     _chr
         ST      textChr
-        LDWI    printChar
+        LDWI    printChr
         CALL    giga_vAC
 %ENDM
 
 %MACRO  PrintAcChar
         ST      textChr
-        LDWI    printChar
+        LDWI    printChr
         CALL    giga_vAC
 %ENDM
 
 %MACRO  PrintVarChar _var
         LD      _var
         ST      textChr
-        LDWI    printChar
+        LDWI    printChr
         CALL    giga_vAC
 %ENDM
 
@@ -165,6 +165,46 @@ _label_ CALL    giga_vAC
         LDW     _var
         STW     textNum    
         LDWI    printInt16
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  StringChr
+        LDWI    stringChr
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  StringHex
+        LDWI    stringHex
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  StringHexw
+        LDWI    stringHexw
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  StringCopy
+        LDWI    stringCopy
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  StringAdd
+        LDWI    stringAdd
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  StringMid
+        LDWI    stringMid
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  StringLeft
+        LDWI    stringLeft
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  StringRight
+        LDWI    stringRight
         CALL    giga_vAC
 %ENDM
 
@@ -241,6 +281,11 @@ _label_ CALL    giga_vAC
 
 %MACRO  DrawLine
         LDWI    drawLine
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  DrawVTLine
+        LDWI    drawVTLine
         CALL    giga_vAC
 %ENDM
 
@@ -354,6 +399,8 @@ _id_    CALL    giga_vAC
         STW     midiStream                              ; reset MIDI
         LDWI    0x0001
         STW     miscFlags                               ; reset flags
+        LDWI    0xFF00
+        STW     highByteMask
         LDI     0x00
         ST      giga_soundTimer                         ; reset soundTimer, (stops any current Audio)
 

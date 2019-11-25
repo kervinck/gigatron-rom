@@ -12,7 +12,7 @@ getArrayByte        LDW     memAddr
 %ENDS
 
 %SUB                setArrayByte
-                    ; get 8bit value from array
+                    ; set 8bit value from array
 setArrayByte        LDW     memAddr
                     ADDW    memIndex
                     STW     memAddr
@@ -31,7 +31,7 @@ getArrayInt16       LDW     memAddr
 %ENDS
 
 %SUB                setArrayInt16
-                    ; get 16bit value from array
+                    ; set 16bit value from array
 setArrayInt16       LDW     memAddr
                     ADDW    memIndex
                     ADDW    memIndex

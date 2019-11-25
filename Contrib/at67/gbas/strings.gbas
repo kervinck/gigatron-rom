@@ -1,0 +1,31 @@
+cls
+
+const ch$ = chr$(65)
+const hb$ = hex$(15)
+const hw$ = hexw$(&hb00b)
+
+const a$="yes "
+const z$="no"
+const b$="hello test world"
+ 
+c$=left$(b$, 5)
+d$ = right$ (b$,5)
+e$=mid$(b$, 6, 4)
+ 
+f$ = b$
+f$ = b$ + b$
+f$ = add$(b$, b$);
+f$ = add$(f$, f$);
+f$ = add$(f$, f$);
+g$ = copy$(f$)
+
+a = 65
+
+print a$;" ";b$;" "
+print c$;" ";d$;" ";e$
+print f$
+print g$
+print ch$;" ";hb$;" ";hw$
+print chr$(a);" ";hex$(15);" ";hexw$(&hb00b)
+
+end

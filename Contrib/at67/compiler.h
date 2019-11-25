@@ -16,12 +16,12 @@
 // 18 bytes, (0x00EE <-> 0x00FF), reserved for vCPU stack, allows for 9 nested calls. The amount of GOSUBS you can use is dependant on how
 // much of the stack is being used by nested system calls. *NOTE* there is NO call table for user code for this compiler
 #define USER_VAR_START    0x0030  // 80 bytes, (0x0030 <-> 0x007F), reserved for BASIC user variables
-#define VAC_SAVE_START    0x0082  // 2 bytes,  (0x0082 <-> 0x0083), reserved for saving vAC
-#define INT_VAR_START     0x0084  // 44 bytes, (0x0084 <-> 0x00AF), internal register variables, used by the BASIC runtime
+#define INT_VAR_START     0x0082  // 46 bytes, (0x0082 <-> 0x00AF), internal register variables, used by the BASIC runtime
 #define LOOP_VAR_START    0x00B0  // 16 bytes, (0x00B0 <-> 0x00BF), reserved for FOR loops with vars, maximum of 4 nested FOR loops
 #define TEMP_VAR_START    0x00C0  // 16 bytes, (0x00C0 <-> 0x00CF), reserved for temporary expression variables
 #define CONVERT_CC_OPS    0x00D0  // 12 bytes, (0x00D0 <-> 0x00DB), critical relational operator routines that can't straddle page boundaries
 #define REAL_TIME_PROC    0x00DC  // 2 bytes,  (0x00DC <-> 0x00DD), critical time sliced routine that usually handles AUDIO/MIDI, etc
+#define VAC_SAVE_START    0x00DE  // 2 bytes,  (0x00DE <-> 0x00DF), reserved for saving vAC
 #define USER_CODE_START   0x0200
 #define USER_VAR_END      0x007F
 
@@ -37,7 +37,7 @@ namespace Compiler
     enum ConstantStrType {StrChar, StrHex, StrHexw};
     enum IfElseEndType {IfBlock, ElseIfBlock, ElseBlock, EndIfBlock};
     enum OperandType {OperandVar, OperandTemp, OperandConst};
-    enum StatementResult {StatementError, StatementExpression, SingleStatementParsed, MultiStatementParsed};
+    enum StatementResult {StatementError, StatementSuccess, StatementExpression, SingleStatementParsed, MultiStatementParsed};
 
     struct Constant
     {
@@ -65,11 +65,13 @@ namespace Compiler
     struct StringVar
     {
         uint8_t _size;
+        uint8_t _maxSize;
         uint16_t _address;
         std::string _data;
         std::string _name;
         std::string _output;
         int _codeLineIndex = -1;
+        bool _constant = true;
     };
 
     struct InternalLabel
@@ -204,6 +206,7 @@ namespace Compiler
     uint16_t getRuntimeEnd(void);
     uint16_t getRuntimeStart(void);
     uint16_t getTempVarStart(void);
+    uint16_t getStrWorkArea(void);
     std::string& getTempVarStartStr(void);
     int getCurrentLabelIndex(void);
     std::string& getNextInternalLabel(void);
@@ -244,12 +247,15 @@ namespace Compiler
     int findLabel(uint16_t address);
     int findInternalLabel(const std::string& labelName);
     int findInternalLabel(uint16_t address);
+    int findConst(std::string& constName);
     int findVar(std::string& varName);
+    int findStr(std::string& strName);
 
+    bool createCodeLine(const std::string& code, int codeLineOffset, int labelIndex, int varIndex, bool assign, bool vars, CodeLine& codeLine);
     void createLabel(uint16_t address, const std::string& name, const std::string& output, int codeLineIndex, Label& label, bool numeric=false, bool addUnderscore=true, bool pageJump=false, bool gosub=false);
     void createIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, int& varIndex, VarType varType=VarInt16, uint16_t arrayStart=0x0000, int intSize=Int16, int arrSize=0);
-    bool createString(CodeLine& codeLine, int codeLineIndex, const std::string& str, std::string& name, uint16_t& address);
-    void createConstantString(ConstantStrType constantStrType, int16_t& value);
+    bool createString(CodeLine& codeLine, int codeLineIndex, const std::string& str, std::string& name, uint16_t& address, uint8_t maxSize=96, bool constString=true);
+    uint16_t createConstantString(ConstantStrType constantStrType, int16_t value);
 
     void updateVar(int16_t data, CodeLine& codeLine, int varIndex, bool containsVars);
 
@@ -260,11 +266,11 @@ namespace Compiler
     bool emitVcpuAsmUserVar(const std::string& opcodeStr, const char* varNamePtr, bool nextTempVar);
     void getNextTempVar(void);
 
-    uint32_t isExpression(std::string& input, int& varIndex, int& constIndex);
+    uint32_t isExpression(std::string& input, int& varIndex, int& constIndex, int& strIndex);
     OperandType parseExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, std::string& operand, Expression::Numeric& numeric);
     uint32_t parseExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, Expression::Numeric& numeric);
     uint32_t handleExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, Expression::Numeric numeric);
-    StatementResult parseMultiStatements(const std::string& code, CodeLine& codeLine, int codeLineIndex, int& varIndex);
+    StatementResult parseMultiStatements(const std::string& code, CodeLine& codeLine, int codeLineIndex, int& varIndex, int& strIndex);
 
     void addLabelToJumpCC(std::vector<VasmLine>& vasm, std::string& label);
     void addLabelToJump(std::vector<VasmLine>& vasm, std::string& label);

@@ -2,8 +2,8 @@ scroll off
 
 play midi &h10a0,3
 
-10 poke 164,42:cls:'Paper
-20 poke 165,rnd(0) AND 63:'Pen
+10 poke 162,42:cls:'Paper
+20 poke 163,rnd(0) AND 63:'Pen
 30 at rnd(155),rnd(113)
 40 put 127:'Block
 50 goto &20

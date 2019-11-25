@@ -1,7 +1,7 @@
 
 'Simulate pulsar signal
 'in Joy Division style
-10 poke 164,0:poke 165,63:cls:w=0:z=0
+10 poke 162,0:poke 163,63:cls:w=0:z=0
 20 at 0,112:print
 30 v=rnd(30)-80:p=5:q=128
 40 y=2000+rnd(700)

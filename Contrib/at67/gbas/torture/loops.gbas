@@ -1,17 +1,18 @@
 cls
 
-LET a=0
+LET a=1
+
+const count = 6 + 1
 
 repeat
-    a=a+1
     print a
-until a&=8    
+a=a+1 : until a &&= count + 1
 
-while a>1
-    a=a-1
-    if a&=1
+while a &&> 0
+    if a &&= 1
         print a;
     else
         print a
     endif
+    a=a-1
 wend

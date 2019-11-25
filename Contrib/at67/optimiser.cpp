@@ -15,7 +15,7 @@
 namespace Optimiser
 {
     enum OptimiseTypes {StwLdwPair=0, StwLdPair, ExtraLdw, StwLdwAddw, StwLdwAddwVar, StwLdwAndw, StwLdwAndwVar, StwLdwXorw, StwLdwXorwVar, StwLdwOrw, StwLdwOrwVar,
-                        PokeVar, DokeVar, StwPair, StwPairReg, ExtraStw, PeekArray, DeekArray, PokeArray, DokeArray, PokeVarArray, DokeVarArray, PokeTmpArray, DokeTmpArray, 
+                        PokeVar, DokeVar, Lsl8Var, StwPair, StwPairReg, ExtraStw, PeekArray, DeekArray, PokeArray, DokeArray, PokeVarArray, DokeVarArray, PokeTmpArray, DokeTmpArray, 
                         AddiZero, SubiZero, NumOptimiseTypes};
 
     struct MatchSequence
@@ -88,6 +88,12 @@ namespace Optimiser
         {0, 2, {"LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "", 
                 "DOKE" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "",
                 "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + ""}},
+
+        // Lsl8Var
+        {0, 1, {"ST"   + std::string(OPCODE_TRUNC_SIZE - 2, ' ') + "0x",
+                "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x",
+                "ANDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "high",
+                "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_"}},
 
         // StwPair
         {0, 0, {"STW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x",
@@ -252,6 +258,8 @@ namespace Optimiser
 
     bool optimiseCode(void)
     {
+
+RESTART_OPTIMISE:
         for(int i=0; i<Compiler::getCodeLines().size(); i++)
         {
             for(int j=0; j<matchSequences.size(); j++)
@@ -300,8 +308,8 @@ namespace Optimiser
 /* Opcode matches required, operand matches required                                                                                                         */
 /*************************************************************************************************************************************************************/
 
-                        // Find operand match
-                        if(firstOperand == secondOperand)
+                        // Find operand match, (temporary variables are a minimum of 4 chars, i.e. '0xc0')
+                        if(firstOperand.substr(0, 4) == secondOperand.substr(0, 4))
                         {
                             // Match STW LDW, delete STW LDW
                             if(j == StwLdwPair  ||  j == StwLdPair)
@@ -478,13 +486,13 @@ namespace Optimiser
                                 if(!migrateInternalLabel(i, firstLine, firstLine + 2)) break;
                                 if(!migrateInternalLabel(i, firstLine + 1, firstLine + 2)) break;
 
-                                // ORW's operand becomes the LDW's operand
+                                // ORW's operand becomes LDW's operand
                                 size_t ldwSpace = Compiler::getCodeLines()[i]._vasm[firstLine + 1]._code.find_first_of("  \n\r\f\t\v");
                                 std::string ldwOperand = Compiler::getCodeLines()[i]._vasm[firstLine + 1]._code.substr(ldwSpace);
                                 Expression::stripWhitespace(ldwOperand);
                                 Compiler::getCodeLines()[i]._vasm[firstLine + 2]._code = "ORW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + ldwOperand;
 
-                                // Delete STW and LDW
+                                // Delete STW LDW
                                 linesDeleted = true;
                                 itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine + 1);
                                 itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine);
@@ -502,6 +510,23 @@ namespace Optimiser
                                 itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine + 2);
                                 adjustLabelAddresses(i, firstLine + 2, -2);
                                 adjustVasmAddresses(i, firstLine+ 2, -2);
+                            }
+                            // Match ST LDW ANDW STW, replace ST operand with STW operand, delete LDW ANDW STW
+                            else if(j == Lsl8Var)
+                            {
+                                // ST's operand becomes STW's operand
+                                size_t stwSpace = Compiler::getCodeLines()[i]._vasm[firstLine + 3]._code.find_first_of("  \n\r\f\t\v");
+                                std::string stwOperand = Compiler::getCodeLines()[i]._vasm[firstLine + 3]._code.substr(stwSpace);
+                                Expression::stripWhitespace(stwOperand);
+                                Compiler::getCodeLines()[i]._vasm[firstLine]._code = "ST" + std::string(OPCODE_TRUNC_SIZE - 2, ' ') + stwOperand + " + 1";
+
+                                // Delete LDW ANDW STW
+                                linesDeleted = true;
+                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine + 1);
+                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(itVasm);
+                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(itVasm);
+                                adjustLabelAddresses(i, firstLine + 1, -6);
+                                adjustVasmAddresses(i, firstLine + 1, -6);
                             }
                         }
 
@@ -617,7 +642,14 @@ namespace Optimiser
                         }
                     }
 
-                    if(!linesDeleted) ++itVasm;
+                    if(!linesDeleted)
+                    {
+                        ++itVasm;
+                    }
+                    else
+                    {
+                        goto RESTART_OPTIMISE;
+                    }
                 }
             }
         }

@@ -62,6 +62,10 @@ namespace Linker
         {0x0000, 0x0000, "drawLineExt"      , "", false, false},
         {0x0000, 0x0000, "drawLineLoop"     , "", false, false},
         {0x0000, 0x0000, "drawLineLoadXY"   , "", false, false},
+        {0x0000, 0x0000, "drawVTLine"       , "", false, false},
+        {0x0000, 0x0000, "drawVTLineExt"    , "", false, false},
+        {0x0000, 0x0000, "drawVTLineLoop"   , "", false, false},
+        {0x0000, 0x0000, "drawVTLineLoadXY" , "", false, false},
         {0x0000, 0x0000, "atLineCursor"     , "", false, false},
         {0x0000, 0x0000, "resetAudio"       , "", false, false},
         {0x0000, 0x0000, "playMidi"         , "", false, false},
@@ -70,11 +74,21 @@ namespace Linker
         {0x0000, 0x0000, "printText"        , "", false, false},
         {0x0000, 0x0000, "printDigit"       , "", false, false},
         {0x0000, 0x0000, "printInt16"       , "", false, false},
+        {0x0000, 0x0000, "printChr"         , "", false, false},
         {0x0000, 0x0000, "printChar"        , "", false, false},
         {0x0000, 0x0000, "printHexByte"     , "", false, false},
         {0x0000, 0x0000, "printHexWord"     , "", false, false},
         {0x0000, 0x0000, "atTextCursor"     , "", false, false},
         {0x0000, 0x0000, "newLineScroll"    , "", false, false},
+        {0x0000, 0x0000, "stringChr"        , "", false, false},
+        {0x0000, 0x0000, "stringHex"        , "", false, false},
+        {0x0000, 0x0000, "stringHexw"       , "", false, false},
+        {0x0000, 0x0000, "createHex"        , "", false, false},
+        {0x0000, 0x0000, "stringCopy"       , "", false, false},
+        {0x0000, 0x0000, "stringAdd"        , "", false, false},
+        {0x0000, 0x0000, "stringMid"        , "", false, false},
+        {0x0000, 0x0000, "stringLeft"       , "", false, false},
+        {0x0000, 0x0000, "stringRight"      , "", false, false},
     };
     const std::vector<std::string> _subIncludes = 
     {
@@ -84,8 +98,9 @@ namespace Linker
         "clear_screen.i",
         "conv_conds.i"  ,
         "graphics.i"    ,
-        "print_text.i"  ,
         "audio.i"       ,
+        "print_text.i"  ,
+        "string.i"      ,
     };
     const std::vector<std::string> _subIncludesCALLI = 
     {
@@ -95,14 +110,26 @@ namespace Linker
         "clear_screen_CALLI.i",
         "conv_conds_CALLI.i"  ,
         "graphics_CALLI.i"    ,
-        "print_text_CALLI.i"  ,
         "audio_CALLI.i"       ,
+        "print_text_CALLI.i"  ,
+        "string_CALLI.i"      ,
     };
 
 
     bool initialise(void)
     {
         return true;
+    }
+
+
+    bool findSub(const std::vector<std::string>& tokens, const std::string& subName)
+    {
+        for(int i=0; i<tokens.size(); i++)
+        {
+            if(tokens[i] == subName) return true;
+        }
+
+        return false;
     }
 
     int getAsmOpcodeSizeOfIncludeSub(const std::string& includeName, const std::string& subName)
@@ -189,13 +216,16 @@ namespace Linker
         for(int i=0; i<_subIncludeFiles[includeName].size(); i++)
         {
             std::string line = _subIncludeFiles[includeName][i];
+            std::vector<std::string> tokens = Expression::tokenise(line, ' ');
+            for(int j=0; j<tokens.size(); j++) Expression::stripWhitespace(tokens[j]);
+
             bool foundSub = (line.find("%SUB") != std::string::npos);
             bool foundEnd = (line.find("%ENDS") != std::string::npos);
 
             if(!buildingSub  &&  foundSub)
             {
                 varsDone = true;
-                if(line.find(subName) != std::string::npos) buildingSub = true;
+                if(findSub(tokens, subName)) buildingSub = true;
             }
             else if(buildingSub  &&  foundEnd)
             {
@@ -208,7 +238,7 @@ namespace Linker
                 code.push_back(line);
                 for(int j=0; j<_internalSubs.size(); j++)
                 {
-                    if(!_internalSubs[j]._inUse  &&  line.find(_internalSubs[j]._name) != std::string::npos)
+                    if(!_internalSubs[j]._inUse  &&  findSub(tokens, _internalSubs[j]._name))
                     {
                         _internalSubs[j]._inUse = true;
                         return true;
@@ -337,10 +367,13 @@ namespace Linker
                 // Vasm code
                 for(int j=0; j<Compiler::getCodeLines()[i]._vasm.size(); j++)
                 {
+                    std::vector<std::string> tokens = Expression::tokenise(Compiler::getCodeLines()[i]._vasm[j]._code, ' ');
+                    for(int k=0; k<tokens.size(); k++) Expression::stripWhitespace(tokens[k]);
+
                     for(int k=0; k<_internalSubs.size(); k++)
                     {
                         // Check for internal subs in code
-                        if(Compiler::getCodeLines()[i]._vasm[j]._code.find(_internalSubs[k]._name) != std::string::npos) loadInternalSub(k);
+                        if(findSub(tokens, _internalSubs[k]._name)) loadInternalSub(k);
 
                         // Check for internal subs in macros, (even nested)
                         std::string opcode = Compiler::getCodeLines()[i]._vasm[j]._opcode;

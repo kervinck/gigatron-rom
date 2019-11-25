@@ -66,6 +66,7 @@ namespace Validater
         return itCode->_vasm.insert(itVasm, {address, opcode, code, "", true, vasmSize});
     }
 
+    // TODO: make this more flexible, (e.g. sound channels off etc)
     bool checkExclusionZone(const std::string& opcode, uint16_t vPC, uint16_t& nextPC)
     {
         uint8_t hPC = HI_BYTE(vPC);
@@ -84,7 +85,8 @@ namespace Validater
         uint16_t codePage2 = 0x08A0;
         uint16_t codeEnd2 = 0x8000;
 
-        uint16_t codePage3 = 0x8000; // only available with 64K RAM
+        // Only available with 64K RAM
+        uint16_t codePage3 = 0x8000;
         uint16_t codeEnd3 = 0x0000;
 
         uint16_t codeSize = 250;
@@ -120,12 +122,12 @@ namespace Validater
             if(firstTime)
             {
                 firstTime = false;
-                fprintf(stderr, "Compiler::checkExclusionZone() : Warning, you have exceeded 32K of RAM\n");
+                fprintf(stderr, "\n*** Compiler::checkExclusionZone() : Warning, you have exceeded 32K of RAM ***\n\n");
             }
         }
         if(nextPC == codeEnd3)
         {
-            fprintf(stderr, "Compiler::checkExclusionZone() : Error, you have exceeded 64K of RAM\n");
+            fprintf(stderr, "\n*** Compiler::checkExclusionZone() : Error, you have exceeded 64K of RAM***\n\n");
             _EXIT_(EXIT_FAILURE);
         }
 
