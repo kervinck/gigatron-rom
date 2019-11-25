@@ -1,0 +1,8 @@
+TODO
+
+Putting object files under change control
+
+Keeping previous versions visible
+
+Versioning object and source files
+

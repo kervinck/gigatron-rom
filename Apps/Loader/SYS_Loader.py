@@ -64,15 +64,15 @@ bne('.sysPi#19')                #17
 ld([sysArgs+0])                 #18
 suba(65, X)                     #19 Point at first byte of buffer
 ld([Y,X])                       #20 Command byte
-st([Y,Xpp])                     #21 X++
+st([Y,Xpp]);                    C('(Just X++)')#21
 xora(ord('L'))                  #22 This loader lumps everything under 'L'
 bne('.sysPi#25')                #23
 ld([Y,X]);                      C('Valid command')#24 Length byte
-st([Y,Xpp])                     #25 X++
+st([Y,Xpp]);                    C('(Just X++)')#25
 anda(63)                        #26 Bit 6:7 are garbage
 st([sysArgs+4])                 #27 Copy count
 ld([Y,X])                       #28 Low copy address
-st([Y,Xpp])                     #29 X++
+st([Y,Xpp]);                    C('(Just X++)')#29
 st([sysArgs+5])                 #30
 ld([Y,X])                       #31 High copy address
 st([Y,Xpp])                     #32 X++

@@ -10,22 +10,22 @@
               0003 c17c  ctrl $7c         ;SCLK=0; Disable SPI slaves; Bank=1; Enable RAM
               0004 007c  ld   $7c
               0005 c281  st   [$81]
-              0006 0001  ld   $01         ;RAM test and count
-.countMem0:   0007 d601  st   [$01],y
+              0006 0001  ld   $01         ;Quick RAM test and count
+.countMem0:   0007 d601  st   [$01],y     ;Store in RAM and load AC in Y
               0008 00ff  ld   $ff
-              0009 6900  xora [y,$00]
-              000a ca00  st   [y,$00]
-              000b c200  st   [$00]
-              000c 6900  xora [y,$00]
-              000d ec0d  bne  $000d
+              0009 6900  xora [y,$00]     ;Invert value from memory
+              000a ca00  st   [y,$00]     ;Test RAM by writing the new value
+              000b c200  st   [$00]       ;Copy result in [0]
+              000c 6900  xora [y,$00]     ;Read back and compare if written ok
+              000d ec0d  bne  $000d       ;Loop forever on RAM failure here
               000e 00ff  ld   $ff
-              000f 6900  xora [y,$00]
-              0010 ca00  st   [y,$00]
-              0011 6100  xora [$00]
-              0012 f016  beq  .countMem1
+              000f 6900  xora [y,$00]     ;Invert memory value again
+              0010 ca00  st   [y,$00]     ;To restore original value
+              0011 6100  xora [$00]       ;Compare with inverted copy
+              0012 f016  beq  .countMem1  ;If equal, we wrapped around
               0013 0101  ld   [$01]
-              0014 fc07  bra  .countMem0
-              0015 8200  adda ac
+              0014 fc07  bra  .countMem0  ;Loop to test next address line
+              0015 8200  adda ac          ;Executes in the branch delay slot!
 .countMem1:   0016 00ff  ld   $ff         ;Debounce reset button
 .debounce:    0017 c200  st   [$00]
               0018 ec18  bne  $0018
@@ -933,7 +933,7 @@ peek:         045f a001  suba $01
               0462 1519  ld   [$19],y
               0463 0d00  ld   [y,x]
               0464 c218  st   [$18]
-lupReturn:    0465 0000  ld   $00
+lupReturn#19: 0465 0000  ld   $00
               0466 c219  st   [$19]
               0467 1403  ld   $03,y
               0468 e0cb  jmp  y,$cb
@@ -53619,7 +53619,7 @@ TinyBASIC:    dc3d 0002  ld   $02         ;| RAM segment address (high byte firs
               e865 001b  ld   $1b         ;| RAM segment address (high byte first)
               e866 00a0  ld   $a0         ;|
               e867 0006  ld   $06         ;| Length (1..256)
-              e868 00a0  ld   $a0         ;1ba0 7072
+              e868 00a0  ld   $a0         ;1ba0 _Buffer
               e869 001b  ld   $1b
               e86a 004e  ld   $4e         ;1ba2 'N'
               e86b 0045  ld   $45         ;1ba3 'E'

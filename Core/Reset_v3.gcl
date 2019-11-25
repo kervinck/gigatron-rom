@@ -23,7 +23,7 @@ gcl0x
   $800 [do
     p= \sysArgs2:               {Destination}
     160 \sysArgs0.              {Count}
-    54!                         {SYS call}
+    54!!                        {SYS call}
     $100 p+ if>0loop]
 
   ret
@@ -113,7 +113,7 @@ $814 Pos= PrintStartupMessage! {Returns 0}
 9 \ledTempo.                    {6.0 Hz ( = 60/(9+1)), was 5.5 Hz}
 
 \SYS_SetMode_v2_80 \sysFn:      {!!! Not in ROM v1 !!!}
-1 80!                           {Mode 1 -> "ABC-"}
+1 80!!                          {Mode 1 -> "ABC-"}
 
 { Load and start main program }
 \Main \sysArgs0: $200 \vLR: \SYS_Exec_88 \sysFn: 88!

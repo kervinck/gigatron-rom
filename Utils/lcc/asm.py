@@ -1,6 +1,6 @@
 from copy import copy
 from re import findall
-from sys import stderr
+import sys
 
 global_labels = {
     'vPC': 0x0016,
@@ -31,7 +31,7 @@ class Log:
     def __init__(self, f):
         self.f = f
 
-log = Log(stderr)
+log = Log(sys.stderr)
 
 class Segment:
     def __init__(self, address, size):
@@ -533,7 +533,7 @@ def link(entry, outf, logf):
             target = calctarget(label, funclabels)
             if target is None:
                 print(f'Undefined symbol: {label}')
-                exit(1)
+                sys.exit(1)
             print(f'reloc: {label} -> {target} @ {offset}', file=log.f)
             s.buffer[offset] = target & 0xff
             s.buffer[offset + 1] = (target >> 8) & 0xff

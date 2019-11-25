@@ -35,9 +35,9 @@ CFLAGS:=-std=c11 -O3 -Wall
 dev.rom: Core/* Apps/*/* Makefile interface.json
 	python Core/dev.py\
 		gigatronRaw=Apps/Screen/gigatron.rgb\
+		Snake=Apps/Snake/Snake_v3.gcl\
 		SYS_Racer_v1.py\
 		SYS_Loader.py\
-		Snake=Apps/Snake/Snake_v3.gcl\
 		zippedRacerHorizon=Apps/Racer/Horizon-256x16.rgb\
 		Racer=Apps/Racer/Racer_v2.gcl\
 		Mandelbrot=Apps/Mandelbrot/Mandelbrot_v1.gcl\

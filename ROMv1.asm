@@ -7,22 +7,22 @@
               0000 0000  ld   $00         ;LEDs |OOOO|
               0001 1880  ld   $80,out
               0002 18c0  ld   $c0,out
-              0003 0001  ld   $01         ;RAM test and count
-.countMem0:   0004 d601  st   [$01],y
+              0003 0001  ld   $01         ;Quick RAM test and count
+.countMem0:   0004 d601  st   [$01],y     ;Store in RAM and load AC in Y
               0005 00ff  ld   $ff
-              0006 6900  xora [y,$00]
-              0007 ca00  st   [y,$00]
-              0008 c200  st   [$00]
-              0009 6900  xora [y,$00]
-              000a ec0a  bne  $000a
+              0006 6900  xora [y,$00]     ;Invert value from memory
+              0007 ca00  st   [y,$00]     ;Test RAM by writing the new value
+              0008 c200  st   [$00]       ;Copy result in [0]
+              0009 6900  xora [y,$00]     ;Read back and compare if written ok
+              000a ec0a  bne  $000a       ;Loop forever on RAM failure here
               000b 00ff  ld   $ff
-              000c 6900  xora [y,$00]
-              000d ca00  st   [y,$00]
-              000e 6100  xora [$00]
-              000f f013  beq  .countMem1
+              000c 6900  xora [y,$00]     ;Invert memory value again
+              000d ca00  st   [y,$00]     ;To restore original value
+              000e 6100  xora [$00]       ;Compare with inverted copy
+              000f f013  beq  .countMem1  ;If equal, we wrapped around
               0010 0101  ld   [$01]
-              0011 fc04  bra  .countMem0
-              0012 8200  adda ac
+              0011 fc04  bra  .countMem0  ;Loop to test next address line
+              0012 8200  adda ac          ;Executes in the branch delay slot!
 .countMem1:   0013 00ff  ld   $ff         ;Debounce reset button
 .debounce:    0014 c200  st   [$00]
               0015 ec15  bne  $0015
@@ -973,7 +973,7 @@ peek:         045f a001  suba $01
               0462 1519  ld   [$19],y
               0463 0d00  ld   [y,x]
               0464 c218  st   [$18]
-lupReturn:    0465 0000  ld   $00
+lupReturn#19: 0465 0000  ld   $00
               0466 c219  st   [$19]
               0467 1403  ld   $03,y
               0468 e0cb  jmp  y,$cb

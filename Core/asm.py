@@ -1,5 +1,12 @@
 
 # SYNOPSIS: from asm import *
+#
+# This is not an assembler -in- Python. This about using Python -itself- as an
+# assembler! Specifically, asm.py is just the back end, while the Python
+# interpreter acts as the front end. By using Python in this way, we get
+# parsing and a powerful macro system for free. Assembly source files are
+# simple .py files, not .asm files. (But we can produce .asm files as a program
+# listing in a more conventional notation.)
 
 from os.path import basename, splitext
 import json
@@ -190,9 +197,9 @@ def trampoline():
   C('+-----------------------------------+')
   bra(253)                      #14
   C('|                                   |')
-  ld(hi('lupReturn'), Y)        #15
+  ld(hi('lupReturn#19'), Y)     #15
   C('| Trampoline for page $%04x lookups |' % (pc()&~255))
-  jmp(Y,lo('lupReturn'))        #17
+  jmp(Y,lo('lupReturn#19'))     #17
   C('|                                   |')
   st([lo('vAC')])               #18
   C('+-----------------------------------+')
@@ -221,7 +228,7 @@ def end():
   if _errors:
     print '%d error(s)' % _errors
     print
-    exit()
+    sys.exit(1)
 
   align(1)
 

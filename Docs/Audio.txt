@@ -1,0 +1,151 @@
+Sound basics
+============
+
+There is a secondary output port (XOUT) with 8 bits. It is split
+in 4 bits for the LEDs, and 4 bits that go into a 4-bit DAC resistor
+array to form 16 output levels. By default, we have 4 sound channels
+in software that are 6 bits each internally. At the beginning of
+each scan line, one of these software channels gets updated to
+compute a new 6-bits sample. So one software channel update happens
+during every horizontal VGA sync pulse. After every 4 scan lines,
+the top 4 bits of their sum gets output to the sound part of the
+XOUT register.
+
+The 4 software channels can independently generate a tone and a
+waveform. Some of the preprogrammed waveforms are triangle, sawtooth,
+pulse and something that looks like noise, but sounds a bit metallic.
+It can all be changed of course, as it is all software-defined.
+
+Controls
+--------
+
+There are 6 bytes for each sound channel. They're at the top of
+page 1..4.
+
+       0                                                       255
+      +----------------------------------------------------------+
+$0000 |                        Zero page                         |
+      +------------------------------------+---------+-----------+
+$0100 | Video table                        | vReset  | Channel 1 |
+      +------------------------------------+---------+-----------+
+$0200 |                                              | Channel 2 |
+      |                                              +-----------+
+$0300 |                                              | Channel 3 |
+      |                                              +-----------+
+$0400 |            User vCPU code and/or data        | Channel 4 |
+      |                                              +-----------+
+      |                                                          |
+
+The 6 bytes are:
+
+wavA      Modulation after table lookup with ADD operation and
+          optional clipping (can approximate PWM with this)
+wavX      Modulation of index with XOR operation
+keyL:keyH 15-bit frequency (bit7 of keyL should be 0).
+          There is a lookup table on page 7 in ROM
+oscL:oscH 15-bit phase, automatically incremented with keyL:keyH
+          every 4 scan lines (1 channel per scan line).
+
+(You typically don't write into oscL,oscH)
+
+The sound synthesises runs during every horizontal pulse of the VGA
+signal. It is implemented twice, once for visible lines and once
+for vertical blank. The sample update runs in the videoC lines, or
+their equivalents in vBlank. A video frame has 521 lines, so there
+is no fixed mapping from video line to channel.
+
+    In pseudo code:
+    ----------------------------------------------------------------
+    For every channel:
+      "osc" += "key"                // Advance phase
+      byte i = oscH & 0xfc          // Keep only the highest 6 bits
+           i ^= wavX                // Low 2 bits select waveform.
+                                    // High 6 bits give effects.
+           i = soundTable[i] + wavA // More sound effect options
+           i = i&128 ? 63 : i&63
+      sample += i
+
+    Every 4 scan lines:
+      1. Emit sample & 0xf0         // The DAC has 4-bits
+      2. Reset sample
+           sample = 3               // Why 3? Any value <=3 (=255-4*63) will
+                                    // work, and we have only 1 cycle available
+           st $03,[$03]             // for this, so operand is address and value
+    ----------------------------------------------------------------
+
+Notes
+-----
+
+The ROM has a handy lookup table for the frequencies that is
+calculated for a 6.25 MHz system doing 200 cycles per horizontal
+sync.
+
+Note: index 0 = 0 Hz = OFF
+
+    ROM table at $0900
+    ----------------------------------------------------------------
+    notesTable:   0900 0000  ld   $00
+                  0901 0000  ld   $00
+                  0902 0045  ld   $45         ;C-0 (16.4 Hz)
+                  0903 0000  ld   $00
+                  0904 0049  ld   $49         ;C#0 (17.3 Hz)
+                  0905 0000  ld   $00
+    [...]
+                  09be 001a  ld   $1a         ;A#7 (3729.3 Hz)
+                  09bf 007a  ld   $7a
+    ----------------------------------------------------------------
+
+The waveforms are stored in RAM page 7. They are initialised once
+at boot time and then never again (so not with soft reset). [Edit:
+from ROM v4 onwards, these are reinitialised with each soft reset!]
+You select one with the low two bits of wavX. They look like below.
+The page is initialised as noise (0), triangle (1), pulse (2) and
+sawtooth (3). You can change them, but then the next application
+will see your changes. You shouldn't change the sawtooth waveform
+(3) because it doubles as a right-shift-2 lookup table for the
+SYS_Unpack_56 function used by Pictures.
+
+Image: https://forum.gigatron.io/download/file.php?id=8
+
+Noise
+-----
+
+Noise is not really noise because it repeats. It sounds a bit
+metallic. You can make it sound like true noise by randomzing the
+top 6 bits of wavX every vertical blank. There are 3 bytes of
+entropy available in the zero page that are updated during vertical
+blank. You might use those. See Apps/Overworld/ for an example.
+
+There's also a SYS_ShuffleNoise_v4_46 function in ROM. That one
+is intended for initializing the waveform table. It isn't very
+suitable for changing the noise waveform on the fly.
+
+Envelopes
+---------
+
+You can make them by changing wavA during vertical blank. See this
+forum topic: https://forum.gigatron.io/viewtopic.php?f=4&t=157
+
+Demo code in Contrib/dhkolf/apps/PianoAD.gcl and DrumsAD.gcl
+
+MIDI player
+-----------
+
+There is midi sequencer in Contrib/at67/midi
+The Tetronis game uses this for its music score.
+The Apps/Overworld/ demo is derived from the same code.
+
+channelMask
+-----------
+
+ROMv4 has the channelMask bits in the byte at address $21: with
+these you can reduce the number of channels to two or even one.
+
+Valid bit combinations are:
+     xxxxx011     Default after reset: 4 channels (page 1,2,3,4)
+     xxxxx001     2 channels at double update rate (page 1,2)
+     xxxxx000     1 channel at quadruple update rate (page 1)
+
+The main application for this is to free up the high bytes of page 2,3,4.
+
+-- End of document --

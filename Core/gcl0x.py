@@ -521,7 +521,7 @@ class Program:
 
   def error(self, message):
     print(self.prefix('Error'), message)
-    sys.exit()
+    sys.exit(1)
 
   def prefix(self, prefix):
     # Informative line prefix for warning and error messages
