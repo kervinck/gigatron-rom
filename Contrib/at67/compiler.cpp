@@ -213,9 +213,9 @@ namespace Compiler
         return -1;
     }
 
-    int findVar(std::string& varName)
+    int findVar(std::string& varName, bool subAlpha)
     {
-        varName = Expression::getSubAlpha(varName);
+        if(subAlpha) varName = Expression::getSubAlpha(varName);
         for(int i=0; i<_integerVars.size(); i++)
         {
             if(_integerVars[i]._name == varName) return i;

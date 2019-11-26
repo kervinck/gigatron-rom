@@ -644,10 +644,12 @@ RESTART_OPTIMISE:
 
                     if(!linesDeleted)
                     {
+                        // Only increment iterator if it has not been invalidated
                         ++itVasm;
                     }
                     else
                     {
+                        // Optimising can cause new optimising opportunities to present, so restart
                         goto RESTART_OPTIMISE;
                     }
                 }

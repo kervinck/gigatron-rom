@@ -7,13 +7,14 @@ breset              EQU     register8
 top                 EQU     register9
 bot                 EQU     register10
 vramAddr            EQU     register11
+videoTop            EQU     register11
 evenAddr            EQU     register12
     
     
 %SUB                resetVideoTable
                     ; resets video table pointers
 resetVideoTable     PUSH
-                    LDWI    0x0008
+                    LDI     8
                     STW     vramAddr
                     LDWI    giga_videoTable
                     STW     evenAddr
@@ -23,11 +24,20 @@ resetVT_loop        CALL    realTimeProcAddr
                     DOKE    evenAddr
                     INC     evenAddr
                     INC     evenAddr
-    
                     INC     vramAddr
                     LD      vramAddr
-                    SUBI    giga_yres+8
+                    SUBI    giga_yres + 8
                     BLT     resetVT_loop
+                    
+                    LDWI    giga_videoTop
+                    STW     videoTop
+                    LDI     0
+                    POKE    videoTop                            ; restore full video output
+                    
+                    LDI     1
+                    STW     graphicsMode
+                    LDWI    scanlineMode
+                    CALL    giga_vAC                            ; restore graphics mode
                     POP
                     RET
 %ENDS   

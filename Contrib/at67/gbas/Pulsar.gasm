@@ -190,15 +190,16 @@ convertGtOp         EQU     0xff36
 multiply16bit       EQU     0xfd5a
 divide16bit         EQU     0xfe5f
 randMod16bit        EQU     0xffc9
-resetVideoTable     EQU     0xffdc
+resetVideoTable     EQU     0xfd81
 initClearFuncs      EQU     0xff3f
 clearVertBlinds     EQU     0xff62
-clearCursorRow      EQU     0xfd81
+clearCursorRow      EQU     0xfda9
 drawVTLine          EQU     0xfd00
-drawVTLineExt       EQU     0xfdc7
-drawVTLineLoop      EQU     0xfc00
-drawVTLineLoadXY    EQU     0xfc53
+drawVTLineExt       EQU     0xfc00
+drawVTLineLoop      EQU     0xfc39
+drawVTLineLoadXY    EQU     0xfc8c
 atLineCursor        EQU     0xfeb9
+printInit           EQU     0xffdc
 atTextCursor        EQU     0xff9c
 newLineScroll       EQU     0xfe00
 realTimeProcAddr    EQU     0x00dc
@@ -388,12 +389,13 @@ breset              EQU     register8
 top                 EQU     register9
 bot                 EQU     register10
 vramAddr            EQU     register11
+videoTop            EQU     register11
 evenAddr            EQU     register12
     
     
                     ; resets video table pointers
 resetVideoTable     PUSH
-                    LDWI    0x0008
+                    LDI     8
                     STW     vramAddr
                     LDWI    giga_videoTable
                     STW     evenAddr
@@ -403,11 +405,15 @@ resetVT_loop        CALL    realTimeProcAddr
                     DOKE    evenAddr
                     INC     evenAddr
                     INC     evenAddr
-    
                     INC     vramAddr
                     LD      vramAddr
-                    SUBI    giga_yres+8
+                    SUBI    giga_yres + 8
                     BLT     resetVT_loop
+                    
+                    LDWI    giga_videoTop
+                    STW     videoTop
+                    LDI     0
+                    POKE    videoTop                            ; restore full video output
                     POP
                     RET
 
@@ -741,6 +747,24 @@ atTC_skip2          LDWI    0x8000
 
 
 
+printInit           LDWI    SYS_VDrawBits_134
+                    STW     giga_sysFn
+                    LDW     fgbgColour
+                    STW     giga_sysArg0
+                    
+                    LDWI    giga_videoTable
+                    STW     giga_sysArg4
+                    LD      cursorXY + 1
+                    LSLW
+                    ADDW    giga_sysArg4
+                    PEEK
+                    ST      giga_sysArg4 + 1
+                    LD      cursorXY
+                    ST      giga_sysArg4                    ; xy position
+                    RET
+
+
+
                     ; clears the top 8 lines of pixels in preparation of text scrolling
 clearCursorRow      PUSH
                     LD      fgbgColour
@@ -752,14 +776,13 @@ clearCursorRow      PUSH
                     LDWI    SYS_Draw4_30                    ; setup 4 pixel SYS routine
                     STW     giga_sysFn
     
-                    LDI     8
-                    ST      clearLoop
-    
                     LDWI    giga_videoTable                 ; current cursor position
                     PEEK
                     ST      giga_sysArg4 + 1
-    
-clearCR_loopy       CALL    realTimeProcAddr
+                    LDI     8
+
+clearCR_loopy       ST      clearLoop
+                    CALL    realTimeProcAddr
                     LDI     giga_xres
                     
 clearCR_loopx       SUBI    4                               ; loop is unrolled 4 times
@@ -775,9 +798,13 @@ clearCR_loopx       SUBI    4                               ; loop is unrolled 4
                     ST      giga_sysArg4
                     SYS     0xFF                            ; SYS_Draw4_30, 270 - 30/2 = 0xFF
                     BGT     clearCR_loopx
-    
+                    
                     INC     giga_sysArg4 + 1                ; next line
-                    LoopCounter clearLoop clearCR_loopy
+                    LD      clearLoop
+                    SUBI    1
+                    BNE     clearCR_loopy
+                    LDWI    printInit
+                    CALL    giga_vAC                       ; re-initialise the SYS registers
                     POP
                     RET
 
@@ -795,8 +822,8 @@ newLS_cont0         PUSH
                     LDWI    0x8000
                     ANDW    miscFlags                       ; on bottom row flag
                     BNE     newLS_cont1
-                    LD      giga_sysArg4 + 1
-                    ADDI    8
+                    LD      giga_sysArg4 + 1                ; need to do this here as printInit
+                    ADDI    8                               ; is only called at the start of a string
                     ST      giga_sysArg4 + 1
                     LD      cursorXY + 1
                     ADDI    8
@@ -808,11 +835,9 @@ newLS_cont0         PUSH
                     
 newLS_cont1         LDWI    clearCursorRow
                     CALL    giga_vAC
-                    
                     LDWI    giga_videoTable
                     STW     scanLine
     
-                    ; scroll all scan lines by 8 through 0x08 to 0x7F
 newLS_scroll        CALL    realTimeProcAddr
                     LDW     scanLine
                     PEEK
@@ -821,14 +846,15 @@ newLS_scroll        CALL    realTimeProcAddr
                     SUBI    8
                     BGE     newLS_adjust
                     ADDI    8
+                    
 newLS_adjust        ADDI    8
                     POKE    scanLine
-                    INC     scanLine                        ; scan line pointers are 16bits
+                    INC     scanLine                        ; scanline pointers are 16bits
                     INC     scanLine
                     LD      scanLine
                     SUBI    0xF0                            ; scanline pointers end at 0x01EE
                     BLT     newLS_scroll
-        
+                    
                     LDWI    0x8000
                     ORW     miscFlags
                     STW     miscFlags                       ; set on bottom row flag

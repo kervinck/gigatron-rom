@@ -149,6 +149,11 @@ namespace Audio
         }
     }
 
+    void clearQueue(void)
+    {
+        SDL_ClearQueuedAudio(_audioDevice);
+    }
+
 
     void nextScore(void)
     {

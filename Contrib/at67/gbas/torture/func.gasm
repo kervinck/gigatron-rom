@@ -53,12 +53,12 @@ _g                  EQU                     0x0042
 _h                  EQU                     0x0044
 
 ; Strings
-_str_0xff00          EQU                     0xff00
-_str_0xff00          DB                      1 ' '
-_str_0xff02          EQU                     0xff02
-_str_0xff02          DB                      4 'test'
-_str_0xff07          EQU                     0xff07
-_str_0xff07          DB                      3 'dog'
+_str_0x7ea0          EQU                     0x7ea0
+_str_0x7ea0          DB                      1 ' '
+_str_0x7ea2          EQU                     0x7ea2
+_str_0x7ea2          DB                      4 'test'
+_str_0x7ea7          EQU                     0x7ea7
+_str_0x7ea7          DB                      3 'dog'
 
 ; Define Bytes
 
@@ -122,27 +122,27 @@ _10                 LDI                     33
 
                     LDW                     _a
                     PrintAcHexByte          
-                    PrintString             _str_0xff00
+                    PrintString             _str_0x7ea0
                     LDW                     _b
                     PrintAcHexWord          
-                    PrintString             _str_0xff00
+                    PrintString             _str_0x7ea0
                     LDWI                    13107
                     PrintAcHexWord          
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print hex$(a);" ";hexw$(b);" ";hexw$(&h1111 OR &h2222)
 
-                    PrintString             _str_0xff02
-                    PrintString             _str_0xff00
-                    PrintString             _str_0xff07
+                    PrintString             _str_0x7ea2
+                    PrintString             _str_0x7ea0
+                    PrintString             _str_0x7ea7
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
-                    PrintString             _str_0xff00
+                    PrintString             _str_0x7ea0
                     PrintInt16              0x0064
-                    PrintString             _str_0xff00
+                    PrintString             _str_0x7ea0
                     PrintVarInt16           _a
-                    PrintString             _str_0xff00
+                    PrintString             _str_0x7ea0
                     LDI                     0x21
                     PEEK                    
                     ANDI                    252
@@ -167,7 +167,7 @@ _page_0x0300        LDW                     0xde
 
                     LDW                     _x
                     PrintAcHexWord          
-                    PrintString             _str_0xff00
+                    PrintString             _str_0x7ea0
                     LDW                     _z
                     PrintAcHexWord          
                     LDWI                    newLineScroll
@@ -209,7 +209,7 @@ _next_0x03b2        LDI                     32
                     STW                     _b                              ; b = -b
 
                     PrintVarInt16           _i
-                    PrintString             _str_0xff00
+                    PrintString             _str_0x7ea0
                     LDW                     _b
                     PrintAcHexWord          
                     LDWI                    newLineScroll
@@ -246,27 +246,28 @@ _end_0x0436         BRA                     _end_0x0436                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0xff0b
-convertEqOp         EQU     0xff14
-convertNeOp         EQU     0xff1d
-convertLeOp         EQU     0xff26
-convertGeOp         EQU     0xff2f
-convertLtOp         EQU     0xff38
-convertGtOp         EQU     0xff41
-resetVideoTable     EQU     0xfd0b
-initClearFuncs      EQU     0xff4a
-clearVertBlinds     EQU     0xff6d
-clearCursorRow      EQU     0xfd2b
-printInit           EQU     0xfd71
-printText           EQU     0xffdc
-printDigit          EQU     0xfd8c
-printInt16          EQU     0xfe78
-printChar           EQU     0xfc00
-printHexByte        EQU     0xffa7
-printHexWord        EQU     0xfe00
-atTextCursor        EQU     0xfecc
-newLineScroll       EQU     0xfe19
-stringChr           EQU     0xfd00
+realTimeProc        EQU     0x7eab
+convertEqOp         EQU     0x7eb4
+convertNeOp         EQU     0x7ebd
+convertLeOp         EQU     0x7ec6
+convertGeOp         EQU     0x7ecf
+convertLtOp         EQU     0x7ed8
+convertGtOp         EQU     0x7ee1
+scanlineMode        EQU     0x7be6
+resetVideoTable     EQU     0x78a0
+initClearFuncs      EQU     0x7da0
+clearVertBlinds     EQU     0x7dc3
+clearCursorRow      EQU     0x77a0
+printInit           EQU     0x78d1
+printText           EQU     0x7cd5
+printDigit          EQU     0x76a0
+printInt16          EQU     0x79a0
+printChar           EQU     0x75a0
+printHexByte        EQU     0x7ca0
+printHexWord        EQU     0x7ba0
+atTextCursor        EQU     0x7bb9
+newLineScroll       EQU     0x7aa0
+stringChr           EQU     0x7eea
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -344,6 +345,55 @@ convertGt_1         LDI     1
 
 
 
+
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+graphicsMode        EQU     register0
+waitVBlankNum       EQU     register0
+
+drawHLine_x1        EQU     register0
+drawHLine_y1        EQU     register1
+drawHLine_x2        EQU     register2
+drawHLine_x4        EQU     register3
+
+drawVLine_x1        EQU     register0
+drawVLine_y1        EQU     register1
+drawVLine_y2        EQU     register2
+drawVLine_y8        EQU     register3
+
+drawLine_x1         EQU     register0
+drawLine_y1         EQU     register1
+drawLine_x2         EQU     register2
+drawLine_y2         EQU     register3
+drawLine_xy1        EQU     register0
+drawLine_xy2        EQU     register1
+drawLine_dxy1       EQU     register2
+drawLine_dxy2       EQU     register3
+drawLine_dx1        EQU     register4
+drawLine_dy1        EQU     register5
+drawLine_dx2        EQU     register6
+drawLine_dy2        EQU     register7
+drawLine_sx         EQU     register8
+drawLine_sy         EQU     register9
+drawLine_h          EQU     register10
+drawLine_num        EQU     register11
+drawLine_count      EQU     register12
+drawLine_addr       EQU     register13
+drawLine_tmp        EQU     register14
+    
+    
+scanlineMode        LDW     giga_romType
+                    ANDI    0xF8
+                    SUBI    romTypeValue_ROMv2
+                    BGE     scanlineM_cont
+                    RET
+    
+scanlineM_cont      LDWI    SYS_SetMode_v2_80
+                    STW     giga_sysFn
+                    LDW     graphicsMode
+                    SYS     0xE6                ; 270 - max(14,80/2)
+                    RET
+
+
 ; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 xreset              EQU     register0
 xcount              EQU     register1
@@ -353,12 +403,13 @@ breset              EQU     register8
 top                 EQU     register9
 bot                 EQU     register10
 vramAddr            EQU     register11
+videoTop            EQU     register11
 evenAddr            EQU     register12
     
     
                     ; resets video table pointers
 resetVideoTable     PUSH
-                    LDWI    0x0008
+                    LDI     8
                     STW     vramAddr
                     LDWI    giga_videoTable
                     STW     evenAddr
@@ -368,11 +419,20 @@ resetVT_loop        CALL    realTimeProcAddr
                     DOKE    evenAddr
                     INC     evenAddr
                     INC     evenAddr
-    
                     INC     vramAddr
                     LD      vramAddr
-                    SUBI    giga_yres+8
+                    SUBI    giga_yres + 8
                     BLT     resetVT_loop
+                    
+                    LDWI    giga_videoTop
+                    STW     videoTop
+                    LDI     0
+                    POKE    videoTop                            ; restore full video output
+                    
+                    LDI     1
+                    STW     graphicsMode
+                    LDWI    scanlineMode
+                    CALL    giga_vAC                            ; restore graphics mode
                     POP
                     RET
 
@@ -474,16 +534,19 @@ printText           PUSH
                     LDWI    printInit
                     CALL    giga_vAC
                     LDW     textStr             
-                    PEEK
-                    ST      textLen                         ; first byte is length
+                    PEEK                                    ; first byte is length
     
-printT_char         INC     textStr                         ; next char
+printT_char         ST      textLen
+                    INC     textStr                         ; next char
                     LDW     textStr             
                     PEEK
                     ST      textChr
                     LDWI    printChar
                     CALL    giga_vAC
-printT_loop         LoopCounter textLen printT_char
+
+                    LD      textLen
+                    SUBI    1
+                    BNE     printT_char
                     POP
                     RET
 
@@ -552,51 +615,56 @@ printI16_pos        LDWI    10000
 
 
                     ; prints char in textChr
-printChar           PUSH
-                    LD      textChr                         ; (char-32)*5 + 0x0700
-                    SUBI    32
-                    STW     textChr
-                    STW     textFont
+printChar           LD      textChr
+                    ANDI    0x7F                            ; char can't be bigger than 127
+                    SUBI    82
+                    BGE     printC_text82
+                    ADDI    50
+                    BLT     printC_exit                     ; char<32 exit
+                    STW     textChr                         ; char-32
+                    LDWI    giga_text32                     ; text font slice base address for chars 32-81
+                    BRA     printC_font
+                    
+printC_text82       STW     textChr                         ; char-82
+                    LDWI    giga_text82                     ; text font slice base address for chars 82+
+                    
+printC_font         STW     textFont
+                    LD      textChr
                     LSLW    
                     LSLW    
                     ADDW    textChr
-                    STW     textFont             
-                    LDWI    giga_text32
                     ADDW    textFont
-                    STW     textFont                        ; text font slice base address for chars 32-81
-    
-                    LD      textChr
-                    SUBI    50
-                    BLT     printC_draw
-                    LDW     textFont
-                    ADDI    0x06
-                    STW     textFont                        ; text font slice base address for chars 82+
-    
-printC_draw         LDI     0x05
-                    ST      textSlice
-    
-printC_slice        LDW     textFont                        ; text font slice base address
+                    STW     textFont                        ; char*5 + textFont
+                    LDI     0x05
+
+printC_slice        ST      textSlice
+                    LDW     textFont                        ; text font slice base address
                     LUP     0x00                            ; get ROM slice
                     ST      giga_sysArg2
                     SYS     0xCB                            ; draw vertical slice, SYS_VDrawBits_134, 270 - 134/2 = 0xCB
                     INC     textFont                        ; next vertical slice
                     INC     giga_sysArg4                    ; next x
-                    LoopCounter textSlice printC_slice
-                    ST      giga_sysArg2                    ; result of loopCounter is always 0
+                    LD      textSlice
+                    SUBI    1
+                    BNE     printC_slice
+                    
+                    ST      giga_sysArg2                    ; result of printC_slice is 0
                     SYS     0xCB                            ; draw last blank slice
                     INC     giga_sysArg4                    ; using sysArg4 as a temporary cursor address for multiple char prints
+                    
+                    PUSH
                     CALL    realTimeProcAddr
-    
                     LD      cursorXY
                     ADDI    0x06
                     ST      cursorXY
                     SUBI    giga_xres - 5                   ; giga_xres - 6, (154), is last possible char in row
-                    BLT     printC_exit
+                    BLT     printC_pop
                     LDWI    newLineScroll                   ; next row, scroll at bottom
                     CALL    giga_vAC
+                    
+printC_pop          POP
 
-printC_exit         POP
-                    RET
+printC_exit         RET
 
 
                     ; print hex byte in textHex
@@ -681,14 +749,13 @@ clearCursorRow      PUSH
                     LDWI    SYS_Draw4_30                    ; setup 4 pixel SYS routine
                     STW     giga_sysFn
     
-                    LDI     8
-                    ST      clearLoop
-    
                     LDWI    giga_videoTable                 ; current cursor position
                     PEEK
                     ST      giga_sysArg4 + 1
-    
-clearCR_loopy       CALL    realTimeProcAddr
+                    LDI     8
+
+clearCR_loopy       ST      clearLoop
+                    CALL    realTimeProcAddr
                     LDI     giga_xres
                     
 clearCR_loopx       SUBI    4                               ; loop is unrolled 4 times
@@ -704,9 +771,14 @@ clearCR_loopx       SUBI    4                               ; loop is unrolled 4
                     ST      giga_sysArg4
                     SYS     0xFF                            ; SYS_Draw4_30, 270 - 30/2 = 0xFF
                     BGT     clearCR_loopx
-    
+                    
                     INC     giga_sysArg4 + 1                ; next line
-                    LoopCounter clearLoop clearCR_loopy
+                    LD      clearLoop
+                    SUBI    1
+                    BNE     clearCR_loopy
+
+                    LDWI    printInit
+                    CALL    giga_vAC                        ; re-initialise the SYS registers
                     POP
                     RET
 
@@ -724,9 +796,6 @@ newLS_cont0         PUSH
                     LDWI    0x8000
                     ANDW    miscFlags                       ; on bottom row flag
                     BNE     newLS_cont1
-                    LD      giga_sysArg4 + 1
-                    ADDI    8
-                    ST      giga_sysArg4 + 1
                     LD      cursorXY + 1
                     ADDI    8
                     ST      cursorXY + 1
@@ -737,11 +806,9 @@ newLS_cont0         PUSH
                     
 newLS_cont1         LDWI    clearCursorRow
                     CALL    giga_vAC
-                    
                     LDWI    giga_videoTable
                     STW     scanLine
     
-                    ; scroll all scan lines by 8 through 0x08 to 0x7F
 newLS_scroll        CALL    realTimeProcAddr
                     LDW     scanLine
                     PEEK
@@ -750,18 +817,22 @@ newLS_scroll        CALL    realTimeProcAddr
                     SUBI    8
                     BGE     newLS_adjust
                     ADDI    8
+                    
 newLS_adjust        ADDI    8
                     POKE    scanLine
-                    INC     scanLine                        ; scan line pointers are 16bits
+                    INC     scanLine                        ; scanline pointers are 16bits
                     INC     scanLine
                     LD      scanLine
                     SUBI    0xF0                            ; scanline pointers end at 0x01EE
                     BLT     newLS_scroll
-        
+                    
                     LDWI    0x8000
                     ORW     miscFlags
                     STW     miscFlags                       ; set on bottom row flag
-newLS_exit          POP
+                    
+newLS_exit          LDWI    printInit
+                    CALL    giga_vAC                        ; re-initialise the SYS registers
+                    POP
                     RET
 
 

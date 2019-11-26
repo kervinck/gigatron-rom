@@ -17,9 +17,9 @@ resetAudio          LDWI    0x0000
                     LDI     0x00
                     ST      waveType            ; waveform type
                     LDI     0x04
-                    ST      numChannels
-                    
-resetA_loop         LDI     giga_soundChan1     ; reset low byte
+
+resetA_loop         ST      numChannels
+                    LDI     giga_soundChan1     ; reset low byte
                     ST      audioPtr
                     LDW     waveType
                     DOKE    audioPtr            ; wavA and wavX
@@ -31,7 +31,10 @@ resetA_loop         LDI     giga_soundChan1     ; reset low byte
                     INC     audioPtr
                     DOKE    audioPtr            ; oscL and oscH
                     INC     audioPtr + 1        ; increment high byte
-                    LoopCounter numChannels resetA_loop
+                    
+                    LD      numChannels
+                    SUBI    1
+                    BNE     resetA_loop
                     RET
 %ENDS   
     

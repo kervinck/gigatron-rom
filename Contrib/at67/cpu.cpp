@@ -5,6 +5,8 @@
 #include <iomanip>
 #include <vector>
 #include <algorithm>
+#include <chrono>
+#include <thread>
 
 #include "memory.h"
 #include "cpu.h"
@@ -960,6 +962,8 @@ namespace Cpu
                 Editor::handleInput();
                 Graphics::render(true);
             }
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(5));
         }
 
         // Pixel
@@ -1013,12 +1017,12 @@ namespace Cpu
         // Rising hSync edge
         if(_hSync > 0)
         {
-            setXOUT(_stateT._AC);
+            _XOUT = _stateT._AC;
         
             // Audio
             if(Audio::getRealTimeAudio())
             {
-                Audio::playSample();
+                (_XOUT) ? Audio::playSample() : Audio::clearQueue();
             }
             else
             {

@@ -89,7 +89,7 @@ def_bytes_0x8000    DB                      144 57 145 33 145 33 144 57 146 45 2
 ; Lookup Tables
 _lut_numericLabs    EQU                     0xfff4
 _lut_numericLabs    DW                      254 253 191 127 -1
-_lut_numericAddrs   EQU                     0xfec1
+_lut_numericAddrs   EQU                     0xfebf
 _lut_numericAddrs   DW                      0x04a0 0x04b2 0x04c8 0x04cf 
 
 ; Code
@@ -475,22 +475,22 @@ _end_0x05a5         BRA                     _end_0x05a5                     ; EN
 ;****************************************************************************************************************************************
 
 realTimeProc        EQU     0xffd1
-convertEqOp         EQU     0xfec9
-convertNeOp         EQU     0xfed2
-convertLeOp         EQU     0xfedb
-convertGeOp         EQU     0xfee4
-convertLtOp         EQU     0xfeed
-convertGtOp         EQU     0xfef6
+convertEqOp         EQU     0xfec7
+convertNeOp         EQU     0xfed0
+convertLeOp         EQU     0xfed9
+convertGeOp         EQU     0xfee2
+convertLtOp         EQU     0xfeeb
+convertGtOp         EQU     0xfef4
 divide16bit         EQU     0xff76
 shiftRight1bit      EQU     0xff6c
-gosubNumericLabel   EQU     0xfe87
+gosubNumericLabel   EQU     0xfe85
 waitVBlank          EQU     0xffd8
 resetVideoTable     EQU     0xfd00
 initClearFuncs      EQU     0xff12
 clearVertBlinds     EQU     0xff33
 resetAudio          EQU     0xfe00
-playMidi            EQU     0xfe3b
-midiStartNote       EQU     0xfd21
+playMidi            EQU     0xfe39
+midiStartNote       EQU     0xfd29
 
 
 ; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
@@ -729,12 +729,13 @@ breset              EQU     register8
 top                 EQU     register9
 bot                 EQU     register10
 vramAddr            EQU     register11
+videoTop            EQU     register11
 evenAddr            EQU     register12
     
     
                     ; resets video table pointers
 resetVideoTable     PUSH
-                    LDWI    0x0008
+                    LDI     8
                     STW     vramAddr
                     LDWI    giga_videoTable
                     STW     evenAddr
@@ -744,11 +745,15 @@ resetVT_loop        CALLI   realTimeProc
                     DOKE    evenAddr
                     INC     evenAddr
                     INC     evenAddr
-    
                     INC     vramAddr
                     LD      vramAddr
-                    SUBI    giga_yres+8
+                    SUBI    giga_yres + 8
                     BLT     resetVT_loop
+
+                    LDWI    giga_videoTop
+                    STW     videoTop
+                    LDI     0
+                    POKE    videoTop                            ; restore full video output
                     POP
                     RET
 
@@ -827,9 +832,9 @@ resetAudio          LDWI    0x0000
                     LDI     0x00
                     ST      waveType            ; waveform type
                     LDI     0x04
-                    ST      numChannels
-                    
-resetA_loop         LDI     giga_soundChan1 
+
+resetA_loop         ST      numChannels
+                    LDI     giga_soundChan1 
                     ST      audioPtr            ; reset low byte
                     LDW     waveType
                     DOKE    audioPtr            ; wavA and wavX
@@ -841,7 +846,10 @@ resetA_loop         LDI     giga_soundChan1
                     INC     audioPtr
                     DOKE    audioPtr            ; oscL and oscH
                     INC     audioPtr + 1        ; increment high byte
-                    LoopCounter numChannels resetA_loop
+                    
+                    LD      numChannels
+                    SUBI    1
+                    BNE     resetA_loop
                     RET
 
 

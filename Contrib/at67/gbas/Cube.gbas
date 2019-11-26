@@ -1,11 +1,15 @@
+_useOpcodeCALLI_
+
 'DRAW 3D CUBE WITH SOME
 'ROTATION AROUND X
 
 K=0:X=K:M=X:N=M:I=N:A=I:B=A:L=B:F=L
-DIM P(10)=0
-DIM Q(10)=0
+DIM P(7)=0
+DIM Q(7)=0
 
-poke 163,&h3F
+'poke &h01F9, 40
+poke 162, &h00
+poke 163, &h3F
 
 10 CLS:U=48:GOTO 100
 
@@ -15,25 +19,17 @@ poke 163,&h3F
 30 Q(I)=60+(M-N)/R
 35 P(I+4)=160-P(I)
 40 Q(I+4)=Q(I)
-45 I=I+1:RETURN
+45 INC I:RETURN
 
-'DRAW EDGE
-'50 X=P(A):Y=Q(A):AT X,Y
-'55 LINE P(B)-X,Q(B)-Y
-'60 RETURN
-
-50 X=P(A):Y=Q(A)
-55 LINE X, Y, P(B), Q(B)
-60 RETURN
+50 LINE P(A), Q(A), P(B), Q(B) : RETURN
 
 'SETUP CAMERA
 ' S=SIN C=COS F=FLEN
-100 S=45:C=45:F=4*U
+100 S=24:C=42:F=4*U
     gosub 110
 
 loop: gosub peek(17)
       goto loop
-
 
 'PROCESS CUBE CORNERS
 110 I=0:X=U*U
@@ -42,6 +38,7 @@ loop: gosub peek(17)
 140 L=-L:N=-N:GOSUB 20
 150 K=-K:M=-M:GOSUB 20
 160 L=-L:N=-N:GOSUB 20
+170 GOSUB 200:RETURN
 
 'DRAW CUBE
 200 A=0:B=1:GOSUB 50
@@ -58,18 +55,18 @@ loop: gosub peek(17)
 255 A=7:B=3:GOSUB 50
     return
 
-254: poke 163, &h20
-     gosub 110
+254: poke &h01F9, 240 'disable video output
+     poke 163, &h00 : gosub 200 'erase cube
+     poke &h01F9, 40 'enable video output
      S = S + 5 : if S &> 90 then S = 0
      C = 90 - S
-     poke 163, &h3F
-     gosub 110
+     poke 163, &h3F : gosub 110 'draw cube
      return
      
-253: poke 163, &h20
-     gosub 110
-     S = S - 5 : if S &&< 0 then S = 90
+253: poke &h01F9, 240 'disable video output
+     poke 163, &h00 : gosub 200 'erase cube
+     poke &h01F9, 40 'enable video output
+     S = S - 5 : if S &< 0 then S = 90
      C = 90 - S
-     poke 163, &h3F
-     gosub 110
+     poke 163, &h3F : gosub 110 'draw cube
      return

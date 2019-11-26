@@ -33,13 +33,13 @@ circle: d = 1 - r
             a = cx - y + ch3 : poke a, c            
 
             if d &&< 0
-                d = d + (x LSL 2) + 3
+                d = d + (x LSL 2) + 3 
             else
                 d = d + ((x - y) LSL 2) + 5
                 y = y - 1
             endif
             
-            x = x + 1
+            inc x 
         until x &> y
         
         return

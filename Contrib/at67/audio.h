@@ -47,6 +47,7 @@ namespace Audio
     void fillAudioBuffer(void);
     void playAudioBuffer(void);
     void playSample(void);
+    void clearQueue(void);
 
     void playMusic(void);
     void nextScore(void);

@@ -88,14 +88,14 @@ SYS_ResetWaveforms_v4_50        EQU     0x0b0f
 SYS_ShuffleNoise_v4_46          EQU     0x0b12
 SYS_SpiExchangeBytes_v4_134     EQU     0x0b15
 
-Black                           EQU     0x00
-DarkRed                         EQU     0x01
-Red                             EQU     0x02
-LightRed                        EQU     0x03
-DarkGreen                       EQU     0x04
-Green                           EQU     0x08
-LightGreen                      EQU     0x0c
-DarkBlue                        EQU     0x10
-Blue                            EQU     0x20
-LightBlue                       EQU     0x30
-White                           EQU     0x3f
+giga_Black                      EQU     0x00
+giga_DarkRed                    EQU     0x01
+giga_Red                        EQU     0x02
+giga_LightRed                   EQU     0x03
+giga_DarkGreen                  EQU     0x04
+giga_Green                      EQU     0x08
+giga_LightGreen                 EQU     0x0c
+giga_DarkBlue                   EQU     0x10
+giga_Blue                       EQU     0x20
+giga_LightBlue                  EQU     0x30
+giga_White                      EQU     0x3f

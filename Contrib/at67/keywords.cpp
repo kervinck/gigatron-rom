@@ -31,6 +31,7 @@ namespace Keywords
         _keywords["REM"   ] = {"REM",    keywordREM,    Compiler::SingleStatementParsed};
         _keywords["LET"   ] = {"LET",    keywordLET,    Compiler::SingleStatementParsed};
         _keywords["END"   ] = {"END",    keywordEND,    Compiler::SingleStatementParsed};
+        _keywords["INC"   ] = {"INC",    keywordINC,    Compiler::SingleStatementParsed};
         _keywords["ON"    ] = {"ON",     keywordON,     Compiler::SingleStatementParsed};
         _keywords["GOTO"  ] = {"GOTO",   keywordGOTO,   Compiler::SingleStatementParsed};
         _keywords["GOSUB" ] = {"GOSUB",  keywordGOSUB,  Compiler::SingleStatementParsed};
@@ -466,6 +467,23 @@ namespace Keywords
     {
         std::string labelName = "_end_" + Expression::wordToHexString(Compiler::getVasmPC());
         Compiler::emitVcpuAsm("BRA", labelName, false, codeLineIndex, labelName);
+
+        return true;
+    }
+
+    bool keywordINC(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        // Operand must be an integer var
+        std::string varToken = codeLine._code.substr(foundPos);
+        Expression::stripWhitespace(varToken);
+        int varIndex = Compiler::findVar(varToken, false);
+        if(varIndex < 0)
+        {
+            fprintf(stderr, "Compiler::keywordINC() : Syntax error, integer variable '%s' not found, in '%s' on line %d\n", varToken.c_str(), codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        Compiler::emitVcpuAsm("INC", "_" + Compiler::getIntegerVars()[varIndex]._name, false, codeLineIndex);
 
         return true;
     }

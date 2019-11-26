@@ -248,7 +248,7 @@ namespace Compiler
     int findInternalLabel(const std::string& labelName);
     int findInternalLabel(uint16_t address);
     int findConst(std::string& constName);
-    int findVar(std::string& varName);
+    int findVar(std::string& varName, bool subAlpha=true);
     int findStr(std::string& strName);
 
     bool createCodeLine(const std::string& code, int codeLineOffset, int labelIndex, int varIndex, bool assign, bool vars, CodeLine& codeLine);
