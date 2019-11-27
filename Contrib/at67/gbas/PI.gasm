@@ -31,20 +31,20 @@ highByteMask        EQU                     register0 + 0x2C
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x0242
-_20                 EQU                     0x024b
-_30                 EQU                     0x025d
-_40                 EQU                     0x0288
-_50                 EQU                     0x02a9
-_60                 EQU                     0x02d7
-_70                 EQU                     0x031e
-_80                 EQU                     0x0345
-_90                 EQU                     0x036a
+_10                 EQU                     0x0240
+_20                 EQU                     0x0249
+_30                 EQU                     0x025b
+_40                 EQU                     0x0282
+_50                 EQU                     0x02a3
+_60                 EQU                     0x02d1
+_70                 EQU                     0x0315
+_80                 EQU                     0x033c
+_90                 EQU                     0x0361
 _page_0x0300        EQU                     0x0300
-_else_0x03be        EQU                     0x038c
+_else_0x03bc        EQU                     0x0383
 
 ; Variables
-_Z_array            EQU                     0xff00
+_Z_array            EQU                     0x0600
 _Z_array            DW                      0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
 _D                  EQU                     0x0030
 _M                  EQU                     0x0032
@@ -54,10 +54,10 @@ _J                  EQU                     0x0038
 _A                  EQU                     0x003a
 
 ; Strings
-_str_0xffbe          EQU                     0xffbe
-_str_0xffbe          DB                      3 'PI='
-_str_0xffc2          EQU                     0xffc2
-_str_0xffc2          DB                      1 '.'
+_str_0x7ea0          EQU                     0x7ea0
+_str_0x7ea0          DB                      3 'PI='
+_str_0x7ea4          EQU                     0x7ea4
+_str_0x7ea4          DB                      1 '.'
 
 ; Define Bytes
 
@@ -88,16 +88,14 @@ _20                 LDI                     94
                     LDI                     1
                     STW                     0xb2                            ; M=94:FOR I=0 TO M-1
 
-_30                 LDW                     _I
-                    STW                     register1
-                    LDWI                    0xff00
-                    ADDW                    register1
-                    ADDW                    register1
+_30                 LDWI                    0x0600
+                    ADDW                    _I
+                    ADDW                    _I
                     STW                     register1
                     LDI                     20
                     DOKE                    register1
                     ForNextLoopStepUp       _I _30 0xb0 0xb2
-                    PrintString             _str_0xffbe                     ; Z(I)=20:NEXT I:PRINT "PI=";
+                    PrintString             _str_0x7ea0                     ; Z(I)=20:NEXT I:PRINT "PI=";
 
 _40                 LDW                     _D
                     STW                     mathX
@@ -127,7 +125,7 @@ _50                 LDW                     _M
                     CALL                    giga_vAC
                     ADDW                    _D
                     STW                     0xc4
-                    LDWI                    0xff00
+                    LDWI                    0x0600
                     ADDW                    _J
                     ADDW                    _J
                     DEEK                    
@@ -149,16 +147,14 @@ _60                 LDW                     _J
                     STW                     mathY
                     LDWI                    divide16bit
                     CALL                    giga_vAC
-                    LDW                     _J
+                    LDWI                    0x0600
+                    ADDW                    _J
+                    ADDW                    _J
                     STW                     register1
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
-                    LDWI                    0xff00
-                    ADDW                    register1
-                    ADDW                    register1
-                    STW                     register1
                     LDW                     mathRem
                     DOKE                    register1
                     LDW                     _D
@@ -192,7 +188,7 @@ _80                 LDW                     _E
                     LDW                     _M
                     SUBI                    88
                     BNE                     _90
-                    PrintString             _str_0xffc2                     ; PRINT E/10;:IF M &&= 88 THEN PRINT ".";
+                    PrintString             _str_0x7ea4                     ; PRINT E/10;:IF M &&= 88 THEN PRINT ".";
 
 _90                 LDW                     _E
                     STW                     mathX
@@ -204,11 +200,11 @@ _90                 LDW                     _E
                     PrintAcInt16            
                     LDW                     _M
                     SUBI                    10
-                    BLE                     _else_0x03be
+                    BLE                     _else_0x03bc
                     LDWI                    _40
                     CALL                    giga_vAC                        ; PRINT E%10;:IF M &&> 10 THEN GOTO 40
 
-_else_0x03be        BRA                     _else_0x03be                    ; END
+_else_0x03bc        BRA                     _else_0x03bc                    ; END
 
 
 
@@ -218,25 +214,25 @@ _else_0x03be        BRA                     _else_0x03be                    ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0xffc4
-convertEqOp         EQU     0xffcd
-convertNeOp         EQU     0xffd6
-convertLeOp         EQU     0xffdf
-convertGeOp         EQU     0xffe8
-convertLtOp         EQU     0xfff1
-convertGtOp         EQU     0xfe00
-multiply16bit       EQU     0xfd00
-divide16bit         EQU     0xfe86
-resetVideoTable     EQU     0xfd7b
-initClearFuncs      EQU     0xfe09
-clearVertBlinds     EQU     0xfe2c
-clearCursorRow      EQU     0xfda3
-printInit           EQU     0xfee0
-printText           EQU     0xfe66
-printDigit          EQU     0xfc00
-printInt16          EQU     0xfd27
-printChar           EQU     0xfc22
-newLineScroll       EQU     0xfc7a
+realTimeProc        EQU     0x7ea6
+convertEqOp         EQU     0x7eaf
+convertNeOp         EQU     0x7eb8
+convertLeOp         EQU     0x7ec1
+convertGeOp         EQU     0x7eca
+convertLtOp         EQU     0x7ed3
+convertGtOp         EQU     0x7edc
+multiply16bit       EQU     0x7cc0
+divide16bit         EQU     0x7ba0
+resetVideoTable     EQU     0x79a0
+initClearFuncs      EQU     0x7da0
+clearVertBlinds     EQU     0x7dc3
+clearCursorRow      EQU     0x78a0
+printInit           EQU     0x7ee5
+printText           EQU     0x7ca0
+printDigit          EQU     0x79bf
+printInt16          EQU     0x7aa0
+printChar           EQU     0x77a0
+newLineScroll       EQU     0x76a0
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -412,8 +408,8 @@ breset              EQU     register8
 top                 EQU     register9
 bot                 EQU     register10
 vramAddr            EQU     register11
-videoTop            EQU     register11
 evenAddr            EQU     register12
+clsAddress          EQU     register13
     
     
                     ; resets video table pointers
@@ -432,11 +428,6 @@ resetVT_loop        CALL    realTimeProcAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
-                    
-                    LDWI    giga_videoTop
-                    STW     videoTop
-                    LDI     0
-                    POKE    videoTop                            ; restore full video output
                     POP
                     RET
 
@@ -468,7 +459,7 @@ clearVertBlinds     PUSH
                     LDWI    initClearFuncs
                     CALL    giga_vAC
 
-                    LDWI    giga_vram                           ; top line
+                    LDWI    giga_vram
                     STW     giga_sysArg4
                     LD      giga_sysArg4 + 1
                     ST      top
@@ -666,6 +657,7 @@ printC_slice        ST      textSlice
                     BLT     printC_pop
                     LDWI    newLineScroll                   ; next row, scroll at bottom
                     CALL    giga_vAC
+                    
 printC_pop          POP
 
 printC_exit         RET
@@ -710,8 +702,9 @@ clearCR_loopx       SUBI    4                               ; loop is unrolled 4
                     LD      clearLoop
                     SUBI    1
                     BNE     clearCR_loopy
+
                     LDWI    printInit
-                    CALL    giga_vAC                       ; re-initialise the SYS registers
+                    CALL    giga_vAC                        ; re-initialise the SYS registers
                     POP
                     RET
 
@@ -729,9 +722,6 @@ newLS_cont0         PUSH
                     LDWI    0x8000
                     ANDW    miscFlags                       ; on bottom row flag
                     BNE     newLS_cont1
-                    LD      giga_sysArg4 + 1                ; need to do this here as printInit
-                    ADDI    8                               ; is only called at the start of a string
-                    ST      giga_sysArg4 + 1
                     LD      cursorXY + 1
                     ADDI    8
                     ST      cursorXY + 1
@@ -765,6 +755,9 @@ newLS_adjust        ADDI    8
                     LDWI    0x8000
                     ORW     miscFlags
                     STW     miscFlags                       ; set on bottom row flag
-newLS_exit          POP
+                    
+newLS_exit          LDWI    printInit
+                    CALL    giga_vAC                        ; re-initialise the SYS registers
+                    POP
                     RET
 

@@ -14,11 +14,11 @@ play midi &h10a0,3
 40 hline x-u,y+v,x+u
 '30 vline x-v, y-u, y+u
 '40 vline x+v, y-u, y+u
-50 w=w+v+v+1:v=v+1
+50 w=w+v+v+1:inc v
 60 if w &&< 0 then goto &30
 70 w=w-u-u+1:u=u-1
 80 if u &&> 0 then goto &60
-85 if a &&< 2 then goto 5
+85 if a &< 2 then goto 5
 90 goto 7
 
 

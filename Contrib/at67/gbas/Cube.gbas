@@ -7,7 +7,6 @@ K=0:X=K:M=X:N=M:I=N:A=I:B=A:L=B:F=L
 DIM P(7)=0
 DIM Q(7)=0
 
-'poke &h01F9, 40
 poke 162, &h00
 poke 163, &h3F
 
@@ -55,18 +54,20 @@ loop: gosub peek(17)
 255 A=7:B=3:GOSUB 50
     return
 
-254: poke &h01F9, 240 'disable video output
+254: poke &h01F9, 238 'disable video output
      poke 163, &h00 : gosub 200 'erase cube
+     
      poke &h01F9, 40 'enable video output
-     S = S + 5 : if S &> 90 then S = 0
+     S = S + 5 : if S &>= 90 then S = 0
      C = 90 - S
      poke 163, &h3F : gosub 110 'draw cube
      return
      
-253: poke &h01F9, 240 'disable video output
+253: poke &h01F9, 238 'disable video output
      poke 163, &h00 : gosub 200 'erase cube
+     
      poke &h01F9, 40 'enable video output
-     S = S - 5 : if S &< 0 then S = 90
+     S = S - 5 : if S &<= 0 then S = 90
      C = 90 - S
      poke 163, &h3F : gosub 110 'draw cube
      return

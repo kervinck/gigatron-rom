@@ -1419,7 +1419,8 @@ namespace Compiler
         for(;;)
         {
             // Boolean conditionals
-            if(peek(false) == '=')          {get(false); result = Operators::operatorEQ(result, logical(), Expression::BooleanCC);}
+            if(Expression::find("=="))      {            result = Operators::operatorEQ(result, logical(), Expression::BooleanCC);}
+            else if(peek(false) == '=')     {get(false); result = Operators::operatorEQ(result, logical(), Expression::BooleanCC);}
             else if(Expression::find("<>")) {            result = Operators::operatorNE(result, logical(), Expression::BooleanCC);}
             else if(Expression::find("<=")) {            result = Operators::operatorLE(result, logical(), Expression::BooleanCC);}
             else if(Expression::find(">=")) {            result = Operators::operatorGE(result, logical(), Expression::BooleanCC);}
@@ -1427,6 +1428,7 @@ namespace Compiler
             else if(peek(false) == '>')     {get(false); result = Operators::operatorGT(result, logical(), Expression::BooleanCC);}
 
             // Normal conditionals
+            else if(Expression::find("&==")) {result = Operators::operatorEQ(result, logical(), Expression::NormalCC);}
             else if(Expression::find("&="))  {result = Operators::operatorEQ(result, logical(), Expression::NormalCC);}
             else if(Expression::find("&<>")) {result = Operators::operatorNE(result, logical(), Expression::NormalCC);}
             else if(Expression::find("&<=")) {result = Operators::operatorLE(result, logical(), Expression::NormalCC);}
@@ -1435,6 +1437,7 @@ namespace Compiler
             else if(Expression::find("&>"))  {result = Operators::operatorGT(result, logical(), Expression::NormalCC);}
 
             // Fast conditionals
+            else if(Expression::find("&&==")) {result = Operators::operatorEQ(result, logical(), Expression::FastCC);}
             else if(Expression::find("&&="))  {result = Operators::operatorEQ(result, logical(), Expression::FastCC);}
             else if(Expression::find("&&<>")) {result = Operators::operatorNE(result, logical(), Expression::FastCC);}
             else if(Expression::find("&&<=")) {result = Operators::operatorLE(result, logical(), Expression::FastCC);}
@@ -1640,6 +1643,15 @@ namespace Compiler
         _nextInternalLabel = label;
     }
 
+    void adjustDiscardedLabels(const std::string name, uint16_t address)
+    {
+        uint16_t match;
+        Expression::stringToU16(name.substr(name.size() - 6, 6), match);
+        for(int i=0; i<_discardedLabels.size(); i++)
+        {
+            if(_discardedLabels[i]._address == match) _discardedLabels[i]._address = address;
+        }
+    }
 
     bool parseCode(void)
     {

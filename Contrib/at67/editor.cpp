@@ -416,8 +416,6 @@ namespace Editor
         _emulator["Execute"]      = {SDLK_F5, KMOD_LCTRL};
         _emulator["Help"]         = {SDLK_h, KMOD_LCTRL};
         _emulator["Quit"]         = {SDLK_q, KMOD_LCTRL};
-        _emulator["Speed+"]       = {SDLK_EQUALS, KMOD_NONE};
-        _emulator["Speed-"]       = {SDLK_MINUS, KMOD_NONE};
 
         // Keyboard INI key to SDL key mapping
         _keyboard["Mode"]   = {SDLK_k, KMOD_LCTRL};
@@ -481,8 +479,6 @@ namespace Editor
                     scanCodeFromIniKey(sectionString, "Execute",      "CTRL+F5",  _emulator["Execute"]);
                     scanCodeFromIniKey(sectionString, "Help",         "CTRL+H",   _emulator["Help"]);
                     scanCodeFromIniKey(sectionString, "Quit",         "CTRL+Q",   _emulator["Quit"]);
-                    scanCodeFromIniKey(sectionString, "Speed+",       "+",        _emulator["Speed+"]);
-                    scanCodeFromIniKey(sectionString, "Speed-",       "-",        _emulator["Speed-"]);
                 }
                 break;
 
@@ -1092,19 +1088,6 @@ namespace Editor
 
         // Gigatron Keyboard emulation mode
         else if(handleGigaKeyDown()) return;
-
-        // Buffered audio locks the emulator to 60Hz
-        else if(Audio::getRealTimeAudio()  &&  _sdlKeyScanCode == _emulator["Speed+"]._scanCode  &&  _sdlKeyModifier == _emulator["Speed+"]._keyMod)
-        {
-            double timingHack = Timing::getTimingHack() - VSYNC_TIMING_60*0.05;
-            if(timingHack >= 0.0) {Timing::setTimingHack(timingHack); return;}
-        }
-
-        else if(Audio::getRealTimeAudio()  &&  _sdlKeyScanCode == _emulator["Speed-"]._scanCode  &&  _sdlKeyModifier == _emulator["Speed-"]._keyMod)
-        {
-            double timingHack = Timing::getTimingHack() + VSYNC_TIMING_60*0.05;
-            if(timingHack <= VSYNC_TIMING_60) {Timing::setTimingHack(timingHack); return;}
-        }
 #if 1
         else if(_sdlKeyScanCode == SDLK_PAGEUP)
         {

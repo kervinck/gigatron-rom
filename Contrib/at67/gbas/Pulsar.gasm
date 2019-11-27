@@ -31,18 +31,18 @@ highByteMask        EQU                     register0 + 0x2C
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x0242
-_20                 EQU                     0x0261
-_30                 EQU                     0x0273
-_40                 EQU                     0x0288
-_50                 EQU                     0x029b
-_60                 EQU                     0x029f
-_65                 EQU                     0x02bb
-_70                 EQU                     0x02c9
-_80                 EQU                     0x02e1
-_90                 EQU                     0x0317
+_10                 EQU                     0x0240
+_20                 EQU                     0x025f
+_30                 EQU                     0x0271
+_40                 EQU                     0x0286
+_50                 EQU                     0x0299
+_60                 EQU                     0x029d
+_65                 EQU                     0x02b9
+_70                 EQU                     0x02c7
+_80                 EQU                     0x02df
+_90                 EQU                     0x0315
 _page_0x0300        EQU                     0x0300
-_end_0x0342         EQU                     0x032a
+_end_0x0340         EQU                     0x0328
 
 ; Variables
 _w                  EQU                     0x0030
@@ -151,11 +151,11 @@ _80                 LDW                     _p
                     LDWI                    multiply16bit
                     CALL                    giga_vAC
                     ADDW                    _y
+                    STW                     _y
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
-                    STW                     _y
                     STW                     mathX
                     LDW                     _q
                     STW                     mathY
@@ -170,7 +170,7 @@ _90                 ForNextLoopUp           _x _60 30
                     LDWI                    _20
                     CALL                    giga_vAC                        ; next x:goto 20
 
-_end_0x0342         BRA                     _end_0x0342                     ; END
+_end_0x0340         BRA                     _end_0x0340                     ; END
 
 
 
@@ -180,28 +180,28 @@ _end_0x0342         BRA                     _end_0x0342                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0xff00
-convertEqOp         EQU     0xff09
-convertNeOp         EQU     0xff12
-convertLeOp         EQU     0xff1b
-convertGeOp         EQU     0xff24
-convertLtOp         EQU     0xff2d
-convertGtOp         EQU     0xff36
-multiply16bit       EQU     0xfd5a
-divide16bit         EQU     0xfe5f
-randMod16bit        EQU     0xffc9
-resetVideoTable     EQU     0xfd81
-initClearFuncs      EQU     0xff3f
-clearVertBlinds     EQU     0xff62
-clearCursorRow      EQU     0xfda9
-drawVTLine          EQU     0xfd00
-drawVTLineExt       EQU     0xfc00
-drawVTLineLoop      EQU     0xfc39
-drawVTLineLoadXY    EQU     0xfc8c
-atLineCursor        EQU     0xfeb9
-printInit           EQU     0xffdc
-atTextCursor        EQU     0xff9c
-newLineScroll       EQU     0xfe00
+realTimeProc        EQU     0x7ea0
+convertEqOp         EQU     0x7ea9
+convertNeOp         EQU     0x7eb2
+convertLeOp         EQU     0x7ebb
+convertGeOp         EQU     0x7ec4
+convertLtOp         EQU     0x7ecd
+convertGtOp         EQU     0x7ed6
+multiply16bit       EQU     0x7ccd
+divide16bit         EQU     0x7aa0
+randMod16bit        EQU     0x7edf
+resetVideoTable     EQU     0x79df
+initClearFuncs      EQU     0x7da0
+clearVertBlinds     EQU     0x7dc3
+clearCursorRow      EQU     0x77a0
+drawVTLine          EQU     0x78a0
+drawVTLineExt       EQU     0x76a0
+drawVTLineLoop      EQU     0x75a0
+drawVTLineLoadXY    EQU     0x76d9
+atLineCursor        EQU     0x79a0
+printInit           EQU     0x74a0
+atTextCursor        EQU     0x7ca0
+newLineScroll       EQU     0x7ba0
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -389,8 +389,8 @@ breset              EQU     register8
 top                 EQU     register9
 bot                 EQU     register10
 vramAddr            EQU     register11
-videoTop            EQU     register11
 evenAddr            EQU     register12
+clsAddress          EQU     register13
     
     
                     ; resets video table pointers
@@ -409,11 +409,6 @@ resetVT_loop        CALL    realTimeProcAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
-                    
-                    LDWI    giga_videoTop
-                    STW     videoTop
-                    LDI     0
-                    POKE    videoTop                            ; restore full video output
                     POP
                     RET
 
@@ -445,7 +440,7 @@ clearVertBlinds     PUSH
                     LDWI    initClearFuncs
                     CALL    giga_vAC
 
-                    LDWI    giga_vram                           ; top line
+                    LDWI    giga_vram
                     STW     giga_sysArg4
                     LD      giga_sysArg4 + 1
                     ST      top
@@ -747,23 +742,6 @@ atTC_skip2          LDWI    0x8000
 
 
 
-printInit           LDWI    SYS_VDrawBits_134
-                    STW     giga_sysFn
-                    LDW     fgbgColour
-                    STW     giga_sysArg0
-                    
-                    LDWI    giga_videoTable
-                    STW     giga_sysArg4
-                    LD      cursorXY + 1
-                    LSLW
-                    ADDW    giga_sysArg4
-                    PEEK
-                    ST      giga_sysArg4 + 1
-                    LD      cursorXY
-                    ST      giga_sysArg4                    ; xy position
-                    RET
-
-
 
                     ; clears the top 8 lines of pixels in preparation of text scrolling
 clearCursorRow      PUSH
@@ -803,9 +781,27 @@ clearCR_loopx       SUBI    4                               ; loop is unrolled 4
                     LD      clearLoop
                     SUBI    1
                     BNE     clearCR_loopy
+
                     LDWI    printInit
-                    CALL    giga_vAC                       ; re-initialise the SYS registers
+                    CALL    giga_vAC                        ; re-initialise the SYS registers
                     POP
+                    RET
+
+
+printInit           LDWI    SYS_VDrawBits_134
+                    STW     giga_sysFn
+                    LDW     fgbgColour
+                    STW     giga_sysArg0
+                    
+                    LDWI    giga_videoTable
+                    STW     giga_sysArg4
+                    LD      cursorXY + 1
+                    LSLW
+                    ADDW    giga_sysArg4
+                    PEEK
+                    ST      giga_sysArg4 + 1
+                    LD      cursorXY
+                    ST      giga_sysArg4                    ; xy position
                     RET
 
 
@@ -822,9 +818,6 @@ newLS_cont0         PUSH
                     LDWI    0x8000
                     ANDW    miscFlags                       ; on bottom row flag
                     BNE     newLS_cont1
-                    LD      giga_sysArg4 + 1                ; need to do this here as printInit
-                    ADDI    8                               ; is only called at the start of a string
-                    ST      giga_sysArg4 + 1
                     LD      cursorXY + 1
                     ADDI    8
                     ST      cursorXY + 1
@@ -858,6 +851,9 @@ newLS_adjust        ADDI    8
                     LDWI    0x8000
                     ORW     miscFlags
                     STW     miscFlags                       ; set on bottom row flag
-newLS_exit          POP
+                    
+newLS_exit          LDWI    printInit
+                    CALL    giga_vAC                        ; re-initialise the SYS registers
+                    POP
                     RET
 

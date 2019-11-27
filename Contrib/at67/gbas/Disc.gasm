@@ -31,15 +31,15 @@ highByteMask        EQU                     register0 + 0x2C
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x0242
-_20                 EQU                     0x024e
-_30                 EQU                     0x0259
-_40                 EQU                     0x0270
-_50                 EQU                     0x0287
-_60                 EQU                     0x0297
-_70                 EQU                     0x02a6
-_80                 EQU                     0x02b6
-_else_0x0303        EQU                     0x02c5
+_10                 EQU                     0x0240
+_20                 EQU                     0x024c
+_30                 EQU                     0x0257
+_40                 EQU                     0x026e
+_50                 EQU                     0x0285
+_60                 EQU                     0x0295
+_70                 EQU                     0x02a4
+_80                 EQU                     0x02b4
+_else_0x0301        EQU                     0x02c3
 
 ; Variables
 _x                  EQU                     0x0030
@@ -123,11 +123,11 @@ _70                 LDW                     _w
                     STW                     _u                              ; w=w-u-u+1:u=u-1
 
 _80                 LDW                     _u
-                    JumpGT                  _else_0x0303 1
+                    JumpGT                  _else_0x0301 1
                     LDWI                    _60
                     CALL                    giga_vAC                        ; if u&>0 then goto 60
 
-_else_0x0303        BRA                     _else_0x0303                    ; END
+_else_0x0301        BRA                     _else_0x0301                    ; END
 
 
 
@@ -137,17 +137,17 @@ _else_0x0303        BRA                     _else_0x0303                    ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7ea0
-convertEqOp         EQU     0x7ea9
-convertNeOp         EQU     0x7eb2
-convertLeOp         EQU     0x7ebb
-convertGeOp         EQU     0x7ec4
-convertLtOp         EQU     0x7ecd
-convertGtOp         EQU     0x7ed6
-resetVideoTable     EQU     0x7ba0
-initClearFuncs      EQU     0x7da0
-clearVertBlinds     EQU     0x7dc3
-drawHLine           EQU     0x7ca0
+realTimeProc        EQU     0xff00
+convertEqOp         EQU     0xff09
+convertNeOp         EQU     0xff12
+convertLeOp         EQU     0xff1b
+convertGeOp         EQU     0xff24
+convertLtOp         EQU     0xff2d
+convertGtOp         EQU     0xff36
+resetVideoTable     EQU     0xfe00
+initClearFuncs      EQU     0xff3f
+clearVertBlinds     EQU     0xff62
+drawHLine           EQU     0xff9c
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -234,8 +234,8 @@ breset              EQU     register8
 top                 EQU     register9
 bot                 EQU     register10
 vramAddr            EQU     register11
-videoTop            EQU     register11
 evenAddr            EQU     register12
+clsAddress          EQU     register13
     
     
                     ; resets video table pointers
@@ -254,11 +254,6 @@ resetVT_loop        CALL    realTimeProcAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
-                    
-                    LDWI    giga_videoTop
-                    STW     videoTop
-                    LDI     0
-                    POKE    videoTop                            ; restore full video output
                     POP
                     RET
 
@@ -290,7 +285,7 @@ clearVertBlinds     PUSH
                     LDWI    initClearFuncs
                     CALL    giga_vAC
 
-                    LDWI    giga_vram                           ; top line
+                    LDWI    giga_vram
                     STW     giga_sysArg4
                     LD      giga_sysArg4 + 1
                     ST      top

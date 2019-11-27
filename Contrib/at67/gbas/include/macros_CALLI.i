@@ -292,15 +292,16 @@ _id_    CALLI   _label
 %ENDM
 
 %MACRO  Initialise
-        LDWI    0x0F20                                  ; yellow on blue
-        STW     fgbgColour
-        STW     giga_sysArg0
+        LDWI    0x0F20
+        STW     fgbgColour                              ; yellow on blue
+
+        LDWI    0x0001
+        STW     miscFlags
+        LDWI    0xFF00
+        STW     highByteMask                            ; reset flags
+        
         LDWI    0x0000
         STW     midiStream                              ; reset MIDI
-        LDWI    0x0001
-        STW     miscFlags                               ; reset flags
-        LDWI    0xFF00
-        STW     highByteMask
         LDI     0x00
         ST      giga_soundTimer                         ; reset soundTimer, (stops any current Audio)
 

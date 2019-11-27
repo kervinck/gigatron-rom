@@ -31,12 +31,12 @@ highByteMask        EQU                     register0 + 0x2C
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_1                  EQU                     0x024a
-_8                  EQU                     0x0270
-_15                 EQU                     0x02dc
-_16                 EQU                     0x02e2
-_20                 EQU                     0x02e8
-_end_0x031b         EQU                     0x02ed
+_1                  EQU                     0x0248
+_8                  EQU                     0x026e
+_15                 EQU                     0x02da
+_16                 EQU                     0x02e0
+_20                 EQU                     0x02e6
+_end_0x0319         EQU                     0x02eb
 
 ; Variables
 _a                  EQU                     0x0030
@@ -124,7 +124,7 @@ _16                 LDW                     _b
 _20                 LDWI                    _1
                     CALL                    giga_vAC                        ; goto 1
 
-_end_0x031b         BRA                     _end_0x031b                     ; END
+_end_0x0319         BRA                     _end_0x0319                     ; END
 
 
 
@@ -141,12 +141,12 @@ convertLeOp         EQU     0xff23
 convertGeOp         EQU     0xff2c
 convertLtOp         EQU     0xff35
 convertGtOp         EQU     0xff3e
-resetVideoTable     EQU     0xfe5e
+resetVideoTable     EQU     0xffde
 initClearFuncs      EQU     0xff47
-clearCursorRow      EQU     0xfe86
-printInit           EQU     0xffde
+clearCursorRow      EQU     0xfe5e
+printInit           EQU     0xfea7
 printText           EQU     0xffbe
-printDigit          EQU     0xfecf
+printDigit          EQU     0xfec2
 printInt16          EQU     0xff6a
 printChar           EQU     0xfd00
 newLineScroll       EQU     0xfe00
@@ -236,8 +236,8 @@ breset              EQU     register8
 top                 EQU     register9
 bot                 EQU     register10
 vramAddr            EQU     register11
-videoTop            EQU     register11
 evenAddr            EQU     register12
+clsAddress          EQU     register13
     
     
                     ; resets video table pointers
@@ -256,11 +256,6 @@ resetVT_loop        CALL    realTimeProcAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
-                    
-                    LDWI    giga_videoTop
-                    STW     videoTop
-                    LDI     0
-                    POKE    videoTop                            ; restore full video output
                     POP
                     RET
 
@@ -453,6 +448,7 @@ printC_slice        ST      textSlice
                     BLT     printC_pop
                     LDWI    newLineScroll                   ; next row, scroll at bottom
                     CALL    giga_vAC
+                    
 printC_pop          POP
 
 printC_exit         RET

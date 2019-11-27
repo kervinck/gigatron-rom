@@ -31,11 +31,11 @@ highByteMask        EQU                     register0 + 0x2C
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_repeat_0x024b      EQU                     0x024b
-_while_0x026c       EQU                     0x0264
-_else_0x028d        EQU                     0x027b
-_endif_0x029b       EQU                     0x0289
-_wend_0x02a5        EQU                     0x0291
+_repeat_0x0249      EQU                     0x0249
+_while_0x026a       EQU                     0x0262
+_else_0x028b        EQU                     0x0279
+_endif_0x0299       EQU                     0x0287
+_wend_0x02a3        EQU                     0x028f
 
 ; Variables
 _a                  EQU                     0x0030
@@ -62,7 +62,7 @@ _entryPoint_        InitRealTimeProc
                     LDI                     1
                     STW                     _a                              ; LET a=1
 
-_repeat_0x024b      PrintVarInt16           _a
+_repeat_0x0249      PrintVarInt16           _a
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print a
 
@@ -70,29 +70,29 @@ _repeat_0x024b      PrintVarInt16           _a
                     ADDI                    1
                     STW                     _a
                     SUBI                    8
-                    BNE                     _repeat_0x024b                  ; a=a+1 : until a &&= count + 1
+                    BNE                     _repeat_0x0249                  ; a=a+1 : until a &&= count + 1
 
-_while_0x026c       LDW                     _a
-                    BLE                     _wend_0x02a5                    ; while a &&> 0
+_while_0x026a       LDW                     _a
+                    BLE                     _wend_0x02a3                    ; while a &&> 0
 
                     LDW                     _a
                     SUBI                    1
-                    BNE                     _else_0x028d                    ; if a &&= 1
+                    BNE                     _else_0x028b                    ; if a &&= 1
 
                     PrintVarInt16           _a
-                    BRA                     _endif_0x029b                   ; print a;
+                    BRA                     _endif_0x0299                   ; print a;
 
-_else_0x028d        PrintVarInt16           _a
+_else_0x028b        PrintVarInt16           _a
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print a
 
-_endif_0x029b       LDW                     _a
+_endif_0x0299       LDW                     _a
                     SUBI                    1
                     STW                     _a                              ; a=a-1
 
-                    BRA                     _while_0x026c                   ; wend
+                    BRA                     _while_0x026a                   ; wend
 
-_wend_0x02a5        BRA                     _wend_0x02a5                    ; END
+_wend_0x02a3        BRA                     _wend_0x02a3                    ; END
 
 
 
@@ -112,8 +112,8 @@ convertGtOp         EQU     0xff36
 resetVideoTable     EQU     0xfe5e
 initClearFuncs      EQU     0xff3f
 clearVertBlinds     EQU     0xff62
-clearCursorRow      EQU     0xfe86
-printInit           EQU     0xfecf
+clearCursorRow      EQU     0xfe7d
+printInit           EQU     0xfec6
 printDigit          EQU     0xfd00
 printInt16          EQU     0xff9c
 printChar           EQU     0xfd22
@@ -204,8 +204,8 @@ breset              EQU     register8
 top                 EQU     register9
 bot                 EQU     register10
 vramAddr            EQU     register11
-videoTop            EQU     register11
 evenAddr            EQU     register12
+clsAddress          EQU     register13
     
     
                     ; resets video table pointers
@@ -224,11 +224,6 @@ resetVT_loop        CALL    realTimeProcAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
-                    
-                    LDWI    giga_videoTop
-                    STW     videoTop
-                    LDI     0
-                    POKE    videoTop                            ; restore full video output
                     POP
                     RET
 
@@ -260,7 +255,7 @@ clearVertBlinds     PUSH
                     LDWI    initClearFuncs
                     CALL    giga_vAC
 
-                    LDWI    giga_vram                           ; top line
+                    LDWI    giga_vram
                     STW     giga_sysArg4
                     LD      giga_sysArg4 + 1
                     ST      top
@@ -435,6 +430,7 @@ printC_slice        ST      textSlice
                     BLT     printC_pop
                     LDWI    newLineScroll                   ; next row, scroll at bottom
                     CALL    giga_vAC
+                    
 printC_pop          POP
 
 printC_exit         RET

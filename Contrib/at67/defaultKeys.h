@@ -19,8 +19,6 @@ std::vector<std::string> _defaultKeys =
     "Execute      = CTRL+F5   ; executes whatever code is present at the load address",
     "Help         = CTRL+H    ; toggles help screen on and off                       ",
     "Quit         = CTRL+Q    ; instant quit                                         ",
-    "Speed+       = +         ; increases the emulation speed                        ",
-    "Speed-       = -         ; decreases the emulation speed                        ",
     "                                                                                ",
     "[Keyboard]               ; case sensitive                                       ",
     "Mode         = CTRL+K    ; toggles between, Giga, PS2, HwGiga and HwPS2         ",

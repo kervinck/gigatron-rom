@@ -161,7 +161,7 @@ namespace Operators
         {
             std::swap(lhs, rhs);
             invertedLogic = true;
-            if(lhs._value > 0) lhs._value = -lhs._value;
+            //if(lhs._value > 0) lhs._value = -lhs._value;
         }
 
         // JumpCC and BCC are inverses of each other
@@ -566,7 +566,7 @@ namespace Operators
         left._isValid = handleConditionOp(left, right, conditionType, invertedLogic);
 
         // Convert EQ into one of the condition types of branch instruction
-        std::string cc = (!invertedLogic) ? "Eq" : "Ne";
+        std::string cc = (conditionType == Expression::FastCC) ? "Ne" : "Eq"; //(!invertedLogic) ? "Eq" : "Ne";
         emitConditionType(conditionType, cc);
 
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
@@ -586,7 +586,7 @@ namespace Operators
         left._isValid = handleConditionOp(left, right, conditionType, invertedLogic);
 
         // Convert NE into one of the condition types of branch instruction
-        std::string cc = (!invertedLogic) ? "Ne" : "Eq";
+        std::string cc = (conditionType == Expression::FastCC) ? "Eq" : "Ne"; //(!invertedLogic) ? "Ne" : "Eq";
         emitConditionType(conditionType, cc);
 
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);

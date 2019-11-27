@@ -31,17 +31,17 @@ highByteMask        EQU                     register0 + 0x2C
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x0242
-_20                 EQU                     0x0242
-_30                 EQU                     0x024a
-_40                 EQU                     0x0263
-_50                 EQU                     0x0267
-_60                 EQU                     0x0279
-_70                 EQU                     0x027f
-_80                 EQU                     0x0291
-_90                 EQU                     0x02a8
-_100                EQU                     0x02ae
-_end_0x02b4         EQU                     0x02b0
+_10                 EQU                     0x0240
+_20                 EQU                     0x0240
+_30                 EQU                     0x0248
+_40                 EQU                     0x0261
+_50                 EQU                     0x0265
+_60                 EQU                     0x0277
+_70                 EQU                     0x027d
+_80                 EQU                     0x028f
+_90                 EQU                     0x02a6
+_100                EQU                     0x02ac
+_end_0x02b2         EQU                     0x02ae
 
 ; Variables
 _X                  EQU                     0x0030
@@ -113,7 +113,7 @@ _90                 LDI                     0
 
 _100                BRA                     _40                             ; GOTO &40
 
-_end_0x02b4         BRA                     _end_0x02b4                     ; END
+_end_0x02b2         BRA                     _end_0x02b2                     ; END
 
 
 
@@ -123,24 +123,23 @@ _end_0x02b4         BRA                     _end_0x02b4                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7ea0
-convertEqOp         EQU     0x7ea9
-convertNeOp         EQU     0x7eb2
-convertLeOp         EQU     0x7ebb
-convertGeOp         EQU     0x7ec4
-convertLtOp         EQU     0x7ecd
-convertGtOp         EQU     0x7ed6
-scanlineMode        EQU     0x7eec
-waitVBlank          EQU     0x7ccd
-resetVideoTable     EQU     0x7ba0
-initClearFuncs      EQU     0x7da0
-clearVertBlinds     EQU     0x7dc3
-clearCursorRow      EQU     0x7aa0
-printInit           EQU     0x7bd1
-printChr            EQU     0x7edf
-printChar           EQU     0x79a0
-atTextCursor        EQU     0x7ca0
-newLineScroll       EQU     0x78a0
+realTimeProc        EQU     0xff00
+convertEqOp         EQU     0xff09
+convertNeOp         EQU     0xff12
+convertLeOp         EQU     0xff1b
+convertGeOp         EQU     0xff24
+convertLtOp         EQU     0xff2d
+convertGtOp         EQU     0xff36
+waitVBlank          EQU     0xffd6
+resetVideoTable     EQU     0xfe00
+initClearFuncs      EQU     0xff3f
+clearVertBlinds     EQU     0xff62
+clearCursorRow      EQU     0xfe1f
+printInit           EQU     0xfe68
+printChr            EQU     0xffc9
+printChar           EQU     0xfe83
+atTextCursor        EQU     0xff9c
+newLineScroll       EQU     0xfd00
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -270,20 +269,6 @@ waitVB_start        LD      giga_frameCount
 
 
 
-
-scanlineMode        LDW     giga_romType
-                    ANDI    0xF8
-                    SUBI    romTypeValue_ROMv2
-                    BGE     scanlineM_cont
-                    RET
-    
-scanlineM_cont      LDWI    SYS_SetMode_v2_80
-                    STW     giga_sysFn
-                    LDW     graphicsMode
-                    SYS     0xE6                ; 270 - max(14,80/2)
-                    RET
-
-
 ; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 xreset              EQU     register0
 xcount              EQU     register1
@@ -293,8 +278,8 @@ breset              EQU     register8
 top                 EQU     register9
 bot                 EQU     register10
 vramAddr            EQU     register11
-videoTop            EQU     register11
 evenAddr            EQU     register12
+clsAddress          EQU     register13
     
     
                     ; resets video table pointers
@@ -313,16 +298,6 @@ resetVT_loop        CALL    realTimeProcAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
-                    
-                    LDWI    giga_videoTop
-                    STW     videoTop
-                    LDI     0
-                    POKE    videoTop                            ; restore full video output
-                    
-                    LDI     1
-                    STW     graphicsMode
-                    LDWI    scanlineMode
-                    CALL    giga_vAC                            ; restore graphics mode
                     POP
                     RET
 
@@ -354,7 +329,7 @@ clearVertBlinds     PUSH
                     LDWI    initClearFuncs
                     CALL    giga_vAC
 
-                    LDWI    giga_vram                           ; top line
+                    LDWI    giga_vram
                     STW     giga_sysArg4
                     LD      giga_sysArg4 + 1
                     ST      top

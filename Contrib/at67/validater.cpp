@@ -242,16 +242,24 @@ namespace Validater
                             // Create CALLI page jump label, (created later in outputCode())
                             if(Assembler::getUseOpcodeCALLI())
                             {
-                                // Code referencing these labels must be fixed later in outputLabels
-                                if(vasm1->_internalLabel.size()) Compiler::getDiscardedLabels().push_back({vasm1->_address, vasm1->_internalLabel});
+                                // Code referencing these labels must be fixed later in outputLabels, (discarded label addresses must be updated if they match page jump address)
+                                if(vasm1->_internalLabel.size())
+                                {
+                                    Compiler::getDiscardedLabels().push_back({vasm1->_address, vasm1->_internalLabel});
+                                    Compiler::adjustDiscardedLabels(vasm1->_internalLabel, vasm1->_address);
+                                }
             
                                 vasm1->_internalLabel = nextPClabel;
                             }
                             // Create pre-CALLI page jump label, (created later in outputCode())
                             else
                             {
-                                // Code referencing these labels must be fixed later in outputLabels
-                                if(vasm0->_internalLabel.size()) Compiler::getDiscardedLabels().push_back({vasm0->_address, vasm0->_internalLabel});
+                                // Code referencing these labels must be fixed later in outputLabels, (discarded label addresses must be updated if they match page jump address)
+                                if(vasm0->_internalLabel.size())
+                                {
+                                    Compiler::getDiscardedLabels().push_back({vasm0->_address, vasm0->_internalLabel});
+                                    Compiler::adjustDiscardedLabels(vasm0->_internalLabel, vasm0->_address);
+                                }
 
                                 vasm0->_internalLabel = nextPClabel;
                             }

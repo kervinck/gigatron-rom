@@ -31,8 +31,8 @@ highByteMask        EQU                     register0 + 0x2C
 
 ; Labels
 _entryPoint_        EQU                     0x0200
+_end_0x02e6         EQU                     0x02e6
 _end_0x02e8         EQU                     0x02e8
-_end_0x02ea         EQU                     0x02ea
 
 ; Variables
 
@@ -108,9 +108,9 @@ _entryPoint_        InitRealTimeProc
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print c$;" ";d$;" ";e$
 
-_end_0x02e8         BRA                     _end_0x02e8                     ; end
+_end_0x02e6         BRA                     _end_0x02e6                     ; end
 
-_end_0x02ea         BRA                     _end_0x02ea                     ; END
+_end_0x02e8         BRA                     _end_0x02e8                     ; END
 
 
 
@@ -131,9 +131,9 @@ resetVideoTable     EQU     0xfec6
 initClearFuncs      EQU     0xff45
 clearVertBlinds     EQU     0xff68
 clearCursorRow      EQU     0xfd00
-printInit           EQU     0xfd49
+printInit           EQU     0xfee5
 printText           EQU     0xffd0
-printChar           EQU     0xfd64
+printChar           EQU     0xfd49
 newLineScroll       EQU     0xfe68
 stringMid           EQU     0xfe32
 stringLeft          EQU     0xffa2
@@ -224,8 +224,8 @@ breset              EQU     register8
 top                 EQU     register9
 bot                 EQU     register10
 vramAddr            EQU     register11
-videoTop            EQU     register11
 evenAddr            EQU     register12
+clsAddress          EQU     register13
     
     
                     ; resets video table pointers
@@ -244,11 +244,6 @@ resetVT_loop        CALL    realTimeProcAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
-                    
-                    LDWI    giga_videoTop
-                    STW     videoTop
-                    LDI     0
-                    POKE    videoTop                            ; restore full video output
                     POP
                     RET
 
@@ -280,7 +275,7 @@ clearVertBlinds     PUSH
                     LDWI    initClearFuncs
                     CALL    giga_vAC
 
-                    LDWI    giga_vram                           ; top line
+                    LDWI    giga_vram
                     STW     giga_sysArg4
                     LD      giga_sysArg4 + 1
                     ST      top
@@ -414,6 +409,7 @@ printC_slice        ST      textSlice
                     BLT     printC_pop
                     LDWI    newLineScroll                   ; next row, scroll at bottom
                     CALL    giga_vAC
+                    
 printC_pop          POP
 
 printC_exit         RET

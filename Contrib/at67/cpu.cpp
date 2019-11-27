@@ -963,7 +963,7 @@ namespace Cpu
                 Graphics::render(true);
             }
 
-            std::this_thread::sleep_for(std::chrono::milliseconds(5));
+            //std::this_thread::sleep_for(std::chrono::milliseconds(5));
         }
 
         // Pixel
@@ -1022,7 +1022,7 @@ namespace Cpu
             // Audio
             if(Audio::getRealTimeAudio())
             {
-                (_XOUT) ? Audio::playSample() : Audio::clearQueue();
+                Audio::playSample();
             }
             else
             {

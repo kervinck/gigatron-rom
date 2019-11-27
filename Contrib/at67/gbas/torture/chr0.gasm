@@ -35,15 +35,15 @@ _10                 EQU                     0x0375
 _test               EQU                     0x0588
 _Big                EQU                     0x06bb
 _page_0x0300        EQU                     0x0300
-_next_0x0391        EQU                     0x0385
-_next_0x0395        EQU                     0x0389
-_next_0x0399        EQU                     0x038d
-_next_0x039d        EQU                     0x0391
+_next_0x038f        EQU                     0x0385
+_next_0x0393        EQU                     0x0389
+_next_0x0397        EQU                     0x038d
+_next_0x039b        EQU                     0x0391
 _page_0x0400        EQU                     0x0400
 _page_0x0500        EQU                     0x0500
-_end_0x0570         EQU                     0x056d
-_next_0x0576        EQU                     0x0573
-_end_0x0589         EQU                     0x0586
+_end_0x056e         EQU                     0x056d
+_next_0x0574        EQU                     0x0573
+_end_0x0587         EQU                     0x0586
 _page_0x0600        EQU                     0x0600
 _page_0x08a0        EQU                     0x08a0
 _page_0x09a0        EQU                     0x09a0
@@ -220,7 +220,7 @@ _page_0xbd00        EQU                     0xbd00
 _page_0xbe00        EQU                     0xbe00
 _page_0xbf00        EQU                     0xbf00
 _page_0xc000        EQU                     0xc000
-_end_0x69b3         EQU                     0xc094
+_end_0x69b1         EQU                     0xc094
 
 ; Variables
 _z                  EQU                     0x0030
@@ -322,13 +322,13 @@ _entryPoint_        InitRealTimeProc
                     CALL                    convertEqOpAddr
                     PrintAcInt16            
                     PrintString             _str_0xff00
-                    LDWI                    -1000
+                    LDWI                    1000
                     SUBW                    _bb
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
-                    CALL                    convertEqOpAddr
+                    CALL                    convertNeOpAddr
                     PrintAcInt16            
                     PrintString             _str_0xff00
                     LDW                     _bb
@@ -372,16 +372,16 @@ _10                 LDW                     _z
                     LDI                     2
                     STW                     0xb2                            ; for i=z+1 to dog-1 step 2
 
-_next_0x0391        LDI                     1
+_next_0x038f        LDI                     1
                     STW                     _j                              ; for j = 1 to 0
 
-_next_0x0395        LDI                     1
+_next_0x0393        LDI                     1
                     STW                     _jj                             ; for jj = 1 to 2 step 1
 
-_next_0x0399        LDI                     1
+_next_0x0397        LDI                     1
                     STW                     _ss                             ; for ss = 1 to 5 step 1
 
-_next_0x039d        LDW                     _i
+_next_0x039b        LDW                     _i
                     STW                     mathX
                     LDI                     3
                     STW                     mathY
@@ -428,13 +428,13 @@ _page_0x0400        LDW                     0xde
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print i*3+1;" ";i/2;" ";j*3;" ";j+23;" ";i+55;" ";i+j;" ";i-j
 
-                    ForNextLoopUp           _ss _next_0x039d 5              ; next ss
+                    ForNextLoopUp           _ss _next_0x039b 5              ; next ss
 
-                    ForNextLoopUp           _jj _next_0x0399 2              ; next jj
+                    ForNextLoopUp           _jj _next_0x0397 2              ; next jj
 
-                    ForNextLoopDown         _j _next_0x0395 0               ; next j
+                    ForNextLoopDown         _j _next_0x0393 0               ; next j
 
-                    ForNextLoopStepUp       _i _next_0x0391 0xb0 0xb2       ; next i
+                    ForNextLoopStepUp       _i _next_0x038f 0xb0 0xb2       ; next i
 
                     LDWI                    _test
                     CALL                    giga_vAC                        ; gosub   test
@@ -474,17 +474,17 @@ _page_0x0500        LDW                     0xde
                     LDWI                    -16657
                     PrintAcHexWord                                          ; print hex$(80);" ";hexw$(&hdead);" ";hexw$(&hbeef);
 
-_end_0x0570         BRA                     _end_0x0570                     ; END
+_end_0x056e         BRA                     _end_0x056e                     ; END
 
                     LDI                     0
                     STW                     _ii                             ; for ii = 0 to 0 step 1
 
-_next_0x0576        LDWI                    _Big
+_next_0x0574        LDWI                    _Big
                     CALL                    giga_vAC                        ; gosub Big
 
-                    ForNextLoopUp           _ii _next_0x0576 0              ; next ii
+                    ForNextLoopUp           _ii _next_0x0574 0              ; next ii
 
-_end_0x0589         BRA                     _end_0x0589                     ; END
+_end_0x0587         BRA                     _end_0x0587                     ; END
 
 _test               PUSH                    
                     LDW                     _i
@@ -8093,7 +8093,7 @@ _page_0xc000        LDW                     0xde
                     POP                     
                     RET                                                     ; return
 
-_end_0x69b3         BRA                     _end_0x69b3                     ; END
+_end_0x69b1         BRA                     _end_0x69b1                     ; END
 
 
 
@@ -8303,8 +8303,8 @@ breset              EQU     register8
 top                 EQU     register9
 bot                 EQU     register10
 vramAddr            EQU     register11
-videoTop            EQU     register11
 evenAddr            EQU     register12
+clsAddress          EQU     register13
     
     
                     ; resets video table pointers
@@ -8323,11 +8323,6 @@ resetVT_loop        CALL    realTimeProcAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
-                    
-                    LDWI    giga_videoTop
-                    STW     videoTop
-                    LDI     0
-                    POKE    videoTop                            ; restore full video output
                     POP
                     RET
 
@@ -8530,6 +8525,7 @@ printC_slice        ST      textSlice
                     BLT     printC_pop
                     LDWI    newLineScroll                   ; next row, scroll at bottom
                     CALL    giga_vAC
+                    
 printC_pop          POP
 
 printC_exit         RET

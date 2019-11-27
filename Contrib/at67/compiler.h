@@ -215,6 +215,7 @@ namespace Compiler
     void setRuntimeStart(uint16_t runtimeStart);
     void setCreateNumericLabelLut(bool createNumericLabelLut);
     void setNextInternalLabel(const std::string& label);
+    void adjustDiscardedLabels(const std::string name, uint16_t address);
 
     int incJumpFalseUniqueId(void);
 

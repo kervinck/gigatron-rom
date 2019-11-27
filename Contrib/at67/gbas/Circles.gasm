@@ -31,14 +31,14 @@ highByteMask        EQU                     register0 + 0x2C
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_loop               EQU                     0x025a
-_circle             EQU                     0x029a
-_end_0x02be         EQU                     0x0298
-_repeat_0x02d1      EQU                     0x02a9
+_loop               EQU                     0x0258
+_circle             EQU                     0x0298
+_end_0x02bc         EQU                     0x0296
+_repeat_0x02cf      EQU                     0x02a7
 _page_0x0300        EQU                     0x0300
-_else_0x03e2        EQU                     0x034d
-_endif_0x0404       EQU                     0x035f
-_end_0x0418         EQU                     0x036f
+_else_0x03e0        EQU                     0x034b
+_endif_0x0402       EQU                     0x035d
+_end_0x0416         EQU                     0x036d
 
 ; Variables
 _ch0                EQU                     0x0030
@@ -109,7 +109,7 @@ _loop               LDI                     0x64
                     LDWI                    _loop
                     CALL                    giga_vAC                        ; goto loop
 
-_end_0x02be         BRA                     _end_0x02be                     ; END
+_end_0x02bc         BRA                     _end_0x02bc                     ; END
 
 _circle             PUSH                    
                     LDI                     1
@@ -122,7 +122,7 @@ _circle             PUSH
                     LDW                     _r
                     STW                     _y                              ; y = r
 
-_repeat_0x02d1      LDW                     _cy
+_repeat_0x02cf      LDW                     _cy
                     ADDW                    _y
                     ADDI                    8
                     ST                      _ch0 + 1                        ; ch0 = (cy + y + 8) LSL 8
@@ -164,11 +164,11 @@ _repeat_0x02d1      LDW                     _cy
                     POKE                    _a                              ; a = cx + x + ch1 : poke a, c
 
                     LDW                     _cx
+                    SUBW                    _x
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
-                    SUBW                    _x
                     ADDW                    _ch1
                     STW                     _a
                     LDW                     _c
@@ -203,7 +203,7 @@ _page_0x0300        LDW                     0xde
                     POKE                    _a                              ; a = cx - y + ch3 : poke a, c
 
                     LDW                     _d
-                    BGE                     _else_0x03e2                    ; if d &&< 0
+                    BGE                     _else_0x03e0                    ; if d &&< 0
 
                     LDW                     _x
                     LSLW                    
@@ -211,9 +211,9 @@ _page_0x0300        LDW                     0xde
                     ADDW                    _d
                     ADDI                    3
                     STW                     _d
-                    BRA                     _endif_0x0404                   ; d = d + (x LSL 2) + 3
+                    BRA                     _endif_0x0402                   ; d = d + (x LSL 2) + 3
 
-_else_0x03e2        LDW                     _x
+_else_0x03e0        LDW                     _x
                     SUBW                    _y
                     LSLW                    
                     LSLW                    
@@ -225,16 +225,16 @@ _else_0x03e2        LDW                     _x
                     SUBI                    1
                     STW                     _y                              ; y = y - 1
 
-_endif_0x0404       INC                     _x                              ; inc x
+_endif_0x0402       INC                     _x                              ; inc x
 
                     LDW                     _x
                     SUBW                    _y
-                    JumpGT                  _repeat_0x02d1 2                ; until x &> y
+                    JumpGT                  _repeat_0x02cf 2                ; until x &> y
 
                     POP                     
                     RET                                                     ; return
 
-_end_0x0418         BRA                     _end_0x0418                     ; END
+_end_0x0416         BRA                     _end_0x0416                     ; END
 
 
 
@@ -244,20 +244,20 @@ _end_0x0418         BRA                     _end_0x0418                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7ea0
-convertEqOp         EQU     0x7ea9
-convertNeOp         EQU     0x7eb2
-convertLeOp         EQU     0x7ebb
-convertGeOp         EQU     0x7ec4
-convertLtOp         EQU     0x7ecd
-convertGtOp         EQU     0x7ed6
-divide16bit         EQU     0x7ba0
-rand16bit           EQU     0x7ef3
-randMod16bit        EQU     0x7ca0
-scanlineMode        EQU     0x7edf
-resetVideoTable     EQU     0x7cb3
-initClearFuncs      EQU     0x7da0
-clearVertBlinds     EQU     0x7dc3
+realTimeProc        EQU     0xff00
+convertEqOp         EQU     0xff09
+convertNeOp         EQU     0xff12
+convertLeOp         EQU     0xff1b
+convertGeOp         EQU     0xff24
+convertLtOp         EQU     0xff2d
+convertGtOp         EQU     0xff36
+divide16bit         EQU     0xfe00
+rand16bit           EQU     0xffc3
+randMod16bit        EQU     0xffb0
+scanlineMode        EQU     0xff9c
+resetVideoTable     EQU     0xffcb
+initClearFuncs      EQU     0xff3f
+clearVertBlinds     EQU     0xff62
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -475,8 +475,8 @@ breset              EQU     register8
 top                 EQU     register9
 bot                 EQU     register10
 vramAddr            EQU     register11
-videoTop            EQU     register11
 evenAddr            EQU     register12
+clsAddress          EQU     register13
     
     
                     ; resets video table pointers
@@ -495,16 +495,6 @@ resetVT_loop        CALL    realTimeProcAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
-                    
-                    LDWI    giga_videoTop
-                    STW     videoTop
-                    LDI     0
-                    POKE    videoTop                            ; restore full video output
-                    
-                    LDI     1
-                    STW     graphicsMode
-                    LDWI    scanlineMode
-                    CALL    giga_vAC                            ; restore graphics mode
                     POP
                     RET
 
@@ -536,7 +526,7 @@ clearVertBlinds     PUSH
                     LDWI    initClearFuncs
                     CALL    giga_vAC
 
-                    LDWI    giga_vram                           ; top line
+                    LDWI    giga_vram
                     STW     giga_sysArg4
                     LD      giga_sysArg4 + 1
                     ST      top

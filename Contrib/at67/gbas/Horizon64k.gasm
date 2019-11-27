@@ -31,31 +31,31 @@ highByteMask        EQU                     register0 + 0x2C
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_loop               EQU                     0x042c
-_254                EQU                     0x04a0
-_253                EQU                     0x04b2
-_191                EQU                     0x04c8
-_127                EQU                     0x04cf
-_calcPitch          EQU                     0x04d6
-_next_0x02ab        EQU                     0x0285
-_else_0x02f5        EQU                     0x02b9
-_else_0x0332        EQU                     0x02e2
-_endif_0x0336       EQU                     0x02e6
+_loop               EQU                     0x041a
+_254                EQU                     0x048e
+_253                EQU                     0x04a0
+_191                EQU                     0x04b6
+_127                EQU                     0x04bd
+_calcPitch          EQU                     0x04c4
+_next_0x02a9        EQU                     0x0283
+_else_0x02e7        EQU                     0x02af
+_else_0x0324        EQU                     0x02d8
+_endif_0x0328       EQU                     0x02dc
 _page_0x0300        EQU                     0x0300
-_next_0x036b        EQU                     0x0314
-_else_0x0381        EQU                     0x0322
-_endif_0x0389       EQU                     0x0328
-_else_0x03a5        EQU                     0x033a
-_endif_0x03ad       EQU                     0x0340
-_next_0x0419        EQU                     0x039e
-_else_0x043f        EQU                     0x03ba
-_next_0x0443        EQU                     0x03be
+_next_0x035d        EQU                     0x030c
+_else_0x0373        EQU                     0x031a
+_endif_0x037b       EQU                     0x0320
+_else_0x0397        EQU                     0x0332
+_endif_0x039f       EQU                     0x0338
+_next_0x040b        EQU                     0x0396
+_else_0x0425        EQU                     0x03aa
+_next_0x0429        EQU                     0x03ae
 _page_0x0400        EQU                     0x0400
-_next_0x04d8        EQU                     0x044e
-_repeat_0x0502      EQU                     0x0474
-_else_0x055e        EQU                     0x04b0
-_else_0x057a        EQU                     0x04c6
-_end_0x05a5         EQU                     0x04ed
+_next_0x04be        EQU                     0x043c
+_repeat_0x04e8      EQU                     0x0462
+_else_0x0544        EQU                     0x049e
+_else_0x0560        EQU                     0x04b4
+_end_0x058b         EQU                     0x04db
 
 ; Variables
 _y                  EQU                     0x0030
@@ -90,15 +90,15 @@ def_bytes_0x8000    DB                      144 57 145 33 145 33 144 57 146 45 2
 _lut_numericLabs    EQU                     0xfff4
 _lut_numericLabs    DW                      254 253 191 127 -1
 _lut_numericAddrs   EQU                     0xfebf
-_lut_numericAddrs   DW                      0x04a0 0x04b2 0x04c8 0x04cf 
+_lut_numericAddrs   DW                      0x048e 0x04a0 0x04b6 0x04bd 
 
 ; Code
 _entryPoint_        Initialise                                              ; INIT
 
                     LDWI                    505
                     STW                     register0
-                    LDI                     240
-                    POKE                    register0                       ; poke &h01F9, 240 'disables video output, cls becomes almost instant
+                    LDI                     238
+                    POKE                    register0                       ; poke &h01F9, 238 'disables video output, cls becomes almost instant
 
                     CALLI                   clearVertBlinds                 ; cls
 
@@ -151,7 +151,7 @@ _entryPoint_        Initialise                                              ; IN
                     LDI                     119
                     STW                     _y                              ; for y=119 to horizonY step -1
 
-_next_0x02ab        LDWI                    0xff00
+_next_0x02a9        LDWI                    0xff00
                     ADDW                    _cIndex
                     ADDW                    _cIndex
                     DEEK                    
@@ -162,24 +162,20 @@ _next_0x02ab        LDWI                    0xff00
                     DEEK                    
                     STW                     _color2                         ; color1 = c1(cIndex) : color2 = c2(cIndex)
 
-                    LDW                     _fade
-                    ADDI                    1
-                    STW                     _fade                           ; fade = fade + 1
+                    INC                     _fade                           ; inc fade
 
                     LDW                     _fade
                     SUBW                    _decay
-                    BNE                     _else_0x02f5
-                    LDW                     _cIndex
-                    ADDI                    1
-                    STW                     _cIndex
+                    BNE                     _else_0x02e7
+                    INC                     _cIndex
                     LDI                     0
                     STW                     _fade
                     LDW                     _decay
                     STW                     mathShift
                     ShiftRight1bit          
-                    STW                     _decay                          ; if fade &&= decay then cIndex = cIndex + 1 : fade = 0 : decay = decay LSR 1
+                    STW                     _decay                          ; if fade &&= decay then inc cIndex : fade = 0 : decay = decay LSR 1
 
-_else_0x02f5        LDW                     _y
+_else_0x02e7        LDW                     _y
                     STW                     _yy                             ; yy = y
 
                     CALLI                   _calcPitch                      ; gosub calcPitch
@@ -194,17 +190,17 @@ _else_0x02f5        LDW                     _y
                     STW                     mathY
                     CALLI                   divide16bit
                     ANDI                    1
-                    BNE                     _else_0x0332                    ; if ((400 / (y-horizonY+40)) AND 1) &&= 0
+                    BNE                     _else_0x0324                    ; if ((400 / (y-horizonY+40)) AND 1) &&= 0
 
                     LDW                     _color1
                     XORW                    _color2
                     STW                     _j
-                    CALLI                   _endif_0x0336                   ; j = color1 XOR color2
+                    CALLI                   _endif_0x0328                   ; j = color1 XOR color2
 
-_else_0x0332        LDI                     0
+_else_0x0324        LDI                     0
                     STW                     _j                              ; j = 0
 
-_endif_0x0336       LDI                     80
+_endif_0x0328       LDI                     80
                     STW                     mathX
                     LDW                     _pitch
                     STW                     mathY
@@ -212,52 +208,52 @@ _endif_0x0336       LDI                     80
                     LDW                     mathRem
                     STW                     _i                              ; i = 80 % pitch
 
-                    CALLI                   _page_0x0300
-_page_0x0300        LDW                     _y
+                    LDW                     _y
                     ADDI                    8
                     ST                      _a + 1                          ; a = ((y + 8) LSL 8)
 
                     LDI                     0
-                    STW                     _x
+                    CALLI                   _page_0x0300
+_page_0x0300        STW                     _x
                     LDW                     _pitch
                     ADDI                    159
                     STW                     0xb4
                     LDI                     1
                     STW                     0xb6                            ; for x=0 to pitch + 159
 
-_next_0x036b        LDW                     _i
-                    BNE                     _else_0x0381                    ; if i &&= 0
+_next_0x035d        LDW                     _i
+                    BNE                     _else_0x0373                    ; if i &&= 0
 
                     LDW                     _pitch
                     SUBI                    1
                     STW                     _i
-                    CALLI                   _endif_0x0389                   ; i = pitch - 1
+                    CALLI                   _endif_0x037b                   ; i = pitch - 1
 
-_else_0x0381        LDW                     _i
+_else_0x0373        LDW                     _i
                     SUBI                    1
                     STW                     _i                              ; i = i - 1
 
-_endif_0x0389       LDW                     _i
+_endif_0x037b       LDW                     _i
                     ADDW                    _i
                     SUBW                    _pitch
-                    BLT                     _else_0x03a5                    ; if i+i &&>= pitch
+                    BLT                     _else_0x0397                    ; if i+i &&>= pitch
 
                     LDW                     _color1
                     XORW                    _j
                     STW                     _p
-                    CALLI                   _endif_0x03ad                   ; p = color1 XOR j
+                    CALLI                   _endif_0x039f                   ; p = color1 XOR j
 
-_else_0x03a5        LDW                     _color2
+_else_0x0397        LDW                     _color2
                     XORW                    _j
                     STW                     _p                              ; p = color2 XOR j
 
-_endif_0x03ad       LDW                     _a
+_endif_0x039f       LDW                     _a
                     ADDW                    _x
                     STW                     0xc0
                     LDW                     _p
                     POKE                    0xc0                            ; poke a+x, p
 
-                    ForNextLoopStepUp       _x _next_0x036b 0xb4 0xb6       ; next x
+                    ForNextLoopStepUp       _x _next_0x035d 0xb4 0xb6       ; next x
 
                     LDW                     _y
                     ADDW                    _y
@@ -267,7 +263,7 @@ _endif_0x03ad       LDW                     _a
                     LDW                     0xc0
                     POKE                    register0                       ; poke &h01F9, y+y
 
-                    ForNextLoopDown         _y _next_0x02ab 32              ; next y
+                    ForNextLoopDown         _y _next_0x02a9 32              ; next y
 
                     LDWI                    0xff0c
                     STW                     register1
@@ -291,26 +287,22 @@ _endif_0x03ad       LDW                     _a
                     LDI                     31
                     STW                     _y                              ; for y=horizonY-1 to 0 step -1
 
-_next_0x0419        LDW                     _fade
-                    ADDI                    1
-                    STW                     _fade                           ; fade = fade + 1
+_next_0x040b        INC                     _fade                           ; inc fade
 
                     LDW                     _fade
                     SUBW                    _decay
-                    BNE                     _else_0x043f
-                    LDW                     _cIndex
-                    ADDI                    1
-                    STW                     _cIndex
+                    BNE                     _else_0x0425
+                    INC                     _cIndex
                     LDI                     0
                     STW                     _fade
                     LDW                     _decay
                     LSLW                    
-                    STW                     _decay                          ; if fade &&= decay then cIndex = cIndex + 1 : fade = 0 : decay = decay LSL 1
+                    STW                     _decay                          ; if fade &&= decay then inc cIndex : fade = 0 : decay = decay LSL 1
 
-_else_0x043f        LDI                     0
+_else_0x0425        LDI                     0
                     STW                     _x                              ; for x=0 to 159
 
-_next_0x0443        LDW                     _y
+_next_0x0429        LDW                     _y
                     ADDI                    8
                     ST                      _a + 1                          ; a = ((y + 8) LSL 8)
 
@@ -323,7 +315,7 @@ _next_0x0443        LDW                     _y
                     DEEK                    
                     POKE                    0xc0                            ; poke a+x, sky(cIndex)
 
-                    ForNextLoopUp           _x _next_0x0443 159             ; next x
+                    ForNextLoopUp           _x _next_0x0429 159             ; next x
 
                     LDW                     _y
                     ADDW                    _y
@@ -333,12 +325,12 @@ _next_0x0443        LDW                     _y
                     LDW                     0xc0
                     POKE                    register0                       ; poke &h01F9, y+y
 
-                    CALLI                   _page_0x0400
-_page_0x0400        ForNextLoopDown         _y _next_0x0419 0               ; next y
+                    ForNextLoopDown         _y _next_0x040b 0               ; next y
 
                     LDI                     3
                     ST                      waveType
-                    LDWI                    -32768
+                    CALLI                   _page_0x0400
+_page_0x0400        LDWI                    -32768
                     PlayMidi                                                ; play midi &h8000,3
 
                     LDI                     0
@@ -368,11 +360,11 @@ _loop               LDW                     _x
                     LDI                     1
                     STW                     0xb2                            ; for y=0 to pitch
 
-_next_0x04d8        LDW                     _j
+_next_0x04be        LDW                     _j
                     ADDW                    _i
                     STW                     _j                              ; j = j + i
 
-                    ForNextLoopStepUp       _y _next_0x04d8 0xb0 0xb2       ; next y
+                    ForNextLoopStepUp       _y _next_0x04be 0xb0 0xb2       ; next y
 
                     LDW                     _i
                     ADDW                    _i
@@ -385,7 +377,7 @@ _next_0x04d8        LDW                     _j
                     STW                     waitVBlankNum
                     WaitVBlank                                              ; wait 1
 
-_repeat_0x0502      LD                      _j + 1
+_repeat_0x04e8      LD                      _j + 1
                     POKE                    _p                              ; poke p, j LSR 8
 
                     LDW                     _j
@@ -397,7 +389,7 @@ _repeat_0x0502      LD                      _j + 1
                     ADDI                    4
                     STW                     _p
                     SUBW                    _q
-                    BLT                     _repeat_0x0502                  ; p = p + 4 : until p &&>= q
+                    BLT                     _repeat_0x04e8                  ; p = p + 4 : until p &&>= q
 
                     LDI                     0x11
                     PEEK                    
@@ -417,11 +409,11 @@ _254                PUSH
                     ADDI                    1
                     STW                     _v
                     SUBI                    32
-                    BLE                     _else_0x055e
+                    BLE                     _else_0x0544
                     LDI                     32
                     STW                     _v                              ; v = v + 1 : if v &&> 32 then v = 32
 
-_else_0x055e        POP                     
+_else_0x0544        POP                     
                     RET                                                     ; return
 
 _253                PUSH                    
@@ -430,11 +422,11 @@ _253                PUSH
                     STW                     _v
                     LDWI                    -32
                     SUBW                    _v
-                    BLT                     _else_0x057a
+                    BLT                     _else_0x0560
                     LDWI                    -32
                     STW                     _v                              ; v = v - 1 : if v &&< -32 then v = -32
 
-_else_0x057a        POP                     
+_else_0x0560        POP                     
                     RET                                                     ; return
 
 _191                PUSH                    
@@ -464,7 +456,7 @@ _calcPitch          PUSH
                     POP                     
                     RET                                                     ; return
 
-_end_0x05a5         BRA                     _end_0x05a5                     ; END
+_end_0x058b         BRA                     _end_0x058b                     ; END
 
 
 
@@ -490,7 +482,7 @@ initClearFuncs      EQU     0xff12
 clearVertBlinds     EQU     0xff33
 resetAudio          EQU     0xfe00
 playMidi            EQU     0xfe39
-midiStartNote       EQU     0xfd29
+midiStartNote       EQU     0xfd20
 
 
 ; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
@@ -729,8 +721,8 @@ breset              EQU     register8
 top                 EQU     register9
 bot                 EQU     register10
 vramAddr            EQU     register11
-videoTop            EQU     register11
 evenAddr            EQU     register12
+clsAddress          EQU     register13
     
     
                     ; resets video table pointers
@@ -749,11 +741,6 @@ resetVT_loop        CALLI   realTimeProc
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
-
-                    LDWI    giga_videoTop
-                    STW     videoTop
-                    LDI     0
-                    POKE    videoTop                            ; restore full video output
                     POP
                     RET
 
@@ -783,7 +770,7 @@ initClearFuncs      PUSH
 clearVertBlinds     PUSH
                     CALLI   initClearFuncs
 
-                    LDWI    giga_vram                           ; top line
+                    LDWI    giga_vram
                     STW     giga_sysArg4
                     LD      giga_sysArg4 + 1
                     ST      top

@@ -46,8 +46,8 @@
 #define _PAUSE_     \
     system("pause");
 #else
-#define _PAUSE_                                         \
-    fprintf(stderr, "Press any key to continue. . .\n");\
+#define _PAUSE_                                          \
+    fprintf(stderr, "Press any key to continue . . .\n");\
     system("read");
 #endif
 

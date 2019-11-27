@@ -2,7 +2,7 @@
 _useOpcodeCALLI_
 _runtimeStart_ &hFFFF
 
-poke &h01F9, 240 'disables video output, cls becomes almost instant
+poke &h01F9, 238 'disables video output, cls becomes almost instant
 cls
 
 const horizonY = 32
@@ -18,8 +18,8 @@ fade=0 : cIndex=fade : decay=54
 ' Draw tiles in perspective in screen memory
 for y=119 to horizonY step -1
     color1 = c1(cIndex) : color2 = c2(cIndex)
-    fade = fade + 1
-    if fade &&= decay then cIndex = cIndex + 1 : fade = 0 : decay = decay LSR 1
+    inc fade
+    if fade &&= decay then inc cIndex : fade = 0 : decay = decay LSR 1
     
     yy = y
     gosub calcPitch
@@ -56,8 +56,8 @@ dim sky(2)=0 : sky(0)=&h10 : sky(1)=&h20 : sky(2)=&h30
 ' sky
 fade=0 : cIndex=fade : decay = 5
 for y=horizonY-1 to 0 step -1
-    fade = fade + 1
-    if fade &&= decay then cIndex = cIndex + 1 : fade = 0 : decay = decay LSL 1
+    inc fade
+    if fade &&= decay then inc cIndex : fade = 0 : decay = decay LSL 1
 
     for x=0 to 159
         a = ((y + 8) LSL 8)

@@ -31,14 +31,14 @@ highByteMask        EQU                     register0 + 0x2C
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_loop               EQU                     0x0269
-_math               EQU                     0x037c
-_next_0x026f        EQU                     0x026d
-_next_0x02b7        EQU                     0x02ab
-_next_0x02fb        EQU                     0x02e9
+_loop               EQU                     0x0267
+_math               EQU                     0x037b
+_next_0x026d        EQU                     0x026b
+_next_0x02b5        EQU                     0x02a9
+_next_0x02f9        EQU                     0x02e7
 _page_0x0300        EQU                     0x0300
-_next_0x0343        EQU                     0x0339
-_end_0x03cc         EQU                     0x039a
+_next_0x0341        EQU                     0x0338
+_end_0x03ca         EQU                     0x0399
 
 ; Variables
 _x                  EQU                     0x0030
@@ -176,7 +176,7 @@ _entryPoint_        InitRealTimeProc
 _loop               LDI                     0
                     STW                     _i                              ; for i=0 to 19
 
-_next_0x026f        LDWI                    _math
+_next_0x026d        LDWI                    _math
                     CALL                    giga_vAC                        ; gosub math
 
                     LDI                     0xa3
@@ -199,12 +199,12 @@ _next_0x026f        LDWI                    _math
                     STW                     drawLine_y2
                     DrawLine                                                ; line x,119, 159,119-y
 
-                    ForNextLoopUp           _i _next_0x026f 19              ; next i
+                    ForNextLoopUp           _i _next_0x026d 19              ; next i
 
                     LDI                     19
                     STW                     _i                              ; for i=19 to 0
 
-_next_0x02b7        LDWI                    _math
+_next_0x02b5        LDWI                    _math
                     CALL                    giga_vAC                        ; gosub math
 
                     LDI                     0xa3
@@ -226,20 +226,20 @@ _next_0x02b7        LDWI                    _math
                     STW                     drawLine_y2
                     DrawLine                                                ; line 159,y, x,0
 
-                    ForNextLoopDown         _i _next_0x02b7 0               ; next i
+                    ForNextLoopDown         _i _next_0x02b5 0               ; next i
 
                     LDI                     0
                     STW                     _i                              ; for i=0 to 19
 
-_next_0x02fb        LDWI                    _math
+_next_0x02f9        LDWI                    _math
                     CALL                    giga_vAC                        ; gosub math
 
                     LDI                     0xa3
+                    PEEK                    
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
-                    PEEK                    
                     ADDI                    7
                     STW                     _p
                     LDWI                    163
@@ -258,12 +258,12 @@ _page_0x0300        LDW                     0xde
                     STW                     drawLine_y2
                     DrawLine                                                ; line 0,y, 159-x,0
 
-                    ForNextLoopUp           _i _next_0x02fb 19              ; next i
+                    ForNextLoopUp           _i _next_0x02f9 19              ; next i
 
                     LDI                     19
                     STW                     _i                              ; for i=19 to 0
 
-_next_0x0343        LDWI                    _math
+_next_0x0341        LDWI                    _math
                     CALL                    giga_vAC                        ; gosub math
 
                     LDI                     0xa3
@@ -287,7 +287,7 @@ _next_0x0343        LDWI                    _math
                     STW                     drawLine_y2
                     DrawLine                                                ; line 159-x,119, 0,119-y
 
-                    ForNextLoopDown         _i _next_0x0343 0               ; next i
+                    ForNextLoopDown         _i _next_0x0341 0               ; next i
 
                     LDWI                    _loop
                     CALL                    giga_vAC                        ; goto  loop
@@ -313,7 +313,7 @@ _math               PUSH
                     POP                     
                     RET                                                     ; return
 
-_end_0x03cc         BRA                     _end_0x03cc                     ; END
+_end_0x03ca         BRA                     _end_0x03ca                     ; END
 
 
 
@@ -323,23 +323,23 @@ _end_0x03cc         BRA                     _end_0x03cc                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7ea0
-convertEqOp         EQU     0x7ea9
-convertNeOp         EQU     0x7eb2
-convertLeOp         EQU     0x7ebb
-convertGeOp         EQU     0x7ec4
-convertLtOp         EQU     0x7ecd
-convertGtOp         EQU     0x7ed6
-scanlineMode        EQU     0x7edf
-resetVideoTable     EQU     0x7aa0
-initClearFuncs      EQU     0x7da0
-drawLine            EQU     0x7ba0
-drawLineExt         EQU     0x79a0
-drawLineLoop        EQU     0x78a0
-drawLineLoadXY      EQU     0x7ad1
-resetAudio          EQU     0x7dc3
-playMidi            EQU     0x7ca0
-midiStartNote       EQU     0x77a0
+realTimeProc        EQU     0xff00
+convertEqOp         EQU     0xff09
+convertNeOp         EQU     0xff12
+convertLeOp         EQU     0xff1b
+convertGeOp         EQU     0xff24
+convertLtOp         EQU     0xff2d
+convertGtOp         EQU     0xff36
+scanlineMode        EQU     0xffeb
+resetVideoTable     EQU     0xfe55
+initClearFuncs      EQU     0xff3f
+drawLine            EQU     0xfe00
+drawLineExt         EQU     0xfe74
+drawLineLoop        EQU     0xfead
+drawLineLoadXY      EQU     0xfd00
+resetAudio          EQU     0xff62
+playMidi            EQU     0xff9b
+midiStartNote       EQU     0xfd2b
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -474,8 +474,8 @@ breset              EQU     register8
 top                 EQU     register9
 bot                 EQU     register10
 vramAddr            EQU     register11
-videoTop            EQU     register11
 evenAddr            EQU     register12
+clsAddress          EQU     register13
     
     
                     ; resets video table pointers
@@ -494,16 +494,6 @@ resetVT_loop        CALL    realTimeProcAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
-                    
-                    LDWI    giga_videoTop
-                    STW     videoTop
-                    LDI     0
-                    POKE    videoTop                            ; restore full video output
-                    
-                    LDI     1
-                    STW     graphicsMode
-                    LDWI    scanlineMode
-                    CALL    giga_vAC                            ; restore graphics mode
                     POP
                     RET
 

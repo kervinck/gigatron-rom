@@ -741,14 +741,38 @@ namespace Keywords
 
     bool keywordCLS(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        if(Assembler::getUseOpcodeCALLI())
+        if(codeLine._tokens.size() > 2)
         {
-            Compiler::emitVcpuAsm("CALLI", "clearVertBlinds", false, codeLineIndex);
+            fprintf(stderr, "Compiler::keywordCLS() : Syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        if(codeLine._tokens.size() == 2)
+        {
+            Expression::Numeric param;
+            uint32_t expressionType = parseExpression(codeLine, codeLineIndex, codeLine._tokens[1], param);
+            Compiler::emitVcpuAsm("STW", "clsAddress", false, codeLineIndex);
+            if(Assembler::getUseOpcodeCALLI())
+            {
+                Compiler::emitVcpuAsm("CALLI", "clearScreen", false, codeLineIndex);
+            }
+            else
+            {
+                Compiler::emitVcpuAsm("LDWI", "clearScreen", false, codeLineIndex);
+                Compiler::emitVcpuAsm("CALL", "giga_vAC",        false, codeLineIndex);
+            }
         }
         else
         {
-            Compiler::emitVcpuAsm("LDWI", "clearVertBlinds", false, codeLineIndex);
-            Compiler::emitVcpuAsm("CALL", "giga_vAC",        false, codeLineIndex);
+            if(Assembler::getUseOpcodeCALLI())
+            {
+                Compiler::emitVcpuAsm("CALLI", "clearVertBlinds", false, codeLineIndex);
+            }
+            else
+            {
+                Compiler::emitVcpuAsm("LDWI", "clearVertBlinds", false, codeLineIndex);
+                Compiler::emitVcpuAsm("CALL", "giga_vAC",        false, codeLineIndex);
+            }
         }
 
         return true;
@@ -1839,7 +1863,19 @@ namespace Keywords
             Compiler::VasmLine* vasm = &Compiler::getCodeLines()[codeLine]._vasm[jmpIndex];
             switch(conditionType)
             {
-                case Expression::BooleanCC: vasm->_code = "LDWI" + std::string(OPCODE_TRUNC_SIZE - (sizeof("LDWI")-1), ' ') + Compiler::getNextInternalLabel(); break;
+                case Expression::BooleanCC: 
+                {
+                    if(Assembler::getUseOpcodeCALLI())
+                    {
+                        vasm->_code = "CALLI" + std::string(OPCODE_TRUNC_SIZE - (sizeof("CALLI")-1), ' ') + Compiler::getNextInternalLabel();
+                    }
+                    else
+                    {
+                        vasm->_code = "LDWI" + std::string(OPCODE_TRUNC_SIZE - (sizeof("LDWI")-1), ' ') + Compiler::getNextInternalLabel();
+                    }
+                }
+                break;
+
                 case Expression::NormalCC:  addLabelToJump(Compiler::getCodeLines()[codeLine]._vasm, Compiler::getNextInternalLabel());                         break;
                 case Expression::FastCC:    addLabelToJump(Compiler::getCodeLines()[codeLine]._vasm, Compiler::getNextInternalLabel());                         break;
             }

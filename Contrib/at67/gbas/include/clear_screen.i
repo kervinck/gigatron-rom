@@ -7,8 +7,8 @@ breset              EQU     register8
 top                 EQU     register9
 bot                 EQU     register10
 vramAddr            EQU     register11
-videoTop            EQU     register11
 evenAddr            EQU     register12
+clsAddress          EQU     register13
     
     
 %SUB                resetVideoTable
@@ -28,16 +28,6 @@ resetVT_loop        CALL    realTimeProcAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
-                    
-                    LDWI    giga_videoTop
-                    STW     videoTop
-                    LDI     0
-                    POKE    videoTop                            ; restore full video output
-                    
-                    LDI     1
-                    STW     graphicsMode
-                    LDWI    scanlineMode
-                    CALL    giga_vAC                            ; restore graphics mode
                     POP
                     RET
 %ENDS   
@@ -71,9 +61,12 @@ clearScreen         PUSH
                     LDWI    initClearFuncs
                     CALL    giga_vAC
                     
-                    LDWI    giga_vram                           ; top line
+                    LDW     clsAddress
                     STW     giga_sysArg4
-    
+                    LDWI    (giga_yres - 1) * 256
+                    ADDW    clsAddress
+                    STW     clsAddress                          ; end address
+
 clearS_loop         CALL    realTimeProcAddr
                     LD      giga_sysArg4
                     SYS     0xFF                                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
@@ -94,9 +87,9 @@ clearS_loop         CALL    realTimeProcAddr
                     LDI     0
                     ST      giga_sysArg4
                     INC     giga_sysArg4 + 1                    ; next top line
-                    LD      giga_sysArg4 + 1
-                    SUBI    giga_yres + 8
-                    BLT     clearS_loop
+                    LDW     giga_sysArg4
+                    SUBW    clsAddress
+                    BLE     clearS_loop
                     POP
                     RET
 %ENDS   
@@ -107,7 +100,7 @@ clearVertBlinds     PUSH
                     LDWI    initClearFuncs
                     CALL    giga_vAC
 
-                    LDWI    giga_vram                           ; top line
+                    LDWI    giga_vram
                     STW     giga_sysArg4
                     LD      giga_sysArg4 + 1
                     ST      top

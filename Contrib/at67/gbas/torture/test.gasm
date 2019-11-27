@@ -31,11 +31,11 @@ highByteMask        EQU                     register0 + 0x2C
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_init               EQU                     0x0242
-_324532453245435435 EQU                     0x024a
-_10                 EQU                     0x024f
-_31                 EQU                     0x02bb
-_32                 EQU                     0x02d6
+_init               EQU                     0x0240
+_324532453245435435 EQU                     0x0248
+_10                 EQU                     0x024d
+_31                 EQU                     0x02b9
+_32                 EQU                     0x02d4
 _33                 EQU                     0x0302
 _34                 EQU                     0x031d
 _35                 EQU                     0x0338
@@ -46,8 +46,8 @@ _page_0x0300        EQU                     0x0300
 _page_0x0400        EQU                     0x0400
 _page_0x0500        EQU                     0x0500
 _page_0x0600        EQU                     0x0600
-_end_0x06f3         EQU                     0x06c5
-_end_0x06f5         EQU                     0x06c7
+_end_0x06f1         EQU                     0x06c5
+_end_0x06f3         EQU                     0x06c7
 
 ; Variables
 _a                  EQU                     0x0030
@@ -584,9 +584,9 @@ _page_0x0600        LDW                     0xde
 _40                 LDWI                    _10
                     CALL                    giga_vAC                        ; goto 10
 
-_end_0x06f3         BRA                     _end_0x06f3                     ; end
+_end_0x06f1         BRA                     _end_0x06f1                     ; end
 
-_end_0x06f5         BRA                     _end_0x06f5                     ; END
+_end_0x06f3         BRA                     _end_0x06f3                     ; END
 
 
 
@@ -698,8 +698,8 @@ breset              EQU     register8
 top                 EQU     register9
 bot                 EQU     register10
 vramAddr            EQU     register11
-videoTop            EQU     register11
 evenAddr            EQU     register12
+clsAddress          EQU     register13
     
     
                     ; resets video table pointers
@@ -718,11 +718,6 @@ resetVT_loop        CALL    realTimeProcAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
-                    
-                    LDWI    giga_videoTop
-                    STW     videoTop
-                    LDI     0
-                    POKE    videoTop                            ; restore full video output
                     POP
                     RET
 
@@ -915,6 +910,7 @@ printC_slice        ST      textSlice
                     BLT     printC_pop
                     LDWI    newLineScroll                   ; next row, scroll at bottom
                     CALL    giga_vAC
+                    
 printC_pop          POP
 
 printC_exit         RET

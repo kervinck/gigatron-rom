@@ -31,26 +31,26 @@ highByteMask        EQU                     register0 + 0x2C
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_1                  EQU                     0x0242
-_2                  EQU                     0x0242
-_3                  EQU                     0x0242
-_10                 EQU                     0x0242
-_19                 EQU                     0x0242
-_20                 EQU                     0x024a
-_29                 EQU                     0x0242
-_30                 EQU                     0x025c
-_40                 EQU                     0x026e
-_50                 EQU                     0x02c7
-_60                 EQU                     0x02d1
-_end_0x031e         EQU                     0x02d6
+_1                  EQU                     0x0240
+_2                  EQU                     0x0240
+_3                  EQU                     0x0240
+_10                 EQU                     0x0240
+_19                 EQU                     0x0240
+_20                 EQU                     0x0248
+_29                 EQU                     0x0240
+_30                 EQU                     0x025a
+_40                 EQU                     0x026c
+_50                 EQU                     0x02c5
+_60                 EQU                     0x02cf
+_end_0x0319         EQU                     0x02d1
 
 ; Variables
 _x                  EQU                     0x0030
 _y                  EQU                     0x0032
 
 ; Strings
-_str_0x7ea0          EQU                     0x7ea0
-_str_0x7ea0          DB                      9 'Gigatron!'
+_str_0xff00          EQU                     0xff00
+_str_0xff00          DB                      9 'Gigatron!'
 
 ; Define Bytes
 
@@ -73,10 +73,10 @@ _10                 LDI                     107
 
 _20                 Rand                    
                     ANDI                    63
-                    STW                     0xc2
+                    STW                     0xc0
                     LDWI                    162
                     STW                     register0
-                    LDW                     0xc2
+                    LDW                     0xc0
                     POKE                    register0                       ; poke 162,rnd(0) AND 63
 
 _30                 Rand                    
@@ -120,12 +120,11 @@ _40                 Rand
                     LDWI                    atTextCursor
                     CALL                    giga_vAC                        ; at (rnd(0) AND &h3F) + (rnd(0) AND &h1F) + (rnd(0) AND &h07) + (rnd(0) AND &h07), (rnd(0) AND &h3F) + (rnd(0) AND &h1F) + (rnd(0) AND &h0F) + (rnd(0) AND &h03)
 
-_50                 PrintString             _str_0x7ea0                     ; print "Gigatron!";
+_50                 PrintString             _str_0xff00                     ; print "Gigatron!";
 
-_60                 LDWI                    _20
-                    CALL                    giga_vAC                        ; goto 20
+_60                 BRA                     _20                             ; goto &20
 
-_end_0x031e         BRA                     _end_0x031e                     ; END
+_end_0x0319         BRA                     _end_0x0319                     ; END
 
 
 
@@ -135,22 +134,22 @@ _end_0x031e         BRA                     _end_0x031e                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7eaa
-convertEqOp         EQU     0x7eb3
-convertNeOp         EQU     0x7ebc
-convertLeOp         EQU     0x7ec5
-convertGeOp         EQU     0x7ece
-convertLtOp         EQU     0x7ed7
-convertGtOp         EQU     0x7ee0
-rand16bit           EQU     0x7ee9
-resetVideoTable     EQU     0x7cc0
-initClearFuncs      EQU     0x7da0
-clearCursorRow      EQU     0x7ba0
-printInit           EQU     0x7aa0
-printText           EQU     0x7ca0
-printChar           EQU     0x79a0
-atTextCursor        EQU     0x7dc3
-newLineScroll       EQU     0x78a0
+realTimeProc        EQU     0xff0a
+convertEqOp         EQU     0xff13
+convertNeOp         EQU     0xff1c
+convertLeOp         EQU     0xff25
+convertGeOp         EQU     0xff2e
+convertLtOp         EQU     0xff37
+convertGtOp         EQU     0xff40
+rand16bit           EQU     0xff6c
+resetVideoTable     EQU     0xffc1
+initClearFuncs      EQU     0xff49
+clearCursorRow      EQU     0xfe00
+printInit           EQU     0xffe0
+printText           EQU     0xffa1
+printChar           EQU     0xfe49
+atTextCursor        EQU     0xff74
+newLineScroll       EQU     0xfea1
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -254,8 +253,8 @@ breset              EQU     register8
 top                 EQU     register9
 bot                 EQU     register10
 vramAddr            EQU     register11
-videoTop            EQU     register11
 evenAddr            EQU     register12
+clsAddress          EQU     register13
     
     
                     ; resets video table pointers
@@ -274,11 +273,6 @@ resetVT_loop        CALL    realTimeProcAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
-                    
-                    LDWI    giga_videoTop
-                    STW     videoTop
-                    LDI     0
-                    POKE    videoTop                            ; restore full video output
                     POP
                     RET
 
@@ -409,6 +403,7 @@ printC_slice        ST      textSlice
                     BLT     printC_pop
                     LDWI    newLineScroll                   ; next row, scroll at bottom
                     CALL    giga_vAC
+                    
 printC_pop          POP
 
 printC_exit         RET
@@ -479,8 +474,9 @@ clearCR_loopx       SUBI    4                               ; loop is unrolled 4
                     LD      clearLoop
                     SUBI    1
                     BNE     clearCR_loopy
+
                     LDWI    printInit
-                    CALL    giga_vAC                       ; re-initialise the SYS registers
+                    CALL    giga_vAC                        ; re-initialise the SYS registers
                     POP
                     RET
 
@@ -498,9 +494,6 @@ newLS_cont0         PUSH
                     LDWI    0x8000
                     ANDW    miscFlags                       ; on bottom row flag
                     BNE     newLS_cont1
-                    LD      giga_sysArg4 + 1                ; need to do this here as printInit
-                    ADDI    8                               ; is only called at the start of a string
-                    ST      giga_sysArg4 + 1
                     LD      cursorXY + 1
                     ADDI    8
                     ST      cursorXY + 1
@@ -534,6 +527,9 @@ newLS_adjust        ADDI    8
                     LDWI    0x8000
                     ORW     miscFlags
                     STW     miscFlags                       ; set on bottom row flag
-newLS_exit          POP
+                    
+newLS_exit          LDWI    printInit
+                    CALL    giga_vAC                        ; re-initialise the SYS registers
+                    POP
                     RET
 

@@ -31,45 +31,45 @@ highByteMask        EQU                     register0 + 0x2C
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_loop               EQU                     0x02aa
-_50                 EQU                     0x02c1
-_51                 EQU                     0x02d1
-_53                 EQU                     0x02e1
-_54                 EQU                     0x0302
-_55                 EQU                     0x0312
-_101                EQU                     0x0322
-_105                EQU                     0x0332
-_113                EQU                     0x0342
-_114                EQU                     0x0352
-_116                EQU                     0x0362
-_117                EQU                     0x0372
-_119                EQU                     0x0382
-_121                EQU                     0x0392
-_note               EQU                     0x03a2
-_next_0x024e        EQU                     0x024c
+_loop               EQU                     0x0285
+_50                 EQU                     0x029c
+_51                 EQU                     0x02ac
+_53                 EQU                     0x02bc
+_54                 EQU                     0x02cc
+_55                 EQU                     0x02dc
+_101                EQU                     0x02ec
+_105                EQU                     0x030f
+_113                EQU                     0x031f
+_114                EQU                     0x032f
+_116                EQU                     0x033f
+_117                EQU                     0x034f
+_119                EQU                     0x035f
+_121                EQU                     0x036f
+_note               EQU                     0x037f
 _page_0x0300        EQU                     0x0300
-_end_0x03b5         EQU                     0x03bc
+_next_0x0375        EQU                     0x0384
+_end_0x03ae         EQU                     0x03b7
 
 ; Variables
 _a                  EQU                     0x0030
 _b                  EQU                     0x0032
-_c                  EQU                     0x0034
-_p                  EQU                     0x0036
-_k                  EQU                     0x0038
+_p                  EQU                     0x0034
+_k                  EQU                     0x0036
+_c                  EQU                     0x0038
 
 ; Strings
-_str_0xff00          EQU                     0xff00
-_str_0xff00          DB                      12 ' 2 3   5 6 7'
-_str_0xff0d          EQU                     0xff0d
-_str_0xff0d          DB                      15 'Q W E R T Y U I'
+_str_0x7ea0          EQU                     0x7ea0
+_str_0x7ea0          DB                      12 ' 2 3   5 6 7'
+_str_0x7ead          EQU                     0x7ead
+_str_0x7ead          DB                      15 'Q W E R T Y U I'
 
 ; Define Bytes
 
 ; Lookup Tables
-_lut_numericLabs    EQU                     0xfe99
+_lut_numericLabs    EQU                     0x7cda
 _lut_numericLabs    DW                      50 51 53 54 55 101 105 113 114 116 117 119 121 -1
-_lut_numericAddrs   EQU                     0xfeb5
-_lut_numericAddrs   DW                      0x02c1 0x02d1 0x02e1 0x0302 0x0312 0x0322 0x0332 0x0342 0x0352 0x0362 0x0372 0x0382 0x0392 
+_lut_numericAddrs   EQU                     0x7ada
+_lut_numericAddrs   DW                      0x029c 0x02ac 0x02bc 0x02cc 0x02dc 0x02ec 0x030f 0x031f 0x032f 0x033f 0x034f 0x035f 0x036f 
 
 ; Code
 _entryPoint_        InitRealTimeProc        
@@ -83,27 +83,12 @@ _entryPoint_        InitRealTimeProc
 
                     LDI                     0
                     STW                     _a
-                    STW                     _b                              ; a=0:b=a
-
-                    LDI                     1
-                    STW                     _c                              ; for c=1 to 4
-
-_next_0x024e        LD                      _c
-                    ST                      0xc0 + 1
-                    LDW                     0xc0
-                    ANDW                    highByteMask
-                    ADDI                    252
-                    STW                     _p                              ; p=(c LSL 8)+252
-
+                    STW                     _b
                     LDI                     0
-                    POKE                    _p
-                    LDW                     _p
-                    ADDI                    1
-                    STW                     0xc0
-                    LDI                     0
-                    POKE                    0xc0                            ; poke p,0:poke p+1,0
+                    STW                     _p                              ; a=0 : b=a : p=0
 
-                    ForNextLoopUp           _c _next_0x024e 4               ; next c
+                    LDWI                    _note
+                    CALL                    giga_vAC                        ; gosub note
 
                     LDI                     2
                     STW                     graphicsMode
@@ -111,11 +96,11 @@ _next_0x024e        LD                      _c
                     LDWI                    clearVertBlinds
                     CALL                    giga_vAC                        ; mode 2:cls
 
-                    PrintString             _str_0xff00
+                    PrintString             _str_0x7ea0
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print " 2 3   5 6 7"
 
-                    PrintString             _str_0xff0d
+                    PrintString             _str_0x7ead
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print "Q W E R T Y U I"
 
@@ -127,7 +112,7 @@ _next_0x024e        LD                      _c
 
 _loop               LDI                     0x0f
                     PEEK                    
-                    STW                     _k                              ; k=peek(15):'serialRaw
+                    STW                     _k                              ; k=peek(15) : 'serialRaw
 
                     LDW                     _k
                     STW                     numericLabel
@@ -147,7 +132,7 @@ _50                 PUSH
                     LDWI                    _note
                     CALL                    giga_vAC
                     POP                     
-                    RET                                                     ; a=11 :b=9 :gosub note:return
+                    RET                                                     ; a=11  : b=9  : gosub note : return
 
 _51                 PUSH                    
                     LDI                     25
@@ -157,7 +142,7 @@ _51                 PUSH
                     LDWI                    _note
                     CALL                    giga_vAC
                     POP                     
-                    RET                                                     ; a=25 :b=10:gosub note:return
+                    RET                                                     ; a=25  : b=10 : gosub note : return
 
 _53                 PUSH                    
                     LDI                     16
@@ -167,12 +152,8 @@ _53                 PUSH
                     LDWI                    _note
                     CALL                    giga_vAC
                     POP                     
-                    RET                                                     ; a=16 :b=12:gosub note:return
+                    RET                                                     ; a=16  : b=12 : gosub note : return
 
-                    STW                     0xde
-                    LDWI                    _page_0x0300
-                    CALL                    giga_vAC
-_page_0x0300        LDW                     0xde
 _54                 PUSH                    
                     LDI                     78
                     STW                     _a
@@ -181,7 +162,7 @@ _54                 PUSH
                     LDWI                    _note
                     CALL                    giga_vAC
                     POP                     
-                    RET                                                     ; a=78 :b=13:gosub note:return
+                    RET                                                     ; a=78  : b=13 : gosub note : return
 
 _55                 PUSH                    
                     LDI                     35
@@ -191,17 +172,21 @@ _55                 PUSH
                     LDWI                    _note
                     CALL                    giga_vAC
                     POP                     
-                    RET                                                     ; a=35 :b=15:gosub note:return
+                    RET                                                     ; a=35  : b=15 : gosub note : return
 
 _101                PUSH                    
                     LDI                     103
+                    STW                     0xde
+                    LDWI                    _page_0x0300
+                    CALL                    giga_vAC
+_page_0x0300        LDW                     0xde
                     STW                     _a
                     LDI                     10
                     STW                     _b
                     LDWI                    _note
                     CALL                    giga_vAC
                     POP                     
-                    RET                                                     ; a=103:b=10:gosub note:return
+                    RET                                                     ; a=103 : b=10 : gosub note : return
 
 _105                PUSH                    
                     LDI                     19
@@ -211,7 +196,7 @@ _105                PUSH
                     LDWI                    _note
                     CALL                    giga_vAC
                     POP                     
-                    RET                                                     ; a=19 :b=17:gosub note:return
+                    RET                                                     ; a=19  : b=17 : gosub note : return
 
 _113                PUSH                    
                     LDI                     73
@@ -221,7 +206,7 @@ _113                PUSH
                     LDWI                    _note
                     CALL                    giga_vAC
                     POP                     
-                    RET                                                     ; a=73 :b=8 :gosub note:return
+                    RET                                                     ; a=73  : b=8  : gosub note : return
 
 _114                PUSH                    
                     LDI                     57
@@ -231,7 +216,7 @@ _114                PUSH
                     LDWI                    _note
                     CALL                    giga_vAC
                     POP                     
-                    RET                                                     ; a=57 :b=11:gosub note:return
+                    RET                                                     ; a=57  : b=11 : gosub note : return
 
 _116                PUSH                    
                     LDI                     108
@@ -241,7 +226,7 @@ _116                PUSH
                     LDWI                    _note
                     CALL                    giga_vAC
                     POP                     
-                    RET                                                     ; a=108:b=12:gosub note:return
+                    RET                                                     ; a=108 : b=12 : gosub note : return
 
 _117                PUSH                    
                     LDI                     23
@@ -251,7 +236,7 @@ _117                PUSH
                     LDWI                    _note
                     CALL                    giga_vAC
                     POP                     
-                    RET                                                     ; a=23 :b=16:gosub note:return
+                    RET                                                     ; a=23  : b=16 : gosub note : return
 
 _119                PUSH                    
                     LDI                     80
@@ -261,7 +246,7 @@ _119                PUSH
                     LDWI                    _note
                     CALL                    giga_vAC
                     POP                     
-                    RET                                                     ; a=80 :b=9 :gosub note:return
+                    RET                                                     ; a=80  : b=9  : gosub note : return
 
 _121                PUSH                    
                     LDI                     53
@@ -271,16 +256,25 @@ _121                PUSH
                     LDWI                    _note
                     CALL                    giga_vAC
                     POP                     
-                    RET                                                     ; a=53 :b=14:gosub note:return
+                    RET                                                     ; a=53  : b=14 : gosub note : return
 
 _note               PUSH                    
+                    LDI                     1
+                    STW                     _c
+_next_0x0375        LD                      _c
+                    ST                      0xc0 + 1
+                    LDW                     0xc0
+                    ANDW                    highByteMask
+                    ADDI                    252
+                    STW                     _p
                     LDW                     _a
                     POKE                    _p
                     LDW                     _p
                     ADDI                    1
-                    STW                     0xc0
+                    STW                     0xc2
                     LDW                     _b
-                    POKE                    0xc0                            ; poke p,a:poke p+1,b
+                    POKE                    0xc2
+                    ForNextLoopUp           _c _next_0x0375 4               ; for c=1 to 4 : p=(c LSL 8)+252 : poke p,a : poke p+1,b : next c
 
                     LDWI                    44
                     STW                     register0
@@ -290,7 +284,7 @@ _note               PUSH
                     POP                     
                     RET                                                     ; return
 
-_end_0x03b5         BRA                     _end_0x03b5                     ; END
+_end_0x03ae         BRA                     _end_0x03ae                     ; END
 
 
 
@@ -300,23 +294,23 @@ _end_0x03b5         BRA                     _end_0x03b5                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0xff1d
-convertEqOp         EQU     0xff26
-convertNeOp         EQU     0xff2f
-convertLeOp         EQU     0xff38
-convertGeOp         EQU     0xff41
-convertLtOp         EQU     0xff4a
-convertGtOp         EQU     0xff53
-gosubNumericLabel   EQU     0xfe5f
-scanlineMode        EQU     0xff7f
-resetVideoTable     EQU     0xfecf
-initClearFuncs      EQU     0xff5c
-clearVertBlinds     EQU     0xff93
-clearCursorRow      EQU     0xfd00
-printInit           EQU     0xfd49
-printText           EQU     0xffcd
-printChar           EQU     0xfd64
-newLineScroll       EQU     0xfe00
+realTimeProc        EQU     0x7ebd
+convertEqOp         EQU     0x7ec6
+convertNeOp         EQU     0x7ecf
+convertLeOp         EQU     0x7ed8
+convertGeOp         EQU     0x7ee1
+convertLtOp         EQU     0x7eea
+convertGtOp         EQU     0x7ef3
+gosubNumericLabel   EQU     0x7aa0
+scanlineMode        EQU     0x7dc3
+resetVideoTable     EQU     0x79a0
+initClearFuncs      EQU     0x7da0
+clearVertBlinds     EQU     0x7ca0
+clearCursorRow      EQU     0x78a0
+printInit           EQU     0x79bf
+printText           EQU     0x7dd7
+printChar           EQU     0x77a0
+newLineScroll       EQU     0x7ba0
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -488,8 +482,8 @@ breset              EQU     register8
 top                 EQU     register9
 bot                 EQU     register10
 vramAddr            EQU     register11
-videoTop            EQU     register11
 evenAddr            EQU     register12
+clsAddress          EQU     register13
     
     
                     ; resets video table pointers
@@ -508,11 +502,6 @@ resetVT_loop        CALL    realTimeProcAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
-                    
-                    LDWI    giga_videoTop
-                    STW     videoTop
-                    LDI     0
-                    POKE    videoTop                            ; restore full video output
                     POP
                     RET
 
@@ -544,7 +533,7 @@ clearVertBlinds     PUSH
                     LDWI    initClearFuncs
                     CALL    giga_vAC
 
-                    LDWI    giga_vram                           ; top line
+                    LDWI    giga_vram
                     STW     giga_sysArg4
                     LD      giga_sysArg4 + 1
                     ST      top
@@ -678,6 +667,7 @@ printC_slice        ST      textSlice
                     BLT     printC_pop
                     LDWI    newLineScroll                   ; next row, scroll at bottom
                     CALL    giga_vAC
+                    
 printC_pop          POP
 
 printC_exit         RET
@@ -722,8 +712,9 @@ clearCR_loopx       SUBI    4                               ; loop is unrolled 4
                     LD      clearLoop
                     SUBI    1
                     BNE     clearCR_loopy
+
                     LDWI    printInit
-                    CALL    giga_vAC                       ; re-initialise the SYS registers
+                    CALL    giga_vAC                        ; re-initialise the SYS registers
                     POP
                     RET
 
@@ -741,9 +732,6 @@ newLS_cont0         PUSH
                     LDWI    0x8000
                     ANDW    miscFlags                       ; on bottom row flag
                     BNE     newLS_cont1
-                    LD      giga_sysArg4 + 1                ; need to do this here as printInit
-                    ADDI    8                               ; is only called at the start of a string
-                    ST      giga_sysArg4 + 1
                     LD      cursorXY + 1
                     ADDI    8
                     ST      cursorXY + 1
@@ -777,6 +765,9 @@ newLS_adjust        ADDI    8
                     LDWI    0x8000
                     ORW     miscFlags
                     STW     miscFlags                       ; set on bottom row flag
-newLS_exit          POP
+                    
+newLS_exit          LDWI    printInit
+                    CALL    giga_vAC                        ; re-initialise the SYS registers
+                    POP
                     RET
 

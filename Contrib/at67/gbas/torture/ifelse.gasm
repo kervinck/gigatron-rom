@@ -31,25 +31,25 @@ highByteMask        EQU                     register0 + 0x2C
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_loop               EQU                     0x0247
-_elseif_0x0272      EQU                     0x026c
-_elseif_0x0296      EQU                     0x028c
-_else_0x02ba        EQU                     0x02ac
-_endif_0x02d1       EQU                     0x02c3
-_end_0x02d6         EQU                     0x02c8
+_loop               EQU                     0x0245
+_elseif_0x0270      EQU                     0x026a
+_elseif_0x0294      EQU                     0x028a
+_else_0x02b8        EQU                     0x02aa
+_endif_0x02cf       EQU                     0x02c1
+_end_0x02d4         EQU                     0x02c6
 
 ; Variables
 _p                  EQU                     0x0030
 
 ; Strings
-_str_0x7ea0          EQU                     0x7ea0
-_str_0x7ea0          DB                      5 'one  '
-_str_0x7ea6          EQU                     0x7ea6
-_str_0x7ea6          DB                      5 'two  '
-_str_0x7eac          EQU                     0x7eac
-_str_0x7eac          DB                      5 'three'
-_str_0x7eb2          EQU                     0x7eb2
-_str_0x7eb2          DB                      5 'none '
+_str_0xff00          EQU                     0xff00
+_str_0xff00          DB                      5 'one  '
+_str_0xff06          EQU                     0xff06
+_str_0xff06          DB                      5 'two  '
+_str_0xff0c          EQU                     0xff0c
+_str_0xff0c          DB                      5 'three'
+_str_0xff12          EQU                     0xff12
+_str_0xff12          DB                      5 'none '
 
 ; Define Bytes
 
@@ -74,7 +74,7 @@ _loop               LDI                     0x0f
 
                     LDW                     _p
                     SUBI                    49
-                    BNE                     _elseif_0x0272                  ; if p &&= 49
+                    BNE                     _elseif_0x0270                  ; if p &&= 49
 
                     LDI                     2
                     ST                      cursorXY
@@ -82,12 +82,12 @@ _loop               LDI                     0x0f
                     ST                      cursorXY + 1
                     LDWI                    atTextCursor
                     CALL                    giga_vAC
-                    PrintString             _str_0x7ea0
-                    BRA                     _endif_0x02d1                   ; at 2,40 : print "one  ";
+                    PrintString             _str_0xff00
+                    BRA                     _endif_0x02cf                   ; at 2,40 : print "one  ";
 
-_elseif_0x0272      LDW                     _p
+_elseif_0x0270      LDW                     _p
                     SUBI                    50
-                    BNE                     _elseif_0x0296                  ; elseif p &&= 50
+                    BNE                     _elseif_0x0294                  ; elseif p &&= 50
 
                     LDI                     2
                     ST                      cursorXY
@@ -95,12 +95,12 @@ _elseif_0x0272      LDW                     _p
                     ST                      cursorXY + 1
                     LDWI                    atTextCursor
                     CALL                    giga_vAC
-                    PrintString             _str_0x7ea6
-                    BRA                     _endif_0x02d1                   ; at 2,40 : print "two  ";
+                    PrintString             _str_0xff06
+                    BRA                     _endif_0x02cf                   ; at 2,40 : print "two  ";
 
-_elseif_0x0296      LDW                     _p
+_elseif_0x0294      LDW                     _p
                     SUBI                    51
-                    BNE                     _else_0x02ba                    ; elseif p &&= 51
+                    BNE                     _else_0x02b8                    ; elseif p &&= 51
 
                     LDI                     2
                     ST                      cursorXY
@@ -108,21 +108,21 @@ _elseif_0x0296      LDW                     _p
                     ST                      cursorXY + 1
                     LDWI                    atTextCursor
                     CALL                    giga_vAC
-                    PrintString             _str_0x7eac
-                    BRA                     _endif_0x02d1                   ; at 2,40 : print "three";
+                    PrintString             _str_0xff0c
+                    BRA                     _endif_0x02cf                   ; at 2,40 : print "three";
 
-_else_0x02ba        LDI                     2
+_else_0x02b8        LDI                     2
                     ST                      cursorXY
                     LDI                     40
                     ST                      cursorXY + 1
                     LDWI                    atTextCursor
                     CALL                    giga_vAC
-                    PrintString             _str_0x7eb2                     ; at 2,40 : print "none ";
+                    PrintString             _str_0xff12                     ; at 2,40 : print "none ";
 
-_endif_0x02d1       LDWI                    _loop
+_endif_0x02cf       LDWI                    _loop
                     CALL                    giga_vAC                        ; goto loop
 
-_end_0x02d6         BRA                     _end_0x02d6                     ; END
+_end_0x02d4         BRA                     _end_0x02d4                     ; END
 
 
 
@@ -132,23 +132,22 @@ _end_0x02d6         BRA                     _end_0x02d6                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7eb8
-convertEqOp         EQU     0x7ec1
-convertNeOp         EQU     0x7eca
-convertLeOp         EQU     0x7ed3
-convertGeOp         EQU     0x7edc
-convertLtOp         EQU     0x7ee5
-convertGtOp         EQU     0x7eee
-scanlineMode        EQU     0x7ba0
-resetVideoTable     EQU     0x7bb4
-initClearFuncs      EQU     0x7da0
-clearVertBlinds     EQU     0x7dc3
-clearCursorRow      EQU     0x7aa0
-printInit           EQU     0x7be5
-printText           EQU     0x7ccd
-printChar           EQU     0x79a0
-atTextCursor        EQU     0x7ca0
-newLineScroll       EQU     0x78a0
+realTimeProc        EQU     0xff18
+convertEqOp         EQU     0xff21
+convertNeOp         EQU     0xff2a
+convertLeOp         EQU     0xff33
+convertGeOp         EQU     0xff3c
+convertLtOp         EQU     0xff45
+convertGtOp         EQU     0xff4e
+resetVideoTable     EQU     0xffe1
+initClearFuncs      EQU     0xff57
+clearVertBlinds     EQU     0xff7a
+clearCursorRow      EQU     0xfe20
+printInit           EQU     0xfe69
+printText           EQU     0xfe00
+printChar           EQU     0xfe84
+atTextCursor        EQU     0xffb4
+newLineScroll       EQU     0xfd00
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -226,55 +225,6 @@ convertGt_1         LDI     1
 
 
 
-
-; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
-graphicsMode        EQU     register0
-waitVBlankNum       EQU     register0
-
-drawHLine_x1        EQU     register0
-drawHLine_y1        EQU     register1
-drawHLine_x2        EQU     register2
-drawHLine_x4        EQU     register3
-
-drawVLine_x1        EQU     register0
-drawVLine_y1        EQU     register1
-drawVLine_y2        EQU     register2
-drawVLine_y8        EQU     register3
-
-drawLine_x1         EQU     register0
-drawLine_y1         EQU     register1
-drawLine_x2         EQU     register2
-drawLine_y2         EQU     register3
-drawLine_xy1        EQU     register0
-drawLine_xy2        EQU     register1
-drawLine_dxy1       EQU     register2
-drawLine_dxy2       EQU     register3
-drawLine_dx1        EQU     register4
-drawLine_dy1        EQU     register5
-drawLine_dx2        EQU     register6
-drawLine_dy2        EQU     register7
-drawLine_sx         EQU     register8
-drawLine_sy         EQU     register9
-drawLine_h          EQU     register10
-drawLine_num        EQU     register11
-drawLine_count      EQU     register12
-drawLine_addr       EQU     register13
-drawLine_tmp        EQU     register14
-    
-    
-scanlineMode        LDW     giga_romType
-                    ANDI    0xF8
-                    SUBI    romTypeValue_ROMv2
-                    BGE     scanlineM_cont
-                    RET
-    
-scanlineM_cont      LDWI    SYS_SetMode_v2_80
-                    STW     giga_sysFn
-                    LDW     graphicsMode
-                    SYS     0xE6                ; 270 - max(14,80/2)
-                    RET
-
-
 ; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 xreset              EQU     register0
 xcount              EQU     register1
@@ -284,8 +234,8 @@ breset              EQU     register8
 top                 EQU     register9
 bot                 EQU     register10
 vramAddr            EQU     register11
-videoTop            EQU     register11
 evenAddr            EQU     register12
+clsAddress          EQU     register13
     
     
                     ; resets video table pointers
@@ -304,16 +254,6 @@ resetVT_loop        CALL    realTimeProcAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
-                    
-                    LDWI    giga_videoTop
-                    STW     videoTop
-                    LDI     0
-                    POKE    videoTop                            ; restore full video output
-                    
-                    LDI     1
-                    STW     graphicsMode
-                    LDWI    scanlineMode
-                    CALL    giga_vAC                            ; restore graphics mode
                     POP
                     RET
 
@@ -345,7 +285,7 @@ clearVertBlinds     PUSH
                     LDWI    initClearFuncs
                     CALL    giga_vAC
 
-                    LDWI    giga_vram                           ; top line
+                    LDWI    giga_vram
                     STW     giga_sysArg4
                     LD      giga_sysArg4 + 1
                     ST      top

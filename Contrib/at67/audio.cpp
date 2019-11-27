@@ -136,17 +136,8 @@ namespace Audio
 
     void playSample(void)
     {
-        double ratio = 1.0;
-        if(Timing::getFrameTime()) ratio = std::max(1.0, VSYNC_TIMING_60 / std::min(Timing::getFrameTime(), VSYNC_TIMING_60));
-
-        static double skip = 0.0;
-        uint64_t count = uint64_t(skip);
-        skip += 1.0 / ratio;
-        if(uint64_t(skip) > count)
-        {
-            uint16_t sample = (Cpu::getXOUT() & 0xf0) <<5;
-            SDL_QueueAudio(_audioDevice, &sample, 2);
-        }
+        uint16_t sample = (Cpu::getXOUT() & 0xf0) <<5;
+        SDL_QueueAudio(_audioDevice, &sample, 2);
     }
 
     void clearQueue(void)

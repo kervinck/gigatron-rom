@@ -31,16 +31,16 @@ highByteMask        EQU                     register0 + 0x2C
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_9                  EQU                     0x0242
-_10                 EQU                     0x025e
-_20                 EQU                     0x0271
-_31                 EQU                     0x0242
-_32                 EQU                     0x0242
-_33                 EQU                     0x0242
-_34                 EQU                     0x0242
-_35                 EQU                     0x0242
-_36                 EQU                     0x0242
-_end_0x0283         EQU                     0x027b
+_9                  EQU                     0x0240
+_10                 EQU                     0x025c
+_20                 EQU                     0x026f
+_31                 EQU                     0x0240
+_32                 EQU                     0x0240
+_33                 EQU                     0x0240
+_34                 EQU                     0x0240
+_35                 EQU                     0x0240
+_36                 EQU                     0x0240
+_end_0x0281         EQU                     0x0279
 
 ; Variables
 _P                  EQU                     0x0030
@@ -91,7 +91,7 @@ _20                 LDW                     _X
                     STW                     _X
                     BRA                     _10                             ; POKE R,X:X=X-1:GOTO &10
 
-_end_0x0283         BRA                     _end_0x0283                     ; END
+_end_0x0281         BRA                     _end_0x0281                     ; END
 
 
 
@@ -101,17 +101,17 @@ _end_0x0283         BRA                     _end_0x0283                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0xff00
-convertEqOp         EQU     0xff09
-convertNeOp         EQU     0xff12
-convertLeOp         EQU     0xff1b
-convertGeOp         EQU     0xff24
-convertLtOp         EQU     0xff2d
-convertGtOp         EQU     0xff36
-scanlineMode        EQU     0xff62
-waitVBlank          EQU     0xff76
-resetVideoTable     EQU     0xff91
-initClearFuncs      EQU     0xff3f
+realTimeProc        EQU     0x7ea0
+convertEqOp         EQU     0x7ea9
+convertNeOp         EQU     0x7eb2
+convertLeOp         EQU     0x7ebb
+convertGeOp         EQU     0x7ec4
+convertLtOp         EQU     0x7ecd
+convertGtOp         EQU     0x7ed6
+scanlineMode        EQU     0x7edf
+waitVBlank          EQU     0x7dc3
+resetVideoTable     EQU     0x7dde
+initClearFuncs      EQU     0x7da0
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -264,11 +264,12 @@ top                 EQU     register9
 bot                 EQU     register10
 vramAddr            EQU     register11
 evenAddr            EQU     register12
+clsAddress          EQU     register13
     
     
                     ; resets video table pointers
 resetVideoTable     PUSH
-                    LDWI    0x0008
+                    LDI     8
                     STW     vramAddr
                     LDWI    giga_videoTable
                     STW     evenAddr
@@ -278,10 +279,9 @@ resetVT_loop        CALL    realTimeProcAddr
                     DOKE    evenAddr
                     INC     evenAddr
                     INC     evenAddr
-    
                     INC     vramAddr
                     LD      vramAddr
-                    SUBI    giga_yres+8
+                    SUBI    giga_yres + 8
                     BLT     resetVT_loop
                     POP
                     RET

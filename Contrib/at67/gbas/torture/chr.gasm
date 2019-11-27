@@ -31,15 +31,15 @@ highByteMask        EQU                     register0 + 0x2C
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x025a
+_10                 EQU                     0x0258
 _20                 EQU                     0x0366
-_next_0x0262        EQU                     0x0262
-_next_0x0266        EQU                     0x0266
-_next_0x026a        EQU                     0x026a
-_next_0x02a0        EQU                     0x02a0
+_next_0x0260        EQU                     0x0260
+_next_0x0264        EQU                     0x0264
+_next_0x0268        EQU                     0x0268
+_next_0x029e        EQU                     0x029e
 _page_0x0300        EQU                     0x0300
-_next_0x0356        EQU                     0x0331
-_end_0x0390         EQU                     0x036b
+_next_0x0354        EQU                     0x0331
+_end_0x038e         EQU                     0x036b
 
 ; Variables
 _a                  EQU                     0x0030
@@ -261,13 +261,13 @@ _10                 LDI                     1
                     LDI                     0
                     STW                     _k                              ; for k = 0 to 1
 
-_next_0x0262        LDI                     0
+_next_0x0260        LDI                     0
                     STW                     _j                              ; for j = 0 to 1
 
-_next_0x0266        LDI                     0
+_next_0x0264        LDI                     0
                     STW                     _i                              ; for i = 0 to 1
 
-_next_0x026a        PrintString             _str_0x7ea0                     ; print "yahooowalllallllalalalwallla";
+_next_0x0268        PrintString             _str_0x7ea0                     ; print "yahooowalllallllalalalwallla";
 
                     PrintString             _str_0x7ebd
                     PrintString             _str_0x7ec1                     ; print "yes";" ";
@@ -278,7 +278,7 @@ _next_0x026a        PrintString             _str_0x7ea0                     ; pr
                     LDI                     32
                     STW                     _char                           ; for char = 32 to 127
 
-_next_0x02a0        LDW                     _a
+_next_0x029e        LDW                     _a
                     ADDI                    1
                     STW                     _a                              ; a = a + 1
 
@@ -298,17 +298,17 @@ _next_0x02a0        LDW                     _a
                     ADDW                    0xc0
                     PrintAcChar                                             ; print chr$(char+1 +a+a+a - 32*0 + 50/0 + a/0 + 3 - a -a -a -4 + j*0 + (k-k));
 
-                    ForNextLoopUp           _char _next_0x02a0 127          ; next char
+                    ForNextLoopUp           _char _next_0x029e 127          ; next char
 
-                    ForNextLoopUp           _i _next_0x026a 1               ; next i
+                    ForNextLoopUp           _i _next_0x0268 1               ; next i
 
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
-                    ForNextLoopUp           _j _next_0x0266 1               ; next j
+                    ForNextLoopUp           _j _next_0x0264 1               ; next j
 
-                    ForNextLoopUp           _k _next_0x0262 1               ; next k
+                    ForNextLoopUp           _k _next_0x0260 1               ; next k
 
                     PrintString             _str_0x7ec3
                     LDWI                    newLineScroll
@@ -317,13 +317,13 @@ _page_0x0300        LDW                     0xde
                     LDI                     0
                     STW                     _i                              ; for i = 0 to 6
 
-_next_0x0356        PrintString             _str_0x7ee6
+_next_0x0354        PrintString             _str_0x7ee6
                     PrintString             _str_0x7ec1
                     PrintVarInt16           _i
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print "dog";" ";i
 
-                    ForNextLoopUp           _i _next_0x0356 6               ; next i
+                    ForNextLoopUp           _i _next_0x0354 6               ; next i
 
                     LDWI                    clearVertBlinds
                     CALL                    giga_vAC                        ; cls
@@ -331,7 +331,7 @@ _next_0x0356        PrintString             _str_0x7ee6
 _20                 LDWI                    _10
                     CALL                    giga_vAC                        ; goto 10
 
-_end_0x0390         BRA                     _end_0x0390                     ; END
+_end_0x038e         BRA                     _end_0x038e                     ; END
 
 
 
@@ -348,20 +348,19 @@ convertLeOp         EQU     0x7da9
 convertGeOp         EQU     0x7db2
 convertLtOp         EQU     0x7dbb
 convertGtOp         EQU     0x7dc4
-scanlineMode        EQU     0x78da
-resetVideoTable     EQU     0x77a0
+resetVideoTable     EQU     0x78da
 initClearFuncs      EQU     0x7dcd
 clearVertBlinds     EQU     0x78a0
-clearCursorRow      EQU     0x76a0
+clearCursorRow      EQU     0x77a0
 resetAudio          EQU     0x7ca0
 playMidi            EQU     0x7ba0
-midiStartNote       EQU     0x75a0
-printInit           EQU     0x77d1
+midiStartNote       EQU     0x76a0
+printInit           EQU     0x76e2
 printText           EQU     0x7cd9
-printDigit          EQU     0x74a0
+printDigit          EQU     0x75a0
 printInt16          EQU     0x7aa0
 printChr            EQU     0x7df0
-printChar           EQU     0x73a0
+printChar           EQU     0x74a0
 newLineScroll       EQU     0x79a0
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
@@ -440,55 +439,6 @@ convertGt_1         LDI     1
 
 
 
-
-; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
-graphicsMode        EQU     register0
-waitVBlankNum       EQU     register0
-
-drawHLine_x1        EQU     register0
-drawHLine_y1        EQU     register1
-drawHLine_x2        EQU     register2
-drawHLine_x4        EQU     register3
-
-drawVLine_x1        EQU     register0
-drawVLine_y1        EQU     register1
-drawVLine_y2        EQU     register2
-drawVLine_y8        EQU     register3
-
-drawLine_x1         EQU     register0
-drawLine_y1         EQU     register1
-drawLine_x2         EQU     register2
-drawLine_y2         EQU     register3
-drawLine_xy1        EQU     register0
-drawLine_xy2        EQU     register1
-drawLine_dxy1       EQU     register2
-drawLine_dxy2       EQU     register3
-drawLine_dx1        EQU     register4
-drawLine_dy1        EQU     register5
-drawLine_dx2        EQU     register6
-drawLine_dy2        EQU     register7
-drawLine_sx         EQU     register8
-drawLine_sy         EQU     register9
-drawLine_h          EQU     register10
-drawLine_num        EQU     register11
-drawLine_count      EQU     register12
-drawLine_addr       EQU     register13
-drawLine_tmp        EQU     register14
-    
-    
-scanlineMode        LDW     giga_romType
-                    ANDI    0xF8
-                    SUBI    romTypeValue_ROMv2
-                    BGE     scanlineM_cont
-                    RET
-    
-scanlineM_cont      LDWI    SYS_SetMode_v2_80
-                    STW     giga_sysFn
-                    LDW     graphicsMode
-                    SYS     0xE6                ; 270 - max(14,80/2)
-                    RET
-
-
 ; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 xreset              EQU     register0
 xcount              EQU     register1
@@ -498,8 +448,8 @@ breset              EQU     register8
 top                 EQU     register9
 bot                 EQU     register10
 vramAddr            EQU     register11
-videoTop            EQU     register11
 evenAddr            EQU     register12
+clsAddress          EQU     register13
     
     
                     ; resets video table pointers
@@ -518,16 +468,6 @@ resetVT_loop        CALL    realTimeProcAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
-                    
-                    LDWI    giga_videoTop
-                    STW     videoTop
-                    LDI     0
-                    POKE    videoTop                            ; restore full video output
-                    
-                    LDI     1
-                    STW     graphicsMode
-                    LDWI    scanlineMode
-                    CALL    giga_vAC                            ; restore graphics mode
                     POP
                     RET
 
@@ -559,7 +499,7 @@ clearVertBlinds     PUSH
                     LDWI    initClearFuncs
                     CALL    giga_vAC
 
-                    LDWI    giga_vram                           ; top line
+                    LDWI    giga_vram
                     STW     giga_sysArg4
                     LD      giga_sysArg4 + 1
                     ST      top
