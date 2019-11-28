@@ -1,5 +1,10 @@
 #!/usr/bin/env python
-from __future__ import print_function
+from __future__ import (
+    absolute_import,
+    division,
+    print_function,
+    unicode_literals,
+)
 
 # XXX Change to Python3
 # XXX Backquoted words should have precedence over grouping
@@ -157,7 +162,7 @@ class Program:
       # Words with constant value as operand
       elif has(con):
         if not has(op):
-          if 0 <= con < 256:
+          if isinstance(con, int) and 0 <= con < 256:
             self.emitOp('LDI')
           else:
             self.emitOp('LDWI').emit(lo(con)); con = hi(con)
@@ -341,7 +346,7 @@ class Program:
     # Convert maximum Gigatron cycles to the negative of excess ticks
     if con & 1:
       self.error('Invalid value (must be even, got %d)' % con)
-    extraTicks = con/2 - symbol('maxTicks')
+    extraTicks = con//2 - symbol('maxTicks')
     return 256 - extraTicks if extraTicks > 0 else 0
 
   def emitQuote(self, var):
@@ -352,7 +357,7 @@ class Program:
     else:
       d = '`' # And symbol becomes a backquote
     for c in d:
-      comment = '%04x %s' % (self.vPC, repr(c))
+      comment = '%04x %s' % (self.vPC, repr(c).lstrip('u'))
       self.emit(ord(c), comment=comment)
 
   def emitDef(self):
@@ -426,7 +431,7 @@ class Program:
       if var not in self.vars:
         self.vars[var] = zpByte(2)
       address = self.vars[var]
-    comment = '%04x %s' % (prev(self.vPC, 1), repr(var))
+    comment = '%04x %s' % (prev(self.vPC, 1), repr(var).lstrip('u'))
     comment += '%+d' % offset if offset else ''
     byte = address + offset
     if byte < -128 or byte >= 256:

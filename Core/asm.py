@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+from __future__ import (
+    absolute_import,
+    division,
+    print_function,
+    unicode_literals,
+)
 
 # SYNOPSIS: from asm import *
 #
@@ -10,6 +17,12 @@
 
 from os.path import basename, splitext
 import json
+import sys
+
+# Python 2/3 compatibility
+_bytes = type(b'')
+_str = type(u'')
+
 
 #------------------------------------------------------------------------
 #       Public interface
@@ -107,7 +120,7 @@ def define(name, newValue):
   if name in _symbols:
     oldValue =  _symbols[name]
     if newValue != oldValue:
-      print 'Warning: redefining %s (old %s new %s)' % (name, oldValue, newValue)
+      print('Warning: redefining %s (old %s new %s)' % (name, oldValue, newValue))
   _symbols[name] = newValue
 
 def symbol(name):
@@ -148,7 +161,7 @@ def wait(n):
   assert n >= 0
   if n > 4:
     n -= 1
-    ld(n/2 - 1)
+    ld(n//2 - 1)
     comment = C(comment)
     bne(_romSize & 255)
     suba(1)
@@ -208,13 +221,12 @@ def trampoline():
 def end():
   """Resolve symbols and write output"""
   global _errors
-
   for name, where in _refsL:
     if name in _symbols:
       _rom1[where] += _symbols[name] # adding allows some label tricks
       _rom1[where] &= 255
     else:
-      print 'Error: Undefined symbol %s' % repr(name)
+      print('Error: Undefined symbol %s' % repr(name))
       _symbols[name] = 0 # No more errors
       _errors += 1
 
@@ -222,12 +234,12 @@ def end():
     if name in _symbols:
       _rom1[where] += _symbols[name] >> 8
     else:
-      print 'Error: Undefined symbol %s' % repr(name)
+      print('Error: Undefined symbol %s' % repr(name))
       _errors += 1
 
   if _errors:
-    print '%d error(s)' % _errors
-    print
+    print('%d error(s)' % _errors)
+    print()
     sys.exit(1)
 
   align(1)
@@ -323,6 +335,18 @@ def _assemble(op, val, to=AC, addr=None):
   # First operand can be optional
   if isinstance(val, list):
     val, addr = None, val
+  elif isinstance(val, float):
+    # Floating point values could have crept in if
+    # our operand is the result of a division in a file with
+    # from __future__ import division enabled.
+    # This happens in the Forth NEXT code, where we divide by two
+    # to convert cycle counts to ticks.
+    # If the number of cycles was not even, this is a clear bug.
+    # Otherwise convert to int.
+    if not val.is_integer():
+      raise TypeError(
+        "Invalid operand: non-integer value %s provided" % (val,))
+    val = int(val)
 
   # Process list notation for addressing mode
   if isinstance(addr, list):
@@ -342,11 +366,10 @@ def _assemble(op, val, to=AC, addr=None):
 
   # Check that addressing mode matches with any target designation
   assert to is None or to is [AC,AC,AC,AC,X,Y,OUT,OUT][mode>>2]
-
   # Process source designation
   if   val is AC: bus = _busAC
   elif val is IN: bus = _busIN
-  elif isinstance(val, str): d = lo(val) # Convenient for branch instructions
+  elif isinstance(val, (_bytes, _str)): d = lo(_str(val)) # Convenient for branch instructions
   elif isinstance(val, int): d = val
 
   _emit(op | mode | bus, d & 255)
@@ -428,8 +451,8 @@ def _emit(opcode, operand):
   global _romSize, _maxRomSize, _errors
   if _romSize >= _maxRomSize:
       disassembly = disassemble(opcode, operand)
-      print '%04x %02x%02x  %s' % (_romSize, opcode, operand, disassembly)
-      print 'Error: Program size limit exceeded'
+      print('%04x %02x%02x  %s' % (_romSize, opcode, operand, disassembly))
+      print('Error: Program size limit exceeded')
       _errors += 1
       _maxRomSize = 0x10000 # Extend to full address space to prevent more of the same errors
   _rom0.append(opcode)
@@ -448,8 +471,8 @@ def _emit(opcode, operand):
     opcode & _maskBus == _busRAM and\
     opcode & _maskCc in [ _jGT, _jLT, _jNE, _jEQ, _jGE, _jLE ]:
     disassembly = disassemble(opcode, operand)
-    print '%04x %02x%02x  %s' % (_romSize, opcode, operand, disassembly)
-    print 'Warning: large propagation delay (conditional branch with RAM on bus)'
+    print('%04x %02x%02x  %s' % (_romSize, opcode, operand, disassembly))
+    print('Warning: large propagation delay (conditional branch with RAM on bus)')
 
 def loadBindings(symfile):
   # Load JSON file into symbol table
@@ -458,10 +481,10 @@ def loadBindings(symfile):
     for (name, value) in json.load(file).items():
       if not isinstance(value, int):
         value = int(value, base=0)
-      _symbols[str(name)] = value
+      _symbols[_str(name)] = value
 
 def getRom1():
-  return ''.join(chr(byte) for byte in _rom1)
+  return bytearray(_rom1)
 
 def writeRomFiles(sourceFile):
 
@@ -472,7 +495,7 @@ def writeRomFiles(sourceFile):
 
   # Disassemble for readability
   filename = stem + '.asm'
-  print 'Create file', filename
+  print('Create file', filename)
   with open(filename, 'w') as file:
     file.write('              address\n'
                '              |    encoding\n'
@@ -543,17 +566,17 @@ def writeRomFiles(sourceFile):
 
   # 16-bit version for 27C1024, little endian
   filename = stem + '.rom'
-  print 'Create file', filename
-  _rom2 = []
+  print('Create file', filename)
+  _rom2 = bytearray()
   for x, y in zip(_rom0, _rom1):
     _rom2.append(x)
     _rom2.append(y)
   # Padding
   while len(_rom2) < 2*_maxRomSize:
-    _rom2.append(ord('Gigatron!'[ (len(_rom2)-2*_maxRomSize) % 9 ]))
+    _rom2.append(b'Gigatron!'[ (len(_rom2)-2*_maxRomSize) % 9 ])
   # Write ROM file
   with open(filename, 'wb') as file:
-    file.write(''.join([chr(byte) for byte in _rom2]))
+    file.write(_rom2)
 
-  print 'OK used %d free %d size %d' % (_romSize, _maxRomSize-_romSize, len(_rom2))
+  print('OK used %d free %d size %d' % (_romSize, _maxRomSize-_romSize, len(_rom2)))
 

@@ -1,9 +1,15 @@
-
+# -*- coding: utf-8 -*-
 #-----------------------------------------------------------------------
 #
 #       Racer-specific SYS extensions
 #
 #-----------------------------------------------------------------------
+from __future__ import (
+    absolute_import,
+    division,
+    print_function,
+    unicode_literals,
+)
 
 from asm import *
 
@@ -52,7 +58,7 @@ st([vPC])                       #34
 label('.sysRacer1')
 ld(hi('REENTER'),Y)             #35
 jmp(Y,'REENTER')                #36
-ld(-40/2)                       #37
+ld(-40//2)                      #37
 
 #-----------------------------------------------------------------------
 #       SYS_RacerUpdateVideoY_40
@@ -91,7 +97,7 @@ adda(1)                         #33
 st([sysArgs+2])                 #34
 ld(hi('REENTER'),Y)             #35
 jmp(Y,'REENTER')                #36
-ld(-40/2)                       #37
+ld(-40//2)                      #37
 
 #-----------------------------------------------------------------------
 #
