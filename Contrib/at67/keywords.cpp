@@ -954,25 +954,25 @@ namespace Keywords
         for(int i=0; i<tokens.size(); i++)
         {
             int varIndex = -1, constIndex = -1, strIndex = -1;
-            Expression::Numeric value;
+            Expression::Numeric numeric;
             uint32_t expressionType = Compiler::isExpression(tokens[i], varIndex, constIndex, strIndex);
 
             if((expressionType & Expression::HasStringKeywords)  ||  (expressionType & Expression::HasFunctions))
             {
                 // Gigatron prints text on the fly without creating strings
                 Expression::setEnablePrint(true);
-                Expression::parse(tokens[i], codeLineIndex, value);
+                Expression::parse(tokens[i], codeLineIndex, numeric);
                 Expression::setEnablePrint(false);
             }
             else if((expressionType & Expression::HasIntVars)  &&  (expressionType & Expression::HasOperators))
             {
-                Expression::parse(tokens[i], codeLineIndex, value);
+                Expression::parse(tokens[i], codeLineIndex, numeric);
                 Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false, codeLineIndex);
                 Compiler::emitVcpuAsm("%PrintAcInt16", "", false, codeLineIndex);
             }
             else if(expressionType & Expression::HasIntVars)
             {
-                Expression::parse(tokens[i], codeLineIndex, value);
+                Expression::parse(tokens[i], codeLineIndex, numeric);
                 if(varIndex >= 0)
                 {
                     if(Compiler::getIntegerVars()[varIndex]._varType == Compiler::VarArray)
@@ -982,7 +982,14 @@ namespace Keywords
                     }
                     else
                     {
-                        Compiler::emitVcpuAsm("%PrintVarInt16", "_" + Compiler::getIntegerVars()[varIndex]._name, false, codeLineIndex);
+                        switch(numeric._int16Byte)
+                        {
+                            case Expression::Int16Low:  Compiler::emitVcpuAsm("LD",  "_" + Compiler::getIntegerVars()[varIndex]._name,          false, codeLineIndex); break;
+                            case Expression::Int16High: Compiler::emitVcpuAsm("LD",  "_" + Compiler::getIntegerVars()[varIndex]._name + " + 1", false, codeLineIndex); break;
+                            case Expression::Int16Both: Compiler::emitVcpuAsm("LDW", "_" + Compiler::getIntegerVars()[varIndex]._name,          false, codeLineIndex); break;
+                        }
+
+                        Compiler::emitVcpuAsm("%PrintAcInt16", "", false, codeLineIndex);
                     }
                 }
                 else
@@ -1000,14 +1007,14 @@ namespace Keywords
             }
             else if(expressionType & Expression::HasKeywords)
             {
-                Expression::parse(tokens[i], codeLineIndex, value);
+                Expression::parse(tokens[i], codeLineIndex, numeric);
                 Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false, codeLineIndex);
                 Compiler::emitVcpuAsm("%PrintAcInt16", "", false, codeLineIndex);
             }
             else if(expressionType & Expression::HasOperators)
             {
-                Expression::parse(tokens[i], codeLineIndex, value);
-                Compiler::emitVcpuAsm("%PrintInt16", Expression::wordToHexString(value._value), false, codeLineIndex);
+                Expression::parse(tokens[i], codeLineIndex, numeric);
+                Compiler::emitVcpuAsm("%PrintInt16", Expression::wordToHexString(numeric._value), false, codeLineIndex);
             }
             else if(expressionType & Expression::HasStrings)
             {
@@ -1036,9 +1043,9 @@ namespace Keywords
             else if(expressionType == Expression::HasNumbers)
             {
                 // If valid expression
-                if(Expression::parse(tokens[i], codeLineIndex, value))
+                if(Expression::parse(tokens[i], codeLineIndex, numeric))
                 {
-                    Compiler::emitVcpuAsm("%PrintInt16", Expression::wordToHexString(value._value), false, codeLineIndex);
+                    Compiler::emitVcpuAsm("%PrintInt16", Expression::wordToHexString(numeric._value), false, codeLineIndex);
                 }
             }
         }
