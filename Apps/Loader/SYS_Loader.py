@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+from __future__ import (
+    absolute_import,
+    division,
+    print_function,
+    unicode_literals,
+)
 
 #-----------------------------------------------------------------------
 #
@@ -37,13 +44,13 @@ adda(1)                         #25
 st([sysArgs+0])                 #26
 ld(hi('REENTER'),Y)             #27
 jmp(Y,'REENTER')                #28
-ld(-32/2)                       #29
+ld(-32//2)                      #29
 # Restart the instruction in the next timeslice
 label('.sysNbi#19')
 ld([vPC])                       #19
 suba(2)                         #20
 st([vPC])                       #21
-ld(-28/2)                       #22
+ld(-28//2)                      #22
 ld(hi('REENTER'),Y)             #23
 jmp(Y,'REENTER')                #24
 nop()                           #25
@@ -106,7 +113,7 @@ st([channelMask])               #57
 nop()                           #58
 ld(hi('REENTER'),Y)             #59
 jmp(Y,'REENTER')                #60
-ld(-64/2)                       #61
+ld(-64//2)                      #61
 # Invalid checksum
 label('.sysPi#19')
 wait(25-19);                    C('Invalid checksum')#19 Reset checksum
@@ -116,7 +123,7 @@ ld(ord('g'));                   C('Unknown command')#25 Reset checksum
 st([sysArgs+2])                 #26
 ld(hi('REENTER'),Y)             #27
 jmp(Y,'REENTER')                #28
-ld(-32/2)                       #29
+ld(-32//2)                      #29
 # Loading data
 label('.sysPi#37')
 ld([sysArgs+0]);                C('Loading data')#37 Continue checksum
@@ -125,7 +132,7 @@ ld([Y,X])                       #39
 st([sysArgs+2])                 #40
 ld(hi('REENTER'),Y)             #41
 jmp(Y,'REENTER')                #42
-ld(-46/2)                       #43
+ld(-46//2)                      #43
 
 #-----------------------------------------------------------------------
 # Extension SYS_LoaderPayloadCopy_34
@@ -155,7 +162,7 @@ ld(hi('REENTER'),Y)             #18,29
 wait(30-19)                     #19
 label('.sysCc#30')
 jmp(Y,'REENTER')                #30
-ld(-34/2)                       #31
+ld(-34//2)                      #31
 
 #-----------------------------------------------------------------------
 #
