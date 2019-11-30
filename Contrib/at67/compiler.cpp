@@ -204,6 +204,7 @@ namespace Compiler
 
     int findConst(std::string& constName)
     {
+        // Valid chars are alpha and 'address of'
         constName = Expression::getSubAlpha(constName);
         for(int i=0; i<_constants.size(); i++)
         {
@@ -215,6 +216,7 @@ namespace Compiler
 
     int findVar(std::string& varName, bool subAlpha)
     {
+        // Valid chars are alpha and 'address of'
         if(subAlpha) varName = Expression::getSubAlpha(varName);
         for(int i=0; i<_integerVars.size(); i++)
         {
@@ -226,6 +228,7 @@ namespace Compiler
 
     int findStr(std::string& strName)
     {
+        // Valid chars are alpha and 'address of'
         strName = Expression::getSubAlpha(strName);
         for(int i=0; i<_stringVars.size(); i++)
         {
@@ -441,7 +444,7 @@ namespace Compiler
         for(int i=0; i<tokens.size(); i++)
         {
             constIndex = findConst(tokens[i]);
-            if(constIndex != -1)
+            if(constIndex != -1  &&  tokens[i][0] != '@') // 'address of' operator returns numbers
             {
                 if(_constants[constIndex]._constantType == ConstInt16)
                 {
@@ -460,7 +463,7 @@ namespace Compiler
         for(int i=0; i<tokens.size(); i++)
         {
             varIndex = findVar(tokens[i]);
-            if(varIndex != -1)
+            if(varIndex != -1  &&  tokens[i][0] != '@') // 'address of' operator returns numbers
             {
                 // Array variables are treated as a function call
                 if(_integerVars[varIndex]._varType == VarArray)
@@ -478,7 +481,7 @@ namespace Compiler
         for(int i=0; i<tokens.size(); i++)
         {
             strIndex = findStr(tokens[i]);
-            if(strIndex != -1  &&  _stringVars[strIndex]._constant == false)
+            if(strIndex != -1  &&  _stringVars[strIndex]._constant == false  &&  tokens[i][0] != '@') // 'address of' operator returns numbers)
             {
                 expressionType |= Expression::HasStrVars;
                 break;
@@ -1446,14 +1449,48 @@ namespace Compiler
         }
         else if((peek(false) >= '0'  &&  peek(false) <= '9')  ||  peek(false) == '&')
         {
-            if(!number(value))
+            // Number
+            if(number(value))
             {
-                fprintf(stderr, "Compiler::factor() : Bad numeric data in '%s' on line %d\n", _codeLines[_currentCodeLineIndex]._code.c_str(), Expression::getLineNumber() + 1);
-                numeric = Expression::Numeric();
+                numeric = Expression::Numeric(value, -1, true, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
             }
             else
             {
-                numeric = Expression::Numeric(value, -1, true, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+                fprintf(stderr, "Compiler::factor() : Syntax error in number '%s' on line %d\n", _codeLines[_currentCodeLineIndex]._code.c_str(), Expression::getLineNumber() + 1);
+                numeric = Expression::Numeric();
+            }
+        }
+        // 'Address of' operator
+        else if(peek(false) == '@')
+        {
+            get(false);
+            std::string varName = Expression::getExpression();
+            if(varName.back() == ')') varName.erase(varName.size()-1);
+            int varIndex = findVar(varName);
+            int strIndex = findStr(varName);
+            int constIndex = findConst(varName);
+            if(varIndex != -1)
+            {
+                Expression::advance(varName.size());
+                uint16_t address = _integerVars[varIndex]._address;
+                numeric = Expression::Numeric(address, -1, true, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+            }
+            else if(strIndex != -1)
+            {
+                Expression::advance(varName.size());
+                uint16_t address = _stringVars[strIndex]._address;
+                numeric = Expression::Numeric(address, -1, true, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+            }
+            else if(constIndex != -1)
+            {
+                Expression::advance(varName.size());
+                uint16_t address = _constants[constIndex]._address;
+                numeric = Expression::Numeric(address, -1, true, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+            }
+            else
+            {
+                fprintf(stderr, "Compiler::factor() : Syntax error in address of '%s' on line %d\n", _codeLines[_currentCodeLineIndex]._code.c_str(), Expression::getLineNumber() + 1);
+                numeric = Expression::Numeric();
             }
         }
         // Functions

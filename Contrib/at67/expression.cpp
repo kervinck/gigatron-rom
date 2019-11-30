@@ -25,6 +25,8 @@ namespace Expression
     bool _decimalChars[256]     = {false};
     bool _hexaDecimalChars[256] = {false};
 
+    uintptr_t _advancePtr;
+
     exprFuncPtr _exprFunc;
 
 
@@ -429,6 +431,11 @@ namespace Expression
         return s;
     }
 
+    bool subAlphaHelper(int i)
+    {
+        // Valid chars are alpha and 'address of'
+        return (isalpha(i) || (i=='@'));
+    }
     std::string getSubAlpha(const std::string& s)
     {
         if(s.size() > 1)
@@ -441,7 +448,7 @@ namespace Expression
             }
         }
 
-        auto it = std::find_if(s.begin(), s.end(), isalpha);
+        auto it = std::find_if(s.begin(), s.end(), subAlphaHelper);
         if(it == s.end()) return std::string("");
 
         size_t start = it - s.begin();
@@ -900,6 +907,16 @@ namespace Expression
         //fprintf(stderr, "%s : %s : %c\n", _expressionToParse.c_str(), _expression, chr);
         advance(1);
         return chr;
+    }
+
+    void save(void)
+    {
+        _advancePtr = uintptr_t(_expression);
+    }
+
+    void restore(void)
+    {
+        _expression = (char *)_advancePtr;
     }
 
     bool advance(uintptr_t n)

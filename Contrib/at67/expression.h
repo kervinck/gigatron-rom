@@ -96,7 +96,10 @@ namespace Expression
 
     char peek(void);
     char get(void);
+    void save(void);
+    void restore(void);
     bool advance(uintptr_t n);
+
     bool find(const std::string& text);
 
     bool number(int16_t& value);
