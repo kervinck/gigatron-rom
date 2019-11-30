@@ -6,6 +6,9 @@ We check in .gt1 and .rom files. There are two reasons:
    There's no need to have them jump through such hoops.
 2. It helps to find regression bugs when working on the tool chain
 
+Only DEVROM object (dev.rom, dev.lst) isn't checked in. Tracking
+all its changes would blow up the history.
+
 Versioned files
 ---------------
 
