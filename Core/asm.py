@@ -468,21 +468,20 @@ def _getSourceLines(upto):
   global _listingSource, _lineno
   lines = []
   if has(upto):
-    for _lineno in range(_lineno, upto+1):
-      source = _listingSource[_lineno-1]
-      lines.append(('%-4d  %s' % (_lineno, source)).rstrip())
-    _lineno = upto+1
+    for lineno in range(_lineno, upto+1):
+      source = _listingSource[lineno-1]
+      lines.append(('%-4d  %s' % (lineno, source)).rstrip())
+    _lineno = max(_lineno, upto+1)
   return lines
 
 # Stop listing source lines (introspection is slow)
 def disableListing():
   global _listing, _lineno
   info = inspect.getframeinfo(_listing)
-  lineno = _linenos[-1]
-  _linenos[-1] = None # Avoid double listing of this line
-  for lineno in range(_lineno, info.lineno+1):
+  for lineno in range(_linenos[-1], info.lineno+1):
     source = '%-4d  %s' % (lineno, _listingSource[lineno-1])
     C(source.rstrip(), prefix='') # A bit tricky: stuff in *comments*
+  _linenos[-1] = None # Avoid double listing of this line
   _listing = None
 
 def _emit(opcode, operand):
