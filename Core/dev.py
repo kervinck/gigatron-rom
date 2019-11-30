@@ -85,6 +85,7 @@
 #  DONE Loader: clear channelMask when loading into sound channels
 #  DONE Update romTypeValue and interface.json
 #  DONE Update version number to v4
+#  DONE Use `inspect' to make program listing with original comments #127
 #
 #-----------------------------------------------------------------------
 #
@@ -107,7 +108,7 @@
 #  XXX  MSBASIC spurious pi-symbols
 #  XXX  MSBASIC QT_BASIC
 #  DONE Speed up SetMemory by 300% using bursts #126
-#  XXX  Add CMPHS/CMPHU instructions to vCPU XXX Only needs testing
+#  XXX  Add CMPHS/CMPHU instructions to vCPU XXX Still needs testing
 #  XXX  SPI: Boot from any *.GT1 file if SDC/MMC detected
 #  XXX  SPI: Tutorial on formatting FAT32 partitions
 #  XXX  SPI: Simple command line interface (solve "EXE vs COM" dilemma)
@@ -130,7 +131,6 @@
 #  XXX  Main: Some startup logo as intro?
 #  XXX  Faster SYS_Exec_88, with start address (GT1)?
 #  XXX  Let SYS_Exec_88 clear channelMask when loading into live variables
-#  XXX  Use `inspect' to make program listing with original comments
 #  XXX  ROM functions: SYS_PrintString, control codes, SYS_DrawChar, SYS_Newline
 #  XXX  Babelfish freeze at power-on?
 #
@@ -308,7 +308,7 @@ vReturn         = zpByte()  # Return into video loop (in page of vBlankStart)
 
 # Scratch
 frameX          = zpByte() # Starting byte within page
-frameY          = zpByte() # Page of current pixel row (updated by videoA)
+frameY          = zpByte() # Page of current pixel line (updated by videoA)
 
 # Vertical blank (reuse some variables used in the visible part)
 videoSync0      = frameX   # Vertical sync type on current line (0xc0 or 0x40)
@@ -658,7 +658,7 @@ st([romType])                   #16
 ld(0)                           #17
 st([vSP])                       #18 vSP
 ld(hi('videoTop_DEVROM'),Y)     #19
-st([Y,lo('videoTop_DEVROM')])   #20 Show all 120 pixel rows
+st([Y,lo('videoTop_DEVROM')])   #20 Show all 120 pixel lines
 st([soundTimer])                #21 soundTimer
 assert userCode&255 == 0
 st([vLR])                       #22 vLR
@@ -681,7 +681,7 @@ nop()                           #38
 # Return to interpreter
 ld(hi('REENTER'),Y)             #39
 jmp(Y,'REENTER')                #40
-ld(-44//2)                     #41
+ld(-44//2)                      #41
 
 #-----------------------------------------------------------------------
 # Placeholders for future SYS functions. This works as a kind of jump
@@ -1200,7 +1200,7 @@ label('.restart#66')
 
 # Switch video mode when (only) select is pressed (16 cycles)
 # XXX We could make this a vCPU interrupt
-ld([buttonState])               #66 heck [Select] to switch modes
+ld([buttonState])               #66 Check [Select] to switch modes
 xora(~buttonSelect)             #67 Only trigger when just [Select] is pressed
 bne('.select#70')               #68
 ld([videoModeC])                #69
@@ -1324,7 +1324,7 @@ st([sample])                    #25
 
 ld([xout])                      #26 Gets copied to XOUT
 bra([nextVideo])                #27
-ld(syncBits,OUT)                #28 End horizontal pulse')
+ld(syncBits,OUT)                #28 End horizontal pulse
 
 # Back porch B: second of 4 repeated scan lines
 # - Recompute Xi from dXi and store for retrieval in the next scan lines
@@ -1361,7 +1361,7 @@ ld([frameX], X)                 #29 4th scanline of 4
 ld([videoY])                    #30
 suba((120-1)*2)                 #31
 beq('.lastpixels#34')           #32
-adda(120*2)                     #33 More pixel rows to go
+adda(120*2)                     #33 More pixel lines to go
 st([videoY])                    #34
 ld('videoA')                    #35
 bra([videoModeD])               #36
@@ -1372,7 +1372,7 @@ if soundDiscontinuity == 1:
   st(sample, [sample])          #34 Sound continuity
 else:
   nop()                         #34
-ld('videoE')                    #35 No more pixel rows to go
+ld('videoE')                    #35 No more pixel lines to go
 bra([videoModeD])               #36
 st([nextVideo])                 #37
 
@@ -1383,12 +1383,12 @@ ld(hi('vBlankStart'),Y)         #29 Return to vertical blank interval
 jmp(Y,'vBlankStart')            #30
 ld(syncBits)                    #31
 
-# Video mode that blacks out one or more pixel rows from the top of screen.
+# Video mode that blacks out one or more pixel lines from the top of screen.
 # This yields some speed, but also frees up screen memory for other purposes.
-# Note: Sound output becomes choppier the more pixel rows are skipped
+# Note: Sound output becomes choppier the more pixel lines are skipped
 # Note: The vertical blank driver leaves 0x80 behind in [videoSync1]
 label('videoF')
-ld([videoSync1])                #29 Completely black pixel row
+ld([videoSync1])                #29 Completely black pixel line
 adda(0x80)                      #30
 st([videoSync1],X)              #31
 ld([frameX])                    #32
@@ -2309,7 +2309,7 @@ assert pc()&255 == 255
 bra([vTmp])                     # Jumps back into next page
 
 label('SYS_LSRW1_48')
-assert pc()&255 == 0            #First instruction on this page must be a nop
+assert pc()&255 == 0            # First instruction on this page *must* be a nop
 nop()                           #15
 ld(hi('shiftTable'),Y)          #16 Logical shift right 1 bit (X >> 1)
 ld('.sysLsrw1a')                #17 Shift low byte
@@ -3028,7 +3028,7 @@ ld(soundTable>>8,Y)             #17
 #       sysArgs[3]      Memory page for receive data (input)
 
 label('SYS_SpiExchangeBytes_v4_134')
-ld(hi('sys_SpiExchangeBytes'),Y)
+ld(hi('sys_SpiExchangeBytes'),Y)#15
 jmp(Y,'sys_SpiExchangeBytes')   #16
 ld([sysArgs+0],X)               #17 Fetch byte to send
 
@@ -3733,7 +3733,7 @@ assert (38 - 22)//2 >= v6502_adjust
 label('v6502_ror')
 assert v6502_Cflag == 1
 ld([v6502_ADH],Y)               #12
-ld(-46//2+v6502_maxTicks)        #13 Is there enough time for the excess ticks?
+ld(-46//2+v6502_maxTicks)       #13 Is there enough time for the excess ticks?
 adda([vTicks])                  #14
 blt('.recheck17')               #15
 ld([v6502_P])                   #16 Transfer C to "bit 8"
