@@ -1,0 +1,58 @@
+
+Context switch
+--------------
+        vPC vAC vLR vSP vCPUselect      -> 8 bytes
+        sysFn sysArgs0..7               -> 10 bytes
+Minimal:
+        vPC vAC sysFn vCPUselect        -> 7 bytes
+
+Preemptive context switching is *easier*, because there's no nice
+way to swap context from within vCPU itself without leaving anything
+behind...
+
+        -> There is instruction to change state
+        -> SYS needs sysFn in state
+        -> Except through DOKE, needing a special ZP location
+        -> CALL and CALLI instuction clobber vLR
+        -> Can we special-case an existing instruction? (if stack becomes zero, ...)
+        -> Poke vCPUselect (and wait), but then we lose our own state
+
+        From vCPU code:
+                LDI vCPUrelease
+                ST  vCPUselect
+        _spin   BRA _spin
+                <continue>
+
+                LDI  SYS_ContextSwitch_40
+                STW  sysFn
+                SYS  40
+
+        From v6502 code:
+                LDIM  v6502release
+                STZ   vCPUselect
+        _spin   BNE   _spin
+
+        Or better:
+                Add a BRK instruction
+
+Interrupt
+---------
+        Its the same?
+
+Interrupts set: vPC
+Interrupts save: vPC vAC sysFn vCPUselect -> 7 bytes
+
+This is almost a full context switch. We can easily swap out and in 18 bytes then?
+
+
+        ld [y,x]        ; 3 cycles per context in byte -> 18*3 = 54
+        st [y,x++]
+        st [$dd]
+
+        ld [$dd]        ; 2 cycles per context out byte -> 18*2  = 36
+        st [y,x++]
+
+        Total: 90 cycles
+
+        Line 40 -has- 104 cycles
+

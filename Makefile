@@ -178,19 +178,6 @@ ROMv1.rom: Core/* Apps/*/* Makefile interface.json
 #	Experimental and temporary (to be removed)
 #-----------------------------------------------------------------------
 
-# Test ROM for v6502 testing
-mos: v6502.rom
-v6502.rom: Core/* Apps/*/* Makefile interface.json
-	rm -f dev.rom dev.asm
-	python Core/dev.py\
-		Main=Apps/Microchess.gcl\
-		Core/Reset.gcl
-	mv dev.rom v6502.rom
-	mv dev.asm v6502.asm
-
-burnmos: v6502.rom
-	minipro -p 'AT27C1024 @DIP40' -w "$<" -y -s
-
 # Adds vCPU slices on scanlines to get 400 cycles per scanline
 ROMv3y.rom: Core/* Apps/*/* Makefile interface.json
 	python Core/ROMv3y.py\

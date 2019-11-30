@@ -382,7 +382,7 @@ X<++ X>++       Original notation for <X++ >X++
 i<++ i>++       Original notation for <i++ >i++
 ii:             Original notation for *=ii
 i% i%=          Original notation for %i %i=
-i!              Original notaiton for i!! (will only be depricated in gcl1)
+i!              Original notation for i!! (will only be depricated in gcl1)
 
 ----------------------
 vCPU instruction table

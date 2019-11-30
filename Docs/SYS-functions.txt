@@ -88,7 +88,7 @@ The naming convention is: SYS_<CamelCase>[_v<V>]_<N>
 With <N> the maximum number of clocks or cycles (not ticks!) the
 function will need, counted from NEXT to NEXT. This duration <N>
 must be passed to the 'SYS' vCPU instruction as operand, represented
-as `270-max(14,<N>/2)'. In GCL you can just type `<N>!', and the
+as `270-max(14,<N>/2)'. In GCL you can just type `<N>!!', and the
 compiler translates the operand for you. The gt1dump tool disassembles
 and displays <N>.
 
@@ -292,6 +292,19 @@ Extension SYS_ExpanderControl_v4_40
 
 Sets the I/O and RAM expander's control register
 
+Variables:
+        vAC bit 2       Device enable /SS0
+            bit 3       Device enable /SS1
+            bit 4       Device enable /SS2
+            bit 5       Device enable /SS3
+            bit 6       Banking B0
+            bit 7       Banking B1
+            bit 15      Data out MOSI
+        sysArgs[7]      Cache for control state (written to)
+
+Intended for prototyping, and probably too low-level for most applications
+Still there's a safeguard: it's not possible to disable RAM using this
+
 Intended for prototyping, and probably too low-level for most applications
 Still there's a safeguard: it's not possible to disable RAM using this
 
@@ -366,6 +379,7 @@ Variables:
       sysArgs[1]      Memory page for send data (input)
       sysArgs[2]      Page index stop (input)
       sysArgs[3]      Memory page for receive data (input)
+      sysArgs[4]      Scratch (modified)
 
 ----------------------------------------------------------------------
 Extension SYS_Sprite6_v3_64

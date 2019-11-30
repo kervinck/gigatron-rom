@@ -1,0 +1,138 @@
+
+
+GPU instruction pair <= 148 cycles:
+        setup
+        (burst)
+        clean
+
+Pixel burst (videoA,B and/or C)
+
+                CopperSetup
+    Burst Burst Burst Burst
+    CopperClean CopperSetup
+    Burst Burst Burst Burst
+    CopperClean
+
+Setup:
+        ; Overhead
+        ld [videoY],x   ; Find out page from video indirection table
+        ld $01,y
+        ls [y,x]
+        st [vTmp],y
+
+        ; Object
+        ld [y,$a0]      ; X position of object
+        ld ac,x
+
+        ; Pixel 1
+        ld [y,x]        ; Preserve background
+        st [y,$a1]
+        ld [y,$a2]      ; Display object
+        st [y,x++]
+
+Clean:
+        ; Overhead
+        ld [vTmp],y     ; XXX is this untouched by the video loop?
+
+        ld [y,$a0]      ; X position of object
+        ld ac,x
+        ld [y,$a1]      ; Restore background
+        st [y,x++]
+
+Object costs:   4 cycles
+Pixel costs:    6 cycles
+
+5 pixel object: 34 cycles -> 4 objects (ghosts!), 10 cycles for overhead sounds ok
+6 pixel object: 40 cycles -> 3 objects (boring)
+
+Eg. 4 objects of 6 pixels
+
+148/4 = 37
+
+ - # # # - - - - - -
+ # O # O # - - - - -
+ # # # # # - - X - -
+ # # # # # - - - - -
+ # - # - # - - - - -
+
+ - O O O -
+ O O # O O
+ O O O O O
+ O O O O O
+ - O O O -
+
+ - O O O -
+ O O # O O
+ - O O O O
+ O O O O O
+ - O O O -
+
+ O O O O -
+ - O # O O
+ - - O O O
+ - O O O O
+ O O O O -
+
+Because most lines have no sprites, there is a lot of wasted CPU time.
+These kind of sprites are better done in vertical blank.
+
+
+But here's an idea for a cool screensaver:
+
+Setup:
+        ld [y,$a7]
+        st [vTmp],x
+        ld [y,$a8]
+        adda sprite1
+        bra [ac]
+sprite1 ld [y,$a0]      ;Draw sprite 1
+        st [y,x++]
+        ld [y,$a1]
+        st [y,x++]
+        ld [y,$a2]
+        st [y,x++]
+        ld [y,$a3]
+        st [y,x++]
+        ld [y,$a4]
+        st [y,x++]
+        ld [y,$a5]
+        st [y,x++]
+        ld [y,$a6]
+        st [y,x++]
+
+        ld [y,$a0]
+loop    bne loop        ;Resync
+        suba 2
+
+Clean:
+        ld [vTmp],x
+
+        ld [x]          ;Restore sprite 1
+        st [y,x++]
+        ld [x]
+        st [y,x++]
+        ld [x]
+        st [y,x++]
+        ld [x]
+        st [y,x++]
+        ld [x]
+        st [y,x++]
+        ld [x]
+        st [y,x++]
+        ld [x]
+        st [y,x++]
+
+With a background in 160 bytes in zero page, we have a vertical bars.
+Playing with videoTable[].dX gives us a blocky pattern!
+
+7 pixel objects cost 8*4 = 32 cycles. We can have 4 objects <-- lets try this
+6 pixel objects cost 7*4 = 28 cycles. We can have 5 objects
+
+But no alpha channel..
+Different ROM routine per shape?
+
+        ld [y,x]
+        op [y,$a0]
+        st [y,x++]
+
+Maybe we don't need full screen frame buffer. 1 line is enough?

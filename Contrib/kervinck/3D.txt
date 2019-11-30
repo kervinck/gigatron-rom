@@ -1,0 +1,119 @@
+3D with free rotation around 1 axis
+See Cube.gtb
+
+Per frame
+
+        Variable dX dY Rz               Camera position and direction
+        Constant f                      Fixed focus
+
+        1 sin/cos (byte), can come from small lookup table
+                C = cos Rz
+                S = sin Rz
+
+Per 3D point x, y, z
+
+        2 add/sub                       Translation
+                x1 = x - dx
+                x1 = y - dY
+
+        2 mul, 2 add/sub                Rotation
+                x2 = x1 * C - y' * S
+                y2 = x1 * S + y1 * C
+
+        2 div, 3 add/sub                Projection
+                r = y2 + f
+                u = 80 + x2/r
+                v = 60 - z /r
+
+        Total: 6 mul/div + some add/subs
+
+Bresenham's algorithm to trace the edge between two points
+
+SYS_SetMemory to fill the area between two edges
+
+Either flat-end triangles (polygon system), or point lists per pixel line.
+
+Arithmetic: 15 bit signed fixed point
+
+        high byte:      1 sign, 7 integer               -128..127
+        low byte:       1 internal carry, 7 fraction    0..127
+
+Speed:
+        7 iterations per mul, plus shifts
+        Fast internal carry
+
+        Maybe down to 2 scanlines per operation???
+        8 scanlines per point???
+        This can become really fast
+
+        Eliminate iteration overhead: SYS functions that process vector
+        of points through self-restart
+
+Addition: 9 cycles
+                ; A1 A0
+                ; B1 B0
+                ; ----- +
+                ; C1 C0
+
+                ld   [A0]
+                adda [B0]
+                anda $80,x
+                anda $7f
+                st   [C0]
+                ld   [x]
+                adda [A1]
+                adda [B1]
+                st   [C1]
+
+Multiplication: 217 cycles
+
+                ;(A2)A1.A0      A2 is sign extension: 0 or 127/255
+                ;       B0      Is cos() or sin() XXX TODO +/- sign, -1.0 and +1.0
+                ; -------- +*
+                ; C2 C1.C0
+
+                ld   [B0]       #0 Bit N (18 cycles)
+                anda 1<<N       #1
+                bpl  .4         #2
+                ld   [A0]       #3
+                ld   4          #4 Zero
+.3              bne  .3         #5,7,9,11,13
+                suba 1          #6,8,10,12,14
+                beq  .5         #15
+                ld   [C2]       #16
+.4              adda [C0]       #4 One
+                anda $80,x      #5
+                anda $7f        #6
+                st   [C0]       #7
+                ld   [X]        #8
+                adda [A1]       #9
+                adda [C1]       #10
+                anda $80,x      #11
+                anda $7f        #12
+                st   [C1]       #13
+                ld   [X]        #14
+                adda [A2]       #15
+                adda [C2]       #16
+.5              st   [C2]       #17
+
+                ld   [C0]       #0 Shift left (15 cycles)
+                adda [C0]       #1
+                anda $80,x      #2
+                anda $7f        #3
+                st   [C0]       #4
+                ld   [X]        #5
+                adda [C1]       #6
+                adda [C1]       #7
+                anda $80,x      #8
+                anda $7f        #9
+                st   [C1]       #10
+                ld   [X]        #11
+                adda [C2]       #12
+                adda [C2]       #13
+                st   [C2]       #14
+
+Total
+        add bit:        7 x 18 = 126
+        shift left:     6 x 15 =  75
+                                 ===
+                                 216 cycles
