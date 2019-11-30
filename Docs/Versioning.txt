@@ -1,8 +1,44 @@
-TODO
+Check-in object files
+---------------------
 
-Putting object files under change control
+We check in .gt1 and .rom files. There are two reasons:
+1. Don't bother casual users with the tool chain.
+   There's no need to have them jump through such hoops.
+2. It helps to find regression bugs when working on the tool chain
 
-Keeping previous versions visible
+Versioned files
+---------------
 
-Versioning object and source files
+Release ROM images are versioned in their filename.
 
+Sources, data and object files that go into a versioned ROM, must
+be versioned themselves as well. E.g. Reset_v2.gcl, Snake_v1.gcl
+
+Versioned object files aren't allowed to change, ever. Versioned
+sources can still change for as long as the object files remain the
+same. (E.g. for updating comments or refactoring.)
+
+Unversioned source and object files can change at will.
+E.g. Core/dev.py, Core/Reset.gcl, Apps/Snake/Snake.gcl
+
+Compatibility
+-------------
+
+See also Docs/GT1-files.txt. Summary:
+
+- GT1 files use only bindings that are defined in interface.json.
+- Files that use features not in interface.json, get the suffix `.gt1x'
+- `32K GT1' files don't crash on any release ROM. Files can check romType
+  before using features not available in ROMv1. They don't have to work
+  fully (or work at all), but they shall not crash.
+- `64K GT1' files that would crash while loading on 32K, can have _64K in
+  their name. With that, they don't have to behave well on 32K systems.
+
+Forking files
+-------------
+
+We don't hide older versioned files in the history or branches.
+Instead, we fork versioned files and keep previous versions visible
+in the same directory. This helps find regression bugs when working
+on the tool chain. The Utils/git-fork-files tool can be useful to
+preserve git history in each branch of the file. This is not mandatory.
