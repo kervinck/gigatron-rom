@@ -11,7 +11,7 @@
 
 #define LABEL_TRUNC_SIZE  20      // The smaller you make this, the more your BASIC label names will be truncated in the resultant .vasm code
 #define OPCODE_TRUNC_SIZE 24      // The smaller you make this, the more your VASM opcode/macro names will be truncated in the resultant .vasm code
-#define USER_STR_SIZE     95
+#define USER_STR_SIZE     94
 
 // 18 bytes, (0x00EE <-> 0x00FF), reserved for vCPU stack, allows for 9 nested calls. The amount of GOSUBS you can use is dependant on how
 // much of the stack is being used by nested system calls. *NOTE* there is NO call table for user code for this compiler
@@ -34,15 +34,17 @@ namespace Compiler
     enum VarType {VarInt8=0, VarInt16, VarInt32, VarFloat16, VarFloat32, VarArray};
     enum IntSize {Int8=1, Int16=2, Int32=4};
     enum ConstantType {ConstInt16, ConstStr};
-    enum ConstantStrType {StrChar, StrHex, StrHexw};
+    enum ConstantStrType {StrChar, StrHex, StrHexw, StrLeft, StrRight, StrMid};
     enum IfElseEndType {IfBlock, ElseIfBlock, ElseBlock, EndIfBlock};
     enum OperandType {OperandVar, OperandTemp, OperandConst};
     enum StatementResult {StatementError, StatementSuccess, StatementExpression, SingleStatementParsed, MultiStatementParsed};
 
     struct Constant
     {
+        uint8_t _size;
         int16_t _data;
         uint16_t _address;
+        std::string _text;
         std::string _name;
         std::string _internalName;
         ConstantType _constantType;
@@ -67,7 +69,7 @@ namespace Compiler
         uint8_t _size;
         uint8_t _maxSize;
         uint16_t _address;
-        std::string _data;
+        std::string _text;
         std::string _name;
         std::string _output;
         int _codeLineIndex = -1;
@@ -127,12 +129,14 @@ namespace Compiler
         std::string _text;
         std::string _code;
         std::vector<std::string> _tokens;
+        std::vector<size_t> _offsets;
         std::vector<VasmLine> _vasm;
         std::string _expression;
         OnGotoGosubLut _onGotoGosubLut;
         int _vasmSize = 0;
         int _labelIndex = -1;
         int  _varIndex = -1;
+        Expression::Int16Byte _int16Byte = Expression::Int16Both;
         bool _assignOperator = false;
         bool _containsVars = false;
         bool _pushEmitted = false;
@@ -166,7 +170,7 @@ namespace Compiler
         std::string _labelName;
         int _codeLineIndex;
         IfElseEndType _ifElseEndType;
-        Expression::ConditionType _conditionType;
+        Expression::CCType _ccType;
     };
 
     struct EndIfData
@@ -180,7 +184,7 @@ namespace Compiler
         int _jmpIndex;
         std::string _labelName;
         int _codeLineIndex;
-        Expression::ConditionType _conditionType;
+        Expression::CCType _ccType;
     };
 
     struct RepeatUntilData
@@ -252,11 +256,12 @@ namespace Compiler
     int findVar(std::string& varName, bool subAlpha=true);
     int findStr(std::string& strName);
 
-    bool createCodeLine(const std::string& code, int codeLineOffset, int labelIndex, int varIndex, bool assign, bool vars, CodeLine& codeLine);
+    bool createCodeLine(const std::string& code, int codeLineOffset, int labelIndex, int varIndex, Expression::Int16Byte int16Byte, bool assign, bool vars, CodeLine& codeLine);
     void createLabel(uint16_t address, const std::string& name, const std::string& output, int codeLineIndex, Label& label, bool numeric=false, bool addUnderscore=true, bool pageJump=false, bool gosub=false);
     void createIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, int& varIndex, VarType varType=VarInt16, uint16_t arrayStart=0x0000, int intSize=Int16, int arrSize=0);
-    bool createString(CodeLine& codeLine, int codeLineIndex, const std::string& str, std::string& name, uint16_t& address, uint8_t maxSize=96, bool constString=true);
-    uint16_t createConstantString(ConstantStrType constantStrType, int16_t value);
+    bool createString(CodeLine& codeLine, int codeLineIndex, const std::string& str, std::string& name, uint16_t& address, uint8_t maxSize=USER_STR_SIZE, bool constString=true);
+    uint16_t createConstantString(ConstantStrType constantStrType, int16_t input);
+    uint16_t createConstantString(ConstantStrType constantStrType, const std::string& input, int8_t length, uint8_t offset);
 
     void updateVar(int16_t data, CodeLine& codeLine, int varIndex, bool containsVars);
 
@@ -264,7 +269,7 @@ namespace Compiler
     int getMacroSize(const std::string& macroName);
     int createVcpuAsm(const std::string& opcodeStr, const std::string& operandStr, int codeLineIdx, std::string& line);
     void emitVcpuAsm(const std::string& opcodeStr, const std::string& operandStr, bool nextTempVar, int codeLineIdx=-1, const std::string& internalLabel="", bool pageJump=false);
-    bool emitVcpuAsmUserVar(const std::string& opcodeStr, const char* varNamePtr, bool nextTempVar);
+    bool emitVcpuAsmUserVar(const std::string& opcodeStr, Expression::Numeric& numeric, bool nextTempVar);
     void getNextTempVar(void);
 
     uint32_t isExpression(std::string& input, int& varIndex, int& constIndex, int& strIndex);

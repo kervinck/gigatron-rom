@@ -34,20 +34,19 @@ _entryPoint_        EQU                     0x0200
 _init               EQU                     0x0240
 _324532453245435435 EQU                     0x0248
 _10                 EQU                     0x024d
-_31                 EQU                     0x02b9
-_32                 EQU                     0x02d4
-_33                 EQU                     0x0302
-_34                 EQU                     0x031d
-_35                 EQU                     0x0338
-_36                 EQU                     0x0353
-_37                 EQU                     0x036e
-_40                 EQU                     0x06c0
+_31                 EQU                     0x02b3
+_32                 EQU                     0x02ce
+_33                 EQU                     0x02e9
+_34                 EQU                     0x0317
+_35                 EQU                     0x0332
+_36                 EQU                     0x034d
+_37                 EQU                     0x0368
+_40                 EQU                     0x06ba
 _page_0x0300        EQU                     0x0300
 _page_0x0400        EQU                     0x0400
 _page_0x0500        EQU                     0x0500
 _page_0x0600        EQU                     0x0600
-_end_0x06f1         EQU                     0x06c5
-_end_0x06f3         EQU                     0x06c7
+_end_0x06f1         EQU                     0x06bf
 
 ; Variables
 _a                  EQU                     0x0030
@@ -60,8 +59,8 @@ _g                  EQU                     0x003c
 _z                  EQU                     0x003e
 
 ; Strings
-_str_0xff00          EQU                     0xff00
-_str_0xff00          DB                      1 ' '
+_str_0xff60          EQU                     0xff60
+_str_0xff60          DB                      1 ' ' 0
 
 ; Define Bytes
 
@@ -87,10 +86,7 @@ _324532453245435435 LDWI                    -3
                     STW                     _cat                            ; cat = -3
 
 _10                 LDW                     _d
-                    ADDI                    5
-                    STW                     0xc0
-                    LDI                     20
-                    ADDW                    0xc0
+                    ADDI                    25
                     STW                     0xc0
                     LDW                     _cat
                     SUBW                    _a
@@ -173,13 +169,13 @@ _32                 LDI                     0
                     ADDW                    _f
                     STW                     _f                              ; f = -g +1000 -(24-g) +f
 
+_33                 LDI                     0
+                    SUBW                    _g
+                    STW                     0xc0
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
-_33                 LDI                     0
-                    SUBW                    _g
-                    STW                     0xc0
                     LDWI                    1000
                     ADDW                    0xc0
                     STW                     0xc0
@@ -296,13 +292,13 @@ _37                 LDI                     0
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
                     LDWI                    -2949
+                    ADDW                    _b
+                    STW                     0xc0
+                    LDWI                    300
                     STW                     0xde
                     LDWI                    _page_0x0400
                     CALL                    giga_vAC
 _page_0x0400        LDW                     0xde
-                    ADDW                    _b
-                    STW                     0xc0
-                    LDWI                    300
                     ADDW                    _e
                     STW                     0xc2
                     LDWI                    -900
@@ -415,13 +411,13 @@ _page_0x0400        LDW                     0xde
                     ADDW                    _b
                     STW                     0xc0
                     LDWI                    300
+                    ADDW                    _e
+                    STW                     0xc2
+                    LDWI                    -900
                     STW                     0xde
                     LDWI                    _page_0x0500
                     CALL                    giga_vAC
 _page_0x0500        LDW                     0xde
-                    ADDW                    _e
-                    STW                     0xc2
-                    LDWI                    -900
                     ADDW                    _f
                     STW                     0xc4
                     LDW                     0xc2
@@ -537,13 +533,13 @@ _page_0x0500        LDW                     0xde
                     ADDW                    _f
                     STW                     0xc4
                     LDW                     0xc2
+                    SUBW                    0xc4
+                    STW                     0xc4
+                    LDW                     0xc0
                     STW                     0xde
                     LDWI                    _page_0x0600
                     CALL                    giga_vAC
 _page_0x0600        LDW                     0xde
-                    SUBW                    0xc4
-                    STW                     0xc4
-                    LDW                     0xc0
                     SUBW                    0xc4
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
@@ -564,19 +560,19 @@ _page_0x0600        LDW                     0xde
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
                     PrintVarInt16           _a
-                    PrintString             _str_0xff00
+                    PrintString             _str_0xff60
                     PrintVarInt16           _b
-                    PrintString             _str_0xff00
+                    PrintString             _str_0xff60
                     PrintVarInt16           _d
-                    PrintString             _str_0xff00
+                    PrintString             _str_0xff60
                     PrintVarInt16           _e
-                    PrintString             _str_0xff00
+                    PrintString             _str_0xff60
                     PrintVarInt16           _f
-                    PrintString             _str_0xff00
+                    PrintString             _str_0xff60
                     PrintVarInt16           _g
-                    PrintString             _str_0xff00
+                    PrintString             _str_0xff60
                     PrintVarInt16           _z
-                    PrintString             _str_0xff00
+                    PrintString             _str_0xff60
                     PrintVarInt16           _cat
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print a;" ";b;" ";d;" ";e;" ";f;" ";g;" ";z;" ";cat
@@ -586,8 +582,6 @@ _40                 LDWI                    _10
 
 _end_0x06f1         BRA                     _end_0x06f1                     ; end
 
-_end_0x06f3         BRA                     _end_0x06f3                     ; END
-
 
 
 ;****************************************************************************************************************************************
@@ -596,22 +590,22 @@ _end_0x06f3         BRA                     _end_0x06f3                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0xff02
-convertEqOp         EQU     0xff0b
-convertNeOp         EQU     0xff14
-convertLeOp         EQU     0xff1d
-convertGeOp         EQU     0xff26
-convertLtOp         EQU     0xff2f
-convertGtOp         EQU     0xff38
-resetVideoTable     EQU     0xffd8
-initClearFuncs      EQU     0xff41
-clearCursorRow      EQU     0xfe5e
-printInit           EQU     0xfea7
-printText           EQU     0xffb8
-printDigit          EQU     0xfec2
-printInt16          EQU     0xff64
-printChar           EQU     0xfd00
-newLineScroll       EQU     0xfe00
+realTimeProc        EQU     0xff63
+convertEqOp         EQU     0xff6c
+convertNeOp         EQU     0xff75
+convertLeOp         EQU     0xff7e
+convertGeOp         EQU     0xff87
+convertLtOp         EQU     0xff90
+convertGtOp         EQU     0xff99
+resetVideoTable     EQU     0xfeb2
+initClearFuncs      EQU     0xffa2
+clearCursorRow      EQU     0xfd00
+printInit           EQU     0xffe5
+printText           EQU     0xffc5
+printDigit          EQU     0xfed1
+printInt16          EQU     0xfe00
+printChar           EQU     0xfd49
+newLineScroll       EQU     0xfe54
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2

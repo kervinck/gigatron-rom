@@ -32,10 +32,10 @@ highByteMask        EQU                     register0 + 0x2C
 ; Labels
 _entryPoint_        EQU                     0x0200
 _repeat_0x0249      EQU                     0x0249
-_while_0x026a       EQU                     0x0262
-_else_0x028b        EQU                     0x0279
-_endif_0x0299       EQU                     0x0287
-_wend_0x02a3        EQU                     0x028f
+_while_0x0264       EQU                     0x0260
+_else_0x0285        EQU                     0x0277
+_endif_0x0293       EQU                     0x0285
+_wend_0x029d        EQU                     0x028d
 
 ; Variables
 _a                  EQU                     0x0030
@@ -66,33 +66,33 @@ _repeat_0x0249      PrintVarInt16           _a
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print a
 
-                    LDW                     _a
-                    ADDI                    1
-                    STW                     _a
-                    SUBI                    8
-                    BNE                     _repeat_0x0249                  ; a=a+1 : until a &&= count + 1
+                    INC                     _a                              ; inc a
 
-_while_0x026a       LDW                     _a
-                    BLE                     _wend_0x02a3                    ; while a &&> 0
+                    LDW                     _a
+                    SUBI                    8
+                    BNE                     _repeat_0x0249                  ; until a &&= count + 1
+
+_while_0x0264       LDW                     _a
+                    BLE                     _wend_0x029d                    ; while a &&> 0
 
                     LDW                     _a
                     SUBI                    1
-                    BNE                     _else_0x028b                    ; if a &&= 1
+                    BNE                     _else_0x0285                    ; if a &&= 1
 
                     PrintVarInt16           _a
-                    BRA                     _endif_0x0299                   ; print a;
+                    BRA                     _endif_0x0293                   ; print a;
 
-_else_0x028b        PrintVarInt16           _a
+_else_0x0285        PrintVarInt16           _a
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print a
 
-_endif_0x0299       LDW                     _a
+_endif_0x0293       LDW                     _a
                     SUBI                    1
                     STW                     _a                              ; a=a-1
 
-                    BRA                     _while_0x026a                   ; wend
+                    BRA                     _while_0x0264                   ; wend
 
-_wend_0x02a3        BRA                     _wend_0x02a3                    ; END
+_wend_0x029d        BRA                     _wend_0x029d                    ; END
 
 
 
@@ -102,22 +102,22 @@ _wend_0x02a3        BRA                     _wend_0x02a3                    ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0xff00
-convertEqOp         EQU     0xff09
-convertNeOp         EQU     0xff12
-convertLeOp         EQU     0xff1b
-convertGeOp         EQU     0xff24
-convertLtOp         EQU     0xff2d
-convertGtOp         EQU     0xff36
-resetVideoTable     EQU     0xfe5e
-initClearFuncs      EQU     0xff3f
-clearVertBlinds     EQU     0xff62
-clearCursorRow      EQU     0xfe7d
-printInit           EQU     0xfec6
-printDigit          EQU     0xfd00
-printInt16          EQU     0xff9c
-printChar           EQU     0xfd22
-newLineScroll       EQU     0xfe00
+realTimeProc        EQU     0xff60
+convertEqOp         EQU     0xff69
+convertNeOp         EQU     0xff72
+convertLeOp         EQU     0xff7b
+convertGeOp         EQU     0xff84
+convertLtOp         EQU     0xff8d
+convertGtOp         EQU     0xff96
+resetVideoTable     EQU     0xfeb2
+initClearFuncs      EQU     0xff9f
+clearVertBlinds     EQU     0xffc2
+clearCursorRow      EQU     0xfd00
+printInit           EQU     0xfed1
+printDigit          EQU     0xfd49
+printInt16          EQU     0xfe00
+printChar           EQU     0xfd6b
+newLineScroll       EQU     0xfe54
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2

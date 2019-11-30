@@ -31,25 +31,28 @@ highByteMask        EQU                     register0 + 0x2C
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_1                  EQU                     0x0248
-_8                  EQU                     0x026e
-_15                 EQU                     0x02da
-_16                 EQU                     0x02e0
-_20                 EQU                     0x02e6
-_end_0x0319         EQU                     0x02eb
+_end_0x031e         EQU                     0x02d6
 
 ; Variables
 _a                  EQU                     0x0030
 _b                  EQU                     0x0032
-_bb                 EQU                     0x0034
-_z                  EQU                     0x0036
-_j                  EQU                     0x0038
+_dog                EQU                     0x0034
 
 ; Strings
 _str_0xff60          EQU                     0xff60
-_str_0xff60          DB                      1 ' ' 0
-_str_0xff63          EQU                     0xff63
-_str_0xff63          DB                      5 ' dog ' 0
+_str_0xff60          DB                      53 'aioujehfiadsuhgfaissuhfgdiughafpiusfghpdsiufghspi;udf' 0
+_cat$                EQU                     0xff97
+_cat$                DB                      3 'cat' 0
+_str_0xfff7          EQU                     0xfff7
+_str_0xfff7          DB                      7 'testing' 0
+_str_0xfe00          EQU                     0xfe00
+_str_0xfe00          DB                      1 'A' 0
+_str_0xfe03          EQU                     0xfe03
+_str_0xfe03          DB                      2 '00' 0
+_str_0xfe07          EQU                     0xfe07
+_str_0xfe07          DB                      4 'FDE8' 0
+_str_0xfe0d          EQU                     0xfe0d
+_str_0xfe0d          DB                      1 ' ' 0
 
 ; Define Bytes
 
@@ -66,65 +69,72 @@ _entryPoint_        InitRealTimeProc
                     Initialise                                              ; INIT
 
                     LDI                     1
-                    STW                     _a
-                    ADDI                    1
-                    STW                     _b                              ; a = 1 : b = a + 1
+                    STW                     _a                              ; a = 1
 
-_1                  LDW                     _b
-                    SUBI                    1
-                    CALL                    convertLeOpAddr
-                    STW                     0xc0
-                    LDW                     _b
-                    SUBI                    1
-                    CALL                    convertGeOpAddr
-                    ADDW                    0xc0
-                    STW                     0xc2
-                    LDW                     _b
-                    SUBI                    33
-                    CALL                    convertEqOpAddr
-                    ADDW                    0xc2
-                    STW                     0xc4
-                    LDW                     _b
-                    SUBI                    32
-                    CALL                    convertNeOpAddr
-                    ADDW                    0xc4
-                    STW                     _bb                             ; bb = (b <= 1) + (b >= 1) + (b = 33) + (b <> 32)
-
-_8                  LDI                     2
-                    ADDW                    _a
-                    STW                     _z
-                    ADDI                    23
-                    SUBW                    _a
-                    STW                     _j
-                    PrintVarInt16           _a
-                    PrintString             _str_0xff60
-                    PrintVarInt16           _b
-                    PrintString             _str_0xff60
                     LDI                     1
-                    ADDW                    _b
-                    PrintAcInt16            
-                    PrintString             _str_0xff63
-                    PrintVarInt16           _bb
-                    PrintString             _str_0xff60
-                    LDW                     _z
-                    SUBI                    20
-                    CALL                    convertGtOpAddr
-                    PrintAcInt16            
+                    ST                      _a + 1
+                    LDI                     0
+                    ST                      _a                              ; a.hi = 1 : a.lo = 0
+
+                    LD                      _a + 1
+                    ADDI                    1
+                    STW                     _b                              ; b = a.hi + 1
+
+                    LDWI                    224
+                    STW                     register0
+                    LD                      _a
+                    POKE                    register0                       ; poke &h00E0, a.lo
+
+                    LD                      _b + 1
+                    STW                     mathX
+                    LDI                     3
+                    STW                     mathY
+                    LDWI                    multiply16bit
+                    CALL                    giga_vAC
+                    STW                     0xc0
+                    LD                      _a
+                    SUBW                    0xc0
+                    ADDI                    1
+                    SUBW                    _a
+                    STW                     0xc2
+                    LDWI                    224
+                    STW                     register0
+                    LDW                     0xc2
+                    DOKE                    register0                       ; doke &h00E0, a.lo - b.hi * 3 + 1 - a
+
+                    LDWI                    clearVertBlinds
+                    CALL                    giga_vAC                        ; cls
+
+                    LDI                     0
+                    STW                     _dog                            ; dog=0 : cat$="cat"
+
+                    PrintString             _str_0xfff7
+                    LDWI                    0xff97                          ; input "testing", cat$
+
+                    LDI                     2
+                    RandMod                 
+                    ADDI                    2
+                    STW                     0xc4
+                    LDWI                    0xff97
+                    PEEK                    
+                    ADDW                    0xc4
+                    ADDI                    27
+                    STW                     _a                              ; a = rnd(len(dog)) + len(dog) + len(cat$) + 27
+
+                    LDI                     53
+                    ADDI                    9
+                    STW                     _b                              ; b = len(big$) + len(a) + len(chr$(65)) + len(hex$(256)) + len(HEXW$(65000))
+
                     LDWI                    newLineScroll
-                    CALL                    giga_vAC                        ; z = 2 + a + 0 : j = z + 23 -a : print a;" ";b;" ";1 + b;" dog ";bb;" ";(z > 20)
+                    CALL                    giga_vAC                        ; print
 
-_15                 LDW                     _a
-                    ADDI                    1
-                    STW                     _a                              ; a=(a+1)
+                    PrintVarInt16           _a
+                    PrintString             _str_0xfe0d
+                    PrintVarInt16           _b
+                    LDWI                    newLineScroll
+                    CALL                    giga_vAC                        ; print a.lo;" ";b
 
-_16                 LDW                     _b
-                    ADDI                    1
-                    STW                     _b                              ; b = b+1
-
-_20                 LDWI                    _1
-                    CALL                    giga_vAC                        ; goto 1
-
-_end_0x0319         BRA                     _end_0x0319                     ; END
+_end_0x031e         BRA                     _end_0x031e                     ; end
 
 
 
@@ -134,22 +144,26 @@ _end_0x0319         BRA                     _end_0x0319                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0xff6a
-convertEqOp         EQU     0xff73
-convertNeOp         EQU     0xff7c
-convertLeOp         EQU     0xff85
-convertGeOp         EQU     0xff8e
-convertLtOp         EQU     0xff97
-convertGtOp         EQU     0xffa0
-resetVideoTable     EQU     0xfeb2
-initClearFuncs      EQU     0xffa9
-clearCursorRow      EQU     0xfd00
-printInit           EQU     0xfed1
-printText           EQU     0xffcc
-printDigit          EQU     0xfd49
-printInt16          EQU     0xfe00
-printChar           EQU     0xfd6b
-newLineScroll       EQU     0xfe54
+realTimeProc        EQU     0xfe10
+convertEqOp         EQU     0xfe19
+convertNeOp         EQU     0xfe22
+convertLeOp         EQU     0xfe2b
+convertGeOp         EQU     0xfe34
+convertLtOp         EQU     0xfe3d
+convertGtOp         EQU     0xfe46
+multiply16bit       EQU     0xfe72
+divide16bit         EQU     0xfc00
+randMod16bit        EQU     0xfd00
+resetVideoTable     EQU     0xfdc5
+initClearFuncs      EQU     0xfe4f
+clearVertBlinds     EQU     0xfe99
+clearCursorRow      EQU     0xfc5a
+printInit           EQU     0xfde4
+printText           EQU     0xfed3
+printDigit          EQU     0xfca3
+printInt16          EQU     0xfd71
+printChar           EQU     0xfb00
+newLineScroll       EQU     0xfd13
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -226,6 +240,108 @@ convertGt_1         LDI     1
                     RET
 
 
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+mathX               EQU     register0
+mathY               EQU     register1
+mathSum             EQU     register2
+mathMask            EQU     register3
+mathRem             EQU     register8
+mathSign            EQU     register9
+mathScratch         EQU     register10
+mathShift           EQU     register11
+    
+    
+                    ; accumulator = mathX * mathY, (result 16bit)
+multiply16bit       LDI     0
+                    STW     mathSum
+                    LDI     1
+    
+multiply16_loop     STW     mathMask
+                    ANDW    mathY
+                    BEQ     multiply16_skip
+                    LDW     mathSum
+                    ADDW    mathX
+                    STW     mathSum
+                    
+multiply16_skip     LDW     mathX
+                    ADDW    mathX
+                    STW     mathX
+                    LDW     mathMask
+                    ADDW    mathMask
+                    BNE     multiply16_loop
+                    PUSH
+                    CALL    realTimeProcAddr
+                    POP
+                    LDW     mathSum
+                    RET
+
+
+
+                    ; accumulator:mathRem = mathX / mathY, (results 16bit)
+divide16bit         LDW     mathX
+                    XORW    mathY
+                    STW     mathSign
+                    LDW     mathX
+                    BGE     divide16_skip0
+                    LDI     0
+                    SUBW    mathX
+                    STW     mathX
+                    
+divide16_skip0      LDW     mathY                     
+                    BGE     divide16_skip1
+                    LDI     0
+                    SUBW    mathY
+                    STW     mathY
+                    
+divide16_skip1      LDI     0
+                    STW     mathRem
+    
+divide16_loop       STW     mathScratch
+                    LDW     mathRem
+                    ADDW    mathRem
+                    STW     mathRem
+                    LDW     mathX
+                    BGE     divide16_skip3
+                    INC     mathRem
+                    
+divide16_skip3      LDW     mathX
+                    ADDW    mathX
+                    STW     mathX
+                    LDW     mathRem
+                    SUBW    mathY
+                    BLT     divide16_skip4
+                    STW     mathRem
+                    INC     mathX
+                    
+divide16_skip4      PUSH
+                    CALL    realTimeProcAddr
+                    POP
+                    LDW     mathScratch
+                    ADDI    1
+                    ANDI    0x0F
+                    BNE     divide16_loop
+                    LDW     mathSign
+                    BGE     divide16_exit
+                    LDI     0
+                    SUBW    mathX
+                    RET
+                    
+divide16_exit       LDW     mathX
+                    RET
+
+
+randMod16bit        PUSH
+                    LDWI    SYS_Random_34
+                    STW     giga_sysFn
+                    SYS     0xFD
+                    STW     mathX
+                    LDWI    divide16bit
+                    CALL    giga_vAC
+                    LDW     mathRem
+                    POP                    
+                    RET
+
+
 
 ; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 xreset              EQU     register0
@@ -278,6 +394,42 @@ initClearFuncs      PUSH
     
                     LDWI    SYS_Draw4_30                        ; setup 4 pixel SYS routine
                     STW     giga_sysFn
+                    POP
+                    RET
+
+
+                    ; clears the viewable screen using a vertical blinds effect
+clearVertBlinds     PUSH
+                    LDWI    initClearFuncs
+                    CALL    giga_vAC
+
+                    LDWI    giga_vram
+                    STW     giga_sysArg4
+                    LD      giga_sysArg4 + 1
+                    ST      top
+    
+clearVB_loop        CALL    realTimeProcAddr
+                    LD      top
+                    ST      giga_sysArg4 + 1                    ; top line
+                    SYS     0xFF                                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+    
+                    LDWI    giga_yres - 1 + 16
+                    SUBW    top
+                    ST      giga_sysArg4 + 1                    ; bottom line
+                    SYS     0xFF                                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+    
+                    LD      giga_sysArg4
+                    ADDI    0x04
+                    ST      giga_sysArg4
+                    SUBI    giga_xres
+                    BLT     clearVB_loop
+    
+                    LDI     0
+                    ST      giga_sysArg4
+                    INC     top                                 ; next top line
+                    LD      top
+                    SUBI    giga_yres / 2 + 8
+                    BLT     clearVB_loop
                     POP
                     RET
 

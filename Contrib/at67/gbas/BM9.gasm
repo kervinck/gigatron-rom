@@ -62,20 +62,20 @@ _M                  EQU                     0x0034
 _L                  EQU                     0x0036
 
 ; Strings
-_str_0xff00          EQU                     0xff00
-_str_0xff00          DB                      13 'INTERFACE AGE'
-_str_0xff0e          EQU                     0xff0e
-_str_0xff0e          DB                      13 ' PRIME-NUMBER'
-_str_0xff1c          EQU                     0xff1c
-_str_0xff1c          DB                      10 ' BENCHMARK'
-_str_0xff27          EQU                     0xff27
-_str_0xff27          DB                      8 ' PROGRAM'
-_str_0xff30          EQU                     0xff30
-_str_0xff30          DB                      12 'For Gigatron'
-_str_0xff3d          EQU                     0xff3d
-_str_0xff3d          DB                      9 ' gtBASIC '
-_str_0xff47          EQU                     0xff47
-_str_0xff47          DB                      4 'DONE'
+_str_0x7ea0          EQU                     0x7ea0
+_str_0x7ea0          DB                      13 'INTERFACE AGE' 0
+_str_0x7eaf          EQU                     0x7eaf
+_str_0x7eaf          DB                      13 ' PRIME-NUMBER' 0
+_str_0x7ebe          EQU                     0x7ebe
+_str_0x7ebe          DB                      10 ' BENCHMARK' 0
+_str_0x7eca          EQU                     0x7eca
+_str_0x7eca          DB                      8 ' PROGRAM' 0
+_str_0x7ed4          EQU                     0x7ed4
+_str_0x7ed4          DB                      12 'For Gigatron' 0
+_str_0x7ee2          EQU                     0x7ee2
+_str_0x7ee2          DB                      9 ' gtBASIC ' 0
+_str_0x7eed          EQU                     0x7eed
+_str_0x7eed          DB                      4 'DONE' 0
 
 ; Define Bytes
 
@@ -94,19 +94,19 @@ _entryPoint_        InitRealTimeProc
                     LDWI                    clearVertBlinds
                     CALL                    giga_vAC                        ; cls
 
-_100                PrintString             _str_0xff00                     ; PRINT "INTERFACE AGE";
+_100                PrintString             _str_0x7ea0                     ; PRINT "INTERFACE AGE";
 
-_101                PrintString             _str_0xff0e                     ; PRINT " PRIME-NUMBER";
+_101                PrintString             _str_0x7eaf                     ; PRINT " PRIME-NUMBER";
 
-_102                PrintString             _str_0xff1c                     ; PRINT " BENCHMARK";
+_102                PrintString             _str_0x7ebe                     ; PRINT " BENCHMARK";
 
-_103                PrintString             _str_0xff27
+_103                PrintString             _str_0x7eca
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; PRINT " PROGRAM"
 
-_104                PrintString             _str_0xff30                     ; PRINT "For Gigatron";
+_104                PrintString             _str_0x7ed4                     ; PRINT "For Gigatron";
 
-_105                PrintString             _str_0xff3d
+_105                PrintString             _str_0x7ee2
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; PRINT " gtBASIC "
 
@@ -169,7 +169,7 @@ _220                LDWI                    newLineScroll
 _230                LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; PRINT
 
-_240                PrintString             _str_0xff47
+_240                PrintString             _str_0x7eed
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; PRINT "DONE"
 
@@ -183,24 +183,24 @@ _250                BRA                     _250                            ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0xff4c
-convertEqOp         EQU     0xff55
-convertNeOp         EQU     0xff5e
-convertLeOp         EQU     0xff67
-convertGeOp         EQU     0xff70
-convertLtOp         EQU     0xff79
-convertGtOp         EQU     0xff82
-divide16bit         EQU     0xfe7e
-resetVideoTable     EQU     0xfed8
-initClearFuncs      EQU     0xff8b
-clearVertBlinds     EQU     0xffae
-clearCursorRow      EQU     0xfd54
-printInit           EQU     0xfd9d
-printText           EQU     0xfe00
-printDigit          EQU     0xfdb8
-printInt16          EQU     0xfd00
-printChar           EQU     0xfc00
-newLineScroll       EQU     0xfe20
+realTimeProc        EQU     0x7ef3
+convertEqOp         EQU     0x7da0
+convertNeOp         EQU     0x7da9
+convertLeOp         EQU     0x7db2
+convertGeOp         EQU     0x7dbb
+convertLtOp         EQU     0x7dc4
+convertGtOp         EQU     0x7dcd
+divide16bit         EQU     0x7aa0
+resetVideoTable     EQU     0x78a0
+initClearFuncs      EQU     0x7dd6
+clearVertBlinds     EQU     0x7ca0
+clearCursorRow      EQU     0x77a0
+printInit           EQU     0x78bf
+printText           EQU     0x7cda
+printDigit          EQU     0x78da
+printInt16          EQU     0x79a0
+printChar           EQU     0x76a0
+newLineScroll       EQU     0x7ba0
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2

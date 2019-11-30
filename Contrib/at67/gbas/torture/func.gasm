@@ -32,12 +32,12 @@ highByteMask        EQU                     register0 + 0x2C
 ; Labels
 _entryPoint_        EQU                     0x0200
 _10                 EQU                     0x0245
-_blamo              EQU                     0x0380
+_blamo              EQU                     0x0376
 _page_0x0300        EQU                     0x0300
-_end_0x039c         EQU                     0x037e
-_next_0x03b0        EQU                     0x0390
+_end_0x039c         EQU                     0x0374
+_next_0x03b0        EQU                     0x0386
 _page_0x0400        EQU                     0x0400
-_end_0x0434         EQU                     0x040d
+_end_0x0439         EQU                     0x040a
 
 ; Variables
 _addr               EQU                     0x0030
@@ -53,12 +53,12 @@ _g                  EQU                     0x0042
 _h                  EQU                     0x0044
 
 ; Strings
-_str_0xff00          EQU                     0xff00
-_str_0xff00          DB                      1 ' '
-_str_0xff02          EQU                     0xff02
-_str_0xff02          DB                      4 'test'
-_str_0xff07          EQU                     0xff07
-_str_0xff07          DB                      3 'dog'
+_str_0xff60          EQU                     0xff60
+_str_0xff60          DB                      1 ' ' 0
+_str_0xff63          EQU                     0xff63
+_str_0xff63          DB                      4 'test' 0
+_str_0xff69          EQU                     0xff69
+_str_0xff69          DB                      3 'dog' 0
 
 ; Define Bytes
 
@@ -89,9 +89,7 @@ _10                 LDI                     33
                     STW                     0xc0
                     LDI                     0x00
                     PEEK                    
-                    STW                     0xc2
-                    LDI                     0x00
-                    ORW                     0xc2
+                    ORI                     0x00
                     PEEK                    
                     ANDW                    _addr
                     PEEK                    
@@ -108,9 +106,7 @@ _10                 LDI                     33
                     STW                     0xcc
                     LDWI                    -1
                     SUBW                    _addr
-                    STW                     0xce
-                    LDI                     72
-                    ADDW                    0xce
+                    ADDI                    72
                     XORW                    0xcc
                     STW                     _a                              ; a = NOT addr - peek(addr AND pEeK(&h0000 OR peek(&h0000))) AND &hFC OR peek(addr+1) + 23 XOR &B00001111 - NOT 56 + NOT addr
 
@@ -122,27 +118,27 @@ _10                 LDI                     33
 
                     LDW                     _a
                     PrintAcHexByte          
-                    PrintString             _str_0xff00
+                    PrintString             _str_0xff60
                     LDW                     _b
                     PrintAcHexWord          
-                    PrintString             _str_0xff00
+                    PrintString             _str_0xff60
                     LDWI                    13107
                     PrintAcHexWord          
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print hex$(a);" ";hexw$(b);" ";hexw$(&h1111 OR &h2222)
 
-                    PrintString             _str_0xff02
-                    PrintString             _str_0xff00
-                    PrintString             _str_0xff07
+                    PrintString             _str_0xff63
+                    PrintString             _str_0xff60
+                    PrintString             _str_0xff69
+                    PrintString             _str_0xff60
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
-                    PrintString             _str_0xff00
                     PrintInt16              0x0064
-                    PrintString             _str_0xff00
+                    PrintString             _str_0xff60
                     PrintVarInt16           _a
-                    PrintString             _str_0xff00
+                    PrintString             _str_0xff60
                     LDI                     0x21
                     PEEK                    
                     ANDI                    252
@@ -167,7 +163,7 @@ _page_0x0300        LDW                     0xde
 
                     LDW                     _x
                     PrintAcHexWord          
-                    PrintString             _str_0xff00
+                    PrintString             _str_0xff60
                     LDW                     _z
                     PrintAcHexWord          
                     LDWI                    newLineScroll
@@ -188,6 +184,8 @@ _blamo              PUSH
 
 _next_0x03b0        LDI                     32
                     STW                     strChr
+                    LDWI                    0xff00
+                    STW                     strDstAddr
                     StringChr                                               ; c = CHR$(32)
 
                     LDI                     0x00
@@ -209,7 +207,7 @@ _next_0x03b0        LDI                     32
                     STW                     _b                              ; b = -b
 
                     PrintVarInt16           _i
-                    PrintString             _str_0xff00
+                    PrintString             _str_0xff60
                     LDW                     _b
                     PrintAcHexWord          
                     LDWI                    newLineScroll
@@ -224,11 +222,11 @@ _next_0x03b0        LDI                     32
                     SUBW                    0xc0
                     STW                     _g                              ; g = z - NOT g
 
+                    LDWI                    -1
                     STW                     0xde
                     LDWI                    _page_0x0400
                     CALL                    giga_vAC
 _page_0x0400        LDW                     0xde
-                    LDWI                    -1
                     SUBW                    _a
                     SUBW                    _d
                     STW                     _h                              ; h = NOT a - d
@@ -236,7 +234,7 @@ _page_0x0400        LDW                     0xde
                     POP                     
                     RET                                                     ; return
 
-_end_0x0434         BRA                     _end_0x0434                     ; END
+_end_0x0439         BRA                     _end_0x0439                     ; END
 
 
 
@@ -246,27 +244,27 @@ _end_0x0434         BRA                     _end_0x0434                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0xff0b
-convertEqOp         EQU     0xff14
-convertNeOp         EQU     0xff1d
-convertLeOp         EQU     0xff26
-convertGeOp         EQU     0xff2f
-convertLtOp         EQU     0xff38
-convertGtOp         EQU     0xff41
-resetVideoTable     EQU     0xfd0b
-initClearFuncs      EQU     0xff4a
-clearVertBlinds     EQU     0xff6d
-clearCursorRow      EQU     0xfd2a
-printInit           EQU     0xfd73
-printText           EQU     0xffdc
-printDigit          EQU     0xfd8e
-printInt16          EQU     0xfe77
-printChar           EQU     0xfc00
-printHexByte        EQU     0xffa7
-printHexWord        EQU     0xfe00
-atTextCursor        EQU     0xfecb
-newLineScroll       EQU     0xfe19
-stringChr           EQU     0xfd00
+realTimeProc        EQU     0xff6e
+convertEqOp         EQU     0xff77
+convertNeOp         EQU     0xff80
+convertLeOp         EQU     0xff89
+convertGeOp         EQU     0xff92
+convertLtOp         EQU     0xff9b
+convertGtOp         EQU     0xffa4
+resetVideoTable     EQU     0xfd81
+initClearFuncs      EQU     0xffad
+clearVertBlinds     EQU     0xfe00
+clearCursorRow      EQU     0xfda0
+printInit           EQU     0xfc00
+printText           EQU     0xffd0
+printDigit          EQU     0xfc1b
+printInt16          EQU     0xfd00
+printChar           EQU     0xfc3d
+printHexByte        EQU     0xfe3a
+printHexWord        EQU     0xfe6f
+atTextCursor        EQU     0xfd54
+newLineScroll       EQU     0xfe88
+stringChr           EQU     0xfee6
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -784,11 +782,9 @@ strFinish           EQU     register0
 strSrcAddr          EQU     register1
 strDstAddr          EQU     register2
 strSrcLen           EQU     register3
-strSrcFin           EQU     register3
 strOffset           EQU     register8
 strSrcAddr2         EQU     register9
-strSrcLen2          EQU     register10
-strSrcFin2          EQU     register10
+strTmpAddr          EQU     register10
 
 
                     ; create a char string, (parameter in strChr)
@@ -797,5 +793,8 @@ stringChr           LDI     1
                     INC     strDstAddr
                     LD      strChr
                     POKE    strDstAddr                          ; copy char
+                    INC     strDstAddr
+                    LDI     0
+                    POKE    strDstAddr                          ; terminating 0
                     RET
 

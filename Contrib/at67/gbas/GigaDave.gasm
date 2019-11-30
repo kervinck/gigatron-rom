@@ -257,20 +257,20 @@ _end_0x033b         BRA                     _end_0x033b                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0xff00
-convertEqOp         EQU     0xff09
-convertNeOp         EQU     0xff12
-convertLeOp         EQU     0xff1b
-convertGeOp         EQU     0xff24
-convertLtOp         EQU     0xff2d
-convertGtOp         EQU     0xff36
-resetVideoTable     EQU     0xfe81
-initClearFuncs      EQU     0xff3f
-clearVertBlinds     EQU     0xfe00
-drawHLine           EQU     0xfe3a
-resetAudio          EQU     0xff62
-playMidi            EQU     0xff9b
-midiStartNote       EQU     0xfea0
+realTimeProc        EQU     0xff60
+convertEqOp         EQU     0xff69
+convertNeOp         EQU     0xff72
+convertLeOp         EQU     0xff7b
+convertGeOp         EQU     0xff84
+convertLtOp         EQU     0xff8d
+convertGtOp         EQU     0xff96
+resetVideoTable     EQU     0xfed1
+initClearFuncs      EQU     0xff9f
+clearVertBlinds     EQU     0xfe50
+drawHLine           EQU     0xfe8a
+resetAudio          EQU     0xffc2
+playMidi            EQU     0xfe00
+midiStartNote       EQU     0xfd00
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2

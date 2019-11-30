@@ -14,9 +14,9 @@
 
 namespace Optimiser
 {
-    enum OptimiseTypes {StwLdwPair=0, StwLdPair, ExtraLdw, StwLdwAddw, StwLdwAddwVar, StwLdwAndw, StwLdwAndwVar, StwLdwXorw, StwLdwXorwVar, StwLdwOrw, StwLdwOrwVar,
-                        PokeVar, DokeVar, Lsl8Var, StwPair, StwPairReg, ExtraStw, PeekArray, DeekArray, PokeArray, DokeArray, PokeVarArray, DokeVarArray, PokeTmpArray, DokeTmpArray, 
-                        AddiZero, SubiZero, NumOptimiseTypes};
+    enum OptimiseTypes {StwLdwPair=0, StwLdPair, ExtraLdw, StwLdiAddw, StwLdwAddw, StwLdwAddwVar, StwLdiAndw, StwLdwAndw, StwLdwAndwVar, StwLdiXorw, StwLdwXorw,
+                        StwLdwXorwVar, StwLdiOrw, StwLdwOrw, StwLdwOrwVar, PokeVar, DokeVar, Lsl8Var, StwPair, StwPairReg, ExtraStw, PeekArray, DeekArray, 
+                        PokeArray, DokeArray, PokeVarArray, DokeVarArray, PokeTmpArray, DokeTmpArray, AddiPair, AddiZero, SubiZero, NumOptimiseTypes};
 
     struct MatchSequence
     {
@@ -36,18 +36,28 @@ namespace Optimiser
                 "LD"  + std::string(OPCODE_TRUNC_SIZE - 2, ' ') + "0x" }},
 
         // ExtraLdw
-        {0, 1, {"STW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_",  
+        {0, 1, {"STW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_",
                 "LDW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_"  }},
 
+        // StwLdiAddw
+        {0, 2, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x",
+                "LDI"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "",
+                "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x"}},
+
         // StwLdwAddw
-        {0, 2, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x", 
-                "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x", 
+        {0, 2, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x",
+                "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x",
                 "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x"}},
 
         // StwLdwAddwVar
         {0, 2, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x",
-                "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_", 
+                "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_",
                 "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x"}},
+
+        // StwLdiAndw
+        {0, 2, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x",
+                "LDI"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "",
+                "ANDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x"}},
 
         // StwLdwAndw
         {0, 2, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x",
@@ -59,6 +69,11 @@ namespace Optimiser
                 "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_",
                 "ANDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x"}},
 
+        // StwLdiXorw
+        {0, 2, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x",
+                "LDI"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "",
+                "XORW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x"}},
+
         // StwLdwXorw
         {0, 2, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x",
                 "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x",
@@ -68,6 +83,11 @@ namespace Optimiser
         {0, 2, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x",
                 "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_",
                 "XORW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x"}},
+
+        // StwLdiOrw
+        {0, 2, {"STW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x",
+                "LDI" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "",
+                "ORW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x"}},
 
         // StwLdwOrw
         {0, 2, {"STW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x",
@@ -178,6 +198,10 @@ namespace Optimiser
                 "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
                 "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
                 "DOKE" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "reg"}},
+
+        // AddiPair
+        {0, 0, {"ADDI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "",
+                "ADDI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + ""}},
 
         // AddiZero
         {0, 0, {"ADDI" + std::string(OPCODE_TRUNC_SIZE - 4, ' '), ""}},
@@ -311,341 +335,578 @@ RESTART_OPTIMISE:
                         // Find operand match, (temporary variables are a minimum of 4 chars, i.e. '0xc0')
                         if(firstOperand.substr(0, 4) == secondOperand.substr(0, 4))
                         {
-                            // Match STW LDW, delete STW LDW
-                            if(j == StwLdwPair  ||  j == StwLdPair)
+                            switch(j)
                             {
-                                // Only one of these can have an internal label
-                                if(!migrateInternalLabel(i, firstLine, firstLine + 2)) break;
-                                if(!migrateInternalLabel(i, firstLine + 1, firstLine + 2)) break;
-
-                                // Delete STW and LDW
-                                linesDeleted = true;
-                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine + 1);
-                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine);
-                                adjustLabelAddresses(i, firstLine, -4);
-                                adjustVasmAddresses(i, firstLine, -4);
-                            }
-                                
-                            // Match STW LDW, delete LDW
-                            else if(j == ExtraLdw)
-                            {
-                                // If the LDW has an internal label, then it probably can't be optimised away
-                                if(!Compiler::getCodeLines()[i]._vasm[firstLine + 1]._internalLabel.size())
+                                // Match STW LDW, delete STW LDW
+                                case StwLdPair:
+                                case StwLdwPair:
                                 {
-                                    // Migrate internal label to next available instruction
+                                    // Only one of these can have an internal label
+                                    if(!migrateInternalLabel(i, firstLine, firstLine + 2)) break;
                                     if(!migrateInternalLabel(i, firstLine + 1, firstLine + 2)) break;
 
-                                    // Delete LDW
+                                    // Delete STW and LDW
                                     linesDeleted = true;
                                     itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine + 1);
-                                    adjustLabelAddresses(i, firstLine + 1, -2);
-                                    adjustVasmAddresses(i, firstLine + 1, -2);
+                                    itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine);
+                                    adjustLabelAddresses(i, firstLine, -4);
+                                    adjustVasmAddresses(i, firstLine, -4);
                                 }
-                            }
+                                break;
+                                
+                                // Match STW LDW, delete LDW
+                                case ExtraLdw:
+                                {
+                                    // If the LDW has an internal label, then it probably can't be optimised away
+                                    if(!Compiler::getCodeLines()[i]._vasm[firstLine + 1]._internalLabel.size())
+                                    {
+                                        // Migrate internal label to next available instruction
+                                        if(!migrateInternalLabel(i, firstLine + 1, firstLine + 2)) break;
 
-                            // Match STW LDW ADDW, copy LDW operand to ADDW operand and delete STW LDW
-                            else if(j == StwLdwAddw)
-                            {
-                                // Only one of these can have an internal label
-                                if(!migrateInternalLabel(i, firstLine, firstLine + 2)) break;
-                                if(!migrateInternalLabel(i, firstLine + 1, firstLine + 2)) break;
+                                        // Delete LDW
+                                        linesDeleted = true;
+                                        itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine + 1);
+                                        adjustLabelAddresses(i, firstLine + 1, -2);
+                                        adjustVasmAddresses(i, firstLine + 1, -2);
+                                    }
+                                }
+                                break;
 
-                                // ADDW's operand becomes the LDW's operand
-                                size_t ldwSpace = Compiler::getCodeLines()[i]._vasm[firstLine + 1]._code.find_first_of("  \n\r\f\t\v");
-                                std::string ldwOperand = Compiler::getCodeLines()[i]._vasm[firstLine + 1]._code.substr(ldwSpace);
-                                Expression::stripWhitespace(ldwOperand);
-                                Compiler::getCodeLines()[i]._vasm[firstLine + 2]._code = matchSequences[j]._sequence[2] + ldwOperand.substr(2); // don't need the leading "0x"
+                                // Match STW LDI ADDW, copy LDI operand to ADDW operand, change ADDW to ADDI, delete STW LDW
+                                case StwLdiAddw:
+                                {
+                                    // Only one of these can have an internal label
+                                    if(!migrateInternalLabel(i, firstLine, firstLine + 2)) break;
+                                    if(!migrateInternalLabel(i, firstLine + 1, firstLine + 2)) break;
 
-                                // Delete STW and LDW
-                                linesDeleted = true;
-                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine + 1);
-                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine);
-                                adjustLabelAddresses(i, firstLine, -4);
-                                adjustVasmAddresses(i, firstLine, -4);
-                            }
-                            // Match STW LDW ADDW, copy LDW operand to ADDW operand and delete STW LDW, (LDW is a var)
-                            else if(j == StwLdwAddwVar)
-                            {
-                                // Only one of these can have an internal label
-                                if(!migrateInternalLabel(i, firstLine, firstLine + 2)) break;
-                                if(!migrateInternalLabel(i, firstLine + 1, firstLine + 2)) break;
+                                    // ADDW's operand becomes the LDI's operand
+                                    size_t ldiSpace = Compiler::getCodeLines()[i]._vasm[firstLine + 1]._code.find_first_of("  \n\r\f\t\v");
+                                    std::string ldiOperand = Compiler::getCodeLines()[i]._vasm[firstLine + 1]._code.substr(ldiSpace);
+                                    Expression::stripWhitespace(ldiOperand);
+                                    Compiler::getCodeLines()[i]._vasm[firstLine + 2]._code = "ADDI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + ldiOperand;
 
-                                // ADDW's operand becomes the LDW's operand
-                                size_t ldwSpace = Compiler::getCodeLines()[i]._vasm[firstLine + 1]._code.find_first_of("  \n\r\f\t\v");
-                                std::string ldwOperand = Compiler::getCodeLines()[i]._vasm[firstLine + 1]._code.substr(ldwSpace);
-                                Expression::stripWhitespace(ldwOperand);
-                                Compiler::getCodeLines()[i]._vasm[firstLine + 2]._code = "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + ldwOperand;
+                                    // Delete STW and LDW
+                                    linesDeleted = true;
+                                    itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine + 1);
+                                    itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine);
+                                    adjustLabelAddresses(i, firstLine, -4);
+                                    adjustVasmAddresses(i, firstLine, -4);
+                                }
+                                break;
 
-                                // Delete STW and LDW
-                                linesDeleted = true;
-                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine + 1);
-                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine);
-                                adjustLabelAddresses(i, firstLine, -4);
-                                adjustVasmAddresses(i, firstLine, -4);
-                            }
-                            // Match STW LDW ANDW, copy LDW operand to ANDW operand and delete STW LDW
-                            else if(j == StwLdwAndw)
-                            {
-                                // Only one of these can have an internal label
-                                if(!migrateInternalLabel(i, firstLine, firstLine + 2)) break;
-                                if(!migrateInternalLabel(i, firstLine + 1, firstLine + 2)) break;
+                                // Match STW LDW ADDW, copy LDW operand to ADDW operand and delete STW LDW
+                                case StwLdwAddw:
+                                {
+                                    // Only one of these can have an internal label
+                                    if(!migrateInternalLabel(i, firstLine, firstLine + 2)) break;
+                                    if(!migrateInternalLabel(i, firstLine + 1, firstLine + 2)) break;
 
-                                // ANDW's operand becomes the LDW's operand
-                                size_t ldwSpace = Compiler::getCodeLines()[i]._vasm[firstLine + 1]._code.find_first_of("  \n\r\f\t\v");
-                                std::string ldwOperand = Compiler::getCodeLines()[i]._vasm[firstLine + 1]._code.substr(ldwSpace);
-                                Expression::stripWhitespace(ldwOperand);
-                                Compiler::getCodeLines()[i]._vasm[firstLine + 2]._code = matchSequences[j]._sequence[2] + ldwOperand.substr(2); // don't need the leading "0x"
+                                    // ADDW's operand becomes the LDW's operand
+                                    size_t ldwSpace = Compiler::getCodeLines()[i]._vasm[firstLine + 1]._code.find_first_of("  \n\r\f\t\v");
+                                    std::string ldwOperand = Compiler::getCodeLines()[i]._vasm[firstLine + 1]._code.substr(ldwSpace);
+                                    Expression::stripWhitespace(ldwOperand);
+                                    Compiler::getCodeLines()[i]._vasm[firstLine + 2]._code = matchSequences[j]._sequence[2] + ldwOperand.substr(2); // don't need the leading "0x"
 
-                                // Delete STW and LDW
-                                linesDeleted = true;
-                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine + 1);
-                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine);
-                                adjustLabelAddresses(i, firstLine, -4);
-                                adjustVasmAddresses(i, firstLine, -4);
-                            }
-                            // Match STW LDW ANDW, copy LDW operand to ANDW operand and delete STW LDW, (LDW is a var)
-                            else if(j == StwLdwAndwVar)
-                            {
-                                // Only one of these can have an internal label
-                                if(!migrateInternalLabel(i, firstLine, firstLine + 2)) break;
-                                if(!migrateInternalLabel(i, firstLine + 1, firstLine + 2)) break;
+                                    // Delete STW and LDW
+                                    linesDeleted = true;
+                                    itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine + 1);
+                                    itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine);
+                                    adjustLabelAddresses(i, firstLine, -4);
+                                    adjustVasmAddresses(i, firstLine, -4);
+                                }
+                                break;
 
-                                // ANDW's operand becomes the LDW's operand
-                                size_t ldwSpace = Compiler::getCodeLines()[i]._vasm[firstLine + 1]._code.find_first_of("  \n\r\f\t\v");
-                                std::string ldwOperand = Compiler::getCodeLines()[i]._vasm[firstLine + 1]._code.substr(ldwSpace);
-                                Expression::stripWhitespace(ldwOperand);
-                                Compiler::getCodeLines()[i]._vasm[firstLine + 2]._code = "ANDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + ldwOperand;
+                                // Match STW LDW ADDW, copy LDW operand to ADDW operand and delete STW LDW, (LDW is a var)
+                                case StwLdwAddwVar:
+                                {
+                                    // Only one of these can have an internal label
+                                    if(!migrateInternalLabel(i, firstLine, firstLine + 2)) break;
+                                    if(!migrateInternalLabel(i, firstLine + 1, firstLine + 2)) break;
 
-                                // Delete STW and LDW
-                                linesDeleted = true;
-                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine + 1);
-                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine);
-                                adjustLabelAddresses(i, firstLine, -4);
-                                adjustVasmAddresses(i, firstLine, -4);
-                            }
-                            // Match STW LDW XORW, copy LDW operand to XORW operand and delete STW LDW
-                            else if(j == StwLdwXorw)
-                            {
-                                // Only one of these can have an internal label
-                                if(!migrateInternalLabel(i, firstLine, firstLine + 2)) break;
-                                if(!migrateInternalLabel(i, firstLine + 1, firstLine + 2)) break;
+                                    // ADDW's operand becomes the LDW's operand
+                                    size_t ldwSpace = Compiler::getCodeLines()[i]._vasm[firstLine + 1]._code.find_first_of("  \n\r\f\t\v");
+                                    std::string ldwOperand = Compiler::getCodeLines()[i]._vasm[firstLine + 1]._code.substr(ldwSpace);
+                                    Expression::stripWhitespace(ldwOperand);
+                                    Compiler::getCodeLines()[i]._vasm[firstLine + 2]._code = "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + ldwOperand;
 
-                                // XORW's operand becomes the LDW's operand
-                                size_t ldwSpace = Compiler::getCodeLines()[i]._vasm[firstLine + 1]._code.find_first_of("  \n\r\f\t\v");
-                                std::string ldwOperand = Compiler::getCodeLines()[i]._vasm[firstLine + 1]._code.substr(ldwSpace);
-                                Expression::stripWhitespace(ldwOperand);
-                                Compiler::getCodeLines()[i]._vasm[firstLine + 2]._code = matchSequences[j]._sequence[2] + ldwOperand.substr(2); // don't need the leading "0x"
+                                    // Delete STW and LDW
+                                    linesDeleted = true;
+                                    itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine + 1);
+                                    itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine);
+                                    adjustLabelAddresses(i, firstLine, -4);
+                                    adjustVasmAddresses(i, firstLine, -4);
+                                }
+                                break;
 
-                                // Delete STW and LDW
-                                linesDeleted = true;
-                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine + 1);
-                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine);
-                                adjustLabelAddresses(i, firstLine, -4);
-                                adjustVasmAddresses(i, firstLine, -4);
-                            }
-                            // Match STW LDW XORW, copy LDW operand to XORW operand and delete STW LDW, (LDW is a var)
-                            else if(j == StwLdwXorwVar)
-                            {
-                                // Only one of these can have an internal label
-                                if(!migrateInternalLabel(i, firstLine, firstLine + 2)) break;
-                                if(!migrateInternalLabel(i, firstLine + 1, firstLine + 2)) break;
+                                // Match STW LDI ANDW, copy LDI operand to ANDW operand, change ANDW to ANDI, delete STW LDW
+                                case StwLdiAndw:
+                                {
+                                    // Only one of these can have an internal label
+                                    if(!migrateInternalLabel(i, firstLine, firstLine + 2)) break;
+                                    if(!migrateInternalLabel(i, firstLine + 1, firstLine + 2)) break;
 
-                                // XORW's operand becomes the LDW's operand
-                                size_t ldwSpace = Compiler::getCodeLines()[i]._vasm[firstLine + 1]._code.find_first_of("  \n\r\f\t\v");
-                                std::string ldwOperand = Compiler::getCodeLines()[i]._vasm[firstLine + 1]._code.substr(ldwSpace);
-                                Expression::stripWhitespace(ldwOperand);
-                                Compiler::getCodeLines()[i]._vasm[firstLine + 2]._code = "XORW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + ldwOperand;
+                                    // ANDW's operand becomes the LDI's operand
+                                    size_t ldiSpace = Compiler::getCodeLines()[i]._vasm[firstLine + 1]._code.find_first_of("  \n\r\f\t\v");
+                                    std::string ldiOperand = Compiler::getCodeLines()[i]._vasm[firstLine + 1]._code.substr(ldiSpace);
+                                    Expression::stripWhitespace(ldiOperand);
+                                    Compiler::getCodeLines()[i]._vasm[firstLine + 2]._code = "ANDI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + ldiOperand;
 
-                                // Delete STW and LDW
-                                linesDeleted = true;
-                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine + 1);
-                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine);
-                                adjustLabelAddresses(i, firstLine, -4);
-                                adjustVasmAddresses(i, firstLine, -4);
-                            }
-                            // Match STW LDW ORW, copy LDW operand to ORW operand and delete STW LDW
-                            else if(j == StwLdwOrw)
-                            {
-                                // Only one of these can have an internal label
-                                if(!migrateInternalLabel(i, firstLine, firstLine + 2)) break;
-                                if(!migrateInternalLabel(i, firstLine + 1, firstLine + 2)) break;
+                                    // Delete STW and LDW
+                                    linesDeleted = true;
+                                    itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine + 1);
+                                    itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine);
+                                    adjustLabelAddresses(i, firstLine, -4);
+                                    adjustVasmAddresses(i, firstLine, -4);
+                                }
+                                break;
 
-                                // ORW's operand becomes the LDW's operand
-                                size_t ldwSpace = Compiler::getCodeLines()[i]._vasm[firstLine + 1]._code.find_first_of("  \n\r\f\t\v");
-                                std::string ldwOperand = Compiler::getCodeLines()[i]._vasm[firstLine + 1]._code.substr(ldwSpace);
-                                Expression::stripWhitespace(ldwOperand);
-                                Compiler::getCodeLines()[i]._vasm[firstLine + 2]._code = matchSequences[j]._sequence[2] + ldwOperand.substr(2); // don't need the leading "0x"
+                                // Match STW LDW ANDW, copy LDW operand to ANDW operand and delete STW LDW
+                                case StwLdwAndw:
+                                {
+                                    // Only one of these can have an internal label
+                                    if(!migrateInternalLabel(i, firstLine, firstLine + 2)) break;
+                                    if(!migrateInternalLabel(i, firstLine + 1, firstLine + 2)) break;
 
-                                // Delete STW and LDW
-                                linesDeleted = true;
-                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine + 1);
-                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine);
-                                adjustLabelAddresses(i, firstLine, -4);
-                                adjustVasmAddresses(i, firstLine, -4);
-                            }
-                            // Match STW LDW ORW, copy LDW operand to ORW operand and delete STW LDW, (LDW is a var)
-                            else if(j == StwLdwOrwVar)
-                            {
-                                // Only one of these can have an internal label
-                                if(!migrateInternalLabel(i, firstLine, firstLine + 2)) break;
-                                if(!migrateInternalLabel(i, firstLine + 1, firstLine + 2)) break;
+                                    // ANDW's operand becomes the LDW's operand
+                                    size_t ldwSpace = Compiler::getCodeLines()[i]._vasm[firstLine + 1]._code.find_first_of("  \n\r\f\t\v");
+                                    std::string ldwOperand = Compiler::getCodeLines()[i]._vasm[firstLine + 1]._code.substr(ldwSpace);
+                                    Expression::stripWhitespace(ldwOperand);
+                                    Compiler::getCodeLines()[i]._vasm[firstLine + 2]._code = matchSequences[j]._sequence[2] + ldwOperand.substr(2); // don't need the leading "0x"
 
-                                // ORW's operand becomes LDW's operand
-                                size_t ldwSpace = Compiler::getCodeLines()[i]._vasm[firstLine + 1]._code.find_first_of("  \n\r\f\t\v");
-                                std::string ldwOperand = Compiler::getCodeLines()[i]._vasm[firstLine + 1]._code.substr(ldwSpace);
-                                Expression::stripWhitespace(ldwOperand);
-                                Compiler::getCodeLines()[i]._vasm[firstLine + 2]._code = "ORW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + ldwOperand;
+                                    // Delete STW and LDW
+                                    linesDeleted = true;
+                                    itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine + 1);
+                                    itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine);
+                                    adjustLabelAddresses(i, firstLine, -4);
+                                    adjustVasmAddresses(i, firstLine, -4);
+                                }
+                                break;
 
-                                // Delete STW LDW
-                                linesDeleted = true;
-                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine + 1);
-                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine);
-                                adjustLabelAddresses(i, firstLine, -4);
-                                adjustVasmAddresses(i, firstLine, -4);
-                            }
-                            // Match LDW POKE/DOKE LDW, delete second LDW if it matches with first LDW
-                            else if(j == PokeVar  ||  j == DokeVar)
-                            {
-                                // Migrate second LDW's label, (if it has one)
-                                if(!migrateInternalLabel(i, firstLine + 2, firstLine + 3)) break;
+                                // Match STW LDW ANDW, copy LDW operand to ANDW operand and delete STW LDW, (LDW is a var)
+                                case StwLdwAndwVar:
+                                {
+                                    // Only one of these can have an internal label
+                                    if(!migrateInternalLabel(i, firstLine, firstLine + 2)) break;
+                                    if(!migrateInternalLabel(i, firstLine + 1, firstLine + 2)) break;
 
-                                // Delete second LDW
-                                linesDeleted = true;
-                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine + 2);
-                                adjustLabelAddresses(i, firstLine + 2, -2);
-                                adjustVasmAddresses(i, firstLine+ 2, -2);
-                            }
-                            // Match ST LDW ANDW STW, replace ST operand with STW operand, delete LDW ANDW STW
-                            else if(j == Lsl8Var)
-                            {
-                                // ST's operand becomes STW's operand
-                                size_t stwSpace = Compiler::getCodeLines()[i]._vasm[firstLine + 3]._code.find_first_of("  \n\r\f\t\v");
-                                std::string stwOperand = Compiler::getCodeLines()[i]._vasm[firstLine + 3]._code.substr(stwSpace);
-                                Expression::stripWhitespace(stwOperand);
-                                Compiler::getCodeLines()[i]._vasm[firstLine]._code = "ST" + std::string(OPCODE_TRUNC_SIZE - 2, ' ') + stwOperand + " + 1";
+                                    // ANDW's operand becomes the LDW's operand
+                                    size_t ldwSpace = Compiler::getCodeLines()[i]._vasm[firstLine + 1]._code.find_first_of("  \n\r\f\t\v");
+                                    std::string ldwOperand = Compiler::getCodeLines()[i]._vasm[firstLine + 1]._code.substr(ldwSpace);
+                                    Expression::stripWhitespace(ldwOperand);
+                                    Compiler::getCodeLines()[i]._vasm[firstLine + 2]._code = "ANDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + ldwOperand;
 
-                                // Delete LDW ANDW STW
-                                linesDeleted = true;
-                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine + 1);
-                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(itVasm);
-                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(itVasm);
-                                adjustLabelAddresses(i, firstLine + 1, -6);
-                                adjustVasmAddresses(i, firstLine + 1, -6);
+                                    // Delete STW and LDW
+                                    linesDeleted = true;
+                                    itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine + 1);
+                                    itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine);
+                                    adjustLabelAddresses(i, firstLine, -4);
+                                    adjustVasmAddresses(i, firstLine, -4);
+                                }
+                                break;
+
+                                // Match STW LDI XORW, copy LDI operand to XORW operand, change XORW to XORI, delete STW LDW
+                                case StwLdiXorw:
+                                {
+                                    // Only one of these can have an internal label
+                                    if(!migrateInternalLabel(i, firstLine, firstLine + 2)) break;
+                                    if(!migrateInternalLabel(i, firstLine + 1, firstLine + 2)) break;
+
+                                    // XORW's operand becomes the LDI's operand
+                                    size_t ldiSpace = Compiler::getCodeLines()[i]._vasm[firstLine + 1]._code.find_first_of("  \n\r\f\t\v");
+                                    std::string ldiOperand = Compiler::getCodeLines()[i]._vasm[firstLine + 1]._code.substr(ldiSpace);
+                                    Expression::stripWhitespace(ldiOperand);
+                                    Compiler::getCodeLines()[i]._vasm[firstLine + 2]._code = "XORI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + ldiOperand;
+
+                                    // Delete STW and LDW
+                                    linesDeleted = true;
+                                    itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine + 1);
+                                    itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine);
+                                    adjustLabelAddresses(i, firstLine, -4);
+                                    adjustVasmAddresses(i, firstLine, -4);
+                                }
+                                break;
+
+                                // Match STW LDW XORW, copy LDW operand to XORW operand and delete STW LDW
+                                case StwLdwXorw:
+                                {
+                                    // Only one of these can have an internal label
+                                    if(!migrateInternalLabel(i, firstLine, firstLine + 2)) break;
+                                    if(!migrateInternalLabel(i, firstLine + 1, firstLine + 2)) break;
+
+                                    // XORW's operand becomes the LDW's operand
+                                    size_t ldwSpace = Compiler::getCodeLines()[i]._vasm[firstLine + 1]._code.find_first_of("  \n\r\f\t\v");
+                                    std::string ldwOperand = Compiler::getCodeLines()[i]._vasm[firstLine + 1]._code.substr(ldwSpace);
+                                    Expression::stripWhitespace(ldwOperand);
+                                    Compiler::getCodeLines()[i]._vasm[firstLine + 2]._code = matchSequences[j]._sequence[2] + ldwOperand.substr(2); // don't need the leading "0x"
+
+                                    // Delete STW and LDW
+                                    linesDeleted = true;
+                                    itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine + 1);
+                                    itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine);
+                                    adjustLabelAddresses(i, firstLine, -4);
+                                    adjustVasmAddresses(i, firstLine, -4);
+                                }
+                                break;
+
+                                // Match STW LDW XORW, copy LDW operand to XORW operand and delete STW LDW, (LDW is a var)
+                                case StwLdwXorwVar:
+                                {
+                                    // Only one of these can have an internal label
+                                    if(!migrateInternalLabel(i, firstLine, firstLine + 2)) break;
+                                    if(!migrateInternalLabel(i, firstLine + 1, firstLine + 2)) break;
+
+                                    // XORW's operand becomes the LDW's operand
+                                    size_t ldwSpace = Compiler::getCodeLines()[i]._vasm[firstLine + 1]._code.find_first_of("  \n\r\f\t\v");
+                                    std::string ldwOperand = Compiler::getCodeLines()[i]._vasm[firstLine + 1]._code.substr(ldwSpace);
+                                    Expression::stripWhitespace(ldwOperand);
+                                    Compiler::getCodeLines()[i]._vasm[firstLine + 2]._code = "XORW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + ldwOperand;
+
+                                    // Delete STW and LDW
+                                    linesDeleted = true;
+                                    itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine + 1);
+                                    itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine);
+                                    adjustLabelAddresses(i, firstLine, -4);
+                                    adjustVasmAddresses(i, firstLine, -4);
+                                }
+                                break;
+
+                                // Match STW LDI ORW, copy LDI operand to ORW operand, change ORW to ORI, delete STW LDW
+                                case StwLdiOrw:
+                                {
+                                    // Only one of these can have an internal label
+                                    if(!migrateInternalLabel(i, firstLine, firstLine + 2)) break;
+                                    if(!migrateInternalLabel(i, firstLine + 1, firstLine + 2)) break;
+
+                                    // ORW's operand becomes the LDI's operand
+                                    size_t ldiSpace = Compiler::getCodeLines()[i]._vasm[firstLine + 1]._code.find_first_of("  \n\r\f\t\v");
+                                    std::string ldiOperand = Compiler::getCodeLines()[i]._vasm[firstLine + 1]._code.substr(ldiSpace);
+                                    Expression::stripWhitespace(ldiOperand);
+                                    Compiler::getCodeLines()[i]._vasm[firstLine + 2]._code = "ORI" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + ldiOperand;
+
+                                    // Delete STW and LDW
+                                    linesDeleted = true;
+                                    itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine + 1);
+                                    itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine);
+                                    adjustLabelAddresses(i, firstLine, -4);
+                                    adjustVasmAddresses(i, firstLine, -4);
+                                }
+                                break;
+
+                                // Match STW LDW ORW, copy LDW operand to ORW operand and delete STW LDW
+                                case StwLdwOrw:
+                                {
+                                    // Only one of these can have an internal label
+                                    if(!migrateInternalLabel(i, firstLine, firstLine + 2)) break;
+                                    if(!migrateInternalLabel(i, firstLine + 1, firstLine + 2)) break;
+
+                                    // ORW's operand becomes the LDW's operand
+                                    size_t ldwSpace = Compiler::getCodeLines()[i]._vasm[firstLine + 1]._code.find_first_of("  \n\r\f\t\v");
+                                    std::string ldwOperand = Compiler::getCodeLines()[i]._vasm[firstLine + 1]._code.substr(ldwSpace);
+                                    Expression::stripWhitespace(ldwOperand);
+                                    Compiler::getCodeLines()[i]._vasm[firstLine + 2]._code = matchSequences[j]._sequence[2] + ldwOperand.substr(2); // don't need the leading "0x"
+
+                                    // Delete STW and LDW
+                                    linesDeleted = true;
+                                    itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine + 1);
+                                    itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine);
+                                    adjustLabelAddresses(i, firstLine, -4);
+                                    adjustVasmAddresses(i, firstLine, -4);
+                                }
+                                break;
+
+                                // Match STW LDW ORW, copy LDW operand to ORW operand and delete STW LDW, (LDW is a var)
+                                case StwLdwOrwVar:
+                                {
+                                    // Only one of these can have an internal label
+                                    if(!migrateInternalLabel(i, firstLine, firstLine + 2)) break;
+                                    if(!migrateInternalLabel(i, firstLine + 1, firstLine + 2)) break;
+
+                                    // ORW's operand becomes LDW's operand
+                                    size_t ldwSpace = Compiler::getCodeLines()[i]._vasm[firstLine + 1]._code.find_first_of("  \n\r\f\t\v");
+                                    std::string ldwOperand = Compiler::getCodeLines()[i]._vasm[firstLine + 1]._code.substr(ldwSpace);
+                                    Expression::stripWhitespace(ldwOperand);
+                                    Compiler::getCodeLines()[i]._vasm[firstLine + 2]._code = "ORW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + ldwOperand;
+
+                                    // Delete STW LDW
+                                    linesDeleted = true;
+                                    itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine + 1);
+                                    itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine);
+                                    adjustLabelAddresses(i, firstLine, -4);
+                                    adjustVasmAddresses(i, firstLine, -4);
+                                }
+                                break;
+
+                                // Match LDW POKE/DOKE LDW, delete second LDW if it matches with first LDW
+                                case PokeVar:
+                                case DokeVar:
+                                {
+                                    // Migrate second LDW's label, (if it has one)
+                                    if(!migrateInternalLabel(i, firstLine + 2, firstLine + 3)) break;
+
+                                    // Delete second LDW
+                                    linesDeleted = true;
+                                    itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine + 2);
+                                    adjustLabelAddresses(i, firstLine + 2, -2);
+                                    adjustVasmAddresses(i, firstLine+ 2, -2);
+                                }
+                                break;
+
+                                // Match ST LDW ANDW STW, replace ST operand with STW operand, delete LDW ANDW STW
+                                case Lsl8Var:
+                                {
+                                    // ST's operand becomes STW's operand
+                                    size_t stwSpace = Compiler::getCodeLines()[i]._vasm[firstLine + 3]._code.find_first_of("  \n\r\f\t\v");
+                                    std::string stwOperand = Compiler::getCodeLines()[i]._vasm[firstLine + 3]._code.substr(stwSpace);
+                                    Expression::stripWhitespace(stwOperand);
+                                    Compiler::getCodeLines()[i]._vasm[firstLine]._code = "ST" + std::string(OPCODE_TRUNC_SIZE - 2, ' ') + stwOperand + " + 1";
+
+                                    // Delete LDW ANDW STW
+                                    linesDeleted = true;
+                                    itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine + 1);
+                                    itVasm = Compiler::getCodeLines()[i]._vasm.erase(itVasm);
+                                    itVasm = Compiler::getCodeLines()[i]._vasm.erase(itVasm);
+                                    adjustLabelAddresses(i, firstLine + 1, -6);
+                                    adjustVasmAddresses(i, firstLine + 1, -6);
+                                }
+                                break;
                             }
                         }
 
 /*************************************************************************************************************************************************************/
 /* Opcode matches required, operand matches NOT required                                                                                                     */
 /*************************************************************************************************************************************************************/
-
-                        // Extra STW, (doesn't require an operand match)
-                        if(j == StwPair  ||  j == StwPairReg  ||  j == ExtraStw)
+                        switch(j)
                         {
-                            // Migrate internal label to next available instruction
-                            if(!migrateInternalLabel(i, firstLine, firstLine + 1)) break;
-
-                            // Delete first STW
-                            linesDeleted = true;
-                            itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine);
-                            adjustLabelAddresses(i, firstLine, -2);
-                            adjustVasmAddresses(i, firstLine, -2);
-                        }
-                        // Match STW LDWI ADDW ADDW PEEK/DEEK
-                        else if(j == PeekArray  ||  j == DeekArray)
-                        {
-                            // Save previous line LDW, if opcode is not LDW then can't optimise
-                            Compiler::VasmLine savedLDW = Compiler::getCodeLines()[i]._vasm[firstLine - 1];
-                            if(savedLDW._opcode != "LDW") break;
-
-                            // Migrate it's label if it has one
-                            if(!migrateInternalLabel(i, firstLine - 1, firstLine + 1)) break;
-
-                            // Get saved LDW's operand
-                            size_t ldwSpace = savedLDW._code.find_first_of("  \n\r\f\t\v");
-                            std::string ldwOperand = savedLDW._code.substr(ldwSpace);
-                            Expression::stripWhitespace(ldwOperand);
-
-                            // Delete previous line LDW and first STW
-                            linesDeleted = true;
-                            itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine - 1);
-                            itVasm = Compiler::getCodeLines()[i]._vasm.erase(itVasm);
-
-                            // Replace operand of both ADDW's
-                            (itVasm + 1)->_code = "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + ldwOperand;
-                            (itVasm + 2)->_code = "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + ldwOperand;
-                            adjustLabelAddresses(i, firstLine - 1, -4);
-                            adjustVasmAddresses(i, firstLine - 1, -4);
-                        }
-                        // Match STW LDWI STW LDW POKE/DOKE
-                        else if(j == PokeArray  ||  j == DokeArray)
-                        {
-                            // Save previous line LD<X>, if opcode is not some sort of LD then can't optimise
-                            Compiler::VasmLine savedLD = Compiler::getCodeLines()[i]._vasm[firstLine - 1];
-                            if(savedLD._opcode.find("LD") == std::string::npos) break;
-
-                            // Discard it's label, (it's no longer needed), and adjust it's address
-                            if(!migrateInternalLabel(i, firstLine - 1, firstLine + 1)) break;
-                            savedLD._internalLabel = "";
-                            savedLD._address += 9; // LD<X> is moved 9bytes
-
-                            // Delete previous line LD<X>, first STW and LDW
-                            linesDeleted = true;
-                            itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine - 1);
-                            itVasm = Compiler::getCodeLines()[i]._vasm.erase(itVasm);
-                            itVasm = Compiler::getCodeLines()[i]._vasm.erase(itVasm + 2);
-
-                            // Replace LDW with saved LD<X> and operand
-                            itVasm = Compiler::getCodeLines()[i]._vasm.insert(itVasm, savedLD);
-                            adjustLabelAddresses(i, firstLine - 1, -4);
-                            adjustVasmAddresses(i, firstLine - 1, -4);
-                        }
-                        // Match STW LDW STW LDWI ADDW ADDW STW LDW POKE/DOKE
-                        else if(j == PokeVarArray  ||  j == DokeVarArray  ||  j == PokeTmpArray  ||  j == DokeTmpArray)
-                        {
-                            // Save previous line LD<X>, if opcode is not some sort of LD then can't optimise first phase
-                            Compiler::VasmLine savedLD = Compiler::getCodeLines()[i]._vasm[firstLine - 1];
-                            if(savedLD._opcode.find("LD") != std::string::npos)
+                            // Extra STW, (doesn't require an operand match)
+                            case StwPair:
+                            case StwPairReg:
+                            case ExtraStw:
                             {
-                                // Discard it's label, (it's no longer needed), and adjust it's address
-                                if(!migrateInternalLabel(i, firstLine - 1, firstLine + 3)) break;
-                                savedLD._internalLabel = "";
-                                savedLD._address += 17; // LD<X> is moved 17 bytes
+                                // Migrate internal label to next available instruction
+                                if(!migrateInternalLabel(i, firstLine, firstLine + 1)) break;
 
-                                // Delete previous line LD<X>, first STW and last LDW
+                                // Delete first STW
+                                linesDeleted = true;
+                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine);
+                                adjustLabelAddresses(i, firstLine, -2);
+                                adjustVasmAddresses(i, firstLine, -2);
+                            }
+                            break;
+
+                            // Match STW LDWI ADDW PEEK
+                            case PeekArray:
+                            {
+                                // Save previous line LDW, if opcode is not LDW then can't optimise
+                                Compiler::VasmLine savedLDW = Compiler::getCodeLines()[i]._vasm[firstLine - 1];
+                                if(savedLDW._opcode != "LDW") break;
+
+                                // Migrate it's label if it has one
+                                if(!migrateInternalLabel(i, firstLine - 1, firstLine + 1)) break;
+
+                                // Get saved LDW's operand
+                                size_t ldwSpace = savedLDW._code.find_first_of("  \n\r\f\t\v");
+                                std::string ldwOperand = savedLDW._code.substr(ldwSpace);
+                                Expression::stripWhitespace(ldwOperand);
+
+                                // Delete previous line LDW and first STW
                                 linesDeleted = true;
                                 itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine - 1);
                                 itVasm = Compiler::getCodeLines()[i]._vasm.erase(itVasm);
-                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(itVasm + 6);
+
+                                // Replace operand of ADDW
+                                (itVasm + 1)->_code = "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + ldwOperand;
+                                adjustLabelAddresses(i, firstLine - 1, -4);
+                                adjustVasmAddresses(i, firstLine - 1, -4);
+                            }
+                            break;
+
+                            // Match STW LDWI ADDW ADDW DEEK
+                            case DeekArray:
+                            {
+                                // Save previous line LDW, if opcode is not LDW then can't optimise
+                                Compiler::VasmLine savedLDW = Compiler::getCodeLines()[i]._vasm[firstLine - 1];
+                                if(savedLDW._opcode != "LDW") break;
+
+                                // Migrate it's label if it has one
+                                if(!migrateInternalLabel(i, firstLine - 1, firstLine + 1)) break;
+
+                                // Get saved LDW's operand
+                                size_t ldwSpace = savedLDW._code.find_first_of("  \n\r\f\t\v");
+                                std::string ldwOperand = savedLDW._code.substr(ldwSpace);
+                                Expression::stripWhitespace(ldwOperand);
+
+                                // Delete previous line LDW and first STW
+                                linesDeleted = true;
+                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine - 1);
+                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(itVasm);
+
+                                // Replace operand of both ADDW's
+                                (itVasm + 1)->_code = "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + ldwOperand;
+                                (itVasm + 2)->_code = "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + ldwOperand;
+                                adjustLabelAddresses(i, firstLine - 1, -4);
+                                adjustVasmAddresses(i, firstLine - 1, -4);
+                            }
+                            break;
+
+                            // Match STW LDWI STW LDW POKE/DOKE
+                            case PokeArray:
+                            case DokeArray:
+                            {
+                                // Save previous line LD<X>, if opcode is not some sort of LD then can't optimise
+                                Compiler::VasmLine savedLD = Compiler::getCodeLines()[i]._vasm[firstLine - 1];
+                                if(savedLD._opcode.find("LD") == std::string::npos) break;
+
+                                // Discard it's label, (it's no longer needed), and adjust it's address
+                                if(!migrateInternalLabel(i, firstLine - 1, firstLine + 1)) break;
+                                savedLD._internalLabel = "";
+                                savedLD._address += 9; // LD<X> is moved 9bytes
+
+                                // Delete previous line LD<X>, first STW and LDW
+                                linesDeleted = true;
+                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine - 1);
+                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(itVasm);
+                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(itVasm + 2);
 
                                 // Replace LDW with saved LD<X> and operand
                                 itVasm = Compiler::getCodeLines()[i]._vasm.insert(itVasm, savedLD);
                                 adjustLabelAddresses(i, firstLine - 1, -4);
                                 adjustVasmAddresses(i, firstLine - 1, -4);
-                                firstLine = firstLine - 1;  // points to new first LDW
                             }
-                            else
+                            break;
+
+                            // Match STW LDW STW LDWI ADDW STW LDW POKE
+                            case PokeVarArray:
+                            case PokeTmpArray:
                             {
-                                firstLine = firstLine + 1; // points to first LDW
+                                // Save previous line LD<X>, if opcode is not some sort of LD then can't optimise first phase
+                                Compiler::VasmLine savedLD = Compiler::getCodeLines()[i]._vasm[firstLine - 1];
+                                if(savedLD._opcode.find("LD") != std::string::npos)
+                                {
+                                    // Discard it's label, (it's no longer needed), and adjust it's address
+                                    if(!migrateInternalLabel(i, firstLine - 1, firstLine + 3)) break;
+                                    savedLD._internalLabel = "";
+                                    savedLD._address += 15; // LD<X> is moved 15 bytes
+
+                                    // Delete previous line LD<X>, first STW and last LDW
+                                    linesDeleted = true;
+                                    itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine - 1);
+                                    itVasm = Compiler::getCodeLines()[i]._vasm.erase(itVasm);
+                                    itVasm = Compiler::getCodeLines()[i]._vasm.erase(itVasm + 5); //points to last LDW
+
+                                    // Replace LDW with saved LD<X> and operand
+                                    itVasm = Compiler::getCodeLines()[i]._vasm.insert(itVasm, savedLD);
+                                    adjustLabelAddresses(i, firstLine - 1, -4);
+                                    adjustVasmAddresses(i, firstLine - 1, -4);
+                                    firstLine = firstLine - 1;  // points to new first LDW
+                                }
+                                else
+                                {
+                                    firstLine = firstLine + 1; // points to first LDW
+                                }
+
+                                // Now optimise the first LDW and second STW for second phase
+                                Compiler::VasmLine savedLDW = Compiler::getCodeLines()[i]._vasm[firstLine];
+
+                                // Get saved LDW's operand
+                                size_t ldwSpace = savedLDW._code.find_first_of("  \n\r\f\t\v");
+                                std::string ldwOperand = savedLDW._code.substr(ldwSpace);
+                                Expression::stripWhitespace(ldwOperand);
+
+                                // Delete first LDW and second STW
+                                linesDeleted = true;
+                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine);
+                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(itVasm);
+
+                                // Replace operand of ADDW
+                                (itVasm + 1)->_code = "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + ldwOperand;
+                                adjustLabelAddresses(i, firstLine, -4);
+                                adjustVasmAddresses(i, firstLine, -4);
                             }
+                            break;
 
-                            // Now optimise the first LDW and second STW for second phase
-                            Compiler::VasmLine savedLDW = Compiler::getCodeLines()[i]._vasm[firstLine];
+                            // Match STW LDW STW LDWI ADDW ADDW STW LDW DOKE
+                            case DokeVarArray:
+                            case DokeTmpArray:
+                            {
+                                // Save previous line LD<X>, if opcode is not some sort of LD then can't optimise first phase
+                                Compiler::VasmLine savedLD = Compiler::getCodeLines()[i]._vasm[firstLine - 1];
+                                if(savedLD._opcode.find("LD") != std::string::npos)
+                                {
+                                    // Migrate LD<X>'s label to LDWI
+                                    if(!migrateInternalLabel(i, firstLine - 1, firstLine + 3)) break;
+                                    savedLD._internalLabel = "";
+                                    savedLD._address += 17; // LD<X> is moved 17 bytes
 
-                            // Get saved LDW's operand
-                            size_t ldwSpace = savedLDW._code.find_first_of("  \n\r\f\t\v");
-                            std::string ldwOperand = savedLDW._code.substr(ldwSpace);
-                            Expression::stripWhitespace(ldwOperand);
+                                    // Delete previous line LD<X>, first STW and last LDW
+                                    linesDeleted = true;
+                                    itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine - 1);
+                                    itVasm = Compiler::getCodeLines()[i]._vasm.erase(itVasm);
+                                    itVasm = Compiler::getCodeLines()[i]._vasm.erase(itVasm + 6); //points to last LDW
 
-                            // Delete first LDW and second STW
-                            linesDeleted = true;
-                            itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine);
-                            itVasm = Compiler::getCodeLines()[i]._vasm.erase(itVasm);
+                                    // Replace LDW with saved LD<X> and operand
+                                    itVasm = Compiler::getCodeLines()[i]._vasm.insert(itVasm, savedLD);
+                                    adjustLabelAddresses(i, firstLine - 1, -4);
+                                    adjustVasmAddresses(i, firstLine - 1, -4);
+                                    firstLine = firstLine - 1;  // points to new first LDW
+                                }
+                                else
+                                {
+                                    firstLine = firstLine + 1; // points to first LDW
+                                }
 
-                            // Replace operand of both ADDW's
-                            (itVasm + 1)->_code = "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + ldwOperand;
-                            (itVasm + 2)->_code = "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + ldwOperand;
-                            adjustLabelAddresses(i, firstLine, -4);
-                            adjustVasmAddresses(i, firstLine, -4);
+                                // Now optimise the first LDW and second STW for second phase
+                                Compiler::VasmLine savedLDW = Compiler::getCodeLines()[i]._vasm[firstLine];
+
+                                // Get saved LDW's operand
+                                size_t ldwSpace = savedLDW._code.find_first_of("  \n\r\f\t\v");
+                                std::string ldwOperand = savedLDW._code.substr(ldwSpace);
+                                Expression::stripWhitespace(ldwOperand);
+
+                                // Delete first LDW and second STW
+                                linesDeleted = true;
+                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine);
+                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(itVasm);
+
+                                // Replace operand of both ADDW's
+                                (itVasm + 1)->_code = "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + ldwOperand;
+                                (itVasm + 2)->_code = "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + ldwOperand;
+                                adjustLabelAddresses(i, firstLine, -4);
+                                adjustVasmAddresses(i, firstLine, -4);
+                            }
+                            break;
+
+                            // Match ADDI ADDI
+                            case AddiPair:
+                            {
+                                uint8_t addi0, addi1;
+
+                                // Migrate second ADDI's label to next instruction
+                                if(!migrateInternalLabel(i, firstLine + 1, firstLine + 2)) break;
+
+                                // Add operands together, replace first operand, delete 2nd opcode and operand
+                                Compiler::VasmLine vasm = Compiler::getCodeLines()[i]._vasm[firstLine];
+                                size_t space = vasm._code.find_first_of("  \n\r\f\t\v");
+                                std::string operand = vasm._code.substr(space);
+                                Expression::stripWhitespace(operand);
+                                Expression::stringToU8(operand, addi0);
+                                vasm = Compiler::getCodeLines()[i]._vasm[firstLine + 1];
+                                space = vasm._code.find_first_of("  \n\r\f\t\v");
+                                operand = vasm._code.substr(space);
+                                Expression::stripWhitespace(operand);
+                                Expression::stringToU8(operand, addi1);
+                                int result = addi0 + addi1;
+                                if(result > 255) break; // result to large for an ADDI operand so exit
+
+                                // Delete second ADDI
+                                linesDeleted = true;
+                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine + 1);
+
+                                // Replace first ADDI's operand
+                                (itVasm - 1)->_code = "ADDI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + std::to_string(uint8_t(result));
+                                adjustLabelAddresses(i, firstLine + 1, -2);
+                                adjustVasmAddresses(i, firstLine + 1, -2);
+                            }
+                            break;
                         }
                     }
 

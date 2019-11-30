@@ -10,22 +10,30 @@ namespace Expression
     enum ExpressionType {Invalid=0x8000, HasNumbers=0x0000, HasStrings=0x0001, HasOperators=0x0002, HasIntConsts=0x0004, HasStrConsts=0x0008,
                          HasIntVars=0x0010, HasStrVars=0x0020, HasKeywords=0x0040, HasStringKeywords=0x0080, HasFunctions=0x0100};
     enum NumericType {BadBase=-1, Decimal, HexaDecimal, Octal, Binary};
-    enum ConditionType {BooleanCC, NormalCC, FastCC};
+    enum CCType {BooleanCC, NormalCC, FastCC};
+    enum Int16Byte {Int16Both, Int16Low, Int16High};
+    enum VarType {Number, Constant, TmpVar, IntVar, ArrVar, StrVar};
 
     struct Numeric
     {
-        Numeric() {_value = 0; _index = -1; _isValid = false; _isAddress = false; _conditionType = NormalCC; _varName="";}
-        Numeric(int16_t value, int16_t index, bool isValid, bool isAddress, ConditionType conditionType, std::string& varName)
+        Numeric()
         {
-            _value = value; _index = index; _isValid = isValid; _isAddress = isAddress; _conditionType = conditionType; _varName = varName;
+            _value = 0; _index = -1; _isValid = false; _varType = Number; _ccType = BooleanCC; _int16Byte = Int16Both; _name = ""; _text = "";
+        }
+
+        Numeric(int16_t value, int16_t index, bool isValid, VarType varType, CCType ccType, Int16Byte int16Byte, std::string& name, std::string& text)
+        {
+            _value = value; _index = index; _isValid = isValid; _varType = varType; _ccType = ccType; _int16Byte = int16Byte; _name = name; _text = text;
         }
 
         int16_t _value = 0;
         int16_t _index = -1;
         bool _isValid = false;
-        bool _isAddress = false;
-        ConditionType _conditionType = NormalCC;
-        std::string _varName;
+        VarType _varType = Number;
+        CCType _ccType = BooleanCC;
+        Int16Byte _int16Byte = Int16Both;
+        std::string _name;
+        std::string _text;
     };
 
     using exprFuncPtr = std::function<Numeric (void)>;
@@ -75,6 +83,7 @@ namespace Expression
     std::vector<std::string> tokenise(const std::string& text, char c, bool skipSpaces=true, bool toUpper=false);
     std::vector<std::string> tokenise(const std::string& text, char c, std::vector<size_t>& offsets, bool skipSpaces=true, bool toUpper=false);
     std::vector<std::string> tokeniseLine(const std::string& line, const std::string& delimiters=" \n\r\f\t\v");
+    std::vector<std::string> tokeniseLine(const std::string& line, const std::string& delimiters, std::vector<size_t>& offsets);
 
     void replaceText(std::string& expression, const std::string& text, const std::string& replace);
 

@@ -44,7 +44,7 @@ _page_0x0300        EQU                     0x0300
 _else_0x03bc        EQU                     0x0383
 
 ; Variables
-_Z_array            EQU                     0x0600
+_Z_array            EQU                     0xfe00
 _Z_array            DW                      0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
 _D                  EQU                     0x0030
 _M                  EQU                     0x0032
@@ -54,10 +54,10 @@ _J                  EQU                     0x0038
 _A                  EQU                     0x003a
 
 ; Strings
-_str_0x7ea0          EQU                     0x7ea0
-_str_0x7ea0          DB                      3 'PI='
-_str_0x7ea4          EQU                     0x7ea4
-_str_0x7ea4          DB                      1 '.'
+_str_0xff60          EQU                     0xff60
+_str_0xff60          DB                      3 'PI=' 0
+_str_0xff65          EQU                     0xff65
+_str_0xff65          DB                      1 '.' 0
 
 ; Define Bytes
 
@@ -88,14 +88,14 @@ _20                 LDI                     94
                     LDI                     1
                     STW                     0xb2                            ; M=94:FOR I=0 TO M-1
 
-_30                 LDWI                    0x0600
+_30                 LDWI                    0xfe00
                     ADDW                    _I
                     ADDW                    _I
                     STW                     register1
                     LDI                     20
                     DOKE                    register1
                     ForNextLoopStepUp       _I _30 0xb0 0xb2
-                    PrintString             _str_0x7ea0                     ; Z(I)=20:NEXT I:PRINT "PI=";
+                    PrintString             _str_0xff60                     ; Z(I)=20:NEXT I:PRINT "PI=";
 
 _40                 LDW                     _D
                     STW                     mathX
@@ -125,7 +125,7 @@ _50                 LDW                     _M
                     CALL                    giga_vAC
                     ADDW                    _D
                     STW                     0xc4
-                    LDWI                    0x0600
+                    LDWI                    0xfe00
                     ADDW                    _J
                     ADDW                    _J
                     DEEK                    
@@ -147,7 +147,7 @@ _60                 LDW                     _J
                     STW                     mathY
                     LDWI                    divide16bit
                     CALL                    giga_vAC
-                    LDWI                    0x0600
+                    LDWI                    0xfe00
                     ADDW                    _J
                     ADDW                    _J
                     STW                     register1
@@ -188,7 +188,7 @@ _80                 LDW                     _E
                     LDW                     _M
                     SUBI                    88
                     BNE                     _90
-                    PrintString             _str_0x7ea4                     ; PRINT E/10;:IF M &&= 88 THEN PRINT ".";
+                    PrintString             _str_0xff65                     ; PRINT E/10;:IF M &&= 88 THEN PRINT ".";
 
 _90                 LDW                     _E
                     STW                     mathX
@@ -214,25 +214,25 @@ _else_0x03bc        BRA                     _else_0x03bc                    ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7ea6
-convertEqOp         EQU     0x7eaf
-convertNeOp         EQU     0x7eb8
-convertLeOp         EQU     0x7ec1
-convertGeOp         EQU     0x7eca
-convertLtOp         EQU     0x7ed3
-convertGtOp         EQU     0x7edc
-multiply16bit       EQU     0x7cc0
-divide16bit         EQU     0x7ba0
-resetVideoTable     EQU     0x79a0
-initClearFuncs      EQU     0x7da0
-clearVertBlinds     EQU     0x7dc3
-clearCursorRow      EQU     0x78a0
-printInit           EQU     0x7ee5
-printText           EQU     0x7ca0
-printDigit          EQU     0x79bf
-printInt16          EQU     0x7aa0
-printChar           EQU     0x77a0
-newLineScroll       EQU     0x76a0
+realTimeProc        EQU     0xff68
+convertEqOp         EQU     0xff71
+convertNeOp         EQU     0xff7a
+convertLeOp         EQU     0xff83
+convertGeOp         EQU     0xff8c
+convertLtOp         EQU     0xff95
+convertGtOp         EQU     0xff9e
+multiply16bit       EQU     0xfd5a
+divide16bit         EQU     0xfd00
+resetVideoTable     EQU     0xfdd5
+initClearFuncs      EQU     0xffa7
+clearVertBlinds     EQU     0xfebe
+clearCursorRow      EQU     0xfc00
+printInit           EQU     0xfc49
+printText           EQU     0xffca
+printDigit          EQU     0xfc64
+printInt16          EQU     0xfd81
+printChar           EQU     0xfc86
+newLineScroll       EQU     0xfb00
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2

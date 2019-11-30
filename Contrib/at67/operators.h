@@ -13,7 +13,7 @@ namespace Operators
 {
     bool initialise(void);
 
-    bool handleSingleOp(const std::string& opcodeStr, Expression::Numeric& numeric);
+    void handleSingleOp(const std::string& opcodeStr, Expression::Numeric& numeric);
 
     Expression::Numeric operatorPOS(Expression::Numeric& numeric);
     Expression::Numeric operatorNEG(Expression::Numeric& numeric);
@@ -31,12 +31,12 @@ namespace Operators
     Expression::Numeric operatorLSL(Expression::Numeric& left, Expression::Numeric& right);
     Expression::Numeric operatorLSR(Expression::Numeric& left, Expression::Numeric& right);
 
-    Expression::Numeric operatorEQ(Expression::Numeric& left, Expression::Numeric& right, Expression::ConditionType conditionType);
-    Expression::Numeric operatorNE(Expression::Numeric& left, Expression::Numeric& right, Expression::ConditionType conditionType);
-    Expression::Numeric operatorLE(Expression::Numeric& left, Expression::Numeric& right, Expression::ConditionType conditionType);
-    Expression::Numeric operatorGE(Expression::Numeric& left, Expression::Numeric& right, Expression::ConditionType conditionType);
-    Expression::Numeric operatorLT(Expression::Numeric& left, Expression::Numeric& right, Expression::ConditionType conditionType);
-    Expression::Numeric operatorGT(Expression::Numeric& left, Expression::Numeric& right, Expression::ConditionType conditionType);
+    Expression::Numeric operatorEQ(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType);
+    Expression::Numeric operatorNE(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType);
+    Expression::Numeric operatorLE(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType);
+    Expression::Numeric operatorGE(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType);
+    Expression::Numeric operatorLT(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType);
+    Expression::Numeric operatorGT(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType);
 }
 
 #endif

@@ -14,15 +14,14 @@ namespace Keywords
 {
     enum EmitStringResult {SyntaxError, InvalidStringVar, ValidStringVar};
 
-    std::map<std::string, Keyword> _keywords;
+    std::map<std::string, Keyword> _keywords, _stringKeywords;
     std::map<std::string, std::string> _functions;
-    std::map<std::string, std::string> _stringKeywords;
     std::map<std::string, std::string> _equalsKeywords;
 
 
-    std::map<std::string, Keyword>& getKeywords(void) {return _keywords;}
-    std::map<std::string, std::string>& getFunctions(void) {return _functions;}
-    std::map<std::string, std::string>& getStringKeywords(void) {return _stringKeywords;}
+    std::map<std::string, Keyword>& getKeywords(void)           {return _keywords;      }
+    std::map<std::string, Keyword>& getStringKeywords(void)     {return _stringKeywords;}
+    std::map<std::string, std::string>& getFunctions(void)      {return _functions;     }
     std::map<std::string, std::string>& getEqualsKeywords(void) {return _equalsKeywords;}
 
 
@@ -39,14 +38,6 @@ namespace Keywords
         _keywords["CLS"   ] = {"CLS",    keywordCLS,    Compiler::SingleStatementParsed};
         _keywords["PRINT" ] = {"PRINT",  keywordPRINT,  Compiler::SingleStatementParsed};
         _keywords["INPUT" ] = {"INPUT",  keywordINPUT,  Compiler::SingleStatementParsed};
-        _keywords["CHR$"  ] = {"CHR$",   keywordCHR,    Compiler::SingleStatementParsed};
-        _keywords["HEX$"  ] = {"HEX$",   keywordHEX,    Compiler::SingleStatementParsed};
-        _keywords["HEXW$" ] = {"HEXW$",  keywordHEXW,   Compiler::SingleStatementParsed};
-        _keywords["COPY$" ] = {"COPY$",  keywordCOPY,   Compiler::SingleStatementParsed};
-        _keywords["ADD$"  ] = {"ADD$",   keywordADD,    Compiler::SingleStatementParsed};
-        _keywords["MID$"  ] = {"MID$",   keywordMID,    Compiler::SingleStatementParsed};
-        _keywords["LEFT$" ] = {"LEFT$",  keywordLEFT,   Compiler::SingleStatementParsed};
-        _keywords["RIGHT$"] = {"RIGHT$", keywordRIGHT,  Compiler::SingleStatementParsed};
         _keywords["FOR"   ] = {"FOR",    keywordFOR,    Compiler::SingleStatementParsed};
         _keywords["NEXT"  ] = {"NEXT",   keywordNEXT,   Compiler::SingleStatementParsed};
         _keywords["IF"    ] = {"IF",     keywordIF,     Compiler::MultiStatementParsed };
@@ -72,9 +63,23 @@ namespace Keywords
         _keywords["DOKE"  ] = {"DOKE",   keywordDOKE,   Compiler::SingleStatementParsed};
         _keywords["PLAY"  ] = {"PLAY",   keywordPLAY,   Compiler::SingleStatementParsed};
 
+        _stringKeywords["CHR$"  ] = {"CHR$",   keywordCHR,    Compiler::SingleStatementParsed};
+        _stringKeywords["HEX$"  ] = {"HEX$",   keywordHEX,    Compiler::SingleStatementParsed};
+        _stringKeywords["HEXW$" ] = {"HEXW$",  keywordHEXW,   Compiler::SingleStatementParsed};
+        _stringKeywords["COPY$" ] = {"COPY$",  keywordCOPY,   Compiler::SingleStatementParsed};
+        _stringKeywords["ADD$"  ] = {"ADD$",   keywordADD,    Compiler::SingleStatementParsed};
+        _stringKeywords["MID$"  ] = {"MID$",   keywordMID,    Compiler::SingleStatementParsed};
+        _stringKeywords["LEFT$" ] = {"LEFT$",  keywordLEFT,   Compiler::SingleStatementParsed};
+        _stringKeywords["RIGHT$"] = {"RIGHT$", keywordRIGHT,  Compiler::SingleStatementParsed};
+        _stringKeywords["SPC$"  ] = {"SPC$",   nullptr,       Compiler::SingleStatementParsed};
+        _stringKeywords["STR$"  ] = {"STR$",   nullptr,       Compiler::SingleStatementParsed};
+        _stringKeywords["TIME$" ] = {"TIME$",  nullptr,       Compiler::SingleStatementParsed};
+
         _functions["PEEK"] = {"PEEK"};
         _functions["DEEK"] = {"DEEK"};
         _functions["USR" ] = {"USR" };
+        _functions["RND" ] = {"RND" };
+        _functions["LEN" ] = {"LEN" };
         _functions["ABS" ] = {"ABS" };
         _functions["ACS" ] = {"ACS" };
         _functions["ASC" ] = {"ASC" };
@@ -84,24 +89,11 @@ namespace Keywords
         _functions["EXP" ] = {"EXP" };
         _functions["INT" ] = {"INT" };
         _functions["LOG" ] = {"LOG" };
-        _functions["RND" ] = {"RND" };
         _functions["SIN" ] = {"SIN" };
         _functions["SQR" ] = {"SQR" };
         _functions["TAN" ] = {"TAN" };
         _functions["FRE" ] = {"FRE" };
         _functions["TIME"] = {"TIME"};
-
-        _stringKeywords["CHR$"  ] = {"CHR$"  };
-        _stringKeywords["HEX$"  ] = {"HEX$"  };
-        _stringKeywords["HEXW$" ] = {"HEXW$" };
-        _stringKeywords["COPY$" ] = {"COPY$" };
-        _stringKeywords["ADD$"  ] = {"ADD$"  };
-        _stringKeywords["MID$"  ] = {"MID$"  };
-        _stringKeywords["LEFT$" ] = {"LEFT$" };
-        _stringKeywords["RIGHT$"] = {"RIGHT$"};
-        _stringKeywords["SPC$"  ] = {"SPC$"  };
-        _stringKeywords["STR$"  ] = {"STR$"  };
-        _stringKeywords["TIME$" ] = {"TIME$" };
 
         _equalsKeywords["CONST" ] = {"CONST" };
         _equalsKeywords["DIM"   ] = {"DIM"   };
@@ -128,7 +120,7 @@ namespace Keywords
         return false;
     }
 
-    KeywordResult handleKeywords(Compiler::CodeLine& codeLine, const std::string& keyword, int codeLineIndex, KeywordFuncResult& result)
+    KeywordResult handleKeywords(Compiler::CodeLine& codeLine, const std::string& keyword, int codeLineIndex, int tokenIndex, KeywordFuncResult& result)
     {
         size_t foundPos;
 
@@ -139,7 +131,25 @@ namespace Keywords
         // Handle keyword in code line
         if(findKeyword(key, _keywords[key]._name, foundPos)  &&  _keywords[key]._func)
         {
-            bool success = _keywords[key]._func(codeLine, codeLineIndex, foundPos, result);
+            bool success = _keywords[key]._func(codeLine, codeLineIndex, tokenIndex, foundPos, result);
+            return (!success) ? KeywordError : KeywordFound;
+        }
+
+        return KeywordFound;
+    }
+
+    KeywordResult handleStringKeywords(Compiler::CodeLine& codeLine, const std::string& keyword, int codeLineIndex, int tokenIndex, KeywordFuncResult& result)
+    {
+        size_t foundPos;
+
+        std::string key = keyword;
+        Expression::strToUpper(key);
+        if(_stringKeywords.find(key) == _stringKeywords.end()) return KeywordNotFound;
+
+        // Handle keyword in code line
+        if(findKeyword(key, _stringKeywords[key]._name, foundPos)  &&  _stringKeywords[key]._func)
+        {
+            bool success = _stringKeywords[key]._func(codeLine, codeLineIndex, tokenIndex, foundPos, result);
             return (!success) ? KeywordError : KeywordFound;
         }
 
@@ -175,48 +185,81 @@ namespace Keywords
         return InvalidStringVar;
     }
 
-    bool handlePrintKeywords(Compiler::CodeLine& codeLine, int codeLineIndex, const std::string& token)
-    {
-        size_t lbra, rbra;
-        if(!Expression::findMatchingBrackets(token, 0, lbra, rbra)) return false;
-
-        std::string keywordToken = token.substr(0, lbra);
-        Expression::strToUpper(keywordToken);
-        Expression::stripWhitespace(keywordToken);
-        if(_stringKeywords.find(keywordToken) == _stringKeywords.end()) return false;
-
-        KeywordFuncResult result;
-        Compiler::CodeLine codeline;
-        Compiler::createCodeLine(token, 0, codeLine._labelIndex, -1, false, false, codeline);
-        if(keywordToken == "CHR$")       keywordCHR(codeline,  codeLineIndex, 0, result);
-        else if(keywordToken == "HEX$")  keywordHEX(codeline,  codeLineIndex, 0, result);
-        else if(keywordToken == "HEXW$") keywordHEXW(codeline, codeLineIndex, 0, result);
-        else return false;
-
-        Compiler::emitVcpuAsm("%PrintString", Expression::wordToHexString(Compiler::getStrWorkArea()), false, codeLineIndex);
-
-        return true;
-    }
-
 
     // ********************************************************************************************
     // Functions
     // ********************************************************************************************
-    Expression::Numeric functionCHR$(Expression::Numeric& numeric)
+    Expression::Numeric functionLEN(Expression::Numeric& numeric)
     {
-        if(!numeric._isAddress)
+        if(numeric._varType != Expression::Number)
         {
-            // Print constant, (without wasting memory)
-            if(Expression::getEnablePrint())
+            Compiler::getNextTempVar();
+
+            if(numeric._index == -1)
             {
-                Compiler::emitVcpuAsm("LDI", std::to_string(numeric._value), false);
-                Compiler::emitVcpuAsm("%PrintAcChar", "", false);
+                fprintf(stderr, "Compiler::functionLEN() : couldn't find variable name '%s'\n", numeric._name.c_str());
                 return numeric;
             }
 
-            // Create constant string
-            Compiler::createConstantString(Compiler::StrChar, numeric._value);
-            return numeric;
+            int length;
+            switch(numeric._varType)
+            {
+                case Expression::IntVar:   length = Compiler::getIntegerVars()[numeric._index]._intSize; break;
+                case Expression::ArrVar:   length = Compiler::getIntegerVars()[numeric._index]._arrSize; break;
+                case Expression::StrVar:   length = Compiler::getStringVars()[numeric._index]._maxSize;  break;
+                case Expression::Constant: length = Compiler::getConstants()[numeric._index]._size;      break;
+            }
+
+            // Variable lengths
+            if(numeric._varType == Expression::StrVar  &&  !Compiler::getStringVars()[numeric._index]._constant)
+            {
+                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStringVars()[numeric._index]._address), false);
+                Compiler::emitVcpuAsm("PEEK", "", false);
+            }
+            // Constants lengths
+            else
+            {
+                (length <= 255) ? Compiler::emitVcpuAsm("LDI", std::to_string(length), false) : Compiler::emitVcpuAsm("LDWI", std::to_string(length), false);
+            }
+
+            if(Expression::getEnablePrint())
+            {
+                Compiler::emitVcpuAsm("%PrintAcInt16", "", false);
+                return numeric;
+            }
+
+            numeric._value = uint8_t(Compiler::getTempVarStart());
+            numeric._varType = Expression::TmpVar;
+            numeric._name = Compiler::getTempVarStartStr();
+
+            Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
+            
+        }
+
+        return numeric;
+    }
+
+    Expression::Numeric functionCHR$(Expression::Numeric& numeric)
+    {
+        switch(numeric._varType)
+        {
+            case Expression::Number:
+            {
+                // Print constant, (without wasting memory)
+                if(Expression::getEnablePrint())
+                {
+                    Compiler::emitVcpuAsm("LDI", std::to_string(numeric._value), false);
+                    Compiler::emitVcpuAsm("%PrintAcChar", "", false);
+                    return numeric;
+                }
+
+                // Create constant string
+                Compiler::createConstantString(Compiler::StrChar, numeric._value);
+                int index = int(Compiler::getStringVars().size() - 1);
+                std::string name = Compiler::getStringVars()[index]._name;
+                std::string text = Compiler::getStringVars()[index]._text;
+                return Expression::Numeric(0, index, true, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, text);
+            }
         }
 
         Compiler::getNextTempVar();
@@ -228,19 +271,25 @@ namespace Keywords
 
     Expression::Numeric functionHEX$(Expression::Numeric& numeric)
     {
-        // Print constant, (without wasting memory)
-        if(!numeric._isAddress)
+        switch(numeric._varType)
         {
-            if(Expression::getEnablePrint())
+            case Expression::Number:
             {
-                Compiler::emitVcpuAsm("LDI", std::to_string(numeric._value), false);
-                Compiler::emitVcpuAsm("%PrintAcHexByte", "", false);
-                return numeric;
-            }
+                // Print constant, (without wasting memory)
+                if(Expression::getEnablePrint())
+                {
+                    Compiler::emitVcpuAsm("LDI", std::to_string(numeric._value), false);
+                    Compiler::emitVcpuAsm("%PrintAcHexByte", "", false);
+                    return numeric;
+                }
 
-            // Create constant string
-            Compiler::createConstantString(Compiler::StrHex, numeric._value);
-            return numeric;
+                // Create constant string
+                Compiler::createConstantString(Compiler::StrHex, numeric._value);
+                int index = int(Compiler::getStringVars().size() - 1);
+                std::string name = Compiler::getStringVars()[index]._name;
+                std::string text = Compiler::getStringVars()[index]._text;
+                return Expression::Numeric(0, index, true, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, text);
+            }
         }
 
         Compiler::getNextTempVar();
@@ -252,7 +301,74 @@ namespace Keywords
 
     Expression::Numeric functionHEXW$(Expression::Numeric& numeric)
     {
-        if(!numeric._isAddress)
+        switch(numeric._varType)
+        {
+            case Expression::Number:
+            {
+                // Print constant, (without wasting memory)
+                if(Expression::getEnablePrint())
+                {
+                    Compiler::emitVcpuAsm("LDWI", std::to_string(numeric._value), false);
+                    Compiler::emitVcpuAsm("%PrintAcHexWord", "", false);
+                    return numeric;
+                }
+
+                // Create constant string
+                Compiler::createConstantString(Compiler::StrHexw, numeric._value);
+                int index = int(Compiler::getStringVars().size() - 1);
+                std::string name = Compiler::getStringVars()[index]._name;
+                std::string text = Compiler::getStringVars()[index]._text;
+                return Expression::Numeric(0, index, true, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, text);
+            }
+        }
+
+        Compiler::getNextTempVar();
+        Operators::handleSingleOp("LDW", numeric);
+        if(Expression::getEnablePrint()) Compiler::emitVcpuAsm("%PrintAcHexWord", "", false);
+
+        return numeric;
+    }
+
+    Expression::Numeric functionLEFT$(Expression::Numeric& numeric)
+    {
+#if 0
+        if(numeric._varType == Expression::Number)
+        {
+            // Create constant string
+            if((numeric._varType == Expression::StrVar  ||  numeric._varType == Expression::Constant)  &&  numeric._parameters.size() == 1)
+            {
+                switch(numeric._varType)
+                {
+                    case Expression::StrVar:   Compiler::createConstantString(Compiler::StrLeft, Compiler::getStringVars()[numeric._index]._text, int8_t(numeric._parameters[0]._value), 0); break;
+                    case Expression::Constant: Compiler::createConstantString(Compiler::StrLeft, Compiler::getConstants()[numeric._index]._text, int8_t(numeric._parameters[0]._value), 0); break;
+                }
+
+                int index = int(Compiler::getStringVars().size() - 1);
+                numeric._index = index;
+                numeric._isValid = true;
+                numeric._varType = Expression::StrVar;
+                numeric._name = Compiler::getStringVars()[index]._name;
+
+                if(Expression::getEnablePrint())
+                {
+                    Compiler::emitVcpuAsm("LDWI", std::to_string(Compiler::getStringVars()[index]._address), false);
+                    Compiler::emitVcpuAsm("%PrintAcString", "", false);
+                }
+            }
+            return numeric;
+        }
+
+        Compiler::getNextTempVar();
+        Operators::handleSingleOp("LDW", numeric);
+        if(Expression::getEnablePrint()) Compiler::emitVcpuAsm("%PrintAcHexWord", "", false);
+#endif
+        return numeric;
+    }
+
+    Expression::Numeric functionRIGHT$(Expression::Numeric& numeric)
+    {
+#if 0
+        if(numeric._varType == Expression::Number)
         {
             // Print constant, (without wasting memory)
             if(Expression::getEnablePrint())
@@ -263,20 +379,55 @@ namespace Keywords
             }
 
             // Create constant string
-            Compiler::createConstantString(Compiler::StrHexw, numeric._value);
+            Compiler::createConstantString(Compiler::StrRight, numeric._value);
+            int index = int(Compiler::getStringVars().size() - 1);
+            numeric._index = index;
+            numeric._isValid = true;
+            numeric._varType = Expression::StrVar;
+            numeric._name = Compiler::getStringVars()[index]._name;
             return numeric;
         }
 
         Compiler::getNextTempVar();
         Operators::handleSingleOp("LDW", numeric);
         if(Expression::getEnablePrint()) Compiler::emitVcpuAsm("%PrintAcHexWord", "", false);
+#endif
+        return numeric;
+    }
 
+    Expression::Numeric functionMID$(Expression::Numeric& numeric)
+    {
+#if 0
+        if(numeric._varType == Expression::Number)
+        {
+            // Print constant, (without wasting memory)
+            if(Expression::getEnablePrint())
+            {
+                Compiler::emitVcpuAsm("LDWI", std::to_string(numeric._value), false);
+                Compiler::emitVcpuAsm("%PrintAcHexWord", "", false);
+                return numeric;
+            }
+
+            // Create constant string
+            Compiler::createConstantString(Compiler::StrMid, numeric._value);
+            int index = int(Compiler::getStringVars().size() - 1);
+            numeric._index = index;
+            numeric._isValid = true;
+            numeric._varType = Expression::StrVar;
+            numeric._name = Compiler::getStringVars()[index]._name;
+            return numeric;
+        }
+
+        Compiler::getNextTempVar();
+        Operators::handleSingleOp("LDW", numeric);
+        if(Expression::getEnablePrint()) Compiler::emitVcpuAsm("%PrintAcHexWord", "", false);
+#endif
         return numeric;
     }
 
     Expression::Numeric functionPEEK(Expression::Numeric& numeric)
     {
-        if(!numeric._isAddress)
+        if(numeric._varType == Expression::Number)
         {
             (numeric._value >= 0  && numeric._value <= 255) ? Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(numeric._value)), false) : 
                                                               Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(numeric._value), false);
@@ -292,7 +443,7 @@ namespace Keywords
 
     Expression::Numeric functionDEEK(Expression::Numeric& numeric)
     {
-        if(!numeric._isAddress)
+        if(numeric._varType == Expression::Number)
         {
             (numeric._value >= 0  && numeric._value <= 255) ? Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(numeric._value)), false) : 
                                                               Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(numeric._value), false);
@@ -308,15 +459,32 @@ namespace Keywords
 
     Expression::Numeric functionUSR(Expression::Numeric& numeric)
     {
-        if(!numeric._isAddress)
+        if(numeric._varType == Expression::Number)
         {
-            (numeric._value >= 0  && numeric._value <= 255) ? Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(numeric._value)), false) : 
-                                                              Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(numeric._value), false);
+            if(Assembler::getUseOpcodeCALLI())
+            {
+                (numeric._value >= 0  && numeric._value <= 255) ? Compiler::emitVcpuAsm("CALLI", Expression::byteToHexString(uint8_t(numeric._value)), false) : 
+                                                                  Compiler::emitVcpuAsm("CALLI", Expression::wordToHexString(numeric._value), false);
+            }
+            else
+            {
+                (numeric._value >= 0  && numeric._value <= 255) ? Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(numeric._value)), false) : 
+                                                                  Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(numeric._value), false);
+            }
         }
 
         Compiler::getNextTempVar();
-        Operators::handleSingleOp("LDW", numeric);
-        Compiler::emitVcpuAsm("CALL", "giga_vAC", false);
+
+        if(Assembler::getUseOpcodeCALLI())
+        {
+            Operators::handleSingleOp("CALLI", numeric);
+        }
+        else
+        {
+            Operators::handleSingleOp("LDW", numeric);
+            Compiler::emitVcpuAsm("CALL", "giga_vAC", false);
+        }
+
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
 
         return numeric;
@@ -325,7 +493,7 @@ namespace Keywords
     Expression::Numeric functionRND(Expression::Numeric& numeric)
     {
         bool useMod = true;
-        if(!numeric._isAddress)
+        if(numeric._varType == Expression::Number)
         {
             // RND(0) skips the MOD call and allows you to filter the output manually
             if(numeric._value == 0)
@@ -348,8 +516,8 @@ namespace Keywords
         else
         {
             numeric._value = uint8_t(Compiler::getTempVarStart());
-            numeric._isAddress = true;
-            numeric._varName = Compiler::getTempVarStartStr();
+            numeric._varType = Expression::TmpVar;
+            numeric._name = Compiler::getTempVarStartStr();
 
             Compiler::emitVcpuAsm("%Rand", "", false);
         }
@@ -366,14 +534,14 @@ namespace Keywords
         int intSize = Compiler::getIntegerVars()[numeric._index]._intSize;
         uint16_t arrayPtr = Compiler::getIntegerVars()[numeric._index]._array;
 
-        if(!numeric._isAddress)
+        if(numeric._varType == Expression::Number)
         {
             Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr + numeric._value*intSize), false);
             Compiler::emitVcpuAsm("DEEK", "", false);
 
             numeric._value = uint8_t(Compiler::getTempVarStart());
-            numeric._isAddress = true;
-            numeric._varName = Compiler::getTempVarStartStr();
+            numeric._varType = Expression::TmpVar;
+            numeric._name = Compiler::getTempVarStartStr();
         }
         else
         {
@@ -407,7 +575,7 @@ namespace Keywords
     // ********************************************************************************************
     // Keywords
     // ********************************************************************************************
-    bool keywordREM(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordREM(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         // Remove REM and everything after it in code
         codeLine._code.erase(foundPos, codeLine._code.size() - foundPos);
@@ -436,7 +604,7 @@ namespace Keywords
         return true;
     }
 
-    bool keywordLET(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordLET(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         // Remove LET from code
         codeLine._code.erase(foundPos, 3);
@@ -463,7 +631,7 @@ namespace Keywords
         return true;
     }
 
-    bool keywordEND(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordEND(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         std::string labelName = "_end_" + Expression::wordToHexString(Compiler::getVasmPC());
         Compiler::emitVcpuAsm("BRA", labelName, false, codeLineIndex, labelName);
@@ -471,7 +639,7 @@ namespace Keywords
         return true;
     }
 
-    bool keywordINC(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordINC(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         // Operand must be an integer var
         std::string varToken = codeLine._code.substr(foundPos);
@@ -488,7 +656,7 @@ namespace Keywords
         return true;
     }
 
-    bool keywordON(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordON(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         int onIndex = -1;
         int gotoIndex = -1;
@@ -568,7 +736,7 @@ namespace Keywords
         return true;
     }
 
-    bool keywordGOTO(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordGOTO(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         // Parse labels
         std::vector<size_t> gotoOffsets;
@@ -656,7 +824,7 @@ namespace Keywords
         return true;
     }
 
-    bool keywordGOSUB(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordGOSUB(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         // Parse labels
         std::vector<size_t> gosubOffsets;
@@ -731,7 +899,7 @@ namespace Keywords
         return true;
     }
 
-    bool keywordRETURN(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordRETURN(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         Compiler::emitVcpuAsm("POP", "", false, codeLineIndex);
         Compiler::emitVcpuAsm("RET", "", false, codeLineIndex);
@@ -739,7 +907,7 @@ namespace Keywords
         return true;
     }
 
-    bool keywordCLS(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordCLS(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         if(codeLine._tokens.size() > 2)
         {
@@ -778,7 +946,7 @@ namespace Keywords
         return true;
     }
 
-    bool keywordPRINT(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordPRINT(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         // Parse print tokens
         std::vector<std::string> tokens = Expression::tokeniseLine(codeLine._code.substr(foundPos), ";");
@@ -789,17 +957,12 @@ namespace Keywords
             Expression::Numeric value;
             uint32_t expressionType = Compiler::isExpression(tokens[i], varIndex, constIndex, strIndex);
 
-            if(expressionType & Expression::HasStringKeywords)
+            if((expressionType & Expression::HasStringKeywords)  ||  (expressionType & Expression::HasFunctions))
             {
-#if 0
-                // Gigatron creates and prints strings
-                handlePrintKeywords(codeLine, codeLineIndex, tokens[i]);
-#else
                 // Gigatron prints text on the fly without creating strings
                 Expression::setEnablePrint(true);
                 Expression::parse(tokens[i], codeLineIndex, value);
                 Expression::setEnablePrint(false);
-#endif
             }
             else if((expressionType & Expression::HasIntVars)  &&  (expressionType & Expression::HasOperators))
             {
@@ -897,18 +1060,83 @@ namespace Keywords
         return true;
     }
 
-    bool keywordINPUT(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordINPUT(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        return true;
+        if(codeLine._tokens.size() < 2  ||  codeLine._tokens.size() > 3)
+        {
+            fprintf(stderr, "Compiler::keywordINPUT() : Syntax error in INPUT statement, must be 'INPUT <optional string>, <int/str var>', in : '%s' : on line %d\n", codeLine._code.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        std::string varToken;
+        if(codeLine._tokens.size() == 3)
+        {
+            if(Expression::isValidString(codeLine._tokens[1]))
+            {
+                Expression::stripNonStringWhitespace(codeLine._tokens[1]);
+                size_t lquote = codeLine._tokens[1].find_first_of("\"");
+                size_t rquote = codeLine._tokens[1].find_first_of("\"", lquote + 1);
+                if(lquote != std::string::npos  &&  rquote != std::string::npos)
+                {
+                    // Skip empty strings
+                    if(rquote > lquote + 1)
+                    {
+                        std::string str = codeLine._tokens[1].substr(lquote + 1, rquote - (lquote + 1));
+
+                        // Create string
+                        std::string name;
+                        uint16_t address;
+                        if(!Compiler::createString(codeLine, codeLineIndex, str, name, address)) return false;
+
+                        // Print string
+                        Compiler::emitVcpuAsm("%PrintString", "_" + name, false, codeLineIndex);
+                    }
+                }
+
+                varToken = codeLine._tokens[2];
+            }
+            else
+            {
+                fprintf(stderr, "Compiler::keywordINPUT() : Syntax error in INPUT statement, first parameter must be a string, in : '%s' : on line %d\n", codeLine._code.c_str(), codeLineIndex + 1);
+                return false;
+            }
+        }
+        else
+        {
+            varToken = codeLine._tokens[1];
+        }
+        
+        Expression::stripWhitespace(varToken);
+        int intVar = Compiler::findVar(varToken);
+        if(intVar >= 0)
+        {
+            Compiler::emitVcpuAsm("LDW", Expression::wordToHexString(Compiler::getIntegerVars()[intVar]._address), false, codeLineIndex);
+            return true;
+        }
+        else
+        {
+            if(varToken.back() == '$'  &&  Expression::isVarNameValid(varToken))
+            {
+                int strIndex = Compiler::findStr(varToken);
+                if(strIndex >= 0)
+                {
+                    Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStringVars()[strIndex]._address), false, codeLineIndex);
+                    return true;
+                }
+            }
+        }
+
+        fprintf(stderr, "Compiler::keywordINPUT() : variable '%s' does not exist, in '%s' on line %d\n", varToken.c_str(), codeLine._text.c_str(), codeLineIndex + 1);
+        return false;
     }
 
-    bool keywordCHR(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordCHR(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         size_t equals = Expression::findNonStringEquals(codeLine._code) - codeLine._code.begin();
 
         // Find brackets
         size_t lbra, rbra;
-        if(!Expression::findMatchingBrackets(codeLine._code, foundPos, lbra, rbra))
+        if(!Expression::findMatchingBrackets(codeLine._code, codeLine._offsets[tokenIndex], lbra, rbra))
         {
             fprintf(stderr, "Compiler::keywordCHR() : Syntax error in CHR$ statement, must be 'CHR$(x)', in : '%s' : on line %d\n", codeLine._code.c_str(), codeLineIndex + 1);
             return false;
@@ -945,28 +1173,26 @@ namespace Keywords
 
                 Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStringVars()[strIndexDst]._address), false, codeLineIndex);
                 Compiler::emitVcpuAsm("STW", "strDstAddr", false, codeLineIndex);
+                Compiler::emitVcpuAsm("%StringChr", "", false, codeLineIndex);
+                return true;
             }
+        }
 
-            Compiler::emitVcpuAsm("%StringChr", "", false, codeLineIndex);
-        }
         // Create temporary string
-        else
-        {
-            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStrWorkArea()), false, codeLineIndex);
-            Compiler::emitVcpuAsm("STW", "strDstAddr", false, codeLineIndex);
-            Compiler::emitVcpuAsm("%StringChr", "", false, codeLineIndex);
-        }
+        Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStrWorkArea()), false, codeLineIndex);
+        Compiler::emitVcpuAsm("STW", "strDstAddr", false, codeLineIndex);
+        Compiler::emitVcpuAsm("%StringChr", "", false, codeLineIndex);
 
         return true;
     }
 
-    bool keywordHEX(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordHEX(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         size_t equals = Expression::findNonStringEquals(codeLine._code) - codeLine._code.begin();
 
          // Find brackets
         size_t lbra, rbra;
-        if(!Expression::findMatchingBrackets(codeLine._code, foundPos, lbra, rbra))
+        if(!Expression::findMatchingBrackets(codeLine._code, codeLine._offsets[tokenIndex], lbra, rbra))
         {
             fprintf(stderr, "Compiler::keywordHEX() : Syntax error in HEX$ statement, must be 'HEX$(x)', in : '%s' : on line %d\n", codeLine._code.c_str(), codeLineIndex + 1);
             return false;
@@ -1017,13 +1243,13 @@ namespace Keywords
         return true;
     }
 
-    bool keywordHEXW(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordHEXW(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         size_t equals = Expression::findNonStringEquals(codeLine._code) - codeLine._code.begin();
 
          // Find brackets
         size_t lbra, rbra;
-        if(!Expression::findMatchingBrackets(codeLine._code, foundPos, lbra, rbra))
+        if(!Expression::findMatchingBrackets(codeLine._code, codeLine._offsets[tokenIndex], lbra, rbra))
         {
             fprintf(stderr, "Compiler::keywordHEXW() : Syntax error in HEXW$ statement, must be 'HEXW$(x)', in : '%s' : on line %d\n", codeLine._code.c_str(), codeLineIndex + 1);
             return false;
@@ -1074,7 +1300,7 @@ namespace Keywords
         return true;
     }
 
-    bool keywordCOPY(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordCOPY(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         size_t equals = Expression::findNonStringEquals(codeLine._code) - codeLine._code.begin();
 
@@ -1127,7 +1353,7 @@ namespace Keywords
         return true;
     }
 
-    bool keywordADD(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordADD(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         size_t equals = Expression::findNonStringEquals(codeLine._code) - codeLine._code.begin();
 
@@ -1195,7 +1421,7 @@ namespace Keywords
         return true;
     }
 
-    bool keywordMID(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordMID(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         size_t equals = Expression::findNonStringEquals(codeLine._code) - codeLine._code.begin();
 
@@ -1273,7 +1499,7 @@ namespace Keywords
         return true;
     }
 
-    bool keywordLEFT(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordLEFT(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         size_t equals = Expression::findNonStringEquals(codeLine._code) - codeLine._code.begin();
 
@@ -1346,7 +1572,7 @@ namespace Keywords
         return true;
     }
 
-    bool keywordRIGHT(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordRIGHT(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         size_t equals = Expression::findNonStringEquals(codeLine._code) - codeLine._code.begin();
 
@@ -1419,7 +1645,7 @@ namespace Keywords
         return true;
     }
 
-    bool keywordFOR(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordFOR(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         bool optimise = true;
         int varIndex, constIndex, strIndex;
@@ -1562,7 +1788,7 @@ namespace Keywords
         return true;
     }
 
-    bool keywordNEXT(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordNEXT(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         if(codeLine._tokens.size() != 2)
         {
@@ -1628,7 +1854,7 @@ namespace Keywords
         return true;
     }
 
-    bool keywordIF(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordIF(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         bool ifElseEndif = false;
 
@@ -1647,13 +1873,13 @@ namespace Keywords
         Expression::Numeric condition;
         std::string conditionToken = codeLine._code.substr(foundPos, offsetTHEN - foundPos);
         parseExpression(codeLine, codeLineIndex, conditionToken, condition);
-        if(condition._conditionType == Expression::BooleanCC) Compiler::emitVcpuAsm("%JumpFalse", "", false, codeLineIndex); // Boolean condition requires this extra check
+        if(condition._ccType == Expression::BooleanCC) Compiler::emitVcpuAsm("%JumpFalse", "", false, codeLineIndex); // Boolean condition requires this extra check
         int jmpIndex = int(Compiler::getCodeLines()[codeLineIndex]._vasm.size()) - 1;
 
         // Bail early as we assume this is an IF ELSE ENDIF block
         if(ifElseEndif)
         {
-            Compiler::getElseIfDataStack().push({jmpIndex, "", codeLineIndex, Compiler::IfBlock, condition._conditionType});
+            Compiler::getElseIfDataStack().push({jmpIndex, "", codeLineIndex, Compiler::IfBlock, condition._ccType});
             return true;
         }
 
@@ -1678,7 +1904,7 @@ namespace Keywords
 
         // Update if's jump to this new label
         Compiler::VasmLine* vasm = &Compiler::getCodeLines()[codeLineIndex]._vasm[jmpIndex];
-        switch(condition._conditionType)
+        switch(condition._ccType)
         {
             case Expression::BooleanCC: vasm->_code = "JumpFalse" + std::string(OPCODE_TRUNC_SIZE - (sizeof("JumpFalse")-1), ' ') + nextInternalLabel; break;
             case Expression::NormalCC:  addLabelToJumpCC(Compiler::getCodeLines()[codeLineIndex]._vasm, nextInternalLabel);                            break;
@@ -1688,7 +1914,7 @@ namespace Keywords
         return true;
     }
 
-    bool keywordELSEIF(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordELSEIF(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         // Check stack for this IF ELSE ENDIF block
         if(Compiler::getElseIfDataStack().empty())
@@ -1700,7 +1926,7 @@ namespace Keywords
         Compiler::ElseIfData elseIfData = Compiler::getElseIfDataStack().top();
         int jmpIndex = elseIfData._jmpIndex;
         int codeIndex = elseIfData._codeLineIndex;
-        Expression::ConditionType conditionType = elseIfData._conditionType;
+        Expression::CCType ccType = elseIfData._ccType;
         Compiler::getElseIfDataStack().pop();
 
         if(elseIfData._ifElseEndType != Compiler::IfBlock  &&  elseIfData._ifElseEndType != Compiler::ElseIfBlock)
@@ -1718,7 +1944,7 @@ namespace Keywords
         else
         {
             // There are no checks to see if this BRA's destination is in the same page, programmer discretion required when using this feature
-            if(conditionType == Expression::FastCC)
+            if(ccType == Expression::FastCC)
             {
                 Compiler::emitVcpuAsm("BRA", "BRA_JUMP", false, codeLineIndex - 1);
                 Compiler::getEndIfDataStack().push({int(Compiler::getCodeLines()[codeLineIndex - 1]._vasm.size()) - 1, codeLineIndex - 1});
@@ -1737,7 +1963,7 @@ namespace Keywords
 
         // Update if's jump to this new label
         Compiler::VasmLine* vasm = &Compiler::getCodeLines()[codeIndex]._vasm[jmpIndex];
-        switch(conditionType)
+        switch(ccType)
         {
             case Expression::BooleanCC: vasm->_code = "JumpFalse" + std::string(OPCODE_TRUNC_SIZE - (sizeof("JumpFalse")-1), ' ') + nextInternalLabel; break;
             case Expression::NormalCC:  addLabelToJumpCC(Compiler::getCodeLines()[codeIndex]._vasm, nextInternalLabel);                                break;
@@ -1748,15 +1974,15 @@ namespace Keywords
         Expression::Numeric condition;
         std::string conditionToken = codeLine._code.substr(foundPos);
         parseExpression(codeLine, codeLineIndex, conditionToken, condition);
-        if(condition._conditionType == Expression::BooleanCC) Compiler::emitVcpuAsm("%JumpFalse", "", false, codeLineIndex); // Boolean condition requires this extra check
+        if(condition._ccType == Expression::BooleanCC) Compiler::emitVcpuAsm("%JumpFalse", "", false, codeLineIndex); // Boolean condition requires this extra check
         jmpIndex = int(Compiler::getCodeLines()[codeLineIndex]._vasm.size()) - 1;
 
-        Compiler::getElseIfDataStack().push({jmpIndex, "", codeLineIndex, Compiler::ElseIfBlock, condition._conditionType});
+        Compiler::getElseIfDataStack().push({jmpIndex, "", codeLineIndex, Compiler::ElseIfBlock, condition._ccType});
 
         return true;
     }
 
-    bool keywordELSE(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordELSE(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         if(codeLine._tokens.size() != 1)
         {
@@ -1774,7 +2000,7 @@ namespace Keywords
         Compiler::ElseIfData elseIfData = Compiler::getElseIfDataStack().top();
         int jmpIndex = elseIfData._jmpIndex;
         int codeIndex = elseIfData._codeLineIndex;
-        Expression::ConditionType conditionType = elseIfData._conditionType;
+        Expression::CCType ccType = elseIfData._ccType;
         Compiler::getElseIfDataStack().pop();
 
         // Jump to endif for previous BASIC line
@@ -1786,7 +2012,7 @@ namespace Keywords
         else
         {
             // There are no checks to see if this BRA's destination is in the same page, programmer discretion required when using this feature
-            if(conditionType == Expression::FastCC)
+            if(ccType == Expression::FastCC)
             {
                 Compiler::emitVcpuAsm("BRA", "BRA_JUMP", false, codeLineIndex - 1);
                 Compiler::getEndIfDataStack().push({int(Compiler::getCodeLines()[codeLineIndex - 1]._vasm.size()) - 1, codeLineIndex - 1});
@@ -1805,19 +2031,19 @@ namespace Keywords
 
         // Update if's or elseif's jump to this new label
         Compiler::VasmLine* vasm = &Compiler::getCodeLines()[codeIndex]._vasm[jmpIndex];
-        switch(conditionType)
+        switch(ccType)
         {
             case Expression::BooleanCC: vasm->_code = "JumpFalse" + std::string(OPCODE_TRUNC_SIZE - (sizeof("JumpFalse")-1), ' ') + nextInternalLabel; break;
             case Expression::NormalCC:  addLabelToJumpCC(Compiler::getCodeLines()[codeIndex]._vasm, nextInternalLabel);                                break;
             case Expression::FastCC:    addLabelToJumpCC(Compiler::getCodeLines()[codeIndex]._vasm, Compiler::getNextInternalLabel());                 break;
         }
 
-        Compiler::getElseIfDataStack().push({jmpIndex, nextInternalLabel, codeIndex, Compiler::ElseBlock, conditionType});
+        Compiler::getElseIfDataStack().push({jmpIndex, nextInternalLabel, codeIndex, Compiler::ElseBlock, ccType});
 
         return true;
     }
 
-    bool keywordENDIF(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordENDIF(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         if(codeLine._tokens.size() != 1)
         {
@@ -1836,7 +2062,7 @@ namespace Keywords
         int jmpIndex = elseIfData._jmpIndex;
         int codeIndex = elseIfData._codeLineIndex;
         Compiler::IfElseEndType ifElseEndType = elseIfData._ifElseEndType;
-        Expression::ConditionType conditionType = elseIfData._conditionType;
+        Expression::CCType ccType = elseIfData._ccType;
         Compiler::getElseIfDataStack().pop();
 
         // Create label on next line of vasm code
@@ -1847,7 +2073,7 @@ namespace Keywords
         if(ifElseEndType == Compiler::IfBlock  ||  ifElseEndType == Compiler::ElseIfBlock)
         {
             Compiler::VasmLine* vasm = &Compiler::getCodeLines()[codeIndex]._vasm[jmpIndex];
-            switch(conditionType)
+            switch(ccType)
             {
                 case Expression::BooleanCC: vasm->_code = "JumpFalse" + std::string(OPCODE_TRUNC_SIZE - (sizeof("JumpFalse")-1), ' ') + nextInternalLabel; break;
                 case Expression::NormalCC:  addLabelToJumpCC(Compiler::getCodeLines()[codeIndex]._vasm, nextInternalLabel);                                break;
@@ -1861,7 +2087,7 @@ namespace Keywords
             int codeLine = Compiler::getEndIfDataStack().top()._codeLineIndex;
             int jmpIndex = Compiler::getEndIfDataStack().top()._jmpIndex;
             Compiler::VasmLine* vasm = &Compiler::getCodeLines()[codeLine]._vasm[jmpIndex];
-            switch(conditionType)
+            switch(ccType)
             {
                 case Expression::BooleanCC: 
                 {
@@ -1886,7 +2112,7 @@ namespace Keywords
         return true;
     }
 
-    bool keywordWHILE(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordWHILE(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         Compiler::setNextInternalLabel("_while_" + Expression::wordToHexString(Compiler::getVasmPC()));
         Compiler::getWhileWendDataStack().push({0, Compiler::getNextInternalLabel(), codeLineIndex, Expression::BooleanCC});
@@ -1895,14 +2121,14 @@ namespace Keywords
         Expression::Numeric condition;
         std::string conditionToken = codeLine._code.substr(foundPos);
         parseExpression(codeLine, codeLineIndex, conditionToken, condition);
-        if(condition._conditionType == Expression::BooleanCC) Compiler::emitVcpuAsm("%JumpFalse", "", false, codeLineIndex); // Boolean condition requires this extra check
+        if(condition._ccType == Expression::BooleanCC) Compiler::emitVcpuAsm("%JumpFalse", "", false, codeLineIndex); // Boolean condition requires this extra check
         Compiler::getWhileWendDataStack().top()._jmpIndex = int(Compiler::getCodeLines()[codeLineIndex]._vasm.size()) - 1;
-        Compiler::getWhileWendDataStack().top()._conditionType = condition._conditionType;
+        Compiler::getWhileWendDataStack().top()._ccType = condition._ccType;
 
         return true;
     }
 
-    bool keywordWEND(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordWEND(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         // Pop stack for this WHILE loop
         if(Compiler::getWhileWendDataStack().empty())
@@ -1921,7 +2147,7 @@ namespace Keywords
         else
         {
             // There are no checks to see if this BRA's destination is in the same page, programmer discretion required when using this feature
-            if(whileWendData._conditionType == Expression::FastCC)
+            if(whileWendData._ccType == Expression::FastCC)
             {
                 Compiler::emitVcpuAsm("BRA", whileWendData._labelName, false, codeLineIndex);
             }
@@ -1935,7 +2161,7 @@ namespace Keywords
         // Branch if condition false to instruction after WEND
         Compiler::setNextInternalLabel("_wend_" + Expression::wordToHexString(Compiler::getVasmPC()));
         Compiler::VasmLine* vasm = &Compiler::getCodeLines()[whileWendData._codeLineIndex]._vasm[whileWendData._jmpIndex];
-        switch(whileWendData._conditionType)
+        switch(whileWendData._ccType)
         {
             case Expression::BooleanCC: vasm->_code = "JumpFalse" + std::string(OPCODE_TRUNC_SIZE - (sizeof("JumpFalse")-1), ' ') + Compiler::getNextInternalLabel() + " " + std::to_string(Compiler::incJumpFalseUniqueId()); break;
             case Expression::NormalCC:  addLabelToJumpCC(Compiler::getCodeLines()[whileWendData._codeLineIndex]._vasm, Compiler::getNextInternalLabel() + " " + std::to_string(Compiler::incJumpFalseUniqueId()));             break;
@@ -1945,7 +2171,7 @@ namespace Keywords
         return true;
     }
 
-    bool keywordREPEAT(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordREPEAT(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         Compiler::setNextInternalLabel("_repeat_" + Expression::wordToHexString(Compiler::getVasmPC()));
         Compiler::getRepeatUntilDataStack().push({Compiler::getNextInternalLabel(), codeLineIndex});
@@ -1953,7 +2179,7 @@ namespace Keywords
         return true;
     }
 
-    bool keywordUNTIL(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordUNTIL(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         // Pop stack for this REPEAT loop
         if(Compiler::getRepeatUntilDataStack().empty())
@@ -1970,7 +2196,7 @@ namespace Keywords
         parseExpression(codeLine, codeLineIndex, conditionToken, condition);
 
         // Branch if condition false to instruction after REPEAT
-        switch(condition._conditionType)
+        switch(condition._ccType)
         {
             case Expression::BooleanCC: Compiler::emitVcpuAsm("%JumpFalse", repeatUntilData._labelName + " " + std::to_string(Compiler::incJumpFalseUniqueId()), false, codeLineIndex);       break;
             case Expression::NormalCC:  addLabelToJumpCC(Compiler::getCodeLines()[codeLineIndex]._vasm, repeatUntilData._labelName + " " + std::to_string(Compiler::incJumpFalseUniqueId())); break;
@@ -1980,7 +2206,7 @@ namespace Keywords
         return true;
     }
 
-    bool keywordCONST(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordCONST(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), '=', true);
         if(tokens.size() != 2)
@@ -2011,7 +2237,7 @@ namespace Keywords
                 tokens[1].erase(tokens[1].size()-1, 1);
 
                 Compiler::createString(codeLine, codeLineIndex, tokens[1], internalName, address);
-                Compiler::getConstants().push_back({0, address, tokens[0], internalName, Compiler::ConstStr});
+                Compiler::getConstants().push_back({uint8_t(tokens[1].size()), 0, address, tokens[1], tokens[0], internalName, Compiler::ConstStr});
             }
             // String keyword
             else
@@ -2040,16 +2266,17 @@ namespace Keywords
                 }
 
                 // Create constant string
+                uint8_t length = 0;
                 uint16_t address = 0x0000;
-                if(keywordToken == "CHR$")       address = Compiler::createConstantString(Compiler::StrChar, param);
-                else if(keywordToken == "HEX$")  address = Compiler::createConstantString(Compiler::StrHex,  param);
-                else if(keywordToken == "HEXW$") address = Compiler::createConstantString(Compiler::StrHexw, param);
+                if(keywordToken == "CHR$")       {length = 1; address = Compiler::createConstantString(Compiler::StrChar, param);}
+                else if(keywordToken == "HEX$")  {length = 2; address = Compiler::createConstantString(Compiler::StrHex,  param);}
+                else if(keywordToken == "HEXW$") {length = 4; address = Compiler::createConstantString(Compiler::StrHexw, param);}
 
                 // Create constant
                 if(address)
                 {
                     std::string internalName = Compiler::getStringVars().back()._name;
-                    Compiler::getConstants().push_back({0, address, tokens[0], internalName, Compiler::ConstStr});
+                    Compiler::getConstants().push_back({length, 0, address, Compiler::getStringVars().back()._text, tokens[0], internalName, Compiler::ConstStr});
                 }
             }
         }
@@ -2060,19 +2287,19 @@ namespace Keywords
 
             Expression::Numeric numeric;
             Expression::parse(tokens[1], codeLineIndex, numeric);
-            if(tokens[1].size() == 0  ||  !numeric._isValid  ||  numeric._isAddress)
+            if(tokens[1].size() == 0  ||  !numeric._isValid  ||  numeric._varType == Expression::TmpVar  ||  numeric._varType == Expression::IntVar)
             {
                 fprintf(stderr, "Compiler::keywordCONST() : Syntax error, invalid constant expression, in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
                 return false;
             }
 
-            Compiler::getConstants().push_back({numeric._value, 0x0000, tokens[0], "_" + tokens[0], Compiler::ConstInt16});
+            Compiler::getConstants().push_back({2, numeric._value, 0x0000, "", tokens[0], "_" + tokens[0], Compiler::ConstInt16});
         }
 
         return true;
     }
 
-    bool keywordDIM(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordDIM(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         std::string dimText = codeLine._code.substr(foundPos);
 
@@ -2133,7 +2360,7 @@ namespace Keywords
         return true;
     }
 
-    bool keywordDEF(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordDEF(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         std::string defText = codeLine._code.substr(foundPos);
 
@@ -2259,7 +2486,7 @@ namespace Keywords
         return true;
     }
 
-    bool keywordAT(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordAT(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() < 1  &&  tokens.size() > 2)
@@ -2292,7 +2519,7 @@ namespace Keywords
         return true;
     }
 
-    bool keywordPUT(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordPUT(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         std::string expression = codeLine._code.substr(foundPos);
         if(expression.size() == 0)
@@ -2308,7 +2535,7 @@ namespace Keywords
         return true;
     }
 
-    bool keywordMODE(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordMODE(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         std::string expression = codeLine._code.substr(foundPos);
         if(expression.size() == 0)
@@ -2325,7 +2552,7 @@ namespace Keywords
         return true;
     }
 
-    bool keywordWAIT(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordWAIT(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         std::string expression = codeLine._code.substr(foundPos);
         if(expression.size() == 0)
@@ -2342,7 +2569,7 @@ namespace Keywords
         return true;
     }
 
-    bool keywordLINE(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordLINE(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() !=2  &&  tokens.size() != 4)
@@ -2388,7 +2615,7 @@ namespace Keywords
         return true;
     }
 
-    bool keywordHLINE(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordHLINE(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() !=3)
@@ -2414,7 +2641,7 @@ namespace Keywords
         return true;
     }
 
-    bool keywordVLINE(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordVLINE(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() !=3)
@@ -2440,7 +2667,7 @@ namespace Keywords
         return true;
     }
 
-    bool keywordSCROLL(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordSCROLL(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ' ', false);
         if(tokens.size() != 1)
@@ -2472,7 +2699,7 @@ namespace Keywords
         return true;
     }
 
-    bool keywordPOKE(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordPOKE(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() != 2)
@@ -2482,17 +2709,25 @@ namespace Keywords
         }
 
         std::vector<std::string> operands = {"", ""};
+        std::vector<Expression::Numeric> numerics = {Expression::Numeric(), Expression::Numeric()};
         std::vector<Compiler::OperandType> operandTypes {Compiler::OperandConst, Compiler::OperandConst};
 
         for(int i=0; i<tokens.size(); i++)
         {
-            Expression::Numeric numeric;
-            operandTypes[i] = parseExpression(codeLine, codeLineIndex, tokens[i], operands[i], numeric);
+            operandTypes[i] = parseExpression(codeLine, codeLineIndex, tokens[i], operands[i], numerics[i]);
+        }
+
+        std::string opcode, operand;
+        switch(numerics[1]._int16Byte)
+        {
+            case Expression::Int16Low:  opcode = "LD";  operand = "_" + operands[1];          break;
+            case Expression::Int16High: opcode = "LD";  operand = "_" + operands[1] + " + 1"; break;
+            case Expression::Int16Both: opcode = "LDW"; operand = "_" + operands[1];          break;
         }
 
         if((operandTypes[0] == Compiler::OperandVar  ||  operandTypes[0] == Compiler::OperandTemp)  &&  (operandTypes[1] == Compiler::OperandVar  ||  operandTypes[1] == Compiler::OperandTemp))
         {
-            (operandTypes[1] == Compiler::OperandVar) ? Compiler::emitVcpuAsm("LDW", "_" + operands[1], false, codeLineIndex) : Compiler::emitVcpuAsm("LDW", operands[1], false, codeLineIndex);
+            (operandTypes[1] == Compiler::OperandVar) ? Compiler::emitVcpuAsm(opcode, operand, false, codeLineIndex) : Compiler::emitVcpuAsm("LDW", operands[1], false, codeLineIndex);
             (operandTypes[0] == Compiler::OperandVar) ? Compiler::emitVcpuAsm("POKE", "_" + operands[0], false, codeLineIndex) : Compiler::emitVcpuAsm("POKE", operands[0], false, codeLineIndex);
         }
         else if((operandTypes[0] == Compiler::OperandVar  ||  operandTypes[0] == Compiler::OperandTemp)  &&  operandTypes[1] == Compiler::OperandConst)
@@ -2504,7 +2739,7 @@ namespace Keywords
         {
             Compiler::emitVcpuAsm("LDWI", operands[0], false, codeLineIndex);
             Compiler::emitVcpuAsm("STW", "register0", false, codeLineIndex);
-            (operandTypes[1] == Compiler::OperandVar) ? Compiler::emitVcpuAsm("LDW", "_" + operands[1], false, codeLineIndex) : Compiler::emitVcpuAsm("LDW", operands[1], false, codeLineIndex);
+            (operandTypes[1] == Compiler::OperandVar) ? Compiler::emitVcpuAsm(opcode, operand, false, codeLineIndex) : Compiler::emitVcpuAsm("LDW", operands[1], false, codeLineIndex);
             Compiler::emitVcpuAsm("POKE", "register0", false, codeLineIndex);
         }
         else
@@ -2518,7 +2753,7 @@ namespace Keywords
         return true;
     }
 
-    bool keywordDOKE(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordDOKE(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() != 2)
@@ -2528,17 +2763,25 @@ namespace Keywords
         }
 
         std::vector<std::string> operands = {"", ""};
+        std::vector<Expression::Numeric> numerics = {Expression::Numeric(), Expression::Numeric()};
         std::vector<Compiler::OperandType> operandTypes {Compiler::OperandConst, Compiler::OperandConst};
 
         for(int i=0; i<tokens.size(); i++)
         {
-            Expression::Numeric numeric;
-            operandTypes[i] = parseExpression(codeLine, codeLineIndex, tokens[i], operands[i], numeric);
+            operandTypes[i] = parseExpression(codeLine, codeLineIndex, tokens[i], operands[i], numerics[i]);
+        }
+
+        std::string opcode, operand;
+        switch(numerics[1]._int16Byte)
+        {
+            case Expression::Int16Low:  opcode = "LD";  operand = "_" + operands[1];          break;
+            case Expression::Int16High: opcode = "LD";  operand = "_" + operands[1] + " + 1"; break;
+            case Expression::Int16Both: opcode = "LDW"; operand = "_" + operands[1];          break;
         }
 
         if((operandTypes[0] == Compiler::OperandVar  ||  operandTypes[0] == Compiler::OperandTemp)  &&  (operandTypes[1] == Compiler::OperandVar  ||  operandTypes[1] == Compiler::OperandTemp))
         {
-            (operandTypes[1] == Compiler::OperandVar) ? Compiler::emitVcpuAsm("LDW", "_" + operands[1], false, codeLineIndex) : Compiler::emitVcpuAsm("LDW", "" + operands[1], false, codeLineIndex);
+            (operandTypes[1] == Compiler::OperandVar) ? Compiler::emitVcpuAsm(opcode, operand, false, codeLineIndex) : Compiler::emitVcpuAsm("LDW", "" + operands[1], false, codeLineIndex);
             (operandTypes[0] == Compiler::OperandVar) ? Compiler::emitVcpuAsm("DOKE", "_" + operands[0], false, codeLineIndex) : Compiler::emitVcpuAsm("DOKE", "" + operands[0], false, codeLineIndex);
         }
         else if((operandTypes[0] == Compiler::OperandVar  ||  operandTypes[0] == Compiler::OperandTemp)  &&  operandTypes[1] == Compiler::OperandConst)
@@ -2550,7 +2793,7 @@ namespace Keywords
         {
             Compiler::emitVcpuAsm("LDWI", operands[0], false, codeLineIndex);
             Compiler::emitVcpuAsm("STW", "register0", false, codeLineIndex);
-            (operandTypes[1] == Compiler::OperandVar) ? Compiler::emitVcpuAsm("LDW", "_" + operands[1], false, codeLineIndex) : Compiler::emitVcpuAsm("LDW", "" + operands[1], false, codeLineIndex);
+            (operandTypes[1] == Compiler::OperandVar) ? Compiler::emitVcpuAsm(opcode, operand, false, codeLineIndex) : Compiler::emitVcpuAsm("LDW", "" + operands[1], false, codeLineIndex);
             Compiler::emitVcpuAsm("DOKE", "register0", false, codeLineIndex);
         }
         else
@@ -2564,7 +2807,7 @@ namespace Keywords
         return true;
     }
 
-    bool keywordPLAY(Compiler::CodeLine& codeLine, int codeLineIndex, size_t foundPos, KeywordFuncResult& result)
+    bool keywordPLAY(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), " ,", false);
         if(tokens.size() != 2  &&  tokens.size() != 3)

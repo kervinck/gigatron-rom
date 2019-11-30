@@ -33,26 +33,29 @@ highByteMask        EQU                     register0 + 0x2C
 _entryPoint_        EQU                     0x0200
 _10                 EQU                     0x0240
 _11                 EQU                     0x0244
-_12                 EQU                     0x0256
-_13                 EQU                     0x0260
-_14                 EQU                     0x026e
-_20                 EQU                     0x027c
-_21                 EQU                     0x0285
-_22                 EQU                     0x028e
-_23                 EQU                     0x0297
-_24                 EQU                     0x02a0
-_25                 EQU                     0x02a9
-_26                 EQU                     0x02b2
-_30                 EQU                     0x02bb
-_31                 EQU                     0x02bf
-_32                 EQU                     0x02d7
-_33                 EQU                     0x02e6
-_34                 EQU                     0x02ec
-_35                 EQU                     0x030a
-_36                 EQU                     0x0313
-_37                 EQU                     0x0323
+_12                 EQU                     0x0250
+_13                 EQU                     0x025a
+_14                 EQU                     0x0268
+_20                 EQU                     0x0276
+_21                 EQU                     0x027f
+_22                 EQU                     0x0288
+_23                 EQU                     0x0291
+_24                 EQU                     0x029a
+_25                 EQU                     0x02a3
+_26                 EQU                     0x02ac
+_30                 EQU                     0x02b5
+_31                 EQU                     0x02b9
+_32                 EQU                     0x02d1
+_33                 EQU                     0x02e0
+_34                 EQU                     0x0302
+_35                 EQU                     0x0308
+_36                 EQU                     0x0314
+_37                 EQU                     0x0322
+_38                 EQU                     0x032b
+_39                 EQU                     0x033b
+_next_0x02ea        EQU                     0x02e4
 _page_0x0300        EQU                     0x0300
-_end_0x0337         EQU                     0x0331
+_end_0x0355         EQU                     0x0349
 
 ; Variables
 _c                  EQU                     0x0030
@@ -60,8 +63,8 @@ _p                  EQU                     0x0032
 _n                  EQU                     0x0034
 
 ; Strings
-_str_0x7ea0          EQU                     0x7ea0
-_str_0x7ea0          DB                      12 'Playing note'
+_str_0xff60          EQU                     0xff60
+_str_0xff60          DB                      12 'Playing note' 0
 
 ; Define Bytes
 
@@ -80,14 +83,12 @@ _entryPoint_        InitRealTimeProc
 _10                 LDI                     1
                     STW                     _c                              ; for c=1 to 4
 
-_11                 LDW                     _c
-                    STW                     mathX
-                    LDWI                    256
-                    STW                     mathY
-                    LDWI                    multiply16bit
-                    CALL                    giga_vAC
+_11                 LD                      _c
+                    ST                      0xc0 + 1
+                    LDW                     0xc0
+                    ANDW                    highByteMask
                     ADDI                    252
-                    STW                     _p                              ; p=c*256+252
+                    STW                     _p                              ; p=(c LSL 8)+252
 
 _12                 LDW                     _p
                     SUBI                    1
@@ -105,45 +106,45 @@ _13                 LDI                     0
 
 _14                 ForNextLoopUp           _c _11 4                        ; next c
 
-_20                 LDWI                    120
+_20                 LDWI                    224
                     STW                     register0
                     LDI                     17
-                    POKE                    register0                       ; poke &h78,17:'LDWI $9xx
+                    POKE                    register0                       ; poke &hE0,17:'LDWI $9xx
 
-_21                 LDWI                    122
+_21                 LDWI                    226
                     STW                     register0
                     LDI                     9
-                    POKE                    register0                       ; poke &h7a,9
+                    POKE                    register0                       ; poke &hE2,9
 
-_22                 LDWI                    123
+_22                 LDWI                    227
                     STW                     register0
                     LDI                     127
-                    POKE                    register0                       ; poke &h7b,127:'LUP 0
+                    POKE                    register0                       ; poke &hE3,127:'LUP 0
 
-_23                 LDWI                    124
+_23                 LDWI                    228
                     STW                     register0
                     LDI                     0
-                    POKE                    register0                       ; poke &h7c,0
+                    POKE                    register0                       ; poke &hE4,0
 
-_24                 LDWI                    125
+_24                 LDWI                    229
                     STW                     register0
                     LDI                     147
-                    POKE                    register0                       ; poke &h7d,147:'INC &h79
+                    POKE                    register0                       ; poke &hE5,147:'INC &hE1
 
-_25                 LDWI                    126
+_25                 LDWI                    230
                     STW                     register0
-                    LDI                     121
-                    POKE                    register0                       ; poke &h7e,&h79
+                    LDI                     225
+                    POKE                    register0                       ; poke &hE6,&hE1
 
-_26                 LDWI                    127
+_26                 LDWI                    231
                     STW                     register0
                     LDI                     255
-                    POKE                    register0                       ; poke &h7f,255:'RET
+                    POKE                    register0                       ; poke &hE7,255:'RET
 
 _30                 LDI                     1
                     STW                     _n                              ; for n=1 to 95
 
-_31                 PrintString             _str_0x7ea0
+_31                 PrintString             _str_0xff60
                     PrintVarInt16           _n
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print "Playing note",n
@@ -151,40 +152,51 @@ _31                 PrintString             _str_0x7ea0
 _32                 LDW                     _n
                     ADDW                    _n
                     STW                     0xc0
-                    LDWI                    121
+                    LDWI                    225
                     STW                     register0
                     LDW                     0xc0
-                    POKE                    register0                       ; poke &h79,n+n:'$900+n*2
+                    POKE                    register0                       ; poke &hE1,n+n:'$900+n*2
 
-_33                 LDI                     0x78
-                    CALL                    giga_vAC
-                    POKE                    _p                              ; poke p,  usr(&h78):'Flo
+_33                 LDI                     1
+                    STW                     _c
+_next_0x02ea        LD                      _c
+                    ST                      0xc0 + 1
+                    LDW                     0xc0
+                    ANDW                    highByteMask
+                    ADDI                    252
+                    STW                     _p                              ; for c=1 to 4 : p=(c LSL 8)+252
 
-_34                 LDW                     _p
-                    ADDI                    1
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
-                    STW                     0xc0
-                    LDI                     0x78
+_34                 LDI                     0xe0
                     CALL                    giga_vAC
-                    POKE                    0xc0                            ; poke p+1,usr(&h78):'Fhi
+                    POKE                    _p                              ; poke p,  usr(&hE0):'Flo
 
-_35                 LDWI                    44
+_35                 LDW                     _p
+                    ADDI                    1
+                    STW                     0xc0
+                    LDI                     0xe0
+                    CALL                    giga_vAC
+                    POKE                    0xc0                            ; poke p+1,usr(&hE0):'Fhi
+
+_36                 ForNextLoopUp           _c _next_0x02ea 4               ; next c
+
+_37                 LDWI                    44
                     STW                     register0
                     LDI                     15
                     POKE                    register0                       ; poke 44,15:'0.25 secs
 
-_36                 LDI                     0x2c
+_38                 LDI                     0x2c
                     PEEK                    
-                    JumpGT                  _37 0
-                    LDWI                    _36
-                    CALL                    giga_vAC                        ; if peek(44)&>0 then goto 36
+                    JumpGT                  _39 0
+                    LDWI                    _38
+                    CALL                    giga_vAC                        ; if peek(44)&>0 then goto 38
 
-_37                 ForNextLoopUp           _n _31 95                       ; next n
+_39                 ForNextLoopUp           _n _31 95                       ; next n
 
-_end_0x0337         BRA                     _end_0x0337                     ; END
+_end_0x0355         BRA                     _end_0x0355                     ; END
 
 
 
@@ -194,23 +206,22 @@ _end_0x0337         BRA                     _end_0x0337                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7ead
-convertEqOp         EQU     0x7eb6
-convertNeOp         EQU     0x7ebf
-convertLeOp         EQU     0x7ec8
-convertGeOp         EQU     0x7ed1
-convertLtOp         EQU     0x7eda
-convertGtOp         EQU     0x7ee3
-multiply16bit       EQU     0x7dc3
-resetVideoTable     EQU     0x7cc0
-initClearFuncs      EQU     0x7da0
-clearCursorRow      EQU     0x79a0
-printInit           EQU     0x7cdf
-printText           EQU     0x7ca0
-printDigit          EQU     0x78a0
-printInt16          EQU     0x7ba0
-printChar           EQU     0x77a0
-newLineScroll       EQU     0x7aa0
+realTimeProc        EQU     0xff6e
+convertEqOp         EQU     0xff77
+convertNeOp         EQU     0xff80
+convertLeOp         EQU     0xff89
+convertGeOp         EQU     0xff92
+convertLtOp         EQU     0xff9b
+convertGtOp         EQU     0xffa4
+resetVideoTable     EQU     0xfeb2
+initClearFuncs      EQU     0xffad
+clearCursorRow      EQU     0xfd00
+printInit           EQU     0xfed1
+printText           EQU     0xffd0
+printDigit          EQU     0xfd49
+printInt16          EQU     0xfe00
+printChar           EQU     0xfd6b
+newLineScroll       EQU     0xfe54
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -284,42 +295,6 @@ convertGtOp         BGT     convertGt_1
                     LDI     0
                     RET
 convertGt_1         LDI     1
-                    RET
-
-
-; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
-mathX               EQU     register0
-mathY               EQU     register1
-mathSum             EQU     register2
-mathMask            EQU     register3
-mathRem             EQU     register8
-mathSign            EQU     register9
-mathScratch         EQU     register10
-mathShift           EQU     register11
-    
-    
-                    ; accumulator = mathX * mathY, (result 16bit)
-multiply16bit       LDI     0
-                    STW     mathSum
-                    LDI     1
-    
-multiply16_loop     STW     mathMask
-                    ANDW    mathY
-                    BEQ     multiply16_skip
-                    LDW     mathSum
-                    ADDW    mathX
-                    STW     mathSum
-                    
-multiply16_skip     LDW     mathX
-                    ADDW    mathX
-                    STW     mathX
-                    LDW     mathMask
-                    ADDW    mathMask
-                    BNE     multiply16_loop
-                    PUSH
-                    CALL    realTimeProcAddr
-                    POP
-                    LDW     mathSum
                     RET
 
 

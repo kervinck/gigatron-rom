@@ -79,8 +79,9 @@ printInit           LDWI    SYS_VDrawBits_134
 %SUB                printText
                     ; prints text string pointed to by the accumulator
 printText           PUSH
+                    STW     textStr
                     CALLI   printInit
-                    STW     textStr             
+                    LDW     textStr
                     PEEK                                    ; first byte is length
 
 printT_char         ST      textLen
@@ -285,7 +286,7 @@ newLS_cont1         CALLI   clearCursorRow
                     STW     scanLine
     
                     ; scroll all scan lines by 8 through 0x08 to 0x7F
-newLS_scroll        CALL    realTimeProcAddr
+newLS_scroll        CALLI   realTimeProc
                     LDW     scanLine
                     PEEK
                     ADDI    8

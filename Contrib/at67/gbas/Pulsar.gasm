@@ -37,12 +37,12 @@ _30                 EQU                     0x0271
 _40                 EQU                     0x0286
 _50                 EQU                     0x0299
 _60                 EQU                     0x029d
-_65                 EQU                     0x02b9
-_70                 EQU                     0x02c7
-_80                 EQU                     0x02df
-_90                 EQU                     0x0315
+_65                 EQU                     0x02b5
+_70                 EQU                     0x02c3
+_80                 EQU                     0x02db
+_90                 EQU                     0x0311
 _page_0x0300        EQU                     0x0300
-_end_0x0340         EQU                     0x0328
+_end_0x0340         EQU                     0x0324
 
 ; Variables
 _w                  EQU                     0x0030
@@ -118,13 +118,11 @@ _60                 LDW                     _y
                     STW                     mathY
                     LDWI                    divide16bit
                     CALL                    giga_vAC
-                    STW                     0xc0
-                    LDI                     10
-                    ADDW                    0xc0
+                    ADDI                    5
                     STW                     _w
                     BLE                     _65
                     LDI                     0
-                    STW                     _w                              ; w=10+y/q:if w &&> 0 then w=0
+                    STW                     _w                              ; w=5+y/q:if w &&> 0 then w=0
 
 _65                 LDI                     0x06
                     PEEK                    
@@ -152,12 +150,12 @@ _80                 LDW                     _p
                     CALL                    giga_vAC
                     ADDW                    _y
                     STW                     _y
+                    STW                     mathX
+                    LDW                     _q
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
-                    STW                     mathX
-                    LDW                     _q
                     STW                     mathY
                     LDWI                    divide16bit
                     CALL                    giga_vAC
@@ -180,28 +178,28 @@ _end_0x0340         BRA                     _end_0x0340                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7ea0
-convertEqOp         EQU     0x7ea9
-convertNeOp         EQU     0x7eb2
-convertLeOp         EQU     0x7ebb
-convertGeOp         EQU     0x7ec4
-convertLtOp         EQU     0x7ecd
-convertGtOp         EQU     0x7ed6
-multiply16bit       EQU     0x7ccd
-divide16bit         EQU     0x7aa0
-randMod16bit        EQU     0x7edf
-resetVideoTable     EQU     0x79df
-initClearFuncs      EQU     0x7da0
-clearVertBlinds     EQU     0x7dc3
-clearCursorRow      EQU     0x77a0
-drawVTLine          EQU     0x78a0
-drawVTLineExt       EQU     0x76a0
-drawVTLineLoop      EQU     0x75a0
-drawVTLineLoadXY    EQU     0x76d9
-atLineCursor        EQU     0x79a0
-printInit           EQU     0x74a0
-atTextCursor        EQU     0x7ca0
-newLineScroll       EQU     0x7ba0
+realTimeProc        EQU     0xff60
+convertEqOp         EQU     0xff69
+convertNeOp         EQU     0xff72
+convertLeOp         EQU     0xff7b
+convertGeOp         EQU     0xff84
+convertLtOp         EQU     0xff8d
+convertGtOp         EQU     0xff96
+multiply16bit       EQU     0xfd99
+divide16bit         EQU     0xfe9e
+randMod16bit        EQU     0xfe8b
+resetVideoTable     EQU     0xfdc0
+initClearFuncs      EQU     0xff9f
+clearVertBlinds     EQU     0xffc2
+clearCursorRow      EQU     0xfc00
+drawVTLine          EQU     0xfd3f
+drawVTLineExt       EQU     0xfc49
+drawVTLineLoop      EQU     0xfc82
+drawVTLineLoadXY    EQU     0xfcd5
+atLineCursor        EQU     0xfd00
+printInit           EQU     0xfddf
+atTextCursor        EQU     0xfe00
+newLineScroll       EQU     0xfe2d
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2

@@ -6,11 +6,9 @@ strFinish           EQU     register0
 strSrcAddr          EQU     register1
 strDstAddr          EQU     register2
 strSrcLen           EQU     register3
-strSrcFin           EQU     register3
 strOffset           EQU     register8
 strSrcAddr2         EQU     register9
-strSrcLen2          EQU     register10
-strSrcFin2          EQU     register10
+strTmpAddr          EQU     register10
 
 
 %SUB                stringChr
@@ -20,6 +18,9 @@ stringChr           LDI     1
                     INC     strDstAddr
                     LD      strChr
                     POKE    strDstAddr                          ; copy char
+                    INC     strDstAddr
+                    LDI     0
+                    POKE    strDstAddr                          ; terminating 0
                     RET
 %ENDS
 
@@ -30,6 +31,8 @@ stringHex           PUSH
                     POKE    strDstAddr                          ; set destination buffer length                    
                     INC     strDstAddr
                     CALLI   createHex
+                    LDI     0
+                    POKE    strDstAddr                          ; terminating 0
                     POP
                     RET
 %ENDS
@@ -46,6 +49,8 @@ stringHexw          PUSH
                     LD      strHex
                     ST      strChr
                     CALLI   createHex
+                    LDI     0
+                    POKE    strDstAddr                          ; terminating 0
                     POP
                     RET
 %ENDS
@@ -78,66 +83,49 @@ createH_skip1       ADDI    0x3A
 %SUB                stringCopy
                     ; copy one string to another
 stringCopy          LDW     strSrcAddr
-                    PEEK                                        ; get source length
-                    POKE    strDstAddr                          ; set destination buffer length
-                    ADDW    strSrcAddr
-                    STW     strSrcFin                           ; end source address
-                    
-stringC_loop        INC     strSrcAddr                          ; skip lengths the first time in
-                    INC     strDstAddr
-                    LDW     strSrcAddr
                     PEEK
-                    POKE    strDstAddr                          ; copy char
-                    LDW     strSrcAddr
-                    SUBW    strSrcFin
-                    BLT     stringC_loop                        ; until finished
+                    POKE    strDstAddr
+                    INC     strSrcAddr
+                    INC     strDstAddr
+                    BNE     stringCopy                          ; copy char until terminating char
                     RET
 %ENDS
 
 %SUB                stringAdd
                     ; concatenates two strings together
-stringAdd           LDW     strSrcAddr
-                    PEEK
-                    STW     strSrcLen                           ; get source length
-                    LDW     strSrcAddr2
-                    PEEK
-                    STW     strSrcLen2                          ; get source length2
-                    ADDW    strSrcLen
-                    POKE    strDstAddr                          ; set destination buffer length
-                    SUBI    95
-                    BLE     stringA_skip0
-                    LDI     95
-                    POKE    strDstAddr                          ; cap destination buffer length
-             
-stringA_skip0       LDW     strSrcAddr
-                    ADDW    strSrcLen
-                    STW     strSrcFin                           ; end source address
+stringAdd           LDW     strDstAddr
+                    STW     strTmpAddr
+                    INC     strSrcAddr
+                    INC     strDstAddr                          ; skip lengths
+                    LDI     0
+                    STW     strLength
                     
-stringA_loop0       INC     strSrcAddr                          ; skip lengths the first time in
-                    INC     strDstAddr
-                    LDW     strSrcAddr
+stringA_copy0       LDW     strSrcAddr
                     PEEK
-                    POKE    strDstAddr                          ; copy char
-                    LDW     strSrcAddr
-                    SUBW    strSrcFin
-                    BLT     stringA_loop0                       ; until finished
+                    BEQ     stringA_copy1
+                    POKE    strDstAddr
+                    INC     strSrcAddr
+                    INC     strDstAddr
+                    INC     strLength
+                    BRA     stringA_copy0
                     
-                    LDW     strSrcAddr2
-                    ADDW    strSrcLen2
-                    STW     strSrcFin2                          ; end source2 address
-
-stringA_loop1       INC     strSrcAddr2                         ; skip lengths the first time in
-                    INC     strDstAddr
-                    LD      strDstAddr                          ; relies on strings being stored in A0 to FF segments
-                    BEQ     stringA_exit                        ; don't overflow destination                    
+stringA_copy1       LDW     strLength
+                    SUBI    94
+                    BGE     stringA_exit
+                    INC     strSrcAddr2                         ; skips length first time
                     LDW     strSrcAddr2
                     PEEK
+                    BEQ     stringA_exit
                     POKE    strDstAddr                          ; copy char
-                    LDW     strSrcAddr2
-                    SUBW    strSrcFin2
-                    BLT     stringA_loop1                       ; until finished
+                    INC     strDstAddr
+                    INC     strLength
+                    BRA     stringA_copy1                       ; copy char until terminating char
 
-stringA_exit        RET
+stringA_exit        LDW     strLength
+                    POKE    strTmpAddr                          ; save concatenated string length
+                    LDI     0
+                    POKE    strDstAddr                          ; terminating zero
+                    RET
 %ENDS
 
 %SUB                stringMid
@@ -171,7 +159,10 @@ stringM_loop        INC     strSrcAddr                          ; skip lengths t
                     SUBW    strFinish
                     BLT     stringM_loop                        ; until finished
                     
-stringM_exit        RET
+stringM_exit        INC     strDstAddr
+                    LDI     0
+                    POKE    strDstAddr                          ; terminating 0
+                    RET
 %ENDS
     
 %SUB                stringLeft
@@ -201,7 +192,10 @@ stringL_loop        INC     strSrcAddr                          ; skip lengths t
                     SUBW    strFinish
                     BLT     stringL_loop                        ; until finished
                     
-stringL_exit        RET
+stringL_exit        INC     strDstAddr
+                    LDI     0
+                    POKE    strDstAddr                          ; terminating 0
+                    RET
 %ENDS
 
 %SUB                stringRight
@@ -233,5 +227,8 @@ stringR_loop        INC     strSrcAddr                          ; skip lengths t
                     SUBW    strFinish
                     BLT     stringR_loop                        ; until finished
                     
-stringR_exit        RET
+stringR_exit        INC     strDstAddr
+                    LDI     0
+                    POKE    strDstAddr                          ; terminating 0
+                    RET
 %ENDS

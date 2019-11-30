@@ -34,39 +34,38 @@ _entryPoint_        EQU                     0x0200
 _10                 EQU                     0x0241
 _20                 EQU                     0x024b
 _25                 EQU                     0x0254
-_30                 EQU                     0x0274
-_35                 EQU                     0x0296
-_40                 EQU                     0x02b9
-_45                 EQU                     0x02d6
-_50                 EQU                     0x02da
-_100                EQU                     0x0314
-_loop               EQU                     0x032c
-_110                EQU                     0x033b
-_120                EQU                     0x034d
-_130                EQU                     0x035e
-_140                EQU                     0x0372
-_150                EQU                     0x0381
-_160                EQU                     0x0390
-_170                EQU                     0x039f
-_200                EQU                     0x03a4
-_205                EQU                     0x03b0
-_210                EQU                     0x03bb
-_215                EQU                     0x03c6
-_220                EQU                     0x03d1
-_225                EQU                     0x03dc
-_230                EQU                     0x03e7
-_235                EQU                     0x03f2
-_240                EQU                     0x0409
-_245                EQU                     0x0414
-_250                EQU                     0x041f
-_255                EQU                     0x042a
-_254                EQU                     0x0437
-_253                EQU                     0x047c
+_30                 EQU                     0x0270
+_35                 EQU                     0x028e
+_40                 EQU                     0x02b1
+_45                 EQU                     0x02ce
+_50                 EQU                     0x02d2
+_100                EQU                     0x030c
+_loop               EQU                     0x0324
+_110                EQU                     0x0333
+_120                EQU                     0x0345
+_130                EQU                     0x0356
+_140                EQU                     0x036a
+_150                EQU                     0x0379
+_160                EQU                     0x0388
+_170                EQU                     0x0397
+_200                EQU                     0x039c
+_205                EQU                     0x03a8
+_210                EQU                     0x03b3
+_215                EQU                     0x03be
+_220                EQU                     0x03c9
+_225                EQU                     0x03d4
+_230                EQU                     0x03df
+_235                EQU                     0x03ea
+_240                EQU                     0x0400
+_245                EQU                     0x040b
+_250                EQU                     0x0416
+_255                EQU                     0x0421
+_254                EQU                     0x042e
+_253                EQU                     0x0473
 _page_0x0300        EQU                     0x0300
-_page_0x0400        EQU                     0x0400
-_else_0x04ca        EQU                     0x0468
-_else_0x0519        EQU                     0x04ab
-_end_0x052f         EQU                     0x04bf
+_else_0x04ca        EQU                     0x045f
+_else_0x0519        EQU                     0x04a2
+_end_0x052f         EQU                     0x04b6
 
 ; Variables
 _K                  EQU                     0x0030
@@ -78,9 +77,9 @@ _A                  EQU                     0x003a
 _B                  EQU                     0x003c
 _L                  EQU                     0x003e
 _F                  EQU                     0x0040
-_P_array            EQU                     0xff00
+_P_array            EQU                     0x7ea0
 _P_array            DW                      0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_Q_array            EQU                     0xff10
+_Q_array            EQU                     0x7eb0
 _Q_array            DW                      0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
 _U                  EQU                     0x0042
 _R                  EQU                     0x0044
@@ -92,10 +91,10 @@ _C                  EQU                     0x0048
 ; Define Bytes
 
 ; Lookup Tables
-_lut_numericLabs    EQU                     0xfe8b
+_lut_numericLabs    EQU                     0x7ee1
 _lut_numericLabs    DW                      254 253 -1
-_lut_numericAddrs   EQU                     0xfe91
-_lut_numericAddrs   DW                      0x0437 0x047c 
+_lut_numericAddrs   EQU                     0x7ee7
+_lut_numericAddrs   DW                      0x042e 0x0473 
 
 ; Code
 _entryPoint_        Initialise                                              ; INIT
@@ -137,11 +136,9 @@ _25                 LDW                     _X
                     LDW                     _R
                     STW                     mathY
                     CALLI                   divide16bit
-                    STW                     0xc0
-                    LDI                     80
-                    ADDW                    0xc0
+                    ADDI                    80
                     STW                     register0
-                    LDWI                    0xff00
+                    LDWI                    0x7ea0
                     ADDW                    _I
                     ADDW                    _I
                     STW                     register1
@@ -154,18 +151,16 @@ _30                 LDW                     _M
                     LDW                     _R
                     STW                     mathY
                     CALLI                   divide16bit
-                    STW                     0xc0
-                    LDI                     60
-                    ADDW                    0xc0
+                    ADDI                    60
                     STW                     register0
-                    LDWI                    0xff10
+                    LDWI                    0x7eb0
                     ADDW                    _I
                     ADDW                    _I
                     STW                     register1
                     LDW                     register0
                     DOKE                    register1                       ; Q(I)=60+(M-N)/R
 
-_35                 LDWI                    0xff00
+_35                 LDWI                    0x7ea0
                     ADDW                    _I
                     ADDW                    _I
                     DEEK                    
@@ -176,14 +171,14 @@ _35                 LDWI                    0xff00
                     LDW                     _I
                     ADDI                    4
                     STW                     register1
-                    LDWI                    0xff00
+                    LDWI                    0x7ea0
                     ADDW                    register1
                     ADDW                    register1
                     STW                     register1
                     LDW                     register0
                     DOKE                    register1                       ; P(I+4)=160-P(I)
 
-_40                 LDWI                    0xff10
+_40                 LDWI                    0x7eb0
                     ADDW                    _I
                     ADDW                    _I
                     DEEK                    
@@ -191,7 +186,7 @@ _40                 LDWI                    0xff10
                     LDW                     _I
                     ADDI                    4
                     STW                     register1
-                    LDWI                    0xff10
+                    LDWI                    0x7eb0
                     ADDW                    register1
                     ADDW                    register1
                     STW                     register1
@@ -203,24 +198,24 @@ _45                 INC                     _I
                     RET                                                     ; INC I:RETURN
 
 _50                 PUSH                    
-                    LDWI                    0xff00
+                    LDWI                    0x7ea0
                     ADDW                    _A
                     ADDW                    _A
                     DEEK                    
                     STW                     drawLine_x1
-                    LDWI                    0xff10
+                    LDWI                    0x7eb0
                     ADDW                    _A
                     ADDW                    _A
                     DEEK                    
                     STW                     drawLine_y1
-                    LDWI                    0xff00
+                    LDWI                    0x7ea0
                     ADDW                    _B
-                    CALLI                   _page_0x0300
-_page_0x0300        ADDW                    _B
+                    ADDW                    _B
                     DEEK                    
                     STW                     drawLine_x2
-                    LDWI                    0xff10
-                    ADDW                    _B
+                    LDWI                    0x7eb0
+                    CALLI                   _page_0x0300
+_page_0x0300        ADDW                    _B
                     ADDW                    _B
                     DEEK                    
                     STW                     drawLine_y2
@@ -351,12 +346,12 @@ _230                LDI                     6
                     CALLI                   _50                             ; A=6:B=7:GOSUB 50
 
 _235                LDI                     7
-                    CALLI                   _page_0x0400
-_page_0x0400        STW                     _A
+                    STW                     _A
                     LDI                     4
                     STW                     _B
                     CALLI                   _50                             ; A=7:B=4:GOSUB 50
 
+                    CALLI                    _240
 _240                LDI                     4
                     STW                     _A
                     LDI                     0
@@ -469,23 +464,23 @@ _end_0x052f         BRA                     _end_0x052f                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0xfe95
-convertEqOp         EQU     0xfe9c
-convertNeOp         EQU     0xfea5
-convertLeOp         EQU     0xfeae
-convertGeOp         EQU     0xfeb7
-convertLtOp         EQU     0xfec0
-convertGtOp         EQU     0xfec9
-multiply16bit       EQU     0xffd5
-divide16bit         EQU     0xff7a
-gosubNumericLabel   EQU     0xfe51
-resetVideoTable     EQU     0xfed2
-initClearFuncs      EQU     0xff20
-clearVertBlinds     EQU     0xff41
-drawLine            EQU     0xfe00
-drawLineExt         EQU     0xfd00
-drawLineLoop        EQU     0xfd35
-drawLineLoadXY      EQU     0xfd70
+realTimeProc        EQU     0x7eeb
+convertEqOp         EQU     0x7ef2
+convertNeOp         EQU     0x7dd9
+convertLeOp         EQU     0x7de2
+convertGeOp         EQU     0x7deb
+convertLtOp         EQU     0x7df4
+convertGtOp         EQU     0x7bf1
+multiply16bit       EQU     0x7aa0
+divide16bit         EQU     0x7ca0
+gosubNumericLabel   EQU     0x79a0
+resetVideoTable     EQU     0x7ac8
+initClearFuncs      EQU     0x7ec0
+clearVertBlinds     EQU     0x7da0
+drawLine            EQU     0x7ba0
+drawLineExt         EQU     0x78a0
+drawLineLoop        EQU     0x77a0
+drawLineLoadXY      EQU     0x78d5
 
 
 ; do *NOT* use register4 to register7 during time slicing if you call realTimeProc

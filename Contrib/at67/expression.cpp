@@ -172,7 +172,7 @@ namespace Expression
     {
         std::string str = input;
         stripNonStringWhitespace(str);
-        if(str.size() < 3) return false;
+        if(str.size() < 2) return false;
         if(str[0] == '"'  &&  str.back() == '"')
         {
             for(int i=1; i<str.size()-1; i++)
@@ -445,7 +445,7 @@ namespace Expression
         if(it == s.end()) return std::string("");
 
         size_t start = it - s.begin();
-        size_t end = s.find_first_of("-+/*%&<>=();, ");
+        size_t end = s.find_first_of("-+/*%&<>=();,. ");
         if(end == std::string::npos) return s.substr(start);
 
         return s.substr(start, end - start);
@@ -766,6 +766,97 @@ namespace Expression
         return tokens;
     }
 
+    // Tokenise using whitespace and quotes, preserves strings
+    std::vector<std::string> tokeniseLine(const std::string& line, const std::string& delimiters, std::vector<size_t>& offsets)
+    {
+        std::string token = "";
+        bool delimiterStart = true;
+        bool stringStart = false;
+        enum DelimiterState {WhiteSpace, Quotes};
+        DelimiterState delimiterState = WhiteSpace;
+        std::vector<std::string> tokens;
+
+        for(int i=0; i<=line.size(); i++)
+        {
+            // End of line is a delimiter for white space
+            if(i == line.size())
+            {
+                if(delimiterState != Quotes)
+                {
+                    delimiterState = WhiteSpace;
+                    delimiterStart = false;
+                }
+                else
+                {
+                    break;
+                }
+            }
+            else
+            {
+                // White space delimiters
+                if(strchr(delimiters.c_str(), line[i]))
+                {
+                    if(delimiterState != Quotes)
+                    {
+                        delimiterState = WhiteSpace;
+                        delimiterStart = false;
+                    }
+                }
+                // String delimiters
+                else if(strchr("\'\"", line[i]))
+                {
+                    delimiterState = Quotes;
+                    stringStart = !stringStart;
+                }
+            }
+
+            // Build token
+            switch(delimiterState)
+            {
+                case WhiteSpace:
+                {
+                    // Don't save delimiters
+                    if(delimiterStart)
+                    {
+                        if(!strchr(delimiters.c_str(), line[i])) token += line[i];
+                    }
+                    else
+                    {
+                        if(token.size())
+                        {
+                            tokens.push_back(token);
+                            offsets.push_back(i - token.size());
+                        }
+                        delimiterStart = true;
+                        token = "";
+                    }
+                }
+                break;
+
+                case Quotes:
+                {
+                    // Save delimiters as well as chars
+                    if(stringStart)
+                    {
+                        token += line[i];
+                    }
+                    else
+                    {
+                        token += line[i];
+                        tokens.push_back(token);
+                        offsets.push_back(i - token.size());
+                        delimiterState = WhiteSpace;
+                        stringStart = false;
+                        token = "";
+                    }
+                }
+                break;
+            }
+        }
+
+        return tokens;
+    }
+
     void replaceText(std::string& input, const std::string& text, const std::string& replace)
     {
         for(size_t foundPos=0; ; foundPos+=replace.size())
@@ -875,7 +966,7 @@ namespace Expression
             if(peek() != ')')
             {
                 fprintf(stderr, "Expression::factor() : Missing ')' in '%s' on line %d\n", _expressionToParse.c_str(), _lineNumber + 1);
-                numeric = Numeric(0, -1, false, false, NormalCC, std::string(""));
+                numeric = Numeric();
             }
             get();
         }
@@ -884,11 +975,11 @@ namespace Expression
             if(!number(value))
             {
                 fprintf(stderr, "Expression::factor() : Bad numeric data in '%s' on line %d\n", _expressionToParse.c_str(), _lineNumber + 1);
-                numeric = Numeric(0, -1, false, false, NormalCC, std::string(""));
+                numeric = Numeric();
             }
             else
             {
-                numeric = Numeric(value, -1, true, false, NormalCC, std::string(""));
+                numeric = Numeric(value, -1, true, Number, BooleanCC, Int16Both, std::string(""), std::string(""));
             }
         }
         else
@@ -903,7 +994,7 @@ namespace Expression
                 case '~': get(); numeric = factor(0); numeric = not(numeric); break;
 
                 // Unknown
-                default: numeric = Numeric(defaultValue, -1, true, true, NormalCC, std::string(_expression)); break;
+                default: numeric = Numeric(defaultValue, -1, true, Number, BooleanCC, Int16Both, std::string(_expression), std::string("")); break;
             }
         }
 

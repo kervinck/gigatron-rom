@@ -323,23 +323,23 @@ _end_0x03ca         BRA                     _end_0x03ca                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0xff00
-convertEqOp         EQU     0xff09
-convertNeOp         EQU     0xff12
-convertLeOp         EQU     0xff1b
-convertGeOp         EQU     0xff24
-convertLtOp         EQU     0xff2d
-convertGtOp         EQU     0xff36
-scanlineMode        EQU     0xffeb
-resetVideoTable     EQU     0xfe55
-initClearFuncs      EQU     0xff3f
-drawLine            EQU     0xfe00
-drawLineExt         EQU     0xfe74
-drawLineLoop        EQU     0xfead
-drawLineLoadXY      EQU     0xfd00
-resetAudio          EQU     0xff62
-playMidi            EQU     0xff9b
-midiStartNote       EQU     0xfd2b
+realTimeProc        EQU     0xff60
+convertEqOp         EQU     0xff69
+convertNeOp         EQU     0xff72
+convertLeOp         EQU     0xff7b
+convertGeOp         EQU     0xff84
+convertLtOp         EQU     0xff8d
+convertGtOp         EQU     0xff96
+scanlineMode        EQU     0xfe50
+resetVideoTable     EQU     0xfeb9
+initClearFuncs      EQU     0xff9f
+drawLine            EQU     0xfe64
+drawLineExt         EQU     0xfd00
+drawLineLoop        EQU     0xfd39
+drawLineLoadXY      EQU     0xfd73
+resetAudio          EQU     0xffc2
+playMidi            EQU     0xfe00
+midiStartNote       EQU     0xfd9e
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2

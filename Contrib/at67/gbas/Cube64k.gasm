@@ -34,28 +34,28 @@ _entryPoint_        EQU                     0x0200
 _10                 EQU                     0x0260
 _20                 EQU                     0x0267
 _25                 EQU                     0x0270
-_30                 EQU                     0x0290
-_35                 EQU                     0x02b2
-_40                 EQU                     0x02d5
-_45                 EQU                     0x02f2
-_50                 EQU                     0x0302
-_60                 EQU                     0x0334
-_setup              EQU                     0x0366
-_loop               EQU                     0x0385
-_process            EQU                     0x0394
-_draw               EQU                     0x0443
-_erase              EQU                     0x04ca
-_254                EQU                     0x055a
-_253                EQU                     0x0593
-_flip               EQU                     0x05ca
+_30                 EQU                     0x028c
+_35                 EQU                     0x02aa
+_40                 EQU                     0x02cd
+_45                 EQU                     0x02ea
+_50                 EQU                     0x02ee
+_60                 EQU                     0x032c
+_setup              EQU                     0x035e
+_loop               EQU                     0x037d
+_process            EQU                     0x038c
+_draw               EQU                     0x043d
+_erase              EQU                     0x04c4
+_254                EQU                     0x0556
+_253                EQU                     0x058f
+_flip               EQU                     0x05c6
 _page_0x0300        EQU                     0x0300
-_next_0x041d        EQU                     0x0399
+_next_0x041d        EQU                     0x0391
 _page_0x0400        EQU                     0x0400
 _page_0x0500        EQU                     0x0500
-_else_0x060a        EQU                     0x056d
-_else_0x064d        EQU                     0x05a4
-_repeat_0x0683      EQU                     0x05d6
-_end_0x06a3         EQU                     0x05f0
+_else_0x060a        EQU                     0x0569
+_else_0x064d        EQU                     0x05a0
+_repeat_0x0683      EQU                     0x05d2
+_end_0x06a3         EQU                     0x05ec
 
 ; Variables
 _videoTable         EQU                     0x0030
@@ -92,7 +92,7 @@ _j                  EQU                     0x0050
 _lut_numericLabs    EQU                     0x87ee
 _lut_numericLabs    DW                      254 253 -1
 _lut_numericAddrs   EQU                     0x87f4
-_lut_numericAddrs   DW                      0x055a 0x0593 
+_lut_numericAddrs   DW                      0x0556 0x058f 
 
 ; Code
 _entryPoint_        Initialise                                              ; INIT
@@ -151,9 +151,7 @@ _25                 LDW                     _X
                     LDW                     _R
                     STW                     mathY
                     CALLI                   divide16bit
-                    STW                     0xc0
-                    LDI                     80
-                    ADDW                    0xc0
+                    ADDI                    80
                     STW                     register0
                     LDWI                    0x8700
                     ADDW                    _I
@@ -168,9 +166,7 @@ _30                 LDW                     _M
                     LDW                     _R
                     STW                     mathY
                     CALLI                   divide16bit
-                    STW                     0xc0
-                    LDI                     60
-                    ADDW                    0xc0
+                    ADDI                    60
                     STW                     register0
                     LDWI                    0x8720
                     ADDW                    _I
@@ -213,14 +209,14 @@ _40                 LDWI                    0x8720
                     DOKE                    register1                       ; Q(I+4)=Q(I)
 
 _45                 INC                     _I
-                    CALLI                   _page_0x0300
-_page_0x0300        POP                     
+                    POP                     
                     RET                                                     ; INC I:RETURN
 
 _50                 PUSH                    
                     LDWI                    0x8700
                     ADDW                    _A
-                    ADDW                    _A
+                    CALLI                   _page_0x0300
+_page_0x0300        ADDW                    _A
                     DEEK                    
                     STW                     drawLine_x1
                     LDWI                    0x8720
@@ -345,11 +341,11 @@ _next_0x041d        LDWI                    0x8700
                     CALLI                   multiply16bit
                     STW                     _M                              ; K=S:M=U*C
 
-                    CALLI                   _page_0x0400
-_page_0x0400        LDW                     _C
+                    LDW                     _C
                     STW                     _L
                     LDW                     _U
-                    STW                     mathX
+                    CALLI                   _page_0x0400
+_page_0x0400        STW                     mathX
                     LDW                     _S
                     STW                     mathY
                     CALLI                   multiply16bit
@@ -483,10 +479,10 @@ _erase              LDI                     0
                     STW                     _B
                     CALLI                   _60                             ; A=3:B=0:GOSUB 60
 
-                    CALLI                   _page_0x0500
-_page_0x0500        LDI                     4
+                    LDI                     4
                     STW                     _A
-                    LDI                     5
+                    CALLI                   _page_0x0500
+_page_0x0500        LDI                     5
                     STW                     _B
                     CALLI                   _60                             ; A=4:B=5:GOSUB 60
 

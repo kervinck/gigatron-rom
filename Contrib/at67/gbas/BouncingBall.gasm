@@ -123,23 +123,23 @@ _end_0x02b2         BRA                     _end_0x02b2                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0xff00
-convertEqOp         EQU     0xff09
-convertNeOp         EQU     0xff12
-convertLeOp         EQU     0xff1b
-convertGeOp         EQU     0xff24
-convertLtOp         EQU     0xff2d
-convertGtOp         EQU     0xff36
-waitVBlank          EQU     0xffd6
-resetVideoTable     EQU     0xfe00
-initClearFuncs      EQU     0xff3f
-clearVertBlinds     EQU     0xff62
-clearCursorRow      EQU     0xfe1f
-printInit           EQU     0xfe68
-printChr            EQU     0xffc9
-printChar           EQU     0xfe83
-atTextCursor        EQU     0xff9c
-newLineScroll       EQU     0xfd00
+realTimeProc        EQU     0x7ea0
+convertEqOp         EQU     0x7ea9
+convertNeOp         EQU     0x7eb2
+convertLeOp         EQU     0x7ebb
+convertGeOp         EQU     0x7ec4
+convertLtOp         EQU     0x7ecd
+convertGtOp         EQU     0x7ed6
+waitVBlank          EQU     0x7ccd
+resetVideoTable     EQU     0x7ba0
+initClearFuncs      EQU     0x7da0
+clearVertBlinds     EQU     0x7dc3
+clearCursorRow      EQU     0x7aa0
+printInit           EQU     0x7bbf
+printChr            EQU     0x7edf
+printChar           EQU     0x79a0
+atTextCursor        EQU     0x7ca0
+newLineScroll       EQU     0x78a0
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2

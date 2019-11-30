@@ -87,19 +87,19 @@ _c                  EQU                     0x0046
 
 ; Strings
 _str_0x7ea0          EQU                     0x7ea0
-_str_0x7ea0          DB                      18 ' 2 3   5 6 7   9 0'
-_str_0x7eb3          EQU                     0x7eb3
-_str_0x7eb3          DB                      19 'Q W E R T Y U I O P'
-_str_0x7ec7          EQU                     0x7ec7
-_str_0x7ec7          DB                      3 'Z: '
-_str_0x7ecb          EQU                     0x7ecb
-_str_0x7ecb          DB                      8 'Metallic'
-_str_0x7ed4          EQU                     0x7ed4
-_str_0x7ed4          DB                      8 'Triangle'
-_str_0x7edd          EQU                     0x7edd
-_str_0x7edd          DB                      8 'Pulse   '
-_str_0x7ee6          EQU                     0x7ee6
-_str_0x7ee6          DB                      8 'Sawtooth'
+_str_0x7ea0          DB                      18 ' 2 3   5 6 7   9 0' 0
+_str_0x7eb4          EQU                     0x7eb4
+_str_0x7eb4          DB                      19 'Q W E R T Y U I O P' 0
+_str_0x7ec9          EQU                     0x7ec9
+_str_0x7ec9          DB                      3 'Z: ' 0
+_str_0x7ece          EQU                     0x7ece
+_str_0x7ece          DB                      8 'Metallic' 0
+_str_0x7ed8          EQU                     0x7ed8
+_str_0x7ed8          DB                      8 'Triangle' 0
+_str_0x7ee2          EQU                     0x7ee2
+_str_0x7ee2          DB                      8 'Pulse   ' 0
+_str_0x7eec          EQU                     0x7eec
+_str_0x7eec          DB                      8 'Sawtooth' 0
 
 ; Define Bytes
 
@@ -505,7 +505,7 @@ _text               PUSH
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print " 2 3   5 6 7   9 0"
 
-                    PrintString             _str_0x7eb3
+                    PrintString             _str_0x7eb4
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print "Q W E R T Y U I O P"
 
@@ -547,7 +547,7 @@ _wave               PUSH
                     ST                      cursorXY + 1
                     LDWI                    atTextCursor
                     CALL                    giga_vAC
-                    PrintString             _str_0x7ec7                     ; at 2,24 : print "Z: ";
+                    PrintString             _str_0x7ec9                     ; at 2,24 : print "Z: ";
 
                     LDI                     206
                     ADDW                    _z
@@ -561,28 +561,28 @@ _wave               PUSH
                     RET                                                     ; return
 
 _206                PUSH                    
-                    PrintString             _str_0x7ecb
+                    PrintString             _str_0x7ece
                     LDWI                    newLineScroll
                     CALL                    giga_vAC
                     POP                     
                     RET                                                     ; print "Metallic":return
 
 _207                PUSH                    
-                    PrintString             _str_0x7ed4
+                    PrintString             _str_0x7ed8
                     LDWI                    newLineScroll
                     CALL                    giga_vAC
                     POP                     
                     RET                                                     ; print "Triangle":return
 
 _208                PUSH                    
-                    PrintString             _str_0x7edd
+                    PrintString             _str_0x7ee2
                     LDWI                    newLineScroll
                     CALL                    giga_vAC
                     POP                     
                     RET                                                     ; print "Pulse   ":return
 
 _209                PUSH                    
-                    PrintString             _str_0x7ee6
+                    PrintString             _str_0x7eec
                     LDWI                    newLineScroll
                     CALL                    giga_vAC
                     POP                     
@@ -659,7 +659,7 @@ _end_0x062c         BRA                     _end_0x062c                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7eef
+realTimeProc        EQU     0x7ef6
 convertEqOp         EQU     0x7da0
 convertNeOp         EQU     0x7da9
 convertLeOp         EQU     0x7db2

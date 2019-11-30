@@ -49,8 +49,8 @@ _x                  EQU                     0x0030
 _y                  EQU                     0x0032
 
 ; Strings
-_str_0xff00          EQU                     0xff00
-_str_0xff00          DB                      9 'Gigatron!'
+_str_0xff60          EQU                     0xff60
+_str_0xff60          DB                      9 'Gigatron!' 0
 
 ; Define Bytes
 
@@ -73,10 +73,10 @@ _10                 LDI                     107
 
 _20                 Rand                    
                     ANDI                    63
-                    STW                     0xc0
+                    STW                     0xc2
                     LDWI                    162
                     STW                     register0
-                    LDW                     0xc0
+                    LDW                     0xc2
                     POKE                    register0                       ; poke 162,rnd(0) AND 63
 
 _30                 Rand                    
@@ -120,7 +120,7 @@ _40                 Rand
                     LDWI                    atTextCursor
                     CALL                    giga_vAC                        ; at (rnd(0) AND &h3F) + (rnd(0) AND &h1F) + (rnd(0) AND &h07) + (rnd(0) AND &h07), (rnd(0) AND &h3F) + (rnd(0) AND &h1F) + (rnd(0) AND &h0F) + (rnd(0) AND &h03)
 
-_50                 PrintString             _str_0xff00                     ; print "Gigatron!";
+_50                 PrintString             _str_0xff60                     ; print "Gigatron!";
 
 _60                 BRA                     _20                             ; goto &20
 
@@ -134,22 +134,22 @@ _end_0x0319         BRA                     _end_0x0319                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0xff0a
-convertEqOp         EQU     0xff13
-convertNeOp         EQU     0xff1c
-convertLeOp         EQU     0xff25
-convertGeOp         EQU     0xff2e
-convertLtOp         EQU     0xff37
-convertGtOp         EQU     0xff40
-rand16bit           EQU     0xff6c
-resetVideoTable     EQU     0xffc1
-initClearFuncs      EQU     0xff49
-clearCursorRow      EQU     0xfe00
-printInit           EQU     0xffe0
-printText           EQU     0xffa1
-printChar           EQU     0xfe49
-atTextCursor        EQU     0xff74
-newLineScroll       EQU     0xfea1
+realTimeProc        EQU     0xff6b
+convertEqOp         EQU     0xff74
+convertNeOp         EQU     0xff7d
+convertLeOp         EQU     0xff86
+convertGeOp         EQU     0xff8f
+convertLtOp         EQU     0xff98
+convertGtOp         EQU     0xffa1
+rand16bit           EQU     0xffcd
+resetVideoTable     EQU     0xfe2d
+initClearFuncs      EQU     0xffaa
+clearCursorRow      EQU     0xfe4c
+printInit           EQU     0xfe95
+printText           EQU     0xffd5
+printChar           EQU     0xfd00
+atTextCursor        EQU     0xfe00
+newLineScroll       EQU     0xfd58
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2

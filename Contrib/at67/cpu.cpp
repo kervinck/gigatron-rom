@@ -493,6 +493,10 @@ namespace Cpu
 
             int xpos, ypos, width, height;
             sscanf_s(line.c_str(), "%d %d %d %d", &xpos, &ypos, &width, &height);
+            if(xpos < -2000  ||  xpos > 4000  ||  ypos < 320  ||  ypos > 1000  ||  width < 100  ||  width > 2000  ||  height < 100 ||  height > 1000)
+            {
+                xpos = -1000; ypos = 320; width = 1000; height = 1000;
+            }
 
             MoveWindow(_consoleWindowHWND, xpos, ypos, width, height, true);
             BringWindowToTop(_consoleWindowHWND);

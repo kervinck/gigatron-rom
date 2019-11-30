@@ -33,7 +33,7 @@ highByteMask        EQU                     register0 + 0x2C
 _entryPoint_        EQU                     0x0200
 _next_0x0248        EQU                     0x0248
 _page_0x0300        EQU                     0x0300
-_end_0x0307         EQU                     0x0312
+_end_0x0305         EQU                     0x0312
 
 ; Variables
 _z                  EQU                     0x0030
@@ -45,8 +45,8 @@ _d                  EQU                     0x003a
 _e                  EQU                     0x003c
 
 ; Strings
-_str_0xff00          EQU                     0xff00
-_str_0xff00          DB                      1 ' '
+_str_0xff60          EQU                     0xff60
+_str_0xff60          DB                      1 ' ' 0
 
 ; Define Bytes
 
@@ -81,8 +81,6 @@ _next_0x0248        LDI                     16
                     CALL                    convertNeOpAddr
                     STW                     _c
                     PEEK                    
-                    STW                     0xc2
-                    LDW                     _c
                     STW                     _d                              ; c = NOT a <> b : d = peek(c)
 
                     LDWI                    0xaa55
@@ -98,17 +96,17 @@ _next_0x0248        LDI                     16
                     STW                     _z                              ; z = z + 1
 
                     PrintVarInt16           _a
-                    PrintString             _str_0xff00
+                    PrintString             _str_0xff60
                     PrintVarInt16           _b
-                    PrintString             _str_0xff00
+                    PrintString             _str_0xff60
                     PrintVarInt16           _c
-                    PrintString             _str_0xff00
+                    PrintString             _str_0xff60
                     LDW                     _d
                     PrintAcHexByte          
-                    PrintString             _str_0xff00
+                    PrintString             _str_0xff60
                     LDW                     _e
                     PrintAcHexWord          
-                    PrintString             _str_0xff00
+                    PrintString             _str_0xff60
                     PrintVarInt16           _z
                     LDWI                    newLineScroll
                     STW                     0xde
@@ -118,7 +116,7 @@ _page_0x0300        LDW                     0xde
                     CALL                    giga_vAC
                     ForNextLoopUp           _i _next_0x0248 5               ; print a;" ";b;" ";c;" ";hex$(d);" ";hexw$(e);" ";z : next i
 
-_end_0x0307         BRA                     _end_0x0307                     ; END
+_end_0x0305         BRA                     _end_0x0305                     ; END
 
 
 
@@ -128,24 +126,24 @@ _end_0x0307         BRA                     _end_0x0307                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0xff02
-convertEqOp         EQU     0xff0b
-convertNeOp         EQU     0xff14
-convertLeOp         EQU     0xff1d
-convertGeOp         EQU     0xff26
-convertLtOp         EQU     0xff2f
-convertGtOp         EQU     0xff38
-resetVideoTable     EQU     0xfe93
-initClearFuncs      EQU     0xff41
-clearCursorRow      EQU     0xfeb2
-printInit           EQU     0xfd00
-printText           EQU     0xffb8
-printDigit          EQU     0xfd1b
-printInt16          EQU     0xff64
-printChar           EQU     0xfd3d
-printHexByte        EQU     0xfe00
-printHexWord        EQU     0xffd8
-newLineScroll       EQU     0xfe35
+realTimeProc        EQU     0xff63
+convertEqOp         EQU     0xff6c
+convertNeOp         EQU     0xff75
+convertLeOp         EQU     0xff7e
+convertGeOp         EQU     0xff87
+convertLtOp         EQU     0xff90
+convertGtOp         EQU     0xff99
+resetVideoTable     EQU     0xfd00
+initClearFuncs      EQU     0xffa2
+clearCursorRow      EQU     0xfd1f
+printInit           EQU     0xfd68
+printText           EQU     0xffc5
+printDigit          EQU     0xfd83
+printInt16          EQU     0xfe00
+printChar           EQU     0xfda5
+printHexByte        EQU     0xfe54
+printHexWord        EQU     0xffe5
+newLineScroll       EQU     0xfe89
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2

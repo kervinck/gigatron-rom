@@ -58,17 +58,17 @@ _k                  EQU                     0x0036
 _c                  EQU                     0x0038
 
 ; Strings
-_str_0x7ea0          EQU                     0x7ea0
-_str_0x7ea0          DB                      12 ' 2 3   5 6 7'
-_str_0x7ead          EQU                     0x7ead
-_str_0x7ead          DB                      15 'Q W E R T Y U I'
+_str_0xff60          EQU                     0xff60
+_str_0xff60          DB                      12 ' 2 3   5 6 7' 0
+_str_0xff6e          EQU                     0xff6e
+_str_0xff6e          DB                      15 'Q W E R T Y U I' 0
 
 ; Define Bytes
 
 ; Lookup Tables
-_lut_numericLabs    EQU                     0x7cda
+_lut_numericLabs    EQU                     0xfd00
 _lut_numericLabs    DW                      50 51 53 54 55 101 105 113 114 116 117 119 121 -1
-_lut_numericAddrs   EQU                     0x7ada
+_lut_numericAddrs   EQU                     0xfd1c
 _lut_numericAddrs   DW                      0x029c 0x02ac 0x02bc 0x02cc 0x02dc 0x02ec 0x030f 0x031f 0x032f 0x033f 0x034f 0x035f 0x036f 
 
 ; Code
@@ -96,11 +96,11 @@ _entryPoint_        InitRealTimeProc
                     LDWI                    clearVertBlinds
                     CALL                    giga_vAC                        ; mode 2:cls
 
-                    PrintString             _str_0x7ea0
+                    PrintString             _str_0xff60
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print " 2 3   5 6 7"
 
-                    PrintString             _str_0x7ead
+                    PrintString             _str_0xff6e
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print "Q W E R T Y U I"
 
@@ -294,23 +294,23 @@ _end_0x03ae         BRA                     _end_0x03ae                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7ebd
-convertEqOp         EQU     0x7ec6
-convertNeOp         EQU     0x7ecf
-convertLeOp         EQU     0x7ed8
-convertGeOp         EQU     0x7ee1
-convertLtOp         EQU     0x7eea
-convertGtOp         EQU     0x7ef3
-gosubNumericLabel   EQU     0x7aa0
-scanlineMode        EQU     0x7dc3
-resetVideoTable     EQU     0x79a0
-initClearFuncs      EQU     0x7da0
-clearVertBlinds     EQU     0x7ca0
-clearCursorRow      EQU     0x78a0
-printInit           EQU     0x79bf
-printText           EQU     0x7dd7
-printChar           EQU     0x77a0
-newLineScroll       EQU     0x7ba0
+realTimeProc        EQU     0xff7f
+convertEqOp         EQU     0xff88
+convertNeOp         EQU     0xff91
+convertLeOp         EQU     0xff9a
+convertGeOp         EQU     0xffa3
+convertLtOp         EQU     0xffac
+convertGtOp         EQU     0xffb5
+gosubNumericLabel   EQU     0xfeb8
+scanlineMode        EQU     0xffe1
+resetVideoTable     EQU     0xfd36
+initClearFuncs      EQU     0xffbe
+clearVertBlinds     EQU     0xfe00
+clearCursorRow      EQU     0xfd55
+printInit           EQU     0xfd9e
+printText           EQU     0xfe3a
+printChar           EQU     0xfc00
+newLineScroll       EQU     0xfe5a
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
