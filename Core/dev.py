@@ -342,9 +342,6 @@ ledTempo        = zpByte() # Next value for ledTimer after LED state change
 # All bytes above, except 0x80, are free for temporary/scratch/stacks etc
 userVars        = zpByte(0)
 
-# TODO: Give this an address < 0x30 (GitHub issue #103)
-ctrlBits        = sysArgs+7
-
 #-----------------------------------------------------------------------
 #
 #  RAM page 1: video line table
@@ -354,6 +351,7 @@ ctrlBits        = sysArgs+7
 # Byte 0-239 define the video lines
 videoTable      = 0x0100 # Indirection table: Y[0] dX[0]  ..., Y[119] dX[119]
 
+ctrlBits        = 0x01f8
 videoTop_DEVROM = 0x01f9 # Number of skip lines
 
 vReset          = 0x01f0
@@ -604,7 +602,7 @@ st('SYS',             [Y,Xpp])  # SYS -> SYS_Reset_88 -> SYS_Exec_88
 st(256-88//2+maxTicks,[Y,Xpp])
 st(0,                 [Y,Xpp])  # Free XXX reserve for interrupt vector?
 st(0,                 [Y,Xpp])  # Free XXX reserve for interrupt vector?
-st(0,                 [Y,Xpp])  # Free XXX reserve for control register?
+st(0b11111100,        [Y,Xpp])  # Control register
 st(0,                 [Y,Xpp])  # videoTop
 
 ld(hi('ENTER'))                 # Active interpreter (vCPU,v6502) = vCPU
@@ -2883,9 +2881,10 @@ ld([sysArgs+2],X)               #17
 # SYS function for sending data over serial controller port using
 # pulse width modulation of the vertical sync signal.
 #
-# sysArgs[0:1] Source address               (destructive)
-# sysArgs[2]   Start bit mask (typically 1) (destructive)
-# sysArgs[3]   Number of send frames X      (destructive)
+# Variables:
+#       sysArgs[0:1]    Source address               (destructive)
+#       sysArgs[2]      Start bit mask (typically 1) (destructive)
+#       sysArgs[3]      Number of send frames X      (destructive)
 #
 # The sending will abort if input data is detected on the serial port.
 # Returns 0 in case of all bits sent, or <>0 in case of abort
@@ -2904,6 +2903,16 @@ xora(videoYline0)               #17 First line of vertical blank
 #-----------------------------------------------------------------------
 
 # Sets the I/O and RAM expander's control register
+#
+# Variables:
+#       vAC bit 2       Device enable /SS0
+#           bit 3       Device enable /SS1
+#           bit 4       Device enable /SS2
+#           bit 5       Device enable /SS3
+#           bit 6       Banking B0
+#           bit 7       Banking B1
+#           bit 15      Data out MOSI
+#       sysArgs[7]      Cache for control state (written to)
 #
 # Intended for prototyping, and probably too low-level for most applications
 # Still there's a safeguard: it's not possible to disable RAM using this
@@ -3026,11 +3035,12 @@ ld(soundTable>>8,Y)             #17
 #       sysArgs[1]      Memory page for send data (input)
 #       sysArgs[2]      Page index stop (input)
 #       sysArgs[3]      Memory page for receive data (input)
+#       sysArgs[4]      Scratch (modified)
 
 label('SYS_SpiExchangeBytes_v4_134')
 ld(hi('sys_SpiExchangeBytes'),Y)#15
 jmp(Y,'sys_SpiExchangeBytes')   #16
-ld([sysArgs+0],X)               #17 Fetch byte to send
+ld(hi(ctrlBits),Y)              #17 Control state as saved by SYS_ExpanderControl
 
 #-----------------------------------------------------------------------
 #  Implementations
@@ -3645,65 +3655,70 @@ anda(0b11111100)                #19 Safety (SCLK=0)
 #      ||`------- /SS3
 #      |`-------- B0
 #      `--------- B1
-st([ctrlBits],X)                #20 Set control register
-ld([vAC+1],Y)                   #21 For MOSI (A15)
-ctrl(Y,X)                       #22
+ld(hi(ctrlBits),Y)              #20
+st([Y,ctrlBits])                #21 Set control register
+ld(AC,X)                        #22
+ld([vAC+1],Y)                   #23 For MOSI (A15)
+ctrl(Y,X)                       #24
 
-ld([sysArgs+3])                 #23 Prepare SYS_SpiExchangeBytes
+ld([sysArgs+3])                 #25 Prepare SYS_SpiExchangeBytes
 assert pc()&255 < 255-3         # Beware of page crossing: asm.py won't warn
-bne(pc()+3)                     #24
-bra(pc()+2)                     #25
-ld([sysArgs+1])                 #26
-st([sysArgs+3])                 #26,27 (must be idempotent)
+bne(pc()+3)                     #26
+bra(pc()+2)                     #27
+ld([sysArgs+1])                 #28
+st([sysArgs+3])                 #28,29 (must be idempotent)
 
-nop()                           #28
-ld(hi('REENTER'),Y)             #29
-jmp(Y,'REENTER')                #30
-ld(-34//2)                      #31
+ld(hi('NEXTY'),Y)               #30
+jmp(Y,'NEXTY')                  #31
+ld(-34//2)                      #32
 
 #-----------------------------------------------------------------------
 
 label('sys_SpiExchangeBytes')
 
-ld([sysArgs+1],Y)               #18
-ld([Y,X])                       #19
+ld([Y,ctrlBits])                #18
+st([sysArgs+4])                 #19
+
+ld([sysArgs+0],X)               #20 Fetch byte to send
+ld([sysArgs+1],Y)               #21
+ld([Y,X])                       #22
 
 for i in range(8):
-  st([vTmp],Y);C('Bit %d'%(7-i))#20+i*12
-  ld([ctrlBits],X)              #21+i*12
-  ctrl(Y,Xpp)                   #22+i*12 Set MOSI
-  ctrl(Y,Xpp)                   #23+i*12 Raise SCLK
-  ld([0])                       #24+i*12 Get MISO
-  anda(0b00001111)              #25+i*12
-  beq(pc()+3)                   #26+i*12
-  bra(pc()+2)                   #27+i*12
-  ld(1)                         #28+i*12
-  ctrl(Y,X)                     #28+i*12,29+i*12 (Must be idempotent) Lower SCLK
-  adda([vTmp])                  #30+i*12 Shift
-  adda([vTmp])                  #31+i*12
+  st([vTmp],Y);C('Bit %d'%(7-i))#23+i*12
+  ld([sysArgs+4],X)             #24+i*12
+  ctrl(Y,Xpp)                   #25+i*12 Set MOSI
+  ctrl(Y,Xpp)                   #26+i*12 Raise SCLK
+  ld([0])                       #27+i*12 Get MISO
+  anda(0b00001111)              #28+i*12
+  beq(pc()+3)                   #29+i*12
+  bra(pc()+2)                   #30+i*12
+  ld(1)                         #31+i*12
+  ctrl(Y,X)                     #32+i*12,29+i*12 (Must be idempotent) Lower SCLK
+  adda([vTmp])                  #33+i*12 Shift
+  adda([vTmp])                  #34+i*12
 
-ld([sysArgs+0],X)               #116 Store received byte
-ld([sysArgs+3],Y)               #117
-st([Y,X])                       #118
+ld([sysArgs+0],X)               #119 Store received byte
+ld([sysArgs+3],Y)               #120
+st([Y,X])                       #121
 
-ld([sysArgs+0])                 #119 Advance pointer
-adda(1)                         #120
-st([sysArgs+0])                 #121
+ld([sysArgs+0])                 #122 Advance pointer
+adda(1)                         #123
+st([sysArgs+0])                 #124
 
-xora([sysArgs+2])               #122 Reached end?
-beq('.sysSpi#125')              #123
+xora([sysArgs+2])               #125 Reached end?
+beq('.sysSpi#128')              #126
 
-ld([vPC])                       #124 Self-repeating SYS call
-suba(2)                         #125
-st([vPC])                       #126
-ld(hi('REENTER'),Y)             #127
-jmp(Y,'REENTER')                #128
-ld(-132//2)                     #129
+ld([vPC])                       #127 Self-repeating SYS call
+suba(2)                         #128
+st([vPC])                       #129
+ld(hi('NEXTY'),Y)               #130
+jmp(Y,'NEXTY')                  #131
+ld(-134//2)                     #132
 
-label('.sysSpi#125')
-ld(hi('REENTER'),Y)             #125 Continue program
-jmp(Y,'REENTER')                #126
-ld(-130//2)                     #127
+label('.sysSpi#128')
+ld(hi('NEXTY'),Y)               #128 Continue program
+jmp(Y,'NEXTY')                  #129
+ld(-132//2)                     #130
 
 #-----------------------------------------------------------------------
 

@@ -4557,89 +4557,89 @@ sys_SpiExchangeBytes:
               0d15 811d  adda [$1d]       3397    adda([vTmp])                  #30+i*12 Shift
               0d16 811d  adda [$1d]       3398    adda([vTmp])                  #31+i*12
               0d17 d61d  st   [$1d],y     ;Bit 6
-              0d18 1181  ld   [$81],x     3388    ld([ctrlBits],X)              #21+i*12
-              0d19 dd00  ctrl y,x++       3389    ctrl(Y,Xpp)                   #22+i*12 Set MOSI
-              0d1a dd00  ctrl y,x++       3390    ctrl(Y,Xpp)                   #23+i*12 Raise SCLK
-              0d1b 0100  ld   [$00]       3391    ld([0])                       #24+i*12 Get MISO
-              0d1c 200f  anda $0f         3392    anda(0b00001111)              #25+i*12
-              0d1d f020  beq  $0d20       3393    beq(pc()+3)                   #26+i*12
-              0d1e fc20  bra  $0d20       3394    bra(pc()+2)                   #27+i*12
-              0d1f 0001  ld   $01         3395    ld(1)                         #28+i*12
-              0d20 cd00  ctrl y,x         3396    ctrl(Y,X)                     #28+i*12,29+i*12 (Must be idempotent) Lower SCLK
-              0d21 811d  adda [$1d]       3397    adda([vTmp])                  #30+i*12 Shift
-              0d22 811d  adda [$1d]       3398    adda([vTmp])                  #31+i*12
+              0d18 1181  ld   [$81],x
+              0d19 dd00  ctrl y,x++
+              0d1a dd00  ctrl y,x++
+              0d1b 0100  ld   [$00]
+              0d1c 200f  anda $0f
+              0d1d f020  beq  $0d20
+              0d1e fc20  bra  $0d20
+              0d1f 0001  ld   $01
+              0d20 cd00  ctrl y,x
+              0d21 811d  adda [$1d]
+              0d22 811d  adda [$1d]
               0d23 d61d  st   [$1d],y     ;Bit 5
-              0d24 1181  ld   [$81],x     3388    ld([ctrlBits],X)              #21+i*12
-              0d25 dd00  ctrl y,x++       3389    ctrl(Y,Xpp)                   #22+i*12 Set MOSI
-              0d26 dd00  ctrl y,x++       3390    ctrl(Y,Xpp)                   #23+i*12 Raise SCLK
-              0d27 0100  ld   [$00]       3391    ld([0])                       #24+i*12 Get MISO
-              0d28 200f  anda $0f         3392    anda(0b00001111)              #25+i*12
-              0d29 f02c  beq  $0d2c       3393    beq(pc()+3)                   #26+i*12
-              0d2a fc2c  bra  $0d2c       3394    bra(pc()+2)                   #27+i*12
-              0d2b 0001  ld   $01         3395    ld(1)                         #28+i*12
-              0d2c cd00  ctrl y,x         3396    ctrl(Y,X)                     #28+i*12,29+i*12 (Must be idempotent) Lower SCLK
-              0d2d 811d  adda [$1d]       3397    adda([vTmp])                  #30+i*12 Shift
-              0d2e 811d  adda [$1d]       3398    adda([vTmp])                  #31+i*12
+              0d24 1181  ld   [$81],x
+              0d25 dd00  ctrl y,x++
+              0d26 dd00  ctrl y,x++
+              0d27 0100  ld   [$00]
+              0d28 200f  anda $0f
+              0d29 f02c  beq  $0d2c
+              0d2a fc2c  bra  $0d2c
+              0d2b 0001  ld   $01
+              0d2c cd00  ctrl y,x
+              0d2d 811d  adda [$1d]
+              0d2e 811d  adda [$1d]
               0d2f d61d  st   [$1d],y     ;Bit 4
-              0d30 1181  ld   [$81],x     3388    ld([ctrlBits],X)              #21+i*12
-              0d31 dd00  ctrl y,x++       3389    ctrl(Y,Xpp)                   #22+i*12 Set MOSI
-              0d32 dd00  ctrl y,x++       3390    ctrl(Y,Xpp)                   #23+i*12 Raise SCLK
-              0d33 0100  ld   [$00]       3391    ld([0])                       #24+i*12 Get MISO
-              0d34 200f  anda $0f         3392    anda(0b00001111)              #25+i*12
-              0d35 f038  beq  $0d38       3393    beq(pc()+3)                   #26+i*12
-              0d36 fc38  bra  $0d38       3394    bra(pc()+2)                   #27+i*12
-              0d37 0001  ld   $01         3395    ld(1)                         #28+i*12
-              0d38 cd00  ctrl y,x         3396    ctrl(Y,X)                     #28+i*12,29+i*12 (Must be idempotent) Lower SCLK
-              0d39 811d  adda [$1d]       3397    adda([vTmp])                  #30+i*12 Shift
-              0d3a 811d  adda [$1d]       3398    adda([vTmp])                  #31+i*12
+              0d30 1181  ld   [$81],x
+              0d31 dd00  ctrl y,x++
+              0d32 dd00  ctrl y,x++
+              0d33 0100  ld   [$00]
+              0d34 200f  anda $0f
+              0d35 f038  beq  $0d38
+              0d36 fc38  bra  $0d38
+              0d37 0001  ld   $01
+              0d38 cd00  ctrl y,x
+              0d39 811d  adda [$1d]
+              0d3a 811d  adda [$1d]
               0d3b d61d  st   [$1d],y     ;Bit 3
-              0d3c 1181  ld   [$81],x     3388    ld([ctrlBits],X)              #21+i*12
-              0d3d dd00  ctrl y,x++       3389    ctrl(Y,Xpp)                   #22+i*12 Set MOSI
-              0d3e dd00  ctrl y,x++       3390    ctrl(Y,Xpp)                   #23+i*12 Raise SCLK
-              0d3f 0100  ld   [$00]       3391    ld([0])                       #24+i*12 Get MISO
-              0d40 200f  anda $0f         3392    anda(0b00001111)              #25+i*12
-              0d41 f044  beq  $0d44       3393    beq(pc()+3)                   #26+i*12
-              0d42 fc44  bra  $0d44       3394    bra(pc()+2)                   #27+i*12
-              0d43 0001  ld   $01         3395    ld(1)                         #28+i*12
-              0d44 cd00  ctrl y,x         3396    ctrl(Y,X)                     #28+i*12,29+i*12 (Must be idempotent) Lower SCLK
-              0d45 811d  adda [$1d]       3397    adda([vTmp])                  #30+i*12 Shift
-              0d46 811d  adda [$1d]       3398    adda([vTmp])                  #31+i*12
+              0d3c 1181  ld   [$81],x
+              0d3d dd00  ctrl y,x++
+              0d3e dd00  ctrl y,x++
+              0d3f 0100  ld   [$00]
+              0d40 200f  anda $0f
+              0d41 f044  beq  $0d44
+              0d42 fc44  bra  $0d44
+              0d43 0001  ld   $01
+              0d44 cd00  ctrl y,x
+              0d45 811d  adda [$1d]
+              0d46 811d  adda [$1d]
               0d47 d61d  st   [$1d],y     ;Bit 2
-              0d48 1181  ld   [$81],x     3388    ld([ctrlBits],X)              #21+i*12
-              0d49 dd00  ctrl y,x++       3389    ctrl(Y,Xpp)                   #22+i*12 Set MOSI
-              0d4a dd00  ctrl y,x++       3390    ctrl(Y,Xpp)                   #23+i*12 Raise SCLK
-              0d4b 0100  ld   [$00]       3391    ld([0])                       #24+i*12 Get MISO
-              0d4c 200f  anda $0f         3392    anda(0b00001111)              #25+i*12
-              0d4d f050  beq  $0d50       3393    beq(pc()+3)                   #26+i*12
-              0d4e fc50  bra  $0d50       3394    bra(pc()+2)                   #27+i*12
-              0d4f 0001  ld   $01         3395    ld(1)                         #28+i*12
-              0d50 cd00  ctrl y,x         3396    ctrl(Y,X)                     #28+i*12,29+i*12 (Must be idempotent) Lower SCLK
-              0d51 811d  adda [$1d]       3397    adda([vTmp])                  #30+i*12 Shift
-              0d52 811d  adda [$1d]       3398    adda([vTmp])                  #31+i*12
+              0d48 1181  ld   [$81],x
+              0d49 dd00  ctrl y,x++
+              0d4a dd00  ctrl y,x++
+              0d4b 0100  ld   [$00]
+              0d4c 200f  anda $0f
+              0d4d f050  beq  $0d50
+              0d4e fc50  bra  $0d50
+              0d4f 0001  ld   $01
+              0d50 cd00  ctrl y,x
+              0d51 811d  adda [$1d]
+              0d52 811d  adda [$1d]
               0d53 d61d  st   [$1d],y     ;Bit 1
-              0d54 1181  ld   [$81],x     3388    ld([ctrlBits],X)              #21+i*12
-              0d55 dd00  ctrl y,x++       3389    ctrl(Y,Xpp)                   #22+i*12 Set MOSI
-              0d56 dd00  ctrl y,x++       3390    ctrl(Y,Xpp)                   #23+i*12 Raise SCLK
-              0d57 0100  ld   [$00]       3391    ld([0])                       #24+i*12 Get MISO
-              0d58 200f  anda $0f         3392    anda(0b00001111)              #25+i*12
-              0d59 f05c  beq  $0d5c       3393    beq(pc()+3)                   #26+i*12
-              0d5a fc5c  bra  $0d5c       3394    bra(pc()+2)                   #27+i*12
-              0d5b 0001  ld   $01         3395    ld(1)                         #28+i*12
-              0d5c cd00  ctrl y,x         3396    ctrl(Y,X)                     #28+i*12,29+i*12 (Must be idempotent) Lower SCLK
-              0d5d 811d  adda [$1d]       3397    adda([vTmp])                  #30+i*12 Shift
-              0d5e 811d  adda [$1d]       3398    adda([vTmp])                  #31+i*12
+              0d54 1181  ld   [$81],x
+              0d55 dd00  ctrl y,x++
+              0d56 dd00  ctrl y,x++
+              0d57 0100  ld   [$00]
+              0d58 200f  anda $0f
+              0d59 f05c  beq  $0d5c
+              0d5a fc5c  bra  $0d5c
+              0d5b 0001  ld   $01
+              0d5c cd00  ctrl y,x
+              0d5d 811d  adda [$1d]
+              0d5e 811d  adda [$1d]
               0d5f d61d  st   [$1d],y     ;Bit 0
-              0d60 1181  ld   [$81],x     3388    ld([ctrlBits],X)              #21+i*12
-              0d61 dd00  ctrl y,x++       3389    ctrl(Y,Xpp)                   #22+i*12 Set MOSI
-              0d62 dd00  ctrl y,x++       3390    ctrl(Y,Xpp)                   #23+i*12 Raise SCLK
-              0d63 0100  ld   [$00]       3391    ld([0])                       #24+i*12 Get MISO
-              0d64 200f  anda $0f         3392    anda(0b00001111)              #25+i*12
-              0d65 f068  beq  $0d68       3393    beq(pc()+3)                   #26+i*12
-              0d66 fc68  bra  $0d68       3394    bra(pc()+2)                   #27+i*12
-              0d67 0001  ld   $01         3395    ld(1)                         #28+i*12
-              0d68 cd00  ctrl y,x         3396    ctrl(Y,X)                     #28+i*12,29+i*12 (Must be idempotent) Lower SCLK
-              0d69 811d  adda [$1d]       3397    adda([vTmp])                  #30+i*12 Shift
-              0d6a 811d  adda [$1d]       3398    adda([vTmp])                  #31+i*12
+              0d60 1181  ld   [$81],x
+              0d61 dd00  ctrl y,x++
+              0d62 dd00  ctrl y,x++
+              0d63 0100  ld   [$00]
+              0d64 200f  anda $0f
+              0d65 f068  beq  $0d68
+              0d66 fc68  bra  $0d68
+              0d67 0001  ld   $01
+              0d68 cd00  ctrl y,x
+              0d69 811d  adda [$1d]
+              0d6a 811d  adda [$1d]
                                           3399
               0d6b 1124  ld   [$24],x     3400  ld([sysArgs+0],X)               #116 Store received byte
               0d6c 1527  ld   [$27],y     3401  ld([sysArgs+3], Y)              #117
