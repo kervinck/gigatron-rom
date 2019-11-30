@@ -1,10 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import (
-    absolute_import,
-    division,
-    print_function,
-    unicode_literals,
-)
 
 # SYNOPSIS: from asm import *
 #
@@ -12,17 +6,19 @@ from __future__ import (
 # assembler! Specifically, asm.py is just the back end, while the Python
 # interpreter acts as the front end. By using Python in this way, we get
 # parsing and a powerful macro system for free. Assembly source files are
-# simple .py files, not .asm files. (But we can produce .asm files as a program
+# simple .py files, not .asm files. (But we can produce .lst files as a program
 # listing in a more conventional notation.)
 
-from os.path import basename, splitext
+from __future__ import (absolute_import, division, print_function, unicode_literals)
+
+import inspect
 import json
+from os.path import basename, splitext
 import sys
 
 # Python 2/3 compatibility
 _bytes = type(b'')
 _str = type(u'')
-
 
 #------------------------------------------------------------------------
 #       Public interface
@@ -63,6 +59,7 @@ _str = type(u'')
 #       ctrl($30, X)                    ctrl $30,x      ; Also copies AC into X
 #       ctrl($30, Y)                    ctrl $30,y      ; Also copies AC into Y
 
+# User registers
 X   = '__x__'
 Y   = '__y__'
 Xpp = '__x++__'
@@ -107,13 +104,13 @@ def label(name):
     _labels[address] = [] # There can be more than one
   _labels[_romSize].append(name)
 
-def C(line):
+def C(line, prefix=';'):
   """Insert comment to print in disassembly"""
   if line:
     address = max(0, _romSize-1)
     if address not in _comments:
       _comments[address] = []
-    _comments[address].append(line)
+    _comments[address].append(prefix + line)
   return None
 
 def define(name, newValue):
@@ -145,19 +142,25 @@ def hi(name):
     _refsH.append((name, _romSize))
     return 0 # placeholder
 
-def align(m=0x100, chunkSize=0x10000):
+def align(m=0x100, size=0x10000):
   """Insert nops to align with chunk boundary"""
   global _maxRomSize
   n = (m - pc()) % m
-  comment = 'filler' if n==1 else '%d fillers' % n
+  if not has(_listing): # Only comment when not listing
+    comment = 'filler' if n==1 else '%d fillers' % n
+  else:
+    comment = None
   while pc() % m > 0:
     nop()
     comment = C(comment)
-  _maxRomSize = min(0x10000, pc() + chunkSize)
+  _maxRomSize = min(0x10000, pc() + size)
 
 def wait(n):
   """Insert delay sequence of n cycles. Might clobber AC"""
-  comment = 'Wait %s cycle%s' % (n, '' if n==1 else 's')
+  if not has(_listing): # Only comment when not listing
+    comment = 'Wait %s cycle%s' % (n, '' if n==1 else 's')
+  else:
+    comment = None
   assert n >= 0
   if n > 4:
     n -= 1
@@ -192,7 +195,10 @@ def zpReset(startFrom=1):
 def fillers(until=256, instruction=nop):
   """Insert fillers until given page offset"""
   n = until - (pc() & 255)
-  comment = 'filler' if n==1 else '%d fillers' % n
+  if not has(_listing): # Only comment when not listing
+    comment = 'filler' if n==1 else '%d fillers' % n
+  else:
+    comment = None
   for i in range(n):
     instruction(0)
     comment = C(comment)
@@ -253,8 +259,9 @@ _romSize, _maxRomSize, _zpSize = 0, 0, 1
 _symbols, _refsL, _refsH = {}, [], []
 _labels = {} # Inverse of _symbols, but only when made with label(). For disassembler
 _comments = {}
-_rom0, _rom1 = [], []
+_rom0, _rom1, _linenos = [], [], []
 _errors = 0
+_listing, _listingSource, _lineno = None, None, None
 
 # General instruction layout
 _maskOp   = 0b11100000
@@ -447,8 +454,40 @@ def disassemble(opcode, operand, address=None, lastOpcode=None):
   # Emit as text
   return text
 
+# Start to include source lines in output listing
+def enableListing():
+  global _listing, _listingSource, _lineno
+  _listing = inspect.currentframe().f_back
+  info = inspect.getframeinfo(_listing)
+  with open(info.filename, 'r') as fp:
+    _listingSource = fp.readlines()
+  _lineno = inspect.getframeinfo(_listing).lineno
+
+# Get source lines from last line number up to current
+def _getSourceLines(upto):
+  global _listingSource, _lineno
+  lines = []
+  if has(upto):
+    for _lineno in range(_lineno, upto+1):
+      source = _listingSource[_lineno-1]
+      lines.append(('%-4d  %s' % (_lineno, source)).rstrip())
+    _lineno = upto+1
+  return lines
+
+# Stop listing source lines (introspection is slow)
+def disableListing():
+  global _listing, _lineno
+  info = inspect.getframeinfo(_listing)
+  lineno = _linenos[-1]
+  _linenos[-1] = None # Avoid double listing of this line
+  for lineno in range(_lineno, info.lineno+1):
+    source = '%-4d  %s' % (lineno, _listingSource[lineno-1])
+    C(source.rstrip(), prefix='') # A bit tricky: stuff in *comments*
+  _listing = None
+
 def _emit(opcode, operand):
   global _romSize, _maxRomSize, _errors
+  lineno = inspect.getframeinfo(_listing).lineno if has(_listing) else None
   if _romSize >= _maxRomSize:
       disassembly = disassemble(opcode, operand)
       print('%04x %02x%02x  %s' % (_romSize, opcode, operand, disassembly))
@@ -457,6 +496,7 @@ def _emit(opcode, operand):
       _maxRomSize = 0x10000 # Extend to full address space to prevent more of the same errors
   _rom0.append(opcode)
   _rom1.append(operand)
+  _linenos.append(lineno)
   _romSize += 1
 
   # Warning for conditional branches with a target address from RAM. The (unverified) danger is
@@ -486,6 +526,7 @@ def loadBindings(symfile):
 def getRom1():
   return bytearray(_rom1)
 
+# Write ROM files and listing
 def writeRomFiles(sourceFile):
 
   # Determine stem for file names
@@ -493,67 +534,116 @@ def writeRomFiles(sourceFile):
   stem = basename(stem)
   if stem == '': stem = 'out'
 
+  # Clarification header emitted once before first instruction
+  header = ('              address\n'
+            '              |    encoding\n'
+            '              |    |     instruction\n'
+            '              |    |     |    operands\n'
+            '              |    |     |    |\n'
+            '              V    V     V    V\n')
+
   # Disassemble for readability
-  filename = stem + '.asm'
+  filename = stem + '.lst'
   print('Create file', filename)
   with open(filename, 'w') as file:
-    file.write('              address\n'
-               '              |    encoding\n'
-               '              |    |     instruction\n'
-               '              |    |     |    operands\n'
-               '              |    |     |    |\n'
-               '              V    V     V    V\n')
     address = 0
-    repeats, previous, postponed = 0, None, None
+    repeats, previous, line0 = 0, None, None
     maxRepeat = 3
 
-    lastOpcode = None
-    for instruction in zip(_rom0, _rom1):
-      # Check if there is a label defined for this address
-      label = _labels[address][-1] + ':' if address in _labels else ''
-      comment = _comments[address][0] if address in _comments else ''
+    # List source filename
+    info = inspect.getframeinfo(inspect.currentframe().f_back)
+    file.write('* source: %s\n' % info.filename)
 
-      if instruction != previous or label or comment:
+    # Disassemble and list all ROM words
+    lastOpcode = None
+    for instruction in zip(_rom0, _rom1, _linenos):
+      opcode, operand, lineno = instruction
+
+      # All labels as list, if any
+      labels = _labels[address] if address in _labels else None
+
+      # First C('...') comment on line, if any
+      comment = _comments[address][0] if address in _comments else None
+
+      # Check for repeating output lines
+      if instruction != previous or labels or comment:
+        # No repetition
         repeats, previous = 0, instruction
-        if postponed:
-          file.write(postponed)
-          postponed = None
-        if label:
-          for extra in _labels[address][:-1]:
-            file.write(extra+':\n') # Extra labels get their own line
-          if len(label) > 13:
-            label += '\n' + (13 * ' ')
+        if has(line0):
+          file.write(line0 + '\n')
+          line0 = None
       else:
+        # Repetition
         repeats += 1
 
-      if repeats <= maxRepeat:
-        opcode, operand = instruction
-        disassembly = disassemble(opcode, operand, address, lastOpcode)
-        if comment:
-          line = '%-13s %04x %02x%02x  %-16s ;%s\n' % (label, address, opcode, operand, disassembly, comment)
+      # Make connection to real source
+      sourceLines = _getSourceLines(upto=lineno)
+      for line in sourceLines[:-1]: # Backlog
+        file.write('%-41s %s\n' % ('', line))
+
+      # Write clarification header (once)
+      if has(header):
+        file.write(header)
+        header = None
+
+      # If multiple labels exist for this address, only the last can go
+      # in front of the instruction. Any others go on their own line.
+      if has(labels):
+        for extra in labels[:-1]:
+          file.write(extra + ':\n')
+
+      # Preformat
+      line1 = labels[-1] + ':' if has(labels) else ''
+      line2 = '%04x %02x%02x' % (address, opcode, operand)
+      line2 += '  ' + disassemble(opcode, operand, address, lastOpcode)
+      if has(comment):
+        line2 = '%-27s %s' % (line2, comment)
+
+      # Combine label with code if it fits in front
+      if len(line1) <= 13:
+        line2 = '%-13s %s' % (line1, line2)
+        line1 = ''
+      else:
+        line2 = '%-13s %s' % ('', line2)
+
+      # Combine source with code if it fits behind
+      if len(sourceLines):
+        if len(line2) <= 41:
+          line2 = '%-41s %s' % (line2, sourceLines[-1])
         else:
-          line = '%-13s %04x %02x%02x  %s\n' % (label, address, opcode, operand, disassembly)
+          line1 = '%-41s %s' % (line1, sourceLines[-1])
 
+      # Emit optional support line first
+      if line1:
+        file.write(line1 + '\n')
+
+      # Emit main line with special treatment for long repetitions
       if repeats < maxRepeat:
-        file.write(line) # always write first N
-        if comment:
+        # Regular scenario
+        file.write(line2 + '\n')
+        if has(comment):
+          # Write any extra comments on new lines
           for extra in _comments[address][1:]:
-            file.write(42*' ' + ';%s\n' % extra)
+            file.write('%41s %s\n' % ('', extra))
       if repeats == maxRepeat:
-        postponed = line # if this turns out to  be the last repeat, emit the line
-      if repeats > maxRepeat: # now it makes sense to abbreviate the output
-        postponed = 14*' '+'* %d times\n' % (1+repeats)
+        line0 = line2 # Hold line in case it is last in the repetition
+      if repeats > maxRepeat:
+        # Abbreviate with a simple count when too many repetitions
+        line0 = '%13s * %d times' % ('', 1+repeats)
 
+      # Next ROM byte
       address += 1
       lastOpcode = opcode
 
-    if postponed:
-      file.write(postponed)
+    # Wrap up. Flush any pending line
+    if line0:
+      file.write(line0 + '\n')
+    # List end address or size
     file.write(14*' '+'%04x\n' % address)
     assert len(_rom0) == _romSize
     assert len(_rom1) == _romSize
 
-# # Write ROM files
+# # Write ROM files for breadboard with two EEPROMs
 # filename = stem + '.lo.rom'
 # print 'Create file', filename
 # with open(filename, 'wb') as file:
