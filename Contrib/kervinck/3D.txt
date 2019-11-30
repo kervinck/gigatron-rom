@@ -1,0 +1,50 @@
+3D with free rotation around 1 axis
+See Cube.gtb
+
+Per frame
+
+        Variable dX dY Rz               Camera position and direction
+        Constant f                      Fixed focus
+
+        1 sin/cos (byte), can come from small lookup table
+                C = cos Rz
+                S = sin Rz
+
+Per 3D point x, y, z
+
+        2 add/sub                       Translation
+                x1 = x - dx
+                x1 = y - dY
+
+        2 mul, 2 add/sub                Rotation
+                x2 = x1 * C - y' * S
+                y2 = x1 * S + y1 * C
+
+        2 div, 3 add/sub                Projection
+                r = y2 + f
+                u = 80 + x2/r
+                v = 60 - z /r
+
+        Total: 4 mul/div + 7 add/sub
+
+Bresenham's algorithm to trace the edge between two points
+
+SYS_SetMemory to fill the area between two edges
+
+Either flat-end triangles (polygon system), or point lists per pixel line.
+
+Arithmetic: 15 bit signed fixed point
+
+        high byte:      1 sign, 7 integer               -128..127
+        low byte:       1 internal carry, 7 fraction    0..127
+
+Speed:
+        14 iterations per mul/div, plus shifts
+        Fast internal carry
+
+        Maybe down to 2 scanlines per operation???
+        8 scanlines per point???
+        This can become real fast
+
+        Eliminate iteration overhead: SYS functions that process vector
+        of points through self-restart

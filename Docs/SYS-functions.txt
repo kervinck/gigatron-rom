@@ -88,7 +88,7 @@ The naming convention is: SYS_<CamelCase>[_v<V>]_<N>
 With <N> the maximum number of clocks or cycles (not ticks!) the
 function will need, counted from NEXT to NEXT. This duration <N>
 must be passed to the 'SYS' vCPU instruction as operand, represented
-as `270-max(14,<N>/2)'. In GCL you can just type `<N>!', and the
+as `270-max(14,<N>/2)'. In GCL you can just type `<N>!!', and the
 compiler translates the operand for you. The gt1dump tool disassembles
 and displays <N>.
 
