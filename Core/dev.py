@@ -85,6 +85,7 @@
 #  DONE Loader: clear channelMask when loading into sound channels
 #  DONE Update romTypeValue and interface.json
 #  DONE Update version number to v4
+#  DONE Formally Support SPI and RAM expander: publish in interface.json
 #  DONE Use `inspect' to make program listing with original comments #127
 #
 #-----------------------------------------------------------------------
@@ -114,7 +115,6 @@
 #  XXX  SPI: Simple command line interface (solve "EXE vs COM" dilemma)
 #  XXX  Reduce the Pictures application ROM footprint #120
 #  XXX  Discoverable ROM contents #46
-#  XXX  Formally Support SPI and RAM expander: publish in interface.json
 #  XXX  SPI: Auto-detect banking, 64K and 128K
 #  XXX  Vertical blank interrupt #125
 #  XXX  v6502: Test with Apple1 BASIC
