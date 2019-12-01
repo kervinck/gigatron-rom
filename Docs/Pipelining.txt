@@ -1,4 +1,4 @@
-Adapter from
+Adapted from
 https://hackaday.io/project/20781-gigatron-ttl-microcomputer/log/68954-pipelining-and-the-single-instruction-subroutine
 
 Pipelining basics
@@ -177,5 +177,30 @@ again by placing two branch instructions immediately in sequence:
 There we are: 5 cycles along each path!
 
 Figuring this one out is left as an exercise to the reader.
+
+Dummy instructions
+------------------
+
+A final frequent "use" of the branch delay slot is when we care
+more about space than about speed. In those cases, we can sometimes
+squeeze out a word.
+
+For example, vCPU uses that in a couple of places. For technical
+reasons, each vCPU instruction must take an even number of cycles.
+That means that sometimes a nop() has to be inserted anyway. Instead
+of adding the nop(), we can also have the function overlap with the
+first instruction of the next routine.
+
+We can see this applied in the overlap between LDI and LDWI:
+
+                      0318 00f6  ld   $f6         1469  ld(-20//2)
+                      0319 fc01  bra  NEXT        1470  bra('NEXT')
+                                                  1471  #dummy()
+                                                  1474  label('LD')
+        LD:           031a 1200  ld   ac,x        1475  ld(AC,X)
+                      031b 0500  ld   [x]         1476  ld([X])
+
+Obviously, this only works if that instruction doesn't do something
+that interferes with the operation.
 
 -- End of document --
