@@ -26,8 +26,9 @@ namespace Expression
     bool _hexaDecimalChars[256] = {false};
 
     uintptr_t _advancePtr;
-
     exprFuncPtr _exprFunc;
+
+    Numeric _output;
 
 
     // Forward declarations
@@ -127,6 +128,7 @@ namespace Expression
     }
 
     bool getEnablePrint(void) {return _enablePrint;}
+    Numeric& getOutputNumeric(void) {return _output;}
 
     void setExprFunc(exprFuncPtr exprFunc) {_exprFunc = exprFunc;}
     void setEnablePrint(bool enablePrint) {_enablePrint = enablePrint;}
@@ -1076,6 +1078,8 @@ namespace Expression
 
     bool parse(const std::string& expression, int lineNumber, Numeric& numeric)
     {
+        _output = numeric;
+
         _advanceError = false;
         _expressionToParse = expression;
         _lineNumber = lineNumber;

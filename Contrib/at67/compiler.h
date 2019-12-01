@@ -31,10 +31,10 @@
 
 namespace Compiler
 {
-    enum VarType {VarInt8=0, VarInt16, VarInt32, VarFloat16, VarFloat32, VarArray};
+    enum VarType {VarInt8=0, VarInt16, VarInt32, VarFloat16, VarFloat32, VarArray, VarStr};
     enum IntSize {Int8=1, Int16=2, Int32=4};
-    enum ConstantType {ConstInt16, ConstStr};
-    enum ConstantStrType {StrChar, StrHex, StrHexw, StrLeft, StrRight, StrMid};
+    enum ConstType {ConstInt16, ConstStr};
+    enum ConstStrType {StrChar, StrHex, StrHexw, StrLeft, StrRight, StrMid};
     enum IfElseEndType {IfBlock, ElseIfBlock, ElseBlock, EndIfBlock};
     enum OperandType {OperandVar, OperandTemp, OperandConst};
     enum StatementResult {StatementError, StatementSuccess, StatementExpression, SingleStatementParsed, MultiStatementParsed};
@@ -47,7 +47,7 @@ namespace Compiler
         std::string _text;
         std::string _name;
         std::string _internalName;
-        ConstantType _constantType;
+        ConstType _constType;
     };
 
     struct IntegerVar
@@ -136,8 +136,8 @@ namespace Compiler
         int _vasmSize = 0;
         int _labelIndex = -1;
         int  _varIndex = -1;
+        VarType _varType = VarInt16;
         Expression::Int16Byte _int16Byte = Expression::Int16Both;
-        bool _assignOperator = false;
         bool _containsVars = false;
         bool _pushEmitted = false;
     };
@@ -256,12 +256,12 @@ namespace Compiler
     int findVar(std::string& varName, bool subAlpha=true);
     int findStr(std::string& strName);
 
-    bool createCodeLine(const std::string& code, int codeLineOffset, int labelIndex, int varIndex, Expression::Int16Byte int16Byte, bool assign, bool vars, CodeLine& codeLine);
+    bool createCodeLine(const std::string& code, int codeLineOffset, int labelIndex, int varIndex, Expression::Int16Byte int16Byte, bool vars, CodeLine& codeLine);
     void createLabel(uint16_t address, const std::string& name, const std::string& output, int codeLineIndex, Label& label, bool numeric=false, bool addUnderscore=true, bool pageJump=false, bool gosub=false);
     void createIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, int& varIndex, VarType varType=VarInt16, uint16_t arrayStart=0x0000, int intSize=Int16, int arrSize=0);
-    bool createString(CodeLine& codeLine, int codeLineIndex, const std::string& str, std::string& name, uint16_t& address, uint8_t maxSize=USER_STR_SIZE, bool constString=true);
-    uint16_t createConstantString(ConstantStrType constantStrType, int16_t input);
-    uint16_t createConstantString(ConstantStrType constantStrType, const std::string& input, int8_t length, uint8_t offset);
+    int getOrCreateString(CodeLine& codeLine, int codeLineIndex, const std::string& str, std::string& name, uint16_t& address, uint8_t maxSize=USER_STR_SIZE, bool constString=true);
+    uint16_t getOrCreateConstString(ConstStrType constStrType, int16_t input, int& index);
+    uint16_t getOrCreateConstString(ConstStrType constStrType, const std::string& input, int8_t length, uint8_t offset, int& index);
 
     void updateVar(int16_t data, CodeLine& codeLine, int varIndex, bool containsVars);
 

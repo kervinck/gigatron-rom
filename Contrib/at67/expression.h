@@ -12,7 +12,7 @@ namespace Expression
     enum NumericType {BadBase=-1, Decimal, HexaDecimal, Octal, Binary};
     enum CCType {BooleanCC, NormalCC, FastCC};
     enum Int16Byte {Int16Both, Int16Low, Int16High};
-    enum VarType {Number, Constant, TmpVar, IntVar, ArrVar, StrVar};
+    enum VarType {Number, String, Constant, TmpVar, IntVar, ArrVar, StrVar};
 
     struct Numeric
     {
@@ -34,11 +34,13 @@ namespace Expression
         Int16Byte _int16Byte = Int16Both;
         std::string _name;
         std::string _text;
+        std::vector<Numeric> _parameters;
     };
 
     using exprFuncPtr = std::function<Numeric (void)>;
 
     bool getEnablePrint(void);
+    Numeric& getOutputNumeric(void);
 
     void setExprFunc(exprFuncPtr exprFunc);
     void setEnablePrint(bool enablePrint);

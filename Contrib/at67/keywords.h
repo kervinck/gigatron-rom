@@ -29,7 +29,7 @@ namespace Keywords
 
 
     std::map<std::string, Keyword>& getKeywords(void);
-    std::map<std::string, Keyword>& getStringKeywords(void);
+    std::map<std::string, std::string>& getStringKeywords(void);
     std::map<std::string, std::string>& getFunctions(void);
     std::map<std::string, std::string>& getEqualsKeywords(void);
 
@@ -37,7 +37,6 @@ namespace Keywords
 
     bool findKeyword(std::string code, const std::string& keyword, size_t& foundPos);
     KeywordResult handleKeywords(Compiler::CodeLine& codeLine, const std::string& keyword, int codeLineIndex, int tokenIndex, KeywordFuncResult& result);
-    KeywordResult handleStringKeywords(Compiler::CodeLine& codeLine, const std::string& keyword, int codeLineIndex, int tokenIndex, KeywordFuncResult& result);
 
     Expression::Numeric functionCHR$(Expression::Numeric&   numeric);
     Expression::Numeric functionHEX$(Expression::Numeric&   numeric);
@@ -95,9 +94,6 @@ namespace Keywords
     bool keywordHEXW(Compiler::CodeLine& codeLine,   int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordCOPY(Compiler::CodeLine& codeLine,   int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordADD(Compiler::CodeLine& codeLine,    int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
-    bool keywordLEFT(Compiler::CodeLine& codeLine,   int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
-    bool keywordRIGHT(Compiler::CodeLine& codeLine,  int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
-    bool keywordMID(Compiler::CodeLine& codeLine,    int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
 }
 
 #endif

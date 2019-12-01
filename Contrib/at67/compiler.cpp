@@ -262,9 +262,9 @@ namespace Compiler
     {
         // Create var
         varIndex = int(_integerVars.size());
-        codeLine._assignOperator = true;
         codeLine._containsVars = containsVars;
         codeLine._varIndex = varIndex;
+        codeLine._varType = VarInt16;
 
         uint16_t varStart = (varType == VarArray) ? 0x0000 : _userVarStart;
         IntegerVar integerVar = {data, init, varStart, arrayStart, varName, varName, codeLineIndex, varType, intSize, arrSize};
@@ -329,9 +329,9 @@ namespace Compiler
         varIndex = findVar(varName);
         if(varIndex != -1)
         {
-            codeLine._assignOperator = true;
             codeLine._containsVars = false;
             codeLine._varIndex = varIndex;
+            codeLine._varType = VarInt16;
 
             return VarExists;
         }
@@ -341,11 +341,11 @@ namespace Compiler
         return VarCreated;
     }
 
-    bool createCodeStr(CodeLine& codeLine, int codeLineIndex, int& strIndex)
+    VarResult createCodeStr(CodeLine& codeLine, int codeLineIndex, int& strIndex)
     {
         // Code and string have minimum size requirements
         size_t equals = Expression::findNonStringEquals(codeLine._code) - codeLine._code.begin();
-        if(codeLine._code.size() < 2  ||  equals >= codeLine._code.size() - 2  ||  codeLine._tokens.size() < 2) return false;
+        if(codeLine._code.size() < 2  ||  equals >= codeLine._code.size() - 2  ||  codeLine._tokens.size() < 2) return VarError;
 
         // Check all tokens individually, don't just do a find as a str name may exist with a reserved keyword embedded within it
         for(int i=0; i<codeLine._tokens.size(); i++)
@@ -355,16 +355,22 @@ namespace Compiler
             Expression::strToUpper(token);
 
             // Check tokens that are reserved keywords using equals
-            if(Keywords::getEqualsKeywords().find(token) != Keywords::getEqualsKeywords().end()) return false;
+            if(Keywords::getEqualsKeywords().find(token) != Keywords::getEqualsKeywords().end()) return VarError;
         }
 
         // String name validation
         std::string strName = codeLine._code.substr(0, equals);
         Expression::stripWhitespace(strName);
-        if(strName.back() != '$') return false;
-        if(!Expression::isVarNameValid(strName)) return false;
+        if(strName.back() != '$') return VarError;
+        if(!Expression::isVarNameValid(strName)) return VarError;
         strIndex = findStr(strName);
-        if(strIndex != -1) return false;
+        if(strIndex != -1)
+        {
+            codeLine._varIndex = strIndex;
+            codeLine._varType = VarStr;
+
+            return VarExists;
+        }
 
         // String data validation
         std::string strData = codeLine._tokens[1];
@@ -379,19 +385,28 @@ namespace Compiler
         // Check for constant string
         else
         {
-            if(!Expression::isValidString(strData)) return false;
-
-            // Strip quotes
-            strData.erase(0, 1);
-            strData.erase(strData.size()-1, 1);
+            if(Expression::isValidString(strData))
+            {
+                // Strip quotes
+                strData.erase(0, 1);
+                strData.erase(strData.size()-1, 1);
+            }
+            // Check for assignment of another variable
+            else
+            {
+                if(strData.back() != '$') return VarError;
+                strData = "";
+            }
         }
 
         // Create string
         uint16_t address;
-        if(!createString(codeLine, codeLineIndex, strData, strName, address, USER_STR_SIZE, false)) return false;
+        if(getOrCreateString(codeLine, codeLineIndex, strData, strName, address, USER_STR_SIZE, false) == -1) return VarError;
         strIndex = int(_stringVars.size()) - 1;
+        codeLine._varIndex = strIndex;
+        codeLine._varType = VarStr;
 
-        return true;
+        return VarCreated;
     }
 
     uint32_t isExpression(std::string& input, int& varIndex, int& constIndex, int& strIndex)
@@ -446,12 +461,12 @@ namespace Compiler
             constIndex = findConst(tokens[i]);
             if(constIndex != -1  &&  tokens[i][0] != '@') // 'address of' operator returns numbers
             {
-                if(_constants[constIndex]._constantType == ConstInt16)
+                if(_constants[constIndex]._constType == ConstInt16)
                 {
                     expressionType |= Expression::HasIntConsts;
                     break;
                 }
-                if(_constants[constIndex]._constantType == ConstStr)
+                if(_constants[constIndex]._constType == ConstStr)
                 {
                     expressionType |= Expression::HasStrConsts;
                     break;
@@ -507,13 +522,13 @@ namespace Compiler
 
     void updateVar(int16_t data, CodeLine& codeLine, int varIndex, bool containsVars)
     {
-        codeLine._assignOperator = true;
         codeLine._containsVars = containsVars;
         codeLine._varIndex = varIndex;
+        codeLine._varType = VarInt16;
         _integerVars[varIndex]._data = data;
     }
 
-    bool createCodeLine(const std::string& code, int codeLineOffset, int labelIndex, int varIndex, Expression::Int16Byte int16Byte, bool assign, bool vars, CodeLine& codeLine)
+    bool createCodeLine(const std::string& code, int codeLineOffset, int labelIndex, int varIndex, Expression::Int16Byte int16Byte, bool vars, CodeLine& codeLine)
     {
         // Handle variables
         size_t equal = code.find_first_of("=");
@@ -529,7 +544,7 @@ namespace Compiler
         std::string codeText = Expression::collapseWhitespaceNotStrings(text);
         std::vector<size_t> offsets;
         std::vector<std::string> tokens = Expression::tokeniseLine(codeText, " (),=", offsets);
-        codeLine = {text, codeText, tokens, offsets, vasm, expression, onGotoGosubLut, 0, labelIndex, varIndex, int16Byte, assign, vars, false};
+        codeLine = {text, codeText, tokens, offsets, vasm, expression, onGotoGosubLut, 0, labelIndex, varIndex, VarInt16, int16Byte, vars, false};
         Expression::operatorReduction(codeLine._expression);
 
         if(codeLine._code.size() < 2) return false; // anything too small is ignored
@@ -1091,7 +1106,7 @@ namespace Compiler
                 foundGosub = isGosubLabel(labelName);
             }
             createLabel(_vasmPC, labelName, labelName, int(_codeLines.size()), label, numeric, true, false, foundGosub);
-            if(createCodeLine(code, int(space + 1), _currentLabelIndex, -1, Expression::Int16Both, false, false, codeLine)) _codeLines.push_back(codeLine);
+            if(createCodeLine(code, int(space + 1), _currentLabelIndex, -1, Expression::Int16Both, false, codeLine)) _codeLines.push_back(codeLine);
 
             return LabelFound;
         }
@@ -1118,13 +1133,13 @@ namespace Compiler
                 // Create label
                 bool foundGosub = isGosubLabel(labelName);
                 createLabel(_vasmPC, labelName, labelName, int(_codeLines.size()), label, false, true, false, foundGosub);
-                if(createCodeLine(code, int(colon1  + 1), _currentLabelIndex, -1, Expression::Int16Both, false, false, codeLine)) _codeLines.push_back(codeLine);
+                if(createCodeLine(code, int(colon1  + 1), _currentLabelIndex, -1, Expression::Int16Both, false, codeLine)) _codeLines.push_back(codeLine);
                 return LabelFound;
             }
         }
 
         // Non label code
-        if(createCodeLine(code, 0, -1, -1, Expression::Int16Both, false, false, codeLine)) _codeLines.push_back(codeLine);
+        if(createCodeLine(code, 0, -1, -1, Expression::Int16Both, false, codeLine)) _codeLines.push_back(codeLine);
 
         return LabelNotFound;
     }
@@ -1175,7 +1190,7 @@ namespace Compiler
         Label label;
         CodeLine codeLine;
         createLabel(_vasmPC, "_entryPoint_", "_entryPoint_\t", 0, label, false, false, false, false);
-        if(createCodeLine("INIT", 0, 0, -1, Expression::Int16Both, false, false, codeLine)) _codeLines.push_back(codeLine);
+        if(createCodeLine("INIT", 0, 0, -1, Expression::Int16Both, false, codeLine)) _codeLines.push_back(codeLine);
         if(!Assembler::getUseOpcodeCALLI())
         {
             // Handles time sliced, (real time), code such as AUDIO and/or MIDI
@@ -1212,12 +1227,13 @@ namespace Compiler
     }
 
     // Create string and advance string pointer
-    bool createString(CodeLine& codeLine, int codeLineIndex, const std::string& str, std::string& name, uint16_t& address, uint8_t maxSize, bool constString)
+    int getOrCreateString(CodeLine& codeLine, int codeLineIndex, const std::string& str, std::string& name, uint16_t& address, uint8_t maxSize, bool constString)
     {
+        int index = -1;
+
         // Reuse const string if possible
         if(constString)
         {
-            int index = -1;
             for(int j=0; j<_stringVars.size(); j++)
             {
                 if(_stringVars[j]._text == str) 
@@ -1235,8 +1251,8 @@ namespace Compiler
             {
                 if(!Memory::giveFreeRAM(Memory::FitAscending, int(str.size()) + 2, 0x0200, _runtimeStart, address))
                 {
-                    fprintf(stderr, "Compiler::createString() : Not enough RAM for string %s='%s' of size %d\n", name.c_str(), str.c_str(), int(str.size()));
-                    return false;
+                    fprintf(stderr, "Compiler::getOrCreateString() : Not enough RAM for string %s='%s' of size %d\n", name.c_str(), str.c_str(), int(str.size()));
+                    return -1;
                 }
 
                 // Save end of runtime/strings
@@ -1245,6 +1261,7 @@ namespace Compiler
                 name = "str_" + Expression::wordToHexString(address);
                 StringVar stringVar = {uint8_t(str.size()), uint8_t(str.size()), address, str, name, "_" + name + std::string(LABEL_TRUNC_SIZE - name.size(), ' '), -1, true};
                 _stringVars.push_back(stringVar);
+                index = int(_stringVars.size()) - 1;
             }
         }
         // Variable strings
@@ -1253,8 +1270,8 @@ namespace Compiler
             // Allocate string
             if(!Memory::giveFreeRAM(Memory::FitAscending, maxSize + 2, 0x0200, _runtimeStart, address))
             {
-                fprintf(stderr, "Compiler::createString() : Not enough RAM for string %s='%s' of size %d\n", name.c_str(), str.c_str(), maxSize + 2);
-                return false;
+                fprintf(stderr, "Compiler::getOrCreateString() : Not enough RAM for string %s='%s' of size %d\n", name.c_str(), str.c_str(), maxSize + 2);
+                return -1;
             }
 
             // Save end of runtime/strings
@@ -1262,16 +1279,17 @@ namespace Compiler
 
             StringVar stringVar = {uint8_t(str.size()), maxSize, address, str, name, "_" + name + std::string(LABEL_TRUNC_SIZE - name.size(), ' '), -1, false};
             _stringVars.push_back(stringVar);
+            index = int(_stringVars.size()) - 1;
         }
 
-        return true;
+        return index;
     }
 
     // Create constant string
-    uint16_t createConstantString(ConstantStrType constantStrType, int16_t input)
+    uint16_t getOrCreateConstString(ConstStrType constStrType, int16_t input, int& index)
     {
         char output[16];
-        switch(constantStrType)
+        switch(constStrType)
         {
             case StrChar:  sprintf(output, "%C",   uint8_t(input) & 0x7F); break;
             case StrHex:   sprintf(output, "%02X", uint8_t(input));        break;
@@ -1282,15 +1300,15 @@ namespace Compiler
 
         std::string name;
         uint16_t address;
-        createString(_codeLines[_currentCodeLineIndex], _currentCodeLineIndex, std::string(output), name, address);
+        index = getOrCreateString(_codeLines[_currentCodeLineIndex], _currentCodeLineIndex, std::string(output), name, address);
         return address;
     }
 
     // Create constant string
-    uint16_t createConstantString(ConstantStrType constantStrType, const std::string& input, int8_t length, uint8_t offset)
+    uint16_t getOrCreateConstString(ConstStrType constStrType, const std::string& input, int8_t length, uint8_t offset, int& index)
     {
         std::string output;
-        switch(constantStrType)
+        switch(constStrType)
         {
             case StrLeft:  output = input.substr(0, length);             break;
             case StrRight: output = input.substr(input.size() - length); break;
@@ -1301,7 +1319,7 @@ namespace Compiler
 
         std::string name;
         uint16_t address;
-        createString(_codeLines[_currentCodeLineIndex], _currentCodeLineIndex, output, name, address);
+        index = getOrCreateString(_codeLines[_currentCodeLineIndex], _currentCodeLineIndex, output, name, address);
         return address;
     }
 
@@ -1343,7 +1361,7 @@ namespace Compiler
         {
             valueStr.push_back(uchr); get(false);
             uchr = toupper(peek(false));
-            while((uchr >= '0'  &&  uchr <= '9')  ||  (uchr >= 'A'  &&  uchr <= 'F'))
+            while(uchr  &&  ((uchr >= '0'  &&  uchr <= '9')  ||  (uchr >= 'A'  &&  uchr <= 'F')))
             {
                 // Don't skip spaces here, as hex numbers can become attached to variables, keywords, etc
                 valueStr.push_back(get(true));
@@ -1354,66 +1372,66 @@ namespace Compiler
         return Expression::stringToI16(valueStr, value);
     }
 
-    Expression::Numeric parameters(Expression::Numeric& input)
+    Expression::Numeric getString(Expression::Numeric& numeric)
     {
-#if 0
-        get(false); // skip first comma
+        // First quote
+        get(false);
 
-        std::string param;
-        while(peek(false) != ','  &&  peek(false) != ')')
+        std::string str;
+        while(peek(false)  &&  peek(false) != '"')
         {
-            param.push_back(get(false));
+            // Don't skip spaces within string
+            str += peek(true);
+            get(true);
         }
 
-        if(param.size())
+        if(!peek(false))
         {
-            std::string name = param;
-            int varIndex = findVar(name);
-            int strIndex = findStr(name);
-            int constIndex = findConst(name);
-
-            // Variable
-            if(varIndex != -1)
-            {
-                (_integerVars[varIndex]._varType == VarArray) ? input._parameters.push_back({strIndex, 0, Expression::ArrVar}) : input._parameters.push_back({strIndex, 0, Expression::IntVar});
-            }
-            // String
-            else if(strIndex != -1)
-            {
-                input._parameters.push_back({strIndex, 0, Expression::StrVar});
-            }
-            // Constant
-            else if(constIndex != -1)
-            {
-                input._parameters.push_back({constIndex, 0, Expression::Constant});
-            }
-            // Number
-            else
-            {
-                int16_t result;
-                if(Expression::stringToI16(param, result))
-                { 
-                    input._parameters.push_back({-1, result, Expression::Number});
-                }
-                else
-                {
-                    fprintf(stderr, "\nCompiler::parameters() : Numeric error in parameters '%s' : in '%s' on line %d\n\n", param.c_str(), 
-                                                                                                                            _codeLines[_currentCodeLineIndex]._code.c_str(),
-                                                                                                                            Expression::getLineNumber() + 1);
-                    _PAUSE_
-                }
-            }
-        }
-        else
-        {
-            fprintf(stderr, "\nCompiler::parameters() : Syntax error in parameters '%s' : in '%s' on line %d\n\n", param.c_str(), 
-                                                                                                                   _codeLines[_currentCodeLineIndex]._code.c_str(),
-                                                                                                                   Expression::getLineNumber() + 1);
-            _PAUSE_
+            fprintf(stderr, "Compiler::getString() : Syntax error in string '%s' in '%s' on line %d\n", str.c_str(), _codeLines[_currentCodeLineIndex]._code.c_str(), Expression::getLineNumber() + 1);
+            return Expression::Numeric();
         }
 
-#endif
-        return input;
+        // Last quote
+        get(false);
+
+        return Expression::Numeric(0, -1, true, Expression::String, Expression::BooleanCC, Expression::Int16Both, std::string(""), str);
+    }
+
+    Expression::Numeric addressOf(void)
+    {
+        get(false);
+        std::string varName = Expression::getExpression();
+        if(varName.back() == ')') varName.erase(varName.size()-1);
+        int varIndex = findVar(varName);
+        int strIndex = findStr(varName);
+        int constIndex = findConst(varName);
+
+        // Int and array vars
+        if(varIndex != -1)
+        {
+            Expression::advance(varName.size());
+            uint16_t address = (_integerVars[varIndex]._varType == VarArray) ? _integerVars[varIndex]._array : _integerVars[varIndex]._address;
+            return Expression::Numeric(address, -1, true, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+        }
+
+        // Strings
+        if(strIndex != -1)
+        {
+            Expression::advance(varName.size());
+            uint16_t address = _stringVars[strIndex]._address;
+            return Expression::Numeric(address, -1, true, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+        }
+        
+        // Constants
+        if(constIndex != -1)
+        {
+            Expression::advance(varName.size());
+            uint16_t address = _constants[constIndex]._address;
+            return Expression::Numeric(address, -1, true, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+        }
+
+        fprintf(stderr, "Compiler::factor() : Syntax error in address of '%s' on line %d\n", _codeLines[_currentCodeLineIndex]._code.c_str(), Expression::getLineNumber() + 1);
+        return Expression::Numeric();
     }
 
     Expression::Numeric factor(int16_t defaultValue)
@@ -1424,21 +1442,17 @@ namespace Compiler
         if(peek(false) == '(')
         {
             get(false);
-#if 0
-            if(peek(false) == '"') // string parameter
-            {
-            }
-            else if(peek(false) == ',') // parameters
-            {
-                numeric = parameters(numeric);
-            }
-            else // normal expression
-            {
-                numeric = expression();
-            }
-#else
             numeric = expression();
-#endif
+
+            // Parameters
+            while(peek(false)  &&  peek(false) != ')')
+            {
+                if(peek(false) == ',')
+                {
+                    get(false);
+                    numeric._parameters.push_back(expression());
+                }
+            }
 
             if(peek(false) != ')')
             {
@@ -1460,38 +1474,15 @@ namespace Compiler
                 numeric = Expression::Numeric();
             }
         }
+        // String
+        else if(peek(false) == '"')
+        {
+            numeric = getString(numeric);
+        }
         // 'Address of' operator
         else if(peek(false) == '@')
         {
-            get(false);
-            std::string varName = Expression::getExpression();
-            if(varName.back() == ')') varName.erase(varName.size()-1);
-            int varIndex = findVar(varName);
-            int strIndex = findStr(varName);
-            int constIndex = findConst(varName);
-            if(varIndex != -1)
-            {
-                Expression::advance(varName.size());
-                uint16_t address = _integerVars[varIndex]._address;
-                numeric = Expression::Numeric(address, -1, true, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
-            }
-            else if(strIndex != -1)
-            {
-                Expression::advance(varName.size());
-                uint16_t address = _stringVars[strIndex]._address;
-                numeric = Expression::Numeric(address, -1, true, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
-            }
-            else if(constIndex != -1)
-            {
-                Expression::advance(varName.size());
-                uint16_t address = _constants[constIndex]._address;
-                numeric = Expression::Numeric(address, -1, true, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
-            }
-            else
-            {
-                fprintf(stderr, "Compiler::factor() : Syntax error in address of '%s' on line %d\n", _codeLines[_currentCodeLineIndex]._code.c_str(), Expression::getLineNumber() + 1);
-                numeric = Expression::Numeric();
-            }
+            numeric = addressOf();
         }
         // Functions
         else if(Expression::find("LEN"))
@@ -1597,7 +1588,7 @@ namespace Compiler
                     {
                         Expression::advance(varName.size());
                         
-                        switch(_constants[constIndex]._constantType)
+                        switch(_constants[constIndex]._constType)
                         {
                             // Numeric is now passed back to compiler, (rather than just numeric._value), so make sure all fields are valid
                             case ConstInt16:
@@ -1608,7 +1599,7 @@ namespace Compiler
 
                             case ConstStr:
                             {
-                                numeric = Expression::Numeric(defaultValue, constIndex, true, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, varName, std::string(""));
+                                numeric = Expression::Numeric(defaultValue, constIndex, true, Expression::Constant, Expression::BooleanCC, Expression::Int16Both, varName, std::string(""));
                             }
                             break;
                         }
@@ -1712,40 +1703,13 @@ namespace Compiler
         }
     }
 
-    StatementResult handleStringExpression(CodeLine& codeLine, int codeLineIndex)
-    {
-        for(int i=0; i<codeLine._tokens.size(); i++)
-        {
-            Keywords::KeywordFuncResult result;
-            Keywords::KeywordResult keywordResult = Keywords::handleStringKeywords(codeLine, codeLine._tokens[i], codeLineIndex, i, result);
-            if(keywordResult == Keywords::KeywordError) return StatementError;
-
-            // Search for string keyword, if found return it's statement type result
-            std::string token = codeLine._tokens[i];
-            Expression::strToUpper(token);
-            if(Keywords::getStringKeywords().find(token) != Keywords::getStringKeywords().end()) return Keywords::getStringKeywords()[token]._result;
-        }
-
-        return StatementError;
-    }
-
-    StatementResult createVasmCode(CodeLine& codeLine, int codeLineIndex, bool handledString)
+    StatementResult createVasmCode(CodeLine& codeLine, int codeLineIndex)
     {
         // Check for subroutine start, make sure PUSH is emitted only once, even for multi-statement lines, (codeLine is a local copy of each statement within a multi-statement codeLine)
         if(!_codeLines[_currentCodeLineIndex]._pushEmitted  &&  codeLine._labelIndex >= 0  &&  _labels[codeLine._labelIndex]._gosub)
         {
             _codeLines[_currentCodeLineIndex]._pushEmitted = true;
             emitVcpuAsm("PUSH", "", false, codeLineIndex);
-        }
-
-        bool containsVars = false;
-        int varIndexRhs = -1, constIndexRhs = -1, strIndexRhs = -1;
-        uint32_t expressionType = isExpression(codeLine._expression, varIndexRhs, constIndexRhs, strIndexRhs);
-
-        // String keywords
-        if((expressionType & Expression::HasStringKeywords)  &&  !(expressionType & Expression::HasFunctions)  &&  !(expressionType & Expression::HasKeywords))
-        {
-            return handleStringExpression(codeLine, codeLineIndex);
         }
 
         // Specific parsing requirements for most keywords, (*NOT* functions), some keywords like IF will also parse multi-statements
@@ -1761,17 +1725,54 @@ namespace Compiler
             if(Keywords::getKeywords().find(token) != Keywords::getKeywords().end()) return Keywords::getKeywords()[token]._result;
         }
 
-        // String already handled
-        if(handledString) return SingleStatementParsed;
+        int varIndexRhs = -1, constIndexRhs = -1, strIndexRhs = -1;
+        uint32_t expressionType = isExpression(codeLine._expression, varIndexRhs, constIndexRhs, strIndexRhs);
 
-        // Expression that contains a variable
-        if(expressionType & Expression::HasIntVars) containsVars = true;
+        // Expression that contains one or more int vars
+        bool intVarAssignment = (expressionType & Expression::HasIntVars) ? true : false;
 
+        // Expression that contains a single string assignment
+        bool strVarAssignment = (expressionType == Expression::HasStrVars) ? true : false;
+
+        // Parse expression, handles ints, strings, operators and functions
+        bool stringResult = false;
         Expression::Numeric numeric;
-        Expression::parse(codeLine._expression, codeLineIndex, numeric);
         if(codeLine._varIndex != -1)
         {
-            updateVar(numeric._value, codeLine, codeLine._varIndex, containsVars);
+            std::string name;
+            Expression::VarType varType;
+            switch(codeLine._varType)
+            {
+                case VarInt16: varType = Expression::IntVar; name = _integerVars[codeLine._varIndex]._name;                     break;
+                case VarStr:   varType = Expression::StrVar; name = _stringVars[codeLine._varIndex]._name; stringResult = true; break;
+            }
+            
+            // Output variable, (functions can access this variable within parse())
+            numeric = Expression::Numeric(0, codeLine._varIndex, true, varType, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
+        }
+        Expression::parse(codeLine._expression, codeLineIndex, numeric);
+
+        // String assignment
+        int srcIndex = numeric._index;
+        int dstIndex = codeLine._varIndex;
+        if(strVarAssignment  &&  srcIndex != -1  &&  dstIndex != -1)
+        {
+            uint16_t srcAddr = _stringVars[srcIndex]._address;
+            uint16_t dstAddr = _stringVars[dstIndex]._address;
+            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr), false, codeLineIndex);
+            Compiler::emitVcpuAsm("STW", "strSrcAddr", false, codeLineIndex);
+            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false, codeLineIndex);
+            Compiler::emitVcpuAsm("STW", "strDstAddr", false, codeLineIndex);
+            Compiler::emitVcpuAsm("%StringCopy", "", false, codeLineIndex);
+        }
+
+        // Strings handled; only ints handled beyond this line
+        if(stringResult) return SingleStatementParsed;
+
+        // Update result variable
+        if(codeLine._varIndex != -1)
+        {
+            updateVar(numeric._value, codeLine, codeLine._varIndex, intVarAssignment);
         }
 
         // Check for matching brackets
@@ -1783,7 +1784,7 @@ namespace Compiler
 
         // TODO: only works with Int16, fix for all var types
         // Variable assignment
-        if(codeLine._assignOperator)
+        if(codeLine._varIndex != -1)
         {
             // Assignment with a var expression
             if(codeLine._containsVars)
@@ -1860,10 +1861,10 @@ namespace Compiler
         std::vector<std::string> tokens = Expression::tokenise(code, ':', false);
         for(int j=0; j<tokens.size(); j++)
         {
-            createCodeLine(tokens[j], 0, _codeLines[codeLineIndex]._labelIndex, -1, Expression::Int16Both, false, false, codeline);
+            createCodeLine(tokens[j], 0, _codeLines[codeLineIndex]._labelIndex, -1, Expression::Int16Both, false, codeline);
             createCodeVar(codeline, codeLineIndex, varIndex);
-            bool handledString = createCodeStr(codeline, codeLineIndex, strIndex);
-            statementResult = createVasmCode(codeline, codeLineIndex, handledString);
+            createCodeStr(codeline, codeLineIndex, strIndex);
+            statementResult = createVasmCode(codeline, codeLineIndex);
             if(statementResult == StatementError) break;
 
             // Some commands, (such as IF), process multi-statements themselves
@@ -1976,7 +1977,7 @@ namespace Compiler
 
             if(!foundEnd)
             {
-                if(createCodeLine("END", 0, -1, -1, Expression::Int16Both, false, false, codeLine)) _codeLines.push_back(codeLine);
+                if(createCodeLine("END", 0, -1, -1, Expression::Int16Both, false, codeLine)) _codeLines.push_back(codeLine);
             }
         }
 
@@ -2084,9 +2085,9 @@ namespace Compiler
             uint16_t address = _constants[i]._address;
             std::string name = _constants[i]._name;
             std::string internalName = _constants[i]._internalName;
-            ConstantType constantType = _constants[i]._constantType;
+            ConstType constType = _constants[i]._constType;
 
-            switch(constantType)
+            switch(constType)
             {
                 case ConstInt16:
                 {
