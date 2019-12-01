@@ -115,6 +115,7 @@
  "ORW"                  : "0x03fa",
  "XORW"                 : "0x03fc",
  "RET"                  : "0x03ff",
+ "HALT"                 : "0x80b4",
 
  "SYS_Exec_88"          : "0x00ad",
  "SYS_Out_22"           : "0x00f4",
