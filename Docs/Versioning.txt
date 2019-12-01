@@ -45,3 +45,5 @@ Instead, we fork versioned files and keep previous versions visible
 in the same directory. This helps find regression bugs when working
 on the tool chain. The Utils/git-fork-files tool can be useful to
 preserve git history in each branch of the file. This is not mandatory.
+
+-- End of document --
