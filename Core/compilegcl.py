@@ -25,11 +25,14 @@ import gcl0x as gcl
 #-----------------------------------------------------------------------
 
 parser = argparse.ArgumentParser(description='Compile GCL source to GT1 object file')
-parser.add_argument('-s', '--sym', dest='sym',
-                    help='Symbol file for interface bindings (default interface.json)',
-                    default='interface.json')
-parser.add_argument('gclSource', help='GCL file')
-parser.add_argument('outputDir', nargs='?', default='.', help='Optional output directory')
+parser.add_argument('-s', '--sym', dest='sym', default='interface.json',
+                    help='Symbol file for interface bindings (default interface.json)')
+parser.add_argument('-x', dest='gt1x', default=False, action='store_true',
+                    help='Create .gt1x file'),
+parser.add_argument('gclSource',
+                    help='GCL file')
+parser.add_argument('outputDir', nargs='?', default='.',
+                    help='Optional output directory')
 args = parser.parse_args()
 
 #-----------------------------------------------------------------------
@@ -37,6 +40,8 @@ args = parser.parse_args()
 #-----------------------------------------------------------------------
 
 asm.loadBindings(args.sym)
+if args.gt1x:
+  asm.loadBindings('Core/interface-dev.json')
 
 userCode = asm.symbol('userCode')
 userVars = asm.symbol('userVars')
@@ -85,6 +90,8 @@ data += chr(address&255)
 
 stem = basename(splitext(args.gclSource)[0])
 gt1File = args.outputDir + '/' + stem + '.gt1' # Resulting object file
+if args.gt1x:
+  gt1File += 'x'
 
 print('Create file', gt1File)
 
