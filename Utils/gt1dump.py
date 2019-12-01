@@ -155,7 +155,10 @@ while True:
         elif ins in ['BRA', 'DEF'] or (ins == 'BCC' and ops == 1):
           asm += ' $%02x%02x' % (hiAddress, (byte+2)&255)
         elif ins == 'SYS':
-          asm += ' %d' % (28-2*((byte^128)-128))
+          if byte != 128:
+            asm += ' %d' % (28-2*((byte^128)-128))
+          else:
+            asm = 'HALT'
         else:
           asm += ' $%02x' % byte
         ops -= 1

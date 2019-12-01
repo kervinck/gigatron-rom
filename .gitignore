@@ -1,0 +1,11 @@
+/dev.rom
+/dev.lst
+/gigatron.rom
+/Utils/lcc/build/
+/Docs/gtemu
+*.o
+/Contrib/at67/CMakeCache.txt
+/Contrib/at67/**/CMakeFiles
+/Contrib/at67/**/Makefile
+/Contrib/at67/**/cmake_install.cmake
+.DS_Store

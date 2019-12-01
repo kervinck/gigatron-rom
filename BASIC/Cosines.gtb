@@ -1,0 +1,10 @@
+'Plot cosine
+10 cls
+20 input p:if p<1 goto 20
+30 u=50*100:v=0:c=0
+40 for x=0 to 159
+50 y=68-u/100
+60 poke y*256+x,c
+70 u=u+v:v=v-u/p
+80 next x
+90 c=c+23:goto 40

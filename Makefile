@@ -202,9 +202,8 @@ ROMv3y.rom: Core/* Apps/*/* Makefile interface.json
 %.gt1: %.gcl
 	Core/compilegcl.py "$<" `dirname "./$@"`
 
-%.gt1x: %.gt1 %.gcl
-	# Non-compliant files in .gt1 format (see Docs/GT1-files.txt)
-	mv "$<" "$@"
+%.gt1x: %.gcl
+	Core/compilegcl.py -x "$<" `dirname "./$@"`
 
 %.h: %.gt1
 	# Convert GT1 file into header for including as PROGMEM data

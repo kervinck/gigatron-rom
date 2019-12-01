@@ -29,8 +29,8 @@ gigatron-rom
  |     +--- GCL-language.txt    Gigatron Control Language and vCPU explanation
  |     +--- GT1-files.txt       vCPU object file format and ROM versioning
  |     +--- gtemu.c             Instruction set definition (as executable code)
- |     +--- SYS-functions.txt   Explanation on how SYS extensions work
- |     `--- vCPU-summary.txt    Overview of 16-bit virtual CPU instruction set
+ |     +--- vCPU-summary.txt    Overview of 16-bit virtual CPU instruction set
+ |     `--- ...                 All on video, audio, native code, versioning...
  `--- Contrib/                  Contributions outside the kit's ROM and tooling:
        +--- at67/               Emulator/visualizer (SDL2), 8-bit/16-bit
        |                        assembler, debugger, MIDI music, demos (sprites,
@@ -248,7 +248,7 @@ Available since ROM v1:
 06c0    SYS_Unpack_56           Unpack 3 bytes into 4 pixels
 04d4    SYS_Draw4_30            Copy 4 pixels to screen memory
 00f4    SYS_Out_22              Write byte to hardware OUT register
-00f9    SYS_In_24               Read byte from hardware IN register
+00f9    SYS_In_24               Read byte from hardware IN port
 
 Added in ROM v2:
 
