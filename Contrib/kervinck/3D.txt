@@ -6,7 +6,7 @@ Per frame
         Variable dX dY Rz               Camera position and direction
         Constant f                      Fixed focus
 
-        1 sin/cos (byte), can come from small lookup table
+        1 sin/cos (byte)                Use small lookup table
                 C = cos Rz
                 S = sin Rz
 
@@ -16,14 +16,26 @@ Per 3D point x, y, z
                 x1 = x - dx
                 x1 = y - dY
 
-        2 mul, 2 add/sub                Rotation
-                x2 = x1 * C - y' * S
+        4 mul, 2 add/sub                Rotation
+                x2 = x1 * C - y1 * S
                 y2 = x1 * S + y1 * C
+                                        [A rotating object demo can do these
+                                         incrementally, sin a = a, cos a = 1,
+                                         fixed "convenient" a (e.g. a=1/256)
+
+                                                x2 = x1     - y1 * a
+                                                y2 = x1 * a + y1
+
+                                         Zero multiplications
+
+                                         This is a like a mass-spring system.
+                                         The 2D points before projection follow
+                                         a harmonic motion]
 
         2 div, 3 add/sub                Projection
                 r = y2 + f
                 u = 80 + x2/r
-                v = 60 - z /r
+                v = 60 -  z/r
 
         Total: 6 mul/div + some add/subs
 
@@ -31,19 +43,19 @@ Bresenham's algorithm to trace the edge between two points
 
 SYS_SetMemory to fill the area between two edges
 
-Either flat-end triangles (polygon system), or point lists per pixel line.
+Either triangles (polygon system), or point lists per pixel line
 
 Arithmetic: 15 bit signed fixed point
 
-        high byte:      1 sign, 7 integer               -128..127
-        low byte:       1 internal carry, 7 fraction    0..127
+        High byte:      1 sign, 7 integer               -128..127
+        Low byte:       1 internal carry, 7 fraction       0..127
 
 Speed:
         7 iterations per mul, plus shifts
         Fast internal carry
 
         Maybe down to 2 scanlines per operation???
-        8 scanlines per point???
+        10 scanlines per point???
         This can become really fast
 
         Eliminate iteration overhead: SYS functions that process vector
@@ -117,3 +129,178 @@ Total
         shift left:     6 x 15 =  75
                                  ===
                                  216 cycles
+
+Table based multiplication
+
+        (a+b)^2 = a^2 + b^2 + ^2ab
+        (a-b)^2 = a^2 + b^2 - ^2ab
+        ========================== -
+            4ab = (a+b)^2 - (a-b)^2
+
+             ab = (a+b)^2/4 - (a-b)^2/4
+                = table[a+b] - table[abs(a-b)]
+
+        table[i] = i^2/4
+
+For 7-bit x 7-bit muliply, needs two 255-byte tables
+The quarters cancel out
+
+http://nparker.llx.com/a2/mult.html
+
+
+mulTableLo:     nop
+                ld   ...
+                ld   ...
+                ld   ...
+                     ...
+mulTableLo+255: bra  255        XXX Can also spread out the code over 4 pages
+mulTableHi:     nop
+                ld   ...
+                ld   ...
+                ld   ...
+                     ...
+mulTableHi+255: bra  [vTmp]
+                nop
+
+                  vACH vACL
+                         A0
+                  ---------
+                  vACL * A0     -> 28+25 cycles
+                    A1   A2
+             vACH * A0          -> 28+27 cycles
+               A2   A3
+             --------------
+               A2   A1          -> 8 cycles
+                                   -------------
+                                   116 cycles
+
+SYS_Mul:
+                ; Strip sign(s)
+                ; XXX TODO
+
+                ; Partial vACL * A0
+                ld   .L0               ;(a-b)^2/4 lo   28 cycles
+                st   [vTmp]
+                ld   [vACL]
+                suba [A0]
+                bmi  pc+3
+                bra  pc+3
+                suba 1
+                xora 255
+                adda 1
+                st   [A1]
+                ld   >mulTableLo,Y
+                jmp  y,ac
+                bra  255
+               ;ld   ...
+               ;bra  [vTmp]
+               ;nop
+.L0             st   [A2]
+                ld   .L1               ;hi
+                st   [vTmp]
+                ld   [A1]
+                ld   >mulTableHi,Y
+                jmp  y,ac
+                bra  255
+               ;ld   ...
+               ;bra  [vTmp]
+               ;nop
+.L1             xora 255                ;Almost negate
+                st   [A1]
+
+                ld   .L2                ;(a-b)^2/4 lo   25 cycles
+                st   [vTmp]
+                ld   [vACL]
+                adda [A0]
+                ld   >mulTableLo,Y
+                jmp  y,ac
+                bra  255
+               ;ld   ...
+               ;bra  [vTmp]
+               ;nop
+.L2             suba [A2]
+                anda $80,x              ;Carry
+                ld   .L3                ;hi
+                st   [vTmp]
+                ld   [vACL]
+                adda [A0]
+                ld   >mulTableHi,Y
+                jmp  y,ac
+                bra  255
+               ;ld   ...
+               ;bra  [vTmp]
+               ;nop
+.L3             adda [A1]
+                adda [x]                ;Apply carry
+                st   [A1]
+
+                ; Partial vACH * A0
+                ld   .L4                ;(a-b)^2/4 lo   28 cycles
+                st   [vTmp]
+                ld   [vACH]
+                suba [A0]
+                bmi  pc+3
+                bra  pc+3
+                suba 1
+                xora 255
+                adda 1
+                st   [A1]
+                ld   >mulTableLo,Y
+                jmp  y,ac
+                bra  255
+               ;ld   ...
+               ;bra  [vTmp]
+               ;nop
+.L4             st   [A3]
+                ld   .L5               ;hi
+                st   [vTmp]
+                ld   [A1]
+                ld   >mulTableHi,Y
+                jmp  y,ac
+                bra  255
+               ;ld   ...
+               ;bra  [vTmp]
+               ;nop
+.L5             xora 255                ;Almost negate
+                st   [A2]
+
+                ld   .L6                ;(a-b)^2/4 lo   27 cycles
+                st   [vTmp]
+                ld   [vACH]
+                adda [A0]
+                ld   >mulTableLo,Y
+                jmp  y,ac
+                bra  255
+               ;ld   ...
+               ;bra  [vTmp]
+               ;nop
+.L6             suba [A3]
+                anda $80,x              ;Carry
+                anda $7f
+                st   [A3]
+                ld   .L7                ;hi
+                st   [vTmp]
+                ld   [vACL]
+                adda [A0]
+                ld   >mulTableHi,Y
+                jmp  y,ac
+                bra  255
+               ;ld   ...
+               ;bra  [vTmp]
+               ;nop
+.L7             adda [A2]
+                adda [x]                ;Apply carry
+                st   [A2]
+
+                ld   [A1]               ;Sum            8 cycles
+                adda [A3]
+                anda $80,x              ;Carry
+                anda $7d
+                st   [A1]
+                ld   [A2]
+                adda [x]                ;Apply carry
+                st   [A2]
+
+                ; Apply result sign
+                ; XXX TODO
+
