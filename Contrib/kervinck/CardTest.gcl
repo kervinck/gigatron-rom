@@ -121,9 +121,6 @@ gcl0x
 \romType, \romTypeValue_DEVROM- {Version check >= DEVROM}
 [if<0 do _frameCount _vPCH: loop]
 
-\videoTop_DEVROM Address=       {Shrink visible screen area. This doesn't work}
-32 Address.                     {on ROMv4 or below, but it doesn't harm either}
-
 $500 Address=                   {512 bytes memory for one sector}
 
 {-----------------------------------------------------------------------+
@@ -706,7 +703,7 @@ InitFat32=
 [def
   {
     Read next byte directly from file and advance position
-    !!! XXX This is slow !!!
+    !!! XXX This is slow, but doesn't use buffer space !!!
   }
   push
 
@@ -783,7 +780,7 @@ InitFat32=
     Multiply ValueL,H by ClusterSize and add ClusterBase (clobbers OffsetL,H)
   }
   push
-  <ValueH, 15& >ValueH.         {Clear the top 4 reserved bits}
+  >ValueH, 15& >ValueH.         {Clear the top 4 reserved bits}
   1 [do k=
     ClusterSize- if<0
     ShiftLeft!
@@ -1280,6 +1277,7 @@ ValueToDecimal=
 
   { Read file contents byte by byte }
   LoadByte!                     {Fetch first byte}
+
   [do                           {Chunk copy loop}
     >Address.                   {High-address comes first}
     LoadByte! <Address.         {Then the low address}
@@ -1297,7 +1295,7 @@ ValueToDecimal=
 
   LoadByte! [if>=0 0 Address=]  {Expect EOF, clear Address when missing}
 
-  512 [do i=                    {Close sector}
+  512 [do i=                    {Read tail of sector}
     SendOnesToCard!
     i 1- if>0loop]
 
@@ -1352,7 +1350,7 @@ ValueToDecimal=
 
   $1fff FileSizeL&              {XXX Hardcoded. Should derive from ClusterSize}
   [if=0
-    List 4+ List= deek ValueL=
+    List 4+ List= deek ValueL=  {Get next cluster from ClusterList}
     List 2+       deek ValueH=
     ClusterToSector!
   ]
@@ -1369,6 +1367,7 @@ ValueToDecimal=
 [def
   {
     Traverse the FAT and collect the clusters used by this file
+    XXX TODO Don't do this if the file is smaller than the cluster size
   }
   push
 
