@@ -73,10 +73,10 @@ _10                 LDI                     107
 
 _20                 Rand                    
                     ANDI                    63
-                    STW                     0xc2
+                    STW                     0xc0
                     LDWI                    162
                     STW                     register0
-                    LDW                     0xc2
+                    LDW                     0xc0
                     POKE                    register0                       ; poke 162,rnd(0) AND 63
 
 _30                 Rand                    
@@ -305,14 +305,15 @@ textStr             EQU     register0
 textNum             EQU     register0
 textBak             EQU     register0
 textLen             EQU     register1
-textFont            EQU     register2
+textOfs             EQU     register2
 textChr             EQU     register3
 textHex             EQU     register8
-textSlice           EQU     register9
-scanLine            EQU     register10
-digitMult           EQU     register11
-digitIndex          EQU     register12
-clearLoop           EQU     register13
+textFont            EQU     register9
+textSlice           EQU     register10
+scanLine            EQU     register11
+digitMult           EQU     register12
+digitIndex          EQU     register13
+clearLoop           EQU     register14
     
     
 printInit           LDWI    SYS_VDrawBits_134
@@ -339,6 +340,7 @@ printText           PUSH
                     CALL    giga_vAC
                     LDW     textStr             
                     PEEK                                    ; first byte is length
+                    BEQ     printT_exit
     
 printT_char         ST      textLen
                     INC     textStr                         ; next char
@@ -351,7 +353,7 @@ printT_char         ST      textLen
                     LD      textLen
                     SUBI    1
                     BNE     printT_char
-                    POP
+printT_exit         POP
                     RET
 
 

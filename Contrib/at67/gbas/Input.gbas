@@ -1,3 +1,7 @@
+_useOpcodeCALLI_
+
+dim arr(5)=0
+
 a = 1
 d = @a
 a.hi = 1 : a.lo = 0
@@ -19,4 +23,5 @@ print a.lo;" ";b.hi;" ";b
 e = @e + d + 1
 f = @big$
 print hexw$(@b);" ";hexw$(@c);" ";hexw$(d);" ";hexw$(e);" ";hexw$(f)
+print hexw$(@arr)
 end

@@ -124,6 +124,18 @@ _label_ CALLI   _label
         CALLI   printText
 %ENDM
 
+%MACRO  PrintAcLeft
+        CALLI   printLeft
+%ENDM
+
+%MACRO  PrintAcRight
+        CALLI   printRight
+%ENDM
+
+%MACRO  PrintAcMid
+        CALLI   printMid
+%ENDM
+
 %MACRO  PrintInt16 _int
         LDWI    _int
         CALLI   printInt16
@@ -296,9 +308,10 @@ _id_    CALLI   _label
         STW     fgbgColour                              ; yellow on blue
 
         LDWI    0x0001
-        STW     miscFlags
+        STW     miscFlags                               ; reset flags
+
         LDWI    0xFF00
-        STW     highByteMask                            ; reset flags
+        STW     highByteMask
         
         LDWI    0x0000
         STW     midiStream                              ; reset MIDI

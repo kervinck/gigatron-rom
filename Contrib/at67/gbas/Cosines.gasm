@@ -31,22 +31,23 @@ highByteMask        EQU                     register0 + 0x2C
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_9                  EQU                     0x0240
-_10                 EQU                     0x025c
-_20                 EQU                     0x026f
-_31                 EQU                     0x0240
-_32                 EQU                     0x0240
-_33                 EQU                     0x0240
-_34                 EQU                     0x0240
-_35                 EQU                     0x0240
-_36                 EQU                     0x0240
-_end_0x0281         EQU                     0x0279
+_10                 EQU                     0x0240
+_20                 EQU                     0x024e
+_30                 EQU                     0x0252
+_40                 EQU                     0x025f
+_50                 EQU                     0x0263
+_60                 EQU                     0x0286
+_70                 EQU                     0x029f
+_80                 EQU                     0x02ad
+_end_0x02cc         EQU                     0x02b8
 
 ; Variables
-_P                  EQU                     0x0030
-_Q                  EQU                     0x0032
-_R                  EQU                     0x0034
-_X                  EQU                     0x0036
+_p                  EQU                     0x0030
+_u                  EQU                     0x0032
+_v                  EQU                     0x0034
+_c                  EQU                     0x0036
+_x                  EQU                     0x0038
+_y                  EQU                     0x003a
 
 ; Strings
 
@@ -64,34 +65,66 @@ _entryPoint_        InitRealTimeProc
                     InitGtOp                
                     Initialise                                              ; INIT
 
-_9                  LDI                     2
-                    STW                     graphicsMode
-                    ScanlineMode            
-                    LDWI                    257
-                    STW                     _P
-                    LDWI                    385
-                    STW                     _Q
-                    LDWI                    387
-                    STW                     _R
+_10                 LDWI                    162
+                    STW                     register0
+                    LDI                     21
+                    POKE                    register0
+                    LDWI                    clearVertBlinds
+                    CALL                    giga_vAC                        ; poke 162, &h15 : cls
+
+_20                 LDI                     45
+                    STW                     _p                              ; p=45 'input p:if p<1 goto 20
+
+_30                 LDWI                    5000
+                    STW                     _u
                     LDI                     0
-                    STW                     _X                              ; MODE 2:P=257:Q=385:R=387:X=0
-
-_10                 LDI                     1
-                    STW                     waitVBlankNum
-                    WaitVBlank              
+                    STW                     _v
                     LDI                     0
-                    SUBW                    _X
-                    POKE                    _P
-                    LDW                     _X
-                    POKE                    _Q                              ; WAIT 1:POKE P,-X:POKE Q,X
+                    STW                     _c                              ; u=50*100:v=0:c=0
 
-_20                 LDW                     _X
-                    POKE                    _R
-                    SUBI                    1
-                    STW                     _X
-                    BRA                     _10                             ; POKE R,X:X=X-1:GOTO &10
+_40                 LDI                     0
+                    STW                     _x                              ; for x=0 to 159
 
-_end_0x0281         BRA                     _end_0x0281                     ; END
+_50                 LDW                     _u
+                    STW                     mathX
+                    LDI                     100
+                    STW                     mathY
+                    LDWI                    divide16bit
+                    CALL                    giga_vAC
+                    STW                     0xc0
+                    LDI                     68
+                    SUBW                    0xc0
+                    ST                      _y + 1
+                    LDI                     0
+                    ST                      _y
+                    LDW                     _y
+                    ADDW                    _x
+                    STW                     0xc4
+                    LDW                     _c
+                    POKE                    0xc4                            ; y=(68-u/100) LSL 8 : y.lo=0 : poke y+x,c
+
+_60                 LDW                     _u
+                    ADDW                    _v
+                    STW                     _u
+                    STW                     mathX
+                    LDW                     _p
+                    STW                     mathY
+                    LDWI                    divide16bit
+                    CALL                    giga_vAC
+                    STW                     0xc2
+                    LDW                     _v
+                    SUBW                    0xc2
+                    STW                     _v                              ; u=u+v:v=v-u/p
+
+_70                 ForNextLoopUp           _x _50 159                      ; next x
+
+_80                 LDW                     _c
+                    ADDI                    23
+                    STW                     _c
+                    LDWI                    _40
+                    CALL                    giga_vAC                        ; c=c+23:goto 40
+
+_end_0x02cc         BRA                     _end_0x02cc                     ; END
 
 
 
@@ -108,10 +141,10 @@ convertLeOp         EQU     0x7ebb
 convertGeOp         EQU     0x7ec4
 convertLtOp         EQU     0x7ecd
 convertGtOp         EQU     0x7ed6
-scanlineMode        EQU     0x7edf
-waitVBlank          EQU     0x7dc3
-resetVideoTable     EQU     0x7dde
+divide16bit         EQU     0x7ca0
+resetVideoTable     EQU     0x7edf
 initClearFuncs      EQU     0x7da0
+clearVertBlinds     EQU     0x7dc3
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -189,68 +222,67 @@ convertGt_1         LDI     1
 
 
 ; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
-graphicsMode        EQU     register0
-waitVBlankNum       EQU     register0
-
-drawHLine_x1        EQU     register0
-drawHLine_y1        EQU     register1
-drawHLine_x2        EQU     register2
-drawHLine_x4        EQU     register3
-
-drawVLine_x1        EQU     register0
-drawVLine_y1        EQU     register1
-drawVLine_y2        EQU     register2
-drawVLine_y8        EQU     register3
-
-drawLine_x1         EQU     register0
-drawLine_y1         EQU     register1
-drawLine_x2         EQU     register2
-drawLine_y2         EQU     register3
-drawLine_xy1        EQU     register0
-drawLine_xy2        EQU     register1
-drawLine_dxy1       EQU     register2
-drawLine_dxy2       EQU     register3
-drawLine_dx1        EQU     register4
-drawLine_dy1        EQU     register5
-drawLine_dx2        EQU     register6
-drawLine_dy2        EQU     register7
-drawLine_sx         EQU     register8
-drawLine_sy         EQU     register9
-drawLine_h          EQU     register10
-drawLine_num        EQU     register11
-drawLine_count      EQU     register12
-drawLine_addr       EQU     register13
-drawLine_tmp        EQU     register14
+mathX               EQU     register0
+mathY               EQU     register1
+mathSum             EQU     register2
+mathMask            EQU     register3
+mathRem             EQU     register8
+mathSign            EQU     register9
+mathScratch         EQU     register10
+mathShift           EQU     register11
     
     
-scanlineMode        LDW     giga_romType
-                    ANDI    0xF8
-                    SUBI    romTypeValue_ROMv2
-                    BGE     scanlineM_cont
-                    RET
+                    ; accumulator:mathRem = mathX / mathY, (results 16bit)
+divide16bit         LDW     mathX
+                    XORW    mathY
+                    STW     mathSign
+                    LDW     mathX
+                    BGE     divide16_skip0
+                    LDI     0
+                    SUBW    mathX
+                    STW     mathX
+                    
+divide16_skip0      LDW     mathY                     
+                    BGE     divide16_skip1
+                    LDI     0
+                    SUBW    mathY
+                    STW     mathY
+                    
+divide16_skip1      LDI     0
+                    STW     mathRem
     
-scanlineM_cont      LDWI    SYS_SetMode_v2_80
-                    STW     giga_sysFn
-                    LDW     graphicsMode
-                    SYS     0xE6                ; 270 - max(14,80/2)
-                    RET
-
-
-waitVBlank          LDW     waitVBlankNum
-                    SUBI    0x01
-                    STW     waitVBlankNum
-                    BGE     waitVB_start
-                    RET
-    
-waitVB_start        LD      giga_frameCount
-                    SUBW    frameCountPrev
-                    BEQ     waitVB_start
-                    LD      giga_frameCount
-                    STW     frameCountPrev
-                    PUSH
+divide16_loop       STW     mathScratch
+                    LDW     mathRem
+                    ADDW    mathRem
+                    STW     mathRem
+                    LDW     mathX
+                    BGE     divide16_skip3
+                    INC     mathRem
+                    
+divide16_skip3      LDW     mathX
+                    ADDW    mathX
+                    STW     mathX
+                    LDW     mathRem
+                    SUBW    mathY
+                    BLT     divide16_skip4
+                    STW     mathRem
+                    INC     mathX
+                    
+divide16_skip4      PUSH
                     CALL    realTimeProcAddr
                     POP
-                    BRA     waitVBlank
+                    LDW     mathScratch
+                    ADDI    1
+                    ANDI    0x0F
+                    BNE     divide16_loop
+                    LDW     mathSign
+                    BGE     divide16_exit
+                    LDI     0
+                    SUBW    mathX
+                    RET
+                    
+divide16_exit       LDW     mathX
+                    RET
 
 
 
@@ -305,6 +337,42 @@ initClearFuncs      PUSH
     
                     LDWI    SYS_Draw4_30                        ; setup 4 pixel SYS routine
                     STW     giga_sysFn
+                    POP
+                    RET
+
+
+                    ; clears the viewable screen using a vertical blinds effect
+clearVertBlinds     PUSH
+                    LDWI    initClearFuncs
+                    CALL    giga_vAC
+
+                    LDWI    giga_vram
+                    STW     giga_sysArg4
+                    LD      giga_sysArg4 + 1
+                    ST      top
+    
+clearVB_loop        CALL    realTimeProcAddr
+                    LD      top
+                    ST      giga_sysArg4 + 1                    ; top line
+                    SYS     0xFF                                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+    
+                    LDWI    giga_yres - 1 + 16
+                    SUBW    top
+                    ST      giga_sysArg4 + 1                    ; bottom line
+                    SYS     0xFF                                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+    
+                    LD      giga_sysArg4
+                    ADDI    0x04
+                    ST      giga_sysArg4
+                    SUBI    giga_xres
+                    BLT     clearVB_loop
+    
+                    LDI     0
+                    ST      giga_sysArg4
+                    INC     top                                 ; next top line
+                    LD      top
+                    SUBI    giga_yres / 2 + 8
+                    BLT     clearVB_loop
                     POP
                     RET
 

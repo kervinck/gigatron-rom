@@ -503,6 +503,9 @@ namespace Compiler
             }
         }
 
+        // Check for string operators
+        if(stripped.find_first_of("+") != std::string::npos) expressionType |= Expression::HasStrOperators;
+
         // Check for operators
         if(stripped.find_first_of("-+/*%&<>=") != std::string::npos) expressionType |= Expression::HasOperators;
         std::string mod = stripped;
@@ -535,16 +538,20 @@ namespace Compiler
         std::string expression = (equal != std::string::npos) ? code.substr(equal + 1) : code;
         Expression::trimWhitespace(expression);
 
-        std::vector<int> lut;
-        OnGotoGosubLut onGotoGosubLut = {0x0000, "", lut};
+        std::vector<int> onLut;
+        OnGotoGosubLut onGotoGosubLut = {0x0000, "", onLut};
+
+        std::vector<uint16_t> strLut;
+        StrConcatLut strConcatLut = {0x0000, strLut};
 
         std::vector<VasmLine> vasm;
         std::string text = code.substr(codeLineOffset, code.size() - (codeLineOffset));
         Expression::trimWhitespace(text);
         std::string codeText = Expression::collapseWhitespaceNotStrings(text);
+        codeText = Expression::removeCommentsNotInStrings(codeText);
         std::vector<size_t> offsets;
         std::vector<std::string> tokens = Expression::tokeniseLine(codeText, " (),=", offsets);
-        codeLine = {text, codeText, tokens, offsets, vasm, expression, onGotoGosubLut, 0, labelIndex, varIndex, VarInt16, int16Byte, vars, false};
+        codeLine = {text, codeText, tokens, offsets, vasm, expression, onGotoGosubLut, strConcatLut, 0, labelIndex, varIndex, VarInt16, int16Byte, vars, false};
         Expression::operatorReduction(codeLine._expression);
 
         if(codeLine._code.size() < 2) return false; // anything too small is ignored
@@ -1112,10 +1119,11 @@ namespace Compiler
         }
 
         // Text label
-        size_t colon1 = code.find_first_of(":");
-        if(colon1 != std::string::npos)
+        static int nonNumericLabelIndex = -1;
+        size_t colon = code.find_first_of(":");
+        if(colon != std::string::npos)
         {
-            std::string labelName = code.substr(0, colon1);
+            std::string labelName = code.substr(0, colon);
             bool validLabel = true;
             if(labelName.size())
             {
@@ -1130,16 +1138,33 @@ namespace Compiler
             }
             if(validLabel)
             {
+                bool validCode = false;
+
                 // Create label
                 bool foundGosub = isGosubLabel(labelName);
                 createLabel(_vasmPC, labelName, labelName, int(_codeLines.size()), label, false, true, false, foundGosub);
-                if(createCodeLine(code, int(colon1  + 1), _currentLabelIndex, -1, Expression::Int16Both, false, codeLine)) _codeLines.push_back(codeLine);
+                if(createCodeLine(code, int(colon  + 1), _currentLabelIndex, -1, Expression::Int16Both, false, codeLine))
+                {
+                    validCode = true;
+                    _codeLines.push_back(codeLine);
+                }
+
+                // Check for label without code
+                if(!validCode)
+                {
+                    nonNumericLabelIndex = _currentLabelIndex;
+                }
+
                 return LabelFound;
             }
         }
 
-        // Non label code
-        if(createCodeLine(code, 0, -1, -1, Expression::Int16Both, false, codeLine)) _codeLines.push_back(codeLine);
+        // Non label code, (except if previous line had a non numeric label without code)
+        if(createCodeLine(code, 0, nonNumericLabelIndex, -1, Expression::Int16Both, false, codeLine))
+        {
+            nonNumericLabelIndex = -1;
+            _codeLines.push_back(codeLine);
+        }
 
         return LabelNotFound;
     }
@@ -1558,9 +1583,12 @@ namespace Compiler
                         // Arrays
                         if(_integerVars[varIndex]._varType == VarArray)
                         {
-                            numeric = factor(0); 
-                            numeric._index = varIndex;
-                            numeric._varType = Expression::ArrVar;
+                            // Array numeric
+                            numeric = Expression::Numeric(defaultValue, varIndex, true, Expression::ArrVar, Expression::BooleanCC, Expression::Int16Both, varName, std::string(""));
+
+                            // Array index numeric
+                            Expression::Numeric param = factor(0); 
+                            numeric._parameters.push_back(param);
                             numeric = Keywords::functionARR(numeric);
                         }
                         // Vars
@@ -1703,6 +1731,90 @@ namespace Compiler
         }
     }
 
+    void handleStrings(CodeLine& codeLine, int codeLineIndex, Expression::Numeric& numeric, uint32_t expressionType)
+    {
+        // Expression that contains a single string assignment
+        bool strAssignment = (expressionType == Expression::HasStrVars  ||  expressionType == Expression::HasStrConsts);
+
+        // String assignment, from vars or consts
+        int srcIndex = numeric._index;
+        int dstIndex = codeLine._varIndex;
+        if(strAssignment  &&  srcIndex != -1  &&  dstIndex != -1)
+        {
+            uint16_t srcAddr = (numeric._varType == Expression::Constant) ? _constants[srcIndex]._address : _stringVars[srcIndex]._address;
+            uint16_t dstAddr = _stringVars[dstIndex]._address;
+            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr), false, codeLineIndex);
+            Compiler::emitVcpuAsm("STW", "strSrcAddr", false, codeLineIndex);
+            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false, codeLineIndex);
+            Compiler::emitVcpuAsm("STW", "strDstAddr", false, codeLineIndex);
+            Compiler::emitVcpuAsm("%StringCopy", "", false, codeLineIndex);
+
+            return;
+        }
+
+        // Expression that contains string vars and operators
+        bool strOperators = (((expressionType & Expression::HasStrVars)  ||  (expressionType & Expression::HasStrConsts))  &&  (expressionType & Expression::HasStrOperators));
+
+        // String concatenation
+        if(strOperators  &&  dstIndex != -1)
+        {
+            std::vector<std::string> tokens = Expression::tokenise(codeLine._expression, "+", false);
+            if(tokens.size() < 2) return;
+            for(int i=0; i<tokens.size(); i++) Expression::stripNonStringWhitespace(tokens[i]);
+            
+#if 0
+        // Create label LUT
+        Compiler::getCodeLines()[codeLineIndex]._onGotoGosubLut._lut.clear();
+        for(int i=0; i<gotoTokens.size(); i++)
+        {
+            std::string gotoLabel = gotoTokens[i];
+            Expression::stripWhitespace(gotoLabel);
+            int labelIndex = Compiler::findLabel(gotoLabel);
+            if(labelIndex == -1)
+            {
+                fprintf(stderr, "Compiler::keywordON() : invalid label %s in slot %d in '%s' on line %d\n", gotoLabel.c_str(), i, codeLine._text.c_str(), codeLineIndex + 1);
+                Compiler::getCodeLines()[codeLineIndex]._onGotoGosubLut._lut.clear();
+                return false;
+            }
+                
+            // Only ON GOSUB needs a PUSH, (emitted in createVasmCode())
+            if(gosubOffset != std::string::npos) Compiler::getLabels()[labelIndex]._gosub = true;
+
+            // Create lookup table out of label addresses
+            Compiler::getCodeLines()[codeLineIndex]._onGotoGosubLut._lut.push_back(labelIndex);
+        }
+
+            // Concatenate two source strings to string work area
+            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStrWorkArea()), false, codeLineIndex);
+            Compiler::emitVcpuAsm("STW", "strDstAddr", false, codeLineIndex);
+            Compiler::emitVcpuAsm("%StringAdd", "", false, codeLineIndex);
+
+            // Copy string work area to var
+            if(equals < codeLine._code.size())
+            {
+                std::string strVar = codeLine._code.substr(0, equals);
+                Expression::stripNonStringWhitespace(strVar);
+                if(strVar.back() == '$'  &&  Expression::isVarNameValid(strVar))
+                {
+                    int strIndexDst = Compiler::findStr(strVar);
+                    if(strIndexDst == -1)
+                    {
+                        fprintf(stderr, "Compiler::keywordADD() : Syntax error, string assignment variable '%s' does not exist, in '%s' on line %d\n", strVar.c_str(), codeLine._text.c_str(), codeLineIndex + 1);
+                        return false;
+                    }
+
+                    Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStringVars()[strIndexDst]._address), false, codeLineIndex);
+                    Compiler::emitVcpuAsm("STW", "strDstAddr", false, codeLineIndex);
+                }
+
+                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStrWorkArea()), false, codeLineIndex);
+                Compiler::emitVcpuAsm("STW", "strSrcAddr", false, codeLineIndex);
+                Compiler::emitVcpuAsm("%StringCopy", "", false, codeLineIndex);
+            }
+#endif
+        }
+    }
+
     StatementResult createVasmCode(CodeLine& codeLine, int codeLineIndex)
     {
         // Check for subroutine start, make sure PUSH is emitted only once, even for multi-statement lines, (codeLine is a local copy of each statement within a multi-statement codeLine)
@@ -1728,12 +1840,6 @@ namespace Compiler
         int varIndexRhs = -1, constIndexRhs = -1, strIndexRhs = -1;
         uint32_t expressionType = isExpression(codeLine._expression, varIndexRhs, constIndexRhs, strIndexRhs);
 
-        // Expression that contains one or more int vars
-        bool intVarAssignment = (expressionType & Expression::HasIntVars) ? true : false;
-
-        // Expression that contains a single string assignment
-        bool strVarAssignment = (expressionType == Expression::HasStrVars) ? true : false;
-
         // Parse expression, handles ints, strings, operators and functions
         bool stringResult = false;
         Expression::Numeric numeric;
@@ -1752,34 +1858,18 @@ namespace Compiler
         }
         Expression::parse(codeLine._expression, codeLineIndex, numeric);
 
-        // String assignment
-        int srcIndex = numeric._index;
-        int dstIndex = codeLine._varIndex;
-        if(strVarAssignment  &&  srcIndex != -1  &&  dstIndex != -1)
-        {
-            uint16_t srcAddr = _stringVars[srcIndex]._address;
-            uint16_t dstAddr = _stringVars[dstIndex]._address;
-            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr), false, codeLineIndex);
-            Compiler::emitVcpuAsm("STW", "strSrcAddr", false, codeLineIndex);
-            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false, codeLineIndex);
-            Compiler::emitVcpuAsm("STW", "strDstAddr", false, codeLineIndex);
-            Compiler::emitVcpuAsm("%StringCopy", "", false, codeLineIndex);
-        }
+        // String assignments and operators
+        handleStrings(codeLine, codeLineIndex, numeric, expressionType);
 
-        // Strings handled; only ints handled beyond this line
+        // Exit early for a string result
         if(stringResult) return SingleStatementParsed;
 
         // Update result variable
         if(codeLine._varIndex != -1)
         {
+            // Expression that contains one or more int vars
+            bool intVarAssignment = (expressionType & Expression::HasIntVars);
             updateVar(numeric._value, codeLine, codeLine._varIndex, intVarAssignment);
-        }
-
-        // Check for matching brackets
-        if(std::count(codeLine._expression.begin(), codeLine._expression.end(), '(') != std::count(codeLine._expression.begin(), codeLine._expression.end(), ')'))
-        {
-            fprintf(stderr, "Compiler::createVasmCode() : Brackets are not matched in '%s' on line %d\n", codeLine._expression.c_str(), codeLineIndex);
-            return StatementError;
         }
 
         // TODO: only works with Int16, fix for all var types

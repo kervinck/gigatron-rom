@@ -3,14 +3,15 @@ textStr             EQU     register0
 textNum             EQU     register0
 textBak             EQU     register0
 textLen             EQU     register1
-textFont            EQU     register2
+textOfs             EQU     register2
 textChr             EQU     register3
 textHex             EQU     register8
-textSlice           EQU     register9
-scanLine            EQU     register10
-digitMult           EQU     register11
-digitIndex          EQU     register12
-clearLoop           EQU     register13
+textFont            EQU     register9
+textSlice           EQU     register10
+scanLine            EQU     register11
+digitMult           EQU     register12
+digitIndex          EQU     register13
+clearLoop           EQU     register14
     
     
 %SUB                clearCursorRow
@@ -83,6 +84,7 @@ printText           PUSH
                     CALLI   printInit
                     LDW     textStr
                     PEEK                                    ; first byte is length
+                    BEQ     printT_exit
 
 printT_char         ST      textLen
                     INC     textStr                         ; next char
@@ -94,10 +96,84 @@ printT_char         ST      textLen
                     LD      textLen
                     SUBI    1
                     BNE     printT_char
-                    POP
+printT_exit         POP
                     RET
 %ENDS   
-        
+
+%SUB                printLeft
+                    ; prints left sub string pointed to by the accumulator
+printLeft           PUSH
+                    STW     textStr
+                    CALLI   printInit
+                    LD      textLen
+                    BEQ     printL_exit
+    
+printL_char         ST      textLen
+                    INC     textStr                         ; next char
+                    LDW     textStr             
+                    PEEK
+                    ST      textChr
+                    CALLI   printChar
+
+                    LD      textLen
+                    SUBI    1
+                    BNE     printL_char
+printL_exit         POP
+                    RET
+%ENDS   
+
+%SUB                printRight
+                    ; prints right sub string pointed to by the accumulator
+printRight          PUSH
+                    STW     textStr
+                    CALLI   printInit
+                    LDW     textStr
+                    PEEK                                    ; text length
+                    ADDW    textStr
+                    SUBW    textLen
+                    STW     textStr                         ; text offset
+                    LD      textLen
+                    BEQ     printR_exit
+    
+printR_char         ST      textLen
+                    INC     textStr                         ; next char
+                    LDW     textStr             
+                    PEEK
+                    ST      textChr
+                    CALLI   printChar
+
+                    LD      textLen
+                    SUBI    1
+                    BNE     printR_char
+printR_exit         POP
+                    RET
+%ENDS   
+
+%SUB                printMid
+                    ; prints sub string pointed to by the accumulator
+printMid            PUSH
+                    STW     textStr
+                    CALLI   printInit
+                    LDW     textStr
+                    ADDW    textOfs
+                    STW     textStr                         ; textStr += textOfs
+                    LD      textLen
+                    BEQ     printM_exit
+    
+printM_char         ST      textLen
+                    INC     textStr                         ; next char
+                    LDW     textStr             
+                    PEEK
+                    ST      textChr
+                    CALLI   printChar
+
+                    LD      textLen
+                    SUBI    1
+                    BNE     printM_char
+printM_exit         POP
+                    RET
+%ENDS   
+
 %SUB                printDigit
                     ; prints single digit in textNum
 printDigit          PUSH

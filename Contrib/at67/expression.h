@@ -7,8 +7,8 @@
 
 namespace Expression
 {
-    enum ExpressionType {Invalid=0x8000, HasNumbers=0x0000, HasStrings=0x0001, HasOperators=0x0002, HasIntConsts=0x0004, HasStrConsts=0x0008,
-                         HasIntVars=0x0010, HasStrVars=0x0020, HasKeywords=0x0040, HasStringKeywords=0x0080, HasFunctions=0x0100};
+    enum ExpressionType {Invalid=0x8000, HasNumbers=0x0000, HasStrings=0x0001, HasOperators=0x0002, HasStrOperators=0x0004, HasIntConsts=0x0008, HasStrConsts=0x0010,
+                         HasIntVars=0x0020, HasStrVars=0x0040, HasKeywords=0x0080, HasStringKeywords=0x0100, HasFunctions=0x0200};
     enum NumericType {BadBase=-1, Decimal, HexaDecimal, Octal, Binary};
     enum CCType {BooleanCC, NormalCC, FastCC};
     enum Int16Byte {Int16Both, Int16Low, Int16High};
@@ -63,6 +63,7 @@ namespace Expression
     void trimWhitespace(std::string& input);
     std::string collapseWhitespace(const std::string& input);
     std::string collapseWhitespaceNotStrings(const std::string& input);
+    std::string removeCommentsNotInStrings(const std::string& input);
     void padString(std::string &str, int num, char pad=' ');
     void addString(std::string &str, int num, char add=' ');
     int tabbedStringLength(const std::string& input, int tabSize);

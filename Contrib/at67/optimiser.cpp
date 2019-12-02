@@ -14,7 +14,7 @@
 
 namespace Optimiser
 {
-    enum OptimiseTypes {StwLdwPair=0, StwLdPair, ExtraLdw, StwLdiAddw, StwLdwAddw, StwLdwAddwVar, StwLdiAndw, StwLdwAndw, StwLdwAndwVar, StwLdiXorw, StwLdwXorw,
+    enum OptimiseTypes {StwLdwPair=0, StwLdPair, StwStHigh, ExtraLdw, LdwPair, StwLdiAddw, StwLdwAddw, StwLdwAddwVar, StwLdiAndw, StwLdwAndw, StwLdwAndwVar, StwLdiXorw, StwLdwXorw,
                         StwLdwXorwVar, StwLdiOrw, StwLdwOrw, StwLdwOrwVar, PokeVar, DokeVar, Lsl8Var, StwPair, StwPairReg, ExtraStw, PeekArray, DeekArray, 
                         PokeArray, DokeArray, PokeVarArray, DokeVarArray, PokeTmpArray, DokeTmpArray, AddiPair, AddiZero, SubiZero, NumOptimiseTypes};
 
@@ -35,9 +35,17 @@ namespace Optimiser
         {0, 1, {"STW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x",
                 "LD"  + std::string(OPCODE_TRUNC_SIZE - 2, ' ') + "0x" }},
 
+        // StwStHigh
+        {0, 0, {"STW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x",
+                "ST"  + std::string(OPCODE_TRUNC_SIZE - 2, ' ') + "_" }},
+
         // ExtraLdw
         {0, 1, {"STW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_",
                 "LDW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_"  }},
+
+        // LdwPair
+        {0, 1, {"LDW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x",
+                "LDW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x"  }},
 
         // StwLdiAddw
         {0, 2, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x",
@@ -353,7 +361,16 @@ RESTART_OPTIMISE:
                                     adjustVasmAddresses(i, firstLine, -4);
                                 }
                                 break;
-                                
+
+                                // Match STW ST, delete STW
+                                case StwStHigh:
+                                {
+                                    // Assume neither of these instructions can have a label
+                                    itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine);
+                                    adjustLabelAddresses(i, firstLine, -2);
+                                }
+                                break;
+
                                 // Match STW LDW, delete LDW
                                 case ExtraLdw:
                                 {
@@ -369,6 +386,20 @@ RESTART_OPTIMISE:
                                         adjustLabelAddresses(i, firstLine + 1, -2);
                                         adjustVasmAddresses(i, firstLine + 1, -2);
                                     }
+                                }
+                                break;
+
+                                // Match LDW LDW, delete first LDW
+                                case LdwPair:
+                                {
+                                    // Migrate internal label from first LDW to second LDW
+                                    if(!migrateInternalLabel(i, firstLine, firstLine + 1)) break;
+
+                                    // Delete first LDW
+                                    linesDeleted = true;
+                                    itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine);
+                                    adjustLabelAddresses(i, firstLine + 1, -2);
+                                    adjustVasmAddresses(i, firstLine + 1, -2);
                                 }
                                 break;
 

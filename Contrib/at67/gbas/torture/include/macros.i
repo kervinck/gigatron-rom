@@ -148,6 +148,24 @@ _label_ CALL    giga_vAC
         CALL    giga_vAC
 %ENDM
 
+%MACRO  PrintAcLeft
+        STW     textStr
+        LDWI    printLeft
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  PrintAcRight
+        STW     textStr
+        LDWI    printRight
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  PrintAcMid
+        STW     textStr
+        LDWI    printMid
+        CALL    giga_vAC
+%ENDM
+
 %MACRO  PrintInt16 _int
         LDWI    _int
         STW     textNum    
@@ -396,9 +414,10 @@ _id_    CALL    giga_vAC
         STW     fgbgColour                              ; yellow on blue
 
         LDWI    0x0001
-        STW     miscFlags
+        STW     miscFlags                               ; reset flags
+        
         LDWI    0xFF00
-        STW     highByteMask                            ; reset flags
+        STW     highByteMask
         
         LDWI    0x0000
         STW     midiStream                              ; reset MIDI

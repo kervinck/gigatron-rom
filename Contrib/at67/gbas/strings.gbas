@@ -2,32 +2,35 @@ _useOpcodeCALLI_
 
 cls
 
-ch$ = chr$(65)
-hb$ = hex$(15)
-hw$ = hexw$(&hb00b)
+const a = 120
+
+ch$ = chr$(a)
+hb$ = hex$(a)
+const bb = &hAA77
+hw$ = hexw$(bb)
 
 const a$="yes "
 const z$="no"
-b$="hello test world"
+const b$="hello test world"
  
 c$=left$(b$, 5)
 d$ = right$ (b$,5)
 e$=mid$(b$, 6, 4)
  
-'f$ = b$
-'f$ = b$ + b$
-f$ = add$(b$, b$);
-f$ = add$(f$, f$);
-f$ = add$(f$, f$);
-g$ = copy$(f$)
+f$ = b$
+f$ = b$ + b$
+g$=f$
 
-a = 65
+print a$;" ";b$
+print c$;" ";d$;" ";e$
+print left$("dogcat", 3);" ";left$(b$, 5)
+print right$("dogcat", 3);" ";right$(b$, 5)
+print mid$("dogcat", 2, 2);" ";mid$(b$, 6, 4)
 
-print a$;" ";b$;" "
 print c$;" ";d$;" ";e$
 print f$
 print g$
 print ch$;" ";hb$;" ";hw$
-print chr$(a);" ";hex$(15);" ";hexw$(&hb00b);" ";left$("dogcat",3);" ";left$(b$, 5)
+print chr$(65);" ";hex$(15);" ";hexw$(bb);" ";left$("dogcat", 3);" ";left$(b$, 5)
 
 end

@@ -703,14 +703,15 @@ textStr             EQU     register0
 textNum             EQU     register0
 textBak             EQU     register0
 textLen             EQU     register1
-textFont            EQU     register2
+textOfs             EQU     register2
 textChr             EQU     register3
 textHex             EQU     register8
-textSlice           EQU     register9
-scanLine            EQU     register10
-digitMult           EQU     register11
-digitIndex          EQU     register12
-clearLoop           EQU     register13
+textFont            EQU     register9
+textSlice           EQU     register10
+scanLine            EQU     register11
+digitMult           EQU     register12
+digitIndex          EQU     register13
+clearLoop           EQU     register14
     
     
 atTextCursor        LD      cursorXY

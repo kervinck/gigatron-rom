@@ -42,18 +42,18 @@ _120                EQU                     0x028f
 _130                EQU                     0x0293
 _140                EQU                     0x02a4
 _150                EQU                     0x02b3
-_160                EQU                     0x02ba
-_170                EQU                     0x02c3
-_180                EQU                     0x02ca
-_190                EQU                     0x02d4
-_200                EQU                     0x02e2
-_210                EQU                     0x0302
-_220                EQU                     0x0310
-_230                EQU                     0x0315
-_240                EQU                     0x031a
-_250                EQU                     0x0329
+_160                EQU                     0x02bd
+_170                EQU                     0x02c9
+_180                EQU                     0x02d8
+_190                EQU                     0x02e2
+_200                EQU                     0x0302
+_210                EQU                     0x0310
+_220                EQU                     0x031e
+_230                EQU                     0x0323
+_240                EQU                     0x0328
+_250                EQU                     0x0337
 _page_0x0300        EQU                     0x0300
-_end_0x0331         EQU                     0x0329
+_end_0x033f         EQU                     0x0337
 
 ; Variables
 _N                  EQU                     0x0030
@@ -135,16 +135,19 @@ _140                LDW                     _N
 
 _150                LDW                     _L
                     BNE                     _160
-                    BRA                     _200                            ; IF L&&=0 THEN GOTO &200
+                    LDWI                    _200
+                    CALL                    giga_vAC                        ; IF L&&=0 THEN GOTO 200
 
 _160                LDW                     _L
                     SUBI                    1
                     BNE                     _170
-                    BRA                     _190                            ; IF L&&=1 THEN GOTO &190
+                    LDWI                    _190
+                    CALL                    giga_vAC                        ; IF L&&=1 THEN GOTO 190
 
 _170                LDW                     _M
-                    BLE                     _180
-                    BRA                     _190                            ; IF M&&>0 THEN GOTO &190
+                    JumpGT                  _180 2
+                    LDWI                    _190
+                    CALL                    giga_vAC                        ; IF M&>0 THEN GOTO 190
 
 _180                LDW                     _M
                     BNE                     _190
@@ -153,14 +156,15 @@ _180                LDW                     _M
 
 _190                ForNextLoopUp           _K _130 100                     ; NEXT K
 
-_200                PrintVarInt16           _N
-                    LDWI                    newLineScroll
-                    CALL                    giga_vAC                        ; PRINT N
-
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
+_200                LDW                     _N
+                    PrintAcInt16            
+                    LDWI                    newLineScroll
+                    CALL                    giga_vAC                        ; PRINT N
+
 _210                ForNextLoopUp           _N _120 200                     ; NEXT N
 
 _220                LDWI                    newLineScroll
@@ -439,14 +443,15 @@ textStr             EQU     register0
 textNum             EQU     register0
 textBak             EQU     register0
 textLen             EQU     register1
-textFont            EQU     register2
+textOfs             EQU     register2
 textChr             EQU     register3
 textHex             EQU     register8
-textSlice           EQU     register9
-scanLine            EQU     register10
-digitMult           EQU     register11
-digitIndex          EQU     register12
-clearLoop           EQU     register13
+textFont            EQU     register9
+textSlice           EQU     register10
+scanLine            EQU     register11
+digitMult           EQU     register12
+digitIndex          EQU     register13
+clearLoop           EQU     register14
     
     
 printInit           LDWI    SYS_VDrawBits_134
@@ -473,6 +478,7 @@ printText           PUSH
                     CALL    giga_vAC
                     LDW     textStr             
                     PEEK                                    ; first byte is length
+                    BEQ     printT_exit
     
 printT_char         ST      textLen
                     INC     textStr                         ; next char
@@ -485,7 +491,7 @@ printT_char         ST      textLen
                     LD      textLen
                     SUBI    1
                     BNE     printT_char
-                    POP
+printT_exit         POP
                     RET
 
 

@@ -123,8 +123,8 @@ _entryPoint_        Initialise                                              ; IN
 
                     LDWI                    505
                     STW                     register0
-                    LDI                     240
-                    POKE                    register0                       ; poke &h01F9, 240
+                    LDI                     238
+                    POKE                    register0                       ; poke &h01F9, 238
 
                     CALLI                   clearVertBlinds
                     LDWI                    -30720
@@ -377,7 +377,7 @@ _page_0x0400        STW                     mathX
                     CALLI                   _20                             ; L=-L:N=-N:GOSUB 20
 
                     POP                     
-                    RET                                                     ; RETURN
+                    RET                                                     ; return
 
 _draw               PUSH                    
                     LDI                     0

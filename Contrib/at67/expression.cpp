@@ -276,7 +276,7 @@ namespace Expression
     std::string collapseWhitespaceNotStrings(const std::string& input)
     {
         std::string output;
-        int spaceCount = 0;        
+        int spaceCount = 0;
         bool inString = false;
 
         for(int i=0; i<input.size(); i++)
@@ -297,6 +297,44 @@ namespace Expression
             else
             {
                 spaceCount = 0;
+                output.push_back(input[i]);
+            }
+        }
+
+        return output;
+    }
+
+    std::string removeCommentsNotInStrings(const std::string& input)
+    {
+        std::string output;
+        bool inString = false;
+        bool inComment = false;
+
+        for(int i=0; i<input.size(); i++)
+        {
+            // Check for string
+            if(!inComment  &&  input[i] == '\"') inString = !inString;
+
+            // Check for comment, ' and REM
+            if(!inString)
+            {
+                if((input[i] == '\'')  ||  (i <= input.size()-3  &&  toupper(input[i]) == 'R'  &&  toupper(input[i+1]) == 'E'  &&  toupper(input[i+2]) == 'M'))
+                {
+                    inComment = true;
+                }
+            }
+
+            if(!inString)
+            {
+                // If not in string but in comment, skip char
+                if(inComment) continue;
+
+                // Save char
+                output.push_back(input[i]);
+            }
+            else
+            {
+                // Save char
                 output.push_back(input[i]);
             }
         }

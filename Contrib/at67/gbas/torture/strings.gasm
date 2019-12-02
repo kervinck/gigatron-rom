@@ -31,23 +31,23 @@ highByteMask        EQU                     register0 + 0x2C
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_end_0x02e6         EQU                     0x02e6
+_end_0x02a9         EQU                     0x02a9
 
 ; Variables
 
 ; Strings
-_str_0xff60          EQU                     0xff60
-_str_0xff60          DB                      3 'yes' 0
-_b$                  EQU                     0xff65
+_str_0x7ea0          EQU                     0x7ea0
+_str_0x7ea0          DB                      3 'yes' 0
+_b$                  EQU                     0x7da0
 _b$                  DB                      16 'hello test world' 0
-_c$                  EQU                     0xfe00
+_c$                  EQU                     0x7ca0
 _c$                  DB                      0 '' 0
-_d$                  EQU                     0xfe60
+_d$                  EQU                     0x7ba0
 _d$                  DB                      0 '' 0
-_e$                  EQU                     0xfd00
+_e$                  EQU                     0x7aa0
 _e$                  DB                      0 '' 0
-_str_0xffc5          EQU                     0xffc5
-_str_0xffc5          DB                      1 ' ' 0
+_str_0x7ea5          EQU                     0x7ea5
+_str_0x7ea5          DB                      1 ' ' 0
 
 ; Define Bytes
 
@@ -66,48 +66,22 @@ _entryPoint_        InitRealTimeProc
                     LDWI                    clearVertBlinds
                     CALL                    giga_vAC                        ; cls
 
-                    LDWI                    0xff65
-                    STW                     strSrcAddr
-                    LDI                     5
-                    STW                     strLength
-                    LDWI                    0xfe00
-                    STW                     strDstAddr
-                    StringLeft                                              ; c$=left$(b$, 5)
-
-                    LDWI                    0xff65
-                    STW                     strSrcAddr
-                    LDI                     5
-                    STW                     strLength
-                    LDWI                    0xfe60
-                    STW                     strDstAddr
-                    StringRight                                             ; d$ = right$ (b$,5)
-
-                    LDWI                    0xff65
-                    STW                     strSrcAddr
-                    LDI                     6
-                    STW                     strOffset
-                    LDI                     4
-                    STW                     strLength
-                    LDWI                    0xfd00
-                    STW                     strDstAddr
-                    StringMid                                               ; e$=mid$(b$, 6, 4)
-
-                    PrintString             _str_0xff60
-                    PrintString             _str_0xffc5
+                    PrintString             _str_0x7ea0
+                    PrintString             _str_0x7ea5
                     PrintString             _b$
-                    PrintString             _str_0xffc5
+                    PrintString             _str_0x7ea5
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print a$;" ";b$;" "
 
                     PrintString             _c$
-                    PrintString             _str_0xffc5
+                    PrintString             _str_0x7ea5
                     PrintString             _d$
-                    PrintString             _str_0xffc5
+                    PrintString             _str_0x7ea5
                     PrintString             _e$
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print c$;" ";d$;" ";e$
 
-_end_0x02e6         BRA                     _end_0x02e6                     ; end
+_end_0x02a9         BRA                     _end_0x02a9                     ; end
 
 
 
@@ -117,24 +91,21 @@ _end_0x02e6         BRA                     _end_0x02e6                     ; en
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0xffc8
-convertEqOp         EQU     0xffd1
-convertNeOp         EQU     0xffda
-convertLeOp         EQU     0xffe3
-convertGeOp         EQU     0xffec
-convertLtOp         EQU     0xfff5
-convertGtOp         EQU     0xfec0
-resetVideoTable     EQU     0xfcd2
-initClearFuncs      EQU     0xfec9
-clearVertBlinds     EQU     0xfd60
-clearCursorRow      EQU     0xfb00
-printInit           EQU     0xfb49
-printText           EQU     0xfdce
-printChar           EQU     0xfb64
-newLineScroll       EQU     0xfc74
-stringMid           EQU     0xfc38
-stringLeft          EQU     0xfd9a
-stringRight         EQU     0xfc00
+realTimeProc        EQU     0x7ea8
+convertEqOp         EQU     0x7eb1
+convertNeOp         EQU     0x7eba
+convertLeOp         EQU     0x7ec3
+convertGeOp         EQU     0x7ecc
+convertLtOp         EQU     0x7ed5
+convertGtOp         EQU     0x7ede
+resetVideoTable     EQU     0x78c0
+initClearFuncs      EQU     0x79a0
+clearVertBlinds     EQU     0x79c3
+clearCursorRow      EQU     0x76a0
+printInit           EQU     0x78df
+printText           EQU     0x78a0
+printChar           EQU     0x75a0
+newLineScroll       EQU     0x77a0
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -508,120 +479,5 @@ newLS_adjust        ADDI    8
 newLS_exit          LDWI    printInit
                     CALL    giga_vAC                        ; re-initialise the SYS registers
                     POP
-                    RET
-
-
-; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
-strChr              EQU     register0
-strHex              EQU     register1
-strLength           EQU     register0
-strFinish           EQU     register0
-strSrcAddr          EQU     register1
-strDstAddr          EQU     register2
-strSrcLen           EQU     register3
-strOffset           EQU     register8
-strSrcAddr2         EQU     register9
-strTmpAddr          EQU     register10
-
-
-                    ; copies length sub string from source offset to destination string
-stringMid           LD      strLength
-                    POKE    strDstAddr                          ; destination length
-                    BEQ     stringM_exit                        ; exit if right length = 0
-                    LDW     strSrcAddr
-                    PEEK                                        ; get source length
-                    STW     strSrcLen
-                    SUBW    strOffset                           
-                    SUBW    strLength
-                    BGE     stringM_skip                        ; length + offset <= srcLength
-                    LD      strSrcLen
-                    SUBW    strOffset
-                    STW     strLength
-                    POKE    strDstAddr                          ; new destination length
-                    
-stringM_skip        LDW     strSrcAddr
-                    ADDW    strOffset
-                    STW     strSrcAddr                          ; copy from (source address + (source length - right length)) to destination address
-                    ADDW    strLength
-                    STW     strFinish                           ; end source address
-
-stringM_loop        INC     strSrcAddr                          ; skip lengths the first time in
-                    INC     strDstAddr
-                    LDW     strSrcAddr
-                    PEEK
-                    POKE    strDstAddr                          ; copy char
-                    LDW     strSrcAddr
-                    SUBW    strFinish
-                    BLT     stringM_loop                        ; until finished
-                    
-stringM_exit        INC     strDstAddr
-                    LDI     0
-                    POKE    strDstAddr                          ; terminating 0
-                    RET
-
-
-                    ; copies sub string from left hand side of source string to destination string
-stringLeft          LD      strLength
-                    POKE    strDstAddr                          ; destination length
-                    BEQ     stringL_exit                        ; exit if left length = 0
-                    LDW     strSrcAddr
-                    PEEK                                        ; get source length
-                    STW     strSrcLen
-                    SUBW    strLength
-                    BGE     stringL_skip                        ; is left length <= source length
-                    LD      strSrcLen
-                    STW     strLength
-                    POKE    strDstAddr                          ; new destination length
-                    
-stringL_skip        LDW     strSrcAddr
-                    ADDW    strLength
-                    STW     strFinish                           ; end source address
-                    
-stringL_loop        INC     strSrcAddr                          ; skip lengths the first time in
-                    INC     strDstAddr
-                    LDW     strSrcAddr
-                    PEEK
-                    POKE    strDstAddr                          ; copy char
-                    LDW     strSrcAddr
-                    SUBW    strFinish
-                    BLT     stringL_loop                        ; until finished
-                    
-stringL_exit        INC     strDstAddr
-                    LDI     0
-                    POKE    strDstAddr                          ; terminating 0
-                    RET
-
-
-                    ; copies sub string from right hand side of source string to destination string
-stringRight         LD      strLength
-                    POKE    strDstAddr                          ; destination length
-                    BEQ     stringR_exit                        ; exit if right length = 0
-                    LDW     strSrcAddr
-                    PEEK                                        ; get source length
-                    STW     strSrcLen
-                    SUBW    strLength
-                    BGE     stringR_skip                        ; length <= srcLength
-                    LD      strSrcLen
-                    STW     strLength
-                    POKE    strDstAddr                          ; new destination length
-                    LDI     0
-                    
-stringR_skip        ADDW    strSrcAddr
-                    STW     strSrcAddr                          ; copy from (source address + (source length - right length)) to destination address
-                    ADDW    strLength
-                    STW     strFinish                           ; end source address
-
-stringR_loop        INC     strSrcAddr                          ; skip lengths the first time in
-                    INC     strDstAddr
-                    LDW     strSrcAddr
-                    PEEK
-                    POKE    strDstAddr                          ; copy char
-                    LDW     strSrcAddr
-                    SUBW    strFinish
-                    BLT     stringR_loop                        ; until finished
-                    
-stringR_exit        INC     strDstAddr
-                    LDI     0
-                    POKE    strDstAddr                          ; terminating 0
                     RET
 

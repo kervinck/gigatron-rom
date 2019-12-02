@@ -124,6 +124,12 @@ namespace Compiler
         std::vector<int> _lut;
     };
 
+    struct StrConcatLut
+    {
+        uint16_t _address;
+        std::vector<uint16_t> _lut;
+    };
+
     struct CodeLine
     {
         std::string _text;
@@ -133,6 +139,7 @@ namespace Compiler
         std::vector<VasmLine> _vasm;
         std::string _expression;
         OnGotoGosubLut _onGotoGosubLut;
+        StrConcatLut _strConcatLut;
         int _vasmSize = 0;
         int _labelIndex = -1;
         int  _varIndex = -1;

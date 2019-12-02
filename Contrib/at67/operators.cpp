@@ -36,7 +36,6 @@ namespace Operators
 
             // User variable name
             case Expression::IntVar:
-            case Expression::ArrVar:
             {
                 Compiler::emitVcpuAsmUserVar(opcodeStr, numeric, false);
             }
