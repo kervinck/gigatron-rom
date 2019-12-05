@@ -41,6 +41,7 @@ gigatron-rom
        +--- gigawalt/           Walter's script
        +--- kervinck/           Ramblings (all work in progress)
        +--- PhilThomas/         Javascript-based Gigatron emulator
+       +--- pkupper/            Pluggy Reloaded's Babelfish (to be merged back)
        +--- tbraun-de/          Gigatron Mac; Python port of gtemu.c; maze.gt1
        +--- xopr/               NetTerm: Terminal program for SPI interface
        `--- xxxbxxx/            Bricks game; RPi port of BabelFish; frogstroll
