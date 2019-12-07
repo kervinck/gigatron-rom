@@ -5503,7 +5503,7 @@ insertRomDir(lastRomFile)       #25-38 Start of chain
 label('.sysDir#39')
 ld(hi('REENTER'),Y)             #39 Return
 jmp(Y,'REENTER')                #40
-ld(44//2)                       #41
+ld(-44//2)                      #41
 
 print()
 
