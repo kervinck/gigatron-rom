@@ -106,29 +106,28 @@
 #  DONE Replace egg with something new
 #  DONE Split interface.json and interface-dev.json
 #  DONE MSBASIC
+#  DONE MSBASIC QT_BASIC
 #  XXX  MSBASIC spurious pi-symbols
-#  XXX  MSBASIC QT_BASIC
 #  DONE Speed up SetMemory by 300% using bursts #126
 #  DONE  Discoverable ROM contents #46
 #  XXX  Add CMPHS/CMPHU instructions to vCPU XXX Still needs testing
 #  XXX  SPI: Boot from any *.GT1 file if SDC/MMC detected
 #  XXX  SPI: Tutorial on formatting FAT32 partitions
 #  XXX  SPI: Simple command line interface (solve "EXE vs COM" dilemma)
-#  XXX  Reduce the Pictures application ROM footprint #120
 #  XXX  SPI: Auto-detect banking, 64K and 128K
 #  XXX  Vertical blank interrupt #125
 #  XXX  v6502: Test with Apple1 BASIC
 #  XXX  v6502: Memory mapped PIA emulation using interrupt (D010-D013)
 #  XXX  v6502: add 65c02 opcodes? http://nparker.llx.com/a2/opcodes.html
 #  XXX  Apple-1: Include A1 BASIC
-#  XXX  Apple-1: More blueish font?
 #  XXX  Apple-1: Original 2514 font? Suppress lower case?
 #  XXX  Apple-1: Include assembler
 #  XXX  Apple-1: Intercept cassette interface
 #  XXX  Racer: Make noise when crashing
 #  XXX  Racer: Control speed with up/down as well
+#  XXX  Reduce the Pictures application ROM footprint #120
+#  XXX  Main: Some startup logo as intro? Rotating 3D letters?
 #  XXX  Main: Better startup chime
-#  XXX  Main: Some startup logo as intro?
 #  XXX  Faster SYS_Exec_88, with start address (GT1)?
 #  XXX  Let SYS_Exec_88 clear channelMask when loading into live variables
 #  XXX  ROM functions: SYS_PrintString, control codes, SYS_DrawChar, SYS_Newline
@@ -152,7 +151,7 @@
 #  XXX  Video mode for 12.5 MHz systems
 #-----------------------------------------------------------------------
 
-from __future__ import (absolute_import, division, print_function, unicode_literals)
+from __future__ import division, print_function # Python2 support
 
 import importlib
 from sys import argv

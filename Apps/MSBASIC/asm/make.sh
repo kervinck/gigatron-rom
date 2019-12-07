@@ -25,7 +25,7 @@ awk '
 # Hex dump
 od -v -A n -t x1 tmp/gigatron.bin |
  fmt -1 |
-  awk -v A=0x218 '
+  awk -v A=536 '
    BEGIN {printf"\n*=$%x\n",A}
    NF>0 {
     if(A%16==0)print""

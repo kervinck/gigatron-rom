@@ -516,8 +516,13 @@ QT_BASIC:
         .byte   $11,$11,$11,0 ; DOWN/DOWN/DOWN
   .endif
   .ifdef CBM2
+    .ifndef GT1
         .byte   "### COMMODORE BASIC ###"
         .byte   CR,CR,0
+    .else
+        .byte   "### CBM BASIC ###"
+        .byte   CR,CR,0
+    .endif
   .endif
   .ifdef APPLE
         .byte   LF,CR,LF
