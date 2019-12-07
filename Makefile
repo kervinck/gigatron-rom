@@ -32,7 +32,7 @@ CFLAGS:=-std=c11 -O3 -Wall
 #-----------------------------------------------------------------------
 
 # Development towards "ROM v5"
-dev.rom: Core/* Apps/*/* Makefile interface.json lcc
+dev.rom: Core/* Apps/*/* Makefile interface.json
 	python Core/dev.py\
 		gigatronRaw=Apps/Screen/gigatron.rgb\
 		Snake=Apps/Snake/Snake_v3.gcl\
