@@ -98,7 +98,7 @@ Address   Name          Description
 0001      memSize       Number of RAM pages detected at hard reset (64kB=0)
 0002      (channel)     Sound channel update on current scanline
 0003      (sample)      Accumulator for synthesizing next sound sample
-0004      (reserved)    Reserved (SPI state? Video? MMU? Keyboard map? ...?)
+0004      (reserved)    Reserved (Video extensions? MMU? v8808? ...?)
 0005      (vCPUselect)  Entry page of active interpreter (offset fixed to 255)
 0006-0008 entropy       Randomness from SRAM boot and input, updated each frame
 0009      videoY        Counts up from 0 to 238 in steps of 2 (odd in vBlank)
@@ -214,7 +214,7 @@ $0a00        | Inversion table                                          |   |
              +----------------------------------------------------------+   |
 $0b00        | SYS functions (SendSerial, Sprites, SPI, ...)            |   |
              |                                                          |   |
-$0d82-$11ff  | v6502 secondary interpreter (planned)                    |   v
+$0d80-$11ff  | v6502 secondary interpreter                              |   v
              +==========================================================+  ---
              |                                                          |   ^
              | ROM tables: Embedded high-resolution images (packed)     |   |
@@ -233,36 +233,36 @@ SYS functions (ROM)
 ```
 Available since ROM v1:
 
-00ad    SYS_Exec_88             Load serialized vCPU code from ROM and execute
-04a7    SYS_Random_34           Get random number and update entropy
-0600    SYS_LSRW1_48            Shift right 1 bit
-0619    SYS_LSRW2_52            Shift right 2 bits
-0636    SYS_LSRW3_52            Shift right 3 bits
-0652    SYS_LSRW4_50            Shift right 4 bits
-066d    SYS_LSRW5_50            Shift right 5 bits
-0687    SYS_LSRW6_48            Shift right 6 bits
-04b9    SYS_LSRW7_30            Shift right 7 bits
-04c6    SYS_LSRW8_24            Shift right 8 bits
-06a0    SYS_LSLW4_46            Shift left 4 bits
-04cd    SYS_LSLW8_24            Shift left 8 bits
-04e1    SYS_VDrawBits_134       Draw 8 vertical pixels
-06c0    SYS_Unpack_56           Unpack 3 bytes into 4 pixels
-04d4    SYS_Draw4_30            Copy 4 pixels to screen memory
-00f4    SYS_Out_22              Write byte to hardware OUT register
-00f9    SYS_In_24               Read byte from hardware IN port
+00ad    SYS_Exec_88                     Load serialized vCPU code from ROM and execute
+04a7    SYS_Random_34                   Get random number and update entropy
+0600    SYS_LSRW1_48                    Shift right 1 bit
+0619    SYS_LSRW2_52                    Shift right 2 bits
+0636    SYS_LSRW3_52                    Shift right 3 bits
+0652    SYS_LSRW4_50                    Shift right 4 bits
+066d    SYS_LSRW5_50                    Shift right 5 bits
+0687    SYS_LSRW6_48                    Shift right 6 bits
+04b9    SYS_LSRW7_30                    Shift right 7 bits
+04c6    SYS_LSRW8_24                    Shift right 8 bits
+06a0    SYS_LSLW4_46                    Shift left 4 bits
+04cd    SYS_LSLW8_24                    Shift left 8 bits
+04e1    SYS_VDrawBits_134               Draw 8 vertical pixels
+06c0    SYS_Unpack_56                   Unpack 3 bytes into 4 pixels
+04d4    SYS_Draw4_30                    Copy 4 pixels to screen memory
+00f4    SYS_Out_22                      Write byte to hardware OUT register
+00f9    SYS_In_24                       Read byte from hardware IN port
 
 Added in ROM v2:
 
-0b00    SYS_SetMode_v2_80       Set video mode 0..3
-0b03    SYS_SetMemory_v2_54     Set 1..256 bytes of memory to value
+0b00    SYS_SetMode_v2_80               Set video mode 0..3
+0b03    SYS_SetMemory_v2_54             Set 1..256 bytes of memory to value
 
 Added in ROM v3:
 
-0b06    SYS_SendSerial1_v3_80   Send data out over game controller port
-0c00    SYS_Sprite6_v3_64       Draw sprite of 6 pixels wide and N pixels high
-0c40    SYS_Sprite6x_v3_64      Draw sprite mirrored in X direction
-0c80    SYS_Sprite6y_v3_64      Draw sprite upside down
-0cc0    SYS_Sprite6xy_v3_64     Draw sprite mirrored and upside down
+0b06    SYS_SendSerial1_v3_80           Send data out over game controller port
+0c00    SYS_Sprite6_v3_64               Draw sprite of 6 pixels wide and N pixels high
+0c40    SYS_Sprite6x_v3_64              Draw sprite mirrored in X direction
+0c80    SYS_Sprite6y_v3_64              Draw sprite upside down
+0cc0    SYS_Sprite6xy_v3_64             Draw sprite mirrored and upside down
 
 Added in ROM v4:
 

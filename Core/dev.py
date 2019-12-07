@@ -699,9 +699,7 @@ ld(-44//2)                      #41
 #-----------------------------------------------------------------------
 
 align(0x80, size=0x80)
-
-assert pc() >> 8 == 0, "forth.next3_rom_return must not push the SYS placeholders off page zero"
-
+assert pc() == 0x80
 
 ld(hi('REENTER'),Y)             #15 slot 0x80
 jmp(Y,'REENTER')                #16
@@ -873,9 +871,20 @@ ld(hi('REENTER'),Y)             #15 slot 0xec
 jmp(Y,'REENTER')                #16
 ld(-20//2)                      #17
 
-ld(hi('REENTER'),Y)             #15 slot 0xef
-jmp(Y,'REENTER')                #16
-ld(-20//2)                      #17
+#-----------------------------------------------------------------------
+# Extension SYS_ReadRomDir_DEVROM_80
+#-----------------------------------------------------------------------
+
+# Get next entry from ROM file system. Use vAC=0 to get the first entry.
+
+# Variables:
+#       vAC             Start address of current entry (input, output)
+#       sysArgs[0:7]    File name, padded with zeroes
+
+label('SYS_ReadRomDir_DEVROM_80')
+ld(hi('sys_ReadRomDir'),Y)      #15
+jmp(Y,'sys_ReadRomDir')         #16
+ld([vAC+1])                     #17
 
 fillers(until=symbol('SYS_Out_22') & 255)
 
@@ -5282,12 +5291,33 @@ def basicLine(address, number, text):
 
 #-----------------------------------------------------------------------
 
-if pc()&255 > 251:              # Don't start in a trampoline region
-  align(0x100)
+lastRomFile = ''
+
+def insertRomDir(name):
+  global lastRomFile
+  if name[0] != '_':                    # Mechanism for hiding files
+    if pc()&255 >= 251-14:              # Prevent page crossing
+      trampoline()
+    s = lastRomFile[0:8].ljust(8,'\0')  # Cropping and padding
+    if len(lastRomFile) == 0:
+      lastRomFile = 0
+    for i in range(8):
+      st(ord(s[i]), [Y,Xpp])            #25-32
+      C(repr(s[i]).lstrip('u'))
+    ld(lo(lastRomFile))                 #33
+    st([vAC])                           #34
+    ld(hi(lastRomFile))                 #35
+    ld(hi('.sysDir#39'),Y)              #36
+    jmp(Y,'.sysDir#39')                 #37
+    st([vAC+1])                         #38
+    lastRomFile = name
 
 #-----------------------------------------------------------------------
 #       Embedded programs must be given on the command line
 #-----------------------------------------------------------------------
+
+if pc()&255 > 251:                      # Don't start in a trampoline region
+  align(0x100)
 
 for application in argv[1:]:
   print()
@@ -5311,6 +5341,7 @@ for application in argv[1:]:
     print('Load type .gt1 at $%04x' % pc())
     with open(application, 'rb') as f:
       raw = bytearray(f.read())
+    insertRomDir(name)
     label(name)
     raw = raw[:-2] # Drop start address
     if raw[0] == 0 and raw[1] + raw[2] > 0xc0:
@@ -5323,6 +5354,7 @@ for application in argv[1:]:
   # GCL files
   elif application.endswith('.gcl'):
     print('Compile type .gcl at $%04x' % pc())
+    insertRomDir(name)
     label(name)
     program = gcl.Program(name)
     program.org(userCode)
@@ -5376,6 +5408,7 @@ for application in argv[1:]:
     f = open(application, 'rb')
     raw = bytearray(f.read())
     f.close()
+    insertRomDir(name)
     label(name)
     packed, quartet = [], []
     for i in range(0, len(raw), 3):
@@ -5441,6 +5474,36 @@ for application in argv[1:]:
 
   C('End of %s, size %d' % (application, pc() - symbol(name)))
   print(' Size %s' % (pc() - symbol(name)))
+
+#-----------------------------------------------------------------------
+# ROM directory
+#-----------------------------------------------------------------------
+
+# SYS_ReadRomDir implementation
+
+if pc()&255 > 251 - 28:         # Prevent page crossing
+  trampoline()
+label('sys_ReadRomDir')
+beq('.sysDir#20')               #18
+ld(lo(sysArgs),X)               #19
+ld(AC,Y)                        #20 Follow chain to next entry
+ld([vAC])                       #21
+suba(14)                        #22
+jmp(Y,AC)                       #23
+#ld(hi(sysArgs),Y)              #24 Overlap
+#
+label('.sysDir#20')
+ld(hi(sysArgs),Y)               #20,24 Dummy
+ld(lo('.sysDir#25'))            #21 Go to first entry in chain
+ld(hi('.sysDir#25'),Y)          #22
+jmp(Y,AC)                       #23
+ld(hi(sysArgs),Y)               #24
+label('.sysDir#25')
+insertRomDir(lastRomFile)       #25-38 Start of chain
+label('.sysDir#39')
+ld(hi('REENTER'),Y)             #39 Return
+jmp(Y,'REENTER')                #40
+ld(44//2)                       #41
 
 print()
 

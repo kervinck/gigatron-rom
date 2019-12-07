@@ -32,7 +32,7 @@ CFLAGS:=-std=c11 -O3 -Wall
 #-----------------------------------------------------------------------
 
 # Development towards "ROM v5"
-dev.rom: Core/* Apps/*/* Makefile interface.json
+dev.rom: Core/* Apps/*/* Makefile interface.json lcc
 	python Core/dev.py\
 		gigatronRaw=Apps/Screen/gigatron.rgb\
 		Snake=Apps/Snake/Snake_v3.gcl\
@@ -273,6 +273,9 @@ libObjects:=$(libSources:.c=.o)
 
 .SECONDARY: # Instructs 'make' not to delete intermeditate .o files
 %.gt1: %.o $(libObjects)
+	$(LCC) $(LCCFLAGS) $^ -o "$@"
+
+%.gt1x: %.o $(libObjects)
 	$(LCC) $(LCCFLAGS) $^ -o "$@"
 
 ctest: Libs/Example.gt1

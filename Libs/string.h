@@ -4,6 +4,7 @@ typedef unsigned size_t;
 #endif
 
 char *strcpy(char *dst, const char *src);
+void *memcpy(void *dst, const void *src, size_t n);
 void *memset(void *b, int c, size_t len);
 
 // Not implemented:

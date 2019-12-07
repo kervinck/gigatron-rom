@@ -1,6 +1,7 @@
 {
- "videoTop_DEVROM"      : "0x01f9",
- "CMPHS_DEVROM"         : "0x031f",
- "CALLI_DEVROM"         : "0x0385",
- "CMPHU_DEVROM"         : "0x0397"
+ "SYS_ReadRomDir_DEVROM_80"   : "0x00ef",
+ "videoTop_DEVROM"            : "0x01f9",
+ "CMPHS_DEVROM"               : "0x031f",
+ "CALLI_DEVROM"               : "0x0385",
+ "CMPHU_DEVROM"               : "0x0397"
 }
