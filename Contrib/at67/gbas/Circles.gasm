@@ -33,12 +33,16 @@ highByteMask        EQU                     register0 + 0x2C
 _entryPoint_        EQU                     0x0200
 _loop               EQU                     0x0258
 _circle             EQU                     0x0294
+_circle1            EQU                     0x0365
 _end_0x02b0         EQU                     0x0292
 _repeat_0x02c3      EQU                     0x02a3
 _page_0x0300        EQU                     0x0300
-_else_0x03ac        EQU                     0x034f
-_endif_0x03ce       EQU                     0x0361
-_end_0x03e2         EQU                     0x0371
+_else_0x0394        EQU                     0x0347
+_endif_0x03b6       EQU                     0x0359
+_repeat_0x03d6      EQU                     0x0375
+_page_0x0400        EQU                     0x0400
+_else_0x04ab        EQU                     0x0421
+_end_0x04bd         EQU                     0x042f
 
 ; Variables
 _ch0                EQU                     0x0030
@@ -89,8 +93,8 @@ _loop               LDI                     0x64
 
                     LDI                     0x3c
                     RandMod                 
-                    ADDI                    30
-                    STW                     _cy                             ; cy = rnd(60) + (- 30 + 60)
+                    ADDI                    38
+                    STW                     _cy                             ; cy = rnd(60) + (- 30 + 60 + 8)
 
                     LDI                     0x1e
                     RandMod                 
@@ -122,23 +126,19 @@ _circle             PUSH
 
 _repeat_0x02c3      LDW                     _cy
                     ADDW                    _y
-                    ADDI                    8
-                    ST                      _ch0 + 1                        ; ch0.hi = cy + y + 8
+                    ST                      _ch0 + 1                        ; ch0.hi = cy + y
 
                     LDW                     _cy
                     SUBW                    _y
-                    ADDI                    8
-                    ST                      _ch1 + 1                        ; ch1.hi = cy - y + 8
+                    ST                      _ch1 + 1                        ; ch1.hi = cy - y
 
                     LDW                     _cy
                     ADDW                    _x
-                    ADDI                    8
-                    ST                      _ch2 + 1                        ; ch2.hi = cy + x + 8
+                    ST                      _ch2 + 1                        ; ch2.hi = cy + x
 
                     LDW                     _cy
                     SUBW                    _x
-                    ADDI                    8
-                    ST                      _ch3 + 1                        ; ch3.hi = cy - x + 8
+                    ST                      _ch3 + 1                        ; ch3.hi = cy - x
 
                     LDW                     _cx
                     ADDW                    _x
@@ -161,14 +161,14 @@ _repeat_0x02c3      LDW                     _cy
                     LDW                     _c
                     POKE                    _a                              ; a = cx + x + ch1 : poke a, c
 
-                    STW                     0xde
-                    LDWI                    _page_0x0300
-                    CALL                    giga_vAC
-_page_0x0300        LDW                     0xde
                     LDW                     _cx
                     SUBW                    _x
                     ADDW                    _ch1
                     STW                     _a
+                    STW                     0xde
+                    LDWI                    _page_0x0300
+                    CALL                    giga_vAC
+_page_0x0300        LDW                     0xde
                     LDW                     _c
                     POKE                    _a                              ; a = cx - x + ch1 : poke a, c
 
@@ -201,7 +201,7 @@ _page_0x0300        LDW                     0xde
                     POKE                    _a                              ; a = cx - y + ch3 : poke a, c
 
                     LDW                     _d
-                    BGE                     _else_0x03ac                    ; if d &&< 0
+                    BGE                     _else_0x0394                    ; if d &&< 0
 
                     LDW                     _x
                     LSLW                    
@@ -209,9 +209,9 @@ _page_0x0300        LDW                     0xde
                     ADDW                    _d
                     ADDI                    3
                     STW                     _d
-                    BRA                     _endif_0x03ce                   ; d = d + (x LSL 2) + 3
+                    BRA                     _endif_0x03b6                   ; d = d + (x LSL 2) + 3
 
-_else_0x03ac        LDW                     _x
+_else_0x0394        LDW                     _x
                     SUBW                    _y
                     LSLW                    
                     LSLW                    
@@ -223,7 +223,7 @@ _else_0x03ac        LDW                     _x
                     SUBI                    1
                     STW                     _y                              ; y = y - 1
 
-_endif_0x03ce       INC                     _x                              ; inc x
+_endif_0x03b6       INC                     _x                              ; inc x
 
                     LDW                     _x
                     SUBW                    _y
@@ -232,7 +232,114 @@ _endif_0x03ce       INC                     _x                              ; in
                     POP                     
                     RET                                                     ; return
 
-_end_0x03e2         BRA                     _end_0x03e2                     ; END
+                    LDW                     _r
+                    STW                     _d                              ; d = r
+
+                    LDW                     _r
+                    STW                     _x                              ; x = r
+
+                    LDI                     0
+                    STW                     _y                              ; y = 0
+
+_repeat_0x03d6      LDW                     _cy
+                    ADDW                    _y
+                    ST                      _ch0 + 1                        ; ch0.hi = cy + y
+
+                    LDW                     _cy
+                    SUBW                    _y
+                    ST                      _ch1 + 1                        ; ch1.hi = cy - y
+
+                    LDW                     _cy
+                    ADDW                    _x
+                    ST                      _ch2 + 1                        ; ch2.hi = cy + x
+
+                    LDW                     _cy
+                    SUBW                    _x
+                    ST                      _ch3 + 1                        ; ch3.hi = cy - x
+
+                    LDW                     _cx
+                    ADDW                    _x
+                    ADDW                    _ch0
+                    STW                     _a
+                    LDW                     _c
+                    POKE                    _a                              ; a = cx + x + ch0 : poke a, c
+
+                    LDW                     _cx
+                    SUBW                    _x
+                    ADDW                    _ch0
+                    STW                     _a
+                    LDW                     _c
+                    POKE                    _a                              ; a = cx - x + ch0 : poke a, c
+
+                    LDW                     _cx
+                    ADDW                    _x
+                    ADDW                    _ch1
+                    STW                     _a
+                    LDW                     _c
+                    POKE                    _a                              ; a = cx + x + ch1 : poke a, c
+
+                    LDW                     _cx
+                    SUBW                    _x
+                    ADDW                    _ch1
+                    STW                     _a
+                    LDW                     _c
+                    POKE                    _a                              ; a = cx - x + ch1 : poke a, c
+
+                    LDW                     _cx
+                    ADDW                    _y
+                    ADDW                    _ch2
+                    STW                     _a
+                    LDW                     _c
+                    POKE                    _a                              ; a = cx + y + ch2 : poke a, c
+
+                    LDW                     _cx
+                    SUBW                    _y
+                    ADDW                    _ch2
+                    STW                     _a
+                    LDW                     _c
+                    POKE                    _a                              ; a = cx - y + ch2 : poke a, c
+
+                    LDW                     _cx
+                    ADDW                    _y
+                    ADDW                    _ch3
+                    STW                     _a
+                    LDW                     _c
+                    POKE                    _a                              ; a = cx + y + ch3 : poke a, c
+
+                    LDW                     _cx
+                    SUBW                    _y
+                    ADDW                    _ch3
+                    STW                     0xde
+                    LDWI                    _page_0x0400
+                    CALL                    giga_vAC
+_page_0x0400        LDW                     0xde
+                    STW                     _a
+                    LDW                     _c
+                    POKE                    _a                              ; a = cx - y + ch3 : poke a, c
+
+                    INC                     _y                              ; inc y
+
+                    LDW                     _d
+                    SUBW                    _y
+                    STW                     _d                              ; d = d - y
+
+                    LDW                     _d
+                    BGE                     _else_0x04ab
+                    LDW                     _x
+                    SUBI                    1
+                    STW                     _x
+                    LDW                     _d
+                    ADDW                    _x
+                    STW                     _d                              ; if d &&< 0 then x = x - 1 : d = d + x
+
+_else_0x04ab        LDW                     _y
+                    SUBW                    _x
+                    JumpGE                  _repeat_0x03d6 4                ; until y &>= x
+
+                    POP                     
+                    RET                                                     ; return
+
+_end_0x04bd         BRA                     _end_0x04bd                     ; END
 
 
 
@@ -341,8 +448,11 @@ mathRem             EQU     register8
 mathSign            EQU     register9
 mathScratch         EQU     register10
 mathShift           EQU     register11
-    
-    
+mathBase            EQU     register8
+mathPow             EQU     register9
+mathResult          EQU     register10
+
+
 rand16bit           LDWI    SYS_Random_34
                     STW     giga_sysFn
                     SYS     0xFD

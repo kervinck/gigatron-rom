@@ -246,7 +246,7 @@ _10                 LDWI                    162
                     LDI                     42
                     POKE                    register0
                     LDWI                    clearVertBlinds
-                    CALL                    giga_vAC                        ; poke 162,42:cls:'Paper
+                    CALL                    giga_vAC                        ; poke 162,&h2A:cls:'Paper
 
 _20                 Rand                    
                     ANDI                    63
@@ -387,8 +387,11 @@ mathRem             EQU     register8
 mathSign            EQU     register9
 mathScratch         EQU     register10
 mathShift           EQU     register11
-    
-    
+mathBase            EQU     register8
+mathPow             EQU     register9
+mathResult          EQU     register10
+
+
 rand16bit           LDWI    SYS_Random_34
                     STW     giga_sysFn
                     SYS     0xFD

@@ -318,8 +318,11 @@ mathRem             EQU     register8
 mathSign            EQU     register9
 mathScratch         EQU     register10
 mathShift           EQU     register11
-    
-    
+mathBase            EQU     register8
+mathPow             EQU     register9
+mathResult          EQU     register10
+
+
                     ; accumulator = mathX * mathY, (result 16bit)
 multiply16bit       LDI     0
                     STW     mathSum

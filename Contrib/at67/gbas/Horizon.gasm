@@ -31,28 +31,28 @@ highByteMask        EQU                     register0 + 0x2C
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_loop               EQU                     0x03d6
-_254                EQU                     0x046f
-_253                EQU                     0x0481
-_191                EQU                     0x0497
-_127                EQU                     0x049e
-_calcPitch          EQU                     0x04a5
+_loop               EQU                     0x03da
+_254                EQU                     0x0471
+_253                EQU                     0x0483
+_191                EQU                     0x0499
+_127                EQU                     0x04a0
+_calcPitch          EQU                     0x04a7
 _next_0x02ee        EQU                     0x02c0
 _page_0x0300        EQU                     0x0300
 _else_0x033f        EQU                     0x030d
 _else_0x037f        EQU                     0x0339
 _endif_0x0383       EQU                     0x033d
-_next_0x03ba        EQU                     0x0362
-_else_0x03cf        EQU                     0x036f
-_endif_0x03d7       EQU                     0x0375
-_else_0x03f2        EQU                     0x0386
-_endif_0x03fa       EQU                     0x038c
+_next_0x03ba        EQU                     0x0366
+_else_0x03cf        EQU                     0x0373
+_endif_0x03d7       EQU                     0x0379
+_else_0x03f2        EQU                     0x038a
+_endif_0x03fa       EQU                     0x0390
 _page_0x0400        EQU                     0x0400
-_next_0x046a        EQU                     0x040c
-_repeat_0x04a2      EQU                     0x043a
-_else_0x0507        EQU                     0x047f
-_else_0x0523        EQU                     0x0495
-_end_0x054e         EQU                     0x04bc
+_next_0x046a        EQU                     0x040e
+_repeat_0x04a2      EQU                     0x043c
+_else_0x0507        EQU                     0x0481
+_else_0x0523        EQU                     0x0497
+_end_0x054e         EQU                     0x04be
 
 ; Variables
 _y                  EQU                     0x0030
@@ -84,7 +84,7 @@ _q                  EQU                     0x004e
 _lut_numericLabs    EQU                     0x23f5
 _lut_numericLabs    DW                      254 253 191 127 -1
 _lut_numericAddrs   EQU                     0x22a0
-_lut_numericAddrs   DW                      0x046f 0x0481 0x0497 0x049e 
+_lut_numericAddrs   DW                      0x0471 0x0483 0x0499 0x04a0 
 
 ; Code
 _entryPoint_        InitRealTimeProc        
@@ -232,6 +232,8 @@ _endif_0x0383       LDI                     80
 
                     LDW                     _y
                     ADDI                    8
+                    STW                     0xc0
+                    LD                      0xc0
                     ST                      _a + 1                          ; a = ((y + 8) LSL 8)
 
                     LDI                     0
@@ -312,11 +314,11 @@ _loop               LDW                     _x
                     LDWI                    _calcPitch
                     CALL                    giga_vAC                        ; gosub calcPitch
 
-                    LDI                     0
                     STW                     0xde
                     LDWI                    _page_0x0400
                     CALL                    giga_vAC
 _page_0x0400        LDW                     0xde
+                    LDI                     0
                     STW                     _y
                     LDW                     _pitch
                     STW                     0xb0
@@ -532,8 +534,11 @@ mathRem             EQU     register8
 mathSign            EQU     register9
 mathScratch         EQU     register10
 mathShift           EQU     register11
-    
-    
+mathBase            EQU     register8
+mathPow             EQU     register9
+mathResult          EQU     register10
+
+
                     ; accumulator:mathRem = mathX / mathY, (results 16bit)
 divide16bit         LDW     mathX
                     XORW    mathY

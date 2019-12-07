@@ -231,6 +231,38 @@ _label_ CALLI   _label
         CALLI   shiftRight8bit
 %ENDM
 
+%MACRO  ShiftRightSgn1bit
+        CALLI   shiftRightSgn1bit
+%ENDM
+
+%MACRO  ShiftRightSgn2bit
+        CALLI   shiftRightSgn2bit
+%ENDM
+
+%MACRO  ShiftRightSgn3bit
+        CALLI   shiftRightSgn3bit
+%ENDM
+
+%MACRO  ShiftRightSgn4bit
+        CALLI   shiftRightSgn4bit
+%ENDM
+
+%MACRO  ShiftRightSgn5bit
+        CALLI    shiftRightSgn5bit
+%ENDM
+
+%MACRO  ShiftRightSgn6bit
+        CALLI    shiftRightSgn6bit
+%ENDM
+
+%MACRO  ShiftRightSgn7bit
+        CALLI   shiftRightSgn7bit
+%ENDM
+
+%MACRO  ShiftRightSgn8bit
+        CALLI   shiftRightSgn8bit
+%ENDM
+
 %MACRO  ScanlineMode
         CALLI   scanlineMode
 %ENDM

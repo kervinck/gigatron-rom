@@ -36,8 +36,8 @@ _20                 EQU                     0x0240
 _30                 EQU                     0x0240
 _40                 EQU                     0x024c
 _50                 EQU                     0x0240
-_60                 EQU                     0x025e
-_end_0x027e         EQU                     0x0268
+_60                 EQU                     0x0262
+_end_0x027e         EQU                     0x026c
 
 ; Variables
 _X                  EQU                     0x0030
@@ -72,6 +72,8 @@ _40                 LDWI                    256
                     ADDW                    _Y
                     ADDW                    _Y
                     PEEK                    
+                    STW                     0xc2
+                    LD                      0xc2
                     ST                      0xc4 + 1
                     LDW                     0xc4
                     ANDW                    highByteMask

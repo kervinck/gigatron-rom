@@ -97,6 +97,7 @@ namespace Assembler
 
 
     bool getUseOpcodeCALLI(void);
+    const std::string& getIncludePath(void);
     uint16_t getStartAddress(void);
     int getCurrDasmByteCount(void);
     int getPrevDasmByteCount(void);

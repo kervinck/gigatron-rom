@@ -31,31 +31,31 @@ highByteMask        EQU                     register0 + 0x2C
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_loop               EQU                     0x041a
-_254                EQU                     0x048e
-_253                EQU                     0x04a0
-_191                EQU                     0x04b6
-_127                EQU                     0x04bd
-_calcPitch          EQU                     0x04c4
+_loop               EQU                     0x041e
+_254                EQU                     0x0492
+_253                EQU                     0x04a4
+_191                EQU                     0x04ba
+_127                EQU                     0x04c1
+_calcPitch          EQU                     0x04c8
 _next_0x02a9        EQU                     0x0283
 _else_0x02e7        EQU                     0x02af
 _else_0x0324        EQU                     0x02d8
 _endif_0x0328       EQU                     0x02dc
 _page_0x0300        EQU                     0x0300
-_next_0x035d        EQU                     0x030c
-_else_0x0373        EQU                     0x031a
-_endif_0x037b       EQU                     0x0320
-_else_0x0397        EQU                     0x0332
-_endif_0x039f       EQU                     0x0338
-_next_0x040b        EQU                     0x0396
-_else_0x0425        EQU                     0x03aa
-_next_0x0429        EQU                     0x03ae
+_next_0x035d        EQU                     0x030e
+_else_0x0373        EQU                     0x031c
+_endif_0x037b       EQU                     0x0322
+_else_0x0397        EQU                     0x0334
+_endif_0x039f       EQU                     0x033a
+_next_0x040b        EQU                     0x0398
+_else_0x0425        EQU                     0x03ac
+_next_0x0429        EQU                     0x03b0
 _page_0x0400        EQU                     0x0400
-_next_0x04be        EQU                     0x043c
-_repeat_0x04e8      EQU                     0x0462
-_else_0x0544        EQU                     0x049e
-_else_0x0560        EQU                     0x04b4
-_end_0x058b         EQU                     0x04db
+_next_0x04be        EQU                     0x0440
+_repeat_0x04e8      EQU                     0x0466
+_else_0x0544        EQU                     0x04a2
+_else_0x0560        EQU                     0x04b8
+_end_0x058b         EQU                     0x04df
 
 ; Variables
 _y                  EQU                     0x0030
@@ -90,7 +90,7 @@ def_bytes_0x8000    DB                      144 57 145 33 145 33 144 57 146 45 2
 _lut_numericLabs    EQU                     0xfee0
 _lut_numericLabs    DW                      254 253 191 127 -1
 _lut_numericAddrs   EQU                     0xfeea
-_lut_numericAddrs   DW                      0x048e 0x04a0 0x04b6 0x04bd 
+_lut_numericAddrs   DW                      0x0492 0x04a4 0x04ba 0x04c1 
 
 ; Code
 _entryPoint_        Initialise                                              ; INIT
@@ -210,11 +210,13 @@ _endif_0x0328       LDI                     80
 
                     LDW                     _y
                     ADDI                    8
+                    STW                     0xc0
+                    LD                      0xc0
                     ST                      _a + 1                          ; a = ((y + 8) LSL 8)
 
-                    LDI                     0
                     CALLI                   _page_0x0300
-_page_0x0300        STW                     _x
+_page_0x0300        LDI                     0
+                    STW                     _x
                     LDW                     _pitch
                     ADDI                    159
                     STW                     0xb4
@@ -304,6 +306,8 @@ _else_0x0425        LDI                     0
 
 _next_0x0429        LDW                     _y
                     ADDI                    8
+                    STW                     0xc0
+                    LD                      0xc0
                     ST                      _a + 1                          ; a = ((y + 8) LSL 8)
 
                     LDW                     _a
@@ -327,10 +331,10 @@ _next_0x0429        LDW                     _y
 
                     ForNextLoopDown         _y _next_0x040b 0               ; next y
 
-                    LDI                     3
-                    ST                      waveType
                     CALLI                   _page_0x0400
-_page_0x0400        LDWI                    -32768
+_page_0x0400        LDI                     3
+                    ST                      waveType
+                    LDWI                    -32768
                     PlayMidi                                                ; play midi &h8000,3
 
                     LDI                     0
@@ -560,8 +564,11 @@ mathRem             EQU     register8
 mathSign            EQU     register9
 mathScratch         EQU     register10
 mathShift           EQU     register11
-    
-    
+mathBase            EQU     register8
+mathPow             EQU     register9
+mathResult          EQU     register10
+
+
                     ; accumulator:mathRem = mathX / mathY, (results 16bit)
 divide16bit         LDW     mathX
                     XORW    mathY

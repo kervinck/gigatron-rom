@@ -21,6 +21,7 @@ namespace Operators
 
     Expression::Numeric operatorADD(Expression::Numeric& left, Expression::Numeric& right);
     Expression::Numeric operatorSUB(Expression::Numeric& left, Expression::Numeric& right);
+    Expression::Numeric operatorPOW(Expression::Numeric& left, Expression::Numeric& right);
     Expression::Numeric operatorMUL(Expression::Numeric& left, Expression::Numeric& right);
     Expression::Numeric operatorDIV(Expression::Numeric& left, Expression::Numeric& right);
     Expression::Numeric operatorMOD(Expression::Numeric& left, Expression::Numeric& right);
@@ -30,6 +31,7 @@ namespace Operators
     Expression::Numeric operatorOR(Expression::Numeric&  left, Expression::Numeric& right);
     Expression::Numeric operatorLSL(Expression::Numeric& left, Expression::Numeric& right);
     Expression::Numeric operatorLSR(Expression::Numeric& left, Expression::Numeric& right);
+    Expression::Numeric operatorASR(Expression::Numeric& left, Expression::Numeric& right);
 
     Expression::Numeric operatorEQ(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType);
     Expression::Numeric operatorNE(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType);

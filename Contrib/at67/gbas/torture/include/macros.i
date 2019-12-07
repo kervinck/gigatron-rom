@@ -287,6 +287,46 @@ _label_ CALL    giga_vAC
         CALL    giga_vAC
 %ENDM
 
+%MACRO  ShiftRightSgn1bit
+        LDWI    shiftRightSgn1bit
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  ShiftRightSgn2bit
+        LDWI    shiftRightSgn2bit
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  ShiftRightSgn3bit
+        LDWI    shiftRightSgn3bit
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  ShiftRightSgn4bit
+        LDWI    shiftRightSgn4bit
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  ShiftRightSgn5bit
+        LDWI    shiftRightSgn5bit
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  ShiftRightSgn6bit
+        LDWI    shiftRightSgn6bit
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  ShiftRightSgn7bit
+        LDWI    shiftRightSgn7bit
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  ShiftRightSgn8bit
+        LDWI    shiftRightSgn8bit
+        CALL    giga_vAC
+%ENDM
+
 %MACRO  ScanlineMode
         LDWI    scanlineMode
         CALL    giga_vAC

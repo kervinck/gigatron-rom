@@ -14,6 +14,7 @@ namespace Linker
     void relinkInternalSubs(void);
     void outputInternalSubs(void);
 
+    void resetIncludeFiles(void);
     void resetInternalSubs(void);
 }
 

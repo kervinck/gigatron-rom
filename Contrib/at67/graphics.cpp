@@ -1101,6 +1101,9 @@ namespace Graphics
         renderTextWindow();
 
 #if 0
+#if 1
+        mandelbrot();
+#else
         int x1 = rand() % 160;
         int y1 = rand() % 120;
         int x2 = rand() % 160;
@@ -1109,6 +1112,7 @@ namespace Graphics
         //drawLineGiga(159,(6*12)+3, (8*12)+4,0, 0x0F);
         drawLineGiga(x1, y1, x2, y2);
         drawLineGiga(x1, y1, x2, y2, 0x0F);
+#endif
 #endif
 
         SDL_UpdateTexture(_screenTexture, NULL, _pixels, SCREEN_WIDTH * sizeof uint32_t);
@@ -1147,6 +1151,45 @@ namespace Graphics
         y = y % GIGA_HEIGHT;
         uint16_t address = GIGA_VRAM + x + (y <<8);
         Cpu::setRAM(address, colour);
+    }
+
+    void mandelbrot(void)
+    {
+        const uint8_t colours[16] = {0x01, 0x02, 0x03, 0x07, 0x0b, 0x0f, 0x0e, 0x0d, 0x0c, 0x3c, 0x38, 0x34, 0x30, 0x20, 0x10, 0x00};
+        const int16_t xmin = -100;
+        const int16_t xmax =  60;
+        const int16_t ymin = -60;
+        const int16_t ymax =  60;
+        const int16_t dx = (xmax-xmin)/160;
+        const int16_t dy = (ymax-ymin)/120;
+ 
+        int16_t cy = ymin;
+        for(int16_t py=8; py<128; py++)
+        {
+            int16_t cx = xmin;
+            for(int16_t px=0; px<160; px++)
+            {
+                int16_t x=0, y=x, x2=y, y2=x2;
+        
+                int colour = 0;
+                for(int16_t c=0; c<=15; c++)
+                {
+                    colour = c;
+
+                    x2 = int16_t(x*x) >> 5;
+                    y2 = int16_t(y*y) >> 5;
+                    if(int16_t(x2+y2) > 128) break;
+            
+                    y = (int16_t(x*y) >> 4) + cy;
+                    x = int16_t(x2 - y2 + cx);
+                }
+
+                Cpu::setRAM((py <<8) + px, colours[colour]);
+                cx = cx + dx;
+            }
+
+            cy = cy + dy;
+        }
     }
 
     void drawLineGiga(int x0, int y0, int x1, int y1)

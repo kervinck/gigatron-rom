@@ -486,7 +486,7 @@ namespace Cpu
     void restoreWin32Console(void)
     {
         std::string line;
-        std::ifstream infile("console.txt");
+        std::ifstream infile(Editor::getCwdPath() + "/" + "console.txt");
         if(infile.is_open())
         {
             getline(infile, line);
@@ -508,7 +508,7 @@ namespace Cpu
         RECT rect;
         if(GetWindowRect(_consoleWindowHWND, &rect))
         {
-            std::ofstream outfile("console.txt");
+            std::ofstream outfile(Editor::getCwdPath() + "/" + "console.txt");
             if(outfile.is_open())
             {
                 int xpos = rect.left;

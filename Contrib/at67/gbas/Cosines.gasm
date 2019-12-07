@@ -36,10 +36,10 @@ _20                 EQU                     0x024e
 _30                 EQU                     0x0252
 _40                 EQU                     0x025f
 _50                 EQU                     0x0263
-_60                 EQU                     0x0286
-_70                 EQU                     0x029f
-_80                 EQU                     0x02ad
-_end_0x02cc         EQU                     0x02b8
+_60                 EQU                     0x028a
+_70                 EQU                     0x02a3
+_80                 EQU                     0x02b1
+_end_0x02cc         EQU                     0x02bc
 
 ; Variables
 _p                  EQU                     0x0030
@@ -94,6 +94,8 @@ _50                 LDW                     _u
                     STW                     0xc0
                     LDI                     68
                     SUBW                    0xc0
+                    STW                     0xc0
+                    LD                      0xc0
                     ST                      _y + 1
                     LDI                     0
                     ST                      _y
@@ -230,8 +232,11 @@ mathRem             EQU     register8
 mathSign            EQU     register9
 mathScratch         EQU     register10
 mathShift           EQU     register11
-    
-    
+mathBase            EQU     register8
+mathPow             EQU     register9
+mathResult          EQU     register10
+
+
                     ; accumulator:mathRem = mathX / mathY, (results 16bit)
 divide16bit         LDW     mathX
                     XORW    mathY

@@ -14,20 +14,53 @@ namespace Keywords
 {
     enum EmitStringResult {SyntaxError, InvalidStringVar, ValidStringVar};
 
+    std::vector<std::string> _operators;
     std::map<std::string, Keyword> _keywords;
-    std::map<std::string, std::string> _stringKeywords;
     std::map<std::string, std::string> _functions;
+    std::map<std::string, std::string> _stringKeywords;
     std::map<std::string, std::string> _equalsKeywords;
 
 
+    std::vector<std::string>& getOperators(void)                {return _operators;     }
     std::map<std::string, Keyword>& getKeywords(void)           {return _keywords;      }
-    std::map<std::string, std::string>& getStringKeywords(void) {return _stringKeywords;}
     std::map<std::string, std::string>& getFunctions(void)      {return _functions;     }
+    std::map<std::string, std::string>& getStringKeywords(void) {return _stringKeywords;}
     std::map<std::string, std::string>& getEqualsKeywords(void) {return _equalsKeywords;}
 
 
     bool initialise(void)
     {
+        _operators.push_back(" AND ");
+        _operators.push_back(" XOR ");
+        _operators.push_back(" OR " );
+        _operators.push_back(" NOT ");
+        _operators.push_back(" MOD ");
+        _operators.push_back(" LSL ");
+        _operators.push_back(" LSR ");
+        _operators.push_back(" ASR ");
+        _operators.push_back("<<"   );
+        _operators.push_back(">>"   );
+
+        _functions["PEEK"] = {"PEEK"};
+        _functions["DEEK"] = {"DEEK"};
+        _functions["USR" ] = {"USR" };
+        _functions["RND" ] = {"RND" };
+        _functions["LEN" ] = {"LEN" };
+        _functions["ABS" ] = {"ABS" };
+        _functions["ACS" ] = {"ACS" };
+        _functions["ASC" ] = {"ASC" };
+        _functions["ASN" ] = {"ASN" };
+        _functions["ATN" ] = {"ATN" };
+        _functions["COS" ] = {"COS" };
+        _functions["EXP" ] = {"EXP" };
+        _functions["INT" ] = {"INT" };
+        _functions["LOG" ] = {"LOG" };
+        _functions["SIN" ] = {"SIN" };
+        _functions["SQR" ] = {"SQR" };
+        _functions["TAN" ] = {"TAN" };
+        _functions["FRE" ] = {"FRE" };
+        _functions["TIME"] = {"TIME"};
+
         _keywords["REM"   ] = {"REM",    keywordREM,    Compiler::SingleStatementParsed};
         _keywords["LET"   ] = {"LET",    keywordLET,    Compiler::SingleStatementParsed};
         _keywords["END"   ] = {"END",    keywordEND,    Compiler::SingleStatementParsed};
@@ -73,26 +106,6 @@ namespace Keywords
         _stringKeywords["SPC$"  ] = {"SPC$"  };
         _stringKeywords["STR$"  ] = {"STR$"  };
         _stringKeywords["TIME$" ] = {"TIME$" };
-
-        _functions["PEEK"] = {"PEEK"};
-        _functions["DEEK"] = {"DEEK"};
-        _functions["USR" ] = {"USR" };
-        _functions["RND" ] = {"RND" };
-        _functions["LEN" ] = {"LEN" };
-        _functions["ABS" ] = {"ABS" };
-        _functions["ACS" ] = {"ACS" };
-        _functions["ASC" ] = {"ASC" };
-        _functions["ASN" ] = {"ASN" };
-        _functions["ATN" ] = {"ATN" };
-        _functions["COS" ] = {"COS" };
-        _functions["EXP" ] = {"EXP" };
-        _functions["INT" ] = {"INT" };
-        _functions["LOG" ] = {"LOG" };
-        _functions["SIN" ] = {"SIN" };
-        _functions["SQR" ] = {"SQR" };
-        _functions["TAN" ] = {"TAN" };
-        _functions["FRE" ] = {"FRE" };
-        _functions["TIME"] = {"TIME"};
 
         _equalsKeywords["CONST" ] = {"CONST" };
         _equalsKeywords["DIM"   ] = {"DIM"   };
@@ -166,447 +179,101 @@ namespace Keywords
         return InvalidStringVar;
     }
 
+    void getOrCreateString(Expression::Numeric& numeric, std::string& name, uint16_t& addr, int& index)
+    {
+        switch(numeric._varType)
+        {
+            case Expression::String:
+            {
+                Compiler::getOrCreateConstString(numeric._text, index);
+                name = Compiler::getStringVars()[index]._name;
+                addr = Compiler::getStringVars()[index]._address;
+            }
+            break;
+
+            case Expression::StrVar:
+            {
+                name = Compiler::getStringVars()[index]._name;
+                addr = Compiler::getStringVars()[index]._address;
+            }
+            break;
+
+            case Expression::Constant:
+            {
+                name = Compiler::getConstants()[index]._name;
+                addr = Compiler::getConstants()[index]._address;
+            }
+            break;
+        }
+    }
+
+    void handleConstantString(Expression::Numeric& numeric, Compiler::ConstStrType constStrType, std::string& name, int& index)
+    {
+        switch(constStrType)
+        {
+            case Compiler::StrLeft:
+            case Compiler::StrRight:
+            {
+                uint8_t length = uint8_t(numeric._parameters[0]._value);
+                Compiler::getOrCreateConstString(constStrType, numeric._text, length, 0, index);
+            }
+            break;
+
+            case Compiler::StrMid:
+            {
+                uint8_t offset = uint8_t(numeric._parameters[0]._value);
+                uint8_t length = uint8_t(numeric._parameters[1]._value);
+                Compiler::getOrCreateConstString(constStrType, numeric._text, length, offset, index);
+            }
+            break;
+        }
+
+        name = Compiler::getStringVars()[index]._name;
+        uint16_t srcAddr = Compiler::getStringVars()[index]._address;
+
+        if(Expression::getEnablePrint())
+        {
+            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr), false);
+            Compiler::emitVcpuAsm("%PrintAcString", "", false);
+        }
+        else
+        {
+            int index = Expression::getOutputNumeric()._index;
+            uint16_t dstAddr = Compiler::getStringVars()[index]._address;
+            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr), false);
+            Compiler::emitVcpuAsm("STW", "strSrcAddr", false);
+            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
+            Compiler::emitVcpuAsm("STW", "strDstAddr", false);
+            Compiler::emitVcpuAsm("%StringCopy", "", false);
+        }
+    }
+
+    void handleStringParameter(Expression::Numeric& param)
+    {
+        // Literals
+        if(param._varType == Expression::Number)
+        {
+            // 8bit
+            if(param._value >=0  &&  param._value <= 255)
+            {
+                Compiler::emitVcpuAsm("LDI", std::to_string(param._value), false);
+            }
+            // 16bit
+            else
+            {
+                Compiler::emitVcpuAsm("LDWI", std::to_string(param._value), false);
+            }
+
+            return;
+        }
+
+        Operators::handleSingleOp("LDW", param);
+    }
+
 
     // ********************************************************************************************
     // Functions
     // ********************************************************************************************
-    Expression::Numeric functionLEN(Expression::Numeric& numeric)
-    {
-        if(numeric._varType != Expression::Number)
-        {
-            Compiler::getNextTempVar();
-
-            if(numeric._index == -1)
-            {
-                fprintf(stderr, "Compiler::functionLEN() : couldn't find variable name '%s'\n", numeric._name.c_str());
-                return numeric;
-            }
-
-            int length;
-            switch(numeric._varType)
-            {
-                case Expression::IntVar:   length = Compiler::getIntegerVars()[numeric._index]._intSize; break;
-                case Expression::ArrVar:   length = Compiler::getIntegerVars()[numeric._index]._arrSize; break;
-                case Expression::StrVar:   length = Compiler::getStringVars()[numeric._index]._maxSize;  break;
-                case Expression::Constant: length = Compiler::getConstants()[numeric._index]._size;      break;
-            }
-
-            // Variable lengths
-            if(numeric._varType == Expression::StrVar  &&  !Compiler::getStringVars()[numeric._index]._constant)
-            {
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStringVars()[numeric._index]._address), false);
-                Compiler::emitVcpuAsm("PEEK", "", false);
-            }
-            // Constants lengths
-            else
-            {
-                (length <= 255) ? Compiler::emitVcpuAsm("LDI", std::to_string(length), false) : Compiler::emitVcpuAsm("LDWI", std::to_string(length), false);
-            }
-
-            if(Expression::getEnablePrint())
-            {
-                Compiler::emitVcpuAsm("%PrintAcInt16", "", false);
-                return numeric;
-            }
-
-            numeric._value = uint8_t(Compiler::getTempVarStart());
-            numeric._varType = Expression::TmpVar;
-            numeric._name = Compiler::getTempVarStartStr();
-
-            Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
-            
-        }
-
-        return numeric;
-    }
-
-    Expression::Numeric functionCHR$(Expression::Numeric& numeric)
-    {
-        if(numeric._varType == Expression::Number)
-        {
-            // Print CHR string, (without wasting memory)
-            if(Expression::getEnablePrint())
-            {
-                Compiler::emitVcpuAsm("LDI", std::to_string(numeric._value), false);
-                Compiler::emitVcpuAsm("%PrintAcChar", "", false);
-                return numeric;
-            }
-
-            // Copy CHR string
-            int index = Expression::getOutputNumeric()._index;
-            uint16_t dstAddr = Compiler::getStringVars()[index]._address;
-            Compiler::emitVcpuAsm("LDI", std::to_string(numeric._value), false);
-            Compiler::emitVcpuAsm("STW", "strChr", false);
-            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
-            Compiler::emitVcpuAsm("STW", "strDstAddr", false);
-            Compiler::emitVcpuAsm("%StringChr", "", false);
-
-            return Expression::Numeric(dstAddr, index, true, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
-        }
-
-        Compiler::getNextTempVar();
-        Operators::handleSingleOp("LDW", numeric);
-        if(Expression::getEnablePrint())
-        {
-            Compiler::emitVcpuAsm("%PrintAcChar", "", false);
-            return numeric;
-        }
-
-        int index = Expression::getOutputNumeric()._index;
-        uint16_t dstAddr = Compiler::getStringVars()[index]._address;
-        Compiler::emitVcpuAsm("STW", "strChr", false);
-        Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
-        Compiler::emitVcpuAsm("STW", "strDstAddr", false);
-        Compiler::emitVcpuAsm("%StringChr", "", false);
-
-        return Expression::Numeric(dstAddr, index, true, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
-    }
-
-    Expression::Numeric functionHEX$(Expression::Numeric& numeric)
-    {
-        if(numeric._varType == Expression::Number)
-        {
-            // Print HEX string, (without wasting memory)
-            if(Expression::getEnablePrint())
-            {
-                Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(numeric._value)), false);
-                Compiler::emitVcpuAsm("%PrintAcHexByte", "", false);
-                return numeric;
-            }
-
-            // Copy HEX string
-            int index = Expression::getOutputNumeric()._index;
-            uint16_t dstAddr = Compiler::getStringVars()[index]._address;
-            Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(numeric._value)), false);
-            Compiler::emitVcpuAsm("STW", "strChr", false);
-            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
-            Compiler::emitVcpuAsm("STW", "strDstAddr", false);
-            Compiler::emitVcpuAsm("%StringHex", "", false);
-
-            return Expression::Numeric(dstAddr, index, true, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
-        }
-
-        Compiler::getNextTempVar();
-        Operators::handleSingleOp("LDW", numeric);
-        if(Expression::getEnablePrint())
-        {
-            Compiler::emitVcpuAsm("%PrintAcHexByte", "", false);
-            return numeric;
-        }
-
-        int index = Expression::getOutputNumeric()._index;
-        uint16_t dstAddr = Compiler::getStringVars()[index]._address;
-        Compiler::emitVcpuAsm("STW", "strChr", false);
-        Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
-        Compiler::emitVcpuAsm("STW", "strDstAddr", false);
-        Compiler::emitVcpuAsm("%StringHex", "", false);
-
-        return Expression::Numeric(dstAddr, index, true, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
-    }
-
-    Expression::Numeric functionHEXW$(Expression::Numeric& numeric)
-    {
-        if(numeric._varType == Expression::Number)
-        {
-            // Print HEXW string, (without wasting memory)
-            if(Expression::getEnablePrint())
-            {
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(numeric._value), false);
-                Compiler::emitVcpuAsm("%PrintAcHexWord", "", false);
-                return numeric;
-            }
-
-            // Copy HEXW string
-            int index = Expression::getOutputNumeric()._index;
-            uint16_t dstAddr = Compiler::getStringVars()[index]._address;
-            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(numeric._value), false);
-            Compiler::emitVcpuAsm("STW", "strHex", false);
-            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
-            Compiler::emitVcpuAsm("STW", "strDstAddr", false);
-            Compiler::emitVcpuAsm("%StringHexw", "", false);
-
-            return Expression::Numeric(dstAddr, index, true, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
-        }
-
-        Compiler::getNextTempVar();
-        Operators::handleSingleOp("LDW", numeric);
-        if(Expression::getEnablePrint())
-        {
-            Compiler::emitVcpuAsm("%PrintAcHexWord", "", false);
-            return numeric;
-        }
-
-        int index = Expression::getOutputNumeric()._index;
-        uint16_t dstAddr = Compiler::getStringVars()[index]._address;
-        Compiler::emitVcpuAsm("STW", "strHex", false);
-        Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
-        Compiler::emitVcpuAsm("STW", "strDstAddr", false);
-        Compiler::emitVcpuAsm("%StringHexw", "", false);
-
-        return Expression::Numeric(dstAddr, index, true, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
-    }
-
-    Expression::Numeric functionLEFT$(Expression::Numeric& numeric)
-    {
-        // Literal string
-        if(numeric._varType == Expression::String  &&  numeric._parameters.size() == 1)
-        {
-            std::string name;
-            uint16_t srcAddr;
-
-            int index;
-            uint8_t length = uint8_t(numeric._parameters[0]._value);
-            Compiler::getOrCreateConstString(Compiler::StrLeft, numeric._text, length, 0, index);
-            name = Compiler::getStringVars()[index]._name;
-            srcAddr = Compiler::getStringVars()[index]._address;
-
-            if(Expression::getEnablePrint())
-            {
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr), false);
-                Compiler::emitVcpuAsm("%PrintAcString", "", false);
-            }
-            else
-            {
-                int index = Expression::getOutputNumeric()._index;
-                uint16_t dstAddr = Compiler::getStringVars()[index]._address;
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr), false);
-                Compiler::emitVcpuAsm("STW", "strSrcAddr", false);
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
-                Compiler::emitVcpuAsm("STW", "strDstAddr", false);
-                Compiler::emitVcpuAsm("%StringCopy", "", false);
-            }
-
-            return Expression::Numeric(0, index, true, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
-        }
-
-        // Variable string or constant string
-        if((numeric._varType == Expression::StrVar  ||  numeric._varType == Expression::Constant)  &&  numeric._parameters.size() == 1)
-        {
-            std::string name;
-            uint16_t srcAddr;
-
-            int index = int(numeric._index);
-            uint8_t length = uint8_t(numeric._parameters[0]._value);
-
-            switch(numeric._varType)
-            {
-                case Expression::StrVar:
-                {
-                    name = Compiler::getStringVars()[index]._name;
-                    srcAddr = Compiler::getStringVars()[index]._address;
-                }
-                break;
-
-                case Expression::Constant:
-                {
-                    name = Compiler::getConstants()[index]._name;
-                    srcAddr = Compiler::getConstants()[index]._address;
-                }
-                break;
-            }
-
-            if(Expression::getEnablePrint())
-            {
-                Compiler::emitVcpuAsm("LDI", std::to_string(length), false);
-                Compiler::emitVcpuAsm("STW", "textLen", false);
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr), false);
-                Compiler::emitVcpuAsm("%PrintAcLeft", "", false);
-            }
-            else
-            {
-                int index = Expression::getOutputNumeric()._index;
-                uint16_t dstAddr = Compiler::getStringVars()[index]._address;
-                Compiler::emitVcpuAsm("LDI", std::to_string(length), false);
-                Compiler::emitVcpuAsm("STW", "strLength", false);
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr), false);
-                Compiler::emitVcpuAsm("STW", "strSrcAddr", false);
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
-                Compiler::emitVcpuAsm("STW", "strDstAddr", false);
-                Compiler::emitVcpuAsm("%StringLeft", "", false);
-            }
-
-            return Expression::Numeric(0, index, true, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
-        }
-
-        return numeric;
-    }
-
-    Expression::Numeric functionRIGHT$(Expression::Numeric& numeric)
-    {
-        // Literal string
-        if(numeric._varType == Expression::String  &&  numeric._parameters.size() == 1)
-        {
-            std::string name;
-            uint16_t srcAddr;
-
-            int index;
-            uint8_t length = uint8_t(numeric._parameters[0]._value);
-            Compiler::getOrCreateConstString(Compiler::StrRight, numeric._text, length, 0, index);
-            name = Compiler::getStringVars()[index]._name;
-            srcAddr = Compiler::getStringVars()[index]._address;
-
-            if(Expression::getEnablePrint())
-            {
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr), false);
-                Compiler::emitVcpuAsm("%PrintAcString", "", false);
-            }
-            else
-            {
-                int index = Expression::getOutputNumeric()._index;
-                uint16_t dstAddr = Compiler::getStringVars()[index]._address;
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr), false);
-                Compiler::emitVcpuAsm("STW", "strSrcAddr", false);
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
-                Compiler::emitVcpuAsm("STW", "strDstAddr", false);
-                Compiler::emitVcpuAsm("%StringCopy", "", false);
-            }
-
-            return Expression::Numeric(0, index, true, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
-        }
-
-        // Variable string or constant string
-        if((numeric._varType == Expression::StrVar  ||  numeric._varType == Expression::Constant)  &&  numeric._parameters.size() == 1)
-        {
-            std::string name;
-            uint16_t srcAddr;
-
-            int index = int(numeric._index);
-            uint8_t length = uint8_t(numeric._parameters[0]._value);
-
-            switch(numeric._varType)
-            {
-                case Expression::StrVar:
-                {
-                    name = Compiler::getStringVars()[index]._name;
-                    srcAddr = Compiler::getStringVars()[index]._address;
-                }
-                break;
-
-                case Expression::Constant:
-                {
-                    name = Compiler::getConstants()[index]._name;
-                    srcAddr = Compiler::getConstants()[index]._address;
-                }
-                break;
-            }
-
-            if(Expression::getEnablePrint())
-            {
-                Compiler::emitVcpuAsm("LDI", std::to_string(length), false);
-                Compiler::emitVcpuAsm("STW", "textLen", false);
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr), false);
-                Compiler::emitVcpuAsm("%PrintAcRight", "", false);
-            }
-            else
-            {
-                int index = Expression::getOutputNumeric()._index;
-                uint16_t dstAddr = Compiler::getStringVars()[index]._address;
-                Compiler::emitVcpuAsm("LDI", std::to_string(length), false);
-                Compiler::emitVcpuAsm("STW", "strLength", false);
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr), false);
-                Compiler::emitVcpuAsm("STW", "strSrcAddr", false);
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
-                Compiler::emitVcpuAsm("STW", "strDstAddr", false);
-                Compiler::emitVcpuAsm("%StringRight", "", false);
-            }
-
-            return Expression::Numeric(0, index, true, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
-        }
-
-        return numeric;
-    }
-
-    Expression::Numeric functionMID$(Expression::Numeric& numeric)
-    {
-        // Literal string
-        if(numeric._varType == Expression::String  &&  numeric._parameters.size() == 2)
-        {
-            std::string name;
-            uint16_t srcAddr;
-
-            int index;
-            uint8_t offset = uint8_t(numeric._parameters[0]._value);
-            uint8_t length = uint8_t(numeric._parameters[1]._value);
-            Compiler::getOrCreateConstString(Compiler::StrMid, numeric._text, length, offset, index);
-            name = Compiler::getStringVars()[index]._name;
-            srcAddr = Compiler::getStringVars()[index]._address;
-
-            if(Expression::getEnablePrint())
-            {
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr), false);
-                Compiler::emitVcpuAsm("%PrintAcString", "", false);
-            }
-            else
-            {
-                int index = Expression::getOutputNumeric()._index;
-                uint16_t dstAddr = Compiler::getStringVars()[index]._address;
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr), false);
-                Compiler::emitVcpuAsm("STW", "strSrcAddr", false);
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
-                Compiler::emitVcpuAsm("STW", "strDstAddr", false);
-                Compiler::emitVcpuAsm("%StringCopy", "", false);
-            }
-
-            return Expression::Numeric(0, index, true, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
-        }
-
-        // Variable string or constant string
-        if((numeric._varType == Expression::StrVar  ||  numeric._varType == Expression::Constant)  &&  numeric._parameters.size() == 2)
-        {
-            std::string name;
-            uint16_t srcAddr;
-
-            int index = int(numeric._index);
-            uint8_t offset = uint8_t(numeric._parameters[0]._value);
-            uint8_t length = uint8_t(numeric._parameters[1]._value);
-
-            switch(numeric._varType)
-            {
-                case Expression::StrVar:
-                {
-                    name = Compiler::getStringVars()[index]._name;
-                    srcAddr = Compiler::getStringVars()[index]._address;
-                }
-                break;
-
-                case Expression::Constant:
-                {
-                    name = Compiler::getConstants()[index]._name;
-                    srcAddr = Compiler::getConstants()[index]._address;
-                }
-                break;
-            }
-
-            if(Expression::getEnablePrint())
-            {
-                Compiler::emitVcpuAsm("LDI", std::to_string(offset), false);
-                Compiler::emitVcpuAsm("STW", "textOfs", false);
-                Compiler::emitVcpuAsm("LDI", std::to_string(length), false);
-                Compiler::emitVcpuAsm("STW", "textLen", false);
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr), false);
-                Compiler::emitVcpuAsm("%PrintAcMid", "", false);
-            }
-            else
-            {
-                int index = Expression::getOutputNumeric()._index;
-                uint16_t dstAddr = Compiler::getStringVars()[index]._address;
-                Compiler::emitVcpuAsm("LDI", std::to_string(offset), false);
-                Compiler::emitVcpuAsm("STW", "strOffset", false);
-                Compiler::emitVcpuAsm("LDI", std::to_string(length), false);
-                Compiler::emitVcpuAsm("STW", "strLength", false);
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr), false);
-                Compiler::emitVcpuAsm("STW", "strSrcAddr", false);
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
-                Compiler::emitVcpuAsm("STW", "strDstAddr", false);
-                Compiler::emitVcpuAsm("%StringMid", "", false);
-            }
-
-            return Expression::Numeric(0, index, true, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
-        }
-
-        return numeric;
-    }
-
     Expression::Numeric functionPEEK(Expression::Numeric& numeric)
     {
         if(numeric._varType == Expression::Number)
@@ -771,6 +438,369 @@ namespace Keywords
         }
 
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
+
+        return numeric;
+    }
+
+    Expression::Numeric functionLEN(Expression::Numeric& numeric)
+    {
+        if(numeric._varType != Expression::Number)
+        {
+            Compiler::getNextTempVar();
+
+            if(numeric._index == -1  &&  numeric._varType != Expression::TmpStrVar)
+            {
+                fprintf(stderr, "Compiler::functionLEN() : couldn't find variable name '%s'\n", numeric._name.c_str());
+                return numeric;
+            }
+
+            int length;
+            switch(numeric._varType)
+            {
+                case Expression::IntVar:   length = Compiler::getIntegerVars()[numeric._index]._intSize; break;
+                case Expression::ArrVar:   length = Compiler::getIntegerVars()[numeric._index]._arrSize; break;
+                case Expression::StrVar:   length = Compiler::getStringVars()[numeric._index]._maxSize;  break;
+                case Expression::Constant: length = Compiler::getConstants()[numeric._index]._size;      break;
+            }
+
+            // Variable lengths
+            if(numeric._varType == Expression::StrVar  &&  !Compiler::getStringVars()[numeric._index]._constant)
+            {
+                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStringVars()[numeric._index]._address), false);
+                Compiler::emitVcpuAsm("PEEK", "", false);
+            }
+            else if(numeric._varType == Expression::TmpStrVar)
+            {
+                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStrWorkArea()), false);
+                Compiler::emitVcpuAsm("PEEK", "", false);
+            }
+            // Constants lengths
+            else
+            {
+                (length <= 255) ? Compiler::emitVcpuAsm("LDI", std::to_string(length), false) : Compiler::emitVcpuAsm("LDWI", std::to_string(length), false);
+            }
+
+            numeric._value = uint8_t(Compiler::getTempVarStart());
+            numeric._varType = Expression::TmpVar;
+            numeric._name = Compiler::getTempVarStartStr();
+
+            Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
+            
+        }
+
+        return numeric;
+    }
+
+    Expression::Numeric functionCHR$(Expression::Numeric& numeric)
+    {
+        int index;
+        uint16_t dstAddr;
+        Expression::VarType varType;
+        if(Expression::getOutputNumeric()._varType == Expression::StrVar)
+        {
+            index = Expression::getOutputNumeric()._index;
+            dstAddr = Compiler::getStringVars()[index]._address;
+            varType = Expression::StrVar;
+        }
+        else
+        {
+            index = -1;
+            dstAddr = Compiler::getStrWorkArea();
+            varType = Expression::TmpStrVar;
+        }
+
+        if(numeric._varType == Expression::Number)
+        {
+            // Print CHR string, (without wasting memory)
+            if(Expression::getEnablePrint())
+            {
+                Compiler::emitVcpuAsm("LDI", std::to_string(numeric._value), false);
+                Compiler::emitVcpuAsm("%PrintAcChar", "", false);
+                return numeric;
+            }
+
+            // Create CHR string
+            Compiler::emitVcpuAsm("LDI", std::to_string(numeric._value), false);
+            Compiler::emitVcpuAsm("STW", "strChr", false);
+            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
+            Compiler::emitVcpuAsm("STW", "strDstAddr", false);
+            Compiler::emitVcpuAsm("%StringChr", "", false);
+
+            return Expression::Numeric(dstAddr, index, true, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+        }
+
+        Compiler::getNextTempVar();
+        Operators::handleSingleOp("LDW", numeric);
+        if(Expression::getEnablePrint())
+        {
+            Compiler::emitVcpuAsm("%PrintAcChar", "", false);
+            return numeric;
+        }
+
+        // Create CHR string
+        Compiler::emitVcpuAsm("STW", "strChr", false);
+        Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
+        Compiler::emitVcpuAsm("STW", "strDstAddr", false);
+        Compiler::emitVcpuAsm("%StringChr", "", false);
+
+        return Expression::Numeric(dstAddr, index, true, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+    }
+
+    Expression::Numeric functionHEX$(Expression::Numeric& numeric)
+    {
+        int index;
+        uint16_t dstAddr;
+        Expression::VarType varType;
+        if(Expression::getOutputNumeric()._varType == Expression::StrVar)
+        {
+            index = Expression::getOutputNumeric()._index;
+            dstAddr = Compiler::getStringVars()[index]._address;
+            varType = Expression::StrVar;
+        }
+        else
+        {
+            index = -1;
+            dstAddr = Compiler::getStrWorkArea();
+            varType = Expression::TmpStrVar;
+        }
+
+        if(numeric._varType == Expression::Number)
+        {
+            // Print HEX string, (without wasting memory)
+            if(Expression::getEnablePrint())
+            {
+                Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(numeric._value)), false);
+                Compiler::emitVcpuAsm("%PrintAcHexByte", "", false);
+                return numeric;
+            }
+
+            // Create HEX string
+            Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(numeric._value)), false);
+            Compiler::emitVcpuAsm("STW", "strChr", false);
+            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
+            Compiler::emitVcpuAsm("STW", "strDstAddr", false);
+            Compiler::emitVcpuAsm("%StringHex", "", false);
+
+            return Expression::Numeric(dstAddr, index, true, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+        }
+
+        Compiler::getNextTempVar();
+        Operators::handleSingleOp("LDW", numeric);
+        if(Expression::getEnablePrint())
+        {
+            Compiler::emitVcpuAsm("%PrintAcHexByte", "", false);
+            return numeric;
+        }
+
+        // Create HEX string
+        Compiler::emitVcpuAsm("STW", "strChr", false);
+        Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
+        Compiler::emitVcpuAsm("STW", "strDstAddr", false);
+        Compiler::emitVcpuAsm("%StringHex", "", false);
+
+        return Expression::Numeric(dstAddr, index, true, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+    }
+
+    Expression::Numeric functionHEXW$(Expression::Numeric& numeric)
+    {
+        int index;
+        uint16_t dstAddr;
+        Expression::VarType varType;
+        if(Expression::getOutputNumeric()._varType == Expression::StrVar)
+        {
+            index = Expression::getOutputNumeric()._index;
+            dstAddr = Compiler::getStringVars()[index]._address;
+            varType = Expression::StrVar;
+        }
+        else
+        {
+            index = -1;
+            dstAddr = Compiler::getStrWorkArea();
+            varType = Expression::TmpStrVar;
+        }
+
+        if(numeric._varType == Expression::Number)
+        {
+            // Print HEXW string, (without wasting memory)
+            if(Expression::getEnablePrint())
+            {
+                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(numeric._value), false);
+                Compiler::emitVcpuAsm("%PrintAcHexWord", "", false);
+                return numeric;
+            }
+
+            // Create HEXW string
+            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(numeric._value), false);
+            Compiler::emitVcpuAsm("STW", "strHex", false);
+            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
+            Compiler::emitVcpuAsm("STW", "strDstAddr", false);
+            Compiler::emitVcpuAsm("%StringHexw", "", false);
+
+            return Expression::Numeric(dstAddr, index, true, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+        }
+
+        Compiler::getNextTempVar();
+        Operators::handleSingleOp("LDW", numeric);
+        if(Expression::getEnablePrint())
+        {
+            Compiler::emitVcpuAsm("%PrintAcHexWord", "", false);
+            return numeric;
+        }
+
+        // Create HEXW string
+        Compiler::emitVcpuAsm("STW", "strHex", false);
+        Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
+        Compiler::emitVcpuAsm("STW", "strDstAddr", false);
+        Compiler::emitVcpuAsm("%StringHexw", "", false);
+
+        return Expression::Numeric(dstAddr, index, true, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+    }
+
+    Expression::Numeric functionLEFT$(Expression::Numeric& numeric)
+    {
+        // Literal string and parameter, (optimised case)
+        if(numeric._varType == Expression::String  &&  numeric._parameters.size() == 1  &&  numeric._parameters[0]._varType == Expression::Number)
+        {
+            int index;
+            std::string name;
+            handleConstantString(numeric, Compiler::StrLeft, name, index);
+
+            return Expression::Numeric(0, index, true, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
+        }
+
+        // Non optimised case
+        if(numeric._parameters.size() == 1)
+        {
+            std::string name;
+            uint16_t srcAddr;
+
+            int index = int(numeric._index);
+            getOrCreateString(numeric, name, srcAddr, index);
+
+            if(Expression::getEnablePrint())
+            {
+                handleStringParameter(numeric._parameters[0]);
+                Compiler::emitVcpuAsm("STW", "textLen", false);
+                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr), false);
+                Compiler::emitVcpuAsm("%PrintAcLeft", "", false);
+            }
+            else
+            {
+                int index = Expression::getOutputNumeric()._index;
+                uint16_t dstAddr = Compiler::getStringVars()[index]._address;
+
+                handleStringParameter(numeric._parameters[0]);
+                Compiler::emitVcpuAsm("STW", "strLength", false);
+                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr), false);
+                Compiler::emitVcpuAsm("STW", "strSrcAddr", false);
+                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
+                Compiler::emitVcpuAsm("STW", "strDstAddr", false);
+                Compiler::emitVcpuAsm("%StringLeft", "", false);
+            }
+
+            return Expression::Numeric(0, index, true, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
+        }
+
+        return numeric;
+    }
+
+    Expression::Numeric functionRIGHT$(Expression::Numeric& numeric)
+    {
+        // Literal string and parameter, (optimised case)
+        if(numeric._varType == Expression::String  &&  numeric._parameters.size() == 1  &&  numeric._parameters[0]._varType == Expression::Number)
+        {
+            int index;
+            std::string name;
+            handleConstantString(numeric, Compiler::StrRight, name, index);
+
+            return Expression::Numeric(0, index, true, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
+        }
+
+        // Non optimised case
+        if(numeric._parameters.size() == 1)
+        {
+            std::string name;
+            uint16_t srcAddr;
+
+            int index = int(numeric._index);
+            getOrCreateString(numeric, name, srcAddr, index);
+
+            if(Expression::getEnablePrint())
+            {
+                handleStringParameter(numeric._parameters[0]);
+                Compiler::emitVcpuAsm("STW", "textLen", false);
+                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr), false);
+                Compiler::emitVcpuAsm("%PrintAcRight", "", false);
+            }
+            else
+            {
+                int index = Expression::getOutputNumeric()._index;
+                uint16_t dstAddr = Compiler::getStringVars()[index]._address;
+
+                handleStringParameter(numeric._parameters[0]);
+                Compiler::emitVcpuAsm("STW", "strLength", false);
+                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr), false);
+                Compiler::emitVcpuAsm("STW", "strSrcAddr", false);
+                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
+                Compiler::emitVcpuAsm("STW", "strDstAddr", false);
+                Compiler::emitVcpuAsm("%StringRight", "", false);
+            }
+
+            return Expression::Numeric(0, index, true, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
+        }
+
+        return numeric;
+    }
+
+    Expression::Numeric functionMID$(Expression::Numeric& numeric)
+    {
+        // Literal string and parameters, (optimised case)
+        if(numeric._varType == Expression::String  &&  numeric._parameters.size() == 2  &&  numeric._parameters[0]._varType == Expression::Number  &&  
+           numeric._parameters[1]._varType == Expression::Number)
+        {
+            int index;
+            std::string name;
+            handleConstantString(numeric, Compiler::StrMid, name, index);
+
+            return Expression::Numeric(0, index, true, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
+        }
+
+        // Non optimised case
+        if(numeric._parameters.size() == 2)
+        {
+            std::string name;
+            uint16_t srcAddr;
+
+            int index = int(numeric._index);
+            getOrCreateString(numeric, name, srcAddr, index);
+
+            if(Expression::getEnablePrint())
+            {
+                handleStringParameter(numeric._parameters[0]);
+                Compiler::emitVcpuAsm("STW", "textOfs", false);
+                handleStringParameter(numeric._parameters[1]);
+                Compiler::emitVcpuAsm("STW", "textLen", false);
+                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr), false);
+                Compiler::emitVcpuAsm("%PrintAcMid", "", false);
+            }
+            else
+            {
+                int index = Expression::getOutputNumeric()._index;
+                uint16_t dstAddr = Compiler::getStringVars()[index]._address;
+
+                handleStringParameter(numeric._parameters[0]);
+                Compiler::emitVcpuAsm("STW", "strOffset", false);
+                handleStringParameter(numeric._parameters[1]);
+                Compiler::emitVcpuAsm("STW", "strLength", false);
+                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr), false);
+                Compiler::emitVcpuAsm("STW", "strSrcAddr", false);
+                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
+                Compiler::emitVcpuAsm("STW", "strDstAddr", false);
+                Compiler::emitVcpuAsm("%StringMid", "", false);
+            }
+
+            return Expression::Numeric(0, index, true, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
+        }
 
         return numeric;
     }
@@ -1172,8 +1202,15 @@ namespace Keywords
             else if((expressionType & Expression::HasIntVars)  &&  (expressionType & Expression::HasOperators))
             {
                 Expression::parse(tokens[i], codeLineIndex, numeric);
-                Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false, codeLineIndex);
-                Compiler::emitVcpuAsm("%PrintAcInt16", "", false, codeLineIndex);
+                if(numeric._varType == Expression::Number)
+                {
+                    Compiler::emitVcpuAsm("%PrintInt16", Expression::wordToHexString(numeric._value), false, codeLineIndex);
+                }
+                else
+                {
+                    Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false, codeLineIndex);
+                    Compiler::emitVcpuAsm("%PrintAcInt16", "", false, codeLineIndex);
+                }
             }
             else if(expressionType & Expression::HasIntVars)
             {
@@ -1241,9 +1278,15 @@ namespace Keywords
             }
             else if(expressionType == Expression::HasStrConsts)
             {
-                // Print string
+                // Print constant string
                 std::string internalName = Compiler::getConstants()[constIndex]._internalName;
                 Compiler::emitVcpuAsm("%PrintString", "_" + internalName, false, codeLineIndex);
+            }
+            else if(expressionType == Expression::HasIntConsts)
+            {
+                // Print constant int
+                int16_t data = Compiler::getConstants()[constIndex]._data;
+                Compiler::emitVcpuAsm("%PrintInt16", Expression::wordToHexString(data), false, codeLineIndex);
             }
             else if(expressionType == Expression::HasNumbers)
             {

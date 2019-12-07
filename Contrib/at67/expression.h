@@ -12,7 +12,7 @@ namespace Expression
     enum NumericType {BadBase=-1, Decimal, HexaDecimal, Octal, Binary};
     enum CCType {BooleanCC, NormalCC, FastCC};
     enum Int16Byte {Int16Both, Int16Low, Int16High};
-    enum VarType {Number, String, Constant, TmpVar, IntVar, ArrVar, StrVar};
+    enum VarType {Number, String, Constant, TmpVar, IntVar, ArrVar, StrVar, TmpStrVar};
 
     struct Numeric
     {

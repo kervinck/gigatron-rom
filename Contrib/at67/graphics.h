@@ -98,6 +98,7 @@ namespace Graphics
 
     void drawLineGiga(int x0, int y0, int x1, int y1);
     void drawLineGiga(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint8_t colour);
+    void mandelbrot(void);
     void life(bool initialise);
     void life1(bool initialise);
     void tetris(void);

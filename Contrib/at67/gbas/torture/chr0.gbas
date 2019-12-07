@@ -12,9 +12,10 @@ bb = (b <= 1) - (b >= 1) - (b = 33) - (b <> 32)
 print b;" ";bb;" ";bb=1;" ";bb<>1000;" ";bb<=3;" ";bb>1;" ";bb>=2
 'END
 
-w = chr$(&h31)
-x = hex$(127)
-y = hexw$(&hb00b)
+x=127
+w$ = chr$(&h31)
+x$ = hex$(x)
+y$ = hexw$(&hb00b)
 
 dog = 39
 10  for i=z+1 to dog-1 step 2
@@ -29,7 +30,7 @@ dog = 39
 
     gosub   test
     
-    print bb;" ";w;" ";hexw$(x);" ";y;" ";chr$(bb+60);" ";chr$(&h30);" ";hex$(peek(&h21) AND &hFC);" ";
+    print bb;" ";w$;" ";hexw$(x);" ";x$;" ";y$;" ";chr$(bb+60);" ";chr$(&h30);" ";hex$(peek(&h21) AND &hFC);" ";
     print hex$(80);" ";hexw$(&hdead);" ";hexw$(&hbeef);
 
     END

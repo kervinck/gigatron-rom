@@ -1,5 +1,3 @@
-_useOpcodeCALLI_
-
 dim arr(5)=0
 
 a = 1
@@ -17,7 +15,7 @@ const a=23
 dog=0 : cat$="cat"
 input "testing", cat$
 a = rnd(len(dog)) + len(dog) + len(cat$) + 27
-b = len(big$) + len(a) + len(chr$(65)) + len(hex$(256)) + len(HEXW$(65000))
+b = len(big$) + len(a) + len(chr$(65)) + len(hex$(255)) + len(HEXW$(65000))
 print
 print a.lo;" ";b.hi;" ";b
 e = @e + d + 1

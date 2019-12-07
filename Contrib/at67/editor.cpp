@@ -64,8 +64,8 @@ namespace Editor
     uint16_t _singleStepVpc = 0x0000;
     uint16_t _singleStepAddress = VIDEO_Y_ADDRESS;
 
-    std::string _cwdPath = "";
-    std::string _filePath = "";
+    std::string _cwdPath = ".";
+    std::string _filePath = "./";
 
     MouseState _mouseState;
     MemoryMode _memoryMode = RAM;
@@ -115,6 +115,8 @@ namespace Editor
     bool getPageDnButton(void) {return _pageDnButton;}
     bool getDelAllButton(void) {return _delAllButton;}
  
+    const std::string& getCwdPath(void) {return _cwdPath;}
+
     MemoryMode getMemoryMode(void) {return _memoryMode;}
     EditorMode getEditorMode(void) {return _editorMode;}
     KeyboardMode getKeyboardMode(void) {return _keyboardMode;}

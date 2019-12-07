@@ -79,6 +79,8 @@ namespace Editor
     bool getPageDnButton(void);
     bool getDelAllButton(void);
 
+    const std::string& getCwdPath(void);
+
     MemoryMode getMemoryMode(void);
     EditorMode getEditorMode(void);
     KeyboardMode getKeyboardMode(void);

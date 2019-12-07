@@ -346,7 +346,7 @@ RESTART_OPTIMISE:
                             switch(j)
                             {
                                 // Match STW LDW, delete STW LDW
-                                case StwLdPair:
+                                //case StwLdPair:
                                 case StwLdwPair:
                                 {
                                     // Only one of these can have an internal label

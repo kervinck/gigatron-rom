@@ -71,6 +71,11 @@ namespace Expression
         left._value -= right._value;
         return left;
     }
+    Numeric pow(Numeric& left, Numeric& right)
+    {
+        left._value = int16_t(std::pow(double(left._value), double(right._value)));
+        return left;
+    }
     Numeric mul(Numeric& left, Numeric& right)
     {
         left._value *= right._value;
@@ -1064,7 +1069,8 @@ namespace Expression
 
         for(;;)
         {
-            if(peek() == '*')      {get(); result = mul(result, factor(0));}
+            if(find("**"))         {       result = pow(result, factor(0));}
+            else if(peek() == '*') {get(); result = mul(result, factor(0));}
             else if(peek() == '/') {get(); result = div(result, factor(0));}
             else if(peek() == '%') {get(); result = mod(result, factor(0));}
             else return result;

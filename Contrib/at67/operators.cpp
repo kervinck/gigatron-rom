@@ -558,6 +558,7 @@ namespace Operators
 
         if((left._varType == Expression::TmpVar  ||  left._varType == Expression::IntVar)  &&  right._varType == Expression::Number)
         {
+            // Optimised high byte read
             if(right._value == 8)
             {
                 switch(left._varType)
@@ -600,6 +601,40 @@ namespace Operators
                 handleLogicalOp(opcode, left, right);
                 Compiler::emitVcpuAsm(opcode, "", false);
             }
+        }
+
+        Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
+
+        return left;
+    }
+
+    Expression::Numeric operatorASR(Expression::Numeric& left, Expression::Numeric& right)
+    {
+        if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
+        {
+            left._value /= (1 << right._value);
+            return left;
+        }
+
+        Compiler::getNextTempVar();
+
+        if((left._varType == Expression::TmpVar  ||  left._varType == Expression::IntVar)  &&  right._varType == Expression::Number)
+        {
+            std::string opcode;
+            switch(right._value)
+            {
+                case 1: opcode = "%ShiftRightSgn1bit"; break;
+                case 2: opcode = "%ShiftRightSgn2bit"; break;
+                case 3: opcode = "%ShiftRightSgn3bit"; break;
+                case 4: opcode = "%ShiftRightSgn4bit"; break;
+                case 5: opcode = "%ShiftRightSgn5bit"; break;
+                case 6: opcode = "%ShiftRightSgn6bit"; break;
+                case 7: opcode = "%ShiftRightSgn7bit"; break;
+                case 8: opcode = "%ShiftRightSgn8bit"; break;
+            }
+
+            handleLogicalOp(opcode, left, right);
+            Compiler::emitVcpuAsm(opcode, "", false);
         }
 
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
@@ -735,6 +770,35 @@ namespace Operators
     // ********************************************************************************************
     // Math Operators
     // ********************************************************************************************
+    Expression::Numeric operatorPOW(Expression::Numeric& left, Expression::Numeric& right)
+    {
+        if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
+        {
+            left._value = int16_t(std::pow(double(left._value), double(right._value)));
+            return left;
+        }
+
+        // Optimise base = 0
+        if(left._varType == Expression::Number  &&  left._value == 0)
+        {
+            return Expression::Numeric(0, -1, true, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+        }
+        // Optimise base = 1
+        else if(left._varType == Expression::Number  &&  left._value == 1)
+        {
+            return Expression::Numeric(1, -1, true, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+        }
+        // Optimise exponent = 0
+        else if(right._varType == Expression::Number  &&  right._value == 0)
+        {
+            return Expression::Numeric(1, -1, true, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+        }
+
+        left._isValid = (Assembler::getUseOpcodeCALLI()) ? handleMathOp("CALLI", "power16bit", left, right) : handleMathOp("CALL", "power16bit", left, right);
+
+        return left;
+    }
+
     Expression::Numeric operatorMUL(Expression::Numeric& left, Expression::Numeric& right)
     {
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)

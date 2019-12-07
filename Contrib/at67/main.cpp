@@ -35,8 +35,8 @@ int main(int argc, char* argv[])
     Cpu::initialise();
     Audio::initialise();
     Image::initialise();
-    Graphics::initialise();
     Editor::initialise();
+    Graphics::initialise();
     Terminal::initialise();
     Expression::initialise();
     Assembler::initialise();

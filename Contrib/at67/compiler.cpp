@@ -510,15 +510,10 @@ namespace Compiler
         if(stripped.find_first_of("-+/*%&<>=") != std::string::npos) expressionType |= Expression::HasOperators;
         std::string mod = stripped;
         Expression::strToUpper(mod);
-        if(mod.find(" AND ") != std::string::npos) expressionType |= Expression::HasOperators;
-        if(mod.find(" XOR ") != std::string::npos) expressionType |= Expression::HasOperators;
-        if(mod.find(" OR"  ) != std::string::npos) expressionType |= Expression::HasOperators;
-        if(mod.find(" NOT ") != std::string::npos) expressionType |= Expression::HasOperators;
-        if(mod.find(" MOD ") != std::string::npos) expressionType |= Expression::HasOperators;
-        if(mod.find(" LSL ") != std::string::npos) expressionType |= Expression::HasOperators;
-        if(mod.find(" LSR ") != std::string::npos) expressionType |= Expression::HasOperators;
-        if(mod.find("<<"   ) != std::string::npos) expressionType |= Expression::HasOperators;
-        if(mod.find(">>"   ) != std::string::npos) expressionType |= Expression::HasOperators;
+        for(int i=0; i<Keywords::getOperators().size(); i++)
+        {
+            if(mod.find(Keywords::getOperators()[i]) != std::string::npos) expressionType |= Expression::HasOperators;
+        }
 
         return expressionType;
     }
@@ -650,7 +645,8 @@ namespace Compiler
 
     bool initialiseMacros(void)
     {
-        std::string filename = (!Assembler::getUseOpcodeCALLI()) ? "gbas/include/macros.i" : "gbas/include/macros_CALLI.i";
+        std::string filename = (!Assembler::getUseOpcodeCALLI()) ? "/include/macros.i" : "/include/macros_CALLI.i";
+        filename =  Assembler::getIncludePath() + filename;
         std::ifstream infile(filename);
 
         if(!infile.is_open())
@@ -1311,6 +1307,17 @@ namespace Compiler
     }
 
     // Create constant string
+    uint16_t getOrCreateConstString(const std::string& input, int& index)
+    {
+        std::string output = input;
+
+        std::string name;
+        uint16_t address;
+        index = getOrCreateString(_codeLines[_currentCodeLineIndex], _currentCodeLineIndex, output, name, address);
+        return address;
+    }
+
+    // Create constant string from int
     uint16_t getOrCreateConstString(ConstStrType constStrType, int16_t input, int& index)
     {
         char output[16];
@@ -1329,7 +1336,7 @@ namespace Compiler
         return address;
     }
 
-    // Create constant string
+    // Create constant sub-string
     uint16_t getOrCreateConstString(ConstStrType constStrType, const std::string& input, int8_t length, uint8_t offset, int& index)
     {
         std::string output;
@@ -1655,7 +1662,8 @@ namespace Compiler
 
         for(;;)
         {
-            if(peek(false) == '*')           {get(false); result = Operators::operatorMUL(result, factor(0));}
+            if(Expression::find("**"))       {            result = Operators::operatorPOW(result, factor(0));}
+            else if(peek(false) == '*')      {get(false); result = Operators::operatorMUL(result, factor(0));}
             else if(peek(false) == '/')      {get(false); result = Operators::operatorDIV(result, factor(0));}
             else if(peek(false) == '%')      {get(false); result = Operators::operatorMOD(result, factor(0));}
             else if(Expression::find("MOD")) {            result = Operators::operatorMOD(result, factor(0));}
@@ -1687,8 +1695,10 @@ namespace Compiler
             else if(Expression::find("OR"))  {result = Operators::operatorOR(result,  expr());}
             else if(Expression::find("LSL")) {result = Operators::operatorLSL(result, expr());}
             else if(Expression::find("LSR")) {result = Operators::operatorLSR(result, expr());}
+            else if(Expression::find("ASR")) {result = Operators::operatorASR(result, expr());}
             else if(Expression::find("<<"))  {result = Operators::operatorLSL(result, expr());}
             else if(Expression::find(">>"))  {result = Operators::operatorLSR(result, expr());}
+            else if(Expression::find("&>>")) {result = Operators::operatorASR(result, expr());}
 
             else return result;
         }
@@ -2562,6 +2572,7 @@ namespace Compiler
         _defDataBytes.clear();
         _defDataWords.clear();
 
+        Linker::resetIncludeFiles();
         Linker::resetInternalSubs();
 
         Memory::initialise();
@@ -2575,8 +2586,7 @@ namespace Compiler
         while(!_whileWendDataStack.empty())   _whileWendDataStack.pop();
         while(!_repeatUntilDataStack.empty()) _repeatUntilDataStack.pop();
 
-        // TODO: maybe refactor this
-        // Allocate string work area, (for string functions like LEFT$, MID$, etc), (variable strings require A0 to FF address space!)
+        // Allocate string work area, (for string functions like LEFT$, MID$, etc)
         Memory::giveFreeRAM(Memory::FitAscending, USER_STR_SIZE + 2, 0x0200, _runtimeStart, _strWorkArea);
     }
 

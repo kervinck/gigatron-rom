@@ -28,6 +28,8 @@ namespace Linker
         {0x0000, 0x0000, "convertGeOp"      , "", true,  false},
         {0x0000, 0x0000, "convertLtOp"      , "", true,  false},
         {0x0000, 0x0000, "convertGtOp"      , "", true,  false},
+        {0x0000, 0x0000, "power16bit"       , "", false, false}, 
+        {0x0000, 0x0000, "power16bitExt"    , "", false, false}, 
         {0x0000, 0x0000, "multiply16bit"    , "", false, false}, 
         {0x0000, 0x0000, "divide16bit"      , "", false, false},
         {0x0000, 0x0000, "rand16bit"        , "", false, false},
@@ -42,6 +44,14 @@ namespace Linker
         {0x0000, 0x0000, "shiftRight6bit"   , "", false, false},
         {0x0000, 0x0000, "shiftRight7bit"   , "", false, false},
         {0x0000, 0x0000, "shiftRight8bit"   , "", false, false},
+        {0x0000, 0x0000, "shiftRightSgn1bit", "", false, false},
+        {0x0000, 0x0000, "shiftRightSgn2bit", "", false, false},
+        {0x0000, 0x0000, "shiftRightSgn3bit", "", false, false},
+        {0x0000, 0x0000, "shiftRightSgn4bit", "", false, false},
+        {0x0000, 0x0000, "shiftRightSgn5bit", "", false, false},
+        {0x0000, 0x0000, "shiftRightSgn6bit", "", false, false},
+        {0x0000, 0x0000, "shiftRightSgn7bit", "", false, false},
+        {0x0000, 0x0000, "shiftRightSgn8bit", "", false, false},
         {0x0000, 0x0000, "getArrayByte"     , "", false, false},
         {0x0000, 0x0000, "setArrayByte"     , "", false, false},
         {0x0000, 0x0000, "getArrayInt16"    , "", false, false},
@@ -470,6 +480,11 @@ RESTART_COLLECTION:
         for(int i=0; i<Compiler::getRuntime().size(); i++) Compiler::getOutput().push_back(Compiler::getRuntime()[i]);
     }
 
+
+    void resetIncludeFiles(void)
+    {
+        _subIncludeFiles.clear();
+    }
 
     void resetInternalSubs(void)
     {

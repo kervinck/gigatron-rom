@@ -128,6 +128,7 @@ namespace Assembler
 
 
     bool getUseOpcodeCALLI(void) {return _useOpcodeCALLI_;}
+    const std::string& getIncludePath(void) {return _includePath;}
     uint16_t getStartAddress(void) {return _startAddress;}
     int getPrevDasmByteCount(void) {return _prevDasmByteCount;}
     int getCurrDasmByteCount(void) {return _currDasmByteCount;}
