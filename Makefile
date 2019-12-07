@@ -43,7 +43,7 @@ dev.rom: Core/* Apps/*/* Makefile interface.json
 		Mandelbrot=Apps/Mandelbrot/Mandelbrot_v1.gcl\
 		Pictures=Apps/Screen/Screen_v1.gcl\
 		Credits=Apps/Credits/Credits_v3.gcl\
-		Loader=Apps/Loader/Loader_v3.gcl\
+		Loader=Apps/Loader/Loader.gcl\
 		Tetronis=Apps/Tetronis/Tetronis.gt1\
 		Bricks=Apps/Bricks/Bricks.gt1\
 		TinyBASIC=Apps/TinyBASIC/TinyBASIC_v3.gcl\
