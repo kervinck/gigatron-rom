@@ -109,12 +109,12 @@
 #  XXX  MSBASIC spurious pi-symbols
 #  XXX  MSBASIC QT_BASIC
 #  DONE Speed up SetMemory by 300% using bursts #126
+#  DONE  Discoverable ROM contents #46
 #  XXX  Add CMPHS/CMPHU instructions to vCPU XXX Still needs testing
 #  XXX  SPI: Boot from any *.GT1 file if SDC/MMC detected
 #  XXX  SPI: Tutorial on formatting FAT32 partitions
 #  XXX  SPI: Simple command line interface (solve "EXE vs COM" dilemma)
 #  XXX  Reduce the Pictures application ROM footprint #120
-#  XXX  Discoverable ROM contents #46
 #  XXX  SPI: Auto-detect banking, 64K and 128K
 #  XXX  Vertical blank interrupt #125
 #  XXX  v6502: Test with Apple1 BASIC
@@ -773,10 +773,10 @@ ld(-20//2)                      #17
 # on top of lookup tables.
 #
 # Variables:
-#       sysArgs[0:1]    ROM pointer (input set by caller)
-#       sysArgs[2:3]    RAM pointer (variable)
-#       sysArgs[4]      State counter (variable)
-#       vLR             vCPU continues here (input set by caller)
+#       sysArgs[0:1]    ROM pointer (in)
+#       sysArgs[2:3]    RAM pointer (changed)
+#       sysArgs[4]      State counter (changed)
+#       vLR             vCPU continues here (in)
 
 label('SYS_Exec_88')
 ld(hi('sys_Exec'),Y)            #15
@@ -878,8 +878,8 @@ ld(-20//2)                      #17
 # Get next entry from ROM file system. Use vAC=0 to get the first entry.
 
 # Variables:
-#       vAC             Start address of current entry (input, output)
-#       sysArgs[0:7]    File name, padded with zeroes
+#       vAC             Start address of current entry (inout)
+#       sysArgs[0:7]    File name, padded with zeroes (out)
 
 label('SYS_ReadRomDir_DEVROM_80')
 ld(hi('sys_ReadRomDir'),Y)      #15
@@ -2212,8 +2212,8 @@ ld(-24//2)                      #21
 # Draw 4 pixels on screen, horizontally next to each other
 #
 # Variables:
-#       sysArgs[0:3]    Pixels
-#       sysArgs[4:5]    Position on screen
+#       sysArgs[0:3]    Pixels (in)
+#       sysArgs[4:5]    Position on screen (in)
 
 label('SYS_Draw4_30')
 ld([sysArgs+4],X)               #15
@@ -2237,10 +2237,10 @@ ld(-30//2)                      #27
 # Draw slice of a character, 8 pixels vertical
 #
 # Variables:
-#       sysArgs[0]      Color 0 (background)
-#       sysArgs[1]      Color 1 (pen)
-#       sysArgs[2]      8 bits, highest bit first (destructive)
-#       sysArgs[4:5]    Position on screen
+#       sysArgs[0]      Color 0 "background" (in)
+#       sysArgs[1]      Color 1 "pen" (in)
+#       sysArgs[2]      8 bits, highest bit first (in, changed)
+#       sysArgs[4:5]    Position on screen (in)
 
 label('SYS_VDrawBits_134')
 ld([sysArgs+4],X)               #15
@@ -2544,8 +2544,8 @@ jmp(Y,'REENTER')                #42
 #       in ROM to be known. Better avoid using this.
 #
 # Variables:
-#       sysArgs[0:2]    Bytes (output)
-#       sysArgs[6:7]    ROM pointer (input)
+#       sysArgs[0:2]    Bytes (out)
+#       sysArgs[6:7]    ROM pointer (in)
 
 label('SYS_Read3_40')
 ld([sysArgs+7],Y)               #15,32
@@ -2591,8 +2591,8 @@ def trampoline3b():
 # Unpack 3 bytes into 4 pixels
 #
 # Variables:
-#       sysArgs[0:2]    Packed bytes (input)
-#       sysArgs[0:3]    Pixels (output)
+#       sysArgs[0:2]    Packed bytes (in)
+#       sysArgs[0:3]    Pixels (out)
 
 label('SYS_Unpack_56')
 ld(soundTable>>8,Y)             #15
@@ -2870,9 +2870,9 @@ ld([vReturn])                   #17
 
 # SYS function for setting 1..256 bytes
 #
-# sysArgs[0]   Copy count (destructive)
-# sysArgs[1]   Copy value
-# sysArgs[2:3] Destination address (destructive)
+# sysArgs[0]   Copy count (in, changed)
+# sysArgs[1]   Copy value (in)
+# sysArgs[2:3] Destination address (in, changed)
 #
 # Sets up to 8 bytes per invocation before restarting itself through vCPU.
 # Doesn't wrap around page boundary. Can run 3 times per 148-cycle time slice.
@@ -2891,9 +2891,9 @@ ld([sysArgs+2],X)               #17
 # pulse width modulation of the vertical sync signal.
 #
 # Variables:
-#       sysArgs[0:1]    Source address               (destructive)
-#       sysArgs[2]      Start bit mask (typically 1) (destructive)
-#       sysArgs[3]      Number of send frames X      (destructive)
+#       sysArgs[0:1]    Source address               (in, changed)
+#       sysArgs[2]      Start bit mask (typically 1) (in, changed)
+#       sysArgs[3]      Number of send frames X      (in, changed)
 #
 # The sending will abort if input data is detected on the serial port.
 # Returns 0 in case of all bits sent, or <>0 in case of abort
@@ -3040,11 +3040,11 @@ ld(soundTable>>8,Y)             #17
 # Send AND receive 1..256 bytes over SPI interface
 
 # Variables:
-#       sysArgs[0]      Page index start, for both send/receive (input, modified)
-#       sysArgs[1]      Memory page for send data (input)
-#       sysArgs[2]      Page index stop (input)
-#       sysArgs[3]      Memory page for receive data (input)
-#       sysArgs[4]      Scratch (modified)
+#       sysArgs[0]      Page index start, for both send/receive (in, changed)
+#       sysArgs[1]      Memory page for send data (in)
+#       sysArgs[2]      Page index stop (in)
+#       sysArgs[3]      Memory page for receive data (in)
+#       sysArgs[4]      Scratch (changed)
 
 label('SYS_SpiExchangeBytes_v4_134')
 ld(hi('sys_SpiExchangeBytes'),Y)#15
