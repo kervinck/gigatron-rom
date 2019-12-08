@@ -45,13 +45,13 @@ void PutChar(int c)
   // Draw bitmap to screen as 5 vertical slices
   for (i=5; i>0; --i, bitmap++) {
     sysArgs[2] = __lookup(0, bitmap);
-    __syscall(203);
+    __syscall(134);
     sysArgs[4]++;
   }
 
   // Clear 6th slice
   sysArgs[2] = 0;
-  __syscall(203);
+  __syscall(134);
 
   // Advance position
   ScreenPos += 6;

@@ -219,15 +219,15 @@ static Tree unary(void) {
 						  t = gettok();
 						  if (t == ICON) {
 							  int n = tsym->u.c.v.i;
-							  if (n < 0 || n > 255) {
-								  error("__syscall argument must be an integer constant in [0, 256)\n");
+							  if ((n & 1) || n < 28 || n > 284) {
+								  error("__syscall argument must be an even constant in [28, 284]\n");
 							  }
-							  p = systree(n);
+							  p = systree((270 - n / 2) & 255);
 							  t = gettok();
 							  expect(')');
 						  } else {
 							  p = postfix(expr(')'));
-							  error("__syscall argument must be an integer constant in [0, 256)\n");
+							  error("__syscall argument must be an even constant in [28, 284]\n");
 						  }
 					  } else {
 						  p = unary();

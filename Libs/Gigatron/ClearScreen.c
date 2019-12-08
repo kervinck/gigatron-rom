@@ -23,7 +23,7 @@ void ClearScreen(void)
   do {
     do {
       *(int*)(sysArgs+4) = p;   // Set screen address
-      __syscall(203);           // == 270-134/2
+      __syscall(134);
       p += 0x800;               // Step 8 pixels down
     } while (p >= 0);
 

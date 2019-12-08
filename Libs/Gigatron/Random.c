@@ -4,7 +4,7 @@
 word Random(void)
 {
   sysFn = SYS_Random_34;
-  __syscall(253); // 270-34/2
+  __syscall(34);
   return vAC;
 }
 

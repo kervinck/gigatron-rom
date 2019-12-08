@@ -13,7 +13,7 @@ void main() {
 	sysArgsw[0] = echo(EXPECT);
 
 	*sysFn = 0;
-	__syscall(0);
+	__syscall(28);
 }
 
 #else
