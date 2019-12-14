@@ -9,7 +9,7 @@ gcl0x
 
 {
         --------------------------
-        ### COMMODORE BASIC ###
+        ### CBM BASIC ###
 
          3839 BYTES FREE
 
@@ -896,9 +896,9 @@ _Newline=*
   }
   [do
     i 22+ j=                    {j looks 11 entries ahead of i}
-    i, \sysArgs7.               {Swap scanlines}
-    j, i.
-    \sysArgs7, j.
+    peek \sysArgs7.             {Swap scanlines}
+    i, j.
+    \sysArgs7, i.
     <i++ <i++                   {Advance to next entry in video table}
     <i, 218^ if<>0loop]         {Until all done}
 
