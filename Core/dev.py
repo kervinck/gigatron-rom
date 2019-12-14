@@ -110,6 +110,7 @@
 #  DONE Speed up SetMemory by 300% using bursts #126
 #  DONE  Discoverable ROM contents #46
 #  DONE Vertical blank interrupt #125
+#  DONE TinyBASIC: Support hexadecimal numbers $....
 #  XXX  Add CMPHS/CMPHU instructions to vCPU XXX Still needs testing
 #  XXX  SPI: Boot from any *.GT1 file if SDC/MMC detected
 #  XXX  SPI: Tutorial on formatting FAT32 partitions

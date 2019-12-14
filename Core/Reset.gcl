@@ -89,13 +89,13 @@ _sysFn= $7c 40!!                {Disable all SPI, set bank to 01}
     EnableCard!                 {Sets /SS0 to 0}
     [def #$40 #0 #0 #0 #0 #$95] {CMD0 Reset}
 
-    _Buffer=$81
+    _Command=$81
 
     { Setup command bytes }
     2 [do i=                    {Lets do 10 bytes for 80 cycles}
       SendOnesToCard!           {Keep MOSI line high by only sending ones}
       i 1- if>0loop]
-    p= \Buffer q=
+    p= \Command q=
     255 q. <q++ q. <q++         {Start with two dummy bytes}
     6 [do i=                    {Copy 6 command bytes to exchange buffer}
       p, <p++                   {Fetch byte and advance read pointer}
@@ -103,8 +103,8 @@ _sysFn= $7c 40!!                {Disable all SPI, set bank to 01}
       i 1- if>0loop]            {Looping}
 
     { Send to SPI device }
-    \Buffer _sysArgs0=          {Begin}
-    8+      _sysArgs2=          {End and overwrite exchange buffer}
+    \Command _sysArgs0=         {Begin}
+    8+       _sysArgs2=         {End and overwrite exchange buffer}
     \SYS_SpiExchangeBytes_v4_134{SYS function}
     _sysFn= 134!!
 

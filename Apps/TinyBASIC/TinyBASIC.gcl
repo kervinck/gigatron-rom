@@ -1449,7 +1449,7 @@ _Line2=*
 
 *=$1ba0 _Buffer=*               {Must be the "line" before user program}
        ##_Buffer                {Initial end pointer, points to startup command}
-       `?$2a:NEW #0                  {'NEW' to start interactive session}
+       `NEW #0                  {'NEW' to start interactive session}
 
 *=$1bc0 _BasicProgram=*         {BASIC program starts here}
 
