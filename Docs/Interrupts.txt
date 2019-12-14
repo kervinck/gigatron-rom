@@ -40,7 +40,7 @@ Then return from the handler with:
         LDWI $400               ;RTI $xx
         LUP $xx
 
-This will switch back to the interrupted interpreter. It has to 
-wait for the next timeslice to do this.
+This will switch back to the interrupted interpreter. It takes
+effect in the next timeslice. The return handler waits for that.
 
 -- End of document --
