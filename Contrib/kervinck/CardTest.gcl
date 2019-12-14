@@ -407,14 +407,14 @@ $500 Address=                   {512 bytes memory for one sector}
 { EnableCard }
 [def
   \SYS_ExpanderControl_v4_40    {SYS function}
-  _sysFn= $8078 40!             {Enable SPI0, keep MOSI high, bank=1}
+  _sysFn= $8078 40!!            {Enable SPI0, keep MOSI high, bank=1}
   ret
 ] EnableCard=
 
 { DisableCard }
 [def
   \SYS_ExpanderControl_v4_40    {SYS function}
-  _sysFn= $807c 40!             {Disable SPI0, keep MOSI high, bank=1}
+  _sysFn= $807c 40!!            {Disable SPI0, keep MOSI high, bank=1}
   ret
 ] DisableCard=
 
@@ -424,7 +424,7 @@ $500 Address=                   {512 bytes memory for one sector}
   \sysArgs6 _sysArgs0=          {Begin}
   1+        _sysArgs2=          {End}
   \SYS_SpiExchangeBytes_v4_134  {SYS function}
-  _sysFn= 134!                  {Exchanges a single byte}
+  _sysFn= 134!!                 {Exchanges a single byte}
   \sysArgs6,                    {Reply byte}
   ret
 ] SendOnesToCard=
@@ -475,7 +475,7 @@ $500 Address=                   {512 bytes memory for one sector}
   Buffer  _sysArgs0=            {Begin}
   8+      _sysArgs2=            {End and overwrite exchange buffer}
   \SYS_SpiExchangeBytes_v4_134  {SYS function}
-  _sysFn= 134!
+  _sysFn= 134!!
 
   pop ret
 ] SendCommandToCard=
@@ -1002,11 +1002,11 @@ AddOffset=
 
   \SYS_LSRW1_48 _sysFn=         {Prepare 1-bit right shift}
   p 17+ peek                    {Select year, origin is 1980}
-  48! 20- [if<0 100+]
+  48!! 20- [if<0 100+]
   PrintTwoDecimals!
 
   \SYS_LSRW5_50 _sysFn=         {Prepare 5-bit shift right}
-  p 16+ deek 50! 15&            {Select month 1-12}
+  p 16+ deek 50!! 15&           {Select month 1-12}
   PrintTwoDecimals!
 
   p 16+ peek 31&                {Select day 1-31}
@@ -1095,7 +1095,7 @@ AddOffset=
   \sysArgs2.                    {Set all-zero output pattern}
   [do
     \SYS_VDrawBits_134          {SYS call to draw 8 pixels vertically}
-    _sysFn= 134!
+    _sysFn= 134!!
     <_sysArgs4++                {Step 1 pixel right}
     \sysArgs4, 160^             {Test for end of line}
     if<>0loop]
@@ -1135,7 +1135,7 @@ AddOffset=
   \SYS_VDrawBits_134 _sysFn=    {Prepare SYS calls}
   5 [do i=                      {Loop to draw 5 vertical slices of 8 pixels}
     j 0? \sysArgs2.             {Get byte from ROM using `LUP 0' instruction}
-    134!                        {Invoke SYS function to draw 8 vertical pixels}
+    134!!                       {Invoke SYS function to draw 8 vertical pixels}
     <j++ <_sysArgs4++           {Advance to next slice in ROM and on screen}
     i 1- if>0loop]              {Looping}
   ret
