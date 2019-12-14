@@ -15,7 +15,7 @@ vIRQ
 Vertical blank interrupt triggering each time [frameCount] wraps
 around to 0 (and the interrupt vector is non-zero).
 
-Interrupt vector: $1f7.$1f8
+Interrupt vector: $1f6.$1f7
 
 Minimal context of vPC and vAC will be stored at $fc..$ff. The
 mechanism won't save any further context (vLR, vSP, sysArgs, ...)!
