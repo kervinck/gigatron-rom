@@ -37,8 +37,8 @@ dev.rom: Core/* Apps/*/* Makefile interface.json
 		gigatronRaw=Apps/Screen/gigatron.rgb\
 		Snake=Apps/Snake/Snake_v3.gcl\
 		SYS_Racer_v1.py\
-		SYS_Loader.py\
 		zippedRacerHorizon=Apps/Racer/Horizon-256x16.rgb\
+		SYS_Loader.py\
 		Racer=Apps/Racer/Racer_v2.gcl\
 		Mandelbrot=Apps/Mandelbrot/Mandelbrot_v1.gcl\
 		Pictures=Apps/Screen/Screen_v1.gcl\
@@ -46,7 +46,7 @@ dev.rom: Core/* Apps/*/* Makefile interface.json
 		Loader=Apps/Loader/Loader.gcl\
 		Tetronis=Apps/Tetronis/Tetronis.gt1\
 		Bricks=Apps/Bricks/Bricks.gt1\
-		TinyBASIC=Apps/TinyBASIC/TinyBASIC_v3.gcl\
+		TinyBASIC=Apps/TinyBASIC/TinyBASIC.gcl\
 		TicTac=Apps/TicTac/TicTac.gcl\
 		TicTacGtb=Apps/TicTac/TicTac_v2.gtb\
 		WozMon=Apps/WozMon/WozMon_v2.gcl\

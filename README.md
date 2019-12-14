@@ -99,7 +99,7 @@ Address   Name          Description
 0002      (channel)     Sound channel update on current scanline
 0003      (sample)      Accumulator for synthesizing next sound sample
 0004      (reserved)    Reserved (Video extensions? MMU? v8808? ...?)
-0005      (vCPUselect)  Entry page of active interpreter (offset fixed to 255)
+0005      (vCpuSelect)  Entry page of active interpreter (offset fixed to 255)
 0006-0008 entropy       Randomness from SRAM boot and input, updated each frame
 0009      videoY        Counts up from 0 to 238 in steps of 2 (odd in vBlank)
 000a      (frameX)      Starting byte within page for pixel burst
