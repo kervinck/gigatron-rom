@@ -7,9 +7,6 @@
 
 gcl0x
 
-\SYS_ExpanderControl_v4_40      {SYS function}
-_sysFn= $7c 40!!                {Disable all SPI, set bank to 01}
-
 { Setup video }
 [def
   { Setup video indirection table }
@@ -60,12 +57,24 @@ _sysFn= $7c 40!!                {Disable all SPI, set bank to 01}
 +-----------------------------------------------------------------------}
 *=$0300
 
-{ CheckForCard }
+{ CheckExpander }
 [def
+
+  0 $7c.                        {Setup ctrl detection}
+
+  \SYS_ExpanderControl_v4_40    {SYS function}
+  _sysFn= $7c 40!!              {Disable SPI0, keep MOSI high, bank=1}
+
+  $7c, [if<>0 ret]              {Detect systems, read "emulators", that
+                                 just wrote to RAM.}
+
+  { XXX TODO Check for 128K config }
+
   { Try putting card in SPI mode and get a positive response }
   push
+  16 [do
+    j=
 
-  [do
     { Reset the SD Memory Card and put in SPI mode }
 
     {
@@ -86,29 +95,25 @@ _sysFn= $7c 40!!                {Disable all SPI, set bank to 01}
     |     mode if executed when the CS line is low."""
     }
 
-    EnableCard!                 {Sets /SS0 to 0}
-    [def #$40 #0 #0 #0 #0 #$95] {CMD0 Reset}
-
-    _Command=$81
+    { EnableCard }
+    \SYS_ExpanderControl_v4_40  {SYS function}
+    _sysFn= $8078 40!!          {Enable SPI0, keep MOSI high, bank=1}
 
     { Setup command bytes }
-    2 [do i=                    {Lets do 10 bytes for 80 cycles}
-      SendOnesToCard!           {Keep MOSI line high by only sending ones}
-      i 1- if>0loop]
+    _Command=$81
+    [def #$ff #$ff              {Start with two dummy bytes}
+         #$40 #0 #0 #0 #0 #$95] {CMD0: GO_IDLE_STATE}
     p= \Command q=
-    255 q. <q++ q. <q++         {Start with two dummy bytes}
-    6 [do i=                    {Copy 6 command bytes to exchange buffer}
+    8 [do i=                    {Copy command bytes to exchange buffer}
       p, <p++                   {Fetch byte and advance read pointer}
       q. <q++                   {Store byte and advance write pointer}
       i 1- if>0loop]            {Looping}
 
-    { Send to SPI device }
+    { Send to SPI0 device }
     \Command _sysArgs0=         {Begin}
     8+       _sysArgs2=         {End and overwrite exchange buffer}
     \SYS_SpiExchangeBytes_v4_134{SYS function}
     _sysFn= 134!!
-
-    { WaitForCardReply }
 
     {
     |  """To receive this message, your program should continuously toggle
@@ -116,39 +121,37 @@ _sysFn= $7c 40!!                {Disable all SPI, set bank to 01}
     |     the MOSI line high and the CS line low. Your program can detect the
     |     message, because every message begins with a 0 bit, and when the
     |     SD card sends no data it keeps the MISO line high."""
-    |
-    |  """Note that the response to each command is sent by the card a few
-    |     SD CLK cycles later. If the expected response is not received within
-    |     16 clock cycles after sending the reset command, the reset command
-    |     has to be sent again."""
     }
-    8 [do i=                    {Poll for up to 8 reply bytes}
+
+    { WaitForCardReply }
+    16 [do i=                   {Poll for at least 8 reply bytes}
       SendOnesToCard!           {Keep MOSI line high by only sending ones}
       128&                      {Note: communication is byte-aligned}
       if<>0                     {Break out when valid message detected}
         i 1- if>0loop]          {Or when loop counter exhausted}
 
-    {  DisableCard }
+    {
+    |  """Note that the response to each command is sent by the card a few
+    |     SD CLK cycles later. If the expected response is not received within
+    |     16 clock cycles after sending the reset command, the reset command
+    |     has to be sent again."""
+    }
+
+    { DisableCard }
     \SYS_ExpanderControl_v4_40  {SYS function}
     _sysFn= $807c 40!!          {Disable SPI0, keep MOSI high, bank=1}
 
-    \sysArgs6,                  {Reply value}
+    \sysArgs6, if<>0            {Break on zeroes from pull-down R1}
 
-    if<>0                       {Only retry if no zeroes}
-    1^ if<>0                    {Only 1 means success}
+    1^ [if=0                    {Only 1 means success}
+      \CardBoot _sysArgs0=      {Load CardBoot from ROM and execute}
+      $200 _vLR=
+      \SYS_Exec_88 _sysFn= 88!!]
 
-      \frameCount, 30-
-      if<0loop]                 {No more than 0.5 second}
+    j 1- if>0loop]              {Retry}
 
     pop ret
-] CheckForCard=
-
-{ EnableCard }
-[def
-  \SYS_ExpanderControl_v4_40    {SYS function}
-  _sysFn= $8078 40!             {Enable SPI0, keep MOSI high, bank=1}
-  ret
-] EnableCard=
+] CheckExpander=
 
 { SendOnesToCard }
 [def
@@ -178,7 +181,7 @@ _sysFn= $7c 40!!                {Disable all SPI, set bank to 01}
   Pos \sysArgs4:                {Position of character}
   6+ Pos=                       {Advance position by 6 pixels for next call}
   5 [do i=                      {Loop to draw 5 vertical slices of 8 pixels}
-    j 0? \sysArgs2.             {Get byte from ROM using `LUP 0' instruction}
+    j 0?? \sysArgs2.            {Get byte from ROM using `LUP 0' instruction}
     134!!                       {Invoke SYS function to draw 8 vertical pixels}
     <j++ <\sysArgs4++           {Advance to next slice in ROM and on screen}
     i 1- if>0loop]              {Looping}
@@ -193,8 +196,8 @@ _sysFn= $7c 40!!                {Disable all SPI, set bank to 01}
   <i, i=                        {Extract note}
   0 p. <p++                     {.wavA}
   3 p. <p++                     {.wavX: 0=Metallic/Noise, 1=Triangle, 2=Pulse, 3=Sawtooth}
-  \notesTable i+ 0? p. <p++     {.keyL}
-  \notesTable i+ 1? p. <p++     {.keyH}
+  \notesTable i+ 0?? p. <p++    {.keyL}
+  \notesTable i+ 1?? p. <p++    {.keyH}
   p. <p++                       {.oscL}
   p.                            {.oscH}
   ret
@@ -221,15 +224,13 @@ $814 Pos= PrintStartupMessage!  {Returns 0}
 [if=0 \ledState_v2. \ledTimer.] {For continuity only restart when paused}
 9 \ledTempo.                    {6.0 Hz ( = 60/(9+1)), was 5.5 Hz}
 
-{
-CheckForCard!                   {Memory card}
-}
+CheckExpander!                  {Memory card}
 
 \SYS_SetMode_v2_80 \sysFn:      {!!! Not in ROM v1 !!!}
 1 80!                           {Mode 1 -> "ABC-"}
 
 { Load and start main program }
-\Main \sysArgs0: $200 \vLR: \SYS_Exec_88 \sysFn: 88!
+\Main _sysArgs0= $200 _vLR= \SYS_Exec_88 _sysFn= 88!!
 
 {-----------------------------------------------------------------------+
 |                                                                       |
