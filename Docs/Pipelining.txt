@@ -174,9 +174,19 @@ again by placing two branch instructions immediately in sequence:
         label:  ld  [B]
         done:   st  [V]
 
-There we are: 5 cycles along each path!
+There we are: 5 cycles along each path! Figuring out this one is
+left as an exercise to the reader.
 
-Figuring this one out is left as an exercise to the reader.
+Note: This idiom has become so common in the Gigatron kernel that
+we don't bother to define labels for it any more. In the source
+code you therefore see something like this instead:
+
+                ld  [C]
+                beq *+3
+                bra *+3
+                ld  [A]
+                ld  [B]
+                st  [V]
 
 Dummy instructions
 ------------------
