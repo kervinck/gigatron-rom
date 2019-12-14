@@ -50,7 +50,7 @@ dev.rom: Core/* Apps/*/* Makefile interface.json
 		TicTac=Apps/TicTac/TicTac.gcl\
 		TicTacGtb=Apps/TicTac/TicTac_v2.gtb\
 		WozMon=Apps/WozMon/WozMon_v2.gcl\
-		Apple1=Apps/Apple1/Apple1.gt1\
+		Apple1=Apps/Apple-1/Apple1.gt1\
 		MSBASIC=Apps/MSBASIC/MSBASIC.gt1\
 		Egg=Apps/Horizon/Horizon.gt1\
 		Main=Apps/MainMenu/MainMenu.gcl\
@@ -118,7 +118,7 @@ ROMv4.rom: Core/* Apps/*/* Makefile interface.json
 		TinyBASIC=Apps/TinyBASIC/TinyBASIC_v3.gcl\
 		TicTac=Apps/TicTac/TicTac_v2.gtb\
 		WozMon=Apps/WozMon/WozMon_v2.gt1\
-		Egg=Apps/Apple1/Apple1_v1.gt1\
+		Egg=Apps/Apple-1/Apple1_v1.gt1\
 		Main=Apps/MainMenu/MainMenu_v4.gcl\
 		Reset=Core/Reset_v4.gcl
 
