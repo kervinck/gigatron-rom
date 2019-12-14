@@ -31,6 +31,7 @@
   2019-07-06 (marcelk) Update GCL notation (no changes to GT1 file)
   2019-07-07 (marcelk) PrintChar accepts arrow chars; Fix indent issue #40
   2019-07-08 (marcelk) Reenable video on input after MODE 1975; Tiny BASIC v3
+  2019-12-14 (marcelk) Accept hexadecimal numbers $....; Tiny BASIC DEV
 
   Formal grammar:
 
@@ -60,10 +61,11 @@
                |  'SAVE'
   Expression  ::= [+-]? Term ([+-] Term)*
   Term        ::= Factor ([*/%] Factor)*
-  Factor      ::= Variable | Number
+  Factor      ::= Variable | Number | Hexnum
                |  (Variable|'PEEK'|'RND'|'USR')? '(' Expression ')'
   RelOp       ::= '=' | '<' | '>' | '<=' | '>=' | '<>'
   Number      ::= [0-9]+
+  Hexnum      ::= $[0-9A-F]+
   Variable    ::= [A-Z] | '@'
   String      ::= '"' ([#x20-#x21] | [#x23-#x7E])* '"'
   Character   ::= [#x20-#x7E]
@@ -165,7 +167,6 @@
     "" or """   For printing the quote character itself (use: PUT 34)
     Overflow    Errors on overflow for + - and *
     WAIT/PAUSE  -> Make a loop subroutine
-    $xx         Hexadecimal numbers
     LIST <n>    List one line
     a-z A-Z     As different variables
     ><          For unequal
@@ -238,10 +239,15 @@ $01df deek Pos=                 {Bottom character row in screen memory}
 [def
   push
 
-  Number!                       {Test for numeric constant}
+  Number!                       {Test for decimal constant}
   [if>=0
     Spaces!
     pop ret]                    {Result already in Value}
+
+  Active, $24^ [if=0            {Test for hexadecimal constant $....}
+    &_Hexnum call
+    Spaces!
+    pop ret]
 
   Keyword! `( #0
   [if<>0
@@ -257,8 +263,8 @@ $01df deek Pos=                 {Bottom character row in screen memory}
   Keyword! `rnd( #0
   [if<>0
     Expression!
-    \SYS_Random_34 \sysFn:      {Prepare SYS call}
-    [do 34! if<0loop]           {Get positive random number}
+    \SYS_Random_34 _sysFn=      {Prepare SYS call}
+    [do 34!! if<0loop]          {Get positive random number}
     Divide!                     {Modulo expression}
     i Value=
   else
@@ -313,7 +319,7 @@ $01df deek Pos=                 {Bottom character row in screen memory}
 ] TestBreak=
 
 {-----------------------------------------------------------------------+
-|}>\vLR++ ret{          RAM page 3                                      |
+|} >\vLR++ ret {        RAM page 3                                      |
 +-----------------------------------------------------------------------}
 *=$0300
 
@@ -340,19 +346,19 @@ $01df deek Pos=                 {Bottom character row in screen memory}
       k+ k=                     {Add to page address to reach bitmap data}
 
       \SYS_VDrawBits_134        {Prepare SYS calls}
-      \sysFn:
-      \sysArgs6; \sysArgs0:     {Apply caller-defined colors}
+      _sysFn=
+      _sysArgs6 _sysArgs0=      {Apply caller-defined colors}
       Pos \sysArgs4:            {Position for character}
       %-2=                      {Temporarily park return value on the stack}
       6+ Pos=                   {Advance position by 6 pixels}
 
       5 [do i=                  {Draw 5 vertical slices}
-        k 0? \sysArgs2.         {Get slice from ROM}
-        134!                    {Invoke SYS function to draw pixels}
+        k 0?? \sysArgs2.        {Get slice from ROM}
+        134!!                   {Invoke SYS function to draw pixels}
         <k++ <\sysArgs4++       {Advance to next slice}
         i 1- if>0loop]          {Looping}
 
-      \sysArgs2. 134!           {Render 6th slice}
+      \sysArgs2. 134!!          {Render 6th slice}
 
       %-2]                      {Return effective position}
   ret
@@ -369,7 +375,7 @@ $01df deek Pos=                 {Bottom character row in screen memory}
   { completely. Better reactivate it before waiting for new input.   }
   \SYS_SetMode_v2_80 _sysFn=
   \romType, \romTypeValue_ROMv4-
-  [if>=0 255- 80!]              {Any value <0 will restore signal, except -177.}
+  [if>=0 255- 80!!]             {Any value <0 will restore signal, except -177.}
                                 {But -177+255+$38 isn't valid romType content,}
                                 {so that's just fine.}
 
@@ -410,7 +416,7 @@ $01df deek Pos=                 {Bottom character row in screen memory}
 ]
 
 {-----------------------------------------------------------------------+
-|}>\vLR++ ret{          RAM page 4                                      |
+|} >\vLR++ ret {        RAM page 4                                      |
 +-----------------------------------------------------------------------}
 *=$0400
 GetLine=
@@ -470,8 +476,8 @@ GetLine=
     Address.                    {Write byte to memory}
     EndOfLine!]
 
-  Keyword! `rem #0
-  [if=0 Keyword! `' #0]
+  Keyword! `' #0
+  [if=0 Keyword! `rem #0]
   [if<>0
     [do
       Active, if<>0             {Find end of line}
@@ -481,11 +487,16 @@ GetLine=
   Keyword! `line #0
   [if<>0 &_Line call]
 
+  Keyword! `end #0
+  [if<>0 Prompt! #0]
+
   &_Statements2 call            {Continue in another page}
 ] Statements=
 
+>\vLR++ >\vLR++ ret             {Hop over next page}
+
 {-----------------------------------------------------------------------+
-|}>\vLR++ >\vLR++ ret{  RAM page 5                                      |
+|                       RAM page 5                                      |
 +-----------------------------------------------------------------------}
 *=$0500
 
@@ -549,11 +560,6 @@ _Statements2=*
     PrintChar!
     EndOfLine!]
 
-  Keyword! `print #0
-  [if=0 Keyword! `? #0]
-  [if<>0
-    &_Print call]               {PRINT}
-
   Keyword! `mode #0
   [if<>0
     Expression!                 {Degrade gracefully in ROM v1}
@@ -561,17 +567,27 @@ _Statements2=*
     \romTypeValue_ROMv2-
     [if>=0
       \SYS_SetMode_v2_80        {Available from ROM v2}
-      \sysFn: Value 80!]
+      _sysFn= Value 80!!]
     EndOfLine!]
 
-  Keyword! `save #0
-  [if<>0
-    \romType, \romTypeValue_ROMv3-
-    [if<0 ValueError!]          {Error on ROM before v3}
-    &_Save call
-  ]
+  &_Statements3 call
 
-  &_Statements3 call            {INPUT, NEW, CLS, LIST, RUN, END, LET}
+_Hexnum=*
+  0 [do
+    Value=                      {Update partial result}
+    4<< i=                      {Multiply by 16 before adding hex digit}
+    <Active++ Active,           {Grab next character}
+    $30- {'0'} if>=0            {Bail out if out of range}
+    10-  {'9'} [if<0            {Decimal digit}
+      10+                       {Map in 0..9 range}
+      i+ loop]                  {Add it to value}
+    $df&                        {Ignore case}
+    7- {'A'} if>=0              {Skip :;<=>?@ and Z[\]^_`}
+    6- {'F'} [if<0              {A..F or a..f}
+      16+                       {Map in 10..15 range}
+      i+ loop]                  {Add it to value}
+  ]                             {Silently accepts bare $ as 0}
+  ret
 
 {-----------------------------------------------------------------------+
 |                       RAM page 6                                      |
@@ -661,11 +677,11 @@ $353f \sysArgs6:                {Pen color blue/purple, background color white}
 &_Newline Newline= call         {Scroll and clear last line}
 
 { Welcome message }
-PrintS! `***`Tiny`BASIC`v3 #0
+PrintS! `***`Tiny`BASIC`DEV #0
 Newline!
 
 { Hop to next page }
-$08a0 \vLR: ret
+$08a0 _vLR= ret
 
 _GetLine2=*
 
@@ -718,7 +734,7 @@ _GetLine2=*
 ] {GotoValue=}
 
 {-----------------------------------------------------------------------+
-|}>\vLR++ ret{          RAM page 9                                      |
+|} >\vLR++ ret {        RAM page 9                                      |
 +-----------------------------------------------------------------------}
 *=$09a0
 GotoValue=
@@ -755,7 +771,7 @@ GotoValue=
 ] SyntaxError=
 
 {-----------------------------------------------------------------------+
-|}>\vLR++ ret{          RAM page 10                                     |
+|} >\vLR++ ret {        RAM page 10                                     |
 +-----------------------------------------------------------------------}
 *=$0aa0
 
@@ -796,7 +812,7 @@ GotoValue=
 ] {Number=}
 
 {-----------------------------------------------------------------------+
-|}>\vLR++ ret{          RAM page 11                                     |
+|} >\vLR++ ret {        RAM page 11                                     |
 +-----------------------------------------------------------------------}
 *=$0ba0
 Number=
@@ -832,7 +848,7 @@ Number=
 ] {Clear=}
 
 {-----------------------------------------------------------------------+
-|}>\vLR++ ret{          RAM page 12                                     |
+|} >\vLR++ ret {        RAM page 12                                     |
 +-----------------------------------------------------------------------}
 *=$0ca0
 Clear=
@@ -876,7 +892,7 @@ Clear=
 ] ValueError=
 
 {-----------------------------------------------------------------------+
-|}>\vLR++ ret{          RAM page 13                                     |
+|} >\vLR++ ret {        RAM page 13                                     |
 +-----------------------------------------------------------------------}
 *=$0da0
 
@@ -906,10 +922,21 @@ Clear=
   pop ret
 ] Term=
 
-{-----------------------------------------------------------------------+
-|}>\vLR++ ret{          RAM page 14                                     |
-+-----------------------------------------------------------------------}
+>\vLR++ ret                     {Hop to next page}
 
+_Statements5=*                  {Borrow a few bytes here for RUN}
+
+  Keyword! `run #0
+  [if<>0
+    Clear!                      {Clear variables}
+    deek Value=                 {First program line, if any}
+    GotoValue!]                 {Also tests for break}
+
+  &_Statements6 call
+
+{-----------------------------------------------------------------------+
+|                       RAM page 14                                     |
++-----------------------------------------------------------------------}
 *=$0ea0
 
 { Calculate vAC / Value, result in vAC, remainder in i }
@@ -935,7 +962,7 @@ Clear=
 ] {Divide=}
 
 {-----------------------------------------------------------------------+
-|}>\vLR++ ret{          RAM page 15                                     |
+|} >\vLR++ ret {        RAM page 15                                     |
 +-----------------------------------------------------------------------}
 *=$0fa0
 Divide=
@@ -974,7 +1001,7 @@ Divide=
 ] Spaces=
 
 {-----------------------------------------------------------------------+
-|}>\vLR++ ret{          RAM page 16                                     |
+|} >\vLR++ ret {        RAM page 16                                     |
 +-----------------------------------------------------------------------}
 *=$10a0
 
@@ -1016,7 +1043,7 @@ Divide=
 ] {List=}
 
 {-----------------------------------------------------------------------+
-|}>\vLR++ ret{          RAM page 17                                     |
+|} >\vLR++ ret {        RAM page 17                                     |
 +-----------------------------------------------------------------------}
 *=$11a0
 List=
@@ -1061,7 +1088,7 @@ List=
 2+ {Active=}                    {BASIC command(s) to run at startup}
 
 {-----------------------------------------------------------------------+
-|}>\vLR++ ret{          RAM page 18                                     |
+|} >\vLR++ ret {        RAM page 18                                     |
 +-----------------------------------------------------------------------}
 *=$12a0
 Active=
@@ -1154,11 +1181,15 @@ _Print=*
 
 _Statements3=*
 
+  Keyword! `? #0
+  [if=0 Keyword! `print #0]
+  [if<>0 &_Print call]          {PRINT}
+
   Keyword! `input #0
   [if<>0
     [do
       Active,
-      [if<>0 PrintChar!]        {Be nice and show variable name in prompt}
+      PrintChar!                {Be nice and show variable name in prompt}
       Variable!                 {Parse variable name}
       Address=                  {Park here}
       Spaces!
@@ -1176,13 +1207,6 @@ _Statements3=*
       Keyword! `, #0            {','}
       if<>0loop]                {Next variable}
     EndOfLine!]
-
-  Keyword! `new #0
-  [if<>0
-    Clear!                      {Clear variables}
-    End=                        {Clear program}
-    List!                       {To print number of free bytes}
-    Prompt! #0]                 {Return to prompt}
 
   &_Statements4 call
 
@@ -1209,14 +1233,11 @@ _Statements4=*
   Keyword! `list #0
   [if<>0 List! EndOfLine!]
 
-  Keyword! `run #0
+  Keyword! `save #0
   [if<>0
-    Clear!                      {Clear variables}
-    deek Value=                 {First program line, if any}
-    GotoValue!]                 {Also tests for break}
-
-  Keyword! `end #0
-  [if<>0 Prompt! #0]
+    \romType, \romTypeValue_ROMv3-
+    [if<0 ValueError!]          {Error on ROM before v3}
+    &_Save call]
 
   &_Statements5 call
 
@@ -1225,7 +1246,14 @@ _Statements4=*
 +-----------------------------------------------------------------------}
 *=$16a0
 
-_Statements5=*
+_Statements6=*
+
+  Keyword! `new #0
+  [if<>0
+    Clear!                      {Clear variables}
+    End=                        {Clear program}
+    List!                       {To print number of free bytes}
+    Prompt! #0]                 {Return to prompt}
 
   Keyword! `let #0              {LET is optional}
   Variable!
@@ -1276,7 +1304,7 @@ _Save=*
       \sysArgs0:                {Prepare SYS call}
       1 \sysArgs2.              {First bit}
       \SYS_SendSerial1_v3_80
-      \sysFn: 80!               {SYS call to send bits to serial port}
+      _sysFn= 80!!              {SYS call to send bits to serial port}
       [if<>0                    {'BreakError' would be better}
         3 \serialRaw.           {Not a great hack...}
         TestBreak!]             {...to initiate a break error}
@@ -1306,7 +1334,7 @@ _Newline=*
 {Newline}
 
   { Prepare for printing on new line }
-  \SYS_VDrawBits_134 \sysFn:    {Prepare SYS call}
+  \SYS_VDrawBits_134 _sysFn=    {Prepare SYS call}
 
   0 <Pos.                       {Go back to start of line}
   \sysArgs2.                    {All-zero output pattern}
@@ -1319,21 +1347,22 @@ _Newline=*
 
   Pos \sysArgs4:                {sysArgs[4:5] is position on screen}
   [do
-    134! <\sysArgs4++           {SYS call and advance to next slice}
-    134! <\sysArgs4++           {A bit unrolling for speed}
+    134!! <\sysArgs4++          {SYS call and advance to next slice}
+    134!! <\sysArgs4++          {A bit unrolling for speed}
     \sysArgs4, 160^             {Test for end of screen}
     if<>0loop]
 
-  $01ee i=                      {Pointer to last entry in video table}
+  \videoTable i=                {videoTable}
   255| deek                     {Gets [$100] aka Y[0] in vAC high byte}
   Pos- \vACH,                   {Compare with Y position}
   [if=0
-    do                          {Scroll 8 lines up by modifying videoTable}
-      i, 120- [if<0 128^
-               else 8^]
-               i.               {Rotate by 8 in 8..127 range}
-      i 2- i=                   {Previous entry in video table}
-      $fe^ if<>0loop]           {Until all done}
+    do
+      i 16+ _sysArgs0=          {sysArgs0 looks 8 entries ahead of i}
+      peek \sysArgs2.           {Swap scanlines}
+      i,   _sysArgs0.
+      \sysArgs2,   i.
+      <i++ <i++                 {Advance to next entry in video table}
+      <i, 224^ if<>0loop]       {Until all done}
 
   <Pos++ <Pos++                 {Indent by 2 pixels}
   ret
@@ -1420,7 +1449,7 @@ _Line2=*
 
 *=$1ba0 _Buffer=*               {Must be the "line" before user program}
        ##_Buffer                {Initial end pointer, points to startup command}
-       `NEW #0                  {'NEW' to start interactive session}
+       `?$2a:NEW #0                  {'NEW' to start interactive session}
 
 *=$1bc0 _BasicProgram=*         {BASIC program starts here}
 
