@@ -105,33 +105,32 @@
 #  DONE Replace egg with something new
 #  DONE Split interface.json and interface-dev.json
 #  DONE MSBASIC
-#  DONE MSBASIC QT_BASIC
 #  XXX  MSBASIC spurious pi-symbols
 #  DONE Speed up SetMemory by 300% using bursts #126
-#  DONE  Discoverable ROM contents #46
+#  DONE Discoverable ROM contents #46
 #  DONE Vertical blank interrupt #125
 #  DONE TinyBASIC: Support hexadecimal numbers $....
 #  DONE Expander: Auto-detect banking, 64K and 128K
+#  DONE Expander: Boot from *.GT1 file if SDC/MMC detected
 #  XXX  Add CMPHS/CMPHU instructions to vCPU XXX Still needs testing
-#  XXX  SPI: Boot from any *.GT1 file if SDC/MMC detected
-#  XXX  SPI: Tutorial on formatting FAT32 partitions
 #  XXX  SPI: Simple command line interface (solve "EXE vs COM" dilemma)
-#  XXX  v6502: Test with Apple1 BASIC
-#  XXX  v6502: Memory mapped PIA emulation using interrupt (D010-D013)
-#  XXX  v6502: add 65c02 opcodes? http://nparker.llx.com/a2/opcodes.html
+#  XXX  SPI: Tutorial on formatting FAT32 partitions
+#  XXX  Apple-1: Memory mapped PIA emulation using interrupt (D010-D013)
 #  XXX  Apple-1: Include A1 BASIC
 #  XXX  Apple-1: Original 2514 font? Suppress lower case?
 #  XXX  Apple-1: Include assembler
 #  XXX  Apple-1: Intercept cassette interface
 #  XXX  Racer: Make noise when crashing
-#  XXX  Racer: Control speed with up/down as well
+#  XXX  Racer: Control speed with up/down (better for TypeC controllers)
 #  XXX  Reduce the Pictures application ROM footprint #120
 #  XXX  Main: Some startup logo as intro? Rotating 3D letters?
 #  XXX  Main: Better startup chime
 #  XXX  Faster SYS_Exec_88, with start address (GT1)?
-#  XXX  Let SYS_Exec_88 clear channelMask when loading into live variables
+#  XXX  Let SYS_Exec_88 clear channelMask when loading into live channels
 #  XXX  ROM functions: SYS_PrintString, control codes, SYS_DrawChar, SYS_Newline
 #  XXX  Babelfish freeze at power-on?
+#  XXX  Loader: make noise while loading (only channel 1 is safe to use)
+#  XXX  v6502: add 65c02 opcodes? http://nparker.llx.com/a2/opcodes.html
 #
 #  Ideas for ROM v6+
 #  XXX  Pucrunch (well documented) or eximozer 3.0.2 (better compression)
@@ -353,8 +352,6 @@ vIRQ_DEVROM     = 0x01f6
 ctrlBits        = 0x01f8
 videoTop_DEVROM = 0x01f9 # Number of skip lines
 
-#resetTimer     = 0x01f8 XXX Future. Also change Easter Egg detection in main
-
 # Highest bytes are for sound channel variables
 wavA = 250      # Waveform modulation with `adda'
 wavX = 251      # Waveform modulation with `xora'
@@ -498,7 +495,7 @@ ld(syncBits^hSync,OUT)          # Prepare XOUT update, hSync goes down, RGB to b
 ld(syncBits,OUT)                # hSync goes up, updating XOUT
 
 # Setup I/O and RAM expander
-ctrl(0b01111100)                # SCLK=0; Disable SPI slaves; Bank=01; Enable RAM
+ctrl(0b01111100)                # Disable SPI slaves, enable RAM, bank 1
 #      ^^^^^^^^
 #      |||||||`-- SCLK
 #      ||||||`--- Not connected
@@ -2870,7 +2867,16 @@ xora(videoYline0)               #17 First line of vertical blank
 label('SYS_ExpanderControl_v4_40')
 ld(hi('sys_ExpanderControl'),Y) #15
 jmp(Y,'sys_ExpanderControl')    #16
-ld([vAC])                       #17
+ld(0b11111100)                  #17 Safety (SCLK=0)
+#    ^^^^^^^^
+#    |||||||`-- SCLK
+#    ||||||`--- Not connected
+#    |||||`---- /SS0
+#    ||||`----- /SS1
+#    |||`------ /SS2
+#    ||`------- /SS3
+#    |`-------- B0
+#    `--------- B1
 
 #-----------------------------------------------------------------------
 # Extension SYS_Run6502_v4_80
@@ -2909,7 +2915,7 @@ ld([vAC])                       #17
 # For info:
 #       sysArgs[0:1]    Address Register, free to clobber
 #       sysArgs[2]      Instruction Register, free to clobber
-#       sysArgs[3:5]    Flags, don't clobber
+#       sysArgs[3:5]    Flags, don't touch
 #
 # Implementation details::
 #
@@ -3594,33 +3600,23 @@ ld(-62//2)                      #59
 
 label('sys_ExpanderControl')
 
-ld([vAC])                       #18
-anda(0b11111100)                #19 Safety (SCLK=0)
-#      ^^^^^^^^
-#      |||||||`-- SCLK
-#      ||||||`--- Not connected
-#      |||||`---- /SS0
-#      ||||`----- /SS1
-#      |||`------ /SS2
-#      ||`------- /SS3
-#      |`-------- B0
-#      `--------- B1
+anda([vAC])                     #18
+st([vAC],X)                     #19
 ld(hi(ctrlBits),Y)              #20
-st([Y,ctrlBits])                #21 Set control register
-ld(AC,X)                        #22
-ld([vAC+1],Y)                   #23 For MOSI (A15)
-ctrl(Y,X)                       #24
+st([Y,ctrlBits])                #21 Set control variable
+ld([vAC+1],Y)                   #22 MOSI (A15)
+ctrl(Y,X)                       #23 Try set the expander control register
 
-ld([sysArgs+3])                 #25 Prepare SYS_SpiExchangeBytes
+ld([sysArgs+3])                 #24 Prepare for SYS_SpiExchangeBytes
 assert pc()&255 < 255-3         # Beware of page crossing: asm.py won't warn
-bne(pc()+3)                     #26
-bra(pc()+2)                     #27
-ld([sysArgs+1])                 #28
-st([sysArgs+3])                 #28,29 (must be idempotent)
+bne(pc()+3)                     #25
+bra(pc()+2)                     #26
+ld([sysArgs+1])                 #27
+st([sysArgs+3])                 #27,28 (must be idempotent)
 
-ld(hi('NEXTY'),Y)               #30
-jmp(Y,'NEXTY')                  #31
-ld(-34//2)                      #32
+ld(hi('REENTER'),Y)             #29
+jmp(Y,'REENTER')                #30
+ld(-34//2)                      #31
 
 #-----------------------------------------------------------------------
 

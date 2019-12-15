@@ -8,15 +8,27 @@ gcl0x
 
 { No need for romType check because Reset.gcl gets hard-compiled in  }
 
+$1f8 CtrlBits=
+
 { CheckMemory }
 [def
   push
 
   \memSize, 1- 255& 1+ i=       {Number of pages as counted at boot}
 
-  { Check for 128K expanded memory }
+  {
+    Check for expander and 128K expanded memory
 
-  $1f8 CtrlBits=
+    XXX We still need 100% reliable expander detection. Some notes:
+    1. The expander completely blocks the RAM write of ctrl()
+    2. An unexpanded system writes an uncontrolled Z-value in memory
+       -- We therefore may need to hook a 2.2K to BUS7 for writing
+          a controlled bit value. That can give reliable detection.
+       -- We could maybe also do a read back for positive detection
+       -- SendOnesToCard writes all over memory if there's no card.
+    3. gtemu.c writes arbitrary S.undef values that change slowly
+  }
+
   0 $7c.                        {Setup ctrl detection}
   \SYS_ExpanderControl_v4_40    {SYS function}
   _sysFn= $7c 40!!              {Disable SPI, set MOSI low, bank 1}
@@ -249,7 +261,16 @@ $47e {4: D-5} SetupChannel!
 [if=0 \ledState_v2. \ledTimer.] {For continuity only restart when paused}
 9 \ledTempo.                    {6.0 Hz ( = 60/(9+1)), was 5.5 Hz}
 
-{ Print startup message }
+{
+  Print startup message
+  +--------------------------+
+  |   *** Gigatron ??K ***   |
+  | TTL microcomputer ROM vX |
+
+  +--------------------------+
+  |  *** Gigatron 128K ***   | <-- TODO Try 1 char less indent for 128K...
+  | TTL microcomputer ROM vX |
+}
 $814 Pos=
 [def `***`Gigatron` #0] PrintS!
 CheckMemory!

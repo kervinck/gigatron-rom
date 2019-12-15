@@ -345,7 +345,7 @@ Variables:
 For info:
         sysArgs[0:1]    Address Register, free to clobber
         sysArgs[2]      Instruction Register, free to clobber
-        sysArgs[3:5]    Flags, don't clobber
+        sysArgs[3:5]    Flags, don't touch
 
 ----------------------------------------------------------------------
 Extension SYS_ResetWaveforms_v4_50
