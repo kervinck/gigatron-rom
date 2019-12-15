@@ -59014,7 +59014,7 @@ Reset:        fe42 0002  ld   $02         ;| RAM segment address (high byte firs
               fe79 0021  ld   $21         ;0234 LDW
               fe7a 0030  ld   $30         ;0234 'p'
               fe7b 002b  ld   $2b         ;0236 STW
-              fe7c 0028  ld   $28
+              fe7c 0028  ld   $28         ;0236 '_sysArgs4'
               fe7d 00b4  ld   $b4         ;0238 SYS
               fe7e 00cb  ld   $cb
               fe7f 0011  ld   $11         ;023a LDWI
@@ -59224,7 +59224,7 @@ Reset:        fe42 0002  ld   $02         ;| RAM segment address (high byte firs
               ff4b 0021  ld   $21         ;0327 LDW
               ff4c 003c  ld   $3c         ;0327 'Pos'
               ff4d 002b  ld   $2b         ;0329 STW
-              ff4e 0028  ld   $28
+              ff4e 0028  ld   $28         ;0329 '_sysArgs4'
               ff4f 00e3  ld   $e3         ;032b ADDI
               ff50 0006  ld   $06
               ff51 002b  ld   $2b         ;032d STW

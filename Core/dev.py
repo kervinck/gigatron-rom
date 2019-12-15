@@ -111,11 +111,11 @@
 #  DONE  Discoverable ROM contents #46
 #  DONE Vertical blank interrupt #125
 #  DONE TinyBASIC: Support hexadecimal numbers $....
+#  DONE Expander: Auto-detect banking, 64K and 128K
 #  XXX  Add CMPHS/CMPHU instructions to vCPU XXX Still needs testing
 #  XXX  SPI: Boot from any *.GT1 file if SDC/MMC detected
 #  XXX  SPI: Tutorial on formatting FAT32 partitions
 #  XXX  SPI: Simple command line interface (solve "EXE vs COM" dilemma)
-#  XXX  SPI: Auto-detect banking, 64K and 128K
 #  XXX  v6502: Test with Apple1 BASIC
 #  XXX  v6502: Memory mapped PIA emulation using interrupt (D010-D013)
 #  XXX  v6502: add 65c02 opcodes? http://nparker.llx.com/a2/opcodes.html

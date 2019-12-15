@@ -55869,7 +55869,7 @@ Reset:        f1e8 0002  ld   $02         ;| RAM segment address (high byte firs
               f21b 002b  ld   $2b         ;022b STW
               f21c 0030  ld   $30         ;022b 'p'
               f21d 002b  ld   $2b         ;022d STW
-              f21e 0026  ld   $26
+              f21e 0026  ld   $26         ;022d '_sysArgs2'
               f21f 0059  ld   $59         ;022f LDI
               f220 00a0  ld   $a0
               f221 005e  ld   $5e         ;0231 ST
