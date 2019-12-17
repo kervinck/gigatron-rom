@@ -1,1 +1,1 @@
-- simple BASIC scripts for duratin tests (and have nice functional blinkenlights!)
+- simple BASIC scripts for tests (and have nice functional blinkenlights!)
