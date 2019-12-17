@@ -35,6 +35,7 @@ gigatron-rom
        +--- at67/               Emulator/visualizer (SDL2), 8-bit/16-bit
        |                        assembler, debugger, MIDI music, demos (sprites,
        |                        lines, game of life, Tetronis game...)
+       +--- Crouze/             Couple of simple BASIC scripts (for now...)
        +--- Cwiiis/             Gigatris game
        +--- dhkolf/             Fast emulator; Demos (SprPaint, PianoBeep,...)
        +--- flok99/             Simple (and slow) visualizer using SDL2
