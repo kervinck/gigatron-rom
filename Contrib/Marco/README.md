@@ -1,1 +1,0 @@
-- simple BASIC scripts for duratin tests (and have nice functional blinkenlights!)
