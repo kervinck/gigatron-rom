@@ -1,0 +1,23 @@
+
+10 mode 1
+15 poke 42,16:poke 46,1
+20 cls:poke 43,32:C=0
+25 ?"<q>uit at pause":?
+30 poke 43,53
+35 ?"Calculating numbers"
+40 ?"between 0 and 15":?
+45 if C=8 goto 20
+50 C=C+1:for T=0 to 128
+55 poke 20,rnd(16):next T
+60 poke 20,0:for T=0 to 3
+65 B(T)=rnd(2):next T
+70 N=B(0)+B(1)*2+B(2)*4
+75 N=N+B(3)*8:poke 43,63
+80 L=B(3)+B(2)*2+B(1)*4
+85 L=L+B(0)*8:poke 20,L
+90 ?N:for T=0 to 50
+95 K=peek(15)
+100 if K=113 goto 110
+105 next T:goto 45
+110 poke 42,63:poke 43,53
+115 poke 46,0:cls:end
