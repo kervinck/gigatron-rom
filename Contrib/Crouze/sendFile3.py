@@ -6,8 +6,8 @@
 #
 # Tested with Python 3.8.0 on Linux (Arch Linux x86_64)
 # Not tested on other platforms or other Python 3.x releases
-# Backward compatibility with Python 2.x not tested
-
+# NOT backwards compatible with Python 2.x
+#
 # From sendFile.py (Python 2.x):
 # 2018-04-29 (marcelk) Initial version
 # 2018-05-13 (marcelk) Use application level flow control
@@ -18,6 +18,10 @@
 # 2018-06-29 (marcelk) Send escaped control bytes to newer Babelfishes
 # 2018-07-23 (marcelk) Send GTB files into BASIC. Renamed to sendFile.py
 # 2018-07-28 (marcelk) Remove escaping of control bytes. Workaround FIFOCON bug.
+#
+# sendFile3.py:
+# 2019-12-19 (crouze) Initial port from senFile.py
+#                     BASIC truncation result added to stdout
 #
 #-----------------------------------------------------------------------
 
