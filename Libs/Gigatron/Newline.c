@@ -20,7 +20,7 @@ void Newline(void)
     sysArgs[2] = 0;             // Set bit pattern: only background
     *(int*)(sysArgs+4) = ScreenPos;// Set screen address
     do {
-      __syscall(203);           // == 270-134/2
+      __syscall(134);
       sysArgs[4]++;             // Step 1 pixel right
     } while (sysArgs[4] != 160);// Until reaching X position 160
 

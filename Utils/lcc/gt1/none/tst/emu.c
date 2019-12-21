@@ -130,7 +130,7 @@ void main()
 		out2++;
 		if (T.OUT == 0x80) {
 			*sysFn = 0;
-			__syscall(0);
+			__syscall(28);
 		}
 	}
 

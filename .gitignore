@@ -8,4 +8,10 @@
 /Contrib/at67/**/CMakeFiles
 /Contrib/at67/**/Makefile
 /Contrib/at67/**/cmake_install.cmake
+/Contrib/at67/gtemuAT67
+/Contrib/at67/midi/gtmidi
+/Contrib/at67/tools/gt1torom/gt1torom
+/Contrib/at67/tools/gtasm/gtasm
+/Contrib/at67/tools/gtmakerom/gtmakerom
+/Contrib/at67/tools/gtsplitrom/gtsplitrom
 .DS_Store

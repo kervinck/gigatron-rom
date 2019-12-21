@@ -115,6 +115,7 @@ byte WaitKey(void);
 void BusyWait(int frames);
 void PutChar(int c);
 void SetMode_v2(int mode);
+word ReadRomDir_DEVROM(word prev, char name[8]);
 
 // Not implemented and/or decided:
 void VideoScrollY(int dy);

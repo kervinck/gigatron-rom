@@ -37,22 +37,23 @@ dev.rom: Core/* Apps/*/* Makefile interface.json
 		gigatronRaw=Apps/Screen/gigatron.rgb\
 		Snake=Apps/Snake/Snake_v3.gcl\
 		SYS_Racer_v1.py\
-		SYS_Loader.py\
 		zippedRacerHorizon=Apps/Racer/Horizon-256x16.rgb\
+		SYS_Loader.py\
 		Racer=Apps/Racer/Racer_v2.gcl\
 		Mandelbrot=Apps/Mandelbrot/Mandelbrot_v1.gcl\
 		Pictures=Apps/Screen/Screen_v1.gcl\
 		Credits=Apps/Credits/Credits_v3.gcl\
-		Loader=Apps/Loader/Loader_v3.gcl\
+		Loader=Apps/Loader/Loader.gcl\
 		Tetronis=Apps/Tetronis/Tetronis.gt1\
 		Bricks=Apps/Bricks/Bricks.gt1\
-		TinyBASIC=Apps/TinyBASIC/TinyBASIC_v3.gcl\
+		TinyBASIC=Apps/TinyBASIC/TinyBASIC.gcl\
 		TicTac=Apps/TicTac/TicTac.gcl\
 		TicTacGtb=Apps/TicTac/TicTac_v2.gtb\
 		WozMon=Apps/WozMon/WozMon_v2.gcl\
-		Apple1=Apps/Apple1/Apple1.gt1\
+		Apple1=Apps/Apple-1/Apple1.gt1\
 		MSBASIC=Apps/MSBASIC/MSBASIC.gt1\
 		Egg=Apps/Horizon/Horizon.gt1\
+		CardBoot=Apps/CardBoot/CardBoot.gcl\
 		Main=Apps/MainMenu/MainMenu.gcl\
 		Reset=Core/Reset.gcl
 
@@ -118,7 +119,7 @@ ROMv4.rom: Core/* Apps/*/* Makefile interface.json
 		TinyBASIC=Apps/TinyBASIC/TinyBASIC_v3.gcl\
 		TicTac=Apps/TicTac/TicTac_v2.gtb\
 		WozMon=Apps/WozMon/WozMon_v2.gt1\
-		Egg=Apps/Apple1/Apple1_v1.gt1\
+		Egg=Apps/Apple-1/Apple1_v1.gt1\
 		Main=Apps/MainMenu/MainMenu_v4.gcl\
 		Reset=Core/Reset_v4.gcl
 
@@ -273,6 +274,9 @@ libObjects:=$(libSources:.c=.o)
 
 .SECONDARY: # Instructs 'make' not to delete intermeditate .o files
 %.gt1: %.o $(libObjects)
+	$(LCC) $(LCCFLAGS) $^ -o "$@"
+
+%.gt1x: %.o $(libObjects)
 	$(LCC) $(LCCFLAGS) $^ -o "$@"
 
 ctest: Libs/Example.gt1

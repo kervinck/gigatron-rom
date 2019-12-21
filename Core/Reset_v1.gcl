@@ -19,10 +19,10 @@ gcl0x
 
   { Clear screen }
   $800 p= $8801 i=
-  \SYS_VDrawBits_134 \sysFn: 32 \sysArgs0. \sysArgs1. {Blue}
+  \SYS_VDrawBits_134 _sysFn= 32 \sysArgs0. \sysArgs1. {Blue}
   [do
     p [do
-      \sysArgs4: 134!! {Clears 8 pixels vertically}
+      _sysArgs4= 134!! {Clears 8 pixels vertically}
       $800 p+ p= if>0loop]
     i+ p=
     255& 160^ if<>0loop]
@@ -80,11 +80,11 @@ $0300:
 
   {Draw 5 vertical slices: 5 using font data}
   63      \sysArgs1. {White}
-  Pos     \sysArgs4:
+  Pos     _sysArgs4=
   6+      Pos=
-  \SYS_VDrawBits_134 \sysFn:
+  \SYS_VDrawBits_134 _sysFn=
   $fb i= [do
-    fontData 0? fontData<++ \sysArgs2. 134!
+    fontData 0?? fontData<++ \sysArgs2. 134!!
     \sysArgs4<++
     i<++ i if<>0loop]
   ret
@@ -97,9 +97,9 @@ $0300:
   i= 255| 255^ $fa| p=          {Pointer to channel struct}
   i<, i=                        {Extract note}
   0 p. p<++                     {.wavA}
-  3 p. p<++                     {.wavX: 0 "Noise", 1 Triangle, 2 Pulse, 3 Sawtooth}
-  \notesTable i+ 0? p. p<++     {.keyL}
-  \notesTable i+ 1? p. p<++     {.keyH}
+  3 p. p<++                     {.wavX, 3=Sawtooth}
+  \notesTable i+ 0?? p. p<++    {.keyL}
+  \notesTable i+ 1?? p. p<++    {.keyH}
   p. p<++                       {.oscL}
   p.                            {.oscH}
   ret
@@ -121,7 +121,7 @@ SetupVideo!
 $812 Pos= PrintStartupMessage!
 
 { Load and start main program }
-\Main \sysArgs0: $200 \vLR: \SYS_Exec_88 \sysFn: 88!
+\Main _sysArgs0= $200 _vLR= \SYS_Exec_88 _sysFn= 88!!
 
 {-----------------------------------------------------------------------+
 |                                                                       |

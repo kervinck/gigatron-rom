@@ -318,7 +318,7 @@ $0300:
   6+ Pos=                       {Advance position by 6 pixels}
 
   5 [do i=                      {Draw 5 vertical slices}
-    k 0? \sysArgs2.             {Get slice from ROM}
+    k 0?? \sysArgs2.            {Get slice from ROM}
     134!                        {Invoke SYS function to draw pixels}
     k<++ \sysArgs4<++           {Advance to next slice}
     i 1- if>0loop]              {Looping}

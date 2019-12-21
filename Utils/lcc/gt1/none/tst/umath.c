@@ -20,9 +20,9 @@ enum {
 	sysArgsw[1] = t; \
 	sysArgsw[2] = u; \
 	sysArgsw[3] = t op u; \
-	__syscall(0); \
+	__syscall(28); \
 	sysArgsw[3] = t op (b); \
-	__syscall(0); \
+	__syscall(28); \
 
 #define ADDT(a, b) OPT(a, b, +)
 #define SUBT(a, b) OPT(a, b, -)
@@ -252,7 +252,7 @@ void main() {
 	le();
 
 	*sysFn = 0;
-	__syscall(0);
+	__syscall(28);
 }
 
 #else

@@ -58217,7 +58217,7 @@ WozMon:       f04b 0002  ld   $02
               f2a5 0000  ld   $00
               f2a6 0000  ld   $00         ;End of Apps/WozMon/WozMon_v2.gt1, size 604
                                           ;+-----------------------------------+
-                                          ;| Apps/Apple1/Apple1_v1.gt1         |
+                                          ;| Apps/Apple-1/Apple1_v1.gt1        |
                                           ;+-----------------------------------+
 Egg:          f2a7 0002  ld   $02
               f2a8 0000  ld   $00
@@ -59441,7 +59441,7 @@ Egg:          f2a7 0002  ld   $02
               f76a 0000  ld   $00
               f76b 0000  ld   $00
               f76c 0000  ld   $00
-              f76d 0000  ld   $00         ;End of Apps/Apple1/Apple1_v1.gt1, size 1223
+              f76d 0000  ld   $00         ;End of Apps/Apple-1/Apple1_v1.gt1, size 1223
                                           ;+-----------------------------------+
                                           ;| Apps/MainMenu/MainMenu_v4.gcl     |
                                           ;+-----------------------------------+
@@ -60425,7 +60425,7 @@ Reset:        fb19 0002  ld   $02         ;| RAM segment address (high byte firs
               fb3c 0003  ld   $03
               fb3d 000b  ld   $0b
               fb3e 002b  ld   $2b         ;0222 STW
-              fb3f 0022  ld   $22
+              fb3f 0022  ld   $22         ;0222 '_sysFn'
               fb40 0059  ld   $59         ;0224 LDI
               fb41 0020  ld   $20
               fb42 005e  ld   $5e         ;0226 ST
@@ -60436,7 +60436,7 @@ Reset:        fb19 0002  ld   $02         ;| RAM segment address (high byte firs
               fb47 002b  ld   $2b         ;022b STW
               fb48 0030  ld   $30         ;022b 'p'
               fb49 002b  ld   $2b         ;022d STW
-              fb4a 0026  ld   $26
+              fb4a 0026  ld   $26         ;022d '_sysArgs2'
               fb4b 0059  ld   $59         ;022f LDI
               fb4c 00a0  ld   $a0
               fb4d 005e  ld   $5e         ;0231 ST
@@ -60636,11 +60636,11 @@ Reset:        fb19 0002  ld   $02         ;| RAM segment address (high byte firs
               fc0f 0020  ld   $20
               fc10 003f  ld   $3f
               fc11 002b  ld   $2b         ;0326 STW
-              fc12 0024  ld   $24
+              fc12 0024  ld   $24         ;0326 '_sysArgs0'
               fc13 0021  ld   $21         ;0328 LDW
               fc14 003a  ld   $3a         ;0328 'Pos'
               fc15 002b  ld   $2b         ;032a STW
-              fc16 0028  ld   $28
+              fc16 0028  ld   $28         ;032a '_sysArgs4'
               fc17 00e3  ld   $e3         ;032c ADDI
               fc18 0006  ld   $06
               fc19 002b  ld   $2b         ;032e STW
@@ -60649,7 +60649,7 @@ Reset:        fb19 0002  ld   $02         ;| RAM segment address (high byte firs
               fc1c 00e1  ld   $e1
               fc1d 0004  ld   $04
               fc1e 002b  ld   $2b         ;0333 STW
-              fc1f 0022  ld   $22
+              fc1f 0022  ld   $22         ;0333 '_sysFn'
               fc20 0059  ld   $59         ;0335 LDI
               fc21 00fb  ld   $fb
               fc22 002b  ld   $2b         ;0337 STW
@@ -60739,7 +60739,7 @@ Reset:        fb19 0002  ld   $02         ;| RAM segment address (high byte firs
               fc76 000f  ld   $0f
               fc77 000b  ld   $0b
               fc78 002b  ld   $2b         ;038d STW
-              fc79 0022  ld   $22
+              fc79 0022  ld   $22         ;038d '_sysFn'
               fc7a 0059  ld   $59         ;038f LDI
               fc7b 0000  ld   $00
               fc7c 00b4  ld   $b4         ;0391 SYS
@@ -60748,7 +60748,7 @@ Reset:        fb19 0002  ld   $02         ;| RAM segment address (high byte firs
               fc7f 0012  ld   $12
               fc80 000b  ld   $0b
               fc81 002b  ld   $2b         ;0396 STW
-              fc82 0022  ld   $22
+              fc82 0022  ld   $22         ;0396 '_sysFn'
               fc83 0059  ld   $59         ;0398 LDI
               fc84 0000  ld   $00
               fc85 00b4  ld   $b4         ;039a SYS
@@ -60807,7 +60807,7 @@ Reset:        fb19 0002  ld   $02         ;| RAM segment address (high byte firs
               fcba 0000  ld   $00
               fcbb 000b  ld   $0b
               fcbc 002b  ld   $2b         ;03d1 STW
-              fcbd 0022  ld   $22
+              fcbd 0022  ld   $22         ;03d1 '_sysFn'
               fcbe 0059  ld   $59         ;03d3 LDI
               fcbf 0001  ld   $01
               fcc0 00b4  ld   $b4         ;03d5 SYS
@@ -60816,16 +60816,16 @@ Reset:        fb19 0002  ld   $02         ;| RAM segment address (high byte firs
               fcc3 006e  ld   $6e
               fcc4 00f7  ld   $f7
               fcc5 002b  ld   $2b         ;03da STW
-              fcc6 0024  ld   $24
+              fcc6 0024  ld   $24         ;03da '_sysArgs0'
               fcc7 0011  ld   $11         ;03dc LDWI
               fcc8 0000  ld   $00
               fcc9 0002  ld   $02
               fcca 002b  ld   $2b         ;03df STW
-              fccb 001a  ld   $1a
+              fccb 001a  ld   $1a         ;03df '_vLR'
               fccc 0059  ld   $59         ;03e1 LDI
               fccd 00ad  ld   $ad
               fcce 002b  ld   $2b         ;03e3 STW
-              fccf 0022  ld   $22
+              fccf 0022  ld   $22         ;03e3 '_sysFn'
               fcd0 00b4  ld   $b4         ;03e5 SYS
               fcd1 00e2  ld   $e2
               fcd2 0000  ld   $00         ;End of Core/Reset_v4.gcl, size 442

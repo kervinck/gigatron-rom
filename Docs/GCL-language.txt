@@ -232,7 +232,7 @@ X; X:           Read/write word at memory address pointed at by X
 peek deek       Read byte/word from memory address pointed at by vAC
 i, i.           Read/write unsigned byte at zero page address i
 i; i:           Read/write word at zero page address i
-i?              Table lookup from ROM address vAC+i (ROM page must be prepared)
+i??             Table lookup from ROM address vAC+i (ROM page must be prepared)
 
 Structured programming
 ----------------------
@@ -383,6 +383,7 @@ i<++ i>++       Original notation for <i++ >i++
 ii:             Original notation for *=ii
 i% i%=          Original notation for %i %i=
 i!              Original notation for i!! (will only be depricated in gcl1)
+i?              Original notation for i?? (will only be depricated in gcl1)
 
 ----------------------
 vCPU instruction table

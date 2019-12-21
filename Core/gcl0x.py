@@ -191,7 +191,8 @@ class Program:
           else:
             self.warning('CALLI is an experimental feature')
             self.emitOp('CALLI_DEVROM').emit(lo(con)); con = hi(con)
-        elif op == '?':    self.emitOp('LUP')
+        elif op == '?':    self.emitOp('LUP');          #self.depr('i?', 'i??')
+        elif op == '??':   self.emitOp('LUP')
         elif op == '# ':   self.emitOp(con); con = None # Silent truncation
         elif op == '#< ':  self.emitOp(con); con = None
         elif op == '#> ':  con = hi(con); assert self.segStart != self.vPC # XXX Conflict

@@ -1,11 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import (
-    absolute_import,
-    division,
-    print_function,
-    unicode_literals,
-)
-
 #-----------------------------------------------------------------------
 #
 #       Loader-specific SYS extensions
@@ -19,6 +12,7 @@ videoY = symbol('videoY')
 sysArgs = symbol('sysArgs0')
 vPC = symbol('vPC')
 vLR = symbol('vLR')
+vTmp = symbol('vTmp')
 channelMask = symbol('channelMask_v4')
 
 #-----------------------------------------------------------------------
@@ -50,10 +44,9 @@ label('.sysNbi#19')
 ld([vPC])                       #19
 suba(2)                         #20
 st([vPC])                       #21
-ld(-28//2)                      #22
-ld(hi('REENTER'),Y)             #23
-jmp(Y,'REENTER')                #24
-nop()                           #25
+ld(hi('NEXTY'),Y)               #22
+jmp(Y,'NEXTY')                  #23
+ld(-26//2)                      #24
 
 #-----------------------------------------------------------------------
 # Extension SYS_LoaderProcessInput_64
@@ -69,51 +62,47 @@ ld([sysArgs+1],Y)               #15
 ld([sysArgs+2])                 #16
 bne('.sysPi#19')                #17
 ld([sysArgs+0])                 #18
-suba(65, X)                     #19 Point at first byte of buffer
+suba(65,X)                      #19 Point at first byte of buffer
 ld([Y,X])                       #20 Command byte
-st([Y,Xpp]);                    C('(Just X++)')#21
+st([Y,Xpp]);                    C('Just X++')#21
 xora(ord('L'))                  #22 This loader lumps everything under 'L'
 bne('.sysPi#25')                #23
 ld([Y,X]);                      C('Valid command')#24 Length byte
-st([Y,Xpp]);                    C('(Just X++)')#25
+st([Y,Xpp]);                    C('Just X++')#25
 anda(63)                        #26 Bit 6:7 are garbage
 st([sysArgs+4])                 #27 Copy count
-ld([Y,X])                       #28 Low copy address
-st([Y,Xpp]);                    C('(Just X++)')#29
-st([sysArgs+5])                 #30
-ld([Y,X])                       #31 High copy address
-st([Y,Xpp])                     #32 X++
-st([sysArgs+6])                 #33
-ld([sysArgs+4])                 #34
-bne('.sysPi#37')                #35
+adda([Y,X])                     #28 Check if writing top 2 bytes in page
+adda(2)                         #29
+anda(0xfe)                      #30
+st([vTmp])                      #31
+ld([Y,X])                       #32 Low copy address
+st([Y,Xpp]);                    C('Just X++')#33
+st([sysArgs+5])                 #34
+ld([Y,X])                       #35 High copy address
+st([Y,Xpp]);                    C('Just X++')#36
+st([sysArgs+6])                 #37
+suba(1)                         #38 Check if writing to sound channel page
+anda(0xfc)                      #39
+ora([vTmp])                     #40
+bne(pc()+3)                     #41
+bra(pc()+3)                     #42
+ld(0xfc);                       C('Unsafe')#43
+ld(0xff);                       C('Safe')#43(!)
+anda([channelMask])             #44
+st([channelMask])               #45
+ld([sysArgs+4])                 #46
+bne('.sysPi#49')                #47
 # Execute code (don't care about checksum anymore)
-ld([sysArgs+5]);                C('Execute')#36 Low run address
-st([vLR])                       #37 https://forum.gigatron.io/viewtopic.php?p=29#p29
-suba(2)                         #38
-st([vPC])                       #39
-ld([sysArgs+6])                 #40 High run address
-st([vPC+1])                     #41
-st([vLR+1])                     #42
-ld(0);                          C('Reactivate sound channels?')#43
-ld(2,Y)                         #44
-ora([Y,254])                    #45
-ora([Y,255])                    #46
-ld(3,Y)                         #47
-ora([Y,254])                    #48
-ora([Y,255])                    #49
-ld(4,Y)                         #50
-ora([Y,254])                    #51
-ora([Y,255])                    #52
-bne(pc()+3)                     #53
-bra(pc()+3)                     #54
-ld(3);                          C('Yes')#55
-ld(0);                          C('No')#55(!)
-ora([channelMask])              #56
-st([channelMask])               #57
-nop()                           #58
-ld(hi('REENTER'),Y)             #59
-jmp(Y,'REENTER')                #60
-ld(-64//2)                      #61
+ld([sysArgs+5]);                C('Execute')#48 Low run address
+st([vLR])                       #49 https://forum.gigatron.io/viewtopic.php?p=29#p29
+suba(2)                         #50
+st([vPC])                       #51
+ld([sysArgs+6])                 #52 High run address
+st([vPC+1])                     #53
+st([vLR+1])                     #54
+ld(hi('REENTER'),Y)             #55
+jmp(Y,'REENTER')                #56
+ld(-60//2)                      #57
 # Invalid checksum
 label('.sysPi#19')
 wait(25-19);                    C('Invalid checksum')#19 Reset checksum
@@ -125,14 +114,14 @@ ld(hi('REENTER'),Y)             #27
 jmp(Y,'REENTER')                #28
 ld(-32//2)                      #29
 # Loading data
-label('.sysPi#37')
-ld([sysArgs+0]);                C('Loading data')#37 Continue checksum
-suba(1, X)                      #38 Point at last byte
-ld([Y,X])                       #39
-st([sysArgs+2])                 #40
-ld(hi('REENTER'),Y)             #41
-jmp(Y,'REENTER')                #42
-ld(-46//2)                      #43
+label('.sysPi#49')
+ld([sysArgs+0]);                C('Loading data')#49 Continue checksum
+suba(1,X)                       #50 Point at last byte
+ld([Y,X])                       #51
+st([sysArgs+2])                 #52
+ld(hi('REENTER'),Y)             #53
+jmp(Y,'REENTER')                #54
+ld(-58//2)                      #55
 
 #-----------------------------------------------------------------------
 # Extension SYS_LoaderPayloadCopy_34

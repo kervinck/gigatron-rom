@@ -1,0 +1,17 @@
+1  'calculate primes
+2  'between 3 and L
+10 L=10000:mode 2
+15 poke42,16:poke46,1:cls
+20 R=0:B(0)=124:B(1)=47
+25 B(2)=45:B(3)=92:C(0)=0
+30 C(1)=8:C(2)=4:C(3)=12
+35 for N=3 to L
+40 poke43,3:for D=2toN-1
+45 at 2:put B(D%4)
+50 poke 20,1+(D%2)+C(R)
+55 if N%D=0 goto 70
+60 nextD:poke43,63:at2:?N
+65 R=R+1:if R=4 R=0
+70 next N:at 2:put 32:?
+75 poke 43,63:poke 46,0
+80 mode 1:end

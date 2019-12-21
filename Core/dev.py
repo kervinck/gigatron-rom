@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 #-----------------------------------------------------------------------
 #
 #  Core video, sound and interpreter loop for Gigatron TTL microcomputer
@@ -107,32 +106,31 @@
 #  DONE Split interface.json and interface-dev.json
 #  DONE MSBASIC
 #  XXX  MSBASIC spurious pi-symbols
-#  XXX  MSBASIC QT_BASIC
 #  DONE Speed up SetMemory by 300% using bursts #126
+#  DONE Discoverable ROM contents #46
+#  DONE Vertical blank interrupt #125
+#  DONE TinyBASIC: Support hexadecimal numbers $....
+#  DONE Expander: Auto-detect banking, 64K and 128K
+#  DONE Expander: Boot from *.GT1 file if SDC/MMC detected
 #  XXX  Add CMPHS/CMPHU instructions to vCPU XXX Still needs testing
-#  XXX  SPI: Boot from any *.GT1 file if SDC/MMC detected
-#  XXX  SPI: Tutorial on formatting FAT32 partitions
 #  XXX  SPI: Simple command line interface (solve "EXE vs COM" dilemma)
-#  XXX  Reduce the Pictures application ROM footprint #120
-#  XXX  Discoverable ROM contents #46
-#  XXX  SPI: Auto-detect banking, 64K and 128K
-#  XXX  Vertical blank interrupt #125
-#  XXX  v6502: Test with Apple1 BASIC
-#  XXX  v6502: Memory mapped PIA emulation using interrupt (D010-D013)
-#  XXX  v6502: add 65c02 opcodes? http://nparker.llx.com/a2/opcodes.html
+#  XXX  SPI: Tutorial on formatting FAT32 partitions
+#  XXX  Apple-1: Memory mapped PIA emulation using interrupt (D010-D013)
 #  XXX  Apple-1: Include A1 BASIC
-#  XXX  Apple-1: More blueish font?
 #  XXX  Apple-1: Original 2514 font? Suppress lower case?
 #  XXX  Apple-1: Include assembler
 #  XXX  Apple-1: Intercept cassette interface
 #  XXX  Racer: Make noise when crashing
-#  XXX  Racer: Control speed with up/down as well
+#  XXX  Racer: Control speed with up/down (better for TypeC controllers)
+#  XXX  Reduce the Pictures application ROM footprint #120
+#  XXX  Main: Some startup logo as intro? Rotating 3D letters?
 #  XXX  Main: Better startup chime
-#  XXX  Main: Some startup logo as intro?
 #  XXX  Faster SYS_Exec_88, with start address (GT1)?
-#  XXX  Let SYS_Exec_88 clear channelMask when loading into live variables
+#  XXX  Let SYS_Exec_88 clear channelMask when loading into live channels
 #  XXX  ROM functions: SYS_PrintString, control codes, SYS_DrawChar, SYS_Newline
 #  XXX  Babelfish freeze at power-on?
+#  XXX  Loader: make noise while loading (only channel 1 is safe to use)
+#  XXX  v6502: add 65c02 opcodes? http://nparker.llx.com/a2/opcodes.html
 #
 #  Ideas for ROM v6+
 #  XXX  Pucrunch (well documented) or eximozer 3.0.2 (better compression)
@@ -152,7 +150,7 @@
 #  XXX  Video mode for 12.5 MHz systems
 #-----------------------------------------------------------------------
 
-from __future__ import (absolute_import, division, print_function, unicode_literals)
+from __future__ import division, print_function # Python2 support
 
 import importlib
 from sys import argv
@@ -258,13 +256,11 @@ assert 4*63 + sample < 256
 assert sample == 3
 
 # Former bootCount and bootCheck (<= ROMv3)
-zpByte()                   # Recycled and still unused. Candidate future uses:
-                           # - SPI control state (to remember banking state)
+zpReserved      = zpByte() # Recycled and still unused. Candidate future uses:
                            # - Video driver high address (for alternative video modes)
                            # - v6502: ADH offset ("MMU")
                            # - v8080: ???
-                           # - mapping for for matrix keyboards (C16, C64, VIC20...)
-vCPUselect      = zpByte() # Active interpreter page
+vCpuSelect      = zpByte() # Active interpreter page
 
 # Entropy harvested from SRAM startup and controller input
 entropy         = zpByte(3)
@@ -351,12 +347,10 @@ userVars        = zpByte(0)
 # Byte 0-239 define the video lines
 videoTable      = 0x0100 # Indirection table: Y[0] dX[0]  ..., Y[119] dX[119]
 
+vReset          = 0x01f0
+vIRQ_DEVROM     = 0x01f6
 ctrlBits        = 0x01f8
 videoTop_DEVROM = 0x01f9 # Number of skip lines
-
-vReset          = 0x01f0
-
-#resetTimer     = 0x01f8 XXX Future. Also change Easter Egg detection in main
 
 # Highest bytes are for sound channel variables
 wavA = 250      # Waveform modulation with `adda'
@@ -424,7 +418,7 @@ def runVcpu(n, ref=None, returnTo=None):
   if returnTo != 0x100:
     if returnTo is None:
       returnTo = pc() + 5       # Next instruction
-    ld(returnTo&255)            #0
+    ld(lo(returnTo))            #0
     st([vReturn])               #1
 
   n //= 2
@@ -432,7 +426,7 @@ def runVcpu(n, ref=None, returnTo=None):
   assert n < 128
   assert n >= v6502_adjust
 
-  ld([vCPUselect],Y)            #2
+  ld([vCpuSelect],Y)            #2
   jmp(Y,'ENTER')                #3
   ld(n)                         #4
 assert runVcpu_overhead ==       5
@@ -501,7 +495,7 @@ ld(syncBits^hSync,OUT)          # Prepare XOUT update, hSync goes down, RGB to b
 ld(syncBits,OUT)                # hSync goes up, updating XOUT
 
 # Setup I/O and RAM expander
-ctrl(0b01111100)                # SCLK=0; Disable SPI slaves; Bank=01; Enable RAM
+ctrl(0b01111100)                # Disable SPI slaves, enable RAM, bank 1
 #      ^^^^^^^^
 #      |||||||`-- SCLK
 #      ||||||`--- Not connected
@@ -591,7 +585,7 @@ ld(syncBits,OUT)
 # vCPU reset handler
 ld((vReset&255)-2)              # Setup vCPU reset handler
 st([vPC])
-adda(2, X)
+adda(2,X)
 ld(vReset>>8)
 st([vPC+1],Y)
 st('LDI',             [Y,Xpp])
@@ -600,13 +594,13 @@ st('STW',             [Y,Xpp])
 st(sysFn,             [Y,Xpp])
 st('SYS',             [Y,Xpp])  # SYS -> SYS_Reset_88 -> SYS_Exec_88
 st(256-88//2+maxTicks,[Y,Xpp])
-st(0,                 [Y,Xpp])  # Free XXX reserve for interrupt vector?
-st(0,                 [Y,Xpp])  # Free XXX reserve for interrupt vector?
+st(0,                 [Y,Xpp])  # vIRQ_DEVROM: Disable interrupts
+st(0,                 [Y,Xpp])  # vIRQ_DEVROM
 st(0b11111100,        [Y,Xpp])  # Control register
 st(0,                 [Y,Xpp])  # videoTop
 
 ld(hi('ENTER'))                 # Active interpreter (vCPU,v6502) = vCPU
-st([vCPUselect])
+st([vCpuSelect])
 
 ld(255)                         # Setup serial input
 st([frameCount])
@@ -657,29 +651,30 @@ ld(0)                           #17
 st([vSP])                       #18 vSP
 ld(hi('videoTop_DEVROM'),Y)     #19
 st([Y,lo('videoTop_DEVROM')])   #20 Show all 120 pixel lines
-st([soundTimer])                #21 soundTimer
+st([Y,vIRQ_DEVROM])             #21 Disable vIRQ dispatch
+st([Y,vIRQ_DEVROM+1])           #22
+st([soundTimer])                #23 soundTimer
 assert userCode&255 == 0
-st([vLR])                       #22 vLR
-ld(userCode>>8)                 #23
-st([vLR+1])                     #24
-ld('nopixels')                  #25 Video mode 3 (fast)
-st([videoModeB])                #26
-st([videoModeC])                #27
-st([videoModeD])                #28
-ld('SYS_Exec_88')               #29 SYS_Exec_88
-st([sysFn])                     #30 High byte (remains) 0
-ld('Reset')                     #31 Reset.gt1 from EPROM
-st([sysArgs+0])                 #32
-ld(hi('Reset'))                 #33
-st([sysArgs+1])                 #34
-ld([vPC])                       #35 Force second SYS call
-suba(2)                         #36
-st([vPC])                       #37
-nop()                           #38
+st([vLR])                       #24 vLR
+ld(userCode>>8)                 #25
+st([vLR+1])                     #26
+ld('nopixels')                  #27 Video mode 3 (fast)
+st([videoModeB])                #28
+st([videoModeC])                #29
+st([videoModeD])                #30
+ld('SYS_Exec_88')               #31 SYS_Exec_88
+st([sysFn])                     #32 High byte (remains) 0
+ld('Reset')                     #33 Reset.gt1 from EPROM
+st([sysArgs+0])                 #34
+ld(hi('Reset'))                 #35
+st([sysArgs+1])                 #36
+ld([vPC])                       #37 Force second SYS call
+suba(2)                         #38
+st([vPC])                       #39
 # Return to interpreter
-ld(hi('REENTER'),Y)             #39
-jmp(Y,'REENTER')                #40
-ld(-44//2)                      #41
+ld(hi('NEXTY'),Y)               #40
+jmp(Y,'NEXTY')                  #41
+ld(-44//2)                      #42
 
 #-----------------------------------------------------------------------
 # Placeholders for future SYS functions. This works as a kind of jump
@@ -699,9 +694,7 @@ ld(-44//2)                      #41
 #-----------------------------------------------------------------------
 
 align(0x80, size=0x80)
-
-assert pc() >> 8 == 0, "forth.next3_rom_return must not push the SYS placeholders off page zero"
-
+assert pc() == 0x80
 
 ld(hi('REENTER'),Y)             #15 slot 0x80
 jmp(Y,'REENTER')                #16
@@ -775,10 +768,10 @@ ld(-20//2)                      #17
 # on top of lookup tables.
 #
 # Variables:
-#       sysArgs[0:1]    ROM pointer (input set by caller)
-#       sysArgs[2:3]    RAM pointer (variable)
-#       sysArgs[4]      State counter (variable)
-#       vLR             vCPU continues here (input set by caller)
+#       sysArgs[0:1]    ROM pointer (in)
+#       sysArgs[2:3]    RAM pointer (changed)
+#       sysArgs[4]      State counter (changed)
+#       vLR             vCPU continues here (in)
 
 label('SYS_Exec_88')
 ld(hi('sys_Exec'),Y)            #15
@@ -873,9 +866,20 @@ ld(hi('REENTER'),Y)             #15 slot 0xec
 jmp(Y,'REENTER')                #16
 ld(-20//2)                      #17
 
-ld(hi('REENTER'),Y)             #15 slot 0xef
-jmp(Y,'REENTER')                #16
-ld(-20//2)                      #17
+#-----------------------------------------------------------------------
+# Extension SYS_ReadRomDir_DEVROM_80
+#-----------------------------------------------------------------------
+
+# Get next entry from ROM file system. Use vAC=0 to get the first entry.
+
+# Variables:
+#       vAC             Start address of current entry (inout)
+#       sysArgs[0:7]    File name, padded with zeroes (out)
+
+label('SYS_ReadRomDir_DEVROM_80')
+ld(hi('sys_ReadRomDir'),Y)      #15
+jmp(Y,'sys_ReadRomDir')         #16
+ld([vAC+1])                     #17
 
 fillers(until=symbol('SYS_Out_22') & 255)
 
@@ -1032,7 +1036,19 @@ if soundDiscontinuity == 2:
 if soundDiscontinuity > 2:
   print('Warning: sound discontinuity not suppressed')
 
-runVcpu(186-72-extra, '---D line 0')#72 Application cycles (scan line 0)
+# vCPU interrupt
+ld([frameCount])                #72
+beq('vBlankFirst#75')           #73
+
+runVcpu(186-74-extra,           #74 Application cycles (scan line 0)
+    '---D line 0 no timeout',
+    returnTo='vBlankFirst#186')
+
+label('vBlankFirst#75')
+ld(hi('vBlankFirst#78'),Y)      #75
+jmp(Y,'vBlankFirst#78')         #76
+ld(hi(vIRQ_DEVROM),Y)           #77
+label('vBlankFirst#186')
 
 # Mitigation for rogue channelMask (3 cycles)
 ld([channelMask])               #186 Normalize channelMask, for robustness
@@ -1057,7 +1073,6 @@ ld(0)                           #198
 st([soundTimer])                #199
 
 ld([videoSync0],OUT)            #0 <New scan line start>
-
 label('sound1')
 ld([channel])                   #1 Advance to next sound channel
 anda([channelMask])             #2
@@ -1193,7 +1208,7 @@ st([vPC])                       #61 Point vPC at vReset
 ld(vReset>>8)                   #62
 st([vPC+1])                     #63
 ld(hi('ENTER'))                 #64 Set active interpreter to vCPU
-st([vCPUselect])                #65
+st([vCpuSelect])                #65
 label('.restart#66')
 
 # Switch video mode when (only) select is pressed (16 cycles)
@@ -1450,6 +1465,7 @@ ld([Y,X])                       #9 Prefetch operand
 # Resync with video driver and transfer control
 label('EXIT')
 adda(maxTicks)                  #3
+label('RESYNC')
 bgt(pc()&255)                   #4 Resync
 suba(1)                         #5
 ld(hi('vBlankStart'),Y)         #6
@@ -2203,8 +2219,8 @@ ld(-24//2)                      #21
 # Draw 4 pixels on screen, horizontally next to each other
 #
 # Variables:
-#       sysArgs[0:3]    Pixels
-#       sysArgs[4:5]    Position on screen
+#       sysArgs[0:3]    Pixels (in)
+#       sysArgs[4:5]    Position on screen (in)
 
 label('SYS_Draw4_30')
 ld([sysArgs+4],X)               #15
@@ -2228,35 +2244,15 @@ ld(-30//2)                      #27
 # Draw slice of a character, 8 pixels vertical
 #
 # Variables:
-#       sysArgs[0]      Color 0 (background)
-#       sysArgs[1]      Color 1 (pen)
-#       sysArgs[2]      8 bits, highest bit first (destructive)
-#       sysArgs[4:5]    Position on screen
+#       sysArgs[0]      Color 0 "background" (in)
+#       sysArgs[1]      Color 1 "pen" (in)
+#       sysArgs[2]      8 bits, highest bit first (in, changed)
+#       sysArgs[4:5]    Position on screen (in)
 
 label('SYS_VDrawBits_134')
-ld([sysArgs+4],X)               #15
-ld(0)                           #16
-label('.vdb0')
-st([vTmp])                      #17+i*14
-adda([sysArgs+5],Y)             #18+i*14 Y=[sysPos+1]+vTmp
-ld([sysArgs+2])                 #19+i*14 Select color
-bmi('.vdb1')                    #20+i*14
-bra('.vdb2')                    #21+i*14
-ld([sysArgs+0])                 #22+i*14
-label('.vdb1')
-ld([sysArgs+1])                 #22+i*14
-label('.vdb2')
-st([Y,X])                       #23+i*14 Draw pixel
-ld([sysArgs+2])                 #24+i*14 Shift byte left
-adda(AC)                        #25+i*14
-st([sysArgs+2])                 #26+i*14
-ld([vTmp])                      #27+i*14 Loop counter
-suba(7)                         #28+i*14
-bne('.vdb0')                    #29+i*14
-adda(8)                         #30+i*14
-ld(hi('REENTER'),Y)             #129
-jmp(Y,'REENTER')                #130
-ld(-134//2)                     #131
+ld(hi('sys_VDrawBits'),Y)       #15
+jmp(Y,'sys_VDrawBits')          #16
+ld([sysArgs+4],X)               #17
 
 #-----------------------------------------------------------------------
 
@@ -2267,6 +2263,36 @@ st([X])                         #15
 ld(hi('NEXTY'),Y)               #16
 jmp(Y,'NEXTY')                  #17
 ld(-20//2)                      #18
+
+# Interrupt handler:
+#       ST   $xx        -> optionally store vCpuSelect
+#       ... IRQ payload ...
+# either:
+#       LDWI $400
+#       LUP  0          -> vRTI and don't switch interpreter (immediate resume)
+# or:
+#       LDWI $400
+#       LUP  $xx        -> vRTI and switch interpreter type as stored in [$xx]
+fillers(until=251-11)
+label('vRTI#15')
+ld([0xfc])                      #15 Continue with vCPU in the same timeslice (faster)
+st([vPC])                       #16
+ld([0xfd])                      #17
+st([vPC+1])                     #18
+ld([0xfe])                      #19
+st([vAC])                       #20
+ld([0xff])                      #21
+st([vAC+1])                     #22
+ld(hi('REENTER'),Y)             #23
+jmp(Y,'REENTER')                #24
+ld(-28//2)                      #25
+# vRTI entry point
+assert(pc()&255 == 251)         # The landing offset 251 for LUP trampoline is fixed
+beq('vRTI#15')                  #13 vRTI sequence
+adda(1,X)                       #14
+ld(hi('vRTI#18'),Y)             #15 Switch and wait for end of timeslice (slower)
+jmp(Y,'vRTI#18')                #16
+st([vTmp])                      #17
 
 #-----------------------------------------------------------------------
 #
@@ -2535,8 +2561,8 @@ jmp(Y,'REENTER')                #42
 #       in ROM to be known. Better avoid using this.
 #
 # Variables:
-#       sysArgs[0:2]    Bytes (output)
-#       sysArgs[6:7]    ROM pointer (input)
+#       sysArgs[0:2]    Bytes (out)
+#       sysArgs[6:7]    ROM pointer (in)
 
 label('SYS_Read3_40')
 ld([sysArgs+7],Y)               #15,32
@@ -2582,8 +2608,8 @@ def trampoline3b():
 # Unpack 3 bytes into 4 pixels
 #
 # Variables:
-#       sysArgs[0:2]    Packed bytes (input)
-#       sysArgs[0:3]    Pixels (output)
+#       sysArgs[0:2]    Packed bytes (in)
+#       sysArgs[0:3]    Pixels (out)
 
 label('SYS_Unpack_56')
 ld(soundTable>>8,Y)             #15
@@ -2635,7 +2661,7 @@ ld(-56//2)                      #53
 #       v6502 right shift instruction
 #-----------------------------------------------------------------------
 
-label('v6502_lsr30')
+label('v6502_lsr#30')
 ld([v6502_ADH],Y)               #30 Result
 st([Y,X])                       #31
 st([v6502_Qz])                  #32 Z flag
@@ -2645,7 +2671,7 @@ ld(-38//2)                      #35
 jmp(Y,'v6502_next')             #36
 #nop()                          #37 Overlap
 #
-label('v6502_ror38')
+label('v6502_ror#38')
 ld([v6502_ADH],Y)               #38,38 Result
 ora([v6502_BI])                 #39 Transfer bit 8
 st([Y,X])                       #40
@@ -2659,7 +2685,7 @@ ld(-46//2)                      #45
 #       Reserved
 #-----------------------------------------------------------------------
 
-# XXX Reserve space for LSRW
+# XXX Reserve space for LSRW?
 
 #-----------------------------------------------------------------------
 #
@@ -2712,85 +2738,6 @@ for i in range(0, 250, 2):
     sharp = '-' if notes[j%12-1] != note else '#'
     comment = '%s%s%s (%0.1f Hz)' % (note, sharp, octave, freq)
     ld(key&127); C(comment); ld(key>>7)
-
-#-----------------------------------------------------------------------
-# Steal remaining space in page for stuff that doesn't fit elsewhere
-#-----------------------------------------------------------------------
-
-fillers(until=0xde, instruction=ld)
-
-# Entered last line of vertical blank (line 40)
-label('vBlankLast#34')
-
-# Game controller types
-# TypeA: Based on 74LS165 shift register (not supported)
-# TypeB: Based on CD4021B shift register (standard)
-# TypeC: Based on priority encoder
-#
-# Notes:
-# - TypeA was only used during development and first beta test, before ROM v1
-# - TypeB appears as type A with negative logic levels
-# - TypeB is the game controller type that comes with the original kit and ROM v1
-# - TypeB is mimicked by BabelFish / Pluggy McPlugface
-# - TypeB requires a prolonged /SER_LATCH, therefore vPulse is 8 scanlines, not 2
-# - TypeB and TypeC can be sampled in the same scanline
-# - TypeA is 1 scanline shifted as it looks at a different edge (XXX up or down?)
-# - TypeC gives incomplete information: lower buttons overshadow higher ones
-#
-#       TypeC    Alias    Button TypeB
-#       00000000  ^@   -> Right  11111110
-#       00000001  ^A   -> Left   11111101
-#       00000011  ^C   -> Down   11111011
-#       00000111  ^G   -> Up     11110111
-#       00001111  ^O   -> Start  11101111
-#       00011111  ^_   -> Select 11011111
-#       00111111  ?    -> B      10111111
-#       01111111  DEL  -> A      01111111
-#       11111111       -> (None) 11111111
-#
-#       Conversion formula:
-#               f(x) := 254 - x
-
-# Detect controller TypeC codes
-ld([serialRaw])                 #34 if serialRaw in [0,1,3,7,15,31,63,127,255]
-adda(1)                         #35
-anda([serialRaw])               #36
-bne('.buttons#39')              #37
-
-# TypeC
-ld([serialRaw])                 #38 [TypeC] if serialRaw < serialLast
-adda(1)                         #39
-anda([serialLast])              #40
-bne('.buttons#43')              #41
-ld(254)                         #42 then clear the selected bit
-nop()                           #43
-bra('.buttons#46')              #44
-label('.buttons#43')
-suba([serialRaw])               #43,45
-anda([buttonState])             #44
-st([buttonState])               #45
-label('.buttons#46')
-ld([serialRaw])                 #46 Set the lower bits
-ora([buttonState])              #47
-label('.buttons#48')
-st([buttonState])               #48
-ld([serialRaw])                 #49 Update serialLast for next pass
-jmp(Y,'vBlankLast#52')          #50
-st([serialLast])                #51
-
-# TypeB
-# pChange = pNew & ~pOld
-# nChange = nNew | ~nOld {DeMorgan}
-label('.buttons#39')
-ld(255)                         #39 [TypeB] Bitwise edge-filter to detect button presses
-xora([serialLast])              #40
-ora([serialRaw])                #41 Catch button-press events
-anda([buttonState])             #42 Keep active button presses
-ora([serialRaw])                #43
-nop()                           #44
-nop()                           #45
-bra('.buttons#48')              #46
-nop()                           #47
 
 trampoline()
 
@@ -2861,9 +2808,9 @@ ld([vReturn])                   #17
 
 # SYS function for setting 1..256 bytes
 #
-# sysArgs[0]   Copy count (destructive)
-# sysArgs[1]   Copy value
-# sysArgs[2:3] Destination address (destructive)
+# sysArgs[0]   Copy count (in, changed)
+# sysArgs[1]   Copy value (in)
+# sysArgs[2:3] Destination address (in, changed)
 #
 # Sets up to 8 bytes per invocation before restarting itself through vCPU.
 # Doesn't wrap around page boundary. Can run 3 times per 148-cycle time slice.
@@ -2882,9 +2829,9 @@ ld([sysArgs+2],X)               #17
 # pulse width modulation of the vertical sync signal.
 #
 # Variables:
-#       sysArgs[0:1]    Source address               (destructive)
-#       sysArgs[2]      Start bit mask (typically 1) (destructive)
-#       sysArgs[3]      Number of send frames X      (destructive)
+#       sysArgs[0:1]    Source address               (in, changed)
+#       sysArgs[2]      Start bit mask (typically 1) (in, changed)
+#       sysArgs[3]      Number of send frames X      (in, changed)
 #
 # The sending will abort if input data is detected on the serial port.
 # Returns 0 in case of all bits sent, or <>0 in case of abort
@@ -2920,7 +2867,16 @@ xora(videoYline0)               #17 First line of vertical blank
 label('SYS_ExpanderControl_v4_40')
 ld(hi('sys_ExpanderControl'),Y) #15
 jmp(Y,'sys_ExpanderControl')    #16
-ld([vAC])                       #17
+ld(0b11111100)                  #17 Safety (SCLK=0)
+#    ^^^^^^^^
+#    |||||||`-- SCLK
+#    ||||||`--- Not connected
+#    |||||`---- /SS0
+#    ||||`----- /SS1
+#    |||`------ /SS2
+#    ||`------- /SS3
+#    |`-------- B0
+#    `--------- B1
 
 #-----------------------------------------------------------------------
 # Extension SYS_Run6502_v4_80
@@ -2929,7 +2885,7 @@ ld([vAC])                       #17
 # Transfer control to v6502
 #
 # Calling 6502 code from vCPU goes (only) through this SYS function.
-# Directly modifying the vCPUselect variable is unreliable. The
+# Directly modifying the vCpuSelect variable is unreliable. The
 # control transfer is immediate, without waiting for the current
 # time slice to end or first returning to vCPU.
 #
@@ -2959,7 +2915,7 @@ ld([vAC])                       #17
 # For info:
 #       sysArgs[0:1]    Address Register, free to clobber
 #       sysArgs[2]      Instruction Register, free to clobber
-#       sysArgs[3:5]    Flags, don't clobber
+#       sysArgs[3:5]    Flags, don't touch
 #
 # Implementation details::
 #
@@ -3031,11 +2987,11 @@ ld(soundTable>>8,Y)             #17
 # Send AND receive 1..256 bytes over SPI interface
 
 # Variables:
-#       sysArgs[0]      Page index start, for both send/receive (input, modified)
-#       sysArgs[1]      Memory page for send data (input)
-#       sysArgs[2]      Page index stop (input)
-#       sysArgs[3]      Memory page for receive data (input)
-#       sysArgs[4]      Scratch (modified)
+#       sysArgs[0]      Page index start, for both send/receive (in, changed)
+#       sysArgs[1]      Memory page for send data (in)
+#       sysArgs[2]      Page index stop (in)
+#       sysArgs[3]      Memory page for receive data (in)
+#       sysArgs[4]      Scratch (changed)
 
 label('SYS_SpiExchangeBytes_v4_134')
 ld(hi('sys_SpiExchangeBytes'),Y)#15
@@ -3644,33 +3600,23 @@ ld(-62//2)                      #59
 
 label('sys_ExpanderControl')
 
-ld([vAC])                       #18
-anda(0b11111100)                #19 Safety (SCLK=0)
-#      ^^^^^^^^
-#      |||||||`-- SCLK
-#      ||||||`--- Not connected
-#      |||||`---- /SS0
-#      ||||`----- /SS1
-#      |||`------ /SS2
-#      ||`------- /SS3
-#      |`-------- B0
-#      `--------- B1
+anda([vAC])                     #18
+st([vAC],X)                     #19
 ld(hi(ctrlBits),Y)              #20
-st([Y,ctrlBits])                #21 Set control register
-ld(AC,X)                        #22
-ld([vAC+1],Y)                   #23 For MOSI (A15)
-ctrl(Y,X)                       #24
+st([Y,ctrlBits])                #21 Set control variable
+ld([vAC+1],Y)                   #22 MOSI (A15)
+ctrl(Y,X)                       #23 Try set the expander control register
 
-ld([sysArgs+3])                 #25 Prepare SYS_SpiExchangeBytes
+ld([sysArgs+3])                 #24 Prepare for SYS_SpiExchangeBytes
 assert pc()&255 < 255-3         # Beware of page crossing: asm.py won't warn
-bne(pc()+3)                     #26
-bra(pc()+2)                     #27
-ld([sysArgs+1])                 #28
-st([sysArgs+3])                 #28,29 (must be idempotent)
+bne(pc()+3)                     #25
+bra(pc()+2)                     #26
+ld([sysArgs+1])                 #27
+st([sysArgs+3])                 #27,28 (must be idempotent)
 
-ld(hi('NEXTY'),Y)               #30
-jmp(Y,'NEXTY')                  #31
-ld(-34//2)                      #32
+ld(hi('REENTER'),Y)             #29
+jmp(Y,'REENTER')                #30
+ld(-34//2)                      #31
 
 #-----------------------------------------------------------------------
 
@@ -3724,7 +3670,7 @@ ld(-132//2)                     #130
 
 label('sys_v6502')
 
-st([vCPUselect],Y)              #18 Activate v6502
+st([vCpuSelect],Y)              #18 Activate v6502
 ld(-22//2)                      #19
 jmp(Y,'v6502_ENTER')            #20 Transfer control in the same time slice
 adda([vTicks])                  #21
@@ -3763,7 +3709,7 @@ ld([Y,X])                       #24
 anda(1)                         #25
 ora([v6502_P])                  #26
 st([v6502_P])                   #27
-ld('v6502_ror38')               #28 Shift table lookup
+ld('v6502_ror#38')              #28 Shift table lookup
 st([vTmp])                      #29
 ld([Y,X])                       #30
 anda(~1)                        #31
@@ -3785,7 +3731,7 @@ ld([Y,X])                       #16
 anda(1)                         #17
 ora([v6502_P])                  #18
 st([v6502_P])                   #19
-ld('v6502_lsr30')               #20 Shift table lookup
+ld('v6502_lsr#30')              #20 Shift table lookup
 st([vTmp])                      #21
 ld([Y,X])                       #22
 anda(~1)                        #23
@@ -3801,7 +3747,7 @@ anda(0x80)                      #14
 st([v6502_Tmp])                 #15
 ld([v6502_P])                   #16
 anda(1)                         #17
-label('.rol18')
+label('.rol#18')
 adda([Y,X])                     #18
 adda([Y,X])                     #19
 st([Y,X])                       #20
@@ -3822,7 +3768,7 @@ ld([v6502_ADH],Y)               #12,32
 ld([Y,X])                       #13
 anda(0x80)                      #14
 st([v6502_Tmp])                 #15
-bra('.rol18')                   #16
+bra('.rol#18')                  #16
 ld(0)                           #17
 
 label('v6502_jmp1')
@@ -3873,7 +3819,7 @@ ld(-20//2)                      #19
 
 label('v6502_brk')
 ld(hi('ENTER'))                 #12 Switch to vCPU
-st([vCPUselect])                #13
+st([vCpuSelect])                #13
 assert v6502_A == vAC
 ld(0)                           #14
 st([vAC+1])                     #15
@@ -3965,7 +3911,7 @@ adda(v6502_maxTicks)            #3 Exit BEFORE fetch
 bgt(pc()&255)                   #4 Resync
 suba(1)                         #5
 ld(hi('v6502_ENTER'))           #6 Set entry point to before 'fetch'
-st([vCPUselect])                #7
+st([vCpuSelect])                #7
 ld(hi('vBlankStart'),Y)         #8
 jmp(Y,[vReturn])                #9 To video driver
 ld(0)                           #10
@@ -4206,7 +4152,7 @@ adda(v6502_maxTicks)            #3 Exit AFTER fetch
 bgt(pc()&255)                   #4 Resync
 suba(1)                         #5
 ld(hi('v6502_RESUME'))          #6 Set entry point to before 'execute'
-st([vCPUselect])                #7
+st([vCpuSelect])                #7
 ld(hi('vBlankStart'),Y)         #8
 jmp(Y,[vReturn])                #9 To video driver
 ld(0)                           #10
@@ -5131,6 +5077,41 @@ ld(hi('REENTER'),Y)             #83
 jmp(Y,'REENTER')                #84
 ld(-88//2)                      #85
 
+# SYS_VDrawBits_134 implementation
+label('sys_VDrawBits')
+ld(0)                           #18
+label('.sysVdb0')
+st([vTmp])                      #19+i*25
+adda([sysArgs+5],Y)             #20+i*25 Y=[sysPos+1]+[vTmp]
+ld([sysArgs+2])                 #21+i*25 Select color
+bmi(pc()+3)                     #22+i*25
+bra(pc()+3)                     #23+i*25
+ld([sysArgs+0])                 #24+i*25
+ld([sysArgs+1])                 #24+i*25(!)
+st([Y,X])                       #25+i*25 Draw pixel
+ld([sysArgs+2])                 #26+i*25 Shift byte left
+adda(AC)                        #27+i*25
+st([sysArgs+2])                 #28+i*25
+ld([vTmp])                      #29+i*25 Unrolled loop (once)
+adda([sysArgs+5])               #31+i*25
+adda(1,Y)                       #30+i*25 Y=[sysPos+1]+[vTmp]+1
+ld([sysArgs+2])                 #32+i*25 Select color
+bmi(pc()+3)                     #33+i*25
+bra(pc()+3)                     #34+i*25
+ld([sysArgs+0])                 #35+i*25
+ld([sysArgs+1])                 #35+i*25(!)
+st([Y,X])                       #36+i*25 Draw pixel
+ld([sysArgs+2])                 #37+i*25 Shift byte left
+adda(AC)                        #38+i*25
+st([sysArgs+2])                 #39+i*25
+ld([vTmp])                      #40+i*25 Loop counter
+suba(6)                         #41+i*25
+bne('.sysVdb0')                 #42+i*25
+adda(8)                         #43+i*25 Steps of 2
+ld(hi('REENTER'),Y)             #119
+jmp(Y,'REENTER')                #120
+ld(-124//2)                     #121
+
 # SYS_ResetWaveforms_v4_50 implementation
 label('sys_ResetWaveforms')
 ld([vAC+0])                     #18 X=4i
@@ -5196,6 +5177,129 @@ ld(hi('NEXTY'),Y)               #40
 jmp(Y,'NEXTY')                  #41
 ld(-44//2)                      #42
 
+# Check if an IRQ handler is defined
+label('vBlankFirst#78')
+ld([Y,vIRQ_DEVROM])             #78
+ora([Y,vIRQ_DEVROM+1])          #79
+bne('vBlankFirst#82')           #80
+ld([vPC])                       #81
+runVcpu(186-82-extra,           #82 Application cycles (scan line 0)
+    '---D line 0 timeout but no irq',
+    returnTo='vBlankFirst#186')
+
+label('vBlankFirst#82')
+st([0xfc])                      #82 Save vPC
+ld([vPC+1])                     #83
+st([0xfd])                      #84
+ld([vAC])                       #85 Save vAC
+st([0xfe])                      #86
+ld([vAC+1])                     #87
+st([0xff])                      #88
+ld([Y,vIRQ_DEVROM])             #89 Set vPC to vIRQ
+suba(2)                         #90
+st([vPC])                       #91
+ld([Y,vIRQ_DEVROM+1])           #92
+st([vPC+1])                     #93
+ld([vCpuSelect])                #94 Allow interrupt to save this itself
+st([vAC])                       #95
+ld(0)                           #96 Tidy up vACH
+st([vAC+1])                     #97
+ld(hi('ENTER'))                 #98 Set vCpuSelect to ENTER (=regular vCPU)
+st([vCpuSelect])                #99
+runVcpu(186-100-extra,          #100 Application cycles (scan line 0)
+    '---D line 0 timeout with irq',
+    returnTo='vBlankFirst#186')
+
+# vIRQ sequence WITH interpreter switch
+label('vRTI#18')
+ld([X])                         #18
+st([vCpuSelect])                #19
+ld([0xfc])                      #20
+st([vPC])                       #21
+ld([0xfd])                      #22
+st([vPC+1])                     #23
+ld([0xfe])                      #24
+st([vAC])                       #25
+ld([0xff])                      #26
+st([vAC+1])                     #27
+nop()                           #0
+ld(hi('RESYNC'),Y)              #1
+jmp(Y,'RESYNC')                 #2
+ld([vTicks])                    #3
+
+# Entered last line of vertical blank (line 40)
+label('vBlankLast#34')
+
+# Game controller types
+# TypeA: Based on 74LS165 shift register (not supported)
+# TypeB: Based on CD4021B shift register (standard)
+# TypeC: Based on priority encoder
+#
+# Notes:
+# - TypeA was only used during development and first beta test, before ROM v1
+# - TypeB appears as type A with negative logic levels
+# - TypeB is the game controller type that comes with the original kit and ROM v1
+# - TypeB is mimicked by BabelFish / Pluggy McPlugface
+# - TypeB requires a prolonged /SER_LATCH, therefore vPulse is 8 scanlines, not 2
+# - TypeB and TypeC can be sampled in the same scanline
+# - TypeA is 1 scanline shifted as it looks at a different edge (XXX up or down?)
+# - TypeC gives incomplete information: lower buttons overshadow higher ones
+#
+#       TypeC    Alias    Button TypeB
+#       00000000  ^@   -> Right  11111110
+#       00000001  ^A   -> Left   11111101
+#       00000011  ^C   -> Down   11111011
+#       00000111  ^G   -> Up     11110111
+#       00001111  ^O   -> Start  11101111
+#       00011111  ^_   -> Select 11011111
+#       00111111  ?    -> B      10111111
+#       01111111  DEL  -> A      01111111
+#       11111111       -> (None) 11111111
+#
+#       Conversion formula:
+#               f(x) := 254 - x
+
+# Detect controller TypeC codes
+ld([serialRaw])                 #34 if serialRaw in [0,1,3,7,15,31,63,127,255]
+adda(1)                         #35
+anda([serialRaw])               #36
+bne('.buttons#39')              #37
+
+# TypeC
+ld([serialRaw])                 #38 [TypeC] if serialRaw < serialLast
+adda(1)                         #39
+anda([serialLast])              #40
+bne('.buttons#43')              #41
+ld(254)                         #42 then clear the selected bit
+nop()                           #43
+bra('.buttons#46')              #44
+label('.buttons#43')
+suba([serialRaw])               #43,45
+anda([buttonState])             #44
+st([buttonState])               #45
+label('.buttons#46')
+ld([serialRaw])                 #46 Set the lower bits
+ora([buttonState])              #47
+label('.buttons#48')
+st([buttonState])               #48
+ld([serialRaw])                 #49 Update serialLast for next pass
+jmp(Y,'vBlankLast#52')          #50
+st([serialLast])                #51
+
+# TypeB
+# pChange = pNew & ~pOld
+# nChange = nNew | ~nOld {DeMorgan}
+label('.buttons#39')
+ld(255)                         #39 [TypeB] Bitwise edge-filter to detect button presses
+xora([serialLast])              #40
+ora([serialRaw])                #41 Catch button-press events
+anda([buttonState])             #42 Keep active button presses
+ora([serialRaw])                #43
+nop()                           #44
+nop()                           #45
+bra('.buttons#48')              #46
+nop()                           #47
+
 #-----------------------------------------------------------------------
 #
 #  End of core
@@ -5236,6 +5340,7 @@ define('ledState_v2',ledState_v2)
 define('ledTempo',   ledTempo)
 define('userVars',   userVars)
 define('videoTable', videoTable)
+define('vIRQ_DEVROM',vIRQ_DEVROM)
 define('videoTop_DEVROM',videoTop_DEVROM)
 define('userCode',   userCode)
 define('soundTable', soundTable)
@@ -5282,12 +5387,33 @@ def basicLine(address, number, text):
 
 #-----------------------------------------------------------------------
 
-if pc()&255 > 251:              # Don't start in a trampoline region
-  align(0x100)
+lastRomFile = ''
+
+def insertRomDir(name):
+  global lastRomFile
+  if name[0] != '_':                    # Mechanism for hiding files
+    if pc()&255 >= 251-14:              # Prevent page crossing
+      trampoline()
+    s = lastRomFile[0:8].ljust(8,'\0')  # Cropping and padding
+    if len(lastRomFile) == 0:
+      lastRomFile = 0
+    for i in range(8):
+      st(ord(s[i]), [Y,Xpp])            #25-32
+      C(repr(s[i]).lstrip('u'))
+    ld(lo(lastRomFile))                 #33
+    st([vAC])                           #34
+    ld(hi(lastRomFile))                 #35
+    ld(hi('.sysDir#39'),Y)              #36
+    jmp(Y,'.sysDir#39')                 #37
+    st([vAC+1])                         #38
+    lastRomFile = name
 
 #-----------------------------------------------------------------------
 #       Embedded programs must be given on the command line
 #-----------------------------------------------------------------------
+
+if pc()&255 > 251:                      # Don't start in a trampoline region
+  align(0x100)
 
 for application in argv[1:]:
   print()
@@ -5311,6 +5437,7 @@ for application in argv[1:]:
     print('Load type .gt1 at $%04x' % pc())
     with open(application, 'rb') as f:
       raw = bytearray(f.read())
+    insertRomDir(name)
     label(name)
     raw = raw[:-2] # Drop start address
     if raw[0] == 0 and raw[1] + raw[2] > 0xc0:
@@ -5323,6 +5450,7 @@ for application in argv[1:]:
   # GCL files
   elif application.endswith('.gcl'):
     print('Compile type .gcl at $%04x' % pc())
+    insertRomDir(name)
     label(name)
     program = gcl.Program(name)
     program.org(userCode)
@@ -5376,6 +5504,7 @@ for application in argv[1:]:
     f = open(application, 'rb')
     raw = bytearray(f.read())
     f.close()
+    insertRomDir(name)
     label(name)
     packed, quartet = [], []
     for i in range(0, len(raw), 3):
@@ -5441,6 +5570,36 @@ for application in argv[1:]:
 
   C('End of %s, size %d' % (application, pc() - symbol(name)))
   print(' Size %s' % (pc() - symbol(name)))
+
+#-----------------------------------------------------------------------
+# ROM directory
+#-----------------------------------------------------------------------
+
+# SYS_ReadRomDir implementation
+
+if pc()&255 > 251 - 28:         # Prevent page crossing
+  trampoline()
+label('sys_ReadRomDir')
+beq('.sysDir#20')               #18
+ld(lo(sysArgs),X)               #19
+ld(AC,Y)                        #20 Follow chain to next entry
+ld([vAC])                       #21
+suba(14)                        #22
+jmp(Y,AC)                       #23
+#ld(hi(sysArgs),Y)              #24 Overlap
+#
+label('.sysDir#20')
+ld(hi(sysArgs),Y)               #20,24 Dummy
+ld(lo('.sysDir#25'))            #21 Go to first entry in chain
+ld(hi('.sysDir#25'),Y)          #22
+jmp(Y,AC)                       #23
+ld(hi(sysArgs),Y)               #24
+label('.sysDir#25')
+insertRomDir(lastRomFile)       #25-38 Start of chain
+label('.sysDir#39')
+ld(hi('REENTER'),Y)             #39 Return
+jmp(Y,'REENTER')                #40
+ld(-44//2)                      #41
 
 print()
 

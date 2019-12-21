@@ -59004,7 +59004,7 @@ Reset:        fe42 0002  ld   $02         ;| RAM segment address (high byte firs
               fe6f 00e1  ld   $e1
               fe70 0004  ld   $04
               fe71 002b  ld   $2b         ;022c STW
-              fe72 0022  ld   $22
+              fe72 0022  ld   $22         ;022c '_sysFn'
               fe73 0059  ld   $59         ;022e LDI
               fe74 0020  ld   $20
               fe75 005e  ld   $5e         ;0230 ST
@@ -59014,7 +59014,7 @@ Reset:        fe42 0002  ld   $02         ;| RAM segment address (high byte firs
               fe79 0021  ld   $21         ;0234 LDW
               fe7a 0030  ld   $30         ;0234 'p'
               fe7b 002b  ld   $2b         ;0236 STW
-              fe7c 0028  ld   $28
+              fe7c 0028  ld   $28         ;0236 '_sysArgs4'
               fe7d 00b4  ld   $b4         ;0238 SYS
               fe7e 00cb  ld   $cb
               fe7f 0011  ld   $11         ;023a LDWI
@@ -59224,7 +59224,7 @@ Reset:        fe42 0002  ld   $02         ;| RAM segment address (high byte firs
               ff4b 0021  ld   $21         ;0327 LDW
               ff4c 003c  ld   $3c         ;0327 'Pos'
               ff4d 002b  ld   $2b         ;0329 STW
-              ff4e 0028  ld   $28
+              ff4e 0028  ld   $28         ;0329 '_sysArgs4'
               ff4f 00e3  ld   $e3         ;032b ADDI
               ff50 0006  ld   $06
               ff51 002b  ld   $2b         ;032d STW
@@ -59233,7 +59233,7 @@ Reset:        fe42 0002  ld   $02         ;| RAM segment address (high byte firs
               ff54 00e1  ld   $e1
               ff55 0004  ld   $04
               ff56 002b  ld   $2b         ;0332 STW
-              ff57 0022  ld   $22
+              ff57 0022  ld   $22         ;0332 '_sysFn'
               ff58 0059  ld   $59         ;0334 LDI
               ff59 00fb  ld   $fb
               ff5a 002b  ld   $2b         ;0336 STW
@@ -59361,16 +59361,16 @@ Reset:        fe42 0002  ld   $02         ;| RAM segment address (high byte firs
               ffd4 0095  ld   $95
               ffd5 00fb  ld   $fb
               ffd6 002b  ld   $2b         ;03b2 STW
-              ffd7 0024  ld   $24
+              ffd7 0024  ld   $24         ;03b2 '_sysArgs0'
               ffd8 0011  ld   $11         ;03b4 LDWI
               ffd9 0000  ld   $00
               ffda 0002  ld   $02
               ffdb 002b  ld   $2b         ;03b7 STW
-              ffdc 001a  ld   $1a
+              ffdc 001a  ld   $1a         ;03b7 '_vLR'
               ffdd 0059  ld   $59         ;03b9 LDI
               ffde 00ad  ld   $ad
               ffdf 002b  ld   $2b         ;03bb STW
-              ffe0 0022  ld   $22
+              ffe0 0022  ld   $22         ;03bb '_sysFn'
               ffe1 00b4  ld   $b4         ;03bd SYS
               ffe2 00e2  ld   $e2
               ffe3 0000  ld   $00

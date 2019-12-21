@@ -18,10 +18,10 @@ gcl0x
     q>++ q  if>0loop]
 
   { Clear screen }
-  \SYS_SetMemory_v2_54 \sysFn:  {!!! Not in ROM v1 !!!}
+  \SYS_SetMemory_v2_54 _sysFn=  {!!! Not in ROM v1 !!!}
   32 \sysArgs1.                 {Color blue}
   $800 [do
-    p= \sysArgs2:               {Destination}
+    p= _sysArgs2=               {Destination}
     160 \sysArgs0.              {Count}
     54!!                        {SYS call}
     $100 p+ if>0loop]
@@ -69,9 +69,9 @@ $0300:
   $3f20   \sysArgs0: {Blue/White}
   Pos     \sysArgs4:
   6+      Pos=
-  \SYS_VDrawBits_134 \sysFn:
+  \SYS_VDrawBits_134 _sysFn=
   $fb i= [do
-    fontData 0? fontData<++ \sysArgs2. 134!
+    fontData 0?? fontData<++ \sysArgs2. 134!!
     \sysArgs4<++
     i<++ i if<>0loop]
   ret
@@ -84,9 +84,9 @@ $0300:
   i= 255| 255^ $fa| p=          {Pointer to channel struct}
   i<, i=                        {Extract note}
   0 p. p<++                     {.wavA}
-  3 p. p<++                     {.wavX: 0 "Noise", 1 Triangle, 2 Pulse, 3 Sawtooth}
-  \notesTable i+ 0? p. p<++     {.keyL}
-  \notesTable i+ 1? p. p<++     {.keyH}
+  3 p. p<++                     {.wavX, 3=Sawtooth}
+  \notesTable i+ 0?? p. p<++    {.keyL}
+  \notesTable i+ 1?? p. p<++    {.keyH}
   p. p<++                       {.oscL}
   p.                            {.oscH}
   ret
@@ -112,11 +112,11 @@ $814 Pos= PrintStartupMessage! {Returns 0}
 [if=0 \ledState_v2. \ledTimer.] {For continuity only restart when paused}
 9 \ledTempo.                    {6.0 Hz ( = 60/(9+1)), was 5.5 Hz}
 
-\SYS_SetMode_v2_80 \sysFn:      {!!! Not in ROM v1 !!!}
+\SYS_SetMode_v2_80 _sysFn=      {!!! Not in ROM v1 !!!}
 1 80!!                          {Mode 1 -> "ABC-"}
 
 { Load and start main program }
-\Main \sysArgs0: $200 \vLR: \SYS_Exec_88 \sysFn: 88!
+\Main _sysArgs0= $200 _vLR= \SYS_Exec_88 _sysFn= 88!!
 
 {-----------------------------------------------------------------------+
 |                                                                       |

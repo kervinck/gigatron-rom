@@ -1,0 +1,55 @@
+
+gcl0x
+
+[def
+  { X     dX    Y   dY  }
+  ##$0800 ##0   ##0 ##-$80
+  ##$1000 ##0   ##0 ##-$100
+  ##$1800 ##0   ##0 ##-$180
+  ##$2000 ##0   ##0 ##-$200
+  ##$2800 ##0   ##0 ##-$280
+  ##$3000 ##0   ##0 ##-$300
+  ##$3800 ##0   ##0 ##-$380
+] Points=
+
+[def
+  ##$4450 ##$4450 ##$4450
+  ##$4450 ##$4450 ##$4450
+  ##$4450
+] Current=
+
+{ Clear screen }
+$800 [do
+ p= $2020 p:
+ p 2+ if>0loop]
+
+[do
+ { Draw points }
+ Points p=
+ Current c=
+ 0 d=
+ 14 [do i=
+   c; q= d q.                   {Plot last position in color}
+   p 1+ peek $50+ <q.
+   p 5+ peek $44+ >q.           {Let Y point down for now}
+   q c:                         {New position}
+   63 q.                        {White}
+   d 23+ d=                     {New color}
+   c 2+ c= p 8+ p=              {Next point}
+   i 2- if>0loop]
+
+ { Update coordinates }
+ Points p=
+ 14 [do i=
+                                {p[0] += p[1]}
+   p       deek u=
+   p 2+ q= deek v=
+   u+ p:
+                                {p[1] -= p[0]/256}
+   p 1+ peek 128^ 128- u=       {Sign extend}
+   v u- q:
+
+   p 4+ p=                      {Next point}
+   i 1- if>0loop]
+ loop]
+

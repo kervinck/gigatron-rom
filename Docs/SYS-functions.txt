@@ -115,10 +115,10 @@ ROM stream format is [<addrH> <addrL> <n&255> n*<byte>]* 0
 on top of lookup tables.
 
 Variables:
-        sysArgs[0:1]    ROM pointer (input set by caller)
-        sysArgs[2:3]    RAM pointer (variable)
-        sysArgs[4]      State counter (variable)
-        vLR             vCPU continues here (input set by caller)
+        sysArgs[0:1]    ROM pointer (in)
+        sysArgs[2:3]    RAM pointer (changed)
+        sysArgs[4]      State counter (changed)
+        vLR             vCPU continues here (out)
 
 ----------------------------------------------------------------------
 Extension SYS_Out_22
@@ -157,8 +157,8 @@ Extension SYS_Unpack_56
 Unpack 3 bytes into 4 pixels
 
 Variables:
-        sysArgs[0:2]    Packed bytes (input)
-        sysArgs[0:3]    Pixels (output)
+        sysArgs[0:2]    Packed bytes (in)
+        sysArgs[0:3]    Pixels (out)
 
 ----------------------------------------------------------------------
 Extension SYS_Draw4_30
@@ -167,8 +167,8 @@ Extension SYS_Draw4_30
 Draw 4 pixels on screen, horizontally next to each other
 
 Variables:
-        sysArgs[0:3]    Pixels
-        sysArgs[4:5]    Position on screen
+        sysArgs[0:3]    Pixels (in)
+        sysArgs[4:5]    Position on screen (in)
 
 ----------------------------------------------------------------------
 Extension SYS_VDrawBits_134
@@ -177,10 +177,10 @@ Extension SYS_VDrawBits_134
 Draw slice of a character, 8 pixels vertical
 
 Variables:
-        sysArgs[0]      Color 0 (background)
-        sysArgs[1]      Color 1 (pen)
-        sysArgs[2]      8 bits, highest bit first (destructive)
-        sysArgs[4:5]    Position on screen
+        sysArgs[0]      Color 0 "background" (in)
+        sysArgs[1]      Color 1 "pen" (in)
+        sysArgs[2]      8 bits, highest bit first (changed)
+        sysArgs[4:5]    Position on screen (in)
 
 ----------------------------------------------------------------------
 Extension SYS_LSRW1_48
@@ -221,8 +221,8 @@ Note: This function a bit obsolete, as it has very limited use. It's
       in ROM to be known. Better avoid using this.
 
 Variables:
-        sysArgs[0:2]    Bytes (output)
-        sysArgs[6:7]    ROM pointer (input)
+        sysArgs[0:2]    Bytes (out)
+        sysArgs[6:7]    ROM pointer (in)
 
 ----------------------------------------------------------------------
 Extension SYS_SetMode_v2_80
@@ -263,9 +263,9 @@ Extension SYS_SetMemory_v2_54
 SYS function for setting 1..256 bytes
 
 Variables:
-        sysArgs[0]      Copy count (destructive)
-        sysArgs[1]      Copy value
-        sysArgs[2:3]    Destination address (destructive)
+        sysArgs[0]      Copy count (in, changed)
+        sysArgs[1]      Copy value (in)
+        sysArgs[2:3]    Destination address (in, changed)
 
 ----------------------------------------------------------------------
 Extension SYS_SendSerial1_v3_80
@@ -275,9 +275,9 @@ SYS function for sending data over serial controller port using
 pulse width modulation of the vertical sync signal.
 
 Variables:
-        sysArgs[0:1]    Source address               (destructive)
-        sysArgs[2]      Start bit mask (typically 1) (destructive)
-        sysArgs[3]      Number of send frames X      (destructive)
+        sysArgs[0:1]    Source address               (in, changed)
+        sysArgs[2]      Start bit mask (typically 1) (in, changed)
+        sysArgs[3]      Number of send frames X      (in, changed)
 
 The sending will abort if input data is detected on the serial port.
 Returns 0 in case of all bits sent, or <>0 in case of abort
@@ -345,7 +345,7 @@ Variables:
 For info:
         sysArgs[0:1]    Address Register, free to clobber
         sysArgs[2]      Instruction Register, free to clobber
-        sysArgs[3:5]    Flags, don't clobber
+        sysArgs[3:5]    Flags, don't touch
 
 ----------------------------------------------------------------------
 Extension SYS_ResetWaveforms_v4_50
@@ -375,11 +375,11 @@ Extension SYS_SpiExchangeBytes_v4_134
 Send and receive 1..256 bytes over SPI interface
 
 Variables:
-      sysArgs[0]      Page index start, for both send/receive (input, modified)
-      sysArgs[1]      Memory page for send data (input)
-      sysArgs[2]      Page index stop (input)
-      sysArgs[3]      Memory page for receive data (input)
-      sysArgs[4]      Scratch (modified)
+      sysArgs[0]      Page index start, for both send/receive (in, changed)
+      sysArgs[1]      Memory page for send data (in)
+      sysArgs[2]      Page index stop (in)
+      sysArgs[3]      Memory page for receive data (in)
+      sysArgs[4]      Scratch (changed)
 
 ----------------------------------------------------------------------
 Extension SYS_Sprite6_v3_64

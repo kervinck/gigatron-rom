@@ -1,0 +1,46 @@
+See also:
+https://github.com/kervinck/gigatron-rom/issues/125
+https://forum.gigatron.io/viewtopic.php?f=4&t=175
+
+vCPU interrupts
+---------------
+
+vReset
+------
+
+TODO
+
+vIRQ
+----
+Vertical blank interrupt triggering each time [frameCount] wraps
+around to 0 (and the interrupt vector is non-zero).
+
+Interrupt vector: $1f6.$1f7
+
+Minimal context of vPC and vAC will be stored at $fc..$ff. The
+mechanism won't save any further context (vLR, vSP, sysArgs, ...)!
+
+Return from interrupt sequence: 
+        LDWI $400               ;RTI 0
+        LUP 0
+
+The interrupt handler always starts in vCPU mode. Fast return to
+vCPU code is immediate: when possible it takes place in the same
+time slice (48 cycles).
+
+If we potentially interrupt non-vCPU code (v6502), the interrupt
+handler must store, in zero page ($xx), the vAC value it receives.
+Upon entry, vAC holds additional state information that allows
+switching back to non-vCPU. For future extendibility, the handler
+must store the whole word.
+
+        STW $xx
+
+Then return from the handler with:
+        LDWI $400               ;RTI $xx
+        LUP $xx
+
+This will switch back to the interrupted interpreter. It takes
+effect in the next timeslice. The return handler waits for that.
+
+-- End of document --
