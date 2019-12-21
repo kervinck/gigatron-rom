@@ -27,6 +27,9 @@ $1f8 CtrlBits=
        -- We could maybe also do a read back for positive detection
        -- SendOnesToCard writes all over memory if there's no card.
     3. gtemu.c writes arbitrary S.undef values that change slowly
+
+    XXX Moreover, it would be good if we can detect an interrupted
+        sector read and flush it
   }
 
   0 $7c.                        {Setup ctrl detection}

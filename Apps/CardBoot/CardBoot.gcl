@@ -12,6 +12,11 @@
 +-----------------------------------------------------------------------}
 
 {
+  XXX Positive card detection:
+        Read MISO's
+        Invert
+        Write to ZP
+        Read MIOS
   XXX  Support loading of segments in zero page
         - Bricks        82.ef   110 bytes
         - Tetronis      a0.ef    80 bytes
@@ -27,23 +32,23 @@
         Approach 3: Reduce footprint with CALLI and move variables to $c0
                 Lots of work, but this is a good idea anyway
   XXX  64K systems: put code in highest pages ($ffff and down)
-                --> Conflicts with Apple1 (WozMon)
+                --> Conflicts with Apple-1 (WozMon)
   XXX  32K systems: put code in bottom screen memory ($7f9f and down)
-        --> Conflicts with Apple1. So how about $800.$1000
+        --> Conflicts with Apple-1. So how about $800.$1000
         16*160 = 2560 bytes
         Con: It overwrites *** Gigatron 32K *** --> So be it
         We can always copy that to the bottom of screen memory (silly)
         Dynamically mak jump table at $f8: if you use it, ALLOC -8
         $FE PrintChar, Newline, Open, LoadByte, ...
   XXX  On the matter of scrolling: When to restore the video table?
-       Graphical games probably need it restored. Disk commands don't
-       need that.
-        Option 1: Signal somehow in the GT1 that we don't want to restore
-        Option 2: Start the terminal with cursor at top of screen
-                  This doesn't work if we type "DIR" first
-  XXX  DIR, CLS commands
-  XXX  TYPE command (passing of ARGS)
-  XXX  Name: GTOS, GTDOS, TTLDOS, UDOS, SDOS, MICRODOS, TINYDOS, PROMPT, ...
+       A: When not loading to $503
+  XXX  DIR -> Builtin command. Only names
+  XXX  LIST -> External command: file size, date, volume label
+  XXX  CLS
+  XXX  STAT
+  XXX  TYPE command (consider passing of ARGS)
+  XXX  Name: GTOS, BOSS, PROMPT, MINIDOS
+  XXX  Device letters or not? A: B: C:
   XXX  https://cdn.hackaday.io/images/1744261554112919559.png
   XXX  LoadtGt1: better closing of sector
   XXX  Compliancy: Byte addressing for V2 cards when CCS bit in CMD58 OCR is 0
@@ -196,7 +201,7 @@ $500 Address=                   {512 bytes memory for one sector}
 ] CMD0=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ [ret]{        RAM page $59                                    |
+|} >_vLR++ [ret] {      RAM page $59                                    |
 +-----------------------------------------------------------------------}
 *=$59a0
 
@@ -274,7 +279,7 @@ $500 Address=                   {512 bytes memory for one sector}
 ] CMD8=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ [ret]{        RAM page $5a                                    |
+|} >_vLR++ [ret] {      RAM page $5a                                    |
 +-----------------------------------------------------------------------}
 *=$5aa0
 
@@ -310,7 +315,7 @@ $500 Address=                   {512 bytes memory for one sector}
 ] CMD55=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ [ret]{        RAM page $5b                                    |
+|} >_vLR++ [ret] {      RAM page $5b                                    |
 +-----------------------------------------------------------------------}
 *=$5ba0
 
@@ -348,7 +353,7 @@ $500 Address=                   {512 bytes memory for one sector}
 ] CMD16=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ [ret]{        RAM page $5c                                    |
+|} >_vLR++ [ret] {      RAM page $5c                                    |
 +-----------------------------------------------------------------------}
 *=$5ca0
 
@@ -385,7 +390,7 @@ $500 Address=                   {512 bytes memory for one sector}
 ] CMD17=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ [ret]{        RAM page $5d                                    |
+|} >_vLR++ [ret] {      RAM page $5d                                    |
 +-----------------------------------------------------------------------}
 *=$5da0
 
@@ -430,7 +435,7 @@ $500 Address=                   {512 bytes memory for one sector}
 ] SendOnesToCard=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ [ret]{        RAM page $5e                                    |
+|} >_vLR++ [ret] {      RAM page $5e                                    |
 +-----------------------------------------------------------------------}
 *=$5ea0
 
@@ -455,7 +460,7 @@ $500 Address=                   {512 bytes memory for one sector}
 ] UpdateCrc16=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ [ret]{        RAM page $5f                                    |
+|} >_vLR++ [ret] {      RAM page $5f                                    |
 +-----------------------------------------------------------------------}
 *=$5fa0
 
@@ -503,13 +508,13 @@ $500 Address=                   {512 bytes memory for one sector}
 
   {32 PrintChar!                 {Space}}
   \sysArgs6, CardReply=         {Store reply from card}
-  {PrintByte!                    {Print hex value}}
+  PrintByte!                    {Print hex value}
   CardReply                     {As return value}
   pop ret
 ] WaitForCardReply=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ [ret]{        RAM page $60                                    |
+|} >_vLR++ [ret] {      RAM page $60                                    |
 +-----------------------------------------------------------------------}
 *=$60a0
 
@@ -525,6 +530,7 @@ $500 Address=                   {512 bytes memory for one sector}
     \frameCount, 60- if<0loop]  {No more than 1 second}
   CMD8!                         {Detect version 1.X or later}
   [do
+    { TODO: "In SPI mode CMD1 and ACMD41 have the same behavior" }
     CMD55! ACMD41!              {Query condition}
     CardReply if<>0             {Until the card is initialised}
     \frameCount, 120- if<0loop] {No more than 2 seconds}
@@ -561,7 +567,7 @@ $500 Address=                   {512 bytes memory for one sector}
 ] ReadVolumeId=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ [ret]{        RAM page $61                                    |
+|} >_vLR++ [ret] {      RAM page $61                                    |
 +-----------------------------------------------------------------------}
 *=$61a0
 
@@ -594,7 +600,7 @@ $500 Address=                   {512 bytes memory for one sector}
 ] ReadMBR=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ [ret]{        RAM page $62                                    |
+|} >_vLR++ [ret] {      RAM page $62                                    |
 +-----------------------------------------------------------------------}
 *=$62a0
 
@@ -644,7 +650,7 @@ $500 Address=                   {512 bytes memory for one sector}
 ] {InitFat32=}
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ [ret]{        RAM page $63                                    |
+|} >_vLR++ [ret] {      RAM page $63                                    |
 +-----------------------------------------------------------------------}
 *=$63a0
 InitFat32=
@@ -695,7 +701,7 @@ InitFat32=
 ] ReadSector=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ [ret]{        RAM page $64                                    |
+|} >_vLR++ [ret] {      RAM page $64                                    |
 +-----------------------------------------------------------------------}
 *=$64a0
 
@@ -748,7 +754,7 @@ InitFat32=
 ] ReadDirectory=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ [ret]{        RAM page $65                                    |
+|} >_vLR++ [ret] {      RAM page $65                                    |
 +-----------------------------------------------------------------------}
 *=$65a0
 
@@ -797,7 +803,7 @@ InitFat32=
 ] ClusterToSector=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ [ret]{        RAM page $66                                    |
+|} >_vLR++ [ret] {      RAM page $66                                    |
 +-----------------------------------------------------------------------}
 *=$66a0
 
@@ -849,7 +855,7 @@ InitFat32=
 ] {AddOffset=}
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ [ret]{        RAM page $67                                    |
+|} >_vLR++ [ret] {      RAM page $67                                    |
 +-----------------------------------------------------------------------}
 *=$67a0
 AddOffset=
@@ -899,7 +905,7 @@ AddOffset=
 ] PrintWord=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ [ret]{        RAM page $68                                    |
+|} >_vLR++ [ret] {      RAM page $68                                    |
 +-----------------------------------------------------------------------}
 *=$68a0
 
@@ -943,7 +949,7 @@ AddOffset=
 ] PrintHexDigit=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ [ret]{        RAM page $69                                    |
+|} >_vLR++ [ret] {      RAM page $69                                    |
 +-----------------------------------------------------------------------}
 *=$69a0
 
@@ -982,7 +988,7 @@ AddOffset=
 ] PrintVolumeLabel=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ [ret]{        RAM page $6a                                    |
+|} >_vLR++ [ret] {      RAM page $6a                                    |
 +-----------------------------------------------------------------------}
 *=$6aa0
 
@@ -1016,7 +1022,7 @@ AddOffset=
 ] PrintDate=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ [ret]{        RAM page $6b                                    |
+|} >_vLR++ [ret] {      RAM page $6b                                    |
 +-----------------------------------------------------------------------}
 *=$6ba0
 
@@ -1054,7 +1060,7 @@ AddOffset=
 ] PrintName=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ [ret]{        RAM page $6c                                    |
+|} >_vLR++ [ret] {      RAM page $6c                                    |
 +-----------------------------------------------------------------------}
 *=$6ca0
 
@@ -1081,7 +1087,7 @@ AddOffset=
 ] PrintDigit=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ [ret]{        RAM page $6d                                    |
+|} >_vLR++ [ret] {      RAM page $6d                                    |
 +-----------------------------------------------------------------------}
 *=$6da0
 
@@ -1111,7 +1117,7 @@ AddOffset=
 ] Newline=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ [ret]{        RAM page $6e                                    |
+|} >_vLR++ [ret] {      RAM page $6e                                    |
 +-----------------------------------------------------------------------}
 *=$6ea0
 
@@ -1142,7 +1148,7 @@ AddOffset=
 ] PrintChar=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ [ret]{        RAM page $6f                                    |
+|} >_vLR++ [ret] {      RAM page $6f                                    |
 +-----------------------------------------------------------------------}
 *=$6fa0
 
@@ -1179,7 +1185,7 @@ AddOffset=
 ] PrintDirectory=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ [ret]{        RAM page $70                                    |
+|} >_vLR++ [ret] {      RAM page $70                                    |
 +-----------------------------------------------------------------------}
 *=$70a0
 
@@ -1210,7 +1216,7 @@ AddOffset=
 ] PrintSize=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ [ret]{        RAM page $71                                    |
+|} >_vLR++ [ret] {      RAM page $71                                    |
 +-----------------------------------------------------------------------}
 *=$71a0
 
@@ -1243,7 +1249,7 @@ AddOffset=
 ] {ValueToDecimal=}
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ [ret]{        RAM page $72                                    |
+|} >_vLR++ [ret] {      RAM page $72                                    |
 +-----------------------------------------------------------------------}
 *=$72a0
 ValueToDecimal=
@@ -1257,7 +1263,7 @@ ValueToDecimal=
 +-----------------------------------------------------------------------}
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ [ret]{        RAM page $73                                    |
+|} >_vLR++ [ret] {      RAM page $73                                    |
 +-----------------------------------------------------------------------}
 *=$73a0
 
@@ -1305,7 +1311,7 @@ ValueToDecimal=
 ] LoadGt1=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ [ret]{        RAM page $74                                    |
+|} >_vLR++ [ret] {      RAM page $74                                    |
 +-----------------------------------------------------------------------}
 *=$74a0
 
@@ -1336,7 +1342,7 @@ ValueToDecimal=
 ] Execute=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ [ret]{        RAM page $75                                    |
+|} >_vLR++ [ret] {      RAM page $75                                    |
 +-----------------------------------------------------------------------}
 *=$75a0
 
@@ -1359,7 +1365,7 @@ ValueToDecimal=
 ] NextSector=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ [ret]{        RAM page $76                                    |
+|} >_vLR++ [ret] {      RAM page $76                                    |
 +-----------------------------------------------------------------------}
 *=$76a0
 
@@ -1395,7 +1401,7 @@ ValueToDecimal=
 ] ReadClusterChain=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ [ret]{        RAM page $77                                    |
+|} >_vLR++ [ret] {      RAM page $77                                    |
 +-----------------------------------------------------------------------}
 *=$77a0
 
@@ -1436,7 +1442,7 @@ ValueToDecimal=
 ] NextCluster=
 
 {-----------------------------------------------------------------------+
-|}>_vLR++ [ret]{        RAM page $78                                    |
+|} >_vLR++ [ret] {      RAM page $78                                    |
 +-----------------------------------------------------------------------}
 *=$78a0
 
