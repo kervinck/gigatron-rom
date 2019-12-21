@@ -646,7 +646,7 @@ namespace Compiler
     bool initialiseMacros(void)
     {
         std::string filename = (!Assembler::getUseOpcodeCALLI()) ? "/include/macros.i" : "/include/macros_CALLI.i";
-        filename =  Assembler::getIncludePath() + filename;
+        filename = Assembler::getIncludePath() + filename;
         std::ifstream infile(filename);
 
         if(!infile.is_open())
@@ -2155,6 +2155,12 @@ namespace Compiler
                         std::string basicLabel = _labels[labelIndex]._output;
                         Expression::stripWhitespace(basicLabel);
                         Expression::replaceText(_codeLines[i]._vasm[j]._code, _internalLabels[k]._name, basicLabel);
+
+                        // BASIC labels override internal labels
+                        if(_codeLines[i]._vasm[j]._address == _labels[labelIndex]._address)
+                        {
+                            _codeLines[i]._vasm[j]._internalLabel = basicLabel;
+                        }
                     }
 
                     // Discarded internal label

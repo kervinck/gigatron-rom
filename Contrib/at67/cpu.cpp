@@ -315,7 +315,8 @@ namespace Cpu
     void setRAM(uint16_t address, uint8_t data)
     {
         // Constant "0" and "1" are stored here
-        if(address == ZERO_CONST_ADDRESS  ||  address == ONE_CONST_ADDRESS) return;
+        if(address == ZERO_CONST_ADDRESS) {fprintf(stderr, "Cpu::setRAM() : Warning writing to address : 0x%04x : 0x%02x\n", address, data); return;}
+        if(address == ONE_CONST_ADDRESS)  {fprintf(stderr, "Cpu::setRAM() : Warning writing to address : 0x%04x : 0x%02x\n", address, data); return;}
 
         _RAM[address & (Memory::getSizeRAM()-1)] = data;
     }

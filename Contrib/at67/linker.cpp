@@ -149,7 +149,7 @@ namespace Linker
     {
         if(_subIncludeFiles.find(includeName) == _subIncludeFiles.end())
         {
-            fprintf(stderr, "Assembler::getAsmOpcodeSizeOfIncludeSub() : Include file was never loaded : '%s'\n", includeName.c_str());
+            fprintf(stderr, "Linker::getAsmOpcodeSizeOfIncludeSub() : Include file was never loaded : '%s'\n", includeName.c_str());
             return -1;
         }
 
@@ -206,7 +206,7 @@ namespace Linker
     {
         if(_subIncludeFiles.find(includeName) == _subIncludeFiles.end())
         {
-            fprintf(stderr, "Assembler::getInternalSubCode() : Include file was never loaded : '%s'\n", includeName.c_str());
+            fprintf(stderr, "Linker::getInternalSubCode() : Include file was never loaded : '%s'\n", includeName.c_str());
             return false;
         }
 
@@ -304,10 +304,11 @@ namespace Linker
         // Include file already loaded
         if(_subIncludeFiles.find(filename) != _subIncludeFiles.end()) return true;
 
-        std::ifstream infile("gbas/include/" + filename);
+        std::string path = Assembler::getIncludePath() + "/include/";
+        std::ifstream infile(path + filename);
         if(!infile.is_open())
         {
-            fprintf(stderr, "Compiler::loadInclude() : Failed to open file : '%s'\n", filename.c_str());
+            fprintf(stderr, "Linker::loadInclude() : Failed to open file : '%s'\n", filename.c_str());
             return false;
         }
 
@@ -321,7 +322,7 @@ namespace Linker
 
             if(!infile.good() && !infile.eof())
             {
-                fprintf(stderr, "Assembler::loadInclude() : Bad lineToken : '%s' : in '%s' : on line %d\n", lineToken.c_str(), filename.c_str(), numLines+1);
+                fprintf(stderr, "Linker::loadInclude() : Bad lineToken : '%s' : in '%s' : on line %d\n", lineToken.c_str(), filename.c_str(), numLines+1);
                 return false;
             }
 
