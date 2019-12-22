@@ -128,11 +128,15 @@ def sendGt1(fp):
 #       Connect to Arduino
 #-----------------------------------------------------------------------
 
-autoDetect = ('Generic', 'Arduino', 'FT232R', 'SparkFun')
+autoDetect = [                  # (VID, PID)
+        (0x2341, 0x0043),       # Arduino Uno
+        (0x2341, 0x8037),       # Arduino Micro
+        (0x0403, 0x6001),       # Arduino Nano
+        (0x1b4f, 0x9206) ]      # SparkFun Pro Micro (5V, 16 MHz)
 
 port = None
 if not args.port:
-  serPorts = [p for p in comports() if p.description.startswith(autoDetect)]
+  serPorts = [p for p in comports() if (p.vid, p.pid) in autoDetect]
   if len(serPorts) == 0:
     raise Exception('No Arduino detected')
   if len(serPorts) > 1:
