@@ -128,7 +128,7 @@ def sendGt1(fp):
 #       Connect to Arduino
 #-----------------------------------------------------------------------
 
-autoDetect = ('Arduino', 'FT232R', 'SparkFun')
+autoDetect = ('Generic', 'Arduino', 'FT232R', 'SparkFun')
 
 port = None
 if not args.port:
