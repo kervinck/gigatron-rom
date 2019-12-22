@@ -24,7 +24,7 @@
 # 2018-04-29 (marcelk) Initial version
 # 2018-05-13 (marcelk) Use application level flow control
 # 2018-05-29 (rockybulwinkle) Add option to override detected port,
-#              search on /dev/ttyACM* as well, swith to argparse.
+#               search on /dev/ttyACM* as well, swith to argparse.
 # 2018-05-30 (marcelk) Enable stdin again. A bit more consistency.
 # 2018-06-04 (marcelk) Allow timeout while waiting for first prompt
 # 2018-06-29 (marcelk) Send escaped control bytes to newer Babelfishes
@@ -47,8 +47,7 @@ from time import sleep
 # One-for-all error handler (don't throw scary stack traces at the user)
 sys.excepthook = lambda exType, exValue, exTrace: print('%s: %s' % (exType.__name__,  exValue))
 
-# Require Python 3
-if sys.version_info[0] < 3:
+if sys.version_info[0] < 3:     # Require Python 3
   raise Exception('Need Python 3')
 
 #-----------------------------------------------------------------------
@@ -129,7 +128,7 @@ def sendGt1(fp):
 #       Connect to Arduino
 #-----------------------------------------------------------------------
 
-autoDetect = ('Arduino', 'SparkFun')
+autoDetect = ('Arduino', 'FT232R', 'SparkFun')
 
 port = None
 if not args.port:
