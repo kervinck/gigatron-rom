@@ -1,12 +1,12 @@
 
 {-----------------------------------------------------------------------+
 |                                                                       |
-|       CardTest                                                        |
+|       CardBoot                                                        |
 |                                                                       |
 |       !!! Work in progress !!!                                        |
 |                                                                       |
 |       The goal is to connect to a FAT32-formatted SDC/MMC card        |
-|       over the SPI interface, and then list its root directory.       |
+|       over the SPI interface, and then read its root directory.       |
 |       If there is a BOOT.GT1 file, load and execute it.               |
 |                                                                       |
 +-----------------------------------------------------------------------}
