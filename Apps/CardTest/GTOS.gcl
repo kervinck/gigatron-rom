@@ -1,13 +1,14 @@
 
 {-----------------------------------------------------------------------+
 |                                                                       |
-|       CardBoot                                                        |
+|       GTOS                                                            |
 |                                                                       |
 |       !!! Work in progress !!!                                        |
 |                                                                       |
-|       The goal is to connect to a FAT32-formatted SDC/MMC card        |
-|       over the SPI interface, and then read its root directory.       |
-|       If there is a BOOT.GT1 file, load and execute it.               |
+|       Goal is to provide basic operating system services              |
+|       - Terminal                                                      |
+|       - Card access                                                   |
+|       - Load command prompt                                           |
 |                                                                       |
 +-----------------------------------------------------------------------}
 
