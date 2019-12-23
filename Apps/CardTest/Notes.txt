@@ -1,5 +1,5 @@
 XXX  Names: GTOS, BOSS, PROMPT/COMMAND, MINIDOS, ...
-XXX  Boot -> Find load and run a GT1 file
+XXX  CardBoot -> Find load and run a GT1 file
 XXX  Dir -> Builtin command. Only names
 XXX  List -> External command: file size, date, volume label
 XXX  Cls -> Clear terminal
@@ -10,7 +10,7 @@ XXX  Device letters or not? A: B: C:
 XXX  Directories or not?
 XXX  Switches or not
 
-        Boot.gcl
+        CardBoot.gcl
                 [Loads from ROM, lives $8a0...up]
                 Checks SD card and FAT32
                 Can find and load one file: GTOS.gt1
@@ -20,29 +20,31 @@ XXX  Switches or not
                                                 CP/M BOOT
                 Welcome message (throw-away code in $503)
                   CLS + "Gigatron GTOS v1 32K" + Apple II beep
-                  Load and execute Prompt.gt1
+                  Load and execute Command.gt1
                 Provide resident services in $200..$4f9
                 - BOSS.writeByte                CP/M CONOUT
                 - BOSS.readByte                 CP/M CONIN
                 - BOSS.setDevice                CP/M SELDSK
+                - BOSS.readDir/find/enter/delete/create
                 - BOSS.loadFile -- Gt1 loading
                 - BOSS.readSector               CP/M READ
                 - BOSS.writeSector              CP/M WRITE
-                - BOSS.find/enter/delete/create
-                - BOSS.prompt                   CP/M WBOOT (DOS COMMAND.COM)
-                - BOSS.multitasking
+                - BOSS.command                  CP/M WBOOT (DOS COMMAND.COM)
+                - BOSS.spawn
+                - BOSS.launch
                 - Won't be reloaded during a session
                 - Controls all shadow memory. May hide in banked memory
                 - Can use generic SYS functions, but not app-specific
                 - Can be be replaced without EPROM change
 
-        Prompt.gt1 -- Command parser and dispatcher
+        Command.gt1 -- Command parser and dispatcher
                 Lives in top..$7fff
                 Display OK/error, this unifies error reporting
                 Show prompt and cursor symbol
                   A> _
                 Handle user input with line editing
-                Change drive letter
+                Built-in command: Change device letter
+                Built-in command: Dir
                 Find file '<CMD>' in root dir
                 If not found, return to prompt
                 Find argument files, open if found?

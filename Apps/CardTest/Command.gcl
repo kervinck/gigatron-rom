@@ -1,14 +1,11 @@
 
 {-----------------------------------------------------------------------+
 |                                                                       |
-|       List                                                            |
+|       Command                                                         |
 |                                                                       |
 |       !!! Work in progress !!!                                        |
 |                                                                       |
-|       List directory contents including date, size and volume ID.     |
-|                                                                       |
-|       Goal is to make this a command that runs under GTOS and         |
-|       returns to the prompt                                           |
+|       Goal is to make this a command dispatcher that runs under GTOS  |
 |                                                                       |
 +-----------------------------------------------------------------------}
 
@@ -19,32 +16,6 @@ gcl0x
 |       Variables                                                       |
 |                                                                       |
 +-----------------------------------------------------------------------}
-
-{
-        Variable        Bytes   Description
-        --------        -----   -----------
-        CardType        X       Detected card version
-        Address         XX      RAM for transfer buffer
-        ValueL,H        XXXX    32-bit accumulator
-        OffsetL,H       XXXX    Offset to be added to ValueL,H
-        SectorL,H       XXXX    Block number of last sector
-        CurrentDirL,H   ----    First cluster of current directory
-        ClusterSize     X       Sectors per cluster: 1, 2, ... 128
-        ClusterMask     X       XXX ClusterSize - 1
-        ClusterBaseL,H  ----    Cluster origin (hypothetical cluster 0)
-        FatBaseL,H      ----    XXX
-        FileSizeL,H     ????    File size from directory entry
-        FilePosL,H      --XX    Current R/W position in file: 0..FileSize
-        Checksum        ----    CRC16 checksum over sector data
-
-        Memory usage
-        ------------
-        $500  $6ff              Buffer for reading FAT sectors
-        $58a0 $xxff             Code not needed for GT1 reading
-                                Eg. detecting the card settings
-        $xxa0 $78ff             GT1 reading core
-        $7fa0 ...               Cluster list
-}
 
 {-----------------------------------------------------------------------+
 |                       RAM page 2                                      |
