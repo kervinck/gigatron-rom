@@ -1,13 +1,89 @@
 
 {-----------------------------------------------------------------------+
 |                                                                       |
-|       Command                                                         |
+|       CardBoot                                                        |
 |                                                                       |
 |       !!! Work in progress !!!                                        |
 |                                                                       |
-|       Goal is to make this a command dispatcher that runs under GTOS  |
+|       The goal is to connect to a FAT32-formatted SDC/MMC card        |
+|       over the SPI interface, and then read its root directory.       |
+|       If there is a BOOT.GT1 file, load and execute it.               |
 |                                                                       |
 +-----------------------------------------------------------------------}
+
+{
+  XXX Positive card detection:
+        Read MISO's
+        Invert
+        Write to ZP
+        Read MIOS
+  XXX  Support loading of segments in zero page
+        - Bricks        82.ef   110 bytes
+        - Tetronis      a0.ef    80 bytes
+        - Frogstroll    82.ef   110 bytes
+        Approach 1: Through page 1
+                Kludge but very simple.
+                Visual artifacts are transient, and only with certain files
+                We could also map it to a different page, e.g. one
+                that will be scrolled out anyway
+        Approach 2: Decoding after load
+                Faster loading, but 2nd pass needed
+                Can't hide visual artifacts, even for simple files
+        Approach 3: Reduce footprint with CALLI and move variables to $c0
+                Lots of work, but this is a good idea anyway
+  XXX  64K systems: put code in highest pages ($ffff and down)
+                --> Conflicts with Apple-1 (WozMon)
+  XXX  32K systems: put code in bottom screen memory ($7f9f and down)
+        --> Conflicts with Apple-1. So how about $800.$1000
+        16*160 = 2560 bytes
+        Con: It overwrites *** Gigatron 32K *** --> So be it
+        We can always copy that to the bottom of screen memory (silly)
+        Dynamically mak jump table at $f8: if you use it, ALLOC -8
+        $FE PrintChar, Newline, Open, LoadByte, ...
+  XXX  On the matter of scrolling: When to restore the video table?
+       A: When not loading to $503
+  XXX  DIR -> Builtin command. Only names
+  XXX  LIST -> External command: file size, date, volume label
+  XXX  CLS
+  XXX  STAT
+  XXX  TYPE command (consider passing of ARGS)
+  XXX  Name: GTOS, BOSS, PROMPT, MINIDOS
+  XXX  Device letters or not? A: B: C:
+  XXX  https://cdn.hackaday.io/images/1744261554112919559.png
+  XXX  LoadtGt1: better closing of sector
+  XXX  Compliancy: Byte addressing for V2 cards when CCS bit in CMD58 OCR is 0
+  XXX  Compliancy: MMC v3 card detection with CMD1
+  XXX  Compliancy: Don't set block size with CMD16 if CCS bit in OCS is 1
+  XXX  Compliancy: Reconsider pull-down resistors on MISO lines
+                   Some cards [30%?] [MMC?] have MISO in open collector during
+                   init" But if this is only during CMD0, we can live with it...
+  XXX  Compliancy: Follow cluster chain for directories as well
+  XXX  Speed: Transfer 256 bytes at once
+  XXX  Think about card detect and monitoring it (inserted = low)
+       Put we can always use the MOSI line for this, or check the
+       init status when opening a file
+  XXX  Figure out why Apple formats card with type 0x0b
+
+  References:
+
+        http://www.dejazzer.com/ee379/lecture_notes/lec12_sd_card.pdf
+        SPI and SD cards
+
+        https://electronics.stackexchange.com/questions/303745/sd-card-initialization-problem-cmd8-wrong-response
+        SD card initialization problem - CMD8 wrong response
+
+        http://www.rjhcoding.com/avrc-sd-interface-1.php
+        http://www.rjhcoding.com/avrc-sd-interface-2.php
+        http://www.rjhcoding.com/avrc-sd-interface-3.php
+        http://www.rjhcoding.com/avrc-sd-interface-4.php
+        Interfacing an SD Card Part 1-4
+
+        https://www.pjrc.com/tech/8051/ide/fat32.html
+        Understanding FAT32 Filesystems
+
+        https://bits4device.wordpress.com/2017/12/16/sd-crc7-crc16-implementation/
+        CRC definition
+}
 
 gcl0x
 
@@ -16,6 +92,32 @@ gcl0x
 |       Variables                                                       |
 |                                                                       |
 +-----------------------------------------------------------------------}
+
+{
+        Variable        Bytes   Description
+        --------        -----   -----------
+        CardType        X       Detected card version
+        Address         XX      RAM for transfer buffer
+        ValueL,H        XXXX    32-bit accumulator
+        OffsetL,H       XXXX    Offset to be added to ValueL,H
+        SectorL,H       XXXX    Block number of last sector
+        CurrentDirL,H   ----    First cluster of current directory
+        ClusterSize     X       Sectors per cluster: 1, 2, ... 128
+        ClusterMask     X       XXX ClusterSize - 1
+        ClusterBaseL,H  ----    Cluster origin (hypothetical cluster 0)
+        FatBaseL,H      ----    XXX
+        FileSizeL,H     ????    File size from directory entry
+        FilePosL,H      --XX    Current R/W position in file: 0..FileSize
+        Checksum        ----    CRC16 checksum over sector data
+
+        Memory usage
+        ------------
+        $500  $6ff              Buffer for reading FAT sectors
+        $58a0 $xxff             Code not needed for GT1 reading
+                                Eg. detecting the card settings
+        $xxa0 $78ff             GT1 reading core
+        $7fa0 ...               Cluster list
+}
 
 {-----------------------------------------------------------------------+
 |                       RAM page 2                                      |
