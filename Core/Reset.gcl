@@ -204,7 +204,7 @@ $1f8 CtrlBits=
     \sysArgs6, if<>0            {Break on zeroes from pull-down R1}
 
     1^ [if=0                    {Only 1 means success}
-      \CardBoot _sysArgs0=      {Load CardBoot from ROM and execute}
+      \Boot _sysArgs0=          {Load Boot from ROM and execute}
       $200 _vLR=
       \SYS_Exec_88 _sysFn= 88!!]
 
