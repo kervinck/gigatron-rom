@@ -18,5 +18,7 @@
 160 poke X+Y,C
 170 X(S)=X:Y(S)=Y
 180 nextS:goto 80
-190 poke Y(S)+X(S),C+64
-200 Y(S)=0:nextS:goto 80
+190 X=X(S)
+200 ifpeek(X+Y)=D goto150
+210 poke Y(S)+X(S),C+64
+220 Y(S)=0:nextS:goto 80
