@@ -3,13 +3,13 @@
 10 N=19
 20 C=63:D=16:I=1:W=159
 30 poke42,D:cls
-40 poke43,76:at32,96
+40 poke43,72:at32,96
 50 ?"Merry Christmas!";
 60 at0,119:line W,0
 70 forS=1toN:Y(S)=0:nextS
 80 for S=1 to N
 90 if Y(S)>0 goto 120
-100 X(S)=2+rnd(W-1)
+100 X(S)=2+rnd(W-3)
 110 Y(S)=(8+rnd(60))*256
 120 Y=Y(S)+256
 130 X=X(S)+I:I=I+J:J=J-I
