@@ -1,5 +1,4 @@
-' 64K RAM example that also require the opcode CALLI
-_useOpcodeCALLI_
+' 64K RAM example
 _runtimeStart_ &hFFFF
 
 poke &h01F9, 238 'disables video output, cls becomes almost instant

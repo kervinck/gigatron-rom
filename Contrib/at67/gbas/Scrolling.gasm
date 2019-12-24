@@ -31,22 +31,15 @@ highByteMask        EQU                     register0 + 0x2C
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_9                  EQU                     0x0240
-_10                 EQU                     0x025c
-_20                 EQU                     0x026f
-_31                 EQU                     0x0240
-_32                 EQU                     0x0240
-_33                 EQU                     0x0240
-_34                 EQU                     0x0240
-_35                 EQU                     0x0240
-_36                 EQU                     0x0240
-_end_0x0281         EQU                     0x0279
+_loop               EQU                     0x024d
+_repeat_0x0274      EQU                     0x0270
+_end_0x029d         EQU                     0x0293
 
 ; Variables
-_P                  EQU                     0x0030
-_Q                  EQU                     0x0032
-_R                  EQU                     0x0034
-_X                  EQU                     0x0036
+_x                  EQU                     0x0030
+_p                  EQU                     0x0032
+_x2                 EQU                     0x0034
+_nx2                EQU                     0x0036
 
 ; Strings
 
@@ -64,34 +57,56 @@ _entryPoint_        InitRealTimeProc
                     InitGtOp                
                     Initialise                                              ; INIT
 
-_9                  LDI                     2
+                    LDI                     0
                     STW                     graphicsMode
-                    ScanlineMode            
-                    LDWI                    257
-                    STW                     _P
-                    LDWI                    385
-                    STW                     _Q
-                    LDWI                    387
-                    STW                     _R
-                    LDI                     0
-                    STW                     _X                              ; MODE 2:P=257:Q=385:R=387:X=0
+                    ScanlineMode                                            ; mode 0
 
-_10                 LDI                     1
+                    LDI                     0
+                    STW                     _x                              ; x = 0
+
+_loop               LDI                     1
                     STW                     waitVBlankNum
-                    WaitVBlank              
+                    WaitVBlank                                              ; wait 1
+
+                    LDWI                    257
+                    STW                     register0
+                    LDW                     _x
+                    POKE                    register0                       ; poke &h0101, x
+
+                    LDWI                    273
+                    STW                     _p                              ; p = &h0111
+
+                    LDW                     _x
+                    ADDW                    _x
+                    STW                     _x2                             ; x2 = x + x
+
                     LDI                     0
-                    SUBW                    _X
-                    POKE                    _P
-                    LDW                     _X
-                    POKE                    _Q                              ; WAIT 1:POKE P,-X:POKE Q,X
+                    SUBW                    _x2
+                    STW                     _nx2                            ; nx2 = -x2
 
-_20                 LDW                     _X
-                    POKE                    _R
-                    SUBI                    1
-                    STW                     _X
-                    BRA                     _10                             ; POKE R,X:X=X-1:GOTO &10
+_repeat_0x0274      LDW                     _nx2
+                    POKE                    _p                              ; poke p, nx2
 
-_end_0x0281         BRA                     _end_0x0281                     ; END
+                    LDW                     _p
+                    ADDI                    16
+                    STW                     0xc0
+                    LDW                     _x2
+                    POKE                    0xc0                            ; poke p + 16, x2
+
+                    LDW                     _p
+                    ADDI                    32
+                    STW                     _p                              ; p = p + 32
+
+                    LDWI                    465
+                    SUBW                    _p
+                    BGE                     _repeat_0x0274                  ; until p &&>= &h01D1
+
+                    INC                     _x                              ; inc x
+
+                    LDWI                    _loop
+                    CALL                    giga_vAC                        ; goto loop
+
+_end_0x029d         BRA                     _end_0x029d                     ; END
 
 
 
@@ -101,17 +116,17 @@ _end_0x0281         BRA                     _end_0x0281                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0xff60
-convertEqOp         EQU     0xff69
-convertNeOp         EQU     0xff72
-convertLeOp         EQU     0xff7b
-convertGeOp         EQU     0xff84
-convertLtOp         EQU     0xff8d
-convertGtOp         EQU     0xff96
-scanlineMode        EQU     0xffc2
-waitVBlank          EQU     0xffd6
-resetVideoTable     EQU     0xfe00
-initClearFuncs      EQU     0xff9f
+realTimeProc        EQU     0x0600
+convertEqOp         EQU     0x0609
+convertNeOp         EQU     0x0612
+convertLeOp         EQU     0x061b
+convertGeOp         EQU     0x0624
+convertLtOp         EQU     0x062d
+convertGtOp         EQU     0x0636
+scanlineMode        EQU     0x0662
+waitVBlank          EQU     0x0676
+resetVideoTable     EQU     0x0691
+initClearFuncs      EQU     0x063f
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2

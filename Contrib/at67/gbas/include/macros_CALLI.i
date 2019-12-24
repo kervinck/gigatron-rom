@@ -300,6 +300,10 @@ _label_ CALLI   _label
         DOKE    register0                               ; self modifying code, replaces realTimeProc stub with playMidi routine
 %ENDM
 
+%MACRO  TickMidi
+        CALLI   playMidi
+%ENDM
+
 %MACRO  JumpFalse _label id
         BNE     _id_ + 3                                ; unique id is used as an internal macro label
 _id_    CALLI   _label

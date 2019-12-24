@@ -1,4 +1,3 @@
-_useOpcodeCALLI_
 _runtimeStart_ &h87FF
 
 const videoTableEnd = &h01F0

@@ -372,6 +372,11 @@ _label_ CALL    giga_vAC
         DOKE    register0                               ; self modifying code, replaces realTimeProc stub with playMidi routine
 %ENDM
 
+%MACRO  TickMidi
+        LDWI    playMidi
+        CALL    giga_vAC
+%ENDM
+
 %MACRO  JumpFalse _label id
         BNE     _id_ + 2                                ; unique id is used as an internal macro label
         LDWI    _label

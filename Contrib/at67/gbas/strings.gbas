@@ -1,5 +1,3 @@
-_useOpcodeCALLI_
-
 cls
 
 const a = 120
@@ -12,10 +10,12 @@ hw$ = hexw$(bb)
 const a$="yes "
 const z$="no"
 const b$="hello test world"
+
+cc = 5
  
-c$=left$(b$, 5)
+c$=left$(b$, cc)
 d$ = right$ (b$,5)
-e$=mid$(b$, 6, 4)
+e$=mid$(b$, cc+1, cc-1)
  
 f$ = b$
 f$ = b$ + b$
@@ -23,9 +23,9 @@ g$=f$
 
 print a$;" ";b$
 print c$;" ";d$;" ";e$
-print left$("dogcat", 3);" ";left$(b$, 5)
+print left$("dogcat", 3);" ";left$(b$, cc)
 print right$("dogcat", 3);" ";right$(b$, 5)
-print mid$("dogcat", 2, 2);" ";mid$(b$, 6, 4)
+print mid$("dogcat", 2, 2);" ";mid$(b$, (cc+1), (cc-1))
 
 print c$;" ";d$;" ";e$
 print f$

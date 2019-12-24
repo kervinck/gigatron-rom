@@ -1188,8 +1188,8 @@ namespace Keywords
 
         for(int i=0; i<tokens.size(); i++)
         {
-            int varIndex = -1, constIndex = -1, strIndex = -1;
             Expression::Numeric numeric;
+            int varIndex = -1, constIndex = -1, strIndex = -1;
             uint32_t expressionType = Compiler::isExpression(tokens[i], varIndex, constIndex, strIndex);
 
             if((expressionType & Expression::HasStringKeywords)  ||  (expressionType & Expression::HasFunctions))
@@ -2051,9 +2051,17 @@ namespace Keywords
             return false;
         }
 
+        // Positive constant size
         uint16_t arraySize;
         std::string sizeText = codeLine._code.substr(lbra + 1, rbra - (lbra + 1));
-        if(!Expression::stringToU16(sizeText, arraySize)  ||  arraySize <= 0)
+        int varIndex = -1, constIndex = -1, strIndex = -1;
+        uint32_t expressionType = Compiler::isExpression(sizeText, varIndex, constIndex, strIndex);
+        if(expressionType == Expression::HasIntConsts)
+        {
+            // Print constant int
+            arraySize = Compiler::getConstants()[constIndex]._data;
+        }
+        else if(!Expression::stringToU16(sizeText, arraySize)  ||  arraySize <= 0)
         {
             fprintf(stderr, "Compiler::keywordDIM() : Array size must be a positive constant, found %s in : '%s' : on line %d\n", sizeText.c_str(), codeLine._code.c_str(), codeLineIndex + 1);
             return false;
@@ -2068,7 +2076,7 @@ namespace Keywords
         Expression::stripWhitespace(varName);
 
         // Var already exists?
-        int varIndex = Compiler::findVar(varName);
+        varIndex = Compiler::findVar(varName);
         if(varIndex >= 0)
         {
             fprintf(stderr, "Compiler::keywordDIM() : Var %s already exists in : '%s' : on line %d\n", varName.c_str(), codeLine._code.c_str(), codeLineIndex + 1);
@@ -2551,9 +2559,9 @@ namespace Keywords
     bool keywordPLAY(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), " ,", false);
-        if(tokens.size() != 2  &&  tokens.size() != 3)
+        if(tokens.size() < 1  ||  tokens.size() > 3)
         {
-            fprintf(stderr, "Compiler::keywordPLAY() : Syntax error, use 'PLAY MIDI <address>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Compiler::keywordPLAY() : Syntax error, use 'PLAY MIDI <address>, <waveType>', where <address> and <waveType> are optional; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
 
@@ -2561,22 +2569,30 @@ namespace Keywords
         Expression::stripWhitespace(midiToken);
         if(midiToken != "MIDI")
         {
-            fprintf(stderr, "Compiler::keywordPLAY() : Syntax error, use 'PLAY MIDI <address>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Compiler::keywordPLAY() : Syntax error, use 'PLAY MIDI <address>, <waveType>', where <address> and <waveType> are optional; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
 
+        // Tick Midi
+        if(tokens.size() == 1)
+        {
+            Compiler::emitVcpuAsm("%TickMidi", "", false, codeLineIndex);
+            return true;
+        }
+
+        // Default wave type
+        if(tokens.size() == 2)
+        {
+            Compiler::emitVcpuAsm("LDI", "2",       false, codeLineIndex);
+            Compiler::emitVcpuAsm("ST", "waveType", false, codeLineIndex);
+        }
         // Midi wave type, (optional)
-        if(tokens.size() == 3)
+        else if(tokens.size() == 3)
         {
             std::string waveTypeToken = tokens[2];
             Expression::stripWhitespace(waveTypeToken);
             Expression::Numeric param;
             uint32_t expressionType = parseExpression(codeLine, codeLineIndex, waveTypeToken, param);
-            Compiler::emitVcpuAsm("ST", "waveType", false, codeLineIndex);
-        }
-        else
-        {
-            Compiler::emitVcpuAsm("LDI", "2",       false, codeLineIndex);
             Compiler::emitVcpuAsm("ST", "waveType", false, codeLineIndex);
         }
 

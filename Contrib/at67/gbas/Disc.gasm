@@ -137,17 +137,17 @@ _else_0x0301        BRA                     _else_0x0301                    ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7ea0
-convertEqOp         EQU     0x7ea9
-convertNeOp         EQU     0x7eb2
-convertLeOp         EQU     0x7ebb
-convertGeOp         EQU     0x7ec4
-convertLtOp         EQU     0x7ecd
-convertGtOp         EQU     0x7ed6
-resetVideoTable     EQU     0x7edf
-initClearFuncs      EQU     0x7da0
-clearVertBlinds     EQU     0x7dc3
-drawHLine           EQU     0x7ca0
+realTimeProc        EQU     0xff60
+convertEqOp         EQU     0xff69
+convertNeOp         EQU     0xff72
+convertLeOp         EQU     0xff7b
+convertGeOp         EQU     0xff84
+convertLtOp         EQU     0xff8d
+convertGtOp         EQU     0xff96
+resetVideoTable     EQU     0xfe47
+initClearFuncs      EQU     0xff9f
+clearVertBlinds     EQU     0xffc2
+drawHLine           EQU     0xfe00
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
