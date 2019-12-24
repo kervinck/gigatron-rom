@@ -16,26 +16,30 @@ XXX  Switches or not
                 Can find and load one file: GTOS.gt1
                 May use application specificic SYS functions
 
-        GTOS.gt1 -- Basic operating system services
-                                                CP/M BOOT
-                Welcome message (throw-away code in $503)
-                  CLS + "Gigatron GTOS v1 32K" + Apple II beep
+        GTOS.gt1 -- Basic operating system services (BOSS)
+                                                "CP/M BOOT"
+                Welcome message (throw-away code in $500)
+                  CLS + "GTOS v1 32K" + Apple II beep
                   Load and execute Command.gt1
                 Provide resident services in $200..$4f9
-                - BOSS.writeByte                CP/M CONOUT
-                - BOSS.readByte                 CP/M CONIN
-                - BOSS.setDevice                CP/M SELDSK
+                - BOSS.writeByte                "CP/M CONOUT"
+                - BOSS.readByte                 "CP/M CONIN"
+                - BOSS.setDevice                "CP/M SELDSK"
                 - BOSS.readDir/find/enter/delete/create
                 - BOSS.loadFile -- Gt1 loading
-                - BOSS.readSector               CP/M READ
-                - BOSS.writeSector              CP/M WRITE
-                - BOSS.command                  CP/M WBOOT (DOS COMMAND.COM)
+                - BOSS.readSector               "CP/M READ"
+                - BOSS.writeSector              "CP/M WRITE"
+                - BOSS.command                  "CP/M WBOOT (DOS COMMAND.COM)"
                 - BOSS.spawn
                 - BOSS.launch
                 - Won't be reloaded during a session
                 - Controls all shadow memory. May hide in banked memory
                 - Can use generic SYS functions, but not app-specific
                 - Can be be replaced without EPROM change
+
+                API:
+                - Use fixed addresses, but only few (esp. zero page) --> function codes
+                -
 
         Command.gt1 -- Command parser and dispatcher
                 Lives in top..$7fff
@@ -60,7 +64,8 @@ XXX  Switches or not
                         Small program -> RET
 
         Launch.gt1:
-                Load in bottom of visible screen area
+                Escapes GTOS
+                Stand-alone loading from bottom of visible screen area, like Loader
                 Requirements: compatible with Tetronis, Apple-1, MSBASIC
                 Reset terminal, video etc
-                Fast load GT1 file
+                Fast loading GT1 file -> sectors must be split
