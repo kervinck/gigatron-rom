@@ -1,0 +1,66 @@
+XXX  Names: GTOS, BOSS, PROMPT/COMMAND, MINIDOS, ...
+XXX  CardBoot -> Find load and run a GT1 file
+XXX  Dir -> Builtin command. Only names
+XXX  List -> External command: file size, date, volume label
+XXX  Cls -> Clear terminal
+XXX  Stat ->
+XXX  Type -> command (consider passing of ARGS)
+XXX  Device letters or not? A: B: C:
+        Familiary, goes back to before CP/M
+XXX  Directories or not?
+XXX  Switches or not
+
+        CardBoot.gcl
+                [Loads from ROM, lives $8a0...up]
+                Checks SD card and FAT32
+                Can find and load one file: GTOS.gt1
+                May use application specificic SYS functions
+
+        GTOS.gt1 -- Basic operating system services
+                                                CP/M BOOT
+                Welcome message (throw-away code in $503)
+                  CLS + "Gigatron GTOS v1 32K" + Apple II beep
+                  Load and execute Command.gt1
+                Provide resident services in $200..$4f9
+                - BOSS.writeByte                CP/M CONOUT
+                - BOSS.readByte                 CP/M CONIN
+                - BOSS.setDevice                CP/M SELDSK
+                - BOSS.readDir/find/enter/delete/create
+                - BOSS.loadFile -- Gt1 loading
+                - BOSS.readSector               CP/M READ
+                - BOSS.writeSector              CP/M WRITE
+                - BOSS.command                  CP/M WBOOT (DOS COMMAND.COM)
+                - BOSS.spawn
+                - BOSS.launch
+                - Won't be reloaded during a session
+                - Controls all shadow memory. May hide in banked memory
+                - Can use generic SYS functions, but not app-specific
+                - Can be be replaced without EPROM change
+
+        Command.gt1 -- Command parser and dispatcher
+                Lives in top..$7fff
+                Display OK/error, this unifies error reporting
+                Show prompt and cursor symbol
+                  A> _
+                Handle user input with line editing
+                Built-in command: Change device letter
+                Built-in command: Dir
+                Find file '<CMD>' in root dir
+                If not found, return to prompt
+                Find argument files, open if found?
+                Load first sector of file in $500..$6ff
+                If not a command -> BOSS.Launch
+                If command, loadFile and run? Or defer
+                  to command itself
+
+        <CMD>.gt1:
+                Do stuff with BOSS
+                Exit:
+                        Big program -> BOSS.prompt
+                        Small program -> RET
+
+        Launch.gt1:
+                Load in bottom of visible screen area
+                Requirements: compatible with Tetronis, Apple-1, MSBASIC
+                Reset terminal, video etc
+                Fast load GT1 file

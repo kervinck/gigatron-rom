@@ -850,7 +850,7 @@ void doTransfer(const byte *gt1)
         nextByte = pgm_read_byte(gt1++);\
       else {\
         nextByte = nextSerial();\
-        if (nextByte < 0) return;\
+        if (nextByte < 0) return; /* Abort file transfer */\
       }
     #define ask(n)\
       if (!gt1) {\

@@ -53,7 +53,7 @@ dev.rom: Core/* Apps/*/* Makefile interface.json
 		Apple1=Apps/Apple-1/Apple1.gt1\
 		MSBASIC=Apps/MSBASIC/MSBASIC.gt1\
 		Egg=Apps/Horizon/Horizon.gt1\
-		CardBoot=Apps/CardBoot/CardBoot.gcl\
+		Boot=Apps/CardTest/CardBoot.gcl\
 		Main=Apps/MainMenu/MainMenu.gcl\
 		Reset=Core/Reset.gcl
 

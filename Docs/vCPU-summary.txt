@@ -73,6 +73,11 @@ CALLI $85 LL HH 28 Goto immediate address and remember vPC (vLR,vPC=vPC+3,$HHLL-
 CMPHS $1f DD    28 Adjust high byte for signed compare (vACH=XXX)
 CMPHU $97 DD    28 Adjust high byte for unsigned compare (vACH=XXX)
 
+Special sequence:
+
+RTI   $11 $00 $04 $7F DD
+                48 Return from interrupt
+
 Changed cycle times
 -------------------
 LD    $1A DD    22 (was 18)

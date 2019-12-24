@@ -114,7 +114,7 @@
 #  DONE Expander: Boot from *.GT1 file if SDC/MMC detected
 #  XXX  Add CMPHS/CMPHU instructions to vCPU XXX Still needs testing
 #  XXX  SPI: Simple command line interface (solve "EXE vs COM" dilemma)
-#  XXX  SPI: Tutorial on formatting FAT32 partitions
+#  XXX  SPI: Tutorial on formatting FAT32 partitions. (Linux=mkdosfs, apple=newfs_msdos)
 #  XXX  Apple-1: Memory mapped PIA emulation using interrupt (D010-D013)
 #  XXX  Apple-1: Include A1 BASIC
 #  XXX  Apple-1: Original 2514 font? Suppress lower case?
@@ -3633,9 +3633,9 @@ for i in range(8):
   st([vTmp],Y);C('Bit %d'%(7-i))#23+i*12
   ld([sysArgs+4],X)             #24+i*12
   ctrl(Y,Xpp)                   #25+i*12 Set MOSI
-  ctrl(Y,Xpp)                   #26+i*12 Raise SCLK
+  ctrl(Y,Xpp)                   #26+i*12 Raise SCLK, disable RAM!
   ld([0])                       #27+i*12 Get MISO
-  anda(0b00001111)              #28+i*12
+  anda(0b00001111)              #28+i*12 This is why R1 as pull-DOWN is simpler
   beq(pc()+3)                   #29+i*12
   bra(pc()+2)                   #30+i*12
   ld(1)                         #31+i*12
