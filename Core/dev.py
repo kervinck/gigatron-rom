@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #-----------------------------------------------------------------------
 #
@@ -149,8 +149,6 @@
 #  XXX  Multitasking/threading/sleeping (start with date/time clock in GCL)
 #  XXX  Video mode for 12.5 MHz systems
 #-----------------------------------------------------------------------
-
-from __future__ import division, print_function # Python2 support
 
 import importlib
 from sys import argv
@@ -2697,7 +2695,7 @@ align(0x100, size=0x100)
 
 label('font32up')
 for ch in range(32, 32+50):
-  comment = 'Char %s' % repr(chr(ch)).lstrip('u')
+  comment = 'Char %s' % repr(chr(ch))
   for byte in font.font[ch-32]:
     ld(byte)
     comment = C(comment)
@@ -2710,7 +2708,7 @@ align(0x100, size=0x100)
 
 label('font82up')
 for ch in range(32+50, 132):
-  comment = 'Char %s' % repr(chr(ch)).lstrip('u')
+  comment = 'Char %s' % repr(chr(ch))
   for byte in font.font[ch-32]:
     ld(byte)
     comment = C(comment)
@@ -5382,7 +5380,7 @@ def basicLine(address, number, text):
   s = head + body
   assert len(s) > 0
   for i, byte in enumerate([address>>8, address&255, len(s)]+s):
-    comment = repr(chr(byte)).lstrip('u') if i >= 3+len(head) else None
+    comment = repr(chr(byte)) if i >= 3+len(head) else None
     program.putInRomTable(byte, comment=comment)
 
 #-----------------------------------------------------------------------
@@ -5399,7 +5397,7 @@ def insertRomDir(name):
       lastRomFile = 0
     for i in range(8):
       st(ord(s[i]), [Y,Xpp])            #25-32
-      C(repr(s[i]).lstrip('u'))
+      C(repr(s[i]))
     ld(lo(lastRomFile))                 #33
     st([vAC])                           #34
     ld(hi(lastRomFile))                 #35
@@ -5528,7 +5526,7 @@ for application in argv[1:]:
     if pc()&255 > 0:
       trampoline()
     print('Convert type .rgb/parallel at $%04x' % pc())
-    f = open(application)
+    f = open(application, 'rb')
     raw = f.read()
     f.close()
     label(name)
@@ -5538,10 +5536,10 @@ for application in argv[1:]:
         for x in range(0, width, 4):
           bytes = []
           for i in range(4):
-            R = ord(raw[3 * ((y + j) * width + x + i) + 0])
-            G = ord(raw[3 * ((y + j) * width + x + i) + 1])
-            B = ord(raw[3 * ((y + j) * width + x + i) + 2])
-            bytes.append( (R/85) + 4*(G/85) + 16*(B/85) )
+            R = raw[3 * ((y + j) * width + x + i) + 0]
+            G = raw[3 * ((y + j) * width + x + i) + 1]
+            B = raw[3 * ((y + j) * width + x + i) + 2]
+            bytes.append( (R//85) + 4*(G//85) + 16*(B//85) )
           # Pack 4 pixels in 3 bytes
           ld( ((bytes[0]&0b111111)>>0) + ((bytes[1]&0b000011)<<6) ); comment = C(comment)
           ld( ((bytes[1]&0b111100)>>2) + ((bytes[2]&0b001111)<<4) )

@@ -9,8 +9,6 @@
 # simple .py files, not .asm files. (But we can produce .lst files as a program
 # listing in a more conventional notation.)
 
-from __future__ import (absolute_import, division, print_function, unicode_literals)
-
 import inspect
 import json
 from os.path import basename, splitext

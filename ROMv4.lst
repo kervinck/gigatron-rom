@@ -267,7 +267,7 @@
                                           349
                                           350     n -= overhead
                                           351
-                                          352     print 'runVcpu at $%04x net cycles %3s info %s' % (pc(), n, ref)
+                                          352     print('runVcpu at $%04x net cycles %3s info %s' % (pc(), n, ref))
                                           353     n -= 2*maxTicks
                                           354
                                           355     assert n >= 0 and n % 2 == 0
@@ -692,7 +692,7 @@ SYS_In_24:    00f9 c318  st   in,[$18]    744   st(IN, [vAC])                   
                                           764   label('videoZ')
                                           765   videoZ = pc()
                                           766   runVcpu(None, '---- novideo', returnTo=videoZ)
-videoZ:       0100 1505  ld   [$05],y     ;Run vCPU for 280 cycles gross (---- novideo)
+videoZ:       0100 1505  ld   [$05],y     ;Run vCPU for 280.0 cycles gross (---- novideo)
               0101 e0ff  jmp  y,$ff
               0102 0078  ld   $78
                                           767
@@ -797,7 +797,7 @@ vBlankStart:  0104 c20a  st   [$0a]       773   st([videoSync0])                
                                           866     st(sample, [sample])          # Sound continuity
                                           867     extra += 1
                                           868   if soundDiscontinuity > 2:
-                                          869     print 'Warning: sound discontinuity not suppressed'
+                                          869     print('Warning: sound discontinuity not suppressed')
                                           870
                                           871   runVcpu(186-72-extra, '---D line 0')#72 Application cycles (scan line 0)
               014b 0050  ld   $50         ;Run vCPU for 114 cycles gross (---D line 0)
@@ -3228,11 +3228,11 @@ font82up:     0800 00fe  ld   $fe         ;Char 'R'
 notesTable:   0900 0000  ld   $00         2482  ld(0)
               0901 0000  ld   $00         2483  ld(0)
                                           2484  for i in range(0, 250, 2):
-                                          2485    j = i/2-1
+                                          2485    j = i//2-1
                                           2486    freq = 440.0*2.0**((j-57)/12.0)
                                           2487    if j>=0 and freq <= sampleRate/2.0:
                                           2488      key = int(round(32768 * freq / sampleRate))
-                                          2489      octave, note = j/12, notes[j%12]
+                                          2489      octave, note = j//12, notes[j%12]
                                           2490      sharp = '-' if notes[j%12-1] != note else '#'
                                           2491      comment = '%s%s%s (%0.1f Hz)' % (note, sharp, octave, freq)
                                           2492      ld(key&127); C(comment); ld(key>>7)
@@ -3529,7 +3529,7 @@ vBlankLast#34:
                                           2584
                                           2585  # Unit 64, table offset 16 (=1/4), value offset 1: (x+16)*(y+1) == 64*64 - e
                                           2586  for i in range(251):
-invTable:     0a00 00ff  ld   $ff         2587    ld(4096/(i+16)-1)
+invTable:     0a00 00ff  ld   $ff         2587    ld(4096//(i+16)-1)
               0a01 00ef  ld   $ef
               0a02 00e2  ld   $e2
               0a03 00d6  ld   $d6

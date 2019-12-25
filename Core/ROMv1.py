@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #-----------------------------------------------------------------------
 #
 #  Core video, sound and interpreter loop for Gigatron TTL microcomputer
@@ -235,7 +235,7 @@ def runVcpu(n, ref=None):
     n -= 1
   n -= vOverheadExt + vOverheadInt
 
-  print 'runVcpu at %04x cycles %3s info %s' % (pc(), n, ref)
+  print('runVcpu at %04x cycles %3s info %s' % (pc(), n, ref))
   n -= 2*maxTicks
 
   assert n >= 0 and n % 2 == 0
@@ -881,7 +881,7 @@ if soundDiscontinuity == 1:
   C('Sound continuity')
   extra += 1
 if soundDiscontinuity > 1:
-  print "Warning: sound discontinuity not suppressed"
+  print('Warning: sound discontinuity not suppressed')
 
 runVcpu(189-73-extra, 'line0')  #73 Application cycles (scan line 0)
 
@@ -2361,11 +2361,11 @@ notes = 'CCDDEFFGGAAB'
 sampleRate = cpuClock / 200.0 / 4
 label('notesTable')
 for i in range(0, 250, 2):
-  j = i/2-1
+  j = i//2-1
   freq = 440.0*2.0**((j-57)/12.0)
   if j>=0 and freq <= sampleRate/2.0:
     key = int(round(32768 * freq / sampleRate))
-    octave, note = j/12, notes[j%12]
+    octave, note = j//12, notes[j%12]
     sharp = '-' if notes[j%12-1] != note else '#'
     comment = '%s%s%s (%0.1f Hz)' % (note, sharp, octave, freq)
   else:
@@ -2385,7 +2385,7 @@ label('invTable')
 
 # Unit 64, table offset 16 (=1/4), value offset 1: (x+16)*(y+1) == 64*64 - e
 for i in range(251):
-  ld(4096/(i+16)-1)
+  ld(4096//(i+16)-1)
 
 trampoline()
 
@@ -2398,14 +2398,14 @@ raw = f.read()
 f.close()
 align(0x100)
 label('gigatronRaw')
-for i in xrange(len(raw)):
+for i in range(len(raw)):
   if i&255 < 251:
-    ld(ord(raw[i]))
+    ld(raw[i])
   elif i&255 == 251:
     trampoline()
 
 def importImage(rgbName, width, height, ref):
-  f = open(rgbName)
+  f = open(rgbName, 'rb')
   raw = f.read()
   f.close()
   align(0x100)
@@ -2417,10 +2417,10 @@ def importImage(rgbName, width, height, ref):
       for x in range(0, width, 4):
         bytes = []
         for i in range(4):
-          R = ord(raw[3 * ((y + j) * width + x + i) + 0])
-          G = ord(raw[3 * ((y + j) * width + x + i) + 1])
-          B = ord(raw[3 * ((y + j) * width + x + i) + 2])
-          bytes.append( (R/85) + 4*(G/85) + 16*(B/85) )
+          R = raw[3 * ((y + j) * width + x + i) + 0]
+          G = raw[3 * ((y + j) * width + x + i) + 1]
+          B = raw[3 * ((y + j) * width + x + i) + 2]
+          bytes.append( (R//85) + 4*(G//85) + 16*(B//85) )
 
         # Pack 4 pixels in 3 bytes
         ld( ((bytes[0]&0b111111)>>0) + ((bytes[1]&0b000011)<<6) ); comment = C(comment)
@@ -2569,9 +2569,9 @@ raw = f.read()
 f.close()
 
 packed, quartet = [], []
-for i in xrange(0, len(raw), 3):
-  R, G, B = ord(raw[i+0]), ord(raw[i+1]), ord(raw[i+2])
-  quartet.append((R/85) + 4*(G/85) + 16*(B/85))
+for i in range(0, len(raw), 3):
+  R, G, B = raw[i+0], raw[i+1], raw[i+2]
+  quartet.append((R//85) + 4*(G//85) + 16*(B//85))
   if len(quartet) == 4:
     # Pack 4 pixels in 3 bytes
     packed.append( ((quartet[0]&0b111111)>>0) + ((quartet[1]&0b000011)<<6) )
@@ -2580,7 +2580,7 @@ for i in xrange(0, len(raw), 3):
     quartet = []
 
 label('zippedRacerHorizon')
-for i in xrange(len(packed)):
+for i in range(len(packed)):
   ld(packed[i])
   if pc()&255 == 251:
     trampoline()
@@ -2592,7 +2592,7 @@ for i in xrange(len(packed)):
 #-----------------------------------------------------------------------
 
 # For info
-print 'SYS limits low %s high %s' % (repr(minSYS), repr(maxSYS))
+print('SYS limits low %s high %s' % (repr(minSYS), repr(maxSYS)))
 
 # Export some zero page variables to GCL
 # These constants were already loaded from interface.json.
@@ -2637,8 +2637,8 @@ for gclSource in argv[1:]:
   name = gclSource.rsplit('.', 1)[0] # Remove extension
   name = name.rsplit('_v', 1)[0]     # Remove version
   name = name.rsplit('/', 1)[-1]     # Remove path
-  print
-  print 'Compile file %s label %s ROM %04x' % (gclSource, name, pc())
+  print()
+  print('Compile file %s label %s ROM %04x' % (gclSource, name, pc()))
   zpReset(userVars)
   label(name)
   program = gcl.Program(name)
@@ -2646,7 +2646,7 @@ for gclSource in argv[1:]:
   for line in open(gclSource).readlines():
     program.line(line)
   program.end()
-print
+print()
 
 if pc()&255:
   trampoline()

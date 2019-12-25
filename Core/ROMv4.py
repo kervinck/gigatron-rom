@@ -349,7 +349,7 @@ def runVcpu(n, ref=None, returnTo=None):
 
   n -= overhead
 
-  print 'runVcpu at $%04x net cycles %3s info %s' % (pc(), n, ref)
+  print('runVcpu at $%04x net cycles %3s info %s' % (pc(), n, ref))
   n -= 2*maxTicks
 
   assert n >= 0 and n % 2 == 0
@@ -866,7 +866,7 @@ if soundDiscontinuity == 2:
   st(sample, [sample])          # Sound continuity
   extra += 1
 if soundDiscontinuity > 2:
-  print 'Warning: sound discontinuity not suppressed'
+  print('Warning: sound discontinuity not suppressed')
 
 runVcpu(186-72-extra, '---D line 0')#72 Application cycles (scan line 0)
 
@@ -2482,11 +2482,11 @@ label('notesTable')
 ld(0)
 ld(0)
 for i in range(0, 250, 2):
-  j = i/2-1
+  j = i//2-1
   freq = 440.0*2.0**((j-57)/12.0)
   if j>=0 and freq <= sampleRate/2.0:
     key = int(round(32768 * freq / sampleRate))
-    octave, note = j/12, notes[j%12]
+    octave, note = j//12, notes[j%12]
     sharp = '-' if notes[j%12-1] != note else '#'
     comment = '%s%s%s (%0.1f Hz)' % (note, sharp, octave, freq)
     ld(key&127); C(comment); ld(key>>7)
@@ -2584,7 +2584,7 @@ label('invTable')
 
 # Unit 64, table offset 16 (=1/4), value offset 1: (x+16)*(y+1) == 64*64 - e
 for i in range(251):
-  ld(4096/(i+16)-1)
+  ld(4096//(i+16)-1)
 
 trampoline()
 
@@ -4842,7 +4842,7 @@ align(1, 0x100)                 # Only pages from here
 #-----------------------------------------------------------------------
 
 for application in argv[1:]:
-  print
+  print()
 
   # Determine label
   if '=' in application:
@@ -4852,7 +4852,7 @@ for application in argv[1:]:
     # Label derived from filename itself
     name = application.rsplit('.', 1)[0] # Remove extension
     name = name.rsplit('/', 1)[-1]       # Remove path
-  print 'Processing file %s label %s' % (application, name)
+  print('Processing file %s label %s' % (application, name))
 
   C('+-----------------------------------+')
   C('| %-33s |' % application)
@@ -4860,21 +4860,21 @@ for application in argv[1:]:
 
   # Pre-compiled GT1 files
   if application.endswith(('.gt1', '.gt1x')):
-    print 'Load type .gt1 at $%04x' % pc()
+    print('Load type .gt1 at $%04x' % pc())
     with open(application, 'rb') as f:
       raw = f.read()
     label(name)
     raw = raw[:-2] # Drop start address
-    if ord(raw[0]) == 0 and ord(raw[1]) + ord(raw[2]) > 0xc0:
-      print 'Warning: zero-page conflict with ROM loader (SYS_Exec_88)'
+    if raw[0] == 0 and raw[1] + raw[2] > 0xc0:
+      print('Warning: zero-page conflict with ROM loader (SYS_Exec_88)')
     program = gcl.Program(None)
     for byte in raw:
-      program.putInRomTable(ord(byte))
+      program.putInRomTable(byte)
     program.end()
 
   # GCL files
   elif application.endswith('.gcl'):
-    print 'Compile type .gcl at $%04x' % pc()
+    print('Compile type .gcl at $%04x' % pc())
     label(name)
     program = gcl.Program(name)
     program.org(userCode)
@@ -4885,19 +4885,19 @@ for application in argv[1:]:
 
   # Application-specific SYS extensions
   elif application.endswith('.py'):
-    print 'Include type .py at $%04x' % pc()
+    print('Include type .py at $%04x' % pc())
     label(name)
     importlib.import_module(name)
 
   # GTB files
   elif application.endswith('.gtb'):
-    print 'Link type .gtb at $%04x' % pc()
+    print('Link type .gtb at $%04x' % pc())
     zpReset(userVars)
     label(name)
     program = gcl.Program(name)
     address = symbol('BasicProgram')
     if not has(address):
-      print ' Error: TinyBASIC must be compiled-in first'
+      print(' Error: TinyBASIC must be compiled-in first')
     program.org(address)
     i = 0
     for line in open(application):
@@ -4917,39 +4917,39 @@ for application in argv[1:]:
     basicLine(symbol('Buffer'), address, None)  # End of program
     program.putInRomTable(0)
     program.end()
-    print ' Lines', i
+    print(' Lines', i)
 
   # Simple sequential RGB file
   elif application.endswith('-256x16.rgb'):
     width, height = 256, 16
-    print 'Convert type .rgb/sequential at $%04x' % pc()
+    print('Convert type .rgb/sequential at $%04x' % pc())
     f = open(application, 'rb')
     raw = f.read()
     f.close()
     label(name)
     packed, quartet = [], []
-    for i in xrange(0, len(raw), 3):
-      R, G, B = ord(raw[i+0]), ord(raw[i+1]), ord(raw[i+2])
-      quartet.append((R/85) + 4*(G/85) + 16*(B/85))
+    for i in range(0, len(raw), 3):
+      R, G, B = raw[i+0], raw[i+1], raw[i+2]
+      quartet.append((R//85) + 4*(G//85) + 16*(B//85))
       if len(quartet) == 4:
         # Pack 4 pixels in 3 bytes
         packed.append( ((quartet[0]&0b111111)>>0) + ((quartet[1]&0b000011)<<6) )
         packed.append( ((quartet[1]&0b111100)>>2) + ((quartet[2]&0b001111)<<4) )
         packed.append( ((quartet[2]&0b110000)>>4) + ((quartet[3]&0b111111)<<2) )
         quartet = []
-    for i in xrange(len(packed)):
+    for i in range(len(packed)):
       ld(packed[i])
       if pc()&255 == 251:
         trampoline()
-    print ' Pixels %dx%d' % (width, height)
+    print(' Pixels %dx%d' % (width, height))
 
   # Random access RGB files (for Pictures application)
   elif application.endswith('-160x120.rgb'):
     width, height = 160, 120
     if pc()&255 > 0:
       trampoline()
-    print 'Convert type .rgb/parallel at $%04x' % pc()
-    f = open(application)
+    print('Convert type .rgb/parallel at $%04x' % pc())
+    f = open(application, 'rb')
     raw = f.read()
     f.close()
     label(name)
@@ -4959,10 +4959,10 @@ for application in argv[1:]:
         for x in range(0, width, 4):
           bytes = []
           for i in range(4):
-            R = ord(raw[3 * ((y + j) * width + x + i) + 0])
-            G = ord(raw[3 * ((y + j) * width + x + i) + 1])
-            B = ord(raw[3 * ((y + j) * width + x + i) + 2])
-            bytes.append( (R/85) + 4*(G/85) + 16*(B/85) )
+            R = raw[3 * ((y + j) * width + x + i) + 0]
+            G = raw[3 * ((y + j) * width + x + i) + 1]
+            B = raw[3 * ((y + j) * width + x + i) + 2]
+            bytes.append( (R//85) + 4*(G//85) + 16*(B//85) )
           # Pack 4 pixels in 3 bytes
           ld( ((bytes[0]&0b111111)>>0) + ((bytes[1]&0b000011)<<6) ); comment = C(comment)
           ld( ((bytes[1]&0b111100)>>2) + ((bytes[2]&0b001111)<<4) )
@@ -4971,15 +4971,15 @@ for application in argv[1:]:
           trampoline3a()
         else:
           trampoline3b()
-    print ' Pixels %dx%d' % (width, height)
+    print(' Pixels %dx%d' % (width, height))
 
   else:
     assert False
 
   C('End of %s, size %d' % (application, pc() - symbol(name)))
-  print ' Size %s' % (pc() - symbol(name))
+  print(' Size %s' % (pc() - symbol(name)))
 
-print
+print()
 
 #-----------------------------------------------------------------------
 # End of embedded applications
