@@ -57,7 +57,6 @@ gcl0x
         FatBaseL,H      ----    XXX
         FileSizeL,H     ????    File size from directory entry
         FilePosL,H      --XX    Current R/W position in file: 0..FileSize
-        Checksum        ----    CRC16 checksum over sector data
 
         Memory usage
         ------------
@@ -96,9 +95,34 @@ gcl0x
 [do loop] { XXX Work in progress }
 
 {-----------------------------------------------------------------------+
+|                                                                       |
+|       Main program                                                    |
+|                                                                       |
++-----------------------------------------------------------------------}
+
+0 \frameCount.                  {Reset timer}
+InitCard!
+
+CardType PrintByte! Newline!    {Show detected card version}
+
+ReadMBR! PrintResult!           {Master Boot Record}
+[if=0 ReadVolumeId!]            {Read first block of FAT partition}
+InitFat32!
+ReadDirectory!                  {Read root directory XXX Move into PrintDir}
+[if=0 PrintDirectory!]          {List directory, find BOOT.GT1 and execute it}
+
+##\HALT                         {Halt if not found}
+
+{-----------------------------------------------------------------------+
 |                       RAM page 2                                      |
 +-----------------------------------------------------------------------}
 *=$200
+
+{-----------------------------------------------------------------------+
+|                                                                       |
+|       Video terminal section                                          |
+|                                                                       |
++-----------------------------------------------------------------------}
 
 { PrintChar -- reads Pos, writes i j Pos _sysFn _sysArgs[01245] }
 
@@ -138,6 +162,31 @@ _WriteByte=*
   \PrintChar!                   {And print it}
   pop ret
 
+{ Newline -- writes i Pos _sysFn _sysArgs[01245] }
+{ !!! This version scrolls only pixel row 16 through 119 !!! }
+
+_Newline=*
+                                {Clear new line first}
+  $3f20 _sysArgs0=              {White on blue}
+  0 <Pos. $120 peek >Pos.       {Go to start of next line}
+  Pos _sysArgs4=                {Set screen position}
+  \sysArgs2.                    {Set all-zero output pattern}
+  [do
+    \SYS_VDrawBits_134          {SYS call to draw 8 pixels vertically}
+    _sysFn= 134!!
+    <_sysArgs4++                {Step 1 pixel right}
+    \sysArgs4, 160^             {Test for end of line}
+    if<>0loop]
+                                {Then scroll up by modifying videoTable}
+  $01 >i. 208                   {Last entry at $100+238, minus 30}
+  [do
+    30+ <i.
+    i, 120- [if<0 128+
+             else 24+] i.       {Rotate by 8 in 24..127 range}
+    <i, 32- if>0loop]           {Move to previous entry in video table}
+
+  ret
+
 $500 Address=                   {512 bytes memory for one sector}
 
 {-----------------------------------------------------------------------+
@@ -157,7 +206,6 @@ $500 Address=                   {512 bytes memory for one sector}
     Reads a block of the size selected by the SET_BLOCKLEN command
   }
   push
-  {[def `CMD17` #0] PrintText!}
 
   [def #$51 #0 #0 #0 #0 #0]     {CMD17}
   p= q=
@@ -172,7 +220,6 @@ $500 Address=                   {512 bytes memory for one sector}
 
   [if=0
     {Wait for first data byte}
-    {[def `Wait``` #0] PrintText!}
     [do
       SendOnesToCard!           {XXX Can we use WaitForCardReply here?}
       $ff^ if=0loop]            {XXX Loop needs a timeout}
@@ -309,7 +356,6 @@ $500 Address=                   {512 bytes memory for one sector}
 
   ReadSector!                   {SectorL,H as set by ReadMBR}
 
-  [def `Vol.ID` #0] PrintText!
   $00b Address+ deek k=         {Confirm expected sector length}
   PrintWord!                    {Print as little-endian word}
   512 k^ PrintResult!
@@ -333,7 +379,6 @@ $500 Address=                   {512 bytes memory for one sector}
   0 SectorL= SectorH=           {First sector on device}
   ReadSector!                   {Read MBR}
 
-  [def `MBR` #0] PrintText!
   $1fe Address+ deek k=         {Fetch signature}
   $aa55 k^                      {Check signature}
 
@@ -419,8 +464,6 @@ InitFat32=
   [if<0 SectorToByte!]          {Version 1.X cards do byte addressing}
   CMD17!                        {Request block of data}
 
-  0 Checksum=                   {Reset CRC16 checksum}
-
   pop ret
 ] OpenSector=
 
@@ -434,7 +477,6 @@ InitFat32=
   OpenSector!                   {Start data stream}
 
   Address q=                    {Setup write pointer}
-  0 Checksum=
   512 [do k=                    {Number of bytes to read}
     SendOnesToCard!             {XXX Read directly into buffer}
     q.                          {Store byte in buffer}
@@ -444,8 +486,6 @@ InitFat32=
   SendOnesToCard!               {Read 16-bit checksum}
   SendOnesToCard!
   DisableCard!
-
-  Checksum                      {CRC16 will be zero on success}
 
   pop ret
 ] ReadSector=
@@ -605,43 +645,6 @@ InitFat32=
 ] AddOffset=
 
 {-----------------------------------------------------------------------+
-|                                                                       |
-|       Video terminal section                                          |
-|                                                                       |
-+-----------------------------------------------------------------------}
-
-{-----------------------------------------------------------------------+
-|                       RAM page $6d                                    |
-+-----------------------------------------------------------------------}
-*=$6da0
-
-{ Newline -- writes i Pos _sysFn _sysArgs[01245] }
-{ !!! This version scrolls only pixel row 16 through 119 !!! }
-[def
-_Newline=*
-                                {Clear new line first}
-  $3f20 _sysArgs0=              {White on blue}
-  0 <Pos. $120 peek >Pos.       {Go to start of next line}
-  Pos _sysArgs4=                {Set screen position}
-  \sysArgs2.                    {Set all-zero output pattern}
-  [do
-    \SYS_VDrawBits_134          {SYS call to draw 8 pixels vertically}
-    _sysFn= 134!!
-    <_sysArgs4++                {Step 1 pixel right}
-    \sysArgs4, 160^             {Test for end of line}
-    if<>0loop]
-                                {Then scroll up by modifying videoTable}
-  $01 >i. 208                   {Last entry at $100+238, minus 30}
-  [do
-    30+ <i.
-    i, 120- [if<0 128+
-             else 24+] i.       {Rotate by 8 in 24..127 range}
-    <i, 32- if>0loop]           {Move to previous entry in video table}
-
-  ret
-] Newline=
-
-{-----------------------------------------------------------------------+
 |                       RAM page $72                                    |
 +-----------------------------------------------------------------------}
 *=$72a0
@@ -668,7 +671,6 @@ _Newline=*
   }
   push
 
-  [def `Loading` #0] PrintText!
   PrintName!
 
   OpenFile!                     {Prepare for reading}
@@ -801,32 +803,6 @@ _Newline=*
 
   pop ret
 ] NextCluster=
-
-{-----------------------------------------------------------------------+
-|                       RAM page $78                                    |
-+-----------------------------------------------------------------------}
-*=$78a0
-
-{-----------------------------------------------------------------------+
-|                                                                       |
-|       Main program                                                    |
-|                                                                       |
-+-----------------------------------------------------------------------}
-
-[def #10 `***`Memory`card #10 #0] PrintText!
-0 \frameCount.                  {Reset timer}
-InitCard!
-
-[def `CardType` #0] PrintText!
-CardType PrintByte! Newline!    {Show detected card version}
-
-ReadMBR! PrintResult!           {Master Boot Record}
-[if=0 ReadVolumeId!]            {Read first block of FAT partition}
-InitFat32!
-ReadDirectory!                  {Read root directory XXX Move into PrintDir}
-[if=0 PrintDirectory!]          {List directory, find BOOT.GT1 and execute it}
-
-##\HALT                         {Halt if not found}
 
 {-----------------------------------------------------------------------+
 |                       RAM page $7f                                    |
