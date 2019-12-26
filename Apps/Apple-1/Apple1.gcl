@@ -8,7 +8,6 @@ gcl0x
 
 {
  Issues:
-  XXX Shift screen memory 96 pixels right
   XXX NMI/IRQ/RESET to wozmon (through vector) without going through main menu
   XXX We can win memory by sharing all black pixel lines in one page
       But drawing characters then touches the top line
@@ -46,7 +45,7 @@ gcl0x
         https://www.sbprojects.net/projects/apple1/a1basic.php
 
 Zero page usage:
-$30-$31         Pos
+$30-$31         p
 $32-$33         CharOut
 $34-$3b         WozMon variables
 }
@@ -77,11 +76,18 @@ _j=$3e          {2 bytes}
 { This code runs once and is then reused as the input buffer for wozmon }
 
 { Setup video indirection table such that WozMon can be at $7F00/$FF00 }
-\videoTable Pos=                {First GCL variable at $30, later becomes Pos}
+\videoTable p=                  {First GCL variable at $30, later used as Pos}
 120                             {7^127}
 [do 127^                        {Loop over 7..126 range}
-  Pos: <Pos++ <Pos++            {Y[y]=7+j and dX[y]=0}
+  p: <p++ <p++                  {Y[y]=7+j and dX[y]=0}
   1+ 127^ if<>0loop]            {Next in range}
+
+{
+  Shift the horizontal display by 96 bytes. For MS BASIC it doesn't matter,
+  but this prepares the I/O routines for an improved Apple 1 emulator:
+  that one has less flexibility in how the RAM address space can be set up.
+}
+$101 {videoTable+1} p= $60 p.   {Use offsets 96..255 for pixel data, not 0..159}
 
 &_CharOut CharOut=              {Forward reference}
 
@@ -206,10 +212,10 @@ _MAPKEYCODE1=*  #_CMPIM_ #10
 _MAPKEYCODE2=*  #_ORAIM_ #$80           {B7 should be '1'}
                 #_RTS_
 
-_GOBACK=*       #_LDAZ_  #<Pos          {Go back}
+_GOBACK=*       #_LDAZ_  #<p            {Go back}
                 #_SEC_
                 #_SBCIM_ #6
-                #_STAZ_  #<Pos
+                #_STAZ_  #<p
                 #_RTS_
 
 {-----------------------------------------------------------------------+
@@ -239,11 +245,11 @@ _CharOut=*
 
   %-2=                          {Park character in stack area}
   \SYS_VDrawBits_134 _sysFn=    {Prepare SYS calls}
-  $3f00 \sysArgs0:              {White on black}
+  $3f00 _sysArgs0=              {White on black}
 
   %-2                           {Get character back}
   $8d^ [if<>0                   {Test for CR...}
-    <Pos, 155- if>0 0]          {...or line wrap}
+    <p, 251- if>0 0]            {...or line wrap}
 
   [if=0
 
@@ -251,28 +257,56 @@ _CharOut=*
     |       Newline                                                     |
     +-------------------------------------------------------------------}
 
-    {Clear new line first}
+    {
+      Newline function for the compressed layout (7 pixel lines per text row)
+    }
 
-    \sysArgs2.                  {Set all-zero output pattern}
-    \sysArgs4.                  {Start of clear area, without the indentation}
-    1 <Pos.                     {Go to start of line, nicely indent by 2 pixels}
-    $ff+                        {=$0100: start of video table}
-    peek >Pos.                  {Go to what is now still the top text row}
-    \sysArgs5.                  {Set drawing position for clearing}
+    \sysArgs2.                  {Zero bit pattern}
+
+    { Find the top text row }
+
+    $62 <p.                     {Go to start of line, nicely indent by 2 pixels}
+    $9e+ _i=                    {i==$100: start of the video table}
+    peek >p.                    {Go to what is now still the top text row}
+
+    { Clear the text row }
+
+    p 2- _sysArgs4=             {Set drawing position for clearing}
+
     [do
       134!!                     {SYS call to draw 8 pixels vertically}
-      <\sysArgs4++              {Step 1 pixel right}
-      \sysArgs4, 160^           {Test for end of line}
-      if<>0loop]
+      <_sysArgs4++              {Step 1 pixel right}
+      \sysArgs4, if<>0loop]     {Loop until end of pixel line}
 
-    {Then scroll up by modifying videoTable}
-
-    $01ee _i=                   {Last entry in video table}
+    {
+      Scroll everything up by modifying the video indirection table.
+      [This may be a cool effect to watch in slow motion?]
+    }
     [do
-      _i, 119- [if<0 127+
-                else 7+] _i.    {Rotate by 8 in 7..126 range}
-      _i 2- _i=                 {Move to previous entry in video table}
-      $fe^ if<>0loop]           {Until all done}
+      _i 16+ _j=                {j looks 9 entries ahead of i}
+      peek \sysArgs0.           {Swap scanlines}
+      _i, _j.
+      \sysArgs0, _i.
+      <_i++ <_i++               {Advance to next entry in video table}
+      <_i, 224^ if<>0loop]      {Until all done}
+
+    { The cleared text row has now bubbled down to the bottom }
+
+{
+    {
+      Set the vertical dividers to the empty base line just created. Since
+      there's always one in the active text row, we don't need to maintain
+      a dedicated empty pixel line. This saves 1 page of memory.
+    }
+
+    $e020 _i=                   {Rotating bit pattern: 1110.0000.001x.xxxx}
+    [do
+      _i [if<0
+        >p, 7+ _j.              {This is the new shared empty pixel line}
+        _i $10+] 1<< _i=        {Rotate bit 5:15}
+      <_j, 2- <_j.
+      if>=0loop]                {Step one line up}
+}
   ]
 
   %-2 $a0-                      {WozMon sends ASCII with bit 7 set}
@@ -291,12 +325,12 @@ _CharOut=*
     _j= _i 2<< _i+              {Multiply char code by 5}
     _j+ _j=                     {Add to page address to reach bitmap data}
 
-    Pos \sysArgs4:              {Screen position for character}
+    p _sysArgs4=                {Screen position for character}
     %-2=                        {Remember this position}
-    6+ Pos=                     {Advance by 6 pixels}
+    6+ p=                       {Advance by 6 pixels}
 
     5 [do _i=                   {Draw character as 5 vertical bit slices}
-      _j 0? \sysArgs2.          {Get bit slice as byte from ROM table}
+      _j 0?? \sysArgs2.         {Get bit slice as byte from ROM table}
       134!!                     {SYS call to draw 8 pixels vertically}
       <_j++ <\sysArgs4++        {Advance to next byte}
       _i 1- if>0loop]           {Looping}
@@ -706,8 +740,8 @@ _ECHO=*         #_PHA_                  { [Gigatron]                            
                 #_PLA_                  { [Gigatron]                              }
                 #_RTS_                  { [Gigatron] Return.                      }
 _BLANK=*        #_CLC_                  { [Gigatron] Advance few pixels so BLOCK  }
-                #_ADCZ_  #<Pos          { [Gigatron]   XAM doesn't wrap around    }
-                #_STAZ_  #<Pos          { [Gigatron]   the 160 pixel wide screen. }
+                #_ADCZ_  #<p            { [Gigatron]   XAM doesn't wrap around    }
+                #_STAZ_  #<p            { [Gigatron]   the 160 pixel wide screen. }
                 #_RTS_                  { [Gigatron]                              }
                 #$00                    { (unused)                                }
 {FFFA}          ##$0000                 { (NMI)                                   }

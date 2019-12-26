@@ -1218,12 +1218,12 @@ _SaveChar=$30fe                 {vCPU adds 2 and wraps to $3000}
     \Buffer i= \sysArgs0:       {Buffer start}
     $01 \sysArgs2.              {Init bit mask}
     <j, \sysArgs3.              {Number of bits to send}
-    \SYS_SendSerial1_v3_80 \sysFn:
+    \SYS_SendSerial1_v3_80 _sysFn=
     80!!                        {SYS call to send bits to serial port}
     [if<>0 3 \serialRaw.]       {Not a great hack: induce a break error}
     0 <j.                       {Reset bit counter}
   ]
-  \SYS_Run6502_v4_80 \sysFn:
+  \SYS_Run6502_v4_80 _sysFn=
   80!!                          {Re-enter 6502 mode}
   loop
 ]
