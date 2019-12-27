@@ -470,7 +470,7 @@ class Program:
       # This must come before any lo() or hi()
       # Write header for GT1 segment
       address = self.segStart
-      if not has(self.execute):
+      if not has(self.execute) and address >= 0x200:
         self.execute = address
       assert self.segId == 0 or address>>8 != 0 # Zero-page segment can only be first
       self.putInRomTable(address>>8, '| RAM segment address (high byte first)')
