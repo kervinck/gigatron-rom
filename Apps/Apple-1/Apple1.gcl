@@ -8,32 +8,8 @@ gcl0x
 
 {
  Issues:
-  XXX Shift screen memory 96 pixels right
   XXX NMI/IRQ/RESET to wozmon (through vector) without going through main menu
   XXX We can win memory by sharing all black pixel lines in one page
-      But drawing characters then touches the top line
-      - Option 1: VDRawBits7
-      - Option 2: Always hide top line
-      - Option 3: New draw transparent plot function, clear with SetBytes
-      - Option 4: Vary which page is the black line, will be the bottom line
-                  -> doesn't work at memory wrap-around
-      - Option 5: New videoTable-aware (character) plot function
-      - Option 6: use Sprite functions for plotting chars
-      - Option 7: Keep 8-pixel height, make 10-row or 11-row screen (simplest)
-      Possible memory map with compressed video memory:
-        +--------------------------+
-        |30-7F,81-FF FREE ZP+STACK!|
-        |0100-01F9   VIDEO+SYSTEM  |
-        |0200-0FFF   FREE RAM      | 1000-5FFF -> 80 scanlines
-        |E000-EFFF   FREE RAM      | F000-FBFF -> 12 scanlines --> total 13*7+1
-        |FC00-FDFF   FREE RAM      |
-        |FE00        KBD/DSP MOCKUP| Add entry points at D010-D013 = 5010-5013
-        |FF00        APPLE1 ROM    |
-        |                          |
-        |C100R     LOADER MENU     |
-        |E000R     BASIC COLD START|
-        |E2B3R     BASIC WARM START|
-        +--------------------------+
   XXX Emulate ACI Apple Cassete Interface? C100R --> 4100 = RAM (still ok)
   XXX       D010 60 KBD     RTS            <-- Or store keyboard value here
             D011 80 KBDCR   BRA $D037      NOK: (JMP $6024 = $E024)
@@ -46,9 +22,26 @@ gcl0x
         https://www.sbprojects.net/projects/apple1/a1basic.php
 
 Zero page usage:
-$30-$31         Pos
+$30-$31         p
 $32-$33         CharOut
 $34-$3b         WozMon variables
+$3c-$3f         PIA emulator
+
+      Memory map, with compressed video memory:
+        +--------------------------+
+        |40-7F,81-FF FREE ZP+STACK!|
+        |0100-01F9   VIDEO+SYSTEM  |
+        |0200-0FFF   FREE RAM      |
+        |1060-5DFF   SCREEN        | 78 scanlines = 11*7+1
+        |5E00-5FFF   PIA EMULATOR  | Add entry points at D010-D013 = 5010-5013
+        |E000-EFFF   A1 BASIC      | alias 6000-6FFF -> A1 BASIC
+        |F060-FEFF   SCREEN        | alias 7000-7EFF -> 15 scanlines = 2*7+1
+        |FF00-FFFF   APPLE1 ROM    |
+        |                          |
+        |C100R     LOADER MENU     |
+        |E000R     BASIC COLD START|
+        |E2B3R     BASIC WARM START|
+        +--------------------------+
 }
 
 _i=$3c          {2 bytes}
@@ -76,12 +69,14 @@ _j=$3e          {2 bytes}
 
 { This code runs once and is then reused as the input buffer for wozmon }
 
-{ Setup video indirection table such that WozMon can be at $7F00/$FF00 }
-\videoTable Pos=                {First GCL variable at $30, later becomes Pos}
+{ Setup video indirection table }
+\videoTable p=                  {First GCL variable at $30, later used as Pos}
 120                             {7^127}
 [do 127^                        {Loop over 7..126 range}
-  Pos: <Pos++ <Pos++            {Y[y]=7+j and dX[y]=0}
+  p: <p++ <p++                  {Y[y]=7+j and dX[y]=0}
   1+ 127^ if<>0loop]            {Next in range}
+
+$101 {videoTable+1} p= $60 p.   {Use offsets 96..255 for pixel data, not 0..159}
 
 &_CharOut CharOut=              {Forward reference}
 
@@ -90,37 +85,12 @@ _j=$3e          {2 bytes}
 [ret]                           {Jump to Main (the brackets avoid the automatic vLR patch)}
 
 {-----------------------------------------------------------------------+
-|       Preloaded demo program                                          |
+|       Startup message                                                 |
 +-----------------------------------------------------------------------}
 
 *=$280
 
-_MUNCH=*        #_CLC_
-                #_ADCIM_ #23
-                #_STAZ_  #$40
-                #_LDAIM_ #$00
-                #_STAZ_  #$41
-                #_LDAIM_ #$10
-                #_STAZ_  #$42
-_L1=*           #_LDAIM_ #$07
-                #_STAZ_  #$43
-_L2=*           #_EORZ_  #$41
-                #_TAY_
-                #_LDAZ_  #$40
-                #_STAIY_ #$42
-                #_INCZ_  #$43
-                #_LDAZ_  #$43
-                #_CMPIM_ #$7f
-                #_BNE_   #@_L2
-                #_LDAZ_  #_serialRaw
-                #_CMPIM_ #$03
-                #_BEQ_   #@_PRE_RESET
-                #_INCZ_  #$41
-                #_BPL_   #@_L1
-                #_LDAZ_  #$40
-                #_JMP_   ##_MUNCH
-
-_PRE_RESET=*    #_LDXIM_ #66
+_PRE_RESET=*    #_LDXIM_ #48
 _L4=*           #_LDAAX_ ##_MSG
                 #_BRK_
                 #_DEX_
@@ -128,7 +98,6 @@ _L4=*           #_LDAAX_ ##_MSG
                 #_JMP_   ##_RESET
 
 _MSG=*
-
                 { '600  Free\r' }
                 #$8d #$e5 #$e5 #$f2 #$c6 #$a0 #$a0 #$b0
                 #$b0 #$b6
@@ -137,11 +106,6 @@ _MSG=*
                 #$8d #$b5 #$b4 #$ae #$b4 #$b4 #$a0 #$e5
                 #$ec #$e2 #$ed #$e5 #$f3 #$f3 #$e1 #$f3
                 #$e9 #$c4 #$a0 #$d2 #$b0 #$b0 #$b4
-
-                { '280R Munching6502\r' }
-                #$8d #$b2 #$b0 #$b5 #$b6 #$e7 #$ee #$e9
-                #$e8 #$e3 #$ee #$f5 #$cd #$a0 #$d2 #$b0
-                #$b8 #$b2
 
                 { 'Apple-1 on TTL\r' }
                 #$8d #$cc #$d4 #$d4 #$a0 #$ee #$ef #$a0
@@ -206,10 +170,10 @@ _MAPKEYCODE1=*  #_CMPIM_ #10
 _MAPKEYCODE2=*  #_ORAIM_ #$80           {B7 should be '1'}
                 #_RTS_
 
-_GOBACK=*       #_LDAZ_  #<Pos          {Go back}
+_GOBACK=*       #_LDAZ_  #<p            {Go back}
                 #_SEC_
                 #_SBCIM_ #6
-                #_STAZ_  #<Pos
+                #_STAZ_  #<p
                 #_RTS_
 
 {-----------------------------------------------------------------------+
@@ -239,11 +203,11 @@ _CharOut=*
 
   %-2=                          {Park character in stack area}
   \SYS_VDrawBits_134 _sysFn=    {Prepare SYS calls}
-  $3f00 \sysArgs0:              {White on black}
+  $3f00 _sysArgs0=              {White on black}
 
   %-2                           {Get character back}
   $8d^ [if<>0                   {Test for CR...}
-    <Pos, 155- if>0 0]          {...or line wrap}
+    <p, 251- if>0 0]            {...or line wrap}
 
   [if=0
 
@@ -251,28 +215,56 @@ _CharOut=*
     |       Newline                                                     |
     +-------------------------------------------------------------------}
 
-    {Clear new line first}
+    {
+      Newline function for the compressed layout (7 pixel lines per text row)
+    }
 
-    \sysArgs2.                  {Set all-zero output pattern}
-    \sysArgs4.                  {Start of clear area, without the indentation}
-    1 <Pos.                     {Go to start of line, nicely indent by 2 pixels}
-    $ff+                        {=$0100: start of video table}
-    peek >Pos.                  {Go to what is now still the top text row}
-    \sysArgs5.                  {Set drawing position for clearing}
+    \sysArgs2.                  {Zero bit pattern}
+
+    { Find the top text row }
+
+    $62 <p.                     {Go to start of line, nicely indent by 2 pixels}
+    $9e+ _i=                    {i==$100: start of the video table}
+    peek >p.                    {Go to what is now still the top text row}
+
+    { Clear the text row }
+
+    p 2- _sysArgs4=             {Set drawing position for clearing}
+
     [do
       134!!                     {SYS call to draw 8 pixels vertically}
-      <\sysArgs4++              {Step 1 pixel right}
-      \sysArgs4, 160^           {Test for end of line}
-      if<>0loop]
+      <_sysArgs4++              {Step 1 pixel right}
+      \sysArgs4, if<>0loop]     {Loop until end of pixel line}
 
-    {Then scroll up by modifying videoTable}
-
-    $01ee _i=                   {Last entry in video table}
+    {
+      Scroll everything up by modifying the video indirection table.
+      [This may be a cool effect to watch in slow motion?]
+    }
     [do
-      _i, 119- [if<0 127+
-                else 7+] _i.    {Rotate by 8 in 7..126 range}
-      _i 2- _i=                 {Move to previous entry in video table}
-      $fe^ if<>0loop]           {Until all done}
+      _i 18+ _j=                {j looks 9 entries ahead of i}
+      peek \sysArgs0.           {Swap scanlines}
+      _i, _j.
+      \sysArgs0, _i.
+      <_i++ <_i++               {Advance to next entry in video table}
+      <_i, 216^ if<>0loop]      {Until all done}
+
+    { The cleared text row has now bubbled down to the bottom }
+
+{
+    {
+      Set the vertical dividers to the empty base line just created. Since
+      there's always one in the active text row, we don't need to maintain
+      a dedicated empty pixel line. This saves 1 page of memory.
+    }
+
+    $e020 _i=                   {Rotating bit pattern: 1110.0000.001x.xxxx}
+    [do
+      _i [if<0
+        >p, 7+ _j.              {This is the new shared empty pixel line}
+        _i $10+] 1<< _i=        {Rotate bit 5:15}
+      <_j, 2- <_j.
+      if>=0loop]                {Step one line up}
+}
   ]
 
   %-2 $a0-                      {WozMon sends ASCII with bit 7 set}
@@ -291,12 +283,12 @@ _CharOut=*
     _j= _i 2<< _i+              {Multiply char code by 5}
     _j+ _j=                     {Add to page address to reach bitmap data}
 
-    Pos \sysArgs4:              {Screen position for character}
+    p _sysArgs4=                {Screen position for character}
     %-2=                        {Remember this position}
-    6+ Pos=                     {Advance by 6 pixels}
+    6+ p=                       {Advance by 6 pixels}
 
     5 [do _i=                   {Draw character as 5 vertical bit slices}
-      _j 0? \sysArgs2.          {Get bit slice as byte from ROM table}
+      _j 0?? \sysArgs2.         {Get bit slice as byte from ROM table}
       134!!                     {SYS call to draw 8 pixels vertically}
       <_j++ <\sysArgs4++        {Advance to next byte}
       _i 1- if>0loop]           {Looping}
@@ -329,7 +321,7 @@ _COUNT=$46
                 #_JSR_          ##_DSMBL        { [Gigatron] Call disassembler as subroutine }
                 #_JMP_          ##_GETLINE      { [Gigatron] Back to wozmon }
 
-_DSMBL=*        #_LDAIM_        #$d {was $13}   { COUNT FOR 13 INSTR. DSMBLY }
+_DSMBL=*        #_LDAIM_        #11 {was $13}   { COUNT FOR 13 INSTR. DSMBLY }
                 #_STAZ_         #_COUNT
 _DSMBL2=*       #_JSR_          ##_INSTDS       { DISASSEMBLE AND DISPLAY INSTR. }
                 #_JSR_          ##_PCADJ
@@ -706,8 +698,8 @@ _ECHO=*         #_PHA_                  { [Gigatron]                            
                 #_PLA_                  { [Gigatron]                              }
                 #_RTS_                  { [Gigatron] Return.                      }
 _BLANK=*        #_CLC_                  { [Gigatron] Advance few pixels so BLOCK  }
-                #_ADCZ_  #<Pos          { [Gigatron]   XAM doesn't wrap around    }
-                #_STAZ_  #<Pos          { [Gigatron]   the 160 pixel wide screen. }
+                #_ADCZ_  #<p            { [Gigatron]   XAM doesn't wrap around    }
+                #_STAZ_  #<p            { [Gigatron]   the 160 pixel wide screen. }
                 #_RTS_                  { [Gigatron]                              }
                 #$00                    { (unused)                                }
 {FFFA}          ##$0000                 { (NMI)                                   }

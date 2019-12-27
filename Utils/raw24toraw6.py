@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import argparse, itertools, os, struct, sys
 from os import path
@@ -52,7 +52,7 @@ with open(rawfile, 'wb') as output:
 
                 bytes = [byte1, byte2, byte3]
                 raw = itertools.chain(raw, bytes)
-                output.write(''.join([chr(byte1), chr(byte2), chr(byte3)]))
+                output.write(bytearray([byte1, byte2, byte3]))
 
 # Write a GCL file
 raw = list(raw)
@@ -69,7 +69,7 @@ with open(gclfile, 'w') as output:
 
     output.write('gcl0x\n\n')
     n_seg = 0
-    for segment in [raw[i:i + split] for i in xrange(0, len(raw), split)]:
+    for segment in [raw[i:i + split] for i in range(0, len(raw), split)]:
         n_seg += 1
 
         if args.start_address is not None:

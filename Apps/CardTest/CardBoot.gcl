@@ -7,7 +7,7 @@
 |                                                                       |
 |       The goal is to connect to a FAT32-formatted SDC/MMC card        |
 |       over the SPI interface, and then read its root directory.       |
-|       If there is a GTOS.GT1 file, load and execute it.               |
+|       If there is a SYSTEM.GT1 file, load and execute it.             |
 |                                                                       |
 +-----------------------------------------------------------------------}
 
@@ -47,7 +47,6 @@
   XXX  CLS
   XXX  STAT
   XXX  TYPE command (consider passing of ARGS)
-  XXX  Name: GTOS, BOSS, PROMPT, MINIDOS
   XXX  Device letters or not? A: B: C:
   XXX  https://cdn.hackaday.io/images/1744261554112919559.png
   XXX  LoadtGt1: better closing of sector
@@ -1318,10 +1317,10 @@ ValueToDecimal=
 { IsBootGt1 }
 [def
   {
-    Check if directrory entry p is GTOS.GT1
+    Check if directrory entry p is SYSTEM.GT1
     Returns 0 when name matches, non-zero otherwise
   }
-  [def `GTOS````GT1 #0] q=      {String to match}
+  [def `SYSTEM``GT1 #0] q=      {String to match}
   p i=
   [do
     q, <q++ if<>0 j=            {Compare until nul terminator}
@@ -1463,7 +1462,7 @@ ReadMBR! PrintResult!           {Master Boot Record}
 [if=0 ReadVolumeId!]            {Read first block of FAT partition}
 InitFat32!
 ReadDirectory!                  {Read root directory XXX Move into PrintDir}
-[if=0 PrintDirectory!]          {List directory, find GTOS.GT1 and execute it}
+[if=0 PrintDirectory!]          {List directory, find SYSTEM.GT1 and execute it}
 
 ##\HALT                         {Halt if not found}
 

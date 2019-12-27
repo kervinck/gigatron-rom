@@ -9,8 +9,6 @@
 # simple .py files, not .asm files. (But we can produce .lst files as a program
 # listing in a more conventional notation.)
 
-from __future__ import (absolute_import, division, print_function, unicode_literals)
-
 import inspect
 import json
 from os.path import basename, splitext
@@ -506,9 +504,10 @@ def _emit(opcode, operand):
   # multiplexer resettles. Such a glitch then potentially ripples all the way through two 74283
   # adders and the control unit's 74153. This all depends on the previous instruction's addressing
   # mode and the values of AC and [D], which we can't know with static analysis.
+  # See also https://github.com/kervinck/gigatron-rom/issues/78
   if opcode & _maskOp == _opJ and\
     opcode & _maskBus == _busRAM and\
-    opcode & _maskCc in [ _jGT, _jLT, _jNE, _jEQ, _jGE, _jLE ]:
+    opcode & _maskCc in [ _jGT, _jLT, _jNE, _jEQ, _jGE, _jLE ]: # XXX Only check jGT, jLT, jNE?
     disassembly = disassemble(opcode, operand)
     print('%04x %02x%02x  %s' % (_romSize, opcode, operand, disassembly))
     print('Warning: large propagation delay (conditional branch with RAM on bus)')

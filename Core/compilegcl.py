@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #-----------------------------------------------------------------------
 #
 #  compilegcl.py -- Compile GCL source to GT1 object file
@@ -81,8 +81,8 @@ if program.needPatch:
 
 # Final two bytes are execution address
 print('Execute at $%04x' % address)
-data += chr(address>>8)
-data += chr(address&255)
+data.append(address>>8)
+data.append(address&255)
 
 #-----------------------------------------------------------------------
 #       Write out GT1 file
