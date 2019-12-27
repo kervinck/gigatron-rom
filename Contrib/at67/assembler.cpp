@@ -567,11 +567,12 @@ namespace Assembler
                 break;
             }
 
+            std::string dasmCodeText = std::string(dasmText);
             dasmCode._instruction = instruction;
             dasmCode._byteSize = byteSize;
             dasmCode._data0 = data0;
             dasmCode._data1 = data1;
-            dasmCode._text = (memoryMode == Editor::RAM) ? Expression::strToUpper(std::string(dasmText)) : Expression::strToLower(std::string(dasmText));
+            dasmCode._text = (memoryMode == Editor::RAM) ? Expression::strToUpper(dasmCodeText) : Expression::strToLower(dasmCodeText);
 
             _disassembledCode.push_back(dasmCode);
         }

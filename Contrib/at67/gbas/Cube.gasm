@@ -79,9 +79,9 @@ _A                  EQU                     0x003a
 _B                  EQU                     0x003c
 _L                  EQU                     0x003e
 _F                  EQU                     0x0040
-_P_array            EQU                     0xff60
+_P_array            EQU                     0x7ea0
 _P_array            DW                      0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_Q_array            EQU                     0xff70
+_Q_array            EQU                     0x7eb0
 _Q_array            DW                      0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
 _U                  EQU                     0x0042
 _R                  EQU                     0x0044
@@ -93,9 +93,9 @@ _C                  EQU                     0x0048
 ; Define Bytes
 
 ; Lookup Tables
-_lut_numericLabs    EQU                     0xffe2
+_lut_numericLabs    EQU                     0x7cfa
 _lut_numericLabs    DW                      254 253 -1
-_lut_numericAddrs   EQU                     0xffe8
+_lut_numericAddrs   EQU                     0x7bf5
 _lut_numericAddrs   DW                      0x049c 0x04e7 
 
 ; Code
@@ -150,7 +150,7 @@ _25                 LDW                     _X
                     CALL                    giga_vAC
                     ADDI                    80
                     STW                     register0
-                    LDWI                    0xff60
+                    LDWI                    0x7ea0
                     ADDW                    _I
                     ADDW                    _I
                     STW                     register1
@@ -166,14 +166,14 @@ _30                 LDW                     _M
                     CALL                    giga_vAC
                     ADDI                    60
                     STW                     register0
-                    LDWI                    0xff70
+                    LDWI                    0x7eb0
                     ADDW                    _I
                     ADDW                    _I
                     STW                     register1
                     LDW                     register0
                     DOKE                    register1                       ; Q(I)=60+(M-N)/R
 
-_35                 LDWI                    0xff60
+_35                 LDWI                    0x7ea0
                     ADDW                    _I
                     ADDW                    _I
                     DEEK                    
@@ -184,14 +184,14 @@ _35                 LDWI                    0xff60
                     LDW                     _I
                     ADDI                    4
                     STW                     register1
-                    LDWI                    0xff60
+                    LDWI                    0x7ea0
                     ADDW                    register1
                     ADDW                    register1
                     STW                     register1
                     LDW                     register0
                     DOKE                    register1                       ; P(I+4)=160-P(I)
 
-_40                 LDWI                    0xff70
+_40                 LDWI                    0x7eb0
                     ADDW                    _I
                     ADDW                    _I
                     DEEK                    
@@ -203,7 +203,7 @@ _40                 LDWI                    0xff70
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
-                    LDWI                    0xff70
+                    LDWI                    0x7eb0
                     ADDW                    register1
                     ADDW                    register1
                     STW                     register1
@@ -215,22 +215,22 @@ _45                 INC                     _I
                     RET                                                     ; INC I:RETURN
 
 _50                 PUSH                    
-                    LDWI                    0xff60
+                    LDWI                    0x7ea0
                     ADDW                    _A
                     ADDW                    _A
                     DEEK                    
                     STW                     drawLine_x1
-                    LDWI                    0xff70
+                    LDWI                    0x7eb0
                     ADDW                    _A
                     ADDW                    _A
                     DEEK                    
                     STW                     drawLine_y1
-                    LDWI                    0xff60
+                    LDWI                    0x7ea0
                     ADDW                    _B
                     ADDW                    _B
                     DEEK                    
                     STW                     drawLine_x2
-                    LDWI                    0xff70
+                    LDWI                    0x7eb0
                     ADDW                    _B
                     ADDW                    _B
                     DEEK                    
@@ -515,23 +515,23 @@ _end_0x059a         BRA                     _end_0x059a                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0xff80
-convertEqOp         EQU     0xff89
-convertNeOp         EQU     0xff92
-convertLeOp         EQU     0xff9b
-convertGeOp         EQU     0xffa4
-convertLtOp         EQU     0xffad
-convertGtOp         EQU     0xffb6
-multiply16bit       EQU     0xfd00
-divide16bit         EQU     0xfe3a
-gosubNumericLabel   EQU     0xfd27
-resetVideoTable     EQU     0xfd61
-initClearFuncs      EQU     0xffbf
-clearVertBlinds     EQU     0xfe00
-drawLine            EQU     0xfe94
-drawLineExt         EQU     0xfd80
-drawLineLoop        EQU     0xfdb9
-drawLineLoadXY      EQU     0xfc00
+realTimeProc        EQU     0x7ec0
+convertEqOp         EQU     0x7ec9
+convertNeOp         EQU     0x7ed2
+convertLeOp         EQU     0x7edb
+convertGeOp         EQU     0x7ee4
+convertLtOp         EQU     0x7eed
+convertGtOp         EQU     0x7ef6
+multiply16bit       EQU     0x7aa0
+divide16bit         EQU     0x7ca0
+gosubNumericLabel   EQU     0x79a0
+resetVideoTable     EQU     0x7ac7
+initClearFuncs      EQU     0x7da0
+clearVertBlinds     EQU     0x7dc3
+drawLine            EQU     0x7ba0
+drawLineExt         EQU     0x78a0
+drawLineLoop        EQU     0x77a0
+drawLineLoadXY      EQU     0x76a0
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2

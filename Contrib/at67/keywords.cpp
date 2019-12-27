@@ -70,6 +70,7 @@ namespace Keywords
         _keywords["GOSUB" ] = {"GOSUB",  keywordGOSUB,  Compiler::SingleStatementParsed};
         _keywords["RETURN"] = {"RETURN", keywordRETURN, Compiler::SingleStatementParsed};
         _keywords["CLS"   ] = {"CLS",    keywordCLS,    Compiler::SingleStatementParsed};
+        _keywords["?"     ] = {"?",      keywordPRINT,  Compiler::SingleStatementParsed};
         _keywords["PRINT" ] = {"PRINT",  keywordPRINT,  Compiler::SingleStatementParsed};
         _keywords["INPUT" ] = {"INPUT",  keywordINPUT,  Compiler::SingleStatementParsed};
         _keywords["FOR"   ] = {"FOR",    keywordFOR,    Compiler::SingleStatementParsed};

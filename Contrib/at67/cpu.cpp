@@ -1015,7 +1015,7 @@ namespace Cpu
                 reset(true);
                 _vgaX = 0, _vgaY = 0;
                 _hSync = 0, _vSync = 0;
-                fprintf(stderr, "main(): CPU stall for %" PRId64 " clocks : rebooting.\n", _clock - _clockStall);
+                fprintf(stderr, "Cpu::process(): CPU stall for %" PRId64 " clocks : rebooting.\n", _clock - _clockStall);
             }
         }
 
@@ -1046,7 +1046,7 @@ namespace Cpu
                 if(_vgaX != 200  &&  _vgaX != 400) // Support for 6.25Mhz and 12.5MHz
                 {
                     colour = 0xFFFF0000;
-                    fprintf(stderr, "main(): Horizontal timing error : vgaX %03d : vgaY %03d : xout %02x : time %0.3f\r", _vgaX, _vgaY, _stateT._AC, float(_clock)/float(CLOCK_FREQ));
+                    fprintf(stderr, "main(): Horizontal timing error : vgaX %03d : vgaY %03d : xout %02x : time %0.3f\n", _vgaX, _vgaY, _stateT._AC, float(_clock)/float(CLOCK_FREQ));
                 }
                 if((_vgaY % 4) == 3) Graphics::refreshTimingPixel(_stateS, GIGA_WIDTH, _vgaY / 4, colour, _debugging);
             }

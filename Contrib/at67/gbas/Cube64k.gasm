@@ -71,13 +71,13 @@ _A                  EQU                     0x0040
 _B                  EQU                     0x0042
 _L                  EQU                     0x0044
 _F                  EQU                     0x0046
-_P_array            EQU                     0x8700
+_P_array            EQU                     0x7ea0
 _P_array            DW                      0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_PP_array           EQU                     0x8710
+_PP_array           EQU                     0x7eb0
 _PP_array           DW                      0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_Q_array            EQU                     0x8720
+_Q_array            EQU                     0x7ec0
 _Q_array            DW                      0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_QQ_array           EQU                     0x8730
+_QQ_array           EQU                     0x7ed0
 _QQ_array           DW                      0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
 _U                  EQU                     0x0048
 _R                  EQU                     0x004a
@@ -90,9 +90,9 @@ _j                  EQU                     0x0050
 ; Define Bytes
 
 ; Lookup Tables
-_lut_numericLabs    EQU                     0x87f0
+_lut_numericLabs    EQU                     0x7cda
 _lut_numericLabs    DW                      254 253 -1
-_lut_numericAddrs   EQU                     0x87f6
+_lut_numericAddrs   EQU                     0x7efb
 _lut_numericAddrs   DW                      0x05ea 0x063e 
 
 ; Code
@@ -165,7 +165,7 @@ _25                 LDW                     _X
                     CALL                    giga_vAC
                     ADDI                    80
                     STW                     register0
-                    LDWI                    0x8700
+                    LDWI                    0x7ea0
                     ADDW                    _I
                     ADDW                    _I
                     STW                     register1
@@ -181,14 +181,14 @@ _30                 LDW                     _M
                     CALL                    giga_vAC
                     ADDI                    60
                     STW                     register0
-                    LDWI                    0x8720
+                    LDWI                    0x7ec0
                     ADDW                    _I
                     ADDW                    _I
                     STW                     register1
                     LDW                     register0
                     DOKE                    register1                       ; Q(I)=60+(M-N)/R
 
-_35                 LDWI                    0x8700
+_35                 LDWI                    0x7ea0
                     ADDW                    _I
                     ADDW                    _I
                     DEEK                    
@@ -203,14 +203,14 @@ _35                 LDWI                    0x8700
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
                     STW                     register1
-                    LDWI                    0x8700
+                    LDWI                    0x7ea0
                     ADDW                    register1
                     ADDW                    register1
                     STW                     register1
                     LDW                     register0
                     DOKE                    register1                       ; P(I+4)=160-P(I)
 
-_40                 LDWI                    0x8720
+_40                 LDWI                    0x7ec0
                     ADDW                    _I
                     ADDW                    _I
                     DEEK                    
@@ -218,7 +218,7 @@ _40                 LDWI                    0x8720
                     LDW                     _I
                     ADDI                    4
                     STW                     register1
-                    LDWI                    0x8720
+                    LDWI                    0x7ec0
                     ADDW                    register1
                     ADDW                    register1
                     STW                     register1
@@ -230,23 +230,23 @@ _45                 INC                     _I
                     RET                                                     ; INC I:RETURN
 
 _50                 PUSH                    
-                    LDWI                    0x8700
+                    LDWI                    0x7ea0
                     ADDW                    _A
                     ADDW                    _A
                     DEEK                    
                     STW                     drawLine_x1
-                    LDWI                    0x8720
+                    LDWI                    0x7ec0
                     ADDW                    _A
                     ADDW                    _A
                     DEEK                    
                     ADDW                    _pageFlip
                     STW                     drawLine_y1
-                    LDWI                    0x8700
+                    LDWI                    0x7ea0
                     ADDW                    _B
                     ADDW                    _B
                     DEEK                    
                     STW                     drawLine_x2
-                    LDWI                    0x8720
+                    LDWI                    0x7ec0
                     ADDW                    _B
                     ADDW                    _B
                     DEEK                    
@@ -258,23 +258,23 @@ _50                 PUSH
                     RET                                                     ; return
 
 _60                 PUSH                    
-                    LDWI                    0x8710
+                    LDWI                    0x7eb0
                     ADDW                    _A
                     ADDW                    _A
                     DEEK                    
                     STW                     drawLine_x1
-                    LDWI                    0x8730
+                    LDWI                    0x7ed0
                     ADDW                    _A
                     ADDW                    _A
                     DEEK                    
                     ADDW                    _pageFlip
                     STW                     drawLine_y1
-                    LDWI                    0x8710
+                    LDWI                    0x7eb0
                     ADDW                    _B
                     ADDW                    _B
                     DEEK                    
                     STW                     drawLine_x2
-                    LDWI                    0x8730
+                    LDWI                    0x7ed0
                     ADDW                    _B
                     ADDW                    _B
                     DEEK                    
@@ -320,12 +320,12 @@ _loop               LDI                     0x11
 _process            PUSH                    
                     LDI                     0
                     STW                     _j
-_next_0x045c        LDWI                    0x8700
+_next_0x045c        LDWI                    0x7ea0
                     ADDW                    _j
                     ADDW                    _j
                     DEEK                    
                     STW                     register0
-                    LDWI                    0x8710
+                    LDWI                    0x7eb0
                     ADDW                    _j
                     ADDW                    _j
                     STW                     register1
@@ -335,12 +335,12 @@ _next_0x045c        LDWI                    0x8700
                     LDWI                    _page_0x0400
                     CALL                    giga_vAC
 _page_0x0400        LDW                     0xde
-                    LDWI                    0x8720
+                    LDWI                    0x7ec0
                     ADDW                    _j
                     ADDW                    _j
                     DEEK                    
                     STW                     register0
-                    LDWI                    0x8730
+                    LDWI                    0x7ed0
                     ADDW                    _j
                     ADDW                    _j
                     STW                     register1
@@ -700,25 +700,25 @@ _end_0x0736         BRA                     _end_0x0736                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x8740
-convertEqOp         EQU     0x8749
-convertNeOp         EQU     0x8752
-convertLeOp         EQU     0x875b
-convertGeOp         EQU     0x8764
-convertLtOp         EQU     0x876d
-convertGtOp         EQU     0x8776
-multiply16bit       EQU     0x8500
-divide16bit         EQU     0x8641
-gosubNumericLabel   EQU     0x8527
-scanlineMode        EQU     0x87a2
-resetVideoTable     EQU     0x8561
-initClearFuncs      EQU     0x877f
-clearScreen         EQU     0x8600
-clearVertBlinds     EQU     0x87b6
-drawLine            EQU     0x869b
-drawLineExt         EQU     0x8580
-drawLineLoop        EQU     0x85b9
-drawLineLoadXY      EQU     0x8400
+realTimeProc        EQU     0x7ee0
+convertEqOp         EQU     0x7ee9
+convertNeOp         EQU     0x7ef2
+convertLeOp         EQU     0x7da0
+convertGeOp         EQU     0x7da9
+convertLtOp         EQU     0x7db2
+convertGtOp         EQU     0x7dbb
+multiply16bit       EQU     0x78a0
+divide16bit         EQU     0x7aa0
+gosubNumericLabel   EQU     0x77a0
+scanlineMode        EQU     0x7de7
+resetVideoTable     EQU     0x7ce0
+initClearFuncs      EQU     0x7dc4
+clearScreen         EQU     0x7ba0
+clearVertBlinds     EQU     0x7ca0
+drawLine            EQU     0x79a0
+drawLineExt         EQU     0x78c7
+drawLineLoop        EQU     0x76a0
+drawLineLoadXY      EQU     0x75a0
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2

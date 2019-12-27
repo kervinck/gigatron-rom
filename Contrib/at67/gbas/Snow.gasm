@@ -33,44 +33,40 @@ highByteMask        EQU                     register0 + 0x2C
 _entryPoint_        EQU                     0x0200
 _10                 EQU                     0x0240
 _20                 EQU                     0x0240
-_30                 EQU                     0x0254
-_40                 EQU                     0x0262
-_50                 EQU                     0x0278
-_60                 EQU                     0x0282
-_70                 EQU                     0x02a1
-_80                 EQU                     0x02b9
-_90                 EQU                     0x02bd
-_100                EQU                     0x02d9
-_110                EQU                     0x0308
-_120                EQU                     0x032e
-_130                EQU                     0x033f
-_140                EQU                     0x0357
-_150                EQU                     0x036d
-_160                EQU                     0x0387
-_170                EQU                     0x0391
-_180                EQU                     0x03ab
-_190                EQU                     0x03be
-_200                EQU                     0x03c8
-_210                EQU                     0x03de
-_220                EQU                     0x040c
-_230                EQU                     0x042e
+_30                 EQU                     0x0248
+_40                 EQU                     0x025f
+_50                 EQU                     0x0275
+_60                 EQU                     0x027f
+_70                 EQU                     0x0290
+_80                 EQU                     0x02a8
+_90                 EQU                     0x02ac
+_100                EQU                     0x02c8
+_110                EQU                     0x0313
+_120                EQU                     0x0335
+_130                EQU                     0x0346
+_140                EQU                     0x035e
+_150                EQU                     0x0374
+_160                EQU                     0x038e
+_170                EQU                     0x0398
+_180                EQU                     0x03b2
+_190                EQU                     0x03c5
+_200                EQU                     0x03cf
+_210                EQU                     0x03e5
+_220                EQU                     0x0412
 _page_0x0300        EQU                     0x0300
 _page_0x0400        EQU                     0x0400
-_end_0x04a2         EQU                     0x0433
+_end_0x04a3         EQU                     0x0424
 
 ; Variables
 _X_array            EQU                     0x0600
-_X_array            DW                      0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_X_array            DW                      0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
 _Y_array            EQU                     0x0500
-_Y_array            DW                      0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_C                  EQU                     0x0030
-_D                  EQU                     0x0032
-_I                  EQU                     0x0034
-_J                  EQU                     0x0036
-_W                  EQU                     0x0038
-_S                  EQU                     0x003a
-_y                  EQU                     0x003c
-_x                  EQU                     0x003e
+_Y_array            DW                      0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_I                  EQU                     0x0030
+_J                  EQU                     0x0032
+_S                  EQU                     0x0034
+_y                  EQU                     0x0036
+_x                  EQU                     0x0038
 
 ; Strings
 _str_0x7ea0          EQU                     0x7ea0
@@ -122,23 +118,20 @@ _entryPoint_        InitRealTimeProc
                     InitGtOp                
                     Initialise                                              ; INIT
 
-_20                 LDI                     63
-                    STW                     _C
-                    LDI                     16
-                    STW                     _D
-                    LDI                     1
+_20                 LDI                     1
                     STW                     _I
                     LDI                     0
-                    STW                     _J
-                    LDI                     159
-                    STW                     _W                              ; C=63 : D=16 : I=1 : J=0 : W=159
+                    STW                     _J                              ; I=1 : J=0
 
 _30                 LDWI                    162
                     STW                     register0
-                    LDW                     _D
+                    LDI                     16
                     POKE                    register0
+                    LDI                     1
+                    STW                     graphicsMode
+                    ScanlineMode            
                     LDWI                    clearVertBlinds
-                    CALL                    giga_vAC                        ; poke 162,D : cls
+                    CALL                    giga_vAC                        ; poke 162,D : mode 1 : cls
 
 _40                 LDWI                    163
                     STW                     register0
@@ -154,25 +147,20 @@ _40                 LDWI                    163
 _50                 PrintString             _str_0x7ea0                     ; print "Merry Christmas!";
 
 _60                 LDI                     0
-                    ST                      cursorXY
+                    STW                     drawHLine_x1
                     LDI                     119
-                    ST                      cursorXY + 1
-                    LDWI                    atTextCursor
-                    CALL                    giga_vAC
-                    LDW                     _W
-                    STW                     drawLine_x2
-                    LDI                     0
-                    STW                     drawLine_y2
-                    AtLineCursor            
-                    DrawVTLine                                              ; at 0,119 : line W,0
+                    STW                     drawHLine_y1
+                    LDI                     159
+                    STW                     drawHLine_x2
+                    DrawHLine                                               ; hline 0, 119, W 'at 0,119 : line W,0
 
 _70                 LDI                     3
                     ST                      waveType
                     LDWI                    2208
                     PlayMidi                                                ; play midi &h08a0,3
 
-_80                 LDI                     1
-                    STW                     _S                              ; for S=1 to N
+_80                 LDI                     0
+                    STW                     _S                              ; for S=0 to N
 
 _90                 TickMidi                
                     LDWI                    0x0500
@@ -184,37 +172,48 @@ _90                 TickMidi
                     LDWI                    _120
                     CALL                    giga_vAC                        ; play midi : if Y(S)>0 then goto 120
 
-_100                LDW                     _W
-                    SUBI                    3
-                    RandMod                 
+_100                Rand                    
+                    ANDI                    63
                     ADDI                    2
-                    STW                     register0
-                    LDWI                    0x0600
-                    ADDW                    _S
-                    ADDW                    _S
+                    STW                     0xc0
+                    Rand                    
+                    ANDI                    63
+                    ADDW                    0xc0
+                    STW                     0xc2
+                    Rand                    
+                    ANDI                    15
+                    ADDW                    0xc2
+                    STW                     0xc4
+                    Rand                    
+                    ANDI                    15
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
+                    ADDW                    0xc4
+                    STW                     register0
+                    LDWI                    0x0600
+                    ADDW                    _S
+                    ADDW                    _S
                     STW                     register1
                     LDW                     register0
-                    DOKE                    register1                       ; X(S)=2+rnd(W-3)
+                    DOKE                    register1                       ; X(S) = 2 + (rnd(0) AND &h3F) + (rnd(0) AND &h3F) + (rnd(0) AND &h0F) + (rnd(0) AND &h0F) '2+rnd(W-3)
 
-_110                LDI                     0x3c
-                    RandMod                 
+_110                Rand                    
+                    ANDI                    63
                     ADDI                    8
-                    STW                     mathX
-                    LDWI                    256
-                    STW                     mathY
-                    LDWI                    multiply16bit
-                    CALL                    giga_vAC
+                    STW                     0xc0
+                    LD                      0xc0
+                    ST                      0xc2 + 1
+                    LDW                     0xc2
+                    ANDW                    highByteMask
                     STW                     register0
                     LDWI                    0x0500
                     ADDW                    _S
                     ADDW                    _S
                     STW                     register1
                     LDW                     register0
-                    DOKE                    register1                       ; Y(S)=(8+rnd(60))*256
+                    DOKE                    register1                       ; Y(S) = (8 + (rnd(0) AND &h3F)) LSL 8 '(8+rnd(60))*256
 
 _120                LDWI                    0x0500
                     ADDW                    _S
@@ -241,7 +240,7 @@ _130                LDWI                    0x0600
 _140                LDW                     _y
                     ADDW                    _x
                     PEEK                    
-                    SUBW                    _C
+                    SUBI                    63
                     CALL                    convertGtOpAddr
                     JumpFalse               _150 1
                     LDWI                    _190
@@ -258,13 +257,13 @@ _150                LDWI                    0x0500
                     DEEK                    
                     ADDW                    0xc0
                     STW                     0xc2
-                    LDW                     _D
+                    LDI                     16
                     POKE                    0xc2                            ; poke Y(S)+X(S),D
 
 _160                LDW                     _x
                     ADDW                    _y
                     STW                     0xc0
-                    LDW                     _C
+                    LDI                     63
                     POKE                    0xc0                            ; poke x+y,C
 
 _170                LDWI                    0x0600
@@ -280,7 +279,7 @@ _170                LDWI                    0x0600
                     LDW                     _y
                     DOKE                    register1                       ; X(S)=x : Y(S)=y
 
-_180                ForNextLoopUp           _S _90 121
+_180                ForNextLoopUp           _S _90 127
                     LDWI                    _80
                     CALL                    giga_vAC                        ; next S : goto 80
 
@@ -293,7 +292,7 @@ _190                LDWI                    0x0600
 _200                LDW                     _x
                     ADDW                    _y
                     PEEK                    
-                    SUBW                    _D
+                    SUBI                    16
                     CALL                    convertEqOpAddr
                     JumpFalse               _210 2
                     LDWI                    _150
@@ -304,18 +303,17 @@ _210                LDWI                    0x0500
                     ADDW                    _S
                     DEEK                    
                     STW                     0xc0
-                    LDWI                    0x0600
-                    ADDW                    _S
-                    ADDW                    _S
-                    DEEK                    
                     STW                     0xde
                     LDWI                    _page_0x0400
                     CALL                    giga_vAC
 _page_0x0400        LDW                     0xde
+                    LDWI                    0x0600
+                    ADDW                    _S
+                    ADDW                    _S
+                    DEEK                    
                     ADDW                    0xc0
                     STW                     0xc2
-                    LDW                     _C
-                    ADDI                    64
+                    LDI                     127
                     POKE                    0xc2                            ; poke Y(S)+X(S),C+64
 
 _220                LDWI                    0x0500
@@ -324,18 +322,10 @@ _220                LDWI                    0x0500
                     STW                     register1
                     LDI                     0
                     DOKE                    register1
-                    INC                     _S
-                    LDW                     _S
-                    SUBI                    121
-                    CALL                    convertLtOpAddr
-                    JumpFalse               _230 3
-                    LDWI                    _90
-                    CALL                    giga_vAC                        ; Y(S)=0 : inc S : if S<N then goto 90
+                    LDWI                    _180
+                    CALL                    giga_vAC                        ; Y(S)=0 : goto 180
 
-_230                LDWI                    _80
-                    CALL                    giga_vAC                        ; goto 80
-
-_end_0x04a2         BRA                     _end_0x04a2                     ; END
+_end_0x04a3         BRA                     _end_0x04a3                     ; END
 
 
 
@@ -352,26 +342,21 @@ convertLeOp         EQU     0x7ecd
 convertGeOp         EQU     0x7ed6
 convertLtOp         EQU     0x7edf
 convertGtOp         EQU     0x7ee8
-multiply16bit       EQU     0x79d9
-divide16bit         EQU     0x77a0
-randMod16bit        EQU     0x7bdf
-resetVideoTable     EQU     0x76a0
+rand16bit           EQU     0x7ef1
+scanlineMode        EQU     0x7dc3
+resetVideoTable     EQU     0x7cda
 initClearFuncs      EQU     0x7da0
-clearVertBlinds     EQU     0x7dc3
-clearCursorRow      EQU     0x75a0
-drawVTLine          EQU     0x7aa0
-drawVTLineExt       EQU     0x76bf
-drawVTLineLoop      EQU     0x74a0
-drawVTLineLoadXY    EQU     0x73a0
-atLineCursor        EQU     0x7ba0
+clearVertBlinds     EQU     0x7ca0
+clearCursorRow      EQU     0x77a0
+drawHLine           EQU     0x7aa0
 resetAudio          EQU     0x79a0
 playMidi            EQU     0x78a0
-midiStartNote       EQU     0x72a0
-printInit           EQU     0x73c7
-printText           EQU     0x7ccd
-printChar           EQU     0x71a0
-atTextCursor        EQU     0x7ca0
-newLineScroll       EQU     0x70a0
+midiStartNote       EQU     0x76a0
+printInit           EQU     0x7bcd
+printText           EQU     0x7dd7
+printChar           EQU     0x75a0
+atTextCursor        EQU     0x7ba0
+newLineScroll       EQU     0x74a0
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -462,94 +447,57 @@ mathPow             EQU     register9
 mathResult          EQU     register10
 
 
-                    ; accumulator = mathX * mathY, (result 16bit)
-multiply16bit       LDI     0
-                    STW     mathSum
-                    LDI     1
-    
-multiply16_loop     STW     mathMask
-                    ANDW    mathY
-                    BEQ     multiply16_skip
-                    LDW     mathSum
-                    ADDW    mathX
-                    STW     mathSum
-                    
-multiply16_skip     LDW     mathX
-                    ADDW    mathX
-                    STW     mathX
-                    LDW     mathMask
-                    ADDW    mathMask
-                    BNE     multiply16_loop
-                    PUSH
-                    CALL    realTimeProcAddr
-                    POP
-                    LDW     mathSum
-                    RET
-
-
-
-                    ; accumulator:mathRem = mathX / mathY, (results 16bit)
-divide16bit         LDW     mathX
-                    XORW    mathY
-                    STW     mathSign
-                    LDW     mathX
-                    BGE     divide16_skip0
-                    LDI     0
-                    SUBW    mathX
-                    STW     mathX
-                    
-divide16_skip0      LDW     mathY                     
-                    BGE     divide16_skip1
-                    LDI     0
-                    SUBW    mathY
-                    STW     mathY
-                    
-divide16_skip1      LDI     0
-                    STW     mathRem
-    
-divide16_loop       STW     mathScratch
-                    LDW     mathRem
-                    ADDW    mathRem
-                    STW     mathRem
-                    LDW     mathX
-                    BGE     divide16_skip3
-                    INC     mathRem
-                    
-divide16_skip3      LDW     mathX
-                    ADDW    mathX
-                    STW     mathX
-                    LDW     mathRem
-                    SUBW    mathY
-                    BLT     divide16_skip4
-                    STW     mathRem
-                    INC     mathX
-                    
-divide16_skip4      PUSH
-                    CALL    realTimeProcAddr
-                    POP
-                    LDW     mathScratch
-                    ADDI    1
-                    ANDI    0x0F
-                    BNE     divide16_loop
-                    LDW     mathSign
-                    BGE     divide16_exit
-                    LDI     0
-                    SUBW    mathX
-                    RET
-                    
-divide16_exit       LDW     mathX
-                    RET
-
-
-randMod16bit        PUSH
-                    LDWI    SYS_Random_34
+rand16bit           LDWI    SYS_Random_34
                     STW     giga_sysFn
                     SYS     0xFD
-                    STW     mathX
-                    LDWI    divide16bit
-                    CALL    giga_vAC
-                    LDW     mathRem
-                    POP                    
+                    RET
+
+
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+graphicsMode        EQU     register0
+waitVBlankNum       EQU     register0
+
+drawHLine_x1        EQU     register0
+drawHLine_y1        EQU     register1
+drawHLine_x2        EQU     register2
+drawHLine_x4        EQU     register3
+
+drawVLine_x1        EQU     register0
+drawVLine_y1        EQU     register1
+drawVLine_y2        EQU     register2
+drawVLine_y8        EQU     register3
+
+drawLine_x1         EQU     register0
+drawLine_y1         EQU     register1
+drawLine_x2         EQU     register2
+drawLine_y2         EQU     register3
+drawLine_xy1        EQU     register0
+drawLine_xy2        EQU     register1
+drawLine_dxy1       EQU     register2
+drawLine_dxy2       EQU     register3
+drawLine_dx1        EQU     register4
+drawLine_dy1        EQU     register5
+drawLine_dx2        EQU     register6
+drawLine_dy2        EQU     register7
+drawLine_sx         EQU     register8
+drawLine_sy         EQU     register9
+drawLine_h          EQU     register10
+drawLine_num        EQU     register11
+drawLine_count      EQU     register12
+drawLine_addr       EQU     register13
+drawLine_tmp        EQU     register14
+    
+    
+scanlineMode        LDW     giga_romType
+                    ANDI    0xF8
+                    SUBI    romTypeValue_ROMv2
+                    BGE     scanlineM_cont
+                    RET
+    
+scanlineM_cont      LDWI    SYS_SetMode_v2_80
+                    STW     giga_sysFn
+                    LDW     graphicsMode
+                    SYS     0xE6                ; 270 - max(14,80/2)
                     RET
 
 
@@ -645,232 +593,44 @@ clearVB_loop        CALL    realTimeProcAddr
                     RET
 
 
-
-
-; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
-graphicsMode        EQU     register0
-waitVBlankNum       EQU     register0
-
-drawHLine_x1        EQU     register0
-drawHLine_y1        EQU     register1
-drawHLine_x2        EQU     register2
-drawHLine_x4        EQU     register3
-
-drawVLine_x1        EQU     register0
-drawVLine_y1        EQU     register1
-drawVLine_y2        EQU     register2
-drawVLine_y8        EQU     register3
-
-drawLine_x1         EQU     register0
-drawLine_y1         EQU     register1
-drawLine_x2         EQU     register2
-drawLine_y2         EQU     register3
-drawLine_xy1        EQU     register0
-drawLine_xy2        EQU     register1
-drawLine_dxy1       EQU     register2
-drawLine_dxy2       EQU     register3
-drawLine_dx1        EQU     register4
-drawLine_dy1        EQU     register5
-drawLine_dx2        EQU     register6
-drawLine_dy2        EQU     register7
-drawLine_sx         EQU     register8
-drawLine_sy         EQU     register9
-drawLine_h          EQU     register10
-drawLine_num        EQU     register11
-drawLine_count      EQU     register12
-drawLine_addr       EQU     register13
-drawLine_tmp        EQU     register14
-    
-    
-drawVTLine          PUSH                        ; matches drawVTLineLoop's POP
-                    LDWI    giga_videoTable
-                    STW     drawLine_addr
-                    LDI     1
-                    STW     drawLine_dx1
-                    STW     drawLine_dx2
-                    STW     drawLine_dy1
-                    LDI     0
-                    STW     drawLine_dy2                
-    
-                    LDWI    0x8000
-                    STW     drawLine_tmp
+drawHLine           PUSH
+                    LD      drawHLine_x1
+                    ST      giga_sysArg4
+                    LD      drawHLine_y1
+                    ADDI    8
+                    ST      giga_sysArg4 + 1
+                    LDW     drawHLine_x2
+                    SUBW    drawHLine_x1
+                    SUBI    4
+                    BLT     drawHL_loop1
                     
-                    LDW     drawLine_x2         ; sx = x2 - x1
-                    SUBW    drawLine_x1
-                    STW     drawLine_sx
-                    ANDW    drawLine_tmp        
-                    BEQ     drawVTL_dy
-                    LDWI    -1
-                    STW     drawLine_dx1        
-                    STW     drawLine_dx2        ; dx1 = dx2 = (sx & 0x8000) ? -1 : 1
-                    LDI     0                   ; sx = (sx & 0x8000) ? 0 - sx : sx
-                    SUBW    drawLine_sx
-                    STW     drawLine_sx                
-                    
-drawVTL_dy          LDW     drawLine_y2
-                    SUBW    drawLine_y1
-                    STW     drawLine_sy
-                    STW     drawLine_h          ; h = sy
-                    ANDW    drawLine_tmp
-                    BEQ     drawVTL_ext
-                    
-                    LDWI    -1
-                    STW     drawLine_dy1        ; dy1 = (sy & 0x8000) ? -1 : 1
-                    LDI     0                   
-                    SUBW    drawLine_sy
-                    STW     drawLine_sy         ; sy = (sy & 0x8000) ? 0 - sy : sy
-                    SUBW    drawLine_sx
-                    BLE     drawVTL_ext           
-                    LDW     drawLine_dy1
-                    STW     drawLine_dy2        ; if(sx < sy) dy2 = -1
-    
-drawVTL_ext         LDWI    drawVTLineLoadXY
-                    CALL    giga_vAC
-                    LDWI    drawVTLineExt
-                    CALL    giga_vAC
-
-
-
-drawVTLineExt       LDW     drawLine_sy
-                    SUBW    drawLine_sx
-                    BLE     drawVTL_num
-                    LDI     0
-                    STW     drawLine_dx2        ; if(sx < sy) dx2 = 0
-                    LDW     drawLine_sy       
-                    STW     drawLine_tmp
-                    LDW     drawLine_sx
-                    STW     drawLine_sy
-                    LDW     drawLine_tmp
-                    STW     drawLine_sx         ; swap sx with sy
-                    LDW     drawLine_h
-                    BLE     drawVTL_num
-                    LDI     1
-                    STW     drawLine_dy2        ; if(h > 0) dy2 = 1
-    
-drawVTL_num         LDWI    SYS_LSRW1_48
-                    STW     giga_sysFn          
-                    LDW     drawLine_sx
-                    SYS     0xF6                ; 0xF6 = 270-max(14,48/2)
-                    ADDI    1
-                    STW     drawLine_num        ; numerator = sx>>1
-                    STW     drawLine_count      ; for(count=sx>>1; counti>=0; --i)
-                    
-                    LDWI    drawVTLineLoadDXY
-                    CALL    giga_vAC
-                    LDWI    drawVTLineLoop
-                    CALL    giga_vAC
-
-
-drawVTLineLoop      LDW     drawLine_xy1
-                    STW     drawLine_tmp
-                    LDWI    drawVTLineAddress
-                    CALL    giga_vAC            ; plot start pixel
-
-                    LDW     drawLine_xy2
-                    STW     drawLine_tmp
-                    LDWI    drawVTLineAddress
-                    CALL    giga_vAC            ; plot end pixel, (meet in middle)
-                    
-                    LDW     drawLine_num        ; numerator += sy
-                    ADDW    drawLine_sy
-                    STW     drawLine_num
-                    SUBW    drawLine_sx
-                    BLE     drawVTL_flip        ; if(numerator <= sx) goto flip
-                    STW     drawLine_num        ; numerator -= sx
-                    
-                    LDW     drawLine_xy1
-                    ADDW    drawLine_dxy1
-                    STW     drawLine_xy1        ; xy1 += dxy1
-                    
-                    LDW     drawLine_xy2
-                    SUBW    drawLine_dxy1
-                    STW     drawLine_xy2        ; xy2 -= dxy1
-                    BRA     drawVTL_count
-                    
-drawVTL_flip        LDW     drawLine_xy1        
-                    ADDW    drawLine_dxy2
-                    STW     drawLine_xy1        ; xy1 += dxy2
-                    
-                    LDW     drawLine_xy2        
-                    SUBW    drawLine_dxy2
-                    STW     drawLine_xy2        ; xy2 -= dxy2
-                    
-drawVTL_count       CALL    realTimeProcAddr
-                    LDW     drawLine_count
-                    SUBI    0x01
-                    STW     drawLine_count
-                    BGT     drawVTLineLoop
-                    POP                         ; matches drawVTLine's PUSH
-                    RET
-                    
-drawVTLineAddress   LD      drawLine_tmp + 1
-                    LSLW
-                    ADDW    drawLine_addr
-                    PEEK
-                    ST      drawLine_tmp + 1
                     LD      fgbgColour + 1
-                    POKE    drawLine_tmp
-                    RET
+                    ST      giga_sysArg0
+                    ST      giga_sysArg0 + 1
+                    ST      giga_sysArg2
+                    ST      giga_sysArg2 + 1    ; 4 pixels of fg colour
+                    LDWI    SYS_Draw4_30        ; setup 4 pixel SYS routine
+                    STW     giga_sysFn
+                    
+                    LDW     drawHLine_x2        
+                    SUBI    3
+                    STW     drawHLine_x4        ; 4 pixel chunks limit
 
-
-drawVTLineLoadXY    LD      drawLine_x1
-                    ST      drawLine_xy1
-                    LD      drawLine_y1
-                    ST      drawLine_xy1 + 1    ; xy1 = x1 | (y1<<8)
+drawHL_loop0        SYS     0xFF                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+                    CALL    realTimeProcAddr
+                    LD      giga_sysArg4
+                    ADDI    4
+                    ST      giga_sysArg4
+                    SUBW    drawHLine_x4
+                    BLT     drawHL_loop0        ; all 4 pixel chunks
                     
-                    LD      drawLine_x2
-                    ST      drawLine_xy2
-                    LD      drawLine_y2
-                    ST      drawLine_xy2 + 1    ; xy2 = x2 | (y2<<8)
-                    RET
-                    
-drawVTLineLoadDXY   LDWI    SYS_LSLW8_24
-                    STW     giga_sysFn          
-                    LDW     drawLine_dy1
-                    SYS     0x00                ; LSL 8, 0x00 = 270-max(14,24/2)
-                    ADDW    drawLine_dx1
-                    STW     drawLine_dxy1       ; dxy1 = dx1 + (dy1<<8)
-    
-                    LDW     drawLine_dy2
-                    SYS     0x00                ; LSL 8, 0x00 = 270-max(14,24/2)
-                    ADDW    drawLine_dx2
-                    STW     drawLine_dxy2       ; dxy2 = dx2 + (dy2<<8)
-                    RET
-
-
-atLineCursor        LD      cursorXY
-                    STW     drawLine_x1
-                    SUBI    giga_xres
-                    BLT     atLC_x1good
-                    LDI     0
-                    STW     drawLine_x1
-                    
-atLC_x1good         LD      cursorXY
-                    ADDW    drawLine_x2
-                    SUBI    giga_xres
-                    BLT     atLC_x2good
-                    LDWI    -giga_xres
-                    
-atLC_x2good         ADDI    giga_xres
-                    STW     drawLine_x2
-                    ST      cursorXY
-
-                    LD      cursorXY + 1
-                    STW     drawLine_y1
-                    SUBI    giga_yres
-                    BLT     atLC_y1good
-                    LDI     giga_yres - 1
-                    STW     drawLine_y1
-                    
-atLC_y1good         LD      cursorXY + 1
-                    ADDW    drawLine_y2
-                    SUBI    giga_yres
-                    BLT     atLC_y2good
-                    LDWI    -1
-                    
-atLC_y2good         ADDI    giga_yres
-                    STW     drawLine_y2
-                    ST      cursorXY + 1
+drawHL_loop1        LD      fgbgColour + 1
+                    POKE    giga_sysArg4
+                    INC     giga_sysArg4
+                    LD      giga_sysArg4
+                    SUBW    drawHLine_x2
+                    BLE     drawHL_loop1        ; remaining pixels
+                    POP
                     RET
 
 
