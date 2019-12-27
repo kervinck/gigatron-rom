@@ -7,9 +7,9 @@ gcl0x
 +-----------------------------------------------------------------------}
 
 {
- Issues:
+  Issues:
+
   XXX NMI/IRQ/RESET to wozmon (through vector) without going through main menu
-  XXX We can win memory by sharing all black pixel lines in one page
   XXX Emulate ACI Apple Cassete Interface? C100R --> 4100 = RAM (still ok)
   XXX       D010 60 KBD     RTS            <-- Or store keyboard value here
             D011 80 KBDCR   BRA $D037      NOK: (JMP $6024 = $E024)
@@ -18,22 +18,22 @@ gcl0x
             D014    _DSP:
             D037    _KBDCR:
   XXX Another idea: interrupts to handle memory mapped DSP/KBD/..
+  XXX https://www.sbprojects.net/projects/apple1/a1basic.php
 
-        https://www.sbprojects.net/projects/apple1/a1basic.php
+  Zero page usage:
 
-Zero page usage:
-$30-$31         p
-$32-$33         CharOut
-$34-$3b         WozMon variables
-$3c-$3f         PIA emulator
+        $30-$31         p
+        $32-$33         CharOut
+        $34-$3b         WozMon variables
+        $3c-$3f         _i, _j
 
-      Memory map, with compressed video memory:
+  Memory map, with compressed video memory:
         +--------------------------+
         |40-7F,81-FF FREE ZP+STACK!|
         |0100-01F9   VIDEO+SYSTEM  |
         |0200-0FFF   FREE RAM      |
         |1060-5DFF   SCREEN        | 78 scanlines = 11*7+1
-        |5E00-5FFF   PIA EMULATOR  | Add entry points at D010-D013 = 5010-5013
+        |5E00-5FFF   PIA EMULATION | Add entry points at D010-D013 = 5010-5013
         |E000-EFFF   A1 BASIC      | alias 6000-6FFF -> A1 BASIC
         |F060-FEFF   SCREEN        | alias 7000-7EFF -> 15 scanlines = 2*7+1
         |FF00-FFFF   APPLE1 ROM    |
@@ -69,12 +69,10 @@ _j=$3e          {2 bytes}
 
 { This code runs once and is then reused as the input buffer for wozmon }
 
-{ Setup video indirection table }
-\videoTable p=                  {First GCL variable at $30, later used as Pos}
-120                             {7^127}
-[do 127^                        {Loop over 7..126 range}
-  p: <p++ <p++                  {Y[y]=7+j and dX[y]=0}
-  1+ 127^ if<>0loop]            {Next in range}
+$1ee p= {videoTable+119*2}      {First GCL variable at $30, later used as Pos}
+[do
+  $7e p.                        {Shared empty pixel line at $7e60}
+  <p, 2- <p. if>=0loop]
 
 $101 {videoTable+1} p= $60 p.   {Use offsets 96..255 for pixel data, not 0..159}
 
@@ -88,19 +86,44 @@ $101 {videoTable+1} p= $60 p.   {Use offsets 96..255 for pixel data, not 0..159}
 |       Startup message                                                 |
 +-----------------------------------------------------------------------}
 
-*=$280
+*=$5e00
 
-_PRE_RESET=*    #_LDXIM_ #48
+_PRE_RESET=*
+                {Set visible pixel lines in video table}
+                #_CLC_
+                #_LDXIM_ #0
+                #_LDYIM_ #12
+_L1=*           #_LDAAY_ ##_ROWS
+                #_STYZ_  #\YSAV
+                #_LDYIM_ #7
+_L2=*           #_STAAX_ ##\videoTable
+                #_ADCIM_ #1
+                #_INX_
+                #_INX_
+                #_DEY_
+                #_BNE_   #@_L2
+                #_INX_
+                #_INX_
+                #_INX_
+                #_INX_
+                #_LDYZ_  #\YSAV
+                #_DEY_
+                #_BPL_   #@_L1
+
+                {Print welcome message}
+                #_LDXIM_ #48
 _L4=*           #_LDAAX_ ##_MSG
                 #_BRK_
                 #_DEX_
                 #_BPL_   #@_L4
                 #_JMP_   ##_RESET
 
+_ROWS=*         { Page of each row's first pixel line, backwards }
+                #$70 #$56 #$4f #$48 #$41 #$3a #$33 #$2c #$25 #$1e #$17 #$10 #$77 #$70
 _MSG=*
-                { '600  Free\r' }
+                { '200  Free\r' }
                 #$8d #$e5 #$e5 #$f2 #$c6 #$a0 #$a0 #$b0
-                #$b0 #$b6
+                #$b0 #$b2
 
                 { '400R Disassemble 44.45\r' }
                 #$8d #$b5 #$b4 #$ae #$b4 #$b4 #$a0 #$e5
@@ -120,7 +143,7 @@ _MSG=*
                   ' '.join('#$%02x'%(ord(c)+128) for c in reversed(s))
                 }
 
-*=$300
+*=$5f00
 
 {-----------------------------------------------------------------------+
 |       WAITKEY                                                         |
@@ -288,7 +311,8 @@ _CharOut=*
     6+ p=                       {Advance by 6 pixels}
 
     5 [do _i=                   {Draw character as 5 vertical bit slices}
-      _j 0?? \sysArgs2.         {Get bit slice as byte from ROM table}
+      _j 0??                    {Get bit slice as byte from ROM table}
+      $fe& \sysArgs2.           {Clear bottom pixel}
       134!!                     {SYS call to draw 8 pixels vertically}
       <_j++ <\sysArgs4++        {Advance to next byte}
       _i 1- if>0loop]           {Looping}

@@ -58217,7 +58217,7 @@ WozMon:       f04b 0002  ld   $02
               f2a5 0000  ld   $00
               f2a6 0000  ld   $00         ;End of Apps/WozMon/WozMon_v2.gt1, size 604
                                           ;+-----------------------------------+
-                                          ;| Apps/Apple-1/Apple1_v1.gt1        |
+                                          ;| Apps/Apple-1/Apple-1_v1.gt1       |
                                           ;+-----------------------------------+
 Egg:          f2a7 0002  ld   $02
               f2a8 0000  ld   $00
@@ -59441,7 +59441,7 @@ Egg:          f2a7 0002  ld   $02
               f76a 0000  ld   $00
               f76b 0000  ld   $00
               f76c 0000  ld   $00
-              f76d 0000  ld   $00         ;End of Apps/Apple-1/Apple1_v1.gt1, size 1223
+              f76d 0000  ld   $00         ;End of Apps/Apple-1/Apple-1_v1.gt1, size 1223
                                           ;+-----------------------------------+
                                           ;| Apps/MainMenu/MainMenu_v4.gcl     |
                                           ;+-----------------------------------+
