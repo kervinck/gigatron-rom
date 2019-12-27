@@ -1,0 +1,919 @@
+_startAddress_      EQU                     0x0200
+
+; Internal variables
+register0           EQU                     0x0082
+register1           EQU                     register0 + 0x02
+register2           EQU                     register0 + 0x04
+register3           EQU                     register0 + 0x06
+register4           EQU                     register0 + 0x08
+register5           EQU                     register0 + 0x0A
+register6           EQU                     register0 + 0x0C
+register7           EQU                     register0 + 0x0E
+register8           EQU                     register0 + 0x10
+register9           EQU                     register0 + 0x12
+register10          EQU                     register0 + 0x14
+register11          EQU                     register0 + 0x16
+register12          EQU                     register0 + 0x18
+register13          EQU                     register0 + 0x1A
+register14          EQU                     register0 + 0x1C
+register15          EQU                     register0 + 0x1E
+fgbgColour          EQU                     register0 + 0x20
+cursorXY            EQU                     register0 + 0x22
+midiStream          EQU                     register0 + 0x24
+midiDelay           EQU                     register0 + 0x26
+frameCountPrev      EQU                     register0 + 0x28
+miscFlags           EQU                     register0 + 0x2A
+highByteMask        EQU                     register0 + 0x2C
+
+; Includes
+%include            include/gigatron.i
+%include            include/macros.i
+
+; Labels
+_entryPoint_        EQU                     0x0200
+_1                  EQU                     0x0240
+_2                  EQU                     0x0268
+_3                  EQU                     0x026d
+_4                  EQU                     0x027b
+_5                  EQU                     0x027f
+_6                  EQU                     0x0284
+_7                  EQU                     0x0289
+_100                EQU                     0x028b
+_198                EQU                     0x02cb
+_199                EQU                     0x02db
+_200                EQU                     0x02ea
+_204                EQU                     0x0302
+_205                EQU                     0x0319
+_206                EQU                     0x0329
+_207                EQU                     0x0335
+_208                EQU                     0x0341
+_209                EQU                     0x034d
+_1000               EQU                     0x0359
+_next_0x0296        EQU                     0x0290
+_page_0x0300        EQU                     0x0300
+_else_0x036f        EQU                     0x0370
+_else_0x0389        EQU                     0x0386
+_else_0x03a3        EQU                     0x039c
+_else_0x03bd        EQU                     0x03b2
+_else_0x03d7        EQU                     0x03c8
+_else_0x03f1        EQU                     0x03de
+_page_0x0400        EQU                     0x0400
+_else_0x040b        EQU                     0x0406
+_else_0x0425        EQU                     0x041c
+_else_0x043f        EQU                     0x0432
+_else_0x0459        EQU                     0x0448
+_else_0x0473        EQU                     0x045e
+_else_0x048d        EQU                     0x0474
+_else_0x04a7        EQU                     0x048a
+_else_0x04c1        EQU                     0x04a0
+_else_0x04db        EQU                     0x04b6
+_else_0x04f5        EQU                     0x04cc
+_else_0x050f        EQU                     0x04e2
+_page_0x0500        EQU                     0x0500
+_else_0x0547        EQU                     0x0524
+_end_0x0555         EQU                     0x0532
+
+; Variables
+_a                  EQU                     0x0030
+_b                  EQU                     0x0032
+_p                  EQU                     0x0034
+_z                  EQU                     0x0036
+_d                  EQU                     0x0038
+_k                  EQU                     0x003a
+_c                  EQU                     0x003c
+
+; Strings
+_str_0x7ea0          EQU                     0x7ea0
+_str_0x7ea0          DB                      18 ' 2 3   5 6 7   9 0' 0
+_str_0x7eb4          EQU                     0x7eb4
+_str_0x7eb4          DB                      19 'Q W E R T Y U I O P' 0
+_str_0x7ec9          EQU                     0x7ec9
+_str_0x7ec9          DB                      3 'Z: ' 0
+_str_0x7ed6          EQU                     0x7ed6
+_str_0x7ed6          DB                      8 'Metallic' 0
+_str_0x7ee0          EQU                     0x7ee0
+_str_0x7ee0          DB                      8 'Triangle' 0
+_str_0x7eea          EQU                     0x7eea
+_str_0x7eea          DB                      8 'Pulse   ' 0
+_str_0x7ef4          EQU                     0x7ef4
+_str_0x7ef4          DB                      8 'Sawtooth' 0
+
+; Define Bytes
+
+; Lookup Tables
+lut_0x7ece          EQU                     0x7ece
+lut_0x7ece          DW                      0x0329 0x0335 0x0341 0x034d 
+
+; Code
+_entryPoint_        InitRealTimeProc        
+                    InitEqOp                
+                    InitNeOp                
+                    InitLeOp                
+                    InitGeOp                
+                    InitLtOp                
+                    InitGtOp                
+                    Initialise                                              ; INIT
+
+_1                  LDI                     0
+                    STW                     _a
+                    LDI                     0
+                    STW                     _b
+                    LDWI                    508
+                    STW                     _p
+                    LDI                     2
+                    STW                     graphicsMode
+                    ScanlineMode            
+                    LDWI                    clearVertBlinds
+                    CALL                    giga_vAC
+                    LDI                     2
+                    STW                     _z
+                    LDI                     0
+                    STW                     _d
+                    LDWI                    _198
+                    CALL                    giga_vAC                        ; a=0 : b=0 : p=256+252 : mode 2 : cls : z=2 : d=0 : gosub 198
+
+_2                  LDI                     0x11
+                    PEEK                    
+                    STW                     _k                              ; k=peek(17)
+
+_3                  LDW                     _k
+                    SUBI                    126
+                    JumpGT                  _4 0
+                    BRA                     _2                              ; if k &> 126 then goto &2
+
+_4                  LDI                     30
+                    STW                     _d                              ; d = 30
+
+_5                  LDWI                    _1000
+                    CALL                    giga_vAC                        ; gosub 1000
+
+_6                  LDWI                    _100
+                    CALL                    giga_vAC                        ; gosub 100
+
+_7                  BRA                     _2                              ; goto &2
+
+_100                PUSH                    
+                    LDI                     1
+                    STW                     _c
+_next_0x0296        LD                      _c
+                    ST                      0xc0 + 1
+                    LDW                     0xc0
+                    ANDW                    highByteMask
+                    ADDI                    252
+                    STW                     _p
+                    SUBI                    1
+                    STW                     0xc2
+                    LDW                     _z
+                    POKE                    0xc2
+                    LDW                     _a
+                    POKE                    _p
+                    LDW                     _p
+                    ADDI                    1
+                    STW                     0xc4
+                    LDW                     _b
+                    POKE                    0xc4
+                    ForNextLoopUp           _c _next_0x0296 4               ; for c=1 to 4 : p=(c LSL 8)+252 : poke p-1,z : poke p,a : poke p+1,b : next c
+
+                    LDWI                    44
+                    STW                     register0
+                    LDW                     _d
+                    POKE                    register0                       ; poke 44,d
+
+                    POP                     
+                    RET                                                     ; return
+
+_198                PUSH                    
+                    PrintString             _str_0x7ea0
+                    LDWI                    newLineScroll
+                    CALL                    giga_vAC                        ; print " 2 3   5 6 7   9 0"
+
+_199                PrintString             _str_0x7eb4
+                    LDWI                    newLineScroll
+                    CALL                    giga_vAC                        ; print "Q W E R T Y U I O P"
+
+_200                LDWI                    _100
+                    CALL                    giga_vAC                        ; gosub 100
+
+                    STW                     0xde
+                    LDWI                    _page_0x0300
+                    CALL                    giga_vAC
+_page_0x0300        LDW                     0xde
+_204                LDI                     2
+                    ST                      cursorXY
+                    LDI                     24
+                    ST                      cursorXY + 1
+                    LDWI                    atTextCursor
+                    CALL                    giga_vAC
+                    PrintString             _str_0x7ec9                     ; at 2,24:print "Z: ";
+
+_205                LDW                     _z
+                    STW                     register0
+                    ADDW                    register0
+                    STW                     register0
+                    LDWI                    lut_0x7ece
+                    ADDW                    register0
+                    DEEK                    
+                    CALL                    giga_vAC                        ; on z goto 206,207,208,209
+
+_206                PrintString             _str_0x7ed6
+                    POP                     
+                    RET                                                     ; print "Metallic";:return
+
+_207                PrintString             _str_0x7ee0
+                    POP                     
+                    RET                                                     ; print "Triangle";:return
+
+_208                PrintString             _str_0x7eea
+                    POP                     
+                    RET                                                     ; print "Pulse   ";:return
+
+_209                PrintString             _str_0x7ef4
+                    POP                     
+                    RET                                                     ; print "Sawtooth";:return
+
+_1000               PUSH                    
+                    LDW                     _k
+                    SUBI                    113
+                    JumpEQ                  _else_0x036f 1
+                    LDI                     73
+                    STW                     _a
+                    LDI                     8
+                    STW                     _b
+                    POP                     
+                    RET                                                     ; if k &= 113 then a=73 :b=8 :return:'C
+
+_else_0x036f        LDW                     _k
+                    SUBI                    50
+                    JumpEQ                  _else_0x0389 2
+                    LDI                     11
+                    STW                     _a
+                    LDI                     9
+                    STW                     _b
+                    POP                     
+                    RET                                                     ; if k &= 50  then a=11 :b=9 :return:'C#
+
+_else_0x0389        LDW                     _k
+                    SUBI                    119
+                    JumpEQ                  _else_0x03a3 3
+                    LDI                     80
+                    STW                     _a
+                    LDI                     9
+                    STW                     _b
+                    POP                     
+                    RET                                                     ; if k &= 119 then a=80 :b=9 :return:'D
+
+_else_0x03a3        LDW                     _k
+                    SUBI                    51
+                    JumpEQ                  _else_0x03bd 4
+                    LDI                     25
+                    STW                     _a
+                    LDI                     10
+                    STW                     _b
+                    POP                     
+                    RET                                                     ; if k &= 51  then a=25 :b=10:return:'D#
+
+_else_0x03bd        LDW                     _k
+                    SUBI                    101
+                    JumpEQ                  _else_0x03d7 5
+                    LDI                     103
+                    STW                     _a
+                    LDI                     10
+                    STW                     _b
+                    POP                     
+                    RET                                                     ; if k &= 101 then a=103:b=10:return:'E
+
+_else_0x03d7        LDW                     _k
+                    SUBI                    114
+                    JumpEQ                  _else_0x03f1 6
+                    LDI                     57
+                    STW                     _a
+                    LDI                     11
+                    STW                     _b
+                    POP                     
+                    RET                                                     ; if k &= 114 then a=57 :b=11:return:'F
+
+_else_0x03f1        LDW                     _k
+                    SUBI                    53
+                    JumpEQ                  _else_0x040b 7
+                    LDI                     16
+                    STW                     _a
+                    LDI                     12
+                    STW                     0xde
+                    LDWI                    _page_0x0400
+                    CALL                    giga_vAC
+_page_0x0400        LDW                     0xde
+                    STW                     _b
+                    POP                     
+                    RET                                                     ; if k &= 53  then a=16 :b=12:return:'F#
+
+_else_0x040b        LDW                     _k
+                    SUBI                    116
+                    JumpEQ                  _else_0x0425 8
+                    LDI                     108
+                    STW                     _a
+                    LDI                     12
+                    STW                     _b
+                    POP                     
+                    RET                                                     ; if k &= 116 then a=108:b=12:return:'G
+
+_else_0x0425        LDW                     _k
+                    SUBI                    54
+                    JumpEQ                  _else_0x043f 9
+                    LDI                     78
+                    STW                     _a
+                    LDI                     13
+                    STW                     _b
+                    POP                     
+                    RET                                                     ; if k &= 54  then a=78 :b=13:return:'G#
+
+_else_0x043f        LDW                     _k
+                    SUBI                    121
+                    JumpEQ                  _else_0x0459 10
+                    LDI                     53
+                    STW                     _a
+                    LDI                     14
+                    STW                     _b
+                    POP                     
+                    RET                                                     ; if k &= 121 then a=53 :b=14:return:'A
+
+_else_0x0459        LDW                     _k
+                    SUBI                    55
+                    JumpEQ                  _else_0x0473 11
+                    LDI                     35
+                    STW                     _a
+                    LDI                     15
+                    STW                     _b
+                    POP                     
+                    RET                                                     ; if k &= 55  then a=35 :b=15:return:'A#
+
+_else_0x0473        LDW                     _k
+                    SUBI                    117
+                    JumpEQ                  _else_0x048d 12
+                    LDI                     23
+                    STW                     _a
+                    LDI                     16
+                    STW                     _b
+                    POP                     
+                    RET                                                     ; if k &= 117 then a=23 :b=16:return:'B
+
+_else_0x048d        LDW                     _k
+                    SUBI                    105
+                    JumpEQ                  _else_0x04a7 13
+                    LDI                     19
+                    STW                     _a
+                    LDI                     17
+                    STW                     _b
+                    POP                     
+                    RET                                                     ; if k &= 105 then a=19 :b=17:return:'C
+
+_else_0x04a7        LDW                     _k
+                    SUBI                    57
+                    JumpEQ                  _else_0x04c1 14
+                    LDI                     21
+                    STW                     _a
+                    LDI                     18
+                    STW                     _b
+                    POP                     
+                    RET                                                     ; if k &= 57  then a=21 :b=18:return:'C#
+
+_else_0x04c1        LDW                     _k
+                    SUBI                    111
+                    JumpEQ                  _else_0x04db 15
+                    LDI                     31
+                    STW                     _a
+                    LDI                     19
+                    STW                     _b
+                    POP                     
+                    RET                                                     ; if k &= 111 then a=31 :b=19:return:'D
+
+_else_0x04db        LDW                     _k
+                    SUBI                    48
+                    JumpEQ                  _else_0x04f5 16
+                    LDI                     50
+                    STW                     _a
+                    LDI                     20
+                    STW                     _b
+                    POP                     
+                    RET                                                     ; if k &= 48  then a=50 :b=20:return:'D#
+
+_else_0x04f5        LDW                     _k
+                    SUBI                    112
+                    JumpEQ                  _else_0x050f 17
+                    LDI                     77
+                    STW                     _a
+                    LDI                     21
+                    STW                     _b
+                    POP                     
+                    RET                                                     ; if k &= 112 then a=77 :b=21:return:'E
+
+_else_0x050f        LDW                     _k
+                    SUBI                    122
+                    JumpEQ                  _else_0x0547 18
+                    STW                     0xde
+                    LDWI                    _page_0x0500
+                    CALL                    giga_vAC
+_page_0x0500        LDW                     0xde
+                    LDWI                    17
+                    STW                     register0
+                    LDI                     239
+                    POKE                    register0
+                    LDW                     _z
+                    ADDI                    1
+                    ANDI                    3
+                    STW                     _z
+                    LDI                     0
+                    STW                     _a
+                    LDI                     0
+                    STW                     _b
+                    LDI                     0
+                    STW                     _d
+                    LDWI                    _200
+                    CALL                    giga_vAC                        ; if k &= 122 then poke 17,&hEF : z=(z+1)AND3 : a=0 : b=0 : d=0 : goto 200
+
+_else_0x0547        LDI                     0
+                    STW                     _a
+                    LDI                     0
+                    STW                     _b
+                    LDI                     0
+                    STW                     _d
+                    POP                     
+                    RET                                                     ; a=0 : b=0 : d=0 : return
+
+_end_0x0555         BRA                     _end_0x0555                     ; END
+
+
+
+;****************************************************************************************************************************************
+;****************************************************************************************************************************************
+;* Internal runtime, DO NOT MODIFY PAST THIS POINT, modifications must be made in the original include files                            *
+;****************************************************************************************************************************************
+;****************************************************************************************************************************************
+
+realTimeProc        EQU     0x7da0
+convertEqOp         EQU     0x7da9
+convertNeOp         EQU     0x7db2
+convertLeOp         EQU     0x7dbb
+convertGeOp         EQU     0x7dc4
+convertLtOp         EQU     0x7dcd
+convertGtOp         EQU     0x7dd6
+scanlineMode        EQU     0x7ddf
+resetVideoTable     EQU     0x79a0
+initClearFuncs      EQU     0x7ca0
+clearVertBlinds     EQU     0x7cc3
+clearCursorRow      EQU     0x78a0
+printInit           EQU     0x79bf
+printText           EQU     0x7ba0
+printChar           EQU     0x77a0
+atTextCursor        EQU     0x7bc3
+newLineScroll       EQU     0x7aa0
+realTimeProcAddr    EQU     0x00dc
+convertEqOpAddr     EQU     0x00d0
+convertNeOpAddr     EQU     0x00d2
+convertLeOpAddr     EQU     0x00d4
+convertGeOpAddr     EQU     0x00d6
+convertLtOpAddr     EQU     0x00d8
+convertGtOpAddr     EQU     0x00da
+
+
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+numericLabel        EQU     register0
+defaultLabel        EQU     register1
+lutLabs             EQU     register2
+lutAddrs            EQU     register3
+lutIndex            EQU     register8
+lutLabel            EQU     register9
+
+
+                    ; runs real time, (time sliced), code at regular intervals
+realTimeProc        PUSH
+                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI/SPRITE etc routines
+                    CALL    giga_vAC
+                    POP
+                    RET
+                    
+realTimeStub        RET
+
+
+                    ; convert equal to into a boolean
+convertEqOp         BEQ     convertEq_1
+                    LDI     0
+                    RET
+convertEq_1         LDI     1
+                    RET
+
+
+                    ; convert not equal to into a boolean
+convertNeOp         BNE     convertNe_1
+                    LDI     0
+                    RET
+convertNe_1         LDI     1
+                    RET
+
+
+                    ; convert less than or equal to into a boolean
+convertLeOp         BLE     convertLe_1
+                    LDI     0
+                    RET
+convertLe_1         LDI     1
+                    RET
+
+
+                    ; convert greater than or equal to into a boolean
+convertGeOp         BGE     convertGe_1
+                    LDI     0
+                    RET
+convertGe_1         LDI     1
+                    RET
+
+
+                    ; convert less than into a boolean
+convertLtOp         BLT     convertLt_1
+                    LDI     0
+                    RET
+convertLt_1         LDI     1
+                    RET
+
+
+                    ; convert greater than into boolean
+convertGtOp         BGT     convertGt_1
+                    LDI     0
+                    RET
+convertGt_1         LDI     1
+                    RET
+
+
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+graphicsMode        EQU     register0
+waitVBlankNum       EQU     register0
+
+drawHLine_x1        EQU     register0
+drawHLine_y1        EQU     register1
+drawHLine_x2        EQU     register2
+drawHLine_x4        EQU     register3
+
+drawVLine_x1        EQU     register0
+drawVLine_y1        EQU     register1
+drawVLine_y2        EQU     register2
+drawVLine_y8        EQU     register3
+
+drawLine_x1         EQU     register0
+drawLine_y1         EQU     register1
+drawLine_x2         EQU     register2
+drawLine_y2         EQU     register3
+drawLine_xy1        EQU     register0
+drawLine_xy2        EQU     register1
+drawLine_dxy1       EQU     register2
+drawLine_dxy2       EQU     register3
+drawLine_dx1        EQU     register4
+drawLine_dy1        EQU     register5
+drawLine_dx2        EQU     register6
+drawLine_dy2        EQU     register7
+drawLine_sx         EQU     register8
+drawLine_sy         EQU     register9
+drawLine_h          EQU     register10
+drawLine_num        EQU     register11
+drawLine_count      EQU     register12
+drawLine_addr       EQU     register13
+drawLine_tmp        EQU     register14
+    
+    
+scanlineMode        LDW     giga_romType
+                    ANDI    0xF8
+                    SUBI    romTypeValue_ROMv2
+                    BGE     scanlineM_cont
+                    RET
+    
+scanlineM_cont      LDWI    SYS_SetMode_v2_80
+                    STW     giga_sysFn
+                    LDW     graphicsMode
+                    SYS     0xE6                ; 270 - max(14,80/2)
+                    RET
+
+
+
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+xreset              EQU     register0
+xcount              EQU     register1
+ycount              EQU     register2
+treset              EQU     register3
+breset              EQU     register8
+top                 EQU     register9
+bot                 EQU     register10
+vramAddr            EQU     register11
+evenAddr            EQU     register12
+clsAddress          EQU     register13
+    
+    
+                    ; resets video table pointers
+resetVideoTable     PUSH
+                    LDI     8
+                    STW     vramAddr
+                    LDWI    giga_videoTable
+                    STW     evenAddr
+    
+resetVT_loop        CALL    realTimeProcAddr
+                    LDW     vramAddr
+                    DOKE    evenAddr
+                    INC     evenAddr
+                    INC     evenAddr
+                    INC     vramAddr
+                    LD      vramAddr
+                    SUBI    giga_yres + 8
+                    BLT     resetVT_loop
+                    POP
+                    RET
+
+
+initClearFuncs      PUSH
+                    LDWI    resetVideoTable
+                    CALL    giga_vAC
+    
+                    LDWI    0x0002                              ; starting cursor position
+                    STW     cursorXY
+                    LDWI    0x7FFF
+                    ANDW    miscFlags
+                    STW     miscFlags                           ; reset on bottom row flag
+            
+                    LD      fgbgColour
+                    ST      giga_sysArg0
+                    ST      giga_sysArg0 + 1
+                    ST      giga_sysArg2
+                    ST      giga_sysArg2 + 1                    ; 4 pixels of fg colour
+    
+                    LDWI    SYS_Draw4_30                        ; setup 4 pixel SYS routine
+                    STW     giga_sysFn
+                    POP
+                    RET
+
+
+                    ; clears the viewable screen using a vertical blinds effect
+clearVertBlinds     PUSH
+                    LDWI    initClearFuncs
+                    CALL    giga_vAC
+
+                    LDWI    giga_vram
+                    STW     giga_sysArg4
+                    LD      giga_sysArg4 + 1
+                    ST      top
+    
+clearVB_loop        CALL    realTimeProcAddr
+                    LD      top
+                    ST      giga_sysArg4 + 1                    ; top line
+                    SYS     0xFF                                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+    
+                    LDWI    giga_yres - 1 + 16
+                    SUBW    top
+                    ST      giga_sysArg4 + 1                    ; bottom line
+                    SYS     0xFF                                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+    
+                    LD      giga_sysArg4
+                    ADDI    0x04
+                    ST      giga_sysArg4
+                    SUBI    giga_xres
+                    BLT     clearVB_loop
+    
+                    LDI     0
+                    ST      giga_sysArg4
+                    INC     top                                 ; next top line
+                    LD      top
+                    SUBI    giga_yres / 2 + 8
+                    BLT     clearVB_loop
+                    POP
+                    RET
+
+
+
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+textStr             EQU     register0
+textNum             EQU     register0
+textBak             EQU     register0
+textLen             EQU     register1
+textOfs             EQU     register2
+textChr             EQU     register3
+textHex             EQU     register8
+textFont            EQU     register9
+textSlice           EQU     register10
+scanLine            EQU     register11
+digitMult           EQU     register12
+digitIndex          EQU     register13
+clearLoop           EQU     register14
+    
+    
+printInit           LDWI    SYS_VDrawBits_134
+                    STW     giga_sysFn
+                    LDW     fgbgColour
+                    STW     giga_sysArg0
+                    
+                    LDWI    giga_videoTable
+                    STW     giga_sysArg4
+                    LD      cursorXY + 1
+                    LSLW
+                    ADDW    giga_sysArg4
+                    PEEK
+                    ST      giga_sysArg4 + 1
+                    LD      cursorXY
+                    ST      giga_sysArg4                    ; xy position
+                    RET
+
+
+
+                    ; prints text string pointed to by the accumulator
+printText           PUSH
+                    LDWI    printInit
+                    CALL    giga_vAC
+                    LDW     textStr             
+                    PEEK                                    ; first byte is length
+                    BEQ     printT_exit
+    
+printT_char         ST      textLen
+                    INC     textStr                         ; next char
+                    LDW     textStr             
+                    PEEK
+                    ST      textChr
+                    LDWI    printChar
+                    CALL    giga_vAC
+
+                    LD      textLen
+                    SUBI    1
+                    BNE     printT_char
+printT_exit         POP
+                    RET
+
+
+                    ; prints char in textChr
+printChar           LD      textChr
+                    ANDI    0x7F                            ; char can't be bigger than 127
+                    SUBI    82
+                    BGE     printC_text82
+                    ADDI    50
+                    BLT     printC_exit                     ; char<32 exit
+                    STW     textChr                         ; char-32
+                    LDWI    giga_text32                     ; text font slice base address for chars 32-81
+                    BRA     printC_font
+                    
+printC_text82       STW     textChr                         ; char-82
+                    LDWI    giga_text82                     ; text font slice base address for chars 82+
+                    
+printC_font         STW     textFont
+                    LD      textChr
+                    LSLW    
+                    LSLW    
+                    ADDW    textChr
+                    ADDW    textFont
+                    STW     textFont                        ; char*5 + textFont
+                    LDI     0x05
+
+printC_slice        ST      textSlice
+                    LDW     textFont                        ; text font slice base address
+                    LUP     0x00                            ; get ROM slice
+                    ST      giga_sysArg2
+                    SYS     0xCB                            ; draw vertical slice, SYS_VDrawBits_134, 270 - 134/2 = 0xCB
+                    INC     textFont                        ; next vertical slice
+                    INC     giga_sysArg4                    ; next x
+                    LD      textSlice
+                    SUBI    1
+                    BNE     printC_slice
+                    
+                    ST      giga_sysArg2                    ; result of printC_slice is 0
+                    SYS     0xCB                            ; draw last blank slice
+                    INC     giga_sysArg4                    ; using sysArg4 as a temporary cursor address for multiple char prints
+                    
+                    PUSH
+                    CALL    realTimeProcAddr
+                    LD      cursorXY
+                    ADDI    0x06
+                    ST      cursorXY
+                    SUBI    giga_xres - 5                   ; giga_xres - 6, (154), is last possible char in row
+                    BLT     printC_pop
+                    LDWI    newLineScroll                   ; next row, scroll at bottom
+                    CALL    giga_vAC
+                    
+printC_pop          POP
+
+printC_exit         RET
+
+
+atTextCursor        LD      cursorXY
+                    SUBI    giga_xres
+                    BLT     atTC_skip0
+                    LDI     0
+                    ST      cursorXY
+                    
+atTC_skip0          LD      cursorXY + 1
+                    SUBI    giga_yres
+                    BLT     atTC_skip1
+                    LDI     giga_yres - 1
+                    ST      cursorXY + 1
+                    
+atTC_skip1          LD      cursorXY + 1
+                    SUBI    giga_yres - 8
+                    BGE     atTC_skip2
+                    LDWI    0x7FFF
+                    ANDW    miscFlags
+                    STW     miscFlags                       ; reset on bottom row flag
+                    RET
+                    
+atTC_skip2          LDWI    0x8000
+                    ORW     miscFlags
+                    STW     miscFlags                       ; set on bottom row flag
+                    RET
+
+
+
+                    ; clears the top 8 lines of pixels in preparation of text scrolling
+clearCursorRow      PUSH
+                    LD      fgbgColour
+                    ST      giga_sysArg0
+                    ST      giga_sysArg0 + 1
+                    ST      giga_sysArg2
+                    ST      giga_sysArg2 + 1                ; 4 pixels of colour
+    
+                    LDWI    SYS_Draw4_30                    ; setup 4 pixel SYS routine
+                    STW     giga_sysFn
+    
+                    LDWI    giga_videoTable                 ; current cursor position
+                    PEEK
+                    ST      giga_sysArg4 + 1
+                    LDI     8
+
+clearCR_loopy       ST      clearLoop
+                    CALL    realTimeProcAddr
+                    LDI     giga_xres
+                    
+clearCR_loopx       SUBI    4                               ; loop is unrolled 4 times
+                    ST      giga_sysArg4
+                    SYS     0xFF                            ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+                    SUBI    4
+                    ST      giga_sysArg4
+                    SYS     0xFF                            ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+                    SUBI    4
+                    ST      giga_sysArg4
+                    SYS     0xFF                            ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+                    SUBI    4
+                    ST      giga_sysArg4
+                    SYS     0xFF                            ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+                    BGT     clearCR_loopx
+                    
+                    INC     giga_sysArg4 + 1                ; next line
+                    LD      clearLoop
+                    SUBI    1
+                    BNE     clearCR_loopy
+
+                    LDWI    printInit
+                    CALL    giga_vAC                        ; re-initialise the SYS registers
+                    POP
+                    RET
+
+
+                    ; print from top row to bottom row, then start scrolling 
+newLineScroll       LDI     0x02                            ; x offset slightly
+                    ST      cursorXY
+                    ST      giga_sysArg4
+                    LDWI    0x0001
+                    ANDW    miscFlags
+                    BNE     newLS_cont0                     ; scroll on or off
+                    RET
+                    
+newLS_cont0         PUSH
+                    LDWI    0x8000
+                    ANDW    miscFlags                       ; on bottom row flag
+                    BNE     newLS_cont1
+                    LD      cursorXY + 1
+                    ADDI    8
+                    ST      cursorXY + 1
+                    SUBI    giga_yres
+                    BLT     newLS_exit
+                    LDI     giga_yres - 8
+                    ST      cursorXY + 1
+                    
+newLS_cont1         LDWI    clearCursorRow
+                    CALL    giga_vAC
+                    LDWI    giga_videoTable
+                    STW     scanLine
+    
+newLS_scroll        CALL    realTimeProcAddr
+                    LDW     scanLine
+                    PEEK
+                    ADDI    8
+                    ANDI    0x7F
+                    SUBI    8
+                    BGE     newLS_adjust
+                    ADDI    8
+                    
+newLS_adjust        ADDI    8
+                    POKE    scanLine
+                    INC     scanLine                        ; scanline pointers are 16bits
+                    INC     scanLine
+                    LD      scanLine
+                    SUBI    0xF0                            ; scanline pointers end at 0x01EE
+                    BLT     newLS_scroll
+                    
+                    LDWI    0x8000
+                    ORW     miscFlags
+                    STW     miscFlags                       ; set on bottom row flag
+                    
+newLS_exit          LDWI    printInit
+                    CALL    giga_vAC                        ; re-initialise the SYS registers
+                    POP
+                    RET
+

@@ -2,8 +2,7 @@ resetAudio      LDWI    0x0000
                 STW     midiCommand
                 STW     midiDelay
                 STW     midiNote
-                LDWI    giga_soundChan1 + 2 ; keyL, keyH
-                STW     midiChannel
+                LDWI    giga_soundChan1
                 STW     midiScratch
                 LDWI    title_screenMidi00  ; midi score
                 STW     midiStreamPtr
@@ -86,12 +85,10 @@ midiStartNote   LDWI    giga_notesTable     ; note table in ROM
                 ST      midiNote + 1
                 LDW     midiCommand
                 ANDI    0x03                ; get channel
+                ADDI    0x01                
                 ST      midiScratch + 1
-                LDI     0x00
-                ST      midiScratch
-                LDW     midiScratch
-                ADDW    midiChannel         ; channel address
-                STW     midiScratch
+                LDI     0xFC
+                ST      midiScratch         ; channels address 0x01FC <-> 0x04FC
                 LDW     midiNote
                 DOKE    midiScratch         ; set note
                 LDW     midiStreamPtr
@@ -102,12 +99,10 @@ midiStartNote   LDWI    giga_notesTable     ; note table in ROM
 
 midiEndNote     LDW     midiCommand
                 ANDI    0x03                ; get channel
+                ADDI    0x01                
                 ST      midiScratch + 1
-                LDI     0x00
-                ST      midiScratch
-                LDW     midiScratch
-                ADDW    midiChannel         ; channel address
-                STW     midiScratch
+                LDI     0xFC
+                ST      midiScratch         ; channels address 0x01FC <-> 0x04FC
                 LDWI    0x0000
                 DOKE    midiScratch         ; end note
                 RET

@@ -1,221 +1,195 @@
-vram        EQU     0x0800
-x_bounds    EQU     0x009F
-y_bounds    EQU     0x0077
+%include ../include/gigatron.i
 
-rand_x1     EQU     0x06
-rand_y1     EQU     0x07
-rand_x2     EQU     0x08
-rand_y2     EQU     0x0b
-rand_colour EQU     0x06
+rand_colour         EQU     0x06
+        
+x1                  EQU     0x30
+y1                  EQU     x1+2
+x2                  EQU     x1+4
+y2                  EQU     x1+6
+xy1    				EQU     x1+8
+xy2    				EQU     x1+10
+dxy1   				EQU     x1+12
+dxy2   				EQU     x1+14
+dx1                 EQU     x1+16
+dy1                 EQU     x1+18
+dx2                 EQU     x1+20
+dy2                 EQU     x1+22
+sx     				EQU     x1+24
+sy     				EQU     x1+26
+h      				EQU     x1+28
+num    				EQU     x1+30
+count  				EQU     x1+32
+tmp    				EQU     x1+34
 
-base        EQU     0x30
-pixels      EQU     0x32
-x1          EQU     0x34
-y1          EQU     0x36
-x2          EQU     0x38
-y2          EQU     0x3A
-dx1         EQU     0x3C
-dy1         EQU     0x3E
-dx2         EQU     0x40
-dy2         EQU     0x42
-w           EQU     0x44
-h           EQU     0x46
-absw        EQU     0x48
-absh        EQU     0x4A
-long        EQU     0x4C
-short       EQU     0x4E
-numerator   EQU     0x50
-ushort_max  EQU     0x52
-count       EQU     0x54
-xypos       EQU     0x56
-
-
-_startAddress_      EQU     0x0200      ; entry point for the code, if this is missing defaults to 0x0200
-
-_callTable_         EQU     0x007E      ; call addresses are automatically stored here by the assembler, it grows downwards
-                                        ; *NOTE* gt1 spec only allows for one zero page segment, .vasm files use this for the call table
-                                        ; do *NOT* make this address higher than 0x00BE, it will conflict with future ROM loading mechanisms
-                                        ; do *NOT* define constants, (DB or DW), between 0x30 -> 0x44 and 0xc0 -> 0xFF, these addresses are
-                                        ; used by the loader and the vCPU stack, you can create variables in these areas as long as you don't
-                                        ; corrupt your nested CALL return addresses on the stack
-                                                                                
 _singleStepWatch_   EQU     count       ; the single step debugger watches this variable location to decide when to step,
                                         ; choose a variable that is updated often
 
-line        EQU     0x0300                                        
-                                        
-plot_pixel  EQU     0x0400      ; custom start address, this allows you to store code modules into any page, (0xNN00 <-> 0xNNFF),
-                                ; make sure no individual code module straddles a page boundary. cannot be less than 0x0200
-
-data        EQU     0x0500      ; custom address for constant data space defined with DB and/or DW
+lineStart	EQU		0x0200
+lineExt		EQU		0x0300
 
 
-            LDWI    vram 
-            STW     base        ; vram base address
-            STW     pixels      ; pixel address
-
-            LDWI    0x0000      
+lineStart	LDWI    0x0000      
             STW     x1
             STW     y1
             STW     x2 
             STW     y2
+
+line_random LDWI    SYS_Random_34
+            STW     giga_sysFn
+
+			SYS     0xFD                ; x1 = (rnd AND &h7F) + (rnd AND &h1F)
+            ANDI    0x7F        
+            STW     x1
+            SYS     0xFD
+            ANDI    0x1F
+            ADDW    x1
+            STW     x1
             
-            LDWI    0x7FFF
-            STW     ushort_max
-            CALL    line
-
-line        LD      rand_x1     ; x1 position
-            ST      x1
-            SUBI    x_bounds    ; works as (rand_x1 % x_bounds), but only because x_bounds is > 0x00FF/2, fails otherwise
-            BLE     y1_load
-            ST      x1
-
-y1_load     LD      rand_y1     ; y1 position
-            ST      y1
-            SUBI    y_bounds    ; works as (rand_y1 % y_bounds), but only because y_bounds is > 0x00FF/3, fails otherwise
-            BLE     x2_load
-            ST      y1
-            SUBI    y_bounds
-            BLE     x2_load
-            ST      y1
+            SYS     0xFD                ; y1 = (rnd AND &h3F) + (rnd AND &h3F)
+            ANDI    0x3F        
+            STW     y1
+            SYS     0xFD
+            ANDI    0x3F
+            ADDW    y1
+            ORI     0x08
+            STW     y1
             
-x2_load     LD      rand_x2     ; x2 position
-            ST      x2
-            SUBI    x_bounds    ; works as (rand_x2 % x_bounds), but only because x_bounds is > 0x00FF/2, fails otherwise
-            BLE     y2_load
-            ST      x2
+            SYS     0xFD                ; x2 = (rnd AND &h7F) + (rnd AND &h1F)
+            ANDI    0x7F        
+            STW     x2
+            SYS     0xFD
+            ANDI    0x1F
+            ADDW    x2
+            STW     x2
 
-y2_load     LD      rand_y2     ; y2 position
-            ST      y2
-            SUBI    y_bounds    ; works as (rand_y2 % y_bounds), but only because y_bounds is > 0x00FF/3, fails otherwise
-            BLE     start
-            ST      y2
-            SUBI    y_bounds
-            BLE     start
-            ST      y2
+            SYS     0xFD                ; y2 = (rnd AND &h3F) + (rnd AND &h3F)
+            ANDI    0x3F        
+            STW     y2
+            SYS     0xFD
+            ANDI    0x3F
+            ADDW    y2
+            ORI     0x08
+            STW     y2
       
-start       LDWI    0x0001
+            LDI     1
             STW     dx1
-            STW     dy1
-            
-            LDWI    0x0000
             STW     dx2
-            STW     dy2
+            STW     dy1
+            LDI     0
+            STW     dy2                
 
-deltax      LDW     x2          ; absw = w = x2 - x1
+            LDWI    0x8000
+            STW     tmp
+            
+            LDW     x2         			; sx = x2 - x1
             SUBW    x1
-            STW     w
-            STW     absw
-            SUBW    ushort_max  ; dx1 = dx2 = (w > 0x7FFF) ? 0xFFFF : 1;
-            BLE     deltay
-            
-            LDWI    0xFFFF
-            STW     dx1
-            STW     dx2
-            LDWI    0x0000      ; absw = (w > 0x7FFF) ? 0 - w : w;
-            SUBW    w
-            STW     absw
-            
-deltay      LDW     y2
+            STW     sx
+            ANDW    tmp        
+            BEQ     line_dy
+            LDWI    -1
+            STW     dx1        
+            STW     dx2        			; dx1 = dx2 = (sx & 0x8000) ? -1 : 1
+            LDI     0                   ; sx = (sx & 0x8000) ? 0 - sx : sx
+            SUBW    sx
+            STW     sx                
+                
+line_dy     LDW     y2
             SUBW    y1
-            STW     h
-            STW     absh
-            SUBW    ushort_max  ; dy1 = (h > 0x7FFF) ? 0xFFFF : 1;
-            BLE     length
+            STW     sy
+            STW     h          			; h = sy
+            ANDW    tmp
+            BEQ     line_ext
             
-            LDWI    0xFFFF
-            STW     dy1
-            LDWI    0x0000      ; absh = (h > 0x7FFF) ? 0 - h : h;
-            SUBW    h
-            STW     absh
-            
-length      LDW     absh        ; short = absh
-            STW     short
-            LDW     absw        ; long = absw
-            STW     long
-            SUBW    short       ; if(longest >= shortest) goto init_num
-            BGE     init_num
-
-            LDW     absh        ; long = absh
-            STW     long
-            LDW     absw        ; short = absw
-            STW     short
-
+            LDWI    -1
+            STW     dy1        			; dy1 = (sy & 0x8000) ? -1 : 1
+            LDI     0                   
+            SUBW    sy
+            STW     sy         			; sy = (sy & 0x8000) ? 0 - sy : sy
+            SUBW    sx
+            BLE     line_ext           
+            LDW     dy1
+            STW     dy2        			; if(sx < sy) dy2 = -1
+			
+line_ext    LDWI    lineExt
+            CALL    giga_vAC
+			
+lineExt		LD      x1	
+            ST      xy1	
+            LD      y1	
+            ST      xy1 + 1    			; xy1 = x1 | (y1<<8)
+				
+            LD      x2	
+            ST      xy2	
+            LD      y2	
+            ST      xy2 + 1    			; xy2 = x2 | (y2<<8)
+                
+			LDW     sy
+            SUBW    sx
+            BLE     line_num
+            LDI     0
+            STW     dx2        			; if(sx < sy) dx2 = 0
+            LDW     sy       
+            STW     tmp
+            LDW     sx
+            STW     sy
+            LDW     tmp
+            STW     sx         			; swap sx with sy
             LDW     h
-            SUBW    ushort_max  ; dy2 = (h > 0x7FFF) ? 0xFFFF : 1;
-            BLE     init_dy2
-            
-            LDWI    0xFFFF
-            STW     dy2
-            BRA     init_dx2
-            
-init_dy2    LDWI    0x0001
-            STW     dy2
-            
-init_dx2    LDWI    0x0000
-            STW     dx2         ; dx2 = 0   
-            
-init_num    LDW     long        ; numerator = long
-            STW     numerator
-            STW     count       ; for(count=long; counti>=0; --i)
-            
-loop        LD      x1          ; generate pixel address
-            ST      xypos
-            LD      y1
-            ST      xypos+1
+            BLE     line_num
+            LDI     1
+            STW     dy2        			; if(h > 0) dy2 = 1
 
-            LDW     base        ; generate vram address
-            ADDW    xypos
-            STW     pixels
-            LD      rand_colour
-            POKE    pixels      ; plot new pixel
-
-            ;CALL    plot_pixel
-            
-            LDW     numerator   ; numerator += short
-            ADDW    short
-            STW     numerator
-            SUBW    long
-            BLE     swap        ; if(numerator <= longest) goto swap
-            
-            STW     numerator   ; numerator -= long
-            LDW     dx1         ; x1 += dx1
-            ADDW    x1
-            STW     x1
-            LDW     dy1         ; y1 += dy1
-            ADDW    y1
-            STW     y1
-            BRA     counter
-            
-swap        LDW     dx2         ; x1 += dx2
-            ADDW    x1
-            STW     x1
-            LDW     dy2         ; y1 += dy2
-            ADDW    y1
-            STW     y1
-            
-counter     LDW     count
-            SUBI    0x01
+line_num    LDWI    SYS_LSRW1_48
+            STW     giga_sysFn          
+            LDW     sx
+            SYS     0xF6                ; 0xF6 = 270-max(14,48/2)
+            STW     num        			; numerator = sx>>1
             STW     count
-            BGT     loop
-            BRA     line       
-
+            INC     count      			; for(count=sx>>1; counti>=0; --i)
             
-plot_pixel  LD      x1          ; generate pixel address
-            ST      xypos
-            LD      y1
-            ST      xypos+1
-
-            LDW     base        ; generate vram address
-            ADDW    xypos
-            STW     pixels
-            LD      rand_colour
-            POKE    pixels      ; plot new pixel
-            RET
-   
+			LDWI    SYS_LSLW8_24	
+            STW     giga_sysFn      	    
+            LDW     dy1	
+            SYS     0x00            	; 0x00 = 270-max(14,24/2)
+            ADDW    dx1	
+            STW     dxy1       			; dxy1 = dx1 + (dy1<<8)
+	
+            LDW     dy2	
+            SYS     0x00            	; 0x00 = 270-max(14,24/2)
+            ADDW    dx2	
+            STW     dxy2       			; dxy2 = dx2 + (dy2<<8)
+			
+line_loop   LD      rand_colour
+            POKE    xy1        			; plot start pixel
+            POKE    xy2        			; plot end pixel, (meet in middle)      
             
-            ; an example of how to define your own data
-;data        DB      x_bounds y_bounds 2 3 4 5 6 7 8 9 0
-;            DB      0x17 9 8 7 6 5 4 3 2 1 0 1 2 3 4 
-;            DW      0xDEAD 0xB00B vram data 0 1 2 3 4 5 6 7 8 9 0
-;            DW      0xBEEF $FFFF $0 0 1 2 3 4 5 6 7 8 9 0
+            LDW     num        			; numerator += sy
+            ADDW    sy
+            STW     num
+            SUBW    sx
+            BLE     line_flip           ; if(numerator <= sx) goto flip
+                
+            STW     num        			; numerator -= sx
+			LDW     xy1
+            ADDW    dxy1
+            STW     xy1        			; xy1 += dxy1
+				
+            LDW     xy2	
+            SUBW    dxy1	
+            STW     xy2        			; xy2 -= dxy1
+            BRA     line_count	
+					
+line_flip   LDW     xy1        	
+            ADDW    dxy2	
+            STW     xy1        			; xy1 += dxy2
+				
+            LDW     xy2        	
+            SUBW    dxy2	
+            STW     xy2        			; xy2 -= dxy2
+					
+line_count  LDW     count	
+            SUBI    0x01	
+            STW     count	
+            BGT     line_loop	
+			LDWI    line_random
+            CALL    giga_vAC

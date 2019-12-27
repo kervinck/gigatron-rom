@@ -5,6 +5,8 @@
 #include <iomanip>
 #include <vector>
 #include <algorithm>
+#include <chrono>
+#include <thread>
 
 #include "memory.h"
 #include "cpu.h"
@@ -61,6 +63,8 @@ namespace Cpu
     uint8_t* getPtrToROM(int& romSize) {romSize = sizeof _ROM; return (uint8_t*)_ROM;}
     RomType getRomType(void) {return _romType;}
 
+    const uint8_t _endianBytes[] = {0x00, 0x01, 0x02, 0x03};
+
 
 //#define COLLECT_INST_STATS
 #if defined(COLLECT_INST_STATS)
@@ -96,6 +100,26 @@ namespace Cpu
     }
 #endif
 
+    Endianess getHostEndianess(void)
+    {
+        return *((Endianess*)_endianBytes);
+    }
+
+    void swapEndianess(uint16_t& value)
+    {
+        value = (value >>8)  |  (value <<8);
+    }
+
+    void swapEndianess(uint32_t& value)
+    {
+        value = (value >>24)  |  ((value >>8) & 0x0000FF00)  |  ((value <<8) & 0x00FF0000)  |  (value <<24);
+    }
+
+    void swapEndianess(uint64_t& value)
+    {
+        value = (value >>56)  |  ((value >>40) & 0x000000000000FF00LL)  |  ((value >>24) & 0x0000000000FF0000LL)  |  ((value >>8) & 0x00000000FF000000LL)  |
+        ((value <<8) & 0x000000FF00000000LL)  |  ((value <<24) & 0x0000FF0000000000LL)  |  ((value <<40) & 0x00FF000000000000LL)  |  (value <<56);
+    }
 
     void initialiseInternalGt1s(void)
     {
@@ -291,7 +315,8 @@ namespace Cpu
     void setRAM(uint16_t address, uint8_t data)
     {
         // Constant "0" and "1" are stored here
-        if(address == ZERO_CONST_ADDRESS  ||  address == ONE_CONST_ADDRESS) return;
+        if(address == ZERO_CONST_ADDRESS  &&  data != 0x00) {fprintf(stderr, "Cpu::setRAM() : Warning writing to address : 0x%04x : 0x%02x\n", address, data); return;}
+        if(address == ONE_CONST_ADDRESS   &&  data != 0x01) {fprintf(stderr, "Cpu::setRAM() : Warning writing to address : 0x%04x : 0x%02x\n", address, data); return;}
 
         _RAM[address & (Memory::getSizeRAM()-1)] = data;
     }
@@ -310,6 +335,21 @@ namespace Cpu
 
         _RAM[address & (Memory::getSizeRAM()-1)] = uint8_t(LO_BYTE(data));
         _RAM[(address+1) & (Memory::getSizeRAM()-1)] = uint8_t(HI_BYTE(data));
+    }
+
+    void clearUserRAM(void)
+    {
+        // Not great for the Gigatron's RNG, will statistically bias it's results
+        for(uint16_t addr=RAM_PAGE_START_0; addr<RAM_PAGE_START_0+RAM_PAGE_SIZE_0; addr++) setRAM(addr, 0x00);
+        for(uint16_t addr=RAM_PAGE_START_1; addr<RAM_PAGE_START_1+RAM_PAGE_SIZE_1; addr++) setRAM(addr, 0x00);
+        for(uint16_t addr=RAM_PAGE_START_2; addr<RAM_PAGE_START_2+RAM_PAGE_SIZE_2; addr++) setRAM(addr, 0x00);
+        for(uint16_t addr=RAM_PAGE_START_3; addr<RAM_PAGE_START_3+RAM_PAGE_SIZE_3; addr++) setRAM(addr, 0x00);
+        for(uint16_t addr=RAM_PAGE_START_4; addr<RAM_PAGE_START_4+RAM_PAGE_SIZE_4; addr++) setRAM(addr, 0x00);
+
+        for(uint16_t addr=RAM_SEGMENTS_START; addr<=RAM_SEGMENTS_END; addr+=RAM_SEGMENTS_OFS)
+        {
+            for(uint16_t offs=0; offs<RAM_SEGMENTS_SIZE; offs++) setRAM(addr+offs, 0x00);
+        }
     }
 
     void setROM16(uint16_t base, uint16_t address, uint16_t data)
@@ -442,13 +482,57 @@ namespace Cpu
     }
 
 
+#ifdef _WIN32
+    HWND _consoleWindowHWND;
+    void restoreWin32Console(void)
+    {
+        std::string line;
+        std::ifstream infile(Editor::getCwdPath() + "/" + "console.txt");
+        if(infile.is_open())
+        {
+            getline(infile, line);
+
+            int xpos, ypos, width, height;
+            sscanf_s(line.c_str(), "%d %d %d %d", &xpos, &ypos, &width, &height);
+            if(xpos < -2000  ||  xpos > 4000  ||  ypos < 320  ||  ypos > 1000  ||  width < 100  ||  width > 2000  ||  height < 100 ||  height > 1000)
+            {
+                xpos = -1000; ypos = 320; width = 1000; height = 1000;
+            }
+
+            MoveWindow(_consoleWindowHWND, xpos, ypos, width, height, true);
+            BringWindowToTop(_consoleWindowHWND);
+        }
+    }
+
+    void saveWin32Console(void)
+    {
+        RECT rect;
+        if(GetWindowRect(_consoleWindowHWND, &rect))
+        {
+            std::ofstream outfile(Editor::getCwdPath() + "/" + "console.txt");
+            if(outfile.is_open())
+            {
+                int xpos = rect.left;
+                int ypos = rect.top;
+                int width = rect.right - rect.left;
+                int height = rect.bottom - rect.top;
+                outfile << xpos << " " << ypos << " " << width << " " << height << std::endl;
+            }
+        }
+    }
+#endif
+
     void shutdown(void)
     {
+#ifdef _WIN32
+        saveWin32Console();
+#endif
+
         for(int i=NUM_INT_ROMS; i<_romFiles.size(); i++)
         {
             if(_romFiles[i])
             {
-                delete [] _romFiles[i];
+                delete[] _romFiles[i];
                 _romFiles[i] = nullptr;
             }
         }
@@ -456,23 +540,43 @@ namespace Cpu
         SDL_Quit();
     }
 
+#ifdef _WIN32
+    BOOL WINAPI consoleCtrlHandler(DWORD fdwCtrlType)
+    {
+        switch(fdwCtrlType)
+        {
+            case CTRL_C_EVENT:        shutdown(); return FALSE;
+            case CTRL_CLOSE_EVENT:    shutdown(); return FALSE;
+            case CTRL_BREAK_EVENT:    shutdown(); return FALSE;
+            case CTRL_LOGOFF_EVENT:   shutdown(); return FALSE;
+            case CTRL_SHUTDOWN_EVENT: shutdown(); return FALSE;
+    
+            default: return FALSE;
+        }
+    }
+#endif
+
     void initialise(void)
     {
 #ifdef _WIN32
-        CONSOLE_SCREEN_BUFFER_INFO csbi;
-
         if(!AllocConsole()) return;
 
-        if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi))
+        // Increase internal buffer
+        CONSOLE_SCREEN_BUFFER_INFO csbi;
+        if(GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi))
         {
-            csbi.dwSize.Y = 1000;
+            csbi.dwSize.Y = 10000;
             SetConsoleScreenBufferSize(GetStdHandle(STD_OUTPUT_HANDLE), csbi.dwSize);
         }
 
         if(!freopen("CONIN$", "w", stdin)) return;
         if(!freopen("CONOUT$", "w", stderr)) return;
-        if (!freopen("CONOUT$", "w", stdout)) return;
+        if(!freopen("CONOUT$", "w", stdout)) return;
         setbuf(stdout, NULL);
+
+        _consoleWindowHWND = GetConsoleWindow();
+
+        SetConsoleCtrlHandler(consoleCtrlHandler, TRUE);
 #endif    
 
         _RAM.resize(Memory::getSizeRAM());
@@ -506,11 +610,11 @@ namespace Cpu
             else
             {
                 // Load ROM file
-                uint8_t* rom = new uint8_t[sizeof _ROM];
+                uint8_t* rom = new (std::nothrow) uint8_t[sizeof _ROM];
                 if(!rom)
                 {
                     // This is fairly pointless as the code does not have any exception handling for the many std:: memory allocations that occur
-                    // If you're running out of memory running this application, (which requires a couple of Mbytes), then you need to leave the 80's
+                    // If you're running out of memory running this application, (which requires around 10 Mbytes), then you need to leave the 80's
                     shutdown();
                     fprintf(stderr, "Cpu::initialise() : out of memory!\n");
                     _EXIT_(EXIT_FAILURE);
@@ -771,11 +875,14 @@ namespace Cpu
             //setRAM(BOOT_CHECK, 0xA6);
         }
 
-        Graphics::resetVTable();
+        clearUserRAM();
         setRAM(ZERO_CONST_ADDRESS, 0x00);
         setRAM(ONE_CONST_ADDRESS, 0x01);
-        Editor::setSingleStepAddress(VIDEO_Y_ADDRESS);
         setClock(CLOCK_RESET);
+
+        Memory::initialise();
+        Graphics::resetVTable();
+        Editor::setSingleStepAddress(VIDEO_Y_ADDRESS);
     }
 
     void softReset(void)
@@ -787,7 +894,7 @@ namespace Cpu
     {
         (Memory::getSizeRAM() == RAM_SIZE_LO) ? Memory::setSizeRAM(RAM_SIZE_HI) : Memory::setSizeRAM(RAM_SIZE_LO);
         _RAM.resize(Memory::getSizeRAM());
-        Memory::intitialise();
+        Memory::initialise();
         reset(false);
     }
 
@@ -828,7 +935,7 @@ namespace Cpu
         }
     }
 
-    bool process(void)
+    void process(void)
     {
         // MCP100 Power-On Reset
         if(_clock < 0)
@@ -854,20 +961,25 @@ namespace Cpu
             _clockStall = _clock;
             _vgaY = VSYNC_START;
 
-            // Input and graphics
             if(!_debugging)
             {
+                // Input and graphics
                 Editor::handleInput();
-                Graphics::render();
+                Graphics::render(true);
             }
+
+            //std::this_thread::sleep_for(std::chrono::milliseconds(5));
         }
 
         // Pixel
         if(_vgaX++ < HLINE_END)
         {
-            if(_vgaY >= 0  &&  _vgaY < SCREEN_HEIGHT  &&  _vgaX >=HPIXELS_START  &&  _vgaX < HPIXELS_END)
+            if(_vgaY >= 0  &&  _vgaY < SCREEN_HEIGHT)
             {
-                Graphics::refreshPixel(_stateS, _vgaX-HPIXELS_START, _vgaY, _debugging);
+                if(_vgaX >=HPIXELS_START  &&  _vgaX < HPIXELS_END) Graphics::refreshPixel(_stateS, _vgaX-HPIXELS_START, _vgaY);
+
+                // Show pixel reticle when debugging Native code
+                if(_debugging  &&  _vgaX >=HPIXELS_START-1  &&  _vgaX <= HPIXELS_END-1) Graphics::pixelReticle(_stateS, _vgaX-(HPIXELS_START-1), _vgaY);
             }
         }
 
@@ -903,14 +1015,14 @@ namespace Cpu
                 reset(true);
                 _vgaX = 0, _vgaY = 0;
                 _hSync = 0, _vSync = 0;
-                fprintf(stderr, "main(): CPU stall for %" PRId64 " clocks : rebooting.\n", _clock - _clockStall);
+                fprintf(stderr, "Cpu::process(): CPU stall for %" PRId64 " clocks : rebooting.\n", _clock - _clockStall);
             }
         }
 
         // Rising hSync edge
         if(_hSync > 0)
         {
-            setXOUT(_stateT._AC);
+            _XOUT = _stateT._AC;
         
             // Audio
             if(Audio::getRealTimeAudio())
@@ -951,8 +1063,6 @@ namespace Cpu
 
         _stateS = _stateT;
         _clock++;
-
-        return true;
     }
 
 #endif

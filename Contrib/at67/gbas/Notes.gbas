@@ -1,0 +1,32 @@
+'
+' Setup sound channels
+'
+10 for c=1 to 4
+11 p=(c LSL 8)+252
+12 poke p-1,2:'Pulse
+13 poke p,0:poke p+1,0
+14 next c
+'
+' Setup vCPU note lookup
+' &hE0 to &hE7 are the last 8 bytes of stack space
+'
+20 poke &hE0,17:'LDWI $9xx
+21 poke &hE2,9
+22 poke &hE3,127:'LUP 0
+23 poke &hE4,0
+24 poke &hE5,147:'INC &hE1
+25 poke &hE6,&hE1
+26 poke &hE7,255:'RET
+'
+' Play all notes
+'
+30 for n=1 to 95
+31 print "Playing note",n
+32 poke &hE1,n+n:'$900+n*2
+33 for c=1 to 4 : p=(c LSL 8)+252
+34 poke p,  usr(&hE0):'Flo
+35 poke p+1,usr(&hE0):'Fhi
+36 next c
+37 poke 44,15:'0.25 secs
+38 if peek(44)&>0 then goto 38
+39 next n

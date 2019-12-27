@@ -1,0 +1,18 @@
+cls
+
+const a$="yes"
+b$="hello test world"
+
+c$=left$(b$, 5)
+d$ = right$ (b$,5)
+e$=mid$(b$, 6, 4)
+
+print a$;" ";b$;" "
+print c$;" ";d$;" ";e$
+
+x$ = "YOUR TEXT BACKWARDS IS"
+for j = len(x$)-1 to 0 step -1
+    print mid$(x$, j, 1);
+next j
+
+end

@@ -43,10 +43,18 @@
 namespace Editor
 {
     enum MemoryMode {RAM=0, ROM0, ROM1, NumMemoryModes};
-    enum EditorMode {Hex=0, Rom, Load, Dasm, NumEditorModes};
+    enum EditorMode {Hex=0, Rom, Load, Dasm, Term, Image, NumEditorModes};
     enum KeyboardMode {Giga=0, PS2, HwGiga, HwPS2, NumKeyboardModes};
     enum FileType {File=0, Dir, Fifo, Link, NumFileTypes};
     enum OnVarType {OnNone=0, OnCpuA, OnCpuB, OnHex, OnVars, OnWatch, NumOnVarTypes};
+
+#ifndef STAND_ALONE
+    struct KeyCodeMod
+    {
+        int _scanCode;
+        SDL_Keymod _keyMod;
+    };
+#endif
 
     struct MouseState
     {
@@ -71,6 +79,8 @@ namespace Editor
     bool getPageDnButton(void);
     bool getDelAllButton(void);
 
+    const std::string& getCwdPath(void);
+
     MemoryMode getMemoryMode(void);
     EditorMode getEditorMode(void);
     KeyboardMode getKeyboardMode(void);
@@ -78,6 +88,7 @@ namespace Editor
 
     uint8_t getMemoryDigit(void);
     uint8_t getAddressDigit(void);
+    uint16_t getNtvBaseAddress(void);
     uint16_t getHexBaseAddress(void);
     uint16_t getVpcBaseAddress(void);
     uint16_t getLoadBaseAddress(void);
@@ -86,10 +97,15 @@ namespace Editor
     uint16_t getCpuUsageAddressA(void);
     uint16_t getCpuUsageAddressB(void);
 
-    int getBreakPointsSize(void);
-    uint16_t getBreakPointAddress(int index);
-    void addBreakPoint(uint16_t address);
-    void clearBreakPoints(void);
+    int getNtvBreakPointsSize(void);
+    uint16_t getNtvBreakPointAddress(int index);
+    void addNtvBreakPoint(uint16_t address);
+    void clearNtvBreakPoints(void);
+
+    int getVpcBreakPointsSize(void);
+    uint16_t getVpcBreakPointAddress(int index);
+    void addVpcBreakPoint(uint16_t address);
+    void clearVpcBreakPoints(void);
 
     int getFileEntriesIndex(void);
     int getFileEntriesSize(void);
@@ -108,6 +124,7 @@ namespace Editor
     void addRomEntry(uint8_t type, std::string& name);
 
     void resetEditor(void);
+    void setEditorToPrevMode(void);
     void setEditorMode(EditorMode editorMode);
 
     void setCursorX(int x);
@@ -124,6 +141,10 @@ namespace Editor
 
     std::string getBrowserPath(bool removeSlash=false);
 
+    int getEmulatorScanCode(const std::string& keyWord);
+#ifndef STAND_ALONE
+    SDL_Keymod getEmulatorKeyMod(const std::string& keyWord);
+#endif
     void initialise(void);
     void browseDirectory(void);
 
@@ -132,6 +153,7 @@ namespace Editor
 #endif
     bool handleDebugger(void);
     void handleInput(void);
+    void handleTerminalInput(void);
 
     void startDebugger(void);
     void resetDebugger(void);

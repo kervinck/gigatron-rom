@@ -1,0 +1,36 @@
+cls
+
+const a = 120
+
+ch$ = chr$(a)
+hb$ = hex$(a)
+const bb = &hAA77
+hw$ = hexw$(bb)
+
+const a$="yes "
+const z$="no"
+const b$="hello test world"
+
+cc = 5
+ 
+c$=left$(b$, cc)
+d$ = right$ (b$,5)
+e$=mid$(b$, cc+1, cc-1)
+ 
+f$ = b$
+f$ = b$ + b$
+g$=f$
+
+print a$;" ";b$
+print c$;" ";d$;" ";e$
+print left$("dogcat", 3);" ";left$(b$, cc)
+print right$("dogcat", 3);" ";right$(b$, 5)
+print mid$("dogcat", 2, 2);" ";mid$(b$, (cc+1), (cc-1))
+
+print c$;" ";d$;" ";e$
+print f$
+print g$
+print ch$;" ";hb$;" ";hw$
+print chr$(65);" ";hex$(15);" ";hexw$(bb);" ";left$("dogcat", 3);" ";left$(b$, 5)
+
+end

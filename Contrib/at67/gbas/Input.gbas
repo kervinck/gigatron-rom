@@ -1,0 +1,25 @@
+dim arr(5)=0
+
+a = 1
+d = @a
+a.hi = 1 : a.lo = 0
+b = a.hi + 1
+c.hi = 1
+
+poke &h00E0, a.lo
+doke &h00E0, a.lo - b.hi * 3 + 1 - a
+
+cls
+const big$="aioujehfiadsuhgfaissuhfgdiughafpiusfghpdsiufghspi;udf"
+const a=23
+dog=0 : cat$="cat"
+input "testing", cat$
+a = rnd(len(dog)) + len(dog) + len(cat$) + 27
+b = len(big$) + len(a) + len(chr$(65)) + len(hex$(255)) + len(HEXW$(65000))
+print
+print a.lo;" ";b.hi;" ";b
+e = @e + d + 1
+f = @big$
+print hexw$(@b);" ";hexw$(@c);" ";hexw$(d);" ";hexw$(e);" ";hexw$(f)
+print hexw$(@arr)
+end

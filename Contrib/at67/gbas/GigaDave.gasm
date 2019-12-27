@@ -1,0 +1,641 @@
+_startAddress_      EQU                     0x0200
+
+; Internal variables
+register0           EQU                     0x0082
+register1           EQU                     register0 + 0x02
+register2           EQU                     register0 + 0x04
+register3           EQU                     register0 + 0x06
+register4           EQU                     register0 + 0x08
+register5           EQU                     register0 + 0x0A
+register6           EQU                     register0 + 0x0C
+register7           EQU                     register0 + 0x0E
+register8           EQU                     register0 + 0x10
+register9           EQU                     register0 + 0x12
+register10          EQU                     register0 + 0x14
+register11          EQU                     register0 + 0x16
+register12          EQU                     register0 + 0x18
+register13          EQU                     register0 + 0x1A
+register14          EQU                     register0 + 0x1C
+register15          EQU                     register0 + 0x1E
+fgbgColour          EQU                     register0 + 0x20
+cursorXY            EQU                     register0 + 0x22
+midiStream          EQU                     register0 + 0x24
+midiDelay           EQU                     register0 + 0x26
+frameCountPrev      EQU                     register0 + 0x28
+miscFlags           EQU                     register0 + 0x2A
+highByteMask        EQU                     register0 + 0x2C
+
+; Includes
+%include            include/gigatron.i
+%include            include/macros.i
+
+; Labels
+_entryPoint_        EQU                     0x0200
+_5                  EQU                     0x0258
+_6                  EQU                     0x0266
+_7                  EQU                     0x026a
+_8                  EQU                     0x0270
+_10                 EQU                     0x0279
+_20                 EQU                     0x0285
+_30                 EQU                     0x028d
+_40                 EQU                     0x02a4
+_50                 EQU                     0x02bb
+_60                 EQU                     0x02c7
+_70                 EQU                     0x02ce
+_80                 EQU                     0x02de
+_85                 EQU                     0x02e5
+_90                 EQU                     0x0311
+_page_0x0300        EQU                     0x0300
+_end_0x033b         EQU                     0x0316
+
+; Variables
+_a                  EQU                     0x0030
+_x                  EQU                     0x0032
+_y                  EQU                     0x0034
+_u                  EQU                     0x0036
+_v                  EQU                     0x0038
+_w                  EQU                     0x003a
+
+; Strings
+
+; Define Bytes
+def_bytes_0x10a0    EQU                     0x10a0
+def_bytes_0x10a0    DB                      144 45 38 128 20 144 47 9 144 48 10 144 50 19 144 48 10 144 47 9 144 48 10 144 47 9 144 43 20 144 40 76 128 77 144 45 39 128 19 144 47 9 144 48 10 144 50 19 144 48 10 144 47 9 144 48 10 144 47 10 144 43 19 144 40 77 128 76 144 45 39 128 19 144 47 10 144 48 9 144 50 19 144 48 10 144 47 10 144 48 9 208 160 17 
+def_bytes_0x11a0    EQU                     0x11a0
+def_bytes_0x11a0    DB                      144 47 10 144 43 19 144 40 77 128 77 144 45 145 64 146 69 19 146 69 145 64 9 129 130 10 128 10 145 69 144 64 9 146 47 10 146 48 144 67 145 62 9 146 50 145 69 144 64 20 146 48 144 64 145 69 9 146 47 128 129 10 146 48 9 146 47 145 69 144 64 10 146 43 10 144 69 145 64 9 146 40 145 64 144 59 19 144 64 208 160 18 
+def_bytes_0x12a0    EQU                     0x12a0
+def_bytes_0x12a0    DB                      145 59 10 128 129 19 145 59 144 64 19 144 57 145 62 10 145 64 144 59 130 19 144 64 145 59 10 128 129 19 145 64 144 59 19 144 64 145 59 10 146 45 145 64 144 69 19 144 69 145 64 10 128 129 9 130 10 145 69 144 64 9 146 47 10 146 48 144 67 145 62 10 146 50 145 69 144 64 19 146 48 144 64 145 69 9 146 47 208 160 19 
+def_bytes_0x13a0    EQU                     0x13a0
+def_bytes_0x13a0    DB                      128 129 10 146 48 10 146 47 145 64 144 69 9 146 43 10 144 69 145 64 9 146 40 145 64 144 59 20 144 64 145 59 9 128 129 19 145 64 144 59 20 144 57 145 62 9 145 64 144 59 130 19 144 64 145 59 10 128 129 19 145 64 144 59 19 144 64 145 59 10 146 45 145 64 144 69 19 144 64 145 69 10 128 129 9 130 10 208 160 20 
+def_bytes_0x14a0    EQU                     0x14a0
+def_bytes_0x14a0    DB                      145 69 144 64 10 146 47 9 146 48 144 67 145 62 10 146 50 145 69 144 64 19 146 48 144 69 145 64 10 146 47 128 129 9 146 48 10 146 47 145 64 144 69 9 146 43 10 144 69 145 64 10 146 40 145 64 144 59 19 144 64 145 59 9 128 129 20 145 64 144 59 19 144 57 145 62 9 145 59 144 64 146 56 5 146 57 5 146 58 208 160 21 
+def_bytes_0x15a0    EQU                     0x15a0
+def_bytes_0x15a0    DB                      5 145 59 130 5 144 64 145 59 145 60 4 145 61 5 145 62 128 5 145 63 5 145 64 5 145 65 4 144 64 146 59 145 66 5 145 67 5 145 68 5 145 69 5 146 64 144 59 145 70 4 145 71 5 147 48 144 60 146 55 145 72 10 147 48 145 67 9 147 48 145 64 10 147 48 145 72 10 147 48 145 67 9 147 48 145 64 208 160 22 
+def_bytes_0x16a0    EQU                     0x16a0
+def_bytes_0x16a0    DB                      10 147 48 145 72 9 147 48 145 67 10 147 48 146 55 144 60 145 64 10 147 48 145 72 9 147 48 145 67 10 147 48 145 64 9 147 48 144 60 146 55 145 72 10 147 48 145 67 10 147 48 145 64 9 147 48 10 146 55 146 67 144 62 145 71 131 9 147 55 146 67 129 10 147 55 144 62 130 10 147 55 144 71 9 147 55 144 67 208 160 23 
+def_bytes_0x17a0    EQU                     0x17a0
+def_bytes_0x17a0    DB                      10 147 55 144 62 9 147 55 144 71 10 147 55 144 67 10 147 55 144 67 145 62 145 62 128 9 147 55 145 71 10 147 55 145 67 9 147 55 145 62 10 147 55 145 67 144 62 144 71 10 147 55 145 67 128 9 147 55 145 62 10 147 55 9 147 53 144 60 145 65 146 69 10 147 53 145 65 130 10 147 53 144 60 129 9 147 53 144 69 208 160 24 
+def_bytes_0x18a0    EQU                     0x18a0
+def_bytes_0x18a0    DB                      10 147 53 144 65 9 147 53 144 60 10 147 53 144 69 10 147 53 144 65 9 147 53 145 60 144 65 145 60 128 10 147 53 145 69 9 147 53 145 65 10 147 53 145 60 10 147 53 144 65 145 60 145 69 9 147 53 144 65 129 10 147 53 144 60 9 147 53 10 147 52 145 64 144 59 146 68 10 147 52 145 64 130 9 147 52 144 59 208 160 25 
+def_bytes_0x19a0    EQU                     0x19a0
+def_bytes_0x19a0    DB                      129 10 147 52 144 71 9 147 52 144 68 10 147 52 144 64 10 147 52 144 68 9 147 52 144 64 10 147 52 144 64 145 59 145 59 128 9 147 52 145 71 10 147 52 145 68 10 147 52 145 64 9 147 52 145 64 144 59 145 68 10 147 52 145 64 9 147 52 145 76 5 145 71 5 147 52 145 68 5 145 64 5 147 48 144 55 145 60 208 160 26 
+def_bytes_0x1aa0    EQU                     0x1aa0
+def_bytes_0x1aa0    DB                      146 64 6 146 72 3 147 48 3 146 76 7 147 48 146 79 6 146 76 3 147 48 4 146 72 6 147 48 146 64 6 146 72 4 147 48 3 146 76 6 147 48 146 79 7 146 76 3 147 48 3 146 72 6 147 48 145 60 144 55 146 64 7 146 72 3 147 48 3 146 76 7 147 48 146 79 6 146 76 3 147 48 3 146 72 7 147 48 208 160 27 
+def_bytes_0x1ba0    EQU                     0x1ba0
+def_bytes_0x1ba0    DB                      144 60 145 55 146 64 6 146 72 3 147 48 4 146 76 6 147 48 146 79 6 146 76 4 147 48 3 146 72 6 145 55 145 67 144 62 145 67 130 131 7 145 71 3 146 55 3 145 74 6 146 55 145 79 7 145 74 3 146 55 3 145 71 7 146 55 145 67 6 145 71 3 146 55 3 145 74 7 146 55 145 79 6 145 74 3 146 55 208 160 28 
+def_bytes_0x1ca0    EQU                     0x1ca0
+def_bytes_0x1ca0    DB                      4 145 71 6 146 55 144 67 147 62 144 67 129 6 144 71 4 146 55 3 144 74 6 146 55 144 79 7 144 74 3 146 55 3 144 71 6 146 55 147 62 145 67 145 67 128 7 145 71 3 146 55 3 145 74 7 146 55 145 79 6 145 74 3 146 55 3 145 71 7 146 53 144 60 147 65 147 65 129 6 147 69 3 146 53 4 147 72 208 160 29 
+def_bytes_0x1da0    EQU                     0x1da0
+def_bytes_0x1da0    DB                      6 146 53 147 77 6 147 72 4 146 53 3 147 69 6 146 53 147 65 7 147 69 3 146 53 3 147 72 6 146 53 147 77 7 147 72 3 146 53 3 147 69 7 146 53 144 65 145 60 144 65 131 6 144 69 3 146 53 3 144 72 7 146 53 144 77 6 144 72 3 146 53 4 144 69 6 146 53 145 65 147 60 145 65 128 6 145 69 208 160 30 
+def_bytes_0x1ea0    EQU                     0x1ea0
+def_bytes_0x1ea0    DB                      4 146 53 3 145 72 6 146 53 145 77 7 145 72 3 146 53 3 145 69 6 146 52 147 64 144 59 147 64 129 7 147 68 3 146 52 3 147 71 7 146 52 147 76 6 147 71 3 146 52 3 147 68 7 146 52 147 64 6 147 68 3 146 52 4 147 71 6 146 52 147 76 6 147 71 4 146 52 3 147 68 6 146 52 144 64 145 59 208 160 31 
+def_bytes_0x1fa0    EQU                     0x1fa0
+def_bytes_0x1fa0    DB                      144 64 131 7 144 68 3 146 52 3 144 71 6 146 52 144 76 7 144 71 3 146 52 3 144 68 7 146 52 145 59 147 64 147 64 128 6 147 68 3 146 52 3 147 71 7 146 52 147 76 6 147 71 3 146 52 4 147 68 6 146 52 144 64 145 59 147 76 5 147 77 5 146 52 147 76 4 147 77 5 146 52 147 76 5 147 77 208 160 32 
+def_bytes_0x20a0    EQU                     0x20a0
+def_bytes_0x20a0    DB                      5 146 52 147 76 5 147 77 4 146 52 147 76 5 147 77 5 146 52 147 76 5 147 77 5 146 52 147 76 4 147 77 5 146 52 147 76 5 147 77 5 146 52 145 64 144 59 147 76 9 146 52 147 76 10 146 50 147 74 10 146 50 147 74 9 146 48 144 64 145 59 147 72 10 146 48 147 72 9 146 47 147 71 10 146 47 147 71 208 160 33 
+def_bytes_0x21a0    EQU                     0x21a0
+def_bytes_0x21a0    DB                      10 146 52 145 64 144 59 147 76 9 146 52 147 76 10 146 50 147 74 9 146 50 147 74 10 146 48 147 72 10 146 48 147 72 9 146 47 147 71 10 146 47 147 71 9 146 52 144 59 145 64 147 76 10 146 52 147 76 10 146 50 145 57 144 62 147 74 9 146 50 147 74 10 146 48 144 60 145 55 147 72 9 146 48 147 72 10 146 47 208 160 34 
+def_bytes_0x22a0    EQU                     0x22a0
+def_bytes_0x22a0    DB                      145 59 144 54 147 71 10 146 47 147 71 9 146 45 144 69 145 64 147 81 144 69 19 145 69 144 64 10 128 129 10 130 9 144 64 145 69 10 146 47 145 71 147 83 9 146 48 144 67 147 72 145 84 10 146 50 144 69 145 74 147 86 19 146 48 144 69 147 72 145 84 10 146 47 145 71 144 83 131 9 146 48 144 72 145 84 10 208 160 35 
+def_bytes_0x23a0    EQU                     0x23a0
+def_bytes_0x23a0    DB                      146 47 147 69 145 83 144 71 10 146 43 144 67 145 79 9 147 64 10 146 40 147 59 145 64 144 76 19 147 64 145 59 10 129 131 19 145 64 147 59 19 147 62 145 57 10 145 64 146 59 128 129 131 19 146 59 144 64 9 128 130 20 144 64 145 59 19 145 64 144 59 9 146 45 144 69 145 64 144 69 147 81 20 145 69 144 64 9 208 160 36 
+def_bytes_0x24a0    EQU                     0x24a0
+def_bytes_0x24a0    DB                      128 129 10 130 9 144 64 145 69 10 146 47 147 71 145 83 10 146 48 144 62 145 72 147 84 9 146 50 144 69 147 74 145 86 19 146 48 144 69 145 84 147 72 10 146 47 147 83 144 71 129 10 146 48 144 72 145 84 131 9 146 47 147 69 145 71 144 83 10 146 43 144 67 145 79 9 147 69 10 146 40 147 59 145 64 144 76 19 208 160 37 
+def_bytes_0x25a0    EQU                     0x25a0
+def_bytes_0x25a0    DB                      147 64 145 59 10 129 131 19 145 64 147 59 19 147 62 145 57 10 145 64 146 59 128 129 131 19 146 59 144 64 10 128 130 19 144 59 145 64 19 145 64 144 59 10 146 45 144 69 145 64 144 69 147 81 19 145 69 144 64 9 128 129 10 130 10 144 69 145 64 9 146 47 147 71 144 83 10 146 48 145 62 144 72 147 84 9 146 50 208 160 38 
+def_bytes_0x26a0    EQU                     0x26a0
+def_bytes_0x26a0    DB                      145 69 147 86 144 74 20 146 48 145 69 144 84 147 72 9 146 47 147 71 144 83 129 10 146 48 144 72 145 84 131 9 146 47 147 69 145 83 144 71 10 146 43 144 67 145 79 10 147 69 9 146 40 147 59 145 64 144 76 19 147 59 145 64 10 129 131 19 145 64 147 59 19 147 62 145 57 10 145 64 146 59 147 56 128 129 5 147 57 208 160 39 
+def_bytes_0x27a0    EQU                     0x27a0
+def_bytes_0x27a0    DB                      5 147 58 4 146 59 131 5 146 64 144 59 144 60 5 144 61 5 144 62 130 5 144 63 4 144 64 5 144 65 5 145 59 146 64 144 66 5 144 67 5 144 68 4 144 69 5 146 64 145 59 144 70 5 144 71 5 147 48 145 60 146 55 144 72 9 147 48 10 147 48 10 147 48 9 147 48 10 147 48 9 147 48 10 147 48 10 208 160 40 
+def_bytes_0x28a0    EQU                     0x28a0
+def_bytes_0x28a0    DB                      147 48 146 60 145 55 144 76 9 147 48 10 147 48 9 147 48 10 147 48 145 60 146 55 144 72 10 147 48 9 147 48 144 76 10 147 48 9 146 55 146 62 145 67 144 74 131 10 147 55 10 147 55 9 147 55 10 147 55 9 147 55 10 147 55 144 74 5 144 76 5 147 55 144 74 4 144 76 5 147 55 145 62 146 67 144 71 10 208 160 41 
+def_bytes_0x29a0    EQU                     0x29a0
+def_bytes_0x29a0    DB                      147 55 9 147 55 10 147 55 10 147 55 146 67 145 62 9 147 55 10 147 55 9 147 55 10 147 53 145 65 146 60 144 72 10 147 53 9 147 53 10 147 53 9 147 53 10 147 53 10 147 53 9 147 53 10 147 53 146 65 145 60 144 77 9 147 53 10 147 53 10 147 53 9 147 53 145 65 146 60 144 72 10 147 53 9 147 53 10 208 160 42 
+def_bytes_0x2aa0    EQU                     0x2aa0
+def_bytes_0x2aa0    DB                      147 53 10 147 52 146 59 145 64 144 71 9 147 52 10 147 52 9 147 52 10 147 52 10 147 52 9 147 52 144 72 5 144 73 5 147 52 144 74 5 144 75 4 147 52 145 64 146 59 144 76 10 147 52 10 147 52 9 147 52 10 147 52 146 64 145 59 9 147 52 10 147 52 10 147 52 9 147 48 145 60 146 55 144 72 10 147 48 208 160 43 
+def_bytes_0x2ba0    EQU                     0x2ba0
+def_bytes_0x2ba0    DB                      9 147 48 10 147 48 10 147 48 9 147 48 10 147 48 9 147 48 10 147 48 146 60 145 55 144 76 10 147 48 9 147 48 10 147 48 9 147 48 145 55 146 60 144 72 10 147 48 10 147 48 144 76 9 147 48 10 145 55 146 62 145 67 144 74 131 9 147 55 10 147 55 10 147 55 9 147 55 10 147 55 9 147 55 144 74 5 144 76 208 160 44 
+def_bytes_0x2ca0    EQU                     0x2ca0
+def_bytes_0x2ca0    DB                      5 147 55 144 74 5 144 76 5 147 55 145 67 146 62 144 71 9 147 55 10 147 55 9 147 55 10 147 55 146 67 145 62 10 147 55 9 147 55 10 147 55 9 147 53 145 65 146 60 144 72 10 147 53 10 147 53 9 147 53 10 147 53 9 147 53 10 147 53 10 147 53 9 147 53 146 65 145 60 144 77 10 147 53 9 147 53 208 160 45 
+def_bytes_0x2da0    EQU                     0x2da0
+def_bytes_0x2da0    DB                      10 147 53 10 147 53 145 60 146 65 144 72 9 147 53 10 147 53 9 147 53 10 147 52 146 64 145 59 144 71 10 147 52 9 147 52 10 147 52 9 147 52 10 147 52 10 147 52 144 72 4 144 73 5 147 52 144 74 5 144 75 5 147 52 145 64 146 59 144 76 9 147 52 10 147 52 10 147 52 9 147 52 146 64 145 59 10 147 52 208 160 46 
+def_bytes_0x2ea0    EQU                     0x2ea0
+def_bytes_0x2ea0    DB                      9 147 52 10 147 52 10 147 52 145 64 146 59 144 76 4 144 77 5 147 52 144 76 5 144 77 5 147 52 144 76 5 144 77 4 147 52 144 76 5 144 77 5 147 52 144 76 5 144 77 5 147 52 144 76 4 144 77 5 147 52 144 76 5 144 77 5 147 52 144 76 5 144 77 4 147 52 146 59 145 64 144 76 10 147 52 144 76 208 160 47 
+def_bytes_0x2fa0    EQU                     0x2fa0
+def_bytes_0x2fa0    DB                      10 147 50 144 74 9 147 50 144 74 10 147 48 145 59 146 64 144 72 9 147 48 144 72 10 147 47 144 71 10 147 47 144 71 9 147 52 146 64 145 59 144 76 10 147 52 144 76 9 147 50 144 74 10 147 50 144 74 10 147 48 144 72 9 147 48 144 72 10 147 47 144 71 9 147 47 144 71 10 147 52 145 64 146 59 144 76 208 160 48 
+def_bytes_0x30a0    EQU                     0x30a0
+def_bytes_0x30a0    DB                      10 147 52 144 76 9 147 50 146 62 145 57 144 74 10 147 50 144 74 9 147 48 145 60 146 55 144 72 10 147 48 144 72 10 147 47 146 54 145 59 144 71 9 147 47 144 71 10 147 45 145 69 146 64 144 81 145 69 19 146 69 145 64 10 129 130 9 131 10 145 69 146 64 9 147 47 145 71 144 83 10 147 48 146 67 144 84 145 72 208 160 49 
+def_bytes_0x31a0    EQU                     0x31a0
+def_bytes_0x31a0    DB                      10 147 50 146 64 145 86 144 74 19 147 48 146 64 144 72 145 84 9 147 47 145 71 144 83 130 10 147 48 144 72 145 84 10 147 47 146 69 145 71 144 83 9 147 43 144 67 145 79 10 146 69 9 147 40 146 64 146 64 144 76 129 20 146 64 145 59 9 129 130 19 145 59 146 64 20 146 62 145 57 9 145 64 146 59 128 129 208 160 50 
+def_bytes_0x32a0    EQU                     0x32a0
+def_bytes_0x32a0    DB                      131 19 146 64 144 59 10 128 130 19 144 64 145 59 19 145 59 144 64 10 144 81 145 69 58 145 71 144 83 9 144 84 145 72 10 145 74 144 86 19 144 72 145 84 10 145 71 144 83 9 144 72 145 84 10 145 71 144 83 9 144 79 145 67 20 145 76 144 64 76 128 129 77 144 69 145 81 58 145 83 144 71 9 144 72 145 84 10 208 160 51 
+def_bytes_0x33a0    EQU                     0x33a0
+def_bytes_0x33a0    DB                      145 86 144 74 19 144 84 145 72 10 145 71 144 83 9 144 72 145 84 10 145 83 144 71 10 144 67 145 79 19 145 76 144 64 77 128 129 76 144 81 145 69 58 145 71 144 83 10 144 72 145 84 9 145 86 144 74 19 144 72 145 84 10 145 83 144 71 10 144 84 145 72 9 145 71 144 83 10 144 79 145 67 19 145 76 144 64 77 208 160 52 
+def_bytes_0x34a0    EQU                     0x34a0
+def_bytes_0x34a0    DB                      128 129 77 147 45 144 64 145 69 145 69 146 81 19 145 64 144 69 9 128 129 10 131 10 144 64 145 69 9 147 47 146 71 145 83 10 147 48 144 62 145 84 146 72 9 147 50 144 64 146 86 145 74 20 147 48 144 64 145 72 146 84 9 147 47 146 71 144 83 129 10 147 48 144 84 145 72 130 9 147 47 146 64 145 83 144 71 10 208 160 53 
+def_bytes_0x35a0    EQU                     0x35a0
+def_bytes_0x35a0    DB                      147 43 144 67 145 79 10 146 64 9 147 40 146 59 145 64 144 76 19 146 59 145 64 10 129 130 19 145 59 146 64 19 146 57 145 62 10 145 59 146 64 128 130 131 19 146 59 144 64 129 10 128 130 19 144 59 145 64 19 145 59 144 64 10 147 45 144 64 145 69 146 81 145 69 19 145 64 144 69 10 128 129 9 131 10 144 64 145 69 208 160 54 
+def_bytes_0x36a0    EQU                     0x36a0
+def_bytes_0x36a0    DB                      9 147 47 145 71 146 83 10 147 48 144 62 146 84 145 72 10 147 50 144 64 145 86 146 74 19 147 48 144 64 146 84 145 72 9 147 47 145 71 144 83 130 10 147 48 144 72 145 84 10 147 47 146 64 145 83 144 71 9 147 43 144 67 145 79 10 146 64 9 147 40 146 59 145 64 144 76 20 146 59 145 64 9 129 130 19 145 59 208 160 55 
+def_bytes_0x37a0    EQU                     0x37a0
+def_bytes_0x37a0    DB                      146 64 20 146 57 145 62 9 145 59 146 64 128 130 131 19 146 59 144 64 129 10 128 130 19 144 59 145 64 19 145 59 144 64 10 128 129 208 160 16 
+
+; Lookup Tables
+
+; Code
+_entryPoint_        InitRealTimeProc        
+                    InitEqOp                
+                    InitNeOp                
+                    InitLeOp                
+                    InitGeOp                
+                    InitLtOp                
+                    InitGtOp                
+                    Initialise                                              ; INIT
+
+                    LDI                     3
+                    ST                      waveType
+                    LDWI                    4256
+                    PlayMidi                                                ; play midi &h10a0,3
+
+_5                  LDWI                    163
+                    STW                     register0
+                    LDI                     0
+                    POKE                    register0
+                    LDWI                    clearVertBlinds
+                    CALL                    giga_vAC                        ; poke 163,0:cls
+
+_6                  LDI                     61
+                    STW                     _a                              ; a=61
+
+_7                  LDW                     _a
+                    SUBI                    1
+                    STW                     _a                              ; a=a-1
+
+_8                  LDWI                    163
+                    STW                     register0
+                    LDW                     _a
+                    POKE                    register0                       ; poke 163,a
+
+_10                 LDI                     80
+                    STW                     _x
+                    LDI                     60
+                    STW                     _y
+                    LDW                     _a
+                    STW                     _u                              ; x=80:y=60:u=a
+
+_20                 LDI                     0
+                    STW                     _v
+                    LDI                     0
+                    STW                     _w                              ; v=0:w=0
+
+_30                 LDW                     _x
+                    SUBW                    _u
+                    STW                     drawHLine_x1
+                    LDW                     _y
+                    SUBW                    _v
+                    STW                     drawHLine_y1
+                    LDW                     _x
+                    ADDW                    _u
+                    STW                     drawHLine_x2
+                    DrawHLine                                               ; hline x-u,y-v,x+u
+
+_40                 LDW                     _x
+                    SUBW                    _u
+                    STW                     drawHLine_x1
+                    LDW                     _y
+                    ADDW                    _v
+                    STW                     drawHLine_y1
+                    LDW                     _x
+                    ADDW                    _u
+                    STW                     drawHLine_x2
+                    DrawHLine                                               ; hline x-u,y+v,x+u
+
+_50                 LDW                     _w
+                    ADDW                    _v
+                    ADDW                    _v
+                    ADDI                    1
+                    STW                     _w
+                    INC                     _v                              ; w=w+v+v+1:inc v
+
+_60                 LDW                     _w
+                    BGE                     _70
+                    BRA                     _30                             ; if w &&< 0 then goto &30
+
+_70                 LDW                     _w
+                    SUBW                    _u
+                    SUBW                    _u
+                    ADDI                    1
+                    STW                     _w
+                    LDW                     _u
+                    SUBI                    1
+                    STW                     _u                              ; w=w-u-u+1:u=u-1
+
+_80                 LDW                     _u
+                    BLE                     _85
+                    BRA                     _60                             ; if u &&> 0 then goto &60
+
+_85                 LDW                     _a
+                    STW                     0xde
+                    LDWI                    _page_0x0300
+                    CALL                    giga_vAC
+_page_0x0300        LDW                     0xde
+                    SUBI                    2
+                    JumpLT                  _90 2
+                    LDWI                    _5
+                    CALL                    giga_vAC                        ; if a &< 2 then goto 5
+
+_90                 LDWI                    _7
+                    CALL                    giga_vAC                        ; goto 7
+
+_end_0x033b         BRA                     _end_0x033b                     ; END
+
+
+
+;****************************************************************************************************************************************
+;****************************************************************************************************************************************
+;* Internal runtime, DO NOT MODIFY PAST THIS POINT, modifications must be made in the original include files                            *
+;****************************************************************************************************************************************
+;****************************************************************************************************************************************
+
+realTimeProc        EQU     0x7ea0
+convertEqOp         EQU     0x7ea9
+convertNeOp         EQU     0x7eb2
+convertLeOp         EQU     0x7ebb
+convertGeOp         EQU     0x7ec4
+convertLtOp         EQU     0x7ecd
+convertGtOp         EQU     0x7ed6
+resetVideoTable     EQU     0x7edf
+initClearFuncs      EQU     0x7da0
+clearVertBlinds     EQU     0x7ba0
+drawHLine           EQU     0x7aa0
+resetAudio          EQU     0x7dc3
+playMidi            EQU     0x7ca0
+midiStartNote       EQU     0x79a0
+realTimeProcAddr    EQU     0x00dc
+convertEqOpAddr     EQU     0x00d0
+convertNeOpAddr     EQU     0x00d2
+convertLeOpAddr     EQU     0x00d4
+convertGeOpAddr     EQU     0x00d6
+convertLtOpAddr     EQU     0x00d8
+convertGtOpAddr     EQU     0x00da
+
+
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+numericLabel        EQU     register0
+defaultLabel        EQU     register1
+lutLabs             EQU     register2
+lutAddrs            EQU     register3
+lutIndex            EQU     register8
+lutLabel            EQU     register9
+
+
+                    ; runs real time, (time sliced), code at regular intervals
+realTimeProc        PUSH
+                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI/SPRITE etc routines
+                    CALL    giga_vAC
+                    POP
+                    RET
+                    
+realTimeStub        RET
+
+
+                    ; convert equal to into a boolean
+convertEqOp         BEQ     convertEq_1
+                    LDI     0
+                    RET
+convertEq_1         LDI     1
+                    RET
+
+
+                    ; convert not equal to into a boolean
+convertNeOp         BNE     convertNe_1
+                    LDI     0
+                    RET
+convertNe_1         LDI     1
+                    RET
+
+
+                    ; convert less than or equal to into a boolean
+convertLeOp         BLE     convertLe_1
+                    LDI     0
+                    RET
+convertLe_1         LDI     1
+                    RET
+
+
+                    ; convert greater than or equal to into a boolean
+convertGeOp         BGE     convertGe_1
+                    LDI     0
+                    RET
+convertGe_1         LDI     1
+                    RET
+
+
+                    ; convert less than into a boolean
+convertLtOp         BLT     convertLt_1
+                    LDI     0
+                    RET
+convertLt_1         LDI     1
+                    RET
+
+
+                    ; convert greater than into boolean
+convertGtOp         BGT     convertGt_1
+                    LDI     0
+                    RET
+convertGt_1         LDI     1
+                    RET
+
+
+
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+xreset              EQU     register0
+xcount              EQU     register1
+ycount              EQU     register2
+treset              EQU     register3
+breset              EQU     register8
+top                 EQU     register9
+bot                 EQU     register10
+vramAddr            EQU     register11
+evenAddr            EQU     register12
+clsAddress          EQU     register13
+    
+    
+                    ; resets video table pointers
+resetVideoTable     PUSH
+                    LDI     8
+                    STW     vramAddr
+                    LDWI    giga_videoTable
+                    STW     evenAddr
+    
+resetVT_loop        CALL    realTimeProcAddr
+                    LDW     vramAddr
+                    DOKE    evenAddr
+                    INC     evenAddr
+                    INC     evenAddr
+                    INC     vramAddr
+                    LD      vramAddr
+                    SUBI    giga_yres + 8
+                    BLT     resetVT_loop
+                    POP
+                    RET
+
+
+initClearFuncs      PUSH
+                    LDWI    resetVideoTable
+                    CALL    giga_vAC
+    
+                    LDWI    0x0002                              ; starting cursor position
+                    STW     cursorXY
+                    LDWI    0x7FFF
+                    ANDW    miscFlags
+                    STW     miscFlags                           ; reset on bottom row flag
+            
+                    LD      fgbgColour
+                    ST      giga_sysArg0
+                    ST      giga_sysArg0 + 1
+                    ST      giga_sysArg2
+                    ST      giga_sysArg2 + 1                    ; 4 pixels of fg colour
+    
+                    LDWI    SYS_Draw4_30                        ; setup 4 pixel SYS routine
+                    STW     giga_sysFn
+                    POP
+                    RET
+
+
+                    ; clears the viewable screen using a vertical blinds effect
+clearVertBlinds     PUSH
+                    LDWI    initClearFuncs
+                    CALL    giga_vAC
+
+                    LDWI    giga_vram
+                    STW     giga_sysArg4
+                    LD      giga_sysArg4 + 1
+                    ST      top
+    
+clearVB_loop        CALL    realTimeProcAddr
+                    LD      top
+                    ST      giga_sysArg4 + 1                    ; top line
+                    SYS     0xFF                                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+    
+                    LDWI    giga_yres - 1 + 16
+                    SUBW    top
+                    ST      giga_sysArg4 + 1                    ; bottom line
+                    SYS     0xFF                                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+    
+                    LD      giga_sysArg4
+                    ADDI    0x04
+                    ST      giga_sysArg4
+                    SUBI    giga_xres
+                    BLT     clearVB_loop
+    
+                    LDI     0
+                    ST      giga_sysArg4
+                    INC     top                                 ; next top line
+                    LD      top
+                    SUBI    giga_yres / 2 + 8
+                    BLT     clearVB_loop
+                    POP
+                    RET
+
+
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+graphicsMode        EQU     register0
+waitVBlankNum       EQU     register0
+
+drawHLine_x1        EQU     register0
+drawHLine_y1        EQU     register1
+drawHLine_x2        EQU     register2
+drawHLine_x4        EQU     register3
+
+drawVLine_x1        EQU     register0
+drawVLine_y1        EQU     register1
+drawVLine_y2        EQU     register2
+drawVLine_y8        EQU     register3
+
+drawLine_x1         EQU     register0
+drawLine_y1         EQU     register1
+drawLine_x2         EQU     register2
+drawLine_y2         EQU     register3
+drawLine_xy1        EQU     register0
+drawLine_xy2        EQU     register1
+drawLine_dxy1       EQU     register2
+drawLine_dxy2       EQU     register3
+drawLine_dx1        EQU     register4
+drawLine_dy1        EQU     register5
+drawLine_dx2        EQU     register6
+drawLine_dy2        EQU     register7
+drawLine_sx         EQU     register8
+drawLine_sy         EQU     register9
+drawLine_h          EQU     register10
+drawLine_num        EQU     register11
+drawLine_count      EQU     register12
+drawLine_addr       EQU     register13
+drawLine_tmp        EQU     register14
+    
+    
+drawHLine           PUSH
+                    LD      drawHLine_x1
+                    ST      giga_sysArg4
+                    LD      drawHLine_y1
+                    ADDI    8
+                    ST      giga_sysArg4 + 1
+                    LDW     drawHLine_x2
+                    SUBW    drawHLine_x1
+                    SUBI    4
+                    BLT     drawHL_loop1
+                    
+                    LD      fgbgColour + 1
+                    ST      giga_sysArg0
+                    ST      giga_sysArg0 + 1
+                    ST      giga_sysArg2
+                    ST      giga_sysArg2 + 1    ; 4 pixels of fg colour
+                    LDWI    SYS_Draw4_30        ; setup 4 pixel SYS routine
+                    STW     giga_sysFn
+                    
+                    LDW     drawHLine_x2        
+                    SUBI    3
+                    STW     drawHLine_x4        ; 4 pixel chunks limit
+
+drawHL_loop0        SYS     0xFF                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+                    CALL    realTimeProcAddr
+                    LD      giga_sysArg4
+                    ADDI    4
+                    ST      giga_sysArg4
+                    SUBW    drawHLine_x4
+                    BLT     drawHL_loop0        ; all 4 pixel chunks
+                    
+drawHL_loop1        LD      fgbgColour + 1
+                    POKE    giga_sysArg4
+                    INC     giga_sysArg4
+                    LD      giga_sysArg4
+                    SUBW    drawHLine_x2
+                    BLE     drawHL_loop1        ; remaining pixels
+                    POP
+                    RET
+
+
+numChannels         EQU     register0
+audioPtr            EQU     register1
+waveType            EQU     register2
+midiNote            EQU     register4           ; register4 to register7 are the only free registers during time slicing
+midiCommand         EQU     register5
+midiPtr             EQU     register6
+
+
+resetAudio          LDWI    0x0000
+                    STW     midiDelay
+                    LDWI    giga_soundChan1
+                    STW     audioPtr
+                    LD      waveType
+                    ANDI    0x03
+                    ST      waveType + 1
+                    LDI     0x00
+                    ST      waveType            ; waveform type
+                    LDI     0x04
+
+resetA_loop         ST      numChannels
+                    LDI     giga_soundChan1     ; reset low byte
+                    ST      audioPtr
+                    LDW     waveType
+                    DOKE    audioPtr            ; wavA and wavX
+                    INC     audioPtr
+                    INC     audioPtr    
+                    LDWI    0x0000
+                    DOKE    audioPtr            ; keyL and keyH
+                    INC     audioPtr
+                    INC     audioPtr
+                    DOKE    audioPtr            ; oscL and oscH
+                    INC     audioPtr + 1        ; increment high byte
+                    
+                    LD      numChannels
+                    SUBI    1
+                    BNE     resetA_loop
+                    RET
+
+
+
+playMidi            LDW     midiStream
+                    BEQ     playM_exit0         ; 0x0000 = stop
+                    LDI     0x08                ; keep pumping soundTimer, so that global sound stays alive
+                    ST      giga_soundTimer
+                    LD      giga_frameCount
+                    SUBW    midiDelay
+                    BEQ     playM_start
+playM_exit0         RET
+
+playM_start         PUSH
+playM_process       LDW     midiStream
+                    PEEK                        ; get midi stream byte
+                    STW     midiCommand
+                    LDW     midiStream
+                    ADDI    0x01
+                    STW     midiStream
+                    LDI     0xF0
+                    ANDW    midiCommand
+                    XORI    0x90                ; check for start note
+                    BNE     playM_endnote
+    
+                    LDWI    midiStartNote
+                    CALL    giga_vAC            ; start note
+                    BRA     playM_process
+                    
+playM_endnote       XORI    0x10                ; check for end note
+                    BNE     playM_segment
+    
+                    LDWI    midiEndNote         ; end note
+                    CALL    giga_vAC
+                    BRA     playM_process
+
+playM_segment       XORI    0x50                ; check for new segment
+                    BNE     playM_delay
+    
+                    LDW     midiStream          ; midi score
+                    DEEK
+                    STW     midiStream          ; 0xD0 new midi segment address
+                    BEQ     playM_exit1         ; 0x0000 = stop
+                    BRA     playM_process
+    
+playM_delay         LD      giga_frameCount     ; midiDelay = (midiCommand + peek(frameCount)) & 0x00FF 
+                    ADDW    midiCommand
+                    ST      midiDelay
+playM_exit1         POP
+                    RET
+
+
+midiStartNote       LDWI    giga_notesTable     ; note table in ROM
+                    STW     midiPtr
+                    LDW     midiStream          ; midi score
+                    PEEK
+                    SUBI    11
+                    LSLW
+                    ADDW    midiPtr
+                    STW     midiPtr
+                    LUP     0x00                ; get ROM midi note low byte
+                    ST      midiNote
+                    LDW     midiPtr
+                    LUP     0x01                ; get ROM midi note high byte
+                    ST      midiNote + 1
+                    LDW     midiCommand
+                    ANDI    0x03                ; get channel
+                    ADDI    0x01                
+                    ST      midiPtr + 1
+                    LDI     0xFC
+                    ST      midiPtr             ; channels address 0x01FC <-> 0x04FC
+                    LDW     midiNote
+                    DOKE    midiPtr             ; set note
+                    LDW     midiStream
+                    ADDI    0x01                ; midiStream++
+                    STW     midiStream
+                    RET
+                    
+midiEndNote         LDW     midiCommand
+                    ANDI    0x03                ; get channel
+                    ADDI    0x01                
+                    ST      midiPtr + 1
+                    LDI     0xFC
+                    ST      midiPtr             ; channels address 0x01FC <-> 0x04FC
+                    LDWI    0x0000
+                    DOKE    midiPtr             ; end note
+                    RET
+

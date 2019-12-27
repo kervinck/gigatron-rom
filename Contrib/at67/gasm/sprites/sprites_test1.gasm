@@ -8,7 +8,7 @@
 ; sprite test
 
 
-%include ../macros/gigatron.i
+%include ../include/gigatron.i
 
 
 vram        EQU     0x0800
@@ -287,7 +287,7 @@ draw        LDW     pixels
             
             ;CALL    vblank0
             ;CALL    vblank1
-            ;CALL    vblank2
+            CALL    vblank2
             
             LDWI    buff1
             STW     backBuffer
@@ -297,9 +297,7 @@ draw        LDW     pixels
             LDI     0x00
             ST      i
 
-restore     CALL    waitScanln
-
-            LDW     backBuffer
+restore     LDW     backBuffer
             STW     srcAddr
             LDW     pixels
             DEEK

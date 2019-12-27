@@ -5,7 +5,7 @@
 ; **************************************************************************************************
 ; **************************************************************************************************
 
-; game of life by John Conway
+; game of life coded by at67, original algorithm by John Conway
 ; 32X32 runs about 2 fps on a 6.25MHz Gigatron TTL
 ; more optimisation: neighbour count buffer is generated from alive cells in cell buffer, pointer arithmetic with offsets,
 ; a look up table to evalute neighbours count and a SYS function to plot the 2x2 pixels.

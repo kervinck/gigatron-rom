@@ -1,0 +1,1008 @@
+_startAddress_      EQU                     0x0200
+
+; Internal variables
+register0           EQU                     0x0082
+register1           EQU                     register0 + 0x02
+register2           EQU                     register0 + 0x04
+register3           EQU                     register0 + 0x06
+register4           EQU                     register0 + 0x08
+register5           EQU                     register0 + 0x0A
+register6           EQU                     register0 + 0x0C
+register7           EQU                     register0 + 0x0E
+register8           EQU                     register0 + 0x10
+register9           EQU                     register0 + 0x12
+register10          EQU                     register0 + 0x14
+register11          EQU                     register0 + 0x16
+register12          EQU                     register0 + 0x18
+register13          EQU                     register0 + 0x1A
+register14          EQU                     register0 + 0x1C
+register15          EQU                     register0 + 0x1E
+fgbgColour          EQU                     register0 + 0x20
+cursorXY            EQU                     register0 + 0x22
+midiStream          EQU                     register0 + 0x24
+midiDelay           EQU                     register0 + 0x26
+frameCountPrev      EQU                     register0 + 0x28
+miscFlags           EQU                     register0 + 0x2A
+highByteMask        EQU                     register0 + 0x2C
+
+; Includes
+%include            include/gigatron.i
+%include            include/macros.i
+
+; Labels
+_entryPoint_        EQU                     0x0200
+_10                 EQU                     0x0266
+_20                 EQU                     0x0274
+_25                 EQU                     0x027d
+_30                 EQU                     0x029b
+_35                 EQU                     0x02bb
+_40                 EQU                     0x02de
+_45                 EQU                     0x030f
+_50                 EQU                     0x0313
+_100                EQU                     0x0343
+_loop               EQU                     0x035f
+_110                EQU                     0x0372
+_120                EQU                     0x0386
+_130                EQU                     0x0399
+_140                EQU                     0x03b1
+_150                EQU                     0x03c2
+_160                EQU                     0x03d3
+_170                EQU                     0x03e4
+_200                EQU                     0x03eb
+_205                EQU                     0x040b
+_210                EQU                     0x0418
+_215                EQU                     0x0425
+_220                EQU                     0x0432
+_225                EQU                     0x043f
+_230                EQU                     0x044c
+_235                EQU                     0x0459
+_240                EQU                     0x0466
+_245                EQU                     0x0473
+_250                EQU                     0x0480
+_255                EQU                     0x048d
+_254                EQU                     0x049c
+_253                EQU                     0x04e7
+_page_0x0300        EQU                     0x0300
+_page_0x0400        EQU                     0x0400
+_else_0x052d        EQU                     0x04d1
+_page_0x0500        EQU                     0x0500
+_else_0x0582        EQU                     0x052b
+_end_0x059a         EQU                     0x0541
+
+; Variables
+_K                  EQU                     0x0030
+_X                  EQU                     0x0032
+_M                  EQU                     0x0034
+_N                  EQU                     0x0036
+_I                  EQU                     0x0038
+_A                  EQU                     0x003a
+_B                  EQU                     0x003c
+_L                  EQU                     0x003e
+_F                  EQU                     0x0040
+_P_array            EQU                     0x7ea0
+_P_array            DW                      0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_Q_array            EQU                     0x7eb0
+_Q_array            DW                      0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_U                  EQU                     0x0042
+_R                  EQU                     0x0044
+_S                  EQU                     0x0046
+_C                  EQU                     0x0048
+
+; Strings
+
+; Define Bytes
+
+; Lookup Tables
+_lut_numericLabs    EQU                     0x7cfa
+_lut_numericLabs    DW                      254 253 -1
+_lut_numericAddrs   EQU                     0x7bf5
+_lut_numericAddrs   DW                      0x049c 0x04e7 
+
+; Code
+_entryPoint_        InitRealTimeProc        
+                    InitEqOp                
+                    InitNeOp                
+                    InitLeOp                
+                    InitGeOp                
+                    InitLtOp                
+                    InitGtOp                
+                    Initialise                                              ; INIT
+
+                    LDI                     0
+                    STW                     _K
+                    STW                     _X
+                    STW                     _M
+                    STW                     _N
+                    STW                     _I
+                    STW                     _A
+                    STW                     _B
+                    STW                     _L
+                    STW                     _F                              ; K=0:X=K:M=X:N=M:I=N:A=I:B=A:L=B:F=L
+
+                    LDWI                    162
+                    STW                     register0
+                    LDI                     0
+                    POKE                    register0                       ; poke 162, &h00
+
+                    LDWI                    163
+                    STW                     register0
+                    LDI                     63
+                    POKE                    register0                       ; poke 163, &h3F
+
+_10                 LDWI                    clearVertBlinds
+                    CALL                    giga_vAC
+                    LDI                     48
+                    STW                     _U
+                    LDWI                    _100
+                    CALL                    giga_vAC                        ; CLS:U=48:GOTO 100
+
+_20                 PUSH                    
+                    LDW                     _K
+                    ADDW                    _L
+                    ADDW                    _F
+                    STW                     _R                              ; R=K+L+F
+
+_25                 LDW                     _X
+                    STW                     mathX
+                    LDW                     _R
+                    STW                     mathY
+                    LDWI                    divide16bit
+                    CALL                    giga_vAC
+                    ADDI                    80
+                    STW                     register0
+                    LDWI                    0x7ea0
+                    ADDW                    _I
+                    ADDW                    _I
+                    STW                     register1
+                    LDW                     register0
+                    DOKE                    register1                       ; P(I)=80+X/R
+
+_30                 LDW                     _M
+                    SUBW                    _N
+                    STW                     mathX
+                    LDW                     _R
+                    STW                     mathY
+                    LDWI                    divide16bit
+                    CALL                    giga_vAC
+                    ADDI                    60
+                    STW                     register0
+                    LDWI                    0x7eb0
+                    ADDW                    _I
+                    ADDW                    _I
+                    STW                     register1
+                    LDW                     register0
+                    DOKE                    register1                       ; Q(I)=60+(M-N)/R
+
+_35                 LDWI                    0x7ea0
+                    ADDW                    _I
+                    ADDW                    _I
+                    DEEK                    
+                    STW                     0xc0
+                    LDI                     160
+                    SUBW                    0xc0
+                    STW                     register0
+                    LDW                     _I
+                    ADDI                    4
+                    STW                     register1
+                    LDWI                    0x7ea0
+                    ADDW                    register1
+                    ADDW                    register1
+                    STW                     register1
+                    LDW                     register0
+                    DOKE                    register1                       ; P(I+4)=160-P(I)
+
+_40                 LDWI                    0x7eb0
+                    ADDW                    _I
+                    ADDW                    _I
+                    DEEK                    
+                    STW                     register0
+                    LDW                     _I
+                    ADDI                    4
+                    STW                     register1
+                    STW                     0xde
+                    LDWI                    _page_0x0300
+                    CALL                    giga_vAC
+_page_0x0300        LDW                     0xde
+                    LDWI                    0x7eb0
+                    ADDW                    register1
+                    ADDW                    register1
+                    STW                     register1
+                    LDW                     register0
+                    DOKE                    register1                       ; Q(I+4)=Q(I)
+
+_45                 INC                     _I
+                    POP                     
+                    RET                                                     ; INC I:RETURN
+
+_50                 PUSH                    
+                    LDWI                    0x7ea0
+                    ADDW                    _A
+                    ADDW                    _A
+                    DEEK                    
+                    STW                     drawLine_x1
+                    LDWI                    0x7eb0
+                    ADDW                    _A
+                    ADDW                    _A
+                    DEEK                    
+                    STW                     drawLine_y1
+                    LDWI                    0x7ea0
+                    ADDW                    _B
+                    ADDW                    _B
+                    DEEK                    
+                    STW                     drawLine_x2
+                    LDWI                    0x7eb0
+                    ADDW                    _B
+                    ADDW                    _B
+                    DEEK                    
+                    STW                     drawLine_y2
+                    DrawLine                
+                    POP                     
+                    RET                                                     ; LINE P(A), Q(A), P(B), Q(B) : RETURN
+
+_100                LDI                     24
+                    STW                     _S
+                    LDI                     42
+                    STW                     _C
+                    LDI                     4
+                    STW                     mathX
+                    LDW                     _U
+                    STW                     mathY
+                    LDWI                    multiply16bit
+                    CALL                    giga_vAC
+                    STW                     _F                              ; S=24:C=42:F=4*U
+
+                    LDWI                    _110
+                    CALL                    giga_vAC                        ; gosub 110
+
+_loop               LDI                     0x11
+                    PEEK                    
+                    STW                     numericLabel
+                    LDI                     0
+                    STW                     defaultLabel
+                    LDWI                    gosubNumericLabel
+                    CALL                    giga_vAC                        ; gosub peek(17)
+
+                    LDWI                    _loop
+                    CALL                    giga_vAC                        ; goto loop
+
+_110                PUSH                    
+                    LDI                     0
+                    STW                     _I
+                    LDW                     _U
+                    STW                     mathX
+                    LDW                     _U
+                    STW                     mathY
+                    LDWI                    multiply16bit
+                    CALL                    giga_vAC
+                    STW                     _X                              ; I=0:X=U*U
+
+_120                LDW                     _S
+                    STW                     _K
+                    LDW                     _U
+                    STW                     mathX
+                    LDW                     _C
+                    STW                     mathY
+                    LDWI                    multiply16bit
+                    CALL                    giga_vAC
+                    STW                     _M                              ; K=S:M=U*C
+
+_130                LDW                     _C
+                    STW                     _L
+                    LDW                     _U
+                    STW                     mathX
+                    LDW                     _S
+                    STW                     mathY
+                    LDWI                    multiply16bit
+                    CALL                    giga_vAC
+                    STW                     _N
+                    LDWI                    _20
+                    CALL                    giga_vAC                        ; L=C:N=U*S:GOSUB 20
+
+_140                LDI                     0
+                    SUBW                    _L
+                    STW                     _L
+                    LDI                     0
+                    SUBW                    _N
+                    STW                     _N
+                    LDWI                    _20
+                    CALL                    giga_vAC                        ; L=-L:N=-N:GOSUB 20
+
+_150                LDI                     0
+                    SUBW                    _K
+                    STW                     _K
+                    LDI                     0
+                    SUBW                    _M
+                    STW                     _M
+                    LDWI                    _20
+                    CALL                    giga_vAC                        ; K=-K:M=-M:GOSUB 20
+
+_160                LDI                     0
+                    SUBW                    _L
+                    STW                     _L
+                    LDI                     0
+                    SUBW                    _N
+                    STW                     _N
+                    LDWI                    _20
+                    CALL                    giga_vAC                        ; L=-L:N=-N:GOSUB 20
+
+_170                LDWI                    _200
+                    CALL                    giga_vAC
+                    POP                     
+                    RET                                                     ; GOSUB 200:RETURN
+
+_200                PUSH                    
+                    LDI                     0
+                    STW                     _A
+                    STW                     0xde
+                    LDWI                    _page_0x0400
+                    CALL                    giga_vAC
+_page_0x0400        LDW                     0xde
+                    LDI                     1
+                    STW                     _B
+                    LDWI                    _50
+                    CALL                    giga_vAC                        ; A=0:B=1:GOSUB 50
+
+_205                LDI                     1
+                    STW                     _A
+                    LDI                     2
+                    STW                     _B
+                    LDWI                    _50
+                    CALL                    giga_vAC                        ; A=1:B=2:GOSUB 50
+
+_210                LDI                     2
+                    STW                     _A
+                    LDI                     3
+                    STW                     _B
+                    LDWI                    _50
+                    CALL                    giga_vAC                        ; A=2:B=3:GOSUB 50
+
+_215                LDI                     3
+                    STW                     _A
+                    LDI                     0
+                    STW                     _B
+                    LDWI                    _50
+                    CALL                    giga_vAC                        ; A=3:B=0:GOSUB 50
+
+_220                LDI                     4
+                    STW                     _A
+                    LDI                     5
+                    STW                     _B
+                    LDWI                    _50
+                    CALL                    giga_vAC                        ; A=4:B=5:GOSUB 50
+
+_225                LDI                     5
+                    STW                     _A
+                    LDI                     6
+                    STW                     _B
+                    LDWI                    _50
+                    CALL                    giga_vAC                        ; A=5:B=6:GOSUB 50
+
+_230                LDI                     6
+                    STW                     _A
+                    LDI                     7
+                    STW                     _B
+                    LDWI                    _50
+                    CALL                    giga_vAC                        ; A=6:B=7:GOSUB 50
+
+_235                LDI                     7
+                    STW                     _A
+                    LDI                     4
+                    STW                     _B
+                    LDWI                    _50
+                    CALL                    giga_vAC                        ; A=7:B=4:GOSUB 50
+
+_240                LDI                     4
+                    STW                     _A
+                    LDI                     0
+                    STW                     _B
+                    LDWI                    _50
+                    CALL                    giga_vAC                        ; A=4:B=0:GOSUB 50
+
+_245                LDI                     5
+                    STW                     _A
+                    LDI                     1
+                    STW                     _B
+                    LDWI                    _50
+                    CALL                    giga_vAC                        ; A=5:B=1:GOSUB 50
+
+_250                LDI                     6
+                    STW                     _A
+                    LDI                     2
+                    STW                     _B
+                    LDWI                    _50
+                    CALL                    giga_vAC                        ; A=6:B=2:GOSUB 50
+
+_255                LDI                     7
+                    STW                     _A
+                    LDI                     3
+                    STW                     _B
+                    LDWI                    _50
+                    CALL                    giga_vAC                        ; A=7:B=3:GOSUB 50
+
+                    POP                     
+                    RET                                                     ; return
+
+_254                PUSH                    
+                    LDWI                    505
+                    STW                     register0
+                    LDI                     238
+                    POKE                    register0                       ; poke &h01F9, 238 'disable video output
+
+                    LDWI                    163
+                    STW                     register0
+                    LDI                     0
+                    POKE                    register0
+                    LDWI                    _200
+                    CALL                    giga_vAC                        ; poke 163, &h00 : gosub 200 'erase cube
+
+                    LDWI                    505
+                    STW                     register0
+                    LDI                     40
+                    POKE                    register0                       ; poke &h01F9, 40 'enable video output
+
+                    LDW                     _S
+                    ADDI                    5
+                    STW                     _S
+                    SUBI                    90
+                    JumpGE                  _else_0x052d 0
+                    LDI                     0
+                    STW                     _S                              ; S = S + 5 : if S &>= 90 then S = 0
+
+_else_0x052d        LDI                     90
+                    SUBW                    _S
+                    STW                     _C                              ; C = 90 - S
+
+                    LDWI                    163
+                    STW                     register0
+                    LDI                     63
+                    POKE                    register0
+                    LDWI                    _110
+                    CALL                    giga_vAC                        ; poke 163, &h3F : gosub 110 'draw cube
+
+                    POP                     
+                    RET                                                     ; return
+
+_253                PUSH                    
+                    LDWI                    505
+                    STW                     register0
+                    LDI                     238
+                    POKE                    register0                       ; poke &h01F9, 238 'disable video output
+
+                    STW                     0xde
+                    LDWI                    _page_0x0500
+                    CALL                    giga_vAC
+_page_0x0500        LDW                     0xde
+                    LDWI                    163
+                    STW                     register0
+                    LDI                     0
+                    POKE                    register0
+                    LDWI                    _200
+                    CALL                    giga_vAC                        ; poke 163, &h00 : gosub 200 'erase cube
+
+                    LDWI                    505
+                    STW                     register0
+                    LDI                     40
+                    POKE                    register0                       ; poke &h01F9, 40 'enable video output
+
+                    LDW                     _S
+                    SUBI                    5
+                    STW                     _S
+                    JumpLE                  _else_0x0582 1
+                    LDI                     90
+                    STW                     _S                              ; S = S - 5 : if S &<= 0 then S = 90
+
+_else_0x0582        LDI                     90
+                    SUBW                    _S
+                    STW                     _C                              ; C = 90 - S
+
+                    LDWI                    163
+                    STW                     register0
+                    LDI                     63
+                    POKE                    register0
+                    LDWI                    _110
+                    CALL                    giga_vAC                        ; poke 163, &h3F : gosub 110 'draw cube
+
+                    POP                     
+                    RET                                                     ; return
+
+_end_0x059a         BRA                     _end_0x059a                     ; END
+
+
+
+;****************************************************************************************************************************************
+;****************************************************************************************************************************************
+;* Internal runtime, DO NOT MODIFY PAST THIS POINT, modifications must be made in the original include files                            *
+;****************************************************************************************************************************************
+;****************************************************************************************************************************************
+
+realTimeProc        EQU     0x7ec0
+convertEqOp         EQU     0x7ec9
+convertNeOp         EQU     0x7ed2
+convertLeOp         EQU     0x7edb
+convertGeOp         EQU     0x7ee4
+convertLtOp         EQU     0x7eed
+convertGtOp         EQU     0x7ef6
+multiply16bit       EQU     0x7aa0
+divide16bit         EQU     0x7ca0
+gosubNumericLabel   EQU     0x79a0
+resetVideoTable     EQU     0x7ac7
+initClearFuncs      EQU     0x7da0
+clearVertBlinds     EQU     0x7dc3
+drawLine            EQU     0x7ba0
+drawLineExt         EQU     0x78a0
+drawLineLoop        EQU     0x77a0
+drawLineLoadXY      EQU     0x76a0
+realTimeProcAddr    EQU     0x00dc
+convertEqOpAddr     EQU     0x00d0
+convertNeOpAddr     EQU     0x00d2
+convertLeOpAddr     EQU     0x00d4
+convertGeOpAddr     EQU     0x00d6
+convertLtOpAddr     EQU     0x00d8
+convertGtOpAddr     EQU     0x00da
+
+
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+numericLabel        EQU     register0
+defaultLabel        EQU     register1
+lutLabs             EQU     register2
+lutAddrs            EQU     register3
+lutIndex            EQU     register8
+lutLabel            EQU     register9
+
+
+                    ; runs real time, (time sliced), code at regular intervals
+realTimeProc        PUSH
+                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI/SPRITE etc routines
+                    CALL    giga_vAC
+                    POP
+                    RET
+                    
+realTimeStub        RET
+
+
+                    ; convert equal to into a boolean
+convertEqOp         BEQ     convertEq_1
+                    LDI     0
+                    RET
+convertEq_1         LDI     1
+                    RET
+
+
+                    ; convert not equal to into a boolean
+convertNeOp         BNE     convertNe_1
+                    LDI     0
+                    RET
+convertNe_1         LDI     1
+                    RET
+
+
+                    ; convert less than or equal to into a boolean
+convertLeOp         BLE     convertLe_1
+                    LDI     0
+                    RET
+convertLe_1         LDI     1
+                    RET
+
+
+                    ; convert greater than or equal to into a boolean
+convertGeOp         BGE     convertGe_1
+                    LDI     0
+                    RET
+convertGe_1         LDI     1
+                    RET
+
+
+                    ; convert less than into a boolean
+convertLtOp         BLT     convertLt_1
+                    LDI     0
+                    RET
+convertLt_1         LDI     1
+                    RET
+
+
+                    ; convert greater than into boolean
+convertGtOp         BGT     convertGt_1
+                    LDI     0
+                    RET
+convertGt_1         LDI     1
+                    RET
+
+
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+mathX               EQU     register0
+mathY               EQU     register1
+mathSum             EQU     register2
+mathMask            EQU     register3
+mathRem             EQU     register8
+mathSign            EQU     register9
+mathScratch         EQU     register10
+mathShift           EQU     register11
+mathBase            EQU     register8
+mathPow             EQU     register9
+mathResult          EQU     register10
+
+
+                    ; accumulator = mathX * mathY, (result 16bit)
+multiply16bit       LDI     0
+                    STW     mathSum
+                    LDI     1
+    
+multiply16_loop     STW     mathMask
+                    ANDW    mathY
+                    BEQ     multiply16_skip
+                    LDW     mathSum
+                    ADDW    mathX
+                    STW     mathSum
+                    
+multiply16_skip     LDW     mathX
+                    ADDW    mathX
+                    STW     mathX
+                    LDW     mathMask
+                    ADDW    mathMask
+                    BNE     multiply16_loop
+                    PUSH
+                    CALL    realTimeProcAddr
+                    POP
+                    LDW     mathSum
+                    RET
+
+
+                    ; accumulator:mathRem = mathX / mathY, (results 16bit)
+divide16bit         LDW     mathX
+                    XORW    mathY
+                    STW     mathSign
+                    LDW     mathX
+                    BGE     divide16_skip0
+                    LDI     0
+                    SUBW    mathX
+                    STW     mathX
+                    
+divide16_skip0      LDW     mathY                     
+                    BGE     divide16_skip1
+                    LDI     0
+                    SUBW    mathY
+                    STW     mathY
+                    
+divide16_skip1      LDI     0
+                    STW     mathRem
+    
+divide16_loop       STW     mathScratch
+                    LDW     mathRem
+                    ADDW    mathRem
+                    STW     mathRem
+                    LDW     mathX
+                    BGE     divide16_skip3
+                    INC     mathRem
+                    
+divide16_skip3      LDW     mathX
+                    ADDW    mathX
+                    STW     mathX
+                    LDW     mathRem
+                    SUBW    mathY
+                    BLT     divide16_skip4
+                    STW     mathRem
+                    INC     mathX
+                    
+divide16_skip4      PUSH
+                    CALL    realTimeProcAddr
+                    POP
+                    LDW     mathScratch
+                    ADDI    1
+                    ANDI    0x0F
+                    BNE     divide16_loop
+                    LDW     mathSign
+                    BGE     divide16_exit
+                    LDI     0
+                    SUBW    mathX
+                    RET
+                    
+divide16_exit       LDW     mathX
+                    RET
+
+
+                    ; find numeric label and call it, (it had better return or welcome to lala land)
+gosubNumericLabel   PUSH
+                    LDWI    _lut_numericLabs
+                    STW     lutLabs
+                    STW     lutIndex
+                    LDWI    _lut_numericAddrs
+                    STW     lutAddrs
+                    
+gosubNL_loop        LDW     lutIndex
+                    DEEK
+                    STW     lutLabel
+                    LD      lutLabel + 1
+                    ANDI    0x80                            ; check for -1
+                    BEQ     gosubNL_cont
+                    LDW     defaultLabel
+                    BEQ     gosubNL_exit
+                    CALL    defaultLabel                    ; fetch default address and call
+                    
+gosubNL_exit        POP
+                    RET
+                    
+gosubNL_cont        LDW     lutLabel
+                    SUBW    numericLabel
+                    BEQ     gosubNL_found
+                    INC     lutIndex
+                    INC     lutIndex                        ; loop through lut until found or -1
+                    BRA     gosubNL_loop
+                    
+gosubNL_found       LDW     lutIndex
+                    SUBW    lutLabs
+                    ADDW    lutAddrs
+                    DEEK
+                    CALL    giga_vAC                        ; fetch label address and call
+                    POP
+                    RET
+
+
+
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+xreset              EQU     register0
+xcount              EQU     register1
+ycount              EQU     register2
+treset              EQU     register3
+breset              EQU     register8
+top                 EQU     register9
+bot                 EQU     register10
+vramAddr            EQU     register11
+evenAddr            EQU     register12
+clsAddress          EQU     register13
+    
+    
+                    ; resets video table pointers
+resetVideoTable     PUSH
+                    LDI     8
+                    STW     vramAddr
+                    LDWI    giga_videoTable
+                    STW     evenAddr
+    
+resetVT_loop        CALL    realTimeProcAddr
+                    LDW     vramAddr
+                    DOKE    evenAddr
+                    INC     evenAddr
+                    INC     evenAddr
+                    INC     vramAddr
+                    LD      vramAddr
+                    SUBI    giga_yres + 8
+                    BLT     resetVT_loop
+                    POP
+                    RET
+
+
+initClearFuncs      PUSH
+                    LDWI    resetVideoTable
+                    CALL    giga_vAC
+    
+                    LDWI    0x0002                              ; starting cursor position
+                    STW     cursorXY
+                    LDWI    0x7FFF
+                    ANDW    miscFlags
+                    STW     miscFlags                           ; reset on bottom row flag
+            
+                    LD      fgbgColour
+                    ST      giga_sysArg0
+                    ST      giga_sysArg0 + 1
+                    ST      giga_sysArg2
+                    ST      giga_sysArg2 + 1                    ; 4 pixels of fg colour
+    
+                    LDWI    SYS_Draw4_30                        ; setup 4 pixel SYS routine
+                    STW     giga_sysFn
+                    POP
+                    RET
+
+
+                    ; clears the viewable screen using a vertical blinds effect
+clearVertBlinds     PUSH
+                    LDWI    initClearFuncs
+                    CALL    giga_vAC
+
+                    LDWI    giga_vram
+                    STW     giga_sysArg4
+                    LD      giga_sysArg4 + 1
+                    ST      top
+    
+clearVB_loop        CALL    realTimeProcAddr
+                    LD      top
+                    ST      giga_sysArg4 + 1                    ; top line
+                    SYS     0xFF                                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+    
+                    LDWI    giga_yres - 1 + 16
+                    SUBW    top
+                    ST      giga_sysArg4 + 1                    ; bottom line
+                    SYS     0xFF                                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+    
+                    LD      giga_sysArg4
+                    ADDI    0x04
+                    ST      giga_sysArg4
+                    SUBI    giga_xres
+                    BLT     clearVB_loop
+    
+                    LDI     0
+                    ST      giga_sysArg4
+                    INC     top                                 ; next top line
+                    LD      top
+                    SUBI    giga_yres / 2 + 8
+                    BLT     clearVB_loop
+                    POP
+                    RET
+
+
+
+
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+graphicsMode        EQU     register0
+waitVBlankNum       EQU     register0
+
+drawHLine_x1        EQU     register0
+drawHLine_y1        EQU     register1
+drawHLine_x2        EQU     register2
+drawHLine_x4        EQU     register3
+
+drawVLine_x1        EQU     register0
+drawVLine_y1        EQU     register1
+drawVLine_y2        EQU     register2
+drawVLine_y8        EQU     register3
+
+drawLine_x1         EQU     register0
+drawLine_y1         EQU     register1
+drawLine_x2         EQU     register2
+drawLine_y2         EQU     register3
+drawLine_xy1        EQU     register0
+drawLine_xy2        EQU     register1
+drawLine_dxy1       EQU     register2
+drawLine_dxy2       EQU     register3
+drawLine_dx1        EQU     register4
+drawLine_dy1        EQU     register5
+drawLine_dx2        EQU     register6
+drawLine_dy2        EQU     register7
+drawLine_sx         EQU     register8
+drawLine_sy         EQU     register9
+drawLine_h          EQU     register10
+drawLine_num        EQU     register11
+drawLine_count      EQU     register12
+drawLine_addr       EQU     register13
+drawLine_tmp        EQU     register14
+    
+    
+drawLine            PUSH                        ; matches drawLineLoop's POP
+                    LDI     1
+                    STW     drawLine_dx1
+                    STW     drawLine_dx2
+                    STW     drawLine_dy1
+                    LDI     0
+                    STW     drawLine_dy2                
+    
+                    LDWI    0x8000
+                    STW     drawLine_tmp
+                    
+                    LDW     drawLine_x2         ; sx = x2 - x1
+                    SUBW    drawLine_x1
+                    STW     drawLine_sx
+                    ANDW    drawLine_tmp        
+                    BEQ     drawL_dy
+                    LDWI    -1
+                    STW     drawLine_dx1        
+                    STW     drawLine_dx2        ; dx1 = dx2 = (sx & 0x8000) ? -1 : 1
+                    LDI     0                   ; sx = (sx & 0x8000) ? 0 - sx : sx
+                    SUBW    drawLine_sx
+                    STW     drawLine_sx                
+                    
+drawL_dy            LDW     drawLine_y2
+                    SUBW    drawLine_y1
+                    STW     drawLine_sy
+                    STW     drawLine_h          ; h = sy
+                    ANDW    drawLine_tmp
+                    BEQ     drawL_ext
+                    
+                    LDWI    -1
+                    STW     drawLine_dy1        ; dy1 = (sy & 0x8000) ? -1 : 1
+                    LDI     0                   
+                    SUBW    drawLine_sy
+                    STW     drawLine_sy         ; sy = (sy & 0x8000) ? 0 - sy : sy
+                    SUBW    drawLine_sx
+                    BLE     drawL_ext           
+                    LDW     drawLine_dy1
+                    STW     drawLine_dy2        ; if(sx < sy) dy2 = -1
+    
+drawL_ext           LDWI    drawLineLoadXY
+                    CALL    giga_vAC
+                    LDWI    drawLineExt
+                    CALL    giga_vAC
+
+
+
+drawLineExt         LDW     drawLine_sy
+                    SUBW    drawLine_sx
+                    BLE     drawL_num
+                    LDI     0
+                    STW     drawLine_dx2        ; if(sx < sy) dx2 = 0
+                    LDW     drawLine_sy       
+                    STW     drawLine_tmp
+                    LDW     drawLine_sx
+                    STW     drawLine_sy
+                    LDW     drawLine_tmp
+                    STW     drawLine_sx         ; swap sx with sy
+                    LDW     drawLine_h
+                    BLE     drawL_num
+                    LDI     1
+                    STW     drawLine_dy2        ; if(h > 0) dy2 = 1
+    
+drawL_num           LDWI    SYS_LSRW1_48
+                    STW     giga_sysFn          
+                    LDW     drawLine_sx
+                    SYS     0xF6                ; 0xF6 = 270-max(14,48/2)
+                    ADDI    1
+                    STW     drawLine_num        ; numerator = sx>>1
+                    STW     drawLine_count      ; for(count=sx>>1; counti>=0; --i)
+                    
+                    LDWI    drawLineLoadDXY
+                    CALL    giga_vAC
+                    LDWI    drawLineLoop
+                    CALL    giga_vAC
+
+
+drawLineLoop        LD      fgbgColour + 1
+                    POKE    drawLine_xy1        ; plot start pixel
+                    POKE    drawLine_xy2        ; plot end pixel, (meet in middle)
+                    
+                    LDW     drawLine_num        ; numerator += sy
+                    ADDW    drawLine_sy
+                    STW     drawLine_num
+                    SUBW    drawLine_sx
+                    BLE     drawL_flip          ; if(numerator <= sx) goto flip
+                    STW     drawLine_num        ; numerator -= sx
+                    
+                    LDW     drawLine_xy1
+                    ADDW    drawLine_dxy1
+                    STW     drawLine_xy1        ; xy1 += dxy1
+                    
+                    LDW     drawLine_xy2
+                    SUBW    drawLine_dxy1
+                    STW     drawLine_xy2        ; xy2 -= dxy1
+                    BRA     drawL_count
+                    
+drawL_flip          LDW     drawLine_xy1        
+                    ADDW    drawLine_dxy2
+                    STW     drawLine_xy1        ; xy1 += dxy2
+                    
+                    LDW     drawLine_xy2        
+                    SUBW    drawLine_dxy2
+                    STW     drawLine_xy2        ; xy2 -= dxy2
+                    
+drawL_count         CALL    realTimeProcAddr
+                    LDW     drawLine_count
+                    SUBI    0x01
+                    STW     drawLine_count
+                    BGT     drawLineLoop
+                    POP                         ; matches drawLine's PUSH
+                    RET
+
+
+drawLineLoadXY      LD      drawLine_x1
+                    ST      drawLine_xy1
+                    LD      drawLine_y1
+                    ADDI    8
+                    ST      drawLine_xy1 + 1    ; xy1 = x1 | ((y1+8)<<8)
+                    
+                    LD      drawLine_x2
+                    ST      drawLine_xy2
+                    LD      drawLine_y2
+                    ADDI    8
+                    ST      drawLine_xy2 + 1    ; xy2 = x2 | ((y2+8)<<8)
+                    RET
+                    
+drawLineLoadDXY     LDWI    SYS_LSLW8_24
+                    STW     giga_sysFn          
+                    LDW     drawLine_dy1
+                    SYS     0x00                ; LSL 8, 0x00 = 270-max(14,24/2)
+                    ADDW    drawLine_dx1
+                    STW     drawLine_dxy1       ; dxy1 = dx1 + (dy1<<8)
+    
+                    LDW     drawLine_dy2
+                    SYS     0x00                ; LSL 8, 0x00 = 270-max(14,24/2)
+                    ADDW    drawLine_dx2
+                    STW     drawLine_dxy2       ; dxy2 = dx2 + (dy2<<8)
+                    RET
+

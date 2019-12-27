@@ -1,0 +1,116 @@
+_runtimeStart_ &h87FF
+
+const videoTableEnd = &h01F0
+videoTable = &h0100
+scanLine = &h00
+pageFlip = &h00
+
+'DRAW 3D CUBE WITH SOME
+'ROTATION AROUND X
+
+K=0:X=K:M=X:N=M:I=N:A=I:B=A:L=B:F=L
+DIM P(7)=0 : DIM PP(7)=0
+DIM Q(7)=0 : DIM QQ(7)=0
+
+mode 3
+
+' disable video, (except last line so that we don't lose sync), for fast cls, cls both buffers, enable video
+poke &h01F9, 238
+cls : cls &h8800
+poke &h01F9, 0
+
+10 U=48:GOTO setup
+
+'ROTATION AND PROJECTION
+20 R=K+L+F
+25 P(I)=80+X/R
+30 Q(I)=60+(M-N)/R
+35 P(I+4)=160-P(I)
+40 Q(I+4)=Q(I)
+45 INC I:RETURN
+
+50 LINE P(A), Q(A)+pageFlip, P(B), Q(B)+pageFlip
+   return
+
+60 LINE PP(A), QQ(A)+pageFlip, PP(B), QQ(B)+pageFlip
+   return
+
+' S=SIN C=COS F=FLEN
+setup: 
+    S=45:C=45:F=4*U
+    gosub process
+    gosub draw
+    pageFlip = &h80
+
+loop: 
+    gosub peek(17)
+goto loop
+
+process: 
+    for j=0 to 7 : PP(j)=P(j) : QQ(j)=Q(j) : next j
+    I=0:X=U*U
+    K=S:M=U*C
+    L=C:N=U*S:GOSUB 20
+    L=-L:N=-N:GOSUB 20
+    K=-K:M=-M:GOSUB 20
+    L=-L:N=-N:GOSUB 20
+return
+
+draw: 
+    A=0:B=1:GOSUB 50
+    A=1:B=2:GOSUB 50
+    A=2:B=3:GOSUB 50
+    A=3:B=0:GOSUB 50
+    A=4:B=5:GOSUB 50
+    A=5:B=6:GOSUB 50
+    A=6:B=7:GOSUB 50
+    A=7:B=4:GOSUB 50
+    A=4:B=0:GOSUB 50
+    A=5:B=1:GOSUB 50
+    A=6:B=2:GOSUB 50
+    A=7:B=3:GOSUB 50
+return
+
+erase: 
+    A=0:B=1:GOSUB 60
+    A=1:B=2:GOSUB 60
+    A=2:B=3:GOSUB 60
+    A=3:B=0:GOSUB 60
+    A=4:B=5:GOSUB 60
+    A=5:B=6:GOSUB 60
+    A=6:B=7:GOSUB 60
+    A=7:B=4:GOSUB 60
+    A=4:B=0:GOSUB 60
+    A=5:B=1:GOSUB 60
+    A=6:B=2:GOSUB 60
+    A=7:B=3:GOSUB 60
+return
+
+254: S = S + 5 : if S &>= 90 then S = 0
+     C = 90 - S
+
+     poke 163, &h0F : gosub process : gosub draw
+     gosub flip
+     poke 163, &h20 : gosub erase
+     return
+     
+253: S = S - 5 : if S &<= 0 then S = 90
+     C = 90 - S
+    
+     poke 163, &h0F : gosub process : gosub draw
+     gosub flip
+     poke 163, &h20 : gosub erase
+     return
+     
+flip: 
+    videoTable = &h0100
+    scanLine = pageFlip OR &h08
+    repeat
+        poke videoTable, scanLine
+        inc scanLine
+        inc videoTable
+        inc videoTable
+    until videoTable &&= videoTableEnd
+       
+    pageFlip = pageFlip XOR &h80
+return

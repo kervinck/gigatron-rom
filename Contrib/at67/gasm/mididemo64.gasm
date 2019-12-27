@@ -1,5 +1,5 @@
-%include macros\gigatron.i
-%include macros\macros.i
+%include include\gigatron.i
+%include include\macros.i
 
 vram            EQU     0x0800
     
@@ -403,7 +403,7 @@ playM_delay     LD      giga_frameCount     ; midiDelay = (midiCommand + peek(fr
 
 midiStartNote   LDWI    giga_notesTable     ; note table in ROM
                 STW     scratch
-                LDW     midiStreamPtr       ; midi score
+                LDW     midiStreamPtr       ; ROM pointer = (Peek(midiStreamPtr) - 11)*2) + giga_notesTable
                 PEEK
                 SUBI    11
                 LSLW

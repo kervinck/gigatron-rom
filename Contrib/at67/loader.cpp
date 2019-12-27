@@ -31,9 +31,10 @@
 #include "memory.h"
 #include "cpu.h"
 #include "loader.h"
-#include "compiler.h"
-#include "assembler.h"
 #include "expression.h"
+#include "assembler.h"
+#include "compiler.h"
+#include "keywords.h"
 
 
 #define DEFAULT_COM_BAUD_RATE 115200
@@ -44,6 +45,9 @@
 
 namespace Loader
 {
+    bool _hostIsBigEndian = false;
+
+
     bool loadGt1File(const std::string& filename, Gt1File& gt1File)
     {
         std::ifstream infile(filename, std::ios::binary | std::ios::in);
@@ -138,6 +142,14 @@ namespace Loader
             {
                 int j = 0;
                 int seg = gt1File._segments[i]._loAddress - start;
+                if(page0._dataBytes.size() < seg + gt1File._segments[i]._dataBytes.size())
+                {
+                    fprintf(stderr, "* Can't Merge: start: 0x%0x  end: 0x%02x  size: 0x%02x\n", gt1File._segments[0]._loAddress, 
+                                                                                                gt1File._segments[0]._loAddress + uint8_t(gt1File._segments[0]._dataBytes.size()) - 1, 
+                                                                                                uint8_t(gt1File._segments[0]._dataBytes.size()));
+                    return false;
+                }
+
                 for(int k=seg; k<seg+gt1File._segments[i]._dataBytes.size(); k++)
                 {
                     page0._dataBytes[k] = gt1File._segments[i]._dataBytes[j++];
@@ -202,7 +214,9 @@ namespace Loader
             if(gt1File._segments[i]._hiAddress)
             {
                 uint16_t address = gt1File._segments[i]._loAddress + (gt1File._segments[i]._hiAddress <<8);
-                if((address + gt1File._segments[i]._dataBytes.size() - 1) < Memory::getSizeRAM()) totalSize += int(gt1File._segments[i]._dataBytes.size());
+                int segmentSize = (gt1File._segments[i]._segmentSize == 0) ? 256 : gt1File._segments[i]._segmentSize;
+                if((address + segmentSize - 1) < Memory::getSizeRAM()) totalSize += segmentSize;
+                if((address & 0x00FF) + segmentSize > 256) fprintf(stderr, "Loader::printGt1Stats() : Page overflow, segment %d : address 0x%04x : segmentSize %3d\n", i, address, segmentSize);
             }
         }
         uint16_t startAddress = gt1File._loStart + (gt1File._hiStart <<8);
@@ -321,12 +335,14 @@ namespace Loader
     {
         result = iniReader.Get(sectionString, iniKey, defaultKey);
         if(result == defaultKey) return false;
-        if(upperCase) result = Expression::strToUpper(result);
+        if(upperCase) Expression::strToUpper(result);
         return true;
     }
 
     void initialise(void)
     {
+        if(Cpu::getHostEndianess() == Cpu::BigEndian) _hostIsBigEndian = true;
+
         _numComPorts = comEnumerate();
         if(_numComPorts == 0) fprintf(stderr, "Loader::initialise() : no COM ports found.\n");
 
@@ -507,9 +523,24 @@ namespace Loader
         return true;
     }
 
+    void openComPort(void)
+    {
+        openComPort(_configComPort);
+    }
+
     void closeComPort(void)
     {
         comClose(_currentComPort);
+    }
+
+    bool readCharGiga(char* chr)
+    {
+        return (comRead(_currentComPort, chr, 1) == 1);
+    }
+
+    bool sendCharGiga(char chr)
+    {
+        return (comWrite(_currentComPort, &chr, 1) == 1);
     }
 
     bool readLineGiga(std::string& line)
@@ -520,7 +551,10 @@ namespace Loader
 
         while(buffer != '\n')
         {
-            if(comRead(_currentComPort, &buffer, 1)) line.push_back(buffer);
+            if(comRead(_currentComPort, &buffer, 1))
+            {
+                if((buffer >= 32  &&  buffer <= 126)  ||  buffer == '\n') line.push_back(buffer);
+            }
             double frameTime = double(SDL_GetPerformanceCounter() - prevFrameCounter) / double(SDL_GetPerformanceFrequency());
             if(frameTime > _configTimeOut) return false;
         }
@@ -531,19 +565,53 @@ namespace Loader
         return true;
     }
 
+    bool readLineGiga(std::vector<std::string>& text)
+    {
+        std::string line;
+        if(!readLineGiga(line))
+        {
+            fprintf(stderr, "Loader::readLineGiga() : timed out on serial port : %s\n", comGetPortName(_currentComPort));
+            return false;
+        }
+
+        text.push_back(line);
+
+        return true;
+    }
+
+    bool readUntilPromptGiga(std::vector<std::string>& text)
+    {
+        std::string line;
+        do
+        {
+            if(!readLineGiga(line))
+            {
+                fprintf(stderr, "Loader::readUntilPromptGiga() : timed out on serial port : %s\n", comGetPortName(_currentComPort));
+                return false;
+            }
+
+            text.push_back(line);
+        }
+        while(line.find('?') == std::string::npos);
+
+        return true;
+    }
+
     bool waitForPromptGiga(std::string& line)
     {
         do
         {
             if(!readLineGiga(line))
             {
-                fprintf(stderr, "Loader::waitForPromptGiga() : timed out on serial port : '%s'\n", comGetPortName(_currentComPort));
+                fprintf(stderr, "Loader::waitForPromptGiga() : timed out on serial port : %s\n", comGetPortName(_currentComPort));
                 return false;
             }
 
+            //fprintf(stderr, "Loader::waitForPromptGiga() : %s\n", line.c_str());
+
             if(size_t e = line.find('!') != std::string::npos)
             {
-                fprintf(stderr, "Loader::waitForPromptGiga() : Arduino Error : '%s'\n", &line[e]);
+                fprintf(stderr, "Loader::waitForPromptGiga() : Arduino Error : %s\n", &line[e]);
                 return false;
             }
         }
@@ -551,7 +619,6 @@ namespace Loader
 
         return true;
     }
-    
 
     void sendCommandToGiga(char cmd, std::string& line, bool wait)
     {
@@ -571,6 +638,19 @@ namespace Loader
 
         closeComPort();
     }
+
+    bool sendCommandToGiga(std::string& cmd, std::vector<std::string>& text)
+    {
+        if(!openComPort(_configComPort)) return false;
+
+        comWrite(_currentComPort, cmd.c_str(), cmd.size());
+        bool success = readUntilPromptGiga(text);
+
+        closeComPort();
+
+        return success;
+    }
+
 
     int uploadToGigaThread(void* userData)
     {
@@ -653,7 +733,6 @@ namespace Loader
             return false;
         }
 
-        // TODO: endian
         // Load counts
         uint16_t numCounts = 0;
         infile.read((char *)&numCounts, 2);
@@ -662,6 +741,7 @@ namespace Loader
             fprintf(stderr, "Loader::loadDataFile() : read error in number of counts in '%s'\n", filename.c_str());
             return false;
         }
+        if(_hostIsBigEndian) Cpu::swapEndianess(numCounts);
         for(int i=0; i<numCounts; i++)
         {
             uint16_t count;
@@ -671,10 +751,10 @@ namespace Loader
                 fprintf(stderr, "Loader::loadDataFile() : read error in counts of '%s'\n", filename.c_str());
                 return false;
             }
+            if(_hostIsBigEndian) Cpu::swapEndianess(count);
             sdata._counts[i] = count;
         }         
 
-        // TODO: endian
         // Load addresses
         uint16_t numAddresses = 0;
         infile.read((char *)&numAddresses, 2);
@@ -683,6 +763,7 @@ namespace Loader
             fprintf(stderr, "Loader::loadDataFile() : read error in number of addresses in '%s'\n", filename.c_str());
             return false;
         }
+        if(_hostIsBigEndian) Cpu::swapEndianess(numAddresses);
         for(int i=0; i<numAddresses; i++)
         {
             uint16_t address;
@@ -692,6 +773,7 @@ namespace Loader
                 fprintf(stderr, "Loader::loadDataFile() : read error in addresses of '%s'\n", filename.c_str());
                 return false;
             }
+            if(_hostIsBigEndian) Cpu::swapEndianess(address);
             sdata._addresses[i] = address;
         }         
 
@@ -726,7 +808,7 @@ namespace Loader
     }
 
     // Only for emulation
-    bool saveDataFile(const SaveData& saveData)
+    bool saveDataFile(SaveData& saveData)
     {
         std::string filename = saveData._filename + ".dat";
         std::ofstream outfile(filename, std::ios::binary | std::ios::out);
@@ -742,10 +824,11 @@ namespace Loader
             return false;
         }
 
-        // TODO: endian
         // Save counts
         uint16_t numCounts = uint16_t(saveData._counts.size());
+        if(_hostIsBigEndian) Cpu::swapEndianess(numCounts);
         outfile.write((char *)&numCounts, 2);
+        if(_hostIsBigEndian) Cpu::swapEndianess(numCounts);
         if(outfile.bad() || outfile.fail())
         {
             fprintf(stderr, "Loader::saveDataFile() : write error in number of counts of '%s'\n", filename.c_str());
@@ -753,7 +836,9 @@ namespace Loader
         }
         for(int i=0; i<numCounts; i++)
         {
+            if(_hostIsBigEndian) Cpu::swapEndianess(saveData._counts[i]);
             outfile.write((char *)&saveData._counts[i], 2);
+            if(_hostIsBigEndian) Cpu::swapEndianess(saveData._counts[i]);
             if(outfile.bad() || outfile.fail())
             {
                 fprintf(stderr, "Loader::saveDataFile() : write error in counts of '%s'\n", filename.c_str());
@@ -763,7 +848,9 @@ namespace Loader
 
         // Save addresses
         uint16_t numAddresses = uint16_t(saveData._addresses.size());
+        if(_hostIsBigEndian) Cpu::swapEndianess(numAddresses);
         outfile.write((char *)&numAddresses, 2);
+        if(_hostIsBigEndian) Cpu::swapEndianess(numAddresses);
         if(outfile.bad() || outfile.fail())
         {
             fprintf(stderr, "Loader::saveDataFile() : write error in number of addresses of '%s'\n", filename.c_str());
@@ -771,7 +858,9 @@ namespace Loader
         }
         for(int i=0; i<numAddresses; i++)
         {
+            if(_hostIsBigEndian) Cpu::swapEndianess(saveData._addresses[i]);
             outfile.write((char *)&saveData._addresses[i], 2);
+            if(_hostIsBigEndian) Cpu::swapEndianess(saveData._addresses[i]);
             if(outfile.bad() || outfile.fail())
             {
                 fprintf(stderr, "Loader::saveDataFile() : write error in addresses of '%s'\n", filename.c_str());
@@ -995,10 +1084,6 @@ namespace Loader
         std::string filepath = std::string(Editor::getBrowserPath() + filename);
         std::string gtbFilepath;
 
-        // Reset video table and reset single step watch address to video line counter
-        Graphics::resetVTable();
-        Editor::setSingleStepAddress(VIDEO_Y_ADDRESS);
-
         size_t nameSuffix = filename.find_last_of(".");
         size_t pathSuffix = filepath.find_last_of(".");
         if(nameSuffix == std::string::npos  ||  pathSuffix == std::string::npos)
@@ -1099,7 +1184,7 @@ namespace Loader
             if(!Assembler::assemble(filepath, DEFAULT_START_ADDRESS)) return;
 
             // Found a breakpoint in source code
-            if(Editor::getBreakPointsSize())
+            if(Editor::getVpcBreakPointsSize())
             {
                 Editor::startDebugger();
                 Editor::setEditorMode(Editor::Dasm);
@@ -1163,7 +1248,14 @@ namespace Loader
 
             // Don't save gt1 file for any asm files that contain native rom code
             std::string gt1FileName;
-            if(!hasRomCode  &&  !saveGt1File(filepath, gt1File, gt1FileName)) return;
+            if(!hasRomCode)
+            {
+                if(!saveGt1File(filepath, gt1File, gt1FileName))
+                {
+                    Cpu::reset();
+                    return;
+                }
+            }
 
             gt1FileBuilt = true;
         }
@@ -1191,13 +1283,23 @@ namespace Loader
                 loadGtbFile(gtbFilepath);
             }
 
+            // Reset video table and reset single step watch address to video line counter
+            Graphics::resetVTable();
+            Editor::setSingleStepAddress(VIDEO_Y_ADDRESS);
+
             // Execute code
             if(!_disableUploads  &&  hasRamCode)
             {
+                // vPC
                 Cpu::setRAM(0x0016, LO_BYTE(executeAddress-2));
                 Cpu::setRAM(0x0017, HI_BYTE(executeAddress));
+
+                // vLR
                 Cpu::setRAM(0x001a, LO_BYTE(executeAddress-2));
                 Cpu::setRAM(0x001b, HI_BYTE(executeAddress));
+
+                // Reset stack
+                Cpu::setRAM(STACK_POINTER, 0x00);
             }
 
             //Editor::startDebugger();

@@ -81,10 +81,22 @@ namespace Loader
     void initialise(void);
 
     void disableUploads(bool disable);
+
+    void openComPort(void);
+    void closeComPort(void);
+
+    bool readCharGiga(char* chr);
+    bool readLineGiga(std::string& line);
+    bool readLineGiga(std::vector<std::string>& text);
+    bool readUntilPromptGiga(std::vector<std::string>& text);
+
+    bool sendCharGiga(char chr);
+    void sendCommandToGiga(char cmd, std::string& line, bool wait);
     void sendCommandToGiga(char cmd, bool wait);
+    bool sendCommandToGiga(std::string& cmd, std::vector<std::string>& text);
 
     bool loadDataFile(SaveData& saveData);
-    bool saveDataFile(const SaveData& saveData);
+    bool saveDataFile(SaveData& saveData);
     void loadHighScore(void);
     bool saveHighScore(void);
     void updateHighScore(void);

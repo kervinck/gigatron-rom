@@ -1,0 +1,514 @@
+_startAddress_      EQU                     0x0200
+
+; Internal variables
+register0           EQU                     0x0082
+register1           EQU                     register0 + 0x02
+register2           EQU                     register0 + 0x04
+register3           EQU                     register0 + 0x06
+register4           EQU                     register0 + 0x08
+register5           EQU                     register0 + 0x0A
+register6           EQU                     register0 + 0x0C
+register7           EQU                     register0 + 0x0E
+register8           EQU                     register0 + 0x10
+register9           EQU                     register0 + 0x12
+register10          EQU                     register0 + 0x14
+register11          EQU                     register0 + 0x16
+register12          EQU                     register0 + 0x18
+register13          EQU                     register0 + 0x1A
+register14          EQU                     register0 + 0x1C
+register15          EQU                     register0 + 0x1E
+fgbgColour          EQU                     register0 + 0x20
+cursorXY            EQU                     register0 + 0x22
+midiStream          EQU                     register0 + 0x24
+midiDelay           EQU                     register0 + 0x26
+frameCountPrev      EQU                     register0 + 0x28
+miscFlags           EQU                     register0 + 0x2A
+highByteMask        EQU                     register0 + 0x2C
+
+; Includes
+%include            include/gigatron.i
+%include            include/macros.i
+
+; Labels
+_entryPoint_        EQU                     0x0200
+_1                  EQU                     0x0240
+_10                 EQU                     0x0240
+_20                 EQU                     0x0244
+_30                 EQU                     0x0257
+_40                 EQU                     0x026c
+_50                 EQU                     0x0285
+_end_0x029e         EQU                     0x0298
+
+; Variables
+_Y                  EQU                     0x0030
+_D                  EQU                     0x0032
+_E                  EQU                     0x0034
+_C                  EQU                     0x0036
+
+; Strings
+
+; Define Bytes
+
+; Lookup Tables
+
+; Code
+_entryPoint_        InitRealTimeProc        
+                    InitEqOp                
+                    InitNeOp                
+                    InitLeOp                
+                    InitGeOp                
+                    InitLtOp                
+                    InitGtOp                
+                    Initialise                                              ; INIT
+
+_10                 LDI                     2
+                    STW                     _Y                              ; FOR Y=2 TO 7
+
+_20                 LDW                     _Y
+                    STW                     mathX
+                    LDI                     16
+                    STW                     mathY
+                    LDWI                    multiply16bit
+                    CALL                    giga_vAC
+                    STW                     _D
+                    ADDI                    15
+                    STW                     _E                              ; D=Y*16: E=D+15
+
+_30                 LDI                     32
+                    ST                      cursorXY
+                    LDWI                    atTextCursor
+                    CALL                    giga_vAC
+                    LDW                     _D
+                    STW                     _C
+                    LDW                     _E
+                    STW                     0xb4
+                    LDI                     1
+                    STW                     0xb6                            ; AT 32: FOR C=D TO E
+
+_40                 LDW                     _C
+                    PrintAcChar             
+                    ForNextLoopStepUp       _C _40 0xb4 0xb6                ; PUT C: NEXT C
+
+_50                 LDWI                    newLineScroll
+                    CALL                    giga_vAC
+                    ForNextLoopUp           _Y _20 7                        ; PRINT: NEXT Y
+
+_end_0x029e         BRA                     _end_0x029e                     ; END
+
+
+
+;****************************************************************************************************************************************
+;****************************************************************************************************************************************
+;* Internal runtime, DO NOT MODIFY PAST THIS POINT, modifications must be made in the original include files                            *
+;****************************************************************************************************************************************
+;****************************************************************************************************************************************
+
+realTimeProc        EQU     0x7ea0
+convertEqOp         EQU     0x7ea9
+convertNeOp         EQU     0x7eb2
+convertLeOp         EQU     0x7ebb
+convertGeOp         EQU     0x7ec4
+convertLtOp         EQU     0x7ecd
+convertGtOp         EQU     0x7ed6
+multiply16bit       EQU     0x7dc3
+resetVideoTable     EQU     0x7ccd
+initClearFuncs      EQU     0x7da0
+clearCursorRow      EQU     0x7aa0
+printInit           EQU     0x79a0
+printChr            EQU     0x7edf
+printChar           EQU     0x78a0
+atTextCursor        EQU     0x7ca0
+newLineScroll       EQU     0x7ba0
+realTimeProcAddr    EQU     0x00dc
+convertEqOpAddr     EQU     0x00d0
+convertNeOpAddr     EQU     0x00d2
+convertLeOpAddr     EQU     0x00d4
+convertGeOpAddr     EQU     0x00d6
+convertLtOpAddr     EQU     0x00d8
+convertGtOpAddr     EQU     0x00da
+
+
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+numericLabel        EQU     register0
+defaultLabel        EQU     register1
+lutLabs             EQU     register2
+lutAddrs            EQU     register3
+lutIndex            EQU     register8
+lutLabel            EQU     register9
+
+
+                    ; runs real time, (time sliced), code at regular intervals
+realTimeProc        PUSH
+                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI/SPRITE etc routines
+                    CALL    giga_vAC
+                    POP
+                    RET
+                    
+realTimeStub        RET
+
+
+                    ; convert equal to into a boolean
+convertEqOp         BEQ     convertEq_1
+                    LDI     0
+                    RET
+convertEq_1         LDI     1
+                    RET
+
+
+                    ; convert not equal to into a boolean
+convertNeOp         BNE     convertNe_1
+                    LDI     0
+                    RET
+convertNe_1         LDI     1
+                    RET
+
+
+                    ; convert less than or equal to into a boolean
+convertLeOp         BLE     convertLe_1
+                    LDI     0
+                    RET
+convertLe_1         LDI     1
+                    RET
+
+
+                    ; convert greater than or equal to into a boolean
+convertGeOp         BGE     convertGe_1
+                    LDI     0
+                    RET
+convertGe_1         LDI     1
+                    RET
+
+
+                    ; convert less than into a boolean
+convertLtOp         BLT     convertLt_1
+                    LDI     0
+                    RET
+convertLt_1         LDI     1
+                    RET
+
+
+                    ; convert greater than into boolean
+convertGtOp         BGT     convertGt_1
+                    LDI     0
+                    RET
+convertGt_1         LDI     1
+                    RET
+
+
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+mathX               EQU     register0
+mathY               EQU     register1
+mathSum             EQU     register2
+mathMask            EQU     register3
+mathRem             EQU     register8
+mathSign            EQU     register9
+mathScratch         EQU     register10
+mathShift           EQU     register11
+mathBase            EQU     register8
+mathPow             EQU     register9
+mathResult          EQU     register10
+
+
+                    ; accumulator = mathX * mathY, (result 16bit)
+multiply16bit       LDI     0
+                    STW     mathSum
+                    LDI     1
+    
+multiply16_loop     STW     mathMask
+                    ANDW    mathY
+                    BEQ     multiply16_skip
+                    LDW     mathSum
+                    ADDW    mathX
+                    STW     mathSum
+                    
+multiply16_skip     LDW     mathX
+                    ADDW    mathX
+                    STW     mathX
+                    LDW     mathMask
+                    ADDW    mathMask
+                    BNE     multiply16_loop
+                    PUSH
+                    CALL    realTimeProcAddr
+                    POP
+                    LDW     mathSum
+                    RET
+
+
+
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+xreset              EQU     register0
+xcount              EQU     register1
+ycount              EQU     register2
+treset              EQU     register3
+breset              EQU     register8
+top                 EQU     register9
+bot                 EQU     register10
+vramAddr            EQU     register11
+evenAddr            EQU     register12
+clsAddress          EQU     register13
+    
+    
+                    ; resets video table pointers
+resetVideoTable     PUSH
+                    LDI     8
+                    STW     vramAddr
+                    LDWI    giga_videoTable
+                    STW     evenAddr
+    
+resetVT_loop        CALL    realTimeProcAddr
+                    LDW     vramAddr
+                    DOKE    evenAddr
+                    INC     evenAddr
+                    INC     evenAddr
+                    INC     vramAddr
+                    LD      vramAddr
+                    SUBI    giga_yres + 8
+                    BLT     resetVT_loop
+                    POP
+                    RET
+
+
+initClearFuncs      PUSH
+                    LDWI    resetVideoTable
+                    CALL    giga_vAC
+    
+                    LDWI    0x0002                              ; starting cursor position
+                    STW     cursorXY
+                    LDWI    0x7FFF
+                    ANDW    miscFlags
+                    STW     miscFlags                           ; reset on bottom row flag
+            
+                    LD      fgbgColour
+                    ST      giga_sysArg0
+                    ST      giga_sysArg0 + 1
+                    ST      giga_sysArg2
+                    ST      giga_sysArg2 + 1                    ; 4 pixels of fg colour
+    
+                    LDWI    SYS_Draw4_30                        ; setup 4 pixel SYS routine
+                    STW     giga_sysFn
+                    POP
+                    RET
+
+
+
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+textStr             EQU     register0
+textNum             EQU     register0
+textBak             EQU     register0
+textLen             EQU     register1
+textOfs             EQU     register2
+textChr             EQU     register3
+textHex             EQU     register8
+textFont            EQU     register9
+textSlice           EQU     register10
+scanLine            EQU     register11
+digitMult           EQU     register12
+digitIndex          EQU     register13
+clearLoop           EQU     register14
+    
+    
+printInit           LDWI    SYS_VDrawBits_134
+                    STW     giga_sysFn
+                    LDW     fgbgColour
+                    STW     giga_sysArg0
+                    
+                    LDWI    giga_videoTable
+                    STW     giga_sysArg4
+                    LD      cursorXY + 1
+                    LSLW
+                    ADDW    giga_sysArg4
+                    PEEK
+                    ST      giga_sysArg4 + 1
+                    LD      cursorXY
+                    ST      giga_sysArg4                    ; xy position
+                    RET
+
+
+
+                    ; prints char in textChr for standalone calls
+printChr            PUSH
+                    LDWI    printInit
+                    CALL    giga_vAC
+                    LDWI    printChar
+                    CALL    giga_vAC
+                    POP
+                    RET
+
+
+                    ; prints char in textChr
+printChar           LD      textChr
+                    ANDI    0x7F                            ; char can't be bigger than 127
+                    SUBI    82
+                    BGE     printC_text82
+                    ADDI    50
+                    BLT     printC_exit                     ; char<32 exit
+                    STW     textChr                         ; char-32
+                    LDWI    giga_text32                     ; text font slice base address for chars 32-81
+                    BRA     printC_font
+                    
+printC_text82       STW     textChr                         ; char-82
+                    LDWI    giga_text82                     ; text font slice base address for chars 82+
+                    
+printC_font         STW     textFont
+                    LD      textChr
+                    LSLW    
+                    LSLW    
+                    ADDW    textChr
+                    ADDW    textFont
+                    STW     textFont                        ; char*5 + textFont
+                    LDI     0x05
+
+printC_slice        ST      textSlice
+                    LDW     textFont                        ; text font slice base address
+                    LUP     0x00                            ; get ROM slice
+                    ST      giga_sysArg2
+                    SYS     0xCB                            ; draw vertical slice, SYS_VDrawBits_134, 270 - 134/2 = 0xCB
+                    INC     textFont                        ; next vertical slice
+                    INC     giga_sysArg4                    ; next x
+                    LD      textSlice
+                    SUBI    1
+                    BNE     printC_slice
+                    
+                    ST      giga_sysArg2                    ; result of printC_slice is 0
+                    SYS     0xCB                            ; draw last blank slice
+                    INC     giga_sysArg4                    ; using sysArg4 as a temporary cursor address for multiple char prints
+                    
+                    PUSH
+                    CALL    realTimeProcAddr
+                    LD      cursorXY
+                    ADDI    0x06
+                    ST      cursorXY
+                    SUBI    giga_xres - 5                   ; giga_xres - 6, (154), is last possible char in row
+                    BLT     printC_pop
+                    LDWI    newLineScroll                   ; next row, scroll at bottom
+                    CALL    giga_vAC
+                    
+printC_pop          POP
+
+printC_exit         RET
+
+
+atTextCursor        LD      cursorXY
+                    SUBI    giga_xres
+                    BLT     atTC_skip0
+                    LDI     0
+                    ST      cursorXY
+                    
+atTC_skip0          LD      cursorXY + 1
+                    SUBI    giga_yres
+                    BLT     atTC_skip1
+                    LDI     giga_yres - 1
+                    ST      cursorXY + 1
+                    
+atTC_skip1          LD      cursorXY + 1
+                    SUBI    giga_yres - 8
+                    BGE     atTC_skip2
+                    LDWI    0x7FFF
+                    ANDW    miscFlags
+                    STW     miscFlags                       ; reset on bottom row flag
+                    RET
+                    
+atTC_skip2          LDWI    0x8000
+                    ORW     miscFlags
+                    STW     miscFlags                       ; set on bottom row flag
+                    RET
+
+
+
+                    ; clears the top 8 lines of pixels in preparation of text scrolling
+clearCursorRow      PUSH
+                    LD      fgbgColour
+                    ST      giga_sysArg0
+                    ST      giga_sysArg0 + 1
+                    ST      giga_sysArg2
+                    ST      giga_sysArg2 + 1                ; 4 pixels of colour
+    
+                    LDWI    SYS_Draw4_30                    ; setup 4 pixel SYS routine
+                    STW     giga_sysFn
+    
+                    LDWI    giga_videoTable                 ; current cursor position
+                    PEEK
+                    ST      giga_sysArg4 + 1
+                    LDI     8
+
+clearCR_loopy       ST      clearLoop
+                    CALL    realTimeProcAddr
+                    LDI     giga_xres
+                    
+clearCR_loopx       SUBI    4                               ; loop is unrolled 4 times
+                    ST      giga_sysArg4
+                    SYS     0xFF                            ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+                    SUBI    4
+                    ST      giga_sysArg4
+                    SYS     0xFF                            ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+                    SUBI    4
+                    ST      giga_sysArg4
+                    SYS     0xFF                            ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+                    SUBI    4
+                    ST      giga_sysArg4
+                    SYS     0xFF                            ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+                    BGT     clearCR_loopx
+                    
+                    INC     giga_sysArg4 + 1                ; next line
+                    LD      clearLoop
+                    SUBI    1
+                    BNE     clearCR_loopy
+
+                    LDWI    printInit
+                    CALL    giga_vAC                        ; re-initialise the SYS registers
+                    POP
+                    RET
+
+
+                    ; print from top row to bottom row, then start scrolling 
+newLineScroll       LDI     0x02                            ; x offset slightly
+                    ST      cursorXY
+                    ST      giga_sysArg4
+                    LDWI    0x0001
+                    ANDW    miscFlags
+                    BNE     newLS_cont0                     ; scroll on or off
+                    RET
+                    
+newLS_cont0         PUSH
+                    LDWI    0x8000
+                    ANDW    miscFlags                       ; on bottom row flag
+                    BNE     newLS_cont1
+                    LD      cursorXY + 1
+                    ADDI    8
+                    ST      cursorXY + 1
+                    SUBI    giga_yres
+                    BLT     newLS_exit
+                    LDI     giga_yres - 8
+                    ST      cursorXY + 1
+                    
+newLS_cont1         LDWI    clearCursorRow
+                    CALL    giga_vAC
+                    LDWI    giga_videoTable
+                    STW     scanLine
+    
+newLS_scroll        CALL    realTimeProcAddr
+                    LDW     scanLine
+                    PEEK
+                    ADDI    8
+                    ANDI    0x7F
+                    SUBI    8
+                    BGE     newLS_adjust
+                    ADDI    8
+                    
+newLS_adjust        ADDI    8
+                    POKE    scanLine
+                    INC     scanLine                        ; scanline pointers are 16bits
+                    INC     scanLine
+                    LD      scanLine
+                    SUBI    0xF0                            ; scanline pointers end at 0x01EE
+                    BLT     newLS_scroll
+                    
+                    LDWI    0x8000
+                    ORW     miscFlags
+                    STW     miscFlags                       ; set on bottom row flag
+                    
+newLS_exit          LDWI    printInit
+                    CALL    giga_vAC                        ; re-initialise the SYS registers
+                    POP
+                    RET
+

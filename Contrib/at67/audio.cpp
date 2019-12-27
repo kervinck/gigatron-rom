@@ -41,7 +41,7 @@ namespace Audio
     {
         result = _configIniReader.Get(sectionString, iniKey, defaultKey);
         if(result == defaultKey) return false;
-        result = Expression::strToUpper(result);
+        Expression::strToUpper(result);
         return true;
     }
 
@@ -136,17 +136,13 @@ namespace Audio
 
     void playSample(void)
     {
-        double ratio = 1.0;
-        if(Timing::getFrameTime()) ratio = std::max(1.0, VSYNC_TIMING_60 / std::min(Timing::getFrameTime(), VSYNC_TIMING_60));
+        uint16_t sample = (Cpu::getXOUT() & 0xf0) <<5;
+        SDL_QueueAudio(_audioDevice, &sample, 2);
+    }
 
-        static double skip = 0.0;
-        uint64_t count = uint64_t(skip);
-        skip += 1.0 / ratio;
-        if(uint64_t(skip) > count)
-        {
-            uint16_t sample = (Cpu::getXOUT() & 0xf0) <<5;
-            SDL_QueueAudio(_audioDevice, &sample, 2);
-        }
+    void clearQueue(void)
+    {
+        SDL_ClearQueuedAudio(_audioDevice);
     }
 
 

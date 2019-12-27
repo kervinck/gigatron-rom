@@ -2,7 +2,7 @@
 **_gtemuAT67_** is an emulator, a cross assembler for both vCPU and Native asm code, a debugger, a monitor<br/>
 and a real time controller for Gigatron TTL hardware; written in C++ using SDL2.<br/>
 This project provides support for Microsoft Windows and should be compatible with Linux, MacOS<br/>
-and possibly even Android. As of v0.8.7 it has only been tested on Microsoft Windows10 and Linux.<br/>
+and possibly even Android. As of v0.8.17 it has been tested on Microsoft Windows10, some flavours of Linux and MacOS.<br/>
 
 ## Features
 - Can control real Gigatron hardware through an Arduino interface.<br/>

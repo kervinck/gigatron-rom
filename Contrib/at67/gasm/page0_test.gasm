@@ -1,4 +1,4 @@
-%include macros/gigatron.i
+%include include/gigatron.i
 
 
 _startAddress_      EQU     0x0200              ; entry point for the code, if this is missing defaults to 0x0200

@@ -9,16 +9,18 @@
 #define RAM_SIZE_LO (1<<15)
 #define RAM_SIZE_HI (1<<16)
 
-#define RAM_USED_DEFAULT  19986 // ignores page 0, would be 19779 otherwise
+#define RAM_USED_DEFAULT  19986 // page0=256 + page1=256 + page2=6 + page3=6 + page4=6 + page7=256 + 160*120
 
 #define RAM_PAGE_START_0  0x0200
 #define RAM_PAGE_START_1  0x0300
 #define RAM_PAGE_START_2  0x0400
 #define RAM_PAGE_START_3  0x0500
-#define RAM_PAGE_SIZE_0   248
-#define RAM_PAGE_SIZE_1   248
-#define RAM_PAGE_SIZE_2   248
+#define RAM_PAGE_START_4  0x0600
+#define RAM_PAGE_SIZE_0   250
+#define RAM_PAGE_SIZE_1   250
+#define RAM_PAGE_SIZE_2   250
 #define RAM_PAGE_SIZE_3   256
+#define RAM_PAGE_SIZE_4   256
 
 #define RAM_STACK_START  0x0600
 #define RAM_STACK_SIZE   256
@@ -28,12 +30,13 @@
 #define RAM_VIDEO_SIZE   160
 
 #define RAM_SEGMENTS_START  0x08A0
-#define RAM_SEGMENTS_END    0x6FA0
+#define RAM_SEGMENTS_END    0x7FA0
 #define RAM_SEGMENTS_OFS    0x0100
 #define RAM_SEGMENTS_SIZE   96
 
 #define RAM_EXPANSION_START  0x8000
 #define RAM_EXPANSION_SIZE   0x8000
+#define RAM_EXPANSION_SEG    256
 
 #define GTB_LINE0_ADDRESS     0x1BA0
 #define MAX_GTB_LINE_SIZE     32
@@ -47,8 +50,8 @@
  
 namespace Memory
 {
-    enum FitType {FitSmallest, FitLargest, FitAscending, NumFitTypes};
-    enum RamType {RamVasm=0, RamVar, RamStr, RamArray, RamStack, NumRamTypes};
+    enum FitType {FitSmallest, FitLargest, FitAscending, FitDescending, NumFitTypes};
+    enum SortType {AddressDescending, AddressAscending, SizeAscending, SizeDescending, NumSortTypes};
 
     struct RamEntry
     {
@@ -65,9 +68,12 @@ namespace Memory
     void setSizeRAM(int sizeRAM);
     void setSizeFreeRAM(int freeRAM);
 
-    void intitialise(void);
+    void initialise(void);
 
-    bool getRAM(FitType fitType, RamType ramType, int size, uint16_t& address);
+    bool takeFreeRAM(uint16_t address, int size);
+    bool giveFreeRAM(FitType fitType, int size, uint16_t min, uint16_t max, uint16_t& address);
+
+    void printFreeRamList(SortType sortType=AddressAscending);
 }
 
 #endif

@@ -1,4 +1,4 @@
-%include ../macros/gigatron.i
+%include ../include/gigatron.i
 
 ; 0x30 -> 0x38  Vars
 ; 0x3A -> 0x45  Midi
@@ -189,14 +189,6 @@ entry_point     LDWI    giga_vram
                 CALL    resetAudio
                 CALL    clearScreen
                 CALL    drawTetrisField
-
-                ; shift right by 4 test
-                ;LDWI    SYS_LSRW4_50        ; setup >>4 SYS routine
-                ;STW     giga_sysFn
-                ;LDWI    0xFF00
-                ;SYS     0xF5            ; SYS_Draw4_50, 270 - 50/2 = 0xF5
-                ;STW     scratch
-                ;gprintf("Scratch = %04x", *scratch)
 
 restart         CALL    resetLevel
                 CALL    resetScore

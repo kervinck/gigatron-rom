@@ -1,0 +1,32 @@
+
+'9 MODE 2:P=257:Q=385:R=387:X=0
+'10 WAIT 1:POKE P,-X:POKE Q,X
+'20 POKE R,X:X=X-1:GOTO &10
+
+'31 'Simple scrolling demo.
+'32 'Timing is critical,
+'33 'and BASIC *was* a bit too
+'34 'slow for very complex
+'35 'or smooth scrolling.
+'36 'It is still possible!
+
+_runtimeStart_ &h06FF
+
+mode 0
+x = 0
+
+loop:
+    wait 1
+    poke &h0101, x
+    p = &h0111
+    x2 = x + x
+    nx2 = -x2
+    
+    repeat
+        poke p, nx2
+        poke p + 16, x2
+        p = p + 32
+    until p &&>= &h01D1
+
+    inc x
+    goto loop

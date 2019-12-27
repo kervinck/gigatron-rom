@@ -78,14 +78,6 @@ namespace Assembler
         std::vector<std::string> _lines;
     };
 
-    struct LineToken
-    {
-        bool _fromInclude = false;
-        int _includeLineNumber;
-        std::string _text;
-        std::string _includeName;
-    };
-
     struct Gprintf
     {
         enum Type {Chr, Int, Bin, Oct, Hex, Str};
@@ -110,6 +102,8 @@ namespace Assembler
 
     int _lineNumber;
 
+    bool _useOpcodeCALLI_ = false;
+
     uint16_t _byteCount = 0;
     uint16_t _callTablePtr = 0x0000;
     uint16_t _startAddress = DEFAULT_START_ADDRESS;
@@ -133,6 +127,8 @@ namespace Assembler
     std::map<uint8_t, InstructionDasm> _nativeOpcodes;
 
 
+    bool getUseOpcodeCALLI(void) {return _useOpcodeCALLI_;}
+    const std::string& getIncludePath(void) {return _includePath;}
     uint16_t getStartAddress(void) {return _startAddress;}
     int getPrevDasmByteCount(void) {return _prevDasmByteCount;}
     int getCurrDasmByteCount(void) {return _currDasmByteCount;}
@@ -141,6 +137,7 @@ namespace Assembler
     int getDisassembledCodeSize(void) {return int(_disassembledCode.size());}
     DasmCode* getDisassembledCode(int index) {return &_disassembledCode[index % _disassembledCode.size()];}
 
+    void setUseOpcodeCALLI(bool useOpcodeCALLI) {_useOpcodeCALLI_ = useOpcodeCALLI;}
     void setIncludePath(const std::string& includePath) {_includePath = includePath;}
 
 
@@ -204,6 +201,9 @@ namespace Assembler
         _asmOpcodes["ALLOC"] = {0xDF, 0x00, TwoBytes,   vCpu};
         _asmOpcodes["SYS"]   = {0xB4, 0x00, TwoBytes,   vCpu};
         _asmOpcodes["DEF"]   = {0xCD, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["CALLI"] = {0x85, 0x00, ThreeBytes, vCpu};
+        _asmOpcodes["CMPHS"] = {0x1F, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["CMPHU"] = {0x97, 0x00, TwoBytes,   vCpu};
 
         // Gigatron vCPU branch instructions
         _asmOpcodes["BEQ"] = {0x35, 0x3F, ThreeBytes, vCpu};
@@ -271,6 +271,9 @@ namespace Assembler
         _vcpuOpcodes[0xDF] = {0xDF, 0x00, TwoBytes,   vCpu, "ALLOC"};
         _vcpuOpcodes[0xB4] = {0xB4, 0x00, TwoBytes,   vCpu, "SYS"  };
         _vcpuOpcodes[0xCD] = {0xCD, 0x00, TwoBytes,   vCpu, "DEF"  };
+        _vcpuOpcodes[0x85] = {0x85, 0x00, ThreeBytes, vCpu, "CALLI"};
+        _vcpuOpcodes[0x1F] = {0x1F, 0x00, TwoBytes,   vCpu, "CMPHS"};
+        _vcpuOpcodes[0x97] = {0x97, 0x00, TwoBytes,   vCpu, "CMPHU"};
 
         // Gigatron vCPU branch instructions, (this works because condition code is still unique compared to opcodes)
         _vcpuOpcodes[0x3F] = {VCPU_BRANCH_OPCODE, 0x3F, ThreeBytes, vCpu, "BEQ"};
@@ -312,6 +315,8 @@ namespace Assembler
         _reservedWords.push_back("%include");
         _reservedWords.push_back("%MACRO");
         _reservedWords.push_back("%ENDM");
+        _reservedWords.push_back("%SUB");
+        _reservedWords.push_back("%END");
         _reservedWords.push_back("gprintf");
 
         initialiseOpcodes();
@@ -391,7 +396,7 @@ namespace Assembler
         // Special case NOP
         if(instruction == 0x02  &&  data == 0x00)
         {
-            sprintf(mnemonic, _nativeOpcodes[instruction]._mnemonic.c_str());
+            strcpy(mnemonic, _nativeOpcodes[instruction]._mnemonic.c_str());
             return true;
         }
 
@@ -406,7 +411,7 @@ namespace Assembler
 
         // Instruction mnemonic, jump = 0xE0 + (condition codes)
         char instStr[8];
-        (!jump) ? sprintf(instStr, _nativeOpcodes[inst]._mnemonic.c_str()) : sprintf(instStr, _nativeOpcodes[0xE0 + addr]._mnemonic.c_str());
+        (!jump) ? strcpy(instStr, _nativeOpcodes[inst]._mnemonic.c_str()) : strcpy(instStr, _nativeOpcodes[0xE0 + addr]._mnemonic.c_str());
 
         // Effective address string
         char addrStr[12];
@@ -436,8 +441,8 @@ namespace Assembler
         {
             case BUS_D:   sprintf(busStr, "$%02x", data);                          break;
             case BUS_RAM: (!store) ? strcpy(busStr, addrStr) : strcpy(busStr, ""); break;
-            case BUS_AC:  sprintf(busStr, "AC");                                   break;
-            case BUS_IN:  sprintf(busStr, "IN");                                   break;
+            case BUS_AC:  strcpy(busStr, "AC");                                    break;
+            case BUS_IN:  strcpy(busStr, "IN");                                    break;
         }
         
         // Compose instruction string
@@ -503,13 +508,13 @@ namespace Assembler
                     {
                         sprintf(dasmText, "%04x  $%02x $%02x", address, instruction, data0);
                         dasmCode._address = address;
-                        address++;
+                        address = (address + 1) & (Memory::getSizeRAM() - 1);
                         break;
                     }
 
                     sprintf(dasmText, "%04x  %s", address, mnemonic);
                     dasmCode._address = address;
-                    address++;
+                    address = (address + 1) & (Memory::getSizeRAM() - 1);
                 }
                 break;
 
@@ -527,7 +532,7 @@ namespace Assembler
                     {
                         sprintf(dasmText, "%04x  $%02x", address, instruction);
                         dasmCode._address = address;
-                        address++;
+                        address = (address + 1) & (Memory::getSizeRAM() - 1);
                         break;
                     }
 
@@ -540,7 +545,7 @@ namespace Assembler
                         {
                             sprintf(dasmText, "%04x  $%02x", address, instruction);
                             dasmCode._address = address;
-                            address++;
+                            address = (address + 1) & (Memory::getSizeRAM() - 1);
                             break;
                         }
                         foundBranch = true;
@@ -554,7 +559,7 @@ namespace Assembler
                         case ThreeBytes: (foundBranch) ? sprintf(dasmText, "%04x  %-5s $%02x", address, _vcpuOpcodes[instruction]._mnemonic.c_str(), data1) : sprintf(dasmText, "%04x  %-5s $%02x%02x", address, _vcpuOpcodes[instruction]._mnemonic.c_str(), data1, data0); break;
                     }
                     dasmCode._address = address;
-                    address = address + byteSize;
+                    address = (address + byteSize) & (Memory::getSizeRAM() - 1);
 
                     // Save current and previous instruction sizes to allow scrolling
                     getDasmCurrAndPrevByteSize(dasmCode._address, byteSize);
@@ -562,11 +567,12 @@ namespace Assembler
                 break;
             }
 
+            std::string dasmCodeText = std::string(dasmText);
             dasmCode._instruction = instruction;
             dasmCode._byteSize = byteSize;
             dasmCode._data0 = data0;
             dasmCode._data1 = data1;
-            dasmCode._text = (memoryMode == Editor::RAM) ? Expression::strToUpper(std::string(dasmText)) : Expression::strToLower(std::string(dasmText));
+            dasmCode._text = (memoryMode == Editor::RAM) ? Expression::strToUpper(dasmCodeText) : Expression::strToLower(dasmCodeText);
 
             _disassembledCode.push_back(dasmCode);
         }
@@ -731,7 +737,10 @@ namespace Assembler
         input.erase(remove_if(input.begin(), input.end(), isspace), input.end());
 
         // Parse expression and return with a result
-        return Expression::parse((char*)input.c_str(), _lineNumber, result);
+        Expression::Numeric numeric;
+        bool valid = Expression::parse(input, _lineNumber, numeric);
+        result = numeric._value;
+        return valid;
     }
 
     bool searchEquate(const std::string& token, Equate& equate)
@@ -755,7 +764,7 @@ namespace Assembler
         // Expression equates
         Expression::ExpressionType expressionType = Expression::isExpression(token);
         if(expressionType == Expression::Invalid) return false;
-        if(expressionType == Expression::Valid)
+        if(expressionType == Expression::HasOperators)
         {
             int16_t value;
             if(!evaluateExpression(token, false, value)) return false;
@@ -807,6 +816,11 @@ namespace Assembler
                 {
                     _startAddress = equate._operand;
                     _currentAddress = _startAddress;
+                }
+                // Reserved word, (equate), _useOpcodeCALLI_
+                else if(tokens[0] == "_useOpcodeCALLI_")
+                {
+                    _useOpcodeCALLI_ = true;
                 }
 #ifndef STAND_ALONE
                 // Disable upload of the current assembler module
@@ -871,7 +885,7 @@ namespace Assembler
         // Expression labels
         Expression::ExpressionType expressionType = Expression::isExpression(token);
         if(expressionType == Expression::Invalid) return false;
-        if(expressionType == Expression::Valid)
+        if(expressionType == Expression::HasOperators)
         {
             int16_t value;
             if(!evaluateExpression(token, false, value)) return false;
@@ -1004,12 +1018,12 @@ namespace Assembler
                     else
                     {
                         // Normal expression
-                        if(Expression::isExpression(tokens[i]) == Expression::Valid)
+                        if(Expression::isExpression(tokens[i]) == Expression::HasOperators)
                         {
-                            int16_t value;
-                            if(Expression::parse((char*)tokens[i].c_str(), _lineNumber, value))
+                            Expression::Numeric value;
+                            if(Expression::parse(tokens[i], _lineNumber, value))
                             {
-                                operand = uint8_t(value);
+                                operand = uint8_t(value._value);
                                 success = true;
                             }
                         }
@@ -1065,12 +1079,12 @@ namespace Assembler
                 else
                 {
                     // Normal expression
-                    if(Expression::isExpression(tokens[i]) == Expression::Valid)
+                    if(Expression::isExpression(tokens[i]) == Expression::HasOperators)
                     {
-                        int16_t value;
-                        if(Expression::parse((char*)tokens[i].c_str(), _lineNumber, value))
+                        Expression::Numeric value;
+                        if(Expression::parse(tokens[i], _lineNumber, value))
                         {
-                            operand = value;
+                            operand = value._value;
                             success = true;
                         }
                     }
@@ -1096,7 +1110,7 @@ namespace Assembler
     {
         Expression::ExpressionType expressionType = Expression::isExpression(token);
         if(expressionType == Expression::Invalid) return false;
-        if(expressionType == Expression::Valid)
+        if(expressionType == Expression::HasOperators)
         {
             // Parse expression and return with a result
             int16_t value;
@@ -1690,6 +1704,13 @@ namespace Assembler
             {
                 Expression::strToUpper(tokens[0]);
 
+                // Remove subroutine header and footer
+                if(tokens[0] == "%SUB"  ||  tokens[0] == "%ENDS")
+                {
+                    itLine = lineTokens.erase(itLine);
+                    continue;
+                }
+
                 // Include
                 if(tokens[0] == "%INCLUDE")
                 {  
@@ -1743,6 +1764,56 @@ namespace Assembler
         return true;
     }
 
+    int getAsmOpcodeSize(const std::string& filename, std::vector<LineToken>& lineTokens)
+    {
+        // Pre-processor
+        if(!preProcess(filename, lineTokens, true)) return -1;
+
+        // Tokenise lines
+        int vasmSize = 0;
+        for(int i=0; i<lineTokens.size(); i++)
+        {
+            std::vector<std::string> tokens = Expression::tokeniseLine(lineTokens[i]._text);
+            for(int j=0; j<tokens.size(); j++)
+            {
+                std::string token = Expression::strToUpper(tokens[j]);
+                vasmSize += getAsmOpcodeSize(token);
+            }
+        }
+
+        return vasmSize;
+    }
+
+    int getAsmOpcodeSizeFile(const std::string& filename)
+    {
+        std::ifstream infile(filename);
+        if(!infile.is_open())
+        {
+            fprintf(stderr, "Assembler::getAsmOpcodeSizeFile() : Failed to open file : '%s'\n", filename.c_str());
+            return -1;
+        }
+
+        // Get file
+        int numLines = 0;
+        LineToken lineToken;
+        std::vector<LineToken> lineTokens;
+        while(!infile.eof())
+        {
+            std::getline(infile, lineToken._text);
+            lineTokens.push_back(lineToken);
+
+            if(!infile.good() && !infile.eof())
+            {
+                fprintf(stderr, "Assembler::getAsmOpcodeSizeFile() : Bad lineToken : '%s' : in '%s' : on line %d\n", lineToken._text.c_str(), filename.c_str(), numLines+1);
+                return -1;
+            }
+
+            numLines++;
+        }
+        
+        return getAsmOpcodeSize(filename, lineTokens);
+    }
+
 #ifndef STAND_ALONE
     bool handleBreakPoints(ParseType parse, const std::string& lineToken, int lineNumber)
     {
@@ -1751,7 +1822,7 @@ namespace Assembler
 
         if(input.find("_BREAKPOINT_") != std::string::npos)
         {
-            if(parse == MnemonicPass) Editor::addBreakPoint(_currentAddress);
+            if(parse == MnemonicPass) Editor::addVpcBreakPoint(_currentAddress);
             return true;
         }
 
@@ -1898,12 +1969,12 @@ namespace Assembler
                     // Normal expression
                     else
                     {
-                        if(Expression::isExpression(token) == Expression::Valid)
+                        if(Expression::isExpression(token) == Expression::HasOperators)
                         {
-                            int16_t value;
-                            if(Expression::parse((char*)token.c_str(), _lineNumber, value))
+                            Expression::Numeric value;
+                            if(Expression::parse(token, _lineNumber, value))
                             {
-                                data = value;
+                                data = value._value;
                                 success = true;
                             }
                         }
@@ -2020,9 +2091,12 @@ namespace Assembler
         _gprintfs.clear();
 
         _callTablePtr = 0x0000;
+        _useOpcodeCALLI_ = false;
+
+        Expression::setExprFunc(Expression::expression);
 
 #ifndef STAND_ALONE
-        Editor::clearBreakPoints();
+        Editor::clearVpcBreakPoints();
 #endif
     }
 
@@ -2342,13 +2416,13 @@ namespace Assembler
                                 {
                                     operand = uint8_t(label._address);
                                 }
-                                else if(Expression::isExpression(tokens[tokenIndex]) == Expression::Valid)
+                                else if(Expression::isExpression(tokens[tokenIndex]) == Expression::HasOperators)
                                 {
-                                    int16_t value;
+                                    Expression::Numeric value;
                                     std::string input;
                                     preProcessExpression(tokens, tokenIndex, input, true);
-                                    if(!Expression::parse((char*)input.c_str(), _lineNumber, value)) return false;
-                                    operand = uint8_t(value);
+                                    if(!Expression::parse(input, _lineNumber, value)) return false;
+                                    operand = uint8_t(value._value);
                                     operandValid = true;
                                 }
                                 else
@@ -2467,13 +2541,13 @@ namespace Assembler
                                 {
                                     operand = label._address;
                                 }
-                                else if(Expression::isExpression(tokens[tokenIndex]) == Expression::Valid)
+                                else if(Expression::isExpression(tokens[tokenIndex]) == Expression::HasOperators)
                                 {
-                                    int16_t value;
+                                    Expression::Numeric value;
                                     std::string input;
                                     preProcessExpression(tokens, tokenIndex, input, true);
                                     if(!Expression::parse((char*)input.c_str(), _lineNumber, value)) return false;
-                                    operand = value;
+                                    operand = value._value;
                                     operandValid = true;
                                 }
                                 else

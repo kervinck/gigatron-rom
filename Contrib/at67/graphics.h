@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <string>
+#include <vector>
 #include <SDL.h>
 
 #include "cpu.h"
@@ -78,19 +79,26 @@ namespace Graphics
     void resetVTable(void);
 
     void refreshTimingPixel(const Cpu::State& S, int vgaX, int pixelY, uint32_t colour, bool debugging);
-    void refreshPixel(const Cpu::State& S, int vgaX, int vgaY, bool debugging);
+    void refreshPixel(const Cpu::State& S, int vgaX, int vgaY);
     void refreshScreen(void);
 
+    void clearScreen(uint32_t colour, uint32_t commandLineColour=0x22222222);
+
+    void pixelReticle(const Cpu::State& S, int vgaX, int vgaY);
+
     void drawLeds(void);
-    bool drawText(const std::string& text, uint32_t* pixels, int x, int y, uint32_t colour, bool invert, int invertSize, bool colourKey=false, int size=-1, bool fullscreen=false, uint32_t commentColour=0x00000000, uint32_t sectionColour=0x00000000);
+    bool drawText(const std::string& text, int x, int y, uint32_t fgColour, bool invert, int invertSize);
+    bool drawMenu(const std::string& text, int x, int y, uint32_t fgColour, bool invert, int invertSize, uint32_t bgColour);
+    bool drawText(const std::string& text, uint32_t* pixels, int x, int y, uint32_t fgColour, bool invert, int invertSize, uint32_t bgColour=0x00000000, bool colourKey=false, int numChars=-1, bool fullscreen=false, uint32_t commentColour=0x00000000, uint32_t sectionColour=0x00000000);
     void drawDigitBox(uint8_t digit, int x, int y, uint32_t colour);
 
     void renderText(void);
     void renderTextWindow(void);
     void render(bool synchronise=true);
 
-    void drawLine(int x, int y, int x2, int y2, uint32_t colour);
-    void drawLineGiga(uint16_t x, uint16_t y, uint16_t x2, uint16_t y2, uint8_t colour);
+    void drawLineGiga(int x0, int y0, int x1, int y1);
+    void drawLineGiga(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint8_t colour);
+    void mandelbrot(void);
     void life(bool initialise);
     void life1(bool initialise);
     void tetris(void);

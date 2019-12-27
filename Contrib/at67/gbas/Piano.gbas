@@ -1,0 +1,66 @@
+inv=0 : char=inv : posx=char : posy=posx
+fg=peek(162) : bg=peek(163)
+a=0 : b=a : p=256+252 : mode 2 : cls : z=2
+gosub text : gosub wave : gosub audio
+    
+loop: k=peek(16)
+      wait 3
+      if inv &&= 1 then gosub normal:goto &loop
+      if k &&> 126 then goto &loop
+      gosub k,default
+      gosub audio
+      goto &loop
+    
+113:  a=73 :b=8 :char=81:posx=2  :posy=8:gosub inverse:return:'C
+50:   a=11 :b=9 :char=50:posx=8  :posy=0:gosub inverse:return:'C#
+119:  a=80 :b=9 :char=87:posx=14 :posy=8:gosub inverse:return:'D
+51:   a=25 :b=10:char=51:posx=20 :posy=0:gosub inverse:return:'D#
+101:  a=103:b=10:char=69:posx=26 :posy=8:gosub inverse:return:'E
+114:  a=57 :b=11:char=82:posx=38 :posy=8:gosub inverse:return:'F
+53:   a=16 :b=12:char=53:posx=44 :posy=0:gosub inverse:return:'F#
+116:  a=108:b=12:char=84:posx=50 :posy=8:gosub inverse:return:'G
+54:   a=78 :b=13:char=54:posx=56 :posy=0:gosub inverse:return:'G#
+121:  a=53 :b=14:char=89:posx=62 :posy=8:gosub inverse:return:'A
+55:   a=35 :b=15:char=55:posx=68 :posy=0:gosub inverse:return:'A#
+117:  a=23 :b=16:char=85:posx=74 :posy=8:gosub inverse:return:'B
+105:  a=19 :b=17:char=73:posx=86 :posy=8:gosub inverse:return:'C
+57:   a=21 :b=18:char=57:posx=92 :posy=0:gosub inverse:return:'C#
+111:  a=31 :b=19:char=79:posx=98 :posy=8:gosub inverse:return:'D
+48:   a=50 :b=20:char=48:posx=104:posy=0:gosub inverse:return:'D#
+112:  a=77 :b=21:char=80:posx=110:posy=8:gosub inverse:return:'E
+122:  if peek(15) &&= 255 then z = (z+1) AND 3 : a=0:b=a : gosub audio : gosub wave : return
+      a=0:b=a:return
+
+default: a=0:b=a:return
+
+text: print " 2 3   5 6 7   9 0"
+      print "Q W E R T Y U I O P"
+      return
+
+audio: for c=1 to 4
+           p=(c LSL 8)+252 : poke p,a : poke p+1,b : poke p-1,z
+       next c
+       return
+       
+wave: at 2,24 : print "Z: ";
+      gosub 206+z
+      return
+
+206: print "Metallic":return
+207: print "Triangle":return
+208: print "Pulse   ":return
+209: print "Sawtooth":return
+
+inverse: inv=1 : poke 162,bg : poke 163,fg
+         gosub print
+         return
+         
+normal: inv=0 : poke 162,fg : poke 163,bg
+        gosub print
+        return
+         
+print:  at posx,posy
+        print chr$(char)
+        poke 44,15
+        return
+       

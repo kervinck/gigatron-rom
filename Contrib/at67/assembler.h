@@ -87,7 +87,17 @@ namespace Assembler
         std::string _mnemonic;
     };
 
+    struct LineToken
+    {
+        bool _fromInclude = false;
+        int _includeLineNumber;
+        std::string _text;
+        std::string _includeName;
+    };
 
+
+    bool getUseOpcodeCALLI(void);
+    const std::string& getIncludePath(void);
     uint16_t getStartAddress(void);
     int getCurrDasmByteCount(void);
     int getPrevDasmByteCount(void);
@@ -96,17 +106,19 @@ namespace Assembler
     int getDisassembledCodeSize(void);
     DasmCode* getDisassembledCode(int index);
 
+    void setUseOpcodeCALLI(bool useOpcodeCALLI);
     void setIncludePath(const std::string& includePath);
 
     int getAsmOpcodeSize(const std::string& opcodeStr);
     int getAsmOpcodeSizeText(const std::string& textStr);
-
-    int disassemble(uint16_t address);
+    int getAsmOpcodeSizeFile(const std::string& filename);
 
     void initialise(void);
     void clearAssembler(void);
     bool getNextAssembledByte(ByteCode& byteCode, bool debug=false);
+
     bool assemble(const std::string& filename, uint16_t startAddress=DEFAULT_START_ADDRESS);
+    int disassemble(uint16_t address);
 
 #ifndef STAND_ALONE
     void printGprintfStrings(void);

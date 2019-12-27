@@ -199,14 +199,27 @@ namespace Graphics
         }
 
         // Print text in lines with spaces as padding to the help screen surface
-        int maxLines = SCREEN_HEIGHT / FONT_HEIGHT;
+        int maxLines = SCREEN_HEIGHT / (FONT_HEIGHT + 2);
         int numLines = std::min(lines-1, maxLines);
+        uint32_t* pixels = (uint32_t*)_helpSurface->pixels;
+
         for(int i=0; i<numLines; i++)
         {
+            int y = i*(FONT_HEIGHT + 2) + (maxLines - numLines)/2 * (FONT_HEIGHT + 2);
             size_t nonWhiteSpace = lineTokens[i].find_first_not_of("  \n\r\f\t\v");
+
             if(nonWhiteSpace == std::string::npos) lineTokens[i] = std::string(MAX_CHARS_HELP, ' ');
             if(lineTokens[i].size() < MAX_CHARS_HELP) lineTokens[i] += std::string(MAX_CHARS_HELP - lineTokens[i].size(), ' ');
-            drawText(lineTokens[i], (uint32_t*)_helpSurface->pixels, 0, i*FONT_HEIGHT + (maxLines - numLines)/2 * FONT_HEIGHT, 0xFF00FF00, false, 0, false, -1, true, 0xFFFFFFFF, 0xFF00FFFF);
+            drawText(lineTokens[i], pixels, 0, y, 0xFF00FF00, false, 0, 0x00000000, false, -1, true, 0xFFFFFFFF, 0xFF00FFFF);
+
+            // Fill in the gaps
+            for(int j=FONT_HEIGHT; j<FONT_HEIGHT+2; j++)
+            {
+                for(int k=0; k<SCREEN_WIDTH*3/4; k++)
+                {
+                    pixels[(y + j)*SCREEN_WIDTH + k] = 0xFF000000;
+                }
+            }
         }
 
         // Create help screen texture
@@ -227,9 +240,10 @@ namespace Graphics
     {
         result = _configIniReader.Get(sectionString, iniKey, defaultKey);
         if(result == defaultKey) return false;
-        result = Expression::strToUpper(result);
+        Expression::strToUpper(result);
         return true;
     }
+
 
     void initialise(void)
     {
@@ -239,19 +253,11 @@ namespace Graphics
         // Colour palette
         for(int i=0; i<COLOUR_PALETTE; i++)
         {
-            int r = (i>>0) & 3;
-            int g = (i>>2) & 3;
-            int b = (i>>4) & 3;
+            uint8_t r = uint8_t(double((i & 0x03) >>0) / 3.0 * 255.0);
+            uint8_t g = uint8_t(double((i & 0x0C) >>2) / 3.0 * 255.0);
+            uint8_t b = uint8_t(double((i & 0x30) >>4) / 3.0 * 255.0);
 
-            r = r | (r << 2) | (r << 4) | (r << 6);
-            g = g | (g << 2) | (g << 4) | (g << 6);
-            b = b | (b << 2) | (b << 4) | (b << 6);
-
-            uint32_t p = 0xFF000000;
-            p |= r << 16;
-            p |= g << 8;
-            p |= b << 0;
-            _colours[i] = p;
+            _colours[i] = 0xFF000000 | (r <<16) | (g <<8) | b;
         }
 
         // Safe resolution by default
@@ -423,6 +429,59 @@ namespace Graphics
         // Help screen
         _helpSurface = createSurface(SCREEN_WIDTH, SCREEN_HEIGHT);
         createHelpTexture();
+
+#ifdef _WIN32
+        Cpu::restoreWin32Console();
+#endif
+
+        SDL_RaiseWindow(_window);
+    }
+
+    uint32_t savedPixels[6*5];
+    void restoreReticlePixel(int x, int y)
+    {
+        if(x < 0  ||  x > SCREEN_WIDTH - 1) return;
+        if(y < 0  ||  y > SCREEN_HEIGHT - 1) return;
+        int index = (x % 5) + (y % 6)*5;
+        _pixels[x + y*SCREEN_WIDTH] = savedPixels[index];
+    }
+    void saveReticlePixel(int x, int y)
+    {
+        if(x < 0  ||  x > SCREEN_WIDTH - 1) return;
+        if(y < 0  ||  y > SCREEN_HEIGHT - 1) return;
+        int index = (x % 5) + (y % 6)*5;
+        savedPixels[index] = _pixels[x + y*SCREEN_WIDTH];
+    }
+    void drawReticlePixel(int x, int y)
+    {
+        if(x < 0  ||  x > SCREEN_WIDTH - 1) return;
+        if(y < 0  ||  y > SCREEN_HEIGHT - 1) return;
+        _pixels[x + y*SCREEN_WIDTH] = 0x00FFFFFFFF; //(0x00FFFFFF ^ _pixels[x + y*SCREEN_WIDTH]) & 0x00FFFFFF;
+    }
+    void drawReticle(int vgaX, int vgaY)
+    {
+        for(int j=-1; j<5; j++)
+        {
+            for(int i=-1; i<4; i++)
+            {
+                int x = vgaX*3 + i;
+                int y = vgaY*4 + j;
+                saveReticlePixel(x, y);
+                if(j==-1 || j==4 || i==-1 || i==3) drawReticlePixel(x, y);
+            }
+        }
+    }
+    void restoreReticle(int vgaX, int vgaY)
+    {
+        for(int j=-1; j<5; j++)
+        {
+            for(int i=-1; i<4; i++)
+            {
+                int x = vgaX*3 + i;
+                int y = vgaY*4 + j;
+                restoreReticlePixel(x, y);
+            }
+        }
     }
 
     void resetVTable(void)
@@ -438,20 +497,18 @@ namespace Graphics
     {
         _hlineTiming[pixelY % GIGA_HEIGHT] = colour;
 
-        if(debugging) return;
+        //if(debugging) return;
 
-        uint32_t screen = (vgaX % (GIGA_WIDTH+1))*3 + (pixelY % GIGA_HEIGHT)*4*SCREEN_WIDTH;
+        uint32_t screen = (vgaX % (GIGA_WIDTH + 1))*3 + (pixelY % GIGA_HEIGHT)*4*SCREEN_WIDTH;
         _pixels[screen + 0 + 0*SCREEN_WIDTH] = colour; _pixels[screen + 1 + 0*SCREEN_WIDTH] = colour; _pixels[screen + 2 + 0*SCREEN_WIDTH] = colour;
         _pixels[screen + 0 + 1*SCREEN_WIDTH] = colour; _pixels[screen + 1 + 1*SCREEN_WIDTH] = colour; _pixels[screen + 2 + 1*SCREEN_WIDTH] = colour;
         _pixels[screen + 0 + 2*SCREEN_WIDTH] = colour; _pixels[screen + 1 + 2*SCREEN_WIDTH] = colour; _pixels[screen + 2 + 2*SCREEN_WIDTH] = colour;
         _pixels[screen + 0 + 3*SCREEN_WIDTH] = 0x00;   _pixels[screen + 1 + 3*SCREEN_WIDTH] = 0x00;   _pixels[screen + 2 + 3*SCREEN_WIDTH] = 0x00;
     }
 
-    void refreshPixel(const Cpu::State& S, int vgaX, int vgaY, bool debugging)
+    void refreshPixel(const Cpu::State& S, int vgaX, int vgaY)
     {
-        if(debugging) return;
-
-        uint32_t colour = _colours[S._OUT & (COLOUR_PALETTE-1)];
+        uint32_t colour = _colours[S._OUT & (COLOUR_PALETTE - 1)];
         uint32_t address = (vgaX % GIGA_WIDTH)*3 + (vgaY % SCREEN_HEIGHT)*SCREEN_WIDTH;
         _pixels[address + 0] = colour;
         _pixels[address + 1] = colour;
@@ -480,6 +537,35 @@ namespace Graphics
         }
     }
 
+    void clearScreen(uint32_t colour, uint32_t commandLineColour)
+    {
+        for(int y=0; y<SCREEN_HEIGHT - (FONT_HEIGHT + 2); y++)
+        {
+            for(int x=0; x<SCREEN_WIDTH*3/4; x++)
+            {
+                _pixels[y*SCREEN_WIDTH + x] = colour;
+            }
+        }
+
+        for(int y=SCREEN_HEIGHT - (FONT_HEIGHT + 2); y<SCREEN_HEIGHT; y++)
+        {
+            for(int x=0; x<SCREEN_WIDTH*3/4; x++)
+            {
+                _pixels[y*SCREEN_WIDTH + x] = commandLineColour;
+            }
+        }
+    }
+
+    void pixelReticle(const Cpu::State& S, int vgaX, int vgaY)
+    {
+        // Draw pixel reticle, but only for active pixels
+        if(S._PC >= 0x020D  &&  S._PC <= 0x02AD)
+        {
+            if(vgaX > 0) restoreReticle(vgaX - 1, vgaY/4);
+            if(vgaX < HPIXELS_END - HPIXELS_START) drawReticle(vgaX, vgaY/4);
+        }
+    }
+
     void drawLeds(void)
     {
         // Update 60 times per second no matter how high the FPS is
@@ -504,7 +590,7 @@ namespace Graphics
     }
 
     // Simple text routine, font is a non proportional 6*8 font loaded from a 96*48 BMP file
-    bool drawText(const std::string& text, uint32_t* pixels, int x, int y, uint32_t colour, bool invert, int invertSize, bool colourKey, int size, bool fullscreen, uint32_t commentColour, uint32_t sectionColour)
+    bool drawText(const std::string& text, uint32_t* pixels, int x, int y, uint32_t fgColour, bool invert, int invertSize, uint32_t bgColour, bool colourKey, int numChars, bool fullscreen, uint32_t commentColour, uint32_t sectionColour)
     {
         if(!fullscreen)
         {
@@ -514,8 +600,8 @@ namespace Graphics
         if(x<0 || x>=SCREEN_WIDTH || y<0 || y>=SCREEN_HEIGHT) return false;
 
         uint32_t* fontPixels = (uint32_t*)_fontSurface->pixels;
-        size = (size == -1) ? int(text.size()) : size;
-        for(int i=0; i<size; i++)
+        numChars = (numChars == -1) ? int(text.size()) : numChars;
+        for(int i=0; i<numChars; i++)
         {
             if(sectionColour)
             {
@@ -523,14 +609,14 @@ namespace Graphics
                 if(x == 0) useSectionColour = false;
                 if(text.c_str()[i] == '[') useSectionColour = true;
                 if(text.c_str()[i] == ']') useSectionColour = false;
-                if(useSectionColour) colour = sectionColour;
+                if(useSectionColour) fgColour = sectionColour;
             }
             if(commentColour)
             {
                 static bool useCommentColour = false;
                 if(x == 0) useCommentColour = false;
                 if(text.c_str()[i] == ';') useCommentColour = true;
-                if(useCommentColour) colour = commentColour;
+                if(useCommentColour) fgColour = commentColour;
             }
 
             uint8_t chr = text.c_str()[i] - 32;
@@ -552,17 +638,27 @@ namespace Graphics
                     uint32_t fontPixel = fontPixels[fontAddress] & 0x00FFFFFF;
                     if((invert  &&  i<invertSize) ? !fontPixel : fontPixel)
                     {
-                        pixels[pixelAddress] = 0xFF000000 | colour;
+                        pixels[pixelAddress] = 0xFF000000 | fgColour;
                     }
                     else
                     {
-                        if(!colourKey) pixels[pixelAddress] = 0xFF000000;
+                        if(!colourKey) pixels[pixelAddress] = 0xFF000000 | bgColour;
                     }
                 }
             }
         }
 
         return true;
+    }
+
+    bool drawText(const std::string& text, int x, int y, uint32_t fgColour, bool invert, int invertSize)
+    {
+        return drawText(text, _pixels, x, y, fgColour, invert, invertSize, 0x00000000, true, -1, true, 0x00000000, 0x00000000);
+    }
+
+    bool drawMenu(const std::string& text, int x, int y, uint32_t fgColour, bool invert, int invertSize, uint32_t bgColour)
+    {
+        return drawText(text, _pixels, x, y, fgColour, invert, invertSize, bgColour, false, -1, true, 0x00000000, 0x00000000);
     }
 
     void drawDigitBox(uint8_t digit, int x, int y, uint32_t colour)
@@ -575,22 +671,6 @@ namespace Graphics
 
         pixelAddress += (FONT_HEIGHT-1)*SCREEN_WIDTH;
         for(int i=0; i<FONT_WIDTH; i++) _pixels[pixelAddress+i] = colour;
-
-        //pixelAddress += (FONT_HEIGHT-4)*SCREEN_WIDTH;
-        //for(int i=0; i<FONT_WIDTH; i++) _pixels[pixelAddress+i] = colour;
-        //pixelAddress += SCREEN_WIDTH;
-        //for(int i=0; i<FONT_WIDTH; i++) _pixels[pixelAddress+i] = colour;
-        //pixelAddress += SCREEN_WIDTH;
-        //for(int i=0; i<FONT_WIDTH; i++) _pixels[pixelAddress+i] = colour;
-        //pixelAddress += SCREEN_WIDTH;
-        //for(int i=0; i<FONT_WIDTH; i++) _pixels[pixelAddress+i] = colour;
-
-        //for(int i=0; i<FONT_WIDTH-1; i++) _pixels[pixelAddress+i] = colour;
-        //pixelAddress += (FONT_HEIGHT-1)*SCREEN_WIDTH;
-        //for(int i=0; i<FONT_WIDTH-1; i++) _pixels[pixelAddress+i] = colour;
-        //for(int i=0; i<FONT_HEIGHT; i++) _pixels[pixelAddress-i*SCREEN_WIDTH] = colour;
-        //pixelAddress += FONT_WIDTH-1;
-        //for(int i=0; i<FONT_HEIGHT; i++) _pixels[pixelAddress-i*SCREEN_WIDTH] = colour;
     }
 
     float powStepRising(float x, float a, float b, float p)
@@ -639,11 +719,11 @@ namespace Graphics
         if(uploadFilename.size() < MENU_TEXT_SIZE+1) uploadFilename.append(MENU_TEXT_SIZE+1 - uploadFilename.size(), ' ');
         if(upload < 1.0f)
         {
-            sprintf(uploadPercentage, uploadFilename.substr(0, MENU_TEXT_SIZE+1).c_str());
+            strcpy(uploadPercentage, uploadFilename.substr(0, MENU_TEXT_SIZE+1).c_str());
             sprintf(&uploadPercentage[MENU_TEXT_SIZE+1 - 6], " %3d%%\r", int(upload * 100.0f));
         }
 
-        drawText(uploadPercentage, _pixels, HEX_START_X, int(FONT_CELL_Y*4.4) + _uploadCursorY*FONT_CELL_Y, 0xFFB0B0B0, true, MENU_TEXT_SIZE+1, false, MENU_TEXT_SIZE+1);
+        drawText(uploadPercentage, _pixels, HEX_START_X, int(FONT_CELL_Y*4.4) + _uploadCursorY*FONT_CELL_Y, 0xFFB0B0B0, true, MENU_TEXT_SIZE+1, 0x00000000, false, MENU_TEXT_SIZE+1);
     }
 
     void renderText(void)
@@ -657,7 +737,7 @@ namespace Graphics
             drawText(std::string(str), _pixels, 0, FONT_CELL_Y*2, 0xFFFFFFFF, false, 0, false);
             sprintf(str, "%05.1f%%", Cpu::getvCpuUtilisation() * 100.0);
             drawUsageBar(Cpu::getvCpuUtilisation(), FONT_WIDTH*4 - 3, FONT_CELL_Y*2 - 3, FONT_WIDTH*6 + 5, FONT_HEIGHT + 5);
-            drawText(std::string(str), _pixels, FONT_WIDTH*4, FONT_CELL_Y*2, 0x80808080, false, 0, true);
+            drawText(std::string(str), _pixels, FONT_WIDTH*4, FONT_CELL_Y*2, 0x80808080, false, 0, 0x00000000, true);
 
             //drawText(std::string("LEDS:"), _pixels, 0, 0, 0xFFFFFFFF, false, 0);
             sprintf(str, "FPS %5.1f  XOUT:%02X IN:%02X", 1.0f / Timing::getFrameTime(), Cpu::getXOUT(), Cpu::getIN());
@@ -666,26 +746,28 @@ namespace Graphics
 
             switch(Editor::getEditorMode())
             {
-                case Editor::Hex:   (Editor::getSingleStepEnabled()) ? sprintf(str, "Debug ") : sprintf(str, "Hex   "); break;
-                case Editor::Rom:   (Editor::getSingleStepEnabled()) ? sprintf(str, "Debug ") : sprintf(str, "Rom   "); break;
-                case Editor::Load:  (Editor::getSingleStepEnabled()) ? sprintf(str, "Debug ") : sprintf(str, "Load  "); break;
-                case Editor::Dasm:  (Editor::getSingleStepEnabled()) ? sprintf(str, "Debug ") : sprintf(str, "Dasm  "); break;
-                default: sprintf(str, "     ");
+                case Editor::Hex:   (Editor::getSingleStepEnabled()) ? strcpy(str, "Debug ") : strcpy(str, "Hex   "); break;
+                case Editor::Rom:   (Editor::getSingleStepEnabled()) ? strcpy(str, "Debug ") : strcpy(str, "Rom   "); break;
+                case Editor::Load:  (Editor::getSingleStepEnabled()) ? strcpy(str, "Debug ") : strcpy(str, "Load  "); break;
+                case Editor::Dasm:  (Editor::getSingleStepEnabled()) ? strcpy(str, "Debug ") : strcpy(str, "Dasm  "); break;
+                case Editor::Term:  (Editor::getSingleStepEnabled()) ? strcpy(str, "Debug ") : strcpy(str, "Term  "); break;
+                case Editor::Image: (Editor::getSingleStepEnabled()) ? strcpy(str, "Debug ") : strcpy(str, "Image "); break;
+                default: strcpy(str, "     ");
             }
             drawText(std::string(str), _pixels, 12, 472 - FONT_CELL_Y, 0xFF00FF00, false, 0);
 
             switch(Editor::getKeyboardMode())
             {
-                case Editor::Giga:   sprintf(str, "Kbd   "); break;
-                case Editor::PS2:    sprintf(str, "PS2   "); break;
-                case Editor::HwGiga: sprintf(str, "HwKbd "); break;
-                case Editor::HwPS2:  sprintf(str, "HwPS2 "); break;
-                default: sprintf(str, "     ");
+                case Editor::Giga:   strcpy(str, "Kbd   "); break;
+                case Editor::PS2:    strcpy(str, "PS2   "); break;
+                case Editor::HwGiga: strcpy(str, "HwKbd "); break;
+                case Editor::HwPS2:  strcpy(str, "HwPS2 "); break;
+                default: strcpy(str, "     ");
             }
             drawText("K:", _pixels, 48, 472 - FONT_CELL_Y, 0xFFFFFFFF, false, 0);
             drawText(std::string(str), _pixels, 60, 472 - FONT_CELL_Y, 0xFF00FF00, false, 0);
 
-            sprintf(str, "%05d", Memory::getSizeFreeRAM());
+            sprintf(str, "%-5d", Memory::getSizeFreeRAM());
             drawText(std::string(str), _pixels, RAM_START, 472 - FONT_CELL_Y, 0xFF00FF00, false, 0);
             sprintf(str, " ROM %02x", Cpu::getRomType());
             drawText(std::string(VERSION_STR) + std::string(str), _pixels, 0, 472, 0xFFFFFFFF, false, 0);
@@ -724,7 +806,7 @@ namespace Graphics
                 uint32_t colour = (Editor::getHexEdit() && Editor::getMemoryMode() == Editor::RAM && onCursor) ? 0xFF00FF00 : 0xFFB0B0B0;
                 drawText(std::string(str), _pixels, HEX_START_X + i*HEX_CHAR_WIDE, FONT_CELL_Y*4 + j*(FONT_HEIGHT+FONT_GAP_Y), colour, onCursor, 2);
                 if(onCursor) cursorAddress = hexAddress;
-                hexAddress++;
+                hexAddress = (hexAddress + 1) & (Memory::getSizeRAM() - 1);
             }
         }
 
@@ -759,7 +841,7 @@ namespace Graphics
             int index = Editor::getRomEntriesIndex() + i;
             if(index >= int(Editor::getRomEntriesSize())) break;
             uint32_t colour = (i < NUM_INT_ROMS) ? 0xFFB0B0B0 : 0xFFFFFFFF;
-            drawText(*Editor::getRomEntryName(index), _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, colour, onCursor, MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
+            drawText(*Editor::getRomEntryName(index), _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, colour, onCursor, MENU_TEXT_SIZE, 0x00000000, false, MENU_TEXT_SIZE);
         }
 
         // ROM type
@@ -784,7 +866,7 @@ namespace Graphics
             int index = Editor::getFileEntriesIndex() + i;
             if(index >= int(Editor::getFileEntriesSize())) break;
             uint32_t colour = (Editor::getFileEntryType(index) == Editor::Dir) ? 0xFFB0B0B0 : 0xFFFFFFFF;
-            drawText(*Editor::getFileEntryName(index), _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, colour, onCursor, MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
+            drawText(*Editor::getFileEntryName(index), _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, colour, onCursor, MENU_TEXT_SIZE, 0x00000000, false, MENU_TEXT_SIZE);
         }
 
         // Load address
@@ -798,9 +880,10 @@ namespace Graphics
     {
         char str[32] = "";
 
-        Assembler::disassemble(Editor::getHexBaseAddress());
+        (Editor::getMemoryMode() == Editor::RAM) ? Assembler::disassemble(Editor::getVpcBaseAddress()) : Assembler::disassemble(Editor::getNtvBaseAddress());
 
-        //sprintf(str, "%d\n", Editor::getBreakpointsSize());
+        //sprintf(str, "%d\n", Editor::getVpcBreakpointsSize());
+        //sprintf(str, "%d\n", Editor::getNtvBreakpointsSize());
         //fprintf(stderr, str);
 
         // Clear window
@@ -808,25 +891,50 @@ namespace Graphics
 
         for(int i=0; i<Assembler::getDisassembledCodeSize(); i++)
         {
-            bool onCursor = i == Editor::getCursorY();
-            bool onVPC = (Assembler::getDisassembledCode(i)->_address == Editor::getVpcBaseAddress()  &&  Editor::getSingleStepEnabled());
-
-            // vPC icon in debug mode
-            if(onVPC) drawText(">", _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y,  0xFFFFFF00, onCursor, MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
-
-            for(int j=0; j<Editor::getBreakPointsSize(); j++)
+            bool onPC = false;
+            if(Editor::getSingleStepEnabled())
             {
-                // Breakpoint icon
-                if(Assembler::getDisassembledCode(i)->_address == Editor::getBreakPointAddress(j)  &&  Editor::getSingleStepEnabled())
+                if(Editor::getMemoryMode() == Editor::RAM)
                 {
-                    drawText("*", _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y,  0xFFB000B0, onCursor, MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
-                    break;
+                    onPC = (Assembler::getDisassembledCode(i)->_address == Cpu::getVPC());
+                }
+                else
+                {
+                    onPC = (Assembler::getDisassembledCode(i)->_address == Cpu::getStateS()._PC);
+                }
+            }
+
+            // Program counter icon in debug mode
+            bool onCursor = i == Editor::getCursorY();
+            if(onPC) drawText(">", _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y,  0xFF00FF00, onCursor, MENU_TEXT_SIZE, 0x00000000, false, MENU_TEXT_SIZE);
+
+            // Breakpoint icons
+            if(Editor::getMemoryMode() == Editor::RAM)
+            {
+                for(int j=0; j<Editor::getVpcBreakPointsSize(); j++)
+                {
+                    if(Assembler::getDisassembledCode(i)->_address == Editor::getVpcBreakPointAddress(j)  &&  Editor::getSingleStepEnabled())
+                    {
+                        drawText("*", _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y,  0xFFC000C0, onCursor, MENU_TEXT_SIZE, 0x00000000, false, MENU_TEXT_SIZE);
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                for(int j=0; j<Editor::getNtvBreakPointsSize(); j++)
+                {
+                    if(Assembler::getDisassembledCode(i)->_address == Editor::getNtvBreakPointAddress(j)  &&  Editor::getSingleStepEnabled())
+                    {
+                        drawText("*", _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y,  0xFFC0C000, onCursor, MENU_TEXT_SIZE, 0x00000000, false, MENU_TEXT_SIZE);
+                        break;
+                    }
                 }
             }
 
             // Mnemonic, highlight if on vPC and show cursor in debug mode
-            uint32_t colour = (onVPC) ? 0xFFFFFFFF : 0xFFB0B0B0;
-            drawText(Assembler::getDisassembledCode(i)->_text, _pixels, HEX_START_X+6, FONT_CELL_Y*4 + i*FONT_CELL_Y, colour, (onCursor || onVPC)  &&  (Editor::getSingleStepEnabled()), MENU_TEXT_SIZE, false, MENU_TEXT_SIZE);
+            uint32_t colour = (onPC) ? 0xFFFFFFFF : 0xFFB0B0B0;
+            drawText(Assembler::getDisassembledCode(i)->_text, _pixels, HEX_START_X+6, FONT_CELL_Y*4 + i*FONT_CELL_Y, colour, (onCursor || onPC)  &&  (Editor::getSingleStepEnabled()), MENU_TEXT_SIZE, 0x00000000, false, MENU_TEXT_SIZE);
         }
 
         switch(Editor::getMemoryMode())
@@ -836,15 +944,26 @@ namespace Graphics
             case Editor::ROM1: drawText("ROM:       Vars:", _pixels, 0, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0); break;
         }
 
-        sprintf(str, "%04X", Editor::getHexBaseAddress());
+        (Editor::getMemoryMode() == Editor::RAM) ? sprintf(str, "%04X", Editor::getVpcBaseAddress()) : sprintf(str, "%04X", Editor::getNtvBaseAddress());
         uint32_t colour = (Editor::getHexEdit() && onHex) ? 0xFF00FF00 : 0xFFFFFFFF;
         drawText(std::string(str), _pixels, HEX_START, FONT_CELL_Y*3, colour, onHex, 4);
 
-        // Display native registers
-        sprintf(str, "PC:%04X  IR:%02X  OUT:%02X", Cpu::getStateS()._PC, Cpu::getStateT()._IR, Cpu::getStateT()._OUT);
-        drawText(std::string(str), _pixels, HEX_START_X, int(FONT_CELL_Y*2.0) + FONT_CELL_Y*HEX_CHARS_Y, 0xFF00FFFF, false, 0);
-        sprintf(str, "AC:%02X  X:%02X  Y:%02X  D:%02X", Cpu::getStateT()._AC, Cpu::getStateT()._X, Cpu::getStateT()._Y, Cpu::getStateT()._D);
-        drawText(std::string(str), _pixels, HEX_START_X, int(FONT_CELL_Y*3.0) + FONT_CELL_Y*HEX_CHARS_Y, 0xFF00FFFF, false, 0);
+        if(Editor::getMemoryMode() == Editor::RAM)
+        {
+            // Display vCPU registers
+            sprintf(str, "PC:%04X LR:%04X Fn:%04X", Cpu::getVPC(), Cpu::getRAM(0x001A) | (Cpu::getRAM(0x001B)<<8), Cpu::getRAM(0x0022) | (Cpu::getRAM(0x0023)<<8));
+            drawText(std::string(str), _pixels, HEX_START_X, int(FONT_CELL_Y*2.0) + FONT_CELL_Y*HEX_CHARS_Y, 0xFF00FFFF, false, 0);
+            sprintf(str, "AC:%04X SP:%02X Sr:%06X", Cpu::getRAM(0x0018) | (Cpu::getRAM(0x0019)<<8), Cpu::getRAM(0x001C), Cpu::getRAM(0x000F) | (Cpu::getRAM(0x0010)<<8) | (Cpu::getRAM(0x0011)<<16));
+            drawText(std::string(str), _pixels, HEX_START_X, int(FONT_CELL_Y*3.0) + FONT_CELL_Y*HEX_CHARS_Y, 0xFF00FFFF, false, 0);
+        }
+        else
+        {
+            // Display native registers
+            sprintf(str, "PC:%04X  IR:%02X  OUT:%02X", Cpu::getStateS()._PC, Cpu::getStateT()._IR, Cpu::getStateT()._OUT);
+            drawText(std::string(str), _pixels, HEX_START_X, int(FONT_CELL_Y*2.0) + FONT_CELL_Y*HEX_CHARS_Y, 0xFF00FFFF, false, 0);
+            sprintf(str, "AC:%02X  X:%02X  Y:%02X  D:%02X", Cpu::getStateT()._AC, Cpu::getStateT()._X, Cpu::getStateT()._Y, Cpu::getStateT()._D);
+            drawText(std::string(str), _pixels, HEX_START_X, int(FONT_CELL_Y*3.0) + FONT_CELL_Y*HEX_CHARS_Y, 0xFF00FFFF, false, 0);
+        }
     }
 
     void renderTextWindow(void)
@@ -936,13 +1055,13 @@ namespace Graphics
             drawUploadBar(_uploadPercentage);
 
             // Page up/down icons
-            sprintf(str, "^");
+            strcpy(str, "^");
             drawText(std::string(str), _pixels, PAGEUP_START_X, PAGEUP_START_Y, 0xFF00FF00, Editor::getPageUpButton(), 1);
             str[0] = 127; str[1] = 0;
             drawText(std::string(str), _pixels, PAGEDN_START_X, PAGEDN_START_Y, 0xFF00FF00, Editor::getPageDnButton(), 1);
 
             // Delete icon, (currently only used for clearing breakpoints)
-            if(Editor::getEditorMode() == Editor::Dasm  &&  (Editor::getSingleStepEnabled())  &&  Editor::getMemoryMode() == Editor::RAM)
+            if(Editor::getEditorMode() == Editor::Dasm  &&  (Editor::getSingleStepEnabled()))
             {
                 drawText("x", _pixels, DELALL_START_X, DELALL_START_Y, 0xFFFF0000, Editor::getDelAllButton(), 1);
             }
@@ -981,6 +1100,21 @@ namespace Graphics
         renderText();
         renderTextWindow();
 
+#if 0
+#if 1
+        mandelbrot();
+#else
+        int x1 = rand() % 160;
+        int y1 = rand() % 120;
+        int x2 = rand() % 160;
+        int y2 = rand() % 120;
+
+        //drawLineGiga(159,(6*12)+3, (8*12)+4,0, 0x0F);
+        drawLineGiga(x1, y1, x2, y2);
+        drawLineGiga(x1, y1, x2, y2, 0x0F);
+#endif
+#endif
+
         SDL_UpdateTexture(_screenTexture, NULL, _pixels, SCREEN_WIDTH * sizeof uint32_t);
         SDL_RenderCopy(_renderer, _screenTexture, NULL, NULL);
         renderHelpScreen();
@@ -1002,62 +1136,6 @@ namespace Graphics
         _pixels[screen + 0 + 3*SCREEN_WIDTH] = 0x00;   _pixels[screen + 1 + 3*SCREEN_WIDTH] = 0x00;   _pixels[screen + 2 + 3*SCREEN_WIDTH] = 0x00;
     }
 
-    void drawLine(int x, int y, int x2, int y2, uint32_t colour)
-    {
-        bool yLonger = false;
-        int shortLen = y2 - y;
-        int longLen = x2 - x;
-        
-        if(abs(shortLen) > abs(longLen))
-        {
-            uint8_t swap = shortLen;
-            shortLen = longLen;
-            longLen = swap;
-            yLonger = true;
-        }
-        
-        int decInc;
-        if(longLen ==0 ) decInc=0;
-        else decInc = (shortLen << 8) / longLen;
-        
-        if(yLonger)
-        {
-            if(longLen > 0)
-            {
-                longLen += y;
-                for(int j=0x80+(x<<8); y<=longLen; ++y)
-                {
-                    drawPixel(uint8_t(j>>8), uint8_t(y), colour);
-                    j+=decInc;
-                }
-                return;
-            }
-            longLen += y;
-            for(int j=0x80+(x<<8); y>=longLen; --y)
-            {
-                drawPixel(uint8_t(j>>8), uint8_t(y), colour);
-                j-=decInc;
-            }
-            return;	
-        }
-        
-        if(longLen>0)
-        {
-            longLen += x;
-            for(int j=0x80+(y<<8); x<=longLen; ++x)
-            {
-                drawPixel(uint8_t(x), uint8_t(j>>8), colour);
-                j+=decInc;
-            }
-            return;
-        }
-        longLen += x;
-        for(int j=0x80+(y<<8); x>=longLen;--x)
-        {
-            drawPixel(uint8_t(x), uint8_t(j>>8), colour);
-            j-=decInc;
-        }
-    }
 
     uint8_t getPixelGiga(uint8_t x, uint8_t y)
     {
@@ -1075,48 +1153,129 @@ namespace Graphics
         Cpu::setRAM(address, colour);
     }
 
-    void drawLineGiga(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint8_t colour)
+    void mandelbrot(void)
     {
-        x1 = y1 = 0;
-        x2 = y2 = 5;
-
-        uint16_t w = x2 - x1;
-        uint16_t h = y2 - y1;
-        uint16_t dx1 = 1, dy1 = 1, dx2 = 0, dy2 = 0;
-
-        dx1 = dx2 = (w > 0x7FFF) ? 0xFFFF : 1;
-        dy1 = (h > 0x7FFF) ? 0xFFFF : dy1 = 1;
-
-        uint16_t absw = (w > 0x7FFF) ? 0 - w : w;
-        uint16_t absh = (h > 0x7FFF) ? 0 - h : h;
-
-        uint16_t longest = absw;
-        uint16_t shortest = absh;
-
-        if(longest < shortest) 
+        const uint8_t colours[16] = {0x01, 0x02, 0x03, 0x07, 0x0b, 0x0f, 0x0e, 0x0d, 0x0c, 0x3c, 0x38, 0x34, 0x30, 0x20, 0x10, 0x00};
+        const int16_t xmin = -100;
+        const int16_t xmax =  60;
+        const int16_t ymin = -60;
+        const int16_t ymax =  60;
+        const int16_t dx = (xmax-xmin)/160;
+        const int16_t dy = (ymax-ymin)/120;
+ 
+        int16_t cy = ymin;
+        for(int16_t py=8; py<128; py++)
         {
-            longest = absh;
-            shortest = absw; 
-            if(h > 0x7FFF) dy2 = 0xFFFF; 
-            else if (h > 0) dy2 = 1;
-            dx2 = 0;            
+            int16_t cx = xmin;
+            for(int16_t px=0; px<160; px++)
+            {
+                int16_t x=0, y=x, x2=y, y2=x2;
+        
+                int colour = 0;
+                for(int16_t c=0; c<=15; c++)
+                {
+                    colour = c;
+
+                    x2 = int16_t(x*x) >> 5;
+                    y2 = int16_t(y*y) >> 5;
+                    if(int16_t(x2+y2) > 128) break;
+            
+                    y = (int16_t(x*y) >> 4) + cy;
+                    x = int16_t(x2 - y2 + cx);
+                }
+
+                Cpu::setRAM((py <<8) + px, colours[colour]);
+                cx = cx + dx;
+            }
+
+            cy = cy + dy;
+        }
+    }
+
+    void drawLineGiga(int x0, int y0, int x1, int y1)
+    {
+        int dx =  abs(x1 - x0);
+        int sx = (x0 < x1) ? 1 : -1;
+        int dy = -abs(y1 - y0);
+        int sy = (y0 < y1) ? 1 : -1;
+        int err = dx + dy;  /* error value e_xy */
+        
+        for(;;)
+        {
+            if(x0 == x1  &&  y0 == y1) break;
+            int e2 = 2*err;
+            if(e2 >= dy)
+            {
+                err += dy; /* e_xy+e_x > 0 */
+                x0 += sx;
+            }
+            if(e2 <= dx) /* e_xy+e_y < 0 */
+            {
+                err += dx;
+                y0 += sy;
+            }
+
+            drawPixelGiga(x0, y0, 0xFF);
+        }
+    }
+
+    void drawLineGiga(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint8_t colour)
+    {
+        int16_t sx = x2 - x1;
+        int16_t sy = y2 - y1;
+        int h = sy;
+        int16_t dx1 = 1, dx2 = 1, dy1 = 1, dy2 = 0;
+
+        if(sx & 0x8000)
+        {
+            dx1 = -1;
+            dx2 = -1;
+            sx = 0 - sx;
         }
 
-        uint16_t numerator = longest;// >> 1;
-        for(uint16_t i=0; i<=longest; i++) 
+        if(sy & 0x8000)
         {
-            drawPixelGiga(uint8_t(x1), uint8_t(y1), colour);
-            numerator += shortest;
-            if(numerator > longest) 
+            dy1 = -1;
+            sy = 0 - sy;
+            if(sx < sy) dy2 = -1;
+        }
+
+        if(sx < sy) 
+        {
+            dx2 = 0;
+            std::swap(sx, sy);
+            if(h > 0) dy2 = 1;
+        }
+
+        int16_t numerator = sx >> 1;
+        int16_t xy1 = x1 | (y1<<8);
+        int16_t xy2 = x2 | (y2<<8);
+        int16_t dxy1 = dx1 + (dy1<<8);
+        int16_t dxy2 = dx2 + (dy2<<8);
+
+        for(uint16_t i=0; i<=sx/2; i++) 
+        {
+            drawPixelGiga(uint8_t(xy1), uint8_t(xy1>>8), colour);
+            drawPixelGiga(uint8_t(xy2), uint8_t(xy2>>8), colour);
+            numerator += sy;
+            if(numerator > sx) 
             {
-                numerator -= longest;
-                x1 += dx1;
-                y1 += dy1;
+                numerator -= sx;
+                xy1 += dxy1;
+                xy2 -= dxy1;
+                //x1 += dx1;
+                //y1 += dy1;
+                //x2 -= dx1;
+                //y2 -= dy1;
             }
             else
             {
-                x1 += dx2;
-                y1 += dy2;
+                xy1 += dxy2;
+                xy2 -= dxy2;
+                //x1 += dx2;
+                //y1 += dy2;
+                //x2 -= dx2;
+                //y2 -= dy2;
             }
         }     
     }
