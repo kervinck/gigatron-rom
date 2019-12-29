@@ -1336,9 +1336,9 @@ namespace Compiler
         char output[16];
         switch(constStrType)
         {
-            case StrChar:  sprintf(output, "%C",   char(uint8_t(input) & 0x7F)); break;
-            case StrHex:   sprintf(output, "%02X", uint8_t(input));              break;
-            case StrHexw:  sprintf(output, "%04X", uint16_t(input));             break;
+            case StrChar:  sprintf(output, "%c",   uint8_t(input) & 0x7F); break;
+            case StrHex:   sprintf(output, "%02X", uint8_t(input));        break;
+            case StrHexw:  sprintf(output, "%04X", uint16_t(input));       break;
 
             default: break;
         }
@@ -1878,6 +1878,16 @@ namespace Compiler
             {
                 case VarInt16: varType = Expression::IntVar; name = _integerVars[codeLine._varIndex]._name;                     break;
                 case VarStr:   varType = Expression::StrVar; name = _stringVars[codeLine._varIndex]._name; stringResult = true; break;
+
+                // Shut MacOS gcc up
+                case VarInt8:
+                case VarInt32:
+                case VarFloat16:
+                case VarFloat32:
+                case VarArray:
+                {
+                }
+                break;
             }
             
             // Output variable, (functions can access this variable within parse())
@@ -2253,6 +2263,16 @@ namespace Compiler
                         dbString += Expression::wordToHexString(_integerVars[i]._init) + " ";
                     }
                     _output.push_back(dbString + "\n");
+                }
+                break;
+
+                // Shut MacOS gcc up
+                case VarInt8:
+                case VarInt32:
+                case VarFloat16:
+                case VarFloat32:
+                case VarStr:
+                {
                 }
                 break;
             }

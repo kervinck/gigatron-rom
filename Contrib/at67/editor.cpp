@@ -630,6 +630,14 @@ namespace Editor
                 }
             }
             break;
+
+            // Shut MacOS gcc up
+            case Term:
+            case Image:
+            case NumEditorModes:
+            {
+            }
+            break;
         }
     }
 
@@ -710,6 +718,14 @@ namespace Editor
             {
                 case File: Loader::setUploadTarget(Loader::Emulator); break;
                 case Dir: changeBrowseDirectory(); break;
+
+                // Shut MacOS gcc up
+                case Fifo:
+                case Link:
+                case NumFileTypes:
+                {
+                }
+                break;
             }
         }
         else if(_editorMode == Rom)
@@ -727,12 +743,26 @@ namespace Editor
             if(_memoryMode == RAM)
             {
                 auto it = std::find(_vpcBreakPoints.begin(), _vpcBreakPoints.end(), Assembler::getDisassembledCode(_cursorY)->_address);
-                (it != _vpcBreakPoints.end()) ? _vpcBreakPoints.erase(it) : _vpcBreakPoints.push_back(Assembler::getDisassembledCode(_cursorY)->_address);
+                if(it != _vpcBreakPoints.end())
+                {
+                    _vpcBreakPoints.erase(it);
+                }
+                else
+                {
+                    _vpcBreakPoints.push_back(Assembler::getDisassembledCode(_cursorY)->_address);
+                }
             }
             else
             {
                 auto it = std::find(_ntvBreakPoints.begin(), _ntvBreakPoints.end(), Assembler::getDisassembledCode(_cursorY)->_address);
-                (it != _ntvBreakPoints.end()) ? _ntvBreakPoints.erase(it) : _ntvBreakPoints.push_back(Assembler::getDisassembledCode(_cursorY)->_address);
+                if(it != _ntvBreakPoints.end())
+                {
+                    _ntvBreakPoints.erase(it);
+                }
+                else
+                {
+                    _ntvBreakPoints.push_back(Assembler::getDisassembledCode(_cursorY)->_address);
+                }
             }
         }
     }
@@ -748,6 +778,15 @@ namespace Editor
             switch(fileType)
             {
                 case File: Loader::setUploadTarget(Loader::Hardware); break;
+
+                // Shut MacOS gcc up
+                case Dir:
+                case Fifo:
+                case Link:
+                case NumFileTypes:
+                {
+                }
+                break;
             }
         }
     }
@@ -785,11 +824,11 @@ namespace Editor
         if(_sdlKeyScanCode >= SDLK_a  &&  _sdlKeyScanCode <= SDLK_f) range = 2;
         if(range == 1  ||  range == 2)
         {
-            uint8_t value = 0;
+            uint16_t value = 0;
             switch(range)
             {
-                case 1: value = uint8_t(_sdlKeyScanCode - SDLK_0);      break;
-                case 2: value = uint8_t(_sdlKeyScanCode - SDLK_a + 10); break;
+                case 1: value = uint16_t(_sdlKeyScanCode - SDLK_0);      break;
+                case 2: value = uint16_t(_sdlKeyScanCode - SDLK_a + 10); break;
             }
 
             // Edit memory
@@ -798,8 +837,8 @@ namespace Editor
                 uint16_t address = uint16_t(_hexBaseAddress + _cursorX + _cursorY*HEX_CHARS_X);
                 switch(_memoryDigit)
                 {
-                    case 0: value = (value << 4) & 0xF0; Cpu::setRAM(address, Cpu::getRAM(address) & 0x0F | value); break;
-                    case 1: value = (value << 0) & 0x0F; Cpu::setRAM(address, Cpu::getRAM(address) & 0xF0 | value); break;
+                    case 0: value = (value << 4) & 0xF0; Cpu::setRAM(address, uint8_t((Cpu::getRAM(address) & 0x0F) | value)); break;
+                    case 1: value = (value << 0) & 0x0F; Cpu::setRAM(address, uint8_t((Cpu::getRAM(address) & 0xF0) | value)); break;
                 }
                 _memoryDigit = (++_memoryDigit) & 0x01;
                 return;
@@ -812,10 +851,10 @@ namespace Editor
                 {
                     switch(_addressDigit)
                     {
-                        case 0: value = (value << 12) & 0xF000; _cpuUsageAddressA = _cpuUsageAddressA & 0x0FFF | value; break;
-                        case 1: value = (value << 8)  & 0x0F00; _cpuUsageAddressA = _cpuUsageAddressA & 0xF0FF | value; break;
-                        case 2: value = (value << 4)  & 0x00F0; _cpuUsageAddressA = _cpuUsageAddressA & 0xFF0F | value; break;
-                        case 3: value = (value << 0)  & 0x000F; _cpuUsageAddressA = _cpuUsageAddressA & 0xFFF0 | value; break;
+                        case 0: value = (value << 12) & 0xF000; _cpuUsageAddressA = (_cpuUsageAddressA & 0x0FFF) | value; break;
+                        case 1: value = (value << 8)  & 0x0F00; _cpuUsageAddressA = (_cpuUsageAddressA & 0xF0FF) | value; break;
+                        case 2: value = (value << 4)  & 0x00F0; _cpuUsageAddressA = (_cpuUsageAddressA & 0xFF0F) | value; break;
+                        case 3: value = (value << 0)  & 0x000F; _cpuUsageAddressA = (_cpuUsageAddressA & 0xFFF0) | value; break;
                     }
                 }
                 break;
@@ -824,10 +863,10 @@ namespace Editor
                 {
                     switch(_addressDigit)
                     {
-                        case 0: value = (value << 12) & 0xF000; _cpuUsageAddressB = _cpuUsageAddressB & 0x0FFF | value; break;
-                        case 1: value = (value << 8)  & 0x0F00; _cpuUsageAddressB = _cpuUsageAddressB & 0xF0FF | value; break;
-                        case 2: value = (value << 4)  & 0x00F0; _cpuUsageAddressB = _cpuUsageAddressB & 0xFF0F | value; break;
-                        case 3: value = (value << 0)  & 0x000F; _cpuUsageAddressB = _cpuUsageAddressB & 0xFFF0 | value; break;
+                        case 0: value = (value << 12) & 0xF000; _cpuUsageAddressB = (_cpuUsageAddressB & 0x0FFF) | value; break;
+                        case 1: value = (value << 8)  & 0x0F00; _cpuUsageAddressB = (_cpuUsageAddressB & 0xF0FF) | value; break;
+                        case 2: value = (value << 4)  & 0x00F0; _cpuUsageAddressB = (_cpuUsageAddressB & 0xFF0F) | value; break;
+                        case 3: value = (value << 0)  & 0x000F; _cpuUsageAddressB = (_cpuUsageAddressB & 0xFFF0) | value; break;
                     }
                 }
                 break;
@@ -841,10 +880,10 @@ namespace Editor
                         {
                             switch(_addressDigit)
                             {
-                                case 0: value = (value << 12) & 0xF000; _loadBaseAddress = _loadBaseAddress & 0x0FFF | value; break;
-                                case 1: value = (value << 8)  & 0x0F00; _loadBaseAddress = _loadBaseAddress & 0xF0FF | value; break;
-                                case 2: value = (value << 4)  & 0x00F0; _loadBaseAddress = _loadBaseAddress & 0xFF0F | value; break;
-                                case 3: value = (value << 0)  & 0x000F; _loadBaseAddress = _loadBaseAddress & 0xFFF0 | value; break;
+                                case 0: value = (value << 12) & 0xF000; _loadBaseAddress = (_loadBaseAddress & 0x0FFF) | value; break;
+                                case 1: value = (value << 8)  & 0x0F00; _loadBaseAddress = (_loadBaseAddress & 0xF0FF) | value; break;
+                                case 2: value = (value << 4)  & 0x00F0; _loadBaseAddress = (_loadBaseAddress & 0xFF0F) | value; break;
+                                case 3: value = (value << 0)  & 0x000F; _loadBaseAddress = (_loadBaseAddress & 0xFFF0) | value; break;
                             }
 
                             if(_loadBaseAddress < LOAD_BASE_ADDRESS) _loadBaseAddress = LOAD_BASE_ADDRESS;
@@ -859,10 +898,10 @@ namespace Editor
                                 {
                                     switch(_addressDigit)
                                     {
-                                        case 0: value = (value << 12) & 0xF000; _vpcBaseAddress = _vpcBaseAddress & 0x0FFF | value; break;
-                                        case 1: value = (value << 8)  & 0x0F00; _vpcBaseAddress = _vpcBaseAddress & 0xF0FF | value; break;
-                                        case 2: value = (value << 4)  & 0x00F0; _vpcBaseAddress = _vpcBaseAddress & 0xFF0F | value; break;
-                                        case 3: value = (value << 0)  & 0x000F; _vpcBaseAddress = _vpcBaseAddress & 0xFFF0 | value; break;
+                                        case 0: value = (value << 12) & 0xF000; _vpcBaseAddress = (_vpcBaseAddress & 0x0FFF) | value; break;
+                                        case 1: value = (value << 8)  & 0x0F00; _vpcBaseAddress = (_vpcBaseAddress & 0xF0FF) | value; break;
+                                        case 2: value = (value << 4)  & 0x00F0; _vpcBaseAddress = (_vpcBaseAddress & 0xFF0F) | value; break;
+                                        case 3: value = (value << 0)  & 0x000F; _vpcBaseAddress = (_vpcBaseAddress & 0xFFF0) | value; break;
                                     }
                                 }
                                 break;
@@ -871,10 +910,10 @@ namespace Editor
                                 {
                                     switch(_addressDigit)
                                     {
-                                        case 0: value = (value << 12) & 0xF000; _ntvBaseAddress = _ntvBaseAddress & 0x0FFF | value; break;
-                                        case 1: value = (value << 8)  & 0x0F00; _ntvBaseAddress = _ntvBaseAddress & 0xF0FF | value; break;
-                                        case 2: value = (value << 4)  & 0x00F0; _ntvBaseAddress = _ntvBaseAddress & 0xFF0F | value; break;
-                                        case 3: value = (value << 0)  & 0x000F; _ntvBaseAddress = _ntvBaseAddress & 0xFFF0 | value; break;
+                                        case 0: value = (value << 12) & 0xF000; _ntvBaseAddress = (_ntvBaseAddress & 0x0FFF) | value; break;
+                                        case 1: value = (value << 8)  & 0x0F00; _ntvBaseAddress = (_ntvBaseAddress & 0xF0FF) | value; break;
+                                        case 2: value = (value << 4)  & 0x00F0; _ntvBaseAddress = (_ntvBaseAddress & 0xFF0F) | value; break;
+                                        case 3: value = (value << 0)  & 0x000F; _ntvBaseAddress = (_ntvBaseAddress & 0xFFF0) | value; break;
                                     }
                                 }
                                 break;
@@ -886,11 +925,20 @@ namespace Editor
                         {
                             switch(_addressDigit)
                             {
-                                case 0: value = (value << 12) & 0xF000; _hexBaseAddress = _hexBaseAddress & 0x0FFF | value; break;
-                                case 1: value = (value << 8)  & 0x0F00; _hexBaseAddress = _hexBaseAddress & 0xF0FF | value; break;
-                                case 2: value = (value << 4)  & 0x00F0; _hexBaseAddress = _hexBaseAddress & 0xFF0F | value; break;
-                                case 3: value = (value << 0)  & 0x000F; _hexBaseAddress = _hexBaseAddress & 0xFFF0 | value; break;
+                                case 0: value = (value << 12) & 0xF000; _hexBaseAddress = (_hexBaseAddress & 0x0FFF) | value; break;
+                                case 1: value = (value << 8)  & 0x0F00; _hexBaseAddress = (_hexBaseAddress & 0xF0FF) | value; break;
+                                case 2: value = (value << 4)  & 0x00F0; _hexBaseAddress = (_hexBaseAddress & 0xFF0F) | value; break;
+                                case 3: value = (value << 0)  & 0x000F; _hexBaseAddress = (_hexBaseAddress & 0xFFF0) | value; break;
                             }
+                        }
+                        break;
+
+                        // Shut MacOS gcc up
+                        case Rom:
+                        case Term:
+                        case Image:
+                        case NumEditorModes:
+                        {
                         }
                         break;
                     }
@@ -901,10 +949,10 @@ namespace Editor
                 {
                     switch(_addressDigit)
                     {
-                        case 0: value = (value << 12) & 0xF000; _varsBaseAddress = _varsBaseAddress & 0x0FFF | value; break;
-                        case 1: value = (value << 8)  & 0x0F00; _varsBaseAddress = _varsBaseAddress & 0xF0FF | value; break;
-                        case 2: value = (value << 4)  & 0x00F0; _varsBaseAddress = _varsBaseAddress & 0xFF0F | value; break;
-                        case 3: value = (value << 0)  & 0x000F; _varsBaseAddress = _varsBaseAddress & 0xFFF0 | value; break;
+                        case 0: value = (value << 12) & 0xF000; _varsBaseAddress = (_varsBaseAddress & 0x0FFF) | value; break;
+                        case 1: value = (value << 8)  & 0x0F00; _varsBaseAddress = (_varsBaseAddress & 0xF0FF) | value; break;
+                        case 2: value = (value << 4)  & 0x00F0; _varsBaseAddress = (_varsBaseAddress & 0xFF0F) | value; break;
+                        case 3: value = (value << 0)  & 0x000F; _varsBaseAddress = (_varsBaseAddress & 0xFFF0) | value; break;
                     }
                 }
                 break;
@@ -913,10 +961,10 @@ namespace Editor
                 {
                     switch(_addressDigit)
                     {
-                        case 0: value = (value << 12) & 0xF000; _singleStepAddress = _singleStepAddress & 0x0FFF | value; break;
-                        case 1: value = (value << 8)  & 0x0F00; _singleStepAddress = _singleStepAddress & 0xF0FF | value; break;
-                        case 2: value = (value << 4)  & 0x00F0; _singleStepAddress = _singleStepAddress & 0xFF0F | value; break;
-                        case 3: value = (value << 0)  & 0x000F; _singleStepAddress = _singleStepAddress & 0xFFF0 | value; break;
+                        case 0: value = (value << 12) & 0xF000; _singleStepAddress = (_singleStepAddress & 0x0FFF) | value; break;
+                        case 1: value = (value << 8)  & 0x0F00; _singleStepAddress = (_singleStepAddress & 0xF0FF) | value; break;
+                        case 2: value = (value << 4)  & 0x00F0; _singleStepAddress = (_singleStepAddress & 0xFF0F) | value; break;
+                        case 3: value = (value << 0)  & 0x000F; _singleStepAddress = (_singleStepAddress & 0xFFF0) | value; break;
                     }
                 }
                 break;
@@ -1405,6 +1453,12 @@ namespace Editor
                         if(Cpu::getRAM(_singleStepAddress) != _singleStepNtv) singleStep(nPC);
                     }
                     break;
+
+                    // Shut MacOS gcc up
+                    case NumSingleStepModes:
+                    {
+                    }
+                    break;
                 }
             }
             // vCPU debugging, (this code can potentially run for every Native instruction, for efficiency we check vPC so this code only runs for each vCPU instruction)
@@ -1438,6 +1492,12 @@ namespace Editor
                     case StepWatch:
                     {
                         if(Cpu::getRAM(_singleStepAddress) != _singleStepVpc) singleStep(vPC);
+                    }
+                    break;
+
+                    // Shut MacOS gcc up
+                    case NumSingleStepModes:
+                    {
                     }
                     break;
                 }

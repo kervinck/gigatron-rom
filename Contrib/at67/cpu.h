@@ -56,7 +56,7 @@
 #undef _X
 #endif
 
-#define UNREFERENCED_PARAM(x) x
+#define UNREFERENCED_PARAM(x) (x)
 
 
 namespace Cpu
