@@ -83,6 +83,10 @@ _j=$3c          {2 bytes}
 
 { This code runs once and is then reused as the input buffer for wozmon }
 
+$a000 _sysArgs0=                {Clear last pixel row}
+$7e60 _sysArgs2=
+\SYS_SetMemory_v2_54 _sysFn= 54!!
+
 $1ee p= {videoTable+119*2}      {First GCL variable at $30, later used as Pos}
 [do
   $7e p.                        {Shared empty pixel line at $7e60}
@@ -342,41 +346,7 @@ _MNEMR=*        #$D8 #$62 #$5A #$48             { XXXXX000 INSTRS }
                 #$44 #$44 #$A2 #$C8
 
 
-{-----------------------------------------------------------------------+
-|       Startup message                                                 |
-+-----------------------------------------------------------------------}
-
 *=$5e00
-
-_PRE_RESET=*
-                {Set visible pixel lines in video table}
-                #_CLC_
-                #_LDXIM_ #0
-                #_LDYIM_ #12
-_L1=*           #_LDAAY_ ##_ROWS
-                #_STYZ_  #_YSAV
-                #_LDYIM_ #7
-_L2=*           #_STAAX_ ##\videoTable
-                #_ADCIM_ #1
-                #_INX_
-                #_INX_
-                #_DEY_
-                #_BNE_   #@_L2
-                #_INX_
-                #_INX_
-                #_INX_
-                #_INX_
-                #_LDYZ_  #_YSAV
-                #_DEY_
-                #_BPL_   #@_L1
-
-                {Initialize terminal through "ACI"}
-                #_JMP_   ##_MENU
-
-_ROWS=*         { Page of each row's first pixel line, backwards }
-                #$70 #$56 #$4f #$48 #$41 #$3a #$33 #$2c #$25 #$1e #$17 #$10 #$77 #$70
-
-*=$5f00
 
 {-----------------------------------------------------------------------+
 |       WAITKEY                                                         |
@@ -434,6 +404,40 @@ _GOBACK=*       #_LDAZ_  #<p            {Go back}
                 #_RTS_
 
 {-----------------------------------------------------------------------+
+|       Startup message                                                 |
++-----------------------------------------------------------------------}
+
+_PRE_RESET=*
+                {Set visible pixel lines in video table}
+                #_CLC_
+                #_LDXIM_ #0
+                #_LDYIM_ #12
+_L1=*           #_LDAAY_ ##_ROWS
+                #_STYZ_  #_YSAV
+                #_LDYIM_ #7
+_L2=*           #_STAAX_ ##\videoTable
+                #_ADCIM_ #1
+                #_INX_
+                #_INX_
+                #_DEY_
+                #_BNE_   #@_L2
+                #_INX_
+                #_INX_
+                #_INX_
+                #_INX_
+                #_LDYZ_  #_YSAV
+                #_DEY_
+                #_BPL_   #@_L1
+
+                {Initialize terminal through "ACI"}
+                #_JMP_   ##_MENU
+
+_ROWS=*         { Page of each row's first pixel line, backwards }
+                #$70 #$56 #$4f #$48 #$41 #$3a #$33 #$2c #$25 #$1e #$17 #$10 #$77 #$70
+
+*=$5f00
+
+{-----------------------------------------------------------------------+
 |       Main vCPU loop                                                  |
 +-----------------------------------------------------------------------}
 
@@ -467,8 +471,6 @@ _v6502_PC=                      {Reset v6502 PC}
     |       Newline                                                     |
     +-------------------------------------------------------------------}
 
-    \sysArgs2.                  {Zero bit pattern}
-
     { Find the top text row }
     $62 <p.                     {Go to start of line, nicely indent by 2 pixels}
     $9e+ _i=                    {i==$100: start of the video table}
@@ -477,6 +479,9 @@ _v6502_PC=                      {Reset v6502 PC}
     { Clear the text row }
     p 2- _sysArgs4=             {Set drawing position for clearing}
     [do
+      $700 _sysArgs4+ peek      {Preserve pixel on 8th line because of overlap}
+      1& \sysArgs2.             { in 7 line text mode. Assume bit 0 differs.}
+
       134!!                     {SYS call to draw 8 pixels vertically}
       <_sysArgs4++              {Step 1 pixel right}
       \sysArgs4, if<>0loop]     {Loop until end of pixel line}
@@ -516,8 +521,10 @@ _v6502_PC=                      {Reset v6502 PC}
     5 [do _i=                   {Draw character as 5 vertical bit slices}
       _j 0??                    {Get bit slice as byte from ROM table}
       $fe& \sysArgs2.           {Clear bottom pixel}
+      $700 _sysArgs4+ peek      {Preserve pixel on 8th line because of overlap}
+      [if<>0 <\sysArgs2++]      { in 7 line text mode. Assumes background is 0.}
       134!!                     {SYS call to draw 8 pixels vertically}
-      <_j++ <\sysArgs4++        {Advance to next byte}
+      <_j++ <_sysArgs4++        {Advance to next byte}
       _i 1- if>0loop]           {Looping}
 
     %-2                         {Return position for backspace}
@@ -580,7 +587,7 @@ _MSG=*
 
 
 *=$e000
- #$4c #$b0 #$e2 #$20 #$00 #$5f #$10 #$fb #$ad #$10 #$d0 #$60 #$8a #$29 #$20 #$f0
+ #$4c #$b0 #$e2 #$20 #$00 #$5e #$10 #$fb #$ad #$10 #$d0 #$60 #$8a #$29 #$20 #$f0
  #$23 #$a9 #$a0 #$85 #$e4 #$4c #$c9 #$e3 #$a9 #$20 #$c5 #$3e #$b0 #$0c #$a9 #$8d
  #$a0 #$07 #$20 #$c9 #$e3 #$a9 #$a0 #$88 #$d0 #$f8 #$a0 #$00 #$b1 #$e2 #$e6 #$e2
  #$d0 #$02 #$e6 #$e3 #$60 #$20 #$15 #$e7 #$20 #$76 #$e5 #$a5 #$e2 #$c5 #$e6 #$a5

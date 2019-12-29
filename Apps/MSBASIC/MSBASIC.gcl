@@ -17,7 +17,7 @@ gcl0x
         --------------------------
 
         Open issues:
-        XXX SAVE/LOAD with SDC/MMC
+        XXX SAVE/LOAD with SD card
 
         Implemented:
         - 9 digit floating point (40 bits)
@@ -716,6 +716,10 @@ _Setup=*
 
   \videoTable p=                {First variable at $30, will become p later}
   &_CharOut CharOut=            {Prepare for vCPU calls}
+
+ $a000 _sysArgs0=               {Clear last pixel row}
+ $7060 _sysArgs2=
+ \SYS_SetMemory_v2_54 _sysFn= 54!!
 ]
 
 \Setup1 call
@@ -786,16 +790,17 @@ _DrawChar=*
 [
   { Tail function: pops without push }
 
-  \SYS_VDrawBits_134 _sysFn=    {Prepare SYS calls}
-  $b00 \sysArgs0:               {Amber on black}
-  p \sysArgs4:                  {Screen position for character}
+  $b00 _sysArgs0=               {Amber on black}
+  p _sysArgs4=                  {Screen position for character}
   6+ p=                         {Advance by 6 pixels}
 
   5 [do i=                      {Draw character as 5 vertical bit slices}
-    j 0?                        {Get bit slice as byte from ROM table}
+    j 0??                       {Get bit slice as byte from ROM table}
     $fe& \sysArgs2.             {Clear bottom pixel}
+    $700 _sysArgs4+ peek        {Preserve pixel on 8th line because of overlap}
+    [if<>0 <\sysArgs2++]        { in 7 line text mode. Assumes background is 0.}
     134!!                       {SYS call to draw 8 pixels vertically}
-    <j++ <\sysArgs4++           {Advance to next byte}
+    <j++ <_sysArgs4++           {Advance to next byte}
     i 1- if>0loop]              {Looping}
 
   pop ret
@@ -817,11 +822,12 @@ _CharOut=*
   push
   %-2=                          {Park character in stack area}
 
+  \SYS_VDrawBits_134 _sysFn=    {Prepare SYS calls}
+
+  %-2                           {Get character back}
   13^ [if<>0 <p, 251- if>0 0]   {Test for CR or line wrap}
 
-  [if=0
-    \SYS_VDrawBits_134 _sysFn=  {Prepare SYS calls}
-    \Newline call]              {Move to next line}
+  [if=0 \Newline call]          {Advance to next line}
 
   %-2 32-
   [if<0                         {Skip control codes}
@@ -876,8 +882,7 @@ _Newline=*
     Newline function for the compressed layout (7 pixel lines per text row)
   }
 
-  \sysArgs0.                    {vACL == <_Newline == 0 == Black}
-  \sysArgs2.                    {Zero bit pattern}
+  $b00 _sysArgs0=               {Amber on black}
 
   { Find the top text row }
 
@@ -887,9 +892,10 @@ _Newline=*
 
   { Clear the text row }
 
-  p 2- \sysArgs4:               {Set drawing position for clearing}
-
+  p 2- _sysArgs4=               {Set drawing position for clearing}
   [do
+    $700 _sysArgs4+ peek        {Preserve pixel on 8th line because of overlap}
+    1& \sysArgs2.               { in 7 line text mode. Assume bit 0 differs.}
     134!!                       {SYS call to draw 8 pixels vertically}
     <\sysArgs4++                {Step 1 pixel right}
     \sysArgs4, if<>0loop]       {Loop until end of pixel line}
