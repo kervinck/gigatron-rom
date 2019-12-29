@@ -436,7 +436,7 @@ namespace Cpu
 
     void garble(uint8_t* mem, int len)
     {
-        for(int i=0; i<len; i++) mem[i] = rand();
+        for(int i=0; i<len; i++) mem[i] = uint8_t(rand());
     }
 
     void createRomHeader(const uint8_t* rom, const std::string& filename, const std::string& name, int length)
@@ -819,7 +819,7 @@ namespace Cpu
         }
 
         uint16_t addr = (hi << 8) | lo;
-        int B = S._undef; // Data Bus
+        uint8_t B = S._undef; // Data Bus
         switch(bus)
         {
             case 0: B=S._D;                                            break;
@@ -901,6 +901,8 @@ namespace Cpu
     // Counts maximum and used vCPU instruction slots available per frame
     void vCpuUsage(const State& S, const State& T)
     {
+        UNREFERENCED_PARAM(T);
+
         // All ROM's so far v1 through v4 use the same vCPU dispatch address!
         if(S._PC == ROM_VCPU_DISPATCH)
         {

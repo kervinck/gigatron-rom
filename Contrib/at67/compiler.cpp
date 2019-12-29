@@ -239,7 +239,7 @@ namespace Compiler
     }
 
 
-    void createLabel(uint16_t address, const std::string& name, const std::string& output, int codeLineIndex, Label& label, bool numeric, bool addUnderscore, bool pageJump, bool gosub)
+    void createLabel(uint16_t address, const std::string& name, int codeLineIndex, Label& label, bool numeric, bool addUnderscore, bool pageJump, bool gosub)
     {
         std::string n = name;
         Expression::stripWhitespace(n);
@@ -663,7 +663,7 @@ namespace Compiler
         }
 
         // Macro names
-        int macroIndex;
+        int macroIndex = 0;
         std::string macroName;
         bool foundMacro = false;
         for(int i=0; i<_macroLines.size(); i++)
@@ -703,9 +703,9 @@ namespace Compiler
         // Calculate macros vASM byte sizes
         for(auto it=_macroNameEntries.begin(); it!=_macroNameEntries.end(); ++it)
         {
-            int macroIndex = _macroIndexEntries[it->second._name]._indexStart;
             it->second._byteSize = getMacroSize(it->second._name);
             _macroIndexEntries[it->second._name]._byteSize = it->second._byteSize;
+            //macroIndex = _macroIndexEntries[it->second._name]._indexStart;
             //fprintf(stderr, "%s  %d %d  %d %d bytes\n", it->second._name.c_str(), macroIndex, it->second._indexEnd, it->second._byteSize, _macroIndexEntries[it->second._name]._byteSize);
         }
 
@@ -715,6 +715,8 @@ namespace Compiler
 
     int createVcpuAsm(const std::string& opcodeStr, const std::string& operandStr, int codeLineIdx, std::string& line)
     {
+        UNREFERENCED_PARAM(codeLineIdx);
+
         int vasmSize = 0;
         std::string opcode = std::string(opcodeStr);
 
@@ -733,7 +735,7 @@ namespace Compiler
             vasmSize = Assembler::getAsmOpcodeSize(opcode);
         }
 
-        _vasmPC += vasmSize;
+        _vasmPC += uint16_t(vasmSize);
 
         //fprintf(stderr, "%s  %d %04x\n", opcode.c_str(), vasmSize, _vasmPC);
 
@@ -766,6 +768,8 @@ namespace Compiler
     // Generic LDW expression parser
     uint32_t parseArrayVarExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, Expression::Numeric& numeric)
     {
+        UNREFERENCED_PARAM(codeLine);
+
         int varIndex, constIndex, strIndex;
         Expression::parse(expression, codeLineIndex, numeric);
         uint32_t expressionType = isExpression(expression, varIndex, constIndex, strIndex);
@@ -808,7 +812,7 @@ namespace Compiler
         // Constant index
         if(!(expressionType & Expression::HasIntVars))
         {
-            emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr + arrIndex._value*intSize), false, codeLineIndex);
+            emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr + arrIndex._value*uint16_t(intSize)), false, codeLineIndex);
             emitVcpuAsm("STW",  "register1", false, codeLineIndex);
             emitVcpuAsm("LDW",  "register0", false, codeLineIndex);
             emitVcpuAsm("DOKE", "register1", false, codeLineIndex);
@@ -946,6 +950,8 @@ namespace Compiler
     // Generic expression parser
     OperandType parseExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, std::string& operand, Expression::Numeric& numeric)
     {
+        UNREFERENCED_PARAM(codeLine);
+
         int varIndex, constIndex, strIndex;
         Expression::parse(expression, codeLineIndex, numeric);
         uint32_t expressionType = isExpression(expression, varIndex, constIndex, strIndex);
@@ -969,6 +975,8 @@ namespace Compiler
     // LDW expression parser
     uint32_t parseExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, Expression::Numeric& numeric)
     {
+        UNREFERENCED_PARAM(codeLine);
+
         int varIndex, constIndex, strIndex;
         Expression::parse(expression, codeLineIndex, numeric);
         uint32_t expressionType = isExpression(expression, varIndex, constIndex, strIndex);
@@ -999,6 +1007,8 @@ namespace Compiler
     // Handle expression, (use this when expression has already been parsed)
     uint32_t handleExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, Expression::Numeric numeric)
     {
+        UNREFERENCED_PARAM(codeLine);
+
         int varIndex, constIndex, strIndex;
         uint32_t expressionType = isExpression(expression, varIndex, constIndex, strIndex);
 
@@ -1108,7 +1118,7 @@ namespace Compiler
             {
                 foundGosub = isGosubLabel(labelName);
             }
-            createLabel(_vasmPC, labelName, labelName, int(_codeLines.size()), label, numeric, true, false, foundGosub);
+            createLabel(_vasmPC, labelName, int(_codeLines.size()), label, numeric, true, false, foundGosub);
             if(createCodeLine(code, int(space + 1), _currentLabelIndex, -1, Expression::Int16Both, false, codeLine)) _codeLines.push_back(codeLine);
 
             return LabelFound;
@@ -1138,7 +1148,7 @@ namespace Compiler
 
                 // Create label
                 bool foundGosub = isGosubLabel(labelName);
-                createLabel(_vasmPC, labelName, labelName, int(_codeLines.size()), label, false, true, false, foundGosub);
+                createLabel(_vasmPC, labelName, int(_codeLines.size()), label, false, true, false, foundGosub);
                 if(createCodeLine(code, int(colon  + 1), _currentLabelIndex, -1, Expression::Int16Both, false, codeLine))
                 {
                     validCode = true;
@@ -1210,7 +1220,7 @@ namespace Compiler
         // Entry point initialisation
         Label label;
         CodeLine codeLine;
-        createLabel(_vasmPC, "_entryPoint_", "_entryPoint_\t", 0, label, false, false, false, false);
+        createLabel(_vasmPC, "_entryPoint_", 0, label, false, false, false, false);
         if(createCodeLine("INIT", 0, 0, -1, Expression::Int16Both, false, codeLine)) _codeLines.push_back(codeLine);
         if(!Assembler::getUseOpcodeCALLI())
         {
@@ -1250,6 +1260,9 @@ namespace Compiler
     // Create string and advance string pointer
     int getOrCreateString(CodeLine& codeLine, int codeLineIndex, const std::string& str, std::string& name, uint16_t& address, uint8_t maxSize, bool constString)
     {
+        UNREFERENCED_PARAM(codeLine);
+        UNREFERENCED_PARAM(codeLineIndex);
+
         int index = -1;
 
         // Reuse const string if possible
@@ -1323,9 +1336,9 @@ namespace Compiler
         char output[16];
         switch(constStrType)
         {
-            case StrChar:  sprintf(output, "%C",   uint8_t(input) & 0x7F); break;
-            case StrHex:   sprintf(output, "%02X", uint8_t(input));        break;
-            case StrHexw:  sprintf(output, "%04X", uint16_t(input));       break;
+            case StrChar:  sprintf(output, "%C",   char(uint8_t(input) & 0x7F)); break;
+            case StrHex:   sprintf(output, "%02X", uint8_t(input));              break;
+            case StrHexw:  sprintf(output, "%04X", uint16_t(input));             break;
 
             default: break;
         }
@@ -1386,52 +1399,56 @@ namespace Compiler
         char uchr;
 
         std::string valueStr;
-        uchr = toupper(peek(false));
+        uchr = char(toupper(peek(false)));
         valueStr.push_back(uchr); get(false);
-        uchr = toupper(peek(false));
+        uchr = char(toupper(peek(false)));
         if((uchr >= '0'  &&  uchr <= '9')  ||  uchr == 'X'  ||  uchr == 'H'  ||  uchr == 'B'  ||  uchr == 'O'  ||  uchr == 'Q')
         {
             valueStr.push_back(uchr); get(false);
-            uchr = toupper(peek(false));
+            uchr = char(toupper(peek(false)));
             while(uchr  &&  ((uchr >= '0'  &&  uchr <= '9')  ||  (uchr >= 'A'  &&  uchr <= 'F')))
             {
                 // Don't skip spaces here, as hex numbers can become attached to variables, keywords, etc
                 valueStr.push_back(get(true));
-                uchr = toupper(peek(true));
+                uchr = char(toupper(peek(true)));
             }
         }
 
         return Expression::stringToI16(valueStr, value);
     }
 
-    Expression::Numeric getString(Expression::Numeric& numeric)
+    Expression::Numeric getString(const Expression::Numeric& numeric)
     {
+        UNREFERENCED_PARAM(numeric);
+
         // First quote
         get(false);
 
-        std::string str;
+        std::string text;
         while(peek(false)  &&  peek(false) != '"')
         {
             // Don't skip spaces within string
-            str += peek(true);
+            text += peek(true);
             get(true);
         }
 
         if(!peek(false))
         {
-            fprintf(stderr, "Compiler::getString() : Syntax error in string '%s' in '%s' on line %d\n", str.c_str(), _codeLines[_currentCodeLineIndex]._code.c_str(), Expression::getLineNumber() + 1);
+            fprintf(stderr, "Compiler::getString() : Syntax error in string '%s' in '%s' on line %d\n", text.c_str(), _codeLines[_currentCodeLineIndex]._code.c_str(), Expression::getLineNumber() + 1);
             return Expression::Numeric();
         }
 
         // Last quote
         get(false);
 
-        return Expression::Numeric(0, -1, true, Expression::String, Expression::BooleanCC, Expression::Int16Both, std::string(""), str);
+        return Expression::Numeric(0, -1, true, Expression::String, Expression::BooleanCC, Expression::Int16Both, std::string(""), text);
     }
 
     Expression::Numeric addressOf(void)
     {
+        // @ char
         get(false);
+
         std::string varName = Expression::getExpression();
         if(varName.back() == ')') varName.erase(varName.size()-1);
         int varIndex = findVar(varName);
@@ -1591,7 +1608,7 @@ namespace Compiler
                         if(_integerVars[varIndex]._varType == VarArray)
                         {
                             // Array numeric
-                            numeric = Expression::Numeric(defaultValue, varIndex, true, Expression::ArrVar, Expression::BooleanCC, Expression::Int16Both, varName, std::string(""));
+                            numeric = Expression::Numeric(defaultValue, int16_t(varIndex), true, Expression::ArrVar, Expression::BooleanCC, Expression::Int16Both, varName, std::string(""));
 
                             // Array index numeric
                             Expression::Numeric param = factor(0); 
@@ -1607,7 +1624,7 @@ namespace Compiler
                             if(Expression::find(".HI")) int16Byte = Expression::Int16High;
 
                             // Numeric is now passed back to compiler, (rather than just numeric._value), so make sure all fields are valid
-                            numeric = Expression::Numeric(defaultValue, varIndex, true, Expression::IntVar, Expression::BooleanCC, int16Byte, varName, std::string(""));
+                            numeric = Expression::Numeric(defaultValue, int16_t(varIndex), true, Expression::IntVar, Expression::BooleanCC, int16Byte, varName, std::string(""));
                         }
                     }
                     // Strings
@@ -1616,7 +1633,7 @@ namespace Compiler
                         Expression::advance(varName.size());
 
                         // Numeric is now passed back to compiler, (rather than just numeric._value), so make sure all fields are valid
-                        numeric = Expression::Numeric(defaultValue, strIndex, true, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, varName, std::string(""));
+                        numeric = Expression::Numeric(defaultValue, int16_t(strIndex), true, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, varName, std::string(""));
                     }
                     // Constants
                     else if(constIndex != -1)
@@ -1628,13 +1645,13 @@ namespace Compiler
                             // Numeric is now passed back to compiler, (rather than just numeric._value), so make sure all fields are valid
                             case ConstInt16:
                             {
-                                numeric = Expression::Numeric(_constants[constIndex]._data, constIndex, true, Expression::Number, Expression::BooleanCC, Expression::Int16Both, varName, std::string(""));
+                                numeric = Expression::Numeric(_constants[constIndex]._data, int16_t(constIndex), true, Expression::Number, Expression::BooleanCC, Expression::Int16Both, varName, std::string(""));
                             }
                             break;
 
                             case ConstStr:
                             {
-                                numeric = Expression::Numeric(defaultValue, constIndex, true, Expression::Constant, Expression::BooleanCC, Expression::Int16Both, varName, std::string(""));
+                                numeric = Expression::Numeric(defaultValue, int16_t(constIndex), true, Expression::Constant, Expression::BooleanCC, Expression::Int16Both, varName, std::string(""));
                             }
                             break;
                         }
@@ -1856,7 +1873,7 @@ namespace Compiler
         if(codeLine._varIndex != -1)
         {
             std::string name;
-            Expression::VarType varType;
+            Expression::VarType varType = Expression::Number;
             switch(codeLine._varType)
             {
                 case VarInt16: varType = Expression::IntVar; name = _integerVars[codeLine._varIndex]._name;                     break;
@@ -1864,7 +1881,7 @@ namespace Compiler
             }
             
             // Output variable, (functions can access this variable within parse())
-            numeric = Expression::Numeric(0, codeLine._varIndex, true, varType, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
+            numeric = Expression::Numeric(0, int16_t(codeLine._varIndex), true, varType, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
         }
         Expression::parse(codeLine._expression, codeLineIndex, numeric);
 
@@ -1974,7 +1991,7 @@ namespace Compiler
         return statementResult;
     }
 
-    void addLabelToJumpCC(std::vector<VasmLine>& vasm, std::string& label)
+    void addLabelToJumpCC(std::vector<VasmLine>& vasm, const std::string& label)
     {
         for(int i=0; i<vasm.size(); i++)
         {
@@ -1986,7 +2003,7 @@ namespace Compiler
         }
     }
 
-    void addLabelToJump(std::vector<VasmLine>& vasm, std::string& label)
+    void addLabelToJump(std::vector<VasmLine>& vasm, const std::string& label)
     {
         for(int i=0; i<vasm.size(); i++)
         {
@@ -2188,7 +2205,6 @@ namespace Compiler
         for(int i=0; i<_constants.size(); i++)
         {
             int16_t data = _constants[i]._data;
-            uint16_t address = _constants[i]._address;
             std::string name = _constants[i]._name;
             std::string internalName = _constants[i]._internalName;
             ConstType constType = _constants[i]._constType;
@@ -2474,11 +2490,6 @@ namespace Compiler
                     else
                     {
                         line += (label.size()) ?  "\n" + label + std::string(LABEL_TRUNC_SIZE - label.size(), ' ') + vasmCode : "\n" + std::string(LABEL_TRUNC_SIZE, ' ') + vasmCode;
-                    }
-
-                    if(vasmAddress == 0x03fd)
-                    {
-                        int a = 1;
                     }
 
                     if(vasmSize) Memory::takeFreeRAM(vasmAddress, vasmSize);

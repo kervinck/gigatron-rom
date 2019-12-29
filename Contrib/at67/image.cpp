@@ -501,22 +501,22 @@ namespace Image
             {
                 int index = getPixelAddress(width, x, y)*3;
 
-                int oldRed = src[index + 2];
-                int oldGrn = src[index + 1];
-                int oldBlu = src[index + 0];
+                uint8_t oldRed = src[index + 2];
+                uint8_t oldGrn = src[index + 1];
+                uint8_t oldBlu = src[index + 0];
                 double nrmRed0 = double(oldRed) / 255.0;
                 double nrmGrn0 = double(oldGrn) / 255.0;
                 double nrmBlu0 = double(oldBlu) / 255.0;
 
-                int newRed = convertTo2Bits(oldRed);
-                int newGrn = convertTo2Bits(oldGrn);
-                int newBlu = convertTo2Bits(oldBlu);
+                uint8_t newRed = convertTo2Bits(oldRed);
+                uint8_t newGrn = convertTo2Bits(oldGrn);
+                uint8_t newBlu = convertTo2Bits(oldBlu);
                 double nrmRed1 = double(newRed) / 255.0;
                 double nrmGrn1 = double(newGrn) / 255.0;
                 double nrmBlu1 = double(newBlu) / 255.0;
 
-                double oldLum;
-                double newLum;
+                double oldLum = 0.0;
+                double newLum = 0.0;
                 bool useLumError = true;
                 switch(_diffusionType)
                 {
@@ -621,6 +621,7 @@ namespace Image
         {
             for(int x=startX; x!=endX; x+=stepX)
             {
+                *ptr = *ptr;
             }
         }
 

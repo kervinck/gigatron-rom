@@ -191,7 +191,7 @@ namespace Linker
 
     bool getIncludeSubSize(const std::string& includeName, int subIndex)
     {
-        uint16_t size = getAsmOpcodeSizeOfIncludeSub(includeName, _internalSubs[subIndex]._name);
+        uint16_t size = uint16_t(getAsmOpcodeSizeOfIncludeSub(includeName, _internalSubs[subIndex]._name));
         if(size)
         {
             _internalSubs[subIndex]._size = size;

@@ -180,7 +180,7 @@ namespace Keywords
         return InvalidStringVar;
     }
 
-    void getOrCreateString(Expression::Numeric& numeric, std::string& name, uint16_t& addr, int& index)
+    void getOrCreateString(const Expression::Numeric& numeric, std::string& name, uint16_t& addr, int& index)
     {
         switch(numeric._varType)
         {
@@ -208,7 +208,7 @@ namespace Keywords
         }
     }
 
-    void handleConstantString(Expression::Numeric& numeric, Compiler::ConstStrType constStrType, std::string& name, int& index)
+    void handleConstantString(const Expression::Numeric& numeric, Compiler::ConstStrType constStrType, std::string& name, int& index)
     {
         switch(constStrType)
         {
@@ -239,8 +239,7 @@ namespace Keywords
         }
         else
         {
-            int index = Expression::getOutputNumeric()._index;
-            uint16_t dstAddr = Compiler::getStringVars()[index]._address;
+            uint16_t dstAddr = Compiler::getStringVars()[Expression::getOutputNumeric()._index]._address;
             Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr), false);
             Compiler::emitVcpuAsm("STW", "strSrcAddr", false);
             Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
@@ -275,7 +274,73 @@ namespace Keywords
     // ********************************************************************************************
     // Functions
     // ********************************************************************************************
-    Expression::Numeric functionPEEK(Expression::Numeric& numeric)
+    Expression::Numeric functionARR(Expression::Numeric& numeric)
+    {
+        Compiler::getNextTempVar();
+
+        int intSize = Compiler::getIntegerVars()[numeric._index]._intSize;
+        uint16_t arrayPtr = Compiler::getIntegerVars()[numeric._index]._array;
+
+        // Literal array index
+        if (numeric._parameters[0]._varType == Expression::Number)
+        {
+            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr + uint16_t(numeric._parameters[0]._value*intSize)), false);
+            Compiler::emitVcpuAsm("DEEK", "", false);
+
+            numeric._value = uint8_t(Compiler::getTempVarStart());
+            numeric._varType = Expression::TmpVar;
+            numeric._name = Compiler::getTempVarStartStr();
+        }
+        // Variable array index
+        else
+        {
+            // Can't call Operators::handleSingleOp() here, so special case it
+            switch (numeric._parameters[0]._varType)
+            {
+                // Temporary variable address
+            case Expression::TmpVar:
+            {
+                Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(numeric._parameters[0]._value)), false);
+            }
+            break;
+
+            // User variable name
+            case Expression::IntVar:
+            {
+                Compiler::emitVcpuAsmUserVar("LDW", numeric._parameters[0], false);
+            }
+            break;
+            }
+
+            numeric._value = uint8_t(Compiler::getTempVarStart());
+            numeric._varType = Expression::TmpVar;
+            numeric._name = Compiler::getTempVarStartStr();
+
+#ifdef SMALL_CODE_SIZE
+            // Saves 2 bytes per array access but costs an extra 2 instructions in performance
+            if (Assembler::getUseOpcodeCALLI())
+            {
+                Compiler::emitVcpuAsm("STW", "memIndex", false);
+                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr), false);
+                Compiler::emitVcpuAsm("CALLI", "getArrayInt16", false);
+            }
+            else
+#endif
+            {
+                Compiler::emitVcpuAsm("STW", "register2", false);
+                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr), false);
+                Compiler::emitVcpuAsm("ADDW", "register2", false);
+                Compiler::emitVcpuAsm("ADDW", "register2", false);
+                Compiler::emitVcpuAsm("DEEK", "", false);
+            }
+        }
+
+        Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
+
+        return numeric;
+    }
+
+    Expression::Numeric functionPEEK(Expression::Numeric&& numeric)
     {
         if(numeric._varType == Expression::Number)
         {
@@ -291,7 +356,7 @@ namespace Keywords
         return numeric;
     }
 
-    Expression::Numeric functionDEEK(Expression::Numeric& numeric)
+    Expression::Numeric functionDEEK(Expression::Numeric&& numeric)
     {
         if(numeric._varType == Expression::Number)
         {
@@ -307,7 +372,7 @@ namespace Keywords
         return numeric;
     }
 
-    Expression::Numeric functionUSR(Expression::Numeric& numeric)
+    Expression::Numeric functionUSR(Expression::Numeric&& numeric)
     {
         if(numeric._varType == Expression::Number)
         {
@@ -340,7 +405,7 @@ namespace Keywords
         return numeric;
     }
 
-    Expression::Numeric functionRND(Expression::Numeric& numeric)
+    Expression::Numeric functionRND(Expression::Numeric&& numeric)
     {
         bool useMod = true;
         if(numeric._varType == Expression::Number)
@@ -377,73 +442,7 @@ namespace Keywords
         return numeric;
     }
 
-    Expression::Numeric functionARR(Expression::Numeric& numeric)
-    {
-        Compiler::getNextTempVar();
-
-        int intSize = Compiler::getIntegerVars()[numeric._index]._intSize;
-        uint16_t arrayPtr = Compiler::getIntegerVars()[numeric._index]._array;
-
-        // Literal array index
-        if(numeric._parameters[0]._varType == Expression::Number)
-        {
-            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr + numeric._parameters[0]._value*intSize), false);
-            Compiler::emitVcpuAsm("DEEK", "", false);
-
-            numeric._value = uint8_t(Compiler::getTempVarStart());
-            numeric._varType = Expression::TmpVar;
-            numeric._name = Compiler::getTempVarStartStr();
-        }
-        // Variable array index
-        else
-        {
-            // Can't call Operators::handleSingleOp() here, so special case it
-            switch(numeric._parameters[0]._varType)
-            {
-                // Temporary variable address
-                case Expression::TmpVar:
-                {
-                    Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(numeric._parameters[0]._value)), false);
-                }
-                break;
-
-                // User variable name
-                case Expression::IntVar:
-                {
-                    Compiler::emitVcpuAsmUserVar("LDW", numeric._parameters[0], false);
-                }
-                break;
-            }
-
-            numeric._value = uint8_t(Compiler::getTempVarStart());
-            numeric._varType = Expression::TmpVar;
-            numeric._name = Compiler::getTempVarStartStr();
-
-#ifdef SMALL_CODE_SIZE
-            // Saves 2 bytes per array access but costs an extra 2 instructions in performance
-            if(Assembler::getUseOpcodeCALLI())
-            {
-                Compiler::emitVcpuAsm("STW", "memIndex", false);
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr), false);
-                Compiler::emitVcpuAsm("CALLI", "getArrayInt16", false);
-            }
-            else
-#endif
-            {
-                Compiler::emitVcpuAsm("STW", "register2", false);
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr), false);
-                Compiler::emitVcpuAsm("ADDW", "register2", false);
-                Compiler::emitVcpuAsm("ADDW", "register2", false);
-                Compiler::emitVcpuAsm("DEEK", "",          false);
-            }
-        }
-
-        Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
-
-        return numeric;
-    }
-
-    Expression::Numeric functionLEN(Expression::Numeric& numeric)
+    Expression::Numeric functionLEN(Expression::Numeric&& numeric)
     {
         if(numeric._varType != Expression::Number)
         {
@@ -455,7 +454,7 @@ namespace Keywords
                 return numeric;
             }
 
-            int length;
+            int length = 0;
             switch(numeric._varType)
             {
                 case Expression::IntVar:   length = Compiler::getIntegerVars()[numeric._index]._intSize; break;
@@ -492,7 +491,7 @@ namespace Keywords
         return numeric;
     }
 
-    Expression::Numeric functionCHR$(Expression::Numeric& numeric)
+    Expression::Numeric functionCHR$(Expression::Numeric&& numeric)
     {
         int index;
         uint16_t dstAddr;
@@ -527,7 +526,7 @@ namespace Keywords
             Compiler::emitVcpuAsm("STW", "strDstAddr", false);
             Compiler::emitVcpuAsm("%StringChr", "", false);
 
-            return Expression::Numeric(dstAddr, index, true, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+            return Expression::Numeric(dstAddr, uint16_t(index), true, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
         }
 
         Compiler::getNextTempVar();
@@ -544,10 +543,10 @@ namespace Keywords
         Compiler::emitVcpuAsm("STW", "strDstAddr", false);
         Compiler::emitVcpuAsm("%StringChr", "", false);
 
-        return Expression::Numeric(dstAddr, index, true, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+        return Expression::Numeric(dstAddr, uint16_t(index), true, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
     }
 
-    Expression::Numeric functionHEX$(Expression::Numeric& numeric)
+    Expression::Numeric functionHEX$(Expression::Numeric&& numeric)
     {
         int index;
         uint16_t dstAddr;
@@ -582,7 +581,7 @@ namespace Keywords
             Compiler::emitVcpuAsm("STW", "strDstAddr", false);
             Compiler::emitVcpuAsm("%StringHex", "", false);
 
-            return Expression::Numeric(dstAddr, index, true, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+            return Expression::Numeric(dstAddr, uint16_t(index), true, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
         }
 
         Compiler::getNextTempVar();
@@ -599,10 +598,10 @@ namespace Keywords
         Compiler::emitVcpuAsm("STW", "strDstAddr", false);
         Compiler::emitVcpuAsm("%StringHex", "", false);
 
-        return Expression::Numeric(dstAddr, index, true, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+        return Expression::Numeric(dstAddr, uint16_t(index), true, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
     }
 
-    Expression::Numeric functionHEXW$(Expression::Numeric& numeric)
+    Expression::Numeric functionHEXW$(Expression::Numeric&& numeric)
     {
         int index;
         uint16_t dstAddr;
@@ -637,7 +636,7 @@ namespace Keywords
             Compiler::emitVcpuAsm("STW", "strDstAddr", false);
             Compiler::emitVcpuAsm("%StringHexw", "", false);
 
-            return Expression::Numeric(dstAddr, index, true, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+            return Expression::Numeric(dstAddr, uint16_t(index), true, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
         }
 
         Compiler::getNextTempVar();
@@ -654,10 +653,10 @@ namespace Keywords
         Compiler::emitVcpuAsm("STW", "strDstAddr", false);
         Compiler::emitVcpuAsm("%StringHexw", "", false);
 
-        return Expression::Numeric(dstAddr, index, true, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+        return Expression::Numeric(dstAddr, uint16_t(index), true, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
     }
 
-    Expression::Numeric functionLEFT$(Expression::Numeric& numeric)
+    Expression::Numeric functionLEFT$(Expression::Numeric&& numeric)
     {
         // Literal string and parameter, (optimised case)
         if(numeric._varType == Expression::String  &&  numeric._parameters.size() == 1  &&  numeric._parameters[0]._varType == Expression::Number)
@@ -666,7 +665,7 @@ namespace Keywords
             std::string name;
             handleConstantString(numeric, Compiler::StrLeft, name, index);
 
-            return Expression::Numeric(0, index, true, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
+            return Expression::Numeric(0, uint16_t(index), true, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
         }
 
         // Non optimised case
@@ -687,8 +686,7 @@ namespace Keywords
             }
             else
             {
-                int index = Expression::getOutputNumeric()._index;
-                uint16_t dstAddr = Compiler::getStringVars()[index]._address;
+                uint16_t dstAddr = Compiler::getStringVars()[Expression::getOutputNumeric()._index]._address;
 
                 handleStringParameter(numeric._parameters[0]);
                 Compiler::emitVcpuAsm("STW", "strLength", false);
@@ -699,13 +697,13 @@ namespace Keywords
                 Compiler::emitVcpuAsm("%StringLeft", "", false);
             }
 
-            return Expression::Numeric(0, index, true, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
+            return Expression::Numeric(0, uint16_t(index), true, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
         }
 
         return numeric;
     }
 
-    Expression::Numeric functionRIGHT$(Expression::Numeric& numeric)
+    Expression::Numeric functionRIGHT$(Expression::Numeric&& numeric)
     {
         // Literal string and parameter, (optimised case)
         if(numeric._varType == Expression::String  &&  numeric._parameters.size() == 1  &&  numeric._parameters[0]._varType == Expression::Number)
@@ -714,7 +712,7 @@ namespace Keywords
             std::string name;
             handleConstantString(numeric, Compiler::StrRight, name, index);
 
-            return Expression::Numeric(0, index, true, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
+            return Expression::Numeric(0, uint16_t(index), true, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
         }
 
         // Non optimised case
@@ -735,8 +733,7 @@ namespace Keywords
             }
             else
             {
-                int index = Expression::getOutputNumeric()._index;
-                uint16_t dstAddr = Compiler::getStringVars()[index]._address;
+                uint16_t dstAddr = Compiler::getStringVars()[Expression::getOutputNumeric()._index]._address;
 
                 handleStringParameter(numeric._parameters[0]);
                 Compiler::emitVcpuAsm("STW", "strLength", false);
@@ -747,13 +744,13 @@ namespace Keywords
                 Compiler::emitVcpuAsm("%StringRight", "", false);
             }
 
-            return Expression::Numeric(0, index, true, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
+            return Expression::Numeric(0, uint16_t(index), true, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
         }
 
         return numeric;
     }
 
-    Expression::Numeric functionMID$(Expression::Numeric& numeric)
+    Expression::Numeric functionMID$(Expression::Numeric&& numeric)
     {
         // Literal string and parameters, (optimised case)
         if(numeric._varType == Expression::String  &&  numeric._parameters.size() == 2  &&  numeric._parameters[0]._varType == Expression::Number  &&  
@@ -763,7 +760,7 @@ namespace Keywords
             std::string name;
             handleConstantString(numeric, Compiler::StrMid, name, index);
 
-            return Expression::Numeric(0, index, true, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
+            return Expression::Numeric(0, uint16_t(index), true, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
         }
 
         // Non optimised case
@@ -786,8 +783,7 @@ namespace Keywords
             }
             else
             {
-                int index = Expression::getOutputNumeric()._index;
-                uint16_t dstAddr = Compiler::getStringVars()[index]._address;
+                uint16_t dstAddr = Compiler::getStringVars()[Expression::getOutputNumeric()._index]._address;
 
                 handleStringParameter(numeric._parameters[0]);
                 Compiler::emitVcpuAsm("STW", "strOffset", false);
@@ -800,7 +796,7 @@ namespace Keywords
                 Compiler::emitVcpuAsm("%StringMid", "", false);
             }
 
-            return Expression::Numeric(0, index, true, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
+            return Expression::Numeric(0, uint16_t(index), true, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
         }
 
         return numeric;
@@ -812,6 +808,10 @@ namespace Keywords
     // ********************************************************************************************
     bool keywordREM(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
+        UNREFERENCED_PARAM(codeLineIndex);
+
         // Remove REM and everything after it in code
         codeLine._code.erase(foundPos, codeLine._code.size() - foundPos);
 
@@ -841,6 +841,10 @@ namespace Keywords
 
     bool keywordLET(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
+        UNREFERENCED_PARAM(codeLineIndex);
+
         // Remove LET from code
         codeLine._code.erase(foundPos, 3);
 
@@ -868,6 +872,12 @@ namespace Keywords
 
     bool keywordEND(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(foundPos);
+        UNREFERENCED_PARAM(tokenIndex);
+        UNREFERENCED_PARAM(codeLineIndex);
+        UNREFERENCED_PARAM(codeLine);
+
         std::string labelName = "_end_" + Expression::wordToHexString(Compiler::getVasmPC());
         Compiler::emitVcpuAsm("BRA", labelName, false, codeLineIndex, labelName);
 
@@ -876,6 +886,9 @@ namespace Keywords
 
     bool keywordINC(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
+
         // Operand must be an integer var
         std::string varToken = codeLine._code.substr(foundPos);
         Expression::stripWhitespace(varToken);
@@ -893,9 +906,8 @@ namespace Keywords
 
     bool keywordON(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        int onIndex = -1;
-        int gotoIndex = -1;
-        int numLabels = 0;
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
 
         std::string code = codeLine._code;
         Expression::strToUpper(code);
@@ -914,7 +926,7 @@ namespace Keywords
         Expression::Numeric onValue;
         std::string onToken = codeLine._code.substr(foundPos, gOffset - (foundPos + 1));
         Expression::stripWhitespace(onToken);
-        uint32_t expressionType = Compiler::parseExpression(codeLine, codeLineIndex, onToken, onValue);
+        Compiler::parseExpression(codeLine, codeLineIndex, onToken, onValue);
         Compiler::emitVcpuAsm("STW", "register0", false, codeLineIndex);
 
         // Parse labels
@@ -973,6 +985,9 @@ namespace Keywords
 
     bool keywordGOTO(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
+
         // Parse labels
         std::vector<size_t> gotoOffsets;
         std::vector<std::string> gotoTokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', gotoOffsets, false);
@@ -999,7 +1014,7 @@ namespace Keywords
         {
             Compiler::setCreateNumericLabelLut(true);
 
-            uint32_t expressionType = parseExpression(codeLine, codeLineIndex, gotoToken, gotoValue);
+            parseExpression(codeLine, codeLineIndex, gotoToken, gotoValue);
             Compiler::emitVcpuAsm("STW", "numericLabel", false, codeLineIndex);
 
             // Default label exists
@@ -1007,7 +1022,7 @@ namespace Keywords
             {
                 std::string defaultToken = gotoTokens[1];
                 Expression::stripWhitespace(defaultToken);
-                int labelIndex = Compiler::findLabel(defaultToken);
+                labelIndex = Compiler::findLabel(defaultToken);
                 if(labelIndex == -1)
                 {
                     fprintf(stderr, "Compiler::keywordGOTO() : Default label does not exist : in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
@@ -1061,6 +1076,9 @@ namespace Keywords
 
     bool keywordGOSUB(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
+
         // Parse labels
         std::vector<size_t> gosubOffsets;
         std::vector<std::string> gosubTokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', gosubOffsets, false);
@@ -1079,7 +1097,7 @@ namespace Keywords
         {
             Compiler::setCreateNumericLabelLut(true);
 
-            uint32_t expressionType = parseExpression(codeLine, codeLineIndex, gosubToken, gosubValue);
+            parseExpression(codeLine, codeLineIndex, gosubToken, gosubValue);
             Compiler::emitVcpuAsm("STW", "numericLabel", false, codeLineIndex);
 
             // Default label exists
@@ -1087,7 +1105,7 @@ namespace Keywords
             {
                 std::string defaultToken = gosubTokens[1];
                 Expression::stripWhitespace(defaultToken);
-                int labelIndex = Compiler::findLabel(defaultToken);
+                labelIndex = Compiler::findLabel(defaultToken);
                 if(labelIndex == -1)
                 {
                     fprintf(stderr, "Compiler::keywordGOSUB() : Default label does not exist : in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
@@ -1136,6 +1154,11 @@ namespace Keywords
 
     bool keywordRETURN(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(foundPos);
+        UNREFERENCED_PARAM(tokenIndex);
+        UNREFERENCED_PARAM(codeLine);
+
         Compiler::emitVcpuAsm("POP", "", false, codeLineIndex);
         Compiler::emitVcpuAsm("RET", "", false, codeLineIndex);
 
@@ -1144,6 +1167,10 @@ namespace Keywords
 
     bool keywordCLS(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(foundPos);
+        UNREFERENCED_PARAM(tokenIndex);
+
         if(codeLine._tokens.size() > 2)
         {
             fprintf(stderr, "Compiler::keywordCLS() : Syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
@@ -1153,7 +1180,7 @@ namespace Keywords
         if(codeLine._tokens.size() == 2)
         {
             Expression::Numeric param;
-            uint32_t expressionType = parseExpression(codeLine, codeLineIndex, codeLine._tokens[1], param);
+            parseExpression(codeLine, codeLineIndex, codeLine._tokens[1], param);
             Compiler::emitVcpuAsm("STW", "clsAddress", false, codeLineIndex);
             if(Assembler::getUseOpcodeCALLI())
             {
@@ -1183,6 +1210,9 @@ namespace Keywords
 
     bool keywordPRINT(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
+
         // Parse print tokens
         //std::vector<std::string> tokens = Expression::tokeniseLine(codeLine._code.substr(foundPos), ";");
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ';', false, false);
@@ -1318,6 +1348,10 @@ namespace Keywords
 
     bool keywordINPUT(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(foundPos);
+        UNREFERENCED_PARAM(tokenIndex);
+
         if(codeLine._tokens.size() < 2  ||  codeLine._tokens.size() > 3)
         {
             fprintf(stderr, "Compiler::keywordINPUT() : Syntax error in INPUT statement, must be 'INPUT <optional string>, <int/str var>', in : '%s' : on line %d\n", codeLine._code.c_str(), codeLineIndex + 1);
@@ -1388,12 +1422,14 @@ namespace Keywords
 
     bool keywordFOR(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
+
         bool optimise = true;
         int varIndex, constIndex, strIndex;
         uint32_t expressionType;
 
         // Parse first line of FOR loop
-        bool foundStep = false;
         std::string code = codeLine._code;
         Expression::strToUpper(code);
         size_t equals, to, step;
@@ -1417,7 +1453,7 @@ namespace Keywords
         }
 
         // Nested loops temporary variables
-        int offset = int(Compiler::getForNextDataStack().size()) * 4;
+        uint16_t offset = uint16_t(Compiler::getForNextDataStack().size()) * 4;
         uint16_t varEnd = LOOP_VAR_START + offset;
         uint16_t varStep = LOOP_VAR_START + offset + 2;
 
@@ -1531,6 +1567,9 @@ namespace Keywords
 
     bool keywordNEXT(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
+
         if(codeLine._tokens.size() != 2)
         {
             fprintf(stderr, "Compiler::keywordNEXT() : Syntax error, (wrong number of tokens), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
@@ -1597,6 +1636,9 @@ namespace Keywords
 
     bool keywordIF(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
+
         bool ifElseEndif = false;
 
         // IF
@@ -1657,6 +1699,9 @@ namespace Keywords
 
     bool keywordELSEIF(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
+
         // Check stack for this IF ELSE ENDIF block
         if(Compiler::getElseIfDataStack().empty())
         {
@@ -1725,6 +1770,10 @@ namespace Keywords
 
     bool keywordELSE(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(foundPos);
+        UNREFERENCED_PARAM(tokenIndex);
+
         if(codeLine._tokens.size() != 1)
         {
             fprintf(stderr, "Compiler::keywordELSE() : Syntax error, (wrong number of tokens), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
@@ -1786,6 +1835,10 @@ namespace Keywords
 
     bool keywordENDIF(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(foundPos);
+        UNREFERENCED_PARAM(tokenIndex);
+
         if(codeLine._tokens.size() != 1)
         {
             fprintf(stderr, "Compiler::keywordENDIF() : Syntax error, (wrong number of tokens), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
@@ -1825,9 +1878,9 @@ namespace Keywords
         // Update elseif's and/or else's jump to endif label
         while(!Compiler::getEndIfDataStack().empty())
         {
-            int codeLine = Compiler::getEndIfDataStack().top()._codeLineIndex;
-            int jmpIndex = Compiler::getEndIfDataStack().top()._jmpIndex;
-            Compiler::VasmLine* vasm = &Compiler::getCodeLines()[codeLine]._vasm[jmpIndex];
+            codeIndex = Compiler::getEndIfDataStack().top()._codeLineIndex;
+            jmpIndex = Compiler::getEndIfDataStack().top()._jmpIndex;
+            Compiler::VasmLine* vasm = &Compiler::getCodeLines()[codeIndex]._vasm[jmpIndex];
             switch(ccType)
             {
                 case Expression::BooleanCC: 
@@ -1843,8 +1896,8 @@ namespace Keywords
                 }
                 break;
 
-                case Expression::NormalCC:  addLabelToJump(Compiler::getCodeLines()[codeLine]._vasm, Compiler::getNextInternalLabel());                         break;
-                case Expression::FastCC:    addLabelToJump(Compiler::getCodeLines()[codeLine]._vasm, Compiler::getNextInternalLabel());                         break;
+                case Expression::NormalCC:  addLabelToJump(Compiler::getCodeLines()[codeIndex]._vasm, Compiler::getNextInternalLabel()); break;
+                case Expression::FastCC:    addLabelToJump(Compiler::getCodeLines()[codeIndex]._vasm, Compiler::getNextInternalLabel()); break;
             }
 
             Compiler::getEndIfDataStack().pop();
@@ -1855,6 +1908,9 @@ namespace Keywords
 
     bool keywordWHILE(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
+
         Compiler::setNextInternalLabel("_while_" + Expression::wordToHexString(Compiler::getVasmPC()));
         Compiler::getWhileWendDataStack().push({0, Compiler::getNextInternalLabel(), codeLineIndex, Expression::BooleanCC});
 
@@ -1871,6 +1927,10 @@ namespace Keywords
 
     bool keywordWEND(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(foundPos);
+        UNREFERENCED_PARAM(tokenIndex);
+
         // Pop stack for this WHILE loop
         if(Compiler::getWhileWendDataStack().empty())
         {
@@ -1914,6 +1974,11 @@ namespace Keywords
 
     bool keywordREPEAT(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(foundPos);
+        UNREFERENCED_PARAM(tokenIndex);
+        UNREFERENCED_PARAM(codeLine);
+
         Compiler::setNextInternalLabel("_repeat_" + Expression::wordToHexString(Compiler::getVasmPC()));
         Compiler::getRepeatUntilDataStack().push({Compiler::getNextInternalLabel(), codeLineIndex});
 
@@ -1922,6 +1987,9 @@ namespace Keywords
 
     bool keywordUNTIL(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
+
         // Pop stack for this REPEAT loop
         if(Compiler::getRepeatUntilDataStack().empty())
         {
@@ -1949,6 +2017,9 @@ namespace Keywords
 
     bool keywordCONST(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
+
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), '=', true);
         if(tokens.size() != 2)
         {
@@ -2043,6 +2114,9 @@ namespace Keywords
 
     bool keywordDIM(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
+
         std::string dimText = codeLine._code.substr(foundPos);
 
         size_t lbra, rbra;
@@ -2085,7 +2159,7 @@ namespace Keywords
         }
 
         // Optional array var init values
-        uint16_t varInit;
+        uint16_t varInit = 0;
         size_t varPos = codeLine._code.find("=");
         if(varPos != std::string::npos)
         {
@@ -2112,6 +2186,9 @@ namespace Keywords
 
     bool keywordDEF(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
+
         std::string defText = codeLine._code.substr(foundPos);
 
         // Equals
@@ -2238,6 +2315,9 @@ namespace Keywords
 
     bool keywordAT(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
+
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() < 1  &&  tokens.size() > 2)
         {
@@ -2248,7 +2328,7 @@ namespace Keywords
         std::vector<Expression::Numeric> params = {Expression::Numeric(), Expression::Numeric()};
         for(int i=0; i<tokens.size(); i++)
         {
-            uint32_t expressionType = parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
+            parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
             switch(i)
             {
                 case 0: Compiler::emitVcpuAsm("ST", "cursorXY",     false, codeLineIndex); break;
@@ -2271,6 +2351,9 @@ namespace Keywords
 
     bool keywordPUT(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
+
         std::string expression = codeLine._code.substr(foundPos);
         if(expression.size() == 0)
         {
@@ -2279,7 +2362,7 @@ namespace Keywords
         }
 
         Expression::Numeric param;
-        uint32_t expressionType = parseExpression(codeLine, codeLineIndex, expression, param);
+        parseExpression(codeLine, codeLineIndex, expression, param);
         Compiler::emitVcpuAsm("%PrintAcChar", "", false, codeLineIndex);
 
         return true;
@@ -2287,6 +2370,9 @@ namespace Keywords
 
     bool keywordMODE(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
+
         std::string expression = codeLine._code.substr(foundPos);
         if(expression.size() == 0)
         {
@@ -2295,7 +2381,7 @@ namespace Keywords
         }
 
         Expression::Numeric param;
-        uint32_t expressionType = parseExpression(codeLine, codeLineIndex, expression, param);
+        parseExpression(codeLine, codeLineIndex, expression, param);
         Compiler::emitVcpuAsm("STW", "graphicsMode", false, codeLineIndex);
         Compiler::emitVcpuAsm("%ScanlineMode", "",   false, codeLineIndex);
 
@@ -2304,6 +2390,9 @@ namespace Keywords
 
     bool keywordWAIT(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
+
         std::string expression = codeLine._code.substr(foundPos);
         if(expression.size() == 0)
         {
@@ -2312,7 +2401,7 @@ namespace Keywords
         }
 
         Expression::Numeric param;
-        uint32_t expressionType = parseExpression(codeLine, codeLineIndex, expression, param);
+        parseExpression(codeLine, codeLineIndex, expression, param);
         Compiler::emitVcpuAsm("STW", "waitVBlankNum", false, codeLineIndex);
         Compiler::emitVcpuAsm("%WaitVBlank", "",      false, codeLineIndex);
 
@@ -2321,6 +2410,9 @@ namespace Keywords
 
     bool keywordLINE(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
+
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() !=2  &&  tokens.size() != 4)
         {
@@ -2333,7 +2425,7 @@ namespace Keywords
             std::vector<Expression::Numeric> params = {Expression::Numeric(), Expression::Numeric()};
             for(int i=0; i<tokens.size(); i++)
             {
-                uint32_t expressionType = parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
+                parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
                 switch(i)
                 {
                     case 0: Compiler::emitVcpuAsm("STW", "drawLine_x2", false, codeLineIndex); break;
@@ -2349,7 +2441,7 @@ namespace Keywords
             std::vector<Expression::Numeric> params = {Expression::Numeric(), Expression::Numeric(), Expression::Numeric(), Expression::Numeric()};
             for(int i=0; i<tokens.size(); i++)
             {
-                uint32_t expressionType = parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
+                parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
                 switch(i)
                 {
                     case 0: Compiler::emitVcpuAsm("STW", "drawLine_x1", false, codeLineIndex); break;
@@ -2367,6 +2459,9 @@ namespace Keywords
 
     bool keywordHLINE(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
+
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() !=3)
         {
@@ -2377,7 +2472,7 @@ namespace Keywords
         std::vector<Expression::Numeric> params = {Expression::Numeric(), Expression::Numeric(), Expression::Numeric()};
         for(int i=0; i<tokens.size(); i++)
         {
-            uint32_t expressionType = parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
+            parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
             switch(i)
             {
                 case 0: Compiler::emitVcpuAsm("STW", "drawHLine_x1", false, codeLineIndex); break;
@@ -2393,6 +2488,9 @@ namespace Keywords
 
     bool keywordVLINE(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
+
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() !=3)
         {
@@ -2403,7 +2501,7 @@ namespace Keywords
         std::vector<Expression::Numeric> params = {Expression::Numeric(), Expression::Numeric(), Expression::Numeric()};
         for(int i=0; i<tokens.size(); i++)
         {
-            uint32_t expressionType = parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
+            parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
             switch(i)
             {
                 case 0: Compiler::emitVcpuAsm("STW", "drawVLine_x1", false, codeLineIndex); break;
@@ -2419,6 +2517,9 @@ namespace Keywords
 
     bool keywordSCROLL(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
+
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ' ', false);
         if(tokens.size() != 1)
         {
@@ -2451,6 +2552,9 @@ namespace Keywords
 
     bool keywordPOKE(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
+
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() != 2)
         {
@@ -2505,6 +2609,9 @@ namespace Keywords
 
     bool keywordDOKE(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
+
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() != 2)
         {
@@ -2559,6 +2666,9 @@ namespace Keywords
 
     bool keywordPLAY(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
+
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), " ,", false);
         if(tokens.size() < 1  ||  tokens.size() > 3)
         {
@@ -2593,7 +2703,7 @@ namespace Keywords
             std::string waveTypeToken = tokens[2];
             Expression::stripWhitespace(waveTypeToken);
             Expression::Numeric param;
-            uint32_t expressionType = parseExpression(codeLine, codeLineIndex, waveTypeToken, param);
+            parseExpression(codeLine, codeLineIndex, waveTypeToken, param);
             Compiler::emitVcpuAsm("ST", "waveType", false, codeLineIndex);
         }
 
@@ -2601,7 +2711,7 @@ namespace Keywords
         std::string addressToken = tokens[1];
         Expression::stripWhitespace(addressToken);
         Expression::Numeric param;
-        uint32_t expressionType = parseExpression(codeLine, codeLineIndex, addressToken, param);
+        parseExpression(codeLine, codeLineIndex, addressToken, param);
         Compiler::emitVcpuAsm("%PlayMidi", "", false, codeLineIndex);
 
         return true;

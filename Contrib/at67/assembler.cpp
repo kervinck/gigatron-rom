@@ -328,12 +328,12 @@ namespace Assembler
         // Save current and previous instruction lengths
         if(_disassembledCode.size() == 0)
         {
-            _currDasmByteCount = byteSize;
+            _currDasmByteCount = uint16_t(byteSize);
 
             // Attempt to get bytesize of previous instruction
             for(uint16_t addr=address-1; addr>=address-3; --addr)
             {
-                uint8_t size = address - addr;
+                uint8_t size = uint8_t(address - addr); // no instruction is longer than 3 bytes
                 uint8_t inst = Cpu::getRAM(addr);
                 if(inst == VCPU_BRANCH_OPCODE) inst = Cpu::getRAM(addr + 1);
                 if(_vcpuOpcodes.find(inst) != _vcpuOpcodes.end()  &&  _vcpuOpcodes[inst]._opcodeType == vCpu  &&  _vcpuOpcodes[inst]._byteSize == size)
@@ -360,7 +360,7 @@ namespace Assembler
             bool foundInstruction = false;
             for(uint16_t addr=address-1; addr>=address-3; --addr)
             {
-                uint8_t size = address - addr;
+                uint8_t size = uint8_t(address - addr); // no instruction is longer than 3 bytes
                 uint8_t inst = Cpu::getRAM(addr);
                 if(inst == VCPU_BRANCH_OPCODE) inst = Cpu::getRAM(addr + 1);
                 if(_vcpuOpcodes.find(inst) != _vcpuOpcodes.end()  &&  _vcpuOpcodes[inst]._opcodeType == vCpu  &&  _vcpuOpcodes[inst]._byteSize == size)
@@ -490,7 +490,7 @@ namespace Assembler
             char dasmText[32];
             DasmCode dasmCode;
             ByteSize byteSize = OneByte;
-            uint8_t instruction, data0, data1;
+            uint8_t instruction = 0, data0 = 0, data1 = 0;
 
             Editor::MemoryMode memoryMode = Editor::getMemoryMode();
             switch(memoryMode)
@@ -559,7 +559,7 @@ namespace Assembler
                         case ThreeBytes: (foundBranch) ? sprintf(dasmText, "%04x  %-5s $%02x", address, _vcpuOpcodes[instruction]._mnemonic.c_str(), data1) : sprintf(dasmText, "%04x  %-5s $%02x%02x", address, _vcpuOpcodes[instruction]._mnemonic.c_str(), data1, data0); break;
                     }
                     dasmCode._address = address;
-                    address = (address + byteSize) & (Memory::getSizeRAM() - 1);
+                    address = uint16_t((address + byteSize) & (Memory::getSizeRAM() - 1));
 
                     // Save current and previous instruction sizes to allow scrolling
                     getDasmCurrAndPrevByteSize(dasmCode._address, byteSize);
@@ -569,7 +569,7 @@ namespace Assembler
 
             std::string dasmCodeText = std::string(dasmText);
             dasmCode._instruction = instruction;
-            dasmCode._byteSize = byteSize;
+            dasmCode._byteSize = uint8_t(byteSize);
             dasmCode._data0 = data0;
             dasmCode._data1 = data1;
             dasmCode._text = (memoryMode == Editor::RAM) ? Expression::strToUpper(dasmCodeText) : Expression::strToLower(dasmCodeText);
@@ -976,9 +976,9 @@ namespace Assembler
         for(int i=tokenIndex+1; i<tokens.size(); i++)
         {
             // Handle all other variations of strings
-            size_t quote1 = tokens[i].find_first_of("'\"");
-            size_t quote2 = tokens[i].find_first_of("'\"", quote1+1);
-            bool quotes = (quote1 != std::string::npos  &&  quote2 != std::string::npos);
+            quote1 = tokens[i].find_first_of("'\"");
+            quote2 = tokens[i].find_first_of("'\"", quote1+1);
+            quotes = (quote1 != std::string::npos  &&  quote2 != std::string::npos);
             if(quotes)
             {
                 std::string token = tokens[i].substr(quote1+1, quote2 - (quote1+1));
@@ -1006,12 +1006,12 @@ namespace Assembler
                     // Search equates
                     Equate equate;
                     Label label;
-                    if(success = evaluateEquateOperand(tokens[i], equate))
+                    if((success = evaluateEquateOperand(tokens[i], equate)) == true)
                     {
                         operand = uint8_t(equate._operand);
                     }
                     // Search labels
-                    else if(success = evaluateLabelOperand(tokens[i], label))
+                    else if((success = evaluateLabelOperand(tokens[i], label)) == true)
                     {
                         operand = uint8_t(label._address);
                     }
@@ -1067,12 +1067,12 @@ namespace Assembler
                 // Search equates
                 Equate equate;
                 Label label;
-                if(success = evaluateEquateOperand(tokens[i], equate))
+                if((success = evaluateEquateOperand(tokens[i], equate)) == true)
                 {
                     operand = equate._operand;
                 }
                 // Search labels
-                else if(success = evaluateLabelOperand(tokens[i], label))
+                else if((success = evaluateLabelOperand(tokens[i], label)) == true)
                 {
                     operand = label._address;
                 }
@@ -1378,7 +1378,7 @@ namespace Assembler
                     _instructions[i]._address = segmentAddress + segmentOffset;
                 }
 
-                segmentOffset += _instructions[i]._byteSize;
+                segmentOffset += uint16_t(_instructions[i]._byteSize);
             }
 
             packByteCode(_instructions[i], byteCode);
@@ -1390,7 +1390,6 @@ namespace Assembler
             // _callTable grows downwards, pointer is 2 bytes below the bottom of the table by the time we get here
             for(int i=int(_callTableEntries.size())-1; i>=0; i--)
             {
-                int end = int(_callTableEntries.size()) - 1;
                 byteCode._isRomAddress = false;
                 byteCode._isCustomAddress = true;  // calltable entries can be non-sequential because of 0x80, (ONE_CONST_ADDRESS)
                 byteCode._data = LO_BYTE(_callTableEntries[i]._address);
@@ -1551,7 +1550,7 @@ namespace Assembler
                                 std::vector<std::string> mtokens =  Expression::tokeniseLine(macro._lines[ml]);
 
                                 // Save labels
-                                size_t nonWhiteSpace = macro._lines[ml].find_first_not_of("  \n\r\f\t\v");
+                                nonWhiteSpace = macro._lines[ml].find_first_not_of("  \n\r\f\t\v");
                                 if(nonWhiteSpace == 0) labels.push_back(mtokens[0]);
 
                                 // Replace parameters
@@ -1692,7 +1691,6 @@ namespace Assembler
                 continue;
             }
 
-            int tokenIndex = 0;
             bool includeFound = false;
             int lineIndex = int(itLine - lineTokens.begin()) + 1;
 
@@ -1817,6 +1815,8 @@ namespace Assembler
 #ifndef STAND_ALONE
     bool handleBreakPoints(ParseType parse, const std::string& lineToken, int lineNumber)
     {
+        UNREFERENCED_PARAM(lineNumber);
+
         std::string input = lineToken;
         Expression::strToUpper(input);
 
@@ -1839,7 +1839,7 @@ namespace Assembler
         int width = 0, index = 0;
         bool foundToken = false;
 
-        while(chr = *fmt++)
+        while((chr = *fmt++) != 0)
         {
             if(index + 1 > variables.size()) return false;
 
@@ -1957,12 +1957,12 @@ namespace Assembler
                     // Search equates
                     Equate equate;
                     Label label;
-                    if(success = evaluateEquateOperand(tokens, 0, equate, false))
+                    if((success = evaluateEquateOperand(tokens, 0, equate, false)) == true)
                     {
                         data = equate._operand;
                     }
                     // Search labels
-                    else if(success = evaluateLabelOperand(tokens, 0, label, false))
+                    else if((success = evaluateLabelOperand(tokens, 0, label, false)) == true)
                     {
                         data = label._address;
                     }
@@ -2026,7 +2026,7 @@ namespace Assembler
                 {
                     data = gprintf._vars[i]._data;
                     uint8_t length = Cpu::getRAM(data) & 0xFF; // maximum length of 256
-                    for(int j=0; j<length; j++) token[j] = Cpu::getRAM(data + j + 1);
+                    for(uint16_t j=0; j<length; j++) token[j] = Cpu::getRAM(data + j + 1);
                     token[length] = 0;
                 }
                 break;
@@ -2216,7 +2216,6 @@ namespace Assembler
                 uint8_t opcode = instructionType._opcode;
                 uint8_t branch = instructionType._branch;
                 int outputSize = instructionType._byteSize;
-                uint16_t additionalSize = 0;
                 OpcodeType opcodeType = instructionType._opcodeType;
                 Instruction instruction = {false, false, ByteSize(outputSize), opcode, 0x00, 0x00, _currentAddress, opcodeType};
 
@@ -2300,7 +2299,7 @@ namespace Assembler
                         case OneByte:
                         {
                             _instructions.push_back(instruction);
-                            if(!checkInvalidAddress(ParseType(parse), _currentAddress, outputSize, instruction, lineToken, filename, _lineNumber)) return false;
+                            if(!checkInvalidAddress(ParseType(parse), _currentAddress, uint16_t(outputSize), instruction, lineToken, filename, _lineNumber)) return false;
                         }
                         break;
 
@@ -2380,7 +2379,7 @@ namespace Assembler
                                 else
                                 {
                                     Equate equate;
-                                    if(operandValid = evaluateEquateOperand(tokens, tokenIndex, equate, false))
+                                    if((operandValid = evaluateEquateOperand(tokens, tokenIndex, equate, false)) == true)
                                     {
                                         operand = uint8_t(equate._operand);
                                     }
@@ -2407,12 +2406,12 @@ namespace Assembler
                                     operand = uint8_t(tokens[tokenIndex][quote1+1]);
                                 }
                                 // Search equates
-                                else if(operandValid = evaluateEquateOperand(tokens, tokenIndex, equate, compoundInstruction))
+                                else if((operandValid = evaluateEquateOperand(tokens, tokenIndex, equate, compoundInstruction)) == true)
                                 {
                                     operand = uint8_t(equate._operand);
                                 }
                                 // Search labels
-                                else if(operandValid = evaluateLabelOperand(tokens, tokenIndex, label, compoundInstruction))
+                                else if((operandValid = evaluateLabelOperand(tokens, tokenIndex, label, compoundInstruction)) == true)
                                 {
                                     operand = uint8_t(label._address);
                                 }
@@ -2452,7 +2451,7 @@ namespace Assembler
                                 instruction._opcode = opcode;
                                 instruction._operand0 = uint8_t(LO_BYTE(operand));
                                 _instructions.push_back(instruction);
-                                if(!checkInvalidAddress(ParseType(parse), _currentAddress, outputSize, instruction, lineToken, filename, _lineNumber)) return false;
+                                if(!checkInvalidAddress(ParseType(parse), _currentAddress, uint16_t(outputSize), instruction, lineToken, filename, _lineNumber)) return false;
 
 #ifndef STAND_ALONE
                                 uint16_t add = instruction._address>>1;
@@ -2489,14 +2488,14 @@ namespace Assembler
                                     }
                                 }
 
-                                if(!checkInvalidAddress(ParseType(parse), _currentAddress, outputSize, instruction, lineToken, filename, _lineNumber)) return false;
+                                if(!checkInvalidAddress(ParseType(parse), _currentAddress, uint16_t(outputSize), instruction, lineToken, filename, _lineNumber)) return false;
                             }
                             // Normal instructions
                             else
                             {
                                 instruction._operand0 = operand;
                                 _instructions.push_back(instruction);
-                                if(!checkInvalidAddress(ParseType(parse), _currentAddress, outputSize, instruction, lineToken, filename, _lineNumber)) return false;
+                                if(!checkInvalidAddress(ParseType(parse), _currentAddress, uint16_t(outputSize), instruction, lineToken, filename, _lineNumber)) return false;
                             }
                         }
                         break;
@@ -2522,7 +2521,7 @@ namespace Assembler
                                 instruction._operand0 = branch;
                                 instruction._operand1 = LO_BYTE(operand);
                                 _instructions.push_back(instruction);
-                                if(!checkInvalidAddress(ParseType(parse), _currentAddress, outputSize, instruction, lineToken, filename, _lineNumber)) return false;
+                                if(!checkInvalidAddress(ParseType(parse), _currentAddress, uint16_t(outputSize), instruction, lineToken, filename, _lineNumber)) return false;
                             }
                             // All other 3 byte instructions
                             else
@@ -2532,12 +2531,12 @@ namespace Assembler
                                 Equate equate;
 
                                 // Search equates
-                                if(operandValid = evaluateEquateOperand(tokens, tokenIndex, equate, compoundInstruction))
+                                if((operandValid = evaluateEquateOperand(tokens, tokenIndex, equate, compoundInstruction)) == true)
                                 {
                                     operand = equate._operand;
                                 }
                                 // Search labels
-                                else if(operandValid = evaluateLabelOperand(tokens, tokenIndex, label, compoundInstruction))
+                                else if((operandValid = evaluateLabelOperand(tokens, tokenIndex, label, compoundInstruction)) == true)
                                 {
                                     operand = label._address;
                                 }
@@ -2573,7 +2572,7 @@ namespace Assembler
 
                                     // Push any remaining operands
                                     if(tokenIndex + 1 < tokens.size()) handleDefineWord(tokens, tokenIndex, instruction, true, outputSize);
-                                    if(!checkInvalidAddress(ParseType(parse), _currentAddress, outputSize, instruction, lineToken, filename, _lineNumber)) return false;
+                                    if(!checkInvalidAddress(ParseType(parse), _currentAddress, uint16_t(outputSize), instruction, lineToken, filename, _lineNumber)) return false;
                                 }
                                 // Normal instructions
                                 else
@@ -2581,7 +2580,7 @@ namespace Assembler
                                     instruction._operand0 = uint8_t(LO_BYTE(operand));
                                     instruction._operand1 = uint8_t(HI_BYTE(operand));
                                     _instructions.push_back(instruction);
-                                    if(!checkInvalidAddress(ParseType(parse), _currentAddress, instruction._byteSize, instruction, lineToken, filename, _lineNumber)) return false;
+                                    if(!checkInvalidAddress(ParseType(parse), _currentAddress, uint16_t(instruction._byteSize), instruction, lineToken, filename, _lineNumber)) return false;
                                 }
                             }
                         }
@@ -2589,7 +2588,7 @@ namespace Assembler
                     }
                 }
 
-                _currentAddress += outputSize;
+                _currentAddress += uint16_t(outputSize);
             }              
         }
 

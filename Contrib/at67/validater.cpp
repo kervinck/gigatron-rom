@@ -26,7 +26,7 @@ namespace Validater
         {
             if(!Compiler::getLabels()[i]._pageJump  &&  Compiler::getLabels()[i]._address >= address)
             {
-                Compiler::getLabels()[i]._address += offset;
+                Compiler::getLabels()[i]._address += int16_t(offset);
             }
         }
 
@@ -34,7 +34,7 @@ namespace Validater
         {
             if(Compiler::getInternalLabels()[i]._address >= address)
             {
-                Compiler::getInternalLabels()[i]._address += offset;
+                Compiler::getInternalLabels()[i]._address += int16_t(offset);
             }
         }
     }
@@ -48,13 +48,13 @@ namespace Validater
                 // Don't adjust page jump's
                 if(!Compiler::getCodeLines()[i]._vasm[j]._pageJump  &&  Compiler::getCodeLines()[i]._vasm[j]._address >= address)
                 {
-                    Compiler::getCodeLines()[i]._vasm[j]._address += offset;
+                    Compiler::getCodeLines()[i]._vasm[j]._address += int16_t(offset);
                 }
             }
         }
     }
 
-    auto insertPageJumpInstruction(std::vector<Compiler::CodeLine>::iterator& itCode, std::vector<Compiler::VasmLine>::iterator& itVasm,
+    auto insertPageJumpInstruction(const std::vector<Compiler::CodeLine>::iterator& itCode, const std::vector<Compiler::VasmLine>::iterator& itVasm,
                                    const std::string& opcode, const std::string& code, uint16_t address, int vasmSize)
     {
         if(itVasm >= itCode->_vasm.end())
@@ -76,10 +76,10 @@ namespace Validater
         nextPC = (hPC + 1) <<8;
 
         // Code page restrictions
-        uint16_t codePage0 = 0x0200;
+        //uint16_t codePage0 = 0x0200;
         uint16_t codeEnd0 = 0x0500;
 
-        uint16_t codePage1 = 0x0500;
+        //uint16_t codePage1 = 0x0500;
         uint16_t codeEnd1 = 0x0700;
 
         uint16_t codePage2 = 0x08A0;
@@ -152,7 +152,7 @@ namespace Validater
 
             if(Compiler::getMacroIndexEntries().find(macro) != Compiler::getMacroIndexEntries().end())
             {
-                int macroSize = Compiler::getMacroIndexEntries()[macro]._byteSize;
+                uint16_t macroSize = uint16_t(Compiler::getMacroIndexEntries()[macro]._byteSize);
                 audioExcl -= macroSize;
                 pageExcl -= macroSize;
             }
@@ -196,7 +196,6 @@ namespace Validater
                         // Insert PAGE JUMP
                         int restoreOffset = 0;
                         auto it = (vasmLineIndex > 0) ? itVasm-1 : itVasm;
-                        int index = (vasmLineIndex > 0) ? vasmLineIndex-1 : vasmLineIndex;
                         std::string nextPClabel = "_page_" + Expression::wordToHexString(nextPC);
                         if(Assembler::getUseOpcodeCALLI())
                         {
@@ -353,7 +352,7 @@ namespace Validater
                         // Internal labels always have underscores, so put it back
                         operand.insert(0, 1, '_');
 
-                        int labelIndex = Compiler::findInternalLabel(operand);
+                        labelIndex = Compiler::findInternalLabel(operand);
                         if(labelIndex >= 0)
                         {
                             uint16_t labAddr = Compiler::getInternalLabels()[labelIndex]._address;

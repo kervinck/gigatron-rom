@@ -103,8 +103,8 @@ namespace Loader
             return false;
         }
 
-        size_t i = filepath.rfind('.');
-        filename = (i != std::string::npos) ? filepath.substr(0, i) + ".gt1" : filepath + ".gt1";
+        size_t dot = filepath.rfind('.');
+        filename = (dot != std::string::npos) ? filepath.substr(0, dot) + ".gt1" : filepath + ".gt1";
 
         std::ofstream outfile(filename, std::ios::binary | std::ios::out);
         if(!outfile.is_open())
@@ -214,7 +214,7 @@ namespace Loader
             if(gt1File._segments[i]._hiAddress)
             {
                 uint16_t address = gt1File._segments[i]._loAddress + (gt1File._segments[i]._hiAddress <<8);
-                int segmentSize = (gt1File._segments[i]._segmentSize == 0) ? 256 : gt1File._segments[i]._segmentSize;
+                uint16_t segmentSize = (gt1File._segments[i]._segmentSize == 0) ? 256 : gt1File._segments[i]._segmentSize;
                 if((address + segmentSize - 1) < Memory::getSizeRAM()) totalSize += segmentSize;
                 if((address & 0x00FF) + segmentSize > 256) fprintf(stderr, "Loader::printGt1Stats() : Page overflow, segment %d : address 0x%04x : segmentSize %3d\n", i, address, segmentSize);
             }
@@ -233,7 +233,7 @@ namespace Loader
         for(int i=0; i<gt1File._segments.size(); i++)
         {
             uint16_t address = gt1File._segments[i]._loAddress + (gt1File._segments[i]._hiAddress <<8);
-            int segmentSize = (gt1File._segments[i]._segmentSize == 0) ? 256 : gt1File._segments[i]._segmentSize;
+            uint16_t segmentSize = (gt1File._segments[i]._segmentSize == 0) ? 256 : gt1File._segments[i]._segmentSize;
             std::string memory = "RAM";
             if(gt1File._segments[i]._isRomAddress)
             {
@@ -317,7 +317,7 @@ namespace Loader
 
 
     std::string& getCurrentGame(void) {return _currentGame;}
-    void setCurrentGame(std::string& currentGame) {_currentGame = currentGame;}
+    void setCurrentGame(const std::string& currentGame) {_currentGame = currentGame;}
 
     UploadTarget getUploadTarget(void) {return _uploadTarget;}
     void setUploadTarget(UploadTarget target) {_uploadTarget = target;}
@@ -378,7 +378,7 @@ namespace Loader
                         char *endPtr;
                         getKeyAsString(_configIniReader, sectionString, "ComPort", "0", result);   
                         _configComPort = strtol(result.c_str(), &endPtr, 10);
-                        if((endPtr - &result[0]) != result.size())
+                        if((endPtr - &result[0]) != int(result.size()))
                         {
                             _configComPort = comFindPort(result.c_str());
                             if(_configComPort < 0) _configComPort = DEFAULT_COM_PORT;
@@ -631,6 +631,8 @@ namespace Loader
 
     void sendCommandToGiga(char cmd, bool wait)
     {
+        UNREFERENCED_PARAM(wait);
+
         if(!openComPort(_configComPort)) return;
 
         std::string line;
@@ -639,7 +641,7 @@ namespace Loader
         closeComPort();
     }
 
-    bool sendCommandToGiga(std::string& cmd, std::vector<std::string>& text)
+    bool sendCommandToGiga(const std::string& cmd, std::vector<std::string>& text)
     {
         if(!openComPort(_configComPort)) return false;
 
@@ -714,7 +716,7 @@ namespace Loader
         Graphics::setUploadFilename(filename);
 
         _gt1UploadSize = int(gt1file.gcount());
-        SDL_Thread* uploadThread = SDL_CreateThread(uploadToGigaThread, VERSION_STR, (void*)&_gt1UploadSize);
+        SDL_CreateThread(uploadToGigaThread, VERSION_STR, (void*)&_gt1UploadSize);
     }
 
     void disableUploads(bool disable)
@@ -787,7 +789,7 @@ namespace Loader
         for(int j=0; j<sdata._addresses.size(); j++)
         {
             //sdata._data.push_back(std::vector<uint8_t>(sdata._counts[j], 0x00));
-            for(int i=0; i<sdata._counts[j]; i++)
+            for(uint16_t i=0; i<sdata._counts[j]; i++)
             {
                 uint8_t data;
                 infile.read((char *)&data, 1);
@@ -966,7 +968,7 @@ namespace Loader
             while(start != end)
             {
                 int i = start;
-                uint8_t data = Cpu::getRAM(_saveData[_currentGame]._addresses[j] + i);
+                uint8_t data = Cpu::getRAM(uint16_t(_saveData[_currentGame]._addresses[j] + i));
 
                 // TODO: create a list of INI rules to make this test more flexible
                 if(data < _saveData[_currentGame]._data[j][i]) return;
@@ -974,7 +976,7 @@ namespace Loader
                 {
                     for(int k=i; k!=end; k+=step)
                     {
-                        _saveData[_currentGame]._data[j][k] = Cpu::getRAM(_saveData[_currentGame]._addresses[j] + k);
+                        _saveData[_currentGame]._data[j][k] = Cpu::getRAM(uint16_t(_saveData[_currentGame]._addresses[j] + k));
                     }
                     saveHighScore();
                     return;
@@ -1057,14 +1059,14 @@ namespace Loader
             if(LO_BYTE(endAddress) < LO_BYTE(GTB_LINE0_ADDRESS)) endAddress = HI_MASK(endAddress) | LO_BYTE(GTB_LINE0_ADDRESS);
         }
 
-        uint16_t freeMemory = Memory::getFreeGtbRAM(uint16_t(lines.size()));
+        uint16_t freeMemory = uint16_t(Memory::getFreeGtbRAM(int(lines.size())));
         fprintf(stderr, "Loader::loadGtbFile() : start %04x : end %04x : free %d : '%s'\n", startAddress, endAddress, freeMemory, filepath.c_str());
 
         Cpu::setRAM(GTB_LINE0_ADDRESS + 0, LO_BYTE(endAddress));
         Cpu::setRAM(GTB_LINE0_ADDRESS + 1, HI_BYTE(endAddress));
         std::string list = "RUN";
-        for(int i=0; i<list.size(); i++) Cpu::setRAM(endAddress + 2 + i, list[i]);
-        Cpu::setRAM(endAddress + 2 + uint16_t(list.size()), 0);
+        for(int i=0; i<list.size(); i++) Cpu::setRAM(uint16_t(endAddress + 2 + i), list[i]);
+        Cpu::setRAM(uint16_t(endAddress + 2 + uint16_t(list.size())), 0);
 
         return true;
     }
@@ -1167,7 +1169,7 @@ namespace Loader
                     {
                         for(int i=0; i<gt1File._segments[j]._dataBytes.size(); i++)
                         {
-                            Cpu::setRAM(address+i, gt1File._segments[j]._dataBytes[i]);
+                            Cpu::setRAM(uint16_t(address+i), gt1File._segments[j]._dataBytes[i]);
                         }
                     }
                 }
@@ -1450,7 +1452,7 @@ namespace Loader
             {
                 case FrameState::Resync:
                 {
-                    if(!sendFrame(vgaY, -1, payload, payloadSize, executeAddress, checksum))
+                    if(!sendFrame(vgaY, 0xFF, payload, payloadSize, executeAddress, checksum))
                     {
                         checksum = 'g'; // loader resets checksum
                         frameState = FrameState::Frame;

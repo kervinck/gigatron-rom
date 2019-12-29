@@ -488,13 +488,16 @@ namespace Graphics
     {
         for(int i=0; i<GIGA_HEIGHT; i++)
         {
-            Cpu::setRAM(GIGA_VTABLE + i*2, (GIGA_VRAM >>8) + i);
-            Cpu::setRAM(GIGA_VTABLE + 1 + i*2, 0x00);
+            Cpu::setRAM(uint16_t(GIGA_VTABLE + i*2), uint8_t((GIGA_VRAM >>8) + i));
+            Cpu::setRAM(uint16_t(GIGA_VTABLE + 1 + i*2), 0x00);
         }
     }
 
     void refreshTimingPixel(const Cpu::State& S, int vgaX, int pixelY, uint32_t colour, bool debugging)
     {
+        UNREFERENCED_PARAM(debugging);
+        UNREFERENCED_PARAM(S);
+
         _hlineTiming[pixelY % GIGA_HEIGHT] = colour;
 
         //if(debugging) return;
@@ -521,11 +524,11 @@ namespace Graphics
 
         for(int y=0; y<GIGA_HEIGHT; y++)
         {
-            offsetx += Cpu::getRAM(GIGA_VTABLE + 1 + y*2);
+            offsetx += Cpu::getRAM(uint16_t(GIGA_VTABLE + 1 + y*2));
     
             for(int x=0; x<=GIGA_WIDTH; x++)
             {
-                uint16_t address = (Cpu::getRAM(GIGA_VTABLE + y*2) <<8) + ((offsetx + x) & 0xFF);
+                uint16_t address = (Cpu::getRAM(uint16_t(GIGA_VTABLE + y*2) <<8) + ((offsetx + x) & 0xFF));
                 uint32_t colour = (x < GIGA_WIDTH) ? _colours[Cpu::getRAM(address) & (COLOUR_PALETTE-1)] : _hlineTiming[y];
                 uint32_t screen = (y*4 % SCREEN_HEIGHT)*SCREEN_WIDTH  +  (x*3 % SCREEN_WIDTH);
 
@@ -1127,7 +1130,6 @@ namespace Graphics
     {
         x = x % GIGA_WIDTH;
         y = y % GIGA_HEIGHT;
-        uint16_t address = GIGA_VRAM + x + (y <<8);
         uint32_t screen = x*3 + y*4*SCREEN_WIDTH;
 
         _pixels[screen + 0 + 0*SCREEN_WIDTH] = colour; _pixels[screen + 1 + 0*SCREEN_WIDTH] = colour; _pixels[screen + 2 + 0*SCREEN_WIDTH] = colour;
@@ -1215,7 +1217,7 @@ namespace Graphics
                 y0 += sy;
             }
 
-            drawPixelGiga(x0, y0, 0xFF);
+            drawPixelGiga(uint8_t(x0), uint8_t(y0), 0xFF);
         }
     }
 
@@ -1301,7 +1303,7 @@ namespace Graphics
 
             for(int j=0; j<LIFE_HEIGHT; j++)
                 for(int i=0; i<LIFE_WIDTH; i++)
-                    lifePixel(i, j, 0);
+                    lifePixel(uint8_t(i), uint8_t(j), 0);
 
             for(int k=0; k<2; k++)
                 for(int j=0; j<LIFE_HEIGHT; j++)
@@ -1312,7 +1314,7 @@ namespace Graphics
             for(int i=0; i<8; i+=4)
             {
                 buffers[0][100][100+i] = 1; buffers[0][101][100+i] = 1; buffers[0][102][100+i] = 1; buffers[0][102][99+i] = 1; buffers[0][101][98+i] = 1;
-                lifePixel(100+i, 100, 1); lifePixel(100+i, 101, 1); lifePixel(100+i, 102, 1); lifePixel(99+i, 102, 1); lifePixel(98+i, 101, 1);
+                lifePixel(uint8_t(100+i), 100, 1); lifePixel(uint8_t(100+i), 101, 1); lifePixel(uint8_t(100+i), 102, 1); lifePixel(uint8_t(99+i), 102, 1); lifePixel(uint8_t(98+i), 101, 1);
             }
 
             index = 0;
@@ -1327,7 +1329,7 @@ namespace Graphics
                     lut[2] = buffers[index][j][i];
                     int count = buffers[index][j-1][i-1] + buffers[index][j-1][i] + buffers[index][j-1][i+1] + buffers[index][j][i+1] + buffers[index][j+1][i+1] + buffers[index][j+1][i] + buffers[index][j+1][i-1] + buffers[index][j][i-1];
                     buffers[index ^ 1][j][i] = lut[count];
-                    if(i < 256  &&  j < 256) lifePixel(i, j, lut[count]);
+                    if(i < 256  &&  j < 256) lifePixel(uint8_t(i), uint8_t(j), lut[count]);
                 }
             }
 
@@ -1347,7 +1349,7 @@ namespace Graphics
 
             for(int j=0; j<LIFE_HEIGHT; j++)
                 for(int i=0; i<LIFE_WIDTH; i++)
-                    lifePixel(i, j, 0);
+                    lifePixel(uint8_t(i), uint8_t(j), 0);
 
             for(int k=0; k<2; k++)
                 for(int j=0; j<LIFE_HEIGHT; j++)
@@ -1358,7 +1360,7 @@ namespace Graphics
             for(int i=0; i<8; i+=4)
             {
                 buffers[0][100][100+i] = 1; buffers[0][101][100+i] = 1; buffers[0][102][100+i] = 1; buffers[0][102][99+i] = 1; buffers[0][101][98+i] = 1;
-                lifePixel(100+i, 100, 1); lifePixel(100+i, 101, 1); lifePixel(100+i, 102, 1); lifePixel(99+i, 102, 1); lifePixel(98+i, 101, 1);
+                lifePixel(uint8_t(100+i), 100, 1); lifePixel(uint8_t(100+i), 101, 1); lifePixel(uint8_t(100+i), 102, 1); lifePixel(uint8_t(99+i), 102, 1); lifePixel(uint8_t(98+i), 101, 1);
             }
         }
 
@@ -1383,8 +1385,8 @@ namespace Graphics
                     lut[2] = buffers[0][j][i];
                     int cell = lut[buffers[1][j][i]];
                     buffers[1][j][i] = 0;
-                    buffers[0][j][i] = cell;
-                    if(i < 256  &&  j < 256) lifePixel(i, j, cell);
+                    buffers[0][j][i] = uint8_t(cell);
+                    if(i < 256  &&  j < 256) lifePixel(uint8_t(i), uint8_t(j), cell);
                 }
             }
         }
@@ -1472,58 +1474,58 @@ namespace Graphics
     int ox, oy, ov;
     int oindex, orotation;
 
-    uint8_t getTetrisPixel(int x, int y)
+    uint8_t getTetrisPixel(int tx, int ty)
     {
-        x *= 4;
-        y *= 4;
-        return getPixelGiga(TETRIS_XPOS + x, TETRIS_YPOS + y);
+        tx *= 4;
+        ty *= 4;
+        return getPixelGiga(uint8_t(TETRIS_XPOS + tx), uint8_t(TETRIS_YPOS + ty));
     }
 
-    void setTetrisPixel(int x, int y, uint8_t colour)
+    void setTetrisPixel(int tx, int ty, uint8_t colour)
     {
-        x *= 4;
-        y *= 4;
-        drawPixelGiga(TETRIS_XPOS + x + 0, TETRIS_YPOS + y + 0, colour);
-        drawPixelGiga(TETRIS_XPOS + x + 0, TETRIS_YPOS + y + 1, colour);
-        drawPixelGiga(TETRIS_XPOS + x + 0, TETRIS_YPOS + y + 2, colour);
-        drawPixelGiga(TETRIS_XPOS + x + 0, TETRIS_YPOS + y + 3, colour);
-        drawPixelGiga(TETRIS_XPOS + x + 1, TETRIS_YPOS + y + 0, colour);
-        drawPixelGiga(TETRIS_XPOS + x + 1, TETRIS_YPOS + y + 1, colour);
-        drawPixelGiga(TETRIS_XPOS + x + 1, TETRIS_YPOS + y + 2, colour);
-        drawPixelGiga(TETRIS_XPOS + x + 1, TETRIS_YPOS + y + 3, colour);
-        drawPixelGiga(TETRIS_XPOS + x + 2, TETRIS_YPOS + y + 0, colour);
-        drawPixelGiga(TETRIS_XPOS + x + 2, TETRIS_YPOS + y + 1, colour);
-        drawPixelGiga(TETRIS_XPOS + x + 2, TETRIS_YPOS + y + 2, colour);
-        drawPixelGiga(TETRIS_XPOS + x + 2, TETRIS_YPOS + y + 3, colour);
-        drawPixelGiga(TETRIS_XPOS + x + 3, TETRIS_YPOS + y + 0, colour);
-        drawPixelGiga(TETRIS_XPOS + x + 3, TETRIS_YPOS + y + 1, colour);
-        drawPixelGiga(TETRIS_XPOS + x + 3, TETRIS_YPOS + y + 2, colour);
-        drawPixelGiga(TETRIS_XPOS + x + 3, TETRIS_YPOS + y + 3, colour);
+        tx *= 4;
+        ty *= 4;
+        drawPixelGiga(uint8_t(TETRIS_XPOS + tx + 0), uint8_t(TETRIS_YPOS + ty + 0), colour);
+        drawPixelGiga(uint8_t(TETRIS_XPOS + tx + 0), uint8_t(TETRIS_YPOS + ty + 1), colour);
+        drawPixelGiga(uint8_t(TETRIS_XPOS + tx + 0), uint8_t(TETRIS_YPOS + ty + 2), colour);
+        drawPixelGiga(uint8_t(TETRIS_XPOS + tx + 0), uint8_t(TETRIS_YPOS + ty + 3), colour);
+        drawPixelGiga(uint8_t(TETRIS_XPOS + tx + 1), uint8_t(TETRIS_YPOS + ty + 0), colour);
+        drawPixelGiga(uint8_t(TETRIS_XPOS + tx + 1), uint8_t(TETRIS_YPOS + ty + 1), colour);
+        drawPixelGiga(uint8_t(TETRIS_XPOS + tx + 1), uint8_t(TETRIS_YPOS + ty + 2), colour);
+        drawPixelGiga(uint8_t(TETRIS_XPOS + tx + 1), uint8_t(TETRIS_YPOS + ty + 3), colour);
+        drawPixelGiga(uint8_t(TETRIS_XPOS + tx + 2), uint8_t(TETRIS_YPOS + ty + 0), colour);
+        drawPixelGiga(uint8_t(TETRIS_XPOS + tx + 2), uint8_t(TETRIS_YPOS + ty + 1), colour);
+        drawPixelGiga(uint8_t(TETRIS_XPOS + tx + 2), uint8_t(TETRIS_YPOS + ty + 2), colour);
+        drawPixelGiga(uint8_t(TETRIS_XPOS + tx + 2), uint8_t(TETRIS_YPOS + ty + 3), colour);
+        drawPixelGiga(uint8_t(TETRIS_XPOS + tx + 3), uint8_t(TETRIS_YPOS + ty + 0), colour);
+        drawPixelGiga(uint8_t(TETRIS_XPOS + tx + 3), uint8_t(TETRIS_YPOS + ty + 1), colour);
+        drawPixelGiga(uint8_t(TETRIS_XPOS + tx + 3), uint8_t(TETRIS_YPOS + ty + 2), colour);
+        drawPixelGiga(uint8_t(TETRIS_XPOS + tx + 3), uint8_t(TETRIS_YPOS + ty + 3), colour);
     }
 
-    void drawTetromino(int index, int rotation, int x, int y, uint8_t colour)
+    void drawTetromino(int idx, int rot, int tx, int ty, uint8_t colour)
     {
         for(int i=0; i<TETROMINOE_SIZE; i++)
         {
-            int xx = x + tetrominoes[index]._pattern[rotation][4 + i*2];
-            int yy = y + tetrominoes[index]._pattern[rotation][5 + i*2];
+            int xx = tx + tetrominoes[idx]._pattern[rot][4 + i*2];
+            int yy = ty + tetrominoes[idx]._pattern[rot][5 + i*2];
             if(xx < 0  ||  xx >= TETRIS_XEXT) continue;
             if(yy < 0  ||  yy >= TETRIS_YEXT) continue;
 
-            setTetrisPixel(xx, yy, colour);
+            setTetrisPixel(uint8_t(xx), uint8_t(yy), colour);
         }
     }
 
-    BoardState checkTetromino(int index, int rotation, int x, int y)
+    BoardState checkTetromino(int idx, int rot, int tx, int ty)
     {
         for(int i=0; i<TETROMINOE_SIZE; i++)
         {
-            int xx = x + tetrominoes[index]._pattern[rotation][4 + i*2];
-            int yy = y + tetrominoes[index]._pattern[rotation][5 + i*2];
+            int xx = tx + tetrominoes[idx]._pattern[rot][4 + i*2];
+            int yy = ty + tetrominoes[idx]._pattern[rot][5 + i*2];
             if(xx < 0  ||  xx >= TETRIS_XEXT) continue;
             if(yy < 0  ||  yy >= TETRIS_YEXT) continue;
 
-            if(getTetrisPixel(xx, yy))
+            if(getTetrisPixel(uint8_t(xx), uint8_t(yy)))
             {
                 if(y == 0) return GameOver;
                 return Blocked;
@@ -1611,23 +1613,23 @@ namespace Graphics
  
     void shakeScreen(int lines)
     {
-        static int frameCount = 0;
+        static int frameCnt = 0;
         static int strength = 0;
 
         if(lines)
         {
-            frameCount = 1;
+            frameCnt = 1;
             strength = lines;
         }
 
-        if(frameCount)
+        if(frameCnt)
         {
             int screenShake = rand() % 4;
             switch(screenShake)
             {
                 case 0:
                 {
-                    Cpu::setRAM(0x0101, strength); 
+                    Cpu::setRAM(0x0101, uint8_t(strength));
                 }
                 break;
          
@@ -1639,22 +1641,22 @@ namespace Graphics
 
                 case 2:
                 {
-                    for(int i=0x0100; i<0x01EE; i+=2) Cpu::setRAM(i, 0x08 + (i-0x0100)/2 + strength); 
+                    for(int i=0x0100; i<0x01EE; i+=2) Cpu::setRAM(uint16_t(i), uint8_t(0x08 + (i-0x0100)/2 + strength));
                 }
                 break;
                 
                 case 3:
                 {
-                    for(int i=0x0100; i<0x01EE; i+=2) Cpu::setRAM(i, 0x08 + (i-0x0100)/2 + uint8_t(0 - strength)); 
+                    for(int i=0x0100; i<0x01EE; i+=2) Cpu::setRAM(uint16_t(i), uint8_t(0x08 + (i-0x0100)/2 + uint8_t(0 - strength)));
                 }
                 break;
             }
             
-            if(++frameCount >= 20) //strength * 10)
+            if(++frameCnt >= 20) //strength * 10)
             {
-                frameCount = 0;
+                frameCnt = 0;
                 Cpu::setRAM(0x0101, 0x00);
-                for(int i=0x0100; i<0x01EF; i+=2) Cpu::setRAM(i, 0x08 + (i-0x0101)/2); 
+                for(int i=0x0100; i<0x01EF; i+=2) Cpu::setRAM(uint16_t(i), uint8_t(0x08 + (i-0x0101)/2));
             }
         }
     }
