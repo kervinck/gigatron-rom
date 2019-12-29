@@ -8,10 +8,11 @@ gcl0x
 {
   Issues:
 
-  XXX NMI/IRQ/RESET to wozmon (through vector) without going through main menu
-  XXX Emulate ACI Apple Cassete Interface? C100R --> 4100 = RAM (still ok)
-  XXX Normally we need RESET to get out of A1 BASIC. What can we do?
-  XXX Another idea: interrupts to handle memory mapped DSP/KBD/..
+  XXX vIRQ interrupts to handle memory mapped PIA: DSP/KBD/..
+  XXX Normally we need RESET to get out of A1 BASIC. Can we use Ctrl-C?
+  XXX BASIC: AUTO doesn't work well
+  XXX Add Baum assembler
+  XXX NMI/IRQ(=BRK)/RESET back into to wozmon (through vector)
 
   References:
 
@@ -81,6 +82,10 @@ _j=$3c          {2 bytes}
 +-----------------------------------------------------------------------}
 
 { This code runs once and is then reused as the input buffer for wozmon }
+
+$a000 _sysArgs0=                {Clear last pixel row}
+$7e60 _sysArgs2=
+\SYS_SetMemory_v2_54 _sysFn= 54!!
 
 $1ee p= {videoTable+119*2}      {First GCL variable at $30, later used as Pos}
 [do
@@ -341,41 +346,7 @@ _MNEMR=*        #$D8 #$62 #$5A #$48             { XXXXX000 INSTRS }
                 #$44 #$44 #$A2 #$C8
 
 
-{-----------------------------------------------------------------------+
-|       Startup message                                                 |
-+-----------------------------------------------------------------------}
-
 *=$5e00
-
-_PRE_RESET=*
-                {Set visible pixel lines in video table}
-                #_CLC_
-                #_LDXIM_ #0
-                #_LDYIM_ #12
-_L1=*           #_LDAAY_ ##_ROWS
-                #_STYZ_  #\YSAV
-                #_LDYIM_ #7
-_L2=*           #_STAAX_ ##\videoTable
-                #_ADCIM_ #1
-                #_INX_
-                #_INX_
-                #_DEY_
-                #_BNE_   #@_L2
-                #_INX_
-                #_INX_
-                #_INX_
-                #_INX_
-                #_LDYZ_  #\YSAV
-                #_DEY_
-                #_BPL_   #@_L1
-
-                {Initialize terminal through "ACI"}
-                #_JMP_   ##_MENU
-
-_ROWS=*         { Page of each row's first pixel line, backwards }
-                #$70 #$56 #$4f #$48 #$41 #$3a #$33 #$2c #$25 #$1e #$17 #$10 #$77 #$70
-
-*=$5f00
 
 {-----------------------------------------------------------------------+
 |       WAITKEY                                                         |
@@ -383,7 +354,8 @@ _ROWS=*         { Page of each row's first pixel line, backwards }
 
 {
   Wait for next key press and return ASCII result
-  Display a blinking cursor while waiting
+  Display a blinking cursor while waiting.
+  Must preserve v6502_Y
 }
 
 _WAITKEY=*      #_LDAZ_  #_serialRaw
@@ -409,7 +381,6 @@ _WAITKEY3=*     #_LDAIM_ #$c0           {`@'}
 
 _WAITKEY4=*     #_CMPIM_ #255           {Ignore key release}
                 #_BEQ_   #@_WAITKEY1
-
                 #_PHA_
                 #_LDAIM_ #$a0           {Overwrite cursor symbol with a space}
                 #_BRK_
@@ -423,6 +394,7 @@ _MAPKEYCODE1=*  #_CMPIM_ #10
                 #_BNE_   #@_MAPKEYCODE2
                 #_LDAIM_ #13            {LF becomes CR}
 _MAPKEYCODE2=*  #_ORAIM_ #$80           {B7 should be '1'}
+                #_STA_   ##_KBD
                 #_RTS_
 
 _GOBACK=*       #_LDAZ_  #<p            {Go back}
@@ -430,6 +402,40 @@ _GOBACK=*       #_LDAZ_  #<p            {Go back}
                 #_SBCIM_ #6
                 #_STAZ_  #<p
                 #_RTS_
+
+{-----------------------------------------------------------------------+
+|       Startup message                                                 |
++-----------------------------------------------------------------------}
+
+_PRE_RESET=*
+                {Set visible pixel lines in video table}
+                #_CLC_
+                #_LDXIM_ #0
+                #_LDYIM_ #12
+_L1=*           #_LDAAY_ ##_ROWS
+                #_STYZ_  #_YSAV
+                #_LDYIM_ #7
+_L2=*           #_STAAX_ ##\videoTable
+                #_ADCIM_ #1
+                #_INX_
+                #_INX_
+                #_DEY_
+                #_BNE_   #@_L2
+                #_INX_
+                #_INX_
+                #_INX_
+                #_INX_
+                #_LDYZ_  #_YSAV
+                #_DEY_
+                #_BPL_   #@_L1
+
+                {Initialize terminal through "ACI"}
+                #_JMP_   ##_MENU
+
+_ROWS=*         { Page of each row's first pixel line, backwards }
+                #$70 #$56 #$4f #$48 #$41 #$3a #$33 #$2c #$25 #$1e #$17 #$10 #$77 #$70
+
+*=$5f00
 
 {-----------------------------------------------------------------------+
 |       Main vCPU loop                                                  |
@@ -452,6 +458,7 @@ _v6502_PC=                      {Reset v6502 PC}
   {Minimalistic terminal output, with bit 7 set by WozMon}
 
   %-2=                          {Park character in stack area}
+  \KBDCR _vAC.                  {Clears KBDCR bit 7}
   \SYS_VDrawBits_134 _sysFn=    {Prepare SYS calls}
   $3f00 _sysArgs0=              {White on black}
 
@@ -464,8 +471,6 @@ _v6502_PC=                      {Reset v6502 PC}
     |       Newline                                                     |
     +-------------------------------------------------------------------}
 
-    \sysArgs2.                  {Zero bit pattern}
-
     { Find the top text row }
     $62 <p.                     {Go to start of line, nicely indent by 2 pixels}
     $9e+ _i=                    {i==$100: start of the video table}
@@ -474,6 +479,9 @@ _v6502_PC=                      {Reset v6502 PC}
     { Clear the text row }
     p 2- _sysArgs4=             {Set drawing position for clearing}
     [do
+      $700 _sysArgs4+ peek      {Preserve pixel on 8th line because of overlap}
+      1& \sysArgs2.             { in 7 line text mode. Assume bit 0 differs.}
+
       134!!                     {SYS call to draw 8 pixels vertically}
       <_sysArgs4++              {Step 1 pixel right}
       \sysArgs4, if<>0loop]     {Loop until end of pixel line}
@@ -513,8 +521,10 @@ _v6502_PC=                      {Reset v6502 PC}
     5 [do _i=                   {Draw character as 5 vertical bit slices}
       _j 0??                    {Get bit slice as byte from ROM table}
       $fe& \sysArgs2.           {Clear bottom pixel}
+      $700 _sysArgs4+ peek      {Preserve pixel on 8th line because of overlap}
+      [if<>0 <\sysArgs2++]      { in 7 line text mode. Assumes background is 0.}
       134!!                     {SYS call to draw 8 pixels vertically}
-      <_j++ <\sysArgs4++        {Advance to next byte}
+      <_j++ <_sysArgs4++        {Advance to next byte}
       _i 1- if>0loop]           {Looping}
 
     %-2                         {Return position for backspace}
@@ -577,7 +587,7 @@ _MSG=*
 
 
 *=$e000
- #$4c #$b0 #$e2 #$84 #$3a #$20 #$00 #$5f #$a4 #$3a #$ea #$60 #$8a #$29 #$20 #$f0
+ #$4c #$b0 #$e2 #$20 #$00 #$5e #$10 #$fb #$ad #$10 #$d0 #$60 #$8a #$29 #$20 #$f0
  #$23 #$a9 #$a0 #$85 #$e4 #$4c #$c9 #$e3 #$a9 #$20 #$c5 #$3e #$b0 #$0c #$a9 #$8d
  #$a0 #$07 #$20 #$c9 #$e3 #$a9 #$a0 #$88 #$d0 #$f8 #$a0 #$00 #$b1 #$e2 #$e6 #$e2
  #$d0 #$02 #$e6 #$e3 #$60 #$20 #$15 #$e7 #$20 #$76 #$e5 #$a5 #$e2 #$c5 #$e6 #$a5
@@ -912,8 +922,8 @@ _GETLINE=*      #_LDAIM_ #$8D           { CR.                                   
 _BACKSPACE=*    #_DEY_                  { Back up text index.                     }
                 #_BMI_   #@_GETLINE     { Beyond start of line, reinitialize.     }
 _NEXTCHAR=*     #_JSR_   ##_WAITKEY     { [Gigatron] No KBDCR and KBD (yet!)      }
-                #_BPL_   #@_NEXTCHAR    { Loop until ready. [Gigatron] Never taken}
-                #_BIT_   ##_KBD         { [Gigatron] Was: LDA                     }
+                #_BPL_   #@_NEXTCHAR    { Loop until ready.                       }
+                #_LDA_   ##_KBD         { Load character. B7 should be '1'.       }
                 #_STAAY_ ##_IN          { Add to text buffer.                     }
                 #_JSR_   ##_ECHO        { Display character.                      }
                 #_CMPIM_ #$8D           { CR?                                     }
@@ -1023,7 +1033,7 @@ _BLANK=*        #_CLC_                  { [Gigatron] Advance few pixels so BLOCK
                 #$00                    { (unused)                                }
 {FFFA}          ##$0000                 { (NMI)                                   }
 {FFFC}          ##_RESET                { (RESET)                                 }
-{FFFE}          ##$0000                 { (IRQ)                                   }
+{FFFE}          ##$0000                 { (IRQ/BRK)                               }
 
 {-----------------------------------------------------------------------+
 |                                                                       |
