@@ -128,7 +128,7 @@ namespace Memory
             else if(address > _freeRam[i]._address  &&  (address + size <= _freeRam[i]._address + _freeRam[i]._size))
             {
                 uint16_t address0 = _freeRam[i]._address;
-                uint16_t address1 = address + size;
+                uint16_t address1 = uint16_t(address + size);
                 int size0 = address - _freeRam[i]._address;
                 int size1 = (_freeRam[i]._address + _freeRam[i]._size) - (address + size);
                 return updateFreeRamList(i, address0, size0, address1, size1);

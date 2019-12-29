@@ -264,7 +264,7 @@ namespace Compiler
     int findStr(std::string& strName);
 
     bool createCodeLine(const std::string& code, int codeLineOffset, int labelIndex, int varIndex, Expression::Int16Byte int16Byte, bool vars, CodeLine& codeLine);
-    void createLabel(uint16_t address, const std::string& name, const std::string& output, int codeLineIndex, Label& label, bool numeric=false, bool addUnderscore=true, bool pageJump=false, bool gosub=false);
+    void createLabel(uint16_t address, const std::string& name, int codeLineIndex, Label& label, bool numeric=false, bool addUnderscore=true, bool pageJump=false, bool gosub=false);
     void createIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, int& varIndex, VarType varType=VarInt16, uint16_t arrayStart=0x0000, int intSize=Int16, int arrSize=0);
     int getOrCreateString(CodeLine& codeLine, int codeLineIndex, const std::string& str, std::string& name, uint16_t& address, uint8_t maxSize=USER_STR_SIZE, bool constString=true);
     uint16_t getOrCreateConstString(const std::string& input, int& index);
@@ -286,8 +286,8 @@ namespace Compiler
     uint32_t handleExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, Expression::Numeric numeric);
     StatementResult parseMultiStatements(const std::string& code, CodeLine& codeLine, int codeLineIndex, int& varIndex, int& strIndex);
 
-    void addLabelToJumpCC(std::vector<VasmLine>& vasm, std::string& label);
-    void addLabelToJump(std::vector<VasmLine>& vasm, std::string& label);
+    void addLabelToJumpCC(std::vector<VasmLine>& vasm, const std::string& label);
+    void addLabelToJump(std::vector<VasmLine>& vasm, const std::string& label);
 
     bool compile(const std::string& inputFilename, const std::string& outputFilename);
 }

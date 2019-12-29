@@ -39,18 +39,19 @@ namespace Keywords
     bool findKeyword(std::string code, const std::string& keyword, size_t& foundPos);
     KeywordResult handleKeywords(Compiler::CodeLine& codeLine, const std::string& keyword, int codeLineIndex, int tokenIndex, KeywordFuncResult& result);
 
-    Expression::Numeric functionPEEK(Expression::Numeric&   numeric);
-    Expression::Numeric functionDEEK(Expression::Numeric&   numeric);
-    Expression::Numeric functionUSR(Expression::Numeric&    numeric);
-    Expression::Numeric functionRND(Expression::Numeric&    numeric);
-    Expression::Numeric functionARR(Expression::Numeric&    numeric);
-    Expression::Numeric functionLEN(Expression::Numeric&    numeric);
-    Expression::Numeric functionCHR$(Expression::Numeric&   numeric);
-    Expression::Numeric functionHEX$(Expression::Numeric&   numeric);
-    Expression::Numeric functionHEXW$(Expression::Numeric&  numeric);
-    Expression::Numeric functionLEFT$(Expression::Numeric&  numeric);
-    Expression::Numeric functionRIGHT$(Expression::Numeric& numeric);
-    Expression::Numeric functionMID$(Expression::Numeric&   numeric);
+    Expression::Numeric functionARR(Expression::Numeric& numeric);
+
+    Expression::Numeric functionPEEK(Expression::Numeric&& numeric);
+    Expression::Numeric functionDEEK(Expression::Numeric&& numeric);
+    Expression::Numeric functionUSR(Expression::Numeric&& numeric);
+    Expression::Numeric functionRND(Expression::Numeric&& numeric);
+    Expression::Numeric functionLEN(Expression::Numeric&& numeric);
+    Expression::Numeric functionCHR$(Expression::Numeric&& numeric);
+    Expression::Numeric functionHEX$(Expression::Numeric&& numeric);
+    Expression::Numeric functionHEXW$(Expression::Numeric&& numeric);
+    Expression::Numeric functionLEFT$(Expression::Numeric&& numeric);
+    Expression::Numeric functionRIGHT$(Expression::Numeric&& numeric);
+    Expression::Numeric functionMID$(Expression::Numeric&& numeric);
 
     // Keywords
     bool keywordREM(Compiler::CodeLine& codeLine,    int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);

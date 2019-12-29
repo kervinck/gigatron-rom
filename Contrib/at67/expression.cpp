@@ -46,87 +46,87 @@ namespace Expression
         numeric._value = ~numeric._value;
         return numeric;
     }
-    Numeric and(Numeric& left, Numeric& right)
+    Numeric and(Numeric& left, Numeric&& right)
     {
         left._value &= right._value;
         return left;
     }
-    Numeric or(Numeric& left, Numeric& right)
+    Numeric or(Numeric& left, Numeric&& right)
     {
         left._value |= right._value;
         return left;
     }
-    Numeric xor(Numeric& left, Numeric& right)
+    Numeric xor(Numeric& left, Numeric&& right)
     {
         left._value ^= right._value;
         return left;
     }
-    Numeric add(Numeric& left, Numeric& right)
+    Numeric add(Numeric& left, Numeric&& right)
     {
         left._value += right._value;
         return left;
     }
-    Numeric sub(Numeric& left, Numeric& right)
+    Numeric sub(Numeric& left, Numeric&& right)
     {
         left._value -= right._value;
         return left;
     }
-    Numeric pow(Numeric& left, Numeric& right)
+    Numeric pow(Numeric& left, Numeric&& right)
     {
         left._value = int16_t(std::pow(double(left._value), double(right._value)));
         return left;
     }
-    Numeric mul(Numeric& left, Numeric& right)
+    Numeric mul(Numeric& left, Numeric&& right)
     {
         left._value *= right._value;
         return left;
     }
-    Numeric div(Numeric& left, Numeric& right)
+    Numeric div(Numeric& left, Numeric&& right)
     {
         left._value = (right._value == 0) ? 0 : left._value / right._value;
         return left;
     }
-    Numeric mod(Numeric& left, Numeric& right)
+    Numeric mod(Numeric& left, Numeric&& right)
     {
         left._value = (right._value == 0) ? 0 : left._value % right._value;
         return left;
     }
-    Numeric lsl(Numeric& left, Numeric& right)
+    Numeric lsl(Numeric& left, Numeric&& right)
     {
         left._value = left._value << right._value;
         return left;
     }
-    Numeric lsr(Numeric& left, Numeric& right)
+    Numeric lsr(Numeric& left, Numeric&& right)
     {
         left._value = left._value >> right._value;
         return left;
     }
-    Numeric lt(Numeric& left, Numeric& right)
+    Numeric lt(Numeric& left, Numeric&& right)
     {
         left._value = left._value < right._value;
         return left;
     }
-    Numeric gt(Numeric& left, Numeric& right)
+    Numeric gt(Numeric& left, Numeric&& right)
     {
         left._value = left._value > right._value;
         return left;
     }
-    Numeric eq(Numeric& left, Numeric& right)
+    Numeric eq(Numeric& left, Numeric&& right)
     {
         left._value = left._value == right._value;
         return left;
     }
-    Numeric ne(Numeric& left, Numeric& right)
+    Numeric ne(Numeric& left, Numeric&& right)
     {
         left._value = left._value != right._value;
         return left;
     }
-    Numeric le(Numeric& left, Numeric& right)
+    Numeric le(Numeric& left, Numeric&& right)
     {
         left._value = left._value <= right._value;
         return left;
     }
-    Numeric ge(Numeric& left, Numeric& right)
+    Numeric ge(Numeric& left, Numeric&& right)
     {
         left._value = left._value >= right._value;
         return left;
@@ -376,8 +376,8 @@ namespace Expression
 
     bool findMatchingBrackets(const std::string& input, size_t start, size_t& lbra, size_t& rbra)
     {
-        lbra = -1;
-        rbra = -1;
+        lbra = std::string::npos;
+        rbra = std::string::npos;
 
         int matched = 0;
         bool startMatching = false;
@@ -403,8 +403,8 @@ namespace Expression
             if(startMatching  &&  matched == 0) return true;
         }
 
-        lbra = -1;
-        rbra = -1;
+        lbra = std::string::npos;
+        rbra = std::string::npos;
 
         return false;
     }
@@ -485,7 +485,7 @@ namespace Expression
     {
         if(s.size() > 1)
         {
-            char uchr = toupper(s[1]);
+            char uchr = char(toupper(s[1]));
             if((s[0] == '&'  &&  (uchr == 'H'  ||  uchr == 'B'  ||  uchr == 'O'))  ||
                (s[0] == '0'  &&  (uchr == 'X'  ||  uchr == 'B'  ||  uchr == 'O')))
             {
@@ -627,7 +627,7 @@ namespace Expression
     std::vector<std::string> tokenise(const std::string& text, const std::string& delimiters, bool toUpper)
     {
         size_t offset0 = 0;
-        size_t offset1 = -1;
+        size_t offset1 = SIZE_MAX;
         bool firstToken = true;
         std::vector<std::string> result;
 
@@ -985,7 +985,8 @@ namespace Expression
     bool find(const std::string& text)
     {
         size_t pos = size_t(_expression - _expressionToParse.c_str());
-        if(strToUpper(_expressionToParse.substr(pos, text.size())) == text)
+        std::string expr = _expressionToParse.substr(pos, text.size());
+        if(strToUpper(expr) == text)
         {
             advance(text.size());
             return true;
@@ -999,17 +1000,17 @@ namespace Expression
         char uchr;
 
         std::string valueStr;
-        uchr = toupper(peek());
+        uchr = char(toupper(peek()));
         valueStr.push_back(uchr); get();
-        uchr = toupper(peek());
+        uchr = char(toupper(peek()));
         if((uchr >= '0'  &&  uchr <= '9')  ||  uchr == 'X'  ||  uchr == 'H'  ||  uchr == 'B'  ||  uchr == 'O'  ||  uchr == 'Q')
         {
             valueStr.push_back(uchr); get();
-            uchr = toupper(peek());
+            uchr = char(toupper(peek()));
             while((uchr >= '0'  &&  uchr <= '9')  ||  (uchr >= 'A'  &&  uchr <= 'F'))
             {
                 valueStr.push_back(get());
-                uchr = toupper(peek());
+                uchr = char(toupper(peek()));
             }
         }
 

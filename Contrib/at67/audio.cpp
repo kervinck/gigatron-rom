@@ -100,7 +100,7 @@ namespace Audio
 
     void initialiseChannels(void)
     {
-        for(int i=0; i<GIGA_SOUND_CHANNELS; i++)
+        for(uint16_t i=0; i<GIGA_SOUND_CHANNELS; i++)
         {
             Cpu::setRAM(GIGA_CH0_WAV_A + i*GIGA_CHANNEL_OFFSET, 0x00); // sample index modification for advanced noise generation
             Cpu::setRAM(GIGA_CH0_WAV_X + i*GIGA_CHANNEL_OFFSET, 0x03); // waveform index

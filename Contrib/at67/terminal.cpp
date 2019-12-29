@@ -45,7 +45,7 @@ namespace Terminal
     {
     }
 
-    bool sendCommandToGiga(std::string& cmd, std::vector<std::string>& text)
+    bool sendCommandToGiga(const std::string& cmd, std::vector<std::string>& text)
     {
         for(int i=0; i<cmd.size(); i++)
         {
@@ -189,7 +189,7 @@ namespace Terminal
         }
         for(int i=selectedMin+1; i<selectedMax; i++)
         {
-            bool saveText = true;
+            saveText = true;
             for(int j=0; j<_terminalTextSelected.size(); j++)
             {
                 if(_terminalTextSelected[j] == i)
@@ -231,6 +231,8 @@ namespace Terminal
 
     void handleTerminalMouseButtonDown(const SDL_Event& event, const Editor::MouseState& mouseState)
     {
+        UNREFERENCED_PARAM(event);
+
         if(mouseState._state == SDL_BUTTON_LEFT) _terminalTextSelected.clear();
 
         if(mouseState._state == SDL_BUTTON_X1)
@@ -246,6 +248,9 @@ namespace Terminal
 
     void handleTerminalMouseButtonUp(const SDL_Event& event, const Editor::MouseState& mouseState)
     {
+        UNREFERENCED_PARAM(event);
+        UNREFERENCED_PARAM(mouseState);
+
         switch(_terminalMenuIdx)
         {
             // Copy selected text
@@ -441,14 +446,14 @@ namespace Terminal
             // No modifier keys
             switch(keyCode)
             {
-                case SDLK_UP:     Loader::sendCharGiga(27); Loader::sendCharGiga('['); Loader::sendCharGiga('A');                                            break;
-                case SDLK_DOWN:   Loader::sendCharGiga(27); Loader::sendCharGiga('['); Loader::sendCharGiga('B');                                            break;
-                case SDLK_RIGHT:  Loader::sendCharGiga(27); Loader::sendCharGiga('['); Loader::sendCharGiga('C');                                            break;
-                case SDLK_LEFT:   Loader::sendCharGiga(27); Loader::sendCharGiga('['); Loader::sendCharGiga('D');                                            break;
-                case SDLK_TAB:    Loader::sendCharGiga(keyCode);                                                                                             break;
-                case SDLK_DELETE: Loader::sendCharGiga(keyCode); if(_terminalCommandLine.size()) _terminalCommandLine.erase(_terminalCommandLine.end() - 1); break;
+                case SDLK_UP:     Loader::sendCharGiga(27); Loader::sendCharGiga('['); Loader::sendCharGiga('A');                                                  break;
+                case SDLK_DOWN:   Loader::sendCharGiga(27); Loader::sendCharGiga('['); Loader::sendCharGiga('B');                                                  break;
+                case SDLK_RIGHT:  Loader::sendCharGiga(27); Loader::sendCharGiga('['); Loader::sendCharGiga('C');                                                  break;
+                case SDLK_LEFT:   Loader::sendCharGiga(27); Loader::sendCharGiga('['); Loader::sendCharGiga('D');                                                  break;
+                case SDLK_TAB:    Loader::sendCharGiga(char(keyCode));                                                                                             break;
+                case SDLK_DELETE: Loader::sendCharGiga(char(keyCode)); if(_terminalCommandLine.size()) _terminalCommandLine.erase(_terminalCommandLine.end() - 1); break;
                 case '\r':
-                case '\n':        Loader::sendCharGiga(keyCode); _terminalCommandLine.clear();                                                               break;
+                case '\n':        Loader::sendCharGiga(char(keyCode)); _terminalCommandLine.clear();                                                               break;
             }
 
             // CTRL C for BASIC, (shared with copy to clipboard)

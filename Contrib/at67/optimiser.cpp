@@ -259,7 +259,7 @@ namespace Optimiser
         {
             if(Compiler::getLabels()[i]._address >= optimisedAddress)
             {
-                Compiler::getLabels()[i]._address += offset;
+                Compiler::getLabels()[i]._address += int16_t(offset);
             }
         }
     }
@@ -283,7 +283,7 @@ namespace Optimiser
             int start = (i == codeLineIndex) ? vasmLineIndex : 0;
             for(int j=start; j<Compiler::getCodeLines()[i]._vasm.size(); j++)
             {
-                Compiler::getCodeLines()[i]._vasm[j]._address += offset;
+                Compiler::getCodeLines()[i]._vasm[j]._address += int16_t(offset);
             }
         }
     }

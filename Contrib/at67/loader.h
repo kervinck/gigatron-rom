@@ -70,7 +70,7 @@ namespace Loader
 
 
     std::string& getCurrentGame(void);
-    void setCurrentGame(std::string& currentGame);
+    void setCurrentGame(const std::string& currentGame);
 
     UploadTarget getUploadTarget(void);
     void setUploadTarget(UploadTarget target);
@@ -93,7 +93,7 @@ namespace Loader
     bool sendCharGiga(char chr);
     void sendCommandToGiga(char cmd, std::string& line, bool wait);
     void sendCommandToGiga(char cmd, bool wait);
-    bool sendCommandToGiga(std::string& cmd, std::vector<std::string>& text);
+    bool sendCommandToGiga(const std::string& cmd, std::vector<std::string>& text);
 
     bool loadDataFile(SaveData& saveData);
     bool saveDataFile(SaveData& saveData);

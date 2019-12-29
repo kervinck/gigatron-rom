@@ -30,6 +30,9 @@
 
 int main(int argc, char* argv[])
 {
+    UNREFERENCED_PARAM(argc);
+    UNREFERENCED_PARAM(argv);
+
     Memory::initialise();
     Loader::initialise();
     Cpu::initialise();

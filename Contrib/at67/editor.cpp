@@ -610,22 +610,22 @@ namespace Editor
                 {
                     if(_memoryMode == RAM)
                     {
-                        _vpcBaseAddress = (_vpcBaseAddress - Assembler::getPrevDasmByteCount()) & (Memory::getSizeRAM()-1);
+                        _vpcBaseAddress = uint16_t(_vpcBaseAddress - Assembler::getPrevDasmByteCount()) & (Memory::getSizeRAM()-1);
                     }
                     else
                     {
-                        _ntvBaseAddress = (_ntvBaseAddress - Assembler::getPrevDasmByteCount()) & (Memory::getSizeRAM()-1);
+                        _ntvBaseAddress = uint16_t(_ntvBaseAddress - Assembler::getPrevDasmByteCount()) & (Memory::getSizeRAM()-1);
                     }
                 }
                 else
                 {
                     if(_memoryMode == RAM)
                     {
-                        _vpcBaseAddress = (_vpcBaseAddress - Assembler::getPrevDasmPageByteCount()) & (Memory::getSizeRAM()-1);
+                        _vpcBaseAddress = uint16_t(_vpcBaseAddress - Assembler::getPrevDasmPageByteCount()) & (Memory::getSizeRAM()-1);
                     }
                     else
                     {
-                        _ntvBaseAddress = (_ntvBaseAddress - Assembler::getPrevDasmPageByteCount()) & (Memory::getSizeRAM()-1);
+                        _ntvBaseAddress = uint16_t(_ntvBaseAddress - Assembler::getPrevDasmPageByteCount()) & (Memory::getSizeRAM()-1);
                     }
                 }
             }
@@ -664,22 +664,22 @@ namespace Editor
                 {
                     if(_memoryMode == RAM)
                     {
-                        _vpcBaseAddress = (_vpcBaseAddress + Assembler::getCurrDasmByteCount()) & (Memory::getSizeRAM()-1);
+                        _vpcBaseAddress = uint16_t(_vpcBaseAddress + Assembler::getCurrDasmByteCount()) & (Memory::getSizeRAM()-1);
                     }
                     else
                     {
-                        _ntvBaseAddress = (_ntvBaseAddress + Assembler::getCurrDasmByteCount()) & (Memory::getSizeRAM()-1);
+                        _ntvBaseAddress = uint16_t(_ntvBaseAddress + Assembler::getCurrDasmByteCount()) & (Memory::getSizeRAM()-1);
                     }
                 }
                 else
                 {
                     if(_memoryMode == RAM)
                     {
-                        _vpcBaseAddress = (_vpcBaseAddress + Assembler::getCurrDasmPageByteCount()) & (Memory::getSizeRAM()-1);
+                        _vpcBaseAddress = uint16_t(_vpcBaseAddress + Assembler::getCurrDasmPageByteCount()) & (Memory::getSizeRAM()-1);
                     }
                     else
                     {
-                        _ntvBaseAddress = (_ntvBaseAddress + Assembler::getCurrDasmPageByteCount()) & (Memory::getSizeRAM()-1);
+                        _ntvBaseAddress = uint16_t(_ntvBaseAddress + Assembler::getCurrDasmPageByteCount()) & (Memory::getSizeRAM()-1);
                     }
                 }
             }
@@ -785,21 +785,21 @@ namespace Editor
         if(_sdlKeyScanCode >= SDLK_a  &&  _sdlKeyScanCode <= SDLK_f) range = 2;
         if(range == 1  ||  range == 2)
         {
-            uint16_t value = 0;    
+            uint8_t value = 0;
             switch(range)
             {
-                case 1: value = _sdlKeyScanCode - SDLK_0;      break;
-                case 2: value = _sdlKeyScanCode - SDLK_a + 10; break;
+                case 1: value = uint8_t(_sdlKeyScanCode - SDLK_0);      break;
+                case 2: value = uint8_t(_sdlKeyScanCode - SDLK_a + 10); break;
             }
 
             // Edit memory
             if(_memoryMode == RAM  &&  _cursorY >= 0)
             {
-                uint16_t address = _hexBaseAddress + _cursorX + _cursorY*HEX_CHARS_X;
+                uint16_t address = uint16_t(_hexBaseAddress + _cursorX + _cursorY*HEX_CHARS_X);
                 switch(_memoryDigit)
                 {
-                    case 0: value = (value << 4) & 0x00F0; Cpu::setRAM(address, Cpu::getRAM(address) & 0x000F | value); break;
-                    case 1: value = (value << 0) & 0x000F; Cpu::setRAM(address, Cpu::getRAM(address) & 0x00F0 | value); break;
+                    case 0: value = (value << 4) & 0xF0; Cpu::setRAM(address, Cpu::getRAM(address) & 0x0F | value); break;
+                    case 1: value = (value << 0) & 0x0F; Cpu::setRAM(address, Cpu::getRAM(address) & 0xF0 | value); break;
                 }
                 _memoryDigit = (++_memoryDigit) & 0x01;
                 return;
