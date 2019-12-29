@@ -71,9 +71,9 @@ ld([Y,X]);                      C('Valid command')#24 Length byte
 st([Y,Xpp]);                    C('Just X++')#25
 anda(63)                        #26 Bit 6:7 are garbage
 st([sysArgs+4])                 #27 Copy count
-adda([Y,X])                     #28 Check if writing top 2 bytes in page
-adda(2)                         #29
-anda(0xfe)                      #30
+adda([Y,X])                     #28 One past last address
+adda(1)                         #29 $ff->0, $00->1
+anda(0xfe)                      #30 Zero if writing top 2 bytes in page
 st([vTmp])                      #31
 ld([Y,X])                       #32 Low copy address
 st([Y,Xpp]);                    C('Just X++')#33

@@ -725,13 +725,18 @@ _Setup=*
 _Setup1=*
 [
   \videoTable p=
-  6 j=                          {Modulo 7 counter}
-  $b3 [do i= $70+               {Loop over $23..$6f range}
-    p. <p++ <p++                {Y[y]=7+j}
-    j 1- [if<0
-      p 8+ p=                   {Four(!) empty lines between text rows}
-      6] j=
-    <i++ i if<>0loop]
+  $1e0 i=                       {Rotating bit pattern: 0000.0001.111x.xxxx}
+  $23 j=                        {First pixel line at $2360}
+  [do
+    i [if>=0
+        j p. <j++               {A visible pixel line, unique}
+        i
+      else
+        $70 p.                  {Or an empty pixel line, shared, at $7060}
+        i $10+
+    ] 1<< i=                    {Rotate bit 5:15}
+    <p++ <p++                   {Step one line down}
+    <p, 240^ if<>0loop]         {Until all 120 pixel lines done}
 
   {
     Shift the horizontal display by 96 bytes. For MS BASIC it doesn't matter,
@@ -746,7 +751,6 @@ _Setup1=*
   }
   6 [do
     \sysArgs6.
-\sysArgs2.
     13 CharOut!                 {Also prepares p for character printing}
     \sysArgs6, 1- if>0loop]
 
@@ -903,19 +907,6 @@ _Newline=*
     <i, 218^ if<>0loop]         {Until all done}
 
   { The cleared text row has now bubbled down to the bottom }
-
-  {
-    Set the vertical dividers to the empty base line just created. Since
-    there's always one in the active text row, we don't need to maintain
-    a dedicated empty pixel line. This saves 1 page of memory.
-  }
-  $e020 i=                      {Rotating bit pattern: 1110.0000.001x.xxxx}
-  [do
-    i [if<0
-      >p, 7+ j.                 {This is the new shared empty pixel line}
-      i $10+] 1<< i=            {Rotate bit 5:15}
-    <j, 2- <j.
-    if>=0loop]                  {Step one line up}
 
   ret
 ]

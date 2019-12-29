@@ -59,27 +59,27 @@
 // Pin 11  PORTB3 6 hSync  SER_PULSE 10 CLOCK   11 SRCLK 12 RCLK 4
 
 #if defined(ARDUINO_AVR_UNO)
- #define platform "ArduinoUno"
- #define maxStorage 32256
+  #define platform "ArduinoUno"
+  #define maxStorage 32256
 
- // Pinout reference:
- // https://i2.wp.com/marcusjenkins.com/wp-content/uploads/2014/06/ARDUINO_V2.png
+  // Pinout reference:
+  // https://i2.wp.com/marcusjenkins.com/wp-content/uploads/2014/06/ARDUINO_V2.png
 
- // Pins for Gigatron (must be on PORTB)
- #define gigatronDataPin  13
- #define gigatronLatchPin 12
- #define gigatronPulsePin 11
- #define gigatronPinToBitMask digitalPinToBitMask
+  // Pins for Gigatron (must be on PORTB)
+  #define gigatronDataPin  13
+  #define gigatronLatchPin 12
+  #define gigatronPulsePin 11
+  #define gigatronPinToBitMask digitalPinToBitMask
 
- // Pins for Controller
- #define gameControllerDataPin -1
+  // Pins for Controller
+  #define gameControllerDataPin -1
 
- // Pins for PS/2 keyboard (Arduino Uno)
- #define keyboardClockPin 3 // Pin 2 or 3 for IRQ
- #define keyboardDataPin  4 // Any available free pin
+  // Pins for PS/2 keyboard (Arduino Uno)
+  #define keyboardClockPin 3 // Pin 2 or 3 for IRQ
+  #define keyboardDataPin  4 // Any available free pin
 
- // Link to PC/laptop
- #define hasSerial 1
+  // Link to PC/laptop
+  #define hasSerial 1
 #endif
 
 /*----------------------------------------------------------------------+
@@ -115,30 +115,30 @@
 //        CTL_DATA
 
 #if defined(ARDUINO_AVR_NANO)
- #define platform "ArduinoNano"
- #define maxStorage 30720
+  #define platform "ArduinoNano"
+  #define maxStorage 30720
 
- // Pinout reference:
- // http://lab.dejaworks.com/wp-content/uploads/2016/08/Arduino-Nano-1024x500.png
- // Note that pin 11 and 12 are wrong on some versions of these diagrams
+  // Pinout reference:
+  // http://lab.dejaworks.com/wp-content/uploads/2016/08/Arduino-Nano-1024x500.png
+  // Note that pin 11 and 12 are wrong on some versions of these diagrams
 
- // Pins for Gigatron (must be on PORTB)
- #define gigatronDataPin  13 // PB5
- #define gigatronLatchPin 12 // PB4
- #define gigatronPulsePin 11 // PB3
- #define gigatronPinToBitMask digitalPinToBitMask // Regular Arduino pin numbers
+  // Pins for Gigatron (must be on PORTB)
+  #define gigatronDataPin  13 // PB5
+  #define gigatronLatchPin 12 // PB4
+  #define gigatronPulsePin 11 // PB3
+  #define gigatronPinToBitMask digitalPinToBitMask // Regular Arduino pin numbers
 
- // Pins for Controller
- #define gameControllerDataPin 10
- #define gameControllerPulsePin 9
- #define gameControllerLatchPin 8
+  // Pins for Controller
+  #define gameControllerDataPin 10
+  #define gameControllerPulsePin 9
+  #define gameControllerLatchPin 8
 
- // Pins for PS/2 keyboard
- #define keyboardClockPin 3 // Pin 2 or 3 for IRQ
- #define keyboardDataPin  4 // Any available free pin
+  // Pins for PS/2 keyboard
+  #define keyboardClockPin 3 // Pin 2 or 3 for IRQ
+  #define keyboardDataPin  4 // Any available free pin
 
- // Link to PC/laptop
- #define hasSerial 1
+  // Link to PC/laptop
+  #define hasSerial 1
 #endif
 
 /*----------------------------------------------------------------------+
@@ -173,29 +173,29 @@
 //                   SER_PULSE
 
 #if defined(ARDUINO_AVR_MICRO)
- // WattSekunde's setup
- #define platform "ArduinoMicro"
- #define maxStorage 28672
+  // WattSekunde's setup
+  #define platform "ArduinoMicro"
+  #define maxStorage 28672
 
- // Pinout reference:
- // http://1.bp.blogspot.com/-xqhL0OrJcxo/VJhVxUabhCI/AAAAAAABEVk/loDafkdqLxM/s1600/micro_pinout.png
+  // Pinout reference:
+  // http://1.bp.blogspot.com/-xqhL0OrJcxo/VJhVxUabhCI/AAAAAAABEVk/loDafkdqLxM/s1600/micro_pinout.png
 
- // Pins for Gigatron (must be on PORTB)
- #define gigatronDataPin  PB1
- #define gigatronLatchPin PB3
- #define gigatronPulsePin PB2
- // These are not regular Arduino pin numbers
- #define gigatronPinToBitMask(pin) (1 << (pin))
+  // Pins for Gigatron (must be on PORTB)
+  #define gigatronDataPin  PB1
+  #define gigatronLatchPin PB3
+  #define gigatronPulsePin PB2
+  // These are not regular Arduino pin numbers
+  #define gigatronPinToBitMask(pin) (1 << (pin))
 
- // Pins for Controller
- #define gameControllerDataPin -1
+  // Pins for Controller
+  #define gameControllerDataPin -1
 
- // Pins for PS/2 keyboard
- #define keyboardClockPin 3 // Pin 2 or 3 for IRQ
- #define keyboardDataPin  4 // Any available free pin
+  // Pins for PS/2 keyboard
+  #define keyboardClockPin 3 // Pin 2 or 3 for IRQ
+  #define keyboardDataPin  4 // Any available free pin
 
- // Link to PC/laptop
- #define hasSerial 1
+  // Link to PC/laptop
+  #define hasSerial 1
 #endif
 
 /*----------------------------------------------------------------------+
@@ -219,25 +219,25 @@
 //                       ATtiny85
 
 #if defined(ARDUINO_attiny)
- #define platform "ATtiny85"
- #define maxStorage 8192
+  #define platform "ATtiny85"
+  #define maxStorage 8192
 
- // Pins for Gigatron (must be on PORTB)
- #define gigatronDataPin  PB2
- #define gigatronLatchPin PB1
- #define gigatronPulsePin PB0
- // These are not regular Arduino pin numbers
- #define gigatronPinToBitMask(pin) (1 << (pin))
+  // Pins for Gigatron (must be on PORTB)
+  #define gigatronDataPin  PB2
+  #define gigatronLatchPin PB1
+  #define gigatronPulsePin PB0
+  // These are not regular Arduino pin numbers
+  #define gigatronPinToBitMask(pin) (1 << (pin))
 
- // Pins for Controller
- #define gameControllerDataPin -1
+  // Pins for Controller
+  #define gameControllerDataPin -1
 
- // Pins for PS/2 keyboard
- #define keyboardClockPin PB4
- #define keyboardDataPin  PB3
+  // Pins for PS/2 keyboard
+  #define keyboardClockPin PB4
+  #define keyboardDataPin  PB3
 
- // Link to PC/laptop
- #define hasSerial 0
+  // Link to PC/laptop
+  #define hasSerial 0
 #endif
 
 /*----------------------------------------------------------------------+
@@ -247,7 +247,11 @@
  +----------------------------------------------------------------------*/
 
 const byte TinyBASIC_gt1[] PROGMEM = {
-  #include "TinyBASIC_v3.h"
+  #if defined(ARDUINO_attiny)
+    #include "TinyBASIC_v3.h" // This version just fits
+  #else
+    #include "TinyBASIC.h"    // Dev version, accepts hex numbers
+  #endif
 };
 const byte WozMon_gt1[]    PROGMEM = {
   #include "WozMon.h"
@@ -276,7 +280,7 @@ const byte tetronis_gt1[]  PROGMEM = {
 
 const struct { const byte *gt1; const char *name; } gt1Files[] = {
   // BASIC image in slot 0 for sendFile.py with .GTB files
-  { TinyBASIC_gt1, "BASIC"                    }, // 3073 bytes
+  { TinyBASIC_gt1, "BASIC"                    }, // 3145 bytes
 #if maxStorage >= 10000
   { WozMon_gt1,    "WozMon"                   }, // 595 bytes
   { Terminal_gt1,  "Terminal"                 }, // 256 bytes
@@ -471,7 +475,7 @@ void loop()
 
   // Commands from upstream USB (PC/laptop)
   #if hasSerial
-    #define lineBuffer outBuffer
+    #define lineBuffer ((char*)outBuffer)
     static char next = 0, last;
     static byte lineIndex = 0;
     if (Serial.available()) {

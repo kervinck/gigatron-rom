@@ -178,8 +178,8 @@ class Program:
         elif op == '> ++': self.emitOp('INC'); con += 1
         elif op == '!!':   self.emitOp('SYS'); con = self.sysTicks(con)
         elif op == '!':
-          if 0 <= con < 256:
-            # XXX Depricate in gcl1? (Replace with i!!)
+          if isinstance(con, int) and 0 <= con < 256:
+            # XXX Deprecate in gcl1? (Replace with i!!)
             self.emitOp('SYS'); con = self.sysTicks(con)
           else:
             self.warning('CALLI is an experimental feature')
@@ -470,7 +470,7 @@ class Program:
       # This must come before any lo() or hi()
       # Write header for GT1 segment
       address = self.segStart
-      if not has(self.execute):
+      if not has(self.execute) and address >= 0x200:
         self.execute = address
       assert self.segId == 0 or address>>8 != 0 # Zero-page segment can only be first
       self.putInRomTable(address>>8, '| RAM segment address (high byte first)')
