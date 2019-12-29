@@ -356,7 +356,7 @@ namespace Operators
     // ********************************************************************************************
     // Unary Operators
     // ********************************************************************************************
-    Expression::Numeric operatorPOS(Expression::Numeric&& numeric)
+    Expression::Numeric operatorPOS(Expression::Numeric& numeric)
     {
         if(numeric._varType == Expression::Number)
         {
@@ -371,7 +371,7 @@ namespace Operators
         return numeric;
     }
 
-    Expression::Numeric operatorNEG(Expression::Numeric&& numeric)
+    Expression::Numeric operatorNEG(Expression::Numeric& numeric)
     {
         if(numeric._varType == Expression::Number)
         {
@@ -387,7 +387,7 @@ namespace Operators
         return numeric;
     }
 
-    Expression::Numeric operatorNOT(Expression::Numeric&& numeric)
+    Expression::Numeric operatorNOT(Expression::Numeric& numeric)
     {
         if(numeric._varType == Expression::Number)
         {
@@ -407,7 +407,7 @@ namespace Operators
     // ********************************************************************************************
     // Binary Operators
     // ********************************************************************************************
-    Expression::Numeric operatorADD(Expression::Numeric& left, Expression::Numeric&& right)
+    Expression::Numeric operatorADD(Expression::Numeric& left, Expression::Numeric& right)
     {
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
@@ -419,7 +419,7 @@ namespace Operators
         return left;
     }
 
-    Expression::Numeric operatorSUB(Expression::Numeric& left, Expression::Numeric&& right)
+    Expression::Numeric operatorSUB(Expression::Numeric& left, Expression::Numeric& right)
     {
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
@@ -431,7 +431,7 @@ namespace Operators
         return left;
     }
 
-    Expression::Numeric operatorAND(Expression::Numeric& left, Expression::Numeric&& right)
+    Expression::Numeric operatorAND(Expression::Numeric& left, Expression::Numeric& right)
     {
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
@@ -443,7 +443,7 @@ namespace Operators
         return left;
     }
 
-    Expression::Numeric operatorXOR(Expression::Numeric& left, Expression::Numeric&& right)
+    Expression::Numeric operatorXOR(Expression::Numeric& left, Expression::Numeric& right)
     {
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
@@ -455,7 +455,7 @@ namespace Operators
         return left;
     }
 
-    Expression::Numeric operatorOR(Expression::Numeric& left, Expression::Numeric&& right)
+    Expression::Numeric operatorOR(Expression::Numeric& left, Expression::Numeric& right)
     {
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
@@ -471,7 +471,7 @@ namespace Operators
     // ********************************************************************************************
     // Logical Operators
     // ********************************************************************************************
-    Expression::Numeric operatorLSL(Expression::Numeric& left, Expression::Numeric&& right)
+    Expression::Numeric operatorLSL(Expression::Numeric& left, Expression::Numeric& right)
     {
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
@@ -546,7 +546,7 @@ namespace Operators
         return left;
     }
 
-    Expression::Numeric operatorLSR(Expression::Numeric& left, Expression::Numeric&& right)
+    Expression::Numeric operatorLSR(Expression::Numeric& left, Expression::Numeric& right)
     {
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
@@ -608,7 +608,7 @@ namespace Operators
         return left;
     }
 
-    Expression::Numeric operatorASR(Expression::Numeric& left, Expression::Numeric&& right)
+    Expression::Numeric operatorASR(Expression::Numeric& left, Expression::Numeric& right)
     {
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
@@ -646,7 +646,7 @@ namespace Operators
     // ********************************************************************************************
     // Conditional Operators
     // ********************************************************************************************
-    Expression::Numeric operatorEQ(Expression::Numeric& left, Expression::Numeric&& right, Expression::CCType ccType)
+    Expression::Numeric operatorEQ(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType)
     {
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
@@ -666,7 +666,7 @@ namespace Operators
         return left;
     }
 
-    Expression::Numeric operatorNE(Expression::Numeric& left, Expression::Numeric&& right, Expression::CCType ccType)
+    Expression::Numeric operatorNE(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType)
     {
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
@@ -686,7 +686,7 @@ namespace Operators
         return left;
     }
 
-    Expression::Numeric operatorLE(Expression::Numeric& left, Expression::Numeric&& right, Expression::CCType ccType)
+    Expression::Numeric operatorLE(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType)
     {
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
@@ -706,7 +706,7 @@ namespace Operators
         return left;
     }
 
-    Expression::Numeric operatorGE(Expression::Numeric& left, Expression::Numeric&& right, Expression::CCType ccType)
+    Expression::Numeric operatorGE(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType)
     {
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
@@ -726,7 +726,7 @@ namespace Operators
         return left;
     }
 
-    Expression::Numeric operatorLT(Expression::Numeric& left, Expression::Numeric&& right, Expression::CCType ccType)
+    Expression::Numeric operatorLT(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType)
     {
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
@@ -746,7 +746,7 @@ namespace Operators
         return left;
     }
 
-    Expression::Numeric operatorGT(Expression::Numeric& left, Expression::Numeric&& right, Expression::CCType ccType)
+    Expression::Numeric operatorGT(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType)
     {
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
@@ -770,7 +770,7 @@ namespace Operators
     // ********************************************************************************************
     // Math Operators
     // ********************************************************************************************
-    Expression::Numeric operatorPOW(Expression::Numeric& left, Expression::Numeric&& right)
+    Expression::Numeric operatorPOW(Expression::Numeric& left, Expression::Numeric& right)
     {
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
@@ -799,7 +799,7 @@ namespace Operators
         return left;
     }
 
-    Expression::Numeric operatorMUL(Expression::Numeric& left, Expression::Numeric&& right)
+    Expression::Numeric operatorMUL(Expression::Numeric& left, Expression::Numeric& right)
     {
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
@@ -818,7 +818,7 @@ namespace Operators
         return left;
     }
 
-    Expression::Numeric operatorDIV(Expression::Numeric& left, Expression::Numeric&& right)
+    Expression::Numeric operatorDIV(Expression::Numeric& left, Expression::Numeric& right)
     {
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
@@ -837,7 +837,7 @@ namespace Operators
         return left;
     }
 
-    Expression::Numeric operatorMOD(Expression::Numeric& left, Expression::Numeric&& right)
+    Expression::Numeric operatorMOD(Expression::Numeric& left, Expression::Numeric& right)
     {
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {

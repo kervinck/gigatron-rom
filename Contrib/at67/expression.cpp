@@ -36,97 +36,97 @@ namespace Expression
 
 
     // Default operators
-    Numeric neg(Numeric& numeric)
+    Numeric& neg(Numeric& numeric)
     {
         numeric._value = -numeric._value;
         return numeric;
     }
-    Numeric not(Numeric& numeric)
+    Numeric& not(Numeric& numeric)
     {
         numeric._value = ~numeric._value;
         return numeric;
     }
-    Numeric and(Numeric& left, Numeric&& right)
+    Numeric& and(Numeric& left, Numeric& right)
     {
         left._value &= right._value;
         return left;
     }
-    Numeric or(Numeric& left, Numeric&& right)
+    Numeric& or(Numeric& left, Numeric& right)
     {
         left._value |= right._value;
         return left;
     }
-    Numeric xor(Numeric& left, Numeric&& right)
+    Numeric& xor(Numeric& left, Numeric& right)
     {
         left._value ^= right._value;
         return left;
     }
-    Numeric add(Numeric& left, Numeric&& right)
+    Numeric& add(Numeric& left, Numeric& right)
     {
         left._value += right._value;
         return left;
     }
-    Numeric sub(Numeric& left, Numeric&& right)
+    Numeric& sub(Numeric& left, Numeric& right)
     {
         left._value -= right._value;
         return left;
     }
-    Numeric pow(Numeric& left, Numeric&& right)
+    Numeric& pow(Numeric& left, Numeric& right)
     {
         left._value = int16_t(std::pow(double(left._value), double(right._value)));
         return left;
     }
-    Numeric mul(Numeric& left, Numeric&& right)
+    Numeric& mul(Numeric& left, Numeric& right)
     {
         left._value *= right._value;
         return left;
     }
-    Numeric div(Numeric& left, Numeric&& right)
+    Numeric& div(Numeric& left, Numeric& right)
     {
         left._value = (right._value == 0) ? 0 : left._value / right._value;
         return left;
     }
-    Numeric mod(Numeric& left, Numeric&& right)
+    Numeric& mod(Numeric& left, Numeric& right)
     {
         left._value = (right._value == 0) ? 0 : left._value % right._value;
         return left;
     }
-    Numeric lsl(Numeric& left, Numeric&& right)
+    Numeric& lsl(Numeric& left, Numeric& right)
     {
         left._value = left._value << right._value;
         return left;
     }
-    Numeric lsr(Numeric& left, Numeric&& right)
+    Numeric& lsr(Numeric& left, Numeric& right)
     {
         left._value = left._value >> right._value;
         return left;
     }
-    Numeric lt(Numeric& left, Numeric&& right)
+    Numeric& lt(Numeric& left, Numeric& right)
     {
         left._value = left._value < right._value;
         return left;
     }
-    Numeric gt(Numeric& left, Numeric&& right)
+    Numeric& gt(Numeric& left, Numeric& right)
     {
         left._value = left._value > right._value;
         return left;
     }
-    Numeric eq(Numeric& left, Numeric&& right)
+    Numeric& eq(Numeric& left, Numeric& right)
     {
         left._value = left._value == right._value;
         return left;
     }
-    Numeric ne(Numeric& left, Numeric&& right)
+    Numeric& ne(Numeric& left, Numeric& right)
     {
         left._value = left._value != right._value;
         return left;
     }
-    Numeric le(Numeric& left, Numeric&& right)
+    Numeric& le(Numeric& left, Numeric& right)
     {
         left._value = left._value <= right._value;
         return left;
     }
-    Numeric ge(Numeric& left, Numeric&& right)
+    Numeric& ge(Numeric& left, Numeric& right)
     {
         left._value = left._value >= right._value;
         return left;
@@ -466,13 +466,13 @@ namespace Expression
 
     std::string& strToLower(std::string& s)
     {
-        std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) {return tolower(c);} );
+        std::transform(s.begin(), s.end(), s.begin(), [](char c) {return char(tolower(c));} );
         return s;
     }
 
     std::string& strToUpper(std::string& s)
     {
-        std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) {return toupper(c);} );
+        std::transform(s.begin(), s.end(), s.begin(), [](char c) {return char(toupper(c));} );
         return s;
     }
 
@@ -1066,57 +1066,57 @@ namespace Expression
 
     Numeric term(void)
     {
-        Numeric result = factor(0);
+        Numeric numeric, result = factor(0);
 
         for(;;)
         {
-            if(find("**"))         {       result = pow(result, factor(0));}
-            else if(peek() == '*') {get(); result = mul(result, factor(0));}
-            else if(peek() == '/') {get(); result = div(result, factor(0));}
-            else if(peek() == '%') {get(); result = mod(result, factor(0));}
+            if(find("**"))         {       numeric = factor(0); result = pow(result, numeric);}
+            else if(peek() == '*') {get(); numeric = factor(0); result = mul(result, numeric);}
+            else if(peek() == '/') {get(); numeric = factor(0); result = div(result, numeric);}
+            else if(peek() == '%') {get(); numeric = factor(0); result = mod(result, numeric);}
             else return result;
         }
     }
 
     Numeric expr(void)
     {
-        Numeric result = term();
+        Numeric numeric, result = term();
     
         for(;;)
         {
-            if(peek() == '+')      {get(); result = add(result, term());}
-            else if(peek() == '-') {get(); result = sub(result, term());}
+            if(peek() == '+')      {get(); numeric = term(); result = add(result, numeric);}
+            else if(peek() == '-') {get(); numeric = term(); result = sub(result, numeric);}
             else return result;
         }
     }
 
     Numeric logical(void)
     {
-        Numeric result = expr();
+        Numeric numeric, result = expr();
     
         for(;;)
         {
-            if(peek() == '&')      {get(); result = and(result, expr());}
-            else if(peek() == '^') {get(); result = xor(result, expr());}
-            else if(peek() == '|') {get(); result = or(result,  expr());}
-            else if(find("<<"))    {       result = lsl(result, expr());}
-            else if(find(">>"))    {       result = lsr(result, expr());}
+            if(peek() == '&')      {get(); numeric = expr(); result = and(result, numeric);}
+            else if(peek() == '^') {get(); numeric = expr(); result = xor(result, numeric);}
+            else if(peek() == '|') {get(); numeric = expr(); result = or(result,  numeric);}
+            else if(find("<<"))    {       numeric = expr(); result = lsl(result, numeric);}
+            else if(find(">>"))    {       numeric = expr(); result = lsr(result, numeric);}
             else return result;
         }
     }
 
     Numeric expression(void)
     {
-        Numeric result = logical();
+        Numeric numeric, result = logical();
     
         for(;;)
         {
-            if(find("=="))         {       result = eq(result, logical());}
-            else if(find("!="))    {       result = ne(result, logical());}
-            else if(find("<="))    {       result = le(result, logical());}
-            else if(find(">="))    {       result = ge(result, logical());}
-            else if(peek() == '<') {get(); result = lt(result, logical());}
-            else if(peek() == '>') {get(); result = gt(result, logical());}
+            if(find("=="))         {       numeric = logical(); result = eq(result, numeric);}
+            else if(find("!="))    {       numeric = logical(); result = ne(result, numeric);}
+            else if(find("<="))    {       numeric = logical(); result = le(result, numeric);}
+            else if(find(">="))    {       numeric = logical(); result = ge(result, numeric);}
+            else if(peek() == '<') {get(); numeric = logical(); result = lt(result, numeric);}
+            else if(peek() == '>') {get(); numeric = logical(); result = gt(result, numeric);}
             else return result;
         }
     }

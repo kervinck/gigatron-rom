@@ -340,7 +340,7 @@ namespace Keywords
         return numeric;
     }
 
-    Expression::Numeric functionPEEK(Expression::Numeric&& numeric)
+    Expression::Numeric functionPEEK(Expression::Numeric& numeric)
     {
         if(numeric._varType == Expression::Number)
         {
@@ -356,7 +356,7 @@ namespace Keywords
         return numeric;
     }
 
-    Expression::Numeric functionDEEK(Expression::Numeric&& numeric)
+    Expression::Numeric functionDEEK(Expression::Numeric& numeric)
     {
         if(numeric._varType == Expression::Number)
         {
@@ -372,7 +372,7 @@ namespace Keywords
         return numeric;
     }
 
-    Expression::Numeric functionUSR(Expression::Numeric&& numeric)
+    Expression::Numeric functionUSR(Expression::Numeric& numeric)
     {
         if(numeric._varType == Expression::Number)
         {
@@ -405,7 +405,7 @@ namespace Keywords
         return numeric;
     }
 
-    Expression::Numeric functionRND(Expression::Numeric&& numeric)
+    Expression::Numeric functionRND(Expression::Numeric& numeric)
     {
         bool useMod = true;
         if(numeric._varType == Expression::Number)
@@ -442,7 +442,7 @@ namespace Keywords
         return numeric;
     }
 
-    Expression::Numeric functionLEN(Expression::Numeric&& numeric)
+    Expression::Numeric functionLEN(Expression::Numeric& numeric)
     {
         if(numeric._varType != Expression::Number)
         {
@@ -491,7 +491,7 @@ namespace Keywords
         return numeric;
     }
 
-    Expression::Numeric functionCHR$(Expression::Numeric&& numeric)
+    Expression::Numeric functionCHR$(Expression::Numeric& numeric)
     {
         int index;
         uint16_t dstAddr;
@@ -546,7 +546,7 @@ namespace Keywords
         return Expression::Numeric(dstAddr, uint16_t(index), true, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
     }
 
-    Expression::Numeric functionHEX$(Expression::Numeric&& numeric)
+    Expression::Numeric functionHEX$(Expression::Numeric& numeric)
     {
         int index;
         uint16_t dstAddr;
@@ -601,7 +601,7 @@ namespace Keywords
         return Expression::Numeric(dstAddr, uint16_t(index), true, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
     }
 
-    Expression::Numeric functionHEXW$(Expression::Numeric&& numeric)
+    Expression::Numeric functionHEXW$(Expression::Numeric& numeric)
     {
         int index;
         uint16_t dstAddr;
@@ -656,7 +656,7 @@ namespace Keywords
         return Expression::Numeric(dstAddr, uint16_t(index), true, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
     }
 
-    Expression::Numeric functionLEFT$(Expression::Numeric&& numeric)
+    Expression::Numeric functionLEFT$(Expression::Numeric& numeric)
     {
         // Literal string and parameter, (optimised case)
         if(numeric._varType == Expression::String  &&  numeric._parameters.size() == 1  &&  numeric._parameters[0]._varType == Expression::Number)
@@ -703,7 +703,7 @@ namespace Keywords
         return numeric;
     }
 
-    Expression::Numeric functionRIGHT$(Expression::Numeric&& numeric)
+    Expression::Numeric functionRIGHT$(Expression::Numeric& numeric)
     {
         // Literal string and parameter, (optimised case)
         if(numeric._varType == Expression::String  &&  numeric._parameters.size() == 1  &&  numeric._parameters[0]._varType == Expression::Number)
@@ -750,7 +750,7 @@ namespace Keywords
         return numeric;
     }
 
-    Expression::Numeric functionMID$(Expression::Numeric&& numeric)
+    Expression::Numeric functionMID$(Expression::Numeric& numeric)
     {
         // Literal string and parameters, (optimised case)
         if(numeric._varType == Expression::String  &&  numeric._parameters.size() == 2  &&  numeric._parameters[0]._varType == Expression::Number  &&  

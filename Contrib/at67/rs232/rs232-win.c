@@ -224,7 +224,7 @@ int comOpen(int index, int baudrate)
 // Prepare serial communication format
     GetCommState(handle, &config);
     config.BaudRate = baudrate;
-    config.fBinary = true;
+    config.fBinary = (uint32_t)true;
     config.fParity = 0;
     config.fErrorChar = 0;
     config.fNull = 0;

@@ -630,14 +630,6 @@ namespace Editor
                 }
             }
             break;
-
-            // Shut MacOS gcc up
-            case Term:
-            case Image:
-            case NumEditorModes:
-            {
-            }
-            break;
         }
     }
 
@@ -718,14 +710,6 @@ namespace Editor
             {
                 case File: Loader::setUploadTarget(Loader::Emulator); break;
                 case Dir: changeBrowseDirectory(); break;
-
-                // Shut MacOS gcc up
-                case Fifo:
-                case Link:
-                case NumFileTypes:
-                {
-                }
-                break;
             }
         }
         else if(_editorMode == Rom)
@@ -778,15 +762,6 @@ namespace Editor
             switch(fileType)
             {
                 case File: Loader::setUploadTarget(Loader::Hardware); break;
-
-                // Shut MacOS gcc up
-                case Dir:
-                case Fifo:
-                case Link:
-                case NumFileTypes:
-                {
-                }
-                break;
             }
         }
     }
@@ -930,15 +905,6 @@ namespace Editor
                                 case 2: value = (value << 4)  & 0x00F0; _hexBaseAddress = (_hexBaseAddress & 0xFF0F) | value; break;
                                 case 3: value = (value << 0)  & 0x000F; _hexBaseAddress = (_hexBaseAddress & 0xFFF0) | value; break;
                             }
-                        }
-                        break;
-
-                        // Shut MacOS gcc up
-                        case Rom:
-                        case Term:
-                        case Image:
-                        case NumEditorModes:
-                        {
                         }
                         break;
                     }
@@ -1453,12 +1419,6 @@ namespace Editor
                         if(Cpu::getRAM(_singleStepAddress) != _singleStepNtv) singleStep(nPC);
                     }
                     break;
-
-                    // Shut MacOS gcc up
-                    case NumSingleStepModes:
-                    {
-                    }
-                    break;
                 }
             }
             // vCPU debugging, (this code can potentially run for every Native instruction, for efficiency we check vPC so this code only runs for each vCPU instruction)
@@ -1492,12 +1452,6 @@ namespace Editor
                     case StepWatch:
                     {
                         if(Cpu::getRAM(_singleStepAddress) != _singleStepVpc) singleStep(vPC);
-                    }
-                    break;
-
-                    // Shut MacOS gcc up
-                    case NumSingleStepModes:
-                    {
                     }
                     break;
                 }
