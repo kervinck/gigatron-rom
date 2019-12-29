@@ -122,6 +122,7 @@ void outputGCLcommand(std::ofstream& outfile, uint8_t command)
 }
 void outputGCLfooter(std::ofstream& outfile, const std::string& name)
 {
+    name;
     outfile << std::endl << "]" << std::endl;
 }
 
@@ -334,16 +335,16 @@ int main(int argc, char* argv[])
         else
         {
             // Coalesce sequence of delays together
-            int i = 0;
+            int index = 0;
             uint16_t coalescedDelay = ((command<<8) | *midiPtr++); midiSize--;
             while(midiSize)
             {
-                if(midiPtr[i] & 0x80) break;
-                coalescedDelay += (midiPtr[i]<<8) + midiPtr[i+1];
-                i += 2;
+                if(midiPtr[index] & 0x80) break;
+                coalescedDelay += (midiPtr[index]<<8) + midiPtr[index + 1];
+                index += 2;
                 midiSize -= 2;
             }
-            midiPtr += i;
+            midiPtr += index;
 
             // Break up coalesced delay into bytes
             if(coalescedDelay)
@@ -354,11 +355,11 @@ int main(int argc, char* argv[])
                 // Ignore zero delays
                 if(coalescedDelay)
                 {
-                    int div = coalescedDelay / 0x7F;
-                    int rem = coalescedDelay % 0x7F;
+                    uint8_t div = uint8_t(coalescedDelay / 0x7F);
+                    uint8_t rem = uint8_t(coalescedDelay % 0x7F);
                     gigaSize += div + 1;
 
-                    for(int i=0; i<div; i++)
+                    for(uint8_t i=0; i<div; i++)
                     {
                         outputDelay(outfile, format, 0x7f, timingAdjust, totalTime16, totalTime8);
                     }
