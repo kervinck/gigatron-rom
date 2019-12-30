@@ -23,7 +23,7 @@
 #define MAX_ELEMENTS          16 // has to be divisible into 256, otherwise free memory list falls over
 
 #define GTMIDI_MAJOR_VERSION "0.4"
-#define GTMIDI_MINOR_VERSION "0"
+#define GTMIDI_MINOR_VERSION "1"
 #define GTMIDI_VERSION_STR "gtmidi v" GTMIDI_MAJOR_VERSION "." GTMIDI_MINOR_VERSION
 
 
