@@ -52,11 +52,10 @@ int main(int argc, char* argv[])
 
 #if 0
     Image::TgaFile tgaFile;
-    Image::GtRgbFile gtRgbFile;
-
     std::string imageName = "Clouds";
     Image::loadTgaFile(imageName + ".tga", tgaFile);
-    gtRgbFile._header = {GTRGB_IDENTIFIER, Image::GT_RGB_222, tgaFile._header._width, tgaFile._header._height};
+
+    Image::GtRgbFile gtRgbFile{GTRGB_IDENTIFIER, Image::GT_RGB_222, tgaFile._header._width, tgaFile._header._height};
     //Image::convertRGB8toRGB2(tgaFile._data, gtRgbFile._data, tgaFile._header._width, tgaFile._header._height, tgaFile._imageOrigin);
     Image::ditherRGB8toRGB2(tgaFile._data, gtRgbFile._data, tgaFile._header._width, tgaFile._header._height, tgaFile._imageOrigin);
     Image::saveGtRgbFile(imageName + ".gtrgb", gtRgbFile);

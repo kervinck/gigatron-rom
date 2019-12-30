@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <climits>
 #include <vector>
 #include <algorithm>
 #include <sys/stat.h>
