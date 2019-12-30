@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <cmath>
 #include <algorithm>
 
 #include "memory.h"
@@ -774,7 +775,7 @@ namespace Operators
     {
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
-            left._value = int16_t(std::pow(double(left._value), double(right._value)));
+            left._value = int16_t(pow(double(left._value), double(right._value)));
             return left;
         }
 
