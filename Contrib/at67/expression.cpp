@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <cmath>
 #include <string>
 #include <sstream>
 #include <iomanip>
@@ -73,7 +74,7 @@ namespace Expression
     }
     Numeric& operatorPOW(Numeric& left, Numeric& right)
     {
-        left._value = int16_t(std::pow(double(left._value), double(right._value)));
+        left._value = int16_t(pow(double(left._value), double(right._value)));
         return left;
     }
     Numeric& operatorMUL(Numeric& left, Numeric& right)
