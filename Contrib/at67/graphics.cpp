@@ -41,9 +41,9 @@ namespace Graphics
     bool _displayHelpScreen = false;
     uint8_t _displayHelpScreenAlpha = 0;
 
-    std::atomic<bool> _enableUploadBar = false;
-    std::atomic<int> _uploadCursorY = -1;
-    std::atomic<float> _uploadPercentage = 0.0f;
+    std::atomic<bool> _enableUploadBar(false);
+    std::atomic<int> _uploadCursorY(-1);
+    std::atomic<float> _uploadPercentage(0.0f);
     std::string _uploadFilename;
 
     uint32_t _pixels[SCREEN_WIDTH * SCREEN_HEIGHT];
