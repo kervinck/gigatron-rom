@@ -36,97 +36,97 @@ namespace Expression
 
 
     // Default operators
-    Numeric& neg(Numeric& numeric)
+    Numeric& operatorNEG(Numeric& numeric)
     {
         numeric._value = -numeric._value;
         return numeric;
     }
-    Numeric& not(Numeric& numeric)
+    Numeric& operatorNOT(Numeric& numeric)
     {
         numeric._value = ~numeric._value;
         return numeric;
     }
-    Numeric& and(Numeric& left, Numeric& right)
+    Numeric& operatorAND(Numeric& left, Numeric& right)
     {
         left._value &= right._value;
         return left;
     }
-    Numeric& or(Numeric& left, Numeric& right)
+    Numeric& operatorOR(Numeric& left, Numeric& right)
     {
         left._value |= right._value;
         return left;
     }
-    Numeric& xor(Numeric& left, Numeric& right)
+    Numeric& operatorXOR(Numeric& left, Numeric& right)
     {
         left._value ^= right._value;
         return left;
     }
-    Numeric& add(Numeric& left, Numeric& right)
+    Numeric& operatorADD(Numeric& left, Numeric& right)
     {
         left._value += right._value;
         return left;
     }
-    Numeric& sub(Numeric& left, Numeric& right)
+    Numeric& operatorSUB(Numeric& left, Numeric& right)
     {
         left._value -= right._value;
         return left;
     }
-    Numeric& pow(Numeric& left, Numeric& right)
+    Numeric& operatorPOW(Numeric& left, Numeric& right)
     {
         left._value = int16_t(std::pow(double(left._value), double(right._value)));
         return left;
     }
-    Numeric& mul(Numeric& left, Numeric& right)
+    Numeric& operatorMUL(Numeric& left, Numeric& right)
     {
         left._value *= right._value;
         return left;
     }
-    Numeric& div(Numeric& left, Numeric& right)
+    Numeric& operatorDIV(Numeric& left, Numeric& right)
     {
         left._value = (right._value == 0) ? 0 : left._value / right._value;
         return left;
     }
-    Numeric& mod(Numeric& left, Numeric& right)
+    Numeric& operatorMOD(Numeric& left, Numeric& right)
     {
         left._value = (right._value == 0) ? 0 : left._value % right._value;
         return left;
     }
-    Numeric& lsl(Numeric& left, Numeric& right)
+    Numeric& operatorLSL(Numeric& left, Numeric& right)
     {
         left._value = left._value << right._value;
         return left;
     }
-    Numeric& lsr(Numeric& left, Numeric& right)
+    Numeric& operatorLSR(Numeric& left, Numeric& right)
     {
         left._value = left._value >> right._value;
         return left;
     }
-    Numeric& lt(Numeric& left, Numeric& right)
+    Numeric& operatorLT(Numeric& left, Numeric& right)
     {
         left._value = left._value < right._value;
         return left;
     }
-    Numeric& gt(Numeric& left, Numeric& right)
+    Numeric& operatorGT(Numeric& left, Numeric& right)
     {
         left._value = left._value > right._value;
         return left;
     }
-    Numeric& eq(Numeric& left, Numeric& right)
+    Numeric& operatorEQ(Numeric& left, Numeric& right)
     {
         left._value = left._value == right._value;
         return left;
     }
-    Numeric& ne(Numeric& left, Numeric& right)
+    Numeric& operatorNE(Numeric& left, Numeric& right)
     {
         left._value = left._value != right._value;
         return left;
     }
-    Numeric& le(Numeric& left, Numeric& right)
+    Numeric& operatorLE(Numeric& left, Numeric& right)
     {
         left._value = left._value <= right._value;
         return left;
     }
-    Numeric& ge(Numeric& left, Numeric& right)
+    Numeric& operatorGE(Numeric& left, Numeric& right)
     {
         left._value = left._value >= right._value;
         return left;
@@ -1053,8 +1053,8 @@ namespace Expression
             switch(peek())
             {
                 case '+': get(); numeric = factor(0);                         break;
-                case '-': get(); numeric = factor(0); numeric = neg(numeric); break;
-                case '~': get(); numeric = factor(0); numeric = not(numeric); break;
+                case '-': get(); numeric = factor(0); numeric = operatorNEG(numeric); break;
+                case '~': get(); numeric = factor(0); numeric = operatorNOT(numeric); break;
 
                 // Unknown
                 default: numeric = Numeric(defaultValue, -1, true, Number, BooleanCC, Int16Both, std::string(_expression), std::string("")); break;
@@ -1070,10 +1070,10 @@ namespace Expression
 
         for(;;)
         {
-            if(find("**"))         {       numeric = factor(0); result = pow(result, numeric);}
-            else if(peek() == '*') {get(); numeric = factor(0); result = mul(result, numeric);}
-            else if(peek() == '/') {get(); numeric = factor(0); result = div(result, numeric);}
-            else if(peek() == '%') {get(); numeric = factor(0); result = mod(result, numeric);}
+            if(find("**"))         {       numeric = factor(0); result = operatorPOW(result, numeric);}
+            else if(peek() == '*') {get(); numeric = factor(0); result = operatorMUL(result, numeric);}
+            else if(peek() == '/') {get(); numeric = factor(0); result = operatorDIV(result, numeric);}
+            else if(peek() == '%') {get(); numeric = factor(0); result = operatorMOD(result, numeric);}
             else return result;
         }
     }
@@ -1084,8 +1084,8 @@ namespace Expression
     
         for(;;)
         {
-            if(peek() == '+')      {get(); numeric = term(); result = add(result, numeric);}
-            else if(peek() == '-') {get(); numeric = term(); result = sub(result, numeric);}
+            if(peek() == '+')      {get(); numeric = term(); result = operatorADD(result, numeric);}
+            else if(peek() == '-') {get(); numeric = term(); result = operatorSUB(result, numeric);}
             else return result;
         }
     }
@@ -1096,11 +1096,11 @@ namespace Expression
     
         for(;;)
         {
-            if(peek() == '&')      {get(); numeric = expr(); result = and(result, numeric);}
-            else if(peek() == '^') {get(); numeric = expr(); result = xor(result, numeric);}
-            else if(peek() == '|') {get(); numeric = expr(); result = or(result,  numeric);}
-            else if(find("<<"))    {       numeric = expr(); result = lsl(result, numeric);}
-            else if(find(">>"))    {       numeric = expr(); result = lsr(result, numeric);}
+            if(peek() == '&')      {get(); numeric = expr(); result = operatorAND(result, numeric);}
+            else if(peek() == '^') {get(); numeric = expr(); result = operatorXOR(result, numeric);}
+            else if(peek() == '|') {get(); numeric = expr(); result = operatorOR(result,  numeric);}
+            else if(find("<<"))    {       numeric = expr(); result = operatorLSL(result, numeric);}
+            else if(find(">>"))    {       numeric = expr(); result = operatorLSR(result, numeric);}
             else return result;
         }
     }
@@ -1111,12 +1111,12 @@ namespace Expression
     
         for(;;)
         {
-            if(find("=="))         {       numeric = logical(); result = eq(result, numeric);}
-            else if(find("!="))    {       numeric = logical(); result = ne(result, numeric);}
-            else if(find("<="))    {       numeric = logical(); result = le(result, numeric);}
-            else if(find(">="))    {       numeric = logical(); result = ge(result, numeric);}
-            else if(peek() == '<') {get(); numeric = logical(); result = lt(result, numeric);}
-            else if(peek() == '>') {get(); numeric = logical(); result = gt(result, numeric);}
+            if(find("=="))         {       numeric = logical(); result = operatorEQ(result, numeric);}
+            else if(find("!="))    {       numeric = logical(); result = operatorNE(result, numeric);}
+            else if(find("<="))    {       numeric = logical(); result = operatorLE(result, numeric);}
+            else if(find(">="))    {       numeric = logical(); result = operatorGE(result, numeric);}
+            else if(peek() == '<') {get(); numeric = logical(); result = operatorLT(result, numeric);}
+            else if(peek() == '>') {get(); numeric = logical(); result = operatorGT(result, numeric);}
             else return result;
         }
     }

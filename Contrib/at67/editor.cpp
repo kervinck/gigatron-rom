@@ -1042,10 +1042,9 @@ namespace Editor
         static std::string names[] = {"Gamma_hi", "Gigatron_hi", "Juggler_hi", "Mario_hi"}; //{"Clouds", "Clouds", "Clouds", "Clouds"};
 
         Image::TgaFile tgaFile;
-        Image::GtRgbFile gtRgbFile;
-
         Image::loadTgaFile(names[gtRgbFileindex] + ".tga", tgaFile);
-        gtRgbFile._header = {GTRGB_IDENTIFIER, Image::GT_RGB_222, tgaFile._header._width, tgaFile._header._height};
+
+        Image::GtRgbFile gtRgbFile{GTRGB_IDENTIFIER, Image::GT_RGB_222, tgaFile._header._width, tgaFile._header._height};
         Image::ditherRGB8toRGB2(tgaFile._data, gtRgbFile._data, tgaFile._header._width, tgaFile._header._height, tgaFile._imageOrigin);
 
         uint16_t vram = 0x0800;
