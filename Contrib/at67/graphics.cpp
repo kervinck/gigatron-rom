@@ -1119,7 +1119,7 @@ namespace Graphics
 #endif
 #endif
 
-        SDL_UpdateTexture(_screenTexture, NULL, _pixels, SCREEN_WIDTH * sizeof uint32_t);
+        SDL_UpdateTexture(_screenTexture, NULL, _pixels, SCREEN_WIDTH * sizeof(uint32_t));
         SDL_RenderCopy(_renderer, _screenTexture, NULL, NULL);
         renderHelpScreen();
         SDL_RenderPresent(_renderer);

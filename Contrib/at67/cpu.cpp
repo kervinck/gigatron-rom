@@ -60,7 +60,7 @@ namespace Cpu
     std::vector<InternalGt1> _internalGt1s;
 
     int getNumRoms(void) {return _numRoms;}
-    uint8_t* getPtrToROM(int& romSize) {romSize = sizeof _ROM; return (uint8_t*)_ROM;}
+    uint8_t* getPtrToROM(int& romSize) {romSize = sizeof(_ROM); return (uint8_t*)_ROM;}
     RomType getRomType(void) {return _romType;}
 
     const uint8_t _endianBytes[] = {0x00, 0x01, 0x02, 0x03};
@@ -470,14 +470,14 @@ namespace Cpu
     void loadRom(int index)
     {
         _romIndex = index % _numRoms;
-        memcpy(_ROM, _romFiles[_romIndex], sizeof _ROM);
+        memcpy(_ROM, _romFiles[_romIndex], sizeof(_ROM));
         reset(true);
     }
 
     void swapRom(void)
     {
         _romIndex = (_romIndex + 1) % _numRoms;
-        memcpy(_ROM, _romFiles[_romIndex], sizeof _ROM);
+        memcpy(_ROM, _romFiles[_romIndex], sizeof(_ROM));
         reset(true);
     }
 
@@ -583,9 +583,9 @@ namespace Cpu
 
         // Memory
         srand((unsigned int)time(NULL)); // Initialize with randomized data
-        garble((uint8_t*)_ROM, sizeof _ROM);
+        garble((uint8_t*)_ROM, sizeof(_ROM));
         garble(&_RAM[0], Memory::getSizeRAM());
-        garble((uint8_t*)&_stateS, sizeof _stateS);
+        garble((uint8_t*)&_stateS, sizeof(_stateS));
 
         // Internal ROMS
         _romFiles.push_back(_gigatron_0x1c_rom);
@@ -610,7 +610,7 @@ namespace Cpu
             else
             {
                 // Load ROM file
-                uint8_t* rom = new (std::nothrow) uint8_t[sizeof _ROM];
+                uint8_t* rom = new (std::nothrow) uint8_t[sizeof(_ROM)];
                 if(!rom)
                 {
                     // This is fairly pointless as the code does not have any exception handling for the many std:: memory allocations that occur
@@ -620,7 +620,7 @@ namespace Cpu
                     _EXIT_(EXIT_FAILURE);
                 }
 
-                file.read((char *)rom, sizeof _ROM);
+                file.read((char *)rom, sizeof(_ROM));
                 if(file.bad() || file.fail())
                 {
                     fprintf(stderr, "Cpu::initialise() : failed to read ROM file : %s\n", name.c_str());
@@ -636,12 +636,12 @@ namespace Cpu
         // Switchable ROMS
         _numRoms = int(_romFiles.size());
         _romIndex = _numRoms - 1;
-        memcpy(_ROM, _romFiles[_romIndex], sizeof _ROM);
+        memcpy(_ROM, _romFiles[_romIndex], sizeof(_ROM));
 
 //#define CREATE_ROM_HEADER
 #ifdef CREATE_ROM_HEADER
         // Create a header file representation of a ROM, (match the ROM type number with the ROM file before enabling and running this code)
-        createRomHeader((uint8_t *)_ROM, "gigatron_xxxx.h", "_gigatron_xxxx_rom", sizeof _ROM);
+        createRomHeader((uint8_t *)_ROM, "gigatron_xxxx.h", "_gigatron_xxxx_rom", sizeof(_ROM));
 #endif
 
 //#define CUSTOM_ROM
