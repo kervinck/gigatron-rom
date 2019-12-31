@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <cmath>
 #include <string>
 #include <sstream>
 #include <iomanip>
@@ -36,97 +37,97 @@ namespace Expression
 
 
     // Default operators
-    Numeric neg(Numeric& numeric)
+    Numeric& operatorNEG(Numeric& numeric)
     {
         numeric._value = -numeric._value;
         return numeric;
     }
-    Numeric not(Numeric& numeric)
+    Numeric& operatorNOT(Numeric& numeric)
     {
         numeric._value = ~numeric._value;
         return numeric;
     }
-    Numeric and(Numeric& left, Numeric&& right)
+    Numeric& operatorAND(Numeric& left, Numeric& right)
     {
         left._value &= right._value;
         return left;
     }
-    Numeric or(Numeric& left, Numeric&& right)
+    Numeric& operatorOR(Numeric& left, Numeric& right)
     {
         left._value |= right._value;
         return left;
     }
-    Numeric xor(Numeric& left, Numeric&& right)
+    Numeric& operatorXOR(Numeric& left, Numeric& right)
     {
         left._value ^= right._value;
         return left;
     }
-    Numeric add(Numeric& left, Numeric&& right)
+    Numeric& operatorADD(Numeric& left, Numeric& right)
     {
         left._value += right._value;
         return left;
     }
-    Numeric sub(Numeric& left, Numeric&& right)
+    Numeric& operatorSUB(Numeric& left, Numeric& right)
     {
         left._value -= right._value;
         return left;
     }
-    Numeric pow(Numeric& left, Numeric&& right)
+    Numeric& operatorPOW(Numeric& left, Numeric& right)
     {
-        left._value = int16_t(std::pow(double(left._value), double(right._value)));
+        left._value = int16_t(pow(double(left._value), double(right._value)));
         return left;
     }
-    Numeric mul(Numeric& left, Numeric&& right)
+    Numeric& operatorMUL(Numeric& left, Numeric& right)
     {
         left._value *= right._value;
         return left;
     }
-    Numeric div(Numeric& left, Numeric&& right)
+    Numeric& operatorDIV(Numeric& left, Numeric& right)
     {
         left._value = (right._value == 0) ? 0 : left._value / right._value;
         return left;
     }
-    Numeric mod(Numeric& left, Numeric&& right)
+    Numeric& operatorMOD(Numeric& left, Numeric& right)
     {
         left._value = (right._value == 0) ? 0 : left._value % right._value;
         return left;
     }
-    Numeric lsl(Numeric& left, Numeric&& right)
+    Numeric& operatorLSL(Numeric& left, Numeric& right)
     {
         left._value = left._value << right._value;
         return left;
     }
-    Numeric lsr(Numeric& left, Numeric&& right)
+    Numeric& operatorLSR(Numeric& left, Numeric& right)
     {
         left._value = left._value >> right._value;
         return left;
     }
-    Numeric lt(Numeric& left, Numeric&& right)
+    Numeric& operatorLT(Numeric& left, Numeric& right)
     {
         left._value = left._value < right._value;
         return left;
     }
-    Numeric gt(Numeric& left, Numeric&& right)
+    Numeric& operatorGT(Numeric& left, Numeric& right)
     {
         left._value = left._value > right._value;
         return left;
     }
-    Numeric eq(Numeric& left, Numeric&& right)
+    Numeric& operatorEQ(Numeric& left, Numeric& right)
     {
         left._value = left._value == right._value;
         return left;
     }
-    Numeric ne(Numeric& left, Numeric&& right)
+    Numeric& operatorNE(Numeric& left, Numeric& right)
     {
         left._value = left._value != right._value;
         return left;
     }
-    Numeric le(Numeric& left, Numeric&& right)
+    Numeric& operatorLE(Numeric& left, Numeric& right)
     {
         left._value = left._value <= right._value;
         return left;
     }
-    Numeric ge(Numeric& left, Numeric&& right)
+    Numeric& operatorGE(Numeric& left, Numeric& right)
     {
         left._value = left._value >= right._value;
         return left;
@@ -466,13 +467,13 @@ namespace Expression
 
     std::string& strToLower(std::string& s)
     {
-        std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) {return tolower(c);} );
+        std::transform(s.begin(), s.end(), s.begin(), [](char c) {return char(tolower(c));} );
         return s;
     }
 
     std::string& strToUpper(std::string& s)
     {
-        std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) {return toupper(c);} );
+        std::transform(s.begin(), s.end(), s.begin(), [](char c) {return char(toupper(c));} );
         return s;
     }
 
@@ -1053,8 +1054,8 @@ namespace Expression
             switch(peek())
             {
                 case '+': get(); numeric = factor(0);                         break;
-                case '-': get(); numeric = factor(0); numeric = neg(numeric); break;
-                case '~': get(); numeric = factor(0); numeric = not(numeric); break;
+                case '-': get(); numeric = factor(0); numeric = operatorNEG(numeric); break;
+                case '~': get(); numeric = factor(0); numeric = operatorNOT(numeric); break;
 
                 // Unknown
                 default: numeric = Numeric(defaultValue, -1, true, Number, BooleanCC, Int16Both, std::string(_expression), std::string("")); break;
@@ -1066,57 +1067,57 @@ namespace Expression
 
     Numeric term(void)
     {
-        Numeric result = factor(0);
+        Numeric numeric, result = factor(0);
 
         for(;;)
         {
-            if(find("**"))         {       result = pow(result, factor(0));}
-            else if(peek() == '*') {get(); result = mul(result, factor(0));}
-            else if(peek() == '/') {get(); result = div(result, factor(0));}
-            else if(peek() == '%') {get(); result = mod(result, factor(0));}
+            if(find("**"))         {       numeric = factor(0); result = operatorPOW(result, numeric);}
+            else if(peek() == '*') {get(); numeric = factor(0); result = operatorMUL(result, numeric);}
+            else if(peek() == '/') {get(); numeric = factor(0); result = operatorDIV(result, numeric);}
+            else if(peek() == '%') {get(); numeric = factor(0); result = operatorMOD(result, numeric);}
             else return result;
         }
     }
 
     Numeric expr(void)
     {
-        Numeric result = term();
+        Numeric numeric, result = term();
     
         for(;;)
         {
-            if(peek() == '+')      {get(); result = add(result, term());}
-            else if(peek() == '-') {get(); result = sub(result, term());}
+            if(peek() == '+')      {get(); numeric = term(); result = operatorADD(result, numeric);}
+            else if(peek() == '-') {get(); numeric = term(); result = operatorSUB(result, numeric);}
             else return result;
         }
     }
 
     Numeric logical(void)
     {
-        Numeric result = expr();
+        Numeric numeric, result = expr();
     
         for(;;)
         {
-            if(peek() == '&')      {get(); result = and(result, expr());}
-            else if(peek() == '^') {get(); result = xor(result, expr());}
-            else if(peek() == '|') {get(); result = or(result,  expr());}
-            else if(find("<<"))    {       result = lsl(result, expr());}
-            else if(find(">>"))    {       result = lsr(result, expr());}
+            if(peek() == '&')      {get(); numeric = expr(); result = operatorAND(result, numeric);}
+            else if(peek() == '^') {get(); numeric = expr(); result = operatorXOR(result, numeric);}
+            else if(peek() == '|') {get(); numeric = expr(); result = operatorOR(result,  numeric);}
+            else if(find("<<"))    {       numeric = expr(); result = operatorLSL(result, numeric);}
+            else if(find(">>"))    {       numeric = expr(); result = operatorLSR(result, numeric);}
             else return result;
         }
     }
 
     Numeric expression(void)
     {
-        Numeric result = logical();
+        Numeric numeric, result = logical();
     
         for(;;)
         {
-            if(find("=="))         {       result = eq(result, logical());}
-            else if(find("!="))    {       result = ne(result, logical());}
-            else if(find("<="))    {       result = le(result, logical());}
-            else if(find(">="))    {       result = ge(result, logical());}
-            else if(peek() == '<') {get(); result = lt(result, logical());}
-            else if(peek() == '>') {get(); result = gt(result, logical());}
+            if(find("=="))         {       numeric = logical(); result = operatorEQ(result, numeric);}
+            else if(find("!="))    {       numeric = logical(); result = operatorNE(result, numeric);}
+            else if(find("<="))    {       numeric = logical(); result = operatorLE(result, numeric);}
+            else if(find(">="))    {       numeric = logical(); result = operatorGE(result, numeric);}
+            else if(peek() == '<') {get(); numeric = logical(); result = operatorLT(result, numeric);}
+            else if(peek() == '>') {get(); numeric = logical(); result = operatorGT(result, numeric);}
             else return result;
         }
     }

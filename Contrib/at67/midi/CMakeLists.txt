@@ -4,8 +4,8 @@ project(gtmidi)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH})
 
-file(GLOB sources *.cpp)
-file(GLOB headers *.h)
+set(headers ../memory.h ../expression.h)
+set(sources ../memory.cpp ../expression.cpp gtmidi.cpp)
 
 add_executable(gtmidi ${headers} ${sources})
 

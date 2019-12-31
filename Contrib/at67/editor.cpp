@@ -630,14 +630,6 @@ namespace Editor
                 }
             }
             break;
-
-            // Shut MacOS gcc up
-            case Term:
-            case Image:
-            case NumEditorModes:
-            {
-            }
-            break;
         }
     }
 
@@ -718,14 +710,6 @@ namespace Editor
             {
                 case File: Loader::setUploadTarget(Loader::Emulator); break;
                 case Dir: changeBrowseDirectory(); break;
-
-                // Shut MacOS gcc up
-                case Fifo:
-                case Link:
-                case NumFileTypes:
-                {
-                }
-                break;
             }
         }
         else if(_editorMode == Rom)
@@ -778,15 +762,6 @@ namespace Editor
             switch(fileType)
             {
                 case File: Loader::setUploadTarget(Loader::Hardware); break;
-
-                // Shut MacOS gcc up
-                case Dir:
-                case Fifo:
-                case Link:
-                case NumFileTypes:
-                {
-                }
-                break;
             }
         }
     }
@@ -932,15 +907,6 @@ namespace Editor
                             }
                         }
                         break;
-
-                        // Shut MacOS gcc up
-                        case Rom:
-                        case Term:
-                        case Image:
-                        case NumEditorModes:
-                        {
-                        }
-                        break;
                     }
                 }
                 break;
@@ -1076,10 +1042,9 @@ namespace Editor
         static std::string names[] = {"Gamma_hi", "Gigatron_hi", "Juggler_hi", "Mario_hi"}; //{"Clouds", "Clouds", "Clouds", "Clouds"};
 
         Image::TgaFile tgaFile;
-        Image::GtRgbFile gtRgbFile;
-
         Image::loadTgaFile(names[gtRgbFileindex] + ".tga", tgaFile);
-        gtRgbFile._header = {GTRGB_IDENTIFIER, Image::GT_RGB_222, tgaFile._header._width, tgaFile._header._height};
+
+        Image::GtRgbFile gtRgbFile{GTRGB_IDENTIFIER, Image::GT_RGB_222, tgaFile._header._width, tgaFile._header._height};
         Image::ditherRGB8toRGB2(tgaFile._data, gtRgbFile._data, tgaFile._header._width, tgaFile._header._height, tgaFile._imageOrigin);
 
         uint16_t vram = 0x0800;
@@ -1453,12 +1418,6 @@ namespace Editor
                         if(Cpu::getRAM(_singleStepAddress) != _singleStepNtv) singleStep(nPC);
                     }
                     break;
-
-                    // Shut MacOS gcc up
-                    case NumSingleStepModes:
-                    {
-                    }
-                    break;
                 }
             }
             // vCPU debugging, (this code can potentially run for every Native instruction, for efficiency we check vPC so this code only runs for each vCPU instruction)
@@ -1492,12 +1451,6 @@ namespace Editor
                     case StepWatch:
                     {
                         if(Cpu::getRAM(_singleStepAddress) != _singleStepVpc) singleStep(vPC);
-                    }
-                    break;
-
-                    // Shut MacOS gcc up
-                    case NumSingleStepModes:
-                    {
                     }
                     break;
                 }

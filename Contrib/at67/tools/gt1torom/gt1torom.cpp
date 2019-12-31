@@ -21,7 +21,7 @@ uint8_t _gt1[GT1_MAX_SIZE];
 bool writeRomDataWithTrampoline(const std::string& outputFilename0, const std::string& outputFilename1, std::ofstream& outfile0, std::ofstream& outfile1, uint16_t& startAddress, uint16_t size, bool _default)
 {
     uint16_t trampolineOffset = 0x0000;
-    for(int i=0; i<size; i++)
+    for(uint16_t i=0; i<size; i++)
     {
         uint16_t address = startAddress + i + trampolineOffset;
 
@@ -31,7 +31,7 @@ bool writeRomDataWithTrampoline(const std::string& outputFilename0, const std::s
             static uint8_t trampolineOpcode[]  = {0xFE, 0xFC, 0x14, 0xE0, 0xC2};
             static uint8_t trampolineOperand[] = {0x00, 0xFD, 0x04, 0x65, 0x18};
 
-            for(int j=0; j<sizeof trampolineOpcode; j++)
+            for(int j=0; j<sizeof(trampolineOpcode); j++)
             {
                 outfile0.write((char *)&trampolineOpcode[j], 1);
                 if(outfile0.bad() || outfile0.fail())
@@ -48,7 +48,7 @@ bool writeRomDataWithTrampoline(const std::string& outputFilename0, const std::s
                 }
             }
 
-            trampolineOffset += sizeof trampolineOpcode;
+            trampolineOffset += sizeof(trampolineOpcode);
         }
         
         // Don't write default data after last trampoline
@@ -111,7 +111,7 @@ int main(int argc, char* argv[])
         fprintf(stderr, "gt1torom : failed to read %s GT1 file.\n", inputFilename.c_str());
         return 1;
     }
-    int gt1Size = int(gt1file.gcount());
+    uint16_t gt1Size = uint16_t(gt1file.gcount());
 
     std::string outputFilename0 = std::string(argv[2]) + "_ti";
     std::ofstream outfile0(outputFilename0, std::ios::binary | std::ios::out);

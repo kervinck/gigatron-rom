@@ -41,9 +41,9 @@ namespace Graphics
     bool _displayHelpScreen = false;
     uint8_t _displayHelpScreenAlpha = 0;
 
-    std::atomic<bool> _enableUploadBar = false;
-    std::atomic<int> _uploadCursorY = -1;
-    std::atomic<float> _uploadPercentage = 0.0f;
+    std::atomic<bool> _enableUploadBar(false);
+    std::atomic<int> _uploadCursorY(-1);
+    std::atomic<float> _uploadPercentage(0.0f);
     std::string _uploadFilename;
 
     uint32_t _pixels[SCREEN_WIDTH * SCREEN_HEIGHT];
@@ -456,7 +456,8 @@ namespace Graphics
     {
         if(x < 0  ||  x > SCREEN_WIDTH - 1) return;
         if(y < 0  ||  y > SCREEN_HEIGHT - 1) return;
-        _pixels[x + y*SCREEN_WIDTH] = 0x00FFFFFFFF; //(0x00FFFFFF ^ _pixels[x + y*SCREEN_WIDTH]) & 0x00FFFFFF;
+        //fprintf(stderr, "%d %d\n", x, y);
+        _pixels[x + y*SCREEN_WIDTH] = 0xFFFFFFFF; //(0x00FFFFFF ^ _pixels[x + y*SCREEN_WIDTH]) & 0x00FFFFFF;
     }
     void drawReticle(int vgaX, int vgaY)
     {
@@ -500,7 +501,7 @@ namespace Graphics
 
         _hlineTiming[pixelY % GIGA_HEIGHT] = colour;
 
-        //if(debugging) return;
+        if(debugging) return;
 
         uint32_t screen = (vgaX % (GIGA_WIDTH + 1))*3 + (pixelY % GIGA_HEIGHT)*4*SCREEN_WIDTH;
         _pixels[screen + 0 + 0*SCREEN_WIDTH] = colour; _pixels[screen + 1 + 0*SCREEN_WIDTH] = colour; _pixels[screen + 2 + 0*SCREEN_WIDTH] = colour;
@@ -522,20 +523,20 @@ namespace Graphics
     {
         uint8_t offsetx = 0;
 
-        for(int y=0; y<GIGA_HEIGHT; y++)
+        for (int y = 0; y<GIGA_HEIGHT; y++)
         {
-            offsetx += Cpu::getRAM(uint16_t(GIGA_VTABLE + 1 + y*2));
-    
-            for(int x=0; x<=GIGA_WIDTH; x++)
-            {
-                uint16_t address = (Cpu::getRAM(uint16_t(GIGA_VTABLE + y*2) <<8) + ((offsetx + x) & 0xFF));
-                uint32_t colour = (x < GIGA_WIDTH) ? _colours[Cpu::getRAM(address) & (COLOUR_PALETTE-1)] : _hlineTiming[y];
-                uint32_t screen = (y*4 % SCREEN_HEIGHT)*SCREEN_WIDTH  +  (x*3 % SCREEN_WIDTH);
+            offsetx += Cpu::getRAM(uint16_t(GIGA_VTABLE + 1 + y * 2));
 
-                _pixels[screen + 0 + 0*SCREEN_WIDTH] = colour; _pixels[screen + 1 + 0*SCREEN_WIDTH] = colour; _pixels[screen + 2 + 0*SCREEN_WIDTH] = colour;
-                _pixels[screen + 0 + 1*SCREEN_WIDTH] = colour; _pixels[screen + 1 + 1*SCREEN_WIDTH] = colour; _pixels[screen + 2 + 1*SCREEN_WIDTH] = colour;
-                _pixels[screen + 0 + 2*SCREEN_WIDTH] = colour; _pixels[screen + 1 + 2*SCREEN_WIDTH] = colour; _pixels[screen + 2 + 2*SCREEN_WIDTH] = colour;
-                _pixels[screen + 0 + 3*SCREEN_WIDTH] = 0x00;   _pixels[screen + 1 + 3*SCREEN_WIDTH] = 0x00;   _pixels[screen + 2 + 3*SCREEN_WIDTH] = 0x00;
+            for (int x = 0; x <= GIGA_WIDTH; x++)
+            {
+                uint16_t address = (Cpu::getRAM(uint16_t(GIGA_VTABLE + y * 2)) << 8) + ((offsetx + x) & 0xFF);
+                uint32_t colour = (x < GIGA_WIDTH) ? _colours[Cpu::getRAM(address) & (COLOUR_PALETTE - 1)] : _hlineTiming[y];
+                uint32_t screen = (y * 4 % SCREEN_HEIGHT)*SCREEN_WIDTH + (x * 3 % SCREEN_WIDTH);
+
+                _pixels[screen + 0 + 0 * SCREEN_WIDTH] = colour; _pixels[screen + 1 + 0 * SCREEN_WIDTH] = colour; _pixels[screen + 2 + 0 * SCREEN_WIDTH] = colour;
+                _pixels[screen + 0 + 1 * SCREEN_WIDTH] = colour; _pixels[screen + 1 + 1 * SCREEN_WIDTH] = colour; _pixels[screen + 2 + 1 * SCREEN_WIDTH] = colour;
+                _pixels[screen + 0 + 2 * SCREEN_WIDTH] = colour; _pixels[screen + 1 + 2 * SCREEN_WIDTH] = colour; _pixels[screen + 2 + 2 * SCREEN_WIDTH] = colour;
+                _pixels[screen + 0 + 3 * SCREEN_WIDTH] = 0x00;   _pixels[screen + 1 + 3 * SCREEN_WIDTH] = 0x00;   _pixels[screen + 2 + 3 * SCREEN_WIDTH] = 0x00;
             }
         }
     }
@@ -1118,7 +1119,7 @@ namespace Graphics
 #endif
 #endif
 
-        SDL_UpdateTexture(_screenTexture, NULL, _pixels, SCREEN_WIDTH * sizeof uint32_t);
+        SDL_UpdateTexture(_screenTexture, NULL, _pixels, SCREEN_WIDTH * sizeof(uint32_t));
         SDL_RenderCopy(_renderer, _screenTexture, NULL, NULL);
         renderHelpScreen();
         SDL_RenderPresent(_renderer);
