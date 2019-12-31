@@ -8,18 +8,33 @@
 |       Goal is to provide basic operating system services              |
 |       - Terminal                                                      |
 |       - Card access                                                   |
-|       - Load command prompt                                           |
 |                                                                       |
 +-----------------------------------------------------------------------}
 
 {
+  XXX  Namespace. Shall we have device letters, or a Unix-like
+       namespace (/dev/...) and/or file descriptors or libc style
+       FILE*?
+       Answer: GTOS will have "drive letters" that are actually
+       a single hexnum, 0..9A-F (16 files is enough for everybody)
+        0: stdin
+        1: stdout
+        2: stderr
+        3..9: active files/streams/resources
+        A: SPI0 a.k.a. SD card 0
+        B: SPI1
+        C: SPI2
+        D: SPI3
+        E: ...      (/dev/null? E for "Empty")
+        F: ROM disk (F for "Fixed")
   XXX Positive card detection:
         Read MISO's
         Invert
         Write to ZP
-        Read MIOS
+        Read MISO
   XXX  https://cdn.hackaday.io/images/1744261554112919559.png
-  XXX  LoadtGt1: better closing of sector
+  XXX  SYS extension for copying to and from object variables
+  XXX  LoadtGt1: proper closing of last sector
   XXX  Compliancy: Byte addressing for V2 cards when CCS bit in CMD58 OCR is 0
   XXX  Compliancy: MMC v3 card detection with CMD1
   XXX  Compliancy: Don't set block size with CMD16 if CCS bit in OCS is 1
@@ -75,24 +90,28 @@ gcl0x
 
 *=$500
 
-\Newline call
+{ Closure for writing to video terminal }
+[def
+  { Function }
+  push \CharOut!
+  { Variables }
+  ##0                           {Pos}
+] p=
 
 \romType, \romTypeValue_DEVROM- {Version check >= DEVROM}
 [if<0                           {Version mismatch}
-  \Newline call                 {Give error using just ROM v1 features}
-  \PrintChar p=
-  [def
+  [def                          {Give error using just ROM v1 features}
     q= [do q,                   {Fetch next char}
       [do if=0loop]             {Loop forever at end of message}
       p! <q++ loop]             {Print char and continue}
   ] q=
-  [def `Need`DEVROM #0] q!
+  [def #10 `Need`DEVROM #0] q!
 ]
 
-[def `GTOS`DEV`32K #0] q=
-[do q, if<>0 \PrintChar! <q++ loop]
+[def #10 `GTOS`DEV`32K #0] q=
+[do q, if<>0 p! <q++ loop]
 
-[do loop] { XXX Work in progress }
+[do loop]                       { XXX Work in progress }
 
 {-----------------------------------------------------------------------+
 |                                                                       |
@@ -102,8 +121,6 @@ gcl0x
 
 0 \frameCount.                  {Reset timer}
 InitCard!
-
-CardType PrintByte! Newline!    {Show detected card version}
 
 ReadMBR! PrintResult!           {Master Boot Record}
 [if=0 ReadVolumeId!]            {Read first block of FAT partition}
@@ -124,71 +141,63 @@ ReadDirectory!                  {Read root directory XXX Move into PrintDir}
 |                                                                       |
 +-----------------------------------------------------------------------}
 
-{ PrintChar -- reads Pos, writes i j Pos _sysFn _sysArgs[01245] }
+{ CharOut -- writes i j _sysFn _sysArgs[01245] }
 
-_PrintChar=*
-  {
-    Print ASCII character (>=32) on screen using the 5x8 pixel built-in font.
-    This is a bare bones version:
-    1. No handling of newline characters
-    2. No implicit linewrapping
-    3. No blanking of the 1 pixel horizontal space between characters
-  }
-  82-                           {Map ASCII code to offset in font table}
-  [if<0 50+ i= &_font32up       {First page for ASCII 32..81}
-   else     i= &_font82up] j=   {Second page is ASCII 82..127}
-  i 2<< i+                      {Multiply by 5}
-  j+ j=                         {Add page address to reach bitmap data}
-  $3f20 _sysArgs0=              {White on blue}
-  Pos _sysArgs4=                {Position of character}
-  6+ Pos=                       {Advance position by 6 pixels for next call}
-  \SYS_VDrawBits_134 _sysFn=    {Prepare SYS calls}
-  5 [do i=                      {Loop to draw 5 vertical slices of 8 pixels}
-    j 0? \sysArgs2.             {Get byte from ROM using `LUP 0' instruction}
-    134!!                       {Invoke SYS function to draw 8 vertical pixels}
-    <j++ <_sysArgs4++           {Advance to next slice in ROM and on screen}
-    i 1- if>0loop]              {Looping}
-  ret
+_CharOut=*
+[
+  %-2=                          {Park character in stack area}
 
-_WriteByte=*
-  {
-    Print any byte value as character, map non-ASCII to block symbol
-    XXX Clear 6th slice
-    XXX Insert Newline when wrapping the line
-  }
-  push
+  10^ [if<>0                    {Test for CR}
+    _vLR, 155- if>0 0]          { or line wrap}
+  [if=0
+
+    { Clear new line first }
+    $3f20 _sysArgs0=            {White on blue}
+    $11f deek 255| 255^ _vLR:   {Go to start of next line}
+    _sysArgs4=                  {Set screen position}
+    \sysArgs2.                  {Set all-zero output pattern}
+    [do
+      \SYS_VDrawBits_134        {SYS call to draw 8 pixels vertically}
+      _sysFn= 134!!
+      <_sysArgs4++              {Step 1 pixel right}
+      \sysArgs4, 160^           {Test for end of line}
+      if<>0loop]
+
+    { Then scroll up by modifying videoTable }
+    $01 >i. 208                 {Last entry at $100+238, minus 30}
+    [do
+      30+ <i.
+      i, 120- [if<0 128+
+               else 24+] i.     {Rotate by 8 in 24..127 range}
+      <i, 32- if>0loop]         {Move to previous entry in video table}
+  ]
+
+  { Draw ASCII character (>=32) on screen using the 5x8 pixel built-in font }
+  %-2 32-
+
+{ XXX TODO
   32- [if<0 127 else 96-        {Map any non-ASCII to block symbol 127}
-       if>=0 127] 127&
-  \PrintChar!                   {And print it}
-  pop ret
+       if>=0 127] 127& }
 
-{ Newline -- writes i Pos _sysFn _sysArgs[01245] }
-{ !!! This version scrolls only pixel row 16 through 119 !!! }
+  [if>=0
+    50-                         {Map ASCII code to offset in font table}
+    [if<0 50+ i= &_font32up     {First page for ASCII 32..81}
+     else     i= &_font82up] j= {Second page is ASCII 82..127}
+    i 2<< i+                    {Multiply by 5}
+    j+ j=                       {Add page address to reach bitmap data}
+    $3f20 _sysArgs0=            {White on blue}
+    _vLR; _sysArgs4=            {Position of character}
+    6+ _vLR:                    {Advance position by 6 pixels for next call}
+    \SYS_VDrawBits_134 _sysFn=  {Prepare SYS calls}
+    5 [do i=                    {Loop to draw 5 vertical slices of 8 pixels}
+      j 0? \sysArgs2.           {Get byte from ROM using `LUP 0' instruction}
+      134!!                     {Invoke SYS function to draw 8 vertical pixels}
+      <j++ <_sysArgs4++         {Advance to next slice in ROM and on screen}
+      i 1- if>0loop]            {Looping}
+  ]
 
-_Newline=*
-                                {Clear new line first}
-  $3f20 _sysArgs0=              {White on blue}
-  0 <Pos. $120 peek >Pos.       {Go to start of next line}
-  Pos _sysArgs4=                {Set screen position}
-  \sysArgs2.                    {Set all-zero output pattern}
-  [do
-    \SYS_VDrawBits_134          {SYS call to draw 8 pixels vertically}
-    _sysFn= 134!!
-    <_sysArgs4++                {Step 1 pixel right}
-    \sysArgs4, 160^             {Test for end of line}
-    if<>0loop]
-                                {Then scroll up by modifying videoTable}
-  $01 >i. 208                   {Last entry at $100+238, minus 30}
-  [do
-    30+ <i.
-    i, 120- [if<0 128+
-             else 24+] i.       {Rotate by 8 in 24..127 range}
-    <i, 32- if>0loop]           {Move to previous entry in video table}
-
-  ret
-
-$500 Address=                   {512 bytes memory for one sector}
-
+  pop ret                       {Closure return}
+]
 {-----------------------------------------------------------------------+
 |                                                                       |
 |       Memory card section                                             |
@@ -327,7 +336,7 @@ $500 Address=                   {512 bytes memory for one sector}
     if<>0                       {Break out when valid message detected}
       i 1- if>0loop]            {Or when loop counter exhausted}
 
-  {32 PrintChar!                 {Space}}
+  {32 p!                        {Space}}
   \sysArgs6, CardReply=         {Store reply from card}
   PrintByte!                    {Print hex value}
   CardReply                     {As return value}
@@ -741,8 +750,6 @@ InitFat32=
   push
 
   \ClusterList List=            {Reset}
-  Newline!
-  PrintValue!
   [do
     { Store in list }
     ValueL List: <List++ <List++
