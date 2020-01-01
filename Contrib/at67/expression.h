@@ -8,7 +8,7 @@
 namespace Expression
 {
     enum ExpressionType {Invalid=0x8000, HasNumbers=0x0000, HasStrings=0x0001, HasOperators=0x0002, HasStrOperators=0x0004, HasIntConsts=0x0008, HasStrConsts=0x0010,
-                         HasIntVars=0x0020, HasStrVars=0x0040, HasKeywords=0x0080, HasStringKeywords=0x0100, HasFunctions=0x0200};
+                         HasIntVars=0x0020, HasStrVars=0x0040, HasKeywords=0x0080, HasFunctions=0x0100, HasStringKeywords=0x0200, HasOptimisedPrint=0x0400};
     enum NumericType {BadBase=-1, Decimal, HexaDecimal, Octal, Binary};
     enum CCType {BooleanCC, NormalCC, FastCC};
     enum Int16Byte {Int16Both, Int16Low, Int16High};
@@ -39,11 +39,11 @@ namespace Expression
 
     using exprFuncPtr = std::function<Numeric (void)>;
 
-    bool getEnablePrint(void);
+    bool getEnableOptimisedPrint(void);
     Numeric& getOutputNumeric(void);
 
     void setExprFunc(exprFuncPtr exprFunc);
-    void setEnablePrint(bool enablePrint);
+    void setEnableOptimisedPrint(bool enableOptimisedPrint);
 
     void initialise(void);
 
