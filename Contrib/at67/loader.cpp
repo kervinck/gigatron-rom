@@ -1124,7 +1124,7 @@ namespace Loader
                 return;
             }
 
-            std::string command = "py -B Core\\compilegcl.py -s interface.json \"" + filepath + "\" \"" + browserPath + "\"";
+            std::string command = "python3 -B Core/compilegcl.py -s interface.json \"" + filepath + "\" \"" + browserPath + "\"";
             //fprintf(stderr, command.c_str());
 
             // Create gt1 name and path

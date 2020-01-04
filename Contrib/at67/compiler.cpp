@@ -451,6 +451,9 @@ namespace Compiler
             Expression::strToUpper(token);
             if(Keywords::getStringKeywords().find(token) != Keywords::getStringKeywords().end())
             {
+                // If first token is a string keyword then don't create strings
+                if(i == 0) expressionType |= Expression::HasOptimisedPrint;
+
                 expressionType |= Expression::HasStringKeywords;
                 break;
             }
@@ -816,7 +819,12 @@ namespace Compiler
             emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr + arrIndex._value*uint16_t(intSize)), false, codeLineIndex);
             emitVcpuAsm("STW",  "register1", false, codeLineIndex);
             emitVcpuAsm("LDW",  "register0", false, codeLineIndex);
-            emitVcpuAsm("DOKE", "register1", false, codeLineIndex);
+            switch(codeLine._int16Byte)
+            {
+                case Expression::Int16Low:  emitVcpuAsm("POKE", "register1", false, codeLineIndex);                                                         break;
+                case Expression::Int16High: emitVcpuAsm("INC",  "register1", false, codeLineIndex); emitVcpuAsm("POKE", "register1", false, codeLineIndex); break;
+                case Expression::Int16Both: emitVcpuAsm("DOKE", "register1", false, codeLineIndex);                                                         break;
+            }
         }
         else
         {
@@ -848,7 +856,12 @@ namespace Compiler
             emitVcpuAsm("ADDW", "register1", false, codeLineIndex);
             emitVcpuAsm("STW",  "register1", false, codeLineIndex);
             emitVcpuAsm("LDW",  "register0", false, codeLineIndex);
-            emitVcpuAsm("DOKE", "register1", false, codeLineIndex);
+            switch(codeLine._int16Byte)
+            {
+                case Expression::Int16Low:  emitVcpuAsm("POKE", "register1", false, codeLineIndex);                                                         break;
+                case Expression::Int16High: emitVcpuAsm("INC",  "register1", false, codeLineIndex); emitVcpuAsm("POKE", "register1", false, codeLineIndex); break;
+                case Expression::Int16Both: emitVcpuAsm("DOKE", "register1", false, codeLineIndex);                                                         break;
+            }
 #endif
         }
 
@@ -1493,7 +1506,7 @@ namespace Compiler
         {
             get(false);
             numeric = expression();
-
+            
             // Parameters
             while(peek(false)  &&  peek(false) != ')')
             {
@@ -1603,8 +1616,10 @@ namespace Compiler
                     int constIndex = findConst(varName);
                     if(varIndex != -1)
                     {
+                        Expression::Int16Byte int16Byte = Expression::Int16Both;
+
                         Expression::advance(varName.size());
-                        
+
                         // Arrays
                         if(_integerVars[varIndex]._varType == VarArray)
                         {
@@ -1614,13 +1629,18 @@ namespace Compiler
                             // Array index numeric
                             Expression::Numeric param = factor(0); 
                             numeric._parameters.push_back(param);
+
+                            // Read both, low or high bytes, (DEEK <X>, PEEK <X>, PEEK <X+1>)
+                            if(Expression::find(".LO")) int16Byte = Expression::Int16Low;
+                            if(Expression::find(".HI")) int16Byte = Expression::Int16High;
+                            numeric._int16Byte = int16Byte;
+
                             numeric = Keywords::functionARR(numeric);
                         }
                         // Vars
                         else
                         {
                             // Read both, low or high bytes, (LDW <X>, LD <X>, LD <X+1>)
-                            Expression::Int16Byte int16Byte = Expression::Int16Both;
                             if(Expression::find(".LO")) int16Byte = Expression::Int16Low;
                             if(Expression::find(".HI")) int16Byte = Expression::Int16High;
 

@@ -232,7 +232,7 @@ namespace Keywords
         name = Compiler::getStringVars()[index]._name;
         uint16_t srcAddr = Compiler::getStringVars()[index]._address;
 
-        if(Expression::getEnablePrint())
+        if(Expression::getEnableOptimisedPrint())
         {
             Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr), false);
             Compiler::emitVcpuAsm("%PrintAcString", "", false);
@@ -282,10 +282,15 @@ namespace Keywords
         uint16_t arrayPtr = Compiler::getIntegerVars()[numeric._index]._array;
 
         // Literal array index
-        if (numeric._parameters[0]._varType == Expression::Number)
+        if(numeric._parameters[0]._varType == Expression::Number)
         {
-            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr + uint16_t(numeric._parameters[0]._value*intSize)), false);
-            Compiler::emitVcpuAsm("DEEK", "", false);
+            std::string operand = Expression::wordToHexString(arrayPtr + uint16_t(numeric._parameters[0]._value*intSize));
+            switch(numeric._int16Byte)
+            {
+                case Expression::Int16Low:  Compiler::emitVcpuAsm("LDWI", operand,          false); Compiler::emitVcpuAsm("PEEK", "", false); break;
+                case Expression::Int16High: Compiler::emitVcpuAsm("LDWI", operand + " + 1", false); Compiler::emitVcpuAsm("PEEK", "", false); break;
+                case Expression::Int16Both: Compiler::emitVcpuAsm("LDWI", operand,          false); Compiler::emitVcpuAsm("DEEK", "", false); break;
+            }
 
             numeric._value = uint8_t(Compiler::getTempVarStart());
             numeric._varType = Expression::TmpVar;
@@ -295,21 +300,21 @@ namespace Keywords
         else
         {
             // Can't call Operators::handleSingleOp() here, so special case it
-            switch (numeric._parameters[0]._varType)
+            switch(numeric._parameters[0]._varType)
             {
                 // Temporary variable address
-            case Expression::TmpVar:
-            {
-                Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(numeric._parameters[0]._value)), false);
-            }
-            break;
+                case Expression::TmpVar:
+                {
+                    Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(numeric._parameters[0]._value)), false);
+                }
+                break;
 
-            // User variable name
-            case Expression::IntVar:
-            {
-                Compiler::emitVcpuAsmUserVar("LDW", numeric._parameters[0], false);
-            }
-            break;
+                // User variable name
+                case Expression::IntVar:
+                {
+                    Compiler::emitVcpuAsmUserVar("LDW", numeric._parameters[0], false);
+                }
+                break;
             }
 
             numeric._value = uint8_t(Compiler::getTempVarStart());
@@ -318,7 +323,7 @@ namespace Keywords
 
 #ifdef SMALL_CODE_SIZE
             // Saves 2 bytes per array access but costs an extra 2 instructions in performance
-            if (Assembler::getUseOpcodeCALLI())
+            if(Assembler::getUseOpcodeCALLI())
             {
                 Compiler::emitVcpuAsm("STW", "memIndex", false);
                 Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr), false);
@@ -331,7 +336,12 @@ namespace Keywords
                 Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr), false);
                 Compiler::emitVcpuAsm("ADDW", "register2", false);
                 Compiler::emitVcpuAsm("ADDW", "register2", false);
-                Compiler::emitVcpuAsm("DEEK", "", false);
+                switch(numeric._int16Byte)
+                {
+                    case Expression::Int16Low:  Compiler::emitVcpuAsm("PEEK", "",  false);                                           break;
+                    case Expression::Int16High: Compiler::emitVcpuAsm("ADDI", "1", false); Compiler::emitVcpuAsm("PEEK", "", false); break;
+                    case Expression::Int16Both: Compiler::emitVcpuAsm("DEEK", "",  false);                                           break;
+                }
             }
         }
 
@@ -399,7 +409,6 @@ namespace Keywords
             Operators::handleSingleOp("LDW", numeric);
             Compiler::emitVcpuAsm("CALL", "giga_vAC", false);
         }
-
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
 
         return numeric;
@@ -436,7 +445,6 @@ namespace Keywords
 
             Compiler::emitVcpuAsm("%Rand", "", false);
         }
-
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
 
         return numeric;
@@ -448,10 +456,32 @@ namespace Keywords
         {
             Compiler::getNextTempVar();
 
-            if(numeric._index == -1  &&  numeric._varType != Expression::TmpStrVar)
+            // Handle non variables
+            if(numeric._index == -1)
             {
-                fprintf(stderr, "Compiler::functionLEN() : couldn't find variable name '%s'\n", numeric._name.c_str());
-                return numeric;
+                switch(numeric._varType)
+                {
+                    // Get or create constant string
+                    case Expression::String:
+                    {
+                        int index;
+                        Compiler::getOrCreateConstString(numeric._text, index);
+                        numeric._index = int16_t(index);
+                        numeric._varType = Expression::StrVar;
+                    }
+                    break;
+
+                    case Expression::TmpStrVar:
+                    {
+                    }
+                    break;
+
+                    default:
+                    {
+                        fprintf(stderr, "Compiler::functionLEN() : couldn't find variable name '%s'\n", numeric._name.c_str());
+                        return numeric;
+                    }
+                }
             }
 
             int length = 0;
@@ -483,7 +513,6 @@ namespace Keywords
             numeric._value = uint8_t(Compiler::getTempVarStart());
             numeric._varType = Expression::TmpVar;
             numeric._name = Compiler::getTempVarStartStr();
-
             Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
             
         }
@@ -512,7 +541,7 @@ namespace Keywords
         if(numeric._varType == Expression::Number)
         {
             // Print CHR string, (without wasting memory)
-            if(Expression::getEnablePrint())
+            if(Expression::getEnableOptimisedPrint())
             {
                 Compiler::emitVcpuAsm("LDI", std::to_string(numeric._value), false);
                 Compiler::emitVcpuAsm("%PrintAcChar", "", false);
@@ -531,7 +560,7 @@ namespace Keywords
 
         Compiler::getNextTempVar();
         Operators::handleSingleOp("LDW", numeric);
-        if(Expression::getEnablePrint())
+        if(Expression::getEnableOptimisedPrint())
         {
             Compiler::emitVcpuAsm("%PrintAcChar", "", false);
             return numeric;
@@ -567,7 +596,7 @@ namespace Keywords
         if(numeric._varType == Expression::Number)
         {
             // Print HEX string, (without wasting memory)
-            if(Expression::getEnablePrint())
+            if(Expression::getEnableOptimisedPrint())
             {
                 Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(numeric._value)), false);
                 Compiler::emitVcpuAsm("%PrintAcHexByte", "", false);
@@ -586,7 +615,7 @@ namespace Keywords
 
         Compiler::getNextTempVar();
         Operators::handleSingleOp("LDW", numeric);
-        if(Expression::getEnablePrint())
+        if(Expression::getEnableOptimisedPrint())
         {
             Compiler::emitVcpuAsm("%PrintAcHexByte", "", false);
             return numeric;
@@ -622,7 +651,7 @@ namespace Keywords
         if(numeric._varType == Expression::Number)
         {
             // Print HEXW string, (without wasting memory)
-            if(Expression::getEnablePrint())
+            if(Expression::getEnableOptimisedPrint())
             {
                 Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(numeric._value), false);
                 Compiler::emitVcpuAsm("%PrintAcHexWord", "", false);
@@ -641,7 +670,7 @@ namespace Keywords
 
         Compiler::getNextTempVar();
         Operators::handleSingleOp("LDW", numeric);
-        if(Expression::getEnablePrint())
+        if(Expression::getEnableOptimisedPrint())
         {
             Compiler::emitVcpuAsm("%PrintAcHexWord", "", false);
             return numeric;
@@ -677,7 +706,7 @@ namespace Keywords
             int index = int(numeric._index);
             getOrCreateString(numeric, name, srcAddr, index);
 
-            if(Expression::getEnablePrint())
+            if(Expression::getEnableOptimisedPrint())
             {
                 handleStringParameter(numeric._parameters[0]);
                 Compiler::emitVcpuAsm("STW", "textLen", false);
@@ -724,7 +753,7 @@ namespace Keywords
             int index = int(numeric._index);
             getOrCreateString(numeric, name, srcAddr, index);
 
-            if(Expression::getEnablePrint())
+            if(Expression::getEnableOptimisedPrint())
             {
                 handleStringParameter(numeric._parameters[0]);
                 Compiler::emitVcpuAsm("STW", "textLen", false);
@@ -772,7 +801,7 @@ namespace Keywords
             int index = int(numeric._index);
             getOrCreateString(numeric, name, srcAddr, index);
 
-            if(Expression::getEnablePrint())
+            if(Expression::getEnableOptimisedPrint())
             {
                 handleStringParameter(numeric._parameters[0]);
                 Compiler::emitVcpuAsm("STW", "textOfs", false);
@@ -1223,12 +1252,18 @@ namespace Keywords
             int varIndex = -1, constIndex = -1, strIndex = -1;
             uint32_t expressionType = Compiler::isExpression(tokens[i], varIndex, constIndex, strIndex);
 
-            if((expressionType & Expression::HasStringKeywords)  ||  (expressionType & Expression::HasFunctions))
+            if((expressionType & Expression::HasStringKeywords)  &&  (expressionType & Expression::HasOptimisedPrint))
             {
-                // Gigatron prints text on the fly without creating strings
-                Expression::setEnablePrint(true);
+                // Prints text on the fly without creating strings
+                Expression::setEnableOptimisedPrint(true);
                 Expression::parse(tokens[i], codeLineIndex, numeric);
-                Expression::setEnablePrint(false);
+                Expression::setEnableOptimisedPrint(false);
+            }
+            else if(expressionType & Expression::HasFunctions)
+            {
+                Expression::parse(tokens[i], codeLineIndex, numeric);
+                Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false, codeLineIndex);
+                Compiler::emitVcpuAsm("%PrintAcInt16", "", false, codeLineIndex);
             }
             else if((expressionType & Expression::HasIntVars)  &&  (expressionType & Expression::HasOperators))
             {

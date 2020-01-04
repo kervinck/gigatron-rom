@@ -17,9 +17,9 @@ namespace Expression
 
     int _lineNumber = 0;
 
-    bool _enablePrint = false;
     bool _advanceError = false;
     bool _containsQuotes = false;
+    bool _enableOptimisedPrint = false;
 
     bool _binaryChars[256]      = {false};
     bool _octalChars[256]       = {false};
@@ -133,11 +133,11 @@ namespace Expression
         return left;
     }
 
-    bool getEnablePrint(void) {return _enablePrint;}
     Numeric& getOutputNumeric(void) {return _output;}
+    bool getEnableOptimisedPrint(void) {return _enableOptimisedPrint;}
 
     void setExprFunc(exprFuncPtr exprFunc) {_exprFunc = exprFunc;}
-    void setEnablePrint(bool enablePrint) {_enablePrint = enablePrint;}
+    void setEnableOptimisedPrint(bool enableOptimisedPrint) {_enableOptimisedPrint = enableOptimisedPrint;}
 
 
     void initialise(void)
@@ -1027,6 +1027,7 @@ namespace Expression
         {
             get();
             numeric = expression();
+
             if(peek() != ')')
             {
                 fprintf(stderr, "Expression::factor() : Missing ')' in '%s' on line %d\n", _expressionToParse.c_str(), _lineNumber + 1);
@@ -1109,7 +1110,7 @@ namespace Expression
     Numeric expression(void)
     {
         Numeric numeric, result = logical();
-    
+            
         for(;;)
         {
             if(find("=="))         {       numeric = logical(); result = operatorEQ(result, numeric);}
@@ -1133,6 +1134,6 @@ namespace Expression
         _expression = (char*)_expressionToParse.c_str();
 
         numeric = _exprFunc();
-        return _exprFunc()._isValid;
+        return numeric._isValid;
     }
 }
