@@ -16,6 +16,7 @@ class Program:
     self.forRom = forRom # Inject trampolines if compiling for ROM XXX why not do that outside?
     self.comments = []   # Stack of line numbers
     self.lineNumber = 0
+    self.lastWord = None
     self.filename = None
     self.openBlocks = [0] # Outside first block is 0
     self.nextBlockId = 1
