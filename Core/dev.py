@@ -855,13 +855,29 @@ ld(hi('REENTER'),Y)             #15 slot 0xe6
 jmp(Y,'REENTER')                #16
 ld(-20/2)                       #17
 
+#-----------------------------------------------------------------------
+# Extension SYS_StoreBytes_DEVROM_XXX
+#-----------------------------------------------------------------------
+
 ld(hi('REENTER'),Y)             #15 slot 0xe9
 jmp(Y,'REENTER')                #16
 ld(-20/2)                       #17
 
-ld(hi('REENTER'),Y)             #15 slot 0xec
-jmp(Y,'REENTER')                #16
-ld(-20/2)                       #17
+#-----------------------------------------------------------------------
+# Extension SYS_LoadBytes_DEVROM_XXX
+#-----------------------------------------------------------------------
+
+# Load object variables into zero-page
+# XXX Unfinished
+#
+# Variables
+#       vLR             Pointer to size byte + object variables
+#       $30...$30+n-1   Target location
+
+label('SYS_LoadBytes_DEVROM_XXX')
+ld(hi('sys_LoadBytes'),Y)       #15
+jmp(Y,'sys_LoadBytes')          #16
+ld([vLR+1],Y)                   #17
 
 #-----------------------------------------------------------------------
 # Extension SYS_ReadRomDir_DEVROM_80
@@ -4996,6 +5012,139 @@ jmp(Y,'v6502_next')             #34
 ld(-36/2)                       #35
 
 #-----------------------------------------------------------------------
+#       Extended vertical blank logic: interrupts
+#-----------------------------------------------------------------------
+align(0x100)
+
+# Check if an IRQ handler is defined
+label('vBlankFirst#78')
+ld([Y,vIRQ_DEVROM])             #78
+ora([Y,vIRQ_DEVROM+1])          #79
+bne('vBlankFirst#82')           #80
+ld([vPC])                       #81
+runVcpu(186-82-extra,           #82 Application cycles (scan line 0)
+    '---D line 0 timeout but no irq',
+    returnTo='vBlankFirst#186')
+
+label('vBlankFirst#82')
+st([0xfc])                      #82 Save vPC
+ld([vPC+1])                     #83
+st([0xfd])                      #84
+ld([vAC])                       #85 Save vAC
+st([0xfe])                      #86
+ld([vAC+1])                     #87
+st([0xff])                      #88
+ld([Y,vIRQ_DEVROM])             #89 Set vPC to vIRQ
+suba(2)                         #90
+st([vPC])                       #91
+ld([Y,vIRQ_DEVROM+1])           #92
+st([vPC+1])                     #93
+ld([vCpuSelect])                #94 Allow interrupt to save this itself
+st([vAC])                       #95
+ld(0)                           #96 Tidy up vACH
+st([vAC+1])                     #97
+ld(hi('ENTER'))                 #98 Set vCpuSelect to ENTER (=regular vCPU)
+st([vCpuSelect])                #99
+runVcpu(186-100-extra,          #100 Application cycles (scan line 0)
+    '---D line 0 timeout with irq',
+    returnTo='vBlankFirst#186')
+
+# vIRQ sequence WITH interpreter switch
+label('vRTI#18')
+ld([X])                         #18
+st([vCpuSelect])                #19
+ld([0xfc])                      #20
+st([vPC])                       #21
+ld([0xfd])                      #22
+st([vPC+1])                     #23
+ld([0xfe])                      #24
+st([vAC])                       #25
+ld([0xff])                      #26
+st([vAC+1])                     #27
+nop()                           #0
+ld(hi('RESYNC'),Y)              #1
+jmp(Y,'RESYNC')                 #2
+ld([vTicks])                    #3
+
+# Entered last line of vertical blank (line 40)
+label('vBlankLast#34')
+
+#-----------------------------------------------------------------------
+#       Extended vertical blank logic: game controller decoding
+#-----------------------------------------------------------------------
+
+# Game controller types
+# TypeA: Based on 74LS165 shift register (not supported)
+# TypeB: Based on CD4021B shift register (standard)
+# TypeC: Based on priority encoder
+#
+# Notes:
+# - TypeA was only used during development and first beta test, before ROM v1
+# - TypeB appears as type A with negative logic levels
+# - TypeB is the game controller type that comes with the original kit and ROM v1
+# - TypeB is mimicked by BabelFish / Pluggy McPlugface
+# - TypeB requires a prolonged /SER_LATCH, therefore vPulse is 8 scanlines, not 2
+# - TypeB and TypeC can be sampled in the same scanline
+# - TypeA is 1 scanline shifted as it looks at a different edge (XXX up or down?)
+# - TypeC gives incomplete information: lower buttons overshadow higher ones
+#
+#       TypeC    Alias    Button TypeB
+#       00000000  ^@   -> Right  11111110
+#       00000001  ^A   -> Left   11111101
+#       00000011  ^C   -> Down   11111011
+#       00000111  ^G   -> Up     11110111
+#       00001111  ^O   -> Start  11101111
+#       00011111  ^_   -> Select 11011111
+#       00111111  ?    -> B      10111111
+#       01111111  DEL  -> A      01111111
+#       11111111       -> (None) 11111111
+#
+#       Conversion formula:
+#               f(x) := 254 - x
+
+# Detect controller TypeC codes
+ld([serialRaw])                 #34 if serialRaw in [0,1,3,7,15,31,63,127,255]
+adda(1)                         #35
+anda([serialRaw])               #36
+bne('.buttons#39')              #37
+
+# TypeC
+ld([serialRaw])                 #38 [TypeC] if serialRaw < serialLast
+adda(1)                         #39
+anda([serialLast])              #40
+bne('.buttons#43')              #41
+ld(254)                         #42 then clear the selected bit
+nop()                           #43
+bra('.buttons#46')              #44
+label('.buttons#43')
+suba([serialRaw])               #43,45
+anda([buttonState])             #44
+st([buttonState])               #45
+label('.buttons#46')
+ld([serialRaw])                 #46 Set the lower bits
+ora([buttonState])              #47
+label('.buttons#48')
+st([buttonState])               #48
+ld([serialRaw])                 #49 Update serialLast for next pass
+jmp(Y,'vBlankLast#52')          #50
+st([serialLast])                #51
+
+# TypeB
+# pChange = pNew & ~pOld
+# nChange = nNew | ~nOld {DeMorgan}
+label('.buttons#39')
+ld(255)                         #39 [TypeB] Bitwise edge-filter to detect button presses
+xora([serialLast])              #40
+ora([serialRaw])                #41 Catch button-press events
+anda([buttonState])             #42 Keep active button presses
+ora([serialRaw])                #43
+nop()                           #44
+nop()                           #45
+bra('.buttons#48')              #46
+nop()                           #47
+
+
+#-----------------------------------------------------------------------
 #       More SYS functions
 #-----------------------------------------------------------------------
 
@@ -5174,128 +5323,33 @@ ld(hi('NEXTY'),Y)               #40
 jmp(Y,'NEXTY')                  #41
 ld(-44/2)                       #42
 
-# Check if an IRQ handler is defined
-label('vBlankFirst#78')
-ld([Y,vIRQ_DEVROM])             #78
-ora([Y,vIRQ_DEVROM+1])          #79
-bne('vBlankFirst#82')           #80
-ld([vPC])                       #81
-runVcpu(186-82-extra,           #82 Application cycles (scan line 0)
-    '---D line 0 timeout but no irq',
-    returnTo='vBlankFirst#186')
+# SYS_LoadBytes_DEVROM_XXX implementation
+label('sys_LoadBytes')
+ld(0x30)                        # Target address
+st([sysArgs+1])                 #
+ld([vLR+0])                     # Source address
+st([sysArgs+0],X)               #
+ld([Y,X])                       # Byte count
+label('.slb1')                  #
+st([sysArgs+2])                 #
 
-label('vBlankFirst#82')
-st([0xfc])                      #82 Save vPC
-ld([vPC+1])                     #83
-st([0xfd])                      #84
-ld([vAC])                       #85 Save vAC
-st([0xfe])                      #86
-ld([vAC+1])                     #87
-st([0xff])                      #88
-ld([Y,vIRQ_DEVROM])             #89 Set vPC to vIRQ
-suba(2)                         #90
-st([vPC])                       #91
-ld([Y,vIRQ_DEVROM+1])           #92
-st([vPC+1])                     #93
-ld([vCpuSelect])                #94 Allow interrupt to save this itself
-st([vAC])                       #95
-ld(0)                           #96 Tidy up vACH
-st([vAC+1])                     #97
-ld(hi('ENTER'))                 #98 Set vCpuSelect to ENTER (=regular vCPU)
-st([vCpuSelect])                #99
-runVcpu(186-100-extra,          #100 Application cycles (scan line 0)
-    '---D line 0 timeout with irq',
-    returnTo='vBlankFirst#186')
+ld([sysArgs+0])                 # Advance source address
+adda(1)                         #
+st([sysArgs+0],X)               #
 
-# vIRQ sequence WITH interpreter switch
-label('vRTI#18')
-ld([X])                         #18
-st([vCpuSelect])                #19
-ld([0xfc])                      #20
-st([vPC])                       #21
-ld([0xfd])                      #22
-st([vPC+1])                     #23
-ld([0xfe])                      #24
-st([vAC])                       #25
-ld([0xff])                      #26
-st([vAC+1])                     #27
-nop()                           #0
-ld(hi('RESYNC'),Y)              #1
-jmp(Y,'RESYNC')                 #2
-ld([vTicks])                    #3
+ld([Y,X])                       # Copy byte
+ld([sysArgs+1],X)               #
+st([X])                         #
 
-# Entered last line of vertical blank (line 40)
-label('vBlankLast#34')
+ld([sysArgs+1])                 # Advance target address
+adda(1)                         #
+st([sysArgs+1])                 #
 
-# Game controller types
-# TypeA: Based on 74LS165 shift register (not supported)
-# TypeB: Based on CD4021B shift register (standard)
-# TypeC: Based on priority encoder
-#
-# Notes:
-# - TypeA was only used during development and first beta test, before ROM v1
-# - TypeB appears as type A with negative logic levels
-# - TypeB is the game controller type that comes with the original kit and ROM v1
-# - TypeB is mimicked by BabelFish / Pluggy McPlugface
-# - TypeB requires a prolonged /SER_LATCH, therefore vPulse is 8 scanlines, not 2
-# - TypeB and TypeC can be sampled in the same scanline
-# - TypeA is 1 scanline shifted as it looks at a different edge (XXX up or down?)
-# - TypeC gives incomplete information: lower buttons overshadow higher ones
-#
-#       TypeC    Alias    Button TypeB
-#       00000000  ^@   -> Right  11111110
-#       00000001  ^A   -> Left   11111101
-#       00000011  ^C   -> Down   11111011
-#       00000111  ^G   -> Up     11110111
-#       00001111  ^O   -> Start  11101111
-#       00011111  ^_   -> Select 11011111
-#       00111111  ?    -> B      10111111
-#       01111111  DEL  -> A      01111111
-#       11111111       -> (None) 11111111
-#
-#       Conversion formula:
-#               f(x) := 254 - x
+ld([sysArgs+2])                 # Decrement byte count and loop
+bne('.slb1')                    #
+suba(1)                         #
 
-# Detect controller TypeC codes
-ld([serialRaw])                 #34 if serialRaw in [0,1,3,7,15,31,63,127,255]
-adda(1)                         #35
-anda([serialRaw])               #36
-bne('.buttons#39')              #37
-
-# TypeC
-ld([serialRaw])                 #38 [TypeC] if serialRaw < serialLast
-adda(1)                         #39
-anda([serialLast])              #40
-bne('.buttons#43')              #41
-ld(254)                         #42 then clear the selected bit
-nop()                           #43
-bra('.buttons#46')              #44
-label('.buttons#43')
-suba([serialRaw])               #43,45
-anda([buttonState])             #44
-st([buttonState])               #45
-label('.buttons#46')
-ld([serialRaw])                 #46 Set the lower bits
-ora([buttonState])              #47
-label('.buttons#48')
-st([buttonState])               #48
-ld([serialRaw])                 #49 Update serialLast for next pass
-jmp(Y,'vBlankLast#52')          #50
-st([serialLast])                #51
-
-# TypeB
-# pChange = pNew & ~pOld
-# nChange = nNew | ~nOld {DeMorgan}
-label('.buttons#39')
-ld(255)                         #39 [TypeB] Bitwise edge-filter to detect button presses
-xora([serialLast])              #40
-ora([serialRaw])                #41 Catch button-press events
-anda([buttonState])             #42 Keep active button presses
-ora([serialRaw])                #43
-nop()                           #44
-nop()                           #45
-bra('.buttons#48')              #46
-nop()                           #47
+# XXX Unfinished
 
 #-----------------------------------------------------------------------
 #
