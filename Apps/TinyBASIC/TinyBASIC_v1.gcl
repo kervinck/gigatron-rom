@@ -9,6 +9,7 @@
 |       - Based on Dennis Allison's original 1976 Tiny BASIC            |
 |                                                                       |
 +-----------------------------------------------------------------------}
+gcl0x
 
 {
   History:
@@ -194,8 +195,6 @@ $ffa0  |                       |                 P(236)|                 @(236)|
     Sprites     Fake sprites with printing chars at arbitrary positions
     TicTac.gtb  Test longer programs. Might need to shorten/preprocess lines.
 }
-
-gcl0x
 
 {-----------------------------------------------------------------------+
 |                       RAM page 2                                      |

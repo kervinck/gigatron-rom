@@ -11,6 +11,7 @@
 |         LINE/SAVE                                                     |
 |                                                                       |
 +-----------------------------------------------------------------------}
+gcl0x
 
 {
   History:
@@ -225,8 +226,6 @@ $7fa0  | SAVE buffer           | Variables @ A B ... J | K ... S T U V W X Y Z |
             Music       Play tones, vary with waveforms
             Sprites     Fake sprites with printing chars at arbitrary positions
 }
-
-gcl0x
 
 {-----------------------------------------------------------------------+
 |                       RAM page 2                                      |
