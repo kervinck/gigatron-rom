@@ -149,9 +149,9 @@ class Program:
 
       # Label definitions
       if has(var) and has(con):
-        if op == '=': self.defSymbol(var, con)
-        else:
-          self.error("Invalid operator '%s' with name and constant" % op)
+        if op == '=' and var == 'zpReset': zpReset(con)
+        elif op == '=': self.defSymbol(var, con)
+        else: self.error("Invalid operator '%s' with name and constant" % op)
 
       # Words with constant value as operand
       elif has(con):

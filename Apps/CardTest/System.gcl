@@ -8,8 +8,10 @@
 |       Goal is to provide basic operating system services              |
 |       - Terminal                                                      |
 |       - Card access                                                   |
+|       - Extensibility                                                 |
 |                                                                       |
 +-----------------------------------------------------------------------}
+gcl0x
 
 {
   XXX  Namespace. Shall we have device letters, or a Unix-like
@@ -49,15 +51,25 @@
   XXX  Figure out why Apple formats card with type 0x0b
 }
 
-gcl0x
-
 {-----------------------------------------------------------------------+
 |                                                                       |
 |       Variables                                                       |
 |                                                                       |
 +-----------------------------------------------------------------------}
 
+_r0=$30                         {First 16 bytes act as register set}
+_r1=$32
+_r2=$34
+_r3=$36
+_r4=$38
+_r5=$3a
+_r6=$3c
+_r7=$3e
+
+zpReset=$40                     {Start GCL vars from $40 instead of $30}
+
 {
+        XXX These must move into and object
         Variable        Bytes   Description
         --------        -----   -----------
         CardType        X       Detected card version
