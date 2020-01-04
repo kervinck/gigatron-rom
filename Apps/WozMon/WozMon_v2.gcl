@@ -4,6 +4,7 @@
 |       Recreation of WozMon for Gigatron TTL microcomputer             |
 |                                                                       |
 +-----------------------------------------------------------------------}
+gcl0x
 
 {
   2018-06-12 (marcelk) Initial version
@@ -46,8 +47,6 @@
         https://github.com/jefftranter/6502/tree/master/asm/wozmon
         https://www.sbprojects.com/projects/apple1/wozmon.txt
 }
-
-gcl0x
 
 {-----------------------------------------------------------------------+
 |                       RAM page 2                                      |

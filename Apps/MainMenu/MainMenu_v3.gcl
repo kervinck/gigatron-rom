@@ -1,11 +1,10 @@
 
-gcl0x
-
 {-----------------------------------------------------------------------+
 |                                                                       |
 |       Application menu                                                |
 |                                                                       |
 +-----------------------------------------------------------------------}
+gcl0x
 
 { Fall into Easter Egg if [Start] is pressed for >4 seconds }
 \buttonState;                   {Fetch buttonState and resetTimer}

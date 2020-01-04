@@ -10,6 +10,7 @@
 |       If there is a SYSTEM.GT1 file, load and execute it.             |
 |                                                                       |
 +-----------------------------------------------------------------------}
+gcl0x
 
 {
   XXX Positive card detection:
@@ -83,8 +84,6 @@
         https://bits4device.wordpress.com/2017/12/16/sd-crc7-crc16-implementation/
         CRC definition
 }
-
-gcl0x
 
 {-----------------------------------------------------------------------+
 |                                                                       |

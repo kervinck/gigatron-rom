@@ -16,6 +16,7 @@ class Program:
     self.forRom = forRom # Inject trampolines if compiling for ROM XXX why not do that outside?
     self.comments = []   # Stack of line numbers
     self.lineNumber = 0
+    self.lastWord = None
     self.filename = None
     self.openBlocks = [0] # Outside first block is 0
     self.nextBlockId = 1
@@ -148,9 +149,9 @@ class Program:
 
       # Label definitions
       if has(var) and has(con):
-        if op == '=': self.defSymbol(var, con)
-        else:
-          self.error("Invalid operator '%s' with name and constant" % op)
+        if op == '=' and var == 'zpReset': zpReset(con)
+        elif op == '=': self.defSymbol(var, con)
+        else: self.error("Invalid operator '%s' with name and constant" % op)
 
       # Words with constant value as operand
       elif has(con):
