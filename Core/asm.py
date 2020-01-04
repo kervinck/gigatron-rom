@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 # SYNOPSIS: from asm import *
 #
@@ -340,17 +339,13 @@ def _assemble(op, val, to=AC, addr=None):
   # First operand can be optional
   if isinstance(val, list):
     val, addr = None, val
-  elif isinstance(val, float):
-    # Floating point values could have crept in if
-    # our operand is the result of a division in a file with
-    # from __future__ import division enabled.
-    # This happens in the Forth NEXT code, where we divide by two
-    # to convert cycle counts to ticks.
-    # If the number of cycles was not even, this is a clear bug.
-    # Otherwise convert to int.
+
+  # Only accept floats when representing a whole number
+  if isinstance(val, float):
     if not val.is_integer():
-      raise TypeError(
-        "Invalid operand: non-integer value %s provided" % (val,))
+      print('Error: Non-integer operand %s' % val)
+      global _errors
+      _errors += 1
     val = int(val)
 
   # Process list notation for addressing mode
