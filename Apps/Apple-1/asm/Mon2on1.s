@@ -1,6 +1,7 @@
 ;
 ; "Monitor II on Apple-1" as found on Winston D. Gayler's tapes
 ; http://www.apple1notes.com/old_apple/Monitor_II_on_1.html
+; (Wendell Sander)
 ;
 ; """As a part of the material in the Gayler collection was a program
 ;    tape that contained a file of the Apple II monitor ported to the
@@ -11,8 +12,8 @@
 ;    which makes sense for the basic Apple 1 but prevents use of Basic."""
 ;
 ; 2020-01-01 (Marcel van Kervinck)
-;       Disassembed using x65dsasm
 ;       Retargeted for address $500.$fff and created Mon2on1.ref
+;       Disassembled using x65dsasm
 ;       Made compatible with ca65. Build instructions:
 ;               ca65 Mon2on1.s
 ;               ld65 -t none Mon2on1.o -o Mon2on1.bin
@@ -26,10 +27,10 @@ zp_5 = $22
 zp_6 = $23
 WozXAML = $24
 WozXAMH = $25
-WozSTL = $26
-WozSTH = $27
-WozL = $28
-WozH = $29
+WozSTL  = $26
+WozSTH  = $27
+WozL    = $28
+WozH    = $29
 WozYSAV = $2a
 WozMODE = $2b
 zp_15 = $2c
@@ -364,12 +365,12 @@ Code_61: ; $0634
         lsr                             ;$0664 4a
         ora #$4c                        ;$0665 09 4c
         .byte $92 ; $0667 ???           ;$0667 92
-        ora $a1                         ;$0668 05 a1
+        .byte $05
                 ; Referenced from $088c (jump)
-Code_62 = * - 1 ; $669
-        .byte $3a ; $066a ???           ;$066a 3a
+Code_62:
+        lda ($3a,x)                     ;$0669 a1 3a
                 ; Referenced from $055e (subroutine)
-Code_63: ; $066b
+Code_63:
         tay                             ;$066b a8
         lsr                             ;$066c 4a
         bcc $0675 ; Code_64             ;$066d 90 06
@@ -1061,9 +1062,10 @@ Data_89: ; $09a6
         eor $914d,y                     ;$09ac 59 4d 91
         .byte $92 ; $09af ???           ;$09af 92
         stx $4a ; zp_41                 ;$09b0 86 4a
-        sta $9d                         ;$09b2 85 9d
+        .byte $85
                 ; Referenced from $0918 (data)
-Data_90 = * - 1 ; $9b3
+Data_90: ; $9b3
+        .byte $9d
                 ; Referenced from $05e0 (data)
 Data_91: ; $09b4
         ldy $aca9                       ;$09b4 ac a9 ac
@@ -1071,11 +1073,12 @@ Data_91: ; $09b4
         tay                             ;$09b8 a8
                 ; Referenced from $091e (data)
 Data_92: ; $09b9
-        ldy $d9                         ;$09b9 a4 d9
+        .byte $a4
+        .byte $d9
                 ; Referenced from $05e8 (data)
                 ; Referenced from $05ed (data)
-Data_93 = * - 1 ; $9ba
-        brk                             ;$09bb 00
+Data_93:
+        .byte $00
 
                 ; ------------- $09bc ------------- ;
 
@@ -1114,68 +1117,55 @@ Data_94: ; $09c0
         ldx $a8ae                       ;$09e8 ae ae a8
         .byte $ad,$29,$00               ;$09eb ad 29 00
         .byte $7c ; $09ee ???           ;$09ee 7c
-
-                ; ------------- $09ef ------------- ;
-
-        brk                             ;$09ef 00
-
-                ; ------------- $09f0 ------------- ;
-
-        ora $9c,x                       ;$09f0 15 9c
-        adc $a59c                       ;$09f2 6d 9c a5
-        adc #$29                        ;$09f5 69 29
-        .byte $53 ; $09f7 sre           ;$09f7 53
-        sty $13                         ;$09f8 84 13
-        .byte $34 ; $09fa ???           ;$09fa 34
-        ora ($a5),y                     ;$09fb 11 a5
-        adc #$23                        ;$09fd 69 23
-        ldy #$d8                        ;$09ff a0 d8
+        .byte $00
+        .byte $15,$9c
+        .byte $6d,$9c,$a5
+        .byte $69,$29
+        .byte $53
+        .byte $84,$13
+        .byte $34
+        .byte $11,$a5,$69,$23,$a0
                 ; Referenced from $0562 (data)
                 ; Referenced from $08f0 (data)
-Data_95 = * - 1 ; $a00
-        .byte $62 ; $0a01 ???           ;$0a01 62
-        .byte $5a ; $0a02 ???           ;$0a02 5a
-        pha                             ;$0a03 48
-        rol $62                         ;$0a04 26 62
-        sty $88,x                       ;$0a06 94 88
-        .byte $54 ; $0a08 ???           ;$0a08 54
-        .byte $44 ; $0a09 ???           ;$0a09 44
-        iny                             ;$0a0a c8
-        .byte $54 ; $0a0b ???           ;$0a0b 54
-        pla                             ;$0a0c 68
-        .byte $44 ; $0a0d ???           ;$0a0d 44
-        inx                             ;$0a0e e8
-        sty $00,x ; zp_1                ;$0a0f 94 00
-        ldy $08,x                       ;$0a11 b4 08
-        sty $74                         ;$0a13 84 74
-        ldy $28,x ; WozL                ;$0a15 b4 28
-        ror $f474                       ;$0a17 6e 74 f4
-        cpy $724a                       ;$0a1a cc 4a 72
-        .byte $f2 ; $0a1d ???           ;$0a1d f2
+Data_95:
+        .byte $d8                       ;$0a00
+        .byte $62
+        .byte $5a
+        .byte $48
+        .byte $26,$62
+        .byte $94,$88
+        .byte $54
+        .byte $44
+        .byte $c8
+        .byte $54
+        .byte $68
+        .byte $44
+        .byte $e8
+        .byte $94,$00
+        .byte $b4,$08
+        .byte $84,$74
+        .byte $b4,$28
+        .byte $6e,$74,$f4
+        .byte $cc,$4a,$72
+        .byte $f2
                 ; Referenced from $0ae9 (data)
-Data_96: ; $0a1e
-        ldy $8a                         ;$0a1e a4 8a
-        brk                             ;$0a20 00
-
-                ; ------------- $0a21 ------------- ;
-
-        tax                             ;$0a21 aa
-        ldx #$a2                        ;$0a22 a2 a2
-        .byte $74 ; $0a24 ???           ;$0a24 74
-        .byte $74 ; $0a25 ???           ;$0a25 74
-        .byte $74 ; $0a26 ???           ;$0a26 74
-        .byte $72 ; $0a27 ???           ;$0a27 72
-        .byte $44 ; $0a28 ???           ;$0a28 44
-        pla                             ;$0a29 68
-        .byte $b2 ; $0a2a ???           ;$0a2a b2
-        .byte $32 ; $0a2b ???           ;$0a2b 32
-        .byte $b2 ; $0a2c ???           ;$0a2c b2
-        brk                             ;$0a2d 00
-
-                ; ------------- $0a2e ------------- ;
-
-        .byte $22 ; $0a2e ???           ;$0a2e 22
-        brk                             ;$0a2f 00
+Data_96:
+        .byte $a4,$8a
+        .byte $00
+        .byte $aa
+        .byte $a2,$a2
+        .byte $74
+        .byte $74
+        .byte $74
+        .byte $72
+        .byte $44
+        .byte $68
+        .byte $b2
+        .byte $32
+        .byte $b2
+        .byte $00
+        .byte $22
+        .byte $00
 
                 ; ------------- $0a30 ------------- ;
 
@@ -1212,15 +1202,15 @@ Data_96: ; $0a1e
         lda ($3a,x) ; zp_25             ;$0a56 a1 3a
         beq $0a9c ; Code_98             ;$0a58 f0 42
         ldy $2f ; zp_18                 ;$0a5a a4 2f
-        cmp #$20                        ;$0a5c c9 20
+        cmp #$20                        ;$0a5c c9 20 JSR
         beq $0ab9 ; Code_103            ;$0a5e f0 59
-        cmp #$60                        ;$0a60 c9 60
+        cmp #$60                        ;$0a60 c9 60 RTS
         beq $0aa9 ; Code_100            ;$0a62 f0 45
-        cmp #$4c                        ;$0a64 c9 4c
+        cmp #$4c                        ;$0a64 c9 4c JMP
         beq $0ac4 ; Code_104            ;$0a66 f0 5c
-        cmp #$6c                        ;$0a68 c9 6c
+        cmp #$6c                        ;$0a68 c9 6c JMPI
         beq $0ac5 ; Code_105            ;$0a6a f0 59
-        cmp #$40                        ;$0a6c c9 40
+        cmp #$40                        ;$0a6c c9 40 RTI
         beq $0aa5 ; Code_99             ;$0a6e f0 35
         and #$1f                        ;$0a70 29 1f
         eor #$14                        ;$0a72 49 14
