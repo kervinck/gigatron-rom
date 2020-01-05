@@ -1,0 +1,44 @@
+'graph display with clock
+'(hr:min) using 59.98Hz
+'counter. UnREM lines 175
+'and 235 to see seconds,
+'adjust I (1/100 sec/min)
+'and J (1/100 sec/hour)
+'for clock finetuning.
+10 poke 42,0:poke 43,2
+20 A=0:B=0:I=-3:J=8:cls
+30 ?"Hour, Minutes";
+40 ?" and Seconds:":?
+50 input H:if H<0 goto 50
+60 if H>23 goto 50
+70 input M:if M<0 goto 70
+80 if M>59 goto 70
+90 input S:if S<0 goto 90
+100 if S>59 goto 90
+110 poke 14,0:S=(S+2)*100
+120 cls:C=rnd(23)+1
+130 P=(rnd(24)+4)*16
+140 U=5000:V=0
+150 Z=S+(427/256*B)
+160 if Z<6000 goto 210
+170 M=M+1:S=S+I-6000
+175 'Z=Z-6000
+180 if M<60 goto 210
+190 M=0:H=H+1:S=S+J
+200 if H=24 H=0
+210 T=rnd(128)+2:at T,1
+220 ?H/10;H%10;":";
+230 ?M/10;M%10;
+235 'at2,112:?Z/100;" ";
+240 for X=0 to 159
+250 Y=68-U/100
+260 poke Y*256+X,C
+270 U=U+V:V=V-U/P
+280 B=peek(14)
+290 if B<A S=S+427
+300 A=B:next X
+310 if C>500 goto 120
+320 C=C+23
+330 if C%64=0 C=C+23
+340 at T,1:?"     ";
+350 goto 150

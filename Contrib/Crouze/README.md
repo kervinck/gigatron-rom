@@ -1,2 +1,2 @@
-- simple BASIC scripts for tests (and have nice functional blinkenlights!)
-- Python3 ported version of sendFile.py (as sendFile3.py)
+- TinyBASIC scripts.
+- Python3 ported version of sendFile.py (as sendFile3.py).
