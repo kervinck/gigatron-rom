@@ -44,7 +44,7 @@
 #define _EXIT_(f)                                                    \
     do                                                               \
     {                                                                \
-        system("read -n1 -r -p \"Press any key to continue . . .\"");\
+        system("echo \"Press ENTER to continue . . .\"; read input");\
         exit(f);                                                     \
     }                                                                \
     while(0)
@@ -57,7 +57,7 @@
 #define _PAUSE_                                                      \
     do                                                               \
     {                                                                \
-        system("read -n1 -r -p \"Press any key to continue . . .\"");\
+        system("echo \"Press ENTER to continue . . .\"; read input");\
     }                                                                \
     while(0)
 #endif
