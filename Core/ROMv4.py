@@ -4833,7 +4833,7 @@ def basicLine(address, number, text):
 
 #-----------------------------------------------------------------------
 
-if pc()&255 > 251:              # Don't start in a trampoline region
+if pc()&255 >= 251:             # Don't start in a trampoline region
   align(0x100)
 align(1, 0x100)                 # Only pages from here
 
