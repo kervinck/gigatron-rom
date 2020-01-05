@@ -496,8 +496,8 @@ namespace Graphics
 
     void refreshTimingPixel(const Cpu::State& S, int vgaX, int pixelY, uint32_t colour, bool debugging)
     {
-        UNREFERENCED_PARAM(debugging);
-        UNREFERENCED_PARAM(S);
+        UNREFERENCED_PARAMETER(debugging);
+        UNREFERENCED_PARAMETER(S);
 
         _hlineTiming[pixelY % GIGA_HEIGHT] = colour;
 
@@ -756,6 +756,7 @@ namespace Graphics
                 case Editor::Dasm:  (Editor::getSingleStepEnabled()) ? strcpy(str, "Debug ") : strcpy(str, "Dasm  "); break;
                 case Editor::Term:  (Editor::getSingleStepEnabled()) ? strcpy(str, "Debug ") : strcpy(str, "Term  "); break;
                 case Editor::Image: (Editor::getSingleStepEnabled()) ? strcpy(str, "Debug ") : strcpy(str, "Image "); break;
+
                 default: strcpy(str, "     ");
             }
             drawText(std::string(str), _pixels, 12, 472 - FONT_CELL_Y, 0xFF00FF00, false, 0);
@@ -766,6 +767,7 @@ namespace Graphics
                 case Editor::PS2:    strcpy(str, "PS2   "); break;
                 case Editor::HwGiga: strcpy(str, "HwKbd "); break;
                 case Editor::HwPS2:  strcpy(str, "HwPS2 "); break;
+
                 default: strcpy(str, "     ");
             }
             drawText("K:", _pixels, 48, 472 - FONT_CELL_Y, 0xFFFFFFFF, false, 0);
@@ -788,6 +790,8 @@ namespace Graphics
             case Editor::RAM:  drawText("RAM:       Vars:", _pixels, 0, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0); break;
             case Editor::ROM0: drawText("ROM0:      Vars:", _pixels, 0, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0); break;
             case Editor::ROM1: drawText("ROM1:      Vars:", _pixels, 0, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0); break;
+
+            default: break;
         }
 
         // 8 * 32 hex display of memory
@@ -803,6 +807,8 @@ namespace Graphics
                     case Editor::RAM:  value = Cpu::getRAM(hexAddress);    break;
                     case Editor::ROM0: value = Cpu::getROM(hexAddress, 0); break;
                     case Editor::ROM1: value = Cpu::getROM(hexAddress, 1); break;
+
+                    default: break;
                 }
                 sprintf(str, "%02X ", value);
                 bool onCursor = (i == Editor::getCursorX()  &&  j == Editor::getCursorY());
@@ -946,6 +952,8 @@ namespace Graphics
             case Editor::RAM:  drawText("RAM:       Vars:", _pixels, 0, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0); break;
             case Editor::ROM0: drawText("ROM:       Vars:", _pixels, 0, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0); break;
             case Editor::ROM1: drawText("ROM:       Vars:", _pixels, 0, FONT_CELL_Y*3, 0xFFFFFFFF, false, 0); break;
+
+            default: break;
         }
 
         (Editor::getMemoryMode() == Editor::RAM) ? sprintf(str, "%04X", Editor::getVpcBaseAddress()) : sprintf(str, "%04X", Editor::getNtvBaseAddress());
@@ -1006,6 +1014,8 @@ namespace Graphics
                 case Editor::Rom:  renderRomBrowser();                      break;
                 case Editor::Load: renderLoadBrowser(onHex);                break;
                 case Editor::Dasm: renderDisassembler(onHex);               break;
+
+                default: break;
             }
 
             // Disable hex/var editing when mouse moves off a currently editing field
@@ -1713,6 +1723,8 @@ namespace Graphics
                         Cpu::shutdown();
                         exit(0);
                     }
+
+                    default: break;
                 }
             }
             break;
@@ -1725,6 +1737,8 @@ namespace Graphics
                 }
             }
             break;
+
+            default: break;
         }
 
         int lines = 0;
@@ -1756,7 +1770,8 @@ namespace Graphics
             BoardState boardState = checkTetromino(index, rotation, x, y-v);
             switch(boardState)
             {
-                case Clear:   drawTetromino(index, rotation, x, y-v, tetrominoes[index]._colour);     break;
+                case Clear:   drawTetromino(index, rotation, x, y-v, tetrominoes[index]._colour); break;
+
                 case Blocked:
                 {
                     if(!refresh)
@@ -1772,6 +1787,7 @@ namespace Graphics
                     }
                 }
                 break;
+
                 case GameOver:
                 {
                     // Game over

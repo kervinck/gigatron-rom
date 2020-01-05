@@ -553,6 +553,8 @@ namespace Image
                         useLumError = false;
                     }
                     break;
+
+                    default: break;
                 }
 
                 double errorScale = (_diffusionScale > 128.0) ? 0.0 : 1.0;

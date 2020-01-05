@@ -217,6 +217,8 @@ namespace Memory
                 return updateFreeRamList(index, address, size, newSize);
             }
             break;
+
+            default: break;
         }
         
         return false;
@@ -273,6 +275,8 @@ namespace Memory
                 });
             }
             break;
+
+            default: break;
         }
 
         int totalFree = 0;

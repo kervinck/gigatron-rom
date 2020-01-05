@@ -557,6 +557,8 @@ namespace Assembler
                         case OneByte:  sprintf(dasmText, "%04x  %-5s", address, _vcpuOpcodes[instruction]._mnemonic.c_str());              break;
                         case TwoBytes: sprintf(dasmText, "%04x  %-5s $%02x", address, _vcpuOpcodes[instruction]._mnemonic.c_str(), data0); break;
                         case ThreeBytes: (foundBranch) ? sprintf(dasmText, "%04x  %-5s $%02x", address, _vcpuOpcodes[instruction]._mnemonic.c_str(), data1) : sprintf(dasmText, "%04x  %-5s $%02x%02x", address, _vcpuOpcodes[instruction]._mnemonic.c_str(), data1, data0); break;
+
+                        default: break;
                     }
                     dasmCode._address = address;
                     address = uint16_t((address + byteSize) & (Memory::getSizeRAM() - 1));
@@ -565,6 +567,8 @@ namespace Assembler
                     getDasmCurrAndPrevByteSize(dasmCode._address, byteSize);
                 }
                 break;
+
+                default: break;
             }
 
             std::string dasmCodeText = std::string(dasmText);
@@ -1349,6 +1353,8 @@ namespace Assembler
                 _byteCode.push_back(byteCode);
             }
             break;
+
+            default: break;
         }
     }
 
@@ -1815,7 +1821,7 @@ namespace Assembler
 #ifndef STAND_ALONE
     bool handleBreakPoints(ParseType parse, const std::string& lineToken, int lineNumber)
     {
-        UNREFERENCED_PARAM(lineNumber);
+        UNREFERENCED_PARAMETER(lineNumber);
 
         std::string input = lineToken;
         Expression::strToUpper(input);
@@ -2585,6 +2591,8 @@ namespace Assembler
                             }
                         }
                         break;
+
+                        default: break;
                     }
                 }
 

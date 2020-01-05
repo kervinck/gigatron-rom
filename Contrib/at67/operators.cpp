@@ -41,6 +41,8 @@ namespace Operators
                 Compiler::emitVcpuAsmUserVar(opcodeStr, numeric, false);
             }
             break;
+
+            default: break;
         }
 
         numeric._value = uint8_t(Compiler::getTempVarStart());
@@ -97,6 +99,8 @@ namespace Operators
                     _nextTempVar = false;
                 }
                 break;
+
+                default: break;
             }
         }
 
@@ -123,6 +127,8 @@ namespace Operators
                     _nextTempVar = false;
                 }
                 break;
+
+                default: break;
             }
         }
 
@@ -153,6 +159,8 @@ namespace Operators
                 if(!Compiler::emitVcpuAsmUserVar("LDW", lhs, true)) return false;
             }
             break;
+
+            default: break;
         }
 
         if(opcode != "LSLW"  &&  opcode != "<<") Compiler::emitVcpuAsm("STW", "mathShift", false);
@@ -221,6 +229,8 @@ namespace Operators
                     _nextTempVar = false;
                 }
                 break;
+
+                default: break;
             }
         }
 
@@ -247,6 +257,8 @@ namespace Operators
                     _nextTempVar = false;
                 }
                 break;
+
+                default: break;
             }
         }
 
@@ -293,6 +305,8 @@ namespace Operators
                     _nextTempVar = false;
                 }
                 break;
+
+                default: break;
             }
         }
 
@@ -328,6 +342,8 @@ namespace Operators
                     _nextTempVar = false;
                 }
                 break;
+
+                default: break;
             }
         }
 
@@ -502,6 +518,8 @@ namespace Operators
                         if(varIndex == -1) fprintf(stderr, "Compiler::operatorLSL() : couldn't find variable name '%s'\n", left._name.c_str());
                         Compiler::emitVcpuAsm("LD", "_" + left._name, false);
                     }
+
+                    default: break;
                 }
 
                 left._value = uint8_t(Compiler::getTempVarStart());
@@ -579,6 +597,8 @@ namespace Operators
                         Compiler::emitVcpuAsm("LD", "_" + left._name + " + 1", false);
                     }
                     break;
+
+                    default: break;
                 }
 
                 left._value = uint8_t(Compiler::getTempVarStart());

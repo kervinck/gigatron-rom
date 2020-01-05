@@ -30,8 +30,8 @@
 
 int main(int argc, char* argv[])
 {
-    UNREFERENCED_PARAM(argc);
-    UNREFERENCED_PARAM(argv);
+    UNREFERENCED_PARAMETER(argc);
+    UNREFERENCED_PARAMETER(argv);
 
     Memory::initialise();
     Loader::initialise();

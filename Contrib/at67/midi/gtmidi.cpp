@@ -206,6 +206,8 @@ void outputDelay(std::ofstream& outfile, Format format, uint8_t delay8, double t
         case Format::GCL:  outputGCLcommand(outfile, delay8);  break;
         case Format::CPP:  outputCPPcommand(outfile, delay8);  break;
         case Format::PY:   outputPYcommand(outfile, delay8);   break;
+
+        default: break;
     }
 }
 
@@ -284,6 +286,8 @@ int main(int argc, char* argv[])
         case Format::GCL:  outputGCLheader(outfile, startAddress);                                       break;
         case Format::CPP:  outputCPPheader(outfile, midiName, segmentSize, segmentIndex);                break;
         case Format::PY:   outputPYheader(outfile, midiName, segmentSize, segmentIndex);                 break;
+
+        default: break;
     }
     
     // Commands
@@ -307,6 +311,8 @@ int main(int argc, char* argv[])
                     case Format::GCL:  outputGCLcommand(outfile, command);  outputGCLcommand(outfile, note);  break;
                     case Format::CPP:  outputCPPcommand(outfile, command);  outputCPPcommand(outfile, note);  break;
                     case Format::PY:   outputPYcommand(outfile, command);   outputPYcommand(outfile, note);   break;
+
+                    default: break;
                 }
             }
             // Stop note
@@ -320,6 +326,8 @@ int main(int argc, char* argv[])
                     case Format::GCL:  outputGCLcommand(outfile, command);  break;
                     case Format::CPP:  outputCPPcommand(outfile, command);  break;
                     case Format::PY:   outputPYcommand(outfile, command);   break;
+
+                    default: break;
                 }
             }
             // Stop midi events are ignored
@@ -387,7 +395,9 @@ int main(int argc, char* argv[])
                     case Format::GBAS: outputGBAScommand(outfile, 0xD0); outputGBAScommand(outfile, LO_BYTE(segment)); outputGBAScommand(outfile, HI_BYTE(segment)); break;
                     case Format::GCL:  outputGCLcommand(outfile, 0xD0);  outputGCLcommand(outfile, LO_BYTE(segment));  outputGCLcommand(outfile, HI_BYTE(segment));  break;
                     case Format::CPP:  outputCPPcommand(outfile, 0xD0);  outputCPPcommand(outfile, LO_BYTE(segment));  outputCPPcommand(outfile, HI_BYTE(segment));  break;
-                    case Format::PY:   outputPYcommand(outfile, 0xD0);   outputPYcommand(outfile, LO_BYTE(segment));   outputPYcommand(outfile, HI_BYTE(segment));   break;                
+                    case Format::PY:   outputPYcommand(outfile, 0xD0);   outputPYcommand(outfile, LO_BYTE(segment));   outputPYcommand(outfile, HI_BYTE(segment));   break;
+
+                    default: break;
                 }
                 // Old segment footer
                 switch(format)
@@ -395,6 +405,8 @@ int main(int argc, char* argv[])
                     case Format::GCL: outputGCLfooter(outfile, midiName); break;
                     case Format::CPP: outputCPPfooter(outfile);           break;
                     case Format::PY:  outputPYfooter(outfile);            break;
+
+                    default: break;
                 }
                 outfile << std::endl << std::endl;
                 // New segment header
@@ -405,6 +417,8 @@ int main(int argc, char* argv[])
                     case Format::GCL:  outputGCLheader(outfile, segment);                                       break;
                     case Format::CPP:  outputCPPheader(outfile, midiName, segmentSize, segmentIndex);           break;
                     case Format::PY:   outputPYheader(outfile, midiName, segmentSize, segmentIndex);            break;
+
+                    default: break;
                 }
             }
         }
@@ -418,7 +432,9 @@ int main(int argc, char* argv[])
                 case Format::GBAS: outputGBAScommand(outfile, 0xD0); outputGBAScommand(outfile, LO_BYTE(startAddress)); outputGBAScommand(outfile, HI_BYTE(startAddress)); break;
                 case Format::GCL:  outputGCLcommand(outfile, 0xD0);  outputGCLcommand(outfile, LO_BYTE(startAddress));  outputGCLcommand(outfile, HI_BYTE(startAddress));  break;
                 case Format::CPP:  outputCPPcommand(outfile, 0xD0);  outputCPPcommand(outfile, LO_BYTE(startAddress));  outputCPPcommand(outfile, HI_BYTE(startAddress));  break;
-                case Format::PY:   outputPYcommand(outfile, 0xD0);   outputPYcommand(outfile, LO_BYTE(startAddress));   outputPYcommand(outfile, HI_BYTE(startAddress));   break;                
+                case Format::PY:   outputPYcommand(outfile, 0xD0);   outputPYcommand(outfile, LO_BYTE(startAddress));   outputPYcommand(outfile, HI_BYTE(startAddress));   break;
+
+                default: break;
             }
         }
     }
@@ -429,6 +445,8 @@ int main(int argc, char* argv[])
         case Format::GCL: outputGCLfooter(outfile, midiName); break;
         case Format::CPP: outputCPPfooter(outfile);           break;
         case Format::PY:  outputPYfooter(outfile);            break;
+
+        default: break;
     }
 
     fprintf(stderr, "Original size:%d  New size:%d  Original time:%.1lfms  New time:%.1lfms  Error:%.1lfms  Start Address:0x%04x  End Address:0x%04x\n",

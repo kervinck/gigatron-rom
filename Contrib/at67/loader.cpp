@@ -631,7 +631,7 @@ namespace Loader
 
     void sendCommandToGiga(char cmd, bool wait)
     {
-        UNREFERENCED_PARAM(wait);
+        UNREFERENCED_PARAMETER(wait);
 
         if(!openComPort(_configComPort)) return;
 
@@ -1420,6 +1420,8 @@ namespace Loader
                 }
             }
             break;
+
+            default: break;
         }
 
         return sending;
@@ -1479,6 +1481,8 @@ namespace Loader
                     }
                 }
                 break;
+
+                default: break;
             }
         }
     }
