@@ -180,10 +180,9 @@ class Program:
         elif op == '!!':   self.emitOp('SYS'); con = self.sysTicks(con)
         elif op == '!':
           if isinstance(con, int) and 0 <= con < 256:
-            # XXX Deprecate in gcl1? (Replace with i!!)
+            # XXX Deprecate in gcl1, replace with i!!
             self.emitOp('SYS'); con = self.sysTicks(con)
           else:
-            self.warning('CALLI is an experimental feature')
             self.emitOp('CALLI_DEVROM').emit(lo(con)); con = hi(con)
         elif op == '?':    self.emitOp('LUP');          #self.depr('i?', 'i??')
         elif op == '??':   self.emitOp('LUP')
