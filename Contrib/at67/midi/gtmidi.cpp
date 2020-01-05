@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <map>
 
+#include "../cpu.h"
 #include "../memory.h"
 #include "../expression.h"
 
@@ -122,7 +123,7 @@ void outputGCLcommand(std::ofstream& outfile, uint8_t command)
 }
 void outputGCLfooter(std::ofstream& outfile, const std::string& name)
 {
-    name;
+    UNREFERENCED_PARAMETER(name);
     outfile << std::endl << "]" << std::endl;
 }
 
