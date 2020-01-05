@@ -33,22 +33,34 @@
 #define ROM_VCPU_DISPATCH 0x0309
 
 #if defined(_WIN32)
-#define _EXIT_(f)   \
-    system("pause");\
-    exit(f);
+#define _EXIT_(f)       \
+    do                  \
+    {                   \
+        system("pause");\
+        exit(f);        \
+    }                   \
+    while(0)
 #else
-#define _EXIT_(f)  \
-    system("read");\
-    exit(f);
+#define _EXIT_(f)      \
+    do                 \
+    {                  \
+        system("read");\
+        exit(f);       \
+    }                  \
+    while(0)
 #endif
 
 #if defined(_WIN32)
 #define _PAUSE_     \
     system("pause");
 #else
-#define _PAUSE_                                          \
-    fprintf(stderr, "Press any key to continue . . .\n");\
-    system("read");
+#define _PAUSE_                                              \
+    do                                                       \
+    {                                                        \
+        fprintf(stderr, "Press any key to continue . . .\n");\
+        system("read");                                      \
+    }                                                        \
+    while(0)
 #endif
 
 // At least on Windows, _X is a constant defined somewhere before here
@@ -56,9 +68,7 @@
 #undef _X
 #endif
 
-#if !defined(UNREFERENCED_PARAMETER)
-#define UNREFERENCED_PARAMETER(x) (x)
-#endif
+#define UNREFERENCED_PARAMETER(P) (P)
 
 
 namespace Cpu
