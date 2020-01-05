@@ -58055,7 +58055,7 @@ Screen:       faaf 0002  ld   $02         ;| RAM segment address (high byte firs
               faba 00a7  ld   $a7
               fabb 0004  ld   $04
               fabc 002b  ld   $2b         ;020a STW
-              fabd 0022  ld   $22
+              fabd 0022  ld   $22         ;020a '_sysFn'
               fabe 00b4  ld   $b4         ;020c SYS
               fabf 00fd  ld   $fd
               fac0 002b  ld   $2b         ;020e STW
@@ -58141,7 +58141,7 @@ Screen:       faaf 0002  ld   $02         ;| RAM segment address (high byte firs
               fb10 00c0  ld   $c0
               fb11 0006  ld   $06
               fb12 002b  ld   $2b         ;025b STW
-              fb13 0022  ld   $22
+              fb13 0022  ld   $22         ;025b '_sysFn'
               fb14 00b4  ld   $b4         ;025d SYS
               fb15 00f2  ld   $f2
               fb16 0021  ld   $21         ;025f LDW

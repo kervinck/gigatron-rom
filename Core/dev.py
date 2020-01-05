@@ -5463,7 +5463,7 @@ def insertRomDir(name):
 #       Embedded programs must be given on the command line
 #-----------------------------------------------------------------------
 
-if pc()&255 > 251:                      # Don't start in a trampoline region
+if pc()&255 >= 251:                     # Don't start in a trampoline region
   align(0x100)
 
 for application in argv[1:]:
@@ -5611,7 +5611,7 @@ for application in argv[1:]:
     f.close()
     label(name)
     for i in range(len(raw)):
-      if pc()&255 < 251:
+      if i&255 < 251:
         ld(raw[i])
       elif pc()&255 == 251:
         trampoline()

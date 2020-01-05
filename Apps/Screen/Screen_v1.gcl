@@ -9,7 +9,7 @@ $0101 ShiftControl=
 
 [def
   [do
-    \SYS_Random_34 \sysFn: 34! q=
+    \SYS_Random_34 _sysFn= 34!! q=
     q>, 120- if>=0loop]
   128+ q>.
 
@@ -21,11 +21,11 @@ $0101 ShiftControl=
     {Fill buffer with next group of 4 bytes when needed}
     n [if<=0
       i [if=0
-        p 0? \sysArgs0.
-        p 1? \sysArgs1.
-        p 2? \sysArgs2.
+        p 0?? \sysArgs0.
+        p 1?? \sysArgs1.
+        p 2?? \sysArgs2.
         p 3+ p= 255& 249^ [if=0 p 7+ p=] {Advance read pointer}
-        \SYS_Unpack_56 \sysFn: 56! {Unpack to 4 bytes}
+        \SYS_Unpack_56 _sysFn= 56!! {Unpack to 4 bytes}
       ]
       n
     ]

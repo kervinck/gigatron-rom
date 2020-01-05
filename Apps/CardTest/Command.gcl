@@ -5,9 +5,8 @@
 |                                                                       |
 |       !!! Work in progress !!!                                        |
 |                                                                       |
-|       - Command line editing                                          |
-|       - Find command                                                  |
-|       - Load command                                                  |
+|       - Prompt with command line input                                |
+|       - Load GT1 command file into RAM                                |
 |       - Run command                                                   |
 |       - Error reporting                                               |
 |                                                                       |
@@ -31,21 +30,114 @@ _r7=$3e
 
 zpReset=$40                     {Start GCL vars from $40 instead of $30}
 
-{-----------------------------------------------------------------------+
-|                       RAM page 5                                      |
-+-----------------------------------------------------------------------}
-
-*=$503
-
-{ XXX: Check for being loaded by System.gcl }
+_StdOut=$300
+_OpenFile=$400
 
 {-----------------------------------------------------------------------+
-|} >_vLR++ [ret] {      RAM page $68                                    |
+|                                                                       |
+|       Command.gt1 bootstrapping                                       |
+|                                                                       |
 +-----------------------------------------------------------------------}
-*=$68a0
 
-{ PrintResult }
-[def
+{
+  It is System.gt1's job to load Command.gt1 into RAM. However, GT1 decoding
+  functionality is part of Command.gt1, not System.gt1... So we have a boot
+  strapping process to make it possible: System.gt1 only loads Command's first
+  sector and then transfers control. From there System.gt1 must decode itself
+  and load its remainder into RAM. The start address is $0503 so that after
+  loading the first sectore the boot strapping code is already in the right
+  spot, ready to take over.
+}
+
+*=$0503
+[
+  [do loop]                     {XXX Work in progress}
+
+  { XXX: Check for presence of System.gcl }
+  { XXX: Set top of memory }
+
+  \CommandLoop!
+]
+
+{-----------------------------------------------------------------------+
+|} >_vLR++ [ret] {      RAM page $7f                                    |
++-----------------------------------------------------------------------}
+*=$7fa0
+
+{-----------------------------------------------------------------------+
+|                                                                       |
+|       Main program                                                    |
+|                                                                       |
++-----------------------------------------------------------------------}
+
+_CommandLoop=*
+[do
+  { XXX: Print newline if needed }
+
+  { XXX: Print error message if needed }
+
+  { XXX: Clear error state }
+
+  { XXX: Print prompt }
+
+  _Prompt!
+
+  { XXX: Read line from stdin in $500, edit with DEL }
+
+  _ReadLine!
+
+  { XXX: Find file.GT1 on A: }
+
+  { XXX: Load first sector }
+
+  { XXX: If first segment is $503 }
+
+  { XXX: then load with own loader }
+
+  { XXX: else load with another loader }
+
+  { XXX: and execute }
+
+  loop]
+
+{-----------------------------------------------------------------------+
+|                       RAM page $7e                                    |
++-----------------------------------------------------------------------}
+*=$7ea0
+
+_Prompt=*
+[
+  $3e _StdOut!                  {'>'}
+  ret
+]
+
+{-----------------------------------------------------------------------+
+|                       RAM page $7d                                    |
++-----------------------------------------------------------------------}
+*=$7da0
+
+_ReadLine=*
+[
+  ret
+]
+
+{-----------------------------------------------------------------------+
+|                       RAM page $7c                                    |
++-----------------------------------------------------------------------}
+*=$7ca0
+
+_WaitKey=*
+[
+  ret
+]
+
+{-----------------------------------------------------------------------+
+|                       RAM page $7b                                    |
++-----------------------------------------------------------------------}
+*=$7ba0
+
+_PrintResult=*
+[
   {
     Print OK or FAILED
   }
@@ -55,18 +147,19 @@ zpReset=$40                     {Start GCL vars from $40 instead of $30}
     [def ``OK #10 #0]
   else
     [def ``FAILED #10 #0]
-  ] PrintText!
+  ] \PrintText!
   k
   pop ret
-] PrintResult=
+]
 
 {-----------------------------------------------------------------------+
-|} >_vLR++ [ret] {      RAM page $69                                    |
+|                       RAM page $7a                                    |
 +-----------------------------------------------------------------------}
-*=$69a0
+*=$7aa0
 
 { PrintText -- writes q }
-[def
+_PrintText=*
+[
   {
     Print text string, may include newline characters (#10)
     Returns 0
@@ -75,41 +168,10 @@ zpReset=$40                     {Start GCL vars from $40 instead of $30}
   q=
   [do                           {Loop over characters}
     q, if<>0                    {Next character to be printed, unless 0}
-    10^ [if<>0 10^ PrintChar!   {Print the character and advance cursor}
-         else      Newline!]    {Or go to next line}
+    _StdOut!                    {Send to terminal}
     <q++ loop]                  {Advance text pointer and loop}
   pop ret
-] PrintText=
-
-{-----------------------------------------------------------------------+
-|} >_vLR++ [ret] {      RAM page $6b                                    |
-+-----------------------------------------------------------------------}
-*=$6ba0
-
-{ PrintName }
-[def
-  {
-    Print 8.3 filename
-  }
-  push
-  p q=                          {Read pointer}
-  11 [do k=                     {Loop over 11 positions}
-    3^ [if=0
-      q, 32^ if<>0              {If there is an extension}
-      $2e PrintChar!]           {Period '.' before extension}
-    q, <q++
-    32^ [if<>0 32^              {Skip spaces (padding)}
-      SafePrintChar!]           {Print the next character}
-    k 1- if>0loop]
-  pop ret
-] PrintName=
-
-{-----------------------------------------------------------------------+
-|} >_vLR++ [ret] {      RAM page $72                                    |
-+-----------------------------------------------------------------------}
-*=$72a0
-
-[def `---------- #0] Buffer=    {String space for 32-bit unsigned decimal}
+]
 
 {-----------------------------------------------------------------------+
 |                                                                       |
@@ -118,12 +180,12 @@ zpReset=$40                     {Start GCL vars from $40 instead of $30}
 +-----------------------------------------------------------------------}
 
 {-----------------------------------------------------------------------+
-|} >_vLR++ [ret] {      RAM page $73                                    |
+|                       RAM page $79                                    |
 +-----------------------------------------------------------------------}
-*=$73a0
+*=$79a0
 
-{ LoadGt1 }
-[def
+_LoadGt1=*
+[
   {
     Load GT1 file into RAM and store start address in Address.
     See Docs/GT1-files.txt for details on GT1
@@ -131,47 +193,38 @@ zpReset=$40                     {Start GCL vars from $40 instead of $30}
   }
   push
 
-  [def `Loading` #0] PrintText!
-  PrintName!
-
-  OpenFile!                     {Prepare for reading}
+  \OpenFile!                    {Prepare for reading}
 
   { Read file contents byte by byte }
-  LoadByte!                     {Fetch first byte}
+  \LoadByte!                    {Fetch first byte}
 
   [do                           {Chunk copy loop}
     >Address.                   {High-address comes first}
-    LoadByte! <Address.         {Then the low address}
-    LoadByte!                   {Byte count (0 means 256)}
+    \LoadByte! <Address.        {Then the low address}
+    \LoadByte!                  {Byte count (0 means 256)}
     [do                         {Byte copy loop}
       \sysArgs5.                {Implicitly chops counter to 8 bits}
-      LoadByte! Address.        {Poke next byte into memory}
+      \LoadByte! Address.       {Poke next byte into memory}
       <Address++                {Advance write pointer in page}
       \sysArgs5, 1-             {Decrement counter}
       if<>0loop]
-    LoadByte!                   {Go to next block}
+    \LoadByte!                  {Go to next block}
     if<>0loop]
-  LoadByte! >Address.           {Load execution address}
-  LoadByte! <Address.
+  \LoadByte! >Address.          {Load execution address}
+  \LoadByte! <Address.
 
-  LoadByte! [if>=0 0 Address=]  {Expect EOF, clear Address when missing}
-
-  512 [do i=                    {Read tail of sector}
-    SendOnesToCard!
-    i 1- if>0loop]
-
-  DisableCard!
+  \LoadByte! [if>=0 0 Address=] {Expect EOF, clear Address when missing}
 
   pop ret
-] LoadGt1=
+]
 
 {-----------------------------------------------------------------------+
-|} >_vLR++ [ret] {      RAM page $74                                    |
+|                       RAM page $78                                    |
 +-----------------------------------------------------------------------}
-*=$74a0
+*=$78a0
 
-{ Execute }
-[def
+_Execute=*
+[
 
   120 [do i=                    {Restore video table}
     i+ $fe+ p=
@@ -180,27 +233,17 @@ zpReset=$40                     {Start GCL vars from $40 instead of $30}
   Address
   [do if=0loop]                 {Stop if not executable}
   call                          {Run...}
-] Execute=
+]
 
 {-----------------------------------------------------------------------+
-|} >_vLR++ [ret] {      RAM page $78                                    |
+|                       RAM page $77                                    |
 +-----------------------------------------------------------------------}
-*=$78a0
+*=$77a0
 
-{-----------------------------------------------------------------------+
-|                                                                       |
-|       Main program                                                    |
-|                                                                       |
-+-----------------------------------------------------------------------}
-
-[def #10 `Command #10 #0] PrintText!
-0 \frameCount.                  {Reset timer}
-InitCard!
-
-
-{-----------------------------------------------------------------------+
-|                       RAM page $7f                                    |
-+-----------------------------------------------------------------------}
+_LoadByte=*
+[
+  ret
+]
 
 {-----------------------------------------------------------------------+
 |                                                                       |
