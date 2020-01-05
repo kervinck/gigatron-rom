@@ -343,7 +343,7 @@ namespace Validater
                         if(HI_MASK(opcAddr) != HI_MASK(labAddr))
                         {
                             fprintf(stderr, "\nCompiler::checkBranchLabels() : *** Warning ***, %s is branching from 0x%04x to 0x%04x, for '%s' on line %d\n\n", opcode.c_str(), opcAddr, labAddr, code.c_str(), i + 1);
-                            _PAUSE_
+                            _PAUSE_;
                         }
                     }
                     // Check internal label
@@ -359,7 +359,7 @@ namespace Validater
                             if(HI_MASK(opcAddr) != HI_MASK(labAddr))
                             {
                                 fprintf(stderr, "\nCompiler::checkBranchLabels() : *** Warning ***, %s is branching from 0x%04x to 0x%04x, for '%s' on line %d\n\n", opcode.c_str(), opcAddr, labAddr, code.c_str(), i + 1);
-                                _PAUSE_
+                                _PAUSE_;
                             }
                         }
                     }

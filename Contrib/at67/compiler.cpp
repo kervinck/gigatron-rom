@@ -1688,7 +1688,7 @@ namespace Compiler
                         if(varName.size()) fprintf(stderr, "\nCompiler::factor() : Found an unknown symbol '%s' : in '%s' on line %d\n\n", varName.c_str(), 
                                                                                                                                            _codeLines[_currentCodeLineIndex]._code.c_str(),
                                                                                                                                            Expression::getLineNumber() + 1);
-                        _PAUSE_
+                        _PAUSE_;
                     }
                 }
                 break;
