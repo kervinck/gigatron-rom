@@ -719,7 +719,7 @@ namespace Compiler
 
     int createVcpuAsm(const std::string& opcodeStr, const std::string& operandStr, int codeLineIdx, std::string& line)
     {
-        UNREFERENCED_PARAM(codeLineIdx);
+        UNREFERENCED_PARAMETER(codeLineIdx);
 
         int vasmSize = 0;
         std::string opcode = std::string(opcodeStr);
@@ -772,7 +772,7 @@ namespace Compiler
     // Generic LDW expression parser
     uint32_t parseArrayVarExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, Expression::Numeric& numeric)
     {
-        UNREFERENCED_PARAM(codeLine);
+        UNREFERENCED_PARAMETER(codeLine);
 
         int varIndex, constIndex, strIndex;
         Expression::parse(expression, codeLineIndex, numeric);
@@ -824,6 +824,8 @@ namespace Compiler
                 case Expression::Int16Low:  emitVcpuAsm("POKE", "register1", false, codeLineIndex);                                                         break;
                 case Expression::Int16High: emitVcpuAsm("INC",  "register1", false, codeLineIndex); emitVcpuAsm("POKE", "register1", false, codeLineIndex); break;
                 case Expression::Int16Both: emitVcpuAsm("DOKE", "register1", false, codeLineIndex);                                                         break;
+
+                default: break;
             }
         }
         else
@@ -861,6 +863,8 @@ namespace Compiler
                 case Expression::Int16Low:  emitVcpuAsm("POKE", "register1", false, codeLineIndex);                                                         break;
                 case Expression::Int16High: emitVcpuAsm("INC",  "register1", false, codeLineIndex); emitVcpuAsm("POKE", "register1", false, codeLineIndex); break;
                 case Expression::Int16Both: emitVcpuAsm("DOKE", "register1", false, codeLineIndex);                                                         break;
+
+                default: break;
             }
 #endif
         }
@@ -964,7 +968,7 @@ namespace Compiler
     // Generic expression parser
     OperandType parseExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, std::string& operand, Expression::Numeric& numeric)
     {
-        UNREFERENCED_PARAM(codeLine);
+        UNREFERENCED_PARAMETER(codeLine);
 
         int varIndex, constIndex, strIndex;
         Expression::parse(expression, codeLineIndex, numeric);
@@ -989,7 +993,7 @@ namespace Compiler
     // LDW expression parser
     uint32_t parseExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, Expression::Numeric& numeric)
     {
-        UNREFERENCED_PARAM(codeLine);
+        UNREFERENCED_PARAMETER(codeLine);
 
         int varIndex, constIndex, strIndex;
         Expression::parse(expression, codeLineIndex, numeric);
@@ -1021,7 +1025,7 @@ namespace Compiler
     // Handle expression, (use this when expression has already been parsed)
     uint32_t handleExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, Expression::Numeric numeric)
     {
-        UNREFERENCED_PARAM(codeLine);
+        UNREFERENCED_PARAMETER(codeLine);
 
         int varIndex, constIndex, strIndex;
         uint32_t expressionType = isExpression(expression, varIndex, constIndex, strIndex);
@@ -1274,8 +1278,8 @@ namespace Compiler
     // Create string and advance string pointer
     int getOrCreateString(CodeLine& codeLine, int codeLineIndex, const std::string& str, std::string& name, uint16_t& address, uint8_t maxSize, bool constString)
     {
-        UNREFERENCED_PARAM(codeLine);
-        UNREFERENCED_PARAM(codeLineIndex);
+        UNREFERENCED_PARAMETER(codeLine);
+        UNREFERENCED_PARAMETER(codeLineIndex);
 
         int index = -1;
 
@@ -1433,7 +1437,7 @@ namespace Compiler
 
     Expression::Numeric getString(const Expression::Numeric& numeric)
     {
-        UNREFERENCED_PARAM(numeric);
+        UNREFERENCED_PARAMETER(numeric);
 
         // First quote
         get(false);
@@ -1899,6 +1903,8 @@ namespace Compiler
             {
                 case VarInt16: varType = Expression::IntVar; name = _integerVars[codeLine._varIndex]._name;                     break;
                 case VarStr:   varType = Expression::StrVar; name = _stringVars[codeLine._varIndex]._name; stringResult = true; break;
+
+                default: break;
             }
             
             // Output variable, (functions can access this variable within parse())
@@ -2276,6 +2282,8 @@ namespace Compiler
                     _output.push_back(dbString + "\n");
                 }
                 break;
+
+                default: break;
             }
         }
 

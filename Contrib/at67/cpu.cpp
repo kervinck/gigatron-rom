@@ -431,6 +431,8 @@ namespace Cpu
             case VideoB:  patchScanlineModeVideoB();                            break;
             case VideoC:  patchScanlineModeVideoC();                            break;
             case VideoBC: patchScanlineModeVideoB(); patchScanlineModeVideoC(); break;
+
+            default: break;
         }
     }
 
@@ -901,7 +903,7 @@ namespace Cpu
     // Counts maximum and used vCPU instruction slots available per frame
     void vCpuUsage(const State& S, const State& T)
     {
-        UNREFERENCED_PARAM(T);
+        UNREFERENCED_PARAMETER(T);
 
         // All ROM's so far v1 through v4 use the same vCPU dispatch address!
         if(S._PC == ROM_VCPU_DISPATCH)

@@ -142,6 +142,8 @@ namespace Terminal
                         Graphics::setWidthHeight(event.window.data1, event.window.data2);
                     }
                     break;
+
+                    default: break;
                 }
             }
             break;
@@ -154,6 +156,8 @@ namespace Terminal
                 Cpu::shutdown();
                 exit(0);
             }
+
+            default: break;
         }
     }
 
@@ -232,7 +236,7 @@ namespace Terminal
 
     void handleTerminalMouseButtonDown(const SDL_Event& event, const Editor::MouseState& mouseState)
     {
-        UNREFERENCED_PARAM(event);
+        UNREFERENCED_PARAMETER(event);
 
         if(mouseState._state == SDL_BUTTON_LEFT) _terminalTextSelected.clear();
 
@@ -249,8 +253,8 @@ namespace Terminal
 
     void handleTerminalMouseButtonUp(const SDL_Event& event, const Editor::MouseState& mouseState)
     {
-        UNREFERENCED_PARAM(event);
-        UNREFERENCED_PARAM(mouseState);
+        UNREFERENCED_PARAMETER(event);
+        UNREFERENCED_PARAMETER(mouseState);
 
         switch(_terminalMenuIdx)
         {
@@ -401,6 +405,8 @@ namespace Terminal
                 case SDLK_PAGEDOWN: _terminalScrollOffset += _terminalScreenMaxIndex; break;
                 case SDLK_HOME:     _terminalScrollOffset = 0;                        break;
                 case SDLK_END:      _terminalScrollOffset = _terminalScrollIndex;     break;
+
+                default: break;
             }
 
             if(!_terminalModeGiga)
@@ -427,6 +433,7 @@ namespace Terminal
                     case SDLK_q: Loader::sendCharGiga('q');Loader::sendCharGiga('\n'); break;
                     case SDLK_e: Loader::sendCharGiga('e');Loader::sendCharGiga('\n'); break;
 #endif
+                    default: break;
                 }
 #endif
 
@@ -453,8 +460,11 @@ namespace Terminal
                 case SDLK_LEFT:   Loader::sendCharGiga(27); Loader::sendCharGiga('['); Loader::sendCharGiga('D');                                                  break;
                 case SDLK_TAB:    Loader::sendCharGiga(char(keyCode));                                                                                             break;
                 case SDLK_DELETE: Loader::sendCharGiga(char(keyCode)); if(_terminalCommandLine.size()) _terminalCommandLine.erase(_terminalCommandLine.end() - 1); break;
+                
                 case '\r':
                 case '\n':        Loader::sendCharGiga(char(keyCode)); _terminalCommandLine.clear();                                                               break;
+
+                default: break;
             }
 
             // CTRL C for BASIC, (shared with copy to clipboard)
@@ -559,6 +569,8 @@ namespace Terminal
                 case SDL_TEXTINPUT:       handleTerminalKey(event);                         break;
                 case SDL_KEYDOWN:         handleTerminalKeyDown(keyCode, keyMod);           break;
                 case SDL_KEYUP:           handleTerminalKeyUp(keyCode, keyMod);             break;
+
+                default: break;
             }
         }
 
@@ -597,6 +609,8 @@ namespace Terminal
         {
             case SDL_BUTTON_LEFT: handleTerminalMouseLeftButtonDown(mouseState._x, mouseState._y);  break;
             case SDL_BUTTON_X1:   handleTerminalMouseRightButtonDown(mouseState._x, mouseState._y); break;
+
+            default: break;
         }
     }
 

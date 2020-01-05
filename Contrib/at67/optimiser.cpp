@@ -700,6 +700,8 @@ RESTART_OPTIMISE:
                                     adjustVasmAddresses(i, firstLine + 1, -6);
                                 }
                                 break;
+
+                                default: break;
                             }
                         }
 
@@ -938,6 +940,8 @@ RESTART_OPTIMISE:
                                 adjustVasmAddresses(i, firstLine + 1, -2);
                             }
                             break;
+
+                            default: break;
                         }
                     }
 

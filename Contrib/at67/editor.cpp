@@ -602,8 +602,9 @@ namespace Editor
         switch(_editorMode)
         {
             case Hex:  _hexBaseAddress = (_hexBaseAddress - HEX_CHARS_X*numRows) & (Memory::getSizeRAM()-1); break;
-            case Load: if((_fileEntriesIndex -= numRows) < 0) _fileEntriesIndex = 0;                                    break;
-            case Rom:  if((_romEntriesIndex -= numRows) < 0) _romEntriesIndex = 0;                                      break;
+            case Load: if((_fileEntriesIndex -= numRows) < 0) _fileEntriesIndex = 0;                         break;
+            case Rom:  if((_romEntriesIndex -= numRows) < 0) _romEntriesIndex = 0;                           break;
+
             case Dasm: 
             {
                 if(numRows == 1)
@@ -630,6 +631,8 @@ namespace Editor
                 }
             }
             break;
+
+            default: break;
         }
     }
 
@@ -638,6 +641,7 @@ namespace Editor
         switch(_editorMode)
         {
             case Hex:  _hexBaseAddress = (_hexBaseAddress + HEX_CHARS_X*numRows) & (Memory::getSizeRAM()-1); break;
+
             case Load:
             {
                 if(_fileEntries.size() > HEX_CHARS_Y)
@@ -648,6 +652,7 @@ namespace Editor
                 }
             }
             break;
+
             case Rom:
             {
                 if(_romEntries.size() > HEX_CHARS_Y)
@@ -658,6 +663,7 @@ namespace Editor
                 }
             }
             break;
+
             case Dasm:
             {
                 if(numRows == 1)
@@ -684,6 +690,8 @@ namespace Editor
                 }
             }
             break;
+
+            default: break;
         }
     }
 
@@ -710,6 +718,8 @@ namespace Editor
             {
                 case File: Loader::setUploadTarget(Loader::Emulator); break;
                 case Dir: changeBrowseDirectory(); break;
+
+                default: break;
             }
         }
         else if(_editorMode == Rom)
@@ -762,6 +772,8 @@ namespace Editor
             switch(fileType)
             {
                 case File: Loader::setUploadTarget(Loader::Hardware); break;
+
+                default: break;
             }
         }
     }
@@ -907,6 +919,8 @@ namespace Editor
                             }
                         }
                         break;
+
+                        default: break;
                     }
                 }
                 break;
@@ -972,6 +986,8 @@ namespace Editor
                 case SDLK_DOWN:     (_keyboardMode == HwPS2) ? Loader::sendCommandToGiga(HW_PS2_DOWN,   true) : Cpu::setIN(Cpu::getIN() & ~INPUT_DOWN  ); return true;
                 case SDLK_PAGEUP:   (_keyboardMode == HwPS2) ? Loader::sendCommandToGiga(HW_PS2_START,  true) : Cpu::setIN(Cpu::getIN() & ~INPUT_START ); return true;
                 case SDLK_PAGEDOWN: (_keyboardMode == HwPS2) ? Loader::sendCommandToGiga(HW_PS2_SELECT, true) : Cpu::setIN(Cpu::getIN() & ~INPUT_SELECT); return true;
+
+                default: break;
             }
 
             if((_sdlKeyScanCode >= 0  &&  _sdlKeyScanCode <= 31) ||  _sdlKeyScanCode == 127  ||  _sdlKeyScanCode == 'c')
@@ -991,6 +1007,8 @@ namespace Editor
                             return true;
                         }
                     }
+
+                    default: break;
                 }
             }
 
@@ -1166,6 +1184,8 @@ namespace Editor
                 case SDLK_DOWN:     Cpu::setIN(0xFF); return true;
                 case SDLK_PAGEUP:   Cpu::setIN(0xFF); return true;
                 case SDLK_PAGEDOWN: Cpu::setIN(0xFF); return true;
+
+                default: break;
             }
 
             if((_sdlKeyScanCode >= 0  &&  _sdlKeyScanCode <= 31) ||  _sdlKeyScanCode == 127  ||  _sdlKeyScanCode == 'c')
@@ -1178,6 +1198,8 @@ namespace Editor
                     case SDLK_DELETE:    Cpu::setIN(0xFF); return true;
 
                     case 'c': if(_sdlKeyModifier == KMOD_LCTRL) Cpu::setIN(0xFF); return true;
+
+                    default: break;
                 }
             }
 
@@ -1360,6 +1382,8 @@ namespace Editor
                         Graphics::setWidthHeight(event.window.data1, event.window.data2);
                     }
                     break;
+
+                    default: break;
                 }
             }
             break;
@@ -1369,6 +1393,8 @@ namespace Editor
                 Cpu::shutdown();
                 exit(0);
             }
+
+            default: break;
         }
     }
 
@@ -1418,6 +1444,8 @@ namespace Editor
                         if(Cpu::getRAM(_singleStepAddress) != _singleStepNtv) singleStep(nPC);
                     }
                     break;
+
+                    default: break;
                 }
             }
             // vCPU debugging, (this code can potentially run for every Native instruction, for efficiency we check vPC so this code only runs for each vCPU instruction)
@@ -1453,6 +1481,8 @@ namespace Editor
                         if(Cpu::getRAM(_singleStepAddress) != _singleStepVpc) singleStep(vPC);
                     }
                     break;
+
+                    default: break;
                 }
 
                 clocks = 0;
@@ -1545,6 +1575,8 @@ namespace Editor
                         }
                     }
                     break;
+
+                    default: break;
                 }
             }
         }
@@ -1587,6 +1619,8 @@ namespace Editor
                 case SDL_TEXTINPUT:  handlePS2key(event);     break;
                 case SDL_KEYDOWN:    handleKeyDown();         break;
                 case SDL_KEYUP:      handleKeyUp();           break;
+
+                default: break;
             }
         }
 

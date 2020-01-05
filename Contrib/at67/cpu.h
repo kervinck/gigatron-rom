@@ -52,11 +52,13 @@
 #endif
 
 // At least on Windows, _X is a constant defined somewhere before here
-#ifdef _X
+#if defined(_X)
 #undef _X
 #endif
 
-#define UNREFERENCED_PARAM(x) (x)
+#if !defined(UNREFERENCED_PARAMETER)
+#define UNREFERENCED_PARAMETER(x) (x)
+#endif
 
 
 namespace Cpu
