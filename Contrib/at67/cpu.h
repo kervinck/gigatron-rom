@@ -41,12 +41,12 @@
     }                   \
     while(0)
 #else
-#define _EXIT_(f)      \
-    do                 \
-    {                  \
-        system("read");\
-        exit(f);       \
-    }                  \
+#define _EXIT_(f)                                                    \
+    do                                                               \
+    {                                                                \
+        system("read -n1 -r -p \"Press any key to continue . . .\"");\
+        exit(f);                                                     \
+    }                                                                \
     while(0)
 #endif
 
@@ -54,12 +54,11 @@
 #define _PAUSE_     \
     system("pause");
 #else
-#define _PAUSE_                                              \
-    do                                                       \
-    {                                                        \
-        fprintf(stderr, "Press any key to continue . . .\n");\
-        system("read");                                      \
-    }                                                        \
+#define _PAUSE_                                                      \
+    do                                                               \
+    {                                                                \
+        system("read -n1 -r -p \"Press any key to continue . . .\"");\
+    }                                                                \
     while(0)
 #endif
 
