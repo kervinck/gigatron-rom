@@ -4,5 +4,18 @@
  "videoTop_DEVROM"            : "0x01f9",
  "CMPHS_DEVROM"               : "0x031f",
  "CALLI_DEVROM"               : "0x0385",
- "CMPHU_DEVROM"               : "0x0397"
+ "CMPHU_DEVROM"               : "0x0397",
+
+ "r0"                         : "0x30",
+ "r1"                         : "0x32",
+ "r2"                         : "0x34",
+ "r3"                         : "0x36",
+ "r4"                         : "0x38",
+ "r5"                         : "0x3a",
+ "r6"                         : "0x3c",
+ "r7"                         : "0x3e",
+ "dev0"                       : "0x40",
+ "dev1"                       : "0x42",
+ "dev2"                       : "0x44",
+ "devA"                       : "0x46"
 }

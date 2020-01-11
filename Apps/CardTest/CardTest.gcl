@@ -1100,7 +1100,7 @@ AddOffset=
         PrintVolumeLabel!       {Print label}
       else
         PrintDirEntry!          {Print entry}
-        IsBootGt1!              {Are we looking for this file?}
+        IsSystemGt1!            {Are we looking for this file?}
         [if=0                   {File found}
           LoadGt1!              {Load file}
           Execute!              {Execute otherwise}
@@ -1242,19 +1242,19 @@ ValueToDecimal=
 +-----------------------------------------------------------------------}
 *=$74a0
 
-{ IsBootGt1 }
+{ IsSystemGt1 }
 [def
   {
     Check if directrory entry p is BOOT.GT1
     Returns 0 when name matches, non-zero otherwise
   }
-  [def `BOOT````GT1 #0] q=      {String to match}
+  [def `SYSTEM``GT1 #0] q=      {String to match}
   p i=
   [do
     q, <q++ if<>0 j=            {Compare until nul terminator}
     i, <i++ j^ if=0loop]        {Loop while equal}
   ret
-] IsBootGt1=
+] IsSystemGt1=
 
 { Execute }
 [def

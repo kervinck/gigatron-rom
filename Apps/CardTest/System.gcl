@@ -37,9 +37,6 @@ gcl0x
   XXX  https://cdn.hackaday.io/images/1744261554112919559.png
   XXX  SYS extension for copying to and from object variables
   XXX  LoadtGt1: proper closing of last sector
-  XXX  Compliancy: Byte addressing for V2 cards when CCS bit in CMD58 OCR is 0
-  XXX  Compliancy: MMC v3 card detection with CMD1
-  XXX  Compliancy: Don't set block size with CMD16 if CCS bit in OCS is 1
   XXX  Compliancy: Reconsider pull-down resistors on MISO lines
                    Some cards [30%?] [MMC?] have MISO in open collector during
                    init" But if this is only during CMD0, we can live with it...
@@ -58,78 +55,88 @@ gcl0x
 |                                                                       |
 +-----------------------------------------------------------------------}
 
-_r0=$30                         {First 16 bytes act as register set}
-_r1=$32
-_r2=$34
-_r3=$36
-_r4=$38
-_r5=$3a
-_r6=$3c
-_r7=$3e
-
-zpReset=$40                     {Start GCL vars from $40 instead of $30}
+zpReset=$c0                     {Start GCL vars from $c0 instead of $30}
 
 _TermOut=$300
 _OpenFile=$400
-
 _Buffer=$500                    {General purpose 512-byte buffer}
+_ClusterList=$7fa0              {Room for 96/4 = 24 clusters}
 
 {
-        XXX These must move into and object
+        XXX These must move into an object
+
+        Registers
+        ---------
+        ValueL,H        XXXX    32-bit accumulator
+        OffsetL,H       XXXX    Offset to be added to ValueL,H
+
+
+        Sector reader
+        =============
+
         Variable        Bytes   Description
         --------        -----   -----------
         ClusterBaseL,H  ----    Cluster origin (hypothetical cluster 0)
-        FatBaseL,H      ----    XXX
-        ValueL,H        XXXX    32-bit accumulator
-        OffsetL,H       XXXX    Offset to be added to ValueL,H
         SectorL,H       XXXX    Block number of last sector
         CurrentDirL,H   ----    First cluster of current directory
         ClusterSize     X       Sectors per cluster: 1, 2, ... 128
         ClusterMask     X       XXX ClusterSize - 1
 
+        File reader
+        ===========
+
+        Variable        Bytes   Description
+        --------        -----   -----------
+        FatBaseL,H      ----    XXX
         FileSizeL,H     ????    File size from directory entry
         FilePosL,H      --XX    Current R/W position in file: 0..FileSize
-
-        Memory usage
-        ------------
-        $500  $6ff              Buffer for reading FAT sectors
-        $58a0 $xxff             Code not needed for GT1 reading
-                                Eg. detecting the card settings
-        $xxa0 $78ff             GT1 reading core
-        $7fa0 ...               Cluster list
 }
 
 {-----------------------------------------------------------------------+
 |                       RAM page 2                                      |
 +-----------------------------------------------------------------------}
-*=$200
 
 [
   \romType, \romTypeValue_DEVROM-
   [if<0                         {Version mismatch}
-    [def                        {Give error using just ROM v1 features}
-      _r0= [do _r0,             {Fetch next char}
-        [do if=0loop]           {Loop forever at end of message}
-        \TermOut! <_r0++ loop]  {Print char and continue}
-    ] _r0=
-    [def #10 `Need`DEVROM #0] _r0!
+    \CharOut _r0=               {Give error using just ROM v1 features}
+    [def push _r0!] _r1=
+    [def #10 `Need`DEVROM #0] _r1!
   ]
 
-  [def #10 `GTOS`DEV`32K #0] _r0=
-  [do _r0, if<>0 \TermOut! <_r0++ loop]
+  \TermOut _dev1=               {Closure uses CALLI_DEVROM}
+  [def #10 `GTOS`DEV`32K #0] _dev1!
 
-  [do loop]                     { XXX Work in progress }
+  {
+     Reads MBR and finds the primary partition's start block
+     Check if it is FAT32
+  }
 
-  \InitFat32!                   {Prepare reading FAT32 structures}
-  \ReadDirectory!               {Read root directory}
-]
+  0 SectorL= SectorH=           {First sector on device}
+  \ReadSector!                  {Read MBR}
 
-_InitFat32=*
-[
-  push
+  $6fe deek k=                  {Fetch signature}
+  $aa55 k^                      {Check signature}
 
-  \ReadMBR!                     {Master Boot Record}
-  [if=0 \ReadVolumeId!]         {Read first block of FAT partition}
+  [if=0
+    $6c6 deek SectorL=          {Primary partition's first sector on disk}
+    $6c8 deek SectorH=
+
+    $6c2 peek k=                {Filesystem type code}
+    $0b k^ [if<>0 $07^]         {Accepts $0b and $0c}
+                                {XXX In case of $0b: check for CHS vs LBA ???}
+  ]
+
+  {
+    Reads the first block of the partition. Mind that, despite it's name,
+    this block doesn't hold the volume label: that is stored in the root
+    directory instead.
+  }
+
+  \ReadSector!                  {SectorL,H as set by ReadMBR}
+
+  $50b deek k=                  {Confirm expected sector length}
+  $200 k^                       {Only $200 is ok}
 
   {
     Calculate cluster base and set current directory to root
@@ -170,7 +177,8 @@ _InitFat32=*
   $52c deek CurrentDirL=
   $52e deek CurrentDirH=
 
-  pop ret
+  \ReadDirectory!               {Read root directory}
+  [do loop]
 ]
 
 {-----------------------------------------------------------------------+
@@ -190,42 +198,46 @@ _TermOut=*
   { Function }
   push \CharOut!
   { Variables }
-  ##0                           {Pos}
+  ##$7802                       {Pos}
 ]
 
-{ CharOut -- writes i j _sysFn _sysArgs[01245] }
+{ CharOut -- writes _r1 _sysFn _sysArgs[01245] }
 
 _CharOut=*
 [
-  %-2=                          {Park character in stack area}
+  _r0=
+  [do _r0, if<>0
 
   10^ [if<>0                    {Test for CR}
     _vLR, 155- if>0 0]          { or line wrap}
   [if=0
 
     { Clear new line first }
-    $3f20 _sysArgs0=            {White on blue}
-    $11f deek 255| 255^ _vLR:   {Go to start of next line}
-    _sysArgs4=                  {Set screen position}
     \sysArgs2.                  {Set all-zero output pattern}
+    $20 \sysArgs0.              {Blue}
+    $e0+ _r1=                   {Video table}
+    255+ deek 255| 255^         {Go to what is now still the top text row}
+    _sysArgs4=                  {Start of line for clearing}
+    2+ _vLR:                    {Indent by 2 pixels for text}
+    \SYS_VDrawBits_134 _sysFn=  {SYS call to draw 8 pixels vertically}
     [do
-      \SYS_VDrawBits_134        {SYS call to draw 8 pixels vertically}
-      _sysFn= 134!!
+      134!!
       <_sysArgs4++              {Step 1 pixel right}
       \sysArgs4, 160^           {Test for end of line}
       if<>0loop]
 
     { Then scroll up by modifying videoTable }
-    $01 >i. 208                 {Last entry at $100+238, minus 30}
     [do
-      30+ <i.
-      i, 120- [if<0 128+
-               else 24+] i.     {Rotate by 8 in 24..127 range}
-      <i, 32- if>0loop]         {Move to previous entry in video table}
+      _r1 16+ _r2=              {_r2 looks 8 entries ahead of _r1}
+      peek \sysArgs0.           {Swap scanlines}
+      _r1, _r2.
+      \sysArgs0, _r1.
+      <_r1++ <_r1++             {Advance to next entry in video table}
+      <_r1, 224^ if<>0loop]     {Until all done}
   ]
 
   { Draw ASCII character (>=32) on screen using the 5x8 pixel built-in font }
-  %-2 32-
+  _r0, 32-
 
 { XXX TODO
   32- [if<0 127 else 96-        {Map any non-ASCII to block symbol 127}
@@ -233,20 +245,22 @@ _CharOut=*
 
   [if>=0
     50-                         {Map ASCII code to offset in font table}
-    [if<0 50+ i= &_font32up     {First page for ASCII 32..81}
-     else     i= &_font82up] j= {Second page is ASCII 82..127}
-    i 2<< i+                    {Multiply by 5}
-    j+ j=                       {Add page address to reach bitmap data}
+    [if<0 50+ _r1= &_font32up   {First page for ASCII 32..81}
+     else _r1= &_font82up] _r2= {Second page is ASCII 82..127}
+    _r1 2<< _r1+                {Multiply by 5}
+    _r2+ _r2=                   {Add page address to reach bitmap data}
     $3f20 _sysArgs0=            {White on blue}
     _vLR; _sysArgs4=            {Position of character}
     6+ _vLR:                    {Advance position by 6 pixels for next call}
     \SYS_VDrawBits_134 _sysFn=  {Prepare SYS calls}
-    5 [do i=                    {Loop to draw 5 vertical slices of 8 pixels}
-      j 0? \sysArgs2.           {Get byte from ROM using `LUP 0' instruction}
+    5 [do _r1=                  {Loop to draw 5 vertical slices of 8 pixels}
+      _r2 0?? \sysArgs2.        {Get byte from ROM using `LUP 0' instruction}
       134!!                     {Invoke SYS function to draw 8 vertical pixels}
-      <j++ <_sysArgs4++         {Advance to next slice in ROM and on screen}
-      i 1- if>0loop]            {Looping}
+      <_r2++ <_sysArgs4++       {Advance to next slice in ROM and on screen}
+      _r1 1- if>0loop]          {Looping}
   ]
+
+  <_r0++ loop]
 
   pop ret                       {Closure return}
 ]
@@ -267,29 +281,27 @@ _OpenFile=*
   p $1e+ deek FileSizeH=
   p $1a+ deek ValueL=           {First cluster for file}
   p $14+ deek ValueH=
+{
   \ReadClusterChain!
+}
   \ClusterToSector!
   pop ret
 ]
 
-{-----------------------------------------------------------------------+
-|                                                                       |
-|       Memory card section                                             |
-|                                                                       |
-+-----------------------------------------------------------------------}
-
-{-----------------------------------------------------------------------+
-|                       RAM page $5c                                    |
-+-----------------------------------------------------------------------}
-*=$5ca0
-
-_CMD17=*
+_ReadSector=*
 [
+  {
+    Read sector from card into memory (clobbers ValueL,H and OffsetL,H)
+  }
+  push
+
+  \SYS_ExpanderControl_v4_40    {SYS function}
+  _sysFn= $8078 40!!            {Enable SPI0, keep MOSI high, bank=1}
+
   {
     CMD17 READ_SINGLE_BLOCK
     Reads a block of the size selected by the SET_BLOCKLEN command
   }
-  push
 
   [def #$51 #0 #0 #0 #0 #0]     {CMD17}
   p= q=
@@ -310,8 +322,27 @@ _CMD17=*
       {\sysArgs6, $fe^          {Only $fe is OK}}
   ]
 
+  \Buffer q=                    {Setup write pointer}
+  512 [do k=                    {Number of bytes to read}
+    \SendOnesToCard!            {XXX Read directly into buffer}
+    q.                          {Store byte in buffer}
+    q 1+ q=                     {Advance write pointer, cross page boundaries}
+    k 1- if>0loop]              {Looping}
+
+  \SendOnesToCard!              {Read 16-bit checksum}
+  \SendOnesToCard!
+
+  \SYS_ExpanderControl_v4_40    {SYS function}
+  _sysFn= $807c 40!!            {Disable SPI0, keep MOSI high, bank=1}
+
   pop ret
 ]
+
+{-----------------------------------------------------------------------+
+|                                                                       |
+|       Memory card section                                             |
+|                                                                       |
++-----------------------------------------------------------------------}
 
 {-----------------------------------------------------------------------+
 |                       RAM page $5d                                    |
@@ -333,20 +364,6 @@ _CMD17=*
         A15     MOSI
 }
 
-_EnableCard=*
-[
-  \SYS_ExpanderControl_v4_40    {SYS function}
-  _sysFn= $8078 40!!            {Enable SPI0, keep MOSI high, bank=1}
-  ret
-]
-
-_DisableCard=*
-[
-  \SYS_ExpanderControl_v4_40    {SYS function}
-  _sysFn= $807c 40!!            {Disable SPI0, keep MOSI high, bank=1}
-  ret
-]
-
 _SendOnesToCard=*
 [
   255 \sysArgs6.                {Place byte in exchange buffer}
@@ -357,11 +374,6 @@ _SendOnesToCard=*
   \sysArgs6,                    {Reply byte}
   ret
 ]
-
-{-----------------------------------------------------------------------+
-|                       RAM page $5e                                    |
-+-----------------------------------------------------------------------}
-*=$5ea0
 
 {-----------------------------------------------------------------------+
 |                       RAM page $5f                                    |
@@ -410,148 +422,15 @@ _WaitForCardReply=*
     if<>0                       {Break out when valid message detected}
       i 1- if>0loop]            {Or when loop counter exhausted}
 
-  {32 p!                        {Space}}
-  \sysArgs6, CardReply=         {Store reply from card}
-  CardReply                     {As return value}
+  \sysArgs6,                    {Return reply from card}
   pop ret
 ]
-
-{-----------------------------------------------------------------------+
-|                       RAM page $60                                    |
-+-----------------------------------------------------------------------}
-*=$60a0
 
 {-----------------------------------------------------------------------+
 |                                                                       |
 |       FAT32 section                                                   |
 |                                                                       |
 +-----------------------------------------------------------------------}
-
-_ReadVolumeId=*
-[
-  {
-    Reads the first block of the partition. Mind that, despite it's name,
-    this block doesn't hold the volume label: that is stored in the root
-    directory instead.
-  }
-  push
-
-  \ReadSector!                  {SectorL,H as set by ReadMBR}
-
-  \Buffer $b+ deek k=           {Confirm expected sector length}
-  $200 k^                       {Only $200 is ok}
-
-  pop ret
-]
-
-_ReadMBR=*
-[
-  {
-     Reads MBR and finds the primary partition's start block
-     Check if it is FAT32
-  }
-  push
-
-  0 SectorL= SectorH=           {First sector on device}
-  \ReadSector!                  {Read MBR}
-
-  $6fe deek k=                  {Fetch signature}
-  $aa55 k^                      {Check signature}
-
-  [if=0
-    $6c6 deek SectorL=          {Primary partition's first sector on disk}
-    $6c8 deek SectorH=
-
-    $6c2 peek k=                {Filesystem type code}
-    $0b k^ [if<>0 $07^]         {Accepts $0b and $0c}
-                                {XXX In case of $0b: check for CHS vs LBA ???}
-  ]
-
-  pop ret
-]
-
-{-----------------------------------------------------------------------+
-|                       RAM page $62                                    |
-+-----------------------------------------------------------------------}
-*=$62a0
-
-{-----------------------------------------------------------------------+
-|                       RAM page $63                                    |
-+-----------------------------------------------------------------------}
-*=$63a0
-
-_OpenSector=*
-[
-  {
-    Tell card to read sector, but don't process the data yet
-  }
-  push
-
-  \EnableCard!
-
-  \CMD17!                       {Request block of data}
-
-  pop ret
-]
-
-_ReadSector=*
-[
-  {
-    Read sector from card into memory (clobbers ValueL,H and OffsetL,H)
-  }
-  push
-
-  \OpenSector!                  {Start data stream}
-
-  \Buffer q=                    {Setup write pointer}
-  512 [do k=                    {Number of bytes to read}
-    \SendOnesToCard!            {XXX Read directly into buffer}
-    q.                          {Store byte in buffer}
-    q 1+ q=                     {Advance write pointer, cross page boundaries}
-    k 1- if>0loop]              {Looping}
-
-  \SendOnesToCard!              {Read 16-bit checksum}
-  \SendOnesToCard!
-  \DisableCard!
-
-  pop ret
-]
-
-{-----------------------------------------------------------------------+
-|                       RAM page $64                                    |
-+-----------------------------------------------------------------------}
-*=$64a0
-
-_LoadByte=*
-[
-  {
-    Read next byte directly from file and advance position
-    !!! XXX This is slow, but doesn't use buffer space !!!
-  }
-  push
-
-  FilePosL FileSizeL^           {Check for EOF}
-  [if=0 FilePosH FileSizeH^]
-
-  [if<>0                        {More to read}
-
-    $1ff FilePosL&              {Read new sector}
-    [if=0
-      \SendOnesToCard!          {Ignore checksum}
-      \SendOnesToCard!
-      \OpenSector!              {Open next sector}
-      \NextSector!]
-
-    FilePosL 1+ FilePosL=       {Increment position in file}
-    [if=0 FilePosH 1+ FilePosH=]
-
-    \SendOnesToCard!            {Returns the next data byte}
-  else
-    1-                          {Negative value for EOF}
-  ]
-
-  pop ret
-]
 
 {-----------------------------------------------------------------------+
 |                       RAM page $65                                    |
@@ -604,9 +483,9 @@ _ClusterToSector=*
 ]
 
 {-----------------------------------------------------------------------+
-|                       RAM page $66                                    |
+|                       RAM page $74                                    |
 +-----------------------------------------------------------------------}
-*=$66a0
+*=$74a0
 
 _ShiftLeft=*
 [
@@ -655,17 +534,18 @@ _NextSector=*
   push
 
   <SectorL++                    {To next sector}
-
+{
   $1fff FileSizeL&              {XXX Hardcoded. Should derive from ClusterSize}
   [if=0
     List 4+ List= deek ValueL=  {Get next cluster from ClusterList}
     List 2+       deek ValueH=
     \ClusterToSector!
   ]
-
+}
   pop ret
 ]
 
+{
 {-----------------------------------------------------------------------+
 |                       RAM page $76                                    |
 +-----------------------------------------------------------------------}
@@ -739,12 +619,7 @@ _NextCluster=*
 
   pop ret
 ]
-
-{-----------------------------------------------------------------------+
-|                       RAM page $7f                                    |
-+-----------------------------------------------------------------------}
-
-_ClusterList=$7fa0              {Room for 96/4 = 24 clusters}
+}
 
 {-----------------------------------------------------------------------+
 |                                                                       |
