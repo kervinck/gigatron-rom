@@ -225,17 +225,17 @@ convertLtOp         EQU     0x7ed0
 convertGtOp         EQU     0x7ed9
 multiply16bit       EQU     0x7ca0
 divide16bit         EQU     0x7ba0
-resetVideoTable     EQU     0x79c3
+resetVideoTable     EQU     0x78a0
 initClearFuncs      EQU     0x7da0
 clearVertBlinds     EQU     0x7dc3
 clearCursorRow      EQU     0x77a0
-printInit           EQU     0x7ee2
-printText           EQU     0x79a0
-printDigit          EQU     0x76a0
+printInit           EQU     0x78bf
+printText           EQU     0x7ee2
+printDigit          EQU     0x78da
 printInt16          EQU     0x7aa0
-printChar           EQU     0x75a0
+printChar           EQU     0x76a0
 atTextCursor        EQU     0x7cc7
-newLineScroll       EQU     0x78a0
+newLineScroll       EQU     0x79a0
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -531,25 +531,21 @@ printInit           LDWI    SYS_VDrawBits_134
 
 
 
-                    ; prints text string pointed to by the accumulator
+                    ; prints text string pointed to by textStr
 printText           PUSH
                     LDWI    printInit
                     CALL    giga_vAC
-                    LDW     textStr             
-                    PEEK                                    ; first byte is length
-                    BEQ     printT_exit
-    
-printT_char         ST      textLen
-                    INC     textStr                         ; next char
+
+                    ; first byte is length
+printT_char         INC     textStr                         ; next char
                     LDW     textStr             
                     PEEK
+                    BEQ     printT_exit                     ; check for delimiting zero
                     ST      textChr
                     LDWI    printChar
                     CALL    giga_vAC
-
-                    LD      textLen
-                    SUBI    1
-                    BNE     printT_char
+                    BRA     printT_char
+                    
 printT_exit         POP
                     RET
 

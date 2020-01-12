@@ -10,7 +10,7 @@ next i
 
 loop:
     r = rnd(0) AND max
-    a(r) = a(r) + 1 : poke (127 - a(r) LSL 8) + r, &h3F
+    poke (127 - a(r) LSL 8) + r, &h3F
+    a(r) = a(r) + 1
     goto &loop
-
 end

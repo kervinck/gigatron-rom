@@ -370,32 +370,32 @@ convertGeOp         EQU     0xff87
 convertLtOp         EQU     0xff90
 convertGtOp         EQU     0xff99
 power16bit          EQU     0xfe00
-power16bitExt       EQU     0xfc6b
-multiply16bit       EQU     0xfc44
-shiftRight1bit      EQU     0xfecb
-shiftRight2bit      EQU     0xfef2
-shiftRight3bit      EQU     0xfd7b
-shiftRight4bit      EQU     0xfda2
-shiftRight5bit      EQU     0xfdc9
-shiftRight6bit      EQU     0xfdf0
-shiftRight7bit      EQU     0xfc1d
-shiftRightSgn1bit   EQU     0xfeb0
-shiftRightSgn2bit   EQU     0xfed5
+power16bitExt       EQU     0xfc61
+multiply16bit       EQU     0xfc3a
+shiftRight1bit      EQU     0xfec1
+shiftRight2bit      EQU     0xfee8
+shiftRight3bit      EQU     0xfef2
+shiftRight4bit      EQU     0xfd98
+shiftRight5bit      EQU     0xfdbf
+shiftRight6bit      EQU     0xfde6
+shiftRight7bit      EQU     0xfdf0
+shiftRightSgn1bit   EQU     0xfea6
+shiftRightSgn2bit   EQU     0xfecb
 shiftRightSgn3bit   EQU     0xfd5e
-shiftRightSgn4bit   EQU     0xfd85
-shiftRightSgn5bit   EQU     0xfdac
-shiftRightSgn6bit   EQU     0xfdd3
+shiftRightSgn4bit   EQU     0xfd7b
+shiftRightSgn5bit   EQU     0xfda2
+shiftRightSgn6bit   EQU     0xfdc9
 shiftRightSgn7bit   EQU     0xfc00
-shiftRightSgn8bit   EQU     0xfc27
-resetVideoTable     EQU     0xfc9c
+shiftRightSgn8bit   EQU     0xfc1d
+resetVideoTable     EQU     0xfc92
 initClearFuncs      EQU     0xffa2
 clearVertBlinds     EQU     0xffc5
-clearCursorRow      EQU     0xfb00
-printInit           EQU     0xfcbb
+clearCursorRow      EQU     0xfcb1
+printInit           EQU     0xfb00
 printText           EQU     0xfe8d
-printDigit          EQU     0xfcd6
+printDigit          EQU     0xfb1b
 printInt16          EQU     0xfe39
-printChar           EQU     0xfb49
+printChar           EQU     0xfb3d
 newLineScroll       EQU     0xfd00
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
@@ -888,25 +888,21 @@ printInit           LDWI    SYS_VDrawBits_134
 
 
 
-                    ; prints text string pointed to by the accumulator
+                    ; prints text string pointed to by textStr
 printText           PUSH
                     LDWI    printInit
                     CALL    giga_vAC
-                    LDW     textStr             
-                    PEEK                                    ; first byte is length
-                    BEQ     printT_exit
-    
-printT_char         ST      textLen
-                    INC     textStr                         ; next char
+
+                    ; first byte is length
+printT_char         INC     textStr                         ; next char
                     LDW     textStr             
                     PEEK
+                    BEQ     printT_exit                     ; check for delimiting zero
                     ST      textChr
                     LDWI    printChar
                     CALL    giga_vAC
-
-                    LD      textLen
-                    SUBI    1
-                    BNE     printT_char
+                    BRA     printT_char
+                    
 printT_exit         POP
                     RET
 

@@ -125,13 +125,13 @@ _10                 LDW                     _d
                     SUBI                    1
                     STW                     _b                              ; b = b - 1
 
-                    LDWI                    62587
+                    LDWI                    -2949
                     ADDW                    _b
                     STW                     0xc0
                     LDWI                    300
                     ADDW                    _e
                     STW                     0xc2
-                    LDWI                    64636
+                    LDWI                    -900
                     ADDW                    _f
                     STW                     0xc4
                     LDW                     0xc2
@@ -243,13 +243,13 @@ _37                 LDI                     0
                     ADDW                    _f
                     STW                     _f                              ; f = -g +1000 -(24-g) +f
 
-                    LDWI                    62587
+                    LDWI                    -2949
                     ADDW                    _b
                     STW                     0xc0
                     LDWI                    300
                     ADDW                    _e
                     STW                     0xc2
-                    LDWI                    64636
+                    LDWI                    -900
                     ADDW                    _f
                     STW                     0xc4
                     LDW                     0xc2
@@ -259,13 +259,13 @@ _37                 LDI                     0
                     SUBW                    0xc4
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
-                    LDWI                    62587
+                    LDWI                    -2949
                     ADDW                    _b
                     STW                     0xc0
                     LDWI                    300
                     ADDW                    _e
                     STW                     0xc2
-                    LDWI                    64636
+                    LDWI                    -900
                     ADDW                    _f
                     STW                     0xc4
                     LDW                     0xc2
@@ -275,13 +275,13 @@ _37                 LDI                     0
                     SUBW                    0xc4
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
-                    LDWI                    62587
+                    LDWI                    -2949
                     ADDW                    _b
                     STW                     0xc0
                     LDWI                    300
                     ADDW                    _e
                     STW                     0xc2
-                    LDWI                    64636
+                    LDWI                    -900
                     ADDW                    _f
                     STW                     0xc4
                     LDW                     0xc2
@@ -291,7 +291,7 @@ _37                 LDI                     0
                     SUBW                    0xc4
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
-                    LDWI                    62587
+                    LDWI                    -2949
                     ADDW                    _b
                     STW                     0xc0
                     LDWI                    300
@@ -301,7 +301,7 @@ _37                 LDI                     0
 _page_0x0400        LDW                     0xde
                     ADDW                    _e
                     STW                     0xc2
-                    LDWI                    64636
+                    LDWI                    -900
                     ADDW                    _f
                     STW                     0xc4
                     LDW                     0xc2
@@ -311,13 +311,13 @@ _page_0x0400        LDW                     0xde
                     SUBW                    0xc4
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
-                    LDWI                    62587
+                    LDWI                    -2949
                     ADDW                    _b
                     STW                     0xc0
                     LDWI                    300
                     ADDW                    _e
                     STW                     0xc2
-                    LDWI                    64636
+                    LDWI                    -900
                     ADDW                    _f
                     STW                     0xc4
                     LDW                     0xc2
@@ -327,13 +327,13 @@ _page_0x0400        LDW                     0xde
                     SUBW                    0xc4
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
-                    LDWI                    62587
+                    LDWI                    -2949
                     ADDW                    _b
                     STW                     0xc0
                     LDWI                    300
                     ADDW                    _e
                     STW                     0xc2
-                    LDWI                    64636
+                    LDWI                    -900
                     ADDW                    _f
                     STW                     0xc4
                     LDW                     0xc2
@@ -343,13 +343,13 @@ _page_0x0400        LDW                     0xde
                     SUBW                    0xc4
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
-                    LDWI                    62587
+                    LDWI                    -2949
                     ADDW                    _b
                     STW                     0xc0
                     LDWI                    300
                     ADDW                    _e
                     STW                     0xc2
-                    LDWI                    64636
+                    LDWI                    -900
                     ADDW                    _f
                     STW                     0xc4
                     LDW                     0xc2
@@ -359,13 +359,13 @@ _page_0x0400        LDW                     0xde
                     SUBW                    0xc4
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
-                    LDWI                    62587
+                    LDWI                    -2949
                     ADDW                    _b
                     STW                     0xc0
                     LDWI                    300
                     ADDW                    _e
                     STW                     0xc2
-                    LDWI                    64636
+                    LDWI                    -900
                     ADDW                    _f
                     STW                     0xc4
                     LDW                     0xc2
@@ -375,13 +375,13 @@ _page_0x0400        LDW                     0xde
                     SUBW                    0xc4
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
-                    LDWI                    62587
+                    LDWI                    -2949
                     ADDW                    _b
                     STW                     0xc0
                     LDWI                    300
                     ADDW                    _e
                     STW                     0xc2
-                    LDWI                    64636
+                    LDWI                    -900
                     ADDW                    _f
                     STW                     0xc4
                     LDW                     0xc2
@@ -391,13 +391,13 @@ _page_0x0400        LDW                     0xde
                     SUBW                    0xc4
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
-                    LDWI                    62587
+                    LDWI                    -2949
                     ADDW                    _b
                     STW                     0xc0
                     LDWI                    300
                     ADDW                    _e
                     STW                     0xc2
-                    LDWI                    64636
+                    LDWI                    -900
                     ADDW                    _f
                     STW                     0xc4
                     LDW                     0xc2
@@ -407,13 +407,13 @@ _page_0x0400        LDW                     0xde
                     SUBW                    0xc4
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
-                    LDWI                    62587
+                    LDWI                    -2949
                     ADDW                    _b
                     STW                     0xc0
                     LDWI                    300
                     ADDW                    _e
                     STW                     0xc2
-                    LDWI                    64636
+                    LDWI                    -900
                     STW                     0xde
                     LDWI                    _page_0x0500
                     CALL                    giga_vAC
@@ -427,13 +427,13 @@ _page_0x0500        LDW                     0xde
                     SUBW                    0xc4
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
-                    LDWI                    62587
+                    LDWI                    -2949
                     ADDW                    _b
                     STW                     0xc0
                     LDWI                    300
                     ADDW                    _e
                     STW                     0xc2
-                    LDWI                    64636
+                    LDWI                    -900
                     ADDW                    _f
                     STW                     0xc4
                     LDW                     0xc2
@@ -443,13 +443,13 @@ _page_0x0500        LDW                     0xde
                     SUBW                    0xc4
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
-                    LDWI                    62587
+                    LDWI                    -2949
                     ADDW                    _b
                     STW                     0xc0
                     LDWI                    300
                     ADDW                    _e
                     STW                     0xc2
-                    LDWI                    64636
+                    LDWI                    -900
                     ADDW                    _f
                     STW                     0xc4
                     LDW                     0xc2
@@ -459,13 +459,13 @@ _page_0x0500        LDW                     0xde
                     SUBW                    0xc4
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
-                    LDWI                    62587
+                    LDWI                    -2949
                     ADDW                    _b
                     STW                     0xc0
                     LDWI                    300
                     ADDW                    _e
                     STW                     0xc2
-                    LDWI                    64636
+                    LDWI                    -900
                     ADDW                    _f
                     STW                     0xc4
                     LDW                     0xc2
@@ -475,13 +475,13 @@ _page_0x0500        LDW                     0xde
                     SUBW                    0xc4
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
-                    LDWI                    62587
+                    LDWI                    -2949
                     ADDW                    _b
                     STW                     0xc0
                     LDWI                    300
                     ADDW                    _e
                     STW                     0xc2
-                    LDWI                    64636
+                    LDWI                    -900
                     ADDW                    _f
                     STW                     0xc4
                     LDW                     0xc2
@@ -491,13 +491,13 @@ _page_0x0500        LDW                     0xde
                     SUBW                    0xc4
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
-                    LDWI                    62587
+                    LDWI                    -2949
                     ADDW                    _b
                     STW                     0xc0
                     LDWI                    300
                     ADDW                    _e
                     STW                     0xc2
-                    LDWI                    64636
+                    LDWI                    -900
                     ADDW                    _f
                     STW                     0xc4
                     LDW                     0xc2
@@ -507,13 +507,13 @@ _page_0x0500        LDW                     0xde
                     SUBW                    0xc4
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
-                    LDWI                    62587
+                    LDWI                    -2949
                     ADDW                    _b
                     STW                     0xc0
                     LDWI                    300
                     ADDW                    _e
                     STW                     0xc2
-                    LDWI                    64636
+                    LDWI                    -900
                     ADDW                    _f
                     STW                     0xc4
                     LDW                     0xc2
@@ -523,13 +523,13 @@ _page_0x0500        LDW                     0xde
                     SUBW                    0xc4
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
-                    LDWI                    62587
+                    LDWI                    -2949
                     ADDW                    _b
                     STW                     0xc0
                     LDWI                    300
                     ADDW                    _e
                     STW                     0xc2
-                    LDWI                    64636
+                    LDWI                    -900
                     ADDW                    _f
                     STW                     0xc4
                     LDW                     0xc2
@@ -543,13 +543,13 @@ _page_0x0600        LDW                     0xde
                     SUBW                    0xc4
                     STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
-                    LDWI                    62587
+                    LDWI                    -2949
                     ADDW                    _b
                     STW                     0xc0
                     LDWI                    300
                     ADDW                    _e
                     STW                     0xc2
-                    LDWI                    64636
+                    LDWI                    -900
                     ADDW                    _f
                     STW                     0xc4
                     LDW                     0xc2
@@ -605,14 +605,14 @@ convertLeOp         EQU     0xff7e
 convertGeOp         EQU     0xff87
 convertLtOp         EQU     0xff90
 convertGtOp         EQU     0xff99
-resetVideoTable     EQU     0xfeb2
+resetVideoTable     EQU     0xffde
 initClearFuncs      EQU     0xffa2
-clearCursorRow      EQU     0xfd00
-printInit           EQU     0xfed1
+clearCursorRow      EQU     0xfeb2
+printInit           EQU     0xfd00
 printText           EQU     0xffc5
-printDigit          EQU     0xfd49
+printDigit          EQU     0xfd1b
 printInt16          EQU     0xfe00
-printChar           EQU     0xfd6b
+printChar           EQU     0xfd3d
 newLineScroll       EQU     0xfe54
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
@@ -781,25 +781,21 @@ printInit           LDWI    SYS_VDrawBits_134
 
 
 
-                    ; prints text string pointed to by the accumulator
+                    ; prints text string pointed to by textStr
 printText           PUSH
                     LDWI    printInit
                     CALL    giga_vAC
-                    LDW     textStr             
-                    PEEK                                    ; first byte is length
-                    BEQ     printT_exit
-    
-printT_char         ST      textLen
-                    INC     textStr                         ; next char
+
+                    ; first byte is length
+printT_char         INC     textStr                         ; next char
                     LDW     textStr             
                     PEEK
+                    BEQ     printT_exit                     ; check for delimiting zero
                     ST      textChr
                     LDWI    printChar
                     CALL    giga_vAC
-
-                    LD      textLen
-                    SUBI    1
-                    BNE     printT_char
+                    BRA     printT_char
+                    
 printT_exit         POP
                     RET
 

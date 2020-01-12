@@ -2,9 +2,11 @@ dim arr(5)=0
 
 cls
 
-t1$ = "yes"
-t2$ = "no"
-test$ = "cat dog furries " + t1$
+const cs$ = "const "
+
+t1$ = "yes "
+t2$ = "no "
+test$ = "cat dog furries " + t1$ + t2$ + "whoop " + "1 " + "2 " + cs$
 print test$;" ";len(test$)
 
 a = 1

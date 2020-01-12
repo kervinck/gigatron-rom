@@ -8369,24 +8369,24 @@ convertLeOp         EQU     0xfec0
 convertGeOp         EQU     0xfec9
 convertLtOp         EQU     0xfed2
 convertGtOp         EQU     0xfedb
-multiply16bit       EQU     0xfdc5
+multiply16bit       EQU     0xfdbb
 divide16bit         EQU     0xfb00
-resetVideoTable     EQU     0xfcd8
+resetVideoTable     EQU     0xfb5a
 initClearFuncs      EQU     0xfd60
-clearCursorRow      EQU     0xfb8f
-printInit           EQU     0xfbd8
+clearCursorRow      EQU     0xfb79
+printInit           EQU     0xfbc2
 printText           EQU     0xfda2
-printDigit          EQU     0xfa00
+printDigit          EQU     0xfbdd
 printInt16          EQU     0xfc5e
-printChr            EQU     0xfccb
-printChar           EQU     0xfa22
-printHexByte        EQU     0xfb5a
+printChr            EQU     0xfdf3
+printChar           EQU     0xfa00
+printHexByte        EQU     0xfccb
 printHexWord        EQU     0xfcb2
 newLineScroll       EQU     0xfc00
-stringChr           EQU     0xfdec
+stringChr           EQU     0xfde2
 stringHex           EQU     0xfee4
 stringHexw          EQU     0xfd83
-createHex           EQU     0xfa7a
+createHex           EQU     0xfa58
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -8646,25 +8646,21 @@ printInit           LDWI    SYS_VDrawBits_134
 
 
 
-                    ; prints text string pointed to by the accumulator
+                    ; prints text string pointed to by textStr
 printText           PUSH
                     LDWI    printInit
                     CALL    giga_vAC
-                    LDW     textStr             
-                    PEEK                                    ; first byte is length
-                    BEQ     printT_exit
-    
-printT_char         ST      textLen
-                    INC     textStr                         ; next char
+
+                    ; first byte is length
+printT_char         INC     textStr                         ; next char
                     LDW     textStr             
                     PEEK
+                    BEQ     printT_exit                     ; check for delimiting zero
                     ST      textChr
                     LDWI    printChar
                     CALL    giga_vAC
-
-                    LD      textLen
-                    SUBI    1
-                    BNE     printT_char
+                    BRA     printT_char
+                    
 printT_exit         POP
                     RET
 
@@ -8949,6 +8945,7 @@ strSrcLen           EQU     register3
 strOffset           EQU     register8
 strSrcAddr2         EQU     register9
 strTmpAddr          EQU     register10
+strLutAddr          EQU     register11
 
 
                     ; create a char string, (parameter in strChr)

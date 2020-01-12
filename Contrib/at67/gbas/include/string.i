@@ -10,6 +10,7 @@ strOffset           EQU     register8
 strSrcAddr2         EQU     register9
 strTmpAddr          EQU     register10
 strLutAddr          EQU     register11
+strBakAddr          EQU     register12
 
 
 %SUB                stringChr
@@ -96,7 +97,7 @@ stringCopy          LDW     strSrcAddr
 %ENDS
 
 %SUB                stringAdd
-                    ; concatenates two strings together
+                    ; adds two strings together
 stringAdd           LDW     strDstAddr
                     STW     strTmpAddr
                     INC     strSrcAddr
@@ -137,16 +138,25 @@ stringA_exit        LDW     strLength
 stringConcat        PUSH
                     LDW     strLutAddr
                     DEEK
+                    BEQ     stringC_exit
                     STW     strSrcAddr
-                    INC     strLutAddr
+                    LDW     strDstAddr
+                    STW     strBakAddr
+                    
+stringC_loop        INC     strLutAddr
                     INC     strLutAddr
                     LDW     strLutAddr
                     DEEK
+                    BEQ     stringC_exit
                     STW     strSrcAddr2
-                    PUSH
                     LDWI    stringAdd
                     CALL    giga_vAC
-                    POP
+                    LDW     strBakAddr
+                    STW     strDstAddr
+                    STW     strSrcAddr
+                    BRA     stringC_loop
+                    
+stringC_exit        POP
                     RET
 %ENDS
 

@@ -147,11 +147,11 @@ convertGtOp         EQU     0xffa0
 resetVideoTable     EQU     0xfeb2
 initClearFuncs      EQU     0xffa9
 clearCursorRow      EQU     0xfd00
-printInit           EQU     0xfed1
+printInit           EQU     0xffe5
 printText           EQU     0xffcc
-printDigit          EQU     0xfd49
+printDigit          EQU     0xfed1
 printInt16          EQU     0xfe00
-printChar           EQU     0xfd6b
+printChar           EQU     0xfd49
 newLineScroll       EQU     0xfe54
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
@@ -320,25 +320,21 @@ printInit           LDWI    SYS_VDrawBits_134
 
 
 
-                    ; prints text string pointed to by the accumulator
+                    ; prints text string pointed to by textStr
 printText           PUSH
                     LDWI    printInit
                     CALL    giga_vAC
-                    LDW     textStr             
-                    PEEK                                    ; first byte is length
-                    BEQ     printT_exit
-    
-printT_char         ST      textLen
-                    INC     textStr                         ; next char
+
+                    ; first byte is length
+printT_char         INC     textStr                         ; next char
                     LDW     textStr             
                     PEEK
+                    BEQ     printT_exit                     ; check for delimiting zero
                     ST      textChr
                     LDWI    printChar
                     CALL    giga_vAC
-
-                    LD      textLen
-                    SUBI    1
-                    BNE     printT_char
+                    BRA     printT_char
+                    
 printT_exit         POP
                     RET
 

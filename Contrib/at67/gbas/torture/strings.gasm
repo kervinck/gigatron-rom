@@ -157,7 +157,7 @@ clearVertBlinds     EQU     0xfdc0
 clearCursorRow      EQU     0xfb7d
 printInit           EQU     0xfbc6
 printText           EQU     0xfca8
-printMid            EQU     0xfccb
+printMid            EQU     0xfcc1
 printChar           EQU     0xfa00
 newLineScroll       EQU     0xfb00
 stringMid           EQU     0xfc6c
@@ -366,25 +366,21 @@ printInit           LDWI    SYS_VDrawBits_134
 
 
 
-                    ; prints text string pointed to by the accumulator
+                    ; prints text string pointed to by textStr
 printText           PUSH
                     LDWI    printInit
                     CALL    giga_vAC
-                    LDW     textStr             
-                    PEEK                                    ; first byte is length
-                    BEQ     printT_exit
-    
-printT_char         ST      textLen
-                    INC     textStr                         ; next char
+
+                    ; first byte is length
+printT_char         INC     textStr                         ; next char
                     LDW     textStr             
                     PEEK
+                    BEQ     printT_exit                     ; check for delimiting zero
                     ST      textChr
                     LDWI    printChar
                     CALL    giga_vAC
-
-                    LD      textLen
-                    SUBI    1
-                    BNE     printT_char
+                    BRA     printT_char
+                    
 printT_exit         POP
                     RET
 
@@ -577,6 +573,7 @@ strSrcLen           EQU     register3
 strOffset           EQU     register8
 strSrcAddr2         EQU     register9
 strTmpAddr          EQU     register10
+strLutAddr          EQU     register11
 
 
                     ; copies length sub string from source offset to destination string
