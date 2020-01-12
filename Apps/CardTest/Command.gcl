@@ -22,82 +22,19 @@ gcl0x
 zpReset=$48                     {Start GCL vars from $48 instead of $30}
 
 _StdOut=$300
-_OpenFile=$400
 
 {-----------------------------------------------------------------------+
 |                                                                       |
-|       Command.gt1 bootstrapping                                       |
+|       Transient Program Area                                          |
 |                                                                       |
 +-----------------------------------------------------------------------}
-
-{
-  It is System.gt1's job to load Command.gt1 into RAM. However, GT1 decoding
-  functionality is part of Command.gt1, not System.gt1... So we need a boot
-  strapping process to make it possible: System.gt1 only loads Command's first
-  sector and then transfers control. The start address is $503 so that after
-  loading the first sector the first code is already ready to run. (The first
-  3 bytes are GT1 header bytes.) From there System.gt1 must decode itself and
-  load its remainder into RAM.
-}
-
-*=$0503
-[
-  $500 _r3=                     {Start decoding in sector buffer}
-  [def                          {Function that reads bytes}
-    $700 _r3^ [if=0
-                                {After decoding the first 512 bytes from the
-                                 preloaded sector buffer, transfer control
-                                 to the true LoadGt1 function (which is now
-                                 on its intended location.}
-                                {XXX Also install a new byte reader that
-                                     reads more data from card}
-      [do loop]                 {XXX Read next sector and/or cluster}
-
-      $7400 _vLR+ _vLR=         {Redirect local return from $5a0+x to $79a0+x}
-      \Start $fe:               {Redirect global return of LoadGt1}
-    ]
-    _r3, <r3++                  {Next byte from sector buffer}
-    ret
-  ]
-  \Gt1LoadBoot!                 {Doesn't return}
-]
-
-{
-  Padding such that the first segment is exactly $a0-3-3=154 bytes.
-  With that _LoadGt1 initially shows up at $5a0 in the sector buffer
-  when (re)loaded by GTOS.
-}
-
-                            #0 #0 #0 #0 #0 #0 #0
- #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0
- #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0
- #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0
- #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0
- #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0
- #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0
- #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 { *=$59d }
-
-_Gt1LoadBoot=$5a0
 
 {-----------------------------------------------------------------------+
 |                       RAM page $08                                    |
 +-----------------------------------------------------------------------}
 *=$8a0
 
-{
-  Entry point when started from System.gt1
-}
-
-_Start=*
-[
-  [def `By`Your`Command #10 #0] _dev1!
-  _CommandLoop!                 {Doesn't return}
-]
-
-{-----------------------------------------------------------------------+
-|                       RAM page $09                                    |
-+-----------------------------------------------------------------------}
-*=$9a0
+execute=$8a0                    {Overrule GCL's default execution address}
 
 {
   Entry point only used when started from a regular loader (outside GTOS)
@@ -107,7 +44,14 @@ _Start=*
   [do _r0. 1+ loop]             {Blink forever}
 ]
 
-execute=$9a0                    {Overrule GCL's default execution address}
+{
+  Entry point when started from System.gt1
+}
+_Start=*
+[
+  [def `By`Your`Command #10 #0] _dev1!
+  _CommandLoop!                 {Doesn't return}
+]
 
 {-----------------------------------------------------------------------+
 |                                                                       |
@@ -116,51 +60,7 @@ execute=$9a0                    {Overrule GCL's default execution address}
 +-----------------------------------------------------------------------}
 
 {-----------------------------------------------------------------------+
-|                       RAM page $79                                    |
-+-----------------------------------------------------------------------}
-*=$79a0 { and $5a0 }
-
-{
-  Byte reader           vAC             input
-  Uses                  _r0.._r2        variables
-  Execution address     _r0             output
-}
-
-_LoadGt1=*
-[
-  [do loop]                     {XXX Work in progress}
-  {
-    Load GT1 file into RAM and return start address.
-    See Docs/GT1-files.txt for details on GT1
-    XXX Not robust against early EOF
-    XXX Final EOF must be checked by caller
-  }
-  push
-
-  _r1=                          {Byte reader}
-
-  { Read file contents byte by byte }
-  _r1!                          {Fetch first byte}
-  [do                           {Chunk copy loop}
-         >_r0.                  {High-address comes first}
-    _r1! <_r0.                  {Then the low address}
-    _r1!                        {Byte count (0 means 256)}
-    [do                         {Byte copy loop}
-      <_r2.                     {Implicitly chops counter to 8 bits}
-      _r1! _r0.                 {Poke next byte into memory}
-      <_r0++                    {Advance write pointer in page}
-      <_r2, 1-                  {Decrement counter}
-      if<>0loop]
-    _r1!                        {Go to next block}
-    if<>0loop]
-  _r1! >_r0.                    {Load execution address}
-  _r1! <_r0.
-
-  pop ret
-]
-
-{-----------------------------------------------------------------------+
-|} >_vLR++ [ret] {      RAM page $7f                                    |
+|                       RAM page $7f                                    |
 +-----------------------------------------------------------------------}
 *=$7fa0
 
@@ -178,10 +78,12 @@ _CommandLoop=*
   { XXX: Print newline if needed }
 
   { Print error message if needed }
+{
   [if<>0
     { XXX Conditional newline }
     [def `?Execution`error #10 #0] _dev1!
   ]
+}
 
   { XXX: Clear error state }
 
@@ -206,11 +108,22 @@ _CommandLoop=*
   loop]
 
 {-----------------------------------------------------------------------+
+|                       RAM page $7e                                    |
++-----------------------------------------------------------------------}
+*=$7ea0
+
+_ReadLine=*
+[
+  [do loop]
+  ret
+]
+
+{-----------------------------------------------------------------------+
 |                       RAM page $7d                                    |
 +-----------------------------------------------------------------------}
 *=$7da0
 
-_ReadLine=*
+_WaitKey=*
 [
   ret
 ]
@@ -220,16 +133,6 @@ _ReadLine=*
 +-----------------------------------------------------------------------}
 *=$7ca0
 
-_WaitKey=*
-[
-  ret
-]
-
-{-----------------------------------------------------------------------+
-|                       RAM page $78                                    |
-+-----------------------------------------------------------------------}
-*=$78a0
-
 _Execute=*
 [
   120 [do _r0=                  {Restore video table}
@@ -238,16 +141,6 @@ _Execute=*
 
   Address [do if=0loop]         {Stop if not executable}
   call                          {Run...}
-]
-
-{-----------------------------------------------------------------------+
-|                       RAM page $77                                    |
-+-----------------------------------------------------------------------}
-*=$77a0
-
-_LoadByte=*
-[
-  ret
 ]
 
 {-----------------------------------------------------------------------+
