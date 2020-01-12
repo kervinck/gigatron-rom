@@ -32,7 +32,10 @@ highByteMask        EQU                     register0 + 0x2C
 ; Labels
 _entryPoint_        EQU                     0x0200
 _page_0x0300        EQU                     0x0300
-_end_0x03e8         EQU                     0x03c2
+_page_0x0400        EQU                     0x0400
+_page_0x0500        EQU                     0x0500
+_page_0x0600        EQU                     0x0600
+_end_0x06c4         EQU                     0x0676
 
 ; Variables
 _arr_array          EQU                     0x7ea0
@@ -42,22 +45,38 @@ _d                  EQU                     0x0032
 _b                  EQU                     0x0034
 _c                  EQU                     0x0036
 _dog                EQU                     0x0038
-_e                  EQU                     0x003a
-_f                  EQU                     0x003c
+_hours              EQU                     0x003a
+_minutes            EQU                     0x003c
+_seconds            EQU                     0x003e
+_e                  EQU                     0x0040
+_f                  EQU                     0x0042
+_t                  EQU                     0x0044
+_cs                 EQU                     0x0046
+_db                 EQU                     0x0048
 
 ; Strings
-_str_0x7eac          EQU                     0x7eac
-_str_0x7eac          DB                      53 'aioujehfiadsuhgfaissuhfgdiughafpiusfghpdsiufghspi;udf' 0
-_cat$                EQU                     0x7da0
+_t1$                 EQU                     0x7da0
+_t1$                 DB                      3 'yes' 0
+_t2$                 EQU                     0x7ca0
+_t2$                 DB                      2 'no' 0
+_test$               EQU                     0x7ba0
+_test$               DB                      16 'cat dog furries ' 0
+_str_0x7eb2          EQU                     0x7eb2
+_str_0x7eb2          DB                      1 ' ' 0
+_str_0x7eb5          EQU                     0x7eb5
+_str_0x7eb5          DB                      53 'aioujehfiadsuhgfaissuhfgdiughafpiusfghpdsiufghspi;udf' 0
+_cat$                EQU                     0x7aa0
 _cat$                DB                      3 'cat' 0
-_str_0x7ee3          EQU                     0x7ee3
-_str_0x7ee3          DB                      7 'testing' 0
 _str_0x7eec          EQU                     0x7eec
-_str_0x7eec          DB                      1 ' ' 0
+_str_0x7eec          DB                      13 'testing 1 2 3' 0
+_str_0x79a0          EQU                     0x79a0
+_str_0x79a0          DB                      7 'Testing' 0
 
 ; Define Bytes
 
 ; Lookup Tables
+_concat_0x7eac      EQU                     0x7eac
+_concat_0x7eac      DW                      0x7ba0 0x7da0 0x0000 
 
 ; Code
 _entryPoint_        InitRealTimeProc        
@@ -68,6 +87,28 @@ _entryPoint_        InitRealTimeProc
                     InitLtOp                
                     InitGtOp                
                     Initialise                                              ; INIT
+
+                    LDWI                    clearVertBlinds
+                    CALL                    giga_vAC                        ; cls
+
+                    LDWI                    0x7eac
+                    STW                     strLutAddr
+                    LDWI                    0x7fa0
+                    STW                     strDstAddr
+                    StringConcat            
+                    LDWI                    0x7fa0
+                    STW                     strSrcAddr
+                    LDWI                    0x7ba0
+                    STW                     strDstAddr
+                    StringCopy                                              ; test$ = "cat dog furries " + t1$
+
+                    PrintString             _test$
+                    PrintString             _str_0x7eb2
+                    LDWI                    0x7ba0
+                    PEEK                    
+                    PrintAcInt16            
+                    LDWI                    newLineScroll
+                    CALL                    giga_vAC                        ; print test$;" ";len(test$)
 
                     LDI                     1
                     STW                     _a                              ; a = 1
@@ -109,22 +150,23 @@ _entryPoint_        InitRealTimeProc
                     LDW                     0xc2
                     DOKE                    register0                       ; doke &h00E0, a.lo - b.hi * 3 + 1 - a
 
-                    LDWI                    clearVertBlinds
-                    CALL                    giga_vAC                        ; cls
-
                     LDI                     0
-                    STW                     _dog                            ; dog=0 : cat$="cat"
+                    STW                     _dog                            ; dog=0
 
-                    PrintString             _str_0x7ee3
-                    LDWI                    0x7da0                          ; input "testing", cat$
+                    PrintString             _str_0x7eec
+                    LDWI                    0x7aa0                          ; input "testing 1 2 3", cat$, hours, minutes,seconds
 
                     LDI                     2
                     RandMod                 
                     ADDI                    2
                     STW                     0xc4
-                    LDWI                    0x7da0
+                    LDWI                    0x7aa0
                     PEEK                    
                     ADDW                    0xc4
+                    STW                     0xde
+                    LDWI                    _page_0x0300
+                    CALL                    giga_vAC
+_page_0x0300        LDW                     0xde
                     ADDI                    27
                     STW                     _a                              ; a = rnd(len(dog)) + len(dog) + len(cat$) + 27
 
@@ -152,10 +194,6 @@ _entryPoint_        InitRealTimeProc
                     LDWI                    0xfde8
                     STW                     strHex
                     LDWI                    0x7fa0
-                    STW                     0xde
-                    LDWI                    _page_0x0300
-                    CALL                    giga_vAC
-_page_0x0300        LDW                     0xde
                     STW                     strDstAddr
                     StringHexw              
                     LDWI                    0x7fa0
@@ -168,46 +206,199 @@ _page_0x0300        LDW                     0xde
 
                     LD                      _a
                     PrintAcInt16            
-                    PrintString             _str_0x7eec
+                    PrintString             _str_0x7eb2
                     LD                      _b + 1
                     PrintAcInt16            
-                    PrintString             _str_0x7eec
+                    PrintString             _str_0x7eb2
                     LDW                     _b
                     PrintAcInt16            
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print a.lo;" ";b.hi;" ";b
 
-                    LDI                     58
+                    LDI                     64
                     ADDW                    _d
                     ADDI                    1
                     STW                     _e                              ; e = @e + d + 1
 
-                    LDWI                    32428
+                    LDWI                    32437
                     STW                     _f                              ; f = @big$
 
                     LDWI                    0x0034
                     PrintAcHexWord          
-                    PrintString             _str_0x7eec
+                    PrintString             _str_0x7eb2
                     LDWI                    0x0036
                     PrintAcHexWord          
-                    PrintString             _str_0x7eec
+                    PrintString             _str_0x7eb2
                     LDW                     _d
                     PrintAcHexWord          
-                    PrintString             _str_0x7eec
+                    PrintString             _str_0x7eb2
                     LDW                     _e
                     PrintAcHexWord          
-                    PrintString             _str_0x7eec
+                    PrintString             _str_0x7eb2
                     LDW                     _f
                     PrintAcHexWord          
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print hexw$(@b);" ";hexw$(@c);" ";hexw$(d);" ";hexw$(e);" ";hexw$(f)
 
+                    STW                     0xde
+                    LDWI                    _page_0x0400
+                    CALL                    giga_vAC
+_page_0x0400        LDW                     0xde
                     LDWI                    0x7ea0
                     PrintAcHexWord          
+                    PrintString             _str_0x7eb2
+                    LDWI                    0x7aa0
+                    PrintAcHexWord          
+                    PrintString             _str_0x7eb2
+                    LDWI                    0x003a
+                    PrintAcHexWord          
+                    PrintString             _str_0x7eb2
+                    LDWI                    0x003c
+                    PrintAcHexWord          
+                    PrintString             _str_0x7eb2
+                    LDWI                    0x003e
+                    PrintAcHexWord          
                     LDWI                    newLineScroll
-                    CALL                    giga_vAC                        ; print hexw$(@arr)
+                    CALL                    giga_vAC                        ; print hexw$(@arr);" ";hexw$(@cat$);" ";hexw$(@hours);" ";hexw$(@minutes);" ";hexw$(@seconds)
 
-_end_0x03e8         BRA                     _end_0x03e8                     ; end
+                    LDWI                    0x7ea0
+                    STW                     register1
+                    LDI                     52
+                    POKE                    register1                       ; arr(0).lo = &h34
+
+                    LDI                     18
+                    STW                     register0
+                    LDWI                    0x7ea0
+                    STW                     register1
+                    LDW                     register0
+                    INC                     register1
+                    POKE                    register1                       ; arr(0).hi = &h12
+
+                    LDWI                    0x7ea0
+                    DEEK                    
+                    PrintAcHexWord          
+                    LDWI                    newLineScroll
+                    CALL                    giga_vAC                        ; print hexw$(arr(0))
+
+                    LDWI                    0x7ea2
+                    STW                     register1
+                    LD                      _f
+                    POKE                    register1                       ; arr(1).lo = f.lo
+
+                    LD                      _f + 1
+                    STW                     register0
+                    LDWI                    0x7ea2
+                    STW                     register1
+                    LDW                     register0
+                    INC                     register1
+                    POKE                    register1                       ; arr(1).hi = f.hi
+
+                    LDWI                    0x7ea2
+                    DEEK                    
+                    PrintAcHexWord          
+                    LDWI                    newLineScroll
+                    CALL                    giga_vAC                        ; print hexw$(arr(1))
+
+                    LDWI                    0x7ea0 + 1
+                    PEEK                    
+                    PrintAcHexByte          
+                    PrintString             _str_0x7eb2
+                    LDWI                    0x7ea0
+                    PEEK                    
+                    PrintAcHexByte          
+                    PrintString             _str_0x7eb2
+                    LDWI                    0x7ea2 + 1
+                    PEEK                    
+                    PrintAcHexByte          
+                    PrintString             _str_0x7eb2
+                    STW                     0xde
+                    LDWI                    _page_0x0500
+                    CALL                    giga_vAC
+_page_0x0500        LDW                     0xde
+                    LDWI                    0x7ea2
+                    PEEK                    
+                    PrintAcHexByte          
+                    LDWI                    newLineScroll
+                    CALL                    giga_vAC                        ; print hex$(arr(0).hi);" ";hex$(arr(0).lo);" ";hex$(arr(1).hi);" ";hex$(arr(1).lo)
+
+                    LDWI                    0x7ea0
+                    DEEK                    
+                    PrintAcInt16            
+                    PrintString             _str_0x7eb2
+                    LDWI                    0x7ea2
+                    DEEK                    
+                    PrintAcInt16            
+                    PrintString             _str_0x7eb2
+                    LDWI                    0x7ea0
+                    DEEK                    
+                    PrintAcHexWord          
+                    PrintString             _str_0x7eb2
+                    LDWI                    0x7ea2
+                    DEEK                    
+                    PrintAcHexWord          
+                    LDWI                    newLineScroll
+                    CALL                    giga_vAC                        ; print arr(0);" ";arr(1);" ";hexw$(arr(0));" ";hexw$(arr(1))
+
+                    Rand                    
+                    ANDI                    63
+                    PrintAcInt16            
+                    PrintString             _str_0x7eb2
+                    LDI                     53
+                    PrintAcInt16            
+                    PrintString             _str_0x7eb2
+                    LDI                     0x00
+                    PEEK                    
+                    PrintAcInt16            
+                    PrintString             _str_0x7eb2
+                    LDI                     0x00
+                    DEEK                    
+                    PrintAcInt16            
+                    PrintString             _str_0x7eb2
+                    PrintInt16              0x7eb5
+                    LDWI                    newLineScroll
+                    CALL                    giga_vAC                        ; print rnd(0) AND 63;" ";len(big$);" ";peek(0);" ";deek(0);" ";@big$
+
+                    LDI                     7
+                    STW                     _t                              ; t = len("Testing")
+
+                    LDI                     53
+                    PrintAcInt16            
+                    PrintString             _str_0x7eb2
+                    LDWI                    0x7aa0
+                    PEEK                    
+                    PrintAcInt16            
+                    PrintString             _str_0x7eb2
+                    STW                     0xde
+                    LDWI                    _page_0x0600
+                    CALL                    giga_vAC
+_page_0x0600        LDW                     0xde
+                    LDI                     7
+                    PrintAcInt16            
+                    PrintString             _str_0x7eb2
+                    LDW                     _t
+                    PrintAcInt16            
+                    LDWI                    newLineScroll
+                    CALL                    giga_vAC                        ; print len(big$);" ";len(cat$);" ";len("Testing");" ";t
+
+                    LDWI                    985
+                    STW                     _cs                             ; cs = cos(10)*1000
+
+                    LDWI                    537
+                    STW                     _db                             ; db = 231.5333333333 * 2.32
+
+                    PrintInt16              0x0345
+                    PrintString             _str_0x7eb2
+                    LDW                     _cs
+                    PrintAcInt16            
+                    PrintString             _str_0x7eb2
+                    LDW                     _db
+                    PrintAcInt16            
+                    PrintString             _str_0x7eb2
+                    PrintInt16              0x0004
+                    LDWI                    newLineScroll
+                    CALL                    giga_vAC                        ; print sin(56.8333333)*1000;" ";cs;" ";db;" ";1.5333333333 * 2.32
+
+_end_0x06c4         BRA                     _end_0x06c4                     ; end
 
 
 
@@ -217,32 +408,36 @@ _end_0x03e8         BRA                     _end_0x03e8                     ; en
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7eef
-convertEqOp         EQU     0x7ca0
-convertNeOp         EQU     0x7ca9
-convertLeOp         EQU     0x7cb2
-convertGeOp         EQU     0x7cbb
-convertLtOp         EQU     0x7cc4
-convertGtOp         EQU     0x7ccd
-multiply16bit       EQU     0x7ba0
-divide16bit         EQU     0x76a0
-randMod16bit        EQU     0x7bea
-resetVideoTable     EQU     0x79d8
-initClearFuncs      EQU     0x7cd6
-clearVertBlinds     EQU     0x7aa0
-clearCursorRow      EQU     0x75a0
-printInit           EQU     0x74a0
-printText           EQU     0x7bc7
-printDigit          EQU     0x74bb
-printInt16          EQU     0x77a0
-printChar           EQU     0x73a0
-printHexByte        EQU     0x72a0
-printHexWord        EQU     0x79bf
-newLineScroll       EQU     0x78a0
-stringChr           EQU     0x7ada
-stringHex           EQU     0x7aeb
-stringHexw          EQU     0x79a0
-createHex           EQU     0x72d5
+realTimeProc        EQU     0x79a9
+convertEqOp         EQU     0x79b2
+convertNeOp         EQU     0x79bb
+convertLeOp         EQU     0x79c4
+convertGeOp         EQU     0x79cd
+convertLtOp         EQU     0x79d6
+convertGtOp         EQU     0x79df
+multiply16bit       EQU     0x77c6
+divide16bit         EQU     0x72a0
+rand16bit           EQU     0x76f4
+randMod16bit        EQU     0x77ed
+resetVideoTable     EQU     0x73d5
+initClearFuncs      EQU     0x78a0
+clearVertBlinds     EQU     0x78c3
+clearCursorRow      EQU     0x71a0
+printInit           EQU     0x70a0
+printText           EQU     0x77ad
+printDigit          EQU     0x70bb
+printInt16          EQU     0x76a0
+printChar           EQU     0x6fa0
+printHexByte        EQU     0x73a0
+printHexWord        EQU     0x74e2
+newLineScroll       EQU     0x75a0
+stringChr           EQU     0x74a0
+stringHex           EQU     0x74b1
+stringHexw          EQU     0x74c3
+createHex           EQU     0x6ea0
+stringCopy          EQU     0x77a0
+stringAdd           EQU     0x6da0
+stringConcat        EQU     0x79e8
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -355,6 +550,12 @@ multiply16_skip     LDW     mathX
                     CALL    realTimeProcAddr
                     POP
                     LDW     mathSum
+                    RET
+
+
+rand16bit           LDWI    SYS_Random_34
+                    STW     giga_sysFn
+                    SYS     0xFD
                     RET
 
 
@@ -555,21 +756,17 @@ printInit           LDWI    SYS_VDrawBits_134
 printText           PUSH
                     LDWI    printInit
                     CALL    giga_vAC
-                    LDW     textStr             
-                    PEEK                                    ; first byte is length
-                    BEQ     printT_exit
-    
-printT_char         ST      textLen
-                    INC     textStr                         ; next char
+
+                    ; first byte is length
+printT_char         INC     textStr                         ; next char
                     LDW     textStr             
                     PEEK
+                    BEQ     printT_exit                     ; check for delimiting zero
                     ST      textChr
                     LDWI    printChar
                     CALL    giga_vAC
-
-                    LD      textLen
-                    SUBI    1
-                    BNE     printT_char
+                    BRA     printT_char
+                    
 printT_exit         POP
                     RET
 
@@ -688,7 +885,6 @@ printC_slice        ST      textSlice
 printC_pop          POP
 
 printC_exit         RET
-
 
 
                     ; print hex byte in textHex
@@ -845,6 +1041,7 @@ strSrcLen           EQU     register3
 strOffset           EQU     register8
 strSrcAddr2         EQU     register9
 strTmpAddr          EQU     register10
+strLutAddr          EQU     register11
 
 
                     ; create a char string, (parameter in strChr)
@@ -913,5 +1110,69 @@ createH_skip0       ADDI    0x3A
 createH_skip1       ADDI    0x3A                    
                     POKE    strDstAddr                          ; save second char
                     INC     strDstAddr
+                    RET
+
+
+                    ; copy one string to another
+stringCopy          LDW     strSrcAddr
+                    PEEK
+                    POKE    strDstAddr
+                    INC     strSrcAddr
+                    INC     strDstAddr
+                    BNE     stringCopy                          ; copy char until terminating char
+                    RET
+
+
+
+                    ; concatenates two strings together
+stringAdd           LDW     strDstAddr
+                    STW     strTmpAddr
+                    INC     strSrcAddr
+                    INC     strDstAddr                          ; skip lengths
+                    LDI     0
+                    STW     strLength
+                    
+stringA_copy0       LDW     strSrcAddr
+                    PEEK
+                    BEQ     stringA_copy1
+                    POKE    strDstAddr
+                    INC     strSrcAddr
+                    INC     strDstAddr
+                    INC     strLength
+                    BRA     stringA_copy0
+                    
+stringA_copy1       LDW     strLength
+                    SUBI    94
+                    BGE     stringA_exit                        ; maximum destination length reached
+                    INC     strSrcAddr2                         ; skips length first time
+                    LDW     strSrcAddr2
+                    PEEK
+                    BEQ     stringA_exit                        ; copy char until terminating char
+                    POKE    strDstAddr                          ; copy char
+                    INC     strDstAddr
+                    INC     strLength
+                    BRA     stringA_copy1
+
+stringA_exit        LDW     strLength
+                    POKE    strTmpAddr                          ; save concatenated string length
+                    LDI     0
+                    POKE    strDstAddr                          ; terminating zero
+                    RET
+
+
+                    ; concatenates multiple strings together
+stringConcat        PUSH
+                    LDW     strLutAddr
+                    DEEK
+                    STW     strSrcAddr
+                    INC     strLutAddr
+                    INC     strLutAddr
+                    LDW     strLutAddr
+                    DEEK
+                    STW     strSrcAddr2
+                    PUSH
+                    LDWI    stringAdd
+                    CALL    giga_vAC
+                    POP
                     RET
 

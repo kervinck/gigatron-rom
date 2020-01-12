@@ -8,7 +8,7 @@
 
 
 #define MAJOR_VERSION "0.8"
-#define MINOR_VERSION "18"
+#define MINOR_VERSION "19"
 #define VERSION_STR "gtemuAT67 v" MAJOR_VERSION "." MINOR_VERSION
  
 #define ROM_INST 0
@@ -51,15 +51,9 @@
 #endif
 
 #if defined(_WIN32)
-#define _PAUSE_     \
-    system("pause");
+#define _PAUSE_ system("pause")
 #else
-#define _PAUSE_                                                      \
-    do                                                               \
-    {                                                                \
-        system("echo \"Press ENTER to continue . . .\"; read input");\
-    }                                                                \
-    while(0)
+#define _PAUSE_ system("echo \"Press ENTER to continue . . .\"; read input")
 #endif
 
 // At least on Windows, _X is a constant defined somewhere before here

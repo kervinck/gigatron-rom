@@ -86,27 +86,27 @@ _k                  EQU                     0x0044
 _c                  EQU                     0x0046
 
 ; Strings
-_str_0x7ea0          EQU                     0x7ea0
-_str_0x7ea0          DB                      18 ' 2 3   5 6 7   9 0' 0
-_str_0x7eb4          EQU                     0x7eb4
-_str_0x7eb4          DB                      19 'Q W E R T Y U I O P' 0
-_str_0x7ec9          EQU                     0x7ec9
-_str_0x7ec9          DB                      3 'Z: ' 0
-_str_0x7ece          EQU                     0x7ece
-_str_0x7ece          DB                      8 'Metallic' 0
-_str_0x7ed8          EQU                     0x7ed8
-_str_0x7ed8          DB                      8 'Triangle' 0
-_str_0x7ee2          EQU                     0x7ee2
-_str_0x7ee2          DB                      8 'Pulse   ' 0
-_str_0x7eec          EQU                     0x7eec
-_str_0x7eec          DB                      8 'Sawtooth' 0
+_str_0xff60          EQU                     0xff60
+_str_0xff60          DB                      18 ' 2 3   5 6 7   9 0' 0
+_str_0xff74          EQU                     0xff74
+_str_0xff74          DB                      19 'Q W E R T Y U I O P' 0
+_str_0xff89          EQU                     0xff89
+_str_0xff89          DB                      3 'Z: ' 0
+_str_0xff8e          EQU                     0xff8e
+_str_0xff8e          DB                      8 'Metallic' 0
+_str_0xff98          EQU                     0xff98
+_str_0xff98          DB                      8 'Triangle' 0
+_str_0xffa2          EQU                     0xffa2
+_str_0xffa2          DB                      8 'Pulse   ' 0
+_str_0xffac          EQU                     0xffac
+_str_0xffac          DB                      8 'Sawtooth' 0
 
 ; Define Bytes
 
 ; Lookup Tables
-_lut_numericLabs    EQU                     0x78a0
+_lut_numericLabs    EQU                     0xfd8b
 _lut_numericLabs    DW                      113 50 119 51 101 114 53 116 54 121 55 117 105 57 111 48 112 122 206 207 208 209 -1
-_lut_numericAddrs   EQU                     0x78ce
+_lut_numericAddrs   EQU                     0xfdb9
 _lut_numericAddrs   DW                      0x02ba 0x02d6 0x0304 0x0320 0x033c 0x0358 0x0374 0x0390 0x03ac 0x03c8 0x03e4 0x0413 0x042f 0x044b 0x0467 0x0483 0x049f 0x04bb 0x0585 0x0597 0x05a9 0x05bb 
 
 ; Code
@@ -501,11 +501,11 @@ _default            PUSH
                     CALL                    giga_vAC
 _page_0x0500        LDW                     0xde
 _text               PUSH                    
-                    PrintString             _str_0x7ea0
+                    PrintString             _str_0xff60
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print " 2 3   5 6 7   9 0"
 
-                    PrintString             _str_0x7eb4
+                    PrintString             _str_0xff74
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print "Q W E R T Y U I O P"
 
@@ -547,7 +547,7 @@ _wave               PUSH
                     ST                      cursorXY + 1
                     LDWI                    atTextCursor
                     CALL                    giga_vAC
-                    PrintString             _str_0x7ec9                     ; at 2,24 : print "Z: ";
+                    PrintString             _str_0xff89                     ; at 2,24 : print "Z: ";
 
                     LDI                     206
                     ADDW                    _z
@@ -561,28 +561,28 @@ _wave               PUSH
                     RET                                                     ; return
 
 _206                PUSH                    
-                    PrintString             _str_0x7ece
+                    PrintString             _str_0xff8e
                     LDWI                    newLineScroll
                     CALL                    giga_vAC
                     POP                     
                     RET                                                     ; print "Metallic":return
 
 _207                PUSH                    
-                    PrintString             _str_0x7ed8
+                    PrintString             _str_0xff98
                     LDWI                    newLineScroll
                     CALL                    giga_vAC
                     POP                     
                     RET                                                     ; print "Triangle":return
 
 _208                PUSH                    
-                    PrintString             _str_0x7ee2
+                    PrintString             _str_0xffa2
                     LDWI                    newLineScroll
                     CALL                    giga_vAC
                     POP                     
                     RET                                                     ; print "Pulse   ":return
 
 _209                PUSH                    
-                    PrintString             _str_0x7eec
+                    PrintString             _str_0xffac
                     LDWI                    newLineScroll
                     CALL                    giga_vAC
                     POP                     
@@ -659,26 +659,26 @@ _end_0x062c         BRA                     _end_0x062c                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7ef6
-convertEqOp         EQU     0x7da0
-convertNeOp         EQU     0x7da9
-convertLeOp         EQU     0x7db2
-convertGeOp         EQU     0x7dbb
-convertLtOp         EQU     0x7dc4
-convertGtOp         EQU     0x7dcd
-gosubNumericLabel   EQU     0x7bbb
-scanlineMode        EQU     0x7ca0
-waitVBlank          EQU     0x7ba0
-resetVideoTable     EQU     0x77a0
-initClearFuncs      EQU     0x7dd6
-clearVertBlinds     EQU     0x7cb4
-clearCursorRow      EQU     0x76a0
-printInit           EQU     0x77bf
-printText           EQU     0x7aa0
-printChr            EQU     0x7cee
-printChar           EQU     0x75a0
-atTextCursor        EQU     0x7ac3
-newLineScroll       EQU     0x79a0
+realTimeProc        EQU     0xffb6
+convertEqOp         EQU     0xffbf
+convertNeOp         EQU     0xffc8
+convertLeOp         EQU     0xffd1
+convertGeOp         EQU     0xffda
+convertLtOp         EQU     0xffe3
+convertGtOp         EQU     0xffec
+gosubNumericLabel   EQU     0xfe8c
+scanlineMode        EQU     0xfe23
+waitVBlank          EQU     0xfe71
+resetVideoTable     EQU     0xfc00
+initClearFuncs      EQU     0xfe00
+clearVertBlinds     EQU     0xfe37
+clearCursorRow      EQU     0xfc1f
+printInit           EQU     0xfde5
+printText           EQU     0xfec6
+printChr            EQU     0xfee9
+printChar           EQU     0xfc68
+atTextCursor        EQU     0xfd5e
+newLineScroll       EQU     0xfd00
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2

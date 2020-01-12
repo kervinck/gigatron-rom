@@ -82,20 +82,16 @@ printInit           LDWI    SYS_VDrawBits_134
 printText           PUSH
                     STW     textStr
                     CALLI   printInit
-                    LDW     textStr
-                    PEEK                                    ; first byte is length
-                    BEQ     printT_exit
 
-printT_char         ST      textLen
-                    INC     textStr                         ; next char
+                    ; first byte is length
+printT_char         INC     textStr                         ; next char
                     LDW     textStr             
                     PEEK
+                    BEQ     printT_exit                     ; check for delimiting zero
                     ST      textChr
                     CALLI   printChar
-
-                    LD      textLen
-                    SUBI    1
-                    BNE     printT_char
+                    BRA     printT_char
+                    
 printT_exit         POP
                     RET
 %ENDS   

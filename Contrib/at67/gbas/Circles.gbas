@@ -40,35 +40,35 @@ circle:
             y = y - 1
         endif
         
-        inc x 
+        inc x
     until x &> y
     
     return
 
     
-circle1:
-    d = r
-    x = r
-    y = 0
-
-    repeat
-        ch0.hi = cy + y
-        ch1.hi = cy - y
-        ch2.hi = cy + x
-        ch3.hi = cy - x
-    
-        a = cx + x + ch0 : poke a, c
-        a = cx - x + ch0 : poke a, c
-        a = cx + x + ch1 : poke a, c
-        a = cx - x + ch1 : poke a, c
-        a = cx + y + ch2 : poke a, c
-        a = cx - y + ch2 : poke a, c
-        a = cx + y + ch3 : poke a, c
-        a = cx - y + ch3 : poke a, c            
-
-        inc y
-        d = d - y
-        if d &&< 0 then x = x - 1 : d = d + x
-    until y &>= x
-    
-    return    
+'circle:
+'    d = r
+'    x = r
+'    y = 0
+'
+'    repeat
+'        ch0.hi = cy + y
+'        ch1.hi = cy - y
+'        ch2.hi = cy + x
+'        ch3.hi = cy - x
+'    
+'        a = cx + x + ch0 : poke a, c
+'        a = cx - x + ch0 : poke a, c
+'        a = cx + x + ch1 : poke a, c
+'        a = cx - x + ch1 : poke a, c
+'        a = cx + y + ch2 : poke a, c
+'        a = cx - y + ch2 : poke a, c
+'        a = cx + y + ch3 : poke a, c
+'        a = cx - y + ch3 : poke a, c            
+'
+'        inc y
+'        d = d - y
+'        if d &&< 0 then x = x - 1 : d = d + x
+'    until y &>= x
+'    
+'    return    

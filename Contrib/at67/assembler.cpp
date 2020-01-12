@@ -743,7 +743,7 @@ namespace Assembler
         // Parse expression and return with a result
         Expression::Numeric numeric;
         bool valid = Expression::parse(input, _lineNumber, numeric);
-        result = numeric._value;
+        result = int16_t(std::lround(numeric._value));
         return valid;
     }
 
@@ -767,7 +767,7 @@ namespace Assembler
     {
         // Expression equates
         Expression::ExpressionType expressionType = Expression::isExpression(token);
-        if(expressionType == Expression::Invalid) return false;
+        if(expressionType == Expression::IsInvalid) return false;
         if(expressionType == Expression::HasOperators)
         {
             int16_t value;
@@ -888,7 +888,7 @@ namespace Assembler
     {
         // Expression labels
         Expression::ExpressionType expressionType = Expression::isExpression(token);
-        if(expressionType == Expression::Invalid) return false;
+        if(expressionType == Expression::IsInvalid) return false;
         if(expressionType == Expression::HasOperators)
         {
             int16_t value;
@@ -1088,7 +1088,7 @@ namespace Assembler
                         Expression::Numeric value;
                         if(Expression::parse(tokens[i], _lineNumber, value))
                         {
-                            operand = value._value;
+                            operand = int16_t(std::lround(value._value));
                             success = true;
                         }
                     }
@@ -1113,7 +1113,7 @@ namespace Assembler
     bool handleNativeOperand(const std::string& token, uint8_t& operand)
     {
         Expression::ExpressionType expressionType = Expression::isExpression(token);
-        if(expressionType == Expression::Invalid) return false;
+        if(expressionType == Expression::IsInvalid) return false;
         if(expressionType == Expression::HasOperators)
         {
             // Parse expression and return with a result
@@ -1980,7 +1980,7 @@ namespace Assembler
                             Expression::Numeric value;
                             if(Expression::parse(token, _lineNumber, value))
                             {
-                                data = value._value;
+                                data = int16_t(std::lround(value._value));
                                 success = true;
                             }
                         }
@@ -2552,7 +2552,7 @@ namespace Assembler
                                     std::string input;
                                     preProcessExpression(tokens, tokenIndex, input, true);
                                     if(!Expression::parse((char*)input.c_str(), _lineNumber, value)) return false;
-                                    operand = value._value;
+                                    operand = int16_t(std::lround(value._value));
                                     operandValid = true;
                                 }
                                 else

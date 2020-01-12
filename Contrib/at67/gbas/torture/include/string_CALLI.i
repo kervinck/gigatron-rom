@@ -9,6 +9,7 @@ strSrcLen           EQU     register3
 strOffset           EQU     register8
 strSrcAddr2         EQU     register9
 strTmpAddr          EQU     register10
+strLutAddr          EQU     register11
 
 
 %SUB                stringChr
@@ -125,6 +126,23 @@ stringA_exit        LDW     strLength
                     POKE    strTmpAddr                          ; save concatenated string length
                     LDI     0
                     POKE    strDstAddr                          ; terminating zero
+                    RET
+%ENDS
+
+%SUB                stringConcat
+                    ; concatenates multiple strings together
+stringConcat        PUSH
+                    LDW     strLutAddr
+                    DEEK
+                    STW     strSrcAddr
+                    INC     strLutAddr
+                    INC     strLutAddr
+                    LDW     strLutAddr
+                    DEEK
+                    STW     strSrcAddr2
+                    PUSH
+                    CALLI   stringAdd
+                    POP
                     RET
 %ENDS
 

@@ -36,7 +36,7 @@ namespace Expression
     Numeric expression(void);
 
 
-    // Default operators
+    // Unary logic operators
     Numeric& operatorNEG(Numeric& numeric)
     {
         numeric._value = -numeric._value;
@@ -44,24 +44,70 @@ namespace Expression
     }
     Numeric& operatorNOT(Numeric& numeric)
     {
-        numeric._value = ~numeric._value;
+        numeric._value = ~int16_t(std::lround(numeric._value));
         return numeric;
     }
+
+    // Unary math operators
+    Numeric& operatorSIN(Numeric& numeric)
+    {
+        numeric._value = sin(numeric._value);
+        return numeric;
+    }
+    Numeric& operatorCOS(Numeric& numeric)
+    {
+        numeric._value = cos(numeric._value);
+        return numeric;
+    }
+    Numeric& operatorTAN(Numeric& numeric)
+    {
+        numeric._value = tan(numeric._value);
+        return numeric;
+    }
+    Numeric& operatorASIN(Numeric& numeric)
+    {
+        numeric._value = asin(numeric._value);
+        return numeric;
+    }
+    Numeric& operatorACOS(Numeric& numeric)
+    {
+        numeric._value = acos(numeric._value);
+        return numeric;
+    }
+    Numeric& operatorATAN(Numeric& numeric)
+    {
+        numeric._value = atan(numeric._value);
+        return numeric;
+    }
+
+    // Binary logic operators
     Numeric& operatorAND(Numeric& left, Numeric& right)
     {
-        left._value &= right._value;
+        left._value = int16_t(std::lround(left._value)) & int16_t(std::lround(right._value));
         return left;
     }
     Numeric& operatorOR(Numeric& left, Numeric& right)
     {
-        left._value |= right._value;
+        left._value = int16_t(std::lround(left._value)) | int16_t(std::lround(right._value));
         return left;
     }
     Numeric& operatorXOR(Numeric& left, Numeric& right)
     {
-        left._value ^= right._value;
+        left._value = int16_t(std::lround(left._value)) ^ int16_t(std::lround(right._value));
         return left;
     }
+    Numeric& operatorLSL(Numeric& left, Numeric& right)
+    {
+        left._value = int16_t(std::lround(left._value)) << int16_t(std::lround(right._value));
+        return left;
+    }
+    Numeric& operatorLSR(Numeric& left, Numeric& right)
+    {
+        left._value = int16_t(std::lround(left._value)) >> int16_t(std::lround(right._value));
+        return left;
+    }
+
+    // Binary math operators
     Numeric& operatorADD(Numeric& left, Numeric& right)
     {
         left._value += right._value;
@@ -70,11 +116,6 @@ namespace Expression
     Numeric& operatorSUB(Numeric& left, Numeric& right)
     {
         left._value -= right._value;
-        return left;
-    }
-    Numeric& operatorPOW(Numeric& left, Numeric& right)
-    {
-        left._value = int16_t(pow(double(left._value), double(right._value)));
         return left;
     }
     Numeric& operatorMUL(Numeric& left, Numeric& right)
@@ -89,47 +130,44 @@ namespace Expression
     }
     Numeric& operatorMOD(Numeric& left, Numeric& right)
     {
-        left._value = (right._value == 0) ? 0 : left._value % right._value;
+        left._value = (right._value == 0) ? 0 : int16_t(std::lround(left._value)) % int16_t(std::lround(right._value));
         return left;
     }
-    Numeric& operatorLSL(Numeric& left, Numeric& right)
+    Numeric& operatorPOW(Numeric& left, Numeric& right)
     {
-        left._value = left._value << right._value;
+        left._value = pow(left._value, right._value);
         return left;
     }
-    Numeric& operatorLSR(Numeric& left, Numeric& right)
-    {
-        left._value = left._value >> right._value;
-        return left;
-    }
+
+    // Relational operators
     Numeric& operatorLT(Numeric& left, Numeric& right)
     {
-        left._value = left._value < right._value;
+        left._value = int16_t(std::lround(left._value)) < int16_t(std::lround(right._value));
         return left;
     }
     Numeric& operatorGT(Numeric& left, Numeric& right)
     {
-        left._value = left._value > right._value;
+        left._value = int16_t(std::lround(left._value)) > int16_t(std::lround(right._value));
         return left;
     }
     Numeric& operatorEQ(Numeric& left, Numeric& right)
     {
-        left._value = left._value == right._value;
+        left._value = int16_t(std::lround(left._value)) == int16_t(std::lround(right._value));
         return left;
     }
     Numeric& operatorNE(Numeric& left, Numeric& right)
     {
-        left._value = left._value != right._value;
+        left._value = int16_t(std::lround(left._value)) != int16_t(std::lround(right._value));
         return left;
     }
     Numeric& operatorLE(Numeric& left, Numeric& right)
     {
-        left._value = left._value <= right._value;
+        left._value = int16_t(std::lround(left._value)) <= int16_t(std::lround(right._value));
         return left;
     }
     Numeric& operatorGE(Numeric& left, Numeric& right)
     {
-        left._value = left._value >= right._value;
+        left._value = int16_t(std::lround(left._value)) >= int16_t(std::lround(right._value));
         return left;
     }
 
@@ -156,9 +194,9 @@ namespace Expression
     // ****************************************************************************************************************
     ExpressionType isExpression(const std::string& input)
     {
-        if(input.find_first_of("[]") != std::string::npos) return Invalid;
-        if(input.find("++") != std::string::npos) return Invalid;
-        if(input.find("--") != std::string::npos) return Invalid;
+        if(input.find_first_of("[]") != std::string::npos) return IsInvalid;
+        if(input.find("++") != std::string::npos) return IsInvalid;
+        if(input.find("--") != std::string::npos) return IsInvalid;
         if(input.find_first_of("-+/%*()&|^") != std::string::npos) return HasOperators;
         return HasNumbers;
     }
@@ -612,6 +650,11 @@ namespace Expression
         return true;
     }
 
+    void stringToDouble(const std::string& token, double& result)
+    {
+        result = std::stod(token);
+    }
+
 
     // ****************************************************************************************************************
     // Tokenising
@@ -1047,10 +1090,33 @@ namespace Expression
                 numeric = Numeric(value, -1, true, Number, BooleanCC, Int16Both, std::string(""), std::string(""));
             }
         }
+        // Functions
+        else if(Expression::find("SIN"))
+        {
+            numeric = factor(0); numeric = operatorSIN(numeric);
+        }
+        else if(Expression::find("COS"))
+        {
+            numeric = factor(0); numeric = operatorCOS(numeric);
+        }
+        else if(Expression::find("TAN"))
+        {
+            numeric = factor(0); numeric = operatorTAN(numeric);
+        }
+        else if(Expression::find("ASIN"))
+        {
+            numeric = factor(0); numeric = operatorASIN(numeric);
+        }
+        else if(Expression::find("ACOS"))
+        {
+            numeric = factor(0); numeric = operatorACOS(numeric);
+        }
+        else if(Expression::find("ATAN"))
+        {
+            numeric = factor(0); numeric = operatorATAN(numeric);
+        }
         else
         {
-            // Functions
-
             // Unary operators
             switch(peek())
             {

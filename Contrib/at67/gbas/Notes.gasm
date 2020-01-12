@@ -204,21 +204,21 @@ _end_0x034b         BRA                     _end_0x034b                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7ea0
-convertEqOp         EQU     0x7ea9
-convertNeOp         EQU     0x7eb2
-convertLeOp         EQU     0x7ebb
-convertGeOp         EQU     0x7ec4
-convertLtOp         EQU     0x7ecd
-convertGtOp         EQU     0x7ed6
-resetVideoTable     EQU     0x7edf
-initClearFuncs      EQU     0x7da0
-clearCursorRow      EQU     0x7aa0
-printInit           EQU     0x7dc3
-printDigit          EQU     0x7dde
-printInt16          EQU     0x7ca0
-printChar           EQU     0x79a0
-newLineScroll       EQU     0x7ba0
+realTimeProc        EQU     0xff60
+convertEqOp         EQU     0xff69
+convertNeOp         EQU     0xff72
+convertLeOp         EQU     0xff7b
+convertGeOp         EQU     0xff84
+convertLtOp         EQU     0xff8d
+convertGtOp         EQU     0xff96
+resetVideoTable     EQU     0xffc2
+initClearFuncs      EQU     0xff9f
+clearCursorRow      EQU     0xfeb2
+printInit           EQU     0xffe1
+printDigit          EQU     0xfd00
+printInt16          EQU     0xfe00
+printChar           EQU     0xfd22
+newLineScroll       EQU     0xfe54
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2

@@ -7,8 +7,8 @@
 
 namespace Expression
 {
-    enum ExpressionType {Invalid=0x8000, HasNumbers=0x0000, HasStrings=0x0001, HasOperators=0x0002, HasStrOperators=0x0004, HasIntConsts=0x0008, HasStrConsts=0x0010,
-                         HasIntVars=0x0020, HasStrVars=0x0040, HasKeywords=0x0080, HasFunctions=0x0100, HasStringKeywords=0x0200, HasOptimisedPrint=0x0400};
+    enum ExpressionType {IsInvalid=0x8000, HasNumbers=0x0000, HasStrings=0x0001, HasStrConsts=0x0002, HasStrVars=0x0004, HasStringKeywords=0x0008, IsStringExpression=0x000F,
+                         HasOperators=0x0010, HasIntConsts=0x0020, HasIntVars=0x0040, HasKeywords=0x0080, HasFunctions=0x0100, HasOptimisedPrint=0x0200};
     enum NumericType {BadBase=-1, Decimal, HexaDecimal, Octal, Binary};
     enum CCType {BooleanCC, NormalCC, FastCC};
     enum Int16Byte {Int16Both, Int16Low, Int16High};
@@ -18,15 +18,15 @@ namespace Expression
     {
         Numeric()
         {
-            _value = 0; _index = -1; _isValid = false; _varType = Number; _ccType = BooleanCC; _int16Byte = Int16Both; _name = ""; _text = "";
+            _value = 0.0; _index = -1; _isValid = false; _varType = Number; _ccType = BooleanCC; _int16Byte = Int16Both; _name = ""; _text = "";
         }
 
-        Numeric(int16_t value, int16_t index, bool isValid, VarType varType, CCType ccType, Int16Byte int16Byte, const std::string& name, const std::string& text)
+        Numeric(double value, int16_t index, bool isValid, VarType varType, CCType ccType, Int16Byte int16Byte, const std::string& name, const std::string& text)
         {
             _value = value; _index = index; _isValid = isValid; _varType = varType; _ccType = ccType; _int16Byte = int16Byte; _name = name; _text = text;
         }
 
-        int16_t _value = 0;
+        double _value = 0.0;
         int16_t _index = -1;
         bool _isValid = false;
         VarType _varType = Number;
@@ -81,6 +81,7 @@ namespace Expression
     bool stringToU8(const std::string& token, uint8_t& result);
     bool stringToI16(const std::string& token, int16_t& result);
     bool stringToU16(const std::string& token, uint16_t& result);
+    void stringToDouble(const std::string& token, double& result);
 
     std::vector<std::string> tokenise(const std::string& text, const std::string& delimiters, bool toUpper=false);
     std::vector<std::string> tokenise(const std::string& text, char c, bool skipSpaces=true, bool toUpper=false);

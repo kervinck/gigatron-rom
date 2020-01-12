@@ -31,7 +31,7 @@ namespace Operators
             // Temporary variable address
             case Expression::TmpVar:
             {
-                Compiler::emitVcpuAsm(opcodeStr, Expression::byteToHexString(uint8_t(numeric._value)), false);
+                Compiler::emitVcpuAsm(opcodeStr, Expression::byteToHexString(uint8_t(std::lround(numeric._value))), false);
             }
             break;
 
@@ -71,12 +71,12 @@ namespace Operators
             // 8bit positive constants
             if(lhs._value >=0  &&  lhs._value <= 255)
             {
-                (outputHex) ? Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(lhs._value)), false) : Compiler::emitVcpuAsm("LDI", std::to_string(lhs._value), false);
+                (outputHex) ? Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(std::lround(lhs._value))), false) : Compiler::emitVcpuAsm("LDI", std::to_string(uint8_t(std::lround(lhs._value))), false);
             }
             // 16bit constants
             else
             {
-                (outputHex) ? Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(lhs._value), false) : Compiler::emitVcpuAsm("LDWI", std::to_string(lhs._value), false);
+                (outputHex) ? Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(int16_t(std::lround(lhs._value))), false) : Compiler::emitVcpuAsm("LDWI", std::to_string(int16_t(std::lround(lhs._value))), false);
             }
 
             _nextTempVar = true;
@@ -88,7 +88,7 @@ namespace Operators
                 // Temporary variable address
                 case Expression::TmpVar:
                 {
-                    Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(lhs._value)), false);
+                    Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(std::lround(lhs._value))), false);
                 }
                 break;
 
@@ -107,7 +107,7 @@ namespace Operators
         // RHS
         if(rhs._varType == Expression::Number)
         {
-            Compiler::emitVcpuAsm(opcode + "I", std::to_string(rhs._value), false);
+            Compiler::emitVcpuAsm(opcode + "I", std::to_string(int16_t(std::lround(rhs._value))), false);
         }
         else
         {
@@ -116,7 +116,7 @@ namespace Operators
                 // Temporary variable address
                 case Expression::TmpVar:
                 {
-                    Compiler::emitVcpuAsm(opcode + "W", Expression::byteToHexString(uint8_t(rhs._value)), false);
+                    Compiler::emitVcpuAsm(opcode + "W", Expression::byteToHexString(uint8_t(std::lround(rhs._value))), false);
                 }
                 break;
 
@@ -149,7 +149,7 @@ namespace Operators
             // Temporary variable address
             case Expression::TmpVar:
             {
-                Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(lhs._value)), false);
+                Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(std::lround(lhs._value))), false);
             }
             break;
 
@@ -201,12 +201,12 @@ namespace Operators
             // 8bit positive constants
             if(lhs._value >=0  &&  lhs._value <= 255)
             {
-                Compiler::emitVcpuAsm("LDI", std::to_string(lhs._value), false);
+                Compiler::emitVcpuAsm("LDI", std::to_string(uint8_t(std::lround(lhs._value))), false);
             }
             // 16bit constants
             else
             {
-                Compiler::emitVcpuAsm("LDWI", std::to_string(lhs._value), false);
+                Compiler::emitVcpuAsm("LDWI", std::to_string(int16_t(std::lround(lhs._value))), false);
             }
 
             _nextTempVar = true;
@@ -218,7 +218,7 @@ namespace Operators
                 // Temporary variable address
                 case Expression::TmpVar:
                 {
-                    Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(lhs._value)), false);
+                    Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(std::lround(lhs._value))), false);
                 }
                 break;
 
@@ -237,7 +237,7 @@ namespace Operators
         // RHS
         if(rhs._varType == Expression::Number)
         {
-            Compiler::emitVcpuAsm("SUBI", std::to_string(rhs._value), false);
+            Compiler::emitVcpuAsm("SUBI", std::to_string(int16_t(std::lround(rhs._value))), false);
         }
         else        
         {
@@ -246,7 +246,7 @@ namespace Operators
                 // Temporary variable address
                 case Expression::TmpVar:
                 {
-                    Compiler::emitVcpuAsm("SUBW", Expression::byteToHexString(uint8_t(rhs._value)), false);
+                    Compiler::emitVcpuAsm("SUBW", Expression::byteToHexString(uint8_t(std::lround(rhs._value))), false);
                 }
                 break;
 
@@ -277,12 +277,12 @@ namespace Operators
             // 8bit positive constants
             if(lhs._value >=0  &&  lhs._value <= 255)
             {
-                Compiler::emitVcpuAsm("LDI", std::to_string(lhs._value), false);
+                Compiler::emitVcpuAsm("LDI", std::to_string(uint8_t(std::lround(lhs._value))), false);
             }
             // 16bit constants
             else
             {
-                Compiler::emitVcpuAsm("LDWI", std::to_string(lhs._value), false);
+                Compiler::emitVcpuAsm("LDWI", std::to_string(int16_t(std::lround(lhs._value))), false);
             }
 
             _nextTempVar = true;
@@ -294,7 +294,7 @@ namespace Operators
                 // Temporary variable address
                 case Expression::TmpVar:
                 {
-                    Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(lhs._value)), false);
+                    Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(std::lround(lhs._value))), false);
                 }
                 break;
 
@@ -317,11 +317,11 @@ namespace Operators
         {
             if(rhs._value >=0  &&  rhs._value <= 255)
             {
-                Compiler::emitVcpuAsm("LDI", std::to_string(rhs._value), false);
+                Compiler::emitVcpuAsm("LDI", std::to_string(uint8_t(std::lround(rhs._value))), false);
             }
             else
             {
-                Compiler::emitVcpuAsm("LDWI", std::to_string(rhs._value), false);
+                Compiler::emitVcpuAsm("LDWI", std::to_string(int16_t(std::lround(rhs._value))), false);
             }
         }
         else
@@ -331,7 +331,7 @@ namespace Operators
                 // Temporary variable address
                 case Expression::TmpVar:
                 {
-                    Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(rhs._value)), false);
+                    Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(std::lround(rhs._value))), false);
                 }
                 break;
 
@@ -408,7 +408,7 @@ namespace Operators
     {
         if(numeric._varType == Expression::Number)
         {
-            numeric._value = ~numeric._value;
+            numeric._value = ~int16_t(std::lround(numeric._value));
             return numeric;
         }
 
@@ -416,6 +416,70 @@ namespace Operators
         Compiler::emitVcpuAsm("LDWI", std::to_string(-1), false);
         handleSingleOp("SUBW", numeric);
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
+
+        return numeric;
+    }
+
+
+    // ********************************************************************************************
+    // Unary Math Operators
+    // ********************************************************************************************
+    Expression::Numeric operatorSIN(Expression::Numeric& numeric)
+    {
+        if(numeric._varType == Expression::Number)
+        {
+            numeric._value = sin(numeric._value*MATH_PI/180.0);
+        }
+
+        return numeric;
+    }
+
+    Expression::Numeric operatorCOS(Expression::Numeric& numeric)
+    {
+        if(numeric._varType == Expression::Number)
+        {
+            numeric._value = cos(numeric._value*MATH_PI/180.0);
+        }
+
+        return numeric;
+    }
+
+    Expression::Numeric operatorTAN(Expression::Numeric& numeric)
+    {
+        if(numeric._varType == Expression::Number)
+        {
+            numeric._value = tan(numeric._value*MATH_PI/180.0);
+        }
+
+        return numeric;
+    }
+
+    Expression::Numeric operatorASIN(Expression::Numeric& numeric)
+    {
+        if(numeric._varType == Expression::Number)
+        {
+            numeric._value = asin(numeric._value);
+        }
+
+        return numeric;
+    }
+
+    Expression::Numeric operatorACOS(Expression::Numeric& numeric)
+    {
+        if(numeric._varType == Expression::Number)
+        {
+            numeric._value = acos(numeric._value);
+        }
+
+        return numeric;
+    }
+
+    Expression::Numeric operatorATAN(Expression::Numeric& numeric)
+    {
+        if(numeric._varType == Expression::Number)
+        {
+            numeric._value = atan(numeric._value);
+        }
 
         return numeric;
     }
@@ -452,7 +516,7 @@ namespace Operators
     {
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
-            left._value &= right._value;
+            left._value = int16_t(std::lround(left._value)) & int16_t(std::lround(right._value));
             return left;
         }
 
@@ -464,7 +528,7 @@ namespace Operators
     {
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
-            left._value ^= right._value;
+            left._value = int16_t(std::lround(left._value)) ^ int16_t(std::lround(right._value));
             return left;
         }
 
@@ -476,7 +540,7 @@ namespace Operators
     {
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
-            left._value |= right._value;
+            left._value = int16_t(std::lround(left._value)) | int16_t(std::lround(right._value));
             return left;
         }
 
@@ -492,7 +556,7 @@ namespace Operators
     {
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
-            left._value <<= right._value;
+            left._value = int16_t(std::lround(left._value)) << int16_t(std::lround(right._value));
             return left;
         }
 
@@ -507,7 +571,7 @@ namespace Operators
                     // Temporary variable address
                     case Expression::TmpVar:
                     {
-                        Compiler::emitVcpuAsm("LD", Expression::byteToHexString(uint8_t(left._value)), false);
+                        Compiler::emitVcpuAsm("LD", Expression::byteToHexString(uint8_t(std::lround(left._value))), false);
                     }
                     break;
 
@@ -533,7 +597,7 @@ namespace Operators
             else
             {
                 std::string opcode;
-                switch(right._value)
+                switch(int16_t(std::lround(right._value)))
                 {
                     case 1:
                     case 2:
@@ -549,7 +613,7 @@ namespace Operators
 
                 Compiler::emitVcpuAsm(opcode, "", false);
 
-                switch(right._value)
+                switch(int16_t(std::lround(right._value)))
                 {
                     case 2: Compiler::emitVcpuAsm("LSLW", "", false);                                                                                     break;
                     case 3: Compiler::emitVcpuAsm("LSLW", "", false); Compiler::emitVcpuAsm("LSLW", "", false);                                           break;
@@ -569,7 +633,7 @@ namespace Operators
     {
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
-            left._value >>= right._value;
+            left._value = int16_t(std::lround(left._value)) >> int16_t(std::lround(right._value));
             return left;
         }
 
@@ -585,7 +649,7 @@ namespace Operators
                     // Temporary variable address
                     case Expression::TmpVar:
                     {
-                        Compiler::emitVcpuAsm("LD", Expression::byteToHexString(uint8_t(left._value)) + " + 1", false);
+                        Compiler::emitVcpuAsm("LD", Expression::byteToHexString(uint8_t(std::lround(left._value))) + " + 1", false);
                     }
                     break;
 
@@ -608,7 +672,7 @@ namespace Operators
             else
             {
                 std::string opcode;
-                switch(right._value)
+                switch(int16_t(std::lround(right._value)))
                 {
                     case 1: opcode = "%ShiftRight1bit"; break;
                     case 2: opcode = "%ShiftRight2bit"; break;
@@ -633,7 +697,7 @@ namespace Operators
     {
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
-            left._value /= (1 << right._value);
+            left._value /= (1 << int16_t(std::lround(right._value)));
             return left;
         }
 
@@ -642,7 +706,7 @@ namespace Operators
         if((left._varType == Expression::TmpVar  ||  left._varType == Expression::IntVar)  &&  right._varType == Expression::Number)
         {
             std::string opcode;
-            switch(right._value)
+            switch(int16_t(std::lround(right._value)))
             {
                 case 1: opcode = "%ShiftRightSgn1bit"; break;
                 case 2: opcode = "%ShiftRightSgn2bit"; break;
@@ -795,7 +859,7 @@ namespace Operators
     {
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
-            left._value = int16_t(pow(double(left._value), double(right._value)));
+            left._value = pow(double(left._value), double(right._value));
             return left;
         }
 
@@ -862,7 +926,7 @@ namespace Operators
     {
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
-            left._value = (right._value == 0) ? 0 : left._value % right._value;
+            left._value = (int16_t(std::lround(right._value)) == 0) ? 0 : int16_t(std::lround(left._value)) % int16_t(std::lround(right._value));
             return left;
         }
 

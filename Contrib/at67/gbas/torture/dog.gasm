@@ -46,10 +46,10 @@ _z                  EQU                     0x0036
 _j                  EQU                     0x0038
 
 ; Strings
-_str_0x7ea0          EQU                     0x7ea0
-_str_0x7ea0          DB                      1 ' ' 0
-_str_0x7ea3          EQU                     0x7ea3
-_str_0x7ea3          DB                      5 ' dog ' 0
+_str_0xff60          EQU                     0xff60
+_str_0xff60          DB                      1 ' ' 0
+_str_0xff63          EQU                     0xff63
+_str_0xff63          DB                      5 ' dog ' 0
 
 ; Define Bytes
 
@@ -98,17 +98,17 @@ _8                  LDI                     2
                     STW                     _j
                     LDW                     _a
                     PrintAcInt16            
-                    PrintString             _str_0x7ea0
+                    PrintString             _str_0xff60
                     LDW                     _b
                     PrintAcInt16            
-                    PrintString             _str_0x7ea0
+                    PrintString             _str_0xff60
                     LDI                     1
                     ADDW                    _b
                     PrintAcInt16            
-                    PrintString             _str_0x7ea3
+                    PrintString             _str_0xff63
                     LDW                     _bb
                     PrintAcInt16            
-                    PrintString             _str_0x7ea0
+                    PrintString             _str_0xff60
                     LDW                     _z
                     SUBI                    20
                     CALL                    convertGtOpAddr
@@ -137,22 +137,22 @@ _end_0x0319         BRA                     _end_0x0319                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7eaa
-convertEqOp         EQU     0x7eb3
-convertNeOp         EQU     0x7ebc
-convertLeOp         EQU     0x7ec5
-convertGeOp         EQU     0x7ece
-convertLtOp         EQU     0x7ed7
-convertGtOp         EQU     0x7ee0
-resetVideoTable     EQU     0x7aa0
-initClearFuncs      EQU     0x7da0
-clearCursorRow      EQU     0x79a0
-printInit           EQU     0x7abf
-printText           EQU     0x7dc3
-printDigit          EQU     0x7ada
-printInt16          EQU     0x7ca0
-printChar           EQU     0x78a0
-newLineScroll       EQU     0x7ba0
+realTimeProc        EQU     0xff6a
+convertEqOp         EQU     0xff73
+convertNeOp         EQU     0xff7c
+convertLeOp         EQU     0xff85
+convertGeOp         EQU     0xff8e
+convertLtOp         EQU     0xff97
+convertGtOp         EQU     0xffa0
+resetVideoTable     EQU     0xfeb2
+initClearFuncs      EQU     0xffa9
+clearCursorRow      EQU     0xfd00
+printInit           EQU     0xfed1
+printText           EQU     0xffcc
+printDigit          EQU     0xfd49
+printInt16          EQU     0xfe00
+printChar           EQU     0xfd6b
+newLineScroll       EQU     0xfe54
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
