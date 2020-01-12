@@ -59,8 +59,8 @@ _g                  EQU                     0x003c
 _z                  EQU                     0x003e
 
 ; Strings
-_str_0x7ea0          EQU                     0x7ea0
-_str_0x7ea0          DB                      1 ' ' 0
+_str_0xff60          EQU                     0xff60
+_str_0xff60          DB                      1 ' ' 0
 
 ; Define Bytes
 
@@ -110,11 +110,11 @@ _10                 LDW                     _d
                     SUBW                    0xc4
                     STW                     _e                              ; e = b - 3 + (25 - a) + d - b - (a - cat - d)
 
-                    LDI                     64
+                    LDI                     65
                     SUBW                    _e
                     STW                     _f                              ; f = 54 - 23 + (27*2) - 32 + (56/3) - 7 - e
 
-                    LDWI                    -1149
+                    LDWI                    -1148
                     STW                     _g                              ; g = 154-1230 + (227*2) - 532 + (756/33) - 17
 
                     LDW                     _a
@@ -561,25 +561,25 @@ _page_0x0600        LDW                     0xde
 
                     LDW                     _a
                     PrintAcInt16            
-                    PrintString             _str_0x7ea0
+                    PrintString             _str_0xff60
                     LDW                     _b
                     PrintAcInt16            
-                    PrintString             _str_0x7ea0
+                    PrintString             _str_0xff60
                     LDW                     _d
                     PrintAcInt16            
-                    PrintString             _str_0x7ea0
+                    PrintString             _str_0xff60
                     LDW                     _e
                     PrintAcInt16            
-                    PrintString             _str_0x7ea0
+                    PrintString             _str_0xff60
                     LDW                     _f
                     PrintAcInt16            
-                    PrintString             _str_0x7ea0
+                    PrintString             _str_0xff60
                     LDW                     _g
                     PrintAcInt16            
-                    PrintString             _str_0x7ea0
+                    PrintString             _str_0xff60
                     LDW                     _z
                     PrintAcInt16            
-                    PrintString             _str_0x7ea0
+                    PrintString             _str_0xff60
                     LDW                     _cat
                     PrintAcInt16            
                     LDWI                    newLineScroll
@@ -598,22 +598,22 @@ _end_0x06f1         BRA                     _end_0x06f1                     ; en
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7ea3
-convertEqOp         EQU     0x7eac
-convertNeOp         EQU     0x7eb5
-convertLeOp         EQU     0x7ebe
-convertGeOp         EQU     0x7ec7
-convertLtOp         EQU     0x7ed0
-convertGtOp         EQU     0x7ed9
-resetVideoTable     EQU     0x7aa0
-initClearFuncs      EQU     0x7da0
-clearCursorRow      EQU     0x79a0
-printInit           EQU     0x7ee2
-printText           EQU     0x7dc3
-printDigit          EQU     0x7abf
-printInt16          EQU     0x7ca0
-printChar           EQU     0x78a0
-newLineScroll       EQU     0x7ba0
+realTimeProc        EQU     0xff63
+convertEqOp         EQU     0xff6c
+convertNeOp         EQU     0xff75
+convertLeOp         EQU     0xff7e
+convertGeOp         EQU     0xff87
+convertLtOp         EQU     0xff90
+convertGtOp         EQU     0xff99
+resetVideoTable     EQU     0xffde
+initClearFuncs      EQU     0xffa2
+clearCursorRow      EQU     0xfeb2
+printInit           EQU     0xfd00
+printText           EQU     0xffc5
+printDigit          EQU     0xfd1b
+printInt16          EQU     0xfe00
+printChar           EQU     0xfd3d
+newLineScroll       EQU     0xfe54
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -781,25 +781,21 @@ printInit           LDWI    SYS_VDrawBits_134
 
 
 
-                    ; prints text string pointed to by the accumulator
+                    ; prints text string pointed to by textStr
 printText           PUSH
                     LDWI    printInit
                     CALL    giga_vAC
-                    LDW     textStr             
-                    PEEK                                    ; first byte is length
-                    BEQ     printT_exit
-    
-printT_char         ST      textLen
-                    INC     textStr                         ; next char
+
+                    ; first byte is length
+printT_char         INC     textStr                         ; next char
                     LDW     textStr             
                     PEEK
+                    BEQ     printT_exit                     ; check for delimiting zero
                     ST      textChr
                     LDWI    printChar
                     CALL    giga_vAC
-
-                    LD      textLen
-                    SUBI    1
-                    BNE     printT_char
+                    BRA     printT_char
+                    
 printT_exit         POP
                     RET
 

@@ -49,16 +49,16 @@ _i                  EQU                     0x0036
 _char               EQU                     0x0038
 
 ; Strings
-_str_0x7ea0          EQU                     0x7ea0
-_str_0x7ea0          DB                      28 'yahooowalllallllalalalwallla' 0
-_str_0x7ebe          EQU                     0x7ebe
-_str_0x7ebe          DB                      3 'yes' 0
-_str_0x7ec3          EQU                     0x7ec3
-_str_0x7ec3          DB                      1 ' ' 0
-_str_0x7ec6          EQU                     0x7ec6
-_str_0x7ec6          DB                      34 'wooooooooooooooooooooooooooooow!!!' 0
-_str_0x7eea          EQU                     0x7eea
-_str_0x7eea          DB                      3 'dog' 0
+_str_0xff60          EQU                     0xff60
+_str_0xff60          DB                      28 'yahooowalllallllalalalwallla' 0
+_str_0xff7e          EQU                     0xff7e
+_str_0xff7e          DB                      3 'yes' 0
+_str_0xff83          EQU                     0xff83
+_str_0xff83          DB                      1 ' ' 0
+_str_0xff86          EQU                     0xff86
+_str_0xff86          DB                      34 'wooooooooooooooooooooooooooooow!!!' 0
+_str_0xffaa          EQU                     0xffaa
+_str_0xffaa          DB                      3 'dog' 0
 
 ; Define Bytes
 def_bytes_0x10a0    EQU                     0x10a0
@@ -267,13 +267,13 @@ _next_0x0260        LDI                     0
 _next_0x0264        LDI                     0
                     STW                     _i                              ; for i = 0 to 1
 
-_next_0x0268        PrintString             _str_0x7ea0                     ; print "yahooowalllallllalalalwallla";
+_next_0x0268        PrintString             _str_0xff60                     ; print "yahooowalllallllalalalwallla";
 
-                    PrintString             _str_0x7ebe
-                    PrintString             _str_0x7ec3                     ; print "yes";" ";
+                    PrintString             _str_0xff7e
+                    PrintString             _str_0xff83                     ; print "yes";" ";
 
                     PrintInt16              0x003d
-                    PrintString             _str_0x7ec3                     ; print 20*3+1;" ";
+                    PrintString             _str_0xff83                     ; print 20*3+1;" ";
 
                     LDI                     32
                     STW                     _char                           ; for char = 32 to 127
@@ -310,15 +310,15 @@ _page_0x0300        LDW                     0xde
 
                     ForNextLoopUp           _k _next_0x0260 1               ; next k
 
-                    PrintString             _str_0x7ec6
+                    PrintString             _str_0xff86
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print "wooooooooooooooooooooooooooooow!!!"
 
                     LDI                     0
                     STW                     _i                              ; for i = 0 to 6
 
-_next_0x0354        PrintString             _str_0x7eea
-                    PrintString             _str_0x7ec3
+_next_0x0354        PrintString             _str_0xffaa
+                    PrintString             _str_0xff83
                     LDW                     _i
                     PrintAcInt16            
                     LDWI                    newLineScroll
@@ -342,27 +342,27 @@ _end_0x038e         BRA                     _end_0x038e                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7eef
-convertEqOp         EQU     0x7da0
-convertNeOp         EQU     0x7da9
-convertLeOp         EQU     0x7db2
-convertGeOp         EQU     0x7dbb
-convertLtOp         EQU     0x7dc4
-convertGtOp         EQU     0x7dcd
-resetVideoTable     EQU     0x78da
-initClearFuncs      EQU     0x7dd6
-clearVertBlinds     EQU     0x78a0
-clearCursorRow      EQU     0x77a0
-resetAudio          EQU     0x7ca0
-playMidi            EQU     0x7ba0
-midiStartNote       EQU     0x76a0
-printInit           EQU     0x76e2
-printText           EQU     0x7cd9
-printDigit          EQU     0x75a0
-printInt16          EQU     0x7aa0
-printChr            EQU     0x7bf0
-printChar           EQU     0x74a0
-newLineScroll       EQU     0x79a0
+realTimeProc        EQU     0xffaf
+convertEqOp         EQU     0xffb8
+convertNeOp         EQU     0xffc1
+convertLeOp         EQU     0xffca
+convertGeOp         EQU     0xffd3
+convertLtOp         EQU     0xffdc
+convertGtOp         EQU     0xffe5
+resetVideoTable     EQU     0xfdb2
+initClearFuncs      EQU     0xfe00
+clearVertBlinds     EQU     0xfec5
+clearCursorRow      EQU     0xfc00
+resetAudio          EQU     0xfe23
+playMidi            EQU     0xfe5c
+midiStartNote       EQU     0xfc49
+printInit           EQU     0xfdd1
+printText           EQU     0xfeac
+printDigit          EQU     0xfc8b
+printInt16          EQU     0xfd00
+printChr            EQU     0xffee
+printChar           EQU     0xfb00
+newLineScroll       EQU     0xfd54
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -691,25 +691,21 @@ printInit           LDWI    SYS_VDrawBits_134
 
 
 
-                    ; prints text string pointed to by the accumulator
+                    ; prints text string pointed to by textStr
 printText           PUSH
                     LDWI    printInit
                     CALL    giga_vAC
-                    LDW     textStr             
-                    PEEK                                    ; first byte is length
-                    BEQ     printT_exit
-    
-printT_char         ST      textLen
-                    INC     textStr                         ; next char
+
+                    ; first byte is length
+printT_char         INC     textStr                         ; next char
                     LDW     textStr             
                     PEEK
+                    BEQ     printT_exit                     ; check for delimiting zero
                     ST      textChr
                     LDWI    printChar
                     CALL    giga_vAC
-
-                    LD      textLen
-                    SUBI    1
-                    BNE     printT_char
+                    BRA     printT_char
+                    
 printT_exit         POP
                     RET
 

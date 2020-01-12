@@ -100,6 +100,7 @@ namespace Linker
         {0x0000, 0x0000, "createHex"        , "", false, false},
         {0x0000, 0x0000, "stringCopy"       , "", false, false},
         {0x0000, 0x0000, "stringAdd"        , "", false, false},
+        {0x0000, 0x0000, "stringConcat"     , "", false, false},
         {0x0000, 0x0000, "stringMid"        , "", false, false},
         {0x0000, 0x0000, "stringLeft"       , "", false, false},
         {0x0000, 0x0000, "stringRight"      , "", false, false},

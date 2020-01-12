@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <cmath>
 #include <algorithm>
 
 #include "memory.h"
@@ -218,15 +219,15 @@ namespace Keywords
 
             case Compiler::StrRight:
             {
-                uint8_t length = uint8_t(numeric._parameters[0]._value);
+                uint8_t length = uint8_t(std::lround(numeric._parameters[0]._value));
                 Compiler::getOrCreateConstString(constStrType, numeric._text, length, 0, index);
             }
             break;
 
             case Compiler::StrMid:
             {
-                uint8_t offset = uint8_t(numeric._parameters[0]._value);
-                uint8_t length = uint8_t(numeric._parameters[1]._value);
+                uint8_t offset = uint8_t(std::lround(numeric._parameters[0]._value));
+                uint8_t length = uint8_t(std::lround(numeric._parameters[1]._value));
                 Compiler::getOrCreateConstString(constStrType, numeric._text, length, offset, index);
             }
             break;
@@ -261,18 +262,69 @@ namespace Keywords
             // 8bit
             if(param._value >=0  &&  param._value <= 255)
             {
-                Compiler::emitVcpuAsm("LDI", std::to_string(param._value), false);
+                Compiler::emitVcpuAsm("LDI", std::to_string(int16_t(std::lround(param._value))), false);
             }
             // 16bit
             else
             {
-                Compiler::emitVcpuAsm("LDWI", std::to_string(param._value), false);
+                Compiler::emitVcpuAsm("LDWI", std::to_string(int16_t(std::lround(param._value))), false);
             }
 
             return;
         }
 
         Operators::handleSingleOp("LDW", param);
+    }
+
+    bool createKeywordVar(Compiler::CodeLine& codeLine, int codeLineIndex, int& varIndex)
+    {
+        // Name
+        std::string varName = codeLine._code;
+        Expression::stripWhitespace(varName);
+
+        // String variables are not handled here
+        if(varName.back() == '$') return false;
+
+        // Var already exists?
+        varIndex = Compiler::findVar(varName);
+        if(varIndex != -1)
+        {
+            codeLine._containsVars = false;
+            codeLine._varIndex = varIndex;
+            codeLine._varType = Compiler::VarInt16;
+
+            return true;
+        }
+
+        Compiler::createIntVar(varName, 0, 0, codeLine, codeLineIndex, false, varIndex);
+
+        return true;
+    }
+
+    bool createKeywordStr(Compiler::CodeLine& codeLine, int codeLineIndex, int& strIndex)
+    {
+        // String name validation
+        std::string strName = codeLine._code;
+        Expression::stripWhitespace(strName);
+        if(strName.back() != '$') return false;
+        if(!Expression::isVarNameValid(strName)) return false;
+        strIndex = Compiler::findStr(strName);
+        if(strIndex != -1)
+        {
+            codeLine._varIndex = strIndex;
+            codeLine._varType = Compiler::VarStr;
+
+            return true;
+        }
+
+        // Create string
+        uint16_t address;
+        strIndex = getOrCreateString(codeLine, codeLineIndex, "", strName, address, USER_STR_SIZE, false);
+        if(strIndex == -1) return false;
+        codeLine._varIndex = strIndex;
+        codeLine._varType = Compiler::VarStr;
+
+        return true;
     }
 
 
@@ -310,7 +362,7 @@ namespace Keywords
                 // Temporary variable address
                 case Expression::TmpVar:
                 {
-                    Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(numeric._parameters[0]._value)), false);
+                    Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(std::lround(numeric._parameters[0]._value))), false);
                 }
                 break;
 
@@ -361,8 +413,8 @@ namespace Keywords
     {
         if(numeric._varType == Expression::Number)
         {
-            (numeric._value >= 0  && numeric._value <= 255) ? Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(numeric._value)), false) : 
-                                                              Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(numeric._value), false);
+            (numeric._value >= 0  && numeric._value <= 255) ? Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(std::lround(numeric._value))), false) : 
+                                                              Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(int16_t(std::lround(numeric._value))), false);
         }
 
         Compiler::getNextTempVar();
@@ -377,8 +429,8 @@ namespace Keywords
     {
         if(numeric._varType == Expression::Number)
         {
-            (numeric._value >= 0  && numeric._value <= 255) ? Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(numeric._value)), false) : 
-                                                              Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(numeric._value), false);
+            (numeric._value >= 0  && numeric._value <= 255) ? Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(std::lround(numeric._value))), false) : 
+                                                              Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(int16_t(std::lround(numeric._value))), false);
         }
 
         Compiler::getNextTempVar();
@@ -395,13 +447,13 @@ namespace Keywords
         {
             if(Assembler::getUseOpcodeCALLI())
             {
-                (numeric._value >= 0  && numeric._value <= 255) ? Compiler::emitVcpuAsm("CALLI", Expression::byteToHexString(uint8_t(numeric._value)), false) : 
-                                                                  Compiler::emitVcpuAsm("CALLI", Expression::wordToHexString(numeric._value), false);
+                (numeric._value >= 0  && numeric._value <= 255) ? Compiler::emitVcpuAsm("CALLI", Expression::byteToHexString(uint8_t(std::lround(numeric._value))), false) : 
+                                                                  Compiler::emitVcpuAsm("CALLI", Expression::wordToHexString(int16_t(std::lround(numeric._value))), false);
             }
             else
             {
-                (numeric._value >= 0  && numeric._value <= 255) ? Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(numeric._value)), false) : 
-                                                                  Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(numeric._value), false);
+                (numeric._value >= 0  && numeric._value <= 255) ? Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(std::lround(numeric._value))), false) : 
+                                                                  Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(int16_t(std::lround(numeric._value))), false);
             }
         }
 
@@ -433,8 +485,8 @@ namespace Keywords
             }
             else
             {
-                (numeric._value > 0  && numeric._value <= 255) ? Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(numeric._value)), false) : 
-                                                                 Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(numeric._value), false);
+                (numeric._value > 0  && numeric._value <= 255) ? Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(std::lround(numeric._value))), false) : 
+                                                                 Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(int16_t(std::lround(numeric._value))), false);
             }
         }
 
@@ -552,13 +604,13 @@ namespace Keywords
             // Print CHR string, (without wasting memory)
             if(Expression::getEnableOptimisedPrint())
             {
-                Compiler::emitVcpuAsm("LDI", std::to_string(numeric._value), false);
+                Compiler::emitVcpuAsm("LDI", std::to_string(int16_t(std::lround(numeric._value))), false);
                 Compiler::emitVcpuAsm("%PrintAcChar", "", false);
                 return numeric;
             }
 
             // Create CHR string
-            Compiler::emitVcpuAsm("LDI", std::to_string(numeric._value), false);
+            Compiler::emitVcpuAsm("LDI", std::to_string(int16_t(std::lround(numeric._value))), false);
             Compiler::emitVcpuAsm("STW", "strChr", false);
             Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
             Compiler::emitVcpuAsm("STW", "strDstAddr", false);
@@ -607,13 +659,13 @@ namespace Keywords
             // Print HEX string, (without wasting memory)
             if(Expression::getEnableOptimisedPrint())
             {
-                Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(numeric._value)), false);
+                Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(std::lround(numeric._value))), false);
                 Compiler::emitVcpuAsm("%PrintAcHexByte", "", false);
                 return numeric;
             }
 
             // Create HEX string
-            Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(numeric._value)), false);
+            Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(std::lround(numeric._value))), false);
             Compiler::emitVcpuAsm("STW", "strChr", false);
             Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
             Compiler::emitVcpuAsm("STW", "strDstAddr", false);
@@ -662,13 +714,13 @@ namespace Keywords
             // Print HEXW string, (without wasting memory)
             if(Expression::getEnableOptimisedPrint())
             {
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(numeric._value), false);
+                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(int16_t(std::lround(numeric._value))), false);
                 Compiler::emitVcpuAsm("%PrintAcHexWord", "", false);
                 return numeric;
             }
 
             // Create HEXW string
-            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(numeric._value), false);
+            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(int16_t(std::lround(numeric._value))), false);
             Compiler::emitVcpuAsm("STW", "strHex", false);
             Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
             Compiler::emitVcpuAsm("STW", "strDstAddr", false);
@@ -1271,15 +1323,22 @@ namespace Keywords
             else if(expressionType & Expression::HasFunctions)
             {
                 Expression::parse(tokens[i], codeLineIndex, numeric);
-                Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false, codeLineIndex);
-                Compiler::emitVcpuAsm("%PrintAcInt16", "", false, codeLineIndex);
+                if(numeric._varType == Expression::Number)
+                {
+                    Compiler::emitVcpuAsm("%PrintInt16", Expression::wordToHexString(int16_t(std::lround(numeric._value))), false, codeLineIndex);
+                }
+                else
+                {
+                    Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false, codeLineIndex);
+                    Compiler::emitVcpuAsm("%PrintAcInt16", "", false, codeLineIndex);
+                }
             }
             else if((expressionType & Expression::HasIntVars)  &&  (expressionType & Expression::HasOperators))
             {
                 Expression::parse(tokens[i], codeLineIndex, numeric);
                 if(numeric._varType == Expression::Number)
                 {
-                    Compiler::emitVcpuAsm("%PrintInt16", Expression::wordToHexString(numeric._value), false, codeLineIndex);
+                    Compiler::emitVcpuAsm("%PrintInt16", Expression::wordToHexString(int16_t(std::lround(numeric._value))), false, codeLineIndex);
                 }
                 else
                 {
@@ -1331,7 +1390,7 @@ namespace Keywords
             else if(expressionType & Expression::HasOperators)
             {
                 Expression::parse(tokens[i], codeLineIndex, numeric);
-                Compiler::emitVcpuAsm("%PrintInt16", Expression::wordToHexString(numeric._value), false, codeLineIndex);
+                Compiler::emitVcpuAsm("%PrintInt16", Expression::wordToHexString(int16_t(std::lround(numeric._value))), false, codeLineIndex);
             }
             else if(expressionType & Expression::HasStrings)
             {
@@ -1368,7 +1427,7 @@ namespace Keywords
                 // If valid expression
                 if(Expression::parse(tokens[i], codeLineIndex, numeric))
                 {
-                    Compiler::emitVcpuAsm("%PrintInt16", Expression::wordToHexString(numeric._value), false, codeLineIndex);
+                    Compiler::emitVcpuAsm("%PrintInt16", Expression::wordToHexString(int16_t(std::lround(numeric._value))), false, codeLineIndex);
                 }
             }
         }
@@ -1393,75 +1452,103 @@ namespace Keywords
     bool keywordINPUT(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         UNREFERENCED_PARAMETER(result);
-        UNREFERENCED_PARAMETER(foundPos);
         UNREFERENCED_PARAMETER(tokenIndex);
 
-        if(codeLine._tokens.size() < 2  ||  codeLine._tokens.size() > 3)
+        // Tokenise string and vars
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false, false);
+        if(tokens.size() < 1)
         {
-            fprintf(stderr, "Compiler::keywordINPUT() : Syntax error in INPUT statement, must be 'INPUT <optional string>, <int/str var>', in : '%s' : on line %d\n", codeLine._code.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Compiler::keywordINPUT() : Syntax error in INPUT statement, must be 'INPUT <optional string>, <int/str var0> ... <int/str varN>', in : '%s' : on line %d\n", codeLine._code.c_str(), codeLineIndex + 1);
             return false;
         }
 
-        std::string varToken;
-        if(codeLine._tokens.size() == 3)
+        // Print string
+        int varStartIndex = 0;
+        if(Expression::isValidString(tokens[0]))
         {
-            if(Expression::isValidString(codeLine._tokens[1]))
+            if(tokens.size() < 2)
             {
-                Expression::stripNonStringWhitespace(codeLine._tokens[1]);
-                size_t lquote = codeLine._tokens[1].find_first_of("\"");
-                size_t rquote = codeLine._tokens[1].find_first_of("\"", lquote + 1);
-                if(lquote != std::string::npos  &&  rquote != std::string::npos)
+                fprintf(stderr, "Compiler::keywordINPUT() : Syntax error in INPUT statement, must be 'INPUT <optional string>, <int/str var0> ... <int/str varN>', in : '%s' : on line %d\n", codeLine._code.c_str(), codeLineIndex + 1);
+                return false;
+            }
+
+            Expression::stripNonStringWhitespace(tokens[0]);
+            size_t lquote = codeLine._tokens[1].find_first_of("\"");
+            size_t rquote = codeLine._tokens[1].find_first_of("\"", lquote + 1);
+            if(lquote != std::string::npos  &&  rquote != std::string::npos)
+            {
+                // Skip empty strings
+                if(rquote > lquote + 1)
                 {
-                    // Skip empty strings
-                    if(rquote > lquote + 1)
-                    {
-                        std::string str = codeLine._tokens[1].substr(lquote + 1, rquote - (lquote + 1));
+                    std::string str = tokens[0].substr(lquote + 1, rquote - (lquote + 1));
 
-                        // Create string
-                        std::string name;
-                        uint16_t address;
-                        if(Compiler::getOrCreateString(codeLine, codeLineIndex, str, name, address) == -1) return false;
+                    // Create string
+                    std::string name;
+                    uint16_t address;
+                    if(Compiler::getOrCreateString(codeLine, codeLineIndex, str, name, address) == -1) return false;
 
-                        // Print string
-                        Compiler::emitVcpuAsm("%PrintString", "_" + name, false, codeLineIndex);
-                    }
+                    // Print string
+                    Compiler::emitVcpuAsm("%PrintString", "_" + name, false, codeLineIndex);
                 }
+            }
 
-                varToken = codeLine._tokens[2];
+            varStartIndex = 1;
+        }
+
+        // Loop through vars
+        for(int i=varStartIndex; i<tokens.size(); i++)
+        {
+            bool isStrVar = false;
+            std::string varToken = tokens[i];
+            Expression::stripWhitespace(varToken);
+            int intVar = Compiler::findVar(varToken);
+
+            if(intVar >= 0)
+            {
+                Compiler::emitVcpuAsm("LDW", Expression::wordToHexString(Compiler::getIntegerVars()[intVar]._address), false, codeLineIndex);
+                continue;
             }
             else
             {
-                fprintf(stderr, "Compiler::keywordINPUT() : Syntax error in INPUT statement, first parameter must be a string, in : '%s' : on line %d\n", codeLine._code.c_str(), codeLineIndex + 1);
-                return false;
-            }
-        }
-        else
-        {
-            varToken = codeLine._tokens[1];
-        }
-        
-        Expression::stripWhitespace(varToken);
-        int intVar = Compiler::findVar(varToken);
-        if(intVar >= 0)
-        {
-            Compiler::emitVcpuAsm("LDW", Expression::wordToHexString(Compiler::getIntegerVars()[intVar]._address), false, codeLineIndex);
-            return true;
-        }
-        else
-        {
-            if(varToken.back() == '$'  &&  Expression::isVarNameValid(varToken))
-            {
-                int strIndex = Compiler::findStr(varToken);
-                if(strIndex >= 0)
+                if(varToken.back() == '$'  &&  Expression::isVarNameValid(varToken))
                 {
-                    Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStringVars()[strIndex]._address), false, codeLineIndex);
-                    return true;
+                    isStrVar = true;
+
+                    int strIndex = Compiler::findStr(varToken);
+                    if(strIndex >= 0)
+                    {
+                        Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStringVars()[strIndex]._address), false, codeLineIndex);
+                        continue;
+                    }
                 }
+            }
+
+            // Create int var
+            int varIndex = 0;
+            Compiler::CodeLine codeline = codeLine;
+            createCodeLine(varToken, 0, codeLine._labelIndex, -1, Expression::Int16Both, false, codeline);
+
+            if(!isStrVar)
+            {
+                //createKeywordVar(codeline, codeLineIndex, varIndex);
+                Compiler::createIntVar(varToken, 0, 0, codeLine, codeLineIndex, false, varIndex);
+
+                if(varIndex == -1) return false;
+                //Compiler::emitVcpuAsm("LDW", Expression::wordToHexString(Compiler::getIntegerVars()[varIndex]._address), false, codeLineIndex);
+            }
+            // Create str var
+            else
+            {
+                uint16_t address;
+                varIndex = getOrCreateString(codeLine, codeLineIndex, "", varToken, address, USER_STR_SIZE, false);
+                if(varIndex == -1) return false;
+
+                //createKeywordStr(codeline, codeLineIndex, varIndex);
+                //Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStringVars()[varIndex]._address), false, codeLineIndex);
             }
         }
 
-        fprintf(stderr, "Compiler::keywordINPUT() : variable '%s' does not exist, in '%s' on line %d\n", varToken.c_str(), codeLine._text.c_str(), codeLineIndex + 1);
-        return false;
+        return true;
     }
 
     bool keywordFOR(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
@@ -1539,17 +1626,17 @@ namespace Keywords
         {
             // Parse start
             Expression::parse(startToken, codeLineIndex, startNumeric);
-            loopStart = startNumeric._value;
+            loopStart = int16_t(std::lround(startNumeric._value));
 
             // Parse end
             Expression::parse(endToken, codeLineIndex, endNumeric);
-            loopEnd = endNumeric._value;
+            loopEnd = int16_t(std::lround(endNumeric._value));
 
             // Parse step
             if(stepToken.size())
             {
                 Expression::parse(stepToken, codeLineIndex, stepNumeric);
-                loopStep = stepNumeric._value;
+                loopStep = int16_t(std::lround(stepNumeric._value));
             }
             else
             {
@@ -1580,19 +1667,19 @@ namespace Keywords
         {
             // Parse start
             parseExpression(codeLine, codeLineIndex, startToken, startNumeric);
-            loopStart = startNumeric._value;
+            loopStart = int16_t(std::lround(startNumeric._value));
             Compiler::emitVcpuAsm("STW", "_" + Compiler::getIntegerVars()[varCounter]._name, false, codeLineIndex);
 
             // Parse end
             parseExpression(codeLine, codeLineIndex, endToken, endNumeric);
-            loopEnd = endNumeric._value;
+            loopEnd = int16_t(std::lround(endNumeric._value));
             Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(varEnd)), false, codeLineIndex);
 
             // Parse step
             if(stepToken.size())
             {
                 parseExpression(codeLine, codeLineIndex, stepToken, stepNumeric);
-                loopStep = stepNumeric._value;
+                loopStep = int16_t(std::lround(stepNumeric._value));
             }
             else
             {
@@ -2150,7 +2237,7 @@ namespace Keywords
                 return false;
             }
 
-            Compiler::getConstants().push_back({2, numeric._value, 0x0000, "", tokens[0], "_" + tokens[0], Compiler::ConstInt16});
+            Compiler::getConstants().push_back({2, int16_t(std::lround(numeric._value)), 0x0000, "", tokens[0], "_" + tokens[0], Compiler::ConstInt16});
         }
 
         return true;
@@ -2264,7 +2351,7 @@ namespace Keywords
             typePos = equalsPos;
         }
 
-        // Address
+        // Type field
         std::string typeText = codeLine._code.substr(foundPos, typePos - foundPos);
         Expression::stripWhitespace(typeText);
         Expression::strToUpper(typeText);

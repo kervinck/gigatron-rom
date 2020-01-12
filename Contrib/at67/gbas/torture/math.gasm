@@ -53,8 +53,8 @@ _y                  EQU                     0x0044
 _r                  EQU                     0x0046
 
 ; Strings
-_str_0x7ea0          EQU                     0x7ea0
-_str_0x7ea0          DB                      1 ' ' 0
+_str_0xff60          EQU                     0xff60
+_str_0xff60          DB                      1 ' ' 0
 
 ; Define Bytes
 
@@ -108,13 +108,13 @@ _entryPoint_        InitRealTimeProc
                     LDWI                    power16bit
                     CALL                    giga_vAC
                     PrintAcInt16            
-                    PrintString             _str_0x7ea0
+                    PrintString             _str_0xff60
                     PrintInt16              0x0000
-                    PrintString             _str_0x7ea0
+                    PrintString             _str_0xff60
                     PrintInt16              0x0001
-                    PrintString             _str_0x7ea0
+                    PrintString             _str_0xff60
                     PrintInt16              0x0001
-                    PrintString             _str_0x7ea0
+                    PrintString             _str_0xff60
                     LDW                     _a
                     STW                     mathX
                     LDI                     1
@@ -122,7 +122,7 @@ _entryPoint_        InitRealTimeProc
                     LDWI                    power16bit
                     CALL                    giga_vAC
                     PrintAcInt16            
-                    PrintString             _str_0x7ea0
+                    PrintString             _str_0xff60
                     LDW                     _a
                     STW                     mathX
                     STW                     0xde
@@ -134,7 +134,7 @@ _page_0x0300        LDW                     0xde
                     LDWI                    power16bit
                     CALL                    giga_vAC
                     PrintAcInt16            
-                    PrintString             _str_0x7ea0
+                    PrintString             _str_0xff60
                     LDW                     _a
                     STW                     mathX
                     LDW                     _c
@@ -142,7 +142,7 @@ _page_0x0300        LDW                     0xde
                     LDWI                    power16bit
                     CALL                    giga_vAC
                     PrintAcInt16            
-                    PrintString             _str_0x7ea0
+                    PrintString             _str_0xff60
                     LDW                     _d
                     PrintAcInt16            
                     LDWI                    newLineScroll
@@ -173,7 +173,7 @@ _page_0x0300        LDW                     0xde
 
                     LDW                     _h
                     PrintAcInt16            
-                    PrintString             _str_0x7ea0
+                    PrintString             _str_0xff60
                     LDW                     _i
                     PrintAcInt16            
                     LDWI                    newLineScroll
@@ -191,7 +191,7 @@ _page_0x0300        LDW                     0xde
 
                     LDW                     _h
                     PrintAcInt16            
-                    PrintString             _str_0x7ea0
+                    PrintString             _str_0xff60
                     LDW                     _i
                     PrintAcInt16            
                     LDWI                    newLineScroll
@@ -213,7 +213,7 @@ _page_0x0300        LDW                     0xde
 _page_0x0400        LDW                     0xde
                     LDW                     _h
                     PrintAcInt16            
-                    PrintString             _str_0x7ea0
+                    PrintString             _str_0xff60
                     LDW                     _i
                     PrintAcInt16            
                     LDWI                    newLineScroll
@@ -231,7 +231,7 @@ _page_0x0400        LDW                     0xde
 
                     LDW                     _h
                     PrintAcInt16            
-                    PrintString             _str_0x7ea0
+                    PrintString             _str_0xff60
                     LDW                     _i
                     PrintAcInt16            
                     LDWI                    newLineScroll
@@ -249,7 +249,7 @@ _page_0x0400        LDW                     0xde
 
                     LDW                     _h
                     PrintAcInt16            
-                    PrintString             _str_0x7ea0
+                    PrintString             _str_0xff60
                     LDW                     _i
                     PrintAcInt16            
                     LDWI                    newLineScroll
@@ -267,7 +267,7 @@ _page_0x0400        LDW                     0xde
 
                     LDW                     _h
                     PrintAcInt16            
-                    PrintString             _str_0x7ea0
+                    PrintString             _str_0xff60
                     LDW                     _i
                     PrintAcInt16            
                     LDWI                    newLineScroll
@@ -289,7 +289,7 @@ _page_0x0400        LDW                     0xde
                     CALL                    giga_vAC
 _page_0x0500        LDW                     0xde
                     PrintAcInt16            
-                    PrintString             _str_0x7ea0
+                    PrintString             _str_0xff60
                     LDW                     _i
                     PrintAcInt16            
                     LDWI                    newLineScroll
@@ -305,7 +305,7 @@ _page_0x0500        LDW                     0xde
 
                     LDW                     _h
                     PrintAcInt16            
-                    PrintString             _str_0x7ea0
+                    PrintString             _str_0xff60
                     LDW                     _i
                     PrintAcInt16            
                     LDWI                    newLineScroll
@@ -362,41 +362,41 @@ _end_0x05a3         BRA                     _end_0x05a3                     ; en
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7ea3
-convertEqOp         EQU     0x7eac
-convertNeOp         EQU     0x7eb5
-convertLeOp         EQU     0x7ebe
-convertGeOp         EQU     0x7ec7
-convertLtOp         EQU     0x7ed0
-convertGtOp         EQU     0x7ed9
-power16bit          EQU     0x7ca0
-power16bitExt       EQU     0x76c7
-multiply16bit       EQU     0x76a0
-shiftRight1bit      EQU     0x7bf4
-shiftRight2bit      EQU     0x79bd
-shiftRight3bit      EQU     0x79e4
-shiftRight4bit      EQU     0x79ee
-shiftRight5bit      EQU     0x78da
-shiftRight6bit      EQU     0x78e4
-shiftRight7bit      EQU     0x78ee
-shiftRightSgn1bit   EQU     0x7ee2
-shiftRightSgn2bit   EQU     0x79a0
-shiftRightSgn3bit   EQU     0x79c7
-shiftRightSgn4bit   EQU     0x78a0
-shiftRightSgn5bit   EQU     0x78bd
-shiftRightSgn6bit   EQU     0x77a0
-shiftRightSgn7bit   EQU     0x77bd
-shiftRightSgn8bit   EQU     0x77da
-resetVideoTable     EQU     0x75a0
-initClearFuncs      EQU     0x7da0
-clearVertBlinds     EQU     0x7dc3
-clearCursorRow      EQU     0x74a0
-printInit           EQU     0x75bf
-printText           EQU     0x7cd9
-printDigit          EQU     0x75da
-printInt16          EQU     0x7ba0
-printChar           EQU     0x73a0
-newLineScroll       EQU     0x7aa0
+realTimeProc        EQU     0xff63
+convertEqOp         EQU     0xff6c
+convertNeOp         EQU     0xff75
+convertLeOp         EQU     0xff7e
+convertGeOp         EQU     0xff87
+convertLtOp         EQU     0xff90
+convertGtOp         EQU     0xff99
+power16bit          EQU     0xfe00
+power16bitExt       EQU     0xfc61
+multiply16bit       EQU     0xfc3a
+shiftRight1bit      EQU     0xfec1
+shiftRight2bit      EQU     0xfee8
+shiftRight3bit      EQU     0xfef2
+shiftRight4bit      EQU     0xfd98
+shiftRight5bit      EQU     0xfdbf
+shiftRight6bit      EQU     0xfde6
+shiftRight7bit      EQU     0xfdf0
+shiftRightSgn1bit   EQU     0xfea6
+shiftRightSgn2bit   EQU     0xfecb
+shiftRightSgn3bit   EQU     0xfd5e
+shiftRightSgn4bit   EQU     0xfd7b
+shiftRightSgn5bit   EQU     0xfda2
+shiftRightSgn6bit   EQU     0xfdc9
+shiftRightSgn7bit   EQU     0xfc00
+shiftRightSgn8bit   EQU     0xfc1d
+resetVideoTable     EQU     0xfc92
+initClearFuncs      EQU     0xffa2
+clearVertBlinds     EQU     0xffc5
+clearCursorRow      EQU     0xfcb1
+printInit           EQU     0xfb00
+printText           EQU     0xfe8d
+printDigit          EQU     0xfb1b
+printInt16          EQU     0xfe39
+printChar           EQU     0xfb3d
+newLineScroll       EQU     0xfd00
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -888,25 +888,21 @@ printInit           LDWI    SYS_VDrawBits_134
 
 
 
-                    ; prints text string pointed to by the accumulator
+                    ; prints text string pointed to by textStr
 printText           PUSH
                     LDWI    printInit
                     CALL    giga_vAC
-                    LDW     textStr             
-                    PEEK                                    ; first byte is length
-                    BEQ     printT_exit
-    
-printT_char         ST      textLen
-                    INC     textStr                         ; next char
+
+                    ; first byte is length
+printT_char         INC     textStr                         ; next char
                     LDW     textStr             
                     PEEK
+                    BEQ     printT_exit                     ; check for delimiting zero
                     ST      textChr
                     LDWI    printChar
                     CALL    giga_vAC
-
-                    LD      textLen
-                    SUBI    1
-                    BNE     printT_char
+                    BRA     printT_char
+                    
 printT_exit         POP
                     RET
 

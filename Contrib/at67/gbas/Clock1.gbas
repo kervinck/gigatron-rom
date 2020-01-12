@@ -1,0 +1,13 @@
+'Keeping time using the
+'59.98 Hz frame counter
+cls
+10 H=0 : M=0 : S=0 : SS=-1 : B=peek(14)
+20 T=S*60 : V=3599 : goto 50
+30 if T>=V then T=T-V : M=M+1
+40 if M>59 then M=M-60 : H=H+1
+50 S=T/60
+60 if S=SS then goto 80
+70 at 60,56 : print H;":";M/10;M%10;":";S/10;S%10
+80 SS=S : A=B : B=peek(14) : A=B-A
+90 if A<0 then A=A+256
+100 T=T+A : goto 30

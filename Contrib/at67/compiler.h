@@ -37,7 +37,7 @@ namespace Compiler
     enum ConstStrType {StrChar, StrHex, StrHexw, StrLeft, StrRight, StrMid};
     enum IfElseEndType {IfBlock, ElseIfBlock, ElseBlock, EndIfBlock};
     enum OperandType {OperandVar, OperandTemp, OperandConst};
-    enum StatementResult {StatementError, StatementSuccess, StatementExpression, SingleStatementParsed, MultiStatementParsed};
+    enum StatementResult {StatementError, StatementSuccess, StatementExpression, SingleStatementParsed, MultiStatementParsed, StringStatementParsed};
 
     struct Constant
     {

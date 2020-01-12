@@ -170,6 +170,10 @@ _label_ CALLI   _label
         CALLI   stringAdd
 %ENDM
 
+%MACRO  StringConcat
+        CALLI   stringConcat
+%ENDM
+
 %MACRO  StringMid
         CALLI   stringMid
 %ENDM

@@ -31,34 +31,15 @@ highByteMask        EQU                     register0 + 0x2C
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_1                  EQU                     0x0240
-_2                  EQU                     0x024e
-_3                  EQU                     0x0278
-_4                  EQU                     0x02a2
-_5                  EQU                     0x02b7
-_6                  EQU                     0x02cc
-_7                  EQU                     0x02e2
-_8                  EQU                     0x0309
-_9                  EQU                     0x0321
-_10                 EQU                     0x0333
-_11                 EQU                     0x0343
-_12                 EQU                     0x0358
-_page_0x0300        EQU                     0x0300
-_next_0x039b        EQU                     0x033f
-_end_0x03df         EQU                     0x0373
+_loop               EQU                     0x0277
+_next_0x0249        EQU                     0x0249
+_end_0x02df         EQU                     0x02bb
 
 ; Variables
-_a                  EQU                     0x0030
-_b                  EQU                     0x0032
-_c                  EQU                     0x0034
-_d                  EQU                     0x0036
-_x                  EQU                     0x0038
-_y                  EQU                     0x003a
-_q                  EQU                     0x003c
-_u                  EQU                     0x003e
-_v                  EQU                     0x0040
-_p                  EQU                     0x0042
-_t                  EQU                     0x0044
+_a_array            EQU                     0x0600
+_a_array            DW                      0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_i                  EQU                     0x0030
+_r                  EQU                     0x0032
 
 ; Strings
 
@@ -76,143 +57,68 @@ _entryPoint_        InitRealTimeProc
                     InitGtOp                
                     Initialise                                              ; INIT
 
-_1                  LDWI                    164
-                    STW                     register0
-                    LDI                     63
-                    POKE                    register0
                     LDWI                    clearVertBlinds
-                    CALL                    giga_vAC                        ; poke 164,63 : cls : rem Lines demo
+                    CALL                    giga_vAC                        ; cls
 
-_2                  Rand                    
-                    ANDI                    127
+                    LDI                     0
+                    STW                     _i                              ; for i=0 to max
+
+_next_0x0249        LDWI                    0x0600
+                    ADDW                    _i
+                    ADDW                    _i
+                    DEEK                    
                     STW                     0xc0
-                    Rand                    
-                    ANDI                    31
-                    ADDW                    0xc0
-                    STW                     _a
-                    Rand                    
-                    ANDI                    63
-                    STW                     0xc4
-                    Rand                    
-                    ANDI                    63
-                    ADDW                    0xc4
-                    ORI                     8
-                    STW                     _b                              ; a=(rnd(0) AND &h7F) + (rnd(0) AND &h1F) : b=(rnd(0) AND &h3F) + (rnd(0) AND &h3F) OR 8
-
-_3                  Rand                    
-                    ANDI                    127
+                    LDI                     127
+                    SUBW                    0xc0
                     STW                     0xc0
-                    Rand                    
-                    ANDI                    31
-                    ADDW                    0xc0
-                    STW                     _c
-                    Rand                    
-                    ANDI                    63
-                    STW                     0xc4
-                    Rand                    
-                    ANDI                    63
-                    ADDW                    0xc4
-                    ORI                     8
-                    STW                     _d                              ; c=(rnd(0) AND &h7F) + (rnd(0) AND &h1F) : d=(rnd(0) AND &h3F) + (rnd(0) AND &h3F) OR 8
-
-_4                  LDW                     _c
-                    SUBW                    _a
-                    STW                     _x
-                    LDW                     _d
-                    SUBW                    _b
-                    STW                     _y
-                    Rand                    
-                    ANDI                    63
-                    STW                     _q                              ; x=c-a : y=d-b : q=rnd(0) AND 63
-
-_5                  LDI                     1
-                    STW                     _u
-                    LDW                     _x
-                    BGE                     _6
-                    LDI                     0
-                    SUBW                    _x
-                    STW                     _x
-                    LDI                     0
-                    SUBW                    _u
-                    STW                     _u                              ; u=1 : if x &&< 0 then x=-x : u=-u
-
-_6                  LDWI                    256
-                    STW                     _v
-                    LDW                     _y
-                    BGE                     _7
-                    LDI                     0
-                    SUBW                    _y
-                    STW                     _y
-                    LDI                     0
-                    SUBW                    _v
-                    STW                     _v                              ; v=256 : if y &&< 0 then y=-y : v=-v
-
-_7                  LD                      _b
-                    ST                      0xc0 + 1
-                    LDW                     0xc0
+                    LD                      0xc0
+                    ST                      0xc2 + 1
+                    LDW                     0xc2
                     ANDW                    highByteMask
-                    ADDW                    _a
-                    STW                     _p
-                    LDW                     _y
-                    STW                     0xde
-                    LDWI                    _page_0x0300
-                    CALL                    giga_vAC
-_page_0x0300        LDW                     0xde
-                    SUBW                    _x
-                    BGE                     _8
-                    BRA                     _9                              ; p=a + (b LSL 8) : if y &&< x then goto &9
+                    ADDW                    _i
+                    STW                     0xc4
+                    LDI                     63
+                    POKE                    0xc4                            ; poke (127 - a(i) LSL 8) + i, &h3F
 
-_8                  LDW                     _x
-                    STW                     _t
-                    LDW                     _y
-                    STW                     _x
-                    LDW                     _t
-                    STW                     _y
-                    LDW                     _u
-                    STW                     _t
-                    LDW                     _v
-                    STW                     _u
-                    LDW                     _t
-                    STW                     _v                              ; t=x : x=y : y=t : t=u : u=v : v=t
+                    ForNextLoopUp           _i _next_0x0249 127             ; next i
 
-_9                  LDI                     0
-                    SUBW                    _x
-                    STW                     _d
-                    LDW                     _x
-                    ADDW                    _x
-                    STW                     _x
-                    LDW                     _y
-                    ADDW                    _y
-                    STW                     _y                              ; d=-x : x=x+x : y=y+y
+_loop               Rand                    
+                    ANDI                    127
+                    STW                     _r                              ; r = rnd(0) AND max
 
-_10                 LDW                     _d
-                    STW                     _t
-                    LDI                     0
-                    STW                     0xb0
-                    LDI                     1
-                    STW                     0xb2
-_next_0x039b        LDW                     _q
-                    POKE                    _p                              ; for t=d to 0 : poke p,q
+                    LDWI                    0x0600
+                    ADDW                    _r
+                    ADDW                    _r
+                    DEEK                    
+                    STW                     0xc0
+                    LDI                     127
+                    SUBW                    0xc0
+                    STW                     0xc0
+                    LD                      0xc0
+                    ST                      0xc2 + 1
+                    LDW                     0xc2
+                    ANDW                    highByteMask
+                    ADDW                    _r
+                    STW                     0xc4
+                    LDI                     63
+                    POKE                    0xc4                            ; poke (127 - a(r) LSL 8) + r, &h3F
 
-_11                 LDW                     _d
-                    ADDW                    _y
-                    STW                     _d
-                    BLE                     _12
-                    LDW                     _d
-                    SUBW                    _x
-                    STW                     _d
-                    LDW                     _p
-                    ADDW                    _v
-                    STW                     _p                              ; d=d+y : if d &&> 0 then d=d-x : p=p+v
+                    LDWI                    0x0600
+                    ADDW                    _r
+                    ADDW                    _r
+                    DEEK                    
+                    ADDI                    1
+                    STW                     register0
+                    LDWI                    0x0600
+                    ADDW                    _r
+                    ADDW                    _r
+                    STW                     register1
+                    LDW                     register0
+                    DOKE                    register1                       ; a(r) = a(r) + 1
 
-_12                 LDW                     _p
-                    ADDW                    _u
-                    STW                     _p
-                    ForNextLoopStepUp       _t _next_0x039b 0xb0 0xb2
-                    LDWI                    _2
-                    CALL                    giga_vAC                        ; p=p+u : next t : goto 2
+                    BRA                     _loop                           ; goto &loop
 
-_end_0x03df         BRA                     _end_0x03df                     ; END
+_end_0x02df         BRA                     _end_0x02df                     ; end
 
 
 
@@ -222,17 +128,17 @@ _end_0x03df         BRA                     _end_0x03df                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0xff60
-convertEqOp         EQU     0xff69
-convertNeOp         EQU     0xff72
-convertLeOp         EQU     0xff7b
-convertGeOp         EQU     0xff84
-convertLtOp         EQU     0xff8d
-convertGtOp         EQU     0xff96
-rand16bit           EQU     0xfe00
-resetVideoTable     EQU     0xfe08
-initClearFuncs      EQU     0xff9f
-clearVertBlinds     EQU     0xffc2
+realTimeProc        EQU     0x7ea0
+convertEqOp         EQU     0x7ea9
+convertNeOp         EQU     0x7eb2
+convertLeOp         EQU     0x7ebb
+convertGeOp         EQU     0x7ec4
+convertLtOp         EQU     0x7ecd
+convertGtOp         EQU     0x7ed6
+rand16bit           EQU     0x7edf
+resetVideoTable     EQU     0x7ca0
+initClearFuncs      EQU     0x7da0
+clearVertBlinds     EQU     0x7dc3
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2

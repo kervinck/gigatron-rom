@@ -211,6 +211,11 @@ _label_ CALL    giga_vAC
         CALL    giga_vAC
 %ENDM
 
+%MACRO  StringConcat
+        LDWI    stringConcat
+        CALL    giga_vAC
+%ENDM
+
 %MACRO  StringMid
         LDWI    stringMid
         CALL    giga_vAC

@@ -53,13 +53,13 @@ _g                  EQU                     0x0042
 _h                  EQU                     0x0044
 
 ; Strings
-_str_0x7ea0          EQU                     0x7ea0
-_str_0x7ea0          DB                      1 ' ' 0
-_str_0x7ea3          EQU                     0x7ea3
-_str_0x7ea3          DB                      4 'test' 0
-_str_0x7ea9          EQU                     0x7ea9
-_str_0x7ea9          DB                      3 'dog' 0
-_c$                  EQU                     0x7da0
+_str_0xff60          EQU                     0xff60
+_str_0xff60          DB                      1 ' ' 0
+_str_0xff63          EQU                     0xff63
+_str_0xff63          DB                      4 'test' 0
+_str_0xff69          EQU                     0xff69
+_str_0xff69          DB                      3 'dog' 0
+_c$                  EQU                     0xff6e
 _c$                  DB                      0 '' 0
 
 ; Define Bytes
@@ -120,28 +120,28 @@ _10                 LDI                     33
 
                     LDW                     _a
                     PrintAcHexByte          
-                    PrintString             _str_0x7ea0
+                    PrintString             _str_0xff60
                     LDW                     _b
                     PrintAcHexWord          
-                    PrintString             _str_0x7ea0
+                    PrintString             _str_0xff60
                     LDWI                    0x3333
                     PrintAcHexWord          
                     LDWI                    newLineScroll
                     CALL                    giga_vAC                        ; print hex$(a);" ";hexw$(b);" ";hexw$(&h1111 OR &h2222)
 
-                    PrintString             _str_0x7ea3
-                    PrintString             _str_0x7ea0
-                    PrintString             _str_0x7ea9
-                    PrintString             _str_0x7ea0
+                    PrintString             _str_0xff63
+                    PrintString             _str_0xff60
+                    PrintString             _str_0xff69
+                    PrintString             _str_0xff60
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
                     PrintInt16              0x0064
-                    PrintString             _str_0x7ea0
+                    PrintString             _str_0xff60
                     LDW                     _a
                     PrintAcInt16            
-                    PrintString             _str_0x7ea0
+                    PrintString             _str_0xff60
                     LDI                     0x21
                     PEEK                    
                     ANDI                    252
@@ -168,7 +168,7 @@ _page_0x0300        LDW                     0xde
 
                     LDW                     _x
                     PrintAcHexWord          
-                    PrintString             _str_0x7ea0
+                    PrintString             _str_0xff60
                     LDW                     _z
                     PrintAcHexWord          
                     LDWI                    newLineScroll
@@ -189,7 +189,7 @@ _blamo              PUSH
 
 _next_0x03b0        LDI                     32
                     STW                     strChr
-                    LDWI                    0x7da0
+                    LDWI                    0xff6e
                     STW                     strDstAddr
                     StringChr                                               ; c$ = CHR$(32)
 
@@ -216,7 +216,7 @@ _next_0x03b0        LDI                     32
 
                     LDW                     _i
                     PrintAcInt16            
-                    PrintString             _str_0x7ea0
+                    PrintString             _str_0xff60
                     LDW                     _b
                     PrintAcHexWord          
                     LDWI                    newLineScroll
@@ -253,27 +253,27 @@ _end_0x043d         BRA                     _end_0x043d                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7eae
-convertEqOp         EQU     0x7eb7
-convertNeOp         EQU     0x7ec0
-convertLeOp         EQU     0x7ec9
-convertGeOp         EQU     0x7ed2
-convertLtOp         EQU     0x7edb
-convertGtOp         EQU     0x7ee4
-resetVideoTable     EQU     0x77a0
-initClearFuncs      EQU     0x7ca0
-clearVertBlinds     EQU     0x7cc3
-clearCursorRow      EQU     0x76a0
-printInit           EQU     0x77bf
-printText           EQU     0x7bd5
-printDigit          EQU     0x77da
-printInt16          EQU     0x78a0
-printChar           EQU     0x75a0
-printHexByte        EQU     0x7ba0
-printHexWord        EQU     0x7aa0
-atTextCursor        EQU     0x7ab9
-newLineScroll       EQU     0x79a0
-stringChr           EQU     0x7eed
+realTimeProc        EQU     0xffce
+convertEqOp         EQU     0xffd7
+convertNeOp         EQU     0xffe0
+convertLeOp         EQU     0xffe9
+convertGeOp         EQU     0xfff2
+convertLtOp         EQU     0xfe00
+convertGtOp         EQU     0xfe09
+resetVideoTable     EQU     0xfddf
+initClearFuncs      EQU     0xfe12
+clearVertBlinds     EQU     0xfe35
+clearCursorRow      EQU     0xfc00
+printInit           EQU     0xfc49
+printText           EQU     0xfea4
+printDigit          EQU     0xfc64
+printInt16          EQU     0xfd5e
+printChar           EQU     0xfc86
+printHexByte        EQU     0xfe6f
+printHexWord        EQU     0xfebd
+atTextCursor        EQU     0xfdb2
+newLineScroll       EQU     0xfd00
+stringChr           EQU     0xfed6
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -477,25 +477,21 @@ printInit           LDWI    SYS_VDrawBits_134
 
 
 
-                    ; prints text string pointed to by the accumulator
+                    ; prints text string pointed to by textStr
 printText           PUSH
                     LDWI    printInit
                     CALL    giga_vAC
-                    LDW     textStr             
-                    PEEK                                    ; first byte is length
-                    BEQ     printT_exit
-    
-printT_char         ST      textLen
-                    INC     textStr                         ; next char
+
+                    ; first byte is length
+printT_char         INC     textStr                         ; next char
                     LDW     textStr             
                     PEEK
+                    BEQ     printT_exit                     ; check for delimiting zero
                     ST      textChr
                     LDWI    printChar
                     CALL    giga_vAC
-
-                    LD      textLen
-                    SUBI    1
-                    BNE     printT_char
+                    BRA     printT_char
+                    
 printT_exit         POP
                     RET
 
@@ -796,6 +792,7 @@ strSrcLen           EQU     register3
 strOffset           EQU     register8
 strSrcAddr2         EQU     register9
 strTmpAddr          EQU     register10
+strLutAddr          EQU     register11
 
 
                     ; create a char string, (parameter in strChr)
