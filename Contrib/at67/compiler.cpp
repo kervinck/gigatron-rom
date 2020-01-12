@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include <string>
+#include <cmath>
 #include <cstring>
+#include <string>
 #include <fstream>
 #include <sstream>
 #include <iomanip>
