@@ -20,7 +20,6 @@ class Program:
     self.filename = None
     self.openBlocks = [0] # Outside first block is 0
     self.nextBlockId = 1
-    self.start = {} # blockId -> address of block start
     self.loops = {} # blockId -> address after `do'
     self.elses = {} # blockId -> count of `else'
     self.defs  = {} # blockId -> address of last `def'
@@ -68,14 +67,11 @@ class Program:
         elif nextChar == '[':
            self.openBlocks.append(self.nextBlockId)
            self.elses[self.nextBlockId] = 0
-           self.start[self.nextBlockId] = self.vPC
            self.nextBlockId += 1
         elif nextChar == ']':
           if len(self.openBlocks) <= 1:
             self.error('Block close without open')
           b = self.openBlocks.pop()
-          if self.start[b]>>8 != (self.vPC-1)>>8:
-            self.error('Block crosses page boundary')
           define('__%s_%d_cond%d__' % (self.name, b, self.elses[b]), prev(self.vPC))
           del self.elses[b]
           if b in self.defs:
@@ -149,7 +145,8 @@ class Program:
 
       # Label definitions
       if has(var) and has(con):
-        if op == '=' and var == 'zpReset': zpReset(con)
+        if   op == '=' and var == 'zpReset': zpReset(con)
+        elif op == '=' and var == 'execute': self.execute = con
         elif op == '=': self.defSymbol(var, con)
         else: self.error("Invalid operator '%s' with name and constant" % op)
 

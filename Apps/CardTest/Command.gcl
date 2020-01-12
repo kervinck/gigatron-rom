@@ -19,16 +19,7 @@ gcl0x
 |                                                                       |
 +-----------------------------------------------------------------------}
 
-_r0=$30                         {First 16 bytes act as register set}
-_r1=$32
-_r2=$34
-_r3=$36
-_r4=$38
-_r5=$3a
-_r6=$3c
-_r7=$3e
-
-zpReset=$40                     {Start GCL vars from $40 instead of $30}
+zpReset=$48                     {Start GCL vars from $48 instead of $30}
 
 _StdOut=$300
 _OpenFile=$400
@@ -41,22 +32,131 @@ _OpenFile=$400
 
 {
   It is System.gt1's job to load Command.gt1 into RAM. However, GT1 decoding
-  functionality is part of Command.gt1, not System.gt1... So we have a boot
+  functionality is part of Command.gt1, not System.gt1... So we need a boot
   strapping process to make it possible: System.gt1 only loads Command's first
-  sector and then transfers control. From there System.gt1 must decode itself
-  and load its remainder into RAM. The start address is $0503 so that after
-  loading the first sectore the boot strapping code is already in the right
-  spot, ready to take over.
+  sector and then transfers control. The start address is $503 so that after
+  loading the first sector the first code is already ready to run. (The first
+  3 bytes are GT1 header bytes.) From there System.gt1 must decode itself and
+  load its remainder into RAM.
 }
 
 *=$0503
 [
+  $500 _r3=                     {Start decoding in sector buffer}
+  [def                          {Function that reads bytes}
+    $700 _r3^ [if=0
+                                {After decoding the first 512 bytes from the
+                                 preloaded sector buffer, transfer control
+                                 to the true LoadGt1 function (which is now
+                                 on its intended location.}
+                                {XXX Also install a new byte reader that
+                                     reads more data from card}
+      [do loop]                 {XXX Read next sector and/or cluster}
+
+      $7400 _vLR+ _vLR=         {Redirect local return from $5a0+x to $79a0+x}
+      \Start $fe:               {Redirect global return of LoadGt1}
+    ]
+    _r3, <r3++                  {Next byte from sector buffer}
+    ret
+  ]
+  \Gt1LoadBoot!                 {Doesn't return}
+]
+
+{
+  Padding such that the first segment is exactly $a0-3-3=154 bytes.
+  With that _LoadGt1 initially shows up at $5a0 in the sector buffer
+  when (re)loaded by GTOS.
+}
+
+                            #0 #0 #0 #0 #0 #0 #0
+ #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0
+ #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0
+ #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0
+ #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0
+ #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0
+ #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0
+ #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 #0 { *=$59d }
+
+_Gt1LoadBoot=$5a0
+
+{-----------------------------------------------------------------------+
+|                       RAM page $08                                    |
++-----------------------------------------------------------------------}
+*=$8a0
+
+{
+  Entry point when started from System.gt1
+}
+
+_Start=*
+[
+  [def `By`Your`Command #10 #0] _dev1!
+  _CommandLoop!                 {Doesn't return}
+]
+
+{-----------------------------------------------------------------------+
+|                       RAM page $09                                    |
++-----------------------------------------------------------------------}
+*=$9a0
+
+{
+  Entry point only used when started from a regular loader (outside GTOS)
+}
+[
+  \screenMemory _r0=            {Top left pixel in screen memory}
+  [do _r0. 1+ loop]             {Blink forever}
+]
+
+execute=$9a0                    {Overrule GCL's default execution address}
+
+{-----------------------------------------------------------------------+
+|                                                                       |
+|       File reading section                                            |
+|                                                                       |
++-----------------------------------------------------------------------}
+
+{-----------------------------------------------------------------------+
+|                       RAM page $79                                    |
++-----------------------------------------------------------------------}
+*=$79a0 { and $5a0 }
+
+{
+  Byte reader           vAC             input
+  Uses                  _r0.._r2        variables
+  Execution address     _r0             output
+}
+
+_LoadGt1=*
+[
   [do loop]                     {XXX Work in progress}
+  {
+    Load GT1 file into RAM and return start address.
+    See Docs/GT1-files.txt for details on GT1
+    XXX Not robust against early EOF
+    XXX Final EOF must be checked by caller
+  }
+  push
 
-  { XXX: Check for presence of System.gcl }
-  { XXX: Set top of memory }
+  _r1=                          {Byte reader}
 
-  \CommandLoop!
+  { Read file contents byte by byte }
+  _r1!                          {Fetch first byte}
+  [do                           {Chunk copy loop}
+         >_r0.                  {High-address comes first}
+    _r1! <_r0.                  {Then the low address}
+    _r1!                        {Byte count (0 means 256)}
+    [do                         {Byte copy loop}
+      <_r2.                     {Implicitly chops counter to 8 bits}
+      _r1! _r0.                 {Poke next byte into memory}
+      <_r0++                    {Advance write pointer in page}
+      <_r2, 1-                  {Decrement counter}
+      if<>0loop]
+    _r1!                        {Go to next block}
+    if<>0loop]
+  _r1! >_r0.                    {Load execution address}
+  _r1! <_r0.
+
+  pop ret
 ]
 
 {-----------------------------------------------------------------------+
@@ -72,15 +172,20 @@ _OpenFile=$400
 
 _CommandLoop=*
 [do
+  { XXX: Restore stdout/stdin }
+  _StdOut _dev1=
+
   { XXX: Print newline if needed }
 
-  { XXX: Print error message if needed }
+  { Print error message if needed }
+  [if<>0
+    { XXX Conditional newline }
+    [def `?Execution`error #10 #0] _dev1!
+  ]
 
   { XXX: Clear error state }
 
-  { XXX: Print prompt }
-
-  _Prompt!
+  [def `> #0] _dev1!            {Prompt}
 
   { XXX: Read line from stdin in $500, edit with DEL }
 
@@ -99,17 +204,6 @@ _CommandLoop=*
   { XXX: and execute }
 
   loop]
-
-{-----------------------------------------------------------------------+
-|                       RAM page $7e                                    |
-+-----------------------------------------------------------------------}
-*=$7ea0
-
-_Prompt=*
-[
-  $3e _StdOut!                  {'>'}
-  ret
-]
 
 {-----------------------------------------------------------------------+
 |                       RAM page $7d                                    |
@@ -132,106 +226,17 @@ _WaitKey=*
 ]
 
 {-----------------------------------------------------------------------+
-|                       RAM page $7b                                    |
-+-----------------------------------------------------------------------}
-*=$7ba0
-
-_PrintResult=*
-[
-  {
-    Print OK or FAILED
-  }
-  push
-  k=                            {Preserve vAC for caller}
-  [if=0
-    [def ``OK #10 #0]
-  else
-    [def ``FAILED #10 #0]
-  ] \PrintText!
-  k
-  pop ret
-]
-
-{-----------------------------------------------------------------------+
-|                       RAM page $7a                                    |
-+-----------------------------------------------------------------------}
-*=$7aa0
-
-{ PrintText -- writes q }
-_PrintText=*
-[
-  {
-    Print text string, may include newline characters (#10)
-    Returns 0
-  }
-  push                          {Save vLR because this is not a leaf subroutine}
-  q=
-  [do                           {Loop over characters}
-    q, if<>0                    {Next character to be printed, unless 0}
-    _StdOut!                    {Send to terminal}
-    <q++ loop]                  {Advance text pointer and loop}
-  pop ret
-]
-
-{-----------------------------------------------------------------------+
-|                                                                       |
-|       File reading section                                            |
-|                                                                       |
-+-----------------------------------------------------------------------}
-
-{-----------------------------------------------------------------------+
-|                       RAM page $79                                    |
-+-----------------------------------------------------------------------}
-*=$79a0
-
-_LoadGt1=*
-[
-  {
-    Load GT1 file into RAM and store start address in Address.
-    See Docs/GT1-files.txt for details on GT1
-    XXX Support loading into audio channels
-  }
-  push
-
-  \OpenFile!                    {Prepare for reading}
-
-  { Read file contents byte by byte }
-  \LoadByte!                    {Fetch first byte}
-
-  [do                           {Chunk copy loop}
-    >Address.                   {High-address comes first}
-    \LoadByte! <Address.        {Then the low address}
-    \LoadByte!                  {Byte count (0 means 256)}
-    [do                         {Byte copy loop}
-      \sysArgs5.                {Implicitly chops counter to 8 bits}
-      \LoadByte! Address.       {Poke next byte into memory}
-      <Address++                {Advance write pointer in page}
-      \sysArgs5, 1-             {Decrement counter}
-      if<>0loop]
-    \LoadByte!                  {Go to next block}
-    if<>0loop]
-  \LoadByte! >Address.          {Load execution address}
-  \LoadByte! <Address.
-
-  \LoadByte! [if>=0 0 Address=] {Expect EOF, clear Address when missing}
-
-  pop ret
-]
-
-{-----------------------------------------------------------------------+
 |                       RAM page $78                                    |
 +-----------------------------------------------------------------------}
 *=$78a0
 
 _Execute=*
 [
+  120 [do _r0=                  {Restore video table}
+    _r0+ $fe+ _r1=
+    _r0 7+ _r1. 8- if>0loop]
 
-  120 [do i=                    {Restore video table}
-    i+ $fe+ p=
-    i 7+ p. 8- if>0loop]
-
-  Address
-  [do if=0loop]                 {Stop if not executable}
+  Address [do if=0loop]         {Stop if not executable}
   call                          {Run...}
 ]
 

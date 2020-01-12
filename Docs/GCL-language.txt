@@ -271,13 +271,19 @@ Data
 ##ii ##_C       Inline word value, little-endian
 #@_C            PC relative offset (6502-style)
 
+Directives
+----------
+zpReset=i       Start allocating GCL variables from address i (default=$30)
+execution=ii    Start execution at address ii (default is first segment >= $200)
+
 Versioning
 ----------
 gcl0x gcl1      GCL version. `x' denotes experimental/extended versions
 
 There are two versions of GCL: gcl0x and gcl1. gcl0x is what we
-used to make the built-in applications of ROM v1. gcl1 is the planned
-cosmetic upgrade in notation.
+used to make the built-in applications of ROM v1. It is still evolving.
+gcl1 will be the planned cosmetic upgrade in notation once we've settled
+on what GCL should really look like.
 
 -----------------
 Program structure
