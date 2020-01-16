@@ -32,17 +32,18 @@ highByteMask        EQU                     register0 + 0x2C
 ; Labels
 _entryPoint_        EQU                     0x0200
 _10                 EQU                     0x0245
-_20                 EQU                     0x025b
-_30                 EQU                     0x0274
-_40                 EQU                     0x028e
-_50                 EQU                     0x02a8
-_60                 EQU                     0x02b7
-_70                 EQU                     0x02ca
-_80                 EQU                     0x035f
-_90                 EQU                     0x0370
-_100                EQU                     0x0383
+_15                 EQU                     0x025e
+_20                 EQU                     0x0268
+_30                 EQU                     0x0281
+_40                 EQU                     0x029b
+_50                 EQU                     0x02b5
+_60                 EQU                     0x02c4
+_70                 EQU                     0x02d7
+_80                 EQU                     0x0376
+_90                 EQU                     0x0387
+_100                EQU                     0x039a
 _page_0x0300        EQU                     0x0300
-_end_0x03b6         EQU                     0x038e
+_end_0x03c3         EQU                     0x03a5
 
 ; Variables
 _H                  EQU                     0x0030
@@ -55,12 +56,28 @@ _V                  EQU                     0x003c
 _A                  EQU                     0x003e
 
 ; Strings
-_str_0x7ea0          EQU                     0x7ea0
-_str_0x7ea0          DB                      1 ':' 0
+_str_0x7ea0         EQU                     0x7ea0
+_str_0x7ea0         DB                      11 'Enter Time ' 0
+_str_0x7ead         EQU                     0x7ead
+_str_0x7ead         DB                      2 'H:' 0
+_str_0x7eb1         EQU                     0x7eb1
+_str_0x7eb1         DB                      2 'M:' 0
+_str_0x7eb5         EQU                     0x7eb5
+_str_0x7eb5         DB                      2 'S:' 0
+_str_0x7ed7         EQU                     0x7ed7
+_str_0x7ed7         DB                      1 ':' 0
 
 ; Define Bytes
 
 ; Lookup Tables
+_inputVars_0x7ebf   EQU                     0x7ebf
+_inputVars_0x7ebf   DW                      0x0030 0x0032 0x0034 0x0000 
+_inputStrs_0x7ec7   EQU                     0x7ec7
+_inputStrs_0x7ec7   DW                      0x7ead 0x7eb1 0x7eb5 0x0000 
+_inputTypes_0x7ecf  EQU                     0x7ecf
+_inputTypes_0x7ecf  DW                      0x0302 0x0302 0x0302 0x0000 
+_input_0x7eb9       EQU                     0x7eb9
+_input_0x7eb9       DW                      0x7ebf 0x7ec7 0x7ecf 
 
 ; Code
 _entryPoint_        InitRealTimeProc        
@@ -75,17 +92,16 @@ _entryPoint_        InitRealTimeProc
                     LDWI                    clearVertBlinds
                     CALL                    giga_vAC                        ; cls
 
-_10                 LDI                     0
-                    STW                     _H
-                    LDI                     0
-                    STW                     _M
-                    LDI                     0
-                    STW                     _S
-                    LDWI                    -1
+_10                 PrintString             _str_0x7ea0
+                    LDWI                    0x7eb9
+                    Input                   
+                    NewLine                                                 ; input "Enter Time ", H,"H:";2;, M,"M:";2;, S,"S:";2; : print
+
+_15                 LDWI                    -1
                     STW                     _SS
                     LDI                     0x0e
                     PEEK                    
-                    STW                     _B                              ; H=0 : M=0 : S=0 : SS=-1 : B=peek(14)
+                    STW                     _B                              ; SS=-1 : B=peek(14)
 
 _20                 LDW                     _S
                     STW                     mathX
@@ -143,15 +159,15 @@ _70                 LDI                     60
                     LDWI                    atTextCursor
                     CALL                    giga_vAC
                     LDW                     _H
-                    PrintAcInt16            
-                    PrintString             _str_0x7ea0
-                    LDW                     _M
-                    STW                     mathX
-                    LDI                     10
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
+                    PrintAcInt16            
+                    PrintString             _str_0x7ed7
+                    LDW                     _M
+                    STW                     mathX
+                    LDI                     10
                     STW                     mathY
                     LDWI                    divide16bit
                     CALL                    giga_vAC
@@ -164,7 +180,7 @@ _page_0x0300        LDW                     0xde
                     CALL                    giga_vAC
                     LDW                     mathRem
                     PrintAcInt16            
-                    PrintString             _str_0x7ea0
+                    PrintString             _str_0x7ed7
                     LDW                     _S
                     STW                     mathX
                     LDI                     10
@@ -180,8 +196,7 @@ _page_0x0300        LDW                     0xde
                     CALL                    giga_vAC
                     LDW                     mathRem
                     PrintAcInt16            
-                    LDWI                    newLineScroll
-                    CALL                    giga_vAC                        ; at 60,56 : print H;":";M/10;M%10;":";S/10;S%10
+                    NewLine                                                 ; at 60,56 : print H;":";M/10;M%10;":";S/10;S%10
 
 _80                 LDW                     _S
                     STW                     _SS
@@ -206,7 +221,7 @@ _100                LDW                     _T
                     LDWI                    _30
                     CALL                    giga_vAC                        ; T=T+A : goto 30
 
-_end_0x03b6         BRA                     _end_0x03b6                     ; END
+_end_0x03c3         BRA                     _end_0x03c3                     ; END
 
 
 
@@ -216,26 +231,39 @@ _end_0x03b6         BRA                     _end_0x03b6                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7ea3
-convertEqOp         EQU     0x7eac
-convertNeOp         EQU     0x7eb5
-convertLeOp         EQU     0x7ebe
-convertGeOp         EQU     0x7ec7
-convertLtOp         EQU     0x7ed0
-convertGtOp         EQU     0x7ed9
-multiply16bit       EQU     0x7ca0
-divide16bit         EQU     0x7ba0
-resetVideoTable     EQU     0x78a0
-initClearFuncs      EQU     0x7da0
-clearVertBlinds     EQU     0x7dc3
-clearCursorRow      EQU     0x77a0
-printInit           EQU     0x78bf
-printText           EQU     0x7ee2
-printDigit          EQU     0x78da
-printInt16          EQU     0x7aa0
-printChar           EQU     0x76a0
-atTextCursor        EQU     0x7cc7
-newLineScroll       EQU     0x79a0
+realTimeProc        EQU     0x7eda
+convertEqOp         EQU     0x7ee3
+convertNeOp         EQU     0x7eec
+convertLeOp         EQU     0x7ef5
+convertGeOp         EQU     0x7da0
+convertLtOp         EQU     0x7da9
+convertGtOp         EQU     0x7db2
+multiply16bit       EQU     0x7aa0
+divide16bit         EQU     0x79a0
+resetVideoTable     EQU     0x77a0
+initClearFuncs      EQU     0x7dbb
+clearVertBlinds     EQU     0x7ca0
+clearCursorRow      EQU     0x76a0
+input               EQU     0x7cda
+inputExt1           EQU     0x75a0
+inputExt2           EQU     0x77bf
+inputCursor         EQU     0x77dd
+inputKeys           EQU     0x74a0
+inputIntVar         EQU     0x76e9
+inputStrVar         EQU     0x73a0
+inputReturn         EQU     0x73b7
+inputDelete         EQU     0x72a0
+inputPrint          EQU     0x71a0
+inputNewline        EQU     0x72e6
+printInit           EQU     0x71c3
+printText           EQU     0x7dde
+printDigit          EQU     0x71de
+printInt16          EQU     0x78a0
+printChr            EQU     0x75ef
+printChar           EQU     0x70a0
+atTextCursor        EQU     0x7ac7
+newLineScroll       EQU     0x7ba0
+integerStr          EQU     0x6fa0
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -497,7 +525,324 @@ clearVB_loop        CALL    realTimeProcAddr
 
 
 
-; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+; do *NOT* use register4 to register7 during time slicing if you use realTimeProc
+inpLutAddr          EQU     register0
+inpKeyBak           EQU     register0
+inpVarsAddr         EQU     register1
+inpStrsAddr         EQU     register2
+inpTypesAddr        EQU     register4
+inpTextAddr         EQU     register5
+inpTextOfs          EQU     register6
+inpTypeData         EQU     register7
+inpTextEnd          EQU     register8
+printXYBak          EQU     register11
+cursXYBak           EQU     register12
+frmCntBak           EQU     register13
+cursorChr           EQU     register14
+cursXYOfs           EQU     register15
+
+cursorDelay         EQU     30
+textWorkArea        EQU     0x7FA0
+
+    
+                    ; inputs numerics and text into vars
+input               PUSH
+                    LDW     inpLutAddr
+                    DEEK
+                    STW     inpVarsAddr         ; vars LUT address
+                    LDW     inpLutAddr
+                    ADDI    2
+                    DEEK
+                    STW     inpStrsAddr         ; strings LUT address
+                    LDW     inpLutAddr
+                    ADDI    4
+                    DEEK
+                    STW     inpTypesAddr        ; types LUT address
+                    
+                    LD      giga_frameCount
+                    ADDI    cursorDelay
+                    STW     frmCntBak           ; delay for cursor flash
+                    LDI     127
+                    STW     cursorChr           ; cursor char
+                    LDWI    inputExt1
+                    CALL    giga_vAC            ; doesn't return to here
+
+
+
+
+                    ; input extended 1
+inputExt1           LDW     inpTypesAddr
+                    DEEK
+                    BEQ     inputE1_exit        ; exit on LUT delimiter
+                    STW     inpTypeData         ; high byte is max string length, 8th and 7th bits of low byte are newline, last 6 bits of low byte is type
+                    ANDI    0x40
+                    BEQ     inputE1_print       ; check for newline
+                    LDWI    inputNewline
+                    CALL    giga_vAC
+                    
+inputE1_print       LDW     inpStrsAddr
+                    DEEK
+                    STW     textStr
+                    LDWI    printText           ; print strings LUT
+                    CALL    giga_vAC
+                    LD      inpTypeData         ; high byte is max string length, 8th and 7th bits of low byte are newline, last 6 bits of low byte is type
+                    ANDI    0x80
+                    BEQ     inputE1_skip        ; check for newline
+                    LDWI    inputNewline
+                    CALL    giga_vAC
+                    
+inputE1_skip        LDWI    textWorkArea + 1
+                    STW     inpTextAddr         ; text work area, treated as a string so skip length
+                    LDI     0
+                    STW     inpTextOfs          ; print text offset
+                    LDWI    textWorkArea
+                    STW     inpTextEnd          ; print text end
+                    LD      inpTypeData + 1
+                    ADDW    inpTextEnd
+                    STW     inpTextEnd          ; text max = textWorkArea + (highByte(inpTypeData) >> 8)
+                    
+                    LDW     cursorXY
+                    STW     cursXYBak
+                    STW     printXYBak
+                    LDWI    inputExt2
+                    CALL    giga_vAC            ; doesn't return to here
+                    
+inputE1_exit        LDI     0x01
+                    ORW     miscFlags
+                    STW     miscFlags           ; enable text scrolling
+                    POP
+                    RET
+
+
+
+
+                    ; input extended 2
+inputExt2           LDWI    inputCursor
+                    CALL    giga_vAC
+                    LDWI    inputKeys
+                    CALL    giga_vAC
+                    BEQ     inputExt2           ; loop until return key pressed
+
+                    INC     inpVarsAddr
+                    INC     inpVarsAddr
+                    INC     inpStrsAddr
+                    INC     inpStrsAddr
+                    INC     inpTypesAddr
+                    INC     inpTypesAddr
+                    LDWI    inputExt1
+                    CALL    giga_vAC            ; doesn't return to here
+
+
+
+                    ; flashes cursor
+inputCursor         LD      giga_frameCount
+                    SUBW    frmCntBak
+                    BEQ     inputC_toggle
+                    RET
+                    
+inputC_toggle       PUSH
+                    LD      giga_frameCount
+                    ADDI    cursorDelay
+                    ST      frmCntBak           ; delay for cursor flash
+                    LD      cursorChr
+                    ST      textChr
+                    XORI    0xDF
+                    ST      cursorChr           ; toggle between 127 and 32 for cursor char
+                    LDW     cursXYBak
+                    STW     cursorXY            ; restore cursor position after the printChr
+                    LDWI    printChr
+                    CALL    giga_vAC
+                    POP
+                    RET
+
+
+
+
+
+                    ; saves key press into string work area buffer
+inputKeys           PUSH
+                    LD      giga_buttonState
+                    STW     inpKeyBak
+                    SUBI    127
+                    BGT     inputK_exit
+                    BNE     inputK_ret
+                    LDWI    inputDelete         ; delete key
+                    CALL    giga_vAC            ; doesn't return to here
+                    
+inputK_ret          LD      inpKeyBak
+                    SUBI    10
+                    BNE     inputK_char
+                    LDWI    inputReturn         ; return key
+                    CALL    giga_vAC            ; doesn't return to here
+                    
+inputK_char         LDW     inpTextEnd
+                    SUBW    inpTextAddr
+                    BEQ     inputK_exit         ; text string bounds, (check after delete and return keys)
+                    LD      inpKeyBak
+                    SUBI    32
+                    BLT     inputK_exit
+                    LD      inpKeyBak
+                    POKE    inpTextAddr         ; set char
+                    INC     inpTextAddr
+                    LDI     0
+                    POKE    inpTextAddr         ; set new end of text string
+                    LD      cursXYBak
+                    SUBI    giga_xres - 11
+                    BLT     inputK_advance      ; cursor max bounds
+                    INC     inpTextOfs
+                    LDI     0
+                    BRA     inputK_print
+                    
+inputK_advance      LDI     6
+                    
+inputK_print        STW     cursXYOfs           ; advance cursor
+                    LDWI    inputPrint
+                    CALL    giga_vAC            ; doesn't return to here
+                    
+inputK_exit         LDI     0                   ; keep looping on current var
+                    POP
+                    RET                    
+
+
+
+inputStrVar         LDWI    textWorkArea
+                    STW     register11          ; src str address
+                    LDW     inpVarsAddr
+                    DEEK
+                    STW     register12          ; dst var address
+
+inputS_copy         LDW     register11
+                    PEEK
+                    POKE    register12
+                    INC     register11
+                    INC     register12
+                    BNE     inputS_copy         ; copy char until terminating char
+                    RET
+
+
+
+
+inputIntVar         PUSH
+                    LDWI    textWorkArea + 1
+                    STW     intSrcAddr          ; src str address, (skip length)
+                    LDW     inpVarsAddr
+                    DEEK
+                    STW     register12          ; dst int address
+                    LDWI    integerStr
+                    CALL    giga_vAC
+                    DOKE    register12          ; convert string to integer
+                    POP
+                    RET
+
+
+inputReturn         LDI     32
+                    STW     cursorChr
+                    LDWI    inputC_toggle
+                    CALL    giga_vAC            ; erase cursor
+                    LDI     0xFF
+                    ST      giga_buttonState    ; reset giga_buttonState
+                    
+                    LDWI    textWorkArea
+                    STW     register0
+                    LDW     inpTextAddr
+                    SUBW    register0
+                    SUBI    1
+                    POKE    register0           ; text length
+                    ADDW    register0
+                    ADDI    1
+                    STW     register0
+                    LDI     0
+                    POKE    register0           ; text delimiter
+                    
+                    LD      inpTypeData         ; check var tye
+                    ANDI    0x3F                ; var type is bottom 6 bits
+                    SUBI    3                   ; var is string or integer?
+                    BNE     inputR_int
+                    LDWI    inputStrVar
+                    CALL    giga_vAC            ; copy string
+                    BRA     inputR_exit
+                    
+inputR_int          LDWI    inputIntVar
+                    CALL    giga_vAC            ; convert numeric
+
+inputR_exit         LDI     1                   ; return key pressed, next var
+                    POP
+                    RET
+
+
+inputDelete         LD      inpTextOfs
+                    BEQ     inputD_bounds
+                    SUBI    1
+                    STW     inpTextOfs          ; decrement print text offset
+                    LDI     0
+                    STW     cursXYOfs           ; stationary cursor
+                    LDI     0
+                    POKE    inpTextAddr         ; delimiter
+                    LDW     inpTextAddr
+                    SUBI    1
+                    STW     inpTextAddr         ; decrement text pointer
+                    LDI     32                  
+                    POKE    inpTextAddr         ; delete char
+                    BRA     inputD_print
+
+inputD_bounds       LDW     printXYBak
+                    SUBW    cursXYBak
+                    BGE     inputD_exit         ; cursor min bounds
+                    LDWI    -6
+                    STW     cursXYOfs           ; retreat cursor
+                    LDI     32                  
+                    POKE    inpTextAddr         ; delete cursor
+                    INC     inpTextAddr
+                    LDI     0
+                    POKE    inpTextAddr         ; delimiter
+                    LDW     inpTextAddr
+                    SUBI    2
+                    STW     inpTextAddr         ; decrement text pointer
+                    LDI     32                  
+                    POKE    inpTextAddr         ; delete char
+                    
+inputD_print        LDWI    inputPrint
+                    CALL    giga_vAC            ; doesn't return to here
+                    
+inputD_exit         LDI     0                   ; keep looping on current var
+                    POP
+                    RET
+
+
+inputPrint          LDWI    inputCursor
+                    CALL    giga_vAC            ; call cursor flash frequently
+                    LDI     0xFF
+                    ST      giga_buttonState    ; reset giga_buttonState
+                    LDWI    textWorkArea
+                    ADDW    inpTextOfs
+                    STW     textStr
+                    LDW     printXYBak
+                    STW     cursorXY            ; restore cursor position after the printText
+                    LDWI    printText
+                    CALL    giga_vAC
+                    LDW     cursXYBak           ; new cursor position
+                    ADDW    cursXYOfs
+                    STW     cursXYBak
+                    LDI     0                   ; keep looping on current var
+                    POP
+                    RET
+
+
+inputNewline        PUSH
+                    LDI     0x01
+                    ORW     miscFlags
+                    STW     miscFlags           ; enable text scrolling
+                    LDWI    newLineScroll
+                    CALL    giga_vAC            ; new line
+                    LDWI    0xFFFE
+                    ANDW    miscFlags
+                    STW     miscFlags           ; disable text scrolling
+                    POP
+                    RET
+
+
+
+; do *NOT* use register4 to register7 during time slicing if you use realTimeProc
 textStr             EQU     register0
 textNum             EQU     register0
 textBak             EQU     register0
@@ -607,6 +952,16 @@ printI16_pos        LDWI    10000
                     LD      textNum
                     ORI     0x30
                     ST      textChr
+                    LDWI    printChar
+                    CALL    giga_vAC
+                    POP
+                    RET
+
+
+                    ; prints char in textChr for standalone calls
+printChr            PUSH
+                    LDWI    printInit
+                    CALL    giga_vAC
                     LDWI    printChar
                     CALL    giga_vAC
                     POP
@@ -788,5 +1143,53 @@ newLS_adjust        ADDI    8
 newLS_exit          LDWI    printInit
                     CALL    giga_vAC                        ; re-initialise the SYS registers
                     POP
+                    RET
+
+
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+intSrcAddr          EQU     register8
+intDigit            EQU     register9
+intResult           EQU     register10
+intNegative         EQU     register11
+intTemp0            EQU     register12
+intTemp1            EQU     register15
+
+
+                    ; converts a +/- integer from a string, assumes string pointer is pointing to first char and not the string length, (no overflow or underflow checks)
+integerStr          LDI     0
+                    ST      intNegative
+                    STW     intResult
+                    LDW     intSrcAddr
+                    PEEK
+                    SUBI    45                  ; -ve
+                    BNE     integerS_loop
+                    LDI     1
+                    ST      intNegative
+                    INC     intSrcAddr          ; skip -ve
+
+integerS_loop       LDW     intSrcAddr
+                    PEEK
+                    SUBI    48                  ; str[i] - '0'
+                    BLT     integerS_neg
+                    STW     intDigit
+                    SUBI    9
+                    BGT     integerS_neg
+                    LDW     intResult
+                    LSLW
+                    LSLW
+                    ADDW    intResult
+                    LSLW
+                    ADDW    intDigit
+                    STW     intResult           ; result = result*10 + digit
+                    INC     intSrcAddr
+                    BRA     integerS_loop
+          
+integerS_neg        LD      intNegative
+                    BEQ     integerS_exit
+                    LDI     0
+                    SUBW    intResult           ; result *= -1
+                    RET
+                    
+integerS_exit       LDW     intResult
                     RET
 

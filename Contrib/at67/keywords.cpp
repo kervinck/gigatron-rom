@@ -62,7 +62,6 @@ namespace Keywords
         _functions["FRE" ] = "FRE";
         _functions["TIME"] = "TIME";
 
-        _keywords["REM"   ] = {"REM",    keywordREM,    Compiler::SingleStatementParsed};
         _keywords["LET"   ] = {"LET",    keywordLET,    Compiler::SingleStatementParsed};
         _keywords["END"   ] = {"END",    keywordEND,    Compiler::SingleStatementParsed};
         _keywords["INC"   ] = {"INC",    keywordINC,    Compiler::SingleStatementParsed};
@@ -274,57 +273,6 @@ namespace Keywords
         }
 
         Operators::handleSingleOp("LDW", param);
-    }
-
-    bool createKeywordVar(Compiler::CodeLine& codeLine, int codeLineIndex, int& varIndex)
-    {
-        // Name
-        std::string varName = codeLine._code;
-        Expression::stripWhitespace(varName);
-
-        // String variables are not handled here
-        if(varName.back() == '$') return false;
-
-        // Var already exists?
-        varIndex = Compiler::findVar(varName);
-        if(varIndex != -1)
-        {
-            codeLine._containsVars = false;
-            codeLine._varIndex = varIndex;
-            codeLine._varType = Compiler::VarInt16;
-
-            return true;
-        }
-
-        Compiler::createIntVar(varName, 0, 0, codeLine, codeLineIndex, false, varIndex);
-
-        return true;
-    }
-
-    bool createKeywordStr(Compiler::CodeLine& codeLine, int codeLineIndex, int& strIndex)
-    {
-        // String name validation
-        std::string strName = codeLine._code;
-        Expression::stripWhitespace(strName);
-        if(strName.back() != '$') return false;
-        if(!Expression::isVarNameValid(strName)) return false;
-        strIndex = Compiler::findStr(strName);
-        if(strIndex != -1)
-        {
-            codeLine._varIndex = strIndex;
-            codeLine._varType = Compiler::VarStr;
-
-            return true;
-        }
-
-        // Create string
-        uint16_t address;
-        strIndex = getOrCreateString(codeLine, codeLineIndex, "", strName, address, USER_STR_SIZE, false);
-        if(strIndex == -1) return false;
-        codeLine._varIndex = strIndex;
-        codeLine._varType = Compiler::VarStr;
-
-        return true;
     }
 
 
@@ -896,39 +844,6 @@ namespace Keywords
     // ********************************************************************************************
     // Keywords
     // ********************************************************************************************
-    bool keywordREM(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
-    {
-        UNREFERENCED_PARAMETER(result);
-        UNREFERENCED_PARAMETER(tokenIndex);
-        UNREFERENCED_PARAMETER(codeLineIndex);
-
-        // Remove REM and everything after it in code
-        codeLine._code.erase(foundPos, codeLine._code.size() - foundPos);
-
-        // Remove REM and everything after it in expression
-        size_t rem;
-        std::string expr = codeLine._expression;
-        Expression::strToUpper(expr);
-        if((rem = expr.find("REM")) != std::string::npos  ||  (rem = expr.find("'")) != std::string::npos)
-        {
-            codeLine._expression.erase(rem, codeLine._expression.size() - rem);
-        }
-
-        // Remove REM and everything after it in tokens
-        for(int i=0; i<codeLine._tokens.size(); i++)
-        {
-            std::string str = codeLine._tokens[i];
-            Expression::strToUpper(str);
-            if(str.find("REM") != std::string::npos  ||  str.find("'") != std::string::npos)
-            {
-                codeLine._tokens.erase(codeLine._tokens.begin() + i, codeLine._tokens.end());
-                break;
-            }
-        }
-
-        return true;
-    }
-
     bool keywordLET(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         UNREFERENCED_PARAMETER(result);
@@ -1435,15 +1350,7 @@ namespace Keywords
         // New line
         if(codeLine._code[codeLine._code.size() - 1] != ';')
         {
-            if(Assembler::getUseOpcodeCALLI())
-            {
-                Compiler::emitVcpuAsm("CALLI", "newLineScroll", false, codeLineIndex);
-            }
-            else
-            {
-                Compiler::emitVcpuAsm("LDWI", "newLineScroll", false, codeLineIndex);
-                Compiler::emitVcpuAsm("CALL", "giga_vAC", false, codeLineIndex);
-            }
+            Compiler::emitVcpuAsm("%NewLine", "", false, codeLineIndex);
         }
 
         return true;
@@ -1455,26 +1362,31 @@ namespace Keywords
         UNREFERENCED_PARAMETER(tokenIndex);
 
         // Tokenise string and vars
-        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false, false);
-        if(tokens.size() < 1)
+        std::vector<std::string> strings;
+        std::string text = codeLine._code.substr(foundPos);
+        Expression::stripNonStringWhitespace(text);
+        std::vector<std::string> tokens = Expression::tokenise(text, ',', false, false);
+        std::string code = Expression::stripStrings(text, strings, true);
+        std::vector<std::string> varTokens = Expression::tokenise(code, ',', false, false);
+
+        if(varTokens.size() < 1  ||  (strings.size() > varTokens.size() + 1))
         {
-            fprintf(stderr, "Compiler::keywordINPUT() : Syntax error in INPUT statement, must be 'INPUT <optional string>, <int/str var0> ... <int/str varN>', in : '%s' : on line %d\n", codeLine._code.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Compiler::keywordINPUT() : Syntax error in INPUT statement, must be 'INPUT <heading string>, <int/str var0>, <prompt string0>, ... <int/str varN>, <prompt stringN>', in : '%s' : on line %d\n", codeLine._code.c_str(), codeLineIndex + 1);
             return false;
         }
 
-        // Print string
-        int varStartIndex = 0;
-        if(Expression::isValidString(tokens[0]))
+        // Print heading string
+        bool foundHeadingString = false;
+        if(tokens.size())
         {
-            if(tokens.size() < 2)
+            if(!Expression::isValidString(tokens[0]))
             {
-                fprintf(stderr, "Compiler::keywordINPUT() : Syntax error in INPUT statement, must be 'INPUT <optional string>, <int/str var0> ... <int/str varN>', in : '%s' : on line %d\n", codeLine._code.c_str(), codeLineIndex + 1);
+                fprintf(stderr, "Compiler::keywordINPUT() : Syntax error in heading string '%s' of INPUT statement, in : '%s' : on line %d\n", tokens[0].c_str(), codeLine._code.c_str(), codeLineIndex + 1);
                 return false;
             }
 
-            Expression::stripNonStringWhitespace(tokens[0]);
-            size_t lquote = codeLine._tokens[1].find_first_of("\"");
-            size_t rquote = codeLine._tokens[1].find_first_of("\"", lquote + 1);
+            size_t lquote = tokens[0].find_first_of("\"");
+            size_t rquote = tokens[0].find_first_of("\"", lquote + 1);
             if(lquote != std::string::npos  &&  rquote != std::string::npos)
             {
                 // Skip empty strings
@@ -1489,35 +1401,37 @@ namespace Keywords
 
                     // Print string
                     Compiler::emitVcpuAsm("%PrintString", "_" + name, false, codeLineIndex);
+                    foundHeadingString = true;
                 }
             }
-
-            varStartIndex = 1;
         }
 
+        // INPUT vars/strs/types LUTs, (extra 0x0000 delimiter used by VASM runtime)
+        std::vector<uint16_t> varsLut(varTokens.size() + 1, 0x0000);
+        std::vector<uint16_t> strsLut(varTokens.size() + 1, 0x0000);
+        std::vector<uint16_t> typesLut(varTokens.size() + 1, 0x00);
+
         // Loop through vars
-        for(int i=varStartIndex; i<tokens.size(); i++)
+        for(int i=0; i<varTokens.size(); i++)
         {
             bool isStrVar = false;
-            std::string varToken = tokens[i];
-            Expression::stripWhitespace(varToken);
-            int intVar = Compiler::findVar(varToken);
-
+            int intVar = Compiler::findVar(varTokens[i]);
             if(intVar >= 0)
             {
-                Compiler::emitVcpuAsm("LDW", Expression::wordToHexString(Compiler::getIntegerVars()[intVar]._address), false, codeLineIndex);
+                varsLut[i] = Compiler::getIntegerVars()[intVar]._address;
+                typesLut[i] = Compiler::VarInt16;
                 continue;
             }
             else
             {
-                if(varToken.back() == '$'  &&  Expression::isVarNameValid(varToken))
+                if(varTokens[i].back() == '$'  &&  Expression::isVarNameValid(varTokens[i]))
                 {
                     isStrVar = true;
-
-                    int strIndex = Compiler::findStr(varToken);
+                    int strIndex = Compiler::findStr(varTokens[i]);
                     if(strIndex >= 0)
                     {
-                        Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStringVars()[strIndex]._address), false, codeLineIndex);
+                        varsLut[i] = Compiler::getStringVars()[strIndex]._address;
+                        typesLut[i] = Compiler::VarStr;
                         continue;
                     }
                 }
@@ -1525,28 +1439,90 @@ namespace Keywords
 
             // Create int var
             int varIndex = 0;
-            Compiler::CodeLine codeline = codeLine;
-            createCodeLine(varToken, 0, codeLine._labelIndex, -1, Expression::Int16Both, false, codeline);
-
             if(!isStrVar)
             {
-                //createKeywordVar(codeline, codeLineIndex, varIndex);
-                Compiler::createIntVar(varToken, 0, 0, codeLine, codeLineIndex, false, varIndex);
-
+                Compiler::createIntVar(varTokens[i], 0, 0, codeLine, codeLineIndex, false, varIndex);
                 if(varIndex == -1) return false;
-                //Compiler::emitVcpuAsm("LDW", Expression::wordToHexString(Compiler::getIntegerVars()[varIndex]._address), false, codeLineIndex);
+                varsLut[i] = Compiler::getIntegerVars()[varIndex]._address;
+                typesLut[i] = Compiler::VarInt16;
             }
             // Create str var
             else
             {
                 uint16_t address;
-                varIndex = getOrCreateString(codeLine, codeLineIndex, "", varToken, address, USER_STR_SIZE, false);
+                varIndex = getOrCreateString(codeLine, codeLineIndex, "", varTokens[i], address, USER_STR_SIZE, false);
                 if(varIndex == -1) return false;
-
-                //createKeywordStr(codeline, codeLineIndex, varIndex);
-                //Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStringVars()[varIndex]._address), false, codeLineIndex);
+                varsLut[i] = Compiler::getStringVars()[varIndex]._address;
+                typesLut[i] = Compiler::VarStr;
             }
         }
+
+        // Loop through strs
+        for(int i=0; i<varTokens.size(); i++)
+        {
+            // Create string
+            std::string name;
+            uint16_t address;
+            int index = (foundHeadingString) ? i + 1 : i;
+            std::string str = (index < strings.size()) ? strings[index] : "\"?\"";
+            size_t fquote = str.find_first_of('"');
+            size_t lquote = str.find_last_of('"');
+
+            // Semicolons
+            if(str.size() > lquote + 1  &&  str[lquote + 1] != ';') typesLut[i] |= 0x40;
+            if(str.size() > lquote + 1  &&  str[lquote + 1] == ';') str.erase(lquote + 1, 1);
+            if(str.back() != ';') typesLut[i] |= 0x80;
+            if(str.back() == ';') str.erase(str.size() - 1, 1);
+
+            // Text length field
+            if(str.size() > lquote + 1  &&  isdigit(unsigned char(str[lquote + 1])))
+            {
+                uint8_t length;
+                std::string field = str.substr(lquote + 1);
+                if(!Expression::stringToU8(field, length))
+                {
+                    fprintf(stderr, "Compiler::keywordINPUT() : Syntax error in text size field of string '%s' of INPUT statement, in : '%s' : on line %d\n", str.c_str(), codeLine._code.c_str(), codeLineIndex + 1);
+                    return false;
+                }
+
+                str.erase(lquote + 1, field.size());
+                typesLut[i] |= (length + 1) << 8; // increment length as input VASM code counts cursor
+            }
+        
+            // Remove quotes
+            str.erase(lquote, 1);
+            str.erase(fquote, 1);
+
+            if(Compiler::getOrCreateString(codeLine, codeLineIndex, str, name, address) == -1) return false;
+            strsLut[i] = address;
+        }
+
+        // INPUT LUTs
+        const int lutSize = 3;
+        uint16_t lutAddr, varsAddr, strsAddr, typesAddr;
+        if(!Memory::giveFreeRAM(Memory::FitAscending, lutSize*2, 0x0200, Compiler::getRuntimeStart(), lutAddr))
+        {
+            fprintf(stderr, "Compiler::keywordINPUT() : Not enough RAM for string concatenation LUT of size %d, in : '%s' : on line %d\n", lutSize*2, codeLine._code.c_str(), codeLineIndex + 1);
+            return false;
+        }
+        if(!Memory::giveFreeRAM(Memory::FitAscending, int(varsLut.size()*2), 0x0200, Compiler::getRuntimeStart(), varsAddr))
+        {
+            fprintf(stderr, "Compiler::keywordINPUT() : Not enough RAM for string concatenation LUT of size %d, in : '%s' : on line %d\n", int(varsLut.size()*2), codeLine._code.c_str(), codeLineIndex + 1);
+            return false;
+        }
+        if(!Memory::giveFreeRAM(Memory::FitAscending, int(strsLut.size()*2), 0x0200, Compiler::getRuntimeStart(), strsAddr))
+        {
+            fprintf(stderr, "Compiler::keywordINPUT() : Not enough RAM for string concatenation LUT of size %d, in : '%s' : on line %d\n", int(strsLut.size()*2), codeLine._code.c_str(), codeLineIndex + 1);
+            return false;
+        }
+        if(!Memory::giveFreeRAM(Memory::FitAscending, int(typesLut.size()*2), 0x0200, Compiler::getRuntimeStart(), typesAddr))
+        {
+            fprintf(stderr, "Compiler::keywordINPUT() : Not enough RAM for string concatenation LUT of size %d, in : '%s' : on line %d\n", int(typesLut.size()*2), codeLine._code.c_str(), codeLineIndex + 1);
+            return false;
+        }
+        Compiler::getCodeLines()[codeLineIndex]._inputLut = {lutAddr, varsAddr, strsAddr, typesAddr, varsLut, strsLut, typesLut}; // save LUT in global codeLine not local copy
+        Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(lutAddr), false, codeLineIndex);
+        Compiler::emitVcpuAsm("%Input", "", false, codeLineIndex);
 
         return true;
     }
@@ -2295,6 +2271,7 @@ namespace Keywords
         if(varPos != std::string::npos)
         {
             std::string varText = codeLine._code.substr(varPos + 1);
+            Expression::stripWhitespace(varText);
             if(!Expression::stringToU16(varText, varInit))
             {
                 fprintf(stderr, "Compiler::keywordDIM() : Initial value must be a constant, found %s in : '%s' : on line %d\n", varText.c_str(), codeLine._code.c_str(), codeLineIndex + 1);

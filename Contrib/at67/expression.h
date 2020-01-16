@@ -60,6 +60,7 @@ namespace Expression
     void stripNonStringWhitespace(std::string& input);
     void stripWhitespace(std::string& input);
     std::string stripStrings(const std::string& input);
+    std::string stripStrings(const std::string& input, std::vector<std::string>& strings, bool saveExtraFields=false);
     void trimWhitespace(std::string& input);
     std::string collapseWhitespace(const std::string& input);
     std::string collapseWhitespaceNotStrings(const std::string& input);

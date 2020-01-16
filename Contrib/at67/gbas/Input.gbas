@@ -22,7 +22,13 @@ const big$="aioujehfiadsuhgfaissuhfgdiughafpiusfghpdsiufghspi;udf"
 const a=23
 dog=0
 cat$="cat"
-input "testing 1 2 3", cat$, hours, minutes,seconds
+'hours = 0
+'minutes = 0
+'seconds = 0
+input "Testing INPUT:", cat$,"Cats Name ?"32;, hours,"H ?"2;, minutes,"M ?"2;, seconds,"S ?"2;
+print
+print cat$;" ";hours;" ";minutes;" ";seconds
+
 a = rnd(len(dog)) + len(dog) + len(cat$) + 27
 b = len(big$) + len(a) + len(chr$(65)) + len(hex$(255)) + len(HEXW$(65000))
 print

@@ -1,7 +1,8 @@
 'Keeping time using the
 '59.98 Hz frame counter
 cls
-10 H=0 : M=0 : S=0 : SS=-1 : B=peek(14)
+10 input "Enter Time ", H,"H:";2;, M,"M:";2;, S,"S:";2; : print
+15 SS=-1 : B=peek(14)
 20 T=S*60 : V=3599 : goto 50
 30 if T>=V then T=T-V : M=M+1
 40 if M>59 then M=M-60 : H=H+1

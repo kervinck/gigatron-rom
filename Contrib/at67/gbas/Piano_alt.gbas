@@ -38,5 +38,5 @@
      if k &= 111 then a=31 :b=19:return:'D
      if k &= 48  then a=50 :b=20:return:'D#
      if k &= 112 then a=77 :b=21:return:'E
-     if k &= 122 then poke 17,&hEF : z=(z+1)AND3 : a=0 : b=0 : d=0 : goto 200
+     if k &= 122 then poke 17,&hFF : z=(z+1)AND3 : a=0 : b=0 : d=0 : goto 200
      a=0 : b=0 : d=0 : return

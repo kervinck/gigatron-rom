@@ -49,8 +49,8 @@ _x                  EQU                     0x0030
 _y                  EQU                     0x0032
 
 ; Strings
-_str_0xff60          EQU                     0xff60
-_str_0xff60          DB                      9 'Gigatron!' 0
+_str_0xff60         EQU                     0xff60
+_str_0xff60         DB                      9 'Gigatron!' 0
 
 ; Define Bytes
 

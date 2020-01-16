@@ -192,6 +192,11 @@ namespace Expression
     // ****************************************************************************************************************
     // Strings
     // ****************************************************************************************************************
+    int isSpace(int chr)
+    {
+        return isspace(unsigned char(chr));
+    }
+
     ExpressionType isExpression(const std::string& input)
     {
         if(input.find_first_of("[]") != std::string::npos) return IsInvalid;
@@ -204,14 +209,14 @@ namespace Expression
     bool isVarNameValid(const std::string& varName)
     {
         if(varName.size() == 0)  return false;
-        if(!isalpha(varName[0])) return false;
+        if(!isalpha(unsigned char(varName[0]))) return false;
 
         for(int i=1; i<varName.size()-1; i++)
         {
-            if(!isalnum(varName[i])) return false;
+            if(!isalnum(unsigned char(varName[i]))) return false;
         }
 
-        if(!isalnum(varName[varName.size() - 1])  &&  varName[varName.size() - 1] != '$') return false;
+        if(!isalnum(unsigned char(varName[varName.size() - 1]))  &&  varName[varName.size() - 1] != '$') return false;
 
         return true;
     }
@@ -237,7 +242,7 @@ namespace Expression
     bool hasNonStringWhiteSpace(int chr)
     {
         if(chr == '"') _containsQuotes = !_containsQuotes;
-        if(!isspace(chr) || _containsQuotes) return false;
+        if(!isspace(unsigned char(chr)) || _containsQuotes) return false;
         return true;    
     }
 
@@ -275,7 +280,7 @@ namespace Expression
 
     void stripWhitespace(std::string& input)
     {
-        input.erase(remove_if(input.begin(), input.end(), isspace), input.end());
+        input.erase(remove_if(input.begin(), input.end(), isSpace), input.end());
     }
 
     std::string stripStrings(const std::string& input)
@@ -297,6 +302,55 @@ namespace Expression
         return output;
     }
 
+    std::string stripStrings(const std::string& input, std::vector<std::string>& strings, bool saveExtraFields)
+    {
+        size_t start, end = -1;
+        std::string output = input;
+
+        do
+        {
+            start = output.find_first_of('"', end + 1);
+            end = output.find_first_of('"', start + 1);
+            if(start == std::string::npos  ||  end == std::string::npos) break;
+
+            strings.push_back(output.substr(start, end - start + 1));
+            output.erase(start, end - start + 1);
+
+            // Save extra fields, (digits and semicolons)
+            if(saveExtraFields  &&  output[start] != ',')
+            {
+                // Save semicolon
+                if(output[start] == ';')
+                {
+                    strings.back() += ';';
+                    output.erase(start, 1);
+                }
+
+                // Save digits
+                if(isdigit(unsigned char(output[start])))
+                {
+                    size_t i = start;
+                    while(isdigit(unsigned char(output[i])))
+                    {
+                        strings.back() += output[i++];
+                    }
+                    output.erase(start, i - start);
+                }
+
+                // Save semicolon
+                if(output[start] == ';')
+                {
+                    strings.back() += ';';
+                    output.erase(start, 1);
+                }
+            }
+            start = 0, end = 0;
+        }
+        while(start != std::string::npos  &&  end != std::string::npos);
+
+        return output;
+    }
+
     void trimWhitespace(std::string& input)
     {
         size_t start = input.find_first_not_of(" \n\r\f\t\v");
@@ -312,7 +366,7 @@ namespace Expression
     {
         std::string output;
 
-        std::unique_copy(input.begin(), input.end(), std::back_insert_iterator<std::string>(output), [](char a, char b) {return isspace(a) && isspace(b);});
+        std::unique_copy(input.begin(), input.end(), std::back_insert_iterator<std::string>(output), [](unsigned char a, unsigned char b) {return isspace(a) && isspace(b);});
 
         return output;
     }
@@ -327,7 +381,7 @@ namespace Expression
         {
             if(input[i] == '\"') inString = !inString;
 
-            if(isspace(input[i]))
+            if(isspace(unsigned char(input[i])))
             {
                 if(!inString)
                 {
@@ -362,7 +416,7 @@ namespace Expression
             // Check for comment, ' and REM
             if(!inString)
             {
-                if((input[i] == '\'')  ||  (i <= input.size()-3  &&  toupper(input[i]) == 'R'  &&  toupper(input[i+1]) == 'E'  &&  toupper(input[i+2]) == 'M'))
+                if((input[i] == '\'')  ||  (i <= input.size()-3  &&  toupper(unsigned char(input[i])) == 'R'  &&  toupper(unsigned char(input[i+1])) == 'E'  &&  toupper(unsigned char(input[i+2])) == 'M'))
                 {
                     inComment = true;
                 }
@@ -505,26 +559,26 @@ namespace Expression
 
     std::string& strToLower(std::string& s)
     {
-        std::transform(s.begin(), s.end(), s.begin(), [](char c) {return char(tolower(c));} );
+        std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) {return char(tolower(c));} );
         return s;
     }
 
     std::string& strToUpper(std::string& s)
     {
-        std::transform(s.begin(), s.end(), s.begin(), [](char c) {return char(toupper(c));} );
+        std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) {return char(toupper(c));} );
         return s;
     }
 
     bool subAlphaHelper(int i)
     {
         // Valid chars are alpha and 'address of'
-        return (isalpha(i) || (i=='@'));
+        return (isalpha(unsigned char(i)) || (i=='@'));
     }
     std::string getSubAlpha(const std::string& s)
     {
         if(s.size() > 1)
         {
-            char uchr = char(toupper(s[1]));
+            char uchr = char(toupper(unsigned char(s[1])));
             if((s[0] == '&'  &&  (uchr == 'H'  ||  uchr == 'B'  ||  uchr == 'O'))  ||
                (s[0] == '0'  &&  (uchr == 'X'  ||  uchr == 'B'  ||  uchr == 'O')))
             {
@@ -735,7 +789,7 @@ namespace Expression
             }
 
             std::string s = std::string(begin, str);
-            if(str > begin  &&  !(skipSpaces  &&  std::all_of(s.begin(), s.end(), isspace)))
+            if(str > begin  &&  !(skipSpaces  &&  std::all_of(s.begin(), s.end(), isSpace)))
             {
                 if(toUpper) strToUpper(s);
                 result.push_back(s);
@@ -764,7 +818,7 @@ namespace Expression
             }
 
             std::string s = std::string(begin, str);
-            if(str > begin  &&  !(skipSpaces  &&  std::all_of(s.begin(), s.end(), isspace)))
+            if(str > begin  &&  !(skipSpaces  &&  std::all_of(s.begin(), s.end(), isSpace)))
             {
                 if(toUpper) strToUpper(s);
                 offsets.push_back(size_t(str - text.c_str()) + 1);
@@ -776,7 +830,7 @@ namespace Expression
         return result;
     }
 
-    // Tokenise using whitespace and quotes, preserves strings
+    // Tokenise using whitespace and single or double quotes, preserves strings
     std::vector<std::string> tokeniseLine(const std::string& line, const std::string& delimiters)
     {
         std::string token = "";
@@ -862,7 +916,7 @@ namespace Expression
         return tokens;
     }
 
-    // Tokenise using whitespace and quotes, preserves strings
+    // Tokenise using whitespace and double quotes, preserves strings, outputs offsets to tokens
     std::vector<std::string> tokeniseLine(const std::string& line, const std::string& delimiters, std::vector<size_t>& offsets)
     {
         std::string token = "";
@@ -899,7 +953,7 @@ namespace Expression
                     }
                 }
                 // String delimiters
-                else if(strchr("\'\"", line[i]))
+                else if(strchr("\"", line[i]))
                 {
                     delimiterState = Quotes;
                     stringStart = !stringStart;
@@ -1044,17 +1098,17 @@ namespace Expression
         char uchr;
 
         std::string valueStr;
-        uchr = char(toupper(peek()));
+        uchr = char(toupper(unsigned char(peek())));
         valueStr.push_back(uchr); get();
-        uchr = char(toupper(peek()));
+        uchr = char(toupper(unsigned char(peek())));
         if((uchr >= '0'  &&  uchr <= '9')  ||  uchr == 'X'  ||  uchr == 'H'  ||  uchr == 'B'  ||  uchr == 'O'  ||  uchr == 'Q')
         {
             valueStr.push_back(uchr); get();
-            uchr = char(toupper(peek()));
+            uchr = char(toupper(unsigned char(peek())));
             while((uchr >= '0'  &&  uchr <= '9')  ||  (uchr >= 'A'  &&  uchr <= 'F'))
             {
                 valueStr.push_back(get());
-                uchr = char(toupper(peek()));
+                uchr = char(toupper(unsigned char(peek())));
             }
         }
 

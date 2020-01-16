@@ -546,8 +546,13 @@ namespace Compiler
         std::vector<int> onLut;
         OnGotoGosubLut onGotoGosubLut = {0x0000, "", onLut};
 
-        std::vector<uint16_t> strLut;
-        StrConcatLut strConcatLut = {0x0000, strLut};
+        std::vector<uint16_t> concatStrs;
+        StrConcatLut strConcatLut = {0x0000, concatStrs};
+
+        std::vector<uint16_t> inputVars;
+        std::vector<uint16_t> inputStrs;
+        std::vector<uint16_t> inputTypes;
+        InputLut inputLut = {0x0000, 0x0000, 0x0000, 0x0000, inputVars, inputStrs, inputTypes};
 
         std::vector<VasmLine> vasm;
         std::string text = code.substr(codeLineOffset, code.size() - (codeLineOffset));
@@ -556,7 +561,7 @@ namespace Compiler
         codeText = Expression::removeCommentsNotInStrings(codeText);
         std::vector<size_t> offsets;
         std::vector<std::string> tokens = Expression::tokeniseLine(codeText, " (),=", offsets);
-        codeLine = {text, codeText, tokens, offsets, vasm, expression, onGotoGosubLut, strConcatLut, 0, labelIndex, varIndex, VarInt16, int16Byte, vars, false};
+        codeLine = {text, codeText, tokens, offsets, vasm, expression, onGotoGosubLut, strConcatLut, inputLut, 0, labelIndex, varIndex, VarInt16, int16Byte, vars, false};
         Expression::operatorReduction(codeLine._expression);
 
         if(codeLine._code.size() < 2) return false; // anything too small is ignored
@@ -1097,7 +1102,7 @@ namespace Compiler
         std::string gosubOpcode = "";
 
         // Numeric labels
-        if(code.size() > 1  &&  isdigit(code[0]))
+        if(code.size() > 1  &&  isdigit(unsigned char(code[0])))
         {
             size_t space = code.find_first_of(" \n\r\f\t\v,");
             if(space == std::string::npos) space = code.size() - 1;
@@ -1105,7 +1110,7 @@ namespace Compiler
             // Force space between line numbers and line
             for(int i=1; i<space; i++)
             {
-                if(!isdigit(code[i])  &&  code[i] != ':'  &&  code[i] != '!')
+                if(!isdigit(unsigned char(code[i]))  &&  code[i] != ':'  &&  code[i] != '!')
                 {
                     space = i;
                     code.insert(i, " ");
@@ -1159,7 +1164,7 @@ namespace Compiler
             {
                 for(int i=0; i<labelName.size(); i++)
                 {
-                    if(!(labelName[i] == '_')  &&  !isalnum(labelName[i]))
+                    if(!(labelName[i] == '_')  &&  !isalnum(unsigned char(labelName[i])))
                     {
                         validLabel = false;
                         break;
@@ -1317,7 +1322,7 @@ namespace Compiler
                 if(address < _runtimeEnd) _runtimeEnd = address;
 
                 name = "str_" + Expression::wordToHexString(address);
-                StringVar stringVar = {uint8_t(str.size()), uint8_t(str.size()), address, str, name, "_" + name + std::string(LABEL_TRUNC_SIZE - name.size(), ' '), -1, true};
+                StringVar stringVar = {uint8_t(str.size()), uint8_t(str.size()), address, str, name, "_" + name + std::string(LABEL_TRUNC_SIZE - name.size() - 1, ' '), -1, true};
                 _stringVars.push_back(stringVar);
                 index = int(_stringVars.size()) - 1;
             }
@@ -1335,7 +1340,7 @@ namespace Compiler
             // Save end of runtime/strings
             if(address < _runtimeEnd) _runtimeEnd = address;
 
-            StringVar stringVar = {uint8_t(str.size()), maxSize, address, str, name, "_" + name + std::string(LABEL_TRUNC_SIZE - name.size(), ' '), -1, false};
+            StringVar stringVar = {uint8_t(str.size()), maxSize, address, str, name, "_" + name + std::string(LABEL_TRUNC_SIZE - name.size() - 1, ' '), -1, false};
             _stringVars.push_back(stringVar);
             index = int(_stringVars.size()) - 1;
         }
@@ -1424,16 +1429,16 @@ namespace Compiler
 
         bool isDouble = false;
         std::string valueStr;
-        uchr = char(toupper(peek(true)));
+        uchr = char(toupper(unsigned char(peek(true))));
         valueStr.push_back(uchr); get(true);
-        uchr = char(toupper(peek(true)));
+        uchr = char(toupper(unsigned char(peek(true))));
 
         if((uchr >= '0'  &&  uchr <= '9')  ||  uchr == 'X'  ||  uchr == 'H'  ||  uchr == 'B'  ||  uchr == 'O'  ||  uchr == 'Q'  ||  uchr == '.')
         {
             if(uchr == '.') isDouble = true;
 
             valueStr.push_back(uchr); get(true);
-            uchr = char(toupper(peek(true)));
+            uchr = char(toupper(unsigned char(peek(true))));
             while(uchr  &&  ((uchr >= '0'  &&  uchr <= '9')  ||  (uchr >= 'A'  &&  uchr <= 'F')  ||  uchr == '.'))
             {
                 if(uchr == '.')
@@ -1445,7 +1450,7 @@ namespace Compiler
 
                 // Don't skip spaces here, as hex numbers can become attached to variables, keywords, etc
                 valueStr.push_back(get(false));
-                uchr = char(toupper(peek(false)));
+                uchr = char(toupper(unsigned char(peek(false))));
             }
         }
 
@@ -1945,13 +1950,13 @@ namespace Compiler
                     return false;
                 }
 
-                // Source addresses, (extra 0x0000 delimiter used by VASM runtime)
-                std::vector<uint16_t> srcAddrs(tokens.size() + 1, 0x0000);
+                // Source string addresses, (extra 0x0000 delimiter used by VASM runtime)
+                std::vector<uint16_t> strAddrs(tokens.size() + 1, 0x0000);
                 for(int i=0; i<tokens.size(); i++)
                 {
                     Expression::stripNonStringWhitespace(tokens[i]);
-                    srcAddrs[i] = getStringSrcAddr(tokens[i]);
-                    if(srcAddrs[i] == 0x0000)
+                    strAddrs[i] = getStringSrcAddr(tokens[i]);
+                    if(strAddrs[i] == 0x0000)
                     {
                         fprintf(stderr, "Compiler::handleStrings() : Syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
                         _PAUSE_;
@@ -1959,14 +1964,14 @@ namespace Compiler
                     }
                 }
 
-                // Source addresses LUT
+                // Source string addresses LUT
                 uint16_t lutAddress;
-                if(!Memory::giveFreeRAM(Memory::FitAscending, int(srcAddrs.size()*2), 0x0200, _runtimeStart, lutAddress))
+                if(!Memory::giveFreeRAM(Memory::FitAscending, int(strAddrs.size()*2), 0x0200, _runtimeStart, lutAddress))
                 {
-                    fprintf(stderr, "Compiler::handleStrings() : Not enough RAM for string concatenation LUT of size %d\n", int(srcAddrs.size()));
+                    fprintf(stderr, "Compiler::handleStrings() : Not enough RAM for string concatenation LUT of size %d\n", int(strAddrs.size()));
                     return false;
                 }
-                _codeLines[codeLineIndex]._strConcatLut = {lutAddress, srcAddrs}; // save LUT in global codeLine not local copy
+                _codeLines[codeLineIndex]._strConcatLut = {lutAddress, strAddrs}; // save LUT in global codeLine not local copy
 
                 // Destination address
                 uint16_t dstAddr = _stringVars[dstIndex]._address;
@@ -2211,21 +2216,12 @@ namespace Compiler
         size_t foundPos;
         CodeLine codeLine;
 
-        // REM and LET modify code
+        // LET modifies code
         for(int i=0; i<_codeLines.size(); i++)
         {
             Keywords::KeywordFuncResult result;
 
-            // ' is a shortcut for REM
-            if((foundPos = _codeLines[i]._code.find_first_of('\'')) != std::string::npos)
-            {
-                Keywords::keywordREM(_codeLines[i], i, 0, foundPos, result);
-            }
-            else if(Keywords::findKeyword(_codeLines[i]._code, "REM", foundPos))
-            {
-                Keywords::keywordREM(_codeLines[i], i, 0, foundPos - 3, result);
-            }
-            else if(Keywords::findKeyword(_codeLines[i]._code, "LET", foundPos))
+            if(Keywords::findKeyword(_codeLines[i]._code, "LET", foundPos))
             {
                 Keywords::keywordLET(_codeLines[i], i, 0, foundPos - 3, result);
             }
@@ -2543,16 +2539,16 @@ namespace Compiler
             {
                 _output.push_back(lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(lutAddress) + "\n");
             
-                std::string dbString = lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+                std::string dwString = lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
                 for(int j=0; j<lutSize; j++)
                 {
                     int index = _codeLines[i]._onGotoGosubLut._lut[j];
                     if(index == -1) fprintf(stderr, "Compiler::outputLuts() : Warning, label index is invalid for LUT entry %d\n", j);
 
                     uint16_t labelAddress = _labels[index]._address;
-                    dbString += Expression::wordToHexString(labelAddress) + " ";
+                    dwString += Expression::wordToHexString(labelAddress) + " ";
                 }
-                _output.push_back(dbString + "\n");
+                _output.push_back(dwString + "\n");
             }
         }
 
@@ -2567,13 +2563,82 @@ namespace Compiler
             {
                 _output.push_back(lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(lutAddress) + "\n");
             
-                std::string dbString = lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+                std::string dwString = lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
                 for(int j=0; j<lutSize; j++)
                 {
                     uint16_t address = _codeLines[i]._strConcatLut._lut[j];
-                    dbString += Expression::wordToHexString(address) + " ";
+                    dwString += Expression::wordToHexString(address) + " ";
                 }
-                _output.push_back(dbString + "\n");
+                _output.push_back(dwString + "\n");
+            }
+        }
+
+        // INPUT LUTs
+        for(int i=0; i<_codeLines.size(); i++)
+        {
+            // Output varsLUT if it exists
+            int varsSize = int(_codeLines[i]._inputLut._varsLut.size());
+            uint16_t varsAddr = _codeLines[i]._inputLut._varsAddr;
+            std::string varsName = "_inputVars_" + Expression::wordToHexString(varsAddr);
+            if(varsSize)
+            {
+                _output.push_back(varsName + std::string(LABEL_TRUNC_SIZE - varsName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(varsAddr) + "\n");
+            
+                std::string dwString = varsName + std::string(LABEL_TRUNC_SIZE - varsName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+                for(int j=0; j<varsSize; j++)
+                {
+                    uint16_t address = _codeLines[i]._inputLut._varsLut[j];
+                    dwString += Expression::wordToHexString(address) + " ";
+                }
+                _output.push_back(dwString + "\n");
+            }
+
+            // Output strsLUT if it exists
+            int strsSize = int(_codeLines[i]._inputLut._strsLut.size());
+            uint16_t strsAddr = _codeLines[i]._inputLut._strsAddr;
+            std::string strsName = "_inputStrs_" + Expression::wordToHexString(strsAddr);
+            if(strsSize)
+            {
+                _output.push_back(strsName + std::string(LABEL_TRUNC_SIZE - strsName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(strsAddr) + "\n");
+            
+                std::string dwString = strsName + std::string(LABEL_TRUNC_SIZE - strsName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+                for(int j=0; j<strsSize; j++)
+                {
+                    uint16_t address = _codeLines[i]._inputLut._strsLut[j];
+                    dwString += Expression::wordToHexString(address) + " ";
+                }
+                _output.push_back(dwString + "\n");
+            }
+
+            // Output typesLUT if it exists
+            int typesSize = int(_codeLines[i]._inputLut._typesLut.size());
+            uint16_t typesAddr = _codeLines[i]._inputLut._typesAddr;
+            std::string typesName = "_inputTypes_" + Expression::wordToHexString(typesAddr);
+            if(typesSize)
+            {
+                _output.push_back(typesName + std::string(LABEL_TRUNC_SIZE - typesName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(typesAddr) + "\n");
+            
+                std::string dwString = typesName + std::string(LABEL_TRUNC_SIZE - typesName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+                for(int j=0; j<typesSize; j++)
+                {
+                    uint16_t type = _codeLines[i]._inputLut._typesLut[j];
+                    dwString += Expression::wordToHexString(type) + " ";
+                }
+                _output.push_back(dwString + "\n");
+            }
+
+            // Output INPUT LUT
+            if(varsSize  &&  strsSize  &&  typesSize  &&  _codeLines[i]._inputLut._address)
+            {
+                uint16_t lutAddress = _codeLines[i]._inputLut._address;
+                std::string name = "_input_" + Expression::wordToHexString(lutAddress);
+                _output.push_back(name + std::string(LABEL_TRUNC_SIZE - name.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(lutAddress) + "\n");
+            
+                std::string dwString = name + std::string(LABEL_TRUNC_SIZE - name.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+                dwString += Expression::wordToHexString(varsAddr) + " ";
+                dwString += Expression::wordToHexString(strsAddr) + " ";
+                dwString += Expression::wordToHexString(typesAddr) + " ";
+                _output.push_back(dwString + "\n");
             }
         }
 

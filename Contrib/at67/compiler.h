@@ -31,7 +31,7 @@
 
 namespace Compiler
 {
-    enum VarType {VarInt8=0, VarInt16, VarInt32, VarFloat16, VarFloat32, VarArray, VarStr};
+    enum VarType {VarInt8=1, VarInt16, VarStr, VarInt32, VarFloat16, VarFloat32, VarArray};
     enum IntSize {Int8=1, Int16=2, Int32=4};
     enum ConstType {ConstInt16, ConstStr};
     enum ConstStrType {StrChar, StrHex, StrHexw, StrLeft, StrRight, StrMid};
@@ -130,6 +130,18 @@ namespace Compiler
         std::vector<uint16_t> _lut;
     };
 
+    struct InputLut
+    {
+        uint16_t _address;
+        uint16_t _varsAddr;
+        uint16_t _strsAddr;
+        uint16_t _typesAddr;
+
+        std::vector<uint16_t> _varsLut;
+        std::vector<uint16_t> _strsLut;
+        std::vector<uint16_t> _typesLut;
+    };
+
     struct CodeLine
     {
         std::string _text;
@@ -140,6 +152,7 @@ namespace Compiler
         std::string _expression;
         OnGotoGosubLut _onGotoGosubLut;
         StrConcatLut _strConcatLut;
+        InputLut _inputLut;
         int _vasmSize = 0;
         int _labelIndex = -1;
         int  _varIndex = -1;

@@ -78,6 +78,14 @@ _label_ CALLI   _label
 _label_ CALLI   _label
 %ENDM
 
+%MACRO  Input
+        CALLI   input
+%ENDM
+
+%MACRO  NewLine
+        CALLI   newLineScroll
+%ENDM
+
 %MACRO  PrintChar _chr
         LDI     _chr
         CALLI   printChr

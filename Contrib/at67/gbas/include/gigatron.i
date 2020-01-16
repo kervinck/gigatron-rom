@@ -22,8 +22,10 @@ giga_rand0                      EQU     0x06
 giga_rand1                      EQU     0x07
 giga_rand2                      EQU     0x08
 giga_videoY                     EQU     0x09
-giga_buttonState                EQU     0x11
 giga_frameCount                 EQU     0x0E
+giga_serialRaw                  EQU     0x0F
+giga_serialLast                 EQU     0x10
+giga_buttonState                EQU     0x11
 giga_vPC                        EQU     0x16
 giga_vAC                        EQU     0x18
 giga_vLR                        EQU     0x1A

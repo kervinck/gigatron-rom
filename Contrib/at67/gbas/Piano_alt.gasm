@@ -83,20 +83,20 @@ _k                  EQU                     0x003a
 _c                  EQU                     0x003c
 
 ; Strings
-_str_0x7ea0          EQU                     0x7ea0
-_str_0x7ea0          DB                      18 ' 2 3   5 6 7   9 0' 0
-_str_0x7eb4          EQU                     0x7eb4
-_str_0x7eb4          DB                      19 'Q W E R T Y U I O P' 0
-_str_0x7ec9          EQU                     0x7ec9
-_str_0x7ec9          DB                      3 'Z: ' 0
-_str_0x7ed6          EQU                     0x7ed6
-_str_0x7ed6          DB                      8 'Metallic' 0
-_str_0x7ee0          EQU                     0x7ee0
-_str_0x7ee0          DB                      8 'Triangle' 0
-_str_0x7eea          EQU                     0x7eea
-_str_0x7eea          DB                      8 'Pulse   ' 0
-_str_0x7ef4          EQU                     0x7ef4
-_str_0x7ef4          DB                      8 'Sawtooth' 0
+_str_0x7ea0         EQU                     0x7ea0
+_str_0x7ea0         DB                      18 ' 2 3   5 6 7   9 0' 0
+_str_0x7eb4         EQU                     0x7eb4
+_str_0x7eb4         DB                      19 'Q W E R T Y U I O P' 0
+_str_0x7ec9         EQU                     0x7ec9
+_str_0x7ec9         DB                      3 'Z: ' 0
+_str_0x7ed6         EQU                     0x7ed6
+_str_0x7ed6         DB                      8 'Metallic' 0
+_str_0x7ee0         EQU                     0x7ee0
+_str_0x7ee0         DB                      8 'Triangle' 0
+_str_0x7eea         EQU                     0x7eea
+_str_0x7eea         DB                      8 'Pulse   ' 0
+_str_0x7ef4         EQU                     0x7ef4
+_str_0x7ef4         DB                      8 'Sawtooth' 0
 
 ; Define Bytes
 
@@ -184,12 +184,10 @@ _next_0x0296        LD                      _c
 
 _198                PUSH                    
                     PrintString             _str_0x7ea0
-                    LDWI                    newLineScroll
-                    CALL                    giga_vAC                        ; print " 2 3   5 6 7   9 0"
+                    NewLine                                                 ; print " 2 3   5 6 7   9 0"
 
 _199                PrintString             _str_0x7eb4
-                    LDWI                    newLineScroll
-                    CALL                    giga_vAC                        ; print "Q W E R T Y U I O P"
+                    NewLine                                                 ; print "Q W E R T Y U I O P"
 
 _200                LDWI                    _100
                     CALL                    giga_vAC                        ; gosub 100
@@ -415,7 +413,7 @@ _else_0x050f        LDW                     _k
 _page_0x0500        LDW                     0xde
                     LDWI                    17
                     STW                     register0
-                    LDI                     239
+                    LDI                     255
                     POKE                    register0
                     LDW                     _z
                     ADDI                    1
@@ -428,7 +426,7 @@ _page_0x0500        LDW                     0xde
                     LDI                     0
                     STW                     _d
                     LDWI                    _200
-                    CALL                    giga_vAC                        ; if k &= 122 then poke 17,&hEF : z=(z+1)AND3 : a=0 : b=0 : d=0 : goto 200
+                    CALL                    giga_vAC                        ; if k &= 122 then poke 17,&hFF : z=(z+1)AND3 : a=0 : b=0 : d=0 : goto 200
 
 _else_0x0547        LDI                     0
                     STW                     _a
@@ -464,7 +462,7 @@ clearCursorRow      EQU     0x78a0
 printInit           EQU     0x79bf
 printText           EQU     0x7ba0
 printChar           EQU     0x77a0
-atTextCursor        EQU     0x7bc3
+atTextCursor        EQU     0x7bb9
 newLineScroll       EQU     0x7aa0
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
@@ -542,7 +540,7 @@ convertGt_1         LDI     1
                     RET
 
 
-; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+; do *NOT* use register4 to register7 during time slicing if you use realTimeProc
 graphicsMode        EQU     register0
 waitVBlankNum       EQU     register0
 
@@ -564,7 +562,7 @@ drawLine_xy1        EQU     register0
 drawLine_xy2        EQU     register1
 drawLine_dxy1       EQU     register2
 drawLine_dxy2       EQU     register3
-drawLine_dx1        EQU     register4
+drawLine_dx1        EQU     register4           ; register4 to register7 used for temp values, state will be invalidated during time slicing
 drawLine_dy1        EQU     register5
 drawLine_dx2        EQU     register6
 drawLine_dy2        EQU     register7
@@ -683,7 +681,7 @@ clearVB_loop        CALL    realTimeProcAddr
 
 
 
-; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+; do *NOT* use register4 to register7 during time slicing if you use realTimeProc
 textStr             EQU     register0
 textNum             EQU     register0
 textBak             EQU     register0
@@ -717,25 +715,21 @@ printInit           LDWI    SYS_VDrawBits_134
 
 
 
-                    ; prints text string pointed to by the accumulator
+                    ; prints text string pointed to by textStr
 printText           PUSH
                     LDWI    printInit
                     CALL    giga_vAC
-                    LDW     textStr             
-                    PEEK                                    ; first byte is length
-                    BEQ     printT_exit
-    
-printT_char         ST      textLen
-                    INC     textStr                         ; next char
+
+                    ; first byte is length
+printT_char         INC     textStr                         ; next char
                     LDW     textStr             
                     PEEK
+                    BEQ     printT_exit                     ; check for delimiting zero
                     ST      textChr
                     LDWI    printChar
                     CALL    giga_vAC
-
-                    LD      textLen
-                    SUBI    1
-                    BNE     printT_char
+                    BRA     printT_char
+                    
 printT_exit         POP
                     RET
 

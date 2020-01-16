@@ -407,7 +407,7 @@ inline double INIReader::GetReal(string section, string name, double default_val
 
 inline char to_lower(char chr)
 {
-    return char(::tolower(chr));
+    return char(::tolower(unsigned char(chr)));
 }
 inline bool INIReader::GetBoolean(string section, string name, bool default_value)
 {
