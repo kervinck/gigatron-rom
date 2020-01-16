@@ -1102,7 +1102,7 @@ namespace Compiler
         std::string gosubOpcode = "";
 
         // Numeric labels
-        if(code.size() > 1  &&  isdigit(unsigned char(code[0])))
+        if(code.size() > 1  &&  isdigit((unsigned char)code[0]))
         {
             size_t space = code.find_first_of(" \n\r\f\t\v,");
             if(space == std::string::npos) space = code.size() - 1;
@@ -1110,7 +1110,7 @@ namespace Compiler
             // Force space between line numbers and line
             for(int i=1; i<space; i++)
             {
-                if(!isdigit(unsigned char(code[i]))  &&  code[i] != ':'  &&  code[i] != '!')
+                if(!isdigit((unsigned char)code[i])  &&  code[i] != ':'  &&  code[i] != '!')
                 {
                     space = i;
                     code.insert(i, " ");
@@ -1164,7 +1164,7 @@ namespace Compiler
             {
                 for(int i=0; i<labelName.size(); i++)
                 {
-                    if(!(labelName[i] == '_')  &&  !isalnum(unsigned char(labelName[i])))
+                    if(!(labelName[i] == '_')  &&  !isalnum((unsigned char)labelName[i]))
                     {
                         validLabel = false;
                         break;
@@ -1429,16 +1429,16 @@ namespace Compiler
 
         bool isDouble = false;
         std::string valueStr;
-        uchr = char(toupper(unsigned char(peek(true))));
+        uchr = char(toupper((unsigned char)peek(true)));
         valueStr.push_back(uchr); get(true);
-        uchr = char(toupper(unsigned char(peek(true))));
+        uchr = char(toupper((unsigned char)peek(true)));
 
         if((uchr >= '0'  &&  uchr <= '9')  ||  uchr == 'X'  ||  uchr == 'H'  ||  uchr == 'B'  ||  uchr == 'O'  ||  uchr == 'Q'  ||  uchr == '.')
         {
             if(uchr == '.') isDouble = true;
 
             valueStr.push_back(uchr); get(true);
-            uchr = char(toupper(unsigned char(peek(true))));
+            uchr = char(toupper((unsigned char)peek(true)));
             while(uchr  &&  ((uchr >= '0'  &&  uchr <= '9')  ||  (uchr >= 'A'  &&  uchr <= 'F')  ||  uchr == '.'))
             {
                 if(uchr == '.')
@@ -1450,7 +1450,7 @@ namespace Compiler
 
                 // Don't skip spaces here, as hex numbers can become attached to variables, keywords, etc
                 valueStr.push_back(get(false));
-                uchr = char(toupper(unsigned char(peek(false))));
+                uchr = char(toupper((unsigned char)peek(false)));
             }
         }
 

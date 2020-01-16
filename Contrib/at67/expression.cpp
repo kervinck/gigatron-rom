@@ -194,7 +194,7 @@ namespace Expression
     // ****************************************************************************************************************
     int isSpace(int chr)
     {
-        return isspace(unsigned char(chr));
+        return isspace((unsigned char)chr);
     }
 
     ExpressionType isExpression(const std::string& input)
@@ -209,14 +209,14 @@ namespace Expression
     bool isVarNameValid(const std::string& varName)
     {
         if(varName.size() == 0)  return false;
-        if(!isalpha(unsigned char(varName[0]))) return false;
+        if(!isalpha((unsigned char)varName[0])) return false;
 
         for(int i=1; i<varName.size()-1; i++)
         {
-            if(!isalnum(unsigned char(varName[i]))) return false;
+            if(!isalnum((unsigned char)varName[i])) return false;
         }
 
-        if(!isalnum(unsigned char(varName[varName.size() - 1]))  &&  varName[varName.size() - 1] != '$') return false;
+        if(!isalnum((unsigned char)varName[varName.size() - 1])  &&  varName[varName.size() - 1] != '$') return false;
 
         return true;
     }
@@ -242,7 +242,7 @@ namespace Expression
     bool hasNonStringWhiteSpace(int chr)
     {
         if(chr == '"') _containsQuotes = !_containsQuotes;
-        if(!isspace(unsigned char(chr)) || _containsQuotes) return false;
+        if(!isspace((unsigned char)chr) || _containsQuotes) return false;
         return true;    
     }
 
@@ -327,10 +327,10 @@ namespace Expression
                 }
 
                 // Save digits
-                if(isdigit(unsigned char(output[start])))
+                if(isdigit((unsigned char)output[start]))
                 {
                     size_t i = start;
-                    while(isdigit(unsigned char(output[i])))
+                    while(isdigit((unsigned char)output[i]))
                     {
                         strings.back() += output[i++];
                     }
@@ -381,7 +381,7 @@ namespace Expression
         {
             if(input[i] == '\"') inString = !inString;
 
-            if(isspace(unsigned char(input[i])))
+            if(isspace((unsigned char)input[i]))
             {
                 if(!inString)
                 {
@@ -416,7 +416,7 @@ namespace Expression
             // Check for comment, ' and REM
             if(!inString)
             {
-                if((input[i] == '\'')  ||  (i <= input.size()-3  &&  toupper(unsigned char(input[i])) == 'R'  &&  toupper(unsigned char(input[i+1])) == 'E'  &&  toupper(unsigned char(input[i+2])) == 'M'))
+                if((input[i] == '\'')  ||  (i <= input.size()-3  &&  toupper((unsigned char)input[i]) == 'R'  &&  toupper((unsigned char)input[i+1]) == 'E'  &&  toupper((unsigned char)input[i+2])) == 'M')
                 {
                     inComment = true;
                 }
@@ -572,13 +572,13 @@ namespace Expression
     bool subAlphaHelper(int i)
     {
         // Valid chars are alpha and 'address of'
-        return (isalpha(unsigned char(i)) || (i=='@'));
+        return (isalpha((unsigned char)i) || (i=='@'));
     }
     std::string getSubAlpha(const std::string& s)
     {
         if(s.size() > 1)
         {
-            char uchr = char(toupper(unsigned char(s[1])));
+            char uchr = char(toupper((unsigned char)s[1]));
             if((s[0] == '&'  &&  (uchr == 'H'  ||  uchr == 'B'  ||  uchr == 'O'))  ||
                (s[0] == '0'  &&  (uchr == 'X'  ||  uchr == 'B'  ||  uchr == 'O')))
             {
@@ -1098,17 +1098,17 @@ namespace Expression
         char uchr;
 
         std::string valueStr;
-        uchr = char(toupper(unsigned char(peek())));
+        uchr = char(toupper((unsigned char)peek()));
         valueStr.push_back(uchr); get();
-        uchr = char(toupper(unsigned char(peek())));
+        uchr = char(toupper((unsigned char)peek()));
         if((uchr >= '0'  &&  uchr <= '9')  ||  uchr == 'X'  ||  uchr == 'H'  ||  uchr == 'B'  ||  uchr == 'O'  ||  uchr == 'Q')
         {
             valueStr.push_back(uchr); get();
-            uchr = char(toupper(unsigned char(peek())));
+            uchr = char(toupper((unsigned char)peek()));
             while((uchr >= '0'  &&  uchr <= '9')  ||  (uchr >= 'A'  &&  uchr <= 'F'))
             {
                 valueStr.push_back(get());
-                uchr = char(toupper(unsigned char(peek())));
+                uchr = char(toupper((unsigned char)peek()));
             }
         }
 

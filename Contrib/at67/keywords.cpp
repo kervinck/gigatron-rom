@@ -1475,7 +1475,7 @@ namespace Keywords
             if(str.back() == ';') str.erase(str.size() - 1, 1);
 
             // Text length field
-            if(str.size() > lquote + 1  &&  isdigit(unsigned char(str[lquote + 1])))
+            if(str.size() > lquote + 1  &&  isdigit((unsigned char)str[lquote + 1]))
             {
                 uint8_t length;
                 std::string field = str.substr(lquote + 1);
