@@ -416,7 +416,7 @@ namespace Expression
             // Check for comment, ' and REM
             if(!inString)
             {
-                if((input[i] == '\'')  ||  (i <= input.size()-3  &&  toupper((unsigned char)input[i]) == 'R'  &&  toupper((unsigned char)input[i+1]) == 'E'  &&  toupper((unsigned char)input[i+2])) == 'M')
+                if((input[i] == '\'')  ||  (i <= input.size() - 3  &&  toupper((unsigned char)input[i]) == 'R'  &&  toupper((unsigned char)input[i+1]) == 'E'  &&  toupper((unsigned char)input[i+2]) == 'M'))
                 {
                     inComment = true;
                 }
