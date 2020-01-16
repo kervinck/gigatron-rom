@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+
 #-----------------------------------------------------------------------
 #
 #       Loader-specific SYS extensions
@@ -38,7 +38,7 @@ adda(1)                         #25
 st([sysArgs+0])                 #26
 ld(hi('REENTER'),Y)             #27
 jmp(Y,'REENTER')                #28
-ld(-32//2)                      #29
+ld(-32/2)                       #29
 # Restart the instruction in the next timeslice
 label('.sysNbi#19')
 ld([vPC])                       #19
@@ -46,7 +46,7 @@ suba(2)                         #20
 st([vPC])                       #21
 ld(hi('NEXTY'),Y)               #22
 jmp(Y,'NEXTY')                  #23
-ld(-26//2)                      #24
+ld(-26/2)                       #24
 
 #-----------------------------------------------------------------------
 # Extension SYS_LoaderProcessInput_64
@@ -102,7 +102,7 @@ st([vPC+1])                     #53
 st([vLR+1])                     #54
 ld(hi('REENTER'),Y)             #55
 jmp(Y,'REENTER')                #56
-ld(-60//2)                      #57
+ld(-60/2)                       #57
 # Invalid checksum
 label('.sysPi#19')
 wait(25-19);                    C('Invalid checksum')#19 Reset checksum
@@ -112,7 +112,7 @@ ld(ord('g'));                   C('Unknown command')#25 Reset checksum
 st([sysArgs+2])                 #26
 ld(hi('REENTER'),Y)             #27
 jmp(Y,'REENTER')                #28
-ld(-32//2)                      #29
+ld(-32/2)                       #29
 # Loading data
 label('.sysPi#49')
 ld([sysArgs+0]);                C('Loading data')#49 Continue checksum
@@ -121,7 +121,7 @@ ld([Y,X])                       #51
 st([sysArgs+2])                 #52
 ld(hi('REENTER'),Y)             #53
 jmp(Y,'REENTER')                #54
-ld(-58//2)                      #55
+ld(-58/2)                       #55
 
 #-----------------------------------------------------------------------
 # Extension SYS_LoaderPayloadCopy_34
@@ -151,7 +151,7 @@ ld(hi('REENTER'),Y)             #18,29
 wait(30-19)                     #19
 label('.sysCc#30')
 jmp(Y,'REENTER')                #30
-ld(-34//2)                      #31
+ld(-34/2)                       #31
 
 #-----------------------------------------------------------------------
 #
