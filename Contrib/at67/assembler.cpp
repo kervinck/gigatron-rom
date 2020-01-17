@@ -680,15 +680,14 @@ namespace Assembler
         if(stripWhiteSpace) Expression::stripWhitespace(input);
     }
 
-    size_t findSymbol(const std::string& input, const std::string& symbol, size_t pos = 0)
+    size_t findSymbol(const std::string& input, const std::string& symbol, size_t pos=0)
     {
         const size_t len = input.length();
         if(pos >= len) return std::string::npos;
 
-        const char* separators = "+-*/().,!?;#'\"[]<> \t\n\r";
-        std::vector<std::string> operators = {"**", ">>", "<<", "==", "!=", "<=", ">="};
+        const std::string separators = "+-*/().,!?;#'\"[]<> \t\n\r";
+        const std::vector<std::string> operators = {"**", ">>", "<<", "==", "!=", "<=", ">="};
 
-        
         for(;;)
         {
             size_t sep = input.find_first_of(separators, pos);
@@ -702,20 +701,22 @@ namespace Assembler
                     if(eos) break;
                 }
             }
+
             size_t end = eos ? len : sep;
             if(input.substr(pos, end-pos) == symbol)
             {
-                return pos;
+                break;
             }
             else if(eos)
             {
-                return std::string::npos;
+                pos = std::string::npos;
+                break;
             }
 
-            pos = sep+1;
+            pos = sep + 1;
         }
 
-        return std::string::npos;   // unreachable
+        return pos;
     }
 
     bool applyEquatesToExpression(std::string& expression, const std::vector<Equate>& equates)
