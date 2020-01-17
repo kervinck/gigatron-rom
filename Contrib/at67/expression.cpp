@@ -202,7 +202,9 @@ namespace Expression
         if(input.find_first_of("[]") != std::string::npos) return IsInvalid;
         if(input.find("++") != std::string::npos) return IsInvalid;
         if(input.find("--") != std::string::npos) return IsInvalid;
-        if(input.find_first_of("-+/%*()&|^") != std::string::npos) return HasOperators;
+        if(input.find_first_of("~-+/%*()&|^<>") != std::string::npos) return HasOperators;
+        if(input.find("**") != std::string::npos  ||  input.find(">>") != std::string::npos  ||  input.find("<<") != std::string::npos) return HasOperators;
+        if(input.find("==") != std::string::npos  ||  input.find("!=") != std::string::npos  ||  input.find("<=") != std::string::npos  ||  input.find(">=") != std::string::npos) return HasOperators;
         return HasNumbers;
     }
 

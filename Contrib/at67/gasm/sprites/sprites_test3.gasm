@@ -458,7 +458,7 @@ SYS_BlinkyBlast_142 .LD     [dstAddr],X         ; dst line 0
                     .ST     $00,[Y,X++]
 
                     .NOP                    ; pad instructions so odd(14 + number of instructions) = true
-                    .LD     REENTER/256,y
+                    .LD     REENTER >>8,y
                     .JMP    y,REENTER
                     .LD     0xB9            ; 0 - ((14 + number of instructions + 3) / 2), odd(14 + number of instructions) = true
 
@@ -501,6 +501,6 @@ SYS_ClearRow32_56   .LD     [vbase],X
                     .ST     [Y,X++]
 
                     .NOP                    ; pad instructions so odd(14 + number of instructions) = true
-                    .LD     REENTER/256,y
+                    .LD     REENTER >>8,y
                     .JMP    y,REENTER
                     .LD     0xE4            ; 0 - ((14 + number of instructions + 3) / 2), odd(14 + number of instructions) = true

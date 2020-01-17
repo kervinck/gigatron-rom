@@ -682,20 +682,39 @@ namespace Assembler
 
     size_t findSymbol(const std::string& input, const std::string& symbol, size_t pos = 0)
     {
-        const char* separators = "+-*/().,!?;#'\"[] \t\n\r";
         const size_t len = input.length();
-        if (pos >= len)
-            return std::string::npos;
-        for(;;) {
+        if(pos >= len) return std::string::npos;
+
+        const char* separators = "+-*/().,!?;#'\"[]<> \t\n\r";
+        std::vector<std::string> operators = {"**", ">>", "<<", "==", "!=", "<=", ">="};
+
+        
+        for(;;)
+        {
             size_t sep = input.find_first_of(separators, pos);
             bool eos = (sep == std::string::npos);
+            if(eos)
+            {
+                for(int i=0; i<operators.size(); i++)
+                {
+                    sep = input.find(operators[i]);
+                    eos = (sep == std::string::npos);
+                    if(eos) break;
+                }
+            }
             size_t end = eos ? len : sep;
-            if (input.substr(pos, end-pos) == symbol)
+            if(input.substr(pos, end-pos) == symbol)
+            {
                 return pos;
-            else if (eos)
+            }
+            else if(eos)
+            {
                 return std::string::npos;
+            }
+
             pos = sep+1;
         }
+
         return std::string::npos;   // unreachable
     }
 
