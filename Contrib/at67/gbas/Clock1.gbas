@@ -1,13 +1,161 @@
 'Keeping time using the
 '59.98 Hz frame counter
+
+const TICKS = 60
+const SECSX = &h60A0
+const SECSY = &h61A0
+const MINSX = &h62A0
+const MINSY = &h63A0
+const HOURX = &h64A0
+const HOURY = &h65A0
+
+const CENTERX = 80
+const CENTERY = 59
+
+const SECSLEN = 45
+const MINSLEN = 37
+const HOURLEN = 29
+
+const BKCOLOUR = &h10
+
+'Seconds
+def byte(SECSX, x, -90.0, 270.0, TICKS) = cos(x)*SECSLEN + CENTERX
+def byte(SECSY, y, -90.0, 270.0, TICKS) = sin(y)*SECSLEN + CENTERY
+
+'Minutes
+def byte(MINSX, x, -90.0, 270.0, TICKS) = cos(x)*MINSLEN + CENTERX
+def byte(MINSY, y, -90.0, 270.0, TICKS) = sin(y)*MINSLEN + CENTERY
+
+'Hours
+def byte(HOURX, x, -90.0, 270.0, TICKS) = cos(x)*HOURLEN + CENTERX
+def byte(HOURY, y, -90.0, 270.0, TICKS) = sin(y)*HOURLEN + CENTERY
+
+poke 162,BKCOLOUR
 cls
-10 H=0 : M=0 : S=0 : SS=-1 : B=peek(14)
+
+B=peek(14)
+
+input "Enter Time ", H,"H:";2;, M,"M:";2;, S,"S:";2;
+at 2,0 : print "                          ";
+if H=0
+    H=12
+else
+    H=H%13
+endif
+M=M%60
+S=S%60
+
+Hm12=H%12
+Md12=M/12 : MMd12=Md12
+
+HH=H : MM=M : SS=S
+HHm12=HH%12 : HHx5=(HHm12 LSL 2)+HHm12
+
+ch0=0 : ch1=ch0 : ch2=ch1 : ch3=ch2
+
+gosub drawDial
+gosub drawClock
+
 20 T=S*60 : V=3599 : goto 50
 30 if T>=V then T=T-V : M=M+1
 40 if M>59 then M=M-60 : H=H+1
-50 S=T/60
-60 if S=SS then goto 80
-70 at 60,56 : print H;":";M/10;M%10;":";S/10;S%10
-80 SS=S : A=B : B=peek(14) : A=B-A
-90 if A<0 then A=A+256
-100 T=T+A : goto 30
+50 if H>12 then H=H-12
+60 S=T/60 : if S<>SS then gosub drawClock : SS=S
+70 A=B : B=peek(14) : A=B-A
+80 if A<0 then A=A+256
+90 T=T+A : goto 30
+
+drawClock:
+    gosub drawDigits
+    gosub drawSeconds
+    gosub drawMinutes
+    gosub drawHours
+return
+
+drawDigits:
+    poke 162,&h00
+    poke 163,&h0C : at 57,82 : print H/10;H%10;":";M/10;M%10;":";S/10;S%10;
+    poke 162,BKCOLOUR
+return
+
+drawSeconds:
+    gosub eraseSecondHand
+    i=SS : gosub drawTickS
+    gosub drawSecondHand
+return
+
+drawMinutes:
+    if M<>MM 
+        gosub eraseMinuteHand
+        MM=M : Md12=M/12
+        if Md12<>MMd12
+            gosub eraseHourHand
+            MMd12=Md12
+        endif
+    endif
+    gosub drawMinuteHand
+return
+
+drawHours:
+    if H<>HH
+        HHm12=HH%12 : HHx5=(HHm12 LSL 2)+HHm12
+        HH=H : Hm12=H%12
+    endif
+    Hx5=(Hm12 LSL 2)+Hm12
+    gosub drawHourHand
+return
+
+drawTickS:
+    x = peek(SECSX + i)
+    y = peek(SECSY + i) + 8
+    poke (y LSL 8) + x, &h3F
+return
+
+
+drawDial:
+    ox=CENTERX : oy=CENTERY + 8
+    cr=44 : cc=&h00 : gosub jitterCircle
+    cr=46 : cc=&h00 : gosub jitterCircle
+    cr=48 : cc=&h01 : gosub jitterCircle
+    cr=52 : cc=&h03 : gosub jitterCircle
+    cr=50 : cc=&h02 : gosub jitterCircle
+    
+    for i=0 to TICKS-1
+        gosub drawTickS
+    next i
+return
+
+eraseSecondHand:
+    poke 163,BKCOLOUR : line CENTERX,CENTERY, peek(SECSX + SS),peek(SECSY + SS)
+return
+    
+drawSecondHand:
+    poke 163,&h3F : line CENTERX,CENTERY, peek(SECSX + S),peek(SECSY + S)
+return
+
+eraseMinuteHand:
+    poke 163,BKCOLOUR : line CENTERX,CENTERY, peek(MINSX + MM),peek(MINSY + MM)
+return
+
+drawMinuteHand:
+    poke 163,&h2A : line CENTERX,CENTERY, peek(MINSX + M),peek(MINSY + M)
+return
+
+eraseHourHand:
+    poke 163,BKCOLOUR : line CENTERX,CENTERY, peek(HOURX + HHx5 + MMd12),peek(HOURY + HHx5 + MMd12)
+return
+
+drawHourHand:
+    poke 163,&h15 : line CENTERX,CENTERY, peek(HOURX + Hx5 + Md12),peek(HOURY + Hx5 + Md12)
+return
+
+jitterCircle:
+    oxx=ox : oyy=oy
+    for ox=oxx-1 to oxx+1
+        for oy=oyy-1 to oyy+1
+            poke 163,cc
+            circle ox, oy, cr
+        next oy
+    next ox
+    ox=oxx : oy=oyy
+return

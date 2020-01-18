@@ -572,7 +572,7 @@ namespace Graphics
 
     void drawLeds(void)
     {
-        // Update 60 times per second no matter how high the FPS is
+        // Update N times per second independently of the main window FPS
         if(Timing::getFrameTime()  &&  Timing::getFrameUpdate())
         {
             for(int i=0; i<NUM_LEDS; i++)
@@ -732,7 +732,7 @@ namespace Graphics
 
     void renderText(void)
     {
-        // Update 60 times per second no matter how high the FPS is
+        // Update N times per second independently of the main window FPS
         if(Timing::getFrameTime()  &&  Timing::getFrameUpdate())
         {
             char str[32];
@@ -980,7 +980,7 @@ namespace Graphics
 
     void renderTextWindow(void)
     {
-        // Update 60 times per second no matter how high the FPS is
+        // Update N times per second independently of the main window FPS
         if(Timing::getFrameTime()  &&  Timing::getFrameUpdate())
         {
             char str[32] = "";

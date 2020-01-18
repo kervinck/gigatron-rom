@@ -1,4 +1,4 @@
-; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+; do *NOT* use register4 to register7 during time slicing if you use realTimeProc
 graphicsMode        EQU     register0
 waitVBlankNum       EQU     register0
 
@@ -20,7 +20,7 @@ drawLine_xy1        EQU     register0
 drawLine_xy2        EQU     register1
 drawLine_dxy1       EQU     register2
 drawLine_dxy2       EQU     register3
-drawLine_dx1        EQU     register4
+drawLine_dx1        EQU     register4           ; register4 to register7 used for temp values, state will be invalidated during time slicing
 drawLine_dy1        EQU     register5
 drawLine_dx2        EQU     register6
 drawLine_dy2        EQU     register7
@@ -31,7 +31,19 @@ drawLine_num        EQU     register11
 drawLine_count      EQU     register12
 drawLine_addr       EQU     register13
 drawLine_tmp        EQU     register14
-    
+  
+drawCircle_cx       EQU     register0
+drawCircle_cy       EQU     register1
+drawCircle_r        EQU     register2
+drawCircle_a        EQU     register3
+drawCircle_d        EQU     register8
+drawCircle_x        EQU     register9
+drawCircle_y        EQU     register10
+drawCircle_ch0      EQU     register11
+drawCircle_ch1      EQU     register12
+drawCircle_ch2      EQU     register13
+drawCircle_ch3      EQU     register14
+
     
 %SUB                scanlineMode
 scanlineMode        LDW     giga_romType
@@ -453,7 +465,134 @@ drawVTLineLoadDXY   LDWI    SYS_LSLW8_24
                     STW     drawLine_dxy2       ; dxy2 = dx2 + (dy2<<8)
                     RET
 %ENDS   
-    
+
+%SUB                drawCircle
+drawCircle          PUSH
+                    LDI     0
+                    STW     drawCircle_ch0
+                    STW     drawCircle_ch1
+                    STW     drawCircle_ch2
+                    STW     drawCircle_ch3
+                    STW     drawCircle_x
+                    LDW     drawCircle_r
+                    STW     drawCircle_y
+                    LDI     1
+                    SUBW    drawCircle_r
+                    STW     drawCircle_d
+                    
+drawC_loop          LDWI    drawCircleExt1
+                    CALL    giga_vAC
+                    
+                    LDW     drawCircle_d
+                    BGE     drawC_skip
+                    LDW     drawCircle_x
+                    LSLW
+                    LSLW
+                    ADDW    drawCircle_d
+                    ADDI    3
+                    STW     drawCircle_d
+                    BRA     drawC_cont
+                    
+drawC_skip          LDW     drawCircle_x
+                    SUBW    drawCircle_y
+                    LSLW
+                    LSLW
+                    ADDW    drawCircle_d
+                    ADDI    5
+                    STW     drawCircle_d
+                    LDW     drawCircle_y
+                    SUBI    1
+                    STW     drawCircle_y
+
+drawC_cont          INC     drawCircle_x
+                    LDW     drawCircle_x
+                    SUBW    drawCircle_y
+                    BLE     drawC_loop
+
+                    POP
+                    RET
+%ENDS
+
+%SUB                drawCircleExt1
+drawCircleExt1      PUSH
+                    LDW     drawCircle_cy
+                    ADDW    drawCircle_y
+                    ST      drawCircle_ch0 + 1
+                    LDW     drawCircle_cy
+                    SUBW    drawCircle_y
+                    ST      drawCircle_ch1 + 1
+                    LDW     drawCircle_cy
+                    ADDW    drawCircle_x
+                    ST      drawCircle_ch2 + 1
+                    LDW     drawCircle_cy
+                    SUBW    drawCircle_x
+                    ST      drawCircle_ch3 + 1
+
+                    LDW     drawCircle_cx
+                    ADDW    drawCircle_x
+                    ADDW    drawCircle_ch0
+                    STW     drawCircle_a
+                    LD      fgbgColour + 1
+                    POKE    drawCircle_a
+
+                    LDW     drawCircle_cx
+                    SUBW    drawCircle_x
+                    ADDW    drawCircle_ch0
+                    STW     drawCircle_a
+                    LD      fgbgColour + 1
+                    POKE    drawCircle_a
+                    
+                    LDW     drawCircle_cx
+                    ADDW    drawCircle_x
+                    ADDW    drawCircle_ch1
+                    STW     drawCircle_a
+                    LD      fgbgColour + 1
+                    POKE    drawCircle_a
+
+                    LDW     drawCircle_cx
+                    SUBW    drawCircle_x
+                    ADDW    drawCircle_ch1
+                    STW     drawCircle_a
+                    LD      fgbgColour + 1
+                    POKE    drawCircle_a
+                    
+                    LDWI    drawCircleExt2
+                    CALL    giga_vAC            ; doesn't return to here
+%ENDS
+                    
+%SUB                drawCircleExt2
+drawCircleExt2      LDW     drawCircle_cx
+                    ADDW    drawCircle_y
+                    ADDW    drawCircle_ch2
+                    STW     drawCircle_a
+                    LD      fgbgColour + 1
+                    POKE    drawCircle_a
+
+                    LDW     drawCircle_cx
+                    SUBW    drawCircle_y
+                    ADDW    drawCircle_ch2
+                    STW     drawCircle_a
+                    LD      fgbgColour + 1
+                    POKE    drawCircle_a
+                    
+                    LDW     drawCircle_cx
+                    ADDW    drawCircle_y
+                    ADDW    drawCircle_ch3
+                    STW     drawCircle_a
+                    LD      fgbgColour + 1
+                    POKE    drawCircle_a
+
+                    LDW     drawCircle_cx
+                    SUBW    drawCircle_y
+                    ADDW    drawCircle_ch3
+                    STW     drawCircle_a
+                    LD      fgbgColour + 1
+                    POKE    drawCircle_a
+                    
+                    POP
+                    RET
+%ENDS
+
 %SUB                atLineCursor
 atLineCursor        LD      cursorXY
                     STW     drawLine_x1

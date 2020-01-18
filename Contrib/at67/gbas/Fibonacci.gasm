@@ -59,8 +59,8 @@ _b_array            DW                      0x0000 0x0000 0x0000 0x0000 0x0000 0
 _i                  EQU                     0x0036
 
 ; Strings
-_str_0xffc6          EQU                     0xffc6
-_str_0xffc6          DB                      2 ': ' 0
+_str_0xffc6         EQU                     0xffc6
+_str_0xffc6         DB                      2 ': ' 0
 
 ; Define Bytes
 
@@ -111,8 +111,7 @@ _next_0x0285        LDW                     _j
                     PrintAcChar                                             ; for i=0 to j : put b(j-i)+48
 
 _5                  ForNextLoopStepUp       _i _next_0x0285 0xb0 0xb2
-                    LDWI                    newLineScroll
-                    CALL                    giga_vAC
+                    NewLine                 
                     LDI                     0
                     STW                     _i
                     LDW                     _j

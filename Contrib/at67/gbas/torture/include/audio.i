@@ -1,7 +1,7 @@
 numChannels         EQU     register0
 audioPtr            EQU     register1
 waveType            EQU     register2
-midiNote            EQU     register4           ; register4 to register7 are the only free registers during time slicing
+midiNote            EQU     register4           ; register4 to register7 are the only free registers during time slicing, (state is invalidated each time slice)
 midiCommand         EQU     register5
 midiPtr             EQU     register6
 

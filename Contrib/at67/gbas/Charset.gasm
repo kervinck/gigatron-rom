@@ -89,8 +89,7 @@ _40                 LDW                     _C
                     PrintAcChar             
                     ForNextLoopStepUp       _C _40 0xb4 0xb6                ; PUT C: NEXT C
 
-_50                 LDWI                    newLineScroll
-                    CALL                    giga_vAC
+_50                 NewLine                 
                     ForNextLoopUp           _Y _20 7                        ; PRINT: NEXT Y
 
 _end_0x029e         BRA                     _end_0x029e                     ; END

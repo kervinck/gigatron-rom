@@ -668,7 +668,7 @@ namespace Loader
         int gt1Size = *((int*)userData);
 
         int index = 0;
-        while(std::isdigit(line[0]))
+        while(std::isdigit((unsigned char)line[0]))
         {
             int n = strtol(line.c_str(), nullptr, 10);
             comWrite(_currentComPort, &_gt1Buffer[index], n);

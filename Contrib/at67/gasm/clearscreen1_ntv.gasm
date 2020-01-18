@@ -88,7 +88,7 @@ SYS_ClearRow32_56       .LD     [0x40],X
                         .ST     [Y,X++]
                         .NOP                ; pad instructions so odd(14 + number of instructions) = true
 
-                        .LD     REENTER/256,y
+                        .LD     REENTER >>8,y
                         .JMP    y,REENTER
                         .LD     0xE4        ; 0 - ((14 + number of instructions + 3) / 2), odd(14 + number of instructions) = true
                         

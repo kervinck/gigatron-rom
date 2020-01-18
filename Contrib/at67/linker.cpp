@@ -78,9 +78,23 @@ namespace Linker
         {0x0000, 0x0000, "drawVTLineLoop"   , "", false, false},
         {0x0000, 0x0000, "drawVTLineLoadXY" , "", false, false},
         {0x0000, 0x0000, "atLineCursor"     , "", false, false},
+        {0x0000, 0x0000, "drawCircle"       , "", false, false},
+        {0x0000, 0x0000, "drawCircleExt1"   , "", false, false},
+        {0x0000, 0x0000, "drawCircleExt2"   , "", false, false},
         {0x0000, 0x0000, "resetAudio"       , "", false, false},
         {0x0000, 0x0000, "playMidi"         , "", false, false},
         {0x0000, 0x0000, "midiStartNote"    , "", false, false},
+        {0x0000, 0x0000, "input"            , "", false, false},
+        {0x0000, 0x0000, "inputExt1"        , "", false, false},
+        {0x0000, 0x0000, "inputExt2"        , "", false, false},
+        {0x0000, 0x0000, "inputCursor"      , "", false, false},
+        {0x0000, 0x0000, "inputKeys"        , "", false, false},
+        {0x0000, 0x0000, "inputIntVar"      , "", false, false},
+        {0x0000, 0x0000, "inputStrVar"      , "", false, false},
+        {0x0000, 0x0000, "inputReturn"      , "", false, false},
+        {0x0000, 0x0000, "inputDelete"      , "", false, false},
+        {0x0000, 0x0000, "inputPrint"       , "", false, false},
+        {0x0000, 0x0000, "inputNewline"     , "", false, false},
         {0x0000, 0x0000, "printInit"        , "", false, false},
         {0x0000, 0x0000, "printText"        , "", false, false},
         {0x0000, 0x0000, "printLeft"        , "", false, false},
@@ -104,6 +118,7 @@ namespace Linker
         {0x0000, 0x0000, "stringMid"        , "", false, false},
         {0x0000, 0x0000, "stringLeft"       , "", false, false},
         {0x0000, 0x0000, "stringRight"      , "", false, false},
+        {0x0000, 0x0000, "integerStr"       , "", false, false},
     };
     const std::vector<std::string> _subIncludes = 
     {
@@ -114,8 +129,10 @@ namespace Linker
         "conv_conds.i"  ,
         "graphics.i"    ,
         "audio.i"       ,
+        "input.i"       ,
         "print_text.i"  ,
         "string.i"      ,
+        "numeric.i"     ,
     };
     const std::vector<std::string> _subIncludesCALLI = 
     {
@@ -126,8 +143,10 @@ namespace Linker
         "conv_conds_CALLI.i"  ,
         "graphics_CALLI.i"    ,
         "audio_CALLI.i"       ,
+        "input_CALLI.i"       ,
         "print_text_CALLI.i"  ,
         "string_CALLI.i"      ,
+        "numeric_CALLI.i"     ,
     };
 
 

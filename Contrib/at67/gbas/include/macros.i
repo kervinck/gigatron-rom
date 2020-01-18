@@ -82,6 +82,17 @@ _label_ CALL    giga_vAC
 _label_ CALL    giga_vAC
 %ENDM
 
+%MACRO  Input
+        STW     inpLutAddr
+        LDWI    input
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  NewLine
+        LDWI    newLineScroll
+        CALL    giga_vAC
+%ENDM
+
 %MACRO  PrintChar _chr
         LDI     _chr
         ST      textChr
@@ -359,6 +370,11 @@ _label_ CALL    giga_vAC
 
 %MACRO  DrawVLine
         LDWI    drawVLine
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  DrawCircle
+        LDWI    drawCircle
         CALL    giga_vAC
 %ENDM
 

@@ -1,4 +1,4 @@
-; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+; do *NOT* use register4 to register7 during time slicing if you use realTimeProc
 textStr             EQU     register0
 textNum             EQU     register0
 textBak             EQU     register0

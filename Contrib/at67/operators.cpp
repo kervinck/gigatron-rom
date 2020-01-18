@@ -556,7 +556,7 @@ namespace Operators
     {
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
-            left._value = int16_t(std::lround(left._value)) << int16_t(std::lround(right._value));
+            left._value = (int16_t(std::lround(left._value)) << int16_t(std::lround(right._value))) & 0x0000FFFF;
             return left;
         }
 
@@ -697,7 +697,7 @@ namespace Operators
     {
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
-            left._value /= (1 << int16_t(std::lround(right._value)));
+            left._value /= (1 << int16_t(std::lround(right._value))) & 0x0000FFFF;
             return left;
         }
 

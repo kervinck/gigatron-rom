@@ -55,7 +55,7 @@ xyVelArray  EQU     0xD0
 xExtent     EQU     0x9C
 yExtent     EQU     0x74
 
-numSprites  EQU     16
+numSprites  EQU     4
    
    
 _startAddress_      EQU     0x0200      ; entry point for the code, if this is missing defaults to 0x0200
@@ -588,7 +588,7 @@ SYS_SpriteCopy_118  .LD     [srcAddr],X         ; src line 0
                     .LD     [rowBuffer3 + 3]
                     .ST     [Y,X++]
                     
-                    .LD     REENTER/256,y
+                    .LD     REENTER >>8,y
                     .JMP    y,REENTER
                     .LD     0xC5                ; 0 - ((14 + number of instructions + 3) / 2), odd(14 + number of instructions) = true
                     

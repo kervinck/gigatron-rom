@@ -636,7 +636,7 @@ gosubNL_found       LDW     lutIndex
                     RET
 
 
-; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+; do *NOT* use register4 to register7 during time slicing if you use realTimeProc
 graphicsMode        EQU     register0
 waitVBlankNum       EQU     register0
 
@@ -658,7 +658,7 @@ drawLine_xy1        EQU     register0
 drawLine_xy2        EQU     register1
 drawLine_dxy1       EQU     register2
 drawLine_dxy2       EQU     register3
-drawLine_dx1        EQU     register4
+drawLine_dx1        EQU     register4           ; register4 to register7 used for temp values, state will be invalidated during time slicing
 drawLine_dy1        EQU     register5
 drawLine_dx2        EQU     register6
 drawLine_dy2        EQU     register7

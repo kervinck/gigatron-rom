@@ -58,9 +58,9 @@ _page_0x0400        EQU                     0x0400
 _end_0x04a3         EQU                     0x0424
 
 ; Variables
-_X_array            EQU                     0x0600
+_X_array            EQU                     0xfe00
 _X_array            DW                      0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_Y_array            EQU                     0x0500
+_Y_array            EQU                     0xfd00
 _Y_array            DW                      0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
 _I                  EQU                     0x0030
 _J                  EQU                     0x0032
@@ -69,8 +69,8 @@ _y                  EQU                     0x0036
 _x                  EQU                     0x0038
 
 ; Strings
-_str_0x7ea0          EQU                     0x7ea0
-_str_0x7ea0          DB                      16 'Merry Christmas!' 0
+_str_0xff60         EQU                     0xff60
+_str_0xff60         DB                      16 'Merry Christmas!' 0
 
 ; Define Bytes
 def_bytes_0x08a0    EQU                     0x08a0
@@ -144,7 +144,7 @@ _40                 LDWI                    163
                     LDWI                    atTextCursor
                     CALL                    giga_vAC                        ; poke 163,72 : at 32,96
 
-_50                 PrintString             _str_0x7ea0                     ; print "Merry Christmas!";
+_50                 PrintString             _str_0xff60                     ; print "Merry Christmas!";
 
 _60                 LDI                     0
                     STW                     drawHLine_x1
@@ -163,7 +163,7 @@ _80                 LDI                     0
                     STW                     _S                              ; for S=0 to N
 
 _90                 TickMidi                
-                    LDWI                    0x0500
+                    LDWI                    0xfd00
                     ADDW                    _S
                     ADDW                    _S
                     DEEK                    
@@ -192,7 +192,7 @@ _100                Rand
 _page_0x0300        LDW                     0xde
                     ADDW                    0xc4
                     STW                     register0
-                    LDWI                    0x0600
+                    LDWI                    0xfe00
                     ADDW                    _S
                     ADDW                    _S
                     STW                     register1
@@ -208,14 +208,14 @@ _110                Rand
                     LDW                     0xc2
                     ANDW                    highByteMask
                     STW                     register0
-                    LDWI                    0x0500
+                    LDWI                    0xfd00
                     ADDW                    _S
                     ADDW                    _S
                     STW                     register1
                     LDW                     register0
                     DOKE                    register1                       ; Y(S) = (8 + (rnd(0) AND &h3F)) LSL 8 '(8+rnd(60))*256
 
-_120                LDWI                    0x0500
+_120                LDWI                    0xfd00
                     ADDW                    _S
                     ADDW                    _S
                     DEEK                    
@@ -224,7 +224,7 @@ _120                LDWI                    0x0500
                     ADDW                    0xc0
                     STW                     _y                              ; y=Y(S)+256
 
-_130                LDWI                    0x0600
+_130                LDWI                    0xfe00
                     ADDW                    _S
                     ADDW                    _S
                     DEEK                    
@@ -246,12 +246,12 @@ _140                LDW                     _y
                     LDWI                    _190
                     CALL                    giga_vAC                        ; if peek(y+x)>C then goto 190
 
-_150                LDWI                    0x0500
+_150                LDWI                    0xfd00
                     ADDW                    _S
                     ADDW                    _S
                     DEEK                    
                     STW                     0xc0
-                    LDWI                    0x0600
+                    LDWI                    0xfe00
                     ADDW                    _S
                     ADDW                    _S
                     DEEK                    
@@ -266,13 +266,13 @@ _160                LDW                     _x
                     LDI                     63
                     POKE                    0xc0                            ; poke x+y,C
 
-_170                LDWI                    0x0600
+_170                LDWI                    0xfe00
                     ADDW                    _S
                     ADDW                    _S
                     STW                     register1
                     LDW                     _x
                     DOKE                    register1
-                    LDWI                    0x0500
+                    LDWI                    0xfd00
                     ADDW                    _S
                     ADDW                    _S
                     STW                     register1
@@ -283,7 +283,7 @@ _180                ForNextLoopUp           _S _90 127
                     LDWI                    _80
                     CALL                    giga_vAC                        ; next S : goto 80
 
-_190                LDWI                    0x0600
+_190                LDWI                    0xfe00
                     ADDW                    _S
                     ADDW                    _S
                     DEEK                    
@@ -298,7 +298,7 @@ _200                LDW                     _x
                     LDWI                    _150
                     CALL                    giga_vAC                        ; if peek(x+y)=D then goto 150
 
-_210                LDWI                    0x0500
+_210                LDWI                    0xfd00
                     ADDW                    _S
                     ADDW                    _S
                     DEEK                    
@@ -307,7 +307,7 @@ _210                LDWI                    0x0500
                     LDWI                    _page_0x0400
                     CALL                    giga_vAC
 _page_0x0400        LDW                     0xde
-                    LDWI                    0x0600
+                    LDWI                    0xfe00
                     ADDW                    _S
                     ADDW                    _S
                     DEEK                    
@@ -316,7 +316,7 @@ _page_0x0400        LDW                     0xde
                     LDI                     127
                     POKE                    0xc2                            ; poke Y(S)+X(S),C+64
 
-_220                LDWI                    0x0500
+_220                LDWI                    0xfd00
                     ADDW                    _S
                     ADDW                    _S
                     STW                     register1
@@ -335,28 +335,28 @@ _end_0x04a3         BRA                     _end_0x04a3                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7eb2
-convertEqOp         EQU     0x7ebb
-convertNeOp         EQU     0x7ec4
-convertLeOp         EQU     0x7ecd
-convertGeOp         EQU     0x7ed6
-convertLtOp         EQU     0x7edf
-convertGtOp         EQU     0x7ee8
-rand16bit           EQU     0x7ef1
-scanlineMode        EQU     0x7dc3
-resetVideoTable     EQU     0x7cda
-initClearFuncs      EQU     0x7da0
-clearVertBlinds     EQU     0x7ca0
-clearCursorRow      EQU     0x77a0
-drawHLine           EQU     0x7aa0
-resetAudio          EQU     0x79a0
-playMidi            EQU     0x78a0
-midiStartNote       EQU     0x76a0
-printInit           EQU     0x7bcd
-printText           EQU     0x7dd7
-printChar           EQU     0x75a0
-atTextCursor        EQU     0x7ba0
-newLineScroll       EQU     0x74a0
+realTimeProc        EQU     0xff72
+convertEqOp         EQU     0xff7b
+convertNeOp         EQU     0xff84
+convertLeOp         EQU     0xff8d
+convertGeOp         EQU     0xff96
+convertLtOp         EQU     0xff9f
+convertGtOp         EQU     0xffa8
+rand16bit           EQU     0xffe8
+scanlineMode        EQU     0xffd4
+resetVideoTable     EQU     0xfb50
+initClearFuncs      EQU     0xffb1
+clearVertBlinds     EQU     0xfc00
+clearCursorRow      EQU     0xfb6f
+drawHLine           EQU     0xfc80
+resetAudio          EQU     0xfcc7
+playMidi            EQU     0xfb00
+midiStartNote       EQU     0xfbb8
+printInit           EQU     0xfa00
+printText           EQU     0xfc67
+printChar           EQU     0xfa1b
+atTextCursor        EQU     0xfc3a
+newLineScroll       EQU     0xfa73
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
