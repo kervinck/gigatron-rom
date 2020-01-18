@@ -1085,7 +1085,7 @@ namespace Compiler
             {
                 if(i+1 >= tokens.size())
                 {
-                    fprintf(stderr, "Compiler::checkForGosubLabel() : missing label after GOSUB in : '%s' : on line %d\n", code.c_str(), lineNumber + 1);
+                    fprintf(stderr, "Compiler::checkForGosubLabel() : missing label after GOSUB in '%s' on line %d\n", code.c_str(), lineNumber + 1);
                     return false;
                 }
                 _gosubLabels.push_back(tokens[i+1]);
@@ -1362,7 +1362,7 @@ namespace Compiler
     // Create constant string from int
     uint16_t getOrCreateConstString(ConstStrType constStrType, int16_t input, int& index)
     {
-        char output[16];
+        char output[16] = "";
         switch(constStrType)
         {
             case StrChar:  sprintf(output, "%c",   uint8_t(input) & 0x7F); break;
@@ -1903,8 +1903,9 @@ namespace Compiler
 
     bool handleStrings(CodeLine& codeLine, int codeLineIndex, Expression::Numeric& numeric, uint32_t expressionType)
     {
-        int dstIndex = codeLine._varIndex;
+        if(codeLine._text.size() < 2) return false;
 
+        int dstIndex = codeLine._varIndex;
         if(dstIndex == -1)
         {
             fprintf(stderr, "Compiler::handleStrings() : Syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
@@ -2428,9 +2429,8 @@ namespace Compiler
 
     bool outputDefs(void)
     {
-        _output.push_back("; Define Bytes\n");
-
         // Create def byte data
+        _output.push_back("; Define Bytes\n");
         for(int i=0; i<_defDataBytes.size(); i++)
         {
             std::string defName = "def_bytes_" + Expression::wordToHexString(_defDataBytes[i]._address);
@@ -2443,8 +2443,10 @@ namespace Compiler
             }
             _output.push_back(dbString + "\n");
         }
+        _output.push_back("\n");
 
         // Create def word data
+        _output.push_back("; Define Words\n");
         for(int i=0; i<_defDataWords.size(); i++)
         {
             std::string defName = "def_words_" + Expression::wordToHexString(_defDataWords[i]._address);
@@ -2457,7 +2459,6 @@ namespace Compiler
             }
             _output.push_back(dwString + "\n");
         }
-
         _output.push_back("\n");
 
         return true;

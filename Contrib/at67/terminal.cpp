@@ -76,7 +76,9 @@ namespace Terminal
     {
         int clipboardTextSize = 0;
         for(int i=0; i<_terminalText.size(); i++) clipboardTextSize += int(_terminalText[i].size());
+        if(clipboardTextSize == 0) return;
         char* clipboardText = new (std::nothrow) char[clipboardTextSize];
+        if(!clipboardText) return;
 
         // Copy text line by line, char by char, replace trailing zero's with newlines
         int clipboardTextIndex = 0;
@@ -89,13 +91,13 @@ namespace Terminal
             }
 
             // trailing zero's get replaced with newlines, except for last one
-            (i < _terminalTextSelected.size() - 1) ? clipboardText[clipboardTextIndex++] = '\n' : clipboardText[clipboardTextIndex++] = 0;
+            clipboardText[clipboardTextIndex++] = (i < _terminalTextSelected.size() - 1) ? '\n' :  0;
         }
 
         // Save to system clipboard
         SDL_SetClipboardText(clipboardText);
 
-        delete[] clipboardText;
+        delete [] clipboardText;
     }
 
     void printTerminal(void)

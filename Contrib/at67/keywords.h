@@ -83,6 +83,7 @@ namespace Keywords
     bool keywordLINE(Compiler::CodeLine& codeLine,   int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordHLINE(Compiler::CodeLine& codeLine,  int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordVLINE(Compiler::CodeLine& codeLine,  int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
+    bool keywordCIRCLE(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordSCROLL(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordPOKE(Compiler::CodeLine& codeLine,   int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordDOKE(Compiler::CodeLine& codeLine,   int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);

@@ -534,7 +534,7 @@ namespace Cpu
         {
             if(_romFiles[i])
             {
-                delete[] _romFiles[i];
+                delete [] _romFiles[i];
                 _romFiles[i] = nullptr;
             }
         }
@@ -967,7 +967,7 @@ namespace Cpu
 
             if(!_debugging)
             {
-                // Input and graphics
+                // Input and graphics 60 times per second
                 Editor::handleInput();
                 Graphics::render(true);
             }

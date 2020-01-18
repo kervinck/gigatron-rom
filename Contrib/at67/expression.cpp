@@ -98,7 +98,7 @@ namespace Expression
     }
     Numeric& operatorLSL(Numeric& left, Numeric& right)
     {
-        left._value = int16_t(std::lround(left._value)) << int16_t(std::lround(right._value));
+        left._value = (int16_t(std::lround(left._value)) << int16_t(std::lround(right._value))) & 0x0000FFFF;
         return left;
     }
     Numeric& operatorLSR(Numeric& left, Numeric& right)

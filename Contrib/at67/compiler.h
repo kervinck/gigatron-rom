@@ -222,7 +222,7 @@ namespace Compiler
     struct DefDataWord
     {
         uint16_t _address;
-        std::vector<uint16_t> _data;
+        std::vector<int16_t> _data;
     };
 
 

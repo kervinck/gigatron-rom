@@ -299,6 +299,10 @@ _label_ CALLI   _label
         CALLI   drawVLine
 %ENDM
 
+%MACRO  DrawCircle
+        CALLI   drawCircle
+%ENDM
+
 %MACRO  AtLineCursor
         CALLI   atLineCursor
 %ENDM
