@@ -81,6 +81,7 @@ namespace Linker
         {0x0000, 0x0000, "drawCircle"       , "", false, false},
         {0x0000, 0x0000, "drawCircleExt1"   , "", false, false},
         {0x0000, 0x0000, "drawCircleExt2"   , "", false, false},
+        {0x0000, 0x0000, "drawCircleF"      , "", false, false},
         {0x0000, 0x0000, "resetAudio"       , "", false, false},
         {0x0000, 0x0000, "playMidi"         , "", false, false},
         {0x0000, 0x0000, "midiStartNote"    , "", false, false},
@@ -408,14 +409,20 @@ namespace Linker
                     for(int k=0; k<_internalSubs.size(); k++)
                     {
                         // Check for internal subs in code
-                        if(findSub(tokens, _internalSubs[k]._name)) loadInternalSub(k);
+                        if(findSub(tokens, _internalSubs[k]._name))
+                        {
+                            loadInternalSub(k);
+                        }
 
                         // Check for internal subs in macros, (even nested)
                         std::string opcode = Compiler::getCodeLines()[i]._vasm[j]._opcode;
                         if(opcode.size()  &&  opcode[0] == '%')
                         {
                             opcode.erase(0, 1);
-                            if(Compiler::findMacroText(opcode, _internalSubs[k]._name)) loadInternalSub(k);
+                            if(Compiler::findMacroText(opcode, _internalSubs[k]._name))
+                            {
+                                loadInternalSub(k);
+                            }
                         }
                     }
                 }
@@ -456,7 +463,10 @@ RESTART_COLLECTION:
         for(int i=0; i<_internalSubs.size(); i++)
         {
             // Check for internal sub directly
-            if(_internalSubs[i]._inUse  &&  _internalSubs[i]._loaded  &&  _internalSubs[i]._address == 0x0000) loadInternalSub(i);
+            if(_internalSubs[i]._inUse  &&  _internalSubs[i]._loaded  &&  _internalSubs[i]._address == 0x0000)
+            {
+                loadInternalSub(i);
+            }
 
             // Runtime size
             if(_internalSubs[i]._inUse  &&  _internalSubs[i]._loaded  &&  _internalSubs[i]._address) runtimeSize += _internalSubs[i]._size;

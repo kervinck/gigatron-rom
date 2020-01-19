@@ -592,6 +592,9 @@ namespace Compiler
     {
         if(_macroIndexEntries.find(macroName) == _macroIndexEntries.end()) return false;
 
+        std::string textU = text;
+        Expression::strToUpper(textU);
+
         int indexStart = _macroIndexEntries[macroName]._indexStart;
         int indexEnd = _macroIndexEntries[macroName]._indexEnd;
         for(int i=indexStart+1; i<indexEnd; i++)
@@ -602,7 +605,9 @@ namespace Compiler
 
             for(int j=0; j<tokens.size(); j++)
             {
-                if(tokens[j].find(text) != std::string::npos) return true;
+                Expression::stripWhitespace(tokens[j]);
+                Expression::strToUpper(tokens[j]);
+                if(tokens[j] == textU) return true;
             }
 
             // Check for nested macros

@@ -62,42 +62,43 @@ namespace Keywords
         _functions["FRE" ] = "FRE";
         _functions["TIME"] = "TIME";
 
-        _keywords["LET"   ] = {"LET",    keywordLET,    Compiler::SingleStatementParsed};
-        _keywords["END"   ] = {"END",    keywordEND,    Compiler::SingleStatementParsed};
-        _keywords["INC"   ] = {"INC",    keywordINC,    Compiler::SingleStatementParsed};
-        _keywords["ON"    ] = {"ON",     keywordON,     Compiler::SingleStatementParsed};
-        _keywords["GOTO"  ] = {"GOTO",   keywordGOTO,   Compiler::SingleStatementParsed};
-        _keywords["GOSUB" ] = {"GOSUB",  keywordGOSUB,  Compiler::SingleStatementParsed};
-        _keywords["RETURN"] = {"RETURN", keywordRETURN, Compiler::SingleStatementParsed};
-        _keywords["CLS"   ] = {"CLS",    keywordCLS,    Compiler::SingleStatementParsed};
-        _keywords["?"     ] = {"?",      keywordPRINT,  Compiler::SingleStatementParsed};
-        _keywords["PRINT" ] = {"PRINT",  keywordPRINT,  Compiler::SingleStatementParsed};
-        _keywords["INPUT" ] = {"INPUT",  keywordINPUT,  Compiler::SingleStatementParsed};
-        _keywords["FOR"   ] = {"FOR",    keywordFOR,    Compiler::SingleStatementParsed};
-        _keywords["NEXT"  ] = {"NEXT",   keywordNEXT,   Compiler::SingleStatementParsed};
-        _keywords["IF"    ] = {"IF",     keywordIF,     Compiler::MultiStatementParsed };
-        _keywords["ELSEIF"] = {"ELSEIF", keywordELSEIF, Compiler::SingleStatementParsed};
-        _keywords["ELSE"  ] = {"ELSE",   keywordELSE,   Compiler::SingleStatementParsed};
-        _keywords["ENDIF" ] = {"ENDIF",  keywordENDIF,  Compiler::SingleStatementParsed};
-        _keywords["WHILE" ] = {"WHILE",  keywordWHILE,  Compiler::SingleStatementParsed};
-        _keywords["WEND"  ] = {"WEND",   keywordWEND,   Compiler::SingleStatementParsed};
-        _keywords["REPEAT"] = {"REPEAT", keywordREPEAT, Compiler::SingleStatementParsed};
-        _keywords["UNTIL" ] = {"UNTIL",  keywordUNTIL,  Compiler::SingleStatementParsed};
-        _keywords["CONST" ] = {"CONST",  keywordCONST,  Compiler::SingleStatementParsed};
-        _keywords["DIM"   ] = {"DIM",    keywordDIM,    Compiler::SingleStatementParsed};
-        _keywords["DEF"   ] = {"DEF",    keywordDEF,    Compiler::SingleStatementParsed};
-        _keywords["AT"    ] = {"AT",     keywordAT,     Compiler::SingleStatementParsed};
-        _keywords["PUT"   ] = {"PUT",    keywordPUT,    Compiler::SingleStatementParsed};
-        _keywords["MODE"  ] = {"MODE",   keywordMODE,   Compiler::SingleStatementParsed};
-        _keywords["WAIT"  ] = {"WAIT",   keywordWAIT,   Compiler::SingleStatementParsed};
-        _keywords["LINE"  ] = {"LINE",   keywordLINE,   Compiler::SingleStatementParsed};
-        _keywords["HLINE" ] = {"HLINE",  keywordHLINE,  Compiler::SingleStatementParsed};
-        _keywords["VLINE" ] = {"VLINE",  keywordVLINE,  Compiler::SingleStatementParsed};
-        _keywords["CIRCLE"] = {"CIRCLE", keywordCIRCLE, Compiler::SingleStatementParsed};
-        _keywords["SCROLL"] = {"SCROLL", keywordSCROLL, Compiler::SingleStatementParsed};
-        _keywords["POKE"  ] = {"POKE",   keywordPOKE,   Compiler::SingleStatementParsed};
-        _keywords["DOKE"  ] = {"DOKE",   keywordDOKE,   Compiler::SingleStatementParsed};
-        _keywords["PLAY"  ] = {"PLAY",   keywordPLAY,   Compiler::SingleStatementParsed};
+        _keywords["LET"    ] = {"LET",     keywordLET,     Compiler::SingleStatementParsed};
+        _keywords["END"    ] = {"END",     keywordEND,     Compiler::SingleStatementParsed};
+        _keywords["INC"    ] = {"INC",     keywordINC,     Compiler::SingleStatementParsed};
+        _keywords["ON"     ] = {"ON",      keywordON,      Compiler::SingleStatementParsed};
+        _keywords["GOTO"   ] = {"GOTO",    keywordGOTO,    Compiler::SingleStatementParsed};
+        _keywords["GOSUB"  ] = {"GOSUB",   keywordGOSUB,   Compiler::SingleStatementParsed};
+        _keywords["RETURN" ] = {"RETURN",  keywordRETURN,  Compiler::SingleStatementParsed};
+        _keywords["CLS"    ] = {"CLS",     keywordCLS,     Compiler::SingleStatementParsed};
+        _keywords["?"      ] = {"?",       keywordPRINT,   Compiler::SingleStatementParsed};
+        _keywords["PRINT"  ] = {"PRINT",   keywordPRINT,   Compiler::SingleStatementParsed};
+        _keywords["INPUT"  ] = {"INPUT",   keywordINPUT,   Compiler::SingleStatementParsed};
+        _keywords["FOR"    ] = {"FOR",     keywordFOR,     Compiler::SingleStatementParsed};
+        _keywords["NEXT"   ] = {"NEXT",    keywordNEXT,    Compiler::SingleStatementParsed};
+        _keywords["IF"     ] = {"IF",      keywordIF,      Compiler::MultiStatementParsed };
+        _keywords["ELSEIF" ] = {"ELSEIF",  keywordELSEIF,  Compiler::SingleStatementParsed};
+        _keywords["ELSE"   ] = {"ELSE",    keywordELSE,    Compiler::SingleStatementParsed};
+        _keywords["ENDIF"  ] = {"ENDIF",   keywordENDIF,   Compiler::SingleStatementParsed};
+        _keywords["WHILE"  ] = {"WHILE",   keywordWHILE,   Compiler::SingleStatementParsed};
+        _keywords["WEND"   ] = {"WEND",    keywordWEND,    Compiler::SingleStatementParsed};
+        _keywords["REPEAT" ] = {"REPEAT",  keywordREPEAT,  Compiler::SingleStatementParsed};
+        _keywords["UNTIL"  ] = {"UNTIL",   keywordUNTIL,   Compiler::SingleStatementParsed};
+        _keywords["CONST"  ] = {"CONST",   keywordCONST,   Compiler::SingleStatementParsed};
+        _keywords["DIM"    ] = {"DIM",     keywordDIM,     Compiler::SingleStatementParsed};
+        _keywords["DEF"    ] = {"DEF",     keywordDEF,     Compiler::SingleStatementParsed};
+        _keywords["AT"     ] = {"AT",      keywordAT,      Compiler::SingleStatementParsed};
+        _keywords["PUT"    ] = {"PUT",     keywordPUT,     Compiler::SingleStatementParsed};
+        _keywords["MODE"   ] = {"MODE",    keywordMODE,    Compiler::SingleStatementParsed};
+        _keywords["WAIT"   ] = {"WAIT",    keywordWAIT,    Compiler::SingleStatementParsed};
+        _keywords["LINE"   ] = {"LINE",    keywordLINE,    Compiler::SingleStatementParsed};
+        _keywords["HLINE"  ] = {"HLINE",   keywordHLINE,   Compiler::SingleStatementParsed};
+        _keywords["VLINE"  ] = {"VLINE",   keywordVLINE,   Compiler::SingleStatementParsed};
+        _keywords["CIRCLE" ] = {"CIRCLE",  keywordCIRCLE,  Compiler::SingleStatementParsed};
+        _keywords["CIRCLEF"] = {"CIRCLEF", keywordCIRCLEF, Compiler::SingleStatementParsed};
+        _keywords["SCROLL" ] = {"SCROLL",  keywordSCROLL,  Compiler::SingleStatementParsed};
+        _keywords["POKE"   ] = {"POKE",    keywordPOKE,    Compiler::SingleStatementParsed};
+        _keywords["DOKE"   ] = {"DOKE",    keywordDOKE,    Compiler::SingleStatementParsed};
+        _keywords["PLAY"   ] = {"PLAY",    keywordPLAY,    Compiler::SingleStatementParsed};
 
         _stringKeywords["CHR$"  ] = "CHR$";
         _stringKeywords["HEX$"  ] = "HEX$";
@@ -2788,15 +2789,46 @@ namespace Keywords
             parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
             switch(i)
             {
-                case 0: Compiler::emitVcpuAsm("STW", "drawCircle_cx", false, codeLineIndex); break;
-                case 1: Compiler::emitVcpuAsm("STW", "drawCircle_cy", false, codeLineIndex); break;
-                case 2: Compiler::emitVcpuAsm("STW", "drawCircle_r",  false, codeLineIndex); break;
+                case 0: Compiler::emitVcpuAsm("STW",  "drawCircle_cx", false, codeLineIndex);                                                          break;
+                case 1: Compiler::emitVcpuAsm("ADDI", "8", false, codeLineIndex); Compiler::emitVcpuAsm("STW", "drawCircle_cy", false, codeLineIndex); break;
+                case 2: Compiler::emitVcpuAsm("STW",  "drawCircle_r",  false, codeLineIndex);                                                          break;
 
                 default: break;
             }
         }
 
         Compiler::emitVcpuAsm("%DrawCircle", "", false, codeLineIndex);
+
+        return true;
+    }
+
+    bool keywordCIRCLEF(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        UNREFERENCED_PARAMETER(result);
+        UNREFERENCED_PARAMETER(tokenIndex);
+
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
+        if(tokens.size() !=3)
+        {
+            fprintf(stderr, "Compiler::keywordCIRCLEF() : Syntax error, 'CIRCLEF X,Y,R', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        std::vector<Expression::Numeric> params = {Expression::Numeric(), Expression::Numeric(), Expression::Numeric()};
+        for(int i=0; i<tokens.size(); i++)
+        {
+            parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
+            switch(i)
+            {
+                case 0: Compiler::emitVcpuAsm("STW", "drawCircleF_cx", false, codeLineIndex); break;
+                case 1: Compiler::emitVcpuAsm("STW", "drawCircleF_cy", false, codeLineIndex); break;
+                case 2: Compiler::emitVcpuAsm("STW", "drawCircleF_r",  false, codeLineIndex); break;
+
+                default: break;
+            }
+        }
+
+        Compiler::emitVcpuAsm("%DrawCircleF", "", false, codeLineIndex);
 
         return true;
     }
@@ -2879,10 +2911,19 @@ namespace Keywords
         }
         else if(operandTypes[0] == Compiler::OperandConst  &&  (operandTypes[1] == Compiler::OperandVar  ||  operandTypes[1] == Compiler::OperandTemp))
         {
-            Compiler::emitVcpuAsm("LDWI", operands[0], false, codeLineIndex);
-            Compiler::emitVcpuAsm("STW", "register0", false, codeLineIndex);
-            (operandTypes[1] == Compiler::OperandVar) ? Compiler::emitVcpuAsm(opcode, operand, false, codeLineIndex) : Compiler::emitVcpuAsm("LDW", operands[1], false, codeLineIndex);
-            Compiler::emitVcpuAsm("POKE", "register0", false, codeLineIndex);
+            uint16_t addr;
+            if(Expression::stringToU16(operands[0], addr)  &&  addr < 0x0100)
+            {
+                (operandTypes[1] == Compiler::OperandVar) ? Compiler::emitVcpuAsm(opcode, operand, false, codeLineIndex) : Compiler::emitVcpuAsm("LDW", operands[1], false, codeLineIndex);
+                Compiler::emitVcpuAsm("ST", operands[0], false, codeLineIndex);
+            }
+            else
+            {
+                Compiler::emitVcpuAsm("LDWI", operands[0], false, codeLineIndex);
+                Compiler::emitVcpuAsm("STW", "register0", false, codeLineIndex);
+                (operandTypes[1] == Compiler::OperandVar) ? Compiler::emitVcpuAsm(opcode, operand, false, codeLineIndex) : Compiler::emitVcpuAsm("LDW", operands[1], false, codeLineIndex);
+                Compiler::emitVcpuAsm("POKE", "register0", false, codeLineIndex);
+            }
         }
         else
         {
@@ -2949,10 +2990,19 @@ namespace Keywords
         }
         else if(operandTypes[0] == Compiler::OperandConst  &&  (operandTypes[1] == Compiler::OperandVar  ||  operandTypes[1] == Compiler::OperandTemp))
         {
-            Compiler::emitVcpuAsm("LDWI", operands[0], false, codeLineIndex);
-            Compiler::emitVcpuAsm("STW", "register0", false, codeLineIndex);
-            (operandTypes[1] == Compiler::OperandVar) ? Compiler::emitVcpuAsm(opcode, operand, false, codeLineIndex) : Compiler::emitVcpuAsm("LDW", "" + operands[1], false, codeLineIndex);
-            Compiler::emitVcpuAsm("DOKE", "register0", false, codeLineIndex);
+            uint16_t addr;
+            if(Expression::stringToU16(operands[0], addr)  &&  addr < 0x0100)
+            {
+                (operandTypes[1] == Compiler::OperandVar) ? Compiler::emitVcpuAsm(opcode, operand, false, codeLineIndex) : Compiler::emitVcpuAsm("LDW", "" + operands[1], false, codeLineIndex);
+                Compiler::emitVcpuAsm("STW", operands[0], false, codeLineIndex);
+            }
+            else
+            {
+                Compiler::emitVcpuAsm("LDWI", operands[0], false, codeLineIndex);
+                Compiler::emitVcpuAsm("STW", "register0", false, codeLineIndex);
+                (operandTypes[1] == Compiler::OperandVar) ? Compiler::emitVcpuAsm(opcode, operand, false, codeLineIndex) : Compiler::emitVcpuAsm("LDW", "" + operands[1], false, codeLineIndex);
+                Compiler::emitVcpuAsm("DOKE", "register0", false, codeLineIndex);
+            }
         }
         else
         {
