@@ -303,6 +303,10 @@ _label_ CALLI   _label
         CALLI   drawCircle
 %ENDM
 
+%MACRO  DrawCircleF
+        CALLI   drawCircleF
+%ENDM
+
 %MACRO  AtLineCursor
         CALLI   atLineCursor
 %ENDM

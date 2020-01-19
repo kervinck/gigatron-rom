@@ -16,7 +16,9 @@ const SECSLEN = 45
 const MINSLEN = 37
 const HOURLEN = 29
 
-const BKCOLOUR = &h10
+const BKCOLOUR = &h30
+const DIALCOLOUR = &h10
+const DIALRADIUS = 43
 
 'Seconds
 def byte(SECSX, x, -90.0, 270.0, TICKS) = cos(x)*SECSLEN + CENTERX
@@ -30,8 +32,11 @@ def byte(MINSY, y, -90.0, 270.0, TICKS) = sin(y)*MINSLEN + CENTERY
 def byte(HOURX, x, -90.0, 270.0, TICKS) = cos(x)*HOURLEN + CENTERX
 def byte(HOURY, y, -90.0, 270.0, TICKS) = sin(y)*HOURLEN + CENTERY
 
+' disable video, (except last line so that we don't lose sync), for fast cls and dial draw
+poke &h01F9, 238
 poke 162,BKCOLOUR
 cls
+poke &h01F9, 0  'enable video
 
 B=peek(14)
 
@@ -50,8 +55,10 @@ HH=H : MM=M : SS=S
 Hm12=H%12
 Md12=M/12 : MMd12=Md12
 
+poke &h01F9, 238  'disable video
 gosub drawDial
 gosub drawClock
+poke &h01F9, 0  'enable video
 
 20 T=S*60 : V=3599 : goto 50
 30 if T>=V then T=T-V : M=M+1
@@ -72,7 +79,7 @@ return
 drawDigits:
     poke 162,&h00
     poke 163,&h0C : at 57,82 : print H/10;H%10;":";M/10;M%10;":";S/10;S%10;
-    poke 162,BKCOLOUR
+    poke 162,DIALCOLOUR
 return
 
 drawSeconds:
@@ -109,12 +116,15 @@ return
 
 
 drawDial:
-    ox=CENTERX : oy=CENTERY + 8
-    cr=44 : cc=&h00 : gosub jitterCircle
-    cr=46 : cc=&h00 : gosub jitterCircle
-    cr=48 : cc=&h01 : gosub jitterCircle
-    cr=52 : cc=&h03 : gosub jitterCircle
-    cr=50 : cc=&h02 : gosub jitterCircle
+    poke 163, DIALCOLOUR
+    circlef CENTERX, CENTERY, DIALRADIUS
+    
+    ox=CENTERX : oy=CENTERY
+    cr=DIALRADIUS + 1 : cc=&h00 : gosub jitterCircle
+    cr=DIALRADIUS + 3 : cc=&h00 : gosub jitterCircle
+    cr=DIALRADIUS + 5 : cc=&h01 : gosub jitterCircle
+    cr=DIALRADIUS + 9 : cc=&h03 : gosub jitterCircle
+    cr=DIALRADIUS + 7 : cc=&h02 : gosub jitterCircle
     
     for i=0 to TICKS-1
         gosub drawTicks
@@ -122,7 +132,7 @@ drawDial:
 return
 
 eraseSecondHand:
-    poke 163,BKCOLOUR : line CENTERX,CENTERY, peek(SECSX + SS),peek(SECSY + SS)
+    poke 163,DIALCOLOUR : line CENTERX,CENTERY, peek(SECSX + SS),peek(SECSY + SS)
 return
     
 drawSecondHand:
@@ -130,7 +140,7 @@ drawSecondHand:
 return
 
 eraseMinuteHand:
-    poke 163,BKCOLOUR : line CENTERX,CENTERY, peek(MINSX + MM),peek(MINSY + MM)
+    poke 163,DIALCOLOUR : line CENTERX,CENTERY, peek(MINSX + MM),peek(MINSY + MM)
 return
 
 drawMinuteHand:
@@ -138,7 +148,7 @@ drawMinuteHand:
 return
 
 eraseHourHand:
-    poke 163,BKCOLOUR: line CENTERX,CENTERY, peek(HOURX + Hx5 + MMd12),peek(HOURY + Hx5 + MMd12)
+    poke 163,DIALCOLOUR: line CENTERX,CENTERY, peek(HOURX + Hx5 + MMd12),peek(HOURY + Hx5 + MMd12)
 return
 
 drawHourHand:

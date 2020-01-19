@@ -2,8 +2,8 @@ cls : mode 2
 
 loop: 
     poke 163, rnd(0) AND &h3F
-    circle rnd(100) + (- 50 + 80), rnd(60) + (- 30 + 60 + 8), rnd(30) + 1
-    goto loop
+    circle rnd(100) + (- 50 + 80), rnd(60) + (- 30 + 60), rnd(30) + 1
+    goto &loop
 
 end
 

@@ -44,6 +44,15 @@ drawCircle_ch1      EQU     register12
 drawCircle_ch2      EQU     register13
 drawCircle_ch3      EQU     register14
 
+drawCircleF_x1      EQU     register0
+drawCircleF_y1      EQU     register1
+drawCircleF_x2      EQU     register2
+drawCircleF_cx      EQU     register15
+drawCircleF_cy      EQU     register10
+drawCircleF_r       EQU     register11
+drawCircleF_v       EQU     register8
+drawCircleF_w       EQU     register9
+
     
 %SUB                scanlineMode
 scanlineMode        LDW     giga_romType
@@ -576,6 +585,49 @@ drawCircleExt2      LDW     drawCircle_cx
                     LD      fgbgColour + 1
                     POKE    drawCircle_a
 
+                    POP
+                    RET
+%ENDS
+
+%SUB                drawCircleF
+drawCircleF         PUSH
+                    LDI     0
+                    STW     drawCircleF_v
+                    STW     drawCircleF_w
+                    
+drawCF_wloop        LDW     drawCircleF_cx
+                    SUBW    drawCircleF_r
+                    STW     drawCircleF_x1
+                    LDW     drawCircleF_cx
+                    ADDW    drawCircleF_r
+                    STW     drawCircleF_x2
+                    LDW     drawCircleF_cy
+                    SUBW    drawCircleF_v
+                    STW     drawCircleF_y1
+                    CALLI   drawHLine
+                    LDW     drawCircleF_cy
+                    ADDW    drawCircleF_v
+                    STW     drawCircleF_y1
+                    CALLI   drawHLine
+                    
+                    LDW     drawCircleF_w
+                    ADDW    drawCircleF_v
+                    ADDW    drawCircleF_v
+                    ADDI    1
+                    STW     drawCircleF_w
+                    INC     drawCircleF_v
+                    
+drawCF_rloop        LDW     drawCircleF_w
+                    BLT     drawCF_wloop
+                    LDW     drawCircleF_w
+                    SUBW    drawCircleF_r
+                    SUBW    drawCircleF_r
+                    ADDI    1
+                    STW     drawCircleF_w
+                    LDW     drawCircleF_r
+                    SUBI    1
+                    STW     drawCircleF_r
+                    BGT     drawCF_rloop
                     POP
                     RET
 %ENDS
