@@ -86,16 +86,14 @@ erase:
     A=7:B=3:GOSUB 60
 return
 
-254: S = S + 5 : if S &>= 90 then S = 0
-     C = 90 - S
+254: S = S + 5 : if S &>= 45 then S = -40
 
      poke 163, &h0F : gosub process : gosub draw
      gosub flip
      poke 163, &h20 : gosub erase
      return
      
-253: S = S - 5 : if S &<= 0 then S = 90
-     C = 90 - S
+253: S = S - 5 : if S &<= -45 then S = 40
     
      poke 163, &h0F : gosub process : gosub draw
      gosub flip

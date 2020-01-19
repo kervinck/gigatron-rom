@@ -412,6 +412,8 @@ namespace Loader
                         }
                     }
                     break;
+
+                    default: break;
                 }
             }
         }

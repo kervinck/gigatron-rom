@@ -408,6 +408,8 @@ namespace Image
             case 1: startX = width-1, endX = -1, stepX = -1; startY = height-1, endY = -1, stepY = -1; break;
             case 2: startX = 0, endX = width, stepX = 1;     startY = 0, endY = height, stepY = 1;     break;
             case 3: startX = width-1, endX = -1, stepX = -1; startY = 0, endY = height, stepY = 1;     break;
+
+            default: break;
         }
 
         uint8_t* ptr = &dst[0];
@@ -439,6 +441,8 @@ namespace Image
             case 1: startX = width-1, endX = -1, stepX = -1; startY = height-1, endY = -1, stepY = -1; break;
             case 2: startX = 0, endX = width, stepX = 1;     startY = 0, endY = height, stepY = 1;     break;
             case 3: startX = width-1, endX = -1, stepX = -1; startY = 0, endY = height, stepY = 1;     break;
+
+            default: break;
         }
 
         uint8_t* ptr = &dst[0];
@@ -481,6 +485,8 @@ namespace Image
             case 1: startX = width-1, endX = -1, stepX = -1; startY = height-1, endY = -1, stepY = -1; break;
             case 2: startX = 0, endX = width, stepX = 1;     startY = 0, endY = height, stepY = 1;     break;
             case 3: startX = width-1, endX = -1, stepX = -1; startY = 0, endY = height, stepY = 1;     break;
+
+            default: break;
         }
 
         for(int y=startY; y!=endY; y+=stepY)
@@ -616,6 +622,8 @@ namespace Image
             case 1: startX = width-1, endX = -1, stepX = -1; startY = height-1, endY = -1, stepY = -1; break;
             case 2: startX = 0, endX = width, stepX = 1;     startY = 0, endY = height, stepY = 1;     break;
             case 3: startX = width-1, endX = -1, stepX = -1; startY = 0, endY = height, stepY = 1;     break;
+
+            default: break;
         }
 
         uint8_t* ptr = &dst[0];

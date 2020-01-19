@@ -794,6 +794,7 @@ namespace Cpu
             }
             break;
 #endif
+            default: break;
         }
 
         int ins = S._IR >> 5;       // Instruction
@@ -817,6 +818,8 @@ namespace Cpu
                 case 5: to =   &T._Y;                              break;
                 case 6: to = E(&T._OUT);                           break;
                 case 7: to = E(&T._OUT); lo=S._X; hi=S._Y; incX=1; break;
+
+                default: break;
             }
         }
 
@@ -828,6 +831,8 @@ namespace Cpu
             case 1: if (!W) B = _RAM[addr & (Memory::getSizeRAM()-1)]; break;
             case 2: B=S._AC;                                           break;
             case 3: B=_IN;                                             break;
+
+            default: break;
         }
 
         if(W) _RAM[addr & (Memory::getSizeRAM()-1)] = B; // Random Access Memory
@@ -843,6 +848,8 @@ namespace Cpu
             case 5: ALU = S._AC - B; break; // SUBA
             case 6: ALU = S._AC;     break; // ST
             case 7: ALU = -S._AC;    break; // Bcc/JMP
+
+            default: break;
         }
 
         if(to) *to = ALU; // Load value into register

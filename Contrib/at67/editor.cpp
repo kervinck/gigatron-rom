@@ -47,7 +47,6 @@ namespace Editor
 
     bool _hexEdit = false;
     bool _startMusic = false;
-    bool _handlePS2Key = false;
 
     SDL_Keycode _sdlKeyScanCode = 0;
     uint16_t _sdlKeyModifier = 0;
@@ -513,6 +512,8 @@ namespace Editor
                     scanCodeFromIniKey(sectionString, "StepWatch", "CTRL+F9", _debugger["StepWatch"]);
                 }
                 break;
+
+                default: break;
             }
         }
     }
@@ -816,6 +817,8 @@ namespace Editor
             {
                 case 1: value = uint16_t(_sdlKeyScanCode - SDLK_0);      break;
                 case 2: value = uint16_t(_sdlKeyScanCode - SDLK_a + 10); break;
+
+                default: break;
             }
 
             // Edit memory
@@ -826,6 +829,8 @@ namespace Editor
                 {
                     case 0: value = (value << 4) & 0xF0; Cpu::setRAM(address, uint8_t((Cpu::getRAM(address) & 0x0F) | value)); break;
                     case 1: value = (value << 0) & 0x0F; Cpu::setRAM(address, uint8_t((Cpu::getRAM(address) & 0xF0) | value)); break;
+
+                    default: break;
                 }
                 _memoryDigit = (++_memoryDigit) & 0x01;
                 return;
@@ -842,6 +847,8 @@ namespace Editor
                         case 1: value = (value << 8)  & 0x0F00; _cpuUsageAddressA = (_cpuUsageAddressA & 0xF0FF) | value; break;
                         case 2: value = (value << 4)  & 0x00F0; _cpuUsageAddressA = (_cpuUsageAddressA & 0xFF0F) | value; break;
                         case 3: value = (value << 0)  & 0x000F; _cpuUsageAddressA = (_cpuUsageAddressA & 0xFFF0) | value; break;
+
+                        default: break;
                     }
                 }
                 break;
@@ -854,6 +861,8 @@ namespace Editor
                         case 1: value = (value << 8)  & 0x0F00; _cpuUsageAddressB = (_cpuUsageAddressB & 0xF0FF) | value; break;
                         case 2: value = (value << 4)  & 0x00F0; _cpuUsageAddressB = (_cpuUsageAddressB & 0xFF0F) | value; break;
                         case 3: value = (value << 0)  & 0x000F; _cpuUsageAddressB = (_cpuUsageAddressB & 0xFFF0) | value; break;
+
+                        default: break;
                     }
                 }
                 break;
@@ -871,6 +880,8 @@ namespace Editor
                                 case 1: value = (value << 8)  & 0x0F00; _loadBaseAddress = (_loadBaseAddress & 0xF0FF) | value; break;
                                 case 2: value = (value << 4)  & 0x00F0; _loadBaseAddress = (_loadBaseAddress & 0xFF0F) | value; break;
                                 case 3: value = (value << 0)  & 0x000F; _loadBaseAddress = (_loadBaseAddress & 0xFFF0) | value; break;
+
+                                default: break;
                             }
 
                             if(_loadBaseAddress < LOAD_BASE_ADDRESS) _loadBaseAddress = LOAD_BASE_ADDRESS;
@@ -889,6 +900,8 @@ namespace Editor
                                         case 1: value = (value << 8)  & 0x0F00; _vpcBaseAddress = (_vpcBaseAddress & 0xF0FF) | value; break;
                                         case 2: value = (value << 4)  & 0x00F0; _vpcBaseAddress = (_vpcBaseAddress & 0xFF0F) | value; break;
                                         case 3: value = (value << 0)  & 0x000F; _vpcBaseAddress = (_vpcBaseAddress & 0xFFF0) | value; break;
+
+                                        default: break;
                                     }
                                 }
                                 break;
@@ -901,6 +914,8 @@ namespace Editor
                                         case 1: value = (value << 8)  & 0x0F00; _ntvBaseAddress = (_ntvBaseAddress & 0xF0FF) | value; break;
                                         case 2: value = (value << 4)  & 0x00F0; _ntvBaseAddress = (_ntvBaseAddress & 0xFF0F) | value; break;
                                         case 3: value = (value << 0)  & 0x000F; _ntvBaseAddress = (_ntvBaseAddress & 0xFFF0) | value; break;
+
+                                        default: break;
                                     }
                                 }
                                 break;
@@ -916,6 +931,8 @@ namespace Editor
                                 case 1: value = (value << 8)  & 0x0F00; _hexBaseAddress = (_hexBaseAddress & 0xF0FF) | value; break;
                                 case 2: value = (value << 4)  & 0x00F0; _hexBaseAddress = (_hexBaseAddress & 0xFF0F) | value; break;
                                 case 3: value = (value << 0)  & 0x000F; _hexBaseAddress = (_hexBaseAddress & 0xFFF0) | value; break;
+
+                                default: break;
                             }
                         }
                         break;
@@ -933,6 +950,8 @@ namespace Editor
                         case 1: value = (value << 8)  & 0x0F00; _varsBaseAddress = (_varsBaseAddress & 0xF0FF) | value; break;
                         case 2: value = (value << 4)  & 0x00F0; _varsBaseAddress = (_varsBaseAddress & 0xFF0F) | value; break;
                         case 3: value = (value << 0)  & 0x000F; _varsBaseAddress = (_varsBaseAddress & 0xFFF0) | value; break;
+
+                        default: break;
                     }
                 }
                 break;
@@ -945,6 +964,8 @@ namespace Editor
                         case 1: value = (value << 8)  & 0x0F00; _singleStepAddress = (_singleStepAddress & 0xF0FF) | value; break;
                         case 2: value = (value << 4)  & 0x00F0; _singleStepAddress = (_singleStepAddress & 0xFF0F) | value; break;
                         case 3: value = (value << 0)  & 0x000F; _singleStepAddress = (_singleStepAddress & 0xFFF0) | value; break;
+
+                        default: break;
                     }
                 }
                 break;
@@ -1015,7 +1036,6 @@ namespace Editor
             // Handle normal keys
             if(_sdlKeyScanCode >= 32  &&  _sdlKeyScanCode <= 126)
             {
-                _handlePS2Key = true;
                 return true;
             }
         }
@@ -1172,48 +1192,6 @@ namespace Editor
     // PS2 Keyboard emulation mode
     bool handlePs2KeyUp(void)
     {
-        _handlePS2Key = false;
-
-        if(_keyboardMode == PS2)
-        {
-            switch(_sdlKeyScanCode)
-            {
-                case SDLK_LEFT:     Cpu::setIN(0xFF); return true;
-                case SDLK_RIGHT:    Cpu::setIN(0xFF); return true;
-                case SDLK_UP:       Cpu::setIN(0xFF); return true;
-                case SDLK_DOWN:     Cpu::setIN(0xFF); return true;
-                case SDLK_PAGEUP:   Cpu::setIN(0xFF); return true;
-                case SDLK_PAGEDOWN: Cpu::setIN(0xFF); return true;
-
-                default: break;
-            }
-
-            if((_sdlKeyScanCode >= 0  &&  _sdlKeyScanCode <= 31) ||  _sdlKeyScanCode == 127  ||  _sdlKeyScanCode == 'c')
-            {
-                switch(_sdlKeyScanCode)
-                {
-                    case SDLK_TAB:       Cpu::setIN(0xFF); return true;
-                    case SDLK_ESCAPE:    Cpu::setIN(0xFF); return true;
-                    case SDLK_RETURN:    Cpu::setIN(0xFF); return true;
-                    case SDLK_DELETE:    Cpu::setIN(0xFF); return true;
-
-                    case 'c': if(_sdlKeyModifier == KMOD_LCTRL) Cpu::setIN(0xFF); return true;
-
-                    default: break;
-                }
-            }
-
-            if(_sdlKeyScanCode >= 32  &&  _sdlKeyScanCode <= 126)
-            {
-                Cpu::setIN(0xFF);
-                return true;
-            }
-        }
-        else if(_keyboardMode == HwPS2)
-        {
-            if(_sdlKeyScanCode >= 0  &&  _sdlKeyScanCode <= 127) return true;
-        }
-
         return false;
     }
 
@@ -1237,7 +1215,7 @@ namespace Editor
 
     void handleKeyUp(void)
     {
-        // To`ggle help screen
+        // Toggle help screen
         if(_sdlKeyScanCode == _emulator["Help"]._scanCode  &&  _sdlKeyModifier == _emulator["Help"]._keyMod)
         {
             static bool helpScreen = false;
@@ -1324,11 +1302,13 @@ namespace Editor
         else if(_sdlKeyScanCode ==  _keyboard["Mode"]._scanCode  &&  _sdlKeyModifier == _keyboard["Mode"]._keyMod)
         {
             int keyboardMode = _keyboardMode;
-            keyboardMode = (++keyboardMode) % NumKeyboardModes;
-            _keyboardMode = (KeyboardMode)keyboardMode;
+            keyboardMode = (++keyboardMode) % (NumKeyboardModes - 1); // TODO: HwPS2 is disabled for now, (requires extra functionality in BabelFish.ino)
 
             // Enable/disable Arduino emulated PS2 keyboard
-            (_keyboardMode == HwPS2) ? Loader::sendCommandToGiga(HW_PS2_ENABLE,  true) : Loader::sendCommandToGiga(HW_PS2_DISABLE, true);
+            if(keyboardMode == HwPS2) Loader::sendCommandToGiga(HW_PS2_ENABLE,  true);
+            if(_keyboardMode == HwPS2) Loader::sendCommandToGiga(HW_PS2_DISABLE, true);
+
+            _keyboardMode = (KeyboardMode)keyboardMode;
         }
 
         // RAM/ROM mode
@@ -1586,7 +1566,13 @@ namespace Editor
 
     void handlePS2key(SDL_Event& event)
     {
-        if(_handlePS2Key) (_keyboardMode == HwPS2) ? Loader::sendCommandToGiga(event.text.text[0], true) : Cpu::setIN(event.text.text[0]);
+        switch(_keyboardMode)
+        {
+            case PS2:   Cpu::setIN(event.text.text[0]);                      break;
+            case HwPS2: Loader::sendCommandToGiga(event.text.text[0], true); break;
+
+            default: break;
+        }
     }
 
     void handleInput(void)
@@ -1622,6 +1608,24 @@ namespace Editor
 
                 default: break;
             }
+        }
+
+        if(_keyboardMode == PS2)
+        {
+            int numKeys;
+            const Uint8 *keyboardState = SDL_GetKeyboardState(&numKeys);
+            bool anyKeyPressed = false;
+            static bool anyKeyPressedPrev = anyKeyPressed;
+            for(int i=0; i<numKeys; i++)
+            {
+                if(keyboardState[i])
+                { 
+                    anyKeyPressed = true;
+                    break;
+                }
+            }
+            if(anyKeyPressedPrev  &&  !anyKeyPressed) Cpu::setIN(0xFF);
+            anyKeyPressedPrev = anyKeyPressed;
         }
 
         // Updates current game's high score once per second, (assuming handleInput is called in vertical blank)
