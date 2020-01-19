@@ -15,7 +15,6 @@ cursorChr           EQU     register14
 cursXYOfs           EQU     register15
 
 cursorDelay         EQU     30
-textWorkArea        EQU     0x7FA0
 
     
 %SUB                input
@@ -33,6 +32,8 @@ input               PUSH
                     DEEK
                     STW     inpTypesAddr        ; types LUT address
                     
+                    LD      giga_serialRaw
+                    ST      serialRawPrev       ; initialise previous keystroke
                     LD      giga_frameCount
                     ADDI    cursorDelay
                     STW     frmCntBak           ; delay for cursor flash
@@ -121,8 +122,13 @@ inputC_toggle       PUSH
 %SUB                inputKeys
                     ; saves key press into string work area buffer
 inputKeys           PUSH
-                    LD      giga_buttonState
-                    STW     inpKeyBak
+                    LD      giga_serialRaw
+                    STW     inpKeyBak           ; save keystroke
+                    LD      serialRawPrev
+                    SUBW    inpKeyBak
+                    BEQ     inputK_exit         ; if keystroke hasn't changed exit
+                    LD      inpKeyBak
+                    ST      serialRawPrev       ; save as previous keystroke
                     SUBI    127
                     BGT     inputK_exit
                     BNE     inputK_ret
@@ -195,8 +201,6 @@ inputReturn         LDI     32
                     STW     cursorChr
                     LDWI    inputC_toggle
                     CALL    giga_vAC            ; erase cursor
-                    LDI     0xFF
-                    ST      giga_buttonState    ; reset giga_buttonState
                     
                     LDWI    textWorkArea
                     STW     register0
@@ -266,8 +270,6 @@ inputD_exit         LDI     0                   ; keep looping on current var
 
 %SUB                inputPrint
 inputPrint          CALLI   inputCursor         ; call cursor flash frequently
-                    LDI     0xFF
-                    ST      giga_buttonState    ; reset giga_buttonState
                     LDW     printXYBak
                     STW     cursorXY            ; restore cursor position before the printText
                     LDWI    textWorkArea

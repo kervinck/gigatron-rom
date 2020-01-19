@@ -429,6 +429,8 @@ namespace Assembler
                 case EA_0D_Y:     sprintf(addrStr, "[$%02x]",   data); sprintf(regStr, "Y");   break;
                 case EA_0D_OUT:   sprintf(addrStr, "[$%02x]",   data); sprintf(regStr, "OUT"); break;
                 case EA_YX_OUTIX: sprintf(addrStr, "[Y,X++]");         sprintf(regStr, "OUT"); break;
+
+                default: break;
             }
         }
         else
@@ -444,6 +446,8 @@ namespace Assembler
             case BUS_RAM: (!store) ? strcpy(busStr, addrStr) : strcpy(busStr, ""); break;
             case BUS_AC:  strcpy(busStr, "AC");                                    break;
             case BUS_IN:  strcpy(busStr, "IN");                                    break;
+
+            default: break;
         }
         
         // Compose instruction string
@@ -1892,6 +1896,8 @@ namespace Assembler
                     case 'o': type = Gprintf::Oct; break;
                     case 'x': type = Gprintf::Hex; break;
                     case 's': type = Gprintf::Str; break;
+
+                    default: break;
                 }
 
                 if(chr == 'c' || chr == 'd' || chr == 'b' || chr == 'q' || chr == 'o' || chr == 'x' || chr == 's')

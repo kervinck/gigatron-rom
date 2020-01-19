@@ -334,6 +334,8 @@ namespace Graphics
                         _posY = strtol(result.c_str(), nullptr, 10);
                     }
                     break;
+
+                    default: break;
                 }
             }
         }
@@ -1661,6 +1663,8 @@ namespace Graphics
                     for(int i=0x0100; i<0x01EE; i+=2) Cpu::setRAM(uint16_t(i), uint8_t(0x08 + (i-0x0100)/2 + uint8_t(0 - strength)));
                 }
                 break;
+
+                default: break;
             }
             
             if(++frameCnt >= 20) //strength * 10)
@@ -1734,6 +1738,8 @@ namespace Graphics
                 switch(event.key.keysym.sym)
                 {
                     case SDLK_DOWN: frameTick = frameTickLevel; break;
+
+                    default: break;
                 }
             }
             break;
@@ -1801,6 +1807,8 @@ namespace Graphics
                     fprintf(stderr, "Tetris GAME OVER...\n");
                 }
                 break;
+
+                default: break;
             }
         }
 

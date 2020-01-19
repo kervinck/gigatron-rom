@@ -179,6 +179,8 @@ namespace Operators
             case Expression::BooleanCC: (Assembler::getUseOpcodeCALLI()) ? Compiler::emitVcpuAsm("CALLI", "convert" + cc + "Op", false) : Compiler::emitVcpuAsm("CALL", "convert" + cc + "OpAddr", false); break;
             case Expression::NormalCC: Compiler::emitVcpuAsm("%Jump" + Expression::strToUpper(cc), "", false); break;
             case Expression::FastCC: Compiler::emitVcpuAsm("B" + Expression::strToUpper(cc), "", false); break;
+
+            default: break;
         }
     }
     bool handleConditionOp(Expression::Numeric& lhs, Expression::Numeric& rhs, Expression::CCType ccType, bool& invertedLogic)
@@ -607,6 +609,8 @@ namespace Operators
                     case 5:
                     case 6:
                     case 7: opcode = "%ShiftLeft4bit"; break;
+
+                    default: break;
                 }
 
                 handleLogicalOp(opcode, left);
@@ -620,6 +624,8 @@ namespace Operators
                     case 5: Compiler::emitVcpuAsm("LSLW", "", false);                                                                                     break;
                     case 6: Compiler::emitVcpuAsm("LSLW", "", false); Compiler::emitVcpuAsm("LSLW", "", false);                                           break;
                     case 7: Compiler::emitVcpuAsm("LSLW", "", false); Compiler::emitVcpuAsm("LSLW", "", false); Compiler::emitVcpuAsm("LSLW", "", false); break;
+
+                    default: break;
                 }
             }
 
@@ -681,6 +687,8 @@ namespace Operators
                     case 5: opcode = "%ShiftRight5bit"; break;
                     case 6: opcode = "%ShiftRight6bit"; break;
                     case 7: opcode = "%ShiftRight7bit"; break;
+
+                    default: break;
                 }
 
                 handleLogicalOp(opcode, left);
@@ -716,6 +724,8 @@ namespace Operators
                 case 6: opcode = "%ShiftRightSgn6bit"; break;
                 case 7: opcode = "%ShiftRightSgn7bit"; break;
                 case 8: opcode = "%ShiftRightSgn8bit"; break;
+
+                default: break;
             }
 
             handleLogicalOp(opcode, left);

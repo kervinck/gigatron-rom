@@ -912,6 +912,8 @@ namespace Expression
                     }
                 }
                 break;
+
+                default: break;
             }
         }
 
@@ -1003,6 +1005,8 @@ namespace Expression
                     }
                 }
                 break;
+
+                default: break;
             }
         }
 

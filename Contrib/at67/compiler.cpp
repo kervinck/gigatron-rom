@@ -799,6 +799,8 @@ namespace Compiler
                 case Expression::Int16Low:  emitVcpuAsm("LD",  "_" + _integerVars[varIndex]._name,          false, codeLineIndex); break;
                 case Expression::Int16High: emitVcpuAsm("LD",  "_" + _integerVars[varIndex]._name + " + 1", false, codeLineIndex); break;
                 case Expression::Int16Both: emitVcpuAsm("LDW", "_" + _integerVars[varIndex]._name,          false, codeLineIndex); break;
+
+                default: break;
             }
         }
 
@@ -943,6 +945,8 @@ namespace Compiler
                 }
             }
             break;
+
+            default: break;
         }
     }
 
@@ -965,6 +969,8 @@ namespace Compiler
                 case Expression::Int16Both: opcode = "LDW";                    break;
                 case Expression::Int16Low:  opcode = "LD";                     break;
                 case Expression::Int16High: opcode = "LD";  operand += " + 1"; break;
+
+                default: break;
             }
 
             emitVcpuAsm(opcode, operand, nextTempVar);
@@ -1022,6 +1028,8 @@ namespace Compiler
                 case Expression::Int16Low:  emitVcpuAsm("LD",  "_" + _integerVars[varIndex]._name,          false, codeLineIndex); break;
                 case Expression::Int16High: emitVcpuAsm("LD",  "_" + _integerVars[varIndex]._name + " + 1", false, codeLineIndex); break;
                 case Expression::Int16Both: emitVcpuAsm("LDW", "_" + _integerVars[varIndex]._name,          false, codeLineIndex); break;
+
+                default: break;
             }
         }
         else
@@ -1053,6 +1061,8 @@ namespace Compiler
                 case Expression::Int16Low:  emitVcpuAsm("LD",  "_" + _integerVars[varIndex]._name,          false, codeLineIndex); break;
                 case Expression::Int16High: emitVcpuAsm("LD",  "_" + _integerVars[varIndex]._name + " + 1", false, codeLineIndex); break;
                 case Expression::Int16Both: emitVcpuAsm("LDW", "_" + _integerVars[varIndex]._name,          false, codeLineIndex); break;
+
+                default: break;
             }
         }
         else
@@ -1280,6 +1290,8 @@ namespace Compiler
                 case LabelFound:    break;
                 case LabelNotFound: break;
                 case LabelError:    return false;
+
+                default: break;
             }
         }
 
@@ -1733,6 +1745,8 @@ namespace Compiler
                                 numeric = Expression::Numeric(defaultValue, int16_t(constIndex), true, Expression::Constant, Expression::BooleanCC, Expression::Int16Both, varName, _constants[constIndex]._text);
                             }
                             break;
+
+                            default: break;
                         }
                     }
                     // Unknown symbol
@@ -1861,6 +1875,8 @@ namespace Compiler
             {
                 case Expression::Constant: srcAddr = getConstants()[numeric._index]._address;  break;
                 case Expression::StrVar:   srcAddr = getStringVars()[numeric._index]._address; break;
+
+                default: break;
             }
         }
 
@@ -2074,6 +2090,8 @@ namespace Compiler
                         case Expression::Int16Low:  emitVcpuAsm("LD",  "_" + _integerVars[varIndexRhs]._name,          false, codeLineIndex); break;
                         case Expression::Int16High: emitVcpuAsm("LD",  "_" + _integerVars[varIndexRhs]._name + " + 1", false, codeLineIndex); break;
                         case Expression::Int16Both: emitVcpuAsm("LDW", "_" + _integerVars[varIndexRhs]._name,          false, codeLineIndex); break;
+
+                        default: break;
                     }
                 }
 
@@ -2088,6 +2106,8 @@ namespace Compiler
                         case Expression::Int16Low:  emitVcpuAsm("ST",  "_" + _integerVars[codeLine._varIndex]._name,          false, codeLineIndex); break;
                         case Expression::Int16High: emitVcpuAsm("ST",  "_" + _integerVars[codeLine._varIndex]._name + " + 1", false, codeLineIndex); break;
                         case Expression::Int16Both: emitVcpuAsm("STW", "_" + _integerVars[codeLine._varIndex]._name,          false, codeLineIndex); break;
+
+                        default: break;
                     }
                 }
             }
@@ -2120,6 +2140,8 @@ namespace Compiler
                         case Expression::Int16Low:  emitVcpuAsm("ST",  "_" + _integerVars[codeLine._varIndex]._name,          false, codeLineIndex); break;
                         case Expression::Int16High: emitVcpuAsm("ST",  "_" + _integerVars[codeLine._varIndex]._name + " + 1", false, codeLineIndex); break;
                         case Expression::Int16Both: emitVcpuAsm("STW", "_" + _integerVars[codeLine._varIndex]._name,          false, codeLineIndex); break;
+
+                        default: break;
                     }
                 }
             }
@@ -2372,6 +2394,8 @@ namespace Compiler
                 {
                 }
                 break;
+
+                default: break;
             }
         }
 
@@ -2649,10 +2673,11 @@ namespace Compiler
     }
 
 
-    void outputInternalVars(void)
+    void outputInternalEquates(void)
     {
         _output.push_back("\n");
         _output.push_back("; Internal variables\n");
+        _output.push_back("serialRawPrev"  + std::string(LABEL_TRUNC_SIZE - strlen("serialRawPrev"), ' ')  + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(0x0081) + "\n");
         _output.push_back("register0"      + std::string(LABEL_TRUNC_SIZE - strlen("register0"), ' ')      + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(INT_VAR_START) + "\n");
         _output.push_back("register1"      + std::string(LABEL_TRUNC_SIZE - strlen("register1"), ' ')      + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x02\n");
         _output.push_back("register2"      + std::string(LABEL_TRUNC_SIZE - strlen("register2"), ' ')      + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x04\n");
@@ -2676,7 +2701,10 @@ namespace Compiler
         _output.push_back("frameCountPrev" + std::string(LABEL_TRUNC_SIZE - strlen("frameCountPrev"), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x28\n");
         _output.push_back("miscFlags"      + std::string(LABEL_TRUNC_SIZE - strlen("miscFlags"), ' ')      + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x2A\n");
         _output.push_back("highByteMask"   + std::string(LABEL_TRUNC_SIZE - strlen("highByteMask"), ' ')   + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x2C\n");
+        _output.push_back("\n");
 
+        _output.push_back("; Internal buffers\n");
+        _output.push_back("textWorkArea" + std::string(LABEL_TRUNC_SIZE - strlen("textWorkArea"), ' ')  + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(getStrWorkArea()) + "\n");
         _output.push_back("\n");
     }
 
@@ -2886,7 +2914,7 @@ namespace Compiler
 
         // Output
         outputReservedWords();
-        outputInternalVars();
+        outputInternalEquates();
         outputIncludes();
         outputLabels();
         outputVars();

@@ -296,6 +296,8 @@ namespace Keywords
                 case Expression::Int16Low:  Compiler::emitVcpuAsm("LDWI", operand,          false); Compiler::emitVcpuAsm("PEEK", "", false); break;
                 case Expression::Int16High: Compiler::emitVcpuAsm("LDWI", operand + " + 1", false); Compiler::emitVcpuAsm("PEEK", "", false); break;
                 case Expression::Int16Both: Compiler::emitVcpuAsm("LDWI", operand,          false); Compiler::emitVcpuAsm("DEEK", "", false); break;
+
+                default: break;
             }
 
             numeric._value = uint8_t(Compiler::getTempVarStart());
@@ -349,6 +351,8 @@ namespace Keywords
                     case Expression::Int16Low:  Compiler::emitVcpuAsm("PEEK", "",  false);                                           break;
                     case Expression::Int16High: Compiler::emitVcpuAsm("ADDI", "1", false); Compiler::emitVcpuAsm("PEEK", "", false); break;
                     case Expression::Int16Both: Compiler::emitVcpuAsm("DEEK", "",  false);                                           break;
+
+                    default: break;
                 }
             }
         }
@@ -1303,6 +1307,8 @@ namespace Keywords
                             case Expression::Int16Low:  Compiler::emitVcpuAsm("LD",  "_" + Compiler::getIntegerVars()[varIndex]._name,          false, codeLineIndex); break;
                             case Expression::Int16High: Compiler::emitVcpuAsm("LD",  "_" + Compiler::getIntegerVars()[varIndex]._name + " + 1", false, codeLineIndex); break;
                             case Expression::Int16Both: Compiler::emitVcpuAsm("LDW", "_" + Compiler::getIntegerVars()[varIndex]._name,          false, codeLineIndex); break;
+
+                            default: break;
                         }
 
                         Compiler::emitVcpuAsm("%PrintAcInt16", "", false, codeLineIndex);
@@ -1826,6 +1832,8 @@ namespace Keywords
             case Expression::BooleanCC: vasm->_code = "JumpFalse" + std::string(OPCODE_TRUNC_SIZE - (sizeof("JumpFalse")-1), ' ') + nextInternalLabel; break;
             case Expression::NormalCC:  addLabelToJumpCC(Compiler::getCodeLines()[codeLineIndex]._vasm, nextInternalLabel);                            break;
             case Expression::FastCC:    addLabelToJumpCC(Compiler::getCodeLines()[codeLineIndex]._vasm, Compiler::getNextInternalLabel());             break;
+
+            default: break;
         }
 
         return true;
@@ -1888,6 +1896,8 @@ namespace Keywords
             case Expression::BooleanCC: vasm->_code = "JumpFalse" + std::string(OPCODE_TRUNC_SIZE - (sizeof("JumpFalse")-1), ' ') + nextInternalLabel; break;
             case Expression::NormalCC:  addLabelToJumpCC(Compiler::getCodeLines()[codeIndex]._vasm, nextInternalLabel);                                break;
             case Expression::FastCC:    addLabelToJumpCC(Compiler::getCodeLines()[codeIndex]._vasm, Compiler::getNextInternalLabel());                 break;
+
+            default: break;
         }
 
         // Condition
@@ -1960,6 +1970,8 @@ namespace Keywords
             case Expression::BooleanCC: vasm->_code = "JumpFalse" + std::string(OPCODE_TRUNC_SIZE - (sizeof("JumpFalse")-1), ' ') + nextInternalLabel; break;
             case Expression::NormalCC:  addLabelToJumpCC(Compiler::getCodeLines()[codeIndex]._vasm, nextInternalLabel);                                break;
             case Expression::FastCC:    addLabelToJumpCC(Compiler::getCodeLines()[codeIndex]._vasm, Compiler::getNextInternalLabel());                 break;
+
+            default: break;
         }
 
         Compiler::getElseIfDataStack().push({jmpIndex, nextInternalLabel, codeIndex, Compiler::ElseBlock, ccType});
@@ -2006,6 +2018,8 @@ namespace Keywords
                 case Expression::BooleanCC: vasm->_code = "JumpFalse" + std::string(OPCODE_TRUNC_SIZE - (sizeof("JumpFalse")-1), ' ') + nextInternalLabel; break;
                 case Expression::NormalCC:  addLabelToJumpCC(Compiler::getCodeLines()[codeIndex]._vasm, nextInternalLabel);                                break;
                 case Expression::FastCC:    addLabelToJumpCC(Compiler::getCodeLines()[codeIndex]._vasm, Compiler::getNextInternalLabel());                 break;
+
+                default: break;
             }
         }
 
@@ -2032,6 +2046,8 @@ namespace Keywords
 
                 case Expression::NormalCC:  addLabelToJump(Compiler::getCodeLines()[codeIndex]._vasm, Compiler::getNextInternalLabel()); break;
                 case Expression::FastCC:    addLabelToJump(Compiler::getCodeLines()[codeIndex]._vasm, Compiler::getNextInternalLabel()); break;
+        
+                default: break;
             }
 
             Compiler::getEndIfDataStack().pop();
@@ -2101,6 +2117,8 @@ namespace Keywords
             case Expression::BooleanCC: vasm->_code = "JumpFalse" + std::string(OPCODE_TRUNC_SIZE - (sizeof("JumpFalse")-1), ' ') + Compiler::getNextInternalLabel() + " " + std::to_string(Compiler::incJumpFalseUniqueId()); break;
             case Expression::NormalCC:  addLabelToJumpCC(Compiler::getCodeLines()[whileWendData._codeLineIndex]._vasm, Compiler::getNextInternalLabel() + " " + std::to_string(Compiler::incJumpFalseUniqueId()));             break;
             case Expression::FastCC:    addLabelToJumpCC(Compiler::getCodeLines()[whileWendData._codeLineIndex]._vasm, Compiler::getNextInternalLabel());                                                                      break;
+
+            default: break;
         }
 
         return true;
@@ -2144,6 +2162,8 @@ namespace Keywords
             case Expression::BooleanCC: Compiler::emitVcpuAsm("%JumpFalse", repeatUntilData._labelName + " " + std::to_string(Compiler::incJumpFalseUniqueId()), false, codeLineIndex);       break;
             case Expression::NormalCC:  addLabelToJumpCC(Compiler::getCodeLines()[codeLineIndex]._vasm, repeatUntilData._labelName + " " + std::to_string(Compiler::incJumpFalseUniqueId())); break;
             case Expression::FastCC:    addLabelToJumpCC(Compiler::getCodeLines()[codeLineIndex]._vasm, repeatUntilData._labelName);                                                          break;
+
+            default: break;
         }
 
         return true;
@@ -2558,6 +2578,8 @@ namespace Keywords
             {
                 case 0: Compiler::emitVcpuAsm("ST", "cursorXY",     false, codeLineIndex); break;
                 case 1: Compiler::emitVcpuAsm("ST", "cursorXY + 1", false, codeLineIndex); break;
+
+                default: break;
             }
         }
 
@@ -2655,6 +2677,8 @@ namespace Keywords
                 {
                     case 0: Compiler::emitVcpuAsm("STW", "drawLine_x2", false, codeLineIndex); break;
                     case 1: Compiler::emitVcpuAsm("STW", "drawLine_y2", false, codeLineIndex); break;
+
+                    default: break;
                 }
             }
 
@@ -2673,6 +2697,8 @@ namespace Keywords
                     case 1: Compiler::emitVcpuAsm("STW", "drawLine_y1", false, codeLineIndex); break;
                     case 2: Compiler::emitVcpuAsm("STW", "drawLine_x2", false, codeLineIndex); break;
                     case 3: Compiler::emitVcpuAsm("STW", "drawLine_y2", false, codeLineIndex); break;
+
+                    default: break;
                 }
             }
 
@@ -2703,6 +2729,8 @@ namespace Keywords
                 case 0: Compiler::emitVcpuAsm("STW", "drawHLine_x1", false, codeLineIndex); break;
                 case 1: Compiler::emitVcpuAsm("STW", "drawHLine_y1", false, codeLineIndex); break;
                 case 2: Compiler::emitVcpuAsm("STW", "drawHLine_x2", false, codeLineIndex); break;
+
+                default: break;
             }
         }
 
@@ -2732,6 +2760,8 @@ namespace Keywords
                 case 0: Compiler::emitVcpuAsm("STW", "drawVLine_x1", false, codeLineIndex); break;
                 case 1: Compiler::emitVcpuAsm("STW", "drawVLine_y1", false, codeLineIndex); break;
                 case 2: Compiler::emitVcpuAsm("STW", "drawVLine_y2", false, codeLineIndex); break;
+
+                default: break;
             }
         }
 
@@ -2761,6 +2791,8 @@ namespace Keywords
                 case 0: Compiler::emitVcpuAsm("STW", "drawCircle_cx", false, codeLineIndex); break;
                 case 1: Compiler::emitVcpuAsm("STW", "drawCircle_cy", false, codeLineIndex); break;
                 case 2: Compiler::emitVcpuAsm("STW", "drawCircle_r",  false, codeLineIndex); break;
+
+                default: break;
             }
         }
 
@@ -2831,6 +2863,8 @@ namespace Keywords
             case Expression::Int16Low:  opcode = "LD";  operand = "_" + operands[1];          break;
             case Expression::Int16High: opcode = "LD";  operand = "_" + operands[1] + " + 1"; break;
             case Expression::Int16Both: opcode = "LDW"; operand = "_" + operands[1];          break;
+
+            default: break;
         }
 
         if((operandTypes[0] == Compiler::OperandVar  ||  operandTypes[0] == Compiler::OperandTemp)  &&  (operandTypes[1] == Compiler::OperandVar  ||  operandTypes[1] == Compiler::OperandTemp))
@@ -2899,6 +2933,8 @@ namespace Keywords
             case Expression::Int16Low:  opcode = "LD";  operand = "_" + operands[1];          break;
             case Expression::Int16High: opcode = "LD";  operand = "_" + operands[1] + " + 1"; break;
             case Expression::Int16Both: opcode = "LDW"; operand = "_" + operands[1];          break;
+
+            default: break;
         }
 
         if((operandTypes[0] == Compiler::OperandVar  ||  operandTypes[0] == Compiler::OperandTemp)  &&  (operandTypes[1] == Compiler::OperandVar  ||  operandTypes[1] == Compiler::OperandTemp))

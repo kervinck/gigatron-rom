@@ -22,7 +22,7 @@ poke 163, &h3F
 
 'SETUP CAMERA
 ' S=SIN C=COS F=FLEN
-100 S=24:C=42:F=4*U
+100 S=45:C=45:F=4*U
     gosub 110
 
 loop: gosub peek(17)
@@ -56,8 +56,7 @@ loop: gosub peek(17)
      poke 163, &h00 : gosub 200 'erase cube
      
      poke &h01F9, 40 'enable video output
-     S = S + 5 : if S &>= 90 then S = 0
-     C = 90 - S
+     S = S + 5 : if S &>= 45 then S = -40
      poke 163, &h3F : gosub 110 'draw cube
      return
      
@@ -65,7 +64,6 @@ loop: gosub peek(17)
      poke 163, &h00 : gosub 200 'erase cube
      
      poke &h01F9, 40 'enable video output
-     S = S - 5 : if S &<= 0 then S = 90
-     C = 90 - S
+     S = S - 5 : if S &<= -45 then S = 40
      poke 163, &h3F : gosub 110 'draw cube
      return

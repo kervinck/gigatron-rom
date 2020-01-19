@@ -1,6 +1,7 @@
 _startAddress_      EQU                     0x0200
 
 ; Internal variables
+serialRawPrev       EQU                     0x0081
 register0           EQU                     0x0082
 register1           EQU                     register0 + 0x02
 register2           EQU                     register0 + 0x04
@@ -25,49 +26,52 @@ frameCountPrev      EQU                     register0 + 0x28
 miscFlags           EQU                     register0 + 0x2A
 highByteMask        EQU                     register0 + 0x2C
 
+; Internal buffers
+textWorkArea        EQU                     0x7fa0
+
 ; Includes
 %include            include/gigatron.i
 %include            include/macros.i
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x0266
-_20                 EQU                     0x0274
-_25                 EQU                     0x027d
-_30                 EQU                     0x029b
-_35                 EQU                     0x02bb
-_40                 EQU                     0x02de
-_45                 EQU                     0x030f
-_50                 EQU                     0x0313
-_100                EQU                     0x0343
-_loop               EQU                     0x035f
-_110                EQU                     0x0372
-_120                EQU                     0x0386
-_130                EQU                     0x0399
-_140                EQU                     0x03b1
-_150                EQU                     0x03c2
-_160                EQU                     0x03d3
-_170                EQU                     0x03e4
-_200                EQU                     0x03eb
-_205                EQU                     0x040b
-_210                EQU                     0x0418
-_215                EQU                     0x0425
-_220                EQU                     0x0432
-_225                EQU                     0x043f
-_230                EQU                     0x044c
-_235                EQU                     0x0459
-_240                EQU                     0x0466
-_245                EQU                     0x0473
-_250                EQU                     0x0480
-_255                EQU                     0x048d
-_254                EQU                     0x049c
-_253                EQU                     0x04e7
+_10                 EQU                     0x025c
+_20                 EQU                     0x026a
+_25                 EQU                     0x0273
+_30                 EQU                     0x0291
+_35                 EQU                     0x02b1
+_40                 EQU                     0x02d4
+_45                 EQU                     0x0302
+_50                 EQU                     0x0306
+_100                EQU                     0x0336
+_loop               EQU                     0x0352
+_110                EQU                     0x0364
+_120                EQU                     0x0378
+_130                EQU                     0x038b
+_140                EQU                     0x03a3
+_150                EQU                     0x03b4
+_160                EQU                     0x03c5
+_170                EQU                     0x03d6
+_200                EQU                     0x03dd
+_205                EQU                     0x03eb
+_210                EQU                     0x040b
+_215                EQU                     0x0418
+_220                EQU                     0x0425
+_225                EQU                     0x0432
+_230                EQU                     0x043f
+_235                EQU                     0x044c
+_240                EQU                     0x0459
+_245                EQU                     0x0466
+_250                EQU                     0x0473
+_255                EQU                     0x0480
+_254                EQU                     0x048f
+_253                EQU                     0x04cb
 _page_0x0300        EQU                     0x0300
 _page_0x0400        EQU                     0x0400
-_else_0x052d        EQU                     0x04d1
+_else_0x051e        EQU                     0x04c0
 _page_0x0500        EQU                     0x0500
-_else_0x0582        EQU                     0x052b
-_end_0x059a         EQU                     0x0541
+_else_0x0562        EQU                     0x0510
+_end_0x056d         EQU                     0x051b
 
 ; Variables
 _K                  EQU                     0x0030
@@ -92,11 +96,13 @@ _C                  EQU                     0x0048
 
 ; Define Bytes
 
+; Define Words
+
 ; Lookup Tables
 _lut_numericLabs    EQU                     0x7cfa
 _lut_numericLabs    DW                      254 253 -1
 _lut_numericAddrs   EQU                     0x7bf5
-_lut_numericAddrs   DW                      0x049c 0x04e7 
+_lut_numericAddrs   DW                      0x048f 0x04cb 
 
 ; Code
 _entryPoint_        InitRealTimeProc        
@@ -119,15 +125,11 @@ _entryPoint_        InitRealTimeProc
                     STW                     _L
                     STW                     _F                              ; K=0:X=K:M=X:N=M:I=N:A=I:B=A:L=B:F=L
 
-                    LDWI                    162
-                    STW                     register0
                     LDI                     0
-                    POKE                    register0                       ; poke 162, &h00
+                    ST                      162                             ; poke 162, &h00
 
-                    LDWI                    163
-                    STW                     register0
                     LDI                     63
-                    POKE                    register0                       ; poke 163, &h3F
+                    ST                      163                             ; poke 163, &h3F
 
 _10                 LDWI                    clearVertBlinds
                     CALL                    giga_vAC
@@ -199,10 +201,6 @@ _40                 LDWI                    0x7eb0
                     LDW                     _I
                     ADDI                    4
                     STW                     register1
-                    STW                     0xde
-                    LDWI                    _page_0x0300
-                    CALL                    giga_vAC
-_page_0x0300        LDW                     0xde
                     LDWI                    0x7eb0
                     ADDW                    register1
                     ADDW                    register1
@@ -210,6 +208,10 @@ _page_0x0300        LDW                     0xde
                     LDW                     register0
                     DOKE                    register1                       ; Q(I+4)=Q(I)
 
+                    STW                     0xde
+                    LDWI                    _page_0x0300
+                    CALL                    giga_vAC
+_page_0x0300        LDW                     0xde
 _45                 INC                     _I
                     POP                     
                     RET                                                     ; INC I:RETURN
@@ -239,9 +241,9 @@ _50                 PUSH
                     POP                     
                     RET                                                     ; LINE P(A), Q(A), P(B), Q(B) : RETURN
 
-_100                LDI                     24
+_100                LDI                     45
                     STW                     _S
-                    LDI                     42
+                    LDI                     45
                     STW                     _C
                     LDI                     4
                     STW                     mathX
@@ -249,13 +251,12 @@ _100                LDI                     24
                     STW                     mathY
                     LDWI                    multiply16bit
                     CALL                    giga_vAC
-                    STW                     _F                              ; S=24:C=42:F=4*U
+                    STW                     _F                              ; S=45:C=45:F=4*U
 
                     LDWI                    _110
                     CALL                    giga_vAC                        ; gosub 110
 
-_loop               LDI                     0x11
-                    PEEK                    
+_loop               LD                      0x11
                     STW                     numericLabel
                     LDI                     0
                     STW                     defaultLabel
@@ -333,10 +334,6 @@ _170                LDWI                    _200
 _200                PUSH                    
                     LDI                     0
                     STW                     _A
-                    STW                     0xde
-                    LDWI                    _page_0x0400
-                    CALL                    giga_vAC
-_page_0x0400        LDW                     0xde
                     LDI                     1
                     STW                     _B
                     LDWI                    _50
@@ -344,6 +341,10 @@ _page_0x0400        LDW                     0xde
 
 _205                LDI                     1
                     STW                     _A
+                    STW                     0xde
+                    LDWI                    _page_0x0400
+                    CALL                    giga_vAC
+_page_0x0400        LDW                     0xde
                     LDI                     2
                     STW                     _B
                     LDWI                    _50
@@ -428,10 +429,8 @@ _254                PUSH
                     LDI                     238
                     POKE                    register0                       ; poke &h01F9, 238 'disable video output
 
-                    LDWI                    163
-                    STW                     register0
                     LDI                     0
-                    POKE                    register0
+                    ST                      163
                     LDWI                    _200
                     CALL                    giga_vAC                        ; poke 163, &h00 : gosub 200 'erase cube
 
@@ -443,19 +442,13 @@ _254                PUSH
                     LDW                     _S
                     ADDI                    5
                     STW                     _S
-                    SUBI                    90
-                    JumpGE                  _else_0x052d 0
-                    LDI                     0
-                    STW                     _S                              ; S = S + 5 : if S &>= 90 then S = 0
+                    SUBI                    45
+                    JumpGE                  _else_0x051e 0
+                    LDWI                    -40
+                    STW                     _S                              ; S = S + 5 : if S &>= 45 then S = -40
 
-_else_0x052d        LDI                     90
-                    SUBW                    _S
-                    STW                     _C                              ; C = 90 - S
-
-                    LDWI                    163
-                    STW                     register0
-                    LDI                     63
-                    POKE                    register0
+_else_0x051e        LDI                     63
+                    ST                      163
                     LDWI                    _110
                     CALL                    giga_vAC                        ; poke 163, &h3F : gosub 110 'draw cube
 
@@ -468,14 +461,8 @@ _253                PUSH
                     LDI                     238
                     POKE                    register0                       ; poke &h01F9, 238 'disable video output
 
-                    STW                     0xde
-                    LDWI                    _page_0x0500
-                    CALL                    giga_vAC
-_page_0x0500        LDW                     0xde
-                    LDWI                    163
-                    STW                     register0
                     LDI                     0
-                    POKE                    register0
+                    ST                      163
                     LDWI                    _200
                     CALL                    giga_vAC                        ; poke 163, &h00 : gosub 200 'erase cube
 
@@ -487,25 +474,25 @@ _page_0x0500        LDW                     0xde
                     LDW                     _S
                     SUBI                    5
                     STW                     _S
-                    JumpLE                  _else_0x0582 1
-                    LDI                     90
-                    STW                     _S                              ; S = S - 5 : if S &<= 0 then S = 90
-
-_else_0x0582        LDI                     90
+                    LDWI                    -45
+                    STW                     0xde
+                    LDWI                    _page_0x0500
+                    CALL                    giga_vAC
+_page_0x0500        LDW                     0xde
                     SUBW                    _S
-                    STW                     _C                              ; C = 90 - S
+                    JumpGT                  _else_0x0562 1
+                    LDI                     40
+                    STW                     _S                              ; S = S - 5 : if S &<= -45 then S = 40
 
-                    LDWI                    163
-                    STW                     register0
-                    LDI                     63
-                    POKE                    register0
+_else_0x0562        LDI                     63
+                    ST                      163
                     LDWI                    _110
                     CALL                    giga_vAC                        ; poke 163, &h3F : gosub 110 'draw cube
 
                     POP                     
                     RET                                                     ; return
 
-_end_0x059a         BRA                     _end_0x059a                     ; END
+_end_0x056d         BRA                     _end_0x056d                     ; END
 
 
 
@@ -609,17 +596,17 @@ convertGt_1         LDI     1
 
 
 ; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
-mathX               EQU     register0
-mathY               EQU     register1
-mathSum             EQU     register2
-mathMask            EQU     register3
-mathRem             EQU     register8
-mathSign            EQU     register9
-mathScratch         EQU     register10
-mathShift           EQU     register11
-mathBase            EQU     register8
-mathPow             EQU     register9
-mathResult          EQU     register10
+mathX               EQU     register8
+mathY               EQU     register9
+mathSum             EQU     register10
+mathMask            EQU     register11
+mathRem             EQU     register12
+mathSign            EQU     register13
+mathScratch         EQU     register14
+mathShift           EQU     register15
+mathBase            EQU     register12
+mathPow             EQU     register13
+mathResult          EQU     register14
 
 
                     ; accumulator = mathX * mathY, (result 16bit)
@@ -831,7 +818,7 @@ clearVB_loop        CALL    realTimeProcAddr
 
 
 
-; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+; do *NOT* use register4 to register7 during time slicing if you use realTimeProc
 graphicsMode        EQU     register0
 waitVBlankNum       EQU     register0
 
@@ -853,7 +840,7 @@ drawLine_xy1        EQU     register0
 drawLine_xy2        EQU     register1
 drawLine_dxy1       EQU     register2
 drawLine_dxy2       EQU     register3
-drawLine_dx1        EQU     register4
+drawLine_dx1        EQU     register4           ; register4 to register7 used for temp values, state will be invalidated during time slicing
 drawLine_dy1        EQU     register5
 drawLine_dx2        EQU     register6
 drawLine_dy2        EQU     register7
@@ -864,7 +851,19 @@ drawLine_num        EQU     register11
 drawLine_count      EQU     register12
 drawLine_addr       EQU     register13
 drawLine_tmp        EQU     register14
-    
+  
+drawCircle_cx       EQU     register0
+drawCircle_cy       EQU     register1
+drawCircle_r        EQU     register2
+drawCircle_a        EQU     register3
+drawCircle_d        EQU     register8
+drawCircle_x        EQU     register9
+drawCircle_y        EQU     register10
+drawCircle_ch0      EQU     register11
+drawCircle_ch1      EQU     register12
+drawCircle_ch2      EQU     register13
+drawCircle_ch3      EQU     register14
+
     
 drawLine            PUSH                        ; matches drawLineLoop's POP
                     LDI     1
