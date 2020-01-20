@@ -11,7 +11,7 @@ loop:
     ox = rnd(160) : oy = rnd(120)
     at ox, oy
     
-    for i=0 to POLYSIZE*2 - 4 step 2
+    for i=0 &to POLYSIZE*2 - 4 step 2
         poke POLYADDR + 0 + i, rnd(160)
         poke POLYADDR + 1 + i, rnd(120)
     next i
@@ -24,6 +24,6 @@ loop:
 '    k = peek(17) : if k = 255 then goto key
 '    poke 17, 255
     
-    goto loop
+    goto &loop
 
 end

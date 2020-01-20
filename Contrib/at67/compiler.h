@@ -180,7 +180,8 @@ namespace Compiler
         int16_t _loopStep;
         uint16_t _varEnd;
         uint16_t _varStep;
-        bool _optimise = false;
+        bool _farJump = true;
+        bool _optimise = true;
         int _codeLineIndex;
     };
 

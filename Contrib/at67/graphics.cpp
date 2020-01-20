@@ -777,7 +777,7 @@ namespace Graphics
 
             sprintf(str, "%-5d", Memory::getSizeFreeRAM());
             drawText(std::string(str), _pixels, RAM_START, 472 - FONT_CELL_Y, 0xFF00FF00, false, 0);
-            sprintf(str, " ROM %02x", Cpu::getRomType());
+            sprintf(str, " ROM %02X", Cpu::getRomType());
             drawText(std::string(VERSION_STR) + std::string(str), _pixels, 0, 472, 0xFFFFFFFF, false, 0);
         }
     }
@@ -849,11 +849,12 @@ namespace Graphics
         // ROM list
         for(int i=0; i<HEX_CHARS_Y; i++)
         {
-            bool onCursor = i == Editor::getCursorY();
+            bool onCursor = (i == Editor::getCursorY());
             int index = Editor::getRomEntriesIndex() + i;
             if(index >= int(Editor::getRomEntriesSize())) break;
             uint32_t colour = (i < NUM_INT_ROMS) ? 0xFFB0B0B0 : 0xFFFFFFFF;
-            drawText(*Editor::getRomEntryName(index), _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y, colour, onCursor, MENU_TEXT_SIZE, 0x00000000, false, MENU_TEXT_SIZE);
+            if(i == Cpu::getRomIndex()) drawText("*", _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y,  0xFFD0D000, onCursor, MENU_TEXT_SIZE, 0x00000000, false, MENU_TEXT_SIZE);
+            drawText(*Editor::getRomEntryName(index), _pixels, HEX_START_X + 6, FONT_CELL_Y*4 + i*FONT_CELL_Y, colour, onCursor, MENU_TEXT_SIZE, 0x00000000, false, MENU_TEXT_SIZE);
         }
 
         // ROM type
@@ -874,7 +875,7 @@ namespace Graphics
         // File list
         for(int i=0; i<HEX_CHARS_Y; i++)
         {
-            bool onCursor = i == Editor::getCursorY();
+            bool onCursor = (i == Editor::getCursorY());
             int index = Editor::getFileEntriesIndex() + i;
             if(index >= int(Editor::getFileEntriesSize())) break;
             uint32_t colour = (Editor::getFileEntryType(index) == Editor::Dir) ? 0xFFB0B0B0 : 0xFFFFFFFF;
@@ -917,7 +918,7 @@ namespace Graphics
             }
 
             // Program counter icon in debug mode
-            bool onCursor = i == Editor::getCursorY();
+            bool onCursor = (i == Editor::getCursorY());
             if(onPC) drawText(">", _pixels, HEX_START_X, FONT_CELL_Y*4 + i*FONT_CELL_Y,  0xFF00FF00, onCursor, MENU_TEXT_SIZE, 0x00000000, false, MENU_TEXT_SIZE);
 
             // Breakpoint icons
@@ -1029,7 +1030,7 @@ namespace Graphics
             if(Editor::getSingleStepEnabled())
             {
                 drawText("Watch:", _pixels, WATCH_START, FONT_CELL_Y*2, 0xFFFFFFFF, false, 0);
-                sprintf(str, "%04x   ", Editor::getSingleStepAddress());
+                sprintf(str, "%04X   ", Editor::getSingleStepAddress());
                 uint32_t colour = (Editor::getHexEdit() && onWatch) ? 0xFF00FF00 : 0xFFFFFFFF;
                 drawText(str, _pixels, WATCH_START+36, FONT_CELL_Y*2, colour, onWatch, 4);
             }

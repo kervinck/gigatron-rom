@@ -1582,9 +1582,11 @@ namespace Keywords
             fprintf(stderr, "Compiler::keywordFOR() : Syntax error, (missing '='), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
+        
+        bool farJump = (code.find("&TO") == std::string::npos);
         if((to = code.find("TO")) == std::string::npos)
         {
-            fprintf(stderr, "Compiler::keywordFOR() : Syntax error, (missing '='), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Compiler::keywordFOR() : Syntax error, (missing 'TO'), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
         step = code.find("STEP");
@@ -1658,13 +1660,13 @@ namespace Keywords
                 loopStep = (loopEnd >= loopStart) ? 1 : -1;
             }
 
-            // Optimised case for 8bit constants
+            // 8bit constants
             if(optimise  &&  startNumeric._isValid  &&  loopStart >= 0  &&  loopStart <= 255  &&  endNumeric._isValid  &&  loopEnd >= 0  &&  loopEnd <= 255)
             {
                 Compiler::emitVcpuAsm("LDI", std::to_string(loopStart), false, codeLineIndex);
                 Compiler::emitVcpuAsm("STW", "_" + Compiler::getIntegerVars()[varCounter]._name, false, codeLineIndex);
             }
-            // 16bit constants
+            // 16bit constants require variables
             else
             {
                 optimise = false;
@@ -1705,7 +1707,7 @@ namespace Keywords
 
         // Label and stack
         Compiler::setNextInternalLabel("_next_" + Expression::wordToHexString(Compiler::getVasmPC()));
-        Compiler::getForNextDataStack().push({varCounter, Compiler::getNextInternalLabel(), loopEnd, loopStep, varEnd, varStep, optimise, codeLineIndex});
+        Compiler::getForNextDataStack().push({varCounter, Compiler::getNextInternalLabel(), loopEnd, loopStep, varEnd, varStep, farJump, optimise, codeLineIndex});
 
         return true;
     }
@@ -1750,49 +1752,31 @@ namespace Keywords
         int16_t loopStep = forNextData._loopStep;
         uint16_t varEnd = forNextData._varEnd;
         uint16_t varStep = forNextData._varStep;
+        bool farJump = forNextData._farJump;
+        bool optimise = forNextData._optimise;
 
-        if(forNextData._optimise)
+        std::string forNextCmd;
+        if(optimise)
         {
             if(abs(loopStep) == 1)
             {
-                // Increment
-                if(loopStep > 0)
-                {
-                    Compiler::emitVcpuAsm("%ForNextLoopInc", "_" + varName + " " + labName + " " + std::to_string(loopEnd), false, codeLineIndex);
-                }
-                // Decrement
-                else
-                {
-                    Compiler::emitVcpuAsm("%ForNextLoopDec", "_" + varName + " " + labName + " " + std::to_string(loopEnd), false, codeLineIndex);
-                }
+                // Increment/decrement step
+                forNextCmd = (loopStep > 0) ? (farJump) ? "%ForNextFarInc" : "%ForNextInc" : (farJump) ? "%ForNextFarDec" : "%ForNextDec";
+                Compiler::emitVcpuAsm(forNextCmd, "_" + varName + " " + labName + " " + std::to_string(loopEnd), false, codeLineIndex);
             }
             else
             {
-                // Additive step
-                if(loopStep > 0)
-                {
-                    Compiler::emitVcpuAsm("%ForNextLoopAdd", "_" + varName + " " + labName + " " + std::to_string(loopEnd) + " " + std::to_string(loopStep), false, codeLineIndex);
-                }
-                // Subtractive step
-                else
-                {
-                    Compiler::emitVcpuAsm("%ForNextLoopSub", "_" + varName + " " + labName + " " + std::to_string(loopEnd) + " " + std::to_string(abs(loopStep)), false, codeLineIndex);
-                }
+                // Additive/subtractive step
+                forNextCmd = (loopStep > 0) ? (farJump) ? "%ForNextFarAdd" : "%ForNextAdd" : (farJump) ? "%ForNextFarSub" : "%ForNextSub";
+                Compiler::emitVcpuAsm(forNextCmd, "_" + varName + " " + labName + " " + std::to_string(loopEnd) + " " + std::to_string(abs(loopStep)), false, codeLineIndex);
             }
         }
         else
         {
             // TODO: this can fail for corner cases
-            // Positive variable step
-            if(loopStep > 0)
-            {
-                Compiler::emitVcpuAsm("%ForNextLoopVarPos", "_" + varName + " " + labName + " " + Expression::byteToHexString(uint8_t(varEnd)) + " " + Expression::byteToHexString(uint8_t(varStep)), false, codeLineIndex);
-            }
-            // Negative variable step
-            else
-            {
-                Compiler::emitVcpuAsm("%ForNextLoopVarNeg", "_" + varName + " " + labName + " " + Expression::byteToHexString(uint8_t(varEnd)) + " " + Expression::byteToHexString(uint8_t(varStep)), false, codeLineIndex);
-            }
+            // Positive/negative variable step
+            forNextCmd = (loopStep > 0) ? (farJump) ? "%ForNextFarVarPos" : "%ForNextVarPos" : (farJump) ? "%ForNextFarVarNeg" : "%ForNextVarNeg";
+            Compiler::emitVcpuAsm(forNextCmd, "_" + varName + " " + labName + " " + Expression::byteToHexString(uint8_t(varEnd)) + " " + Expression::byteToHexString(uint8_t(varStep)), false, codeLineIndex);
         }
 
         return true;
