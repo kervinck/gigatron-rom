@@ -598,6 +598,9 @@ namespace Cpu
         std::string names[NUM_INT_ROMS] = {"ROMv1.rom", "ROMv2.rom", "ROMv3.rom", "ROMv4.rom"};
         for(int i=0; i<NUM_INT_ROMS; i++) Editor::addRomEntry(types[i], names[i]);
 
+        // Latest internal ROM is the one that is loaded at startup
+        _romIndex = _romFiles.size() - 1;
+
         // External ROMS
         for(int i=0; i<Loader::getConfigRomsSize(); i++)
         {
@@ -616,7 +619,7 @@ namespace Cpu
                 if(!rom)
                 {
                     // This is fairly pointless as the code does not have any exception handling for the many std:: memory allocations that occur
-                    // If you're running out of memory running this application, (which requires around 10 Mbytes), then you need to leave the 80's
+                    // If you're running out of memory running this application, (which requires around 20 Mbytes), then you need to leave the 80's
                     shutdown();
                     fprintf(stderr, "Cpu::initialise() : out of memory!\n");
                     _EXIT_(EXIT_FAILURE);
@@ -637,7 +640,6 @@ namespace Cpu
 
         // Switchable ROMS
         _numRoms = int(_romFiles.size());
-        _romIndex = _numRoms - 1;
         memcpy(_ROM, _romFiles[_romIndex], sizeof(_ROM));
 
 //#define CREATE_ROM_HEADER

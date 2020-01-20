@@ -11,6 +11,6 @@ next i
 loop:
     r = rnd(0) AND max
     poke (127 - a(r) LSL 8) + r, &h3F
-    a(r) = a(r) + 1
+    a(r) = a(r) + 1 : if a(r) = 120 then a(r) = 119
     goto &loop
 end

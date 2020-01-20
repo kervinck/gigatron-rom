@@ -43,7 +43,7 @@
         DEEK
 %ENDM
 
-%MACRO  ForNextLoopUp _var _label _end
+%MACRO  ForNextLoopInc _var _label _end
         INC     _var
         LD      _var
         SUBI    _end
@@ -52,7 +52,7 @@
 _label_ CALL    giga_vAC
 %ENDM
 
-%MACRO  ForNextLoopDown _var _label _end
+%MACRO  ForNextLoopDec _var _label _end
         LD      _var
         SUBI    1
         ST      _var
@@ -62,7 +62,27 @@ _label_ CALL    giga_vAC
 _label_ CALL    giga_vAC
 %ENDM
 
-%MACRO  ForNextLoopStepUp _var _label _vEnd _vStep
+%MACRO  ForNextLoopAdd _var _label _end _step
+        LD      _var
+        ADDI    _step
+        ST      _var
+        SUBI    _end
+        BGT     _label_ + 2
+        LDWI    _label
+_label_ CALL    giga_vAC
+%ENDM
+
+%MACRO  ForNextLoopSub _var _label _end _step
+        LD      _var
+        SUBI    _step
+        ST      _var
+        SUBI    _end
+        BLT     _label_ + 2
+        LDWI    _label
+_label_ CALL    giga_vAC
+%ENDM
+
+%MACRO  ForNextLoopVarPos _var _label _vEnd _vStep
         LDW     _var
         ADDW    _vStep
         STW     _var
@@ -72,7 +92,7 @@ _label_ CALL    giga_vAC
 _label_ CALL    giga_vAC
 %ENDM
 
-%MACRO  ForNextLoopStepDown _var _label _vEnd _vStep
+%MACRO  ForNextLoopVarNeg _var _label _vEnd _vStep
         LDW     _var
         ADDW    _vStep
         STW     _var
