@@ -1,0 +1,8 @@
+cls : mode 2
+
+loop: 
+    poke 163, rnd(0) AND &h3F
+    rect rnd(160), rnd(120), rnd(160), rnd(120)
+    goto &loop
+
+end

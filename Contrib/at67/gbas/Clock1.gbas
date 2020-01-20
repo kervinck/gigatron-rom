@@ -38,10 +38,10 @@ poke 162,BKCOLOUR
 cls
 poke &h01F9, 0  'enable video
 
-B=peek(14)
-
 input "Enter Time ", H,"H:";2;, M,"M:";2;, S,"S:";2;
+B=peek(14)
 at 2,0 : print "                          ";
+
 if H=0
     H=12
 else

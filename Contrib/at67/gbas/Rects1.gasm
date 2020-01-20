@@ -36,7 +36,7 @@ textWorkArea        EQU                     0x7fa0
 ; Labels
 _entryPoint_        EQU                     0x0200
 _loop               EQU                     0x024e
-_end_0x02a5         EQU                     0x0285
+_end_0x02a2         EQU                     0x028a
 
 ; Variables
 
@@ -68,23 +68,23 @@ _loop               Rand
                     ANDI                    63
                     ST                      163                             ; poke 163, rnd(0) AND &h3F
 
-                    LDI                     0x64
+                    LDI                     0xa0
                     RandMod                 
-                    ADDI                    30
-                    STW                     drawCircleF_cx
-                    LDI                     0x3c
+                    STW                     drawRectF_x1
+                    LDI                     0x78
                     RandMod                 
-                    ADDI                    30
-                    STW                     drawCircleF_cy
-                    LDI                     0x1e
+                    STW                     drawRectF_y1
+                    LDI                     0xa0
                     RandMod                 
-                    ADDI                    1
-                    STW                     drawCircleF_r
-                    DrawCircleF                                             ; circlef rnd(100) + (- 50 + 80), rnd(60) + (- 30 + 60), rnd(30) + 1
+                    STW                     drawRectF_x2
+                    LDI                     0x78
+                    RandMod                 
+                    STW                     drawRectF_y2
+                    DrawRectF                                               ; rectf rnd(160), rnd(120), rnd(160), rnd(120)
 
                     BRA                     _loop                           ; goto &loop
 
-_end_0x02a5         BRA                     _end_0x02a5                     ; end
+_end_0x02a2         BRA                     _end_0x02a2                     ; end
 
 
 
@@ -101,15 +101,15 @@ convertLeOp         EQU     0x7ebb
 convertGeOp         EQU     0x7ec4
 convertLtOp         EQU     0x7ecd
 convertGtOp         EQU     0x7ed6
-divide16bit         EQU     0x7aa0
+divide16bit         EQU     0x7ba0
 rand16bit           EQU     0x7ef3
 randMod16bit        EQU     0x7ca0
 scanlineMode        EQU     0x7edf
-resetVideoTable     EQU     0x7cb3
+resetVideoTable     EQU     0x7cdb
 initClearFuncs      EQU     0x7da0
 clearVertBlinds     EQU     0x7dc3
-drawHLine           EQU     0x79a0
-drawCircleF         EQU     0x7ba0
+drawHLine           EQU     0x7aa0
+drawRectF           EQU     0x7cb3
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -495,46 +495,26 @@ drawHL_loop1        LD      fgbgColour + 1
                     RET
 
 
-drawCircleF         PUSH
-                    LDI     0
-                    STW     drawCircleF_v
-                    STW     drawCircleF_w
+drawRectF           PUSH
+                    LDW     drawRectF_y2
+                    SUBW    drawRectF_y1
+                    BGE     drawRF_loop
+                    LDW     drawRectF_y2
+                    STW     drawLine_tmp
+                    LDW     drawRectF_y1
+                    STW     drawRectF_y2
+                    LDW     drawLine_tmp
+                    STW     drawRectF_y1        ; if y2 < y1 then swap y2 with y1
                     
-drawCF_wloop        LDW     drawCircleF_cx
-                    SUBW    drawCircleF_r
-                    STW     drawCircleF_x1
-                    LDW     drawCircleF_cx
-                    ADDW    drawCircleF_r
-                    STW     drawCircleF_x2
-                    LDW     drawCircleF_cy
-                    SUBW    drawCircleF_v
-                    STW     drawCircleF_y1
+drawRF_loop         LDW     drawRectF_y1
+                    STW     drawHLine_y1
                     LDWI    drawHLine
                     CALL    giga_vAC
-                    LDW     drawCircleF_cy
-                    ADDW    drawCircleF_v
-                    STW     drawCircleF_y1
-                    LDWI    drawHLine
-                    CALL    giga_vAC
-                    
-                    LDW     drawCircleF_w
-                    ADDW    drawCircleF_v
-                    ADDW    drawCircleF_v
-                    ADDI    1
-                    STW     drawCircleF_w
-                    INC     drawCircleF_v
-                    
-drawCF_rloop        LDW     drawCircleF_w
-                    BLT     drawCF_wloop
-                    LDW     drawCircleF_w
-                    SUBW    drawCircleF_r
-                    SUBW    drawCircleF_r
-                    ADDI    1
-                    STW     drawCircleF_w
-                    LDW     drawCircleF_r
-                    SUBI    1
-                    STW     drawCircleF_r
-                    BGT     drawCF_rloop
+                    INC     drawRectF_y1
+                    LDW     drawRectF_y1
+                    SUBW    drawRectF_y2
+                    BLT     drawRF_loop
+
                     POP
                     RET
 

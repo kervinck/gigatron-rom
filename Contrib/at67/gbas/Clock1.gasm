@@ -35,47 +35,47 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_20                 EQU                     0x030c
-_30                 EQU                     0x0325
-_40                 EQU                     0x033f
-_50                 EQU                     0x0359
-_60                 EQU                     0x036d
-_70                 EQU                     0x0391
-_80                 EQU                     0x039d
-_90                 EQU                     0x03b0
-_drawClock          EQU                     0x03bb
-_drawDigits         EQU                     0x03d2
-_drawSeconds        EQU                     0x0492
-_drawMinutes        EQU                     0x04a8
-_drawHours          EQU                     0x04ed
-_drawTicks          EQU                     0x0532
-_drawDial           EQU                     0x0557
-_eraseSecondHand    EQU                     0x05ba
-_drawSecondHand     EQU                     0x05de
-_eraseMinuteHand    EQU                     0x060e
-_drawMinuteHand     EQU                     0x0632
-_eraseHourHand      EQU                     0x0656
-_drawHourHand       EQU                     0x067e
-_jitterCircle       EQU                     0x06a6
-_else_0x0295        EQU                     0x028d
-_endif_0x02a8       EQU                     0x029e
+_20                 EQU                     0x032f
+_30                 EQU                     0x0348
+_40                 EQU                     0x0362
+_50                 EQU                     0x037c
+_60                 EQU                     0x0390
+_70                 EQU                     0x03b4
+_80                 EQU                     0x03c0
+_90                 EQU                     0x03d3
+_drawClock          EQU                     0x03de
+_drawDigits         EQU                     0x0409
+_drawSeconds        EQU                     0x04b7
+_drawMinutes        EQU                     0x04cd
+_drawHours          EQU                     0x0524
+_drawTicks          EQU                     0x0557
+_drawDial           EQU                     0x057c
+_eraseSecondHand    EQU                     0x05f4
+_drawSecondHand     EQU                     0x0625
+_eraseMinuteHand    EQU                     0x0649
+_drawMinuteHand     EQU                     0x066d
+_eraseHourHand      EQU                     0x0691
+_drawHourHand       EQU                     0x06b9
+_jitterCircle       EQU                     0x06e1
+_else_0x02a7        EQU                     0x029f
+_endif_0x02ba       EQU                     0x02b0
 _page_0x0300        EQU                     0x0300
 _page_0x0400        EQU                     0x0400
-_endif_0x0526       EQU                     0x04e6
 _page_0x0500        EQU                     0x0500
-_endif_0x0557       EQU                     0x0523
-_next_0x05f3        EQU                     0x05a5
+_endif_0x054a       EQU                     0x051d
+_endif_0x057b       EQU                     0x0548
+_next_0x062c        EQU                     0x05df
 _page_0x0600        EQU                     0x0600
-_next_0x0771        EQU                     0x06b7
-_next_0x0789        EQU                     0x06c7
+_next_0x07aa        EQU                     0x06f2
 _page_0x08a0        EQU                     0x08a0
-_end_0x07c5         EQU                     0x08b4
+_next_0x07c2        EQU                     0x08ae
+_end_0x07fb         EQU                     0x08e7
 
 ; Variables
-_B                  EQU                     0x0030
-_H                  EQU                     0x0032
-_M                  EQU                     0x0034
-_S                  EQU                     0x0036
+_H                  EQU                     0x0030
+_M                  EQU                     0x0032
+_S                  EQU                     0x0034
+_B                  EQU                     0x0036
 _HH                 EQU                     0x0038
 _MM                 EQU                     0x003a
 _SS                 EQU                     0x003c
@@ -128,7 +128,7 @@ def_bytes_0x65a0    DB                      30 30 31 31 33 34 36 37 40 42 45 47 
 
 ; Lookup Tables
 _inputVars_0x7ebf   EQU                     0x7ebf
-_inputVars_0x7ebf   DW                      0x0032 0x0034 0x0036 
+_inputVars_0x7ebf   DW                      0x0030 0x0032 0x0034 
 _inputStrs_0x7ec5   EQU                     0x7ec5
 _inputStrs_0x7ec5   DW                      0x7ead 0x7eb1 0x7eb5 
 _inputTypes_0x7ecb  EQU                     0x7ecb
@@ -146,14 +146,21 @@ _entryPoint_        InitRealTimeProc
                     InitGtOp                
                     Initialise                                              ; INIT
 
-                    LDI                     16
+                    LDWI                    505
+                    STW                     register0
+                    LDI                     238
+                    POKE                    register0                       ; poke &h01F9, 238
+
+                    LDI                     48
                     ST                      162                             ; poke 162,BKCOLOUR
 
                     LDWI                    clearVertBlinds
                     CALL                    giga_vAC                        ; cls
 
-                    LD                      0x0e
-                    STW                     _B                              ; B=peek(14)
+                    LDWI                    505
+                    STW                     register0
+                    LDI                     0
+                    POKE                    register0                       ; poke &h01F9, 0  'enable video
 
                     PrintString             _str_0x7ea0
                     LDWI                    0x7eb9
@@ -167,16 +174,19 @@ _entryPoint_        InitRealTimeProc
                     CALL                    giga_vAC
                     PrintString             _str_0x7ed3                     ; at 2,0 : print "                          ";
 
+                    LD                      0x0e
+                    STW                     _B                              ; B=peek(14)
+
                     LDW                     _H
                     CALL                    convertEqOpAddr
-                    JumpFalse               _else_0x0295 0                  ; if H=0
+                    JumpFalse               _else_0x02a7 0                  ; if H=0
 
                     LDI                     12
                     STW                     _H
-                    LDWI                    _endif_0x02a8
+                    LDWI                    _endif_0x02ba
                     CALL                    giga_vAC                        ; H=12
 
-_else_0x0295        LDW                     _H
+_else_0x02a7        LDW                     _H
                     STW                     mathX
                     LDI                     13
                     STW                     mathY
@@ -185,7 +195,7 @@ _else_0x0295        LDW                     _H
                     LDW                     mathRem
                     STW                     _H                              ; H=H%13
 
-_endif_0x02a8       LDW                     _M
+_endif_0x02ba       LDW                     _M
                     STW                     mathX
                     LDI                     60
                     STW                     mathY
@@ -219,6 +229,10 @@ _endif_0x02a8       LDW                     _M
                     LDW                     mathRem
                     STW                     _Hm12                           ; Hm12=H%12
 
+                    STW                     0xde
+                    LDWI                    _page_0x0300
+                    CALL                    giga_vAC
+_page_0x0300        LDW                     0xde
                     LDW                     _M
                     STW                     mathX
                     LDI                     12
@@ -228,15 +242,21 @@ _endif_0x02a8       LDW                     _M
                     STW                     _Md12
                     STW                     _MMd12                          ; Md12=M/12 : MMd12=Md12
 
-                    STW                     0xde
-                    LDWI                    _page_0x0300
-                    CALL                    giga_vAC
-_page_0x0300        LDW                     0xde
+                    LDWI                    505
+                    STW                     register0
+                    LDI                     238
+                    POKE                    register0                       ; poke &h01F9, 238  'disable video
+
                     LDWI                    _drawDial
                     CALL                    giga_vAC                        ; gosub drawDial
 
                     LDWI                    _drawClock
                     CALL                    giga_vAC                        ; gosub drawClock
+
+                    LDWI                    505
+                    STW                     register0
+                    LDI                     0
+                    POKE                    register0                       ; poke &h01F9, 0  'enable video
 
 _20                 LDW                     _S
                     STW                     mathX
@@ -325,6 +345,10 @@ _drawClock          PUSH
                     LDWI                    _drawMinutes
                     CALL                    giga_vAC                        ; gosub drawMinutes
 
+                    STW                     0xde
+                    LDWI                    _page_0x0400
+                    CALL                    giga_vAC
+_page_0x0400        LDW                     0xde
                     LDWI                    _drawHours
                     CALL                    giga_vAC                        ; gosub drawHours
 
@@ -347,10 +371,6 @@ _drawDigits         PUSH
                     STW                     mathX
                     LDI                     10
                     STW                     mathY
-                    STW                     0xde
-                    LDWI                    _page_0x0400
-                    CALL                    giga_vAC
-_page_0x0400        LDW                     0xde
                     LDWI                    divide16bit
                     CALL                    giga_vAC
                     PrintAcInt16            
@@ -396,7 +416,7 @@ _page_0x0400        LDW                     0xde
                     PrintAcInt16                                            ; poke 163,&h0C : at 57,82 : print H/10;H%10;":";M/10;M%10;":";S/10;S%10;
 
                     LDI                     16
-                    ST                      162                             ; poke 162,BKCOLOUR
+                    ST                      162                             ; poke 162,DIALCOLOUR
 
                     POP                     
                     RET                                                     ; return
@@ -420,7 +440,7 @@ _drawMinutes        PUSH
                     LDW                     _M
                     SUBW                    _MM
                     CALL                    convertNeOpAddr
-                    JumpFalse               _endif_0x0526 8                 ; if M<>MM
+                    JumpFalse               _endif_0x054a 8                 ; if M<>MM
 
                     LDWI                    _eraseMinuteHand
                     CALL                    giga_vAC                        ; gosub eraseMinuteHand
@@ -432,13 +452,17 @@ _drawMinutes        PUSH
                     LDI                     12
                     STW                     mathY
                     LDWI                    divide16bit
+                    STW                     0xde
+                    LDWI                    _page_0x0500
+                    CALL                    giga_vAC
+_page_0x0500        LDW                     0xde
                     CALL                    giga_vAC
                     STW                     _Md12                           ; MM=M : Md12=M/12
 
                     LDW                     _Md12
                     SUBW                    _MMd12
                     CALL                    convertNeOpAddr
-                    JumpFalse               _endif_0x0526 7                 ; if Md12<>MMd12
+                    JumpFalse               _endif_0x054a 7                 ; if Md12<>MMd12
 
                     LDWI                    _eraseHourHand
                     CALL                    giga_vAC                        ; gosub eraseHourHand
@@ -446,7 +470,7 @@ _drawMinutes        PUSH
                     LDW                     _Md12
                     STW                     _MMd12                          ; MMd12=Md12
 
-_endif_0x0526       LDWI                    _drawMinuteHand
+_endif_0x054a       LDWI                    _drawMinuteHand
                     CALL                    giga_vAC                        ; gosub drawMinuteHand
 
                     POP                     
@@ -454,13 +478,9 @@ _endif_0x0526       LDWI                    _drawMinuteHand
 
 _drawHours          PUSH                    
                     LDW                     _H
-                    STW                     0xde
-                    LDWI                    _page_0x0500
-                    CALL                    giga_vAC
-_page_0x0500        LDW                     0xde
                     SUBW                    _HH
                     CALL                    convertNeOpAddr
-                    JumpFalse               _endif_0x0557 9                 ; if H<>HH
+                    JumpFalse               _endif_0x057b 9                 ; if H<>HH
 
                     LDW                     _H
                     STW                     _HH
@@ -473,7 +493,7 @@ _page_0x0500        LDW                     0xde
                     LDW                     mathRem
                     STW                     _Hm12                           ; HH=H : Hm12=H%12
 
-_endif_0x0557       LDW                     _Hm12
+_endif_0x057b       LDW                     _Hm12
                     LSLW                    
                     LSLW                    
                     ADDW                    _Hm12
@@ -510,58 +530,73 @@ _drawTicks          PUSH
                     RET                                                     ; return
 
 _drawDial           PUSH                    
+                    LDI                     16
+                    ST                      163                             ; poke 163, DIALCOLOUR
+
+                    LDI                     80
+                    STW                     drawCircleF_cx
+                    LDI                     59
+                    STW                     drawCircleF_cy
+                    LDI                     43
+                    STW                     drawCircleF_r
+                    DrawCircleF                                             ; circlef CENTERX, CENTERY, DIALRADIUS
+
                     LDI                     80
                     STW                     _ox
-                    LDI                     67
-                    STW                     _oy                             ; ox=CENTERX : oy=CENTERY + 8
+                    LDI                     59
+                    STW                     _oy                             ; ox=CENTERX : oy=CENTERY
 
                     LDI                     44
                     STW                     _cr
                     LDI                     0
                     STW                     _cc
                     LDWI                    _jitterCircle
-                    CALL                    giga_vAC                        ; cr=44 : cc=&h00 : gosub jitterCircle
+                    CALL                    giga_vAC                        ; cr=DIALRADIUS + 1 : cc=&h00 : gosub jitterCircle
 
                     LDI                     46
                     STW                     _cr
                     LDI                     0
                     STW                     _cc
                     LDWI                    _jitterCircle
-                    CALL                    giga_vAC                        ; cr=46 : cc=&h00 : gosub jitterCircle
+                    CALL                    giga_vAC                        ; cr=DIALRADIUS + 3 : cc=&h00 : gosub jitterCircle
 
                     LDI                     48
                     STW                     _cr
                     LDI                     1
                     STW                     _cc
                     LDWI                    _jitterCircle
-                    CALL                    giga_vAC                        ; cr=48 : cc=&h01 : gosub jitterCircle
+                    CALL                    giga_vAC                        ; cr=DIALRADIUS + 5 : cc=&h01 : gosub jitterCircle
 
                     LDI                     52
                     STW                     _cr
                     LDI                     3
                     STW                     _cc
                     LDWI                    _jitterCircle
-                    CALL                    giga_vAC                        ; cr=52 : cc=&h03 : gosub jitterCircle
+                    CALL                    giga_vAC                        ; cr=DIALRADIUS + 9 : cc=&h03 : gosub jitterCircle
 
                     LDI                     50
                     STW                     _cr
                     LDI                     2
                     STW                     _cc
                     LDWI                    _jitterCircle
-                    CALL                    giga_vAC                        ; cr=50 : cc=&h02 : gosub jitterCircle
+                    CALL                    giga_vAC                        ; cr=DIALRADIUS + 7 : cc=&h02 : gosub jitterCircle
 
                     LDI                     0
                     STW                     _i                              ; for i=0 to TICKS-1
 
-_next_0x05f3        LDWI                    _drawTicks
+_next_0x062c        LDWI                    _drawTicks
                     CALL                    giga_vAC                        ; gosub drawTicks
 
-                    ForNextLoopUp           _i _next_0x05f3 59              ; next i
+                    ForNextLoopUp           _i _next_0x062c 59              ; next i
 
                     POP                     
                     RET                                                     ; return
 
 _eraseSecondHand    PUSH                    
+                    STW                     0xde
+                    LDWI                    _page_0x0600
+                    CALL                    giga_vAC
+_page_0x0600        LDW                     0xde
                     LDI                     16
                     ST                      163
                     LDI                     80
@@ -576,7 +611,7 @@ _eraseSecondHand    PUSH
                     ADDW                    _SS
                     PEEK                    
                     STW                     drawLine_y2
-                    DrawLine                                                ; poke 163,BKCOLOUR : line CENTERX,CENTERY, peek(SECSX + SS),peek(SECSY + SS)
+                    DrawLine                                                ; poke 163,DIALCOLOUR : line CENTERX,CENTERY, peek(SECSX + SS),peek(SECSY + SS)
 
                     POP                     
                     RET                                                     ; return
@@ -593,10 +628,6 @@ _drawSecondHand     PUSH
                     PEEK                    
                     STW                     drawLine_x2
                     LDWI                    24992
-                    STW                     0xde
-                    LDWI                    _page_0x0600
-                    CALL                    giga_vAC
-_page_0x0600        LDW                     0xde
                     ADDW                    _S
                     PEEK                    
                     STW                     drawLine_y2
@@ -620,7 +651,7 @@ _eraseMinuteHand    PUSH
                     ADDW                    _MM
                     PEEK                    
                     STW                     drawLine_y2
-                    DrawLine                                                ; poke 163,BKCOLOUR : line CENTERX,CENTERY, peek(MINSX + MM),peek(MINSY + MM)
+                    DrawLine                                                ; poke 163,DIALCOLOUR : line CENTERX,CENTERY, peek(MINSX + MM),peek(MINSY + MM)
 
                     POP                     
                     RET                                                     ; return
@@ -662,7 +693,7 @@ _eraseHourHand      PUSH
                     ADDW                    _MMd12
                     PEEK                    
                     STW                     drawLine_y2
-                    DrawLine                                                ; poke 163,BKCOLOUR: line CENTERX,CENTERY, peek(HOURX + Hx5 + MMd12),peek(HOURY + Hx5 + MMd12)
+                    DrawLine                                                ; poke 163,DIALCOLOUR: line CENTERX,CENTERY, peek(HOURX + Hx5 + MMd12),peek(HOURY + Hx5 + MMd12)
 
                     POP                     
                     RET                                                     ; return
@@ -699,8 +730,12 @@ _jitterCircle       PUSH
                     LDI                     1
                     STW                     0xb2                            ; for oxx=ox-1 to ox+1
 
-_next_0x0771        LDW                     _oy
+_next_0x07aa        LDW                     _oy
                     SUBI                    1
+                    STW                     0xde
+                    LDWI                    _page_0x08a0
+                    CALL                    giga_vAC
+_page_0x08a0        LDW                     0xde
                     STW                     _oyy
                     LDW                     _oy
                     ADDI                    1
@@ -708,31 +743,26 @@ _next_0x0771        LDW                     _oy
                     LDI                     1
                     STW                     0xb6                            ; for oyy=oy-1 to oy+1
 
-_next_0x0789        LDWI                    163
-                    STW                     register0
-                    LDW                     _cc
-                    POKE                    register0                       ; poke 163,cc
+_next_0x07c2        LDW                     _cc
+                    ST                      163                             ; poke 163,cc
 
                     LDW                     _oxx
                     STW                     drawCircle_cx
                     LDW                     _oyy
+                    ADDI                    8
                     STW                     drawCircle_cy
                     LDW                     _cr
                     STW                     drawCircle_r
                     DrawCircle                                              ; circle oxx, oyy, cr
 
-                    ForNextLoopStepUp       _oyy _next_0x0789 0xb4 0xb6     ; next oyy
+                    ForNextLoopStepUp       _oyy _next_0x07c2 0xb4 0xb6     ; next oyy
 
-                    STW                     0xde
-                    LDWI                    _page_0x08a0
-                    CALL                    giga_vAC
-_page_0x08a0        LDW                     0xde
-                    ForNextLoopStepUp       _oxx _next_0x0771 0xb0 0xb2     ; next oxx
+                    ForNextLoopStepUp       _oxx _next_0x07aa 0xb0 0xb2     ; next oxx
 
                     POP                     
                     RET                                                     ; return
 
-_end_0x07c5         BRA                     _end_0x07c5                     ; END
+_end_0x07fb         BRA                     _end_0x07fb                     ; END
 
 
 
@@ -754,34 +784,36 @@ divide16bit         EQU     0x7aa0
 resetVideoTable     EQU     0x79c7
 initClearFuncs      EQU     0x7dd6
 clearVertBlinds     EQU     0x7ca0
-clearCursorRow      EQU     0x75a0
-drawLine            EQU     0x77a0
-drawLineExt         EQU     0x74a0
-drawLineLoop        EQU     0x73a0
-drawLineLoadXY      EQU     0x72a0
-drawCircle          EQU     0x76a0
-drawCircleExt1      EQU     0x71a0
-drawCircleExt2      EQU     0x72cb
+clearCursorRow      EQU     0x74a0
+drawHLine           EQU     0x73a0
+drawLine            EQU     0x76a0
+drawLineExt         EQU     0x72a0
+drawLineLoop        EQU     0x71a0
+drawLineLoadXY      EQU     0x70a0
+drawCircle          EQU     0x75a0
+drawCircleExt1      EQU     0x6fa0
+drawCircleExt2      EQU     0x70cb
+drawCircleF         EQU     0x77a0
 input               EQU     0x7ba0
-inputExt1           EQU     0x70a0
-inputExt2           EQU     0x74d9
-inputCursor         EQU     0x73da
-inputKeys           EQU     0x6fa0
+inputExt1           EQU     0x6ea0
+inputExt2           EQU     0x72d9
+inputCursor         EQU     0x71da
+inputKeys           EQU     0x6da0
 inputIntVar         EQU     0x79e6
-inputStrVar         EQU     0x75e9
-inputReturn         EQU     0x6ea0
-inputDelete         EQU     0x6da0
-inputPrint          EQU     0x6ed9
-inputNewline        EQU     0x76ea
-printInit           EQU     0x6ca0
+inputStrVar         EQU     0x74e9
+inputReturn         EQU     0x6ca0
+inputDelete         EQU     0x6ba0
+inputPrint          EQU     0x6cd9
+inputNewline        EQU     0x75ea
+printInit           EQU     0x6aa0
 printText           EQU     0x7cda
-printDigit          EQU     0x6cbb
+printDigit          EQU     0x6abb
 printInt16          EQU     0x78a0
 printChr            EQU     0x7cf3
-printChar           EQU     0x6ba0
+printChar           EQU     0x69a0
 atTextCursor        EQU     0x7bc7
-newLineScroll       EQU     0x6aa0
-integerStr          EQU     0x69a0
+newLineScroll       EQU     0x68a0
+integerStr          EQU     0x67a0
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -1090,6 +1122,25 @@ drawCircle_ch1      EQU     register12
 drawCircle_ch2      EQU     register13
 drawCircle_ch3      EQU     register14
 
+drawCircleF_x1      EQU     register0
+drawCircleF_y1      EQU     register1
+drawCircleF_x2      EQU     register2
+drawCircleF_cx      EQU     register15
+drawCircleF_cy      EQU     register10
+drawCircleF_r       EQU     register11
+drawCircleF_v       EQU     register8
+drawCircleF_w       EQU     register9
+
+drawRect_x1         EQU     register7
+drawRect_y1         EQU     register10
+drawRect_x2         EQU     register11
+drawRect_y2         EQU     register15
+
+drawRectF_x1        EQU     register0
+drawRectF_y1        EQU     register1
+drawRectF_x2        EQU     register2
+drawRectF_y2        EQU     register7
+
     
 drawLine            PUSH                        ; matches drawLineLoop's POP
                     LDI     1
@@ -1354,6 +1405,102 @@ drawCircleExt2      LDW     drawCircle_cx
                     LD      fgbgColour + 1
                     POKE    drawCircle_a
                     
+                    POP
+                    RET
+
+
+
+drawHLine           PUSH
+                    LDW     drawHLine_x2
+                    SUBW    drawHLine_x1
+                    BGE     drawHL_cont
+                    LDW     drawHLine_x2
+                    STW     drawLine_tmp
+                    LDW     drawHLine_x1
+                    STW     drawHLine_x2
+                    LDW     drawLine_tmp
+                    STW     drawHLine_x1        ; if x2 < x1 then swap x2 with x1
+                    
+drawHL_cont         LD      drawHLine_x1
+                    ST      giga_sysArg4
+                    LD      drawHLine_y1
+                    ADDI    8
+                    ST      giga_sysArg4 + 1
+                    LDW     drawHLine_x2
+                    SUBW    drawHLine_x1
+                    SUBI    4
+                    BLT     drawHL_loop1
+                    
+                    LD      fgbgColour + 1
+                    ST      giga_sysArg0
+                    ST      giga_sysArg0 + 1
+                    ST      giga_sysArg2
+                    ST      giga_sysArg2 + 1    ; 4 pixels of fg colour
+                    LDWI    SYS_Draw4_30        ; setup 4 pixel SYS routine
+                    STW     giga_sysFn
+                    
+                    LDW     drawHLine_x2        
+                    SUBI    3
+                    STW     drawHLine_x4        ; 4 pixel chunks limit
+
+drawHL_loop0        SYS     0xFF                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+                    CALL    realTimeProcAddr
+                    LD      giga_sysArg4
+                    ADDI    4
+                    ST      giga_sysArg4
+                    SUBW    drawHLine_x4
+                    BLT     drawHL_loop0        ; all 4 pixel chunks
+                    
+drawHL_loop1        LD      fgbgColour + 1
+                    POKE    giga_sysArg4
+                    INC     giga_sysArg4
+                    LD      giga_sysArg4
+                    SUBW    drawHLine_x2
+                    BLE     drawHL_loop1        ; remaining pixels
+                    POP
+                    RET
+
+
+drawCircleF         PUSH
+                    LDI     0
+                    STW     drawCircleF_v
+                    STW     drawCircleF_w
+                    
+drawCF_wloop        LDW     drawCircleF_cx
+                    SUBW    drawCircleF_r
+                    STW     drawCircleF_x1
+                    LDW     drawCircleF_cx
+                    ADDW    drawCircleF_r
+                    STW     drawCircleF_x2
+                    LDW     drawCircleF_cy
+                    SUBW    drawCircleF_v
+                    STW     drawCircleF_y1
+                    LDWI    drawHLine
+                    CALL    giga_vAC
+                    LDW     drawCircleF_cy
+                    ADDW    drawCircleF_v
+                    STW     drawCircleF_y1
+                    LDWI    drawHLine
+                    CALL    giga_vAC
+                    
+                    LDW     drawCircleF_w
+                    ADDW    drawCircleF_v
+                    ADDW    drawCircleF_v
+                    ADDI    1
+                    STW     drawCircleF_w
+                    INC     drawCircleF_v
+                    
+drawCF_rloop        LDW     drawCircleF_w
+                    BLT     drawCF_wloop
+                    LDW     drawCircleF_w
+                    SUBW    drawCircleF_r
+                    SUBW    drawCircleF_r
+                    ADDI    1
+                    STW     drawCircleF_w
+                    LDW     drawCircleF_r
+                    SUBI    1
+                    STW     drawCircleF_r
+                    BGT     drawCF_rloop
                     POP
                     RET
 

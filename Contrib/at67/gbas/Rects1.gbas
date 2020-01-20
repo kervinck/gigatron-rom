@@ -1,0 +1,10 @@
+cls : mode 2
+
+def byte p(&h600) = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255
+
+loop: 
+    poke 163, rnd(0) AND &h3F
+    rectf rnd(160), rnd(120), rnd(160), rnd(120)
+    goto &loop
+
+end
