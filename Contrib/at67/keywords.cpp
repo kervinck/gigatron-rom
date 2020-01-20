@@ -1605,7 +1605,8 @@ namespace Keywords
 
         // Loop start
         int16_t loopStart = 0;
-        std::string startToken = codeLine._code.substr(equals + 1, to - (equals + 1));
+        int toOffset = (farJump) ? 0 : -1;
+        std::string startToken = codeLine._code.substr(equals + 1, to - (equals + 1) + toOffset);
         Expression::stripWhitespace(startToken);
         expressionType = Compiler::isExpression(startToken, varIndex, constIndex, strIndex);
         if((expressionType & Expression::HasIntVars)  ||  (expressionType & Expression::HasKeywords)  ||  (expressionType & Expression::HasFunctions)) optimise = false;
