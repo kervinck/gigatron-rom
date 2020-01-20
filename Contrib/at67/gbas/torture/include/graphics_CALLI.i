@@ -53,6 +53,18 @@ drawCircleF_r       EQU     register11
 drawCircleF_v       EQU     register8
 drawCircleF_w       EQU     register9
 
+drawRect_x1         EQU     register7
+drawRect_y1         EQU     register10
+drawRect_x2         EQU     register11
+drawRect_y2         EQU     register15
+
+drawRectF_x1        EQU     register0
+drawRectF_y1        EQU     register1
+drawRectF_x2        EQU     register2
+drawRectF_y2        EQU     register7
+
+drawPoly_addr       EQU     register15
+
     
 %SUB                scanlineMode
 scanlineMode        LDW     giga_romType
@@ -88,7 +100,17 @@ waitVB_start        LD      giga_frameCount
 
 %SUB                drawHLine
 drawHLine           PUSH
-                    LD      drawHLine_x1
+                    LDW     drawHLine_x2
+                    SUBW    drawHLine_x1
+                    BGE     drawHL_cont
+                    LDW     drawHLine_x2
+                    STW     drawLine_tmp
+                    LDW     drawHLine_x1
+                    STW     drawHLine_x2
+                    LDW     drawLine_tmp
+                    STW     drawHLine_x1        ; if x2 < x1 then swap x2 with x1
+                    
+drawHL_cont         LD      drawHLine_x1
                     ST      giga_sysArg4
                     LD      drawHLine_y1
                     ADDI    8
@@ -130,7 +152,17 @@ drawHL_loop1        LD      fgbgColour + 1
 
 %SUB                drawVLine
 drawVLine           PUSH
-                    LD      drawVLine_x1
+                    LDW     drawVLine_y2
+                    SUBW    drawVLine_y1
+                    BGE     drawVL_cont
+                    LDW     drawVLine_y2
+                    STW     drawLine_tmp
+                    LDW     drawVLine_y1
+                    STW     drawVLine_y2
+                    LDW     drawLine_tmp
+                    STW     drawVLine_y1        ; if y2 < y1 then swap y2 with y1
+                    
+drawVL_cont         LD      drawVLine_x1
                     ST      giga_sysArg4
                     LD      drawVLine_y1
                     ADDI    8
@@ -629,6 +661,89 @@ drawCF_rloop        LDW     drawCircleF_w
                     STW     drawCircleF_r
                     BGT     drawCF_rloop
                     POP
+                    RET
+%ENDS
+
+%SUB                drawRect
+drawRect            PUSH
+                    LDW     drawRect_x1
+                    STW     drawHLine_x1
+                    LDW     drawRect_y1
+                    STW     drawHLine_y1
+                    LDW     drawRect_x2
+                    STW     drawHLine_x2
+                    CALLI   drawHLine
+                    LDW     drawRect_y2
+                    STW     drawHLine_y1
+                    CALLI   drawHLine
+
+                    LDW     drawRect_x1
+                    STW     drawVLine_x1
+                    LDW     drawRect_y1
+                    STW     drawVLine_y1
+                    LDW     drawRect_y2
+                    STW     drawVLine_y2
+                    CALLI   drawVLine
+                    LDW     drawRect_x2
+                    STW     drawVLine_x1
+                    LDW     drawRect_y1
+                    STW     drawVLine_y1
+                    LDW     drawRect_y2
+                    STW     drawVLine_y2
+                    CALLI   drawVLine
+
+                    POP
+                    RET
+%ENDS
+
+%SUB                drawRectF
+drawRectF           PUSH
+                    LDW     drawRectF_y2
+                    SUBW    drawRectF_y1
+                    BGE     drawRF_loop
+                    LDW     drawRectF_y2
+                    STW     drawLine_tmp
+                    LDW     drawRectF_y1
+                    STW     drawRectF_y2
+                    LDW     drawLine_tmp
+                    STW     drawRectF_y1        ; if y2 < y1 then swap y2 with y1
+                    
+drawRF_loop         LDW     drawRectF_y1
+                    STW     drawHLine_y1
+                    CALLI   drawHLine
+                    INC     drawRectF_y1
+                    LDW     drawRectF_y1
+                    SUBW    drawRectF_y2
+                    BLT     drawRF_loop
+
+                    POP
+                    RET
+%ENDS
+
+%SUB                drawPoly
+drawPoly            PUSH
+
+drawP_loop          LD      cursorXY
+                    STW     drawLine_x1
+                    LD      cursorXY + 1
+                    STW     drawLine_y1
+                    LDW     drawPoly_addr
+                    PEEK
+                    STW     drawLine_x2
+                    SUBI    255
+                    BEQ     drawP_exit
+                    LDW     drawLine_x2
+                    ST      cursorXY
+                    INC     drawPoly_addr
+                    LDW     drawPoly_addr
+                    PEEK
+                    STW     drawLine_y2
+                    ST      cursorXY + 1
+                    CALLI   drawLine
+                    INC     drawPoly_addr
+                    BRA     drawP_loop
+                    
+drawP_exit          POP
                     RET
 %ENDS
 

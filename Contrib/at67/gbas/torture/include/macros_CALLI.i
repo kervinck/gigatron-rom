@@ -307,6 +307,18 @@ _label_ CALLI   _label
         CALLI   drawCircleF
 %ENDM
 
+%MACRO  DrawRect
+        CALLI   drawRect
+%ENDM
+
+%MACRO  DrawRectF
+        CALLI   drawRectF
+%ENDM
+
+%MACRO  DrawPoly
+        CALLI   drawPoly
+%ENDM
+
 %MACRO  AtLineCursor
         CALLI   atLineCursor
 %ENDM

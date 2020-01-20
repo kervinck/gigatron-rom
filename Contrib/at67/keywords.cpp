@@ -95,6 +95,9 @@ namespace Keywords
         _keywords["VLINE"  ] = {"VLINE",   keywordVLINE,   Compiler::SingleStatementParsed};
         _keywords["CIRCLE" ] = {"CIRCLE",  keywordCIRCLE,  Compiler::SingleStatementParsed};
         _keywords["CIRCLEF"] = {"CIRCLEF", keywordCIRCLEF, Compiler::SingleStatementParsed};
+        _keywords["RECT"   ] = {"RECT",    keywordRECT,    Compiler::SingleStatementParsed};
+        _keywords["RECTF"  ] = {"RECTF",   keywordRECTF,   Compiler::SingleStatementParsed};
+        _keywords["POLY"   ] = {"POLY",    keywordPOLY,    Compiler::SingleStatementParsed};
         _keywords["SCROLL" ] = {"SCROLL",  keywordSCROLL,  Compiler::SingleStatementParsed};
         _keywords["POKE"   ] = {"POKE",    keywordPOKE,    Compiler::SingleStatementParsed};
         _keywords["DOKE"   ] = {"DOKE",    keywordDOKE,    Compiler::SingleStatementParsed};
@@ -1647,6 +1650,7 @@ namespace Keywords
             {
                 Expression::parse(stepToken, codeLineIndex, stepNumeric);
                 loopStep = int16_t(std::lround(stepNumeric._value));
+                if(abs(loopStep) > 1) optimise = false;
             }
             else
             {
@@ -2662,7 +2666,7 @@ namespace Keywords
         UNREFERENCED_PARAMETER(tokenIndex);
 
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
-        if(tokens.size() !=2  &&  tokens.size() != 4)
+        if(tokens.size() != 2  &&  tokens.size() != 4)
         {
             fprintf(stderr, "Compiler::keywordLINE() : Syntax error, 'LINE X,Y' or 'LINE X1,Y1,X2,Y2', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
@@ -2715,7 +2719,7 @@ namespace Keywords
         UNREFERENCED_PARAMETER(tokenIndex);
 
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
-        if(tokens.size() !=3)
+        if(tokens.size() != 3)
         {
             fprintf(stderr, "Compiler::keywordHLINE() : Syntax error, 'HLINE X1,Y,X2', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
@@ -2746,7 +2750,7 @@ namespace Keywords
         UNREFERENCED_PARAMETER(tokenIndex);
 
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
-        if(tokens.size() !=3)
+        if(tokens.size() != 3)
         {
             fprintf(stderr, "Compiler::keywordVLINE() : Syntax error, 'VLINE X1,Y,X2', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
@@ -2777,7 +2781,7 @@ namespace Keywords
         UNREFERENCED_PARAMETER(tokenIndex);
 
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
-        if(tokens.size() !=3)
+        if(tokens.size() != 3)
         {
             fprintf(stderr, "Compiler::keywordCIRCLE() : Syntax error, 'CIRCLE X,Y,R', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
@@ -2808,7 +2812,7 @@ namespace Keywords
         UNREFERENCED_PARAMETER(tokenIndex);
 
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
-        if(tokens.size() !=3)
+        if(tokens.size() != 3)
         {
             fprintf(stderr, "Compiler::keywordCIRCLEF() : Syntax error, 'CIRCLEF X,Y,R', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
@@ -2829,6 +2833,90 @@ namespace Keywords
         }
 
         Compiler::emitVcpuAsm("%DrawCircleF", "", false, codeLineIndex);
+
+        return true;
+    }
+
+    bool keywordRECT(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        UNREFERENCED_PARAMETER(result);
+        UNREFERENCED_PARAMETER(tokenIndex);
+
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
+        if(tokens.size() != 4)
+        {
+            fprintf(stderr, "Compiler::keywordRECT() : Syntax error, 'RECT X1,Y1,X2,Y2', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        std::vector<Expression::Numeric> params = {Expression::Numeric(), Expression::Numeric(), Expression::Numeric(), Expression::Numeric()};
+        for(int i=0; i<tokens.size(); i++)
+        {
+            parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
+            switch(i)
+            {
+                case 0: Compiler::emitVcpuAsm("STW", "drawRect_x1", false, codeLineIndex); break;
+                case 1: Compiler::emitVcpuAsm("STW", "drawRect_y1", false, codeLineIndex); break;
+                case 2: Compiler::emitVcpuAsm("STW", "drawRect_x2", false, codeLineIndex); break;
+                case 3: Compiler::emitVcpuAsm("STW", "drawRect_y2", false, codeLineIndex); break;
+
+                default: break;
+            }
+        }
+
+        Compiler::emitVcpuAsm("%DrawRect", "", false, codeLineIndex);
+
+        return true;
+    }
+
+    bool keywordRECTF(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        UNREFERENCED_PARAMETER(result);
+        UNREFERENCED_PARAMETER(tokenIndex);
+
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
+        if(tokens.size() != 4)
+        {
+            fprintf(stderr, "Compiler::keywordRECTF() : Syntax error, 'RECTF X1,Y1,X2,Y2', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        std::vector<Expression::Numeric> params = {Expression::Numeric(), Expression::Numeric(), Expression::Numeric(), Expression::Numeric()};
+        for(int i=0; i<tokens.size(); i++)
+        {
+            parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
+            switch(i)
+            {
+                case 0: Compiler::emitVcpuAsm("STW", "drawRectF_x1", false, codeLineIndex); break;
+                case 1: Compiler::emitVcpuAsm("STW", "drawRectF_y1", false, codeLineIndex); break;
+                case 2: Compiler::emitVcpuAsm("STW", "drawRectF_x2", false, codeLineIndex); break;
+                case 3: Compiler::emitVcpuAsm("STW", "drawRectF_y2", false, codeLineIndex); break;
+
+                default: break;
+            }
+        }
+
+        Compiler::emitVcpuAsm("%DrawRectF", "", false, codeLineIndex);
+
+        return true;
+    }
+
+    bool keywordPOLY(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        UNREFERENCED_PARAMETER(result);
+        UNREFERENCED_PARAMETER(tokenIndex);
+
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
+        if(tokens.size() != 1)
+        {
+            fprintf(stderr, "Compiler::keywordPOLY() : Syntax error, 'POLY ADDR', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        Expression::Numeric param;
+        parseExpression(codeLine, codeLineIndex, tokens[0], param);
+        Compiler::emitVcpuAsm("STW", "drawPoly_addr", false, codeLineIndex);
+        Compiler::emitVcpuAsm("%DrawPoly", "", false, codeLineIndex);
 
         return true;
     }

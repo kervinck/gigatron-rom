@@ -36,13 +36,19 @@ textWorkArea        EQU                     0x7fa0
 ; Labels
 _entryPoint_        EQU                     0x0200
 _loop               EQU                     0x024e
-_end_0x02a5         EQU                     0x0285
+_next_0x0295        EQU                     0x0289
+_end_0x02f2         EQU                     0x02de
 
 ; Variables
+_ox                 EQU                     0x0030
+_oy                 EQU                     0x0032
+_i                  EQU                     0x0034
 
 ; Strings
 
 ; Define Bytes
+def_bytes_0x0600    EQU                     0x0600
+def_bytes_0x0600    DB                      0 0 0 0 0 0 0 0 0 0 255 
 
 ; Define Words
 
@@ -68,23 +74,61 @@ _loop               Rand
                     ANDI                    63
                     ST                      163                             ; poke 163, rnd(0) AND &h3F
 
-                    LDI                     0x64
+                    LDI                     0xa0
                     RandMod                 
-                    ADDI                    30
-                    STW                     drawCircleF_cx
-                    LDI                     0x3c
+                    STW                     _ox
+                    LDI                     0x78
                     RandMod                 
-                    ADDI                    30
-                    STW                     drawCircleF_cy
-                    LDI                     0x1e
-                    RandMod                 
-                    ADDI                    1
-                    STW                     drawCircleF_r
-                    DrawCircleF                                             ; circlef rnd(100) + (- 50 + 80), rnd(60) + (- 30 + 60), rnd(30) + 1
+                    STW                     _oy                             ; ox = rnd(160) : oy = rnd(120)
 
-                    BRA                     _loop                           ; goto &loop
+                    LDW                     _ox
+                    ST                      cursorXY
+                    LDW                     _oy
+                    ST                      cursorXY + 1
+                    LDWI                    atTextCursor
+                    CALL                    giga_vAC                        ; at ox, oy
 
-_end_0x02a5         BRA                     _end_0x02a5                     ; end
+                    LDWI                    0
+                    STW                     _i
+                    LDWI                    6
+                    STW                     0xb0
+                    LDWI                    2
+                    STW                     0xb2                            ; for i=0 to POLYSIZE*2 - 4 step 2
+
+_next_0x0295        LDWI                    1536
+                    ADDW                    _i
+                    STW                     0xc0
+                    LDI                     0xa0
+                    RandMod                 
+                    POKE                    0xc0                            ; poke POLYADDR + 0 + i, rnd(160)
+
+                    LDWI                    1537
+                    ADDW                    _i
+                    STW                     0xc0
+                    LDI                     0x78
+                    RandMod                 
+                    POKE                    0xc0                            ; poke POLYADDR + 1 + i, rnd(120)
+
+                    ForNextLoopStepUp       _i _next_0x0295 0xb0 0xb2       ; next i
+
+                    LDWI                    1544
+                    STW                     register0
+                    LDW                     _ox
+                    POKE                    register0                       ; poke POLYADDR + 8, ox
+
+                    LDWI                    1545
+                    STW                     register0
+                    LDW                     _oy
+                    POKE                    register0                       ; poke POLYADDR + 9, oy
+
+                    LDWI                    1536
+                    STW                     drawPoly_addr
+                    DrawPoly                                                ; poly POLYADDR
+
+                    LDWI                    _loop
+                    CALL                    giga_vAC                        ; goto loop
+
+_end_0x02f2         BRA                     _end_0x02f2                     ; end
 
 
 
@@ -105,11 +149,15 @@ divide16bit         EQU     0x7aa0
 rand16bit           EQU     0x7ef3
 randMod16bit        EQU     0x7ca0
 scanlineMode        EQU     0x7edf
-resetVideoTable     EQU     0x7cb3
+resetVideoTable     EQU     0x7ce0
 initClearFuncs      EQU     0x7da0
 clearVertBlinds     EQU     0x7dc3
-drawHLine           EQU     0x79a0
-drawCircleF         EQU     0x7ba0
+drawLine            EQU     0x79a0
+drawLineExt         EQU     0x78a0
+drawLineLoop        EQU     0x77a0
+drawLineLoadXY      EQU     0x7bcb
+drawPoly            EQU     0x7ba0
+atTextCursor        EQU     0x7cb3
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -327,6 +375,18 @@ drawCircleF_r       EQU     register11
 drawCircleF_v       EQU     register8
 drawCircleF_w       EQU     register9
 
+drawRect_x1         EQU     register7
+drawRect_y1         EQU     register10
+drawRect_x2         EQU     register11
+drawRect_y2         EQU     register15
+
+drawRectF_x1        EQU     register0
+drawRectF_y1        EQU     register1
+drawRectF_x2        EQU     register2
+drawRectF_y2        EQU     register7
+
+drawPoly_addr       EQU     register15
+
     
 scanlineMode        LDW     giga_romType
                     ANDI    0xF8
@@ -434,87 +494,214 @@ clearVB_loop        CALL    realTimeProcAddr
 
 
 
-drawHLine           PUSH
-                    LD      drawHLine_x1
-                    ST      giga_sysArg4
-                    LD      drawHLine_y1
-                    ADDI    8
-                    ST      giga_sysArg4 + 1
-                    LDW     drawHLine_x2
-                    SUBW    drawHLine_x1
-                    SUBI    4
-                    BLT     drawHL_loop1
-                    
-                    LD      fgbgColour + 1
-                    ST      giga_sysArg0
-                    ST      giga_sysArg0 + 1
-                    ST      giga_sysArg2
-                    ST      giga_sysArg2 + 1    ; 4 pixels of fg colour
-                    LDWI    SYS_Draw4_30        ; setup 4 pixel SYS routine
-                    STW     giga_sysFn
-                    
-                    LDW     drawHLine_x2        
-                    SUBI    3
-                    STW     drawHLine_x4        ; 4 pixel chunks limit
 
-drawHL_loop0        SYS     0xFF                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
-                    CALL    realTimeProcAddr
-                    LD      giga_sysArg4
-                    ADDI    4
-                    ST      giga_sysArg4
-                    SUBW    drawHLine_x4
-                    BLT     drawHL_loop0        ; all 4 pixel chunks
+
+drawLine            PUSH                        ; matches drawLineLoop's POP
+                    LDI     1
+                    STW     drawLine_dx1
+                    STW     drawLine_dx2
+                    STW     drawLine_dy1
+                    LDI     0
+                    STW     drawLine_dy2                
+    
+                    LDWI    0x8000
+                    STW     drawLine_tmp
                     
-drawHL_loop1        LD      fgbgColour + 1
-                    POKE    giga_sysArg4
-                    INC     giga_sysArg4
-                    LD      giga_sysArg4
-                    SUBW    drawHLine_x2
-                    BLE     drawHL_loop1        ; remaining pixels
-                    POP
+                    LDW     drawLine_x2         ; sx = x2 - x1
+                    SUBW    drawLine_x1
+                    STW     drawLine_sx
+                    ANDW    drawLine_tmp        
+                    BEQ     drawL_dy
+                    LDWI    -1
+                    STW     drawLine_dx1        
+                    STW     drawLine_dx2        ; dx1 = dx2 = (sx & 0x8000) ? -1 : 1
+                    LDI     0                   ; sx = (sx & 0x8000) ? 0 - sx : sx
+                    SUBW    drawLine_sx
+                    STW     drawLine_sx                
+                    
+drawL_dy            LDW     drawLine_y2
+                    SUBW    drawLine_y1
+                    STW     drawLine_sy
+                    STW     drawLine_h          ; h = sy
+                    ANDW    drawLine_tmp
+                    BEQ     drawL_ext
+                    
+                    LDWI    -1
+                    STW     drawLine_dy1        ; dy1 = (sy & 0x8000) ? -1 : 1
+                    LDI     0                   
+                    SUBW    drawLine_sy
+                    STW     drawLine_sy         ; sy = (sy & 0x8000) ? 0 - sy : sy
+                    SUBW    drawLine_sx
+                    BLE     drawL_ext           
+                    LDW     drawLine_dy1
+                    STW     drawLine_dy2        ; if(sx < sy) dy2 = -1
+    
+drawL_ext           LDWI    drawLineLoadXY
+                    CALL    giga_vAC
+                    LDWI    drawLineExt
+                    CALL    giga_vAC
+
+
+
+drawLineExt         LDW     drawLine_sy
+                    SUBW    drawLine_sx
+                    BLE     drawL_num
+                    LDI     0
+                    STW     drawLine_dx2        ; if(sx < sy) dx2 = 0
+                    LDW     drawLine_sy       
+                    STW     drawLine_tmp
+                    LDW     drawLine_sx
+                    STW     drawLine_sy
+                    LDW     drawLine_tmp
+                    STW     drawLine_sx         ; swap sx with sy
+                    LDW     drawLine_h
+                    BLE     drawL_num
+                    LDI     1
+                    STW     drawLine_dy2        ; if(h > 0) dy2 = 1
+    
+drawL_num           LDWI    SYS_LSRW1_48
+                    STW     giga_sysFn          
+                    LDW     drawLine_sx
+                    SYS     0xF6                ; 0xF6 = 270-max(14,48/2)
+                    ADDI    1
+                    STW     drawLine_num        ; numerator = sx>>1
+                    STW     drawLine_count      ; for(count=sx>>1; counti>=0; --i)
+                    
+                    LDWI    drawLineLoadDXY
+                    CALL    giga_vAC
+                    LDWI    drawLineLoop
+                    CALL    giga_vAC
+
+
+drawLineLoop        LD      fgbgColour + 1
+                    POKE    drawLine_xy1        ; plot start pixel
+                    POKE    drawLine_xy2        ; plot end pixel, (meet in middle)
+                    
+                    LDW     drawLine_num        ; numerator += sy
+                    ADDW    drawLine_sy
+                    STW     drawLine_num
+                    SUBW    drawLine_sx
+                    BLE     drawL_flip          ; if(numerator <= sx) goto flip
+                    STW     drawLine_num        ; numerator -= sx
+                    
+                    LDW     drawLine_xy1
+                    ADDW    drawLine_dxy1
+                    STW     drawLine_xy1        ; xy1 += dxy1
+                    
+                    LDW     drawLine_xy2
+                    SUBW    drawLine_dxy1
+                    STW     drawLine_xy2        ; xy2 -= dxy1
+                    BRA     drawL_count
+                    
+drawL_flip          LDW     drawLine_xy1        
+                    ADDW    drawLine_dxy2
+                    STW     drawLine_xy1        ; xy1 += dxy2
+                    
+                    LDW     drawLine_xy2        
+                    SUBW    drawLine_dxy2
+                    STW     drawLine_xy2        ; xy2 -= dxy2
+                    
+drawL_count         CALL    realTimeProcAddr
+                    LDW     drawLine_count
+                    SUBI    0x01
+                    STW     drawLine_count
+                    BGT     drawLineLoop
+                    POP                         ; matches drawLine's PUSH
                     RET
 
 
-drawCircleF         PUSH
+drawLineLoadXY      LD      drawLine_x1
+                    ST      drawLine_xy1
+                    LD      drawLine_y1
+                    ADDI    8
+                    ST      drawLine_xy1 + 1    ; xy1 = x1 | ((y1+8)<<8)
+                    
+                    LD      drawLine_x2
+                    ST      drawLine_xy2
+                    LD      drawLine_y2
+                    ADDI    8
+                    ST      drawLine_xy2 + 1    ; xy2 = x2 | ((y2+8)<<8)
+                    RET
+                    
+drawLineLoadDXY     LDWI    SYS_LSLW8_24
+                    STW     giga_sysFn          
+                    LDW     drawLine_dy1
+                    SYS     0x00                ; LSL 8, 0x00 = 270-max(14,24/2)
+                    ADDW    drawLine_dx1
+                    STW     drawLine_dxy1       ; dxy1 = dx1 + (dy1<<8)
+    
+                    LDW     drawLine_dy2
+                    SYS     0x00                ; LSL 8, 0x00 = 270-max(14,24/2)
+                    ADDW    drawLine_dx2
+                    STW     drawLine_dxy2       ; dxy2 = dx2 + (dy2<<8)
+                    RET
+
+
+drawPoly            PUSH
+
+drawP_loop          LD      cursorXY
+                    STW     drawLine_x1
+                    LD      cursorXY + 1
+                    STW     drawLine_y1
+                    LDW     drawPoly_addr
+                    PEEK
+                    STW     drawLine_x2
+                    SUBI    255
+                    BEQ     drawP_exit
+                    LDW     drawLine_x2
+                    ST      cursorXY
+                    INC     drawPoly_addr
+                    LDW     drawPoly_addr
+                    PEEK
+                    STW     drawLine_y2
+                    ST      cursorXY + 1
+                    LDWI    drawLine
+                    CALL    giga_vAC
+                    INC     drawPoly_addr
+                    BRA     drawP_loop
+                    
+drawP_exit          POP
+                    RET
+
+
+; do *NOT* use register4 to register7 during time slicing if you use realTimeProc
+textStr             EQU     register0
+textNum             EQU     register0
+textBak             EQU     register0
+textLen             EQU     register1
+textOfs             EQU     register2
+textChr             EQU     register3
+textHex             EQU     register8
+textFont            EQU     register9
+textSlice           EQU     register10
+scanLine            EQU     register11
+digitMult           EQU     register12
+digitIndex          EQU     register13
+clearLoop           EQU     register14
+    
+    
+atTextCursor        LD      cursorXY
+                    SUBI    giga_xres
+                    BLT     atTC_skip0
                     LDI     0
-                    STW     drawCircleF_v
-                    STW     drawCircleF_w
+                    ST      cursorXY
                     
-drawCF_wloop        LDW     drawCircleF_cx
-                    SUBW    drawCircleF_r
-                    STW     drawCircleF_x1
-                    LDW     drawCircleF_cx
-                    ADDW    drawCircleF_r
-                    STW     drawCircleF_x2
-                    LDW     drawCircleF_cy
-                    SUBW    drawCircleF_v
-                    STW     drawCircleF_y1
-                    LDWI    drawHLine
-                    CALL    giga_vAC
-                    LDW     drawCircleF_cy
-                    ADDW    drawCircleF_v
-                    STW     drawCircleF_y1
-                    LDWI    drawHLine
-                    CALL    giga_vAC
+atTC_skip0          LD      cursorXY + 1
+                    SUBI    giga_yres
+                    BLT     atTC_skip1
+                    LDI     giga_yres - 1
+                    ST      cursorXY + 1
                     
-                    LDW     drawCircleF_w
-                    ADDW    drawCircleF_v
-                    ADDW    drawCircleF_v
-                    ADDI    1
-                    STW     drawCircleF_w
-                    INC     drawCircleF_v
+atTC_skip1          LD      cursorXY + 1
+                    SUBI    giga_yres - 8
+                    BGE     atTC_skip2
+                    LDWI    0x7FFF
+                    ANDW    miscFlags
+                    STW     miscFlags                       ; reset on bottom row flag
+                    RET
                     
-drawCF_rloop        LDW     drawCircleF_w
-                    BLT     drawCF_wloop
-                    LDW     drawCircleF_w
-                    SUBW    drawCircleF_r
-                    SUBW    drawCircleF_r
-                    ADDI    1
-                    STW     drawCircleF_w
-                    LDW     drawCircleF_r
-                    SUBI    1
-                    STW     drawCircleF_r
-                    BGT     drawCF_rloop
-                    POP
+atTC_skip2          LDWI    0x8000
+                    ORW     miscFlags
+                    STW     miscFlags                       ; set on bottom row flag
                     RET
 
