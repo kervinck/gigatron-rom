@@ -338,6 +338,8 @@ drawRectF_y1        EQU     register1
 drawRectF_x2        EQU     register2
 drawRectF_y2        EQU     register7
 
+drawPoly_addr       EQU     register15
+
     
 scanlineMode        LDW     giga_romType
                     ANDI    0xF8

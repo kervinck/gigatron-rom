@@ -166,6 +166,9 @@ _entryPoint_        InitRealTimeProc
                     LDWI                    0x7eb9
                     Input                                                   ; input "Enter Time ", H,"H:";2;, M,"M:";2;, S,"S:";2;
 
+                    LD                      0x0e
+                    STW                     _B                              ; B=peek(14)
+
                     LDI                     2
                     ST                      cursorXY
                     LDI                     0
@@ -173,9 +176,6 @@ _entryPoint_        InitRealTimeProc
                     LDWI                    atTextCursor
                     CALL                    giga_vAC
                     PrintString             _str_0x7ed3                     ; at 2,0 : print "                          ";
-
-                    LD                      0x0e
-                    STW                     _B                              ; B=peek(14)
 
                     LDW                     _H
                     CALL                    convertEqOpAddr
@@ -1140,6 +1140,8 @@ drawRectF_x1        EQU     register0
 drawRectF_y1        EQU     register1
 drawRectF_x2        EQU     register2
 drawRectF_y2        EQU     register7
+
+drawPoly_addr       EQU     register15
 
     
 drawLine            PUSH                        ; matches drawLineLoop's POP
