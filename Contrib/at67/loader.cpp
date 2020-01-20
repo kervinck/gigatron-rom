@@ -401,7 +401,7 @@ namespace Loader
                             ConfigRom configRom;
 
                             std::string romName = "RomName" + std::to_string(index);
-                            if(getKeyAsString(_configIniReader, sectionString, romName, "", result) == false) break;
+                            if(getKeyAsString(_configIniReader, sectionString, romName, "", result, false) == false) break;
                             configRom._name = result;
 
                             std::string romVer = "RomType" + std::to_string(index);
