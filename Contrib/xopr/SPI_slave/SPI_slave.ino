@@ -18,7 +18,13 @@ volatile char spiByte = 0;
 
 void setup (void)
 {
-  Serial.begin( 9600 );
+  // Note: The Atmega16u2 uses U2X mode, where 300 baud isn't possible
+  // CH340G has a minimum of 2400 baud
+  // https://github.com/arduino/ArduinoCore-avr/issues/265
+  // Fetch updated firmware from: https://github.com/facchinm/Arduino_avrusb_firmware/tree/master/arduino-usbserial
+  // https://www.arduino.cc/en/Hacking/DFUProgramming8U2
+  // see https://forum.arduino.cc/index.php?topic=385567.0
+  Serial.begin( 300 );
 
   // have to send on master in, *slave out*
   pinMode(MISO, OUTPUT);

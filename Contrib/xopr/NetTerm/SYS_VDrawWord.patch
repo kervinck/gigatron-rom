@@ -1,42 +1,26 @@
-From f752729d2e88b6d0a37c4aac8b3b2f1793dd73a3 Mon Sep 17 00:00:00 2001
+From c3a397c28c4c0f2502e038b58bc4d282242f22a9 Mon Sep 17 00:00:00 2001
 From: xopr <xopr@ackspace.nl>
-Date: Tue, 27 Aug 2019 19:59:41 +0200
-Subject: [PATCH] SYS_VDrawWord_134 fixed annotations
+Date: Mon, 20 Jan 2020 13:30:17 +0100
+Subject: [PATCH] Added SYS_VDrawWord function
 
 ---
- Core/dev.py | 220 +++++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 217 insertions(+), 3 deletions(-)
- mode change 100755 => 100644 Core/dev.py
+ Core/dev.py | 219 +++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 216 insertions(+), 3 deletions(-)
 
 diff --git a/Core/dev.py b/Core/dev.py
-old mode 100755
-new mode 100644
-index 76669ed..530052c
+index 76a18881..4c3ef583 100755
 --- a/Core/dev.py
 +++ b/Core/dev.py
-@@ -781,9 +781,14 @@ ld(hi('REENTER'), Y)            #15 slot 0xc8
+@@ -815,9 +815,23 @@ ld(hi('REENTER'),Y)             #15 slot 0xc8
  jmp(Y,'REENTER')                #16
  ld(-20/2)                       #17
  
--ld(hi('REENTER'), Y)            #15 slot 0xcb
+-ld(hi('REENTER'),Y)             #15 slot 0xcb
 -jmp(Y,'REENTER')                #16
 -ld(-20/2)                       #17
 +#-----------------------------------------------------------------------
 +# Extension SYS_VDrawWord_134
 +#-----------------------------------------------------------------------
-+
-+label('SYS_VDrawWord_134')
-+ld(hi('sys_VDrawWord'),Y);C('Draw a 3x5 glyph') #15 slot 0xcb
-+jmp(Y,'sys_VDrawWord')   #16
-+ld([sysArgs+4], X)              #17
- 
- ld(hi('REENTER'), Y)            #15 slot 0xce
- jmp(Y,'REENTER')                #16
-@@ -4931,6 +4936,215 @@ ld(-88/2)                       #85
- 
- align(0x100)
- 
-+label('sys_VDrawWord')
 +
 +# Draw 3x5 glyph from word
 +# sysArgs[0]    Color 0 (background)
@@ -47,6 +31,19 @@ index 76669ed..530052c
 +#               bit 9 is column 2 row 1, ..., bit 0 is column 3 row 5
 +# sysArgs[4:5]  Position on screen
 +
++label('SYS_VDrawWord_134')
++ld(hi('sys_VDrawWord'),Y);C('Draw a 3x5 glyph') #15 slot 0xcb
++jmp(Y,'sys_VDrawWord')   #16
++ld([sysArgs+4], X)              #17
+ 
+ ld(hi('REENTER'),Y)             #15 slot 0xce
+ jmp(Y,'REENTER')                #16
+@@ -5349,6 +5363,205 @@ ld([sysArgs+2])                 # Decrement byte count and loop
+ bne('.slb1')                    #
+ suba(1)                         #
+ 
++# SYS_VDrawWord_134 implementation
++label('sys_VDrawWord')
 +
 +# Line 1
 +ld([sysArgs+5], Y)              #18 store arg5 in Y
@@ -242,12 +239,11 @@ index 76669ed..530052c
 +# Return to interpreter
 +ld(hi('REENTER'), Y)            #129
 +jmp(Y,'REENTER')                #130
-+ld(-134/2)                      #131  
++ld(-134/2)                      #131
 +
-+
+ # XXX Unfinished
+ 
  #-----------------------------------------------------------------------
- #
- #  End of core -- Start of storage area
 -- 
 2.17.1
 
