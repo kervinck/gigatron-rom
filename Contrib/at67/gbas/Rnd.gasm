@@ -1,6 +1,7 @@
 _startAddress_      EQU                     0x0200
 
 ; Internal variables
+serialRawPrev       EQU                     0x0081
 register0           EQU                     0x0082
 register1           EQU                     register0 + 0x02
 register2           EQU                     register0 + 0x04
@@ -25,6 +26,9 @@ frameCountPrev      EQU                     register0 + 0x28
 miscFlags           EQU                     register0 + 0x2A
 highByteMask        EQU                     register0 + 0x2C
 
+; Internal buffers
+textWorkArea        EQU                     0x7fa0
+
 ; Includes
 %include            include/gigatron.i
 %include            include/macros.i
@@ -33,7 +37,8 @@ highByteMask        EQU                     register0 + 0x2C
 _entryPoint_        EQU                     0x0200
 _loop               EQU                     0x0277
 _next_0x0249        EQU                     0x0249
-_end_0x02df         EQU                     0x02bb
+_else_0x0312        EQU                     0x02da
+_end_0x0314         EQU                     0x02dc
 
 ; Variables
 _a_array            EQU                     0x0600
@@ -44,6 +49,8 @@ _r                  EQU                     0x0032
 ; Strings
 
 ; Define Bytes
+
+; Define Words
 
 ; Lookup Tables
 
@@ -80,7 +87,7 @@ _next_0x0249        LDWI                    0x0600
                     LDI                     63
                     POKE                    0xc4                            ; poke (127 - a(i) LSL 8) + i, &h3F
 
-                    ForNextLoopUp           _i _next_0x0249 127             ; next i
+                    ForNextLoopInc          _i _next_0x0249 127             ; next i
 
 _loop               Rand                    
                     ANDI                    127
@@ -114,11 +121,24 @@ _loop               Rand
                     ADDW                    _r
                     STW                     register1
                     LDW                     register0
-                    DOKE                    register1                       ; a(r) = a(r) + 1
+                    DOKE                    register1
+                    LDWI                    0x0600
+                    ADDW                    _r
+                    ADDW                    _r
+                    DEEK                    
+                    SUBI                    120
+                    CALL                    convertEqOpAddr
+                    JumpFalse               _else_0x0312 0
+                    LDWI                    0x0600
+                    ADDW                    _r
+                    ADDW                    _r
+                    STW                     register1
+                    LDI                     119
+                    DOKE                    register1                       ; a(r) = a(r) + 1 : if a(r) = 120 then a(r) = 119
 
-                    BRA                     _loop                           ; goto &loop
+_else_0x0312        BRA                     _loop                           ; goto &loop
 
-_end_0x02df         BRA                     _end_0x02df                     ; end
+_end_0x0314         BRA                     _end_0x0314                     ; end
 
 
 
@@ -216,17 +236,17 @@ convertGt_1         LDI     1
 
 
 ; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
-mathX               EQU     register0
-mathY               EQU     register1
-mathSum             EQU     register2
-mathMask            EQU     register3
-mathRem             EQU     register8
-mathSign            EQU     register9
-mathScratch         EQU     register10
-mathShift           EQU     register11
-mathBase            EQU     register8
-mathPow             EQU     register9
-mathResult          EQU     register10
+mathX               EQU     register8
+mathY               EQU     register9
+mathSum             EQU     register10
+mathMask            EQU     register11
+mathRem             EQU     register12
+mathSign            EQU     register13
+mathScratch         EQU     register14
+mathShift           EQU     register15
+mathBase            EQU     register12
+mathPow             EQU     register13
+mathResult          EQU     register14
 
 
 rand16bit           LDWI    SYS_Random_34

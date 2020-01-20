@@ -1081,11 +1081,9 @@ namespace Compiler
 
     bool isGosubLabel(const std::string& label)
     {
-        std::string lab = label;
-
         for(int i=0; i<_gosubLabels.size(); i++)
         {
-            if(_gosubLabels[i] == Expression::strToUpper(lab)) return true;
+            if(_gosubLabels[i] == label) return true;
         }
 
         return false;

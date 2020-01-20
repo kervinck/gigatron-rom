@@ -27,7 +27,7 @@ miscFlags           EQU                     register0 + 0x2A
 highByteMask        EQU                     register0 + 0x2C
 
 ; Internal buffers
-textWorkArea        EQU                     0x7fa0
+textWorkArea        EQU                     0xff00
 
 ; Includes
 %include            include/gigatron.i
@@ -97,18 +97,18 @@ _oxx                EQU                     0x005a
 _oyy                EQU                     0x005c
 
 ; Strings
-_str_0x7ea0         EQU                     0x7ea0
-_str_0x7ea0         DB                      11 'Enter Time ' 0
-_str_0x7ead         EQU                     0x7ead
-_str_0x7ead         DB                      2 'H:' 0
-_str_0x7eb1         EQU                     0x7eb1
-_str_0x7eb1         DB                      2 'M:' 0
-_str_0x7eb5         EQU                     0x7eb5
-_str_0x7eb5         DB                      2 'S:' 0
-_str_0x7ed3         EQU                     0x7ed3
-_str_0x7ed3         DB                      26 '                          ' 0
-_str_0x7eef         EQU                     0x7eef
-_str_0x7eef         DB                      1 ':' 0
+_str_0xff60         EQU                     0xff60
+_str_0xff60         DB                      11 'Enter Time ' 0
+_str_0xff6d         EQU                     0xff6d
+_str_0xff6d         DB                      2 'H:' 0
+_str_0xff71         EQU                     0xff71
+_str_0xff71         DB                      2 'M:' 0
+_str_0xff75         EQU                     0xff75
+_str_0xff75         DB                      2 'S:' 0
+_str_0xff93         EQU                     0xff93
+_str_0xff93         DB                      26 '                          ' 0
+_str_0xffaf         EQU                     0xffaf
+_str_0xffaf         DB                      1 ':' 0
 
 ; Define Bytes
 def_bytes_0x60a0    EQU                     0x60a0
@@ -127,14 +127,14 @@ def_bytes_0x65a0    DB                      30 30 31 31 33 34 36 37 40 42 45 47 
 ; Define Words
 
 ; Lookup Tables
-_inputVars_0x7ebf   EQU                     0x7ebf
-_inputVars_0x7ebf   DW                      0x0030 0x0032 0x0034 
-_inputStrs_0x7ec5   EQU                     0x7ec5
-_inputStrs_0x7ec5   DW                      0x7ead 0x7eb1 0x7eb5 
-_inputTypes_0x7ecb  EQU                     0x7ecb
-_inputTypes_0x7ecb  DW                      0x0302 0x0302 0x0302 0x0000 
-_input_0x7eb9       EQU                     0x7eb9
-_input_0x7eb9       DW                      0x7ebf 0x7ec5 0x7ecb 
+_inputVars_0xff7f   EQU                     0xff7f
+_inputVars_0xff7f   DW                      0x0030 0x0032 0x0034 
+_inputStrs_0xff85   EQU                     0xff85
+_inputStrs_0xff85   DW                      0xff6d 0xff71 0xff75 
+_inputTypes_0xff8b  EQU                     0xff8b
+_inputTypes_0xff8b  DW                      0x0302 0x0302 0x0302 0x0000 
+_input_0xff79       EQU                     0xff79
+_input_0xff79       DW                      0xff7f 0xff85 0xff8b 
 
 ; Code
 _entryPoint_        InitRealTimeProc        
@@ -162,8 +162,8 @@ _entryPoint_        InitRealTimeProc
                     LDI                     0
                     POKE                    register0                       ; poke &h01F9, 0  'enable video
 
-                    PrintString             _str_0x7ea0
-                    LDWI                    0x7eb9
+                    PrintString             _str_0xff60
+                    LDWI                    0xff79
                     Input                                                   ; input "Enter Time ", H,"H:";2;, M,"M:";2;, S,"S:";2;
 
                     LD                      0x0e
@@ -175,7 +175,7 @@ _entryPoint_        InitRealTimeProc
                     ST                      cursorXY + 1
                     LDWI                    atTextCursor
                     CALL                    giga_vAC
-                    PrintString             _str_0x7ed3                     ; at 2,0 : print "                          ";
+                    PrintString             _str_0xff93                     ; at 2,0 : print "                          ";
 
                     LDW                     _H
                     CALL                    convertEqOpAddr
@@ -382,7 +382,7 @@ _drawDigits         PUSH
                     CALL                    giga_vAC
                     LDW                     mathRem
                     PrintAcInt16            
-                    PrintString             _str_0x7eef
+                    PrintString             _str_0xffaf
                     LDW                     _M
                     STW                     mathX
                     LDI                     10
@@ -398,7 +398,7 @@ _drawDigits         PUSH
                     CALL                    giga_vAC
                     LDW                     mathRem
                     PrintAcInt16            
-                    PrintString             _str_0x7eef
+                    PrintString             _str_0xffaf
                     LDW                     _S
                     STW                     mathX
                     LDI                     10
@@ -587,7 +587,7 @@ _drawDial           PUSH
 _next_0x062c        LDWI                    _drawTicks
                     CALL                    giga_vAC                        ; gosub drawTicks
 
-                    ForNextLoopUp           _i _next_0x062c 59              ; next i
+                    ForNextLoopInc          _i _next_0x062c 59              ; next i
 
                     POP                     
                     RET                                                     ; return
@@ -755,9 +755,9 @@ _next_0x07c2        LDW                     _cc
                     STW                     drawCircle_r
                     DrawCircle                                              ; circle oxx, oyy, cr
 
-                    ForNextLoopStepUp       _oyy _next_0x07c2 0xb4 0xb6     ; next oyy
+                    ForNextLoopVarPos       _oyy _next_0x07c2 0xb4 0xb6     ; next oyy
 
-                    ForNextLoopStepUp       _oxx _next_0x07aa 0xb0 0xb2     ; next oxx
+                    ForNextLoopVarPos       _oxx _next_0x07aa 0xb0 0xb2     ; next oxx
 
                     POP                     
                     RET                                                     ; return
@@ -772,48 +772,48 @@ _end_0x07fb         BRA                     _end_0x07fb                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7ef2
-convertEqOp         EQU     0x7da0
-convertNeOp         EQU     0x7da9
-convertLeOp         EQU     0x7db2
-convertGeOp         EQU     0x7dbb
-convertLtOp         EQU     0x7dc4
-convertGtOp         EQU     0x7dcd
-multiply16bit       EQU     0x79a0
-divide16bit         EQU     0x7aa0
-resetVideoTable     EQU     0x79c7
-initClearFuncs      EQU     0x7dd6
-clearVertBlinds     EQU     0x7ca0
-clearCursorRow      EQU     0x74a0
-drawHLine           EQU     0x73a0
-drawLine            EQU     0x76a0
-drawLineExt         EQU     0x72a0
-drawLineLoop        EQU     0x71a0
-drawLineLoadXY      EQU     0x70a0
-drawCircle          EQU     0x75a0
-drawCircleExt1      EQU     0x6fa0
-drawCircleExt2      EQU     0x70cb
-drawCircleF         EQU     0x77a0
-input               EQU     0x7ba0
-inputExt1           EQU     0x6ea0
-inputExt2           EQU     0x72d9
-inputCursor         EQU     0x71da
-inputKeys           EQU     0x6da0
-inputIntVar         EQU     0x79e6
-inputStrVar         EQU     0x74e9
-inputReturn         EQU     0x6ca0
-inputDelete         EQU     0x6ba0
-inputPrint          EQU     0x6cd9
-inputNewline        EQU     0x75ea
-printInit           EQU     0x6aa0
-printText           EQU     0x7cda
-printDigit          EQU     0x6abb
-printInt16          EQU     0x78a0
-printChr            EQU     0x7cf3
-printChar           EQU     0x69a0
-atTextCursor        EQU     0x7bc7
-newLineScroll       EQU     0x68a0
-integerStr          EQU     0x67a0
+realTimeProc        EQU     0xffb2
+convertEqOp         EQU     0xffbb
+convertNeOp         EQU     0xffc4
+convertLeOp         EQU     0xffcd
+convertGeOp         EQU     0xffd6
+convertLtOp         EQU     0xffdf
+convertGtOp         EQU     0xffe8
+multiply16bit       EQU     0xfeca
+divide16bit         EQU     0xfd00
+resetVideoTable     EQU     0xfc9f
+initClearFuncs      EQU     0xfe00
+clearVertBlinds     EQU     0xfe23
+clearCursorRow      EQU     0xfb00
+drawHLine           EQU     0xfb49
+drawLine            EQU     0xfc00
+drawLineExt         EQU     0xfcbe
+drawLineLoop        EQU     0xfba3
+drawLineLoadXY      EQU     0xfa00
+drawCircle          EQU     0xfc55
+drawCircleExt1      EQU     0xfa2b
+drawCircleExt2      EQU     0xfa79
+drawCircleF         EQU     0xfdae
+input               EQU     0xfe76
+inputExt1           EQU     0xfaab
+inputExt2           EQU     0xfbdd
+inputCursor         EQU     0xf900
+inputKeys           EQU     0xf922
+inputIntVar         EQU     0xf97d
+inputStrVar         EQU     0xf991
+inputReturn         EQU     0xf9a8
+inputDelete         EQU     0xf800
+inputPrint          EQU     0xf9e1
+inputNewline        EQU     0xf846
+printInit           EQU     0xf85b
+printText           EQU     0xfe5d
+printDigit          EQU     0xf876
+printInt16          EQU     0xfd5a
+printChr            EQU     0xfff1
+printChar           EQU     0xf898
+atTextCursor        EQU     0xfe9d
+newLineScroll       EQU     0xf700
+integerStr          EQU     0xf75e
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
