@@ -86,6 +86,9 @@ namespace Cpu
     };
 
 
+    int getNumRoms(void);
+    int getRomIndex(void);
+
     uint8_t* getPtrToROM(int& romSize);
     RomType getRomType(void);
 

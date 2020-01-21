@@ -11,7 +11,7 @@
 #define HLINE_END           200
 #define HPIXELS_START       13
 #define HPIXELS_END         173
-#define VSYNC_TIMING_60     0.0166667
+#define VSYNC_TIMING_60     0.01667222407469 // 59.98Hz
 #define NON_CRITICAL_TIMING (VSYNC_TIMING_60*3.0)
 
 #define CLOCK_FREQ   6250000

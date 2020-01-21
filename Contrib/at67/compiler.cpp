@@ -1327,7 +1327,7 @@ namespace Compiler
             }
             else
             {
-                if(!Memory::giveFreeRAM(Memory::FitAscending, int(str.size()) + 2, 0x0200, _runtimeStart, address))
+                if(!Memory::getFreeRAM(Memory::FitAscending, int(str.size()) + 2, 0x0200, _runtimeStart, address))
                 {
                     fprintf(stderr, "Compiler::getOrCreateString() : Not enough RAM for string %s='%s' of size %d\n", name.c_str(), str.c_str(), int(str.size()));
                     return -1;
@@ -1346,7 +1346,7 @@ namespace Compiler
         else
         {
             // Allocate string
-            if(!Memory::giveFreeRAM(Memory::FitAscending, maxSize + 2, 0x0200, _runtimeStart, address))
+            if(!Memory::getFreeRAM(Memory::FitAscending, maxSize + 2, 0x0200, _runtimeStart, address))
             {
                 fprintf(stderr, "Compiler::getOrCreateString() : Not enough RAM for string %s='%s' of size %d\n", name.c_str(), str.c_str(), maxSize + 2);
                 return -1;
@@ -1986,7 +1986,7 @@ namespace Compiler
 
                 // Source string addresses LUT
                 uint16_t lutAddress;
-                if(!Memory::giveFreeRAM(Memory::FitAscending, int(strAddrs.size()*2), 0x0200, _runtimeStart, lutAddress))
+                if(!Memory::getFreeRAM(Memory::FitAscending, int(strAddrs.size()*2), 0x0200, _runtimeStart, lutAddress))
                 {
                     fprintf(stderr, "Compiler::handleStrings() : Not enough RAM for string concatenation LUT of size %d\n", int(strAddrs.size()));
                     return false;
@@ -2521,7 +2521,7 @@ namespace Compiler
                 // Create numeric labels LUT, (delimited by -1)
                 int lutSize = int(numericLabels.size()) * 2;
                 uint16_t lutAddress;
-                if(!Memory::giveFreeRAM(Memory::FitAscending, lutSize + 2, 0x0200, _runtimeStart, lutAddress))
+                if(!Memory::getFreeRAM(Memory::FitAscending, lutSize + 2, 0x0200, _runtimeStart, lutAddress))
                 {
                     fprintf(stderr, "Compiler::outputLuts() : Not enough RAM for numeric labels LUT of size %d\n", lutSize + 2);
                     return false;
@@ -2538,7 +2538,7 @@ namespace Compiler
                 _output.push_back(dbString + "-1\n");
 
                 // Create numeric addresses LUT
-                if(!Memory::giveFreeRAM(Memory::FitAscending, lutSize, 0x0200, _runtimeStart, lutAddress))
+                if(!Memory::getFreeRAM(Memory::FitAscending, lutSize, 0x0200, _runtimeStart, lutAddress))
                 {
                     fprintf(stderr, "Compiler::outputLuts() : Not enough RAM for numeric addresses LUT of size %d\n", lutSize);
                     return false;
@@ -2765,7 +2765,7 @@ namespace Compiler
                         line += (label.size()) ?  "\n" + label + std::string(LABEL_TRUNC_SIZE - label.size(), ' ') + vasmCode : "\n" + std::string(LABEL_TRUNC_SIZE, ' ') + vasmCode;
                     }
 
-                    if(vasmSize) Memory::takeFreeRAM(vasmAddress, vasmSize);
+                    //if(vasmSize) Memory::takeFreeRAM(vasmAddress, vasmSize);
                 }
 
                 // Commented BASIC code, (assumes any tabs are 4 spaces)
@@ -2877,7 +2877,7 @@ namespace Compiler
         while(!_repeatUntilDataStack.empty()) _repeatUntilDataStack.pop();
 
         // Allocate string work area, (for string functions like LEFT$, MID$, etc)
-        Memory::giveFreeRAM(Memory::FitAscending, USER_STR_SIZE + 2, 0x0200, _runtimeStart, _strWorkArea);
+        Memory::getFreeRAM(Memory::FitAscending, USER_STR_SIZE + 2, 0x0200, _runtimeStart, _strWorkArea);
     }
 
     bool compile(const std::string& inputFilename, const std::string& outputFilename)
@@ -2906,8 +2906,8 @@ namespace Compiler
         // Optimise
         if(!Optimiser::optimiseCode()) return false;
 
-        // Check code exclusion zones
-        if(!Validater::checkExclusionZones()) return false;
+        // Check for code relocations
+        if(!Validater::checkForRelocations()) return false;
 
         // Check keywords that form statement blocks
         if(!Validater::checkStatementBlocks()) return false;
@@ -2936,7 +2936,7 @@ namespace Compiler
 
         Validater::checkBranchLabels();
 
-        //Memory::printFreeRamList(Memory::SizeAscending);
+        //Memory::printFreeRamList(Memory::NoSort); //Memory::SizeAscending);
 
         // Write .vasm file
         std::ofstream outfile(outputFilename, std::ios::binary | std::ios::out);

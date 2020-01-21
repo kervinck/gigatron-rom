@@ -6,7 +6,7 @@ namespace Validater
 {
     bool initialise(void);
 
-    bool checkExclusionZones(void);
+    bool checkForRelocations(void);
     bool checkBranchLabels(void);
     bool checkStatementBlocks(void);
 }

@@ -19,9 +19,9 @@ rem original
 4 x=c-a : y=d-b : q=rnd(0) AND 63
 5 u=1 : if x &&< 0 then x=-x : u=-u
 6 v=256 : if y &&< 0 then y=-y : v=-v
-7 p=a + (b LSL 8) : if y &&< x then goto &9
+7 p=a + (b LSL 8) : if y &< x then goto &9
 8 t=x : x=y : y=t : t=u : u=v : v=t
 9 d=-x : x=x+x : y=y+y
-10 for t=d to 0 : poke p,q
+10 for t=d &to 0 : poke p,q
 11 d=d+y : if d &&> 0 then d=d-x : p=p+v
 12 p=p+u : next t : goto 2

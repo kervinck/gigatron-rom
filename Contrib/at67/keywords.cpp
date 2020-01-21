@@ -65,6 +65,7 @@ namespace Keywords
         _keywords["LET"    ] = {"LET",     keywordLET,     Compiler::SingleStatementParsed};
         _keywords["END"    ] = {"END",     keywordEND,     Compiler::SingleStatementParsed};
         _keywords["INC"    ] = {"INC",     keywordINC,     Compiler::SingleStatementParsed};
+        _keywords["DEC"    ] = {"DEC",     keywordDEC,     Compiler::SingleStatementParsed};
         _keywords["ON"     ] = {"ON",      keywordON,      Compiler::SingleStatementParsed};
         _keywords["GOTO"   ] = {"GOTO",    keywordGOTO,    Compiler::SingleStatementParsed};
         _keywords["GOSUB"  ] = {"GOSUB",   keywordGOSUB,   Compiler::SingleStatementParsed};
@@ -942,6 +943,28 @@ namespace Keywords
         return true;
     }
 
+    bool keywordDEC(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        UNREFERENCED_PARAMETER(result);
+        UNREFERENCED_PARAMETER(tokenIndex);
+
+        // Operand must be an integer var
+        std::string varToken = codeLine._code.substr(foundPos);
+        Expression::stripWhitespace(varToken);
+        int varIndex = Compiler::findVar(varToken, false);
+        if(varIndex < 0)
+        {
+            fprintf(stderr, "Compiler::keywordDEC() : Syntax error, integer variable '%s' not found, in '%s' on line %d\n", varToken.c_str(), codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        Compiler::emitVcpuAsm("LDW",  "_" + Compiler::getIntegerVars()[varIndex]._name, false, codeLineIndex);
+        Compiler::emitVcpuAsm("SUBI", "1", false, codeLineIndex);
+        Compiler::emitVcpuAsm("STW",  "_" + Compiler::getIntegerVars()[varIndex]._name, false, codeLineIndex);
+
+        return true;
+    }
+
     bool keywordON(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         UNREFERENCED_PARAMETER(result);
@@ -1000,7 +1023,7 @@ namespace Keywords
         // Allocate giga memory for LUT
         int size = int(gotoTokens.size()) * 2;
         uint16_t address;
-        if(!Memory::giveFreeRAM(Memory::FitAscending, size, 0x0200, Compiler::getRuntimeStart(), address))
+        if(!Memory::getFreeRAM(Memory::FitAscending, size, 0x0200, Compiler::getRuntimeStart(), address))
         {
             fprintf(stderr, "Compiler::keywordON() : Not enough RAM for onGotoGosub LUT of size %d\n", size);
             return false;
@@ -1537,22 +1560,22 @@ namespace Keywords
         // INPUT LUTs
         const int lutSize = 3;
         uint16_t lutAddr, varsAddr, strsAddr, typesAddr;
-        if(!Memory::giveFreeRAM(Memory::FitAscending, lutSize*2, 0x0200, Compiler::getRuntimeStart(), lutAddr))
+        if(!Memory::getFreeRAM(Memory::FitAscending, lutSize*2, 0x0200, Compiler::getRuntimeStart(), lutAddr))
         {
             fprintf(stderr, "Compiler::keywordINPUT() : Not enough RAM for INPUT LUT of size %d, in '%s' on line %d\n", lutSize*2, codeLine._code.c_str(), codeLineIndex + 1);
             return false;
         }
-        if(!Memory::giveFreeRAM(Memory::FitAscending, int(varsLut.size()*2), 0x0200, Compiler::getRuntimeStart(), varsAddr))
+        if(!Memory::getFreeRAM(Memory::FitAscending, int(varsLut.size()*2), 0x0200, Compiler::getRuntimeStart(), varsAddr))
         {
             fprintf(stderr, "Compiler::keywordINPUT() : Not enough RAM for INPUT Vars LUT of size %d, in '%s' on line %d\n", int(varsLut.size()*2), codeLine._code.c_str(), codeLineIndex + 1);
             return false;
         }
-        if(!Memory::giveFreeRAM(Memory::FitAscending, int(strsLut.size()*2), 0x0200, Compiler::getRuntimeStart(), strsAddr))
+        if(!Memory::getFreeRAM(Memory::FitAscending, int(strsLut.size()*2), 0x0200, Compiler::getRuntimeStart(), strsAddr))
         {
             fprintf(stderr, "Compiler::keywordINPUT() : Not enough RAM for INPUT Strings LUT of size %d, in '%s' on line %d\n", int(strsLut.size()*2), codeLine._code.c_str(), codeLineIndex + 1);
             return false;
         }
-        if(!Memory::giveFreeRAM(Memory::FitAscending, int(typesLut.size()*2), 0x0200, Compiler::getRuntimeStart(), typesAddr))
+        if(!Memory::getFreeRAM(Memory::FitAscending, int(typesLut.size()*2), 0x0200, Compiler::getRuntimeStart(), typesAddr))
         {
             fprintf(stderr, "Compiler::keywordINPUT() : Not enough RAM for INPUT Var Types LUT of size %d, in '%s' on line %d\n", int(typesLut.size()*2), codeLine._code.c_str(), codeLineIndex + 1);
             return false;
@@ -1582,9 +1605,11 @@ namespace Keywords
             fprintf(stderr, "Compiler::keywordFOR() : Syntax error, (missing '='), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
+        
+        bool farJump = (code.find("&TO") == std::string::npos);
         if((to = code.find("TO")) == std::string::npos)
         {
-            fprintf(stderr, "Compiler::keywordFOR() : Syntax error, (missing '='), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Compiler::keywordFOR() : Syntax error, (missing 'TO'), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
             return false;
         }
         step = code.find("STEP");
@@ -1603,7 +1628,8 @@ namespace Keywords
 
         // Loop start
         int16_t loopStart = 0;
-        std::string startToken = codeLine._code.substr(equals + 1, to - (equals + 1));
+        int toOffset = (farJump) ? 0 : -1;
+        std::string startToken = codeLine._code.substr(equals + 1, to - (equals + 1) + toOffset);
         Expression::stripWhitespace(startToken);
         expressionType = Compiler::isExpression(startToken, varIndex, constIndex, strIndex);
         if((expressionType & Expression::HasIntVars)  ||  (expressionType & Expression::HasKeywords)  ||  (expressionType & Expression::HasFunctions)) optimise = false;
@@ -1658,13 +1684,13 @@ namespace Keywords
                 loopStep = (loopEnd >= loopStart) ? 1 : -1;
             }
 
-            // Optimised case for 8bit constants
+            // 8bit constants
             if(optimise  &&  startNumeric._isValid  &&  loopStart >= 0  &&  loopStart <= 255  &&  endNumeric._isValid  &&  loopEnd >= 0  &&  loopEnd <= 255)
             {
                 Compiler::emitVcpuAsm("LDI", std::to_string(loopStart), false, codeLineIndex);
                 Compiler::emitVcpuAsm("STW", "_" + Compiler::getIntegerVars()[varCounter]._name, false, codeLineIndex);
             }
-            // 16bit constants
+            // 16bit constants require variables
             else
             {
                 optimise = false;
@@ -1705,7 +1731,7 @@ namespace Keywords
 
         // Label and stack
         Compiler::setNextInternalLabel("_next_" + Expression::wordToHexString(Compiler::getVasmPC()));
-        Compiler::getForNextDataStack().push({varCounter, Compiler::getNextInternalLabel(), loopEnd, loopStep, varEnd, varStep, optimise, codeLineIndex});
+        Compiler::getForNextDataStack().push({varCounter, Compiler::getNextInternalLabel(), loopEnd, loopStep, varEnd, varStep, farJump, optimise, codeLineIndex});
 
         return true;
     }
@@ -1750,49 +1776,31 @@ namespace Keywords
         int16_t loopStep = forNextData._loopStep;
         uint16_t varEnd = forNextData._varEnd;
         uint16_t varStep = forNextData._varStep;
+        bool farJump = forNextData._farJump;
+        bool optimise = forNextData._optimise;
 
-        if(forNextData._optimise)
+        std::string forNextCmd;
+        if(optimise)
         {
             if(abs(loopStep) == 1)
             {
-                // Increment
-                if(loopStep > 0)
-                {
-                    Compiler::emitVcpuAsm("%ForNextLoopInc", "_" + varName + " " + labName + " " + std::to_string(loopEnd), false, codeLineIndex);
-                }
-                // Decrement
-                else
-                {
-                    Compiler::emitVcpuAsm("%ForNextLoopDec", "_" + varName + " " + labName + " " + std::to_string(loopEnd), false, codeLineIndex);
-                }
+                // Increment/decrement step
+                forNextCmd = (loopStep > 0) ? (farJump) ? "%ForNextFarInc" : "%ForNextInc" : (farJump) ? "%ForNextFarDec" : "%ForNextDec";
+                Compiler::emitVcpuAsm(forNextCmd, "_" + varName + " " + labName + " " + std::to_string(loopEnd), false, codeLineIndex);
             }
             else
             {
-                // Additive step
-                if(loopStep > 0)
-                {
-                    Compiler::emitVcpuAsm("%ForNextLoopAdd", "_" + varName + " " + labName + " " + std::to_string(loopEnd) + " " + std::to_string(loopStep), false, codeLineIndex);
-                }
-                // Subtractive step
-                else
-                {
-                    Compiler::emitVcpuAsm("%ForNextLoopSub", "_" + varName + " " + labName + " " + std::to_string(loopEnd) + " " + std::to_string(abs(loopStep)), false, codeLineIndex);
-                }
+                // Additive/subtractive step
+                forNextCmd = (loopStep > 0) ? (farJump) ? "%ForNextFarAdd" : "%ForNextAdd" : (farJump) ? "%ForNextFarSub" : "%ForNextSub";
+                Compiler::emitVcpuAsm(forNextCmd, "_" + varName + " " + labName + " " + std::to_string(loopEnd) + " " + std::to_string(abs(loopStep)), false, codeLineIndex);
             }
         }
         else
         {
             // TODO: this can fail for corner cases
-            // Positive variable step
-            if(loopStep > 0)
-            {
-                Compiler::emitVcpuAsm("%ForNextLoopVarPos", "_" + varName + " " + labName + " " + Expression::byteToHexString(uint8_t(varEnd)) + " " + Expression::byteToHexString(uint8_t(varStep)), false, codeLineIndex);
-            }
-            // Negative variable step
-            else
-            {
-                Compiler::emitVcpuAsm("%ForNextLoopVarNeg", "_" + varName + " " + labName + " " + Expression::byteToHexString(uint8_t(varEnd)) + " " + Expression::byteToHexString(uint8_t(varStep)), false, codeLineIndex);
-            }
+            // Positive/negative variable step
+            forNextCmd = (loopStep > 0) ? (farJump) ? "%ForNextFarVarPos" : "%ForNextVarPos" : (farJump) ? "%ForNextFarVarNeg" : "%ForNextVarNeg";
+            Compiler::emitVcpuAsm(forNextCmd, "_" + varName + " " + labName + " " + Expression::byteToHexString(uint8_t(varEnd)) + " " + Expression::byteToHexString(uint8_t(varStep)), false, codeLineIndex);
         }
 
         return true;
@@ -2352,7 +2360,7 @@ namespace Keywords
 
         arraySize *= 2;
         uint16_t arrayStart = 0x0000;
-        if(!Memory::giveFreeRAM(Memory::FitAscending, arraySize, 0x0200, Compiler::getRuntimeStart(), arrayStart))
+        if(!Memory::getFreeRAM(Memory::FitAscending, arraySize, 0x0200, Compiler::getRuntimeStart(), arrayStart))
         {
             fprintf(stderr, "Compiler::keywordDIM() : Not enough RAM for int array of size %d in '%s' on line %d\n", arraySize, codeLine._code.c_str(), codeLineIndex + 1);
             return false;

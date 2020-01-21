@@ -36,8 +36,8 @@ textWorkArea        EQU                     0x7fa0
 ; Labels
 _entryPoint_        EQU                     0x0200
 _loop               EQU                     0x024e
-_next_0x0295        EQU                     0x0289
-_end_0x02f2         EQU                     0x02de
+_next_0x028a        EQU                     0x027e
+_end_0x02df         EQU                     0x02cb
 
 ; Variables
 _ox                 EQU                     0x0030
@@ -88,14 +88,10 @@ _loop               Rand
                     LDWI                    atTextCursor
                     CALL                    giga_vAC                        ; at ox, oy
 
-                    LDWI                    0
-                    STW                     _i
-                    LDWI                    6
-                    STW                     0xb0
-                    LDWI                    2
-                    STW                     0xb2                            ; for i=0 to POLYSIZE*2 - 4 step 2
+                    LDI                     0
+                    STW                     _i                              ; for i=0 &to POLYSIZE*2 - 4 step 2
 
-_next_0x0295        LDWI                    1536
+_next_0x028a        LDWI                    1536
                     ADDW                    _i
                     STW                     0xc0
                     LDI                     0xa0
@@ -109,7 +105,7 @@ _next_0x0295        LDWI                    1536
                     RandMod                 
                     POKE                    0xc0                            ; poke POLYADDR + 1 + i, rnd(120)
 
-                    ForNextLoopStepUp       _i _next_0x0295 0xb0 0xb2       ; next i
+                    ForNextAdd              _i _next_0x028a 6 2             ; next i
 
                     LDWI                    1544
                     STW                     register0
@@ -125,10 +121,9 @@ _next_0x0295        LDWI                    1536
                     STW                     drawPoly_addr
                     DrawPoly                                                ; poly POLYADDR
 
-                    LDWI                    _loop
-                    CALL                    giga_vAC                        ; goto loop
+                    BRA                     _loop                           ; goto &loop
 
-_end_0x02f2         BRA                     _end_0x02f2                     ; end
+_end_0x02df         BRA                     _end_0x02df                     ; end
 
 
 

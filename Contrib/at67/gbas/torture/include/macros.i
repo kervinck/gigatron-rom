@@ -43,7 +43,54 @@
         DEEK
 %ENDM
 
-%MACRO  ForNextLoopInc _var _label _end
+%MACRO  ForNextInc _var _label _end
+        INC     _var
+        LD      _var
+        SUBI    _end
+        BLE     _label
+%ENDM
+
+%MACRO  ForNextDec _var _label _end
+        LD      _var
+        SUBI    1
+        ST      _var
+        SUBI    _end
+        BGE     _label
+%ENDM
+
+%MACRO  ForNextAdd _var _label _end _step
+        LD      _var
+        ADDI    _step
+        ST      _var
+        SUBI    _end
+        BLE     _label
+%ENDM
+
+%MACRO  ForNextSub _var _label _end _step
+        LD      _var
+        SUBI    _step
+        ST      _var
+        SUBI    _end
+        BGE     _label
+%ENDM
+
+%MACRO  ForNextVarPos _var _label _vEnd _vStep
+        LDW     _var
+        ADDW    _vStep
+        STW     _var
+        SUBW    _vEnd
+        BLE     _label
+%ENDM
+
+%MACRO  ForNextVarNeg _var _label _vEnd _vStep
+        LDW     _var
+        ADDW    _vStep
+        STW     _var
+        SUBW    _vEnd
+        BGE     _label
+%ENDM
+
+%MACRO  ForNextFarInc _var _label _end
         INC     _var
         LD      _var
         SUBI    _end
@@ -52,7 +99,7 @@
 _label_ CALL    giga_vAC
 %ENDM
 
-%MACRO  ForNextLoopDec _var _label _end
+%MACRO  ForNextFarDec _var _label _end
         LD      _var
         SUBI    1
         ST      _var
@@ -62,7 +109,7 @@ _label_ CALL    giga_vAC
 _label_ CALL    giga_vAC
 %ENDM
 
-%MACRO  ForNextLoopAdd _var _label _end _step
+%MACRO  ForNextFarAdd _var _label _end _step
         LD      _var
         ADDI    _step
         ST      _var
@@ -72,7 +119,7 @@ _label_ CALL    giga_vAC
 _label_ CALL    giga_vAC
 %ENDM
 
-%MACRO  ForNextLoopSub _var _label _end _step
+%MACRO  ForNextFarSub _var _label _end _step
         LD      _var
         SUBI    _step
         ST      _var
@@ -82,7 +129,7 @@ _label_ CALL    giga_vAC
 _label_ CALL    giga_vAC
 %ENDM
 
-%MACRO  ForNextLoopVarPos _var _label _vEnd _vStep
+%MACRO  ForNextFarVarPos _var _label _vEnd _vStep
         LDW     _var
         ADDW    _vStep
         STW     _var
@@ -92,7 +139,7 @@ _label_ CALL    giga_vAC
 _label_ CALL    giga_vAC
 %ENDM
 
-%MACRO  ForNextLoopVarNeg _var _label _vEnd _vStep
+%MACRO  ForNextFarVarNeg _var _label _vEnd _vStep
         LDW     _var
         ADDW    _vStep
         STW     _var

@@ -5,8 +5,6 @@
 #include <iomanip>
 #include <vector>
 #include <algorithm>
-#include <chrono>
-#include <thread>
 
 #include "memory.h"
 #include "cpu.h"
@@ -60,6 +58,8 @@ namespace Cpu
     std::vector<InternalGt1> _internalGt1s;
 
     int getNumRoms(void) {return _numRoms;}
+    int getRomIndex(void) {return _romIndex;}
+
     uint8_t* getPtrToROM(int& romSize) {romSize = sizeof(_ROM); return (uint8_t*)_ROM;}
     RomType getRomType(void) {return _romType;}
 
@@ -599,7 +599,7 @@ namespace Cpu
         for(int i=0; i<NUM_INT_ROMS; i++) Editor::addRomEntry(types[i], names[i]);
 
         // Latest internal ROM is the one that is loaded at startup
-        _romIndex = _romFiles.size() - 1;
+        _romIndex = int(_romFiles.size()) - 1;
 
         // External ROMS
         for(int i=0; i<Loader::getConfigRomsSize(); i++)
@@ -980,8 +980,6 @@ namespace Cpu
                 Editor::handleInput();
                 Graphics::render(true);
             }
-
-            //std::this_thread::sleep_for(std::chrono::milliseconds(5));
         }
 
         // Pixel
