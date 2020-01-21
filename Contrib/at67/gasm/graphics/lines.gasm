@@ -150,12 +150,12 @@ line_num    LDWI    SYS_LSRW1_48
 			LDWI    SYS_LSLW8_24	
             STW     giga_sysFn      	    
             LDW     dy1	
-            SYS     24
+            SYS     28
             ADDW    dx1	
             STW     dxy1       			; dxy1 = dx1 + (dy1<<8)
 	
             LDW     dy2	
-            SYS     24
+            SYS     28
             ADDW    dx2	
             STW     dxy2       			; dxy2 = dx2 + (dy2<<8)
 			
