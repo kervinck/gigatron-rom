@@ -93,7 +93,7 @@ start       LDWI    vram
             LDWI    SYS_ClearRow32_56   ; clears 32 row pixels at a time
             STW     sysFn
 
-clear       SYS     0xF2        ; SYS_ClearRow32_56, 270 - 56/2 = 0xF2
+clear       SYS     56
             LDWI    0x0020
             ADDW    vbase
             STW     vbase
@@ -102,7 +102,7 @@ clear       SYS     0xF2        ; SYS_ClearRow32_56, 270 - 56/2 = 0xF2
             BLT     clear
             LDI     0x08        ; finish off last row
             ST      i
-last_row    SYS     0xF2        ; SYS_ClearRow32_56, 270 - 56/2 = 0xF2
+last_row    SYS     56
             LDWI    0x0020
             ADDW    vbase
             STW     vbase
@@ -279,7 +279,7 @@ velocity    LDW     xyPos
 draw        LDW     pixels
             DEEK
             STW     dstAddr
-            SYS     0xC7        ; SYS_BlinkyBlast_142, 270 - 142/2 = 0xC7
+            SYS     142
 
             INC     pixels
             INC     pixels

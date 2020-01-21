@@ -656,14 +656,13 @@ namespace Assembler
         return false;
     }    
 
-    InstructionType getOpcode(const std::string& input)
+    InstructionType getOpcode(const std::string& opcodeStr)
     {
-        std::string token = input;
-        Expression::strToUpper(token);
+        std::string opcode = opcodeStr;
+        Expression::strToUpper(opcode); 
+        if(_asmOpcodes.find(opcode) == _asmOpcodes.end()) return {0x00, 0x00, BadSize, vCpu};
 
-        if(_asmOpcodes.find(token) == _asmOpcodes.end()) return {0x00, 0x00, BadSize, vCpu};
-
-        return _asmOpcodes[token];
+        return _asmOpcodes[opcode];
     }
 
     void preProcessExpression(const std::vector<std::string>& tokens, int tokenIndex, std::string& input, bool stripWhiteSpace)
@@ -1052,7 +1051,7 @@ namespace Assembler
                             Expression::Numeric value;
                             if(Expression::parse(tokens[i], _lineNumber, value))
                             {
-                                operand = uint8_t(value._value);
+                                operand = uint8_t(std::lround(value._value));
                                 success = true;
                             }
                         }
@@ -2114,6 +2113,23 @@ namespace Assembler
     }
 #endif
 
+    uint8_t sysHelper(const std::string& opcodeStr, uint16_t operand, const std::string& filename, int lineNumber)
+    {
+        std::string opcode = opcodeStr;
+        Expression::strToUpper(opcode); 
+        
+        if(opcode != "SYS") return uint8_t(operand);
+
+        if((operand & 0x0001) || operand < 28 || operand > 284)
+        {
+            fprintf(stderr, "Assembler::sysHelper() : SYS operand must be an even constant in [28, 284] : found 'SYS %d' : in '%s' : on line %d\n", operand, filename.c_str(), lineNumber);
+            return uint8_t(operand);
+        }
+
+        return uint8_t((270 - operand / 2) & 0x00FF);
+    }
+
+
     void clearAssembler(void)
     {
         _byteCode.clear();
@@ -2245,7 +2261,8 @@ namespace Assembler
 
                 // Opcode
                 bool operandValid = false;
-                InstructionType instructionType = getOpcode(tokens[tokenIndex++]);
+                std::string opcodeStr = tokens[tokenIndex++];
+                InstructionType instructionType = getOpcode(opcodeStr);
                 uint8_t opcode = instructionType._opcode;
                 uint8_t branch = instructionType._branch;
                 int outputSize = instructionType._byteSize;
@@ -2397,12 +2414,12 @@ namespace Assembler
                                             // Avoid ONE_CONST_ADDRESS
                                             if(_callTablePtr == ONE_CONST_ADDRESS)
                                             {
-                                                fprintf(stderr, "Assembler::assemble() : Calltable : 0x%02x : collided with : 0x%02x : on line %d\n", _callTablePtr, ONE_CONST_ADDRESS, _lineNumber+1);
+                                                fprintf(stderr, "Assembler::assemble() : Warning, (safe to ignore), Calltable : 0x%02x : collided with : 0x%02x : on line %d\n", _callTablePtr, ONE_CONST_ADDRESS, _lineNumber+1);
                                                 _callTablePtr -= 0x0002;
                                             }
                                             else if(_callTablePtr+1 == ONE_CONST_ADDRESS)
                                             {
-                                                fprintf(stderr, "Assembler::assemble() : Calltable : 0x%02x : collided with : 0x%02x : on line %d\n", _callTablePtr+1, ONE_CONST_ADDRESS, _lineNumber+1);
+                                                fprintf(stderr, "Assembler::assemble() : Warning, (safe to ignore), Calltable : 0x%02x : collided with : 0x%02x : on line %d\n", _callTablePtr+1, ONE_CONST_ADDRESS, _lineNumber+1);
                                                 _callTablePtr -= 0x0001;
                                             }
                                         }
@@ -2436,17 +2453,17 @@ namespace Assembler
                                 bool quotes = (quote1 != std::string::npos  &&  quote2 != std::string::npos  &&  (quote2 - quote1 > 1));
                                 if(quotes)
                                 {
-                                    operand = uint8_t(tokens[tokenIndex][quote1+1]);
+                                    operand = sysHelper(opcodeStr, uint16_t(tokens[tokenIndex][quote1+1]), filename, _lineNumber+1);
                                 }
                                 // Search equates
                                 else if((operandValid = evaluateEquateOperand(tokens, tokenIndex, equate, compoundInstruction)) == true)
                                 {
-                                    operand = uint8_t(equate._operand);
+                                    operand = sysHelper(opcodeStr, equate._operand, filename, _lineNumber+1);
                                 }
                                 // Search labels
                                 else if((operandValid = evaluateLabelOperand(tokens, tokenIndex, label, compoundInstruction)) == true)
                                 {
-                                    operand = uint8_t(label._address);
+                                    operand = sysHelper(opcodeStr, label._address, filename, _lineNumber+1);
                                 }
                                 else if(Expression::isExpression(tokens[tokenIndex]) == Expression::HasOperators)
                                 {
@@ -2454,17 +2471,20 @@ namespace Assembler
                                     std::string input;
                                     preProcessExpression(tokens, tokenIndex, input, true);
                                     if(!Expression::parse(input, _lineNumber, value)) return false;
-                                    operand = uint8_t(value._value);
+                                    operand = sysHelper(opcodeStr, uint16_t(std::lround(value._value)), filename, _lineNumber+1);
                                     operandValid = true;
                                 }
                                 else
                                 {
-                                    operandValid = Expression::stringToU8(tokens[tokenIndex], operand);
+                                    uint16_t operandU16 = 0;
+                                    operandValid = Expression::stringToU16(tokens[tokenIndex], operandU16);
                                     if(!operandValid)
                                     {
                                         fprintf(stderr, "Assembler::assemble() : Label/Equate error : '%s' : in '%s' on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), _lineNumber+1);
                                         return false;
                                     }
+
+                                    operand = sysHelper(opcodeStr, operandU16, filename, _lineNumber+1);
                                 }
                             }
 
@@ -2559,7 +2579,7 @@ namespace Assembler
                             // All other 3 byte instructions
                             else
                             {
-                                uint16_t operand;
+                                uint16_t operand = 0x0000;
                                 Label label;
                                 Equate equate;
 

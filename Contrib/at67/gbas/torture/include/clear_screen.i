@@ -69,16 +69,16 @@ clearScreen         PUSH
 
 clearS_loop         CALL    realTimeProcAddr
                     LD      giga_sysArg4
-                    SYS     0xFF                                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+                    SYS     30
                     ADDI    0x04
                     ST      giga_sysArg4
-                    SYS     0xFF
+                    SYS     30
                     ADDI    0x04
                     ST      giga_sysArg4
-                    SYS     0xFF
+                    SYS     30
                     ADDI    0x04
                     ST      giga_sysArg4
-                    SYS     0xFF
+                    SYS     30
                     ADDI    0x04
                     ST      giga_sysArg4
                     SUBI    giga_xres
@@ -108,12 +108,12 @@ clearVertBlinds     PUSH
 clearVB_loop        CALL    realTimeProcAddr
                     LD      top
                     ST      giga_sysArg4 + 1                    ; top line
-                    SYS     0xFF                                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+                    SYS     30
     
                     LDWI    giga_yres - 1 + 16
                     SUBW    top
                     ST      giga_sysArg4 + 1                    ; bottom line
-                    SYS     0xFF                                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+                    SYS     30
     
                     LD      giga_sysArg4
                     ADDI    0x04
@@ -140,11 +140,11 @@ clearRVertBlinds    PUSH
 clearRVB_loop       CALL    realTimeProcAddr
                     LDW     top
                     STW     giga_sysArg4                        ; top line
-                    SYS     0xFF                                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+                    SYS     30
     
                     LDW     bot
                     STW     giga_sysArg4                        ; bottom line
-                    SYS     0xFF                                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+                    SYS     30
     
                     LD      top                                 ; 4 horizontal pixels
                     ADDI    0x04

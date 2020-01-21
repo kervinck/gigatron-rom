@@ -309,7 +309,7 @@ namespace Linker
             // Save end of runtime/strings
             if(address < Compiler::getRuntimeEnd()) Compiler::setRuntimeEnd(address);
 
-            fprintf(stderr, "%-18s  :  0x%04x  :  %2d bytes\n", _internalSubs[subIndex]._name.c_str(), address, _internalSubs[subIndex]._size);
+            fprintf(stderr, "* %-20s : 0x%04x  :    %2d bytes\n", _internalSubs[subIndex]._name.c_str(), address, _internalSubs[subIndex]._size);
 
             _internalSubs[subIndex]._address = address;
             _internalSubs[subIndex]._inUse = true;
@@ -317,7 +317,7 @@ namespace Linker
         }
         else
         {
-            fprintf(stderr, "Compiler::loadInternalSub() : Not enough RAM for %s of size %d\n", _internalSubs[subIndex]._name.c_str(), _internalSubs[subIndex]._size);
+            fprintf(stderr, "Linker::loadInternalSub() : Not enough RAM for %s of size %d\n", _internalSubs[subIndex]._name.c_str(), _internalSubs[subIndex]._size);
             return false;
         }
 
@@ -398,6 +398,10 @@ namespace Linker
 
     bool linkInternalSubs(void)
     {
+        fprintf(stderr, "\n**********************************************\n");
+        fprintf(stderr, "*        Name          : Address :    Size    \n");
+        fprintf(stderr, "**********************************************\n");
+        
         for(int i=0; i<Compiler::getCodeLines().size(); i++)
         {
             // Valid BASIC code
@@ -475,7 +479,8 @@ RESTART_COLLECTION:
             if(_internalSubs[i]._inUse  &&  _internalSubs[i]._loaded  &&  _internalSubs[i]._address) runtimeSize += _internalSubs[i]._size;
         }
 
-        fprintf(stderr, "\nCompiler::relinkInternalSubs() : runtime START 0x%04x : runtime END 0x%04x : runtime SIZE %d bytes\n", Compiler::getRuntimeStart() & Memory::getSizeRAM() - 1, Compiler::getRuntimeEnd(), runtimeSize);
+        fprintf(stderr, "**********************************************\n");
+        fprintf(stderr, "\nLinker::relinkInternalSubs() : runtime START 0x%04x : runtime END 0x%04x : runtime SIZE %d bytes\n", Compiler::getRuntimeStart() & Memory::getSizeRAM() - 1, Compiler::getRuntimeEnd(), runtimeSize);
     }
 
     void outputInternalSubs(void)

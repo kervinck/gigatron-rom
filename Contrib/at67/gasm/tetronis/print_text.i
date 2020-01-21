@@ -37,7 +37,7 @@ printT_slice    LDW     textPos
                 LDW     scratch             ; text font slice base address
                 LUP     0x00                ; get ROM slice
                 ST      giga_sysArg2        
-                SYS     0xCB                ; draw vertical slice, SYS_VDrawBits_134, 270 - 134/2 = 0xCB
+                SYS     134
                 INC     scratch             ; next vertical slice
                 INC     textPos             ; next x
                 LoopCounter ii printT_slice
@@ -79,7 +79,7 @@ printD_slice    LDW     scratch
                 ST      giga_sysArg3        ; fourth pixel is background colour
                 LDW     textPos
                 STW     giga_sysArg4        ; xy
-                SYS     0xFF                ; draw horizontal slice, SYS_Draw4_30, 270 - 30/2 = 0xFF
+                SYS     30
 
                 PUSH
                 CALL    playMidi

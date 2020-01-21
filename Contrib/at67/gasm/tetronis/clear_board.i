@@ -19,7 +19,7 @@ clearBoard      LDWI    SYS_Draw4_30    ; setup 4 pixel SYS routine
 clearB_loop     LDW     vbase           ; vram address
                 ADDW    xx
                 STW     giga_sysArg4
-                SYS     0xFF            ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+                SYS     30
 
                 LD      xx              ; 4 horizontal pixels
                 ADDI    0x04
@@ -76,11 +76,11 @@ clearStrips     STW     scratch
 clearScreen_0   POP                     ; restore clearScreen's caller return address
 clearS_loop     LDW     xx
                 STW     giga_sysArg4    ; top line
-                SYS     0xFF            ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+                SYS     30
 
                 LDW     kk
                 STW     giga_sysArg4    ; bottom line
-                SYS     0xFF            ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+                SYS     30
 
                 LD      xx              ; 4 horizontal pixels
                 ADDI    0x04

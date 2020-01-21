@@ -50,7 +50,7 @@ draw        LDW     vbase
             ADDW    xx
             STW     pixels
         
-            SYS     0xFE        ; SYS_DrawPixel2x2_32, 270 - 32/2 = 0xFE
+            SYS     32          ; SYS_DrawPixel2x2_32
 
             BRA     loop        
         

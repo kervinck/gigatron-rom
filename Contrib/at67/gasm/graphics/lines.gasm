@@ -37,35 +37,35 @@ lineStart	LDWI    0x0000
 line_random LDWI    SYS_Random_34
             STW     giga_sysFn
 
-			SYS     0xFD                ; x1 = (rnd AND &h7F) + (rnd AND &h1F)
+			SYS     34                  ; x1 = (rnd AND &h7F) + (rnd AND &h1F)
             ANDI    0x7F        
             STW     x1
-            SYS     0xFD
+            SYS     34
             ANDI    0x1F
             ADDW    x1
             STW     x1
             
-            SYS     0xFD                ; y1 = (rnd AND &h3F) + (rnd AND &h3F)
+            SYS     34                  ; y1 = (rnd AND &h3F) + (rnd AND &h3F)
             ANDI    0x3F        
             STW     y1
-            SYS     0xFD
+            SYS     34
             ANDI    0x3F
             ADDW    y1
             ORI     0x08
             STW     y1
             
-            SYS     0xFD                ; x2 = (rnd AND &h7F) + (rnd AND &h1F)
+            SYS     34                  ; x2 = (rnd AND &h7F) + (rnd AND &h1F)
             ANDI    0x7F        
             STW     x2
-            SYS     0xFD
+            SYS     34
             ANDI    0x1F
             ADDW    x2
             STW     x2
 
-            SYS     0xFD                ; y2 = (rnd AND &h3F) + (rnd AND &h3F)
+            SYS     34                  ; y2 = (rnd AND &h3F) + (rnd AND &h3F)
             ANDI    0x3F        
             STW     y2
-            SYS     0xFD
+            SYS     34
             ANDI    0x3F
             ADDW    y2
             ORI     0x08
@@ -142,7 +142,7 @@ lineExt		LD      x1
 line_num    LDWI    SYS_LSRW1_48
             STW     giga_sysFn          
             LDW     sx
-            SYS     0xF6                ; 0xF6 = 270-max(14,48/2)
+            SYS     48
             STW     num        			; numerator = sx>>1
             STW     count
             INC     count      			; for(count=sx>>1; counti>=0; --i)
@@ -150,12 +150,12 @@ line_num    LDWI    SYS_LSRW1_48
 			LDWI    SYS_LSLW8_24	
             STW     giga_sysFn      	    
             LDW     dy1	
-            SYS     0x00            	; 0x00 = 270-max(14,24/2)
+            SYS     28
             ADDW    dx1	
             STW     dxy1       			; dxy1 = dx1 + (dy1<<8)
 	
             LDW     dy2	
-            SYS     0x00            	; 0x00 = 270-max(14,24/2)
+            SYS     28
             ADDW    dx2	
             STW     dxy2       			; dxy2 = dx2 + (dy2<<8)
 			

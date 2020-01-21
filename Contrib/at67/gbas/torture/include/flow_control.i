@@ -39,7 +39,7 @@ gotoNL_loop         LDW     lutIndex
 gotoNL_exit         RET
                     
 gotoNL_cont         LDW     lutLabel
-                    SUBW    numericLabel
+                    XORW    numericLabel
                     BEQ     gotoNL_found
                     INC     lutIndex
                     INC     lutIndex                        ; loop through lut until found or -1
@@ -75,7 +75,7 @@ gosubNL_exit        POP
                     RET
                     
 gosubNL_cont        LDW     lutLabel
-                    SUBW    numericLabel
+                    XORW    numericLabel
                     BEQ     gosubNL_found
                     INC     lutIndex
                     INC     lutIndex                        ; loop through lut until found or -1
