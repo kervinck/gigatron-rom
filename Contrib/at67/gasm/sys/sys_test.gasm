@@ -8,7 +8,6 @@
         
         LDWI    0x04d4      ; SYS_Draw4_30
         STW     0x22
-        
-        SYS     0xFF        ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+        SYS     30
         
 loop    BRA     loop        

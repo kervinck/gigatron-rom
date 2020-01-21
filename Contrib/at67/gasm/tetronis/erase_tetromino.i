@@ -53,7 +53,7 @@ eraseTrCorner   LDWI    SYS_Draw4_30    ; setup 4 pixel SYS routine
                 LDI     (yOffset-6) + giga_vram/256
                 ST      giga_sysArg4 + 1
 
-eraseTr_loop    SYS     0xFF            ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+eraseTr_loop    SYS     30
                 LDW     giga_sysArg4
                 SUBI    0x01
                 STW     scratch

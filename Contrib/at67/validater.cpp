@@ -69,7 +69,7 @@ namespace Validater
     }
 
     // TODO: make this more flexible, (e.g. sound channels off etc)
-    bool checkForRelocation(const std::string& opcode, uint16_t vPC, uint16_t& nextPC)
+    bool checkForRelocation(const std::string& opcode, uint16_t vPC, uint16_t& nextPC, bool& print)
     {
 #define CALL_PAGE_JUMP_SIZE    7
 #define CALLI_PAGE_JUMP_SIZE   3
@@ -111,8 +111,16 @@ namespace Validater
                 if(!Memory::getNextFreeRAM(vPC + opcodeSize, opcodeSize, freeAddr)) return false;
                 if(Memory::getFreeRAM(Memory::FitDescending, opcodeSize, freeAddr, Compiler::getRuntimeStart(), nextPC, false))
                 {
+                    if(!print)
+                    {
+                        print = true;
+                        fprintf(stderr, "\n*******************************************************\n");
+                        fprintf(stderr, "*       Opcode         : Address :    Size     :  New  \n");
+                        fprintf(stderr, "*******************************************************\n");
+                    }
+
                     uint16_t newPC = ((Assembler::getUseOpcodeCALLI()) ? CALLI_PAGE_JUMP_OFFSET : CALL_PAGE_JUMP_OFFSET) + nextPC;
-                    fprintf(stderr, "Validater::checkForRelocation() : relocating %s : size %d : from 0x%04X to 0x%04X\n", opcode.c_str(), opcodeSize, vPC, newPC);
+                    fprintf(stderr, "* %-20s : 0x%04x  :    %2d bytes : 0x%04x\n", opcode.c_str(), vPC, opcodeSize, newPC);
                     return true;
                 }
 
@@ -126,7 +134,7 @@ namespace Validater
     bool checkForRelocations(void)
     {
         std::string line;
-
+        bool print = false;
         for(auto itCode=Compiler::getCodeLines().begin(); itCode!=Compiler::getCodeLines().end();)
         {
             if(itCode->_vasm.size() == 0)
@@ -140,7 +148,7 @@ namespace Validater
             for(auto itVasm=itCode->_vasm.begin(); itVasm!=itCode->_vasm.end();)
             {
                 uint16_t nextPC;
-                bool excluded = checkForRelocation(itVasm->_opcode, itVasm->_address, nextPC);
+                bool excluded = checkForRelocation(itVasm->_opcode, itVasm->_address, nextPC, print);
 
                 if(!itVasm->_pageJump  &&  excluded)
                 {
@@ -241,6 +249,8 @@ namespace Validater
 
             itCode++;
         }
+
+        if(print) fprintf(stderr, "*******************************************************\n");
 
         return true;
     }

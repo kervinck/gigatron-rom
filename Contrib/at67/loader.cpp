@@ -220,11 +220,11 @@ namespace Loader
             }
         }
         uint16_t startAddress = gt1File._loStart + (gt1File._hiStart <<8);
-        fprintf(stderr, "\n************************************************************\n");
-        fprintf(stderr, "* %s : 0x%04x : %5d bytes : %3d segments\n", output.c_str(), startAddress, totalSize, int(gt1File._segments.size()));
-        fprintf(stderr, "************************************************************\n");
-        fprintf(stderr, "* Segment :  Type  : Address : Memory Used                  \n");
-        fprintf(stderr, "************************************************************\n");
+        fprintf(stderr, "\n**********************************************\n");
+        fprintf(stderr, "* %-20s : 0x%04x  : %5d bytes\n", output.c_str(), startAddress, totalSize);
+        fprintf(stderr, "**********************************************\n");
+        fprintf(stderr, "*   Segment   :  Type  : Address : Memory Used\n");
+        fprintf(stderr, "**********************************************\n");
 
         // Segments
         int contiguousSegments = 0;
@@ -240,8 +240,8 @@ namespace Loader
                 memory = "ROM";
                 if(gt1File._segments.size() == 1)
                 {
-                    fprintf(stderr, "*  %4d   :  %s   : 0x%04x  : %5d bytes\n", i, memory.c_str(), address, totalSize);
-                    fprintf(stderr, "************************************************************\n");
+                    fprintf(stderr, "*    %4d     :  %s   : 0x%04x  : %5d bytes\n", i, memory.c_str(), address, totalSize);
+                    fprintf(stderr, "**********************************************\n");
                     return totalSize;
                 }
                 totalSize -= segmentSize;
@@ -267,20 +267,20 @@ namespace Loader
                 // Normal segment < 256 bytes
                 if(contiguousSegments == 0)
                 {
-                    fprintf(stderr, "*  %4d   :  %s   : 0x%04x  : %5d bytes\n", i, memory.c_str(), address, segmentSize);
+                    fprintf(stderr, "*    %4d     :  %s   : 0x%04x  : %5d bytes\n", i, memory.c_str(), address, segmentSize);
                 }
                 // Contiguous segment < 256 bytes
                 else
                 {
-                    fprintf(stderr, "*  %4d   :  %s   : 0x%04x  : %5d bytes (%dx256)\n", startContiguousSegment, memory.c_str(), startContiguousAddress, contiguousSegments*256, contiguousSegments);
-                    fprintf(stderr, "*  %4d   :  %s   : 0x%04x  : %5d bytes\n", i, memory.c_str(), address, segmentSize);
+                    fprintf(stderr, "*    %4d     :  %s   : 0x%04x  : %5d bytes (%dx256)\n", startContiguousSegment, memory.c_str(), startContiguousAddress, contiguousSegments*256, contiguousSegments);
+                    fprintf(stderr, "*    %4d     :  %s   : 0x%04x  : %5d bytes\n", i, memory.c_str(), address, segmentSize);
                     contiguousSegments = 0;
                 }
             }
         }
-        fprintf(stderr, "************************************************************\n");
-        fprintf(stderr, "* Free RAM after loading: %d\n", Memory::getBaseFreeRAM() - totalSize);
-        fprintf(stderr, "************************************************************\n");
+        fprintf(stderr, "**********************************************\n");
+        fprintf(stderr, "* Free RAM after load  : %d\n", Memory::getBaseFreeRAM() - totalSize);
+        fprintf(stderr, "**********************************************\n");
 
         return totalSize;
     }

@@ -237,7 +237,7 @@ velocity    LDW     xyPos       ; xpos += xvel
 save        STW     srcAddr
             LDW     backBuffer
             STW     dstAddr
-            SYS     0xD3        ; SYS_SpriteCopy_118, 270 - 118/2 = 0xD3
+            SYS     118
 
             INC     xyPos       ; increment array pointers
             INC     xyPos
@@ -271,7 +271,7 @@ draw        LDW     pixels
             STW     dstAddr
             LDW     spriteData
             STW     srcAddr
-            SYS     0xD3        ; SYS_SpriteCopy_118, 270 - 118/2 = 0xD3
+            SYS     118
 
             INC     pixels
             INC     pixels
@@ -302,7 +302,7 @@ restore     LDW     backBuffer
             LDW     pixels
             DEEK
             STW     dstAddr
-            SYS     0xD3        ; SYS_SpriteCopy_118, 270 - 118/2 = 0xD3
+            SYS     118
 
             INC     pixels
             INC     pixels

@@ -67,7 +67,7 @@ power16E_skip       LDW     mathBase
                     CALLI   multiply16bit
                     STW     mathBase            ; mathBase = mathBase * mathBase
                     LDW     mathPow
-                    SYS     0xF6
+                    SYS     48
                     STW     mathPow             ; mathPow = mathPow / 2
                     BNE     power16E_loop       ; while mathPow > 0
                     POP
@@ -158,7 +158,7 @@ divide16_exit       LDW     mathX
 %SUB                rand16bit
 rand16bit           LDWI    SYS_Random_34
                     STW     giga_sysFn
-                    SYS     0xFD
+                    SYS     34
                     RET
 %ENDS
 
@@ -166,7 +166,7 @@ rand16bit           LDWI    SYS_Random_34
 randMod16bit        PUSH
                     LDWI    SYS_Random_34
                     STW     giga_sysFn
-                    SYS     0xFD
+                    SYS     34
                     STW     mathX
                     CALLI   divide16bit
                     LDW     mathRem
@@ -178,7 +178,7 @@ randMod16bit        PUSH
 shiftLeft4bit       LDWI    SYS_LSLW4_46
                     STW     giga_sysFn
                     LDW     mathShift
-                    SYS     0xF7                ; 0xF7 = 270-max(14,46/2)
+                    SYS     46
                     RET
 %ENDS   
     
@@ -186,7 +186,7 @@ shiftLeft4bit       LDWI    SYS_LSLW4_46
 shiftLeft8bit       LDWI    SYS_LSLW8_24
                     STW     giga_sysFn
                     LDW     mathShift
-                    SYS     0x00                ; 0x00 = 270-max(14,24/2)
+                    SYS     28
                     RET
 %ENDS   
     
@@ -194,7 +194,7 @@ shiftLeft8bit       LDWI    SYS_LSLW8_24
 shiftRight1bit      LDWI    SYS_LSRW1_48
                     STW     giga_sysFn
                     LDW     mathShift
-                    SYS     0xF6                ; 0xF6 = 270-max(14,48/2)
+                    SYS     48
                     RET
 %ENDS   
     
@@ -202,7 +202,7 @@ shiftRight1bit      LDWI    SYS_LSRW1_48
 shiftRight2bit      LDWI    SYS_LSRW2_52
                     STW     giga_sysFn
                     LDW     mathShift
-                    SYS     0xF4                ; 0xF4 = 270-max(14,52/2)
+                    SYS     52
                     RET
 %ENDS   
     
@@ -210,7 +210,7 @@ shiftRight2bit      LDWI    SYS_LSRW2_52
 shiftRight3bit      LDWI    SYS_LSRW3_52
                     STW     giga_sysFn
                     LDW     mathShift
-                    SYS     0xF4                ; 0xF4 = 270-max(14,52/2)
+                    SYS     52
                     RET
 %ENDS   
     
@@ -218,7 +218,7 @@ shiftRight3bit      LDWI    SYS_LSRW3_52
 shiftRight4bit      LDWI    SYS_LSRW4_50
                     STW     giga_sysFn
                     LDW     mathShift
-                    SYS     0xF5                ; 0xF5 = 270-max(14,50/2)
+                    SYS     50
                     RET
 %ENDS   
     
@@ -226,7 +226,7 @@ shiftRight4bit      LDWI    SYS_LSRW4_50
 shiftRight5bit      LDWI    SYS_LSRW5_50
                     STW     giga_sysFn
                     LDW     mathShift
-                    SYS     0xF5                ; 0xF5 = 270-max(14,50/2)
+                    SYS     50
                     RET
 %ENDS   
     
@@ -234,7 +234,7 @@ shiftRight5bit      LDWI    SYS_LSRW5_50
 shiftRight6bit      LDWI    SYS_LSRW6_48
                     STW     giga_sysFn
                     LDW     mathShift
-                    SYS     0xF6                ; 0xF6 = 270-max(14,48/2)
+                    SYS     48
                     RET
 %ENDS   
     
@@ -242,7 +242,7 @@ shiftRight6bit      LDWI    SYS_LSRW6_48
 shiftRight7bit      LDWI    SYS_LSRW7_30
                     STW     giga_sysFn
                     LDW     mathShift
-                    SYS     0xFF                ; 0xFF = 270-max(14,30/2)
+                    SYS     30
                     RET
 %ENDS   
     
@@ -250,7 +250,7 @@ shiftRight7bit      LDWI    SYS_LSRW7_30
 shiftRight8bit      LDWI    SYS_LSRW8_24
                     STW     giga_sysFn
                     LDW     mathShift
-                    SYS     0x00                ; 0x00 = 270-max(14,24/2)
+                    SYS     28
                     RET
 %ENDS
 
@@ -262,12 +262,12 @@ shiftRightSgn1bit   LDWI    SYS_LSRW1_48
                     ANDW    mathShift
                     BEQ     shiftRS1_pos        ; check sign
                     LDW     mathShift
-                    SYS     0xF6                ; shift right 1
+                    SYS     48                  ; shift right 1
                     ORW     mathSign            ; fix sign
                     RET
 
 shiftRS1_pos        LDW     mathShift           ; positive number
-                    SYS     0xF6                ; 0xF6 = 270-max(14,48/2)
+                    SYS     48
                     RET
 %ENDS   
     
@@ -280,12 +280,12 @@ shiftRightSgn2bit   LDWI    SYS_LSRW2_52
                     LDWI    0xC000
                     STW     mathSign
                     LDW     mathShift
-                    SYS     0xF4                ; shift right 2
+                    SYS     52                  ; shift right 2
                     ORW     mathSign            ; fix sign
                     RET
 
 shiftRS2_pos        LDW     mathShift           ; positive number
-                    SYS     0xF4                ; 0xF4 = 270-max(14,52/2)
+                    SYS     52
                     RET
 %ENDS   
     
@@ -298,12 +298,12 @@ shiftRightSgn3bit   LDWI    SYS_LSRW3_52
                     LDWI    0xE000
                     STW     mathSign
                     LDW     mathShift
-                    SYS     0xF4                ; shift right 3
+                    SYS     52                  ; shift right 3
                     ORW     mathSign            ; fix sign
                     RET
 
 shiftRS3_pos        LDW     mathShift           ; positive number
-                    SYS     0xF4                ; 0xF4 = 270-max(14,52/2)
+                    SYS     52
                     RET
 %ENDS   
 
@@ -316,12 +316,12 @@ shiftRightSgn4bit   LDWI    SYS_LSRW4_50
                     LDWI    0xF000
                     STW     mathSign
                     LDW     mathShift
-                    SYS     0xF5                ; shift right 4
+                    SYS     50                  ; shift right 4
                     ORW     mathSign            ; fix sign
                     RET
 
 shiftRS4_pos        LDW     mathShift           ; positive number
-                    SYS     0xF5                ; 0xF5 = 270-max(14,50/2)
+                    SYS     50
                     RET
 %ENDS
                     
@@ -334,12 +334,12 @@ shiftRightSgn5bit   LDWI    SYS_LSRW5_50
                     LDWI    0xF800
                     STW     mathSign
                     LDW     mathShift
-                    SYS     0xF5                ; shift right 5
+                    SYS     50                  ; shift right 5
                     ORW     mathSign            ; fix sign
                     RET
 
 shiftRS5_pos        LDW     mathShift           ; positive number
-                    SYS     0xF5                ; 0xF5 = 270-max(14,50/2)
+                    SYS     50
                     RET
 %ENDS   
 
@@ -352,12 +352,12 @@ shiftRightSgn6bit   LDWI    SYS_LSRW6_48
                     LDWI    0xFC00
                     STW     mathSign
                     LDW     mathShift
-                    SYS     0xF6                ; shift right 6
+                    SYS     48                  ; shift right 6
                     ORW     mathSign            ; fix sign
                     RET
 
 shiftRS6_pos        LDW     mathShift           ; positive number
-                    SYS     0xF6                ; 0xF6 = 270-max(14,48/2)
+                    SYS     48
                     RET
 %ENDS   
     
@@ -370,12 +370,12 @@ shiftRightSgn7bit   LDWI    SYS_LSRW7_30
                     LDWI    0xFE00
                     STW     mathSign
                     LDW     mathShift
-                    SYS     0xFF                ; shift right 7
+                    SYS     30                  ; shift right 7
                     ORW     mathSign            ; fix sign
                     RET
 
 shiftRS7_pos        LDW     mathShift           ; positive number
-                    SYS     0xFF                ; 0xFF = 270-max(14,30/2)
+                    SYS     30
                     RET
 %ENDS   
     
@@ -388,11 +388,11 @@ shiftRightSgn8bit   LDWI    SYS_LSRW8_24
                     LDWI    0xFF00
                     STW     mathSign
                     LDW     mathShift
-                    SYS     0x00                ; shift right 8
+                    SYS     28                  ; shift right 8
                     ORW     mathSign            ; fix sign
                     RET
 
 shiftRS8_pos        LDW     mathShift           ; positive number
-                    SYS     0x00                ; 0x00 = 270-max(14,24/2)
+                    SYS     28
                     RET
 %ENDS

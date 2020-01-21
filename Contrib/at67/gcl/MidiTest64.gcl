@@ -51,15 +51,15 @@ gcl0x
 ] MidiEndNote=
 
 [def { MidiStartNote -- starts a MIDI note }
-  \notesTable notes=                        { notes = \notesTable                      }
-  midiStreamPtr, 11- 1<< notes+             { notes = (Peek(midiStreamPtr) - 10)*2 - 2 }
-  notes= 0? <midiNote.                      { midiNote low = LUP(notes + 0)            }
-  notes  1? >midiNote.                      { midiNote high = LUP(notes + 1)           }
-  midiCommand $03& >notes.                  { notes high = channel                     }
-  $0 <notes.                                { notes low = $00                          }
-  notes midiChannel+ notes=                 { notes += midiChannel                     }
-  midiNote notes:                           { Doke(notes, midiNote)                    }
-  midiStreamPtr 1+ midiStreamPtr=           { midiStreamPtr++                          }
+  \notesTable notes=                        { notes = \notesTable                  }
+  midiStreamPtr, 11- 1<< notes+             { notes = (Peek(midiStreamPtr) - 11)*2 }
+  notes= 0? <midiNote.                      { midiNote low = LUP(notes + 0)        }
+  notes  1? >midiNote.                      { midiNote high = LUP(notes + 1)       }
+  midiCommand $03& >notes.                  { notes high = channel                 }
+  $0 <notes.                                { notes low = $00                      }
+  notes midiChannel+ notes=                 { notes += midiChannel                 }
+  midiNote notes:                           { Doke(notes, midiNote)                }
+  midiStreamPtr 1+ midiStreamPtr=           { midiStreamPtr++                      }
   ret
 ] MidiStartNote=
 
@@ -197,7 +197,7 @@ StringMidiNote PrintText!
 
 { Loop forever }
 [do
-  $10 \soundTimer=                          { keep pumping soundTimer, so that global sound stays alive }
+  $10 \soundTimer:                          { keep pumping soundTimer, so that global sound stays alive }
               
   $3074 Pos=            
   midiStreamPtr>, PrintByte!                {Print MIDI stream pointer, high and low bytes}

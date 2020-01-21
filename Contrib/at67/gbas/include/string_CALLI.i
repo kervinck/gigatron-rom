@@ -62,7 +62,7 @@ stringHexw          PUSH
 createHex           LDWI    SYS_LSRW4_50                        ; shift right by 4 SYS routine
                     STW     giga_sysFn
                     LD      strChr
-                    SYS     0xF5                                ; SYS_LSRW4_50, 270 - 50/2 = 0xF5
+                    SYS     50
                     SUBI    10
                     BLT     createH_skip0
                     ADDI    7

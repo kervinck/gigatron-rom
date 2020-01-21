@@ -23,7 +23,7 @@ setTetrisBlock  LDWI    SYS_Draw4_30        ; setup 4 pixel SYS routine
 setT_loop       LDW     vbase           ; vram address
                 ADDW    xx
                 STW     giga_sysArg4
-                SYS     0xFF            ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+                SYS     30
 
                 PUSH
                 CALL    playMidi

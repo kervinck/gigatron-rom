@@ -76,7 +76,7 @@ scanlineMode        LDW     giga_romType
 scanlineM_cont      LDWI    SYS_SetMode_v2_80
                     STW     giga_sysFn
                     LDW     graphicsMode
-                    SYS     0xE6                ; 270 - max(14,80/2)
+                    SYS     80
                     RET
 %ENDS   
     
@@ -132,7 +132,7 @@ drawHL_cont         LD      drawHLine_x1
                     SUBI    3
                     STW     drawHLine_x4        ; 4 pixel chunks limit
 
-drawHL_loop0        SYS     0xFF                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+drawHL_loop0        SYS     30
                     CALL    realTimeProcAddr
                     LD      giga_sysArg4
                     ADDI    4
@@ -186,7 +186,7 @@ drawVL_cont         LD      drawVLine_x1
 
 drawVL_loop0        LDI     0xFF
                     ST      giga_sysArg2        ; 8 pixels of fg and bg colour
-                    SYS     0xCB                ; SYS_VDrawBits_134, 270 - 134/2 = 0xCB
+                    SYS     134                 ; SYS_VDrawBits_134, 270 - 134/2 = 0xCB
                     CALL    realTimeProcAddr
                     LD      giga_sysArg4 + 1
                     ADDI    8
@@ -271,7 +271,7 @@ drawLineExt         LDW     drawLine_sy
 drawL_num           LDWI    SYS_LSRW1_48
                     STW     giga_sysFn          
                     LDW     drawLine_sx
-                    SYS     0xF6                ; 0xF6 = 270-max(14,48/2)
+                    SYS     48
                     ADDI    1
                     STW     drawLine_num        ; numerator = sx>>1
                     STW     drawLine_count      ; for(count=sx>>1; counti>=0; --i)
@@ -337,12 +337,12 @@ drawLineLoadXY      LD      drawLine_x1
 drawLineLoadDXY     LDWI    SYS_LSLW8_24
                     STW     giga_sysFn          
                     LDW     drawLine_dy1
-                    SYS     0x00                ; LSL 8, 0x00 = 270-max(14,24/2)
+                    SYS     28
                     ADDW    drawLine_dx1
                     STW     drawLine_dxy1       ; dxy1 = dx1 + (dy1<<8)
     
                     LDW     drawLine_dy2
-                    SYS     0x00                ; LSL 8, 0x00 = 270-max(14,24/2)
+                    SYS     28
                     ADDW    drawLine_dx2
                     STW     drawLine_dxy2       ; dxy2 = dx2 + (dy2<<8)
                     RET
@@ -417,7 +417,7 @@ drawVTLineExt       LDW     drawLine_sy
 drawVTL_num         LDWI    SYS_LSRW1_48
                     STW     giga_sysFn          
                     LDW     drawLine_sx
-                    SYS     0xF6                ; 0xF6 = 270-max(14,48/2)
+                    SYS     48
                     ADDI    1
                     STW     drawLine_num        ; numerator = sx>>1
                     STW     drawLine_count      ; for(count=sx>>1; counti>=0; --i)
@@ -496,12 +496,12 @@ drawVTLineLoadXY    LD      drawLine_x1
 drawVTLineLoadDXY   LDWI    SYS_LSLW8_24
                     STW     giga_sysFn          
                     LDW     drawLine_dy1
-                    SYS     0x00                ; LSL 8, 0x00 = 270-max(14,24/2)
+                    SYS     28
                     ADDW    drawLine_dx1
                     STW     drawLine_dxy1       ; dxy1 = dx1 + (dy1<<8)
     
                     LDW     drawLine_dy2
-                    SYS     0x00                ; LSL 8, 0x00 = 270-max(14,24/2)
+                    SYS     28
                     ADDW    drawLine_dx2
                     STW     drawLine_dxy2       ; dxy2 = dx2 + (dy2<<8)
                     RET
