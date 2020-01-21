@@ -5,8 +5,6 @@
 #include <iomanip>
 #include <vector>
 #include <algorithm>
-#include <chrono>
-#include <thread>
 
 #include "memory.h"
 #include "cpu.h"
@@ -982,8 +980,6 @@ namespace Cpu
                 Editor::handleInput();
                 Graphics::render(true);
             }
-
-            //std::this_thread::sleep_for(std::chrono::milliseconds(5));
         }
 
         // Pixel

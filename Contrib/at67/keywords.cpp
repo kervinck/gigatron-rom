@@ -65,6 +65,7 @@ namespace Keywords
         _keywords["LET"    ] = {"LET",     keywordLET,     Compiler::SingleStatementParsed};
         _keywords["END"    ] = {"END",     keywordEND,     Compiler::SingleStatementParsed};
         _keywords["INC"    ] = {"INC",     keywordINC,     Compiler::SingleStatementParsed};
+        _keywords["DEC"    ] = {"DEC",     keywordDEC,     Compiler::SingleStatementParsed};
         _keywords["ON"     ] = {"ON",      keywordON,      Compiler::SingleStatementParsed};
         _keywords["GOTO"   ] = {"GOTO",    keywordGOTO,    Compiler::SingleStatementParsed};
         _keywords["GOSUB"  ] = {"GOSUB",   keywordGOSUB,   Compiler::SingleStatementParsed};
@@ -942,6 +943,28 @@ namespace Keywords
         return true;
     }
 
+    bool keywordDEC(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        UNREFERENCED_PARAMETER(result);
+        UNREFERENCED_PARAMETER(tokenIndex);
+
+        // Operand must be an integer var
+        std::string varToken = codeLine._code.substr(foundPos);
+        Expression::stripWhitespace(varToken);
+        int varIndex = Compiler::findVar(varToken, false);
+        if(varIndex < 0)
+        {
+            fprintf(stderr, "Compiler::keywordDEC() : Syntax error, integer variable '%s' not found, in '%s' on line %d\n", varToken.c_str(), codeLine._text.c_str(), codeLineIndex + 1);
+            return false;
+        }
+
+        Compiler::emitVcpuAsm("LDW",  "_" + Compiler::getIntegerVars()[varIndex]._name, false, codeLineIndex);
+        Compiler::emitVcpuAsm("SUBI", "1", false, codeLineIndex);
+        Compiler::emitVcpuAsm("STW",  "_" + Compiler::getIntegerVars()[varIndex]._name, false, codeLineIndex);
+
+        return true;
+    }
+
     bool keywordON(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         UNREFERENCED_PARAMETER(result);
@@ -1000,7 +1023,7 @@ namespace Keywords
         // Allocate giga memory for LUT
         int size = int(gotoTokens.size()) * 2;
         uint16_t address;
-        if(!Memory::giveFreeRAM(Memory::FitAscending, size, 0x0200, Compiler::getRuntimeStart(), address))
+        if(!Memory::getFreeRAM(Memory::FitAscending, size, 0x0200, Compiler::getRuntimeStart(), address))
         {
             fprintf(stderr, "Compiler::keywordON() : Not enough RAM for onGotoGosub LUT of size %d\n", size);
             return false;
@@ -1537,22 +1560,22 @@ namespace Keywords
         // INPUT LUTs
         const int lutSize = 3;
         uint16_t lutAddr, varsAddr, strsAddr, typesAddr;
-        if(!Memory::giveFreeRAM(Memory::FitAscending, lutSize*2, 0x0200, Compiler::getRuntimeStart(), lutAddr))
+        if(!Memory::getFreeRAM(Memory::FitAscending, lutSize*2, 0x0200, Compiler::getRuntimeStart(), lutAddr))
         {
             fprintf(stderr, "Compiler::keywordINPUT() : Not enough RAM for INPUT LUT of size %d, in '%s' on line %d\n", lutSize*2, codeLine._code.c_str(), codeLineIndex + 1);
             return false;
         }
-        if(!Memory::giveFreeRAM(Memory::FitAscending, int(varsLut.size()*2), 0x0200, Compiler::getRuntimeStart(), varsAddr))
+        if(!Memory::getFreeRAM(Memory::FitAscending, int(varsLut.size()*2), 0x0200, Compiler::getRuntimeStart(), varsAddr))
         {
             fprintf(stderr, "Compiler::keywordINPUT() : Not enough RAM for INPUT Vars LUT of size %d, in '%s' on line %d\n", int(varsLut.size()*2), codeLine._code.c_str(), codeLineIndex + 1);
             return false;
         }
-        if(!Memory::giveFreeRAM(Memory::FitAscending, int(strsLut.size()*2), 0x0200, Compiler::getRuntimeStart(), strsAddr))
+        if(!Memory::getFreeRAM(Memory::FitAscending, int(strsLut.size()*2), 0x0200, Compiler::getRuntimeStart(), strsAddr))
         {
             fprintf(stderr, "Compiler::keywordINPUT() : Not enough RAM for INPUT Strings LUT of size %d, in '%s' on line %d\n", int(strsLut.size()*2), codeLine._code.c_str(), codeLineIndex + 1);
             return false;
         }
-        if(!Memory::giveFreeRAM(Memory::FitAscending, int(typesLut.size()*2), 0x0200, Compiler::getRuntimeStart(), typesAddr))
+        if(!Memory::getFreeRAM(Memory::FitAscending, int(typesLut.size()*2), 0x0200, Compiler::getRuntimeStart(), typesAddr))
         {
             fprintf(stderr, "Compiler::keywordINPUT() : Not enough RAM for INPUT Var Types LUT of size %d, in '%s' on line %d\n", int(typesLut.size()*2), codeLine._code.c_str(), codeLineIndex + 1);
             return false;
@@ -2337,7 +2360,7 @@ namespace Keywords
 
         arraySize *= 2;
         uint16_t arrayStart = 0x0000;
-        if(!Memory::giveFreeRAM(Memory::FitAscending, arraySize, 0x0200, Compiler::getRuntimeStart(), arrayStart))
+        if(!Memory::getFreeRAM(Memory::FitAscending, arraySize, 0x0200, Compiler::getRuntimeStart(), arrayStart))
         {
             fprintf(stderr, "Compiler::keywordDIM() : Not enough RAM for int array of size %d in '%s' on line %d\n", arraySize, codeLine._code.c_str(), codeLineIndex + 1);
             return false;
