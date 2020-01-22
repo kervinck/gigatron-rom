@@ -1092,7 +1092,7 @@ namespace Compiler
     bool checkForGosubLabel(const std::string& code, int lineNumber)
     {
         std::vector<std::string> tokens = Expression::tokeniseLine(code, " :=");
-        for(size_t i=0; i<tokens.size(); i++)
+        for(int i=0; i<int(tokens.size()); i++)
         {
             if(Expression::strToUpper(tokens[i]) == "GOSUB")
             {

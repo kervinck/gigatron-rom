@@ -1167,7 +1167,7 @@ namespace Loader
                 {
                     // Ignore if address will not fit in current RAM
                     uint16_t address = gt1File._segments[j]._loAddress + (gt1File._segments[j]._hiAddress <<8);
-                    if((address + gt1File._segments[j]._dataBytes.size() - 1) < Memory::getSizeRAM())
+                    if((address + int(gt1File._segments[j]._dataBytes.size()) - 1) < Memory::getSizeRAM())
                     {
                         for(int i=0; i<int(gt1File._segments[j]._dataBytes.size()); i++)
                         {

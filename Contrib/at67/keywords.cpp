@@ -2467,7 +2467,7 @@ namespace Keywords
 
             // Parse function paramaters
             std::vector<Expression::Numeric> funcParams = {Expression::Numeric(), Expression::Numeric(), Expression::Numeric()};
-            for(int i=0; i<funcParams.size(); i++)
+            for(int i=0; i<int(funcParams.size()); i++)
             {
                 parseExpression(codeLine, codeLineIndex, addrTokens[i + 2], operand, funcParams[i]);
             }
@@ -2496,7 +2496,7 @@ namespace Keywords
             if(typeText == "BYTE")
             {
                 std::vector<uint8_t> dataBytes(int(count), 0);
-                for(int i=0; i<dataBytes.size(); i++) dataBytes[i] = uint8_t(funcData[i]);
+                for(int i=0; i<int(dataBytes.size()); i++) dataBytes[i] = uint8_t(funcData[i]);
                 Compiler::getDefDataBytes().push_back({address, dataBytes});
                 if(!Memory::takeFreeRAM(address, int(dataBytes.size()))) return false;
             }
@@ -2557,7 +2557,7 @@ namespace Keywords
         else if(typeText == "WORD")
         {
             std::vector<int16_t> dataWords;
-            for(int i=0; i<dataTokens.size(); i++)
+            for(int i=0; i<int(dataTokens.size()); i++)
             {
                 int16_t data;
                 Expression::stripWhitespace(dataTokens[i]);
