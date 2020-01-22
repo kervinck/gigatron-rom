@@ -248,7 +248,7 @@ namespace Cpu
             fprintf(stderr, "Cpu::patchSplitGt1IntoRom() : failed to read %s ROM file.\n", std::string(splitGt1path + "_ti").c_str());
             return false;
         }
-        for(int i=0; i<filelength; i++) _ROM[startAddress + i][ROM_INST] = filebuffer[i];
+        for(int i=0; i<int(filelength); i++) _ROM[startAddress + i][ROM_INST] = filebuffer[i];
 
         // Data ROM
         std::ifstream romfile_td(splitGt1path + "_td", std::ios::binary | std::ios::in);
@@ -269,7 +269,7 @@ namespace Cpu
             fprintf(stderr, "Cpu::patchSplitGt1IntoRom() : failed to read %s ROM file.\n", std::string(splitGt1path + "_td").c_str());
             return false;
         }
-        for(int i=0; i<filelength; i++) _ROM[startAddress + i][ROM_DATA] = filebuffer[i];
+        for(int i=0; i<int(filelength); i++) _ROM[startAddress + i][ROM_DATA] = filebuffer[i];
 
         // Replace internal gt1 menu option with split gt1
         _ROM[_internalGt1s[gt1Id]._patch + 0][ROM_DATA] = LO_BYTE(startAddress);
@@ -530,7 +530,7 @@ namespace Cpu
         saveWin32Console();
 #endif
 
-        for(int i=NUM_INT_ROMS; i<_romFiles.size(); i++)
+        for(int i=NUM_INT_ROMS; i<int(_romFiles.size()); i++)
         {
             if(_romFiles[i])
             {
@@ -912,7 +912,7 @@ namespace Cpu
     // Counts maximum and used vCPU instruction slots available per frame
     void vCpuUsage(const State& S, const State& T)
     {
-        UNREFERENCED_PARAMETER(T);
+        UNREFERENCED_PARAM(T);
 
         // All ROM's so far v1 through v4 use the same vCPU dispatch address!
         if(S._PC == ROM_VCPU_DISPATCH)

@@ -39,7 +39,9 @@
 #include "rs232.h"
 
 #include <unistd.h>
+#ifndef __USE_MISC
 #define __USE_MISC // For CRTSCTS
+#endif
 #include <termios.h>
 #include <fcntl.h>
 #include <dirent.h>
@@ -242,7 +244,7 @@ int _BaudFlag(int BaudRate)
 
 void _AppendDevices(const char * base)
 {
-    int baseLen = strlen(base);
+    size_t baseLen = strlen(base);
     struct dirent * dp;
 // Enumerate devices
     DIR * dirp = opendir("/dev");

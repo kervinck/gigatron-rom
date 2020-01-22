@@ -87,7 +87,7 @@ _next_0x0249        LDWI                    0x0600
                     LDI                     63
                     POKE                    0xc4                            ; poke (127 - a(i) LSL 8) + i, &h3F
 
-                    ForNextLoopInc          _i _next_0x0249 127             ; next i
+                    ForNextFarInc           _i _next_0x0249 127             ; next i
 
 _loop               Rand                    
                     ANDI                    127
@@ -251,7 +251,7 @@ mathResult          EQU     register14
 
 rand16bit           LDWI    SYS_Random_34
                     STW     giga_sysFn
-                    SYS     0xFD
+                    SYS     34
                     RET
 
 
@@ -324,12 +324,12 @@ clearVertBlinds     PUSH
 clearVB_loop        CALL    realTimeProcAddr
                     LD      top
                     ST      giga_sysArg4 + 1                    ; top line
-                    SYS     0xFF                                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+                    SYS     30
     
                     LDWI    giga_yres - 1 + 16
                     SUBW    top
                     ST      giga_sysArg4 + 1                    ; bottom line
-                    SYS     0xFF                                ; SYS_Draw4_30, 270 - 30/2 = 0xFF
+                    SYS     30
     
                     LD      giga_sysArg4
                     ADDI    0x04

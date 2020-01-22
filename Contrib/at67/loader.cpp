@@ -124,7 +124,7 @@ namespace Loader
         // Merge page 0 segments together
         Gt1Segment page0;
         int segments = 0;
-        for(int i=0; i<gt1File._segments.size(); i++) if(gt1File._segments[i]._hiAddress == 0x00) segments++;
+        for(int i=0; i<int(gt1File._segments.size()); i++) if(gt1File._segments[i]._hiAddress == 0x00) segments++;
         if(segments > 1)
         {
             uint8_t start = gt1File._segments[0]._loAddress;
@@ -150,7 +150,7 @@ namespace Loader
                     return false;
                 }
 
-                for(int k=seg; k<seg+gt1File._segments[i]._dataBytes.size(); k++)
+                for(int k=seg; k<seg+int(gt1File._segments[i]._dataBytes.size()); k++)
                 {
                     page0._dataBytes[k] = gt1File._segments[i]._dataBytes[j++];
                 }
@@ -169,7 +169,7 @@ namespace Loader
                                                                                        uint8_t(gt1File._segments[0]._dataBytes.size()));
         }
 
-        for(int i=0; i<gt1File._segments.size(); i++)
+        for(int i=0; i<int(gt1File._segments.size()); i++)
         {
             // Write header
             outfile.write((char *)&gt1File._segments[i]._hiAddress, SEGMENT_HEADER_SIZE);
@@ -204,11 +204,11 @@ namespace Loader
     {
         size_t nameSuffix = filename.find_last_of(".");
         std::string output = filename.substr(0, nameSuffix) + ".gt1";
-        fprintf(stderr, "\nFile:   %s\n", output.c_str());
+        fprintf(stderr, "\nOutput : %s\n", output.c_str());
 
         // Header
         uint16_t totalSize = 0;
-        for(int i=0; i<gt1File._segments.size(); i++)
+        for(int i=0; i<int(gt1File._segments.size()); i++)
         {
             // Don't count page 0 RAM usage or segments outside of current RAM size
             if(gt1File._segments[i]._hiAddress)
@@ -230,7 +230,7 @@ namespace Loader
         int contiguousSegments = 0;
         int startContiguousSegment = 0;
         uint16_t startContiguousAddress = 0x0000;
-        for(int i=0; i<gt1File._segments.size(); i++)
+        for(int i=0; i<int(gt1File._segments.size()); i++)
         {
             uint16_t address = gt1File._segments[i]._loAddress + (gt1File._segments[i]._hiAddress <<8);
             uint16_t segmentSize = (gt1File._segments[i]._segmentSize == 0) ? 256 : gt1File._segments[i]._segmentSize;
@@ -279,7 +279,7 @@ namespace Loader
             }
         }
         fprintf(stderr, "**********************************************\n");
-        fprintf(stderr, "* Free RAM after load  : %d\n", Memory::getBaseFreeRAM() - totalSize);
+        fprintf(stderr, "* Free RAM after load  :  %5d  :    %5d\n", Memory::getBaseFreeRAM() - totalSize, Memory::getBaseFreeRAM() - totalSize + RAM_EXPANSION_SIZE);
         fprintf(stderr, "**********************************************\n");
 
         return totalSize;
@@ -325,7 +325,7 @@ namespace Loader
     int getConfigRomsSize(void) {return int(_configRoms.size());}
     ConfigRom* getConfigRom(int index)
     {
-        if(_configRoms.size() == 0  ||  index >= _configRoms.size()) return nullptr;
+        if(_configRoms.size() == 0  ||  index >= int(_configRoms.size())) return nullptr;
 
         return &_configRoms[index];
     }
@@ -633,7 +633,7 @@ namespace Loader
 
     void sendCommandToGiga(char cmd, bool wait)
     {
-        UNREFERENCED_PARAMETER(wait);
+        UNREFERENCED_PARAM(wait);
 
         if(!openComPort(_configComPort)) return;
 
@@ -788,7 +788,7 @@ namespace Loader
         }
 
         // load data
-        for(int j=0; j<sdata._addresses.size(); j++)
+        for(int j=0; j<int(sdata._addresses.size()); j++)
         {
             //sdata._data.push_back(std::vector<uint8_t>(sdata._counts[j], 0x00));
             for(uint16_t i=0; i<sdata._counts[j]; i++)
@@ -873,7 +873,7 @@ namespace Loader
         }         
 
         // Check data has been initialised
-        for(int j=0; j<saveData._addresses.size(); j++)
+        for(int j=0; j<int(saveData._addresses.size()); j++)
         {
             if(saveData._data.size() != saveData._addresses.size())
             {
@@ -891,7 +891,7 @@ namespace Loader
         }
 
         // Save data
-        for(int j=0; j<saveData._addresses.size(); j++)
+        for(int j=0; j<int(saveData._addresses.size()); j++)
         {
             for(int i=0; i<saveData._counts[j]; i++)
             {
@@ -955,7 +955,7 @@ namespace Loader
         frameCount = 0;
 
         // Update data, (checks byte by byte and saves if larger, endian order is configurable)
-        for(int j=0; j<_saveData[_currentGame]._addresses.size(); j++)
+        for(int j=0; j<int(_saveData[_currentGame]._addresses.size()); j++)
         {
             // Defaults to little endian
             int start = _saveData[_currentGame]._counts[j] - 1, end = -1, step = -1;
@@ -1042,7 +1042,7 @@ namespace Loader
         uint16_t startAddress = GTB_LINE0_ADDRESS + MAX_GTB_LINE_SIZE;
         uint16_t endAddress = startAddress;
         char *endPtr;
-        for(int i=0; i<lines.size(); i++)
+        for(int i=0; i<int(lines.size()); i++)
         {
             uint16_t lineNumber = (uint16_t)strtol(lines[i].c_str(), &endPtr, 10);
             Cpu::setRAM(endAddress + 0, LO_BYTE(lineNumber));
@@ -1067,7 +1067,7 @@ namespace Loader
         Cpu::setRAM(GTB_LINE0_ADDRESS + 0, LO_BYTE(endAddress));
         Cpu::setRAM(GTB_LINE0_ADDRESS + 1, HI_BYTE(endAddress));
         std::string list = "RUN";
-        for(int i=0; i<list.size(); i++) Cpu::setRAM(uint16_t(endAddress + 2 + i), list[i]);
+        for(int i=0; i<int(list.size()); i++) Cpu::setRAM(uint16_t(endAddress + 2 + i), list[i]);
         Cpu::setRAM(uint16_t(endAddress + 2 + uint16_t(list.size())), 0);
 
         return true;
@@ -1163,13 +1163,13 @@ namespace Loader
 
             if(uploadTarget == Emulator)
             {
-                for(int j=0; j<gt1File._segments.size(); j++)
+                for(int j=0; j<int(gt1File._segments.size()); j++)
                 {
                     // Ignore if address will not fit in current RAM
                     uint16_t address = gt1File._segments[j]._loAddress + (gt1File._segments[j]._hiAddress <<8);
-                    if((address + gt1File._segments[j]._dataBytes.size() - 1) < Memory::getSizeRAM())
+                    if((address + int(gt1File._segments[j]._dataBytes.size()) - 1) < Memory::getSizeRAM())
                     {
-                        for(int i=0; i<gt1File._segments[j]._dataBytes.size(); i++)
+                        for(int i=0; i<int(gt1File._segments[j]._dataBytes.size()); i++)
                         {
                             Cpu::setRAM(uint16_t(address+i), gt1File._segments[j]._dataBytes[i]);
                         }
@@ -1433,8 +1433,6 @@ namespace Loader
     void upload(int vgaY)
     {
         static bool frameUploading = false;
-        static FILE* fileToUpload = NULL;
-        static FILE* fileToSave = NULL;
         static uint8_t payload[RAM_SIZE_HI];
         static uint8_t payloadSize = 0;
 

@@ -12,3 +12,5 @@ set(sources ../../memory.cpp ../../loader.cpp ../../assembler.cpp ../../expressi
 add_executable(gtasm ${headers} ${sources})
 
 target_link_libraries(gtasm)
+
+set_target_properties(gtasm PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE ..)

@@ -48,7 +48,7 @@ namespace Terminal
 
     bool sendCommandToGiga(const std::string& cmd, std::vector<std::string>& text)
     {
-        for(int i=0; i<cmd.size(); i++)
+        for(int i=0; i<int(cmd.size()); i++)
         {
             Loader::sendCharGiga(cmd.c_str()[i]);
         }
@@ -75,23 +75,23 @@ namespace Terminal
     void copyTextToClipboard(void)
     {
         int clipboardTextSize = 0;
-        for(int i=0; i<_terminalText.size(); i++) clipboardTextSize += int(_terminalText[i].size());
+        for(int i=0; i<int(_terminalText.size()); i++) clipboardTextSize += int(_terminalText[i].size());
         if(clipboardTextSize == 0) return;
         char* clipboardText = new (std::nothrow) char[clipboardTextSize];
         if(!clipboardText) return;
 
         // Copy text line by line, char by char, replace trailing zero's with newlines
         int clipboardTextIndex = 0;
-        for(int i=0; i<_terminalTextSelected.size(); i++)
+        for(int i=0; i<int(_terminalTextSelected.size()); i++)
         {
             int index = _terminalTextSelected[i];
-            for(int j=0; j<_terminalText[index].size()-1; j++)
+            for(int j=0; j<int(_terminalText[index].size())-1; j++)
             {
                 clipboardText[clipboardTextIndex++] = _terminalText[index][j];
             }
 
             // trailing zero's get replaced with newlines, except for last one
-            clipboardText[clipboardTextIndex++] = (i < _terminalTextSelected.size() - 1) ? '\n' :  0;
+            clipboardText[clipboardTextIndex++] = (i < int(_terminalTextSelected.size()) - 1) ? '\n' :  0;
         }
 
         // Save to system clipboard
@@ -109,12 +109,12 @@ namespace Terminal
         Graphics::clearScreen(0x22222222, 0x00000000);
 
         // Terminal text
-        for(int i=_terminalScrollOffset; i<_terminalText.size(); i++)
+        for(int i=_terminalScrollOffset; i<int(_terminalText.size()); i++)
         {
             if(i - _terminalScrollOffset >= _terminalScreenMaxIndex) break;
 
             bool invert = false;
-            for(int j=0; j<_terminalTextSelected.size(); j++)
+            for(int j=0; j<int(_terminalTextSelected.size()); j++)
             {
                 if(i == _terminalTextSelected[j])
                 {
@@ -176,7 +176,7 @@ namespace Terminal
 
         // Save selected text line as long as it doesn't already exist
         bool saveText = true;
-        for(int i=0; i<_terminalTextSelected.size(); i++)
+        for(int i=0; i<int(_terminalTextSelected.size()); i++)
         {
             if(_terminalTextSelected[i] == terminalTextSelected)
             {
@@ -184,12 +184,12 @@ namespace Terminal
                 break;
             }
         }
-        if(saveText  &&  terminalTextSelected < _terminalText.size()) _terminalTextSelected.push_back(terminalTextSelected);
+        if(saveText  &&  terminalTextSelected < int(_terminalText.size())) _terminalTextSelected.push_back(terminalTextSelected);
 
         // Select everything between min and max as long as it doesn't already exist
         int selectedMin = INT_MAX;
         int selectedMax = INT_MIN;
-        for(int i=0; i<_terminalTextSelected.size(); i++)
+        for(int i=0; i<int(_terminalTextSelected.size()); i++)
         {
             if(_terminalTextSelected[i] > selectedMax) selectedMax = _terminalTextSelected[i];
             if(_terminalTextSelected[i] < selectedMin) selectedMin = _terminalTextSelected[i];
@@ -197,7 +197,7 @@ namespace Terminal
         for(int i=selectedMin+1; i<selectedMax; i++)
         {
             saveText = true;
-            for(int j=0; j<_terminalTextSelected.size(); j++)
+            for(int j=0; j<int(_terminalTextSelected.size()); j++)
             {
                 if(_terminalTextSelected[j] == i)
                 {
@@ -205,7 +205,7 @@ namespace Terminal
                     break;
                 }
             }
-            if(saveText  &&  i < _terminalText.size()) _terminalTextSelected.push_back(i);
+            if(saveText  &&  i < int(_terminalText.size())) _terminalTextSelected.push_back(i);
         }
 
         if(mouseY == 0) _terminalScrollOffset--;
@@ -238,7 +238,7 @@ namespace Terminal
 
     void handleTerminalMouseButtonDown(const SDL_Event& event, const Editor::MouseState& mouseState)
     {
-        UNREFERENCED_PARAMETER(event);
+        UNREFERENCED_PARAM(event);
 
         if(mouseState._state == SDL_BUTTON_LEFT) _terminalTextSelected.clear();
 
@@ -255,8 +255,8 @@ namespace Terminal
 
     void handleTerminalMouseButtonUp(const SDL_Event& event, const Editor::MouseState& mouseState)
     {
-        UNREFERENCED_PARAMETER(event);
-        UNREFERENCED_PARAMETER(mouseState);
+        UNREFERENCED_PARAM(event);
+        UNREFERENCED_PARAM(mouseState);
 
         switch(_terminalMenuIdx)
         {
@@ -283,7 +283,7 @@ namespace Terminal
                 else
                 {
                     _terminalTextSelected.clear();
-                    for(int i=0; i<_terminalText.size(); i++)
+                    for(int i=0; i<int(_terminalText.size()); i++)
                     {
                         _terminalTextSelected.push_back(i);
                     }
@@ -303,7 +303,7 @@ namespace Terminal
                     // Delete selected
                     int selectedMin = _terminalTextSelected[0];
                     int selectedMax = _terminalTextSelected.back();
-                    if(_terminalText.size() > selectedMax)
+                    if(int(_terminalText.size()) > selectedMax)
                     {
                         _terminalText.erase(_terminalText.begin() + selectedMin, _terminalText.begin() + selectedMax + 1);
                     }
@@ -323,7 +323,7 @@ namespace Terminal
                     // Delete selected
                     int selectedMin = _terminalTextSelected[0];
                     int selectedMax = _terminalTextSelected.back();
-                    if(_terminalText.size() > selectedMax)
+                    if(int(_terminalText.size()) > selectedMax)
                     {
                         _terminalText.erase(_terminalText.begin() + selectedMin, _terminalText.begin() + selectedMax + 1);
                     }

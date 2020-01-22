@@ -12,3 +12,5 @@ set(sources ../../cpu.cpp gtsplitrom.cpp)
 add_executable(gtsplitrom ${headers} ${sources})
 
 target_link_libraries(gtsplitrom)
+
+set_target_properties(gtsplitrom PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE ..)

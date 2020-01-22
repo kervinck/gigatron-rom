@@ -232,7 +232,7 @@ namespace Optimiser
         if(Compiler::getCodeLines()[index]._vasm[oldLine]._internalLabel.size())
         {
             // Next available vasm line is part of a new BASIC line, so can't optimise
-            if(Compiler::getCodeLines()[index]._vasm.size() <= newLine) return false;
+            if(int(Compiler::getCodeLines()[index]._vasm.size()) <= newLine) return false;
             Compiler::getCodeLines()[index]._vasm[newLine]._internalLabel = Compiler::getCodeLines()[index]._vasm[oldLine]._internalLabel;
         }
     
@@ -245,9 +245,9 @@ namespace Optimiser
         // Loop through commented out code
         do
         {
-            if(vasmLineIndex >= Compiler::getCodeLines()[codeLineIndex]._vasm.size())
+            if(vasmLineIndex >= int(Compiler::getCodeLines()[codeLineIndex]._vasm.size()))
             {
-                if(++codeLineIndex >= Compiler::getCodeLines().size()) return;
+                if(++codeLineIndex >= int(Compiler::getCodeLines().size())) return;
                 vasmLineIndex = 0;
             }
         }
@@ -255,7 +255,7 @@ namespace Optimiser
 
         uint16_t optimisedAddress = Compiler::getCodeLines()[codeLineIndex]._vasm[vasmLineIndex]._address;
 
-        for(int i=0; i<Compiler::getLabels().size(); i++)
+        for(int i=0; i<int(Compiler::getLabels().size()); i++)
         {
             if(Compiler::getLabels()[i]._address >= optimisedAddress)
             {
@@ -270,18 +270,18 @@ namespace Optimiser
         // Loop through commented out code
         do
         {
-            if(vasmLineIndex >= Compiler::getCodeLines()[codeLineIndex]._vasm.size())
+            if(vasmLineIndex >= int(Compiler::getCodeLines()[codeLineIndex]._vasm.size()))
             {
-                if(++codeLineIndex >= Compiler::getCodeLines().size()) return;
+                if(++codeLineIndex >= int(Compiler::getCodeLines().size())) return;
                 vasmLineIndex = 0;
             }
         }
         while(Compiler::getCodeLines()[codeLineIndex]._vasm.size() == 0);
 
-        for(int i=codeLineIndex; i<Compiler::getCodeLines().size(); i++)
+        for(int i=codeLineIndex; i<int(Compiler::getCodeLines().size()); i++)
         {
             int start = (i == codeLineIndex) ? vasmLineIndex : 0;
-            for(int j=start; j<Compiler::getCodeLines()[i]._vasm.size(); j++)
+            for(int j=start; j<int(Compiler::getCodeLines()[i]._vasm.size()); j++)
             {
                 Compiler::getCodeLines()[i]._vasm[j]._address += int16_t(offset);
             }
@@ -292,9 +292,9 @@ namespace Optimiser
     {
 
 RESTART_OPTIMISE:
-        for(int i=0; i<Compiler::getCodeLines().size(); i++)
+        for(int i=0; i<int(Compiler::getCodeLines().size()); i++)
         {
-            for(int j=0; j<matchSequences.size(); j++)
+            for(int j=0; j<int(matchSequences.size()); j++)
             {
                 for(auto itVasm=Compiler::getCodeLines()[i]._vasm.begin(); itVasm!=Compiler::getCodeLines()[i]._vasm.end();)
                 {
@@ -303,7 +303,7 @@ RESTART_OPTIMISE:
 
                     // Can only optimise within a BASIC code line, (use multi-statements to optimise across lines)
                     int vasmIndexMax = vasmIndex + int(matchSequences[j]._sequence.size()) - 1;
-                    if(vasmIndexMax >= Compiler::getCodeLines()[i]._vasm.size())
+                    if(vasmIndexMax >= int(Compiler::getCodeLines()[i]._vasm.size()))
                     {
                         ++itVasm;
                         continue;

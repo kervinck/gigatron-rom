@@ -11,3 +11,5 @@ set(sources gt1torom.cpp)
 add_executable(gt1torom ${sources})
 
 target_link_libraries(gt1torom)
+
+set_target_properties(gt1torom PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE ..)
