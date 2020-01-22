@@ -213,7 +213,7 @@ namespace Expression
         if(varName.size() == 0)  return false;
         if(!isalpha((unsigned char)varName[0])) return false;
 
-        for(size_t i=1; i<varName.size()-1; i++)
+        for(int i=1; i<int(varName.size())-1; i++)
         {
             if(!isalnum((unsigned char)varName[i])) return false;
         }
@@ -230,7 +230,7 @@ namespace Expression
         if(str.size() < 2) return false;
         if(str[0] == '"'  &&  str.back() == '"')
         {
-            for(size_t i=1; i<str.size()-1; i++)
+            for(int i=1; i<int(str.size())-1; i++)
             {
                 if(str[i] == '"') return false;
             }
@@ -379,7 +379,7 @@ namespace Expression
         int spaceCount = 0;
         bool inString = false;
 
-        for(size_t i=0; i<input.size(); i++)
+        for(int i=0; i<int(input.size()); i++)
         {
             if(input[i] == '\"') inString = !inString;
 
@@ -607,7 +607,7 @@ namespace Expression
         // Hex
         if(token.size() >= 2  &&  token.c_str()[0] == '$')
         {
-            for(size_t i=1; i<token.size(); i++) success &= _hexaDecimalChars[uint8_t(token.c_str()[i])];
+            for(int i=1; i<int(token.size()); i++) success &= _hexaDecimalChars[uint8_t(token.c_str()[i])];
             if(success)
             {
                 result = strtol(&token.c_str()[1], NULL, 16);
@@ -617,7 +617,7 @@ namespace Expression
         // Hex
         else if(token.size() >= 3  &&  ((token.c_str()[0] == '0'  &&  token.c_str()[1] == 'X')  ||  (token.c_str()[0] == '&'  &&  token.c_str()[1] == 'H')))
         {
-            for(size_t i=2; i<token.size(); i++) success &= _hexaDecimalChars[uint8_t(token.c_str()[i])];
+            for(int i=2; i<int(token.size()); i++) success &= _hexaDecimalChars[uint8_t(token.c_str()[i])];
             if(success)
             {
                 result = strtol(&token.c_str()[2], NULL, 16);
@@ -627,7 +627,7 @@ namespace Expression
         // Octal
         else if(token.size() >= 3  &&  ((token.c_str()[0] == '0'  &&  (token.c_str()[1] == 'O' || token.c_str()[1] == 'Q'))  ||  (token.c_str()[0] == '&'  &&  token.c_str()[1] == 'O')))
         {
-            for(size_t i=2; i<token.size(); i++) success &= _octalChars[uint8_t(token.c_str()[i])];
+            for(int i=2; i<int(token.size()); i++) success &= _octalChars[uint8_t(token.c_str()[i])];
             if(success)
             {
                 result = strtol(&token.c_str()[2], NULL, 8);
@@ -637,7 +637,7 @@ namespace Expression
         // Binary
         else if(token.size() >= 3  &&  ((token.c_str()[0] == '0'  &&  token.c_str()[1] == 'B')  ||  (token.c_str()[0] == '&'  &&  token.c_str()[1] == 'B')))
         {
-            for(size_t i=2; i<token.size(); i++) success &= _binaryChars[uint8_t(token.c_str()[i])];
+            for(int i=2; i<int(token.size()); i++) success &= _binaryChars[uint8_t(token.c_str()[i])];
             if(success)
             {
                 result = strtol(&token.c_str()[2], NULL, 2);
@@ -647,7 +647,7 @@ namespace Expression
         // Decimal
         else
         {
-            for(size_t i=0; i<token.size(); i++) success &= _decimalChars[uint8_t(token.c_str()[i])];
+            for(int i=0; i<int(token.size()); i++) success &= _decimalChars[uint8_t(token.c_str()[i])];
             if(success)
             {
                 result = strtol(&token.c_str()[0], NULL, 10);
@@ -842,7 +842,7 @@ namespace Expression
         DelimiterState delimiterState = WhiteSpace;
         std::vector<std::string> tokens;
 
-        for(size_t i=0; i<=line.size(); i++)
+        for(int i=0; i<=int(line.size()); i++)
         {
             // End of line is a delimiter for white space
             if(i == line.size())
@@ -930,7 +930,7 @@ namespace Expression
         DelimiterState delimiterState = WhiteSpace;
         std::vector<std::string> tokens;
 
-        for(size_t i=0; i<=line.size(); i++)
+        for(int i=0; i<=int(line.size()); i++)
         {
             // End of line is a delimiter for white space
             if(i == line.size())

@@ -248,7 +248,7 @@ namespace Cpu
             fprintf(stderr, "Cpu::patchSplitGt1IntoRom() : failed to read %s ROM file.\n", std::string(splitGt1path + "_ti").c_str());
             return false;
         }
-        for(size_t i=0; i<filelength; i++) _ROM[startAddress + i][ROM_INST] = filebuffer[i];
+        for(int i=0; i<int(filelength); i++) _ROM[startAddress + i][ROM_INST] = filebuffer[i];
 
         // Data ROM
         std::ifstream romfile_td(splitGt1path + "_td", std::ios::binary | std::ios::in);
@@ -269,7 +269,7 @@ namespace Cpu
             fprintf(stderr, "Cpu::patchSplitGt1IntoRom() : failed to read %s ROM file.\n", std::string(splitGt1path + "_td").c_str());
             return false;
         }
-        for(size_t i=0; i<filelength; i++) _ROM[startAddress + i][ROM_DATA] = filebuffer[i];
+        for(int i=0; i<int(filelength); i++) _ROM[startAddress + i][ROM_DATA] = filebuffer[i];
 
         // Replace internal gt1 menu option with split gt1
         _ROM[_internalGt1s[gt1Id]._patch + 0][ROM_DATA] = LO_BYTE(startAddress);
@@ -530,7 +530,7 @@ namespace Cpu
         saveWin32Console();
 #endif
 
-        for(size_t i=NUM_INT_ROMS; i<_romFiles.size(); i++)
+        for(int i=NUM_INT_ROMS; i<int(_romFiles.size()); i++)
         {
             if(_romFiles[i])
             {

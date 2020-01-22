@@ -670,7 +670,7 @@ namespace Assembler
         input.clear();
 
         // Pre-process
-        for(size_t j=tokenIndex; j<tokens.size(); j++)
+        for(int j=tokenIndex; j<int(tokens.size()); j++)
         {
             // Strip comments
             if(tokens[j].find_first_of(";#") != std::string::npos) break;
@@ -697,7 +697,7 @@ namespace Assembler
             bool eos = (sep == std::string::npos);
             if(eos)
             {
-                for(size_t i=0; i<operators.size(); i++)
+                for(int i=0; i<int(operators.size()); i++)
                 {
                     sep = input.find(operators[i]);
                     eos = (sep == std::string::npos);
@@ -725,7 +725,7 @@ namespace Assembler
     bool applyEquatesToExpression(std::string& expression, const std::vector<Equate>& equates)
     {
         bool modified = false;
-        for(size_t i=0; i<equates.size(); i++)
+        for(int i=0; i<int(equates.size()); i++)
         {
             for(;;)
             {
@@ -742,7 +742,7 @@ namespace Assembler
     bool applyLabelsToExpression(std::string& expression, const std::vector<Label>& labels, bool nativeCode)
     {
         bool modified = false;
-        for(size_t i=0; i<labels.size(); i++)
+        for(int i=0; i<int(labels.size()); i++)
         {
             for(;;)
             {
@@ -778,7 +778,7 @@ namespace Assembler
     bool searchEquate(const std::string& token, Equate& equate)
     {
         bool success = false;
-        for(size_t i=0; i<_equates.size(); i++)
+        for(int i=0; i<int(_equates.size()); i++)
         {
             if(_equates[i]._name == token)
             {
@@ -899,7 +899,7 @@ namespace Assembler
     bool searchLabel(const std::string& token, Label& label)
     {
         bool success = false;
-        for(size_t i=0; i<_labels.size(); i++)
+        for(int i=0; i<int(_labels.size()); i++)
         {
             if(token == _labels[i]._name)
             {
@@ -952,7 +952,7 @@ namespace Assembler
         if(parse == MnemonicPass) 
         {
             // Check reserved words
-            for(size_t i=0; i<_reservedWords.size(); i++)
+            for(int i=0; i<int(_reservedWords.size()); i++)
             {
                 if(tokens[tokenIndex] == _reservedWords[i]) return Reserved;
             }
@@ -961,7 +961,7 @@ namespace Assembler
             if(searchLabel(tokens[tokenIndex], label)) return Duplicate;
 
             // Check equates for a custom start address
-            for(size_t i=0; i<_equates.size(); i++)
+            for(int i=0; i<int(_equates.size()); i++)
             {
                 if(_equates[i]._name == tokens[tokenIndex])
                 {
@@ -995,7 +995,7 @@ namespace Assembler
             std::string token = tokens[tokenIndex].substr(quote1+1, quote2 - (quote1+1));
             if(createInstruction)
             {
-                for(size_t j=1; j<token.size(); j++) // First instruction was created by callee
+                for(int j=1; j<int(token.size()); j++) // First instruction was created by callee
                 {
                     Instruction inst = {instruction._isRomAddress, false, OneByte, uint8_t(token[j]), 0x00, 0x00, 0x0000, instruction._opcodeType};
                     _instructions.push_back(inst);
@@ -1005,7 +1005,7 @@ namespace Assembler
             success = true;
         }
        
-        for(size_t i=tokenIndex+1; i<tokens.size(); i++)
+        for(int i=tokenIndex+1; i<int(tokens.size()); i++)
         {
             // Handle all other variations of strings
             quote1 = tokens[i].find_first_of("'\"");
@@ -1016,7 +1016,7 @@ namespace Assembler
                 std::string token = tokens[i].substr(quote1+1, quote2 - (quote1+1));
                 if(createInstruction)
                 {
-                    for(size_t j=0; j<token.size(); j++)
+                    for(int j=0; j<int(token.size()); j++)
                     {
                         Instruction inst = {instruction._isRomAddress, false, OneByte, uint8_t(token[j]), 0x00, 0x00, 0x0000, instruction._opcodeType};
                         _instructions.push_back(inst);
@@ -1083,7 +1083,7 @@ namespace Assembler
     {
         bool success = false;
 
-        for(size_t i=tokenIndex+1; i<tokens.size(); i++)
+        for(int i=tokenIndex+1; i<int(tokens.size()); i++)
         {
             // Strip comments
             if(tokens[i].find_first_of(";#") != std::string::npos)
@@ -1392,7 +1392,7 @@ namespace Assembler
         ByteCode byteCode;
         uint16_t segmentOffset = 0x0000;
         uint16_t segmentAddress = 0x0000;
-        for(size_t i=0; i<_instructions.size(); i++)
+        for(int i=0; i<int(_instructions.size()); i++)
         {
             // Segment RAM instructions into 256 byte pages for .gt1 file format
             if(!_instructions[i]._isRomAddress)
@@ -1514,7 +1514,7 @@ namespace Assembler
     bool handleMacros(const std::vector<Macro>& macros, std::vector<LineToken>& lineTokens)
     {
         // Incomplete macros
-        for(size_t i=0; i<macros.size(); i++)
+        for(int i=0; i<int(macros.size()); i++)
         {
             if(!macros[i]._complete)
             {
@@ -1544,7 +1544,7 @@ namespace Assembler
 
         // Find and expand macro
         int macroInstanceId = 0;
-        for(size_t m=0; m<macros.size(); m++)
+        for(int m=0; m<int(macros.size()); m++)
         {
             bool macroMissing = true;
             bool macroMissingParams = true;
@@ -1566,7 +1566,7 @@ namespace Assembler
 
                 // Find macro
                 bool macroSuccess = false;
-                for(size_t t=0; t<tokens.size(); t++)
+                for(int t=0; t<int(tokens.size()); t++)
                 {
                     if(tokens[t] == macro._name)
                     {
@@ -1578,7 +1578,7 @@ namespace Assembler
                             std::vector<LineToken> macroLines;
 
                             // Create substitute lines
-                            for(size_t ml=0; ml<macro._lines.size(); ml++)
+                            for(int ml=0; ml<int(macro._lines.size()); ml++)
                             {
                                 // Tokenise macro line
                                 std::vector<std::string> mtokens =  Expression::tokeniseLine(macro._lines[ml]);
@@ -1588,9 +1588,9 @@ namespace Assembler
                                 if(nonWhiteSpace == 0) labels.push_back(mtokens[0]);
 
                                 // Replace parameters
-                                for(size_t mt=0; mt<mtokens.size(); mt++)
+                                for(int mt=0; mt<int(mtokens.size()); mt++)
                                 {
-                                    for(size_t p=0; p<macro._params.size(); p++)
+                                    for(int p=0; p<int(macro._params.size()); p++)
                                     {
                                         //if(mtokens[mt] == macro._params[p]) mtokens[mt] = tokens[t + 1 + p];
                                         size_t param = mtokens[mt].find(macro._params[p]);
@@ -1607,7 +1607,7 @@ namespace Assembler
                                 macroLine._text = (t > 0  &&  ml == 0) ? tokens[0] : "";
 
                                 // Append to macro line
-                                for(size_t mt=0; mt<mtokens.size(); mt++)
+                                for(int mt=0; mt<int(mtokens.size()); mt++)
                                 {
                                     // Don't prefix macro labels with a space
                                     if(nonWhiteSpace != 0  ||  mt != 0) macroLine._text += " ";
@@ -1619,13 +1619,13 @@ namespace Assembler
                             }
 
                             // Insert substitute lines
-                            for(size_t ml=0; ml<macro._lines.size(); ml++)
+                            for(int ml=0; ml<int(macro._lines.size()); ml++)
                             {
                                 // Delete macro caller
                                 if(ml == 0) itLine = lineTokens.erase(itLine);
 
                                 // Each instance of a macro's labels are made unique
-                                for(size_t i=0; i<labels.size(); i++)
+                                for(int i=0; i<int(labels.size()); i++)
                                 {
                                     size_t labelFoundPos = macroLines[ml]._text.find(labels[i]);
                                     if(labelFoundPos != std::string::npos) macroLines[ml]._text.insert(labelFoundPos + labels[i].size(), std::to_string(macroInstanceId));
@@ -1679,7 +1679,7 @@ namespace Assembler
         macro._filename = macroFileName;
 
         // Save params
-        for(size_t i=2; i<tokens.size(); i++) macro._params.push_back(tokens[i]);
+        for(int i=2; i<int(tokens.size()); i++) macro._params.push_back(tokens[i]);
 
         return true;
     }
@@ -1687,7 +1687,7 @@ namespace Assembler
     bool handleMacroEnd(std::vector<Macro>& macros, Macro& macro)
     {
         // Check for duplicates
-        for(size_t i=0; i<macros.size(); i++)
+        for(int i=0; i<int(macros.size()); i++)
         {
             if(macro._name == macros[i]._name)
             {
@@ -1803,10 +1803,10 @@ namespace Assembler
 
         // Tokenise lines
         int vasmSize = 0;
-        for(size_t i=0; i<lineTokens.size(); i++)
+        for(int i=0; i<int(lineTokens.size()); i++)
         {
             std::vector<std::string> tokens = Expression::tokeniseLine(lineTokens[i]._text);
-            for(size_t j=0; j<tokens.size(); j++)
+            for(int j=0; j<int(tokens.size()); j++)
             {
                 std::string token = Expression::strToUpper(tokens[j]);
                 vasmSize += getAsmOpcodeSize(token);
@@ -1964,9 +1964,9 @@ namespace Assembler
 
     bool parseGprintfs(void)
     {
-        for(size_t i = 0; i<_gprintfs.size(); i++)
+        for(int i = 0; i<int(_gprintfs.size()); i++)
         {
-            for(size_t j = 0; j<_gprintfs[i]._vars.size(); j++)
+            for(int j = 0; j<int(_gprintfs[i]._vars.size()); j++)
             {
                 bool success = false;
                 uint16_t data = 0x0000;
@@ -2038,7 +2038,7 @@ namespace Assembler
         gstring = gprintf._format;
    
         size_t subIndex = 0;
-        for(size_t i=0; i<gprintf._vars.size(); i++)
+        for(int i=0; i<int(gprintf._vars.size()); i++)
         {
             char token[256];
 
@@ -2337,7 +2337,7 @@ namespace Assembler
                     }
 
                     // Custom address
-                    for(size_t i=0; i<_equates.size(); i++)
+                    for(int i=0; i<int(_equates.size()); i++)
                     {
                         if(_equates[i]._name == tokens[0]  &&  _equates[i]._isCustomAddress)
                         {
@@ -2395,7 +2395,7 @@ namespace Assembler
                                         // Search for address
                                         bool newLabel = true;
                                         uint16_t address = uint16_t(label._address);
-                                        for(size_t i=0; i<_callTableEntries.size(); i++)
+                                        for(int i=0; i<int(_callTableEntries.size()); i++)
                                         {
                                             if(_callTableEntries[i]._address == address)
                                             {

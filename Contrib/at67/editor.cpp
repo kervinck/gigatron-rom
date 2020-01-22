@@ -559,14 +559,14 @@ namespace Editor
         }
 
         std::sort(dirnames.begin(), dirnames.end());
-        for(size_t i=0; i<dirnames.size(); i++)
+        for(int i=0; i<int(dirnames.size()); i++)
         {
             FileEntry fileEntry = {Dir, dirnames[i]};
             _fileEntries.push_back(fileEntry);
         }
 
         std::sort(filenames.begin(), filenames.end());
-        for(size_t i=0; i<filenames.size(); i++)
+        for(int i=0; i<int(filenames.size()); i++)
         {
             FileEntry fileEntry = {File, filenames[i]};
             _fileEntries.push_back(fileEntry);
