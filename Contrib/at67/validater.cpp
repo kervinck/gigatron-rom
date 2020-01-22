@@ -108,7 +108,7 @@ namespace Validater
 
                 // Relocation is required if a new RAM address is needed
                 uint16_t freeAddr = 0x0000;
-                if(!Memory::getNextFreeRAM(vPC + opcodeSize, opcodeSize, freeAddr)) return false;
+                if(!Memory::getNextFreeRAM(uint16_t(vPC + opcodeSize), opcodeSize, freeAddr)) return false;
                 if(Memory::getFreeRAM(Memory::FitDescending, opcodeSize, freeAddr, Compiler::getRuntimeStart(), nextPC, false))
                 {
                     if(!print)
@@ -154,7 +154,6 @@ namespace Validater
                 {
                     std::vector<std::string> tokens;
                     uint16_t currPC = itVasm->_address;
-                    int vasmLineIndex = int(itVasm - itCode->_vasm.begin());
 
                     // Insert PAGE JUMP
                     int restoreOffset = 0;

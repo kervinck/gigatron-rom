@@ -315,12 +315,8 @@ namespace Linker
             _internalSubs[subIndex]._inUse = true;
             return true;
         }
-        else
-        {
-            fprintf(stderr, "Linker::loadInternalSub() : Not enough RAM for %s of size %d\n", _internalSubs[subIndex]._name.c_str(), _internalSubs[subIndex]._size);
-            return false;
-        }
 
+        fprintf(stderr, "Linker::loadInternalSub() : Not enough RAM for %s of size %d\n", _internalSubs[subIndex]._name.c_str(), _internalSubs[subIndex]._size);
         return false;
     }
 

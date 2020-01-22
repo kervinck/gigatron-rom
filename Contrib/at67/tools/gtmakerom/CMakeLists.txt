@@ -12,3 +12,5 @@ set(sources ../../cpu.cpp gtmakerom.cpp)
 add_executable(gtmakerom ${headers} ${sources})
 
 target_link_libraries(gtmakerom)
+
+set_target_properties(gtmakerom PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE ..)

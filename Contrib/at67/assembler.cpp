@@ -1480,8 +1480,8 @@ namespace Assembler
             return false;
         }
 
-        std::string filepath = _includePath + tokens[1];
-        std::replace( filepath.begin(), filepath.end(), '\\', '/');
+        std::string filepath = _includePath + "/" + tokens[1];
+        std::replace(filepath.begin(), filepath.end(), '\\', '/');
         std::ifstream infile(filepath);
         if(!infile.is_open())
         {
@@ -2158,7 +2158,7 @@ namespace Assembler
             return false;
         }
 
-        fprintf(stderr, "\nAssembling file '%s'\n", filename.c_str());
+        fprintf(stderr, "\nAssembling : %s\n", filename.c_str());
 
         clearAssembler();
 

@@ -8,15 +8,15 @@
 #include "audio.h"
 #include "timing.h"
 #include "editor.h"
-#include "midi/music.h"
 #include "expression.h"
 #include "inih/INIReader.h"
+#include "tools/gtmidi/music.h"
 
 #include <SDL.h>
 
 
-#define AUDIO_SAMPLES    (SCAN_LINES + 1)
-#define AUDIO_FREQUENCY  (SCAN_LINES*VSYNC_RATE)
+#define AUDIO_SAMPLES   (SCAN_LINES + 1)
+#define AUDIO_FREQUENCY (SCAN_LINES*VSYNC_RATE)
 
 
 namespace Audio

@@ -204,7 +204,7 @@ namespace Loader
     {
         size_t nameSuffix = filename.find_last_of(".");
         std::string output = filename.substr(0, nameSuffix) + ".gt1";
-        fprintf(stderr, "\nFile:   %s\n", output.c_str());
+        fprintf(stderr, "\nOutput : %s\n", output.c_str());
 
         // Header
         uint16_t totalSize = 0;
@@ -279,7 +279,7 @@ namespace Loader
             }
         }
         fprintf(stderr, "**********************************************\n");
-        fprintf(stderr, "* Free RAM after load  : %d\n", Memory::getBaseFreeRAM() - totalSize);
+        fprintf(stderr, "* Free RAM after load  :  %5d  :    %5d\n", Memory::getBaseFreeRAM() - totalSize, Memory::getBaseFreeRAM() - totalSize + RAM_EXPANSION_SIZE);
         fprintf(stderr, "**********************************************\n");
 
         return totalSize;

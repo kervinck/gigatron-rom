@@ -306,7 +306,7 @@ namespace Expression
 
     std::string stripStrings(const std::string& input, std::vector<std::string>& strings, bool saveExtraFields)
     {
-        size_t start, end = -1;
+        size_t start, end = std::string::npos;
         std::string output = input;
 
         do

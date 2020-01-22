@@ -2747,7 +2747,6 @@ namespace Compiler
                 // Vasm code
                 for(int j=0; j<_codeLines[i]._vasm.size(); j++)
                 {
-                    int vasmSize = _codeLines[i]._vasm[j]._vasmSize;
                     uint16_t vasmAddress = _codeLines[i]._vasm[j]._address;
                     std::string vasmCode = _codeLines[i]._vasm[j]._code;
                     std::string vasmLabel = _codeLines[i]._vasm[j]._internalLabel;
@@ -2764,8 +2763,6 @@ namespace Compiler
                     {
                         line += (label.size()) ?  "\n" + label + std::string(LABEL_TRUNC_SIZE - label.size(), ' ') + vasmCode : "\n" + std::string(LABEL_TRUNC_SIZE, ' ') + vasmCode;
                     }
-
-                    //if(vasmSize) Memory::takeFreeRAM(vasmAddress, vasmSize);
                 }
 
                 // Commented BASIC code, (assumes any tabs are 4 spaces)

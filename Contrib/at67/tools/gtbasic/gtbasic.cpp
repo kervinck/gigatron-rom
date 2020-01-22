@@ -5,45 +5,54 @@
 #include "../../memory.h"
 #include "../../loader.h"
 #include "../../assembler.h"
-#include "../../expression.h"
+#include "../../compiler.h"
+#include "../../operators.h"
+#include "../../keywords.h"
+#include "../../optimiser.h"
+#include "../../validater.h"
+#include "../../linker.h"
 
 
-#define GTASM_MAJOR_VERSION "0.1"
-#define GTASM_MINOR_VERSION "5"
-#define GTASM_VERSION_STR "gtasm v" GTASM_MAJOR_VERSION "." GTASM_MINOR_VERSION
+#define GTBASIC_MAJOR_VERSION "0.1"
+#define GTBASIC_MINOR_VERSION "2"
+#define GTBASIC_VERSION_STR "gtbasic v" GTBASIC_MAJOR_VERSION "." GTBASIC_MINOR_VERSION
 
 
 int main(int argc, char* argv[])
 {
-    if(argc != 3  &&  argc != 4)
+    if(argc != 2  &&  argc != 3)
     {
-        fprintf(stderr, "%s\n", GTASM_VERSION_STR);
-        fprintf(stderr, "Usage:   gtasm <input filename> <uint16_t start address in hex> <optional include path>\n");
+        fprintf(stderr, "%s\n", GTBASIC_VERSION_STR);
+        fprintf(stderr, "Usage:   gtbasic <input filename> <optional include path>\n");
         return 1;
     }
 
     std::string filename = std::string(argv[1]);
-    if(filename.find(".vasm") == filename.npos  &&  filename.find(".gasm") == filename.npos   &&  filename.find(".asm") == filename.npos  &&  filename.find(".s") == filename.npos)
+    if(filename.find(".gbas") == filename.npos  &&  filename.find(".bas") == filename.npos)
     {
-        fprintf(stderr, "Wrong file extension in %s : must be one of : '.vasm' or '.gasm' or '.asm' or '.s'\n", filename.c_str());
+        fprintf(stderr, "Wrong file extension in %s : must be one of : '.gbas' or '.bas'\n", filename.c_str());
         return 1;
     }
 
-    // Handles hex numbers
-    uint16_t address = DEFAULT_START_ADDRESS;
-    std::stringstream ss;
-    ss << std::hex << argv[2];
-    ss >> address;
-    if(address < DEFAULT_START_ADDRESS) address = DEFAULT_START_ADDRESS;
-
     // Optional include path
-    std::string includepath = (argc == 4) ? std::string(argv[3]) : ".";
+    std::string includepath = (argc == 3) ? std::string(argv[2]) : ".";
 
     Expression::initialise();
     Assembler::initialise();
+    Compiler::initialise();
+    Operators::initialise();
+    Keywords::initialise();
+    Optimiser::initialise();
+    Validater::initialise();
+    Linker::initialise();
+
+    uint16_t address = 0x0200;
+    size_t nameSuffix = filename.find_last_of(".");
+    std::string output = filename.substr(0, nameSuffix) + ".gasm";
 
     Assembler::setIncludePath(includepath);
-    if(!Assembler::assemble(filename, address)) return 1;
+    if(!Compiler::compile(filename, output)) return 1;
+    if(!Assembler::assemble(output, address)) return 1;
 
     // Create gt1 format
     Loader::Gt1File gt1File;

@@ -9,9 +9,9 @@
 #include <algorithm>
 #include <map>
 
-#include "../cpu.h"
-#include "../memory.h"
-#include "../expression.h"
+#include "../../cpu.h"
+#include "../../memory.h"
+#include "../../expression.h"
 
 
 // 64K is maximum size, (good luck getting it into a Gigatron)

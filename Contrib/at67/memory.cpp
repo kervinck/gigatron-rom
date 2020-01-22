@@ -138,7 +138,7 @@ namespace Memory
     {
         for(int i=0; i<_freeRam.size(); i++)
         {
-            uint16_t siz = _freeRam[i]._size;
+            uint16_t siz = uint16_t(_freeRam[i]._size);
             uint16_t addr = _freeRam[i]._address;
 
             // Full segment so continue
@@ -180,8 +180,8 @@ namespace Memory
         {
             for(int i=0; i<_freeRam[j]._size; i++)
             {
-                uint16_t left = _freeRam[j]._size - i;
-                uint16_t addr = _freeRam[j]._address + i;
+                uint16_t left = uint16_t(_freeRam[j]._size - i);
+                uint16_t addr = uint16_t(_freeRam[j]._address + i);
                 if(addr >= start  &&  size <= left)
                 {
                     address = addr;
@@ -197,7 +197,7 @@ namespace Memory
     {
         for(int i=0; i<_freeRam.size(); i++)
         {
-            uint16_t siz = _freeRam[i]._size;
+            uint16_t siz = uint16_t(_freeRam[i]._size);
             uint16_t addr = _freeRam[i]._address;
 
             if(start >= addr  &&  start + size - 1 <= addr + siz - 1)
