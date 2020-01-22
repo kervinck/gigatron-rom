@@ -845,7 +845,7 @@ namespace Expression
         for(int i=0; i<=int(line.size()); i++)
         {
             // End of line is a delimiter for white space
-            if(i == line.size())
+            if(i == int(line.size()))
             {
                 if(delimiterState != Quotes)
                 {
@@ -933,7 +933,7 @@ namespace Expression
         for(int i=0; i<=int(line.size()); i++)
         {
             // End of line is a delimiter for white space
-            if(i == line.size())
+            if(i == int(line.size()))
             {
                 if(delimiterState != Quotes)
                 {
