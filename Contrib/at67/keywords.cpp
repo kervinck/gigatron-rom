@@ -880,9 +880,9 @@ namespace Keywords
     // ********************************************************************************************
     bool keywordLET(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        UNREFERENCED_PARAMETER(result);
-        UNREFERENCED_PARAMETER(tokenIndex);
-        UNREFERENCED_PARAMETER(codeLineIndex);
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
+        UNREFERENCED_PARAM(codeLineIndex);
 
         // Remove LET from code
         codeLine._code.erase(foundPos, 3);
@@ -895,7 +895,7 @@ namespace Keywords
             codeLine._expression.erase(let, 3);
         }
 
-        for(int i=0; i<codeLine._tokens.size(); i++)
+        for(int i=0; i<int(codeLine._tokens.size()); i++)
         {
             std::string str = codeLine._tokens[i];
             Expression::strToUpper(str);
@@ -911,11 +911,11 @@ namespace Keywords
 
     bool keywordEND(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        UNREFERENCED_PARAMETER(result);
-        UNREFERENCED_PARAMETER(foundPos);
-        UNREFERENCED_PARAMETER(tokenIndex);
-        UNREFERENCED_PARAMETER(codeLineIndex);
-        UNREFERENCED_PARAMETER(codeLine);
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(foundPos);
+        UNREFERENCED_PARAM(tokenIndex);
+        UNREFERENCED_PARAM(codeLineIndex);
+        UNREFERENCED_PARAM(codeLine);
 
         std::string labelName = "_end_" + Expression::wordToHexString(Compiler::getVasmPC());
         Compiler::emitVcpuAsm("BRA", labelName, false, codeLineIndex, labelName);
@@ -925,8 +925,8 @@ namespace Keywords
 
     bool keywordINC(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        UNREFERENCED_PARAMETER(result);
-        UNREFERENCED_PARAMETER(tokenIndex);
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
 
         // Operand must be an integer var
         std::string varToken = codeLine._code.substr(foundPos);
@@ -945,8 +945,8 @@ namespace Keywords
 
     bool keywordDEC(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        UNREFERENCED_PARAMETER(result);
-        UNREFERENCED_PARAMETER(tokenIndex);
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
 
         // Operand must be an integer var
         std::string varToken = codeLine._code.substr(foundPos);
@@ -967,8 +967,8 @@ namespace Keywords
 
     bool keywordON(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        UNREFERENCED_PARAMETER(result);
-        UNREFERENCED_PARAMETER(tokenIndex);
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
 
         std::string code = codeLine._code;
         Expression::strToUpper(code);
@@ -1001,7 +1001,7 @@ namespace Keywords
 
         // Create label LUT
         Compiler::getCodeLines()[codeLineIndex]._onGotoGosubLut._lut.clear();
-        for(int i=0; i<gotoTokens.size(); i++)
+        for(int i=0; i<int(gotoTokens.size()); i++)
         {
             std::string gotoLabel = gotoTokens[i];
             Expression::stripWhitespace(gotoLabel);
@@ -1046,8 +1046,8 @@ namespace Keywords
 
     bool keywordGOTO(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        UNREFERENCED_PARAMETER(result);
-        UNREFERENCED_PARAMETER(tokenIndex);
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
 
         // Parse labels
         std::vector<size_t> gotoOffsets;
@@ -1137,8 +1137,8 @@ namespace Keywords
 
     bool keywordGOSUB(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        UNREFERENCED_PARAMETER(result);
-        UNREFERENCED_PARAMETER(tokenIndex);
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
 
         // Parse labels
         std::vector<size_t> gosubOffsets;
@@ -1215,10 +1215,10 @@ namespace Keywords
 
     bool keywordRETURN(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        UNREFERENCED_PARAMETER(result);
-        UNREFERENCED_PARAMETER(foundPos);
-        UNREFERENCED_PARAMETER(tokenIndex);
-        UNREFERENCED_PARAMETER(codeLine);
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(foundPos);
+        UNREFERENCED_PARAM(tokenIndex);
+        UNREFERENCED_PARAM(codeLine);
 
         Compiler::emitVcpuAsm("POP", "", false, codeLineIndex);
         Compiler::emitVcpuAsm("RET", "", false, codeLineIndex);
@@ -1228,9 +1228,9 @@ namespace Keywords
 
     bool keywordCLS(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        UNREFERENCED_PARAMETER(result);
-        UNREFERENCED_PARAMETER(foundPos);
-        UNREFERENCED_PARAMETER(tokenIndex);
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(foundPos);
+        UNREFERENCED_PARAM(tokenIndex);
 
         if(codeLine._tokens.size() > 2)
         {
@@ -1271,14 +1271,14 @@ namespace Keywords
 
     bool keywordPRINT(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        UNREFERENCED_PARAMETER(result);
-        UNREFERENCED_PARAMETER(tokenIndex);
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
 
         // Parse print tokens
         //std::vector<std::string> tokens = Expression::tokeniseLine(codeLine._code.substr(foundPos), ";");
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ';', false, false);
 
-        for(int i=0; i<tokens.size(); i++)
+        for(int i=0; i<int(tokens.size()); i++)
         {
             Expression::Numeric numeric;
             int varIndex = -1, constIndex = -1, strIndex = -1;
@@ -1416,8 +1416,8 @@ namespace Keywords
 
     bool keywordINPUT(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        UNREFERENCED_PARAMETER(result);
-        UNREFERENCED_PARAMETER(tokenIndex);
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
 
         // Tokenise string and vars
         std::vector<std::string> strings;
@@ -1470,7 +1470,7 @@ namespace Keywords
         std::vector<uint16_t> typesLut(varTokens.size() + 1, 0x0000);
 
         // Loop through vars
-        for(int i=0; i<varTokens.size(); i++)
+        for(int i=0; i<int(varTokens.size()); i++)
         {
             // Int var exists
             bool isStrVar = false;
@@ -1518,13 +1518,13 @@ namespace Keywords
         }
 
         // Loop through strs
-        for(int i=0; i<varTokens.size(); i++)
+        for(int i=0; i<int(varTokens.size()); i++)
         {
             // Create string
             std::string name;
             uint16_t address;
             int index = (foundHeadingString) ? i + 1 : i;
-            std::string str = (index < strings.size()) ? strings[index] : "\"?\"";
+            std::string str = (index < int(strings.size())) ? strings[index] : "\"?\"";
             size_t fquote = str.find_first_of('"');
             size_t lquote = str.find_last_of('"');
 
@@ -1589,8 +1589,8 @@ namespace Keywords
 
     bool keywordFOR(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        UNREFERENCED_PARAMETER(result);
-        UNREFERENCED_PARAMETER(tokenIndex);
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
 
         bool optimise = true;
         int varIndex, constIndex, strIndex;
@@ -1738,8 +1738,8 @@ namespace Keywords
 
     bool keywordNEXT(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        UNREFERENCED_PARAMETER(result);
-        UNREFERENCED_PARAMETER(tokenIndex);
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
 
         if(codeLine._tokens.size() != 2)
         {
@@ -1808,8 +1808,8 @@ namespace Keywords
 
     bool keywordIF(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        UNREFERENCED_PARAMETER(result);
-        UNREFERENCED_PARAMETER(tokenIndex);
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
 
         bool ifElseEndif = false;
 
@@ -1873,8 +1873,8 @@ namespace Keywords
 
     bool keywordELSEIF(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        UNREFERENCED_PARAMETER(result);
-        UNREFERENCED_PARAMETER(tokenIndex);
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
 
         // Check stack for this IF ELSE ENDIF block
         if(Compiler::getElseIfDataStack().empty())
@@ -1946,9 +1946,9 @@ namespace Keywords
 
     bool keywordELSE(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        UNREFERENCED_PARAMETER(result);
-        UNREFERENCED_PARAMETER(foundPos);
-        UNREFERENCED_PARAMETER(tokenIndex);
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(foundPos);
+        UNREFERENCED_PARAM(tokenIndex);
 
         if(codeLine._tokens.size() != 1)
         {
@@ -2013,9 +2013,9 @@ namespace Keywords
 
     bool keywordENDIF(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        UNREFERENCED_PARAMETER(result);
-        UNREFERENCED_PARAMETER(foundPos);
-        UNREFERENCED_PARAMETER(tokenIndex);
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(foundPos);
+        UNREFERENCED_PARAM(tokenIndex);
 
         if(codeLine._tokens.size() != 1)
         {
@@ -2090,8 +2090,8 @@ namespace Keywords
 
     bool keywordWHILE(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        UNREFERENCED_PARAMETER(result);
-        UNREFERENCED_PARAMETER(tokenIndex);
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
 
         Compiler::setNextInternalLabel("_while_" + Expression::wordToHexString(Compiler::getVasmPC()));
         Compiler::getWhileWendDataStack().push({0, Compiler::getNextInternalLabel(), codeLineIndex, Expression::BooleanCC});
@@ -2109,9 +2109,9 @@ namespace Keywords
 
     bool keywordWEND(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        UNREFERENCED_PARAMETER(result);
-        UNREFERENCED_PARAMETER(foundPos);
-        UNREFERENCED_PARAMETER(tokenIndex);
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(foundPos);
+        UNREFERENCED_PARAM(tokenIndex);
 
         // Pop stack for this WHILE loop
         if(Compiler::getWhileWendDataStack().empty())
@@ -2158,10 +2158,10 @@ namespace Keywords
 
     bool keywordREPEAT(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        UNREFERENCED_PARAMETER(result);
-        UNREFERENCED_PARAMETER(foundPos);
-        UNREFERENCED_PARAMETER(tokenIndex);
-        UNREFERENCED_PARAMETER(codeLine);
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(foundPos);
+        UNREFERENCED_PARAM(tokenIndex);
+        UNREFERENCED_PARAM(codeLine);
 
         Compiler::setNextInternalLabel("_repeat_" + Expression::wordToHexString(Compiler::getVasmPC()));
         Compiler::getRepeatUntilDataStack().push({Compiler::getNextInternalLabel(), codeLineIndex});
@@ -2171,8 +2171,8 @@ namespace Keywords
 
     bool keywordUNTIL(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        UNREFERENCED_PARAMETER(result);
-        UNREFERENCED_PARAMETER(tokenIndex);
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
 
         // Pop stack for this REPEAT loop
         if(Compiler::getRepeatUntilDataStack().empty())
@@ -2203,8 +2203,8 @@ namespace Keywords
 
     bool keywordCONST(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        UNREFERENCED_PARAMETER(result);
-        UNREFERENCED_PARAMETER(tokenIndex);
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
 
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), '=', true);
         if(tokens.size() != 2)
@@ -2300,8 +2300,8 @@ namespace Keywords
 
     bool keywordDIM(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        UNREFERENCED_PARAMETER(result);
-        UNREFERENCED_PARAMETER(tokenIndex);
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
 
         std::string dimText = codeLine._code.substr(foundPos);
 
@@ -2373,8 +2373,8 @@ namespace Keywords
 
     bool keywordDEF(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        UNREFERENCED_PARAMETER(result);
-        UNREFERENCED_PARAMETER(tokenIndex);
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
 
         std::string defText = codeLine._code.substr(foundPos);
 
@@ -2446,7 +2446,7 @@ namespace Keywords
                 return false;
             }
 
-            for(int i=0; i<addrTokens.size(); i++) Expression::stripWhitespace(addrTokens[i]);
+            for(int i=0; i<int(addrTokens.size()); i++) Expression::stripWhitespace(addrTokens[i]);
             std::string funcVar = addrTokens[1];
             std::string function = codeLine._code.substr(equalsPos + 1);
             Expression::stripWhitespace(function);
@@ -2503,7 +2503,7 @@ namespace Keywords
             else if(typeText == "WORD")
             {
                 std::vector<int16_t> dataWords(int(count), 0);
-                for(int i=0; i<dataWords.size(); i++) dataWords[i] = int16_t(funcData[i]);
+                for(int i=0; i<int(dataWords.size()); i++) dataWords[i] = int16_t(funcData[i]);
                 Compiler::getDefDataWords().push_back({address, dataWords});
                 if(!Memory::takeFreeRAM(address, int(dataWords.size()) * 2)) return false;
             }
@@ -2524,7 +2524,7 @@ namespace Keywords
         if(typeText == "BYTE")
         {
             std::vector<uint8_t> dataBytes;
-            for(int i=0; i<dataTokens.size(); i++)
+            for(int i=0; i<int(dataTokens.size()); i++)
             {
                 uint8_t data;
                 Expression::stripWhitespace(dataTokens[i]);
@@ -2547,7 +2547,7 @@ namespace Keywords
             {
                 // Append data
                 address = Compiler::getDefDataBytes().back()._address + uint16_t(Compiler::getDefDataBytes().back()._data.size());
-                for(int i=0; i<dataBytes.size(); i++) Compiler::getDefDataBytes().back()._data.push_back(dataBytes[i]);
+                for(int i=0; i<int(dataBytes.size()); i++) Compiler::getDefDataBytes().back()._data.push_back(dataBytes[i]);
 
                 // Mark new RAM chunk as used
                 if(!Memory::takeFreeRAM(address, int(dataBytes.size()))) return false;
@@ -2580,7 +2580,7 @@ namespace Keywords
             {
                 // Append data
                 address = Compiler::getDefDataWords().back()._address + uint16_t(Compiler::getDefDataWords().back()._data.size()) * 2;
-                for(int i=0; i<dataWords.size(); i++) Compiler::getDefDataWords().back()._data.push_back(dataWords[i]);
+                for(int i=0; i<int(dataWords.size()); i++) Compiler::getDefDataWords().back()._data.push_back(dataWords[i]);
 
                 // Mark new RAM chunk as used
                 if(!Memory::takeFreeRAM(address, int(dataWords.size()) * 2)) return false;
@@ -2592,8 +2592,8 @@ namespace Keywords
 
     bool keywordAT(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        UNREFERENCED_PARAMETER(result);
-        UNREFERENCED_PARAMETER(tokenIndex);
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
 
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() < 1  &&  tokens.size() > 2)
@@ -2603,7 +2603,7 @@ namespace Keywords
         }
 
         std::vector<Expression::Numeric> params = {Expression::Numeric(), Expression::Numeric()};
-        for(int i=0; i<tokens.size(); i++)
+        for(int i=0; i<int(tokens.size()); i++)
         {
             parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
             switch(i)
@@ -2630,8 +2630,8 @@ namespace Keywords
 
     bool keywordPUT(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        UNREFERENCED_PARAMETER(result);
-        UNREFERENCED_PARAMETER(tokenIndex);
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
 
         std::string expression = codeLine._code.substr(foundPos);
         if(expression.size() == 0)
@@ -2649,8 +2649,8 @@ namespace Keywords
 
     bool keywordMODE(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        UNREFERENCED_PARAMETER(result);
-        UNREFERENCED_PARAMETER(tokenIndex);
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
 
         std::string expression = codeLine._code.substr(foundPos);
         if(expression.size() == 0)
@@ -2669,8 +2669,8 @@ namespace Keywords
 
     bool keywordWAIT(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        UNREFERENCED_PARAMETER(result);
-        UNREFERENCED_PARAMETER(tokenIndex);
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
 
         std::string expression = codeLine._code.substr(foundPos);
         if(expression.size() == 0)
@@ -2689,8 +2689,8 @@ namespace Keywords
 
     bool keywordLINE(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        UNREFERENCED_PARAMETER(result);
-        UNREFERENCED_PARAMETER(tokenIndex);
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
 
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() != 2  &&  tokens.size() != 4)
@@ -2702,7 +2702,7 @@ namespace Keywords
         if(tokens.size() == 2)
         {
             std::vector<Expression::Numeric> params = {Expression::Numeric(), Expression::Numeric()};
-            for(int i=0; i<tokens.size(); i++)
+            for(int i=0; i<int(tokens.size()); i++)
             {
                 parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
                 switch(i)
@@ -2720,7 +2720,7 @@ namespace Keywords
         else
         {
             std::vector<Expression::Numeric> params = {Expression::Numeric(), Expression::Numeric(), Expression::Numeric(), Expression::Numeric()};
-            for(int i=0; i<tokens.size(); i++)
+            for(int i=0; i<int(tokens.size()); i++)
             {
                 parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
                 switch(i)
@@ -2742,8 +2742,8 @@ namespace Keywords
 
     bool keywordHLINE(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        UNREFERENCED_PARAMETER(result);
-        UNREFERENCED_PARAMETER(tokenIndex);
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
 
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() != 3)
@@ -2753,7 +2753,7 @@ namespace Keywords
         }
 
         std::vector<Expression::Numeric> params = {Expression::Numeric(), Expression::Numeric(), Expression::Numeric()};
-        for(int i=0; i<tokens.size(); i++)
+        for(int i=0; i<int(tokens.size()); i++)
         {
             parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
             switch(i)
@@ -2773,8 +2773,8 @@ namespace Keywords
 
     bool keywordVLINE(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        UNREFERENCED_PARAMETER(result);
-        UNREFERENCED_PARAMETER(tokenIndex);
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
 
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() != 3)
@@ -2784,7 +2784,7 @@ namespace Keywords
         }
 
         std::vector<Expression::Numeric> params = {Expression::Numeric(), Expression::Numeric(), Expression::Numeric()};
-        for(int i=0; i<tokens.size(); i++)
+        for(int i=0; i<int(tokens.size()); i++)
         {
             parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
             switch(i)
@@ -2804,8 +2804,8 @@ namespace Keywords
 
     bool keywordCIRCLE(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        UNREFERENCED_PARAMETER(result);
-        UNREFERENCED_PARAMETER(tokenIndex);
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
 
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() != 3)
@@ -2815,7 +2815,7 @@ namespace Keywords
         }
 
         std::vector<Expression::Numeric> params = {Expression::Numeric(), Expression::Numeric(), Expression::Numeric()};
-        for(int i=0; i<tokens.size(); i++)
+        for(int i=0; i<int(tokens.size()); i++)
         {
             parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
             switch(i)
@@ -2835,8 +2835,8 @@ namespace Keywords
 
     bool keywordCIRCLEF(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        UNREFERENCED_PARAMETER(result);
-        UNREFERENCED_PARAMETER(tokenIndex);
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
 
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() != 3)
@@ -2846,7 +2846,7 @@ namespace Keywords
         }
 
         std::vector<Expression::Numeric> params = {Expression::Numeric(), Expression::Numeric(), Expression::Numeric()};
-        for(int i=0; i<tokens.size(); i++)
+        for(int i=0; i<int(tokens.size()); i++)
         {
             parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
             switch(i)
@@ -2866,8 +2866,8 @@ namespace Keywords
 
     bool keywordRECT(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        UNREFERENCED_PARAMETER(result);
-        UNREFERENCED_PARAMETER(tokenIndex);
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
 
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() != 4)
@@ -2877,7 +2877,7 @@ namespace Keywords
         }
 
         std::vector<Expression::Numeric> params = {Expression::Numeric(), Expression::Numeric(), Expression::Numeric(), Expression::Numeric()};
-        for(int i=0; i<tokens.size(); i++)
+        for(int i=0; i<int(tokens.size()); i++)
         {
             parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
             switch(i)
@@ -2898,8 +2898,8 @@ namespace Keywords
 
     bool keywordRECTF(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        UNREFERENCED_PARAMETER(result);
-        UNREFERENCED_PARAMETER(tokenIndex);
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
 
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() != 4)
@@ -2909,7 +2909,7 @@ namespace Keywords
         }
 
         std::vector<Expression::Numeric> params = {Expression::Numeric(), Expression::Numeric(), Expression::Numeric(), Expression::Numeric()};
-        for(int i=0; i<tokens.size(); i++)
+        for(int i=0; i<int(tokens.size()); i++)
         {
             parseExpression(codeLine, codeLineIndex, tokens[i], params[i]);
             switch(i)
@@ -2930,8 +2930,8 @@ namespace Keywords
 
     bool keywordPOLY(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        UNREFERENCED_PARAMETER(result);
-        UNREFERENCED_PARAMETER(tokenIndex);
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
 
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() != 1)
@@ -2950,8 +2950,8 @@ namespace Keywords
 
     bool keywordSCROLL(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        UNREFERENCED_PARAMETER(result);
-        UNREFERENCED_PARAMETER(tokenIndex);
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
 
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ' ', false);
         if(tokens.size() != 1)
@@ -2985,8 +2985,8 @@ namespace Keywords
 
     bool keywordPOKE(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        UNREFERENCED_PARAMETER(result);
-        UNREFERENCED_PARAMETER(tokenIndex);
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
 
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() != 2)
@@ -2999,7 +2999,7 @@ namespace Keywords
         std::vector<Expression::Numeric> numerics = {Expression::Numeric(), Expression::Numeric()};
         std::vector<Compiler::OperandType> operandTypes {Compiler::OperandConst, Compiler::OperandConst};
 
-        for(int i=0; i<tokens.size(); i++)
+        for(int i=0; i<int(tokens.size()); i++)
         {
             operandTypes[i] = parseExpression(codeLine, codeLineIndex, tokens[i], operands[i], numerics[i]);
         }
@@ -3064,8 +3064,8 @@ namespace Keywords
 
     bool keywordDOKE(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        UNREFERENCED_PARAMETER(result);
-        UNREFERENCED_PARAMETER(tokenIndex);
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
 
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() != 2)
@@ -3078,7 +3078,7 @@ namespace Keywords
         std::vector<Expression::Numeric> numerics = {Expression::Numeric(), Expression::Numeric()};
         std::vector<Compiler::OperandType> operandTypes {Compiler::OperandConst, Compiler::OperandConst};
 
-        for(int i=0; i<tokens.size(); i++)
+        for(int i=0; i<int(tokens.size()); i++)
         {
             operandTypes[i] = parseExpression(codeLine, codeLineIndex, tokens[i], operands[i], numerics[i]);
         }
@@ -3143,8 +3143,8 @@ namespace Keywords
 
     bool keywordPLAY(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
-        UNREFERENCED_PARAMETER(result);
-        UNREFERENCED_PARAMETER(tokenIndex);
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
 
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), " ,", false);
         if(tokens.size() < 1  ||  tokens.size() > 3)

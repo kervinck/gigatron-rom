@@ -22,7 +22,7 @@ namespace Validater
     void adjustLabelAddresses(uint16_t address, int offset)
     {
         // Adjust addresses for any non page jump labels with addresses higher than start label, (labels can be stored out of order)
-        for(int i=0; i<Compiler::getLabels().size(); i++)
+        for(int i=0; i<int(Compiler::getLabels().size()); i++)
         {
             if(!Compiler::getLabels()[i]._pageJump  &&  Compiler::getLabels()[i]._address >= address)
             {
@@ -30,7 +30,7 @@ namespace Validater
             }
         }
 
-        for(int i=0; i<Compiler::getInternalLabels().size(); i++)
+        for(int i=0; i<int(Compiler::getInternalLabels().size()); i++)
         {
             if(Compiler::getInternalLabels()[i]._address >= address)
             {
@@ -41,9 +41,9 @@ namespace Validater
 
     void adjustVasmAddresses(int codeLineIndex, uint16_t address, int offset)
     {
-        for(int i=codeLineIndex; i<Compiler::getCodeLines().size(); i++)
+        for(int i=codeLineIndex; i<int(Compiler::getCodeLines().size()); i++)
         {
-            for(int j=0; j<Compiler::getCodeLines()[i]._vasm.size(); j++)
+            for(int j=0; j<int(Compiler::getCodeLines()[i]._vasm.size()); j++)
             {
                 // Don't adjust page jump's
                 if(!Compiler::getCodeLines()[i]._vasm[j]._pageJump  &&  Compiler::getCodeLines()[i]._vasm[j]._address >= address)
@@ -269,9 +269,9 @@ namespace Validater
 
     bool checkBranchLabels(void)
     {
-        for(int i=0; i<Compiler::getCodeLines().size(); i++)
+        for(int i=0; i<int(Compiler::getCodeLines().size()); i++)
         {
-            for(int j=0; j<Compiler::getCodeLines()[i]._vasm.size(); j++)
+            for(int j=0; j<int(Compiler::getCodeLines()[i]._vasm.size()); j++)
             {
                 uint16_t opcAddr = Compiler::getCodeLines()[i]._vasm[j]._address;
                 std::string opcode = Compiler::getCodeLines()[i]._vasm[j]._opcode;

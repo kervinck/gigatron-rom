@@ -123,7 +123,7 @@ void outputGCLcommand(std::ofstream& outfile, uint8_t command)
 }
 void outputGCLfooter(std::ofstream& outfile, const std::string& name)
 {
-    UNREFERENCED_PARAMETER(name);
+    UNREFERENCED_PARAM(name);
     outfile << std::endl << "]" << std::endl;
 }
 

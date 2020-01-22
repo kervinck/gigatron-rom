@@ -559,21 +559,21 @@ namespace Editor
         }
 
         std::sort(dirnames.begin(), dirnames.end());
-        for(int i=0; i<dirnames.size(); i++)
+        for(size_t i=0; i<dirnames.size(); i++)
         {
             FileEntry fileEntry = {Dir, dirnames[i]};
             _fileEntries.push_back(fileEntry);
         }
 
         std::sort(filenames.begin(), filenames.end());
-        for(int i=0; i<filenames.size(); i++)
+        for(size_t i=0; i<filenames.size(); i++)
         {
             FileEntry fileEntry = {File, filenames[i]};
             _fileEntries.push_back(fileEntry);
         }
 
         // Only reset cursor and file index if file list size has changed
-        if(int(_fileEntriesSize != _fileEntries.size()))
+        if(_fileEntriesSize != int(_fileEntries.size()))
         {
             _cursorX = 0;
             _cursorY = 0;
@@ -832,7 +832,7 @@ namespace Editor
 
                     default: break;
                 }
-                _memoryDigit = (++_memoryDigit) & 0x01;
+                _memoryDigit = (_memoryDigit + 1) & 0x01;
                 return;
             }
 
@@ -973,7 +973,7 @@ namespace Editor
                 default: return;
             }
 
-            _addressDigit = (++_addressDigit) & 0x03;
+            _addressDigit = (_addressDigit + 1) & 0x03;
         }
     }
 
@@ -1082,7 +1082,9 @@ namespace Editor
         Image::TgaFile tgaFile;
         Image::loadTgaFile(names[gtRgbFileindex] + ".tga", tgaFile);
 
-        Image::GtRgbFile gtRgbFile{GTRGB_IDENTIFIER, Image::GT_RGB_222, tgaFile._header._width, tgaFile._header._height};
+        std::vector<uint8_t> data;
+        std::vector<uint16_t> optional;
+        Image::GtRgbFile gtRgbFile{GTRGB_IDENTIFIER, Image::GT_RGB_222, tgaFile._header._width, tgaFile._header._height, data, optional};
         Image::ditherRGB8toRGB2(tgaFile._data, gtRgbFile._data, tgaFile._header._width, tgaFile._header._height, tgaFile._imageOrigin);
 
         uint16_t vram = 0x0800;
@@ -1090,8 +1092,7 @@ namespace Editor
         {
             for(int x=0; x<gtRgbFile._header._width; x++)
             {
-                uint8_t data = gtRgbFile._data[y*gtRgbFile._header._width + x];
-                Cpu::setRAM(vram++, data);
+                Cpu::setRAM(vram++, gtRgbFile._data[y*gtRgbFile._header._width + x]);
                 //if((vram & 0x00FF) == 0x00) vram += 0x00A0;
                 if((vram & 0x00FF) == 0xA0) vram = (vram + 0x0100) & 0xFF00;
             }
@@ -1302,7 +1303,7 @@ namespace Editor
         else if(_sdlKeyScanCode ==  _keyboard["Mode"]._scanCode  &&  _sdlKeyModifier == _keyboard["Mode"]._keyMod)
         {
             int keyboardMode = _keyboardMode;
-            keyboardMode = (++keyboardMode) % (NumKeyboardModes - 1); // TODO: HwPS2 is disabled for now, (requires extra functionality in BabelFish.ino)
+            keyboardMode = (keyboardMode + 1) % (NumKeyboardModes - 1); // TODO: HwPS2 is disabled for now, (requires extra functionality in BabelFish.ino)
 
             // Enable/disable Arduino emulated PS2 keyboard
             if(keyboardMode == HwPS2) Loader::sendCommandToGiga(HW_PS2_ENABLE,  true);
@@ -1315,7 +1316,7 @@ namespace Editor
         else if(_sdlKeyScanCode ==  _emulator["MemoryMode"]._scanCode  &&  _sdlKeyModifier == _emulator["MemoryMode"]._keyMod)
         {
             int memoryMode = _memoryMode;
-            memoryMode = (_editorMode == Dasm) ? (++memoryMode) % (NumMemoryModes-1) : (++memoryMode) % NumMemoryModes;
+            memoryMode = (_editorMode == Dasm) ? (memoryMode + 1) % (NumMemoryModes-1) : (memoryMode + 1) % NumMemoryModes;
             _memoryMode = (MemoryMode)memoryMode;
             
             // Update debugger address with PC or vPC

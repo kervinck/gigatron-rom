@@ -162,7 +162,7 @@ namespace Linker
 
     bool findSub(const std::vector<std::string>& tokens, const std::string& subName)
     {
-        for(int i=0; i<tokens.size(); i++)
+        for(int i=0; i<int(tokens.size()); i++)
         {
             if(tokens[i] == subName) return true;
         }
@@ -182,10 +182,10 @@ namespace Linker
         int numLines = 0;
         int vasmSize = 0;
         bool buildingSub = false;
-        for(int i=0; i<_subIncludeFiles[includeName].size(); i++)
+        for(int i=0; i<int(_subIncludeFiles[includeName].size()); i++)
         {
             std::vector<std::string> tokens = Expression::tokeniseLine(_subIncludeFiles[includeName][i]);
-            for(int j=0; j<tokens.size(); j++) Expression::stripWhitespace(tokens[j]);
+            for(int j=0; j<int(tokens.size()); j++) Expression::stripWhitespace(tokens[j]);
             if(!buildingSub  &&  tokens.size() >= 2  &&  tokens[0] == "%SUB"  &&  tokens[1] == subName)
             {
                 buildingSub = true;
@@ -197,7 +197,7 @@ namespace Linker
             }
             else if(buildingSub)
             {
-                for(int j=0; j<tokens.size(); j++)
+                for(int j=0; j<int(tokens.size()); j++)
                 {
                     std::string token = tokens[j];
                     if(tokens[j].find_first_of(";#") != std::string::npos) break;
@@ -239,7 +239,7 @@ namespace Linker
 
         // Check if include vars already done
         bool varsDone = false;
-        for(int i=0; i<includeVarsDone.size(); i++)
+        for(int i=0; i<int(includeVarsDone.size()); i++)
         {
             if(includeVarsDone[i] == includeName)
             {
@@ -251,11 +251,11 @@ namespace Linker
         // Find sub in include
         int numLines = 0;
         bool buildingSub = false;
-        for(int i=0; i<_subIncludeFiles[includeName].size(); i++)
+        for(int i=0; i<int(_subIncludeFiles[includeName].size()); i++)
         {
             std::string line = _subIncludeFiles[includeName][i];
             std::vector<std::string> tokens = Expression::tokenise(line, ' ');
-            for(int j=0; j<tokens.size(); j++) Expression::stripWhitespace(tokens[j]);
+            for(int j=0; j<int(tokens.size()); j++) Expression::stripWhitespace(tokens[j]);
 
             bool foundSub = (line.find("%SUB") != std::string::npos);
             bool foundEnd = (line.find("%ENDS") != std::string::npos);
@@ -274,7 +274,7 @@ namespace Linker
             else if(buildingSub)
             {
                 code.push_back(line);
-                for(int j=0; j<_internalSubs.size(); j++)
+                for(int j=0; j<int(_internalSubs.size()); j++)
                 {
                     if(!_internalSubs[j]._inUse  &&  findSub(tokens, _internalSubs[j]._name))
                     {
@@ -358,7 +358,7 @@ namespace Linker
     bool parseIncludes(void)
     {
         // Load include files into memory
-        for(int i=0; i<_subIncludes.size(); i++)
+        for(int i=0; i<int(_subIncludes.size()); i++)
         {
             if(!Assembler::getUseOpcodeCALLI())
             {
@@ -371,18 +371,18 @@ namespace Linker
         }
 
         // Parse loaded includes
-        for(int i=0; i<_internalSubs.size(); i++)
+        for(int i=0; i<int(_internalSubs.size()); i++)
         {
             if(!Assembler::getUseOpcodeCALLI())
             {
-                for(int j=0; j<_subIncludes.size(); j++)
+                for(int j=0; j<int(_subIncludes.size()); j++)
                 {
                     if(getIncludeSubSize(_subIncludes[j], i)) break;
                 }
             }
             else
             {
-                for(int j=0; j<_subIncludesCALLI.size(); j++)
+                for(int j=0; j<int(_subIncludesCALLI.size()); j++)
                 {
                     if(getIncludeSubSize(_subIncludesCALLI[j], i)) break;
                 }
@@ -398,18 +398,18 @@ namespace Linker
         fprintf(stderr, "*        Name          : Address :    Size    \n");
         fprintf(stderr, "**********************************************\n");
         
-        for(int i=0; i<Compiler::getCodeLines().size(); i++)
+        for(int i=0; i<int(Compiler::getCodeLines().size()); i++)
         {
             // Valid BASIC code
             if(Compiler::getCodeLines()[i]._code.size() >= 2  &&  Compiler::getCodeLines()[i]._vasm.size())
             {
                 // Vasm code
-                for(int j=0; j<Compiler::getCodeLines()[i]._vasm.size(); j++)
+                for(int j=0; j<int(Compiler::getCodeLines()[i]._vasm.size()); j++)
                 {
                     std::vector<std::string> tokens = Expression::tokenise(Compiler::getCodeLines()[i]._vasm[j]._code, ' ');
-                    for(int k=0; k<tokens.size(); k++) Expression::stripWhitespace(tokens[k]);
+                    for(int k=0; k<int(tokens.size()); k++) Expression::stripWhitespace(tokens[k]);
 
-                    for(int k=0; k<_internalSubs.size(); k++)
+                    for(int k=0; k<int(_internalSubs.size()); k++)
                     {
                         // Check for internal subs in code
                         if(findSub(tokens, _internalSubs[k]._name))
@@ -440,7 +440,7 @@ namespace Linker
         std::vector<std::string> includeVarsDone;
 
 RESTART_COLLECTION:
-        for(int i=0; i<_internalSubs.size(); i++)
+        for(int i=0; i<int(_internalSubs.size()); i++)
         {
             if(_internalSubs[i]._inUse  &&  !_internalSubs[i]._loaded)
             {
@@ -451,7 +451,7 @@ RESTART_COLLECTION:
 
                 includeVarsDone.push_back(_internalSubs[i]._includeName);
 
-                for(int j=0; j<code.size(); j++)
+                for(int j=0; j<int(code.size()); j++)
                 {
                     Compiler::getRuntime().push_back(code[j] + "\n");
                 }
@@ -463,7 +463,7 @@ RESTART_COLLECTION:
     void relinkInternalSubs(void)
     {
         uint16_t runtimeSize = 0;
-        for(int i=0; i<_internalSubs.size(); i++)
+        for(int i=0; i<int(_internalSubs.size()); i++)
         {
             // Check for internal sub directly
             if(_internalSubs[i]._inUse  &&  _internalSubs[i]._loaded  &&  _internalSubs[i]._address == 0x0000)
@@ -476,7 +476,7 @@ RESTART_COLLECTION:
         }
 
         fprintf(stderr, "**********************************************\n");
-        fprintf(stderr, "\nLinker::relinkInternalSubs() : runtime START 0x%04x : runtime END 0x%04x : runtime SIZE %d bytes\n", Compiler::getRuntimeStart() & Memory::getSizeRAM() - 1, Compiler::getRuntimeEnd(), runtimeSize);
+        fprintf(stderr, "\nLinker::relinkInternalSubs() : runtime START 0x%04x : runtime END 0x%04x : runtime SIZE %d bytes\n", Compiler::getRuntimeStart() & (Memory::getSizeRAM() - 1), Compiler::getRuntimeEnd(), runtimeSize);
     }
 
     void outputInternalSubs(void)
@@ -489,7 +489,7 @@ RESTART_COLLECTION:
         Compiler::getOutput().push_back(";****************************************************************************************************************************************\n");
         Compiler::getOutput().push_back("\n");
 
-        for(int i=0; i<_internalSubs.size(); i++)
+        for(int i=0; i<int(_internalSubs.size()); i++)
         {
             if(_internalSubs[i]._inUse)
             {
@@ -513,7 +513,7 @@ RESTART_COLLECTION:
 
         Compiler::getOutput().push_back("\n");
 
-        for(int i=0; i<Compiler::getRuntime().size(); i++) Compiler::getOutput().push_back(Compiler::getRuntime()[i]);
+        for(int i=0; i<int(Compiler::getRuntime().size()); i++) Compiler::getOutput().push_back(Compiler::getRuntime()[i]);
     }
 
 
@@ -524,7 +524,7 @@ RESTART_COLLECTION:
 
     void resetInternalSubs(void)
     {
-        for(int i=0; i<_internalSubs.size(); i++)
+        for(int i=0; i<int(_internalSubs.size()); i++)
         {
             _internalSubs[i]._size = 0;
             _internalSubs[i]._address = 0;

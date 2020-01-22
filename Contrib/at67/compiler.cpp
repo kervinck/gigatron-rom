@@ -150,7 +150,7 @@ namespace Compiler
         }
 
         // Write output .vasm file
-        for(int i=0; i<_output.size(); i++)
+        for(size_t i=0; i<_output.size(); i++)
         {
             outfile.write((char *)_output[i].c_str(), _output[i].size());
             if(outfile.bad() || outfile.fail())
@@ -166,7 +166,7 @@ namespace Compiler
 
     int findLabel(const std::string& labelName)
     {
-        for(int i=0; i<_labels.size(); i++)
+        for(int i=0; i<int(_labels.size()); i++)
         {
             if(_labels[i]._name == labelName) return i;
         }
@@ -176,7 +176,7 @@ namespace Compiler
     
     int findLabel(uint16_t address)
     {
-        for(int i=0; i<_labels.size(); i++)
+        for(int i=0; i<int(_labels.size()); i++)
         {
             if(_labels[i]._address == address) return i;
         }
@@ -186,7 +186,7 @@ namespace Compiler
 
     int findInternalLabel(const std::string& labelName)
     {
-        for(int i=0; i<_internalLabels.size(); i++)
+        for(int i=0; i<int(_internalLabels.size()); i++)
         {
             if(_internalLabels[i]._name == labelName) return i;
         }
@@ -196,7 +196,7 @@ namespace Compiler
     
     int findInternalLabel(uint16_t address)
     {
-        for(int i=0; i<_internalLabels.size(); i++)
+        for(int i=0; i<int(_internalLabels.size()); i++)
         {
             if(_internalLabels[i]._address == address) return i;
         }
@@ -208,7 +208,7 @@ namespace Compiler
     {
         // Valid chars are alpha and 'address of'
         constName = Expression::getSubAlpha(constName);
-        for(int i=0; i<_constants.size(); i++)
+        for(int i=0; i<int(_constants.size()); i++)
         {
             if(_constants[i]._name == constName) return i;
         }
@@ -220,7 +220,7 @@ namespace Compiler
     {
         // Valid chars are alpha and 'address of'
         if(subAlpha) varName = Expression::getSubAlpha(varName);
-        for(int i=0; i<_integerVars.size(); i++)
+        for(int i=0; i<int(_integerVars.size()); i++)
         {
             if(_integerVars[i]._name == varName) return i;
         }
@@ -232,7 +232,7 @@ namespace Compiler
     {
         // Valid chars are alpha and 'address of'
         strName = Expression::getSubAlpha(strName);
-        for(int i=0; i<_stringVars.size(); i++)
+        for(int i=0; i<int(_stringVars.size()); i++)
         {
             if(_stringVars[i]._name == strName) return i;
         }
@@ -296,7 +296,7 @@ namespace Compiler
         if(codeLine._code.size() < 2  ||  equals >= codeLine._code.size()) return VarNotFound;
 
         // Check all tokens individually, don't just do a find as a var may exist with a reserved keyword embedded within it
-        for(int i=0; i<codeLine._tokens.size(); i++)
+        for(size_t i=0; i<codeLine._tokens.size(); i++)
         {
             std::string token = codeLine._tokens[i];
             Expression::stripWhitespace(token);
@@ -350,7 +350,7 @@ namespace Compiler
         if(codeLine._code.size() < 2  ||  equals >= codeLine._code.size() - 2  ||  codeLine._tokens.size() < 2) return VarError;
 
         // Check all tokens individually, don't just do a find as a str name may exist with a reserved keyword embedded within it
-        for(int i=0; i<codeLine._tokens.size(); i++)
+        for(size_t i=0; i<codeLine._tokens.size(); i++)
         {
             std::string token = codeLine._tokens[i];
             Expression::stripWhitespace(token);
@@ -426,7 +426,7 @@ namespace Compiler
         std::vector<std::string> tokens = Expression::tokenise(stripped, "-+/*%&<>=();, ", false);
 
         // Check for keywords
-        for(int i=0; i<tokens.size(); i++)
+        for(size_t i=0; i<tokens.size(); i++)
         {
             std::string token = tokens[i];
             Expression::strToUpper(token);
@@ -438,7 +438,7 @@ namespace Compiler
         }
 
         // Check for functions
-        for(int i=0; i<tokens.size(); i++)
+        for(size_t i=0; i<tokens.size(); i++)
         {
             std::string token = tokens[i];
             Expression::strToUpper(token);
@@ -450,7 +450,7 @@ namespace Compiler
         }
 
         // Check for string keywords
-        for(int i=0; i<tokens.size(); i++)
+        for(size_t i=0; i<tokens.size(); i++)
         {
             std::string token = tokens[i];
             Expression::strToUpper(token);
@@ -465,7 +465,7 @@ namespace Compiler
         }
 
         // Check for consts
-        for(int i=0; i<tokens.size(); i++)
+        for(size_t i=0; i<tokens.size(); i++)
         {
             constIndex = findConst(tokens[i]);
             if(constIndex != -1  &&  tokens[i][0] != '@') // 'address of' operator returns numbers
@@ -484,7 +484,7 @@ namespace Compiler
         }
 
         // Check for vars
-        for(int i=0; i<tokens.size(); i++)
+        for(size_t i=0; i<tokens.size(); i++)
         {
             varIndex = findVar(tokens[i]);
             if(varIndex != -1  &&  tokens[i][0] != '@') // 'address of' operator returns numbers
@@ -502,7 +502,7 @@ namespace Compiler
         }
 
         // Check for string vars
-        for(int i=0; i<tokens.size(); i++)
+        for(size_t i=0; i<tokens.size(); i++)
         {
             strIndex = findStr(tokens[i]);
             if(strIndex != -1  &&  _stringVars[strIndex]._constant == false  &&  tokens[i][0] != '@') // 'address of' operator returns numbers)
@@ -519,7 +519,7 @@ namespace Compiler
             if(stripped.find_first_of("-+/*%&<>=") != std::string::npos) expressionType |= Expression::HasOperators;
             std::string mod = stripped;
             Expression::strToUpper(mod);
-            for(int i=0; i<Keywords::getOperators().size(); i++)
+            for(size_t i=0; i<Keywords::getOperators().size(); i++)
             {
                 if(mod.find(Keywords::getOperators()[i]) != std::string::npos) expressionType |= Expression::HasOperators;
             }
@@ -603,7 +603,7 @@ namespace Compiler
             std::string macroLine = (commentStart != std::string::npos) ? _macroLines[i].substr(0, commentStart) : _macroLines[i];
             std::vector<std::string> tokens = Expression::tokeniseLine(macroLine);
 
-            for(int j=0; j<tokens.size(); j++)
+            for(size_t j=0; j<tokens.size(); j++)
             {
                 Expression::stripWhitespace(tokens[j]);
                 Expression::strToUpper(tokens[j]);
@@ -611,7 +611,7 @@ namespace Compiler
             }
 
             // Check for nested macros
-            for(int j=0; j<tokens.size(); j++)
+            for(size_t j=0; j<tokens.size(); j++)
             {
                 if(findMacroText(tokens[j], text)) return true;
             }
@@ -635,7 +635,7 @@ namespace Compiler
             std::vector<std::string> tokens = Expression::tokeniseLine(macroLine);
 
             int opcodeSize = 0;
-            for(int j=0; j<tokens.size(); j++)
+            for(size_t j=0; j<tokens.size(); j++)
             {
                 opcodeSize = Assembler::getAsmOpcodeSize(tokens[j]);
                 if(opcodeSize)
@@ -648,7 +648,7 @@ namespace Compiler
             // Check for nested macros
             if(opcodeSize == 0)
             {
-                for(int j=0; j<tokens.size(); j++)
+                for(size_t j=0; j<tokens.size(); j++)
                 {
                     opcodeSize = getMacroSize(tokens[j]);
                     if(opcodeSize)
@@ -686,7 +686,7 @@ namespace Compiler
         int macroIndex = 0;
         std::string macroName;
         bool foundMacro = false;
-        for(int i=0; i<_macroLines.size(); i++)
+        for(int i=0; i<int(_macroLines.size()); i++)
         {
             std::vector<std::string> tokens = Expression::tokeniseLine(_macroLines[i]);
             if(!foundMacro  &&  tokens.size() >= 2  &&  tokens[0] == "%MACRO")
@@ -735,7 +735,7 @@ namespace Compiler
 
     int createVcpuAsm(const std::string& opcodeStr, const std::string& operandStr, int codeLineIdx, std::string& line)
     {
-        UNREFERENCED_PARAMETER(codeLineIdx);
+        UNREFERENCED_PARAM(codeLineIdx);
 
         int vasmSize = 0;
         std::string opcode = std::string(opcodeStr);
@@ -788,7 +788,7 @@ namespace Compiler
     // Generic LDW expression parser
     uint32_t parseArrayVarExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, Expression::Numeric& numeric)
     {
-        UNREFERENCED_PARAMETER(codeLine);
+        UNREFERENCED_PARAM(codeLine);
 
         int varIndex, constIndex, strIndex;
         Expression::parse(expression, codeLineIndex, numeric);
@@ -990,7 +990,7 @@ namespace Compiler
     // Generic expression parser
     OperandType parseExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, std::string& operand, Expression::Numeric& numeric)
     {
-        UNREFERENCED_PARAMETER(codeLine);
+        UNREFERENCED_PARAM(codeLine);
 
         int varIndex, constIndex, strIndex;
         Expression::parse(expression, codeLineIndex, numeric);
@@ -1015,7 +1015,7 @@ namespace Compiler
     // LDW expression parser
     uint32_t parseExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, Expression::Numeric& numeric)
     {
-        UNREFERENCED_PARAMETER(codeLine);
+        UNREFERENCED_PARAM(codeLine);
 
         int varIndex, constIndex, strIndex;
         Expression::parse(expression, codeLineIndex, numeric);
@@ -1049,7 +1049,7 @@ namespace Compiler
     // Handle expression, (use this when expression has already been parsed)
     uint32_t handleExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, Expression::Numeric numeric)
     {
-        UNREFERENCED_PARAMETER(codeLine);
+        UNREFERENCED_PARAM(codeLine);
 
         int varIndex, constIndex, strIndex;
         uint32_t expressionType = isExpression(expression, varIndex, constIndex, strIndex);
@@ -1081,7 +1081,7 @@ namespace Compiler
 
     bool isGosubLabel(const std::string& label)
     {
-        for(int i=0; i<_gosubLabels.size(); i++)
+        for(size_t i=0; i<_gosubLabels.size(); i++)
         {
             if(_gosubLabels[i] == label) return true;
         }
@@ -1092,11 +1092,11 @@ namespace Compiler
     bool checkForGosubLabel(const std::string& code, int lineNumber)
     {
         std::vector<std::string> tokens = Expression::tokeniseLine(code, " :=");
-        for(int i=0; i<tokens.size(); i++)
+        for(size_t i=0; i<tokens.size(); i++)
         {
             if(Expression::strToUpper(tokens[i]) == "GOSUB")
             {
-                if(i+1 >= tokens.size())
+                if(i+1 >= int(tokens.size()))
                 {
                     fprintf(stderr, "Compiler::checkForGosubLabel() : missing label after GOSUB in '%s' on line %d\n", code.c_str(), lineNumber + 1);
                     return false;
@@ -1121,7 +1121,7 @@ namespace Compiler
             if(space == std::string::npos) space = code.size() - 1;
 
             // Force space between line numbers and line
-            for(int i=1; i<space; i++)
+            for(size_t i=1; i<space; i++)
             {
                 if(!isdigit((unsigned char)code[i])  &&  code[i] != ':'  &&  code[i] != '!')
                 {
@@ -1175,7 +1175,7 @@ namespace Compiler
             bool validLabel = true;
             if(labelName.size())
             {
-                for(int i=0; i<labelName.size(); i++)
+                for(size_t i=0; i<labelName.size(); i++)
                 {
                     if(!(labelName[i] == '_')  &&  !isalnum((unsigned char)labelName[i]))
                     {
@@ -1234,7 +1234,7 @@ namespace Compiler
             {
                 std::vector<size_t> offsets;
                 std::vector<std::string> tokens = Expression::tokenise(*it, ' ', offsets, false, false);
-                for(int i=0; i<tokens.size(); i++)
+                for(size_t i=0; i<tokens.size(); i++)
                 {
                     Expression::stripWhitespace(tokens[i]);
                 }
@@ -1304,15 +1304,15 @@ namespace Compiler
     // Create string and advance string pointer
     int getOrCreateString(CodeLine& codeLine, int codeLineIndex, const std::string& str, std::string& name, uint16_t& address, uint8_t maxSize, bool constString)
     {
-        UNREFERENCED_PARAMETER(codeLine);
-        UNREFERENCED_PARAMETER(codeLineIndex);
+        UNREFERENCED_PARAM(codeLine);
+        UNREFERENCED_PARAM(codeLineIndex);
 
         int index = -1;
 
         // Reuse const string if possible
         if(constString)
         {
-            for(int j=0; j<_stringVars.size(); j++)
+            for(int j=0; j<int(_stringVars.size()); j++)
             {
                 if(_stringVars[j]._text == str) 
                 {
@@ -1483,7 +1483,7 @@ namespace Compiler
 
     Expression::Numeric getString(const Expression::Numeric& numeric)
     {
-        UNREFERENCED_PARAMETER(numeric);
+        UNREFERENCED_PARAM(numeric);
 
         // First quote
         get(true);
@@ -1972,7 +1972,7 @@ namespace Compiler
 
                 // Source string addresses, (extra 0x0000 delimiter used by VASM runtime)
                 std::vector<uint16_t> strAddrs(tokens.size() + 1, 0x0000);
-                for(int i=0; i<tokens.size(); i++)
+                for(size_t i=0; i<tokens.size(); i++)
                 {
                     Expression::stripNonStringWhitespace(tokens[i]);
                     strAddrs[i] = getStringSrcAddr(tokens[i]);
@@ -2030,7 +2030,7 @@ namespace Compiler
         }
 
         // Specific parsing requirements for most keywords, (*NOT* functions), some keywords like IF will also parse multi-statements
-        for(int i=0; i<codeLine._tokens.size(); i++)
+        for(int i=0; i<int(codeLine._tokens.size()); i++)
         {
             Keywords::KeywordFuncResult result;
             Keywords::KeywordResult keywordResult = Keywords::handleKeywords(codeLine, codeLine._tokens[i], codeLineIndex, i, result);
@@ -2161,7 +2161,7 @@ namespace Compiler
         // Tokenise and parse multi-statement lines
         StatementResult statementResult = StatementSuccess;
         std::vector<std::string> tokens = Expression::tokenise(code, ':', false);
-        for(int j=0; j<tokens.size(); j++)
+        for(size_t j=0; j<tokens.size(); j++)
         {
             createCodeLine(tokens[j], 0, _codeLines[codeLineIndex]._labelIndex, -1, Expression::Int16Both, false, codeline);
             createCodeVar(codeline, codeLineIndex, varIndex);
@@ -2178,7 +2178,7 @@ namespace Compiler
 
     void addLabelToJumpCC(std::vector<VasmLine>& vasm, const std::string& label)
     {
-        for(int i=0; i<vasm.size(); i++)
+        for(size_t i=0; i<vasm.size(); i++)
         {
             if(vasm[i]._code.substr(0, sizeof("Jump")-1) == "Jump"  ||  vasm[i]._code.substr(0, sizeof("B")-1) == "B")
             {
@@ -2190,7 +2190,7 @@ namespace Compiler
 
     void addLabelToJump(std::vector<VasmLine>& vasm, const std::string& label)
     {
-        for(int i=0; i<vasm.size(); i++)
+        for(size_t i=0; i<vasm.size(); i++)
         {
             if(Assembler::getUseOpcodeCALLI())
             {
@@ -2231,7 +2231,7 @@ namespace Compiler
     {
         uint16_t match;
         Expression::stringToU16(name.substr(name.size() - 6, 6), match);
-        for(int i=0; i<_discardedLabels.size(); i++)
+        for(size_t i=0; i<_discardedLabels.size(); i++)
         {
             if(_discardedLabels[i]._address == match) _discardedLabels[i]._address = address;
         }
@@ -2243,7 +2243,7 @@ namespace Compiler
         CodeLine codeLine;
 
         // LET modifies code
-        for(int i=0; i<_codeLines.size(); i++)
+        for(int i=0; i<int(_codeLines.size()); i++)
         {
             Keywords::KeywordFuncResult result;
 
@@ -2257,7 +2257,7 @@ namespace Compiler
         if(_codeLines.size())
         {
             bool foundEnd = false;
-            for(int i=0; i<_codeLines[_codeLines.size() - 1]._tokens.size(); i++)
+            for(size_t i=0; i<_codeLines[_codeLines.size() - 1]._tokens.size(); i++)
             {
                 std::string token = _codeLines[_codeLines.size() - 1]._tokens[i];
                 Expression::strToUpper(token);
@@ -2276,7 +2276,7 @@ namespace Compiler
 
         // Parse code creating vars and vasm code, (BASIC code lines were created in ParseLabels())
         int varIndex, strIndex;
-        for(int i=0; i<_codeLines.size(); i++)
+        for(int i=0; i<int(_codeLines.size()); i++)
         {
             _currentCodeLineIndex = i;
 
@@ -2311,7 +2311,7 @@ namespace Compiler
         _output.push_back("; Labels\n");
 
         // BASIC labels
-        for(int i=0; i<_labels.size(); i++)
+        for(size_t i=0; i<_labels.size(); i++)
         {
             std::string address = Expression::wordToHexString(_labels[i]._address);
             _output.push_back(_labels[i]._output + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + address + "\n");
@@ -2319,9 +2319,9 @@ namespace Compiler
         }
 
         // Internal labels
-        for(int i=0; i<_codeLines.size(); i++)
+        for(size_t i=0; i<_codeLines.size(); i++)
         {
-            for(int j=0; j<_codeLines[i]._vasm.size(); j++)
+            for(size_t j=0; j<_codeLines[i]._vasm.size(); j++)
             {
                 std::string internalLabel = _codeLines[i]._vasm[j]._internalLabel;
                 if(internalLabel.size())
@@ -2335,12 +2335,12 @@ namespace Compiler
         }
 
         // Check for label conflicts
-        for(int i=0; i<_codeLines.size(); i++)
+        for(size_t i=0; i<_codeLines.size(); i++)
         {
-            for(int j=0; j<_codeLines[i]._vasm.size(); j++)
+            for(size_t j=0; j<_codeLines[i]._vasm.size(); j++)
             {
                 // BASIC label conflict
-                for(int k=0; k<_internalLabels.size(); k++)
+                for(size_t k=0; k<_internalLabels.size(); k++)
                 {
                     int labelIndex = findLabel(_internalLabels[k]._address);
                     if(labelIndex >= 0)
@@ -2357,7 +2357,7 @@ namespace Compiler
                     }
 
                     // Discarded internal label
-                    for(int l=0; l<_discardedLabels.size(); l++)
+                    for(size_t l=0; l<_discardedLabels.size(); l++)
                     {
                         // Match on unique address embedded within names or the real address
                         std::string internalName = _internalLabels[k]._name.substr(_internalLabels[k]._name.size() - 4, 4);
@@ -2378,7 +2378,7 @@ namespace Compiler
     {
         _output.push_back("; Constants\n");
 
-        for(int i=0; i<_constants.size(); i++)
+        for(size_t i=0; i<_constants.size(); i++)
         {
             int16_t data = _constants[i]._data;
             std::string name = _constants[i]._name;
@@ -2409,7 +2409,7 @@ namespace Compiler
     {
         _output.push_back("; Variables\n");
 
-        for(int i=0; i<_integerVars.size(); i++)
+        for(size_t i=0; i<_integerVars.size(); i++)
         {
             switch(_integerVars[i]._varType)
             {
@@ -2445,7 +2445,7 @@ namespace Compiler
     {
         _output.push_back("; Strings\n");
 
-        for(int i=0; i<_stringVars.size(); i++)
+        for(size_t i=0; i<_stringVars.size(); i++)
         {
             _output.push_back(_stringVars[i]._output + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(_stringVars[i]._address) + "\n");
             _output.push_back(_stringVars[i]._output + "DB" + std::string(OPCODE_TRUNC_SIZE - 2, ' ') + std::to_string(_stringVars[i]._size) + " '" + _stringVars[i]._text + "' 0\n");
@@ -2458,13 +2458,13 @@ namespace Compiler
     {
         // Create def byte data
         _output.push_back("; Define Bytes\n");
-        for(int i=0; i<_defDataBytes.size(); i++)
+        for(size_t i=0; i<_defDataBytes.size(); i++)
         {
             std::string defName = "def_bytes_" + Expression::wordToHexString(_defDataBytes[i]._address);
             _output.push_back(defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(_defDataBytes[i]._address) + "\n");
             
             std::string dbString = defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "DB" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
-            for(int j=0; j<_defDataBytes[i]._data.size(); j++)
+            for(size_t j=0; j<_defDataBytes[i]._data.size(); j++)
             {
                 dbString += std::to_string(_defDataBytes[i]._data[j]) + " ";
             }
@@ -2474,13 +2474,13 @@ namespace Compiler
 
         // Create def word data
         _output.push_back("; Define Words\n");
-        for(int i=0; i<_defDataWords.size(); i++)
+        for(size_t i=0; i<_defDataWords.size(); i++)
         {
             std::string defName = "def_words_" + Expression::wordToHexString(_defDataWords[i]._address);
             _output.push_back(defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(_defDataWords[i]._address) + "\n");
             
             std::string dwString = defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
-            for(int j=0; j<_defDataWords[i]._data.size(); j++)
+            for(size_t j=0; j<_defDataWords[i]._data.size(); j++)
             {
                 dwString += std::to_string(_defDataWords[i]._data[j]) + " ";
             }
@@ -2500,7 +2500,7 @@ namespace Compiler
         {
             std::vector<uint16_t> numericLabels;
             std::vector<uint16_t> numericAddresses;
-            for(int i=0; i<_labels.size(); i++)
+            for(size_t i=0; i<_labels.size(); i++)
             {
                 if(_labels[i]._numeric)
                 {
@@ -2531,7 +2531,7 @@ namespace Compiler
                 _output.push_back(lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(lutAddress) + "\n");
             
                 std::string dbString = lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
-                for(int i=0; i<numericLabels.size(); i++)
+                for(size_t i=0; i<numericLabels.size(); i++)
                 {
                     dbString += std::to_string(numericLabels[i]) + " ";
                 }
@@ -2548,7 +2548,7 @@ namespace Compiler
                 _output.push_back(lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(lutAddress) + "\n");
             
                 std::string dwString = lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
-                for(int i=0; i<numericAddresses.size(); i++)
+                for(size_t i=0; i<numericAddresses.size(); i++)
                 {
                     dwString += Expression::wordToHexString(numericAddresses[i]) + " ";
                 }
@@ -2557,7 +2557,7 @@ namespace Compiler
         }
 
         // ON GOTO GOSUB label LUTs
-        for(int i=0; i<_codeLines.size(); i++)
+        for(size_t i=0; i<_codeLines.size(); i++)
         {
             // Output LUT if it exists
             int lutSize = int(_codeLines[i]._onGotoGosubLut._lut.size());
@@ -2581,7 +2581,7 @@ namespace Compiler
         }
 
         // String concatenation LUTs
-        for(int i=0; i<_codeLines.size(); i++)
+        for(size_t i=0; i<_codeLines.size(); i++)
         {
             // Output LUT if it exists
             int lutSize = int(_codeLines[i]._strConcatLut._lut.size());
@@ -2602,7 +2602,7 @@ namespace Compiler
         }
 
         // INPUT LUTs
-        for(int i=0; i<_codeLines.size(); i++)
+        for(size_t i=0; i<_codeLines.size(); i++)
         {
             // Output varsLUT if it exists
             int varsSize = int(_codeLines[i]._inputLut._varsLut.size());
@@ -2734,7 +2734,7 @@ namespace Compiler
 
         _output.push_back("; Code\n");
 
-        for(int i=0; i<_codeLines.size(); i++)
+        for(size_t i=0; i<_codeLines.size(); i++)
         {
             int labelIndex = _codeLines[i]._labelIndex;
 
@@ -2745,7 +2745,7 @@ namespace Compiler
                 std::string basicLabel = (labelIndex >= 0) ? _labels[labelIndex]._output : "";
 
                 // Vasm code
-                for(int j=0; j<_codeLines[i]._vasm.size(); j++)
+                for(size_t j=0; j<_codeLines[i]._vasm.size(); j++)
                 {
                     uint16_t vasmAddress = _codeLines[i]._vasm[j]._address;
                     std::string vasmCode = _codeLines[i]._vasm[j]._code;
@@ -2782,17 +2782,17 @@ namespace Compiler
 
     void discardUnusedLabels(void)
     {
-        for(int k=0; k<_equateLabels.size(); k++)
+        for(size_t k=0; k<_equateLabels.size(); k++)
         {
             bool foundLabel = false;
 
-            for(int i=0; i<_codeLines.size(); i++)
+            for(size_t i=0; i<_codeLines.size(); i++)
             {
                 // Valid BASIC code
                 if(_codeLines[i]._code.size() >= 2  &&  _codeLines[i]._vasm.size())
                 {
                     // Vasm code
-                    for(int j=0; j<_codeLines[i]._vasm.size(); j++)
+                    for(size_t j=0; j<_codeLines[i]._vasm.size(); j++)
                     {
                         if(_codeLines[i]._vasm[j]._code.find(_equateLabels[k]) != std::string::npos)
                         {
@@ -2811,7 +2811,7 @@ namespace Compiler
                                       _equateLabels[k].find("_endif_") != std::string::npos  ||  _equateLabels[k].find("_while_") != std::string::npos ||  _equateLabels[k].find("_wend_") != std::string::npos    ||
                                       _equateLabels[k].find("_repeat_") != std::string::npos ||  _equateLabels[k].find("_next_") != std::string::npos  ||  _equateLabels[k].find("_page_") != std::string::npos);
 
-                for(int l=0; l<_output.size(); l++)
+                for(size_t l=0; l<_output.size(); l++)
                 {
                     // Find unused internal label in output and discard it
                     if(foundInternal  &&  _output[l].find(_equateLabels[k]) != std::string::npos)

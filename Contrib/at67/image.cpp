@@ -146,7 +146,7 @@ namespace Image
         }
 
         // Optional data
-        size_t optionalSize = infile.tellg() - fileSize;
+        int optionalSize = int(infile.tellg()) - int(fileSize);
         if(optionalSize < 0  ||  (optionalSize & 1)) // should never be -ve or odd
         {
             fprintf(stderr, "Loader::loadGtRgbFile() : bad optional size in '%s'\n", filename.c_str());
@@ -154,7 +154,7 @@ namespace Image
         }
         else if(optionalSize > 0)
         {
-            int numOptionalData = int(optionalSize) / 2;
+            int numOptionalData = optionalSize / 2;
             gtRgbFile._optional.resize(numOptionalData);
             infile.read((char *)&gtRgbFile._optional[0], optionalSize);
 
@@ -199,7 +199,7 @@ namespace Image
         }
 
         // Wrong size
-        if(totalSize != gtRgbFile._data.size())
+        if(totalSize != int(gtRgbFile._data.size()))
         {
             fprintf(stderr, "Loader::saveGtRgbFile() : image size does not match data size : image size=%d : data size=%d : in '%s'\n", totalSize, int(gtRgbFile._data.size()), filename.c_str());
             return false;
@@ -243,14 +243,14 @@ namespace Image
         {
             if(_hostIsBigEndian)
             {
-                for(int i=0; i<numOptionalData; i++) Cpu::swapEndianess(gtRgbFile._optional[i]);
+                for(int i=0; i<int(numOptionalData); i++) Cpu::swapEndianess(gtRgbFile._optional[i]);
             }
 
             outfile.write((char *)&gtRgbFile._optional[0], numOptionalData*2);
 
             if(_hostIsBigEndian)
             {
-                for(int i=0; i<numOptionalData; i++) Cpu::swapEndianess(gtRgbFile._optional[i]);
+                for(int i=0; i<int(numOptionalData); i++) Cpu::swapEndianess(gtRgbFile._optional[i]);
             }
         }
 
@@ -395,7 +395,7 @@ namespace Image
     // 24bit to 6bit
     bool convertRGB8toRGB2(const std::vector<uint8_t>& src, std::vector<uint8_t>& dst, int width, int height, uint8_t imageOrigin)
     {
-        if(src.size() != width*height*3) return false;
+        if(int(src.size()) != width*height*3) return false;
         dst.resize(width*height);
 
         int startX = 0, endX = width, stepX = 1;
@@ -429,7 +429,7 @@ namespace Image
     // 32bit to 6bit, (ignoring alpha channel)
     bool convertRGBA8toRGB2(const std::vector<uint8_t>& src, std::vector<uint8_t>& dst, int width, int height, uint8_t imageOrigin)
     {
-        if(src.size() != width*height*4) return false;
+        if(int(src.size()) != width*height*4) return false;
         dst.resize(width*height);
 
         int startX = 0, endX = width, stepX = 1;
@@ -472,7 +472,7 @@ namespace Image
     // Floyd-Steinberg dithering 24bit to 6bit, (*NOTE* TGA and the Gigatron store RGB pixels in little endian order, so BGR in memory)
     bool ditherRGB8toRGB2(std::vector<uint8_t>& src, std::vector<uint8_t>& dst, int width, int height, uint8_t imageOrigin)
     {
-        if(src.size() != width*height*3) return false;
+        if(int(src.size()) != width*height*3) return false;
         dst.resize(width*height);
 
         int startX = 0, endX = width, stepX = 1;
@@ -610,7 +610,7 @@ namespace Image
     // Floyd-Steinberg dithering 32bit to 6bit, (ignoring alpha channel)
     bool ditherRGBA8toRGB2(std::vector<uint8_t>& src, std::vector<uint8_t>& dst, int width, int height, uint8_t imageOrigin)
     {
-        if(src.size() != width*height*4) return false;
+        if(int(src.size()) != width*height*4) return false;
         dst.resize(width*height);
 
         int startX = 0, endX = width, stepX = 1;

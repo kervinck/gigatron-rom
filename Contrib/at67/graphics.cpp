@@ -319,9 +319,9 @@ namespace Graphics
                         _filter = (_filter<0 || _filter>2) ? 0 : _filter;
 
                         getKeyAsString(sectionString, "Width", "640", result);
-                        _width = (result == "DESKTOP") ? DM.w : _width = std::strtol(result.c_str(), nullptr, 10);
+                        _width = (result == "DESKTOP") ? DM.w : std::strtol(result.c_str(), nullptr, 10);
                         getKeyAsString(sectionString, "Height", "480", result);
-                        _height = (result == "DESKTOP") ? DM.h : _height = std::strtol(result.c_str(), nullptr, 10);
+                        _height = (result == "DESKTOP") ? DM.h : std::strtol(result.c_str(), nullptr, 10);
 
                         getKeyAsString(sectionString, "ScaleX", "2.0", result);
                         _scaleX = std::stof(result.c_str());
@@ -498,8 +498,8 @@ namespace Graphics
 
     void refreshTimingPixel(const Cpu::State& S, int vgaX, int pixelY, uint32_t colour, bool debugging)
     {
-        UNREFERENCED_PARAMETER(debugging);
-        UNREFERENCED_PARAMETER(S);
+        UNREFERENCED_PARAM(debugging);
+        UNREFERENCED_PARAM(S);
 
         _hlineTiming[pixelY % GIGA_HEIGHT] = colour;
 
@@ -1106,7 +1106,7 @@ namespace Graphics
             if(!_displayHelpScreen  &&  _displayHelpScreenAlpha > 0)
             {
                 _displayHelpScreenAlpha -= 10;
-                if(_displayHelpScreenAlpha < 0) _displayHelpScreenAlpha = 0;
+                if(_displayHelpScreenAlpha > 240) _displayHelpScreenAlpha = 0;
             }
         }
     }

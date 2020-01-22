@@ -8,7 +8,7 @@
 
 
 #define MAJOR_VERSION "0.8"
-#define MINOR_VERSION "19"
+#define MINOR_VERSION "20"
 #define VERSION_STR "gtemuAT67 v" MAJOR_VERSION "." MINOR_VERSION
  
 #define ROM_INST 0
@@ -61,7 +61,7 @@
 #undef _X
 #endif
 
-#define UNREFERENCED_PARAMETER(P) (P)
+#define UNREFERENCED_PARAM(P) ((void)P)
 
 
 namespace Cpu
