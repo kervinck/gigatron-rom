@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<language id="gcl" _name="Gigatron Control Language" version="2.0" _section="Source">
+  <metadata>
+    <property name="mimetypes">text/x-gcl</property>
+    <property name="globs">*.gcl</property>
+    <property name="block-comment-start">{</property>
+    <property name="block-comment-end">}</property>
+  </metadata>
+
+  <styles>
+    <style id="gclKeywords" _name="Keywords" map-to="def:statement"/>
+    <style id="gclVersion" _name="Version" map-to="def:identifier"/>
+    <style id="variable" _name="Variable" />
+    <style id="string" _name="String" map-to="def:string"/>
+    <style id="gclSysFn" _name="SysFn" map-to="def:identifier"/>
+    <style id="gclComparators" _name="Comparators" map-to="def:statement"/>
+    <style id="gclComment" _name="Comment" map-to="def:comment"/>
+    <style id="gclNumber" _name="Number" map-to="def:constant"/>
+    <style id="gclData" _name="Data" map-to="def:constant"/>
+    <style id="gclSegment" _name="Segment" map-to="def:preprocessor"/>
+    <style id="gclOperator" _name="Operator" map-to="def:operator"/>
+  </styles>
+
+  <definitions>
+    <context id="gclComparators" style-ref="gclComparators">
+       <keyword>(if[&lt;&gt;]=?0|if&lt;&gt;0|if=0)(loop)?</keyword>
+    </context>
+
+    <context id="gclKeywords" style-ref="gclKeywords">
+       <keyword>else</keyword>
+       <keyword>do</keyword>
+       <keyword>loop</keyword>
+       <keyword>def</keyword>
+       <keyword>ret</keyword>
+       <keyword>push</keyword>
+       <keyword>pop</keyword>
+       <keyword>call</keyword>
+    </context>
+
+    <context id="gclVersion" style-ref="gclVersion">
+       <keyword>gcl0x</keyword>
+       <keyword>gcl1</keyword>
+    </context>
+
+    <context id="gclComment" style-ref="gclComment" class="comment" class-disabled="no-spell-check">
+      <start>{</start>
+      <end>}</end>
+      <include>
+        <context ref="def:in-comment"/>
+      </include>
+    </context>
+
+    <context id="gclNumber" style-ref="gclNumber">
+      <match>(?&lt;![a-zA-Z])[+-]?([$][0-9a-fA-F)]+|\d+)(?![#:0-9a-fA-F])</match>
+    </context>
+
+    <context id="gclData" style-ref="gclData">
+      <match>([$][0-9a-fA-F)]+|\d+)#</match>
+    </context>
+
+    <context id="gclSegment" style-ref="gclSegment">
+      <match>^([$][0-9a-fA-F)]+|\d+):</match>
+    </context>
+
+    <context id="gclOperator" style-ref="gclOperator">
+       <keyword>\+</keyword>
+       <keyword>-</keyword>
+       <keyword>=</keyword>
+       <keyword>&lt;</keyword>
+       <keyword>&gt;</keyword>
+       <keyword>!</keyword>
+       <keyword>%</keyword>
+       <keyword>&amp;</keyword>
+       <keyword>\^</keyword>
+       <keyword>|</keyword>
+    </context>
+
+    <context id="variable" style-ref="variable">
+      <match>([a-zA-Z][a-zA-Z0-9]+)</match>
+    </context>
+
+    <context id="string" style-ref="string" end-at-line-end="true" class-disabled="no-spell-check">
+      <start>`</start>
+      <end> </end>
+    </context>
+
+    <context id="gclSysFn" style-ref="gclSysFn">
+     <match extended="true">
+        [\\](
+        bootCount|
+        bootCheck|
+        xout|
+        romTypeValue_ROMv1|
+        romTypeValue_ROMv2|
+        romTypeValue_ROMv3|
+        romTypeValue_ROMv4|
+        romTypeValue_DEVROM|
+        zeroConst|
+        memSize|
+        entropy|
+        videoY|
+        frameCount|
+        serialRaw|
+        buttonState|
+        xoutMask|
+        vPC|
+        vAC|
+        vLR|
+        vSP|
+        romType|
+        channelMask_v4|
+        sysFn|
+        sysArgs[0-7]|
+        soundTimer|
+        ledState_v2|
+        ledTempo|
+        userVars|
+        oneConst|
+        userVars2|
+        v6502_PC|
+        v6502_PCL|
+        v6502_PCH|
+        v6502_A|
+        v6502_X|
+        v6502_Y|
+        videoTable|
+        vReset|
+        userCode|
+        soundTable|
+        screenMemory|
+        channel1|
+        channel2|
+        channel3|
+        channel4|
+        wavA|
+        wavX|
+        keyL|
+        keyH|
+        oscL|
+        oscH|
+        buttonRight|
+        buttonLeft|
+        buttonDown|
+        buttonUp|
+        buttonStart|
+        buttonSelect|
+        buttonB|
+        buttonA|
+        maxTicks|
+        LDWI|
+        LD|
+        LDW|
+        STW|
+        BCC|
+        EQ|
+        GT|
+        LT|
+        GE|
+        LE|
+        LDI|
+        ST|
+        POP|
+        NE|
+        PUSH|
+        LUP|
+        ANDI|
+        ORI|
+        XORI|
+        BRA|
+        INC|
+        ADDW|
+        PEEK|
+        SYS|
+        SUBW|
+        DEF|
+        CALL|
+        ALLOC|
+        ADDI|
+        SUBI|
+        LSLW|
+        STLW|
+        LDLW|
+        POKE|
+        DOKE|
+        DEEK|
+        ANDW|
+        ORW|
+        XORW|
+        RET|
+        HALT|
+        SYS_Exec_88|
+        SYS_Out_22|
+        SYS_In_24|
+        SYS_Random_34|
+        SYS_LSRW7_30|
+        SYS_LSRW8_24|
+        SYS_LSLW8_24|
+        SYS_Draw4_30|
+        SYS_VDrawBits_134|
+        SYS_LSRW1_48|
+        SYS_LSRW2_52|
+        SYS_LSRW3_52|
+        SYS_LSRW4_50|
+        SYS_LSRW5_50|
+        SYS_LSRW6_48|
+        SYS_LSLW4_46|
+        SYS_Read3_40|
+        SYS_Unpack_56|
+        font32up|
+        font82up|
+        notesTable|
+        invTable|
+        SYS_SetMode_v2_80|
+        SYS_SetMemory_v2_54|
+        SYS_SendSerial1_v3_80|
+        SYS_ExpanderControl_v4_40|
+        SYS_Run6502_v4_80|
+        SYS_ResetWaveforms_v4_50|
+        SYS_ShuffleNoise_v4_46|
+        SYS_SpiExchangeBytes_v4_134|
+        SYS_Sprite6_v3_64|
+        SYS_Sprite6x_v3_64|
+        SYS_Sprite6y_v3_64|
+        SYS_Sprite6xy_v3_64|
+        SYS_LoaderPayloadCopy_34|
+        SYS_LoaderNextByteIn_32)
+      </match>
+    </context>
+
+    <context id="code-block">
+      <start>\[</start>
+      <end>\]</end>
+      <include>
+        <context ref="gclKeywords"/>
+        <context ref="gclComparators"/>
+        <context ref="variable"/>
+        <context ref="string"/>
+        <context ref="gclSysFn"/>
+        <context ref="code-block"/>
+        <context ref="gclComparators"/>
+        <context ref="gclComment"/>
+        <context ref="gclNumber"/>
+        <context ref="gclData"/>
+        <context ref="gclSegment"/>
+        <context ref="gclOperator"/>
+      </include>
+    </context>
+
+    <context id="gcl" class="no-spell-check">
+      <include>
+        <context ref="gclVersion"/>
+        <context ref="gclKeywords"/>
+        <context ref="variable"/>
+        <context ref="string"/>
+        <context ref="gclSysFn"/>
+        <context ref="code-block"/>
+        <context ref="gclComparators"/>
+        <context ref="gclComment"/>
+        <context ref="gclNumber"/>
+        <context ref="gclData"/>
+        <context ref="gclSegment"/>
+        <context ref="gclOperator"/>
+      </include>
+    </context>
+
+  </definitions>
+</language>
