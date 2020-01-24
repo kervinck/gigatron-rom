@@ -22,6 +22,11 @@ Place `gcl.vim` in `$HOME/.vim/after/syntax/` and create a file,
 au BufRead,BufNewFile *.gcl set filetype=gcl
 ```
 
+Installing Gedit/Pluma/Xed syntax highlighting
+==============================================
+
+Place `gcl.lang` in `$HOME/.local/share/gtksourceview-3.0/language-specs`.
+
 Using raw24toraw6.py
 ====================
 
