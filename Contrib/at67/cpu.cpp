@@ -1036,15 +1036,8 @@ namespace Cpu
             _XOUT = _stateT._AC;
         
             // Audio
-            if(Audio::getRealTimeAudio())
-            {
-                Audio::playSample();
-            }
-            else
-            {
-                Audio::fillAudioBuffer();
-                if(_vgaY == SCREEN_HEIGHT+4) Audio::playAudioBuffer();
-            }
+            Audio::playSample();
+            //Audio::fillAudioBuffer();
 
             // Loader
             Loader::upload(_vgaY);

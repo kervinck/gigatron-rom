@@ -79,24 +79,32 @@ scanlineM_cont      LDWI    SYS_SetMode_v2_80
                     SYS     80
                     RET
 %ENDS   
-    
-%SUB                waitVBlank
-waitVBlank          LDW     waitVBlankNum
+
+%SUB                waitVBlanks
+waitVBlanks         PUSH
+
+waitVB_loop         LDW     waitVBlankNum
                     SUBI    0x01
                     STW     waitVBlankNum
-                    BGE     waitVB_start
+                    BGE     waitVB_vblank
+                    POP
                     RET
     
-waitVB_start        LD      giga_frameCount
+waitVB_vblank       CALLI   waitVBlank
+                    BRA     waitVB_loop
+%ENDS   
+
+%SUB                waitVBlank
+waitVBlank          LD      giga_frameCount
                     SUBW    frameCountPrev
-                    BEQ     waitVB_start
+                    BEQ     waitVBlank
                     LD      giga_frameCount
                     STW     frameCountPrev
                     PUSH
-                    CALLI   realTimeProc
+                    CALLI   realTimeProcAddr
                     POP
-                    BRA     waitVBlank
-%ENDS   
+                    RET
+%ENDS
 
 %SUB                drawHLine
 drawHLine           PUSH

@@ -25,7 +25,6 @@
 #define USER_CODE_START   0x0200
 #define USER_VAR_END      0x007F
 
-//#define SMALL_CODE_SIZE
 //#define ARRAY_INDICES_ONE
 
 
@@ -38,6 +37,7 @@ namespace Compiler
     enum IfElseEndType {IfBlock, ElseIfBlock, ElseBlock, EndIfBlock};
     enum OperandType {OperandVar, OperandTemp, OperandConst};
     enum StatementResult {StatementError, StatementSuccess, StatementExpression, SingleStatementParsed, MultiStatementParsed, StringStatementParsed};
+    enum CodeOptimiseType {CodeSpeed, CodeSize};
 
     struct Constant
     {
@@ -232,15 +232,18 @@ namespace Compiler
     uint16_t getRuntimeStart(void);
     uint16_t getTempVarStart(void);
     uint16_t getStrWorkArea(void);
+    CodeOptimiseType getCodeOptimiseType(void);
+
     std::string& getTempVarStartStr(void);
     int getCurrentLabelIndex(void);
     std::string& getNextInternalLabel(void);
 
     void setRuntimeEnd(uint16_t runtimeEnd);
     void setRuntimeStart(uint16_t runtimeStart);
+    void setTempVarStart(uint16_t tempVarStart);
+    void setStrWorkArea(uint16_t strWorkArea);
     void setCreateNumericLabelLut(bool createNumericLabelLut);
-    void setNextInternalLabel(const std::string& label);
-    void adjustDiscardedLabels(const std::string name, uint16_t address);
+    void setCodeOptimiseType(CodeOptimiseType codeOptimiseType);
 
     int incJumpFalseUniqueId(void);
 
@@ -263,6 +266,9 @@ namespace Compiler
     std::stack<EndIfData>& getEndIfDataStack(void);
     std::stack<WhileWendData>& getWhileWendDataStack(void);
     std::stack<RepeatUntilData>& getRepeatUntilDataStack(void);
+
+    void setNextInternalLabel(const std::string& label);
+    void adjustDiscardedLabels(const std::string name, uint16_t address);
 
     bool initialise(void);
     bool initialiseMacros(void);
@@ -295,9 +301,9 @@ namespace Compiler
     void getNextTempVar(void);
 
     uint32_t isExpression(std::string& input, int& varIndex, int& constIndex, int& strIndex);
-    OperandType parseExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, std::string& operand, Expression::Numeric& numeric);
-    uint32_t parseExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, Expression::Numeric& numeric);
-    uint32_t handleExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, Expression::Numeric numeric);
+    OperandType parseExpression(int codeLineIndex, std::string& expression, std::string& operand, Expression::Numeric& numeric);
+    uint32_t parseExpression(int codeLineIndex, std::string& expression, Expression::Numeric& numeric);
+    uint32_t handleExpression(int codeLineIndex, std::string& expression, Expression::Numeric numeric);
     StatementResult parseMultiStatements(const std::string& code, CodeLine& codeLine, int codeLineIndex, int& varIndex, int& strIndex);
 
     void addLabelToJumpCC(std::vector<VasmLine>& vasm, const std::string& label);

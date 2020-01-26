@@ -415,6 +415,11 @@ _label_ CALL    giga_vAC
         CALL    giga_vAC
 %ENDM
 
+%MACRO  WaitVBlanks
+        LDWI    waitVBlanks
+        CALL    giga_vAC
+%ENDM
+
 %MACRO  WaitVBlank
         LDWI    waitVBlank
         CALL    giga_vAC

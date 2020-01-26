@@ -992,6 +992,8 @@ namespace Editor
         _singleStep = false;
         _singleStepEnabled = false;
         _singleStepMode = RunToBrk;
+
+        Audio::clearQueue();
     }
 
     // PS2 Keyboard emulation mode
@@ -1077,7 +1079,7 @@ namespace Editor
 
     void loadGtRgbFile(void)
     {
-        static std::string names[] = {"Gamma_hi", "Gigatron_hi", "Juggler_hi", "Mario_hi"}; //{"Clouds", "Clouds", "Clouds", "Clouds"};
+        static std::string names[] = {"lowres", "turrican", "clouds1", "mario"}; //{"Clouds", "Clouds", "Clouds", "Clouds"};
 
         Image::TgaFile tgaFile;
         Image::loadTgaFile(names[gtRgbFileindex] + ".tga", tgaFile);

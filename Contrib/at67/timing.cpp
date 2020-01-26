@@ -30,7 +30,6 @@ namespace Timing
         do
         {
             _frameTime = double(SDL_GetPerformanceCounter() - prevFrameCounter) / double(SDL_GetPerformanceFrequency());
-            //std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
         while(_frameTime < _timingAdjust);
         prevFrameCounter = SDL_GetPerformanceCounter();

@@ -40,3 +40,45 @@ setArrayInt16       LDW     memAddr
                     DOKE    memAddr
                     RET
 %ENDS
+
+%SUB                getArrayInt16Low
+                    ; get low byte from 16bit array value
+getArrayInt16Low    LDW     memAddr
+                    ADDW    memIndex
+                    ADDW    memIndex
+                    PEEK
+                    RET
+%ENDS
+
+%SUB                setArrayInt16Low
+                    ; set low byte from 16bit array value
+setArrayInt16Low    LDW     memAddr
+                    ADDW    memIndex
+                    ADDW    memIndex
+                    STW     memAddr
+                    LDW     memValue
+                    POKE    memAddr
+                    RET
+%ENDS
+
+%SUB                getArrayInt16High
+                    ; get High byte from 16bit array value
+getArrayInt16High   LDW     memAddr
+                    ADDW    memIndex
+                    ADDW    memIndex
+                    ADDI    1
+                    PEEK
+                    RET
+%ENDS
+
+%SUB                setArrayInt16High
+                    ; set High byte from 16bit array value
+setArrayInt16High   LDW     memAddr
+                    ADDW    memIndex
+                    ADDW    memIndex
+                    ADDI    1
+                    STW     memAddr
+                    LDW     memValue
+                    POKE    memAddr
+                    RET
+%ENDS

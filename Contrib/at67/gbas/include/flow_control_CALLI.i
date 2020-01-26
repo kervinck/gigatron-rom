@@ -4,7 +4,6 @@ defaultLabel        EQU     register1
 lutLabs             EQU     register2
 lutAddrs            EQU     register3
 lutIndex            EQU     register8
-lutLabel            EQU     register9
 
 
 %SUB                realTimeProc
@@ -27,22 +26,18 @@ gotoNumericLabel    LDWI    _lut_numericLabs
                     
 gotoNL_loop         LDW     lutIndex
                     DEEK
-                    STW     lutLabel
-                    LD      lutLabel + 1
-                    ANDI    0x80                            ; check for -1
-                    BEQ     gotoNL_cont
+                    BNE     gotoNL_cont                     ; check for 0
                     LDW     defaultLabel
                     BEQ     gotoNL_exit
                     CALL    defaultLabel                    ; fetch default address and jump, (note we never return from here)
                     
 gotoNL_exit         RET
                     
-gotoNL_cont         LDW     lutLabel
-                    SUBW    numericLabel
+gotoNL_cont         SUBW    numericLabel
                     BEQ     gotoNL_found
                     INC     lutIndex
-                    INC     lutIndex                        ; loop through lut until found or -1
-                    BRA     gotoNL_loop
+                    INC     lutIndex
+                    BRA     gotoNL_loop                     ; loop through lut until found or 0
                     
 gotoNL_found        LDW     lutIndex
                     SUBW    lutLabs
@@ -62,10 +57,7 @@ gosubNumericLabel   PUSH
                     
 gosubNL_loop        LDW     lutIndex
                     DEEK
-                    STW     lutLabel
-                    LD      lutLabel + 1
-                    ANDI    0x80                            ; check for -1
-                    BEQ     gosubNL_cont
+                    BNE     gosubNL_cont                    ; check for 0
                     LDW     defaultLabel
                     BEQ     gosubNL_exit
                     CALL    defaultLabel                    ; fetch default address and call
@@ -73,12 +65,11 @@ gosubNL_loop        LDW     lutIndex
 gosubNL_exit        POP
                     RET
                     
-gosubNL_cont        LDW     lutLabel
-                    SUBW    numericLabel
+gosubNL_cont        SUBW    numericLabel
                     BEQ     gosubNL_found
                     INC     lutIndex
-                    INC     lutIndex                        ; loop through lut until found or -1
-                    BRA     gosubNL_loop
+                    INC     lutIndex
+                    BRA     gosubNL_loop                    ; loop through lut until found or 0
                     
 gosubNL_found       LDW     lutIndex
                     SUBW    lutLabs

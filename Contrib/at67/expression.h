@@ -8,7 +8,7 @@
 namespace Expression
 {
     enum ExpressionType {IsInvalid=0x8000, HasNumbers=0x0000, HasStrings=0x0001, HasStrConsts=0x0002, HasStrVars=0x0004, HasStringKeywords=0x0008, IsStringExpression=0x000F,
-                         HasOperators=0x0010, HasIntConsts=0x0020, HasIntVars=0x0040, HasKeywords=0x0080, HasFunctions=0x0100, HasOptimisedPrint=0x0200};
+                         HasOperators=0x0010, HasIntConsts=0x0020, HasIntVars=0x0040, HasPragmas=0x0080, HasKeywords=0x0100, HasFunctions=0x0200, HasOptimisedPrint=0x0400};
     enum NumericType {BadBase=-1, Decimal, HexaDecimal, Octal, Binary};
     enum CCType {BooleanCC, NormalCC, FastCC};
     enum Int16Byte {Int16Both, Int16Low, Int16High};

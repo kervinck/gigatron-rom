@@ -15,8 +15,8 @@
 #include <SDL.h>
 
 
-#define AUDIO_SAMPLES   (SCAN_LINES + 1)
-#define AUDIO_FREQUENCY (SCAN_LINES*VSYNC_RATE)
+#define AUDIO_SAMPLES   (SCAN_LINES)
+#define AUDIO_FREQUENCY (int(SCAN_LINES*59.98))
 
 
 namespace Audio
@@ -125,7 +125,11 @@ namespace Audio
     void fillAudioBuffer(void)
     {
         _audioSamples[_audioIndex] = (Cpu::getXOUT() & 0xf0) <<5;
-        _audioIndex = (_audioIndex + 1) % AUDIO_SAMPLES;
+        if(++_audioIndex == AUDIO_SAMPLES)
+        {
+            playAudioBuffer();
+            _audioIndex = 0;
+        }
     }
 
     void playAudioBuffer(void)
