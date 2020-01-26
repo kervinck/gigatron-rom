@@ -1,14 +1,14 @@
 ; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 mathX               EQU     register8
 mathY               EQU     register9
-mathSum             EQU     register10
-mathMask            EQU     register11
+mathSum             EQU     register12
+mathMask            EQU     register13
 mathRem             EQU     register12
 mathSign            EQU     register13
 mathScratch         EQU     register14
 mathShift           EQU     register15
-mathBase            EQU     register12
-mathPow             EQU     register13
+mathBase            EQU     register10
+mathPow             EQU     register11
 mathResult          EQU     register14
 
 

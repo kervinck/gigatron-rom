@@ -1,10 +1,10 @@
-const NOTELEN=30
+const NOTELEN=15
 
 poke &h01F9, 238  'disable video
 mode 2 : cls
 poke &h01F9, 0  'enable video
 
-n=0 : c=n : inv=n : char=inv : posxy=char
+n=0 : c=n : kk=c : char=kk : posxy=char
 fg=peek(162) : bg=peek(163)
 ch=252 : z=2
 
@@ -17,11 +17,11 @@ gosub waveform
 poke &h01F9, 0  'enable video
     
 loop:
-    poke 44,5
+    wait
+    poke 44,2
     k=peek(15)
     gosub channels
-    wait 1
-    if inv &&= 1 then gosub normalChar : goto &loop
+    if k &&<> kk then gosub normalChar
     gosub k
     kk = k
 goto &loop
@@ -57,7 +57,7 @@ audio:
     ch.hi = c : doke ch,n
 return
 
-waveform: 
+waveform:
     at 48,103 : print "Z: ";
     gosub 206+z
     for c=1 to 4
@@ -79,12 +79,12 @@ playExit:
 return    
 
 inverseChar:
-    inv=1 : poke 162,bg : poke 163,fg
+    poke 162,bg : poke 163,fg
     gosub printChar
 return
          
 normalChar: 
-    inv=0 : poke 162,fg : poke 163,bg
+    poke 162,fg : poke 163,bg
     gosub printChar
 return
          
@@ -100,8 +100,8 @@ return
 
 drawKeys:
     for i=0 to 9
-        poke 163,&h00 : rectf 20+i*12,30, 20+i*12+12,90
-        poke 163,&hFF : rectf 21+i*12,31, 21+i*12+10,89
+        poke 163,&h00 : rect  20+i*12,30, 20+i*12+12,89
+        poke 163,&hFF : rectf 21+i*12,31, 21+i*12+10,88
     next i
     for i=0 to 1
         poke 163,&h00 : rectf 28+i*12,30, 28+i*12+8,70

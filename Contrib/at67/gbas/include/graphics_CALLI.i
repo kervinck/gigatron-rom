@@ -722,7 +722,7 @@ drawRF_loop         LDW     drawRectF_y1
                     INC     drawRectF_y1
                     LDW     drawRectF_y1
                     SUBW    drawRectF_y2
-                    BLT     drawRF_loop
+                    BLE     drawRF_loop
 
                     POP
                     RET
