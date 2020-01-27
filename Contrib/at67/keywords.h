@@ -67,6 +67,7 @@ namespace Keywords
     bool pragmaRUNTIMESTART(const std::string& input,     int codeLineIndex, size_t foundPos);
     bool pragmaSTRINGWORKAREA(const std::string& input,   int codeLineIndex, size_t foundPos);
     bool pragmaCODEOPTIMISETYPE(const std::string& input, int codeLineIndex, size_t foundPos);
+    bool pragmaARRAYINDICIESONE(const std::string& input, int codeLineIndex, size_t foundPos);
 
     // Keywords
     bool keywordLET(Compiler::CodeLine& codeLine,     int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);

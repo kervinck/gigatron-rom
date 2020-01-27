@@ -71,6 +71,7 @@ namespace Keywords
         _pragmas["_RUNTIMESTART_"]     = {"_RUNTIMESTART_",     pragmaRUNTIMESTART    };
         _pragmas["_STRINGWORKAREA_"]   = {"_STRINGWORKAREA_",   pragmaSTRINGWORKAREA  };
         _pragmas["_CODEOPTIMISETYPE_"] = {"_CODEOPTIMISETYPE_", pragmaCODEOPTIMISETYPE};
+        _pragmas["_ARRAYINDICIESONE_"] = {"_ARRAYINDICIESONE_", pragmaARRAYINDICIESONE};
 
         // Keywords
         _keywords["LET"    ] = {"LET",     keywordLET,     Compiler::SingleStatementParsed};
@@ -1070,6 +1071,17 @@ namespace Keywords
         return false;
     }
 
+    bool pragmaARRAYINDICIESONE(const std::string& input, int codeLineIndex, size_t foundPos)
+    {
+        UNREFERENCED_PARAM(input);
+        UNREFERENCED_PARAM(foundPos);
+        UNREFERENCED_PARAM(codeLineIndex);
+
+        Compiler::setArrayIndiciesOne(true);
+
+        return true;
+    }
+
 
     // ********************************************************************************************
     // Keywords
@@ -1212,9 +1224,10 @@ namespace Keywords
         Compiler::emitVcpuAsm("STW",  "register0", false, codeLineIndex);
         Compiler::emitVcpuAsm("LDWI", Compiler::getCodeLines()[codeLineIndex]._onGotoGosubLut._name, false, codeLineIndex);
         Compiler::emitVcpuAsm("ADDW", "register0", false, codeLineIndex);
-#ifdef ARRAY_INDICES_ONE
-        Compiler::emitVcpuAsm("SUBI", "2",         false, codeLineIndex);  // enable this to start at 1 instead of 0
-#endif
+        if(Compiler::getArrayIndiciesOne())
+        {
+            Compiler::emitVcpuAsm("SUBI", "2",         false, codeLineIndex);  // enable this to start at 1 instead of 0
+        }
         Compiler::emitVcpuAsm("DEEK", "",          false, codeLineIndex);
         Compiler::emitVcpuAsm("CALL", "giga_vAC",  false, codeLineIndex);
 
@@ -2506,9 +2519,10 @@ namespace Keywords
         }
 
         // Most BASIC's declared 0 to n elements, hence size = n + 1
-#ifndef ARRAY_INDICES_ONE
-        arraySize++;
-#endif
+        if(!Compiler::getArrayIndiciesOne())
+        {
+            arraySize++;
+        }
 
         std::string varName = codeLine._code.substr(foundPos, lbra - foundPos);
         Expression::stripWhitespace(varName);

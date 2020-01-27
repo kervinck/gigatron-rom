@@ -34,7 +34,7 @@ namespace Compiler
     uint16_t _strWorkArea    = 0x0000;
 
     CodeOptimiseType _codeOptimiseType = CodeSpeed;
-
+    bool _arrayIndiciesOne = false;
     bool _createNumericLabelLut = false;
 
     int _currentLabelIndex = -1;
@@ -78,6 +78,7 @@ namespace Compiler
     uint16_t getTempVarStart(void) {return _tempVarStart;}
     uint16_t getStrWorkArea(void) {return _strWorkArea;}
     CodeOptimiseType getCodeOptimiseType(void) {return _codeOptimiseType;}
+    bool getArrayIndiciesOne(void) {return _arrayIndiciesOne;}
     std::string& getTempVarStartStr(void) {return _tempVarStartStr;}
     int getCurrentLabelIndex(void) {return _currentLabelIndex;}
     std::string& getNextInternalLabel(void) {return _nextInternalLabel;}
@@ -86,6 +87,7 @@ namespace Compiler
     void setRuntimeStart(uint16_t runtimeStart) {_runtimeStart = runtimeStart;}
     void setTempVarStart(uint16_t tempVarStart) {_tempVarStart = tempVarStart;}
     void setStrWorkArea(uint16_t strWorkArea) {_strWorkArea = strWorkArea;}
+    void setArrayIndiciesOne(bool arrayIndiciesOne) {_arrayIndiciesOne = arrayIndiciesOne;}
     void setCreateNumericLabelLut(bool createNumericLabelLut) {_createNumericLabelLut = createNumericLabelLut;}
     void setCodeOptimiseType(CodeOptimiseType codeOptimiseType) {_codeOptimiseType = codeOptimiseType;}
 
@@ -2851,7 +2853,7 @@ namespace Compiler
         _strWorkArea    = 0x0000;
 
         _codeOptimiseType = CodeSpeed;
-
+        _arrayIndiciesOne = false;
         _createNumericLabelLut = false;
 
         _currentLabelIndex = -1;

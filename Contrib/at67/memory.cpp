@@ -328,12 +328,15 @@ namespace Memory
 
     void printFreeRamList(SortType sortType)
     {
+        // Make a local copy so that we don't change the sort on the real free RAM list
+        std::vector<RamEntry> freeRam = _freeRam;
+
         switch(sortType)
         {
             // Sort entries from lowest address to highest address
             case AddressAscending:
             {
-                std::sort(_freeRam.begin(), _freeRam.end(), [](const RamEntry& ramEntryA, const RamEntry& ramEntryB)
+                std::sort(freeRam.begin(), freeRam.end(), [](const RamEntry& ramEntryA, const RamEntry& ramEntryB)
                 {
                     uint16_t addressA = ramEntryA._address;
                     uint16_t addressB = ramEntryB._address;
@@ -345,7 +348,7 @@ namespace Memory
             // Sort entries from highest address to lowest address
             case AddressDescending:
             {
-                std::sort(_freeRam.begin(), _freeRam.end(), [](const RamEntry& ramEntryA, const RamEntry& ramEntryB)
+                std::sort(freeRam.begin(), freeRam.end(), [](const RamEntry& ramEntryA, const RamEntry& ramEntryB)
                 {
                     uint16_t addressA = ramEntryA._address;
                     uint16_t addressB = ramEntryB._address;
@@ -357,7 +360,7 @@ namespace Memory
             // Sort entries from lowest address to highest address
             case SizeAscending:
             {
-                std::sort(_freeRam.begin(), _freeRam.end(), [](const RamEntry& ramEntryA, const RamEntry& ramEntryB)
+                std::sort(freeRam.begin(), freeRam.end(), [](const RamEntry& ramEntryA, const RamEntry& ramEntryB)
                 {
                     int sizeA = ramEntryA._size;
                     int sizeB = ramEntryB._size;
@@ -369,7 +372,7 @@ namespace Memory
             // Sort entries from highest address to lowest address
             case SizeDescending:
             {
-                std::sort(_freeRam.begin(), _freeRam.end(), [](const RamEntry& ramEntryA, const RamEntry& ramEntryB)
+                std::sort(freeRam.begin(), freeRam.end(), [](const RamEntry& ramEntryA, const RamEntry& ramEntryB)
                 {
                     int sizeA = ramEntryA._size;
                     int sizeB = ramEntryB._size;
@@ -382,10 +385,10 @@ namespace Memory
         }
 
         int totalFree = 0;
-        for(int i=0; i<int(_freeRam.size()); i++)
+        for(int i=0; i<int(freeRam.size()); i++)
         {
-            totalFree += _freeRam[i]._size;
-            fprintf(stderr, "Memory::printFreeRamList() : %3d : 0x%04x %3d\n", i, _freeRam[i]._address, _freeRam[i]._size);
+            totalFree += freeRam[i]._size;
+            fprintf(stderr, "Memory::printFreeRamList() : %3d : 0x%04x %3d\n", i, freeRam[i]._address, freeRam[i]._size);
         }
         fprintf(stderr, "Memory::printFreeRamList() : Expected %5d : Found %5d\n", _sizeFreeRAM, totalFree);
     }

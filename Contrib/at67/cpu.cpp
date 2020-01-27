@@ -1036,8 +1036,9 @@ namespace Cpu
             _XOUT = _stateT._AC;
         
             // Audio
-            Audio::playSample();
+            //Audio::playSample();
             //Audio::fillAudioBuffer();
+            Audio::fillCallbackAudioBuffer();
 
             // Loader
             Loader::upload(_vgaY);

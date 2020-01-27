@@ -25,8 +25,6 @@
 #define USER_CODE_START   0x0200
 #define USER_VAR_END      0x007F
 
-//#define ARRAY_INDICES_ONE
-
 
 namespace Compiler
 {
@@ -233,6 +231,7 @@ namespace Compiler
     uint16_t getTempVarStart(void);
     uint16_t getStrWorkArea(void);
     CodeOptimiseType getCodeOptimiseType(void);
+    bool getArrayIndiciesOne(void);
 
     std::string& getTempVarStartStr(void);
     int getCurrentLabelIndex(void);
@@ -243,6 +242,7 @@ namespace Compiler
     void setTempVarStart(uint16_t tempVarStart);
     void setStrWorkArea(uint16_t strWorkArea);
     void setCreateNumericLabelLut(bool createNumericLabelLut);
+    void setArrayIndiciesOne(bool arrayIndiciesOne);
     void setCodeOptimiseType(CodeOptimiseType codeOptimiseType);
 
     int incJumpFalseUniqueId(void);
