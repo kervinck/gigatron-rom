@@ -50,7 +50,7 @@
  
 namespace Memory
 {
-    enum FitType {FitSmallest, FitLargest, FitAscending, FitDescending, NumFitTypes};
+    enum FitType {FitAscending, FitDescending, NumFitTypes};
     enum SortType {NoSort, AddressDescending, AddressAscending, SizeAscending, SizeDescending, NumSortTypes};
 
     struct RamEntry
@@ -71,11 +71,11 @@ namespace Memory
     void initialise(void);
 
     bool isFreeRAM(uint16_t address, int size);
+    bool getNextCodeAddress(FitType fitType, uint16_t start, int size, uint16_t& address);
+
     bool giveFreeRAM(uint16_t address, int size);
-    bool getNextFreeRAM(uint16_t start, int size, uint16_t& address);
-    bool getNextFreeSegment(uint16_t start, int size, uint16_t& address);
     bool takeFreeRAM(uint16_t address, int size, bool printError=true);
-    bool getFreeRAM(FitType fitType, int size, uint16_t min, uint16_t max, uint16_t& address, bool update=true);
+    bool getFreeRAM(FitType fitType, int size, uint16_t min, uint16_t max, uint16_t& address, bool withinPage=true);
 
     void printFreeRamList(SortType sortType=AddressAscending);
 }

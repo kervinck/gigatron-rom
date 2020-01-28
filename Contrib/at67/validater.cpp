@@ -98,33 +98,33 @@ namespace Validater
 
             if(opcodeSize)
             {
-                // Increase opcodeSize by size of page jump preamble, relocation is not required if requested RAM address is free
+                // Increase opcodeSize by size of page jump prologue
                 int opSize = ((Assembler::getUseOpcodeCALLI()) ? CALLI_PAGE_JUMP_SIZE : CALL_PAGE_JUMP_SIZE) + opcodeSize;
-                if(Memory::isFreeRAM(vPC, opSize))
+
+                // Code can't straddle page boundaries
+                if(HI_BYTE(vPC) == HI_BYTE(vPC + opSize)  &&  Memory::isFreeRAM(vPC, opSize))
                 {
+                    // Code relocation is not required if requested RAM address is free
                     Memory::takeFreeRAM(vPC, opcodeSize, true);
                     return false;
                 }
 
-                // Relocation is required if a new RAM address is needed
-                uint16_t freeAddr = 0x0000;
-                if(!Memory::getNextFreeRAM(uint16_t(vPC + opcodeSize), opcodeSize, freeAddr)) return false;
-                if(Memory::getFreeRAM(Memory::FitDescending, opcodeSize, freeAddr, Compiler::getRuntimeStart(), nextPC, false))
-                {
-                    if(!print)
-                    {
-                        print = true;
-                        fprintf(stderr, "\n*******************************************************\n");
-                        fprintf(stderr, "*       Opcode         : Address :    Size     :  New  \n");
-                        fprintf(stderr, "*******************************************************\n");
-                    }
+                // Get next free code address after page jump prologue and relocate code, (return true)
+                if(!Memory::getNextCodeAddress(Memory::FitAscending, vPC, opSize, nextPC)) return false;
 
-                    uint16_t newPC = ((Assembler::getUseOpcodeCALLI()) ? CALLI_PAGE_JUMP_OFFSET : CALL_PAGE_JUMP_OFFSET) + nextPC;
-                    fprintf(stderr, "* %-20s : 0x%04x  :    %2d bytes : 0x%04x\n", opcode.c_str(), vPC, opcodeSize, newPC);
-                    return true;
+                if(!print)
+                {
+                    print = true;
+                    fprintf(stderr, "\n*******************************************************\n");
+                    fprintf(stderr, "*                      Relocating                      \n");
+                    fprintf(stderr, "*******************************************************\n");
+                    fprintf(stderr, "*       Opcode         : Address :    Size     :  New  \n");
+                    fprintf(stderr, "*******************************************************\n");
                 }
 
-                return false;
+                uint16_t newPC = ((Assembler::getUseOpcodeCALLI()) ? CALLI_PAGE_JUMP_OFFSET : CALL_PAGE_JUMP_OFFSET) + nextPC;
+                fprintf(stderr, "* %-20s : 0x%04x  :    %2d bytes : 0x%04x\n", opcode.c_str(), vPC, opcodeSize, newPC);
+                return true;
             }
         }
 
@@ -277,6 +277,7 @@ namespace Validater
                 std::string opcode = Compiler::getCodeLines()[i]._vasm[j]._opcode;
                 std::string code = Compiler::getCodeLines()[i]._vasm[j]._code;
                 std::string label = Compiler::getCodeLines()[i]._vasm[j]._internalLabel;
+                std::string basic = Compiler::getCodeLines()[i]._code;
 
                 Expression::stripWhitespace(opcode);
                 if(opcodeIsBranch(opcode))
@@ -297,7 +298,7 @@ namespace Validater
                         uint16_t labAddr = Compiler::getLabels()[labelIndex]._address;
                         if(HI_MASK(opcAddr) != HI_MASK(labAddr))
                         {
-                            fprintf(stderr, "\nCompiler::checkBranchLabels() : *** Warning ***, %s is branching from 0x%04x to 0x%04x, for '%s' on line %d\n\n", opcode.c_str(), opcAddr, labAddr, code.c_str(), i + 1);
+                            fprintf(stderr, "\nValidater::checkBranchLabels() : *** Warning ***, %s is branching from 0x%04x to 0x%04x, for '%s' on line %d\n\n", opcode.c_str(), opcAddr, labAddr, basic.c_str(), i + 1);
                             _PAUSE_;
                         }
                     }
@@ -313,7 +314,7 @@ namespace Validater
                             uint16_t labAddr = Compiler::getInternalLabels()[labelIndex]._address;
                             if(HI_MASK(opcAddr) != HI_MASK(labAddr))
                             {
-                                fprintf(stderr, "\nCompiler::checkBranchLabels() : *** Warning ***, %s is branching from 0x%04x to 0x%04x, for '%s' on line %d\n\n", opcode.c_str(), opcAddr, labAddr, code.c_str(), i + 1);
+                                fprintf(stderr, "\nValidater::checkBranchLabels() : *** Warning ***, %s is branching from 0x%04x to 0x%04x, for '%s' on line %d\n\n", opcode.c_str(), opcAddr, labAddr, basic.c_str(), i + 1);
                                 _PAUSE_;
                             }
                         }
@@ -336,7 +337,7 @@ namespace Validater
             Compiler::ForNextData forNextData = Compiler::getForNextDataStack().top();
             int codeLineIndex = forNextData._codeLineIndex;
             std::string code = Compiler::getCodeLines()[codeLineIndex]._code;
-            fprintf(stderr, "Validater::checkStatementBlocks() : Syntax error, missing NEXT statement, for '%s' on line %d\n", code.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Validater::checkStatementBlocks() : Syntax error, missing NEXT statement, for '%s' on line %d\n", code.c_str(), codeLineIndex);
             Compiler::getForNextDataStack().pop();
         }
 
@@ -347,7 +348,7 @@ namespace Validater
             Compiler::ElseIfData elseIfData = Compiler::getElseIfDataStack().top();
             int codeLineIndex = elseIfData._codeLineIndex;
             std::string code = Compiler::getCodeLines()[codeLineIndex]._code;
-            fprintf(stderr, "Validater::checkStatementBlocks() : Syntax error, missing ELSE or ELSEIF statement, for '%s' on line %d\n", code.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Validater::checkStatementBlocks() : Syntax error, missing ELSE or ELSEIF statement, for '%s' on line %d\n", code.c_str(), codeLineIndex);
             Compiler::getElseIfDataStack().pop();
         }
 
@@ -358,7 +359,7 @@ namespace Validater
             Compiler::EndIfData endIfData = Compiler::getEndIfDataStack().top();
             int codeLineIndex = endIfData._codeLineIndex;
             std::string code = Compiler::getCodeLines()[codeLineIndex]._code;
-            fprintf(stderr, "Validater::checkStatementBlocks() : Syntax error, missing ENDIF statement, for '%s' on line %d\n", code.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Validater::checkStatementBlocks() : Syntax error, missing ENDIF statement, for '%s' on line %d\n", code.c_str(), codeLineIndex);
             Compiler::getEndIfDataStack().pop();
         }
         
@@ -369,7 +370,7 @@ namespace Validater
             Compiler::WhileWendData whileWendData = Compiler::getWhileWendDataStack().top();
             int codeLineIndex = whileWendData._codeLineIndex;
             std::string code = Compiler::getCodeLines()[codeLineIndex]._code;
-            fprintf(stderr, "Validater::checkStatementBlocks() : Syntax error, missing WEND statement, for '%s' on line %d\n", code.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Validater::checkStatementBlocks() : Syntax error, missing WEND statement, for '%s' on line %d\n", code.c_str(), codeLineIndex);
             Compiler::getWhileWendDataStack().pop();
         }
 
@@ -380,7 +381,7 @@ namespace Validater
             Compiler::RepeatUntilData repeatUntilData = Compiler::getRepeatUntilDataStack().top();
             int codeLineIndex = repeatUntilData._codeLineIndex;
             std::string code = Compiler::getCodeLines()[codeLineIndex]._code;
-            fprintf(stderr, "Validater::checkStatementBlocks() : Syntax error, missing UNTIL statement, for '%s' on line %d\n", code.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Validater::checkStatementBlocks() : Syntax error, missing UNTIL statement, for '%s' on line %d\n", code.c_str(), codeLineIndex);
             Compiler::getRepeatUntilDataStack().pop();
         }
 

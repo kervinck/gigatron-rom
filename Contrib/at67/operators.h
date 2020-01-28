@@ -29,6 +29,7 @@ namespace Operators
     Expression::Numeric operatorASIN(Expression::Numeric& numeric);
     Expression::Numeric operatorACOS(Expression::Numeric& numeric);
     Expression::Numeric operatorATAN(Expression::Numeric& numeric);
+    Expression::Numeric operatorRAND(Expression::Numeric& numeric);
 
     // Binary logic operators
     Expression::Numeric operatorAND(Expression::Numeric& left, Expression::Numeric& right);

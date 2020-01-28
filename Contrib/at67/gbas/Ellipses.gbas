@@ -1,0 +1,53 @@
+' draw random ellipses, not mathematically correct because of cheat avoiding overflows!
+
+cls : mode 2
+
+loop: 
+    color = rnd(0) AND &h3F
+    a = rnd(39) + 1 : b = rnd(39) + 1
+    if a &&> b
+        t = a
+    else
+        t = b
+    endif
+    mx = rnd(160 - (t LSL 1)) + t
+    my = rnd(120 - (t LSL 1)) + t
+    gosub ellipse
+    goto loop
+
+end
+
+
+ellipse:
+    addr.lo = mx : addr.hi = my + 8
+    poke addr + a, color
+    poke addr - a, color
+
+    mx1 = mx - a : my1 = my
+    mx2 = mx + a : my2 = my
+
+    ' should be aa=a*a and bb=b*b, but we're avoiding overflows as we only want pretty pixels
+    aa = a      : dx = aa LSL 1
+    bb = b      : dy = bb LSL 1
+    r  = a * bb : rx = r  LSL 1
+    ry = 0
+    x  = a
+
+    while x &&> 0
+        if r &&> 0 
+            inc my1 : dec my2
+            ry = ry + dx : r = r - ry
+        else
+            dec x : inc mx1 : dec mx2
+            rx = rx - dy : r = rx + r
+        endif
+
+        addr.hi = my1 + 8
+        addr.lo = mx1 : poke addr, color
+        addr.lo = mx2 : poke addr, color
+
+        addr.hi = my2 + 8
+        addr.lo = mx1 : poke addr, color
+        addr.lo = mx2 : poke addr, color
+    wend
+return

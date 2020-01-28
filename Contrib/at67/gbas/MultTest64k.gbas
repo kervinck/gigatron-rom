@@ -1,0 +1,30 @@
+const ADDR=&h8000
+const SIZE=10
+
+cls : mode 2
+
+def word(ADDR + SIZE*0, 0, SIZE, SIZE) = rand(360) - 180
+def word(ADDR + SIZE*2, 0, SIZE, SIZE) = rand(360) - 180
+def word(ADDR + SIZE*4, 0, SIZE, SIZE) = 0
+
+
+result=0 : timer=result : tick=peek(14)
+for i=0 to SIZE-1
+    ticks=tick : tick=peek(14) : ticks=tick-ticks
+    if ticks &&< 0 then ticks=ticks+256
+    timer=timer+ticks
+    gosub math
+next i    
+
+for i=0 to SIZE-1
+    print deek(ADDR + SIZE*4 + (i LSL 1));" ";
+next i
+
+print : print timer/60;" ";timer % 60;"/60"
+end
+
+math:
+    a = deek(ADDR + SIZE*0 + (i LSL 1))
+    b = deek(ADDR + SIZE*2 + (i LSL 1))
+    doke ADDR + SIZE*4 + (i LSL 1), a * b
+return

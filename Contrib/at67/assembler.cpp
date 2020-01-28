@@ -1170,7 +1170,7 @@ namespace Assembler
 
     bool handleNativeInstruction(const std::vector<std::string>& tokens, int tokenIndex, uint8_t& opcode, uint8_t& operand)
     {
-        std::string input, token;;
+        std::string input, token;
 
         preProcessExpression(tokens, tokenIndex, input, true);
         size_t openBracket = input.find_first_of("[");
@@ -2111,7 +2111,7 @@ namespace Assembler
             }
             else
             {
-                _gprintfs[i]._displayed = false;;
+                _gprintfs[i]._displayed = false;
             }
         }
     }
@@ -2162,7 +2162,9 @@ namespace Assembler
             return false;
         }
 
-        fprintf(stderr, "\nAssembling : %s\n", filename.c_str());
+        fprintf(stderr, "\n\n****************************************************************************************************\n");
+        fprintf(stderr, "* Assembling file '%s'\n", filename.c_str());
+        fprintf(stderr, "****************************************************************************************************\n");
 
         clearAssembler();
 

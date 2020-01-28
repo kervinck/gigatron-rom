@@ -8,7 +8,7 @@ DIM Q(7)=0
 poke 162, &h00
 poke 163, &h3F
 
-10 CLS:U=48:GOTO 100
+10 MODE 3:CLS:U=48:GOTO 100
 
 'ROTATION AND PROJECTION
 20 R=K+L+F
@@ -25,8 +25,19 @@ poke 163, &h3F
 100 S=45:C=45:F=4*U
     gosub 110
 
-loop: gosub peek(17)
-      goto loop
+timer=0 : tick=peek(14)
+for i=0 to 100
+    ticks=tick : tick=peek(14) : ticks=tick-ticks
+    if ticks &&< 0 then ticks=ticks+256
+    timer=timer+ticks
+    gosub 254
+next i    
+
+print timer/60;" ";timer % 60;"/60"
+end
+
+'loop: gosub peek(17)
+'      goto loop
 
 'PROCESS CUBE CORNERS
 110 I=0:X=U*U

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <algorithm>
+#include <atomic>
 
 #include "memory.h"
 #include "cpu.h"
@@ -15,8 +16,9 @@
 #include <SDL.h>
 
 
-#define AUDIO_SAMPLES   (SCAN_LINES + 1)
-#define AUDIO_FREQUENCY (SCAN_LINES*VSYNC_RATE)
+#define AUDIO_SAMPLES     (SCAN_LINES)
+#define AUDIO_BUFFER_SIZE (SCAN_LINES*4)
+#define AUDIO_FREQUENCY   (int(SCAN_LINES*59.98))
 
 
 namespace Audio
@@ -25,8 +27,9 @@ namespace Audio
 
     SDL_AudioDeviceID _audioDevice = 1;
 
-    int32_t _audioIndex = 0;
-    uint16_t _audioSamples[AUDIO_SAMPLES] = {0};
+    std::atomic<int64_t> _audioInIndex(AUDIO_SAMPLES*2);
+    std::atomic<int64_t> _audioOutIndex(0);
+    uint16_t _audioSamples[AUDIO_BUFFER_SIZE] = {0};
 
     int _scoreIndex = 0;
     uint8_t* _score[] = {(uint8_t*)musicMidi00};
@@ -44,6 +47,26 @@ namespace Audio
         Expression::strToUpper(result);
         return true;
     }
+
+    void sdl2AudioCallback(void* userData, unsigned char *stream, int length)
+    {
+        UNREFERENCED_PARAM(userData);
+
+        int16_t *sdl2Stream = (int16_t *)stream;
+
+        for(int i=0; i<length/2; i++)
+        {
+            if(_audioOutIndex % AUDIO_BUFFER_SIZE  ==  _audioInIndex % AUDIO_BUFFER_SIZE)
+            {
+                sdl2Stream[i] = _audioSamples[(_audioOutIndex-1) % AUDIO_BUFFER_SIZE];
+            }
+            else
+            {
+                sdl2Stream[i] = _audioSamples[_audioOutIndex++ % AUDIO_BUFFER_SIZE];
+            }
+        }
+    }
+
 
     void initialise(void)
     {
@@ -86,6 +109,8 @@ namespace Audio
         audSpec.freq = AUDIO_FREQUENCY;
         audSpec.format = AUDIO_S16;
         audSpec.channels = 1;
+        audSpec.callback = sdl2AudioCallback;
+        audSpec.samples = AUDIO_SAMPLES;
 
         if(SDL_OpenAudio(&audSpec, NULL) < 0)
         {
@@ -93,9 +118,10 @@ namespace Audio
             fprintf(stderr, "Audio::initialise() : failed to initialise SDL audio\n");
             _EXIT_(EXIT_FAILURE);
         }
-        SDL_PauseAudio(0);
 
         initialiseChannels();
+
+        SDL_PauseAudio(0);
     }
 
     void initialiseChannels(void)
@@ -122,16 +148,25 @@ namespace Audio
 #endif
     }
 
-    void fillAudioBuffer(void)
+    void fillCallbackBuffer(void)
     {
-        _audioSamples[_audioIndex] = (Cpu::getXOUT() & 0xf0) <<5;
-        _audioIndex = (_audioIndex + 1) % AUDIO_SAMPLES;
+        _audioSamples[_audioInIndex++ % AUDIO_BUFFER_SIZE] = (Cpu::getXOUT() & 0xf0) <<5;
     }
 
-    void playAudioBuffer(void)
+    void fillBuffer(void)
     {
-        SDL_QueueAudio(_audioDevice, &_audioSamples[0], _audioIndex <<1);
-        _audioIndex = 0;
+        _audioSamples[_audioInIndex++] = (Cpu::getXOUT() & 0xf0) <<5;
+        if(_audioInIndex == AUDIO_SAMPLES)
+        {
+            playBuffer();
+            _audioInIndex = 0;
+        }
+    }
+
+    void playBuffer(void)
+    {
+        SDL_QueueAudio(_audioDevice, &_audioSamples[0], uint32_t(_audioInIndex) <<1);
+        _audioInIndex = 0;
     }
 
     void playSample(void)

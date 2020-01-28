@@ -3,6 +3,8 @@
 #include <ctype.h>
 #include <cmath>
 #include <algorithm>
+#include <stdlib.h>
+#include <time.h>
 
 #include "memory.h"
 #include "cpu.h"
@@ -19,6 +21,8 @@ namespace Operators
     bool initialise(void)
     {
         _nextTempVar = true;
+
+        srand((unsigned int)time(NULL));
 
         return true;
     }
@@ -481,6 +485,16 @@ namespace Operators
         if(numeric._varType == Expression::Number)
         {
             numeric._value = atan(numeric._value);
+        }
+
+        return numeric;
+    }
+
+    Expression::Numeric operatorRAND(Expression::Numeric& numeric)
+    {
+        if(numeric._varType == Expression::Number)
+        {
+            numeric._value = double(rand() % std::lround(numeric._value));
         }
 
         return numeric;

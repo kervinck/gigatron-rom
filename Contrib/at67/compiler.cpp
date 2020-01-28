@@ -33,6 +33,8 @@ namespace Compiler
     uint16_t _runtimeStart   = 0xFFFF;
     uint16_t _strWorkArea    = 0x0000;
 
+    CodeOptimiseType _codeOptimiseType = CodeSpeed;
+    bool _arrayIndiciesOne = false;
     bool _createNumericLabelLut = false;
 
     int _currentLabelIndex = -1;
@@ -75,6 +77,8 @@ namespace Compiler
     uint16_t getRuntimeStart(void) {return _runtimeStart;}
     uint16_t getTempVarStart(void) {return _tempVarStart;}
     uint16_t getStrWorkArea(void) {return _strWorkArea;}
+    CodeOptimiseType getCodeOptimiseType(void) {return _codeOptimiseType;}
+    bool getArrayIndiciesOne(void) {return _arrayIndiciesOne;}
     std::string& getTempVarStartStr(void) {return _tempVarStartStr;}
     int getCurrentLabelIndex(void) {return _currentLabelIndex;}
     std::string& getNextInternalLabel(void) {return _nextInternalLabel;}
@@ -82,7 +86,10 @@ namespace Compiler
     void setRuntimeEnd(uint16_t runtimeEnd) {_runtimeEnd = runtimeEnd;}
     void setRuntimeStart(uint16_t runtimeStart) {_runtimeStart = runtimeStart;}
     void setTempVarStart(uint16_t tempVarStart) {_tempVarStart = tempVarStart;}
+    void setStrWorkArea(uint16_t strWorkArea) {_strWorkArea = strWorkArea;}
+    void setArrayIndiciesOne(bool arrayIndiciesOne) {_arrayIndiciesOne = arrayIndiciesOne;}
     void setCreateNumericLabelLut(bool createNumericLabelLut) {_createNumericLabelLut = createNumericLabelLut;}
+    void setCodeOptimiseType(CodeOptimiseType codeOptimiseType) {_codeOptimiseType = codeOptimiseType;}
 
     int incJumpFalseUniqueId(void) {return _jumpFalseUniqueId++;}
 
@@ -105,6 +112,24 @@ namespace Compiler
     std::stack<EndIfData>& getEndIfDataStack(void) {return _endIfDataStack;}
     std::stack<WhileWendData>& getWhileWendDataStack(void) {return _whileWendDataStack;}
     std::stack<RepeatUntilData>& getRepeatUntilDataStack(void) {return _repeatUntilDataStack;}
+
+    // If _nextInternalLabel is already queued, add it to discarded labels so that it is fixed later in outputLabels
+    void setNextInternalLabel(const std::string& label)
+    {
+        if(_nextInternalLabel.size()) _discardedLabels.push_back({_vasmPC, _nextInternalLabel});
+
+        _nextInternalLabel = label;
+    }
+
+    void adjustDiscardedLabels(const std::string name, uint16_t address)
+    {
+        uint16_t match;
+        Expression::stringToU16(name.substr(name.size() - 6, 6), match);
+        for(int i=0; i<int(_discardedLabels.size()); i++)
+        {
+            if(_discardedLabels[i]._address == match) _discardedLabels[i]._address = address;
+        }
+    }
 
 
     bool initialise(void)
@@ -425,6 +450,18 @@ namespace Compiler
         std::string stripped = Expression::stripStrings(input);
         std::vector<std::string> tokens = Expression::tokenise(stripped, "-+/*%&<>=();, ", false);
 
+        // Check for pragmas
+        for(int i=0; i<int(tokens.size()); i++)
+        {
+            std::string token = tokens[i];
+            Expression::strToUpper(token);
+            if(Keywords::getPragmas().find(token) != Keywords::getPragmas().end())
+            {
+                expressionType |= Expression::HasPragmas;
+                break;
+            }
+        }
+
         // Check for keywords
         for(int i=0; i<int(tokens.size()); i++)
         {
@@ -564,7 +601,7 @@ namespace Compiler
         codeLine = {text, codeText, tokens, offsets, vasm, expression, onGotoGosubLut, strConcatLut, inputLut, 0, labelIndex, varIndex, VarInt16, int16Byte, vars, false};
         Expression::operatorReduction(codeLine._expression);
 
-        if(codeLine._code.size() < 2) return false; // anything too small is ignored
+        //if(codeLine._code.size() < 2) return false; // anything too small is ignored
 
         return true;
     }
@@ -848,43 +885,38 @@ namespace Compiler
         }
         else
         {
-            if(Assembler::getUseOpcodeCALLI())
+            // TODO: currently makes code bigger AND slower because of optimiser
+            if(0) //Assembler::getUseOpcodeCALLI()  &&  _codeOptimiseType == CodeSize)
             {
-#ifdef SMALL_CODE_SIZE
                 // Saves 7 bytes per array access but costs an extra 2 instructions in performance
                 emitVcpuAsm("STW", "memIndex", false, codeLineIndex);
                 emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr), false, codeLineIndex);
-                emitVcpuAsm("CALLI", "setArrayInt16", false, codeLineIndex);
-#endif
+                switch(codeLine._int16Byte)
+                {
+                    case Expression::Int16Low:  emitVcpuAsm("CALLI", "setArrayInt16Low",  false, codeLineIndex); break;
+                    case Expression::Int16High: emitVcpuAsm("CALLI", "setArrayInt16High", false, codeLineIndex); break;
+                    case Expression::Int16Both: emitVcpuAsm("CALLI", "setArrayInt16",     false, codeLineIndex); break;
+
+                    default: break;
+                }
             }
-            else
+            //else if(_codeOptimiseType == CodeSpeed)
             {
-#ifdef SMALL_CODE_SIZE
-                // Saves 3 bytes per array access, but costs an extra 5 instructions in performance
-                emitVcpuAsm("STW",  "memIndex", false, codeLineIndex);
+                emitVcpuAsm("STW",  "register1", false, codeLineIndex);
                 emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr), false, codeLineIndex);
-                emitVcpuAsm("STW",  "memAddr", false, codeLineIndex);
-                emitVcpuAsm("LDWI", "setArrayInt16", false, codeLineIndex);
-                emitVcpuAsm("CALL", "giga_vAC", false, codeLineIndex);
-#endif
-            }
+                emitVcpuAsm("ADDW", "register1", false, codeLineIndex);
+                emitVcpuAsm("ADDW", "register1", false, codeLineIndex);
+                emitVcpuAsm("STW",  "register1", false, codeLineIndex);
+                emitVcpuAsm("LDW",  "register0", false, codeLineIndex);
+                switch(codeLine._int16Byte)
+                {
+                    case Expression::Int16Low:  emitVcpuAsm("POKE", "register1", false, codeLineIndex);                                                         break;
+                    case Expression::Int16High: emitVcpuAsm("INC",  "register1", false, codeLineIndex); emitVcpuAsm("POKE", "register1", false, codeLineIndex); break;
+                    case Expression::Int16Both: emitVcpuAsm("DOKE", "register1", false, codeLineIndex);                                                         break;
 
-#ifndef SMALL_CODE_SIZE
-            emitVcpuAsm("STW",  "register1", false, codeLineIndex);
-            emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr), false, codeLineIndex);
-            emitVcpuAsm("ADDW", "register1", false, codeLineIndex);
-            emitVcpuAsm("ADDW", "register1", false, codeLineIndex);
-            emitVcpuAsm("STW",  "register1", false, codeLineIndex);
-            emitVcpuAsm("LDW",  "register0", false, codeLineIndex);
-            switch(codeLine._int16Byte)
-            {
-                case Expression::Int16Low:  emitVcpuAsm("POKE", "register1", false, codeLineIndex);                                                         break;
-                case Expression::Int16High: emitVcpuAsm("INC",  "register1", false, codeLineIndex); emitVcpuAsm("POKE", "register1", false, codeLineIndex); break;
-                case Expression::Int16Both: emitVcpuAsm("DOKE", "register1", false, codeLineIndex);                                                         break;
-
-                default: break;
+                    default: break;
+                }
             }
-#endif
         }
 
         return true;
@@ -988,10 +1020,8 @@ namespace Compiler
     }
 
     // Generic expression parser
-    OperandType parseExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, std::string& operand, Expression::Numeric& numeric)
+    OperandType parseExpression(int codeLineIndex, std::string& expression, std::string& operand, Expression::Numeric& numeric)
     {
-        UNREFERENCED_PARAM(codeLine);
-
         int varIndex, constIndex, strIndex;
         Expression::parse(expression, codeLineIndex, numeric);
         uint32_t expressionType = isExpression(expression, varIndex, constIndex, strIndex);
@@ -1013,10 +1043,8 @@ namespace Compiler
     }
 
     // LDW expression parser
-    uint32_t parseExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, Expression::Numeric& numeric)
+    uint32_t parseExpression(int codeLineIndex, std::string& expression, Expression::Numeric& numeric)
     {
-        UNREFERENCED_PARAM(codeLine);
-
         int varIndex, constIndex, strIndex;
         Expression::parse(expression, codeLineIndex, numeric);
         uint32_t expressionType = isExpression(expression, varIndex, constIndex, strIndex);
@@ -1047,10 +1075,8 @@ namespace Compiler
     }
 
     // Handle expression, (use this when expression has already been parsed)
-    uint32_t handleExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, Expression::Numeric numeric)
+    uint32_t handleExpression(int codeLineIndex, std::string& expression, Expression::Numeric numeric)
     {
-        UNREFERENCED_PARAM(codeLine);
-
         int varIndex, constIndex, strIndex;
         uint32_t expressionType = isExpression(expression, varIndex, constIndex, strIndex);
 
@@ -1191,10 +1217,17 @@ namespace Compiler
                 // Create label
                 bool foundGosub = isGosubLabel(labelName);
                 createLabel(_vasmPC, labelName, int(_codeLines.size()), label, false, true, false, foundGosub);
-                if(createCodeLine(code, int(colon  + 1), _currentLabelIndex, -1, Expression::Int16Both, false, codeLine))
+
+                // Check for label with code
+                if(code.size() > colon + 1)
                 {
-                    validCode = true;
-                    _codeLines.push_back(codeLine);
+                    std::string labelCode = code.substr(colon  + 1);
+                    Expression::stripWhitespace(labelCode);
+                    if(labelCode.size() > 2  &&  createCodeLine(code, int(colon  + 1), _currentLabelIndex, -1, Expression::Int16Both, false, codeLine))
+                    {
+                        validCode = true;
+                        _codeLines.push_back(codeLine);
+                    }
                 }
 
                 // Check for label without code
@@ -1210,53 +1243,52 @@ namespace Compiler
         // Non label code, (except if previous line had a non numeric label without code)
         if(createCodeLine(code, 0, nonNumericLabelIndex, -1, Expression::Int16Both, false, codeLine))
         {
-            nonNumericLabelIndex = -1;
+            // Don't reset nonNumericLabelIndex until it has been assigned to a valid line
+            if(codeLine._code.size() >= 2) nonNumericLabelIndex = -1;
             _codeLines.push_back(codeLine);
         }
 
         return LabelNotFound;
     }
 
-    bool parseLabels(int numLines)
+    bool parsePragmas(int numLines)
     {
         // By default do not support CALLI
         Assembler::setUseOpcodeCALLI(false);
-        for(auto it=_input.begin(); it!=_input.end(); ++it)
+
+        // Parse each line of input for pragmas
+        for(int j=0; j<numLines; j++)
         {
-            size_t calli;
-            if((calli = it->find("_useOpcodeCALLI_")) != std::string::npos)
+            std::vector<size_t> offsets;
+            std::string input = _input[j];
+            input = Expression::removeCommentsNotInStrings(input);
+            Expression::strToUpper(input);
+            Keywords::KeywordResult keywordResult = Keywords::handlePragmas(input, j);
+            switch(keywordResult)
             {
-                it->erase(calli, sizeof("_useOpcodeCALLI_")-1);
-                Assembler::setUseOpcodeCALLI(true);
-            }
-            size_t runtime;
-            if((runtime = it->find("_runtimeStart_")) != std::string::npos)
-            {
-                std::vector<size_t> offsets;
-                std::vector<std::string> tokens = Expression::tokenise(*it, ' ', offsets, false, false);
-                for(int i=0; i<int(tokens.size()); i++)
+                case Keywords::KeywordFound:
                 {
-                    Expression::stripWhitespace(tokens[i]);
+                    _input[j].erase(0);
                 }
-                if(tokens.size() != 2) 
-                {
-                    fprintf(stderr, "Compiler::parseLabels() : Syntax error, _runtimeStart_ <address>, found %s\n", it->c_str());
-                    return false;
-                }
-                uint16_t address;
-                if(!Expression::stringToU16(tokens[1], address))
-                {
-                    fprintf(stderr, "Compiler::parseLabels() : Syntax error, invalid address in _runtimeStart_ <address>, found %s\n", it->c_str());
-                    return false;
-                }
-                _runtimeStart = address;
-                it->erase(offsets[0] - sizeof("_runtimeStart_"), offsets[1] - (offsets[0] - sizeof("_runtimeStart_")));
-                
                 break;
+
+                case Keywords::KeywordError:
+                {
+                    fprintf(stderr, "Compiler::parsePragmas() : Syntax error in Pragma, in %s on line %d\n", _input[j].c_str(), j + 1);
+                    return false;
+                }
+                break;
+
+                default: break;
             }
         }
 
-        // Relies on _useOpcodeCALLI_
+        return true;
+    }
+
+    bool parseLabels(int numLines)
+    {
+        // Relies on _useOpcodeCALLI_, so make sure it is already initialised
         initialiseMacros();
 
         // Entry point initialisation
@@ -1327,7 +1359,7 @@ namespace Compiler
             }
             else
             {
-                if(!Memory::getFreeRAM(Memory::FitAscending, int(str.size()) + 2, 0x0200, _runtimeStart, address))
+                if(!Memory::getFreeRAM(Memory::FitDescending, int(str.size()) + 2, 0x0200, _runtimeStart, address))
                 {
                     fprintf(stderr, "Compiler::getOrCreateString() : Not enough RAM for string %s='%s' of size %d\n", name.c_str(), str.c_str(), int(str.size()));
                     return -1;
@@ -1346,7 +1378,7 @@ namespace Compiler
         else
         {
             // Allocate string
-            if(!Memory::getFreeRAM(Memory::FitAscending, maxSize + 2, 0x0200, _runtimeStart, address))
+            if(!Memory::getFreeRAM(Memory::FitDescending, maxSize + 2, 0x0200, _runtimeStart, address))
             {
                 fprintf(stderr, "Compiler::getOrCreateString() : Not enough RAM for string %s='%s' of size %d\n", name.c_str(), str.c_str(), maxSize + 2);
                 return -1;
@@ -1497,7 +1529,7 @@ namespace Compiler
 
         if(!peek(true))
         {
-            fprintf(stderr, "Compiler::getString() : Syntax error in string '%s' in '%s' on line %d\n", text.c_str(), _codeLines[_currentCodeLineIndex]._code.c_str(), Expression::getLineNumber() + 1);
+            fprintf(stderr, "Compiler::getString() : Syntax error in string '%s' in '%s' on line %d\n", text.c_str(), _codeLines[_currentCodeLineIndex]._code.c_str(), Expression::getLineNumber());
             _PAUSE_;
             return Expression::Numeric();
         }
@@ -1543,7 +1575,7 @@ namespace Compiler
             return Expression::Numeric(address, -1, true, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
         }
 
-        fprintf(stderr, "Compiler::factor() : Syntax error in address of '%s' on line %d\n", _codeLines[_currentCodeLineIndex]._code.c_str(), Expression::getLineNumber() + 1);
+        fprintf(stderr, "Compiler::factor() : Syntax error in address of '%s' on line %d\n", _codeLines[_currentCodeLineIndex]._code.c_str(), Expression::getLineNumber());
         _PAUSE_;
         return Expression::Numeric();
     }
@@ -1566,7 +1598,7 @@ namespace Compiler
 
             if(peek(true) != ')')
             {
-                fprintf(stderr, "Compiler::factor() : Found '%c' : expecting ')' in '%s' on line %d\n", peek(true), Expression::getExpressionToParse(), Expression::getLineNumber() + 1);
+                fprintf(stderr, "Compiler::factor() : Found '%c' : expecting ')' in '%s' on line %d\n", peek(true), Expression::getExpressionToParse(), Expression::getLineNumber());
                 _PAUSE_;
                 numeric = Expression::Numeric();
             }
@@ -1581,7 +1613,7 @@ namespace Compiler
             }
             else
             {
-                fprintf(stderr, "Compiler::factor() : Syntax error in number '%s' on line %d\n", _codeLines[_currentCodeLineIndex]._code.c_str(), Expression::getLineNumber() + 1);
+                fprintf(stderr, "Compiler::factor() : Syntax error in number '%s' on line %d\n", _codeLines[_currentCodeLineIndex]._code.c_str(), Expression::getLineNumber());
                 _PAUSE_;
                 numeric = Expression::Numeric();
             }
@@ -1641,7 +1673,7 @@ namespace Compiler
         {
             numeric = factor(0); numeric = Keywords::functionRND(numeric);
         }
-        else if(Expression::find("NOT"))
+        else if(Expression::find("NOT "))
         {
             numeric = factor(0); numeric = Operators::operatorNOT(numeric);
         }
@@ -1668,6 +1700,10 @@ namespace Compiler
         else if(Expression::find("ATAN"))
         {
             numeric = factor(0); numeric = Operators::operatorATAN(numeric);
+        }
+        else if(Expression::find("RAND"))
+        {
+            numeric = factor(0); numeric = Operators::operatorRAND(numeric);
         }
         else
         {
@@ -1756,13 +1792,16 @@ namespace Compiler
                     else
                     {
                         numeric = Expression::Numeric(defaultValue, -1, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+
+                        // Pragma parsing happens before any code has been parsed, so _codeLines[] may be empty
+                        std::string codeText = (int(_codeLines.size()) > _currentCodeLineIndex) ? _codeLines[_currentCodeLineIndex]._code : "PRAGMA";
                         if(varName.size())
                         {
-                            fprintf(stderr, "\nCompiler::factor() : Found an unknown symbol '%s' : in '%s' on line %d\n\n", varName.c_str(), _codeLines[_currentCodeLineIndex]._code.c_str(), Expression::getLineNumber() + 1);
+                            fprintf(stderr, "\nCompiler::factor() : Found an unknown symbol '%s' : in '%s' on line %d\n\n", varName.c_str(), codeText.c_str(), Expression::getLineNumber());
                         }
                         else
                         {
-                            fprintf(stderr, "\nCompiler::factor() : Found an unknown symbol in '%s' on line %d\n\n", _codeLines[_currentCodeLineIndex]._code.c_str(), Expression::getLineNumber() + 1);
+                            fprintf(stderr, "\nCompiler::factor() : Found an unknown symbol in '%s' on line %d\n\n", codeText.c_str(), Expression::getLineNumber());
                         }
 
                         _PAUSE_;
@@ -1927,7 +1966,7 @@ namespace Compiler
         int dstIndex = codeLine._varIndex;
         if(dstIndex == -1)
         {
-            fprintf(stderr, "Compiler::handleStrings() : Syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Compiler::handleStrings() : Syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             _PAUSE_;
             return false;
         }
@@ -1942,7 +1981,7 @@ namespace Compiler
                 uint16_t srcAddr = getStringSrcAddr(numeric);
                 if(srcAddr == 0x0000)
                 {
-                    fprintf(stderr, "Compiler::handleStrings() : Syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+                    fprintf(stderr, "Compiler::handleStrings() : Syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
                     _PAUSE_;
                     return false;
                 }
@@ -1965,7 +2004,7 @@ namespace Compiler
             {
                 if(tokens.size() < 2)
                 {
-                    fprintf(stderr, "Compiler::handleStrings() : Syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+                    fprintf(stderr, "Compiler::handleStrings() : Syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
                     _PAUSE_;
                     return false;
                 }
@@ -1978,7 +2017,7 @@ namespace Compiler
                     strAddrs[i] = getStringSrcAddr(tokens[i]);
                     if(strAddrs[i] == 0x0000)
                     {
-                        fprintf(stderr, "Compiler::handleStrings() : Syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex + 1);
+                        fprintf(stderr, "Compiler::handleStrings() : Syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
                         _PAUSE_;
                         return false;
                     }
@@ -1986,7 +2025,7 @@ namespace Compiler
 
                 // Source string addresses LUT
                 uint16_t lutAddress;
-                if(!Memory::getFreeRAM(Memory::FitAscending, int(strAddrs.size()*2), 0x0200, _runtimeStart, lutAddress))
+                if(!Memory::getFreeRAM(Memory::FitDescending, int(strAddrs.size()*2), 0x0200, _runtimeStart, lutAddress))
                 {
                     fprintf(stderr, "Compiler::handleStrings() : Not enough RAM for string concatenation LUT of size %d\n", int(strAddrs.size()));
                     return false;
@@ -2219,23 +2258,6 @@ namespace Compiler
         }
     }
 
-    // If _nextInternalLabel is already queued, add it to discarded labels so that it is fixed later in outputLabels
-    void setNextInternalLabel(const std::string& label)
-    {
-        if(_nextInternalLabel.size()) _discardedLabels.push_back({_vasmPC, _nextInternalLabel});
-
-        _nextInternalLabel = label;
-    }
-
-    void adjustDiscardedLabels(const std::string name, uint16_t address)
-    {
-        uint16_t match;
-        Expression::stringToU16(name.substr(name.size() - 6, 6), match);
-        for(int i=0; i<int(_discardedLabels.size()); i++)
-        {
-            if(_discardedLabels[i]._address == match) _discardedLabels[i]._address = address;
-        }
-    }
 
     bool parseCode(void)
     {
@@ -2521,7 +2543,7 @@ namespace Compiler
                 // Create numeric labels LUT, (delimited by -1)
                 int lutSize = int(numericLabels.size()) * 2;
                 uint16_t lutAddress;
-                if(!Memory::getFreeRAM(Memory::FitAscending, lutSize + 2, 0x0200, _runtimeStart, lutAddress))
+                if(!Memory::getFreeRAM(Memory::FitDescending, lutSize + 2, 0x0200, _runtimeStart, lutAddress))
                 {
                     fprintf(stderr, "Compiler::outputLuts() : Not enough RAM for numeric labels LUT of size %d\n", lutSize + 2);
                     return false;
@@ -2530,15 +2552,15 @@ namespace Compiler
                 std::string lutName = "_lut_numericLabs";
                 _output.push_back(lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(lutAddress) + "\n");
             
-                std::string dbString = lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+                std::string dwString = lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
                 for(int i=0; i<int(numericLabels.size()); i++)
                 {
-                    dbString += std::to_string(numericLabels[i]) + " ";
+                    dwString += std::to_string(numericLabels[i]) + " ";
                 }
-                _output.push_back(dbString + "-1\n");
+                _output.push_back(dwString + "0\n");
 
                 // Create numeric addresses LUT
-                if(!Memory::getFreeRAM(Memory::FitAscending, lutSize, 0x0200, _runtimeStart, lutAddress))
+                if(!Memory::getFreeRAM(Memory::FitDescending, lutSize, 0x0200, _runtimeStart, lutAddress))
                 {
                     fprintf(stderr, "Compiler::outputLuts() : Not enough RAM for numeric addresses LUT of size %d\n", lutSize);
                     return false;
@@ -2547,7 +2569,7 @@ namespace Compiler
                 lutName = "_lut_numericAddrs";
                 _output.push_back(lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(lutAddress) + "\n");
             
-                std::string dwString = lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+                dwString = lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
                 for(int i=0; i<int(numericAddresses.size()); i++)
                 {
                     dwString += Expression::wordToHexString(numericAddresses[i]) + " ";
@@ -2834,6 +2856,8 @@ namespace Compiler
         _runtimeStart   = 0xFFFF;
         _strWorkArea    = 0x0000;
 
+        _codeOptimiseType = CodeSpeed;
+        _arrayIndiciesOne = false;
         _createNumericLabelLut = false;
 
         _currentLabelIndex = -1;
@@ -2873,8 +2897,8 @@ namespace Compiler
         while(!_whileWendDataStack.empty())   _whileWendDataStack.pop();
         while(!_repeatUntilDataStack.empty()) _repeatUntilDataStack.pop();
 
-        // Allocate string work area, (for string functions like LEFT$, MID$, etc)
-        Memory::getFreeRAM(Memory::FitAscending, USER_STR_SIZE + 2, 0x0200, _runtimeStart, _strWorkArea);
+        // Allocate default string work area, (for string functions like LEFT$, MID$, etc)
+        Memory::getFreeRAM(Memory::FitDescending, USER_STR_SIZE + 2, 0x0200, _runtimeStart, _strWorkArea);
     }
 
     bool compile(const std::string& inputFilename, const std::string& outputFilename)
@@ -2890,6 +2914,9 @@ namespace Compiler
         fprintf(stderr, "\n\n****************************************************************************************************\n");
         fprintf(stderr, "* Compiling file '%s'\n", inputFilename.c_str());
         fprintf(stderr, "****************************************************************************************************\n");
+
+        // Pragmas
+        if(!parsePragmas(numLines)) return false;
 
         // Labels
         if(!parseLabels(numLines)) return false;

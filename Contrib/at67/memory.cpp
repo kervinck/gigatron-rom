@@ -39,8 +39,9 @@ namespace Memory
         _freeRam.push_back({RAM_PAGE_START_2, RAM_PAGE_SIZE_2});
 
         // 0x0500 <-> 0x0600
-        _freeRam.push_back({RAM_PAGE_START_3, RAM_PAGE_SIZE_3});
-        _freeRam.push_back({RAM_PAGE_START_4, RAM_PAGE_SIZE_4});
+        _freeRam.push_back({RAM_PAGE_START_3, RAM_PAGE_SIZE_3*2});
+        //_freeRam.push_back({RAM_PAGE_START_3, RAM_PAGE_SIZE_3});
+        //_freeRam.push_back({RAM_PAGE_START_4, RAM_PAGE_SIZE_4});
 
         // 0x08A0 <-> 0c7FA0
         for(uint16_t i=RAM_SEGMENTS_START; i<=RAM_SEGMENTS_END; i+=RAM_SEGMENTS_OFS) _freeRam.push_back({i, RAM_SEGMENTS_SIZE});
@@ -48,19 +49,41 @@ namespace Memory
         // 0x8000 <-> 0xFF00
         if(_sizeRAM == RAM_SIZE_HI)
         {
-            for(uint32_t a=RAM_EXPANSION_START; a<RAM_EXPANSION_START + RAM_EXPANSION_SIZE; a+=RAM_EXPANSION_SEG)
-            {
-                _freeRam.push_back({uint16_t(a), RAM_EXPANSION_SEG});
-            }
+            _freeRam.push_back({RAM_EXPANSION_START, RAM_EXPANSION_SIZE});
+            //for(uint32_t a=RAM_EXPANSION_START; a<RAM_EXPANSION_START + RAM_EXPANSION_SIZE; a+=RAM_EXPANSION_SEG)
+            //{
+            //    _freeRam.push_back({uint16_t(a), RAM_EXPANSION_SEG});
+            //}
         }
 
         _baseFreeRAM = _sizeRAM - RAM_USED_DEFAULT;
         _sizeFreeRAM = _baseFreeRAM;
     }
 
-    void updateSizeFreeRAM(void)
+    void updateFreeRAM(void)
     {
         _sizeFreeRAM = 0;
+
+        // Check to see if any chunks can be merged
+        for(auto it=_freeRam.begin(); it!=_freeRam.end()-1;)
+        {
+            uint16_t addr0 = it->_address;
+            uint16_t size0 = uint16_t(it->_size);
+
+            uint16_t addr1 = (it + 1)->_address;
+
+            // Merge
+            if(addr0 + size0 == addr1)
+            {
+                (it + 1)->_size += size0;
+                (it + 1)->_address = addr0;
+                it = _freeRam.erase(it);
+            }
+            else
+            {
+                it++;
+            }
+        }
 
         // Sort by address in ascending order
         std::sort(_freeRam.begin(), _freeRam.end(), [](const RamEntry& ramEntryA, const RamEntry& ramEntryB)
@@ -76,15 +99,15 @@ namespace Memory
         }
     }
 
-    bool updateFreeRamList(int index, uint16_t address, int size, int newSize)
+    bool updateFreeRamList(int index, uint16_t address, int size)
     {
-        if(index >= 0  &&  newSize >= 0)
+        if(index >= 0  &&  size >= 0)
         {
             _freeRam.erase(_freeRam.begin() + index);
-            if(newSize) _freeRam.push_back({uint16_t(address + size), newSize});
-            updateSizeFreeRAM();
+            if(size) _freeRam.push_back({uint16_t(address), size});
+            updateFreeRAM();
 
-            //fprintf(stderr, "1 RAM chunk: %3d  :  %04x %3d  :  %04x %3d\n", _sizeFreeRAM, address, size, uint16_t(address + size), newSize);
+            //fprintf(stderr, "1 RAM segment: %3d  :  %04x %3d  :  %04x %3d\n", _sizeFreeRAM, address, size, uint16_t(address + size), newSize);
 
             return true;
         }
@@ -99,9 +122,9 @@ namespace Memory
             _freeRam.erase(_freeRam.begin() + index);
             if(size0) _freeRam.push_back({uint16_t(address0), size0});
             if(size1) _freeRam.push_back({uint16_t(address1), size1});
-            updateSizeFreeRAM();
+            updateFreeRAM();
 
-            //fprintf(stderr, "2 RAM chunks: %3d  :  %04x %3d  :  %04x %3d\n", _sizeFreeRAM, address0, size0, address1, size1);
+            //fprintf(stderr, "2 RAM segments: %3d  :  %04x %3d  :  %04x %3d\n", _sizeFreeRAM, address0, size0, address1, size1);
 
             return true;
         }
@@ -119,12 +142,12 @@ namespace Memory
 
         for(int i=0; i<int(_freeRam.size()); i++)
         {
-            // RAM chunk becomes smaller
+            // Free RAM segment
             if(address == _freeRam[i]._address  &&  size <= _freeRam[i]._size)
             {
                 return true;
             }
-            // RAM chunk gets split into 2 smaller chunks
+            // Free RAM within segment
             else if(address > _freeRam[i]._address  &&  (address + size <= _freeRam[i]._address + _freeRam[i]._size))
             {
                 return true;
@@ -134,99 +157,105 @@ namespace Memory
         return false;
     }
 
+    bool getNextCodeAddress(FitType fitType, uint16_t start, int size, uint16_t& address)
+    {
+        switch(fitType)
+        {
+            case FitAscending:
+            {
+                for(int j=0; j<int(_freeRam.size()); j++)
+                {
+                    for(int i=0; i<_freeRam[j]._size; i++)
+                    {
+                        uint16_t left = uint16_t(_freeRam[j]._size - i);
+                        uint16_t addr = uint16_t(_freeRam[j]._address + i);
+                        if(addr >= start  &&  size <= left  &&  HI_BYTE(addr) == HI_BYTE(addr + size))
+                        {
+                            address = addr;
+                            return true;
+                        }
+                    }
+                }
+            }
+            break;
+
+            case FitDescending:
+            {
+                for(int j=int(_freeRam.size())-1; j>=0; j--)
+                {
+                    for(int i=_freeRam[j]._size-1; i>=0; i--)
+                    {
+                        uint16_t left = uint16_t(_freeRam[j]._size - i);
+                        uint16_t addr = uint16_t(_freeRam[j]._address + i);
+                        if(addr < start  &&  size <= left  &&  HI_BYTE(addr) == HI_BYTE(addr + size))
+                        {
+                            address = addr;
+                            return true;
+                        }
+                    }
+                }
+            }
+            break;
+
+            default: break;
+        }
+
+        fprintf(stderr, "Memory::getNextCodeAddress() : Couldn't find free code space in RAM of size %d bytes\n", size);
+        return false;
+    }
+
     bool giveFreeRAM(uint16_t address, int size)
     {
+        // Check to see if new chunk can be merged with any other free chunks
         for(int i=0; i<int(_freeRam.size()); i++)
         {
             uint16_t siz = uint16_t(_freeRam[i]._size);
             uint16_t addr = _freeRam[i]._address;
 
-            // Full segment so continue
-            if(siz == RAM_EXPANSION_SEG) continue;
+            // RAM is already free
+            if(address >= addr  &&  address + size <= addr + siz) return false;
 
-            // Within the same segment
-            if((addr & 0xFF00) == (address & 0xFF00))
+            // Insert
+            if(address + size == addr)
             {
-                // Returning too much memory
-                if(siz + size > RAM_EXPANSION_SEG)
-                {
-                    fprintf(stderr, "Memory::giveFreeRAM() : %d bytes at 0x%04x  +  %d bytes at 0x%04x  >  %d\n", size, address, siz, addr, RAM_EXPANSION_SEG);
-                    return false;
-                }
-
-                // Insert
-                if(address + size == addr)
-                {
-                    _freeRam[i]._size += size;
-                    _freeRam[i]._address = address;
-                    return true;
-                }
-
-                // Append
-                if(address == addr + siz)
-                {
-                    _freeRam[i]._size += size;
-                    return true;
-                }
+                _freeRam[i]._size += size;
+                _freeRam[i]._address = address;
+                updateFreeRAM();
+                return true;
             }
-        }
 
-        return false;
-    }
-
-    bool getNextFreeRAM(uint16_t start, int size, uint16_t& address)
-    {
-        for(int j=0; j<int(_freeRam.size()); j++)
-        {
-            for(int i=0; i<_freeRam[j]._size; i++)
+            // Append
+            if(address == addr + siz)
             {
-                uint16_t left = uint16_t(_freeRam[j]._size - i);
-                uint16_t addr = uint16_t(_freeRam[j]._address + i);
-                if(addr >= start  &&  size <= left)
-                {
-                    address = addr;
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    bool getNextFreeSegment(uint16_t start, int size, uint16_t& address)
-    {
-        for(int i=0; i<int(_freeRam.size()); i++)
-        {
-            uint16_t siz = uint16_t(_freeRam[i]._size);
-            uint16_t addr = _freeRam[i]._address;
-
-            if(start >= addr  &&  start + size - 1 <= addr + siz - 1)
-            {
-                address = addr;
+                _freeRam[i]._size += size;
+                updateFreeRAM();
                 return true;
             }
         }
 
-        return false;
+        // Add new chunk
+        _freeRam.push_back({address, size});
+        updateFreeRAM();
+        return true;
     }
 
     bool takeFreeRAM(uint16_t address, int size, bool printError)
     {
         if(address > _sizeRAM - 1)
         {
-            fprintf(stderr, "Memory::takeFreeRAM() : Memory at 0x%04x does not exist on this %d byte system : your request : 0x%04x %d\n", address, _sizeRAM, address, size);
+            if(printError) fprintf(stderr, "Memory::takeFreeRAM() : Memory at 0x%04x does not exist on this %d byte system : your request : 0x%04x %d\n", address, _sizeRAM, address, size);
             return false;
         }
 
         for(int i=0; i<int(_freeRam.size()); i++)
         {
-            // RAM chunk becomes smaller
+            // RAM segment becomes smaller
             if(address == _freeRam[i]._address  &&  size <= _freeRam[i]._size)
             {
-                if(!updateFreeRamList(i, address, size, _freeRam[i]._size - size)) break;
+                if(!updateFreeRamList(i, address + uint16_t(size), _freeRam[i]._size - size)) break;
                 return true;
             }
-            // RAM chunk gets split into 2 smaller chunks
+            // RAM segment gets split into 2 smaller segments
             else if(address > _freeRam[i]._address  &&  (address + size <= _freeRam[i]._address + _freeRam[i]._size))
             {
                 uint16_t address0 = _freeRam[i]._address;
@@ -239,107 +268,75 @@ namespace Memory
         }
 
         if(printError) fprintf(stderr, "Memory::takeFreeRAM() : Memory at 0x%04x already in use : your request : 0x%04x %d\n", address, address, size);
-
         return false;
     }
 
-    bool getFreeRAM(FitType fitType, int size, uint16_t min, uint16_t max, uint16_t& address, bool update)
+    bool getFreeRAM(FitType fitType, int size, uint16_t min, uint16_t max, uint16_t& address, bool withinPage)
     {
-        int index = -1;
-        int newSize = 0;
-
         switch(fitType)
         {
-            case FitSmallest:
-            {
-                int smallest = 0xFFFF;
-                for(int i=0; i<int(_freeRam.size()); i++)
-                {
-                    if(_freeRam[i]._size >= size  &&  _freeRam[i]._size < smallest)
-                    {
-                        index = i;
-                        newSize = _freeRam[i]._size - size;
-                        smallest = _freeRam[i]._size;
-                        address =  _freeRam[i]._address;
-                    }
-                }
-
-                if(update) return updateFreeRamList(index, address, size, newSize);
-                return true;
-            }
-            break;
-
-            case FitLargest:
-            {
-                int largest = 0;
-                for(int i=0; i<int(_freeRam.size()); i++)
-                {
-                    if(_freeRam[i]._size >= size  &&  _freeRam[i]._size > largest)
-                    {
-                        index = i;
-                        newSize = _freeRam[i]._size - size;
-                        largest = _freeRam[i]._size;
-                        address =  _freeRam[i]._address;
-                    }
-                }
-
-                if(update) return updateFreeRamList(index, address, size, newSize);
-                return true;
-            }
-            break;
-
             case FitAscending:
             {
-                uint16_t ascending = min;
-                for(int i=0; i<int(_freeRam.size()); i++)
+                for(int j=0; j<int(_freeRam.size()); j++)
                 {
-                    if(_freeRam[i]._size >= size  &&  _freeRam[i]._address >= ascending  &&  _freeRam[i]._address <= max)
+                    for(int i=0; i<_freeRam[j]._size; i++)
                     {
-                        index = i;
-                        newSize = _freeRam[i]._size - size;
-                        address =  _freeRam[i]._address;
-                        ascending = _freeRam[i]._address;
+                        uint16_t left = uint16_t(_freeRam[j]._size - i);
+                        uint16_t addr = uint16_t(_freeRam[j]._address + i);
+
+                        if(addr >= min  &&  addr + size-1 <= max  &&  size <= left)
+                        {
+                            // Skip if request must be within a page and it isn't
+                            if(withinPage  &&  HI_BYTE(addr) != HI_BYTE(addr + size - 1)) continue;
+
+                            address = addr;
+                            return takeFreeRAM(addr, size);
+                        }
                     }
                 }
-
-                if(update) return updateFreeRamList(index, address, size, newSize);
-                return true;
             }
             break;
 
             case FitDescending:
             {
-                uint16_t descending = max;
-                for(int i=0; i<int(_freeRam.size()); i++)
+                for(int j=int(_freeRam.size())-1; j>=0; j--)
                 {
-                    if(_freeRam[i]._size >= size  &&  _freeRam[i]._address <= descending  &&  _freeRam[i]._address >= min)
+                    for(int i=_freeRam[j]._size-1; i>=0; i--)
                     {
-                        index = i;
-                        newSize = _freeRam[i]._size - size;
-                        address =  _freeRam[i]._address;
-                        descending = _freeRam[i]._address;
+                        uint16_t left = uint16_t(_freeRam[j]._size - i);
+                        uint16_t addr = uint16_t(_freeRam[j]._address + i);
+
+                        if(addr >= min  &&  addr + size - 1 <= max  &&  size <= left)
+                        {
+                            // Skip if request must be within a page and it isn't
+                            if(withinPage  &&  HI_BYTE(addr) != HI_BYTE(addr + size - 1)) continue;
+
+                            address = addr;
+                            return takeFreeRAM(addr, size);
+                        }
                     }
                 }
-
-                if(update) return updateFreeRamList(index, address, size, newSize);
-                return true;
             }
             break;
 
             default: break;
         }
         
+        fprintf(stderr, "Memory::getFreeRAM() : No free RAM found of size %d bytes\n", size);
         return false;
     }
 
     void printFreeRamList(SortType sortType)
     {
+        // Make a local copy so that we don't change the sort on the real free RAM list
+        std::vector<RamEntry> freeRam = _freeRam;
+
         switch(sortType)
         {
             // Sort entries from lowest address to highest address
             case AddressAscending:
             {
-                std::sort(_freeRam.begin(), _freeRam.end(), [](const RamEntry& ramEntryA, const RamEntry& ramEntryB)
+                std::sort(freeRam.begin(), freeRam.end(), [](const RamEntry& ramEntryA, const RamEntry& ramEntryB)
                 {
                     uint16_t addressA = ramEntryA._address;
                     uint16_t addressB = ramEntryB._address;
@@ -351,7 +348,7 @@ namespace Memory
             // Sort entries from highest address to lowest address
             case AddressDescending:
             {
-                std::sort(_freeRam.begin(), _freeRam.end(), [](const RamEntry& ramEntryA, const RamEntry& ramEntryB)
+                std::sort(freeRam.begin(), freeRam.end(), [](const RamEntry& ramEntryA, const RamEntry& ramEntryB)
                 {
                     uint16_t addressA = ramEntryA._address;
                     uint16_t addressB = ramEntryB._address;
@@ -363,7 +360,7 @@ namespace Memory
             // Sort entries from lowest address to highest address
             case SizeAscending:
             {
-                std::sort(_freeRam.begin(), _freeRam.end(), [](const RamEntry& ramEntryA, const RamEntry& ramEntryB)
+                std::sort(freeRam.begin(), freeRam.end(), [](const RamEntry& ramEntryA, const RamEntry& ramEntryB)
                 {
                     int sizeA = ramEntryA._size;
                     int sizeB = ramEntryB._size;
@@ -375,7 +372,7 @@ namespace Memory
             // Sort entries from highest address to lowest address
             case SizeDescending:
             {
-                std::sort(_freeRam.begin(), _freeRam.end(), [](const RamEntry& ramEntryA, const RamEntry& ramEntryB)
+                std::sort(freeRam.begin(), freeRam.end(), [](const RamEntry& ramEntryA, const RamEntry& ramEntryB)
                 {
                     int sizeA = ramEntryA._size;
                     int sizeB = ramEntryB._size;
@@ -388,10 +385,10 @@ namespace Memory
         }
 
         int totalFree = 0;
-        for(int i=0; i<int(_freeRam.size()); i++)
+        for(int i=0; i<int(freeRam.size()); i++)
         {
-            totalFree += _freeRam[i]._size;
-            fprintf(stderr, "Memory::printFreeRamList() : %3d : 0x%04x %3d\n", i, _freeRam[i]._address, _freeRam[i]._size);
+            totalFree += freeRam[i]._size;
+            fprintf(stderr, "Memory::printFreeRamList() : %3d : 0x%04x %3d\n", i, freeRam[i]._address, freeRam[i]._size);
         }
         fprintf(stderr, "Memory::printFreeRamList() : Expected %5d : Found %5d\n", _sizeFreeRAM, totalFree);
     }

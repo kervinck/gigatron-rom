@@ -12,14 +12,21 @@ namespace Keywords
 {
     enum KeywordResult {KeywordNotFound, KeywordError, KeywordFound};
 
+
     struct KeywordFuncResult
     {
         int16_t _data = 0;
         std::string _name;
     };
+    
+    using PragamFuncPtr = bool (*)(const std::string& input, int codeLineIndex, size_t foundPos);
+    struct Pragma
+    {
+        std::string _name;
+        PragamFuncPtr _func;
+    };
 
     using KeywordFuncPtr = bool (*)(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
-
     struct Keyword
     {
         std::string _name;
@@ -29,12 +36,16 @@ namespace Keywords
 
 
     std::vector<std::string>& getOperators(void);
+    std::map<std::string, Pragma>& getPragmas(void);
     std::map<std::string, Keyword>& getKeywords(void);
     std::map<std::string, std::string>& getFunctions(void);
     std::map<std::string, std::string>& getStringKeywords(void);
     std::map<std::string, std::string>& getEqualsKeywords(void);
 
     bool initialise(void);
+
+    bool findPragma(std::string code, const std::string& pragma, size_t& foundPos);
+    KeywordResult handlePragmas(std::string& input, int codeLineIndex);
 
     bool findKeyword(std::string code, const std::string& keyword, size_t& foundPos);
     KeywordResult handleKeywords(Compiler::CodeLine& codeLine, const std::string& keyword, int codeLineIndex, int tokenIndex, KeywordFuncResult& result);
@@ -51,6 +62,12 @@ namespace Keywords
     Expression::Numeric functionLEFT$(Expression::Numeric& numeric);
     Expression::Numeric functionRIGHT$(Expression::Numeric& numeric);
     Expression::Numeric functionMID$(Expression::Numeric& numeric);
+
+    bool pragmaUSEOPCODECALLI(const std::string& input,   int codeLineIndex, size_t foundPos);
+    bool pragmaRUNTIMESTART(const std::string& input,     int codeLineIndex, size_t foundPos);
+    bool pragmaSTRINGWORKAREA(const std::string& input,   int codeLineIndex, size_t foundPos);
+    bool pragmaCODEOPTIMISETYPE(const std::string& input, int codeLineIndex, size_t foundPos);
+    bool pragmaARRAYINDICIESONE(const std::string& input, int codeLineIndex, size_t foundPos);
 
     // Keywords
     bool keywordLET(Compiler::CodeLine& codeLine,     int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
@@ -77,6 +94,7 @@ namespace Keywords
     bool keywordCONST(Compiler::CodeLine& codeLine,   int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordDIM(Compiler::CodeLine& codeLine,     int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordDEF(Compiler::CodeLine& codeLine,     int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
+    bool keywordALLOC(Compiler::CodeLine& codeLine,   int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordAT(Compiler::CodeLine& codeLine,      int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordPUT(Compiler::CodeLine& codeLine,     int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordMODE(Compiler::CodeLine& codeLine,    int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);

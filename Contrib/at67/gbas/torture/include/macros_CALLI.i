@@ -344,6 +344,10 @@ _label_ CALLI   _label
         CALLI   scanlineMode
 %ENDM
 
+%MACRO  WaitVBlanks
+        CALLI   waitVBlanks
+%ENDM
+
 %MACRO  WaitVBlank
         CALLI   waitVBlank
 %ENDM

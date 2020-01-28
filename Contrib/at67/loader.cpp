@@ -216,11 +216,13 @@ namespace Loader
                 uint16_t address = gt1File._segments[i]._loAddress + (gt1File._segments[i]._hiAddress <<8);
                 uint16_t segmentSize = (gt1File._segments[i]._segmentSize == 0) ? 256 : gt1File._segments[i]._segmentSize;
                 if((address + segmentSize - 1) < Memory::getSizeRAM()) totalSize += segmentSize;
-                if((address & 0x00FF) + segmentSize > 256) fprintf(stderr, "Loader::printGt1Stats() : Page overflow, segment %d : address 0x%04x : segmentSize %3d\n", i, address, segmentSize);
+                if((address & 0x00FF) + segmentSize > 256) fprintf(stderr, "Loader::printGt1Stats() : Page overflow, (ignore if non code segment), segment %d : address 0x%04x : segmentSize %3d\n", i, address, segmentSize);
             }
         }
         uint16_t startAddress = gt1File._loStart + (gt1File._hiStart <<8);
         fprintf(stderr, "\n**********************************************\n");
+        fprintf(stderr, "*                   Loading                    \n");
+        fprintf(stderr, "**********************************************\n");
         fprintf(stderr, "* %-20s : 0x%04x  : %5d bytes\n", output.c_str(), startAddress, totalSize);
         fprintf(stderr, "**********************************************\n");
         fprintf(stderr, "*   Segment   :  Type  : Address : Memory Used\n");
@@ -279,7 +281,7 @@ namespace Loader
             }
         }
         fprintf(stderr, "**********************************************\n");
-        fprintf(stderr, "* Free RAM after load  :  %5d  :    %5d\n", Memory::getBaseFreeRAM() - totalSize, Memory::getBaseFreeRAM() - totalSize + RAM_EXPANSION_SIZE);
+        fprintf(stderr, "* Free RAM after load  :  %5d\n", Memory::getBaseFreeRAM() - totalSize);
         fprintf(stderr, "**********************************************\n");
 
         return totalSize;
@@ -1270,8 +1272,8 @@ namespace Loader
             return;
         }
 
-        if(uploadTarget == Emulator) fprintf(stderr, "\nTarget: Emulator");
-        else if(uploadTarget == Hardware) fprintf(stderr, "\nTarget: Gigatron");
+        if(uploadTarget == Emulator) fprintf(stderr, "\nTarget : Emulator");
+        else if(uploadTarget == Hardware) fprintf(stderr, "\nTarget : Gigatron");
         uint16_t totalSize = printGt1Stats(filename, gt1File);
         Memory::setSizeFreeRAM(Memory::getBaseFreeRAM() - totalSize); 
 

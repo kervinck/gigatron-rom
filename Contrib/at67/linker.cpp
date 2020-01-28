@@ -29,9 +29,10 @@ namespace Linker
         {0x0000, 0x0000, "convertGeOp"      , "", true,  false},
         {0x0000, 0x0000, "convertLtOp"      , "", true,  false},
         {0x0000, 0x0000, "convertGtOp"      , "", true,  false},
-        {0x0000, 0x0000, "power16bit"       , "", false, false}, 
-        {0x0000, 0x0000, "power16bitExt"    , "", false, false}, 
-        {0x0000, 0x0000, "multiply16bit"    , "", false, false}, 
+        {0x0000, 0x0000, "power16bit"       , "", false, false},
+        {0x0000, 0x0000, "power16bitExt"    , "", false, false},
+        {0x0000, 0x0000, "multiply16bit"    , "", false, false},
+        {0x0000, 0x0000, "multiply16bit_1"  , "", false, false},
         {0x0000, 0x0000, "divide16bit"      , "", false, false},
         {0x0000, 0x0000, "rand16bit"        , "", false, false},
         {0x0000, 0x0000, "randMod16bit"     , "", false, false},
@@ -57,9 +58,14 @@ namespace Linker
         {0x0000, 0x0000, "setArrayByte"     , "", false, false},
         {0x0000, 0x0000, "getArrayInt16"    , "", false, false},
         {0x0000, 0x0000, "setArrayInt16"    , "", false, false},
+        {0x0000, 0x0000, "getArrayInt16Low" , "", false, false},
+        {0x0000, 0x0000, "setArrayInt16Low" , "", false, false},
+        {0x0000, 0x0000, "getArrayInt16High", "", false, false},
+        {0x0000, 0x0000, "setArrayInt16High", "", false, false},
         {0x0000, 0x0000, "gotoNumericLabel" , "", false, false},
         {0x0000, 0x0000, "gosubNumericLabel", "", false, false},
         {0x0000, 0x0000, "scanlineMode"     , "", false, false},
+        {0x0000, 0x0000, "waitVBlanks"      , "", false, false},
         {0x0000, 0x0000, "waitVBlank"       , "", false, false},
         {0x0000, 0x0000, "resetVideoTable"  , "", false, false},
         {0x0000, 0x0000, "initClearFuncs"   , "", false, false},
@@ -304,8 +310,10 @@ namespace Linker
         if(!overwrite  &&  _internalSubs[subIndex]._address) return false;
 
         uint16_t address;
-        if(Memory::getFreeRAM(Memory::FitAscending, _internalSubs[subIndex]._size, 0x0200, Compiler::getRuntimeStart(), address))
+        if(Memory::getNextCodeAddress(Memory::FitDescending, Compiler::getRuntimeStart(),  _internalSubs[subIndex]._size, address))
         {
+            Memory::takeFreeRAM(address, _internalSubs[subIndex]._size, true);
+
             // Save end of runtime/strings
             if(address < Compiler::getRuntimeEnd()) Compiler::setRuntimeEnd(address);
 
@@ -395,6 +403,8 @@ namespace Linker
     bool linkInternalSubs(void)
     {
         fprintf(stderr, "\n**********************************************\n");
+        fprintf(stderr, "*                   Linking                   \n");
+        fprintf(stderr, "**********************************************\n");
         fprintf(stderr, "*        Name          : Address :    Size    \n");
         fprintf(stderr, "**********************************************\n");
         
@@ -476,7 +486,12 @@ RESTART_COLLECTION:
         }
 
         fprintf(stderr, "**********************************************\n");
-        fprintf(stderr, "\nLinker::relinkInternalSubs() : runtime START 0x%04x : runtime END 0x%04x : runtime SIZE %d bytes\n", Compiler::getRuntimeStart() & (Memory::getSizeRAM() - 1), Compiler::getRuntimeEnd(), runtimeSize);
+        fprintf(stderr, "*                 Re-Linking                  \n");
+        fprintf(stderr, "**********************************************\n");
+        fprintf(stderr, "*    Start     :    End       :       Size    \n");
+        fprintf(stderr, "**********************************************\n");
+        fprintf(stderr, "*    0x%04x    :    0x%04x    :    %5d bytes\n", Compiler::getRuntimeStart() & (Memory::getSizeRAM() - 1), Compiler::getRuntimeEnd(), runtimeSize);
+        fprintf(stderr, "**********************************************\n");
     }
 
     void outputInternalSubs(void)

@@ -1,14 +1,14 @@
 ; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 mathX               EQU     register8
 mathY               EQU     register9
-mathSum             EQU     register10
-mathMask            EQU     register11
+mathSum             EQU     register12
+mathMask            EQU     register13
 mathRem             EQU     register12
 mathSign            EQU     register13
 mathScratch         EQU     register14
 mathShift           EQU     register15
-mathBase            EQU     register12
-mathPow             EQU     register13
+mathBase            EQU     register10
+mathPow             EQU     register11
 mathResult          EQU     register14
 
 
@@ -79,21 +79,53 @@ power16E_skip       LDW     mathBase
                     ; accumulator = mathX * mathY, (result 16bit)
 multiply16bit       LDI     0
                     STW     mathSum
+                    LDW     mathX
+                    BEQ     multiply16_exit     ; if x=0 then return 0
+                    LDWI    SYS_LSRW1_48
+                    STW     giga_sysFn
+                    LDW     mathY
+                    
+multiply16_loop     BEQ     multiply16_exit     ; if y=0 then return
+                    ANDI    1
+                    BEQ     multiply16_skip
+                    LDW     mathSum
+                    ADDW    mathX
+                    STW     mathSum             ; mathSum += mathX
+                    
+multiply16_skip     LDW     mathX
+                    LSLW
+                    STW     mathX               ; mathX = mathX <<1
+                    LDW     mathY
+                    SYS     48
+                    STW     mathY               ; mathY = mathY >>1
+                    BRA     multiply16_loop
+
+multiply16_exit     PUSH
+                    CALLI   realTimeProc
+                    POP
+                    LDW     mathSum
+                    RET
+%ENDS   
+    
+%SUB                multiply16bit_1
+                    ; accumulator = mathX * mathY, (result 16bit)
+multiply16bit_1     LDI     0
+                    STW     mathSum
                     LDI     1
     
-multiply16_loop     STW     mathMask
+multiply161_loop    STW     mathMask
                     ANDW    mathY
-                    BEQ     multiply16_skip
+                    BEQ     multiply161_skip
                     LDW     mathSum
                     ADDW    mathX
                     STW     mathSum
                     
-multiply16_skip     LDW     mathX
+multiply161_skip    LDW     mathX
                     ADDW    mathX
                     STW     mathX
                     LDW     mathMask
                     ADDW    mathMask
-                    BNE     multiply16_loop
+                    BNE     multiply161_loop
                     PUSH
                     CALLI   realTimeProc
                     POP
