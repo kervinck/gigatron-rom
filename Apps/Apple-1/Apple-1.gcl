@@ -9,15 +9,14 @@ gcl0x
 {
   Issues:
 
+  XXX Mini-assembler: Remove the #$9D escape?
+  XXX Mini-assembler: relocate to strictly under $1000
+  XXX Mini-assembler: find an easy to remember entry address (Apple II: $F666)
   XXX vIRQ interrupts to handle memory mapped PIA: DSP/KBD/..
   XXX Normally we need RESET to get out of A1 BASIC. Can we use Ctrl-C?
   XXX BASIC: AUTO doesn't work well
   XXX Can we preload a nice BASIC program
   XXX Preload Mastermind game at $300
-  XXX Add Baum assembler. Where to find it? Apple II ROM $F500??
-      http://www.apple1notes.com/old_apple/Monitor_II_on_1.html
-  XXX Add entire Apple II monitor, retarget for $500..$fff??
-      http://forum.6502.org/viewtopic.php?f=2&t=5884
   XXX NMI/IRQ(=BRK)/RESET back into to wozmon (through vector)
 
   References:
@@ -105,15 +104,33 @@ $101 {videoTable+1} p= $60 p.   {Use offsets 96..255 for pixel data, not 0..159}
 [ret]                           {Jump to Main (the brackets avoid the automatic vLR patch)}
 
 {-----------------------------------------------------------------------+
-|       Disassembler                                                    |
+|       Assembler and disassembler                                      |
 +-----------------------------------------------------------------------}
 
 {
         WRITTEN BY STEVE WOZNIAK & ALLEN BAUM
         AND PUBLISHED IN DOCTOR DOBBS JOURNAL
         SEPT 1976
+
+        ;======================================
+        ;    ** ENHANCED WOZMON EXTENSION **
+        ;    MINI-ASSEMBLER AND DISASSEMBLER
+        ;       FOR THE APPLE 1 COMPUTER
+        ;  BASED ON THE CODE OF STEVE WOZNIAK
+        ;       AND ALLEN BAUM, 1976/1977
+        ; MANUALLY AND LOVINGLY ADAPTED BY THE
+        ;    HAND OF MICHAEL T. BARRY, 2020
+        ;    MODIFICATIONS MADE IN 2020 ARE
+        ;     FREE TO USE WITH ATTRIBUTION
+        ;        <<< 6502 FOREVER!! >>>
+        ;======================================
+
+        Merged and transcribed both sources to the
+        Gigatron Apple-1 emulator on v6502 by
+        Marcel van Kervinck 2019/2020
 }
-                *=$400
+
+                *=$d00
 
 _FORMAT=$40
 _LENGTH=$41
@@ -121,22 +138,169 @@ _LMNEM=$42
 _RMNEM=$43
 _PCL=$44
 _PCH=$45
-_COUNT=$46
+_A1L=$46
+_A1H=$47
+_A2L=$48
+_A2H=$49
+_A4L=$4a
+_A4H=$4b
+_FMT=$4c
 
-                #_JSR_          ##_DSMBL        { [Gigatron] Call disassembler as subroutine }
-                #_JMP_          ##_GETLINE      { [Gigatron] Back to wozmon }
-
-_DSMBL=*        #_LDAIM_        #11 {was $13}   { COUNT FOR 13 INSTR. DSMBLY }
-                #_STAZ_         #_COUNT
-_DSMBL2=*       #_JSR_          ##_INSTDS       { DISASSEMBLE AND DISPLAY INSTR. }
-                #_JSR_          ##_PCADJ
-                #_STAZ_         #_PCL           { UPDATE PCL,H TO NEXT INSTR. }
+_LIST=*         #_LDAIM_        #12 {was 20}    { DISASSEM 20 INSTR }
+_LIST1=*        #_PHA_                          { STACK LOOP COUNTER }
+                #_JSR_          ##_INSTDSP      { DISASSEM ONE INSTR }
+                #_JSR_          ##_PCADJ        { UPDATE VIRTUAL PC }
+                #_STAZ_         #_PCL
                 #_STYZ_         #_PCH
-                #_DECZ_         #_COUNT         { DONE FIRST 19 INSTR?. }
-                #_BNE_          #@_DSMBL2       { * YES, LOOP. ELSE DSMBL 20TH. }
-_INSTDS=*       #_JSR_          ##_PRPC         { PRINT PCL,H }
+                #_PLA_                          { UPDATE LOOP COUNTER }
+                #_SEC_
+                #_SBCIM_        #1
+                #_BNE_          #@_LIST1        { LOOP FOR 20 INSTRS }
+_CMDLINE=*      #_JSR_          ##_GETLNZ       { INPUT A FRESH LINE }
+                #_TXA_                          { NULL INPUT? }
+                #_BNE_          #@_CMDLIN2
+                #_JMP_          ##_GETLINE      { YES: BACK TO WOZMON }
+_CMDLIN2=*      #_LDYIM_        #0              { START AT 1ST CHAR }
+                #_JSR_          ##_GETNUM       { PARSE OPTIONAL ADDR }
+                #_PHA_
+                #_TXA_                          { EMPTY ADDR FIELD? }
+                #_BEQ_          #@_CMDLIN3      { YES: USE DEFAULT PC }
+_A1PCLP=*       #_LDAZX_        #_A1L           { ASSUMES X=1 }
+                #_STAZX_        #_PCL           { COPY FROM A1 TO PC }
+                #_DEX_
+                #_BPL_          #@_A1PCLP
+_CMDLIN3=*      #_PLA_
+                #_CMPIM_        #$05            { 'L' COMMAND? }
+                #_BEQ_          #@_LIST         { YES: DISASSEMBLE }
+                #_CMPIM_        #$99            { ' ' COMMAND? }
+                #_BEQ_          #@_ASSEM        { YES: ASM AT CURR PC }
+                #_CMPIM_        #$93            { ':' COMMAND? }
+                #_BNE_          #@_FORM8A       { NO: ERROR }
+_ASSEM=*        #_LDAIM_        #3              { # OF CHARS IN MNEM }
+                #_STAZ_         #_A1H
+_NXTMN=*        #_JSR_          ##_GETNSP       { GET A MNEM CHAR }
+_NXTM=*         #_ASLA_
+                #_SBCIM_        #$BE            { SUBTRACT OFFSET }
+                #_CMPZ_         #$C2            { LEGAL CHAR? }
+                #_BCC_          #@_FORM8A       { NO }
+                #_ASLA_                         { COMPRESS/LT-JUSTIFY }
+                #_ASLA_
+                #_LDXIM_        #4
+_NXTM2=*        #_ASLA_                         { DO 5 24-BIT SHIFTS }
+                #_ROLZ_         #_A4L
+                #_ROLZ_         #_A4H
+                #_DEX_
+                #_BPL_          #@_NXTM2
+                #_DECZ_         #_A1H           { DONE WITH 3 CHARS? }
+                #_BEQ_          #@_NXTM2        { YES: ONE LAST SHIFT }
+                #_BPL_          #@_NXTMN        { NO }
+_FORM1=*        #_LDXIM_        #5              { 5 CHARS IN ADR MODE }
+_FORM2=*        #_JSR_          ##_GETNSP       { GET 1ST CHR OF ADDR }
+                #_STYZ_         #_YSAV
+                #_CMPAX_        ##_CHAR1        { 1ST CHR MATCH PATT? }
+                #_BNE_          #@_FORM3        { NO }
+                #_JSR_          ##_GETNSP       { YES: GET 2ND CHAR }
+                #_CMPAX_        ##_CHAR2        { MATCHES 2ND HALF? }
+                #_BEQ_          #@_FORM5        { YES }
+                #_LDAAX_        ##_CHAR2        { NO: IS 2ND HALF 0? }
+                #_BEQ_          #@_FORM4        { YES }
+                #_CMPIM_        #$A4            { NO: 2ND HALF OPT? }
+                #_BEQ_          #@_FORM4        { YES }
+                #_LDYZ_         #_YSAV
+_FORM3=*        #_CLC_                          { CLEAR BIT-NO MATCH }
+_FORM4=*        #_DEY_                          { BACK UP 1 CHAR }
+_FORM5=*        #_ROLZ_         #_FMT           { FORM FORMAT BYTE }
+                #_CPXIM_        #3              { TIME TO CHECK ADDR? }
+                #_BNE_          #@_FORM7        { NO }
+                #_JSR_          ##_GETNUM       { YES: PARSE IT }
+                #_LDAZ_         #_A2H
+                #_BEQ_          #@_FORM6        { HIGH-ORDER BYTE 0? }
+                #_INX_                          { NO: INCR FOR 2-BYTE }
+_FORM6=*        #_STXZ_         #_L             { STORE LENGTH }
+                #_LDXIM_        #3              { RELOAD FMT INDEX }
+                #_DEY_                          { BACK UP 1 CHAR }
+_FORM7=*        #_STXZ_         #_A1H           { SAVE INDEX }
+                #_DEX_                          { DONE W/FMT CHECK? }
+                #_BPL_          #@_FORM2        { NO }
+                #_LDAZ_         #_FMT           { YES: PUT LENGTH }
+                #_ASLA_                         { IN LOW BITS }
+                #_ASLA_
+                #_ORAZ_         #_L
+                #_CMPIM_        #$20
+                #_BCS_          #@_FORM8
+                #_LDXZ_         #_L
+                #_BEQ_          #@_FORM8
+                #_ORAIM_        #$80
+_FORM8=*        #_STAZ_         #_FMT
+                #_STYZ_         #_YSAV
+                #_LDAAY_        ##_IN           { GET NEXT NONBLANK }
+                #_CMPIM_        #$BB {";"}      { START OF COMMENT? }
+                #_BEQ_          #@_TRYNEXT      { YES }
+                #_CMPIM_        #$8D            { CR? }
+_FORM8A=*       #_BNE_          #@_ERR2         { NO: ERROR }
+_TRYNEXT=*      #_LDAZ_         #_A1H           { GET TRIAL OPCODE }
+                #_JSR_          ##_INSDS2       { GET FMT+LEN FOR IT }
+                #_TAX_
+                #_LDAAX_        ##_MNEMR        { GET LOWER MNEM BYTE }
+                #_CMPZ_         #_A4L           { MATCH? }
+                #_BNE_          #@_NEXTOP       { NO: TRY NEXT OPCODE }
+                #_LDAAX_        ##_MNEML        { GET UPPER MNEM BYTE }
+                #_CMPZ_         #_A4H           { MATCH? }
+                #_BNE_          #@_NEXTOP       { NO: TRY NEXT OPCODE }
+                #_LDAZ_         #_FMT
+                #_LDYZ_         #_FORMAT        { GET TRIAL FORMAT }
+                #_CPYIM_        #$9D            { IS IT RELATIVE? }
+                #_BEQ_          #@_REL          { YES }
+                #_CMPZ_         #_FORMAT        { SAME FORMAT? }
+                #_BEQ_          #@_FINDOP       { YES }
+_NEXTOP=*       #_DECZ_         #_A1H           { NO: TRY NEXT OPCODE }
+                #_BNE_          #@_TRYNEXT
+                #_INCZ_         #_FMT           { NO MORE: TRY LEN=2 }
+                #_DECZ_         #_L             { WAS L=2 ALREADY? }
+                #_BEQ_          #@_TRYNEXT      { NO: KEEP TRYING }
+_ERR1=*         #_LDYZ_         #_YSAV          { YES: UNREC. INST }
+_ERR2=*         #_TYA_
+                #_TAX_
+                #_JSR_          ##_CROUT
+                #_JSR_          ##_PRBL2        { PRINT '^' BELOW THE }
+                #_LDAIM_        #$DE {"^"}      {   LAST PARSED CHAR }
+                #_JSR_          ##_ECHO         {   TO SHOW ERR POSN }
+                #_JMP_          ##_CMDLINE      { NEXT COMMAND LINE }
+_REL=*          #_SBCIM_        #$81            { YES: IS FMT COMPAT }
+                #_LSRA_                         {   W/RELATIVE MODE? }
+                #_BNE_          #@_ERR1         { NO: ERROR OUT }
+                #_LDYZ_         #_A2H
+                #_LDXZ_         #_A2L           { DOUBLE DECREMENT }
+                #_BNE_          #@_REL2
+                #_DEY_
+_REL2=*         #_DEX_
+                #_TXA_
+                #_CLC_
+                #_SBCZ_         #_PCL           { CALC ADDR-PC-2 }
+                #_STAZ_         #_A2L
+*=$e00          #_BPL_          #@_REL3
+                #_INY_
+_REL3=*         #_TYA_
+                #_SBCZ_         #_PCH
+                #_BNE_          #@_ERR          { ERROR IF TOO FAR }
+_FINDOP=*       #_LDYZ_         #_LENGTH
+_FNDOP2=*       #_LDAAY_        ##_A1H          { MOVE INST TO (PC) }
+                #_STAIY_        #_PCL
+                #_DEY_
+                #_BPL_          #@_FNDOP2
+                #_LDAIM_        #1              { DISASSEMBLE RESULT }
+                #_JMP_          ##_LIST1        { BACK TO CMD LINE }
+
+_INSDS1=*       #_LDXZ_         #_PCL           { PRINT PCL,H }
+                #_LDYZ_         #_PCH
+                #_JSR_          ##_CROUT
+                #_JSR_          ##_PRNTYX
+                #_LDYIM_        #0
+                #_LDAIM_        #$AD {"-"}      { PRINT '-' }
+                #_JSR_          ##_ECHO
+                #_JSR_          ##_PRBLNK       { PRINT 3 BLANKS }
                 #_LDAIX_        #_PCL           { GET OPCODE }
-                #_TAY_
+_INSDS2=*       #_TAY_
                 #_LSRA_                         { EVEN/ODD TEST }
                 #_BCC_          #@_IEVEN
                 #_LSRA_                         { * TEST BIT 1 }
@@ -179,6 +343,9 @@ _MNNDX2=*       #_LSRA_                         { * 1XXX1010 -> 00101XXX }
                 #_INY_                          { * XXXXX000 -> 000XXXXX }
 _MNNDX3=*       #_DEY_
                 #_BNE_          #@_MNNDX1
+                #_RTS_
+
+_INSTDSP=*      #_JSR_          ##_INSDS1       { GEN FMT, LEN BYTES }
                 #_PHA_                          { * SAVE MNEMONIC TABLE INDEX. }
 _PROP=*         #_LDAIY_        #_PCL
                 #_JSR_          ##_PRBYTE
@@ -236,33 +403,93 @@ _RELADR=*       #_JSR_          ##_PCADJ3       { PCL,H + DISPL + 1 TO 'A','Y'. 
                 #_BNE_          #@_PRNTYX       { *    +1 TO 'X','Y'. }
                 #_INY_
 _PRNTYX=*       #_TYA_
-_PRNTAX=*       #_JSR_          ##_PRBYTE       { PRINT TARGET ADDRESS OF BRANCH }
+                #_JSR_          ##_PRBYTE       { PRINT TARGET ADDRESS OF BRANCH }
 _PRNTX=*        #_TXA_                          { AND RETURN }
                 #_JMP_          ##_PRBYTE
-_PRPC=*         #_LDAIM_        #$8D
-                #_JSR_          ##_CHAROUT      { OUTPUT CARRIAGE RETURN. }
-                #_LDAZ_         #_PCH
-                #_LDXZ_         #_PCL
-                #_JSR_          ##_PRNTAX       { OUTPUT PCL,H }
-                #_LDAIM_        #$AD
-                #_JSR_          ##_CHAROUT      { OUTPUT '-' }
+
 _PRBLNK=*       #_LDXIM_        #$1             { BLANK COUNT [Gigatron] Was: #$3 }
 _PRBL2=*        #_LDAIM_        #$A0
 _PRBL3=*        #_JSR_          ##_CHAROUT      { OUTPUT A BLANK }
                 #_DEX_
                 #_BNE_          #@_PRBL2        { LOOP UNTIL COUNT =0 }
                 #_RTS_
+
+_NOTACR=*       #_CMPIM_        #$9B            { ESC? }
+                #_BEQ_          #@_GETLNZ       { YES: START OVER }
+                #_JSR_          ##_ECHO         { PRINT CHAR }
+                #_CMPIM_
+*=$f00
+                                #$DF {"_"}
+                #_BEQ_          #@_BCKSPC
+                #_INX_
+                #_BPL_          #@_NXTCHAR      { 128 CHARS MAX }
+_GETLNZ=*       #_JSR_          ##_CROUT        { FRESH LINE }
+                #_LDAIM_        #$A1 {"!"}      { PROMPT CHAR }
+                #_JSR_          ##_ECHO
+                #_LDXIM_        #1
+_BCKSPC=*       #_DEX_
+                #_BMI_          #@_GETLNZ
+_NXTCHAR=*      #_STXZ_         #_YSAV          { [Gigatron] }
+                #_JSR_          ##_WAITKEY      { [Gigatron] }
+                #_LDXZ_         #_YSAV          { [Gigatron] }
+              { #_BIT_          ##_KBDCR      } { WAIT FOR KEY PRESS }
+              { #_BPL_          #@_NXTCHAR    } { NO KEY YET }
+              { #_LDA_          ##_KBD        } { LOAD CHAR }
+                #_STAAX_        ##_IN           { STORE IN BUFFER }
+                #_CMPIM_        #$8D            { CR? }
+                #_BNE_          #@_NOTACR       { NO: KEEP GOING }
+                #_RTS_                          { YES: X=BUFLEN }
+
+_GETNSP=*       #_LDAAY_        ##_IN
+                #_INY_
+                #_CMPIM_        #$A0 {" "}      { SKIP OVER SPACES }
+                #_BEQ_          #@_GETNSP
+                #_RTS_
+
+_XMON=*         #_JMP_          ##_CMDLINE      { [Gigatron] XXX put on nice address }
+_CROUT=*        #_LDAIM_        #$8D
+                #_JMP_          ##_ECHO
+
 _PCADJ=*        #_LDAZ_         #_LENGTH        { 0=1-BYTE, 1=2-BYTE, 2=3-BYTE. }
-_PCADJ2=*       #_SEC_
+                #_SEC_
 _PCADJ3=*       #_LDYZ_         #_PCH
                 #_TAX_                          { * TEST DISPL SIGN (FOR REL }
                 #_BPL_          #@_PCADJ4       { *   BRANCH). EXTEND NEG }
                 #_DEY_                          { *   BY DECREMENTING PCH. }
 _PCADJ4=*       #_ADCZ_         #_PCL
-                *=$500                          { [Gigatron] Open next GT1 file segment }
                 #_BCC_          #@_RTS1         { PCL+LENGTH (OR DISPL) +1 TO A. }
                 #_INY_                          { *  CARRY INTO Y (PCH) }
 _RTS1=*         #_RTS_
+
+_GETNUM=*       #_LDXIM_        #0              { CLEAR VALID # FLAG }
+                #_STXZ_         #_A2L           { CLEAR A2 }
+                #_STXZ_         #_A2H
+                #_BEQ_          #@_NXTCHR
+_XDIG=*         #_LDXIM_        #3
+                #_ASLA_                         { GOT HEX DIGIT, }
+                #_ASLA_                         {   SHIFT INTO A2 }
+                #_ASLA_
+                #_ASLA_
+_NXTBIT=*       #_ASLA_
+                #_ROLZ_         #_A2L
+                #_ROLZ_         #_A2H
+                #_DEX_                          { LEAVE X=$FF IF DIG }
+                #_BPL_          #@_NXTBIT
+_NXTBAS=*       #_LDAZX_        #_A2H
+                #_STAZX_        #_A1H
+_NXTBS2=*       #_INX_
+                #_BEQ_          #@_NXTBAS
+_NXTCHR=*       #_LDAAY_        ##_IN           { GET CHAR }
+                #_INY_                          { ADVANCE INDEX }
+                #_EORIM_        #$B0
+                #_CMPIM_        #10             { DECIMAL DIGIT? }
+                #_BCC_          #@_XDIG         { YES: ACCUMULATE }
+                #_ADCIM_        #$88
+                #_CMPIM_        #$FA            { 'A'-'F' }
+                #_BCS_          #@_XDIG         { YES: ACCUMULATE }
+                #_RTS_                          { NO: RETURN WITH }
+                                                {   X=0: NO NUMBER }
+                                                {   X=1: NUMBER }
 
 _MODE1=*        #$40 #$2  #$45 #$3
                 #$D0 #$8  #$40 #$9
@@ -329,7 +556,9 @@ _MNEML=*        #$1C #$8A #$1C #$23             { XXXXX000 INSTRS. }
                 #$A5 #$69 #$24 #$24
                 #$AE #$AE #$A8 #$AD             { 1XXX1010 INSTRS. }
                 #$29 #$0  #$7C #$0
-                #$15 #$9C #$6D #$9C             { XXXYYY10 INSTRS. }
+                #$15 #$9C
+*=$1000
+                          #$6D #$9C             { XXXYYY10 INSTRS. }
                 #$A5 #$69 #$29 #$53
                 #$84 #$13 #$34 #$11             { XXXYYY01 INSTRS. }
                 #$A5 #$69 #$23 #$A0
@@ -562,10 +791,10 @@ _MSG=*
                 #$8d #$c3 #$c9 #$d3 #$c1 #$c2 #$a0 #$d2
                 #$b0 #$b0 #$b0 #$c5
 
-                { '400R  Disassemble 44.45\r' }
-                #$8d #$b5 #$b4 #$ae #$b4 #$b4 #$a0 #$e5
-                #$ec #$e2 #$ed #$e5 #$f3 #$f3 #$e1 #$f3
-                #$e9 #$c4 #$a0 #$a0 #$d2 #$b0 #$b0 #$b4
+                { 'D13R  Mini-assembler\r' }
+                #$8d #$f2 #$e5 #$ec #$e2 #$ed #$e5 #$f3
+                #$f3 #$e1 #$ad #$e9 #$ee #$e9 #$cd #$a0
+                #$a0 #$d2 #$b3 #$b1 #$c4
 
                 { '200   Free\r' }
                 #$8d #$e5 #$e5 #$f2 #$c6 #$a0 #$a0 #$a0
