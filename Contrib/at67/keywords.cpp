@@ -2089,7 +2089,7 @@ namespace Keywords
         if(Assembler::getUseOpcodeCALLI())
         {
             Compiler::emitVcpuAsm("CALLI", "CALLI_JUMP", false, codeLineIndex - 1);
-            Compiler::getEndIfDataStack().push({int(Compiler::getCodeLines()[codeLineIndex - 1]._vasm.size()) - 1, codeLineIndex - 1});
+            Compiler::getEndIfDataStack().push({int(Compiler::getCodeLines()[codeLineIndex - 1]._vasm.size()) - 1, codeLineIndex - 1, ccType});
         }
         else
         {
@@ -2097,13 +2097,13 @@ namespace Keywords
             if(ccType == Expression::FastCC)
             {
                 Compiler::emitVcpuAsm("BRA", "BRA_JUMP", false, codeLineIndex - 1);
-                Compiler::getEndIfDataStack().push({int(Compiler::getCodeLines()[codeLineIndex - 1]._vasm.size()) - 1, codeLineIndex - 1});
+                Compiler::getEndIfDataStack().push({int(Compiler::getCodeLines()[codeLineIndex - 1]._vasm.size()) - 1, codeLineIndex - 1, ccType});
             }
             else
             {
                 Compiler::emitVcpuAsm("LDWI", "LDWI_JUMP", false, codeLineIndex - 1);
                 Compiler::emitVcpuAsm("CALL", "giga_vAC", false, codeLineIndex - 1);
-                Compiler::getEndIfDataStack().push({int(Compiler::getCodeLines()[codeLineIndex - 1]._vasm.size()) - 2, codeLineIndex - 1});
+                Compiler::getEndIfDataStack().push({int(Compiler::getCodeLines()[codeLineIndex - 1]._vasm.size()) - 2, codeLineIndex - 1, ccType});
             }
         }
 
@@ -2163,7 +2163,7 @@ namespace Keywords
         if(Assembler::getUseOpcodeCALLI())
         {
             Compiler::emitVcpuAsm("CALLI", "CALLI_JUMP", false, codeLineIndex - 1);
-            Compiler::getEndIfDataStack().push({int(Compiler::getCodeLines()[codeLineIndex - 1]._vasm.size()) - 1, codeLineIndex - 1});
+            Compiler::getEndIfDataStack().push({int(Compiler::getCodeLines()[codeLineIndex - 1]._vasm.size()) - 1, codeLineIndex - 1, ccType});
         }
         else
         {
@@ -2171,13 +2171,13 @@ namespace Keywords
             if(ccType == Expression::FastCC)
             {
                 Compiler::emitVcpuAsm("BRA", "BRA_JUMP", false, codeLineIndex - 1);
-                Compiler::getEndIfDataStack().push({int(Compiler::getCodeLines()[codeLineIndex - 1]._vasm.size()) - 1, codeLineIndex - 1});
+                Compiler::getEndIfDataStack().push({int(Compiler::getCodeLines()[codeLineIndex - 1]._vasm.size()) - 1, codeLineIndex - 1, ccType});
             }
             else
             {
                 Compiler::emitVcpuAsm("LDWI", "LDWI_JUMP", false, codeLineIndex - 1);
                 Compiler::emitVcpuAsm("CALL", "giga_vAC", false, codeLineIndex - 1);
-                Compiler::getEndIfDataStack().push({int(Compiler::getCodeLines()[codeLineIndex - 1]._vasm.size()) - 2, codeLineIndex - 1});
+                Compiler::getEndIfDataStack().push({int(Compiler::getCodeLines()[codeLineIndex - 1]._vasm.size()) - 2, codeLineIndex - 1, ccType});
             }
         }
 
@@ -2250,6 +2250,7 @@ namespace Keywords
         {
             codeIndex = Compiler::getEndIfDataStack().top()._codeLineIndex;
             jmpIndex = Compiler::getEndIfDataStack().top()._jmpIndex;
+            ccType = Compiler::getEndIfDataStack().top()._ccType;
             Compiler::VasmLine* vasm = &Compiler::getCodeLines()[codeIndex]._vasm[jmpIndex];
             switch(ccType)
             {
@@ -2631,14 +2632,14 @@ namespace Keywords
         // Function generator
         if(foundFunction)
         {
-            if(addrTokens.size() != 5)
+            if(addrTokens.size() < 4  ||  addrTokens.size() > 5)
             {
-                fprintf(stderr, "Compiler::keywordDEF() : function generator must have 5 parameters, found %d in '%s' on line %d\n", int(addrTokens.size()), codeLine._code.c_str(), codeLineIndex);
+                fprintf(stderr, "Compiler::keywordDEF() : function generator must have 4 or 5 parameters, '(ADDR, <VAR>, START, STOP, SIZE)', (<VAR> is optional), found %d in '%s' on line %d\n", int(addrTokens.size()), codeLine._code.c_str(), codeLineIndex);
                 return false;
             }
 
             for(int i=0; i<int(addrTokens.size()); i++) Expression::stripWhitespace(addrTokens[i]);
-            std::string funcVar = addrTokens[1];
+
             std::string function = codeLine._code.substr(equalsPos + 1);
             Expression::stripWhitespace(function);
             if(function.size() == 0)
@@ -2648,19 +2649,28 @@ namespace Keywords
             }
 
             // Parse function variable
-            size_t varPos = function.find(funcVar);
-            if(varPos == std::string::npos)
+            bool foundVar = false;
+            std::string funcVar;
+            size_t varPos = std::string::npos;
+            if(addrTokens.size() == 5)
             {
-                fprintf(stderr, "Compiler::keywordDEF() : function variable '%s' invalid in '%s' on line %d\n", funcVar.c_str(), codeLine._code.c_str(), codeLineIndex);
-                return false;
+                foundVar = true;
+                funcVar = addrTokens[1];
+                varPos = function.find(funcVar);
+                if(varPos == std::string::npos)
+                {
+                    fprintf(stderr, "Compiler::keywordDEF() : function variable '%s' invalid in '%s' on line %d\n", funcVar.c_str(), codeLine._code.c_str(), codeLineIndex);
+                    return false;
+                }
+                function.erase(varPos, funcVar.size());
             }
-            function.erase(varPos, funcVar.size());
 
             // Parse function paramaters
+            int paramsOffset = (foundVar) ? 2 : 1;
             std::vector<Expression::Numeric> funcParams = {Expression::Numeric(), Expression::Numeric(), Expression::Numeric()};
             for(int i=0; i<int(funcParams.size()); i++)
             {
-                Compiler::parseExpression(codeLineIndex, addrTokens[i + 2], operand, funcParams[i]);
+                Compiler::parseExpression(codeLineIndex, addrTokens[i + paramsOffset], operand, funcParams[i]);
             }
             if(funcParams[2]._value == 0.0)
             {
@@ -2676,12 +2686,21 @@ namespace Keywords
             std::vector<int16_t> funcData;
             for(double d=start; d<end; d+=step)
             {
-                std::string var = std::to_string(d);
-                function.insert(varPos, var);
+                std::string var;
+                if(foundVar)
+                {
+                    var = std::to_string(d);
+                    function.insert(varPos, var);
+                }
+
                 Expression::Numeric funcResult;
                 Compiler::parseExpression(codeLineIndex, function, operand, funcResult);
                 funcData.push_back(int16_t(std::lround(funcResult._value)));
-                function.erase(varPos, var.size());
+
+                if(foundVar)
+                {
+                    function.erase(varPos, var.size());
+                }
             }
 
             if(typeText == "BYTE")

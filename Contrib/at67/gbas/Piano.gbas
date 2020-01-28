@@ -47,7 +47,7 @@ goto &loop
       return
 
 channels:
-    for c=1 to 4
+    for c=1 &to 4
         if chan(c) &&> 0 then chan(c) = chan(c) - 1
         if chan(c) &&= 0 then note(c) = 0 : n=0 : gosub audio
     next c
@@ -60,18 +60,15 @@ return
 waveform:
     at 48,103 : print "Z: ";
     gosub 206+z
-    for c=1 to 4
+    for c=1 &to 4
         ch.hi = c : poke ch-1,z
     next c
 return
 
 playNote:
-    for c=1 to 4
-        if note(c) &&= k then chan(c) = NOTELEN : goto playExit
-    next c
-    
-    for c=1 to 4
-        if chan(c) &&= 0 then chan(c) = NOTELEN : note(c) = k : gosub audio : goto playExit
+    for c=1 &to 4
+        if note(c) &&= k then chan(c) = NOTELEN : goto &playExit
+        if chan(c) &&= 0 then chan(c) = NOTELEN : note(c) = k : gosub audio : goto &playExit
     next c
     
 playExit: 
@@ -99,18 +96,18 @@ return
 209: print "Sawtooth" : return
 
 drawKeys:
-    for i=0 to 9
-        poke 163,&h00 : rect  20+i*12,30, 20+i*12+12,89
-        poke 163,&hFF : rectf 21+i*12,31, 21+i*12+10,88
+    for i=0 &to 9
+        ofs = (i LSL 3) + (i LSL 2) + 20  ' i*12 + 20
+        poke 163,&h00 : rect  ofs,30, ofs+12,89
+        poke 163,&hFF : rectf ofs+1,31, ofs+11,88
     next i
-    for i=0 to 1
-        poke 163,&h00 : rectf 28+i*12,30, 28+i*12+8,70
-    next i
-    for i=3 to 5
-        poke 163,&h00 : rectf 28+i*12,30, 28+i*12+8,70
-    next i
-    for i=7 to 8
-        poke 163,&h00 : rectf 28+i*12,30, 28+i*12+8,70
+    for i=0 &to 8
+        ' two seperate BRA optimised IF's are smaller/faster than 'IF (i=2) OR (i=6)
+        if i &&= 2 then goto &cont
+        if i &&= 6 then goto &cont
+        ofs = (i LSL 3) + (i LSL 2) + 28  ' i*12 + 28
+        poke 163,&h00 : rectf ofs,30, ofs+8,70
+cont:
     next i
     
     'doke 162,&h00FF

@@ -44,9 +44,9 @@ namespace Audio
     void initialise(void);
     void initialiseChannels(void);
 
-    void fillCallbackAudioBuffer(void);
-    void fillAudioBuffer(void);
-    void playAudioBuffer(void);
+    void fillCallbackBuffer(void);
+    void fillBuffer(void);
+    void playBuffer(void);
     void playSample(void);
     void clearQueue(void);
 

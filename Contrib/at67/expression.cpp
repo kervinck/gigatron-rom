@@ -79,6 +79,11 @@ namespace Expression
         numeric._value = atan(numeric._value);
         return numeric;
     }
+    Numeric& operatorRAND(Numeric& numeric)
+    {
+        numeric._value = double(rand() % std::lround(numeric._value));
+        return numeric;
+    }
 
     // Binary logic operators
     Numeric& operatorAND(Numeric& left, Numeric& right)
@@ -1174,6 +1179,10 @@ namespace Expression
         else if(Expression::find("ATAN"))
         {
             numeric = factor(0); numeric = operatorATAN(numeric);
+        }
+        else if(Expression::find("RAND"))
+        {
+            numeric = factor(0); numeric = operatorRAND(numeric);
         }
         else
         {

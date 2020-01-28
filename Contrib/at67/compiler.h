@@ -196,6 +196,7 @@ namespace Compiler
     {
         int _jmpIndex;
         int _codeLineIndex;
+        Expression::CCType _ccType;
     };
 
     struct WhileWendData

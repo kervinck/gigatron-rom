@@ -1701,6 +1701,10 @@ namespace Compiler
         {
             numeric = factor(0); numeric = Operators::operatorATAN(numeric);
         }
+        else if(Expression::find("RAND"))
+        {
+            numeric = factor(0); numeric = Operators::operatorRAND(numeric);
+        }
         else
         {
             switch(peek(true))

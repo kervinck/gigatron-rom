@@ -1037,8 +1037,8 @@ namespace Cpu
         
             // Audio
             //Audio::playSample();
-            //Audio::fillAudioBuffer();
-            Audio::fillCallbackAudioBuffer();
+            //Audio::fillBuffer();
+            Audio::fillCallbackBuffer();
 
             // Loader
             Loader::upload(_vgaY);
