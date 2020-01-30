@@ -2,7 +2,7 @@ _runtimeStart_ &h06FF
 
 mode 1
 
-load image, &h0800, Parallax.tga
+load image, &h0800, images/gbas/Parallax.tga
 
 ' hack to get around 'Loader.gcl' being resident in video memory
 ' to solve this issue you need to cut your image into horizontal slices
