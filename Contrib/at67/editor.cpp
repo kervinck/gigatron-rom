@@ -1076,12 +1076,12 @@ namespace Editor
 
 
     int gtRgbFileindex = 0;
-    std::vector<std::string> names = {"lowres", "turrican", "clouds1", "sunset", "mario", "juggler", "venus", "forest", "doom", "MonaLisa", "parallax1"};
+    std::vector<std::string> names = {"lowres", "turrican", "clouds1", "sunset", "mario", "juggler", "venus", "forest", "doom", "MonaLisa", "parallax"};
 
     void loadGtRgbFile(void)
     {
         Image::TgaFile tgaFile;
-        Image::loadTgaFile(names[gtRgbFileindex] + ".tga", tgaFile);
+        Image::loadTgaFile("images/" + names[gtRgbFileindex] + ".tga", tgaFile);
 
         std::vector<uint8_t> data;
         std::vector<uint16_t> optional;
