@@ -3517,10 +3517,6 @@ namespace Keywords
         // Handle Image
         if(tokens[0] == "IMAGE")
         {
-            Image::GtRgbFile gtRgbFile;        
-            std::vector<uint8_t> data;
-            std::vector<uint16_t> optional;
-        
             Expression::stripWhitespace(tokens[2]);
             std::string ext = tokens[2];
             Expression::strToUpper(ext);
@@ -3533,7 +3529,9 @@ namespace Keywords
                     return false;
                 }
 
-                gtRgbFile = {GTRGB_IDENTIFIER, Image::GT_RGB_222, tgaFile._header._width, tgaFile._header._height, data, optional};
+                std::vector<uint8_t> data;
+                std::vector<uint16_t> optional;
+                Image::GtRgbFile gtRgbFile{GTRGB_IDENTIFIER, Image::GT_RGB_222, tgaFile._header._width, tgaFile._header._height, data, optional};
                 Image::convertRGB8toRGB2(tgaFile._data, gtRgbFile._data, tgaFile._header._width, tgaFile._header._height, tgaFile._imageOrigin);
                 if(gtRgbFile._header._width > 256  ||  gtRgbFile._header._width + (address & 0x00FF) > 256)
                 {
