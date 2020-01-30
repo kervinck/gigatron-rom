@@ -385,6 +385,7 @@ namespace Memory
         }
 
         int totalFree = 0;
+        fprintf(stderr, "\n");
         for(int i=0; i<int(freeRam.size()); i++)
         {
             totalFree += freeRam[i]._size;

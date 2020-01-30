@@ -34,6 +34,8 @@ namespace Compiler
     uint16_t _strWorkArea    = 0x0000;
 
     CodeOptimiseType _codeOptimiseType = CodeSpeed;
+
+    bool _compilingError = false;
     bool _arrayIndiciesOne = false;
     bool _createNumericLabelLut = false;
 
@@ -69,8 +71,10 @@ namespace Compiler
     std::map<int, MacroNameEntry> _macroNameEntries;
     std::map<std::string, MacroIndexEntry> _macroIndexEntries;
 
-    std::vector<DefDataByte> _defDataBytes;
-    std::vector<DefDataWord> _defDataWords;
+    std::vector<DefDataByte>  _defDataBytes;
+    std::vector<DefDataWord>  _defDataWords;
+    std::vector<DefDataImage> _defDataImages;
+
 
     uint16_t getVasmPC(void) {return _vasmPC;}
     uint16_t getRuntimeEnd(void) {return _runtimeEnd;}
@@ -78,6 +82,7 @@ namespace Compiler
     uint16_t getTempVarStart(void) {return _tempVarStart;}
     uint16_t getStrWorkArea(void) {return _strWorkArea;}
     CodeOptimiseType getCodeOptimiseType(void) {return _codeOptimiseType;}
+    bool getCompilingError(void) {return _compilingError;}
     bool getArrayIndiciesOne(void) {return _arrayIndiciesOne;}
     std::string& getTempVarStartStr(void) {return _tempVarStartStr;}
     int getCurrentLabelIndex(void) {return _currentLabelIndex;}
@@ -87,6 +92,7 @@ namespace Compiler
     void setRuntimeStart(uint16_t runtimeStart) {_runtimeStart = runtimeStart;}
     void setTempVarStart(uint16_t tempVarStart) {_tempVarStart = tempVarStart;}
     void setStrWorkArea(uint16_t strWorkArea) {_strWorkArea = strWorkArea;}
+    void setCompilingError(bool compilingError) {_compilingError = compilingError;}
     void setArrayIndiciesOne(bool arrayIndiciesOne) {_arrayIndiciesOne = arrayIndiciesOne;}
     void setCreateNumericLabelLut(bool createNumericLabelLut) {_createNumericLabelLut = createNumericLabelLut;}
     void setCodeOptimiseType(CodeOptimiseType codeOptimiseType) {_codeOptimiseType = codeOptimiseType;}
@@ -104,6 +110,7 @@ namespace Compiler
     std::vector<std::string>& getRuntime(void) {return _runtime;}
     std::vector<DefDataByte>& getDefDataBytes(void) {return _defDataBytes;}
     std::vector<DefDataWord>& getDefDataWords(void) {return _defDataWords;}
+    std::vector<DefDataImage>& getDefDataImages(void) {return _defDataImages;}
 
     std::map<std::string, MacroIndexEntry>& getMacroIndexEntries(void) {return _macroIndexEntries;}
 
@@ -112,6 +119,7 @@ namespace Compiler
     std::stack<EndIfData>& getEndIfDataStack(void) {return _endIfDataStack;}
     std::stack<WhileWendData>& getWhileWendDataStack(void) {return _whileWendDataStack;}
     std::stack<RepeatUntilData>& getRepeatUntilDataStack(void) {return _repeatUntilDataStack;}
+
 
     // If _nextInternalLabel is already queued, add it to discarded labels so that it is fixed later in outputLabels
     void setNextInternalLabel(const std::string& label)
@@ -1530,7 +1538,8 @@ namespace Compiler
         if(!peek(true))
         {
             fprintf(stderr, "Compiler::getString() : Syntax error in string '%s' in '%s' on line %d\n", text.c_str(), _codeLines[_currentCodeLineIndex]._code.c_str(), Expression::getLineNumber());
-            _PAUSE_;
+            //_PAUSE_;
+            _compilingError = true;
             return Expression::Numeric();
         }
 
@@ -1576,7 +1585,8 @@ namespace Compiler
         }
 
         fprintf(stderr, "Compiler::factor() : Syntax error in address of '%s' on line %d\n", _codeLines[_currentCodeLineIndex]._code.c_str(), Expression::getLineNumber());
-        _PAUSE_;
+        //_PAUSE_;
+        _compilingError = true;
         return Expression::Numeric();
     }
 
@@ -1599,7 +1609,8 @@ namespace Compiler
             if(peek(true) != ')')
             {
                 fprintf(stderr, "Compiler::factor() : Found '%c' : expecting ')' in '%s' on line %d\n", peek(true), Expression::getExpressionToParse(), Expression::getLineNumber());
-                _PAUSE_;
+                //_PAUSE_;
+                _compilingError = true;
                 numeric = Expression::Numeric();
             }
             get(true);
@@ -1614,7 +1625,8 @@ namespace Compiler
             else
             {
                 fprintf(stderr, "Compiler::factor() : Syntax error in number '%s' on line %d\n", _codeLines[_currentCodeLineIndex]._code.c_str(), Expression::getLineNumber());
-                _PAUSE_;
+                //_PAUSE_;
+                _compilingError = true;
                 numeric = Expression::Numeric();
             }
         }
@@ -1804,7 +1816,8 @@ namespace Compiler
                             fprintf(stderr, "\nCompiler::factor() : Found an unknown symbol in '%s' on line %d\n\n", codeText.c_str(), Expression::getLineNumber());
                         }
 
-                        _PAUSE_;
+                        //_PAUSE_;
+                        _compilingError = true;
                     }
                 }
                 break;
@@ -1967,7 +1980,8 @@ namespace Compiler
         if(dstIndex == -1)
         {
             fprintf(stderr, "Compiler::handleStrings() : Syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
-            _PAUSE_;
+            //_PAUSE_;
+            _compilingError = true;
             return false;
         }
 
@@ -1982,7 +1996,8 @@ namespace Compiler
                 if(srcAddr == 0x0000)
                 {
                     fprintf(stderr, "Compiler::handleStrings() : Syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
-                    _PAUSE_;
+                    //_PAUSE_;
+                    _compilingError = true;
                     return false;
                 }
 
@@ -2005,7 +2020,8 @@ namespace Compiler
                 if(tokens.size() < 2)
                 {
                     fprintf(stderr, "Compiler::handleStrings() : Syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
-                    _PAUSE_;
+                    //_PAUSE_;
+                    _compilingError = true;
                     return false;
                 }
 
@@ -2018,7 +2034,8 @@ namespace Compiler
                     if(strAddrs[i] == 0x0000)
                     {
                         fprintf(stderr, "Compiler::handleStrings() : Syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
-                        _PAUSE_;
+                        //_PAUSE_;
+                        _compilingError = true;
                         return false;
                     }
                 }
@@ -2510,6 +2527,34 @@ namespace Compiler
         }
         _output.push_back("\n");
 
+        // Create def image data
+        _output.push_back("; Define Images\n");
+        for(int i=0; i<int(_defDataImages.size()); i++)
+        {
+            // For each scanline of image data
+            uint16_t offset = 0x0000;
+            uint16_t address = _defDataImages[i]._address;
+            for(int j=0; j<_defDataImages[i]._height; j++)
+            {
+                // TODO: find a way around this monster hack, 'Loader.gcl' is resident at these addresses when loading *.gt1 files, you can overwrite these locations only AFTER the loading process has finished
+                if(address + offset < 0x5900  ||  address + offset > 0x5BFF)
+                {
+                    std::string defName = "def_images_" + Expression::wordToHexString(address + offset);
+                    _output.push_back(defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(address + offset) + "\n");
+            
+                    std::string dbString = defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "DB" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+                    for(int k=0; k<int(_defDataImages[i]._width); k++)
+                    {
+                        dbString += std::to_string(_defDataImages[i]._data[j * _defDataImages[i]._width  +  k]) + " ";
+                    }
+                    _output.push_back(dbString + "\n");
+                }
+
+                offset += _defDataImages[i]._stride;
+            }
+        }
+        _output.push_back("\n");
+
         return true;
     }
 
@@ -2857,6 +2902,8 @@ namespace Compiler
         _strWorkArea    = 0x0000;
 
         _codeOptimiseType = CodeSpeed;
+
+        _compilingError = false;
         _arrayIndiciesOne = false;
         _createNumericLabelLut = false;
 
@@ -2882,6 +2929,7 @@ namespace Compiler
         _stringVars.clear();
         _defDataBytes.clear();
         _defDataWords.clear();
+        _defDataImages.clear();
 
         Linker::resetIncludeFiles();
         Linker::resetInternalSubs();
@@ -2927,6 +2975,13 @@ namespace Compiler
         // Code
         if(!parseCode()) return false;
 
+        // Check for compiler errors
+        if(_compilingError)
+        {
+            _PAUSE_;
+            return false;
+        }
+
         // Optimise
         if(!Optimiser::optimiseCode()) return false;
 
@@ -2959,6 +3014,13 @@ namespace Compiler
         Linker::outputInternalSubs();
 
         Validater::checkBranchLabels();
+
+        // Check for validation errors
+        if(_compilingError)
+        {
+            _PAUSE_;
+            return false;
+        }
 
         //Memory::printFreeRamList(Memory::NoSort); //Memory::SizeAscending);
 

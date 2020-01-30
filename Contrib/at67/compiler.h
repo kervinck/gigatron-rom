@@ -225,6 +225,13 @@ namespace Compiler
         std::vector<int16_t> _data;
     };
 
+    struct DefDataImage
+    {
+        uint16_t _address;
+        uint16_t _width, _height, _stride;
+        std::vector<uint8_t> _data;
+    };
+
 
     uint16_t getVasmPC(void);
     uint16_t getRuntimeEnd(void);
@@ -232,6 +239,7 @@ namespace Compiler
     uint16_t getTempVarStart(void);
     uint16_t getStrWorkArea(void);
     CodeOptimiseType getCodeOptimiseType(void);
+    bool getCompilingError(void);
     bool getArrayIndiciesOne(void);
 
     std::string& getTempVarStartStr(void);
@@ -243,8 +251,9 @@ namespace Compiler
     void setTempVarStart(uint16_t tempVarStart);
     void setStrWorkArea(uint16_t strWorkArea);
     void setCreateNumericLabelLut(bool createNumericLabelLut);
-    void setArrayIndiciesOne(bool arrayIndiciesOne);
     void setCodeOptimiseType(CodeOptimiseType codeOptimiseType);
+    void setCompilingError(bool compilingError);
+    void setArrayIndiciesOne(bool arrayIndiciesOne);
 
     int incJumpFalseUniqueId(void);
 
@@ -259,6 +268,7 @@ namespace Compiler
     std::vector<std::string>& getRuntime(void);
     std::vector<DefDataByte>& getDefDataBytes(void);
     std::vector<DefDataWord>& getDefDataWords(void);
+    std::vector<DefDataImage>& getDefDataImages(void);
 
     std::map<std::string, MacroIndexEntry>& getMacroIndexEntries(void);
 

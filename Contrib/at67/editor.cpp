@@ -1076,11 +1076,10 @@ namespace Editor
 
 
     int gtRgbFileindex = 0;
+    std::vector<std::string> names = {"lowres", "turrican", "clouds1", "sunset", "mario", "juggler", "venus", "forest", "doom", "MonaLisa", "parallax1"};
 
     void loadGtRgbFile(void)
     {
-        static std::string names[] = {"lowres", "turrican", "clouds1", "mario"}; //{"Clouds", "Clouds", "Clouds", "Clouds"};
-
         Image::TgaFile tgaFile;
         Image::loadTgaFile(names[gtRgbFileindex] + ".tga", tgaFile);
 
@@ -1089,21 +1088,26 @@ namespace Editor
         Image::GtRgbFile gtRgbFile{GTRGB_IDENTIFIER, Image::GT_RGB_222, tgaFile._header._width, tgaFile._header._height, data, optional};
         Image::ditherRGB8toRGB2(tgaFile._data, gtRgbFile._data, tgaFile._header._width, tgaFile._header._height, tgaFile._imageOrigin);
 
+        if(gtRgbFile._header._width > 256)
+        {
+            fprintf(stderr, "Editor::loadGtRgbFile() : Width > 256, (%d, %d), in %s\n", gtRgbFile._header._width, gtRgbFile._header._height, names[gtRgbFileindex].c_str());
+            return;
+        }
+
         uint16_t vram = 0x0800;
         for(int y=0; y<gtRgbFile._header._height; y++)
         {
             for(int x=0; x<gtRgbFile._header._width; x++)
             {
                 Cpu::setRAM(vram++, gtRgbFile._data[y*gtRgbFile._header._width + x]);
-                //if((vram & 0x00FF) == 0x00) vram += 0x00A0;
-                if((vram & 0x00FF) == 0xA0) vram = (vram + 0x0100) & 0xFF00;
             }
+            vram += 256 - gtRgbFile._header._width;
         }
     }
 
     void loadNextGtRgbFile(void)
     {
-        gtRgbFileindex = (gtRgbFileindex + 1) % 4;
+        gtRgbFileindex = (gtRgbFileindex + 1) % names.size();
         loadGtRgbFile();
     }
 

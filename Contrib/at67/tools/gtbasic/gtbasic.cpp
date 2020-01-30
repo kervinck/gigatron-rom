@@ -4,6 +4,7 @@
 
 #include "../../memory.h"
 #include "../../loader.h"
+#include "../../cpu.h"
 #include "../../assembler.h"
 #include "../../compiler.h"
 #include "../../operators.h"
