@@ -153,9 +153,11 @@ drawHL_loop1        LD      fgbgColour + 1
                     POKE    giga_sysArg4
                     INC     giga_sysArg4
                     LD      giga_sysArg4
+                    BEQ     drawHL_exit
                     SUBW    drawHLine_x2
                     BLE     drawHL_loop1        ; remaining pixels
-                    POP
+                    
+drawHL_exit         POP
                     RET
 %ENDS
 

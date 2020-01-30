@@ -215,7 +215,7 @@ namespace Loader
             {
                 uint16_t address = gt1File._segments[i]._loAddress + (gt1File._segments[i]._hiAddress <<8);
                 uint16_t segmentSize = (gt1File._segments[i]._segmentSize == 0) ? 256 : gt1File._segments[i]._segmentSize;
-                if((address + segmentSize - 1) < Memory::getSizeRAM()) totalSize += segmentSize;
+                if((address + segmentSize - 1) < Memory::getSizeRAM()  &&  Memory::isFreeRAM(address, segmentSize)) totalSize += segmentSize;
                 if((address & 0x00FF) + segmentSize > 256) fprintf(stderr, "Loader::printGt1Stats() : Page overflow, (ignore if non code segment), segment %d : address 0x%04x : segmentSize %3d\n", i, address, segmentSize);
             }
         }

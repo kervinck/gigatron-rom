@@ -1451,7 +1451,7 @@ namespace Assembler
                (start >= GIGA_CH2_WAV_A  &&  start <= GIGA_CH2_OSC_H)  ||  (end >= GIGA_CH2_WAV_A  &&  end <= GIGA_CH2_OSC_H)  ||
                (start >= GIGA_CH3_WAV_A  &&  start <= GIGA_CH3_OSC_H)  ||  (end >= GIGA_CH3_WAV_A  &&  end <= GIGA_CH3_OSC_H))
             {
-                fprintf(stderr, "Assembler::assemble() : Warning, audio channel boundary compromised : 0x%04X <-> 0x%04X\nAssembler::assemble() : '%s'\nAssembler::assemble() : in '%s' on line %d\n", start, end, lineToken._text.c_str(), filename.c_str(), lineNumber+1);
+                fprintf(stderr, "Assembler::assemble() : Warning, audio channel boundary compromised, (if you've disabled the audio channels, then ignore this warning) : 0x%04X <-> 0x%04X\nAssembler::assemble() : '%s'\nAssembler::assemble() : in '%s' on line %d\n", start, end, lineToken._text.c_str(), filename.c_str(), lineNumber+1);
             }
         }
 
@@ -2061,7 +2061,7 @@ namespace Assembler
                 case Gprintf::Str:
                 {
                     data = gprintf._vars[i]._data;
-                    uint8_t length = Cpu::getRAM(data) & 0xFF; // maximum length of 256
+                    uint8_t length = Cpu::getRAM(data) & 0xFF; // maximum length of 255, (in reality 254, first byte is length, last byte is '0' trailing delimiter)
                     for(uint16_t j=0; j<length; j++) token[j] = Cpu::getRAM(data + j + 1);
                     token[length] = 0;
                 }

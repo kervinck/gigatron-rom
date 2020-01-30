@@ -95,6 +95,7 @@ namespace Keywords
     bool keywordDIM(Compiler::CodeLine& codeLine,     int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordDEF(Compiler::CodeLine& codeLine,     int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordALLOC(Compiler::CodeLine& codeLine,   int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
+    bool keywordFREE(Compiler::CodeLine& codeLine,    int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordAT(Compiler::CodeLine& codeLine,      int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordPUT(Compiler::CodeLine& codeLine,     int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordMODE(Compiler::CodeLine& codeLine,    int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
@@ -111,6 +112,7 @@ namespace Keywords
     bool keywordPOKE(Compiler::CodeLine& codeLine,    int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordDOKE(Compiler::CodeLine& codeLine,    int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordPLAY(Compiler::CodeLine& codeLine,    int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
+    bool keywordLOAD(Compiler::CodeLine& codeLine,    int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
 }
 
 #endif

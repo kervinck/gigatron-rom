@@ -1,3 +1,4 @@
+#include <cmath>
 #include <string>
 #include <fstream>
 #include <iomanip>
@@ -6,7 +7,10 @@
 
 #include "cpu.h"
 #include "image.h"
+
+#ifndef STAND_ALONE
 #include "graphics.h"
+#endif
 
 
 namespace Image
@@ -639,6 +643,7 @@ namespace Image
     }
 
 
+#ifndef STAND_ALONE
     void handleImageInput(void)
     {
     }
@@ -648,4 +653,5 @@ namespace Image
         handleImageInput();
         Graphics::render(true);
     }
+#endif
 }

@@ -6,6 +6,7 @@
 
 #include "memory.h"
 #include "cpu.h"
+#include "image.h"
 #include "assembler.h"
 #include "keywords.h"
 #include "operators.h"
@@ -100,6 +101,7 @@ namespace Keywords
         _keywords["DIM"    ] = {"DIM",     keywordDIM,     Compiler::SingleStatementParsed};
         _keywords["DEF"    ] = {"DEF",     keywordDEF,     Compiler::SingleStatementParsed};
         _keywords["ALLOC"  ] = {"ALLOC",   keywordALLOC,   Compiler::SingleStatementParsed};
+        _keywords["FREE"   ] = {"FREE",    keywordFREE,    Compiler::SingleStatementParsed};
         _keywords["AT"     ] = {"AT",      keywordAT,      Compiler::SingleStatementParsed};
         _keywords["PUT"    ] = {"PUT",     keywordPUT,     Compiler::SingleStatementParsed};
         _keywords["MODE"   ] = {"MODE",    keywordMODE,    Compiler::SingleStatementParsed};
@@ -116,6 +118,7 @@ namespace Keywords
         _keywords["POKE"   ] = {"POKE",    keywordPOKE,    Compiler::SingleStatementParsed};
         _keywords["DOKE"   ] = {"DOKE",    keywordDOKE,    Compiler::SingleStatementParsed};
         _keywords["PLAY"   ] = {"PLAY",    keywordPLAY,    Compiler::SingleStatementParsed};
+        _keywords["LOAD"   ] = {"LOAD",    keywordLOAD,    Compiler::SingleStatementParsed};
 
         // String keywords
         _stringKeywords["CHR$"  ] = "CHR$";
@@ -603,7 +606,7 @@ namespace Keywords
 
                     default:
                     {
-                        fprintf(stderr, "Compiler::functionLEN() : couldn't find variable name '%s'\n", numeric._name.c_str());
+                        fprintf(stderr, "Keywords::functionLEN() : couldn't find variable name '%s'\n", numeric._name.c_str());
                         return numeric;
                     }
                 }
@@ -980,7 +983,7 @@ namespace Keywords
         std::vector<std::string> tokens = Expression::tokenise(pragma.substr(foundPos), ',', false);
         if(tokens.size() != 1)
         {
-            fprintf(stderr, "Compiler::pragmaRUNTIMESTART() : Syntax error, _runtimeStart_ <address>, in '%s' on line %d\n", input.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::pragmaRUNTIMESTART() : Syntax error, _runtimeStart_ <address>, in '%s' on line %d\n", input.c_str(), codeLineIndex);
             return false;
         }
 
@@ -991,7 +994,7 @@ namespace Keywords
         uint16_t address = uint16_t(std::lround(addrNumeric._value));
         if(address < DEFAULT_START_ADDRESS)
         {
-            fprintf(stderr, "Compiler::pragmaRUNTIMESTART() : Address field must be above %04x, found %s in '%s' on line %d\n", DEFAULT_START_ADDRESS, tokens[0].c_str(), input.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::pragmaRUNTIMESTART() : Address field must be above %04x, found %s in '%s' on line %d\n", DEFAULT_START_ADDRESS, tokens[0].c_str(), input.c_str(), codeLineIndex);
             return false;
         }
 
@@ -1002,7 +1005,7 @@ namespace Keywords
         Memory::giveFreeRAM(Compiler::getStrWorkArea(), USER_STR_SIZE + 2);
         if(!Memory::getFreeRAM(Memory::FitDescending, USER_STR_SIZE + 2, 0x0200, address, strWorkArea))
         {
-            fprintf(stderr, "Compiler::pragmaRUNTIMESTART() : Setting new String Work Area failed, in '%s' on line %d\n", input.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::pragmaRUNTIMESTART() : Setting new String Work Area failed, in '%s' on line %d\n", input.c_str(), codeLineIndex);
             return false;
         }
         Compiler::setStrWorkArea(strWorkArea);
@@ -1017,7 +1020,7 @@ namespace Keywords
         std::vector<std::string> tokens = Expression::tokenise(pragma.substr(foundPos), ',', false);
         if(tokens.size() != 1)
         {
-            fprintf(stderr, "Compiler::pragmaSTRINGWORKAREA() : Syntax error, _stringWorkArea_ <address>, in '%s' on line %d\n", input.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::pragmaSTRINGWORKAREA() : Syntax error, _stringWorkArea_ <address>, in '%s' on line %d\n", input.c_str(), codeLineIndex);
             return false;
         }
 
@@ -1028,7 +1031,7 @@ namespace Keywords
         uint16_t strWorkArea = uint16_t(std::lround(addrNumeric._value));
         if(strWorkArea < DEFAULT_START_ADDRESS)
         {
-            fprintf(stderr, "Compiler::pragmaSTRINGWORKAREA() : Address field must be above %04x, found %s in '%s' on line %d\n", DEFAULT_START_ADDRESS, tokens[0].c_str(), input.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::pragmaSTRINGWORKAREA() : Address field must be above %04x, found %s in '%s' on line %d\n", DEFAULT_START_ADDRESS, tokens[0].c_str(), input.c_str(), codeLineIndex);
             return false;
         }
 
@@ -1036,7 +1039,7 @@ namespace Keywords
         Memory::giveFreeRAM(Compiler::getStrWorkArea(), USER_STR_SIZE + 2);
         if(!Memory::takeFreeRAM(strWorkArea, USER_STR_SIZE + 2))
         {
-            fprintf(stderr, "Compiler::pragmaSTRINGWORKAREA() : Setting new String Work Area failed, in '%s' on line %d\n", input.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::pragmaSTRINGWORKAREA() : Setting new String Work Area failed, in '%s' on line %d\n", input.c_str(), codeLineIndex);
             return false;
         }
         Compiler::setStrWorkArea(strWorkArea);
@@ -1051,7 +1054,7 @@ namespace Keywords
         std::vector<std::string> tokens = Expression::tokenise(pragma.substr(foundPos), ',', false);
         if(tokens.size() != 1)
         {
-            fprintf(stderr, "Compiler::pragmaCODEOPTIMISETYPE() : Syntax error, _codeOptimiseType_ <size/speed>, in '%s' on line %d\n", input.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::pragmaCODEOPTIMISETYPE() : Syntax error, _codeOptimiseType_ <size/speed>, in '%s' on line %d\n", input.c_str(), codeLineIndex);
             return false;
         }
 
@@ -1066,7 +1069,7 @@ namespace Keywords
             return true;
         }
 
-        fprintf(stderr, "Compiler::pragmaCODEOPTIMISETYPE() : Syntax error, _codeOptimiseType_ <'size'/'speed'>, in '%s' on line %d\n", input.c_str(), codeLineIndex);
+        fprintf(stderr, "Keywords::pragmaCODEOPTIMISETYPE() : Syntax error, _codeOptimiseType_ <'size'/'speed'>, in '%s' on line %d\n", input.c_str(), codeLineIndex);
 
         return false;
     }
@@ -1123,7 +1126,7 @@ namespace Keywords
         int varIndex = Compiler::findVar(varToken, false);
         if(varIndex < 0)
         {
-            fprintf(stderr, "Compiler::keywordINC() : Syntax error, integer variable '%s' not found, in '%s' on line %d\n", varToken.c_str(), codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordINC() : Syntax error, integer variable '%s' not found, in '%s' on line %d\n", varToken.c_str(), codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -1143,7 +1146,7 @@ namespace Keywords
         int varIndex = Compiler::findVar(varToken, false);
         if(varIndex < 0)
         {
-            fprintf(stderr, "Compiler::keywordDEC() : Syntax error, integer variable '%s' not found, in '%s' on line %d\n", varToken.c_str(), codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordDEC() : Syntax error, integer variable '%s' not found, in '%s' on line %d\n", varToken.c_str(), codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -1165,7 +1168,7 @@ namespace Keywords
         size_t gosubOffset = code.find("GOSUB");
         if(gotoOffset == std::string::npos  &&  gosubOffset == std::string::npos)
         {
-            fprintf(stderr, "Compiler::keywordON() : Syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordON() : Syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -1184,7 +1187,7 @@ namespace Keywords
         std::vector<std::string> gotoTokens = Expression::tokenise(codeLine._code.substr(gOffset + gSize), ',', gOffsets, false);
         if(gotoTokens.size() < 1)
         {
-            fprintf(stderr, "Compiler::keywordON() : Syntax error, must have at least one label after GOTO, in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordON() : Syntax error, must have at least one label after GOTO, in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -1197,7 +1200,7 @@ namespace Keywords
             int labelIndex = Compiler::findLabel(gotoLabel);
             if(labelIndex == -1)
             {
-                fprintf(stderr, "Compiler::keywordON() : invalid label %s in slot %d in '%s' on line %d\n", gotoLabel.c_str(), i, codeLine._text.c_str(), codeLineIndex);
+                fprintf(stderr, "Keywords::keywordON() : invalid label %s in slot %d in '%s' on line %d\n", gotoLabel.c_str(), i, codeLine._text.c_str(), codeLineIndex);
                 Compiler::getCodeLines()[codeLineIndex]._onGotoGosubLut._lut.clear();
                 return false;
             }
@@ -1214,7 +1217,7 @@ namespace Keywords
         uint16_t address;
         if(!Memory::getFreeRAM(Memory::FitDescending, size, 0x0200, Compiler::getRuntimeStart(), address))
         {
-            fprintf(stderr, "Compiler::keywordON() : Not enough RAM for onGotoGosub LUT of size %d\n", size);
+            fprintf(stderr, "Keywords::keywordON() : Not enough RAM for onGotoGosub LUT of size %d\n", size);
             return false;
         }
         Compiler::getCodeLines()[codeLineIndex]._onGotoGosubLut._address = address;
@@ -1244,7 +1247,7 @@ namespace Keywords
         std::vector<std::string> gotoTokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', gotoOffsets, false);
         if(gotoTokens.size() < 1  ||  gotoTokens.size() > 2)
         {
-            fprintf(stderr, "Compiler::keywordGOTO() : Syntax error, must have one or two parameters, e.g. 'GOTO 200' or 'GOTO k+1,default' : in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordGOTO() : Syntax error, must have one or two parameters, e.g. 'GOTO 200' or 'GOTO k+1,default' : in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -1276,7 +1279,7 @@ namespace Keywords
                 labelIndex = Compiler::findLabel(defaultToken);
                 if(labelIndex == -1)
                 {
-                    fprintf(stderr, "Compiler::keywordGOTO() : Default label does not exist : in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+                    fprintf(stderr, "Keywords::keywordGOTO() : Default label does not exist : in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
                     return false;
                 }
 
@@ -1335,7 +1338,7 @@ namespace Keywords
         std::vector<std::string> gosubTokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', gosubOffsets, false);
         if(gosubTokens.size() < 1  ||  gosubTokens.size() > 2)
         {
-            fprintf(stderr, "Compiler::keywordGOSUB() : Syntax error, must have one or two parameters, e.g. 'GOSUB 200' or 'GOSUB k+1,default' : in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordGOSUB() : Syntax error, must have one or two parameters, e.g. 'GOSUB 200' or 'GOSUB k+1,default' : in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -1359,7 +1362,7 @@ namespace Keywords
                 labelIndex = Compiler::findLabel(defaultToken);
                 if(labelIndex == -1)
                 {
-                    fprintf(stderr, "Compiler::keywordGOSUB() : Default label does not exist : in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+                    fprintf(stderr, "Keywords::keywordGOSUB() : Default label does not exist : in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
                     return false;
                 }
 
@@ -1424,7 +1427,7 @@ namespace Keywords
 
         if(codeLine._tokens.size() > 2)
         {
-            fprintf(stderr, "Compiler::keywordCLS() : Syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordCLS() : Syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -1619,7 +1622,7 @@ namespace Keywords
 
         if(varTokens.size() < 1  ||  (strings.size() > varTokens.size() + 1))
         {
-            fprintf(stderr, "Compiler::keywordINPUT() : Syntax error in INPUT statement, must be 'INPUT <heading string>, <int/str var0>, <prompt string0>, ... <int/str varN>, <prompt stringN>', in '%s' on line %d\n", codeLine._code.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordINPUT() : Syntax error in INPUT statement, must be 'INPUT <heading string>, <int/str var0>, <prompt string0>, ... <int/str varN>, <prompt stringN>', in '%s' on line %d\n", codeLine._code.c_str(), codeLineIndex);
             return false;
         }
 
@@ -1629,7 +1632,7 @@ namespace Keywords
         {
             if(!Expression::isValidString(tokens[0]))
             {
-                fprintf(stderr, "Compiler::keywordINPUT() : Syntax error in heading string '%s' of INPUT statement, in '%s' on line %d\n", tokens[0].c_str(), codeLine._code.c_str(), codeLineIndex);
+                fprintf(stderr, "Keywords::keywordINPUT() : Syntax error in heading string '%s' of INPUT statement, in '%s' on line %d\n", tokens[0].c_str(), codeLine._code.c_str(), codeLineIndex);
                 return false;
             }
 
@@ -1731,7 +1734,7 @@ namespace Keywords
                 std::string field = str.substr(lquote + 1);
                 if(!Expression::stringToU8(field, length))
                 {
-                    fprintf(stderr, "Compiler::keywordINPUT() : Syntax error in text size field of string '%s' of INPUT statement, in '%s' on line %d\n", str.c_str(), codeLine._code.c_str(), codeLineIndex);
+                    fprintf(stderr, "Keywords::keywordINPUT() : Syntax error in text size field of string '%s' of INPUT statement, in '%s' on line %d\n", str.c_str(), codeLine._code.c_str(), codeLineIndex);
                     return false;
                 }
 
@@ -1752,22 +1755,22 @@ namespace Keywords
         uint16_t lutAddr, varsAddr, strsAddr, typesAddr;
         if(!Memory::getFreeRAM(Memory::FitDescending, lutSize*2, 0x0200, Compiler::getRuntimeStart(), lutAddr))
         {
-            fprintf(stderr, "Compiler::keywordINPUT() : Not enough RAM for INPUT LUT of size %d, in '%s' on line %d\n", lutSize*2, codeLine._code.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordINPUT() : Not enough RAM for INPUT LUT of size %d, in '%s' on line %d\n", lutSize*2, codeLine._code.c_str(), codeLineIndex);
             return false;
         }
         if(!Memory::getFreeRAM(Memory::FitDescending, int(varsLut.size()*2), 0x0200, Compiler::getRuntimeStart(), varsAddr))
         {
-            fprintf(stderr, "Compiler::keywordINPUT() : Not enough RAM for INPUT Vars LUT of size %d, in '%s' on line %d\n", int(varsLut.size()*2), codeLine._code.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordINPUT() : Not enough RAM for INPUT Vars LUT of size %d, in '%s' on line %d\n", int(varsLut.size()*2), codeLine._code.c_str(), codeLineIndex);
             return false;
         }
         if(!Memory::getFreeRAM(Memory::FitDescending, int(strsLut.size()*2), 0x0200, Compiler::getRuntimeStart(), strsAddr))
         {
-            fprintf(stderr, "Compiler::keywordINPUT() : Not enough RAM for INPUT Strings LUT of size %d, in '%s' on line %d\n", int(strsLut.size()*2), codeLine._code.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordINPUT() : Not enough RAM for INPUT Strings LUT of size %d, in '%s' on line %d\n", int(strsLut.size()*2), codeLine._code.c_str(), codeLineIndex);
             return false;
         }
         if(!Memory::getFreeRAM(Memory::FitDescending, int(typesLut.size()*2), 0x0200, Compiler::getRuntimeStart(), typesAddr))
         {
-            fprintf(stderr, "Compiler::keywordINPUT() : Not enough RAM for INPUT Var Types LUT of size %d, in '%s' on line %d\n", int(typesLut.size()*2), codeLine._code.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordINPUT() : Not enough RAM for INPUT Var Types LUT of size %d, in '%s' on line %d\n", int(typesLut.size()*2), codeLine._code.c_str(), codeLineIndex);
             return false;
         }
         Compiler::getCodeLines()[codeLineIndex]._inputLut = {lutAddr, varsAddr, strsAddr, typesAddr, varsLut, strsLut, typesLut}; // save LUT in global codeLine not local copy
@@ -1792,14 +1795,14 @@ namespace Keywords
         size_t equals, to, step;
         if((equals = code.find("=")) == std::string::npos)
         {
-            fprintf(stderr, "Compiler::keywordFOR() : Syntax error, (missing '='), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordFOR() : Syntax error, (missing '='), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
         
         bool farJump = (code.find("&TO") == std::string::npos);
         if((to = code.find("TO")) == std::string::npos)
         {
-            fprintf(stderr, "Compiler::keywordFOR() : Syntax error, (missing 'TO'), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordFOR() : Syntax error, (missing 'TO'), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
         step = code.find("STEP");
@@ -1807,7 +1810,7 @@ namespace Keywords
         // Maximum of 4 nested loops
         if(Compiler::getForNextDataStack().size() == 4)
         {
-            fprintf(stderr, "Compiler::keywordFOR() : Syntax error, (maximum nested loops is 4), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordFOR() : Syntax error, (maximum nested loops is 4), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -1933,7 +1936,7 @@ namespace Keywords
 
         if(codeLine._tokens.size() != 2)
         {
-            fprintf(stderr, "Compiler::keywordNEXT() : Syntax error, (wrong number of tokens), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordNEXT() : Syntax error, (wrong number of tokens), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -1941,14 +1944,14 @@ namespace Keywords
         int varIndex = Compiler::findVar(codeLine._tokens[1]);
         if(varIndex < 0)
         {
-            fprintf(stderr, "Compiler::keywordNEXT() : Syntax error, (bad var), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordNEXT() : Syntax error, (bad var), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
         // Pop stack for this nested loop
         if(Compiler::getForNextDataStack().empty())
         {
-            fprintf(stderr, "Compiler::keywordNEXT() : Syntax error, missing FOR statement, for '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordNEXT() : Syntax error, missing FOR statement, for '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
         Compiler::ForNextData forNextData = Compiler::getForNextDataStack().top();
@@ -1956,7 +1959,7 @@ namespace Keywords
 
         if(varIndex != forNextData._varIndex)
         {
-            fprintf(stderr, "Compiler::keywordNEXT() : Syntax error, (wrong var), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordNEXT() : Syntax error, (wrong var), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -2032,7 +2035,7 @@ namespace Keywords
         std::string actionToken = Compiler::getCodeLines()[codeLineIndex]._code.substr(offsetIF + offsetTHEN + 4);
         if(actionToken.size() == 0)
         {
-            fprintf(stderr, "Compiler::keywordIF() : Syntax error, IF THEN <action>, (missing action), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordIF() : Syntax error, IF THEN <action>, (missing action), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -2069,7 +2072,7 @@ namespace Keywords
         // Check stack for this IF ELSE ENDIF block
         if(Compiler::getElseIfDataStack().empty())
         {
-            fprintf(stderr, "Compiler::keywordELSEIF() : Syntax error, missing IF statement, for '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordELSEIF() : Syntax error, missing IF statement, for '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -2081,7 +2084,7 @@ namespace Keywords
 
         if(elseIfData._ifElseEndType != Compiler::IfBlock  &&  elseIfData._ifElseEndType != Compiler::ElseIfBlock)
         {
-            fprintf(stderr, "Compiler::keywordELSEIF() : Syntax error, ELSEIF follows IF or ELSEIF, for '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordELSEIF() : Syntax error, ELSEIF follows IF or ELSEIF, for '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -2142,14 +2145,14 @@ namespace Keywords
 
         if(codeLine._tokens.size() != 1)
         {
-            fprintf(stderr, "Compiler::keywordELSE() : Syntax error, (wrong number of tokens), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordELSE() : Syntax error, (wrong number of tokens), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
         // Check stack for this IF ELSE ENDIF block
         if(Compiler::getElseIfDataStack().empty())
         {
-            fprintf(stderr, "Compiler::keywordELSE() : Syntax error, missing IF statement, for '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordELSE() : Syntax error, missing IF statement, for '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -2209,14 +2212,14 @@ namespace Keywords
 
         if(codeLine._tokens.size() != 1)
         {
-            fprintf(stderr, "Compiler::keywordENDIF() : Syntax error, (wrong number of tokens), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordENDIF() : Syntax error, (wrong number of tokens), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
         // Check stack for this IF ELSE ENDIF block
         if(Compiler::getElseIfDataStack().empty())
         {
-            fprintf(stderr, "Compiler::keywordENDIF() : Syntax error, missing IF statement, for '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordENDIF() : Syntax error, missing IF statement, for '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -2307,7 +2310,7 @@ namespace Keywords
         // Pop stack for this WHILE loop
         if(Compiler::getWhileWendDataStack().empty())
         {
-            fprintf(stderr, "Compiler::keywordWEND() : Syntax error, missing WHILE statement, for '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordWEND() : Syntax error, missing WHILE statement, for '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
         Compiler::WhileWendData whileWendData = Compiler::getWhileWendDataStack().top();
@@ -2368,7 +2371,7 @@ namespace Keywords
         // Pop stack for this REPEAT loop
         if(Compiler::getRepeatUntilDataStack().empty())
         {
-            fprintf(stderr, "Compiler::keywordUNTIL() : Syntax error, missing REPEAT statement, for '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordUNTIL() : Syntax error, missing REPEAT statement, for '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
         Compiler::RepeatUntilData repeatUntilData = Compiler::getRepeatUntilDataStack().top();
@@ -2400,14 +2403,14 @@ namespace Keywords
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), '=', true);
         if(tokens.size() != 2)
         {
-            fprintf(stderr, "Compiler::keywordCONST() : Syntax error, require a variable and an int or str constant, e.g. CONST a=50 or CONST a$=\"doggy\", in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordCONST() : Syntax error, require a variable and an int or str constant, e.g. CONST a=50 or CONST a$=\"doggy\", in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
         Expression::stripWhitespace(tokens[0]);
         if(!Expression::isVarNameValid(tokens[0]))
         {
-            fprintf(stderr, "Compiler::keywordCONST() : Syntax error, name must contain only alphanumerics and '$', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordCONST() : Syntax error, name must contain only alphanumerics and '$', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -2434,7 +2437,7 @@ namespace Keywords
                 size_t lbra, rbra;
                 if(!Expression::findMatchingBrackets(tokens[1], 0, lbra, rbra))
                 {
-                    fprintf(stderr, "Compiler::keywordCONST() : Syntax error, invalid string or keyword, in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+                    fprintf(stderr, "Keywords::keywordCONST() : Syntax error, invalid string or keyword, in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
                     return false;
                 }
 
@@ -2443,14 +2446,14 @@ namespace Keywords
                 Expression::strToUpper(keywordToken);
                 if(_stringKeywords.find(keywordToken) == _stringKeywords.end())
                 {
-                    fprintf(stderr, "Compiler::keywordCONST() : Syntax error, invalid string or keyword, in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+                    fprintf(stderr, "Keywords::keywordCONST() : Syntax error, invalid string or keyword, in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
                     return false;
                 }
 
                 int16_t param;
                 if(!Expression::stringToI16(paramToken, param))
                 {
-                    fprintf(stderr, "Compiler::keywordCONST() : Syntax error, keyword param must be a constant number, in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+                    fprintf(stderr, "Keywords::keywordCONST() : Syntax error, keyword param must be a constant number, in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
                     return false;
                 }
 
@@ -2479,7 +2482,7 @@ namespace Keywords
             Expression::parse(tokens[1], codeLineIndex, numeric);
             if(tokens[1].size() == 0  ||  !numeric._isValid  ||  numeric._varType == Expression::TmpVar  ||  numeric._varType == Expression::IntVar)
             {
-                fprintf(stderr, "Compiler::keywordCONST() : Syntax error, invalid constant expression, in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+                fprintf(stderr, "Keywords::keywordCONST() : Syntax error, invalid constant expression, in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
                 return false;
             }
 
@@ -2499,7 +2502,7 @@ namespace Keywords
         size_t lbra, rbra;
         if(!Expression::findMatchingBrackets(codeLine._code, foundPos, lbra, rbra))
         {
-            fprintf(stderr, "Compiler::keywordDIM() : Syntax error in DIM statement, must be DIM var(x), in '%s' on line %d\n", codeLine._code.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordDIM() : Syntax error in DIM statement, must be DIM var(x), in '%s' on line %d\n", codeLine._code.c_str(), codeLineIndex);
             return false;
         }
 
@@ -2515,7 +2518,7 @@ namespace Keywords
         }
         else if(!Expression::stringToU16(sizeText, arraySize)  ||  arraySize <= 0)
         {
-            fprintf(stderr, "Compiler::keywordDIM() : Array size must be a positive constant, found %s in '%s' on line %d\n", sizeText.c_str(), codeLine._code.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordDIM() : Array size must be a positive constant, found %s in '%s' on line %d\n", sizeText.c_str(), codeLine._code.c_str(), codeLineIndex);
             return false;
         }
 
@@ -2532,7 +2535,7 @@ namespace Keywords
         varIndex = Compiler::findVar(varName);
         if(varIndex >= 0)
         {
-            fprintf(stderr, "Compiler::keywordDIM() : Var %s already exists in '%s' on line %d\n", varName.c_str(), codeLine._code.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordDIM() : Var %s already exists in '%s' on line %d\n", varName.c_str(), codeLine._code.c_str(), codeLineIndex);
             return false;
         }
 
@@ -2545,7 +2548,7 @@ namespace Keywords
             Expression::stripWhitespace(varText);
             if(!Expression::stringToU16(varText, varInit))
             {
-                fprintf(stderr, "Compiler::keywordDIM() : Initial value must be a constant, found %s in '%s' on line %d\n", varText.c_str(), codeLine._code.c_str(), codeLineIndex);
+                fprintf(stderr, "Keywords::keywordDIM() : Initial value must be a constant, found %s in '%s' on line %d\n", varText.c_str(), codeLine._code.c_str(), codeLineIndex);
                 return false;
             }
         }
@@ -2554,7 +2557,7 @@ namespace Keywords
         uint16_t arrayStart = 0x0000;
         if(!Memory::getFreeRAM(Memory::FitDescending, arraySize, 0x0200, Compiler::getRuntimeStart(), arrayStart, false)) // arrays do not need to be contained within pages
         {
-            fprintf(stderr, "Compiler::keywordDIM() : Not enough RAM for int array of size %d in '%s' on line %d\n", arraySize, codeLine._code.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordDIM() : Not enough RAM for int array of size %d in '%s' on line %d\n", arraySize, codeLine._code.c_str(), codeLineIndex);
             return false;
         }
 
@@ -2574,7 +2577,7 @@ namespace Keywords
         size_t equalsPos = codeLine._code.find("=");
         if(equalsPos == std::string::npos)
         {
-            fprintf(stderr, "Compiler::keywordDEF() : Syntax error, missing equals sign, in '%s' on line %d\n", codeLine._code.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordDEF() : Syntax error, missing equals sign, in '%s' on line %d\n", codeLine._code.c_str(), codeLineIndex);
             return false;
         }
 
@@ -2599,14 +2602,14 @@ namespace Keywords
             // Parse address field
             if(addrTokens.size() == 0)
             {
-                fprintf(stderr, "Compiler::keywordDEF() : Address field does not exist, found %s in '%s' on line %d\n", addrText.c_str(), codeLine._code.c_str(), codeLineIndex);
+                fprintf(stderr, "Keywords::keywordDEF() : Address field does not exist, found %s in '%s' on line %d\n", addrText.c_str(), codeLine._code.c_str(), codeLineIndex);
                 return false;
             }
             Compiler::parseExpression(codeLineIndex, addrTokens[0], operand, addrNumeric);
             address = int16_t(std::lround(addrNumeric._value));
             if(address < DEFAULT_START_ADDRESS)
             {
-                fprintf(stderr, "Compiler::keywordDEF() : Address field must be above %04x, found %s in '%s' on line %d\n", DEFAULT_START_ADDRESS, addrText.c_str(), codeLine._code.c_str(), codeLineIndex);
+                fprintf(stderr, "Keywords::keywordDEF() : Address field must be above %04x, found %s in '%s' on line %d\n", DEFAULT_START_ADDRESS, addrText.c_str(), codeLine._code.c_str(), codeLineIndex);
                 return false;
             }
 
@@ -2624,7 +2627,7 @@ namespace Keywords
         Expression::strToUpper(typeText);
         if(typeText != "BYTE"  &&  typeText != "WORD")
         {
-            fprintf(stderr, "Compiler::keywordDEF() : Type field must be either BYTE or WORD, found %s in '%s' on line %d\n", typeText.c_str(), codeLine._code.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordDEF() : Type field must be either BYTE or WORD, found %s in '%s' on line %d\n", typeText.c_str(), codeLine._code.c_str(), codeLineIndex);
             return false;
         }
 
@@ -2634,7 +2637,7 @@ namespace Keywords
         {
             if(addrTokens.size() < 4  ||  addrTokens.size() > 5)
             {
-                fprintf(stderr, "Compiler::keywordDEF() : function generator must have 4 or 5 parameters, '(ADDR, <VAR>, START, STOP, SIZE)', (<VAR> is optional), found %d in '%s' on line %d\n", int(addrTokens.size()), codeLine._code.c_str(), codeLineIndex);
+                fprintf(stderr, "Keywords::keywordDEF() : function generator must have 4 or 5 parameters, '(ADDR, <VAR>, START, STOP, SIZE)', (<VAR> is optional), found %d in '%s' on line %d\n", int(addrTokens.size()), codeLine._code.c_str(), codeLineIndex);
                 return false;
             }
 
@@ -2644,7 +2647,7 @@ namespace Keywords
             Expression::stripWhitespace(function);
             if(function.size() == 0)
             {
-                fprintf(stderr, "Compiler::keywordDEF() : function '%s' is invalid in '%s' on line %d\n", function.c_str(), codeLine._code.c_str(), codeLineIndex);
+                fprintf(stderr, "Keywords::keywordDEF() : function '%s' is invalid in '%s' on line %d\n", function.c_str(), codeLine._code.c_str(), codeLineIndex);
                 return false;
             }
 
@@ -2659,7 +2662,7 @@ namespace Keywords
                 varPos = function.find(funcVar);
                 if(varPos == std::string::npos)
                 {
-                    fprintf(stderr, "Compiler::keywordDEF() : function variable '%s' invalid in '%s' on line %d\n", funcVar.c_str(), codeLine._code.c_str(), codeLineIndex);
+                    fprintf(stderr, "Keywords::keywordDEF() : function variable '%s' invalid in '%s' on line %d\n", funcVar.c_str(), codeLine._code.c_str(), codeLineIndex);
                     return false;
                 }
                 function.erase(varPos, funcVar.size());
@@ -2674,7 +2677,7 @@ namespace Keywords
             }
             if(funcParams[2]._value == 0.0)
             {
-                fprintf(stderr, "Compiler::keywordDEF() : Divide by zero detected in '%s' : '%s' : on line %d\n", function.c_str(), codeLine._code.c_str(), codeLineIndex);
+                fprintf(stderr, "Keywords::keywordDEF() : Divide by zero detected in '%s' : '%s' : on line %d\n", function.c_str(), codeLine._code.c_str(), codeLineIndex);
                 return false;
             }
 
@@ -2726,7 +2729,7 @@ namespace Keywords
         std::vector<std::string> dataTokens = Expression::tokenise(codeLine._code.substr(equalsPos + 1), ',', true);
         if(dataTokens.size() == 0)
         {
-            fprintf(stderr, "Compiler::keywordDEF() : Syntax error, require at least one data field in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordDEF() : Syntax error, require at least one data field in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -2740,7 +2743,7 @@ namespace Keywords
                 Expression::stripWhitespace(dataTokens[i]);
                 if(!Expression::stringToU8(dataTokens[i], data))
                 {
-                    fprintf(stderr, "Compiler::keywordDEF() : Numeric error '%s', in '%s' on line %d\n", dataTokens[i].c_str(), codeLine._text.c_str(), codeLineIndex);
+                    fprintf(stderr, "Keywords::keywordDEF() : Numeric error '%s', in '%s' on line %d\n", dataTokens[i].c_str(), codeLine._text.c_str(), codeLineIndex);
                     return false;
                 }
                 dataBytes.push_back(data);
@@ -2773,7 +2776,7 @@ namespace Keywords
                 Expression::stripWhitespace(dataTokens[i]);
                 if(!Expression::stringToI16(dataTokens[i], data))
                 {
-                    fprintf(stderr, "Compiler::keywordDEF() : Numeric error '%s', in '%s' on line %d\n", dataTokens[i].c_str(), codeLine._text.c_str(), codeLineIndex);
+                    fprintf(stderr, "Keywords::keywordDEF() : Numeric error '%s', in '%s' on line %d\n", dataTokens[i].c_str(), codeLine._text.c_str(), codeLineIndex);
                     return false;
                 }
                 dataWords.push_back(data);
@@ -2808,7 +2811,7 @@ namespace Keywords
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() < 1  &&  tokens.size() > 2)
         {
-            fprintf(stderr, "Compiler::keywordALLOC() : Syntax error, '<address>, <optional size>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordALLOC() : Syntax error, '<address>, <optional size>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -2820,12 +2823,38 @@ namespace Keywords
         uint16_t address = int16_t(std::lround(addrNumeric._value));
         if(address < DEFAULT_START_ADDRESS)
         {
-            fprintf(stderr, "Compiler::keywordALLOC() : Address field must be above %04x, found %s in '%s' on line %d\n", DEFAULT_START_ADDRESS, tokens[0].c_str(), codeLine._code.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordALLOC() : Address field must be above %04x, found %s in '%s' on line %d\n", DEFAULT_START_ADDRESS, tokens[0].c_str(), codeLine._code.c_str(), codeLineIndex);
             return false;
         }
 
         int end = (tokens.size() == 2) ? address + std::lround(sizeNumeric._value) : 0xFFFF;
         for(int i=address; i<end; i++) Memory::takeFreeRAM(uint16_t(i), 1, false);
+        //Memory::printFreeRamList(Memory::NoSort);
+
+        return true;
+    }
+
+    bool keywordFREE(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
+
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
+        if(tokens.size() != 2)
+        {
+            fprintf(stderr, "Keywords::keywordFREE() : Syntax error, '<address>, <size>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            return false;
+        }
+
+        Expression::Numeric addrNumeric, sizeNumeric;
+        std::string addrOperand, sizeOperand;
+        Compiler::parseExpression(codeLineIndex, tokens[0], addrOperand, addrNumeric);
+        Compiler::parseExpression(codeLineIndex, tokens[1], sizeOperand, sizeNumeric);
+        uint16_t address = int16_t(std::lround(addrNumeric._value));
+        uint16_t size = int16_t(std::lround(sizeNumeric._value));
+
+        //Memory::printFreeRamList(Memory::NoSort);
+        Memory::giveFreeRAM(address, size);
         //Memory::printFreeRamList(Memory::NoSort);
 
         return true;
@@ -2839,7 +2868,7 @@ namespace Keywords
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() < 1  &&  tokens.size() > 2)
         {
-            fprintf(stderr, "Compiler::keywordAT() : Syntax error, 'AT X' or 'AT X,Y', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordAT() : Syntax error, 'AT X' or 'AT X,Y', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -2877,7 +2906,7 @@ namespace Keywords
         std::string expression = codeLine._code.substr(foundPos);
         if(expression.size() == 0)
         {
-            fprintf(stderr, "Compiler::keywordPUT() : Syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordPUT() : Syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -2896,7 +2925,7 @@ namespace Keywords
         std::string expression = codeLine._code.substr(foundPos);
         if(expression.size() == 0)
         {
-            fprintf(stderr, "Compiler::keywordMODE() : Syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordMODE() : Syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -2936,7 +2965,7 @@ namespace Keywords
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() != 2  &&  tokens.size() != 4)
         {
-            fprintf(stderr, "Compiler::keywordLINE() : Syntax error, 'LINE X,Y' or 'LINE X1,Y1,X2,Y2', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordLINE() : Syntax error, 'LINE X,Y' or 'LINE X1,Y1,X2,Y2', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -2989,7 +3018,7 @@ namespace Keywords
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() != 3)
         {
-            fprintf(stderr, "Compiler::keywordHLINE() : Syntax error, 'HLINE X1,Y,X2', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordHLINE() : Syntax error, 'HLINE X1,Y,X2', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -3020,7 +3049,7 @@ namespace Keywords
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() != 3)
         {
-            fprintf(stderr, "Compiler::keywordVLINE() : Syntax error, 'VLINE X1,Y,X2', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordVLINE() : Syntax error, 'VLINE X1,Y,X2', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -3051,7 +3080,7 @@ namespace Keywords
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() != 3)
         {
-            fprintf(stderr, "Compiler::keywordCIRCLE() : Syntax error, 'CIRCLE X,Y,R', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordCIRCLE() : Syntax error, 'CIRCLE X,Y,R', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -3082,7 +3111,7 @@ namespace Keywords
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() != 3)
         {
-            fprintf(stderr, "Compiler::keywordCIRCLEF() : Syntax error, 'CIRCLEF X,Y,R', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordCIRCLEF() : Syntax error, 'CIRCLEF X,Y,R', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -3113,7 +3142,7 @@ namespace Keywords
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() != 4)
         {
-            fprintf(stderr, "Compiler::keywordRECT() : Syntax error, 'RECT X1,Y1,X2,Y2', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordRECT() : Syntax error, 'RECT X1,Y1,X2,Y2', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -3145,7 +3174,7 @@ namespace Keywords
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() != 4)
         {
-            fprintf(stderr, "Compiler::keywordRECTF() : Syntax error, 'RECTF X1,Y1,X2,Y2', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordRECTF() : Syntax error, 'RECTF X1,Y1,X2,Y2', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -3177,7 +3206,7 @@ namespace Keywords
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() != 1)
         {
-            fprintf(stderr, "Compiler::keywordPOLY() : Syntax error, 'POLY ADDR', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordPOLY() : Syntax error, 'POLY ADDR', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -3197,7 +3226,7 @@ namespace Keywords
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ' ', false);
         if(tokens.size() != 1)
         {
-            fprintf(stderr, "Compiler::keywordSCROLL() : Syntax error, 'SCROLL ON' or 'SCROLL OFF', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordSCROLL() : Syntax error, 'SCROLL ON' or 'SCROLL OFF', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -3205,7 +3234,7 @@ namespace Keywords
         Expression::stripWhitespace(scrollToken);
         if(scrollToken != "ON"  &&  scrollToken != "OFF")
         {
-            fprintf(stderr, "Compiler::keywordSCROLL() : Syntax error, 'SCROLL ON' or 'SCROLL OFF', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordSCROLL() : Syntax error, 'SCROLL ON' or 'SCROLL OFF', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -3232,7 +3261,7 @@ namespace Keywords
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() != 2)
         {
-            fprintf(stderr, "Compiler::keywordPOKE() : Syntax error, 'POKE A,X', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordPOKE() : Syntax error, 'POKE A,X', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -3311,7 +3340,7 @@ namespace Keywords
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() != 2)
         {
-            fprintf(stderr, "Compiler::keywordDOKE() : syntax error, 'DOKE A,X', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordDOKE() : syntax error, 'DOKE A,X', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -3390,7 +3419,7 @@ namespace Keywords
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), " ,", false);
         if(tokens.size() < 1  ||  tokens.size() > 3)
         {
-            fprintf(stderr, "Compiler::keywordPLAY() : Syntax error, use 'PLAY MIDI <address>, <waveType>', where <address> and <waveType> are optional; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordPLAY() : Syntax error, use 'PLAY MIDI <address>, <waveType>', where <address> and <waveType> are optional; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -3398,7 +3427,7 @@ namespace Keywords
         Expression::stripWhitespace(midiToken);
         if(midiToken != "MIDI")
         {
-            fprintf(stderr, "Compiler::keywordPLAY() : Syntax error, use 'PLAY MIDI <address>, <waveType>', where <address> and <waveType> are optional; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordPLAY() : Syntax error, use 'PLAY MIDI <address>, <waveType>', where <address> and <waveType> are optional; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -3431,6 +3460,108 @@ namespace Keywords
         Expression::Numeric param;
         Compiler::parseExpression(codeLineIndex, addressToken, param);
         Compiler::emitVcpuAsm("%PlayMidi", "", false, codeLineIndex);
+
+        return true;
+    }
+
+    bool keywordLOAD(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
+
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), " ,", false);
+        if(tokens.size() != 3)
+        {
+            fprintf(stderr, "Keywords::keywordLOAD() : Syntax error, use 'LOAD MIDI/IMAGE/SPRITE, <address/variable>, <filename>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            return false;
+        }
+
+        // Type
+        Expression::strToUpper(tokens[0]);
+        Expression::stripWhitespace(tokens[0]);
+        if(tokens[0] != "MIDI"  &&  tokens[0] != "IMAGE"  &&  tokens[0] != "SPRITE")
+        {
+            fprintf(stderr, "Keywords::keywordLOAD() : Syntax error, use 'LOAD MIDI/IMAGE/SPRITE, <address/variable>, <filename>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            return false;
+        }
+
+        // Address/variable
+        uint16_t address = 0x0000;
+        std::string addrVar = tokens[1];
+        Expression::stripWhitespace(addrVar);
+        int varIndex = Compiler::findVar(addrVar, false);
+        if(varIndex >= 0)
+        {
+            // Image always returns vram start, (i.e. 0x0800), if address is not explicitly stated
+            if(tokens[0] == "IMAGE")
+            {
+                address = 0x0800;
+                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(address), false, codeLineIndex);
+                Compiler::emitVcpuAsm("STW", "_" + addrVar, false, codeLineIndex);
+            }
+        }
+        else
+        // Parse address
+        {
+            Expression::Numeric addrNumeric;
+            std::string addrOperand;
+            Compiler::parseExpression(codeLineIndex, addrVar, addrOperand, addrNumeric);
+            address = uint16_t(std::lround(addrNumeric._value));
+            if(address < DEFAULT_START_ADDRESS)
+            {
+                fprintf(stderr, "Keywords::keywordLOAD() : Address field must be above %04x, found %s in '%s' on line %d\n", DEFAULT_START_ADDRESS, addrVar.c_str(), codeLine._text.c_str(), codeLineIndex);
+                return false;
+            }
+        }
+
+        // Handle Image
+        if(tokens[0] == "IMAGE")
+        {
+            Expression::stripWhitespace(tokens[2]);
+            std::string ext = tokens[2];
+            Expression::strToUpper(ext);
+            if(ext.find(".TGA") != std::string::npos)
+            {
+                Image::TgaFile tgaFile;
+                if(!Image::loadTgaFile(tokens[2], tgaFile))
+                {
+                    fprintf(stderr, "Keywords::keywordLOAD() : File '%s' failed to load, in '%s' on line %d\n", tokens[2].c_str(), codeLine._text.c_str(), codeLineIndex);
+                    return false;
+                }
+
+                std::vector<uint8_t> data;
+                std::vector<uint16_t> optional;
+                Image::GtRgbFile gtRgbFile{GTRGB_IDENTIFIER, Image::GT_RGB_222, tgaFile._header._width, tgaFile._header._height, data, optional};
+                Image::convertRGB8toRGB2(tgaFile._data, gtRgbFile._data, tgaFile._header._width, tgaFile._header._height, tgaFile._imageOrigin);
+                if(gtRgbFile._header._width > 256  ||  gtRgbFile._header._width + (address & 0x00FF) > 256)
+                {
+                    fprintf(stderr, "Keywords::keywordLOAD() : Width > 256, (%d, %d), for %s; in '%s' on line %d\n", gtRgbFile._header._width, gtRgbFile._header._height, tokens[2].c_str(), codeLine._text.c_str(), codeLineIndex);
+                    return false;
+                }
+
+                uint16_t stride = 256;
+                Compiler::DefDataImage defDataImage = {address, tgaFile._header._width, tgaFile._header._height, stride, gtRgbFile._data};
+                Compiler::getDefDataImages().push_back(defDataImage);
+
+                // Allocate RAM for image
+                int size = gtRgbFile._header._width;
+                for(int y=0; y<gtRgbFile._header._height; y++)
+                {
+                    if(address >= 0x0800  &&  address <= 0x7FFF)
+                    {
+                        size = gtRgbFile._header._width + (address & 0x00FF) - 160;
+                    }
+
+                    if(!Memory::takeFreeRAM(address + 0x00A0, size))
+                    {
+                        fprintf(stderr, "Keywords::keywordLOAD() : Allocating RAM for pixel row %d failed, in '%s' on line %d\n", y, codeLine._text.c_str(), codeLineIndex);
+                        return false;
+                    }
+
+                    address += stride;
+                }
+            }
+        }
 
         return true;
     }

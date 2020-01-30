@@ -34,6 +34,7 @@ namespace Linker
         {0x0000, 0x0000, "multiply16bit"    , "", false, false},
         {0x0000, 0x0000, "multiply16bit_1"  , "", false, false},
         {0x0000, 0x0000, "divide16bit"      , "", false, false},
+        {0x0000, 0x0000, "divide16bit_1"    , "", false, false},
         {0x0000, 0x0000, "rand16bit"        , "", false, false},
         {0x0000, 0x0000, "randMod16bit"     , "", false, false},
         {0x0000, 0x0000, "shiftLeft4bit"    , "", false, false},
