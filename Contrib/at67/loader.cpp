@@ -596,7 +596,7 @@ namespace Loader
 
             text.push_back(line);
         }
-        while(line.find('?') == std::string::npos);
+        while(line.find("Cmd?") == std::string::npos);
 
         return true;
     }
@@ -619,7 +619,7 @@ namespace Loader
                 return false;
             }
         }
-        while(line.find('?') == std::string::npos);
+        while(line.find("Cmd?") == std::string::npos);
 
         return true;
     }

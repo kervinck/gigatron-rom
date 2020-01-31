@@ -1415,8 +1415,18 @@ namespace Editor
                 {
                     case RunToBrk:
                     {
-                        auto it = std::find(_ntvBreakPoints.begin(), _ntvBreakPoints.end(), nPC);
-                        if(it != _ntvBreakPoints.end()) singleStep(nPC);
+                        if(_ntvBreakPoints.size() == 0)
+                        {
+                            resetDebugger();
+                        }
+                        else
+                        {
+                            auto it = std::find(_ntvBreakPoints.begin(), _ntvBreakPoints.end(), nPC);
+                            if(it != _ntvBreakPoints.end())
+                            {
+                                singleStep(nPC);
+                            }
+                        }
                     }
                     break;
                 
@@ -1446,13 +1456,24 @@ namespace Editor
                     resetDebugger();
                     fprintf(stderr, "Editor::handleDebugger() : Single step stall for %d milliseconds : exiting debugger.\n", SDL_GetTicks() - _singleStepTicks);
                 }
+
                 // Single step on breakpoint, vPC or on watch value
                 switch(_singleStepMode)
                 {
                     case RunToBrk:
                     {
-                        auto it = std::find(_vpcBreakPoints.begin(), _vpcBreakPoints.end(), vPC);
-                        if(it != _vpcBreakPoints.end()) singleStep(vPC);
+                        if(_vpcBreakPoints.size() == 0)
+                        {
+                            resetDebugger();
+                        }
+                        else
+                        {
+                            auto it = std::find(_vpcBreakPoints.begin(), _vpcBreakPoints.end(), vPC);
+                            if(it != _vpcBreakPoints.end())
+                            {
+                                singleStep(vPC);
+                            }
+                        }
                     }
                     break;
                 
@@ -1481,9 +1502,26 @@ namespace Editor
         // Pause simulation and handle debugging keys
         while(_singleStepEnabled)
         {
+#if 0
             _onVarType = updateOnVarType();
             Graphics::refreshScreen();
             Graphics::render(false);
+#else
+            // Update graphics but only once every 16.66667ms
+            static uint64_t prevFrameCounter = 0;
+            double frameTime = double(SDL_GetPerformanceCounter() - prevFrameCounter) / double(SDL_GetPerformanceFrequency());
+
+            Timing::setFrameUpdate(false);
+            if(frameTime > VSYNC_TIMING_60)
+            {
+                _onVarType = updateOnVarType();
+
+                prevFrameCounter = SDL_GetPerformanceCounter();
+                Timing::setFrameUpdate(true);
+                Graphics::refreshScreen();
+                Graphics::render(false);
+            }
+#endif
 
             SDL_Event event;
             while(SDL_PollEvent(&event))
