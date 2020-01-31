@@ -42,11 +42,11 @@
 #define WATCH_START      66
 #define MENU_TEXT_SIZE   23
 #define PAGEUP_START_X   140
-#define PAGEUP_START_Y   44
+#define PAGEUP_START_Y   48
 #define PAGEDN_START_X   140
-#define PAGEDN_START_Y   428
+#define PAGEDN_START_Y   420
 #define DELALL_START_X   140
-#define DELALL_START_Y   32
+#define DELALL_START_Y   36
 
 #define GRAPHICS_CONFIG_INI  "graphics_config.ini"
 
@@ -87,9 +87,10 @@ namespace Graphics
     void pixelReticle(const Cpu::State& S, int vgaX, int vgaY);
 
     void drawLeds(void);
-    bool drawText(const std::string& text, int x, int y, uint32_t fgColour, bool invert, int invertSize);
+    bool drawText(const std::string& text, int x, int y, uint32_t fgColour, bool invert, int invertSize, int invertPos=0);
     bool drawMenu(const std::string& text, int x, int y, uint32_t fgColour, bool invert, int invertSize, uint32_t bgColour);
-    bool drawText(const std::string& text, uint32_t* pixels, int x, int y, uint32_t fgColour, bool invert, int invertSize, uint32_t bgColour=0x00000000, bool colourKey=false, int numChars=-1, bool fullscreen=false, uint32_t commentColour=0x00000000, uint32_t sectionColour=0x00000000);
+    bool drawText(const std::string& text, uint32_t* pixels, int x, int y, uint32_t fgColour, bool invert, int invertSize, int invertPos=0,
+                  uint32_t bgColour=0x00000000, bool colourKey=false, int numChars=-1, bool fullscreen=false, uint32_t commentColour=0x00000000, uint32_t sectionColour=0x00000000);
     void drawDigitBox(uint8_t digit, int x, int y, uint32_t colour);
 
     void renderText(void);
