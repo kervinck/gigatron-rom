@@ -41,6 +41,7 @@ namespace Cpu
     int _vCpuInstPerFrameMax = 0;
     float _vCpuUtilisation = 0.0;
 
+    bool _coldBoot = true;
     bool _isInReset = false;
     bool _checkRomType = true;
     bool _debugging = false;
@@ -227,7 +228,7 @@ namespace Cpu
     char filebuffer[RAM_SIZE_HI];
     bool patchSplitGt1IntoRom(const std::string& splitGt1path, const std::string& splitGt1name, uint16_t startAddress, InternalGt1Id gt1Id)
     {
-        size_t filelength = 0;
+        std::streampos filelength = 0;
 
         // Instruction ROM
         std::ifstream romfile_ti(splitGt1path + "_ti", std::ios::binary | std::ios::in);
@@ -293,6 +294,7 @@ namespace Cpu
     uint16_t _vPC = 0x0200;
     State _stateS, _stateT;
 
+    bool getColdBoot(void) {return _coldBoot;}
     bool getIsInReset(void) {return _isInReset;}
     State& getStateS(void) {return _stateS;}
     State& getStateT(void) {return _stateT;}
@@ -306,7 +308,7 @@ namespace Cpu
     uint16_t getROM16(uint16_t address, int page) {return _ROM[address & (ROM_SIZE-1)][page & 0x01] | (_ROM[(address+1) & (ROM_SIZE-1)][page & 0x01]<<8);}
     float getvCpuUtilisation(void) {return _vCpuUtilisation;}
 
-
+    void setColdBoot(bool coldBoot) {_coldBoot = coldBoot;}
     void setIsInReset(bool isInReset) {_isInReset = isInReset;}
     void setClock(int64_t clock) {_clock = clock;}
     void setIN(uint8_t in) {_IN = in;}
@@ -877,14 +879,8 @@ namespace Cpu
 
     void reset(bool coldBoot)
     {
+        _coldBoot = coldBoot;
         _checkRomType = true;
-
-        // Cold boot
-        if(coldBoot)
-        {
-            //setRAM(BOOT_COUNT, 0x00);
-            //setRAM(BOOT_CHECK, 0xA6);
-        }
 
         clearUserRAM();
         setRAM(ZERO_CONST_ADDRESS, 0x00);
@@ -1016,8 +1012,10 @@ namespace Cpu
 
             if(_initAudio  &&  _clock > STARTUP_DELAY_CLOCKS*10.0)
             {
+                Audio::initialiseChannels(_coldBoot, _romType);
+
+                _coldBoot = false;
                 _initAudio = false;
-                Audio::initialiseChannels();
             }
 
             if(!_debugging  &&  _clock - _clockStall > CPU_STALL_CLOCKS)

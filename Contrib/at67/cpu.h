@@ -8,7 +8,7 @@
 
 
 #define MAJOR_VERSION "0.8"
-#define MINOR_VERSION "21"
+#define MINOR_VERSION "22"
 #define VERSION_STR "gtemuAT67 v" MAJOR_VERSION "." MINOR_VERSION
  
 #define ROM_INST 0
@@ -113,6 +113,7 @@ namespace Cpu
     bool patchSplitGt1IntoRom(const std::string& splitGt1path, const std::string& splitGt1name, uint16_t startAddress, InternalGt1Id gt1Id);
 
 #ifndef STAND_ALONE
+    bool getColdBoot(void);
     bool getIsInReset(void);
     State& getStateS(void);
     State& getStateT(void);
@@ -126,6 +127,7 @@ namespace Cpu
     uint16_t getROM16(uint16_t address, int page);
     float getvCpuUtilisation(void);
 
+    void setColdBoot(bool coldBoot);
     void setIsInReset(bool isInReset);
     void setClock(int64_t clock);
     void setIN(uint8_t in);

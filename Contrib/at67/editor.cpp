@@ -414,7 +414,6 @@ namespace Editor
         _emulator["ImageEditor"]  = {SDLK_i, KMOD_LCTRL};
         _emulator["ScanlineMode"] = {SDLK_s, KMOD_LCTRL};
         _emulator["Reset"]        = {SDLK_F1, KMOD_LCTRL};
-        _emulator["Execute"]      = {SDLK_F5, KMOD_LCTRL};
         _emulator["Help"]         = {SDLK_h, KMOD_LCTRL};
         _emulator["Quit"]         = {SDLK_q, KMOD_LCTRL};
 
@@ -430,8 +429,7 @@ namespace Editor
         _keyboard["B"]      = {SDLK_SLASH, KMOD_NONE};
 
         // Hardware INI key to SDL key mapping
-        _hardware["Reset"]   = {SDLK_F1, KMOD_LALT};
-        _hardware["Execute"] = {SDLK_F5, KMOD_LALT};
+        _hardware["Reset"]   = {SDLK_F2, KMOD_LCTRL};
 
         // Debugger INI key to SDL key mapping
         _debugger["Debug"]     = {SDLK_F6, KMOD_LCTRL};
@@ -477,7 +475,6 @@ namespace Editor
                     scanCodeFromIniKey(sectionString, "ImageEditor",  "CTRL+I",   _emulator["ImageEditor"]);
                     scanCodeFromIniKey(sectionString, "ScanlineMode", "CTRL+S",   _emulator["ScanlineMode"]);
                     scanCodeFromIniKey(sectionString, "Reset",        "CTRL+F1",  _emulator["Reset"]);
-                    scanCodeFromIniKey(sectionString, "Execute",      "CTRL+F5",  _emulator["Execute"]);
                     scanCodeFromIniKey(sectionString, "Help",         "CTRL+H",   _emulator["Help"]);
                     scanCodeFromIniKey(sectionString, "Quit",         "CTRL+Q",   _emulator["Quit"]);
                 }
@@ -499,8 +496,7 @@ namespace Editor
 
                 case Hardware:
                 {
-                    scanCodeFromIniKey(sectionString, "Reset",   "ALT+F1", _hardware["Reset"]);
-                    scanCodeFromIniKey(sectionString, "Execute", "ALT+F5", _hardware["Execute"]);
+                    scanCodeFromIniKey(sectionString, "Reset",   "CTRL+F2", _hardware["Reset"]);
                 }
                 break;
 
@@ -1337,12 +1333,6 @@ namespace Editor
         else if(_sdlKeyScanCode ==  _emulator["MemorySize"]._scanCode  &&  _sdlKeyModifier == _emulator["MemorySize"]._keyMod)
         {
             Cpu::swapMemoryModel();
-        }
-
-        // Hardware upload and execute
-        else if(_sdlKeyScanCode == _hardware["Execute"]._scanCode  &&  _sdlKeyModifier == _hardware["Execute"]._keyMod)
-        {
-            Loader::setUploadTarget(Loader::Hardware);
         }
 
         updateEditor();
