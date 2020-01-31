@@ -107,7 +107,7 @@ namespace Terminal
     void nextCommandLineHistory(void)
     {
         if(_historyCommandLine.size() == 0) return;
-        if(++_historyCommandIndex >= _historyCommandLine.size()) _historyCommandIndex = int(_historyCommandLine.size()) - 1;
+        if(++_historyCommandIndex >= int(_historyCommandLine.size())) _historyCommandIndex = int(_historyCommandLine.size()) - 1;
         _terminalCommandLine = _historyCommandLine[_historyCommandIndex];
         _terminalCommandCharIndex = int(_terminalCommandLine.size());
     }
@@ -119,12 +119,12 @@ namespace Terminal
 
     void nextCommandLineChar(void)
     {
-        if(++_terminalCommandCharIndex > _terminalCommandLine.size()) _terminalCommandCharIndex = int(_terminalCommandLine.size());
+        if(++_terminalCommandCharIndex > int(_terminalCommandLine.size())) _terminalCommandCharIndex = int(_terminalCommandLine.size());
     }
 
     void backspaceCommandLineChar(void)
     {
-        if(_terminalCommandLine.size()  &&  _terminalCommandCharIndex > 0  &&  _terminalCommandCharIndex <= _terminalCommandLine.size())
+        if(_terminalCommandLine.size()  &&  _terminalCommandCharIndex > 0  &&  _terminalCommandCharIndex <= int(_terminalCommandLine.size()))
         {
             _terminalCommandLine.erase(--_terminalCommandCharIndex, 1);
         }
@@ -132,10 +132,10 @@ namespace Terminal
 
     void deleteCommandLineChar(void)
     {
-        if(_terminalCommandLine.size()  &&  _terminalCommandCharIndex >= 0  &&  _terminalCommandCharIndex < _terminalCommandLine.size())
+        if(_terminalCommandLine.size()  &&  _terminalCommandCharIndex >= 0  &&  _terminalCommandCharIndex < int(_terminalCommandLine.size()))
         {
             _terminalCommandLine.erase(_terminalCommandCharIndex, 1);
-            if(_terminalCommandCharIndex > _terminalCommandLine.size()) _terminalCommandCharIndex = int(_terminalCommandLine.size());
+            if(_terminalCommandCharIndex > int(_terminalCommandLine.size())) _terminalCommandCharIndex = int(_terminalCommandLine.size());
         }
     }
 
@@ -211,7 +211,7 @@ namespace Terminal
 
         // Command line
         std::string commandLine = _terminalCommandLine;
-        if(_terminalCommandCharIndex >= commandLine.size())
+        if(_terminalCommandCharIndex >= int(commandLine.size()))
         {
             _terminalCommandCharIndex = int(commandLine.size());
             commandLine += char(32);
