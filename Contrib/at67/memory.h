@@ -27,6 +27,7 @@
 
 #define RAM_VIDEO_START  0x0800
 #define RAM_VIDEO_END    0x7F00
+#define RAM_VIDEO_OFS    0x0100
 #define RAM_VIDEO_SIZE   160
 
 #define RAM_SEGMENTS_START  0x08A0
@@ -71,6 +72,7 @@ namespace Memory
     void initialise(void);
 
     bool isFreeRAM(uint16_t address, int size);
+    bool isVideoRAM(uint16_t address);
     bool getNextCodeAddress(FitType fitType, uint16_t start, int size, uint16_t& address);
 
     bool giveFreeRAM(uint16_t address, int size);

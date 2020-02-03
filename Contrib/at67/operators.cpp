@@ -375,6 +375,19 @@ namespace Operators
         return true;
     }
 
+    uint32_t handleRevOp(uint32_t input, uint32_t n)
+    {
+        uint32_t output = 0;
+        uint32_t bits = input & uint32_t(pow(2, n) - 1);
+        for(uint32_t i=0; i<=n-1; i++)
+        {
+            output = (output << 1) | (bits & 1);
+            bits = bits >> 1;
+        }
+
+        return output;
+    }
+
 
     // ********************************************************************************************
     // Unary Operators
@@ -495,6 +508,36 @@ namespace Operators
         if(numeric._varType == Expression::Number)
         {
             numeric._value = double(rand() % std::lround(numeric._value));
+        }
+
+        return numeric;
+    }
+
+    Expression::Numeric operatorREV16(Expression::Numeric& numeric)
+    {
+        if(numeric._varType == Expression::Number)
+        {
+            numeric._value = double(handleRevOp(uint32_t(std::lround(numeric._value)), 16));
+        }
+
+        return numeric;
+    }
+
+    Expression::Numeric operatorREV8(Expression::Numeric& numeric)
+    {
+        if(numeric._varType == Expression::Number)
+        {
+            numeric._value = double(handleRevOp(uint32_t(std::lround(numeric._value)), 8));
+        }
+
+        return numeric;
+    }
+
+    Expression::Numeric operatorREV4(Expression::Numeric& numeric)
+    {
+        if(numeric._varType == Expression::Number)
+        {
+            numeric._value = double(handleRevOp(uint32_t(std::lround(numeric._value)), 4));
         }
 
         return numeric;

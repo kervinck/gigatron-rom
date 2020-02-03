@@ -13,6 +13,7 @@ namespace Memory
     int _sizeFreeRAM = _baseFreeRAM;
 
     std::vector<RamEntry> _freeRam;
+    std::vector<RamEntry> _videoRam;
 
 
     int getSizeRAM(void) {return _sizeRAM;}
@@ -32,6 +33,7 @@ namespace Memory
     void initialise(void)
     {
         _freeRam.clear();
+        _videoRam.clear();
 
         // 0x0200 <-> 0x0400
         _freeRam.push_back({RAM_PAGE_START_0, RAM_PAGE_SIZE_0});
@@ -40,21 +42,15 @@ namespace Memory
 
         // 0x0500 <-> 0x0600
         _freeRam.push_back({RAM_PAGE_START_3, RAM_PAGE_SIZE_3*2});
-        //_freeRam.push_back({RAM_PAGE_START_3, RAM_PAGE_SIZE_3});
-        //_freeRam.push_back({RAM_PAGE_START_4, RAM_PAGE_SIZE_4});
 
         // 0x08A0 <-> 0c7FA0
         for(uint16_t i=RAM_SEGMENTS_START; i<=RAM_SEGMENTS_END; i+=RAM_SEGMENTS_OFS) _freeRam.push_back({i, RAM_SEGMENTS_SIZE});
 
         // 0x8000 <-> 0xFF00
-        if(_sizeRAM == RAM_SIZE_HI)
-        {
-            _freeRam.push_back({RAM_EXPANSION_START, RAM_EXPANSION_SIZE});
-            //for(uint32_t a=RAM_EXPANSION_START; a<RAM_EXPANSION_START + RAM_EXPANSION_SIZE; a+=RAM_EXPANSION_SEG)
-            //{
-            //    _freeRam.push_back({uint16_t(a), RAM_EXPANSION_SEG});
-            //}
-        }
+        if(_sizeRAM == RAM_SIZE_HI) _freeRam.push_back({RAM_EXPANSION_START, RAM_EXPANSION_SIZE});
+
+        // VRAM 0x0800 <-> 0c7F00
+        for(uint16_t i=RAM_VIDEO_START; i<=RAM_VIDEO_END; i+=RAM_VIDEO_OFS) _videoRam.push_back({i, RAM_VIDEO_SIZE});
 
         _baseFreeRAM = _sizeRAM - RAM_USED_DEFAULT;
         _sizeFreeRAM = _baseFreeRAM;
@@ -149,6 +145,25 @@ namespace Memory
             }
             // Free RAM within segment
             else if(address > _freeRam[i]._address  &&  (address + size <= _freeRam[i]._address + _freeRam[i]._size))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    bool isVideoRAM(uint16_t address)
+    {
+        for(int i=0; i<int(_videoRam.size()); i++)
+        {
+            // Video RAM segment
+            if(address == _videoRam[i]._address)
+            {
+                return true;
+            }
+            // Video RAM within segment
+            else if(address > _videoRam[i]._address  &&  (address <= _videoRam[i]._address + _videoRam[i]._size))
             {
                 return true;
             }

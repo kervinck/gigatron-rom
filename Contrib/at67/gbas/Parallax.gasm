@@ -36,14 +36,14 @@ textWorkArea        EQU                     0x06a0
 ; Labels
 _entryPoint_        EQU                     0x0200
 _loop               EQU                     0x0292
-_254                EQU                     0x0339
-_253                EQU                     0x034f
-_191                EQU                     0x0361
-_127                EQU                     0x0368
+_254                EQU                     0x0333
+_253                EQU                     0x0349
+_191                EQU                     0x035b
+_127                EQU                     0x0362
 _page_0x0300        EQU                     0x0300
-_else_0x0367        EQU                     0x034d
-_else_0x0381        EQU                     0x035f
-_end_0x0391         EQU                     0x036f
+_else_0x0367        EQU                     0x0347
+_else_0x0381        EQU                     0x0359
+_end_0x0391         EQU                     0x0369
 
 ; Variables
 _x0                 EQU                     0x0030
@@ -60,6 +60,8 @@ _speed1             EQU                     0x0042
 ; Strings
 
 ; Define Bytes
+def_bytes_0x0021    EQU                     0x0021
+def_bytes_0x0021    DB                      0 
 
 ; Define Words
 
@@ -303,7 +305,7 @@ def_images_0x7f00   DB                      12 8 12 8 12 8 8 12 8 9 8 8 9 8 8 9 
 _lut_numericLabs    EQU                     0x0610
 _lut_numericLabs    DW                      254 253 191 127 0
 _lut_numericAddrs   EQU                     0x0608
-_lut_numericAddrs   DW                      0x0339 0x034f 0x0361 0x0368 
+_lut_numericAddrs   DW                      0x0333 0x0349 0x035b 0x0362 
 
 ; Code
 _entryPoint_        InitRealTimeProc        
@@ -409,13 +411,13 @@ _loop               WaitVBlank                                              ; wa
 
                     LDWI                    403
                     STW                     register0
+                    LD                      _x5 + 1
+                    POKE                    register0
+                    LDW                     _x5
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
-                    LD                      _x5 + 1
-                    POKE                    register0
-                    LDW                     _x5
                     ADDW                    _speed4
                     STW                     _x5                             ; poke &h0193, x5.hi : x5 = x5 + speed4
 
