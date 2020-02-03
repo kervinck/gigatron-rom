@@ -270,7 +270,7 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    size_t midiSize = infile.gcount();
+    std::streamsize midiSize = infile.gcount();
     uint8_t* midiPtr = _midiBuffer;
     uint16_t gigaSize = 0;
 

@@ -368,6 +368,7 @@ RESTART_OPTIMISE:
                                     // Assume neither of these instructions can have a label
                                     itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine);
                                     adjustLabelAddresses(i, firstLine, -2);
+                                    adjustVasmAddresses(i, firstLine, -2);
                                 }
                                 break;
 

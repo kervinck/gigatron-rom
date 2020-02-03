@@ -42,7 +42,7 @@ namespace Audio
     bool getRealTimeAudio(void);
 
     void initialise(void);
-    void initialiseChannels(void);
+    void initialiseChannels(bool coldBoot, Cpu::RomType romType);
 
     void fillCallbackBuffer(void);
     void fillBuffer(void);

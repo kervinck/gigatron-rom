@@ -47,17 +47,17 @@ input               PUSH
 inputExt1           LDW     inpTypesAddr
                     DEEK
                     BEQ     inputE1_exit        ; exit on LUT delimiter
-                    STW     inpTypeData         ; high byte is max string length, 8th and 7th bits of low byte are newline, last 6 bits of low byte is type
-                    ANDI    0x40
-                    BEQ     inputE1_print       ; check for newline
+                    STW     inpTypeData         ; high byte is max string length, 8th and 7th bits of low byte are newlines, last 6 bits of low byte is type
+                    ANDI    0x40                
+                    BEQ     inputE1_print       ; check for prefix newline
                     CALLI   inputNewline
                     
 inputE1_print       LDW     inpStrsAddr
                     DEEK
                     CALLI   printText           ; print strings LUT
-                    LD      inpTypeData         ; high byte is max string length, 8th and 7th bits of low byte are newline, last 6 bits of low byte is type
+                    LD      inpTypeData
                     ANDI    0x80
-                    BEQ     inputE1_skip        ; check for newline
+                    BEQ     inputE1_skip        ; check for suffix newline
                     CALLI   inputNewline
                     
 inputE1_skip        LDWI    textWorkArea + 1

@@ -35,6 +35,19 @@ namespace Expression
     // Forward declarations
     Numeric expression(void);
 
+    // Helpers
+    uint32_t revHelper(uint32_t input, uint32_t n)
+    {
+        uint32_t output = 0;
+        uint32_t bits = input & uint32_t(pow(2, n) - 1);
+        for(uint32_t i=0; i<=n-1; i++)
+        {
+            output = (output << 1) | (bits & 1);
+            bits = bits >> 1;
+        }
+
+        return output;
+    }
 
     // Unary logic operators
     Numeric& operatorNEG(Numeric& numeric)
@@ -82,6 +95,21 @@ namespace Expression
     Numeric& operatorRAND(Numeric& numeric)
     {
         numeric._value = double(rand() % std::lround(numeric._value));
+        return numeric;
+    }
+    Numeric& operatorREV16(Numeric& numeric)
+    {
+        numeric._value = double(revHelper(uint32_t(std::lround(numeric._value)), 16));
+        return numeric;
+    }
+    Numeric& operatorREV8(Numeric& numeric)
+    {
+        numeric._value = double(revHelper(uint32_t(std::lround(numeric._value)), 8));
+        return numeric;
+    }
+    Numeric& operatorREV4(Numeric& numeric)
+    {
+        numeric._value = double(revHelper(uint32_t(std::lround(numeric._value)), 4));
         return numeric;
     }
 
@@ -1183,6 +1211,18 @@ namespace Expression
         else if(Expression::find("RAND"))
         {
             numeric = factor(0); numeric = operatorRAND(numeric);
+        }
+        else if(Expression::find("REV16"))
+        {
+            numeric = factor(0); numeric = operatorREV16(numeric);
+        }
+        else if(Expression::find("REV8"))
+        {
+            numeric = factor(0); numeric = operatorREV8(numeric);
+        }
+        else if(Expression::find("REV4"))
+        {
+            numeric = factor(0); numeric = operatorREV4(numeric);
         }
         else
         {
