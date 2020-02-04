@@ -112,7 +112,7 @@ namespace Assembler
     uint16_t _currDasmByteCount = 1, _prevDasmByteCount = 1;
     uint16_t _currDasmPageByteCount = 0, _prevDasmPageByteCount = 0;
 
-    std::string _includePath = "";
+    std::string _includePath = ".";
 
     std::vector<Label> _labels;
     std::vector<Equate> _equates;

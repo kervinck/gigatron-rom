@@ -1078,7 +1078,7 @@ namespace Loader
         return true;
     }
 
-    void uploadDirect(UploadTarget uploadTarget, const std::string& name, const std::string path)
+    void uploadDirect(UploadTarget uploadTarget, const std::string& name)
     {
         Gt1File gt1File;
 
@@ -1091,8 +1091,13 @@ namespace Loader
         uint16_t executeAddress;
         std::string gtbFilepath;
 
-        std::string filename = name;
-        std::string filepath = path + name;
+        size_t slash = name.find_last_of("\\/");
+
+        std::string filepath = name;
+        std::string filename = name.substr(slash + 1);
+
+        Expression::replaceText(filepath, "\\", "/");
+
         size_t nameSuffix = filename.find_last_of(".");
         size_t pathSuffix = filepath.find_last_of(".");
         if(nameSuffix == std::string::npos  ||  pathSuffix == std::string::npos)
@@ -1123,18 +1128,15 @@ namespace Loader
         else if(_configGclBuildFound  &&  filename.find(".gcl") != filename.npos)
         {
             // Create compile gcl string
-            std::string browserPath = Editor::getBrowserPath();
-            browserPath.pop_back(); // remove trailing '/'
             if(chdir(_configGclBuild.c_str()))
             {
                 fprintf(stderr, "\nLoader::uploadDirect() : failed to change directory to '%s' : can't build %s\n", _configGclBuild.c_str(), filename.c_str());
                 return;
             }
 
-            size_t slash = filepath.find_last_of("\\/");
-            std::string gclPath = (slash != std::string::npos) ? filepath.substr(0, slash) : browserPath;
+            slash = filepath.find_last_of("\\/");
+            std::string gclPath = (slash != std::string::npos) ? filepath.substr(0, slash) : "./";
             std::string command = "python3 -B Core/compilegcl.py -s interface.json \"" + filepath + "\" \"" + gclPath + "\"";
-            //fprintf(stderr, command.c_str());
 
             // Create gt1 name and path
             filename = filename.substr(0, nameSuffix) + ".gt1";
@@ -1448,10 +1450,17 @@ namespace Loader
             uint16_t executeAddress = Editor::getLoadBaseAddress();
             if(_uploadTarget != None)
             {
-                std::string filename = (Editor::getCurrentFileEntryName()) ? *Editor::getCurrentFileEntryName() : _launchName;
-                std::string filepath = Editor::getBrowserPath();
+                std::string filename;
+                if(Editor::getCurrentFileEntryName())
+                {
+                    filename = Editor::getBrowserPath() + *Editor::getCurrentFileEntryName();
+                }
+                else
+                {
+                    filename = Editor::getBrowserPath() + _launchName;
+                }
 
-                uploadDirect(_uploadTarget, filename, filepath);
+                uploadDirect(_uploadTarget, filename);
                 _uploadTarget = None;
 
                 return;

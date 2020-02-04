@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
     if(argc != 1  &&  argc != 2)
     {
         fprintf(stderr, "%s\n", VERSION_STR);
-        fprintf(stderr, "Usage:   gtemuAT67 <optional input filename> \n");
+        fprintf(stderr, "Usage:   gtemuAT67 <optional input filename>\n");
         return 1;
     }
 
@@ -58,24 +58,18 @@ int main(int argc, char* argv[])
     if(argc == 2)
     {
         std::string name = std::string(argv[1]);
-        size_t colon = name.find_last_of(":");
         size_t slash = name.find_last_of("\\/");
         size_t ram64k = name.find_last_of("64");
-
         std::string path = (slash != std::string::npos) ? name.substr(0, slash) : ".";
+        Expression::replaceText(path, "\\", "/");
         name = (slash != std::string::npos) ? name.substr(slash + 1) : name;
-        std::string fullpath = path + "/" + name;
 
 #ifdef _WIN32
-        // Windows...
-        if(colon != std::string::npos) fullpath = name;
         Cpu::enableWin32ConsoleSaveFile(false);
 #endif
 
-        //fprintf(stderr, "%s : %s : %s\n", path.c_str(), name.c_str(), fullpath.c_str());
-
         Assembler::setIncludePath(path);
-        Loader::setLaunchName(fullpath);
+        Loader::setLaunchName(path + "/" + name);
         Loader::setUploadTarget(Loader::Emulator);
         if(ram64k != std::string::npos) Cpu::swapMemoryModel();
     }

@@ -75,7 +75,7 @@ namespace Loader
 
     UploadTarget getUploadTarget(void);
     void setUploadTarget(UploadTarget target);
-    void uploadDirect(UploadTarget uploadTarget, const std::string& name, const std::string path);
+    void uploadDirect(UploadTarget uploadTarget, const std::string& name);
 
     int getConfigRomsSize(void);
     ConfigRom* getConfigRom(int index);
