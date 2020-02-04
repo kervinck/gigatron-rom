@@ -140,6 +140,7 @@ namespace Editor
     void getMouseMenuCursor(int& x, int& y, int& cy);
 
     std::string getBrowserPath(bool removeSlash=false);
+    void setBrowserPath(const std::string& path);
 
     int getEmulatorScanCode(const std::string& keyWord);
 #ifndef STAND_ALONE

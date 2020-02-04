@@ -219,6 +219,10 @@ namespace Editor
         if(removeSlash  &&  str.length()) str.erase(str.length()-1);
         return str;
     }
+    void setBrowserPath(const std::string& path)
+    {
+        _filePath = path;
+    }
 
     bool scanCodeFromIniKey(const std::string& sectionString, const std::string& iniKey, const std::string& defaultKey, KeyCodeMod& keyCodeMod)
     {

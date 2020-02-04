@@ -45,7 +45,6 @@ namespace Loader
     bool saveGt1File(const std::string& filepath, Gt1File& gt1File, std::string& filename);
     uint16_t printGt1Stats(const std::string& filename, const Gt1File& gt1File);
 
-
 #ifndef STAND_ALONE
     enum Endianness {Little, Big};
     enum UploadTarget {None, Emulator, Hardware};
@@ -69,11 +68,14 @@ namespace Loader
     };
 
 
+    std::string& getLaunchName(void);
     std::string& getCurrentGame(void);
+    void setLaunchName(const std::string& launchName);
     void setCurrentGame(const std::string& currentGame);
 
     UploadTarget getUploadTarget(void);
     void setUploadTarget(UploadTarget target);
+    void uploadDirect(UploadTarget uploadTarget, const std::string& name);
 
     int getConfigRomsSize(void);
     ConfigRom* getConfigRom(int index);

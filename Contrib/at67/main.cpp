@@ -30,8 +30,12 @@
 
 int main(int argc, char* argv[])
 {
-    UNREFERENCED_PARAM(argc);
-    UNREFERENCED_PARAM(argv);
+    if(argc != 1  &&  argc != 2)
+    {
+        fprintf(stderr, "%s\n", VERSION_STR);
+        fprintf(stderr, "Usage:   gtemuAT67 <optional input filename>\n");
+        return 1;
+    }
 
     Memory::initialise();
     Loader::initialise();
@@ -49,6 +53,26 @@ int main(int argc, char* argv[])
     Optimiser::initialise();
     Validater::initialise();
     Linker::initialise();
+
+    // Load file
+    if(argc == 2)
+    {
+        std::string name = std::string(argv[1]);
+        size_t slash = name.find_last_of("\\/");
+        size_t ram64k = name.find_last_of("64");
+        std::string path = (slash != std::string::npos) ? name.substr(0, slash) : ".";
+        Expression::replaceText(path, "\\", "/");
+        name = (slash != std::string::npos) ? name.substr(slash + 1) : name;
+
+#ifdef _WIN32
+        Cpu::enableWin32ConsoleSaveFile(false);
+#endif
+
+        Assembler::setIncludePath(path);
+        Loader::setLaunchName(path + "/" + name);
+        Loader::setUploadTarget(Loader::Emulator);
+        if(ram64k != std::string::npos) Cpu::swapMemoryModel();
+    }
 
 #if 0
     Image::TgaFile tgaFile;

@@ -94,6 +94,7 @@ namespace Cpu
 
 #ifdef _WIN32
     void restoreWin32Console(void);
+    void enableWin32ConsoleSaveFile(bool consoleSaveFile);
 #endif
     
     void loadRom(int index);
