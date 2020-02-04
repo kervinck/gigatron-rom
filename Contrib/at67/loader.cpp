@@ -1134,6 +1134,13 @@ namespace Loader
                 return;
             }
 
+            // Check for absolute path
+            if(filepath.find(":") == std::string::npos  &&  filepath[0] != '/')
+            {
+                filepath = Editor::getBrowserPath() + filepath;
+                pathSuffix = filepath.find_last_of(".");
+            }
+
             slash = filepath.find_last_of("\\/");
             std::string gclPath = (slash != std::string::npos) ? filepath.substr(0, slash) : "./";
             std::string command = "python3 -B Core/compilegcl.py -s interface.json \"" + filepath + "\" \"" + gclPath + "\"";
@@ -1151,7 +1158,7 @@ namespace Loader
             std::ifstream infile(filepath, std::ios::binary | std::ios::in);
             if(!infile.is_open())
             {
-                fprintf(stderr, "\nLoader::uploadDirect() : failed to compile '%s'\n", filename.c_str());
+                fprintf(stderr, "\nLoader::uploadDirect() : failed to compile '%s'\n", filepath.c_str());
                 filename = "";
                 if(gt1FileDeleted == 0) Editor::browseDirectory();
             }
@@ -1457,7 +1464,7 @@ namespace Loader
                 }
                 else
                 {
-                    filename = Editor::getBrowserPath() + _launchName;
+                    filename = _launchName;
                 }
 
                 uploadDirect(_uploadTarget, filename);
