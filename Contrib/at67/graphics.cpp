@@ -273,8 +273,8 @@ namespace Graphics
         _filter = 0;
         _width = 640;
         _height = 480;
-        _scaleX = 1.5f;
-        _scaleY = 1.5f;
+        _scaleX = 2.0f;
+        _scaleY = 2.0f;
         _posX = 40;
         _posY = 40;
 
@@ -324,9 +324,9 @@ namespace Graphics
                         getKeyAsString(sectionString, "Height", "480", result);
                         _height = (result == "DESKTOP") ? DM.h : std::strtol(result.c_str(), nullptr, 10);
 
-                        getKeyAsString(sectionString, "ScaleX", "1.5", result);
+                        getKeyAsString(sectionString, "ScaleX", "2.0", result);
                         _scaleX = std::stof(result.c_str());
-                        getKeyAsString(sectionString, "ScaleY", "1.5", result);
+                        getKeyAsString(sectionString, "ScaleY", "2.0", result);
                         _scaleY = std::stof(result.c_str());
 
                         getKeyAsString(sectionString, "PosX", "0", result);

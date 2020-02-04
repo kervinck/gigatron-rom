@@ -46,6 +46,7 @@ namespace Cpu
     bool _checkRomType = true;
     bool _debugging = false;
     bool _initAudio = true;
+    bool _consoleSaveFile = true;
 
     std::vector<uint8_t> _RAM;
     uint8_t _ROM[ROM_SIZE][2];
@@ -490,6 +491,8 @@ namespace Cpu
     HWND _consoleWindowHWND;
     void restoreWin32Console(void)
     {
+        if(!_consoleSaveFile) return;
+
         std::string line;
         std::ifstream infile(Editor::getCwdPath() + "/" + "console.txt");
         if(infile.is_open())
@@ -510,6 +513,8 @@ namespace Cpu
 
     void saveWin32Console(void)
     {
+        if(!_consoleSaveFile) return;
+
         RECT rect;
         if(GetWindowRect(_consoleWindowHWND, &rect))
         {
@@ -523,6 +528,11 @@ namespace Cpu
                 outfile << xpos << " " << ypos << " " << width << " " << height << std::endl;
             }
         }
+    }
+
+    void enableWin32ConsoleSaveFile(bool consoleSaveFile)
+    {
+        _consoleSaveFile = consoleSaveFile;
     }
 #endif
 
@@ -1039,7 +1049,7 @@ namespace Cpu
             Audio::fillCallbackBuffer();
 
             // Loader
-            Loader::upload(_vgaY);
+            if(_clock > STARTUP_DELAY_CLOCKS*10.0) Loader::upload(_vgaY);
 
             // Horizontal timing errors
             if(_vgaY >= 0  &&  _vgaY < SCREEN_HEIGHT)

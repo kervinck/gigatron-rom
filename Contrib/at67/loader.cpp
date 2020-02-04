@@ -311,6 +311,7 @@ namespace Loader
 
     std::vector<ConfigRom> _configRoms;
 
+    std::string _launchName = "";
     std::string _currentGame = "";
 
     INIReader _configIniReader;
@@ -318,7 +319,9 @@ namespace Loader
     std::map<std::string, SaveData> _saveData;
 
 
+    std::string& getLaunchName(void) {return _launchName;}
     std::string& getCurrentGame(void) {return _currentGame;}
+    void setLaunchName(const std::string& launchName) {_launchName = launchName;}
     void setCurrentGame(const std::string& currentGame) {_currentGame = currentGame;}
 
     UploadTarget getUploadTarget(void) {return _uploadTarget;}
@@ -1075,7 +1078,7 @@ namespace Loader
         return true;
     }
 
-    void uploadDirect(UploadTarget uploadTarget)
+    void uploadDirect(UploadTarget uploadTarget, const std::string& name, const std::string path)
     {
         Gt1File gt1File;
 
@@ -1085,11 +1088,11 @@ namespace Loader
         bool hasRomCode = false;
         bool hasRamCode = false;
 
-        uint16_t executeAddress = Editor::getLoadBaseAddress();
-        std::string filename = *Editor::getCurrentFileEntryName();
-        std::string filepath = std::string(Editor::getBrowserPath() + filename);
+        uint16_t executeAddress;
         std::string gtbFilepath;
 
+        std::string filename = name;
+        std::string filepath = path + name;
         size_t nameSuffix = filename.find_last_of(".");
         size_t pathSuffix = filepath.find_last_of(".");
         if(nameSuffix == std::string::npos  ||  pathSuffix == std::string::npos)
@@ -1128,7 +1131,9 @@ namespace Loader
                 return;
             }
 
-            std::string command = "python3 -B Core/compilegcl.py -s interface.json \"" + filepath + "\" \"" + browserPath + "\"";
+            size_t slash = filepath.find_last_of("\\/");
+            std::string gclPath = (slash != std::string::npos) ? filepath.substr(0, slash) : browserPath;
+            std::string command = "python3 -B Core/compilegcl.py -s interface.json \"" + filepath + "\" \"" + gclPath + "\"";
             //fprintf(stderr, command.c_str());
 
             // Create gt1 name and path
@@ -1443,7 +1448,10 @@ namespace Loader
             uint16_t executeAddress = Editor::getLoadBaseAddress();
             if(_uploadTarget != None)
             {
-                uploadDirect(_uploadTarget);
+                std::string filename = (Editor::getCurrentFileEntryName()) ? *Editor::getCurrentFileEntryName() : _launchName;
+                std::string filepath = Editor::getBrowserPath();
+
+                uploadDirect(_uploadTarget, filename, filepath);
                 _uploadTarget = None;
 
                 return;
