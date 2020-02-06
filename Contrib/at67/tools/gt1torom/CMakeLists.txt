@@ -5,6 +5,9 @@ project(gt1torom)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH})
 
 add_definitions(-DSTAND_ALONE)
+if(MSVC)
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+endif()
 
 set(sources gt1torom.cpp)
 

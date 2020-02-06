@@ -69,7 +69,7 @@ namespace Cpu
     enum RomType {ROMERR=0x00, ROMv1=0x1c, ROMv2=0x20, ROMv3=0x28, ROMv4=0x38, DEVROM=0xf8};
     enum ScanlineMode {Normal=0, VideoB, VideoC, VideoBC, NumScanlineModes};
     enum InternalGt1Id {SnakeGt1=0, RacerGt1=1, MandelbrotGt1=2, PicturesGt1=3, CreditsGt1=4, LoaderGt1=5, NumInternalGt1s};
-    enum Endianess {LittleEndian = 0x03020100ul, BigEndian = 0x00010203ul};
+    enum Endianness {LittleEndian = 0x03020100ul, BigEndian = 0x00010203ul};
 
     struct State
     {
@@ -93,17 +93,13 @@ namespace Cpu
     RomType getRomType(void);
 
 #ifdef _WIN32
-    void restoreWin32Console(void);
     void enableWin32ConsoleSaveFile(bool consoleSaveFile);
 #endif
     
-    void loadRom(int index);
-    void swapRom(void);
-
-    Endianess getHostEndianess(void);
-    void swapEndianess(uint16_t& value);
-    void swapEndianess(uint32_t& value);
-    void swapEndianess(uint64_t& value);
+    Endianness getHostEndianness(void);
+    void swapEndianness(uint16_t& value);
+    void swapEndianness(uint32_t& value);
+    void swapEndianness(uint64_t& value);
 
     void initialiseInternalGt1s(void);
 
@@ -143,6 +139,9 @@ namespace Cpu
     void restoreScanlineModes(void);
     void swapScanlineMode(void);
 
+    void loadRom(int index);
+    void swapRom(void);
+
     void initialise(void);
     void shutdown(void);
     void cycle(const State& S, State& T);
@@ -151,6 +150,11 @@ namespace Cpu
     void swapMemoryModel(void);
     void vCpuUsage(const State& S, const State& T);
     void process(void);
+
+#ifdef _WIN32
+    void restoreWin32Console(void);
+    void saveWin32Console(void);
+#endif
 #endif
 }
 

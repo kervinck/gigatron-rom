@@ -28,16 +28,15 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    std::string filename = std::string(argv[1]);
-    if(filename.find(".gbas") == filename.npos  &&  filename.find(".bas") == filename.npos)
+    std::string name = std::string(argv[1]);
+    if(name.find(".gbas") == name.npos  &&  name.find(".bas") == name.npos)
     {
-        fprintf(stderr, "Wrong file extension in %s : must be one of : '.gbas' or '.bas'\n", filename.c_str());
+        fprintf(stderr, "Wrong file extension in %s : must be one of : '.gbas' or '.bas'\n", name.c_str());
         return 1;
     }
 
-    // Optional include path
-    std::string includepath = (argc == 3) ? std::string(argv[2]) : ".";
-
+    Memory::initialise();
+    Loader::initialise();
     Expression::initialise();
     Assembler::initialise();
     Compiler::initialise();
@@ -47,11 +46,27 @@ int main(int argc, char* argv[])
     Validater::initialise();
     Linker::initialise();
 
-    uint16_t address = 0x0200;
-    size_t nameSuffix = filename.find_last_of(".");
-    std::string output = filename.substr(0, nameSuffix) + ".gasm";
-
+    // Optional include path
+    std::string includepath = (argc == 3) ? std::string(argv[2]) : ".";
     Assembler::setIncludePath(includepath);
+
+    // Output file
+    uint16_t address = DEFAULT_START_ADDRESS;
+    size_t nameSuffix = name.find_last_of(".");
+    std::string output = name.substr(0, nameSuffix) + ".gasm";
+
+    // Path and name
+    size_t slash = name.find_last_of("\\/");
+    std::string path = (slash != std::string::npos) ? name.substr(0, slash) : ".";
+    Expression::replaceText(path, "\\", "/");
+    name = (slash != std::string::npos) ? name.substr(slash + 1) : name;
+    std::string filename = path + "/" + name;
+    Loader::setFilePath(filename);
+
+#ifdef _WIN32
+    Cpu::enableWin32ConsoleSaveFile(false);
+#endif
+
     if(!Compiler::compile(filename, output)) return 1;
     if(!Assembler::assemble(output, address)) return 1;
 

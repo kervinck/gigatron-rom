@@ -5,17 +5,10 @@
 #include <fstream>
 #include <algorithm>
 
-#ifndef STAND_ALONE
-#include "editor.h"
-#include "timing.h"
-#include "graphics.h"
-#include "inih/INIReader.h"
-#include "rs232/rs232.h"
-
-#if defined(_WIN32)
+#ifdef _WIN32
+#include <windows.h>
 #include <direct.h>
 #include "dirent/dirent.h"
-#define chdir _chdir
 #ifdef max
 #undef max
 #endif
@@ -23,9 +16,17 @@
 #undef min
 #endif
 #else
+#include <limits.h>
 #include <unistd.h>
 #include <dirent.h>
 #endif
+
+#ifndef STAND_ALONE
+#include "editor.h"
+#include "timing.h"
+#include "graphics.h"
+#include "inih/INIReader.h"
+#include "rs232/rs232.h"
 #endif
 
 #include "memory.h"
@@ -47,6 +48,47 @@ namespace Loader
 {
     bool _hostIsBigEndian = false;
 
+    std::string _exePath = ".";
+    std::string _cwdPath = ".";
+    std::string _filePath = ".";
+
+
+    const std::string& getExePath(void) {return _exePath;}
+    const std::string& getCwdPath(void) {return _cwdPath;}
+    const std::string& getFilePath(void) {return _filePath;}
+    void setFilePath(const std::string& filePath) {_filePath = filePath;}
+
+#ifdef _WIN32
+    char* getcwd(char* dst, int size)
+    {
+        return _getcwd(dst, size);
+    }
+    int chdir(const char* path)
+    {
+        return _chdir(path);
+    }
+    std::string getExeDir(void)
+    {
+        char dir[MAX_PATH] = {0};
+        GetModuleFileName(NULL, dir, MAX_PATH);
+        std::string path = dir;
+        size_t slash = path.find_last_of("\\/");
+        path = (slash != std::string::npos) ? path.substr(0, slash) : ".";
+        Expression::replaceText(path, "\\", "/");
+        return path;
+    }
+#else
+    std::string getExePath(void)
+    {
+        char dir[PATH_MAX];
+        ssize_t result = readlink("/proc/self/exe", dir, PATH_MAX);
+        std::string path = (result > 0) ? dir : ".";
+        size_t slash = path.find_last_of("\\/");
+        path = (slash != std::string::npos) ? path.substr(0, slash) : ".";
+        Expression::replaceText(path, "\\", "/");
+        return path;
+    }
+#endif
 
     bool loadGt1File(const std::string& filename, Gt1File& gt1File)
     {
@@ -311,29 +353,11 @@ namespace Loader
 
     std::vector<ConfigRom> _configRoms;
 
-    std::string _launchName = "";
     std::string _currentGame = "";
 
     INIReader _configIniReader;
     INIReader _highScoresIniReader;
     std::map<std::string, SaveData> _saveData;
-
-
-    std::string& getLaunchName(void) {return _launchName;}
-    std::string& getCurrentGame(void) {return _currentGame;}
-    void setLaunchName(const std::string& launchName) {_launchName = launchName;}
-    void setCurrentGame(const std::string& currentGame) {_currentGame = currentGame;}
-
-    UploadTarget getUploadTarget(void) {return _uploadTarget;}
-    void setUploadTarget(UploadTarget target) {_uploadTarget = target;}
-
-    int getConfigRomsSize(void) {return int(_configRoms.size());}
-    ConfigRom* getConfigRom(int index)
-    {
-        if(_configRoms.size() == 0  ||  index >= int(_configRoms.size())) return nullptr;
-
-        return &_configRoms[index];
-    }
 
 
     bool getKeyAsString(INIReader& iniReader, const std::string& sectionString, const std::string& iniKey, const std::string& defaultKey, std::string& result, bool upperCase=true)
@@ -343,16 +367,25 @@ namespace Loader
         if(upperCase) Expression::strToUpper(result);
         return true;
     }
+#endif
 
     void initialise(void)
     {
-        if(Cpu::getHostEndianess() == Cpu::BigEndian) _hostIsBigEndian = true;
+        // Current working directory
+        char cwdPath[FILENAME_MAX];
+        if(!getcwd(cwdPath, FILENAME_MAX)) strcpy(cwdPath, ".");
+        _cwdPath = std::string(cwdPath);
+        Expression::replaceText(_cwdPath, "\\", "/");
+        _exePath = getExeDir();
 
+        if(Cpu::getHostEndianness() == Cpu::BigEndian) _hostIsBigEndian = true;
+
+#ifndef STAND_ALONE
         _numComPorts = comEnumerate();
         if(_numComPorts == 0) fprintf(stderr, "Loader::initialise() : no COM ports found.\n");
 
         // Loader config
-        INIReader iniReader(LOADER_CONFIG_INI);
+        INIReader iniReader(_exePath + "/" + LOADER_CONFIG_INI);
         _configIniReader = iniReader;
         if(_configIniReader.ParseError() == 0)
         {
@@ -429,7 +462,7 @@ namespace Loader
 
 
         // High score config
-        INIReader highScoresIniReader(HIGH_SCORES_INI);
+        INIReader highScoresIniReader(_exePath + "/" + HIGH_SCORES_INI);
         _highScoresIniReader = highScoresIniReader;
         if(_highScoresIniReader.ParseError() == 0)
         {
@@ -463,8 +496,25 @@ namespace Loader
         }
         else
         {
-            fprintf(stderr, "Loader::initialise() : couldn't load high scores INI file '%s' : loading and saving of high scores is disabled.\n", HIGH_SCORES_INI);
+            fprintf(stderr, "Loader::initialise() : couldn't load high scores INI file '%s' : high scores are disabled.\n", HIGH_SCORES_INI);
         }
+#endif
+    }
+
+
+#ifndef STAND_ALONE
+    const std::string& getCurrentGame(void) {return _currentGame;}
+    void setCurrentGame(const std::string& currentGame) {_currentGame = currentGame;}
+
+    UploadTarget getUploadTarget(void) {return _uploadTarget;}
+    void setUploadTarget(UploadTarget target) {_uploadTarget = target;}
+
+    int getConfigRomsSize(void) {return int(_configRoms.size());}
+    ConfigRom* getConfigRom(int index)
+    {
+        if(_configRoms.size() == 0  ||  index >= int(_configRoms.size())) return nullptr;
+
+        return &_configRoms[index];
     }
 
     int matchFileSystemName(const std::string& path, const std::string& match, std::vector<std::string>& names)
@@ -750,7 +800,7 @@ namespace Loader
             fprintf(stderr, "Loader::loadDataFile() : read error in number of counts in '%s'\n", filename.c_str());
             return false;
         }
-        if(_hostIsBigEndian) Cpu::swapEndianess(numCounts);
+        if(_hostIsBigEndian) Cpu::swapEndianness(numCounts);
         for(int i=0; i<numCounts; i++)
         {
             uint16_t count;
@@ -760,7 +810,7 @@ namespace Loader
                 fprintf(stderr, "Loader::loadDataFile() : read error in counts of '%s'\n", filename.c_str());
                 return false;
             }
-            if(_hostIsBigEndian) Cpu::swapEndianess(count);
+            if(_hostIsBigEndian) Cpu::swapEndianness(count);
             sdata._counts[i] = count;
         }         
 
@@ -772,7 +822,7 @@ namespace Loader
             fprintf(stderr, "Loader::loadDataFile() : read error in number of addresses in '%s'\n", filename.c_str());
             return false;
         }
-        if(_hostIsBigEndian) Cpu::swapEndianess(numAddresses);
+        if(_hostIsBigEndian) Cpu::swapEndianness(numAddresses);
         for(int i=0; i<numAddresses; i++)
         {
             uint16_t address;
@@ -782,7 +832,7 @@ namespace Loader
                 fprintf(stderr, "Loader::loadDataFile() : read error in addresses of '%s'\n", filename.c_str());
                 return false;
             }
-            if(_hostIsBigEndian) Cpu::swapEndianess(address);
+            if(_hostIsBigEndian) Cpu::swapEndianness(address);
             sdata._addresses[i] = address;
         }         
 
@@ -835,9 +885,9 @@ namespace Loader
 
         // Save counts
         uint16_t numCounts = uint16_t(saveData._counts.size());
-        if(_hostIsBigEndian) Cpu::swapEndianess(numCounts);
+        if(_hostIsBigEndian) Cpu::swapEndianness(numCounts);
         outfile.write((char *)&numCounts, 2);
-        if(_hostIsBigEndian) Cpu::swapEndianess(numCounts);
+        if(_hostIsBigEndian) Cpu::swapEndianness(numCounts);
         if(outfile.bad() || outfile.fail())
         {
             fprintf(stderr, "Loader::saveDataFile() : write error in number of counts of '%s'\n", filename.c_str());
@@ -845,9 +895,9 @@ namespace Loader
         }
         for(int i=0; i<numCounts; i++)
         {
-            if(_hostIsBigEndian) Cpu::swapEndianess(saveData._counts[i]);
+            if(_hostIsBigEndian) Cpu::swapEndianness(saveData._counts[i]);
             outfile.write((char *)&saveData._counts[i], 2);
-            if(_hostIsBigEndian) Cpu::swapEndianess(saveData._counts[i]);
+            if(_hostIsBigEndian) Cpu::swapEndianness(saveData._counts[i]);
             if(outfile.bad() || outfile.fail())
             {
                 fprintf(stderr, "Loader::saveDataFile() : write error in counts of '%s'\n", filename.c_str());
@@ -857,9 +907,9 @@ namespace Loader
 
         // Save addresses
         uint16_t numAddresses = uint16_t(saveData._addresses.size());
-        if(_hostIsBigEndian) Cpu::swapEndianess(numAddresses);
+        if(_hostIsBigEndian) Cpu::swapEndianness(numAddresses);
         outfile.write((char *)&numAddresses, 2);
-        if(_hostIsBigEndian) Cpu::swapEndianess(numAddresses);
+        if(_hostIsBigEndian) Cpu::swapEndianness(numAddresses);
         if(outfile.bad() || outfile.fail())
         {
             fprintf(stderr, "Loader::saveDataFile() : write error in number of addresses of '%s'\n", filename.c_str());
@@ -867,9 +917,9 @@ namespace Loader
         }
         for(int i=0; i<numAddresses; i++)
         {
-            if(_hostIsBigEndian) Cpu::swapEndianess(saveData._addresses[i]);
+            if(_hostIsBigEndian) Cpu::swapEndianness(saveData._addresses[i]);
             outfile.write((char *)&saveData._addresses[i], 2);
-            if(_hostIsBigEndian) Cpu::swapEndianess(saveData._addresses[i]);
+            if(_hostIsBigEndian) Cpu::swapEndianness(saveData._addresses[i]);
             if(outfile.bad() || outfile.fail())
             {
                 fprintf(stderr, "Loader::saveDataFile() : write error in addresses of '%s'\n", filename.c_str());
@@ -1124,7 +1174,7 @@ namespace Loader
             filepath = _configGclBuild + "/Apps/TinyBASIC/" + filename;
             isGtbFile = true;
         }
-        // Compile gcl to gt1
+        // Compile gcl to gt`
         else if(_configGclBuildFound  &&  filename.find(".gcl") != filename.npos)
         {
             // Create compile gcl string
@@ -1134,16 +1184,18 @@ namespace Loader
                 return;
             }
 
-            // Check for absolute path
+            // Prepend CWD to relative paths
             if(filepath.find(":") == std::string::npos  &&  filepath[0] != '/')
             {
-                filepath = Editor::getBrowserPath() + filepath;
+                filepath = _cwdPath + "/" + filepath;
                 pathSuffix = filepath.find_last_of(".");
             }
 
             slash = filepath.find_last_of("\\/");
             std::string gclPath = (slash != std::string::npos) ? filepath.substr(0, slash) : "./";
             std::string command = "python3 -B Core/compilegcl.py -s interface.json \"" + filepath + "\" \"" + gclPath + "\"";
+
+            //fprintf(stderr, "\nLoader::uploadDirect() : %s : %s : %s : %s\n", filepath.c_str(), command.c_str(), _cwdPath.c_str(), _exePath.c_str());
 
             // Create gt1 name and path
             filename = filename.substr(0, nameSuffix) + ".gt1";
@@ -1457,17 +1509,14 @@ namespace Loader
             uint16_t executeAddress = Editor::getLoadBaseAddress();
             if(_uploadTarget != None)
             {
-                std::string filename;
                 if(Editor::getCurrentFileEntryName())
                 {
-                    filename = Editor::getBrowserPath() + *Editor::getCurrentFileEntryName();
-                }
-                else
-                {
-                    filename = _launchName;
+                    _filePath = Editor::getBrowserPath() + *Editor::getCurrentFileEntryName();
                 }
 
-                uploadDirect(_uploadTarget, filename);
+                //fprintf(stderr, "\nLoader::upload() : %s\n", _filePath.c_str());
+
+                uploadDirect(_uploadTarget, _filePath);
                 _uploadTarget = None;
 
                 return;

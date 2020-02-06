@@ -5,6 +5,7 @@
 #include <atomic>
 
 #include "memory.h"
+#include "loader.h"
 #include "cpu.h"
 #include "audio.h"
 #include "timing.h"
@@ -71,7 +72,7 @@ namespace Audio
     void initialise(void)
     {
         // Loader config
-        INIReader iniReader(AUDIO_CONFIG_INI);
+        INIReader iniReader(Loader::getExePath() + "/" + AUDIO_CONFIG_INI);
         _configIniReader = iniReader;
         if(_configIniReader.ParseError() == 0)
         {
@@ -83,7 +84,7 @@ namespace Audio
             {
                 if(section.find(sectionString) == section.end())
                 {
-                    fprintf(stderr, "Loader::initialise() : INI file '%s' has bad Sections : reverting to default values.\n", AUDIO_CONFIG_INI);
+                    fprintf(stderr, "Audio::initialise() : INI file '%s' has bad Sections : reverting to default values.\n", AUDIO_CONFIG_INI);
                     break;
                 }
 
@@ -101,7 +102,7 @@ namespace Audio
         }
         else
         {
-            fprintf(stderr, "Loader::initialise() : couldn't find loader configuration INI file '%s' : reverting to default values.\n", AUDIO_CONFIG_INI);
+            fprintf(stderr, "Audio::initialise() : couldn't find audio configuration INI file '%s' : reverting to default values.\n", AUDIO_CONFIG_INI);
         }
 
         SDL_AudioSpec audSpec;

@@ -39,6 +39,7 @@
 
 namespace Audio
 {
+#ifndef STAND_ALONE
     bool getRealTimeAudio(void);
 
     void initialise(void);
@@ -52,6 +53,7 @@ namespace Audio
 
     void playMusic(void);
     void nextScore(void);
+#endif
 }
 
 #endif

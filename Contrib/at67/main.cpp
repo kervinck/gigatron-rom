@@ -38,8 +38,8 @@ int main(int argc, char* argv[])
     }
 
     Memory::initialise();
-    Loader::initialise();
     Cpu::initialise();
+    Loader::initialise();
     Audio::initialise();
     Image::initialise();
     Editor::initialise();
@@ -59,7 +59,7 @@ int main(int argc, char* argv[])
     {
         std::string name = std::string(argv[1]);
         size_t slash = name.find_last_of("\\/");
-        size_t ram64k = name.find_last_of("64");
+        size_t ram64k = name.find("64k");
         std::string path = (slash != std::string::npos) ? name.substr(0, slash) : ".";
         Expression::replaceText(path, "\\", "/");
         name = (slash != std::string::npos) ? name.substr(slash + 1) : name;
@@ -69,7 +69,7 @@ int main(int argc, char* argv[])
 #endif
 
         Assembler::setIncludePath(path);
-        Loader::setLaunchName(path + "/" + name);
+        Loader::setFilePath(path + "/" + name);
         Loader::setUploadTarget(Loader::Emulator);
         if(ram64k != std::string::npos) Cpu::swapMemoryModel();
     }

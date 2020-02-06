@@ -60,7 +60,7 @@ namespace Image
 
     void initialise(void)
     {
-        if(Cpu::getHostEndianess() == Cpu::BigEndian) _hostIsBigEndian = true;
+        if(Cpu::getHostEndianness() == Cpu::BigEndian) _hostIsBigEndian = true;
     }
 
     bool getFileSize(const std::string& filename, std::ifstream::streampos& fileSize)
@@ -111,9 +111,9 @@ namespace Image
         // Big endian conversion
         if(_hostIsBigEndian)
         {
-            Cpu::swapEndianess(header._format);
-            Cpu::swapEndianess(header._width);
-            Cpu::swapEndianess(header._height);
+            Cpu::swapEndianness(header._format);
+            Cpu::swapEndianness(header._width);
+            Cpu::swapEndianness(header._height);
         }
 
         if(header._format > GtRgbFormats::GT_RGB_888)
@@ -164,7 +164,7 @@ namespace Image
 
             if(_hostIsBigEndian)
             {
-                for(int i=0; i<numOptionalData; i++) Cpu::swapEndianess(gtRgbFile._optional[i]);
+                for(int i=0; i<numOptionalData; i++) Cpu::swapEndianness(gtRgbFile._optional[i]);
             }
         }
 
@@ -212,9 +212,9 @@ namespace Image
         // Big endian conversion
         if(_hostIsBigEndian)
         {
-            Cpu::swapEndianess(gtRgbFile._header._format);
-            Cpu::swapEndianess(gtRgbFile._header._width);
-            Cpu::swapEndianess(gtRgbFile._header._height);
+            Cpu::swapEndianness(gtRgbFile._header._format);
+            Cpu::swapEndianness(gtRgbFile._header._width);
+            Cpu::swapEndianness(gtRgbFile._header._height);
         }
 
         // Write header
@@ -228,9 +228,9 @@ namespace Image
         // Big endian conversion
         if(_hostIsBigEndian)
         {
-            Cpu::swapEndianess(gtRgbFile._header._format);
-            Cpu::swapEndianess(gtRgbFile._header._width);
-            Cpu::swapEndianess(gtRgbFile._header._height);
+            Cpu::swapEndianness(gtRgbFile._header._format);
+            Cpu::swapEndianness(gtRgbFile._header._width);
+            Cpu::swapEndianness(gtRgbFile._header._height);
         }
 
         // Write data
@@ -247,14 +247,14 @@ namespace Image
         {
             if(_hostIsBigEndian)
             {
-                for(int i=0; i<int(numOptionalData); i++) Cpu::swapEndianess(gtRgbFile._optional[i]);
+                for(int i=0; i<int(numOptionalData); i++) Cpu::swapEndianness(gtRgbFile._optional[i]);
             }
 
             outfile.write((char *)&gtRgbFile._optional[0], numOptionalData*2);
 
             if(_hostIsBigEndian)
             {
-                for(int i=0; i<int(numOptionalData); i++) Cpu::swapEndianess(gtRgbFile._optional[i]);
+                for(int i=0; i<int(numOptionalData); i++) Cpu::swapEndianness(gtRgbFile._optional[i]);
             }
         }
 
@@ -282,12 +282,12 @@ namespace Image
 
         if(_hostIsBigEndian)
         {
-            Cpu::swapEndianess(header._colourMapLength);
-            Cpu::swapEndianess(header._colourMapOrigin);
-            Cpu::swapEndianess(header._originX);
-            Cpu::swapEndianess(header._originY);
-            Cpu::swapEndianess(header._width);
-            Cpu::swapEndianess(header._height);
+            Cpu::swapEndianness(header._colourMapLength);
+            Cpu::swapEndianness(header._colourMapOrigin);
+            Cpu::swapEndianness(header._originX);
+            Cpu::swapEndianness(header._originY);
+            Cpu::swapEndianness(header._width);
+            Cpu::swapEndianness(header._height);
         }
 
         if(header._colourMapType != 0)
