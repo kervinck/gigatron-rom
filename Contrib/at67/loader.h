@@ -2,6 +2,7 @@
 #define LOADER_H
 
 
+#include <string>
 #include <vector>
 
 #include "timing.h"

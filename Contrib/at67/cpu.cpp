@@ -302,8 +302,9 @@ namespace Cpu
     uint16_t _vPC = 0x0200;
     State _stateS, _stateT;
 
+#ifdef _WIN32
     HWND _consoleWindowHWND;
-
+#endif
 
     bool getColdBoot(void) {return _coldBoot;}
     bool getIsInReset(void) {return _isInReset;}

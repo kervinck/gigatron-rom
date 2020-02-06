@@ -4,6 +4,7 @@
 #include <string>
 #include <fstream>
 #include <algorithm>
+#include <string.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -78,7 +79,7 @@ namespace Loader
         return path;
     }
 #else
-    std::string getExePath(void)
+    std::string getExeDir(void)
     {
         char dir[PATH_MAX];
         ssize_t result = readlink("/proc/self/exe", dir, PATH_MAX);
@@ -1174,7 +1175,7 @@ namespace Loader
             filepath = _configGclBuild + "/Apps/TinyBASIC/" + filename;
             isGtbFile = true;
         }
-        // Compile gcl to gt`
+        // Compile gcl to gt1
         else if(_configGclBuildFound  &&  filename.find(".gcl") != filename.npos)
         {
             // Create compile gcl string

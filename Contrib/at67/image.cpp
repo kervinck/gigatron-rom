@@ -81,14 +81,14 @@ namespace Image
         std::ifstream infile(filename, std::ios::binary | std::ios::in);
         if(!infile.is_open())
         {
-            fprintf(stderr, "Loader::loadGtRgbFile() : failed to open '%s'\n", filename.c_str());
+            fprintf(stderr, "Image::loadGtRgbFile() : failed to open '%s'\n", filename.c_str());
             return false;
         }
 
         std::ifstream::streampos fileSize = 0;
         if(!getFileSize(filename, fileSize))
         {
-            fprintf(stderr, "Loader::loadGtRgbFile() : couldn't get file size of '%s'\n", filename.c_str());
+            fprintf(stderr, "Image::loadGtRgbFile() : couldn't get file size of '%s'\n", filename.c_str());
             return false;
         }
 
@@ -97,14 +97,14 @@ namespace Image
         infile.read((char *)&header, sizeof(GtRgbHeader));
         if(infile.eof() || infile.bad() || infile.fail())
         {
-            fprintf(stderr, "Loader::loadGtRgbFile() : bad header in '%s'\n", filename.c_str());
+            fprintf(stderr, "Image::loadGtRgbFile() : bad header in '%s'\n", filename.c_str());
             return false;
         }
 
         std::string name = std::string(header._name, sizeof(GTRGB_IDENTIFIER));
         if(name.find(GTRGB_IDENTIFIER) == std::string::npos)
         {
-            fprintf(stderr, "Loader::loadGtRgbFile() : bad header identifier in '%s'\n", filename.c_str());
+            fprintf(stderr, "Image::loadGtRgbFile() : bad header identifier in '%s'\n", filename.c_str());
             return false;
         }
 
@@ -118,7 +118,7 @@ namespace Image
 
         if(header._format > GtRgbFormats::GT_RGB_888)
         {
-            fprintf(stderr, "Loader::loadGtRgbFile() : bad header format : %04x : in '%s'\n", header._format, filename.c_str());
+            fprintf(stderr, "Image::loadGtRgbFile() : bad header format : %04x : in '%s'\n", header._format, filename.c_str());
             return false;
         }
 
@@ -128,13 +128,13 @@ namespace Image
         // Quick sanity check on total size, (maximum RAM is 64K)
         if(totalSize >= 0x10000)
         {
-            fprintf(stderr, "Loader::loadGtRgbFile() : image is bigger than 64K bytes : width=%d : height=%d : format=%04x : in '%s'\n", header._width, header._height, header._format, filename.c_str());
+            fprintf(stderr, "Image::loadGtRgbFile() : image is bigger than 64K bytes : width=%d : height=%d : format=%04x : in '%s'\n", header._width, header._height, header._format, filename.c_str());
             return false;
         }
 
         if(header._width == 0  ||  header._height == 0)
         {
-            fprintf(stderr, "Loader::loadGtRgbFile() : width and height both have to be non zero : width=%d : height=%d : format=%04x : in '%s'\n", header._width, header._height, header._format, filename.c_str());
+            fprintf(stderr, "Image::loadGtRgbFile() : width and height both have to be non zero : width=%d : height=%d : format=%04x : in '%s'\n", header._width, header._height, header._format, filename.c_str());
             return false;
         }
 
@@ -145,7 +145,7 @@ namespace Image
         infile.read((char *)&gtRgbFile._data[0], totalSize);
         if(infile.eof() || infile.bad() || infile.fail())
         {
-            fprintf(stderr, "Loader::loadGtRgbFile() : bad data in '%s'\n", filename.c_str());
+            fprintf(stderr, "Image::loadGtRgbFile() : bad data in '%s'\n", filename.c_str());
             return false;
         }
 
@@ -153,7 +153,7 @@ namespace Image
         int optionalSize = int(infile.tellg()) - int(fileSize);
         if(optionalSize < 0  ||  (optionalSize & 1)) // should never be -ve or odd
         {
-            fprintf(stderr, "Loader::loadGtRgbFile() : bad optional size in '%s'\n", filename.c_str());
+            fprintf(stderr, "Image::loadGtRgbFile() : bad optional size in '%s'\n", filename.c_str());
             return false;
         }
         else if(optionalSize > 0)
@@ -176,13 +176,13 @@ namespace Image
         std::ofstream outfile(filename, std::ios::binary | std::ios::out);
         if(!outfile.is_open())
         {
-            fprintf(stderr, "Loader::saveGtRgbFile() : failed to open '%s'\n", filename.c_str());
+            fprintf(stderr, "Image::saveGtRgbFile() : failed to open '%s'\n", filename.c_str());
             return false;
         }
 
         if(gtRgbFile._header._format > GtRgbFormats::GT_RGB_888)
         {
-            fprintf(stderr, "Loader::saveGtRgbFile() : bad header format : %04x : for '%s'\n", gtRgbFile._header._format, filename.c_str());
+            fprintf(stderr, "Image::saveGtRgbFile() : bad header format : %04x : for '%s'\n", gtRgbFile._header._format, filename.c_str());
             return false;
         }
 
@@ -192,20 +192,20 @@ namespace Image
         // Quick sanity check on total size, (maximum RAM is 64K)
         if(totalSize >= 0x10000)
         {
-            fprintf(stderr, "Loader::saveGtRgbFile() : image is bigger than 64K bytes : width=%d : height=%d : format=%04x : in '%s'\n", gtRgbFile._header._width, gtRgbFile._header._height, gtRgbFile._header._format, filename.c_str());
+            fprintf(stderr, "Image::saveGtRgbFile() : image is bigger than 64K bytes : width=%d : height=%d : format=%04x : in '%s'\n", gtRgbFile._header._width, gtRgbFile._header._height, gtRgbFile._header._format, filename.c_str());
             return false;
         }
 
         if(gtRgbFile._header._width == 0  ||  gtRgbFile._header._height == 0)
         {
-            fprintf(stderr, "Loader::saveGtRgbFile() : width and height both have to be non zero : width=%d : height=%d : format=%04x : in '%s'\n", gtRgbFile._header._width, gtRgbFile._header._height, gtRgbFile._header._format, filename.c_str());
+            fprintf(stderr, "Image::saveGtRgbFile() : width and height both have to be non zero : width=%d : height=%d : format=%04x : in '%s'\n", gtRgbFile._header._width, gtRgbFile._header._height, gtRgbFile._header._format, filename.c_str());
             return false;
         }
 
         // Wrong size
         if(totalSize != int(gtRgbFile._data.size()))
         {
-            fprintf(stderr, "Loader::saveGtRgbFile() : image size does not match data size : image size=%d : data size=%d : in '%s'\n", totalSize, int(gtRgbFile._data.size()), filename.c_str());
+            fprintf(stderr, "Image::saveGtRgbFile() : image size does not match data size : image size=%d : data size=%d : in '%s'\n", totalSize, int(gtRgbFile._data.size()), filename.c_str());
             return false;
         }
 
@@ -221,7 +221,7 @@ namespace Image
         outfile.write((char *)&gtRgbFile._header, sizeof(GtRgbHeader));
         if(outfile.bad() || outfile.fail())
         {
-            fprintf(stderr, "Loader::saveGtRgbFile() : write error in header of '%s'\n", filename.c_str());
+            fprintf(stderr, "Image::saveGtRgbFile() : write error in header of '%s'\n", filename.c_str());
             return false;
         }
 
@@ -237,7 +237,7 @@ namespace Image
         outfile.write((char *)&gtRgbFile._data[0], gtRgbFile._data.size());
         if(outfile.bad() || outfile.fail())
         {
-            fprintf(stderr, "Loader::saveGtRgbFile() : write error in data of '%s'\n", filename.c_str());
+            fprintf(stderr, "Image::saveGtRgbFile() : write error in data of '%s'\n", filename.c_str());
             return false;
         }
 
@@ -267,7 +267,7 @@ namespace Image
         std::ifstream infile(filename, std::ios::binary | std::ios::in);
         if(!infile.is_open())
         {
-            fprintf(stderr, "Loader::loadTgaFile() : failed to open '%s'\n", filename.c_str());
+            fprintf(stderr, "Image::loadTgaFile() : failed to open '%s'\n", filename.c_str());
             return false;
         }
 
@@ -276,7 +276,7 @@ namespace Image
         infile.read((char *)&header, sizeof(TgaHeader));
         if(infile.eof() || infile.bad() || infile.fail())
         {
-            fprintf(stderr, "Loader::loadTgaFile() : bad header in '%s'\n", filename.c_str());
+            fprintf(stderr, "Image::loadTgaFile() : bad header in '%s'\n", filename.c_str());
             return false;
         }
 
@@ -292,49 +292,49 @@ namespace Image
 
         if(header._colourMapType != 0)
         {
-            fprintf(stderr, "Loader::loadTgaFile() : bad colourMapType %d, the only valid colourMapType is 0 : in '%s'\n", header._colourMapType, filename.c_str());
+            fprintf(stderr, "Image::loadTgaFile() : bad colourMapType %d, the only valid colourMapType is 0 : in '%s'\n", header._colourMapType, filename.c_str());
             return false;
         }
 
         if(header._imageType != 2)
         {
-            fprintf(stderr, "Loader::loadTgaFile() : bad imageType %d, the only valid imageType is 2 : in '%s'\n", header._imageType, filename.c_str());
+            fprintf(stderr, "Image::loadTgaFile() : bad imageType %d, the only valid imageType is 2 : in '%s'\n", header._imageType, filename.c_str());
             return false;
         }
 
         if(header._colourMapDepth !=0  ||  header._colourMapLength != 0  ||  header._colourMapOrigin != 0)
         {
-            fprintf(stderr, "Loader::loadTgaFile() : bad colourMap entries, colour maps, (palettes), not supported : in '%s'\n", filename.c_str());
+            fprintf(stderr, "Image::loadTgaFile() : bad colourMap entries, colour maps, (palettes), not supported : in '%s'\n", filename.c_str());
             return false;
         }
 
         if(header._originX !=0  ||  header._originY != 0)
         {
-            fprintf(stderr, "Loader::loadTgaFile() : bad origin, origin anything other thant (0, 0), not supported : in '%s'\n", filename.c_str());
+            fprintf(stderr, "Image::loadTgaFile() : bad origin, origin anything other thant (0, 0), not supported : in '%s'\n", filename.c_str());
             return false;
         }
 
         if(header._bitsPerPixel != 24  &&  header._bitsPerPixel != 32)
         {
-            fprintf(stderr, "Loader::loadTgaFile() : bad bitsPerPixel, only bitsPerPixel = 8 is supported : in '%s'\n", filename.c_str());
+            fprintf(stderr, "Image::loadTgaFile() : bad bitsPerPixel, only bitsPerPixel = 8 is supported : in '%s'\n", filename.c_str());
             return false;
         }
 
         if(header._width * header._height >= 0x10000)
         {
-            fprintf(stderr, "Loader::loadTgaFile() : maximum width*height = 64Kbytes, width = %d, height =%d, size = %d : in '%s'\n", header._width, header._height, header._width * header._height, filename.c_str());
+            fprintf(stderr, "Image::loadTgaFile() : maximum width*height = 64Kbytes, width = %d, height =%d, size = %d : in '%s'\n", header._width, header._height, header._width * header._height, filename.c_str());
             return false;
         }
 
         if(header._width == 0  ||  header._height == 0)
         {
-            fprintf(stderr, "Loader::loadTgaFile() : width and height both have to be non zero, width = %d, height =%d : in '%s'\n", header._width, header._height, filename.c_str());
+            fprintf(stderr, "Image::loadTgaFile() : width and height both have to be non zero, width = %d, height =%d : in '%s'\n", header._width, header._height, filename.c_str());
             return false;
         }
 
         if(header._imageDescriptor & 0x0F)
         {
-            fprintf(stderr, "Loader::loadTgaFile() : attribute bits per pixel not supported, attributes = %01x : in '%s'\n", (header._imageDescriptor & 0x0F), filename.c_str());
+            fprintf(stderr, "Image::loadTgaFile() : attribute bits per pixel not supported, attributes = %01x : in '%s'\n", (header._imageDescriptor & 0x0F), filename.c_str());
             return false;
         }
 
@@ -353,7 +353,7 @@ namespace Image
         // Quick sanity check on total size, (maximum RAM is 64K)
         if(totalSize >= 0x10000 * (header._bitsPerPixel / 8))
         {
-            fprintf(stderr, "Loader::loadTgaFile() : image is bigger than %d bytes : width=%d : height=%d : in '%s'\n", 0x10000 * (header._bitsPerPixel / 8), header._width, header._height, filename.c_str());
+            fprintf(stderr, "Image::loadTgaFile() : image is bigger than %d bytes : width=%d : height=%d : in '%s'\n", 0x10000 * (header._bitsPerPixel / 8), header._width, header._height, filename.c_str());
             return false;
         }
 
@@ -364,7 +364,7 @@ namespace Image
         infile.read((char *)&tgaFile._data[0], totalSize);
         if(infile.eof() || infile.bad() || infile.fail())
         {
-            fprintf(stderr, "Loader::loadTgaFile() : bad data in '%s'\n", filename.c_str());
+            fprintf(stderr, "Image::loadTgaFile() : bad data in '%s'\n", filename.c_str());
             return false;
         }
 
