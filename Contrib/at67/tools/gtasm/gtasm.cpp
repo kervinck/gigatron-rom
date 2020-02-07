@@ -15,34 +15,37 @@
 
 int main(int argc, char* argv[])
 {
-    if(argc != 3  &&  argc != 4)
+    if(argc != 2  &&  argc != 3)
     {
         fprintf(stderr, "%s\n", GTASM_VERSION_STR);
-        fprintf(stderr, "Usage:   gtasm <input filename> <uint16_t start address in hex> <optional include path>\n");
+        fprintf(stderr, "Usage:   gtasm <input filename> <optional include path>\n");
         return 1;
     }
 
-    std::string filename = std::string(argv[1]);
-    if(filename.find(".vasm") == filename.npos  &&  filename.find(".gasm") == filename.npos   &&  filename.find(".asm") == filename.npos  &&  filename.find(".s") == filename.npos)
+    std::string name = std::string(argv[1]);
+    if(name.find(".vasm") == name.npos  &&  name.find(".gasm") == name.npos   &&  name.find(".asm") == name.npos  &&  name.find(".s") == name.npos)
     {
-        fprintf(stderr, "Wrong file extension in %s : must be one of : '.vasm' or '.gasm' or '.asm' or '.s'\n", filename.c_str());
+        fprintf(stderr, "Wrong file extension in %s : must be one of : '.vasm' or '.gasm' or '.asm' or '.s'\n", name.c_str());
         return 1;
     }
 
-    // Handles hex numbers
-    uint16_t address = DEFAULT_START_ADDRESS;
-    std::stringstream ss;
-    ss << std::hex << argv[2];
-    ss >> address;
-    if(address < DEFAULT_START_ADDRESS) address = DEFAULT_START_ADDRESS;
-
-    // Optional include path
-    std::string includepath = (argc == 4) ? std::string(argv[3]) : ".";
-
+    Loader::initialise();
     Expression::initialise();
     Assembler::initialise();
 
+    // Optional include path
+    uint16_t address = DEFAULT_START_ADDRESS;
+    std::string includepath = (argc == 3) ? std::string(argv[2]) : ".";
     Assembler::setIncludePath(includepath);
+
+    // Path and name
+    size_t slash = name.find_last_of("\\/");
+    std::string path = (slash != std::string::npos) ? name.substr(0, slash) : ".";
+    Expression::replaceText(path, "\\", "/");
+    name = (slash != std::string::npos) ? name.substr(slash + 1) : name;
+    std::string filename = path + "/" + name;
+    Loader::setFilePath(filename);
+
     if(!Assembler::assemble(filename, address)) return 1;
 
     // Create gt1 format

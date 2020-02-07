@@ -6,6 +6,7 @@
 
 #include "memory.h"
 #include "cpu.h"
+#include "loader.h"
 #include "image.h"
 #include "assembler.h"
 #include "keywords.h"
@@ -3515,15 +3516,23 @@ namespace Keywords
         // Handle Image
         if(tokens[0] == "IMAGE")
         {
-            Expression::stripWhitespace(tokens[2]);
-            std::string ext = tokens[2];
+            std::string filename = tokens[2];
+            Expression::stripWhitespace(filename);
+            std::string ext = filename;
             Expression::strToUpper(ext);
             if(ext.find(".TGA") != std::string::npos)
             {
+                std::string filepath = Loader::getFilePath();
+                size_t slash = filepath.find_last_of("\\/");
+                filepath = (slash != std::string::npos) ? filepath.substr(0, slash) : ".";
+                filename = filepath + "/" + filename;
                 Image::TgaFile tgaFile;
-                if(!Image::loadTgaFile(tokens[2], tgaFile))
+
+                //fprintf(stderr, "\nKeywords::keywordLOAD() : %s\n", filename.c_str());
+
+                if(!Image::loadTgaFile(filename, tgaFile))
                 {
-                    fprintf(stderr, "Keywords::keywordLOAD() : File '%s' failed to load, in '%s' on line %d\n", tokens[2].c_str(), codeLine._text.c_str(), codeLineIndex);
+                    fprintf(stderr, "Keywords::keywordLOAD() : File '%s' failed to load, in '%s' on line %d\n", filename.c_str(), codeLine._text.c_str(), codeLineIndex);
                     return false;
                 }
 
@@ -3533,7 +3542,7 @@ namespace Keywords
                 Image::convertRGB8toRGB2(tgaFile._data, gtRgbFile._data, tgaFile._header._width, tgaFile._header._height, tgaFile._imageOrigin);
                 if(gtRgbFile._header._width > 256  ||  gtRgbFile._header._width + (address & 0x00FF) > 256)
                 {
-                    fprintf(stderr, "Keywords::keywordLOAD() : Width > 256, (%d, %d), for %s; in '%s' on line %d\n", gtRgbFile._header._width, gtRgbFile._header._height, tokens[2].c_str(), codeLine._text.c_str(), codeLineIndex);
+                    fprintf(stderr, "Keywords::keywordLOAD() : Width > 256, (%d, %d), for %s; in '%s' on line %d\n", gtRgbFile._header._width, gtRgbFile._header._height, filename.c_str(), codeLine._text.c_str(), codeLineIndex);
                     return false;
                 }
 

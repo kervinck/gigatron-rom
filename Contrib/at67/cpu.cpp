@@ -102,22 +102,29 @@ namespace Cpu
     }
 #endif
 
-    Endianess getHostEndianess(void)
+#ifdef _WIN32
+    void enableWin32ConsoleSaveFile(bool consoleSaveFile)
     {
-        return *((Endianess*)_endianBytes);
+        _consoleSaveFile = consoleSaveFile;
+    }
+#endif
+
+    Endianness getHostEndianness(void)
+    {
+        return *((Endianness*)_endianBytes);
     }
 
-    void swapEndianess(uint16_t& value)
+    void swapEndianness(uint16_t& value)
     {
         value = (value >>8)  |  (value <<8);
     }
 
-    void swapEndianess(uint32_t& value)
+    void swapEndianness(uint32_t& value)
     {
         value = (value >>24)  |  ((value >>8) & 0x0000FF00)  |  ((value <<8) & 0x00FF0000)  |  (value <<24);
     }
 
-    void swapEndianess(uint64_t& value)
+    void swapEndianness(uint64_t& value)
     {
         value = (value >>56)  |  ((value >>40) & 0x000000000000FF00LL)  |  ((value >>24) & 0x0000000000FF0000LL)  |  ((value >>8) & 0x00000000FF000000LL)  |
         ((value <<8) & 0x000000FF00000000LL)  |  ((value <<24) & 0x0000FF0000000000LL)  |  ((value <<40) & 0x00FF000000000000LL)  |  (value <<56);
@@ -294,6 +301,10 @@ namespace Cpu
     uint8_t _IN = 0xFF, _XOUT = 0x00;
     uint16_t _vPC = 0x0200;
     State _stateS, _stateT;
+
+#ifdef _WIN32
+    HWND _consoleWindowHWND;
+#endif
 
     bool getColdBoot(void) {return _coldBoot;}
     bool getIsInReset(void) {return _isInReset;}
@@ -485,56 +496,6 @@ namespace Cpu
         memcpy(_ROM, _romFiles[_romIndex], sizeof(_ROM));
         reset(true);
     }
-
-
-#ifdef _WIN32
-    HWND _consoleWindowHWND;
-    void restoreWin32Console(void)
-    {
-        if(!_consoleSaveFile) return;
-
-        std::string line;
-        std::ifstream infile(Editor::getCwdPath() + "/" + "console.txt");
-        if(infile.is_open())
-        {
-            getline(infile, line);
-
-            int xpos, ypos, width, height;
-            sscanf_s(line.c_str(), "%d %d %d %d", &xpos, &ypos, &width, &height);
-            if(xpos < -2000  ||  xpos > 4000  ||  ypos < 320  ||  ypos > 1000  ||  width < 100  ||  width > 2000  ||  height < 100 ||  height > 1000)
-            {
-                xpos = -1000; ypos = 320; width = 1000; height = 1000;
-            }
-
-            MoveWindow(_consoleWindowHWND, xpos, ypos, width, height, true);
-            BringWindowToTop(_consoleWindowHWND);
-        }
-    }
-
-    void saveWin32Console(void)
-    {
-        if(!_consoleSaveFile) return;
-
-        RECT rect;
-        if(GetWindowRect(_consoleWindowHWND, &rect))
-        {
-            std::ofstream outfile(Editor::getCwdPath() + "/" + "console.txt");
-            if(outfile.is_open())
-            {
-                int xpos = rect.left;
-                int ypos = rect.top;
-                int width = rect.right - rect.left;
-                int height = rect.bottom - rect.top;
-                outfile << xpos << " " << ypos << " " << width << " " << height << std::endl;
-            }
-        }
-    }
-
-    void enableWin32ConsoleSaveFile(bool consoleSaveFile)
-    {
-        _consoleSaveFile = consoleSaveFile;
-    }
-#endif
 
     void shutdown(void)
     {
@@ -1078,5 +1039,47 @@ namespace Cpu
         _clock++;
     }
 
+#ifdef _WIN32
+    void restoreWin32Console(void)
+    {
+        if(!_consoleSaveFile) return;
+
+        std::string line;
+        std::ifstream infile(Loader::getCwdPath() + "/" + "console.txt");
+        if(infile.is_open())
+        {
+            getline(infile, line);
+
+            int xpos, ypos, width, height;
+            sscanf_s(line.c_str(), "%d %d %d %d", &xpos, &ypos, &width, &height);
+            if(xpos < -2000  ||  xpos > 4000  ||  ypos < 320  ||  ypos > 1000  ||  width < 100  ||  width > 2000  ||  height < 100 ||  height > 1000)
+            {
+                xpos = -1000; ypos = 320; width = 1000; height = 1000;
+            }
+
+            MoveWindow(_consoleWindowHWND, xpos, ypos, width, height, true);
+            BringWindowToTop(_consoleWindowHWND);
+        }
+    }
+
+    void saveWin32Console(void)
+    {
+        if(!_consoleSaveFile) return;
+
+        RECT rect;
+        if(GetWindowRect(_consoleWindowHWND, &rect))
+        {
+            std::ofstream outfile(Loader::getCwdPath() + "/" + "console.txt");
+            if(outfile.is_open())
+            {
+                int xpos = rect.left;
+                int ypos = rect.top;
+                int width = rect.right - rect.left;
+                int height = rect.bottom - rect.top;
+                outfile << xpos << " " << ypos << " " << width << " " << height << std::endl;
+            }
+        }
+    }
+#endif
 #endif
 }

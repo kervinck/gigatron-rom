@@ -197,7 +197,7 @@ StringMidiNote PrintText!
 
 { Loop forever }
 [do
-  $10 \soundTimer:                          { keep pumping soundTimer, so that global sound stays alive }
+  $10 \soundTimer.                          { keep pumping soundTimer, so that global sound stays alive }
               
   $3074 Pos=            
   midiStreamPtr>, PrintByte!                {Print MIDI stream pointer, high and low bytes}
