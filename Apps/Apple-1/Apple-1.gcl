@@ -1,7 +1,9 @@
 
 {-----------------------------------------------------------------------+
 |                                                                       |
+|                                                                       |
 |       Apple-1 simulator for Gigatron TTL microcomputer                |
+|                                                                       |
 |                                                                       |
 +-----------------------------------------------------------------------}
 gcl0x
@@ -9,13 +11,11 @@ gcl0x
 {
   Issues:
 
-  XXX Mini-assembler: Remove the #$9D escape?
-  XXX Mini-assembler: relocate to strictly under $1000
-  XXX Mini-assembler: find an easy to remember entry address (Apple II: $F666)
-  XXX vIRQ interrupts to handle memory mapped PIA: DSP/KBD/..
+  XXX Restore cursor `@'
+  XXX Don't crash BASIC (free up more zero page, eg. saving of vPC)
+  XXX Restore 'spacers' to make wozmon output fit again
   XXX Normally we need RESET to get out of A1 BASIC. Can we use Ctrl-C?
   XXX BASIC: AUTO doesn't work well
-  XXX Can we preload a nice BASIC program
   XXX Preload Mastermind game at $300
   XXX NMI/IRQ(=BRK)/RESET back into to wozmon (through vector)
 
@@ -45,6 +45,10 @@ gcl0x
         $32-$33         _i
         $34-$3b         WozMon variables
         $3c-$3d         _j
+        $3e-$3f         _TIA
+        $40-$4c         Mini-assembler
+
+        $f8-$ff         Interrupt handling
 
   Memory map, with compressed video memory:
         +--------------------------+
@@ -65,12 +69,12 @@ gcl0x
 
 _i=$32          {2 bytes}
 _j=$3c          {2 bytes}
+_TIA=$3e        {2 bytes}
 
-{-----------------------------------------------------------------------+
-|       Zero page data                                                  |
-+-----------------------------------------------------------------------}
-
-*=$44           ##_RESET        {Sensible default argument to disassembler}
+_stackBottom=$f8
+_cursorTimer=$f8
+_lastKey=$f9
+_vCpuState=$fa
 
 {-----------------------------------------------------------------------+
 |       ROM type check                                                  |
@@ -78,7 +82,7 @@ _j=$3c          {2 bytes}
 
 *=$200
 
-\romType, \romTypeValue_ROMv4-  {Version check >= ROMv4, see Docs/GT1-files.txt}
+\romType, \romTypeValue_DEVROM- {Version check >= DEVROM, see Docs/GT1-files.txt}
 [if<0 do _frameCount _vPCH:     {https://forum.gigatron.io/viewtopic.php?f=4&t=130}
       loop]
 
@@ -96,8 +100,14 @@ $1ee p= {videoTable+119*2}      {First GCL variable at $30, later used as Pos}
 [do
   $7e p.                        {Shared empty pixel line at $7e60}
   <p, 2- <p. if>=0loop]
-
 $101 {videoTable+1} p= $60 p.   {Use offsets 96..255 for pixel data, not 0..159}
+255 p=                          {Forces a newline on initial _CharOut}
+
+&_stackBottom \vSP.             {Reserve bottom of stack for IRQ context}
+&_vIRQ_DEVROM _i=
+&_vIRQ_ENTER _i:                {Set vIRQ vector}
+
+255 \frameCount.                {First interrupt in next frame}
 
 &_Apple1 _vLR=                  {Prepare transfer to main loop}
 &_PRE_RESET                     {Start address for 6502 program}
@@ -126,11 +136,11 @@ $101 {videoTable+1} p= $60 p.   {Use offsets 96..255 for pixel data, not 0..159}
         ;======================================
 
         Merged and transcribed both sources to the
-        Gigatron Apple-1 emulator on v6502 by
+        Apple-1 emulator for Gigatron v6502 by
         Marcel van Kervinck 2019/2020
 }
 
-                *=$d00
+                *=$c8a
 
 _FORMAT=$40
 _LENGTH=$41
@@ -156,6 +166,7 @@ _LIST1=*        #_PHA_                          { STACK LOOP COUNTER }
                 #_SEC_
                 #_SBCIM_        #1
                 #_BNE_          #@_LIST1        { LOOP FOR 20 INSTRS }
+
 _CMDLINE=*      #_JSR_          ##_GETLNZ       { INPUT A FRESH LINE }
                 #_TXA_                          { NULL INPUT? }
                 #_BNE_          #@_CMDLIN2
@@ -206,6 +217,7 @@ _FORM2=*        #_JSR_          ##_GETNSP       { GET 1ST CHR OF ADDR }
                 #_BEQ_          #@_FORM4        { YES }
                 #_CMPIM_        #$A4            { NO: 2ND HALF OPT? }
                 #_BEQ_          #@_FORM4        { YES }
+*=$d00
                 #_LDYZ_         #_YSAV
 _FORM3=*        #_CLC_                          { CLEAR BIT-NO MATCH }
 _FORM4=*        #_DEY_                          { BACK UP 1 CHAR }
@@ -266,6 +278,7 @@ _ERR2=*         #_TYA_
                 #_LDAIM_        #$DE {"^"}      {   LAST PARSED CHAR }
                 #_JSR_          ##_ECHO         {   TO SHOW ERR POSN }
                 #_JMP_          ##_CMDLINE      { NEXT COMMAND LINE }
+
 _REL=*          #_SBCIM_        #$81            { YES: IS FMT COMPAT }
                 #_LSRA_                         {   W/RELATIVE MODE? }
                 #_BNE_          #@_ERR1         { NO: ERROR OUT }
@@ -278,7 +291,7 @@ _REL2=*         #_DEX_
                 #_CLC_
                 #_SBCZ_         #_PCL           { CALC ADDR-PC-2 }
                 #_STAZ_         #_A2L
-*=$e00          #_BPL_          #@_REL3
+                #_BPL_          #@_REL3
                 #_INY_
 _REL3=*         #_TYA_
                 #_SBCZ_         #_PCH
@@ -346,6 +359,7 @@ _MNNDX3=*       #_DEY_
                 #_RTS_
 
 _INSTDSP=*      #_JSR_          ##_INSDS1       { GEN FMT, LEN BYTES }
+*=$e00
                 #_PHA_                          { * SAVE MNEMONIC TABLE INDEX. }
 _PROP=*         #_LDAIY_        #_PCL
                 #_JSR_          ##_PRBYTE
@@ -371,7 +385,7 @@ _PRMN2=*        #_ASLZ_         #_RMNEM
                 #_DEY_
                 #_BNE_          #@_PRMN2
                 #_ADCIM_        #$BF            { ADD '?' OFFSET. }
-                #_JSR_          ##_CHAROUT      { OUTPUT A CHAR OR MNEMONIC }
+                #_JSR_          ##_ECHO         { OUTPUT A CHAR OR MNEMONIC }
                 #_DEX_
                 #_BNE_          #@_PRMN1
                 #_JSR_          ##_PRBLNK       { OUTPUT 3 BLANKS. }
@@ -390,10 +404,10 @@ _PRADR2=*       #_LDAZ_         #_FORMAT
 _PRADR3=*       #_ASLZ_         #_FORMAT        { TEST NEXT PRINT FORMAT BIT. }
                 #_BCC_          #@_PRADR4       { IF 0, DONT PRINT }
                 #_LDAAX_        ##_CHAR1_MINUS1 { CORRESPONDING CHAR. }
-                #_JSR_          ##_CHAROUT      { OUTPUT 1 OR 2 CHARS. }
+                #_JSR_          ##_ECHO         { OUTPUT 1 OR 2 CHARS. }
                 #_LDAAX_        ##_CHAR2_MINUS1 { *   (IF CHAR FROM CHAR2 IS 0, }
                 #_BEQ_          #@_PRADR4       { *     DON'T FRINT IT) }
-                #_JSR_          ##_CHAROUT
+                #_JSR_          ##_ECHO
 _PRADR4=*       #_DEX_
                 #_BNE_          #@_PRADR1
                 #_RTS_                          { *RETURN IF DONE 6 FORMAT BITS. }
@@ -409,32 +423,29 @@ _PRNTX=*        #_TXA_                          { AND RETURN }
 
 _PRBLNK=*       #_LDXIM_        #$1             { BLANK COUNT [Gigatron] Was: #$3 }
 _PRBL2=*        #_LDAIM_        #$A0
-_PRBL3=*        #_JSR_          ##_CHAROUT      { OUTPUT A BLANK }
+_PRBL3=*        #_JSR_          ##_ECHO         { OUTPUT A BLANK }
                 #_DEX_
                 #_BNE_          #@_PRBL2        { LOOP UNTIL COUNT =0 }
                 #_RTS_
 
 _NOTACR=*       #_CMPIM_        #$9B            { ESC? }
-                #_BEQ_          #@_GETLNZ       { YES: START OVER }
+                #_BEQ_          #@_CANCEL       { YES: START OVER }
                 #_JSR_          ##_ECHO         { PRINT CHAR }
-                #_CMPIM_
-*=$f00
-                                #$DF {"_"}
+                #_CMPIM_        #$DF {"_"}
                 #_BEQ_          #@_BCKSPC
                 #_INX_
                 #_BPL_          #@_NXTCHAR      { 128 CHARS MAX }
+_CANCEL=*       #_LDAIM_        #$DC {"\"}
+                #_JSR_          ##_ECHO
 _GETLNZ=*       #_JSR_          ##_CROUT        { FRESH LINE }
                 #_LDAIM_        #$A1 {"!"}      { PROMPT CHAR }
                 #_JSR_          ##_ECHO
                 #_LDXIM_        #1
 _BCKSPC=*       #_DEX_
                 #_BMI_          #@_GETLNZ
-_NXTCHAR=*      #_STXZ_         #_YSAV          { [Gigatron] }
-                #_JSR_          ##_WAITKEY      { [Gigatron] }
-                #_LDXZ_         #_YSAV          { [Gigatron] }
-              { #_BIT_          ##_KBDCR      } { WAIT FOR KEY PRESS }
-              { #_BPL_          #@_NXTCHAR    } { NO KEY YET }
-              { #_LDA_          ##_KBD        } { LOAD CHAR }
+_NXTCHAR=*      #_BIT_          ##_KBDCR        { WAIT FOR KEY PRESS }
+                #_BPL_          #@_NXTCHAR      { NO KEY YET }
+                #_LDA_          ##_KBD          { LOAD CHAR }
                 #_STAAX_        ##_IN           { STORE IN BUFFER }
                 #_CMPIM_        #$8D            { CR? }
                 #_BNE_          #@_NOTACR       { NO: KEEP GOING }
@@ -446,20 +457,8 @@ _GETNSP=*       #_LDAAY_        ##_IN
                 #_BEQ_          #@_GETNSP
                 #_RTS_
 
-_XMON=*         #_JMP_          ##_CMDLINE      { [Gigatron] XXX put on nice address }
 _CROUT=*        #_LDAIM_        #$8D
                 #_JMP_          ##_ECHO
-
-_PCADJ=*        #_LDAZ_         #_LENGTH        { 0=1-BYTE, 1=2-BYTE, 2=3-BYTE. }
-                #_SEC_
-_PCADJ3=*       #_LDYZ_         #_PCH
-                #_TAX_                          { * TEST DISPL SIGN (FOR REL }
-                #_BPL_          #@_PCADJ4       { *   BRANCH). EXTEND NEG }
-                #_DEY_                          { *   BY DECREMENTING PCH. }
-_PCADJ4=*       #_ADCZ_         #_PCL
-                #_BCC_          #@_RTS1         { PCL+LENGTH (OR DISPL) +1 TO A. }
-                #_INY_                          { *  CARRY INTO Y (PCH) }
-_RTS1=*         #_RTS_
 
 _GETNUM=*       #_LDXIM_        #0              { CLEAR VALID # FLAG }
                 #_STXZ_         #_A2L           { CLEAR A2 }
@@ -491,6 +490,20 @@ _NXTCHR=*       #_LDAAY_        ##_IN           { GET CHAR }
                                                 {   X=0: NO NUMBER }
                                                 {   X=1: NUMBER }
 
+_XMON=* {EEE}   #_JMP_          ##_CMDLINE      { [Gigatron] Easy to remember entry point }
+
+_PCADJ=*        #_LDAZ_         #_LENGTH        { 0=1-BYTE, 1=2-BYTE, 2=3-BYTE. }
+                #_SEC_
+_PCADJ3=*       #_LDYZ_         #_PCH
+                #_TAX_                          { * TEST DISPL SIGN (FOR REL }
+                #_BPL_          #@_PCADJ4       { *   BRANCH). EXTEND NEG }
+                #_DEY_                          { *   BY DECREMENTING PCH. }
+_PCADJ4=*       #_ADCZ_         #_PCL
+                #_BCC_          #@_RTS1         { PCL+LENGTH (OR DISPL) +1 TO A. }
+                #_INY_                          { *  CARRY INTO Y (PCH) }
+_RTS1=*         #_RTS_
+
+*=$f00
 _MODE1=*        #$40 #$2  #$45 #$3
                 #$D0 #$8  #$40 #$9
                 #$30                            { XXXXXXZ0 INSTRS.. }
@@ -556,9 +569,7 @@ _MNEML=*        #$1C #$8A #$1C #$23             { XXXXX000 INSTRS. }
                 #$A5 #$69 #$24 #$24
                 #$AE #$AE #$A8 #$AD             { 1XXX1010 INSTRS. }
                 #$29 #$0  #$7C #$0
-                #$15 #$9C
-*=$1000
-                          #$6D #$9C             { XXXYYY10 INSTRS. }
+                #$15 #$9C #$6D #$9C             { XXXYYY10 INSTRS. }
                 #$A5 #$69 #$29 #$53
                 #$84 #$13 #$34 #$11             { XXXYYY01 INSTRS. }
                 #$A5 #$69 #$23 #$A0
@@ -580,63 +591,53 @@ _MNEMR=*        #$D8 #$62 #$5A #$48             { XXXXX000 INSTRS }
                 #$C4 #$CA #$26 #$48             { XXXYYY01 INSTRS. }
                 #$44 #$44 #$A2 #$C8
 
-
 *=$5e00
 
 {-----------------------------------------------------------------------+
-|       WAITKEY                                                         |
+|       vIRQ_ENTER                                                      |
 +-----------------------------------------------------------------------}
 
-{
-  Wait for next key press and return ASCII result
-  Display a blinking cursor while waiting.
-  Must preserve v6502_Y
-}
+_vIRQ_ENTER=*
+[
+  {-- Enter interrupt --}
+  push                          {Non-leaf function}
+  _vCpuState=                   {Save extra vIRQ state information}
+                                { needed if switching back to v6502}
 
-_WAITKEY=*      #_LDAZ_  #_serialRaw
-_WAITKEY1=*     #_TAX_                  {Reference state before change}
-_WAITKEY2=*     #_LDAZ_  #_serialRaw
-                #_CMPZ_  #_v6502_X      {Keyboard state changed? v6502's X is in memory...}
-                #_BNE_   #@_WAITKEY4
+  {-- Handle KBD --}
+  &_lastKey, _serialRaw^ 255&   {First trigger on key changes}
+  [if<>0
+    &_KBD _TIA=                 {Pointer to TIA register}
+    &_serialRaw, &_lastKey.     {"serialLast" isn't useful for this}
+    255^ [if<>0 255^            {But ignore key releases}
+      $60- [if>=0 $20-] $60+    {Map to upper case, delete becomes rubout}
+      10^ [if=0 7] 10^          {Map 10 CR to 13 LF}
+      127& 128-                 {Set bits 7..15}
+      _TIA:                     {Update KBD and KBDCR in one go}
+    ]]
 
-                #_LDAZ_  #_frameCount   {No change: handle cursor and time}
-                #_ANDIM_ #$0f
-                #_BNE_   #@_WAITKEY2    {4 Hz cursor redraw rate}
+  {-- Handle DSP --}
+  &_DSP_minus1 deek             {Test DSP bit 7}
+  [if<0
+    &_DSP _TIA=                 {Pointer to TIA register}
+    peek &_CharOut!             {Emit character when set}
+    &_KBDCR _TIA.               {Setting DSP to $11 clears bit 7}
+    _vAC.]                      {Also clear *KBDCR* bit 7. This is NOT how the}
+                                { true TIA works, but it fools most programs.}
 
-                #_LDAZ_  #_frameCount   {Select space or cursor symbol}
-                #_ANDIM_ #$30           {Flash at 1 Hz with 75% duty cycle}
-                #_BNE_   #@_WAITKEY3
-                #_LDAIM_ #$a0           {Space}
-                #_BIT_
-_WAITKEY3=*     #_LDAIM_ #$c0           {`@'}
-                #_BRK_                  {Display cursor}
-                #_JSR_   ##_GOBACK      {Move back}
+  {-- Handle cursor --}
+  <_cursorTimer++               {Advance cursor timer}
+  {
+    $c0 &_CharOut!              {`@'}
+    p 6- p=                     {Go back}
+  }
 
-                #_JMP_   ##_WAITKEY2
-
-_WAITKEY4=*     #_CMPIM_ #255           {Ignore key release}
-                #_BEQ_   #@_WAITKEY1
-                #_PHA_
-                #_LDAIM_ #$a0           {Overwrite cursor symbol with a space}
-                #_BRK_
-                #_JSR_   ##_GOBACK      {Move back}
-                #_PLA_
-
-                #_CMPIM_ #$60           {Lower case?}
-                #_BCC_   #@_MAPKEYCODE1
-                #_SBCIM_ #$20           {Map to upper case, DEL becomes rubout}
-_MAPKEYCODE1=*  #_CMPIM_ #10
-                #_BNE_   #@_MAPKEYCODE2
-                #_LDAIM_ #13            {LF becomes CR}
-_MAPKEYCODE2=*  #_ORAIM_ #$80           {B7 should be '1'}
-                #_STA_   ##_KBD
-                #_RTS_
-
-_GOBACK=*       #_LDAZ_  #<p            {Go back}
-                #_SEC_
-                #_SBCIM_ #6
-                #_STAZ_  #<p
-                #_RTS_
+  {-- Return from interrupt --}
+  pop
+  255 \frameCount.              {New interrupt in next frame. Note: "255"}
+                                { *may* cause a race condition and crash!}
+  \vIRQ_Return &_vCpuState??    {vIRQ return sequence with extra state}
+]
 
 {-----------------------------------------------------------------------+
 |       Startup message                                                 |
@@ -684,20 +685,26 @@ _v6502_PC=                      {Reset v6502 PC}
 [do
   \SYS_Run6502_v4_80 _sysFn=
   80!!                          {Run 6502 code until BRK}
-  push                          {Save v6502 PC}
+  loop]                         {TODO Simulate 6502 IRQ}
 
 {-----------------------------------------------------------------------+
 |       Character output with automatic scrolling                       |
 +-----------------------------------------------------------------------}
 
+_CharOut=*
+[
   {Minimalistic terminal output, with bit 7 set by WozMon}
 
-  %-2=                          {Park character in stack area}
-  \KBDCR _vAC.                  {Clears KBDCR bit 7}
+  8-- %0=                       {Park character in stack area}
+
+  _sysArgs0 %2=
+  _sysArgs2 %4=
+  _sysArgs4 %6=
+
   \SYS_VDrawBits_134 _sysFn=    {Prepare SYS calls}
   $3f00 _sysArgs0=              {White on black}
 
-  %-2                           {Get character back}
+  %0                            {Get character back}
   $8d^ [if<>0                   {Test for CR...}
     <p, 251- if>0 0]            {...or line wrap}
   [if=0
@@ -724,16 +731,16 @@ _v6502_PC=                      {Reset v6502 PC}
     { Scroll everything up by modifying the video indirection table }
     [do
       _i 18+ _j=                {j looks 9 entries ahead of i}
-      peek \sysArgs0.           {Swap scanlines}
+      peek \sysArgs2.           {Swap scanlines}
       _i, _j.
-      \sysArgs0, _i.
+      \sysArgs2, _i.
       <_i++ <_i++               {Advance to next entry in video table}
       <_i, 216^ if<>0loop]      {Until all done}
 
     { The cleared text row has now bubbled down to the bottom }
   ]
 
-  %-2 $a0-                      {WozMon sends ASCII with bit 7 set}
+  %0 $a0-                       {WozMon sends ASCII with bit 7 set}
   [if>=0                        {If printable}
 
     {-------------------------------------------------------------------+
@@ -750,7 +757,7 @@ _v6502_PC=                      {Reset v6502 PC}
     _j+ _j=                     {Add to page address to reach bitmap data}
 
     p _sysArgs4=                {Screen position for character}
-    %-2=                        {Remember this position}
+    %0=                         {Remember this position}
     6+ p=                       {Advance by 6 pixels}
 
     5 [do _i=                   {Draw character as 5 vertical bit slices}
@@ -762,28 +769,31 @@ _v6502_PC=                      {Reset v6502 PC}
       <_j++ <_sysArgs4++        {Advance to next byte}
       _i 1- if>0loop]           {Looping}
 
-    %-2                         {Return position for backspace}
+    %0                          {Return position for backspace}
   ]
 
-  pop                           {Restore v6502 PC}
+  %2 _sysArgs0=
+  %4 _sysArgs2=
+  %6 _sysArgs4=
 
-  loop]                         {Back to wozmon}
+  8++ ret
+]
 
 {-----------------------------------------------------------------------+
 |       Apple-1 Cassette Interface                                      |
 +-----------------------------------------------------------------------}
 
 *=$c100
-
-                #_LDAIM_ #$aa
-                #_BRK_
+                #_LDAIM_ #$aa           {`*'}
+                #_JSR_   ##_ECHO
 _MENU=*
-                {Print welcome message}
-                #_LDXIM_ #62
+                #_LDXIM_ #59            {Print welcome message}
 _L4=*           #_LDAAX_ ##_MSG
-                #_BRK_
+                #_JSR_   ##_ECHO
                 #_DEX_
                 #_BPL_   #@_L4
+_L5=*           #_BIT_   ##_DSP         {Wait for processing of char}
+                #_BMI_   #@_L5
                 #_JMP_   ##_RESET
 
 _MSG=*
@@ -791,10 +801,10 @@ _MSG=*
                 #$8d #$c3 #$c9 #$d3 #$c1 #$c2 #$a0 #$d2
                 #$b0 #$b0 #$b0 #$c5
 
-                { 'D13R  Mini-assembler\r' }
+                { 'EEER  Mini-assembler\r' }
                 #$8d #$f2 #$e5 #$ec #$e2 #$ed #$e5 #$f3
                 #$f3 #$e1 #$ad #$e9 #$ee #$e9 #$cd #$a0
-                #$a0 #$d2 #$b3 #$b1 #$c4
+                #$a0 #$d2 #$c5 #$c5 #$c5
 
                 { '200   Free\r' }
                 #$8d #$e5 #$e5 #$f2 #$c6 #$a0 #$a0 #$a0
@@ -805,6 +815,9 @@ _MSG=*
                 #$b1 #$ad #$e5 #$ec #$f0 #$f0 #$c1
 
                 { '\r' }
+                #$8d
+
+
                 #$8d
 
                 {
@@ -822,8 +835,8 @@ _MSG=*
 
 
 *=$e000
- #$4c #$b0 #$e2 #$20 #$00 #$5e #$10 #$fb #$ad #$10 #$d0 #$60 #$8a #$29 #$20 #$f0
- #$23 #$a9 #$a0 #$85 #$e4 #$4c #$c9 #$e3 #$a9 #$20 #$c5 #$3e #$b0 #$0c #$a9 #$8d
+ #$4c #$b0 #$e2 #$ad #$11 #$d0 #$10 #$fb #$ad #$10 #$d0 #$60 #$8a #$29 #$20 #$f0
+ #$23 #$a9 #$a0 #$85 #$e4 #$4c #$c9 #$e3 #$a9 #$20 #$c5 #$ef #$b0 #$0c #$a9 #$8d
  #$a0 #$07 #$20 #$c9 #$e3 #$a9 #$a0 #$88 #$d0 #$f8 #$a0 #$00 #$b1 #$e2 #$e6 #$e2
  #$d0 #$02 #$e6 #$e3 #$60 #$20 #$15 #$e7 #$20 #$76 #$e5 #$a5 #$e2 #$c5 #$e6 #$a5
  #$e3 #$e5 #$e7 #$b0 #$ef #$20 #$6d #$e0 #$4c #$3b #$e0 #$a5 #$ca #$85 #$e2 #$a5
@@ -870,52 +883,52 @@ _MSG=*
  #$02 #$c8 #$10 #$0a #$a0 #$8b #$20 #$c4 #$e3 #$a0 #$01 #$88 #$30 #$f6 #$20 #$03
  #$e0 #$ea #$ea #$20 #$c9 #$e3 #$c9 #$8d #$d0 #$d6 #$a9 #$df #$99 #$00 #$02 #$60
  #$20 #$d3 #$ef #$20 #$cd #$e3 #$46 #$d9 #$a9 #$be #$20 #$c9 #$e3 #$a0 #$00 #$84
- #$42 #$24 #$40 #$10 #$0c #$a6 #$ec #$a5 #$ed #$20 #$1b #$e5 #$a9 #$a0 #$20 #$c9
- #$e3 #$a2 #$ff #$9a #$20 #$9e #$e2 #$84 #$3f #$8a #$85 #$c8 #$a2 #$20 #$20 #$91
+ #$42 #$24 #$40 #$10 #$0c #$a6 #$ed #$a5 #$ee #$20 #$1b #$e5 #$a9 #$a0 #$20 #$c9
+ #$e3 #$a2 #$f7 #$9a #$20 #$9e #$e2 #$84 #$e8 #$8a #$85 #$c8 #$a2 #$20 #$20 #$91
  #$e4 #$a5 #$c8 #$69 #$00 #$85 #$e0 #$a9 #$00 #$aa #$69 #$02 #$85 #$e1 #$a1 #$e0
  #$29 #$f0 #$c9 #$b0 #$f0 #$03 #$4c #$83 #$e8 #$a0 #$02 #$b1 #$e0 #$99 #$cd #$00
 
 *=$e300
- #$88 #$d0 #$f8 #$20 #$8a #$e3 #$a5 #$3f #$e5 #$c8 #$c9 #$04 #$f0 #$a8 #$91 #$e0
+ #$88 #$d0 #$f8 #$20 #$8a #$e3 #$a5 #$e8 #$e5 #$c8 #$c9 #$04 #$f0 #$a8 #$91 #$e0
  #$a5 #$ca #$f1 #$e0 #$85 #$e4 #$a5 #$cb #$e9 #$00 #$85 #$e5 #$a5 #$e4 #$c5 #$cc
  #$a5 #$e5 #$e5 #$cd #$90 #$45 #$a5 #$ca #$f1 #$e0 #$85 #$e6 #$a5 #$cb #$e9 #$00
  #$85 #$e7 #$b1 #$ca #$91 #$e6 #$e6 #$ca #$d0 #$02 #$e6 #$cb #$a5 #$e2 #$c5 #$ca
  #$a5 #$e3 #$e5 #$cb #$b0 #$e0 #$b5 #$e4 #$95 #$ca #$ca #$10 #$f9 #$b1 #$e0 #$a8
- #$88 #$b1 #$e0 #$91 #$e6 #$98 #$d0 #$f8 #$24 #$40 #$10 #$09 #$b5 #$ed #$75 #$eb
- #$95 #$ed #$e8 #$f0 #$f7 #$10 #$7e #$00 #$00 #$00 #$00 #$a0 #$14 #$d0 #$71 #$20
+ #$88 #$b1 #$e0 #$91 #$e6 #$98 #$d0 #$f8 #$24 #$40 #$10 #$09 #$b5 #$ee #$75 #$ec
+ #$95 #$ee #$e8 #$f0 #$f7 #$10 #$7e #$00 #$00 #$00 #$00 #$a0 #$14 #$d0 #$71 #$20
  #$15 #$e7 #$a5 #$e2 #$85 #$e6 #$a5 #$e3 #$85 #$e7 #$20 #$75 #$e5 #$a5 #$e2 #$85
  #$e4 #$a5 #$e3 #$85 #$e5 #$d0 #$0e #$20 #$15 #$e7 #$20 #$6d #$e5 #$a5 #$e6 #$85
  #$e2 #$a5 #$e7 #$85 #$e3 #$a0 #$00 #$a5 #$ca #$c5 #$e4 #$a5 #$cb #$e5 #$e5 #$b0
  #$16 #$a5 #$e4 #$d0 #$02 #$c6 #$e5 #$c6 #$e4 #$a5 #$e6 #$d0 #$02 #$c6 #$e7 #$c6
  #$e6 #$b1 #$e4 #$91 #$e6 #$90 #$e0 #$a5 #$e6 #$85 #$ca #$a5 #$e7 #$85 #$cb #$60
  #$20 #$c9 #$e3 #$c8 #$b9 #$00 #$eb #$30 #$f7 #$c9 #$8d #$d0 #$06 #$a9 #$00 #$85
- #$3e #$a9 #$8d #$e6 #$3e #$48 #$09 #$80 #$20 #$ef #$ff #$68 #$ea #$60 #$a0 #$06
+ #$ef #$a9 #$8d #$e6 #$ef #$8d #$12 #$d0 #$2c #$12 #$d0 #$30 #$fb #$60 #$a0 #$06
  #$20 #$d3 #$ee #$24 #$d9 #$30 #$03 #$4c #$b6 #$e2 #$4c #$9a #$eb #$2a #$69 #$a0
  #$dd #$00 #$02 #$d0 #$53 #$b1 #$46 #$0a #$30 #$06 #$88 #$b1 #$46 #$30 #$29 #$c8
 
 *=$e400
  #$86 #$c8 #$98 #$48 #$a2 #$00 #$a1 #$46 #$aa #$4a #$49 #$48 #$11 #$46 #$c9 #$c0
- #$90 #$01 #$e8 #$c8 #$d0 #$f3 #$68 #$a8 #$8a #$4c #$c0 #$e4 #$e6 #$3f #$a6 #$3f
+ #$90 #$01 #$e8 #$c8 #$d0 #$f3 #$68 #$a8 #$8a #$4c #$c0 #$e4 #$e6 #$e8 #$a6 #$e8
  #$f0 #$bc #$9d #$00 #$02 #$60 #$a6 #$c8 #$a9 #$a0 #$e8 #$dd #$00 #$02 #$b0 #$fa
  #$b1 #$46 #$29 #$3f #$4a #$d0 #$b6 #$bd #$00 #$02 #$b0 #$06 #$69 #$3f #$c9 #$1a
  #$90 #$6f #$69 #$4f #$c9 #$0a #$90 #$69 #$a6 #$45 #$c8 #$b1 #$46 #$29 #$e0 #$c9
- #$20 #$f0 #$7a #$b5 #$a8 #$85 #$c8 #$b5 #$d1 #$85 #$3f #$88 #$b1 #$46 #$0a #$10
+ #$20 #$f0 #$7a #$b5 #$a8 #$85 #$c8 #$b5 #$d1 #$85 #$e8 #$88 #$b1 #$46 #$0a #$10
  #$fa #$88 #$b0 #$38 #$0a #$30 #$35 #$b4 #$58 #$84 #$47 #$b4 #$80 #$e8 #$10 #$da
  #$f0 #$b3 #$c9 #$7e #$b0 #$22 #$ca #$10 #$04 #$a0 #$06 #$10 #$29 #$94 #$80 #$a4
- #$47 #$94 #$58 #$a4 #$c8 #$94 #$a8 #$a4 #$3f #$94 #$d1 #$29 #$1f #$a8 #$b9 #$20
+ #$47 #$94 #$58 #$a4 #$c8 #$94 #$a8 #$a4 #$e8 #$94 #$d1 #$29 #$1f #$a8 #$b9 #$20
  #$ec #$0a #$a8 #$a9 #$76 #$2a #$85 #$47 #$d0 #$01 #$c8 #$c8 #$86 #$45 #$b1 #$46
  #$30 #$84 #$d0 #$05 #$a0 #$0e #$4c #$e0 #$e3 #$c9 #$03 #$b0 #$c3 #$4a #$a6 #$c8
  #$e8 #$bd #$00 #$02 #$90 #$04 #$c9 #$a2 #$f0 #$0a #$c9 #$df #$f0 #$06 #$86 #$c8
  #$20 #$1c #$e4 #$c8 #$88 #$a6 #$45 #$b1 #$46 #$88 #$0a #$10 #$cf #$b4 #$58 #$84
- #$47 #$b4 #$80 #$e8 #$b1 #$46 #$29 #$9f #$d0 #$ed #$85 #$e8 #$85 #$e9 #$98 #$48
+ #$47 #$b4 #$80 #$e8 #$b1 #$46 #$29 #$9f #$d0 #$ed #$85 #$e9 #$85 #$ea #$98 #$48
  #$86 #$45 #$b4 #$d0 #$84 #$c9 #$18 #$a9 #$0a #$85 #$41 #$a2 #$00 #$c8 #$b9 #$00
- #$02 #$29 #$0f #$65 #$e8 #$48 #$8a #$65 #$e9 #$30 #$1c #$aa #$68 #$c6 #$41 #$d0
+ #$02 #$29 #$0f #$65 #$e9 #$48 #$8a #$65 #$ea #$30 #$1c #$aa #$68 #$c6 #$41 #$d0
 
 *=$e500
- #$f2 #$85 #$e8 #$86 #$e9 #$c4 #$3f #$d0 #$de #$a4 #$c9 #$c8 #$84 #$3f #$20 #$1c
- #$e4 #$68 #$a8 #$a5 #$e9 #$b0 #$a9 #$a0 #$00 #$10 #$8b #$85 #$e9 #$86 #$e8 #$a2
- #$04 #$86 #$c9 #$a9 #$b0 #$85 #$41 #$a5 #$e8 #$dd #$63 #$e5 #$a5 #$e9 #$fd #$68
- #$e5 #$90 #$0d #$85 #$e9 #$a5 #$e8 #$fd #$63 #$e5 #$85 #$e8 #$e6 #$41 #$d0 #$e7
+ #$f2 #$85 #$e9 #$86 #$ea #$c4 #$e8 #$d0 #$de #$a4 #$c9 #$c8 #$84 #$e8 #$20 #$1c
+ #$e4 #$68 #$a8 #$a5 #$ea #$b0 #$a9 #$a0 #$00 #$10 #$8b #$85 #$ea #$86 #$e9 #$a2
+ #$04 #$86 #$c9 #$a9 #$b0 #$85 #$41 #$a5 #$e9 #$dd #$63 #$e5 #$a5 #$ea #$fd #$68
+ #$e5 #$90 #$0d #$85 #$ea #$a5 #$e9 #$fd #$63 #$e5 #$85 #$e9 #$e6 #$41 #$d0 #$e7
  #$a5 #$41 #$e8 #$ca #$f0 #$0e #$c9 #$b0 #$f0 #$02 #$85 #$c9 #$24 #$c9 #$30 #$04
  #$a5 #$42 #$f0 #$0b #$20 #$c9 #$e3 #$24 #$40 #$10 #$04 #$99 #$00 #$02 #$c8 #$ca
  #$10 #$c1 #$60 #$01 #$0a #$64 #$e8 #$10 #$00 #$00 #$00 #$03 #$27 #$a5 #$ca #$85
@@ -959,11 +972,11 @@ _MSG=*
  #$10 #$90 #$20 #$6f #$e7 #$20 #$15 #$e7 #$a5 #$ce #$85 #$da #$a5 #$cf #$85 #$db
  #$20 #$15 #$e7 #$18 #$a5 #$ce #$65 #$da #$20 #$08 #$e7 #$a5 #$cf #$65 #$db #$70
  #$dd #$95 #$a0 #$60 #$20 #$15 #$e7 #$a4 #$ce #$f0 #$05 #$88 #$a5 #$cf #$f0 #$0c
- #$60 #$a5 #$3e #$09 #$07 #$a8 #$c8 #$a9 #$a0 #$20 #$c9 #$e3 #$c4 #$3e #$b0 #$f7
+ #$60 #$a5 #$ef #$09 #$07 #$a8 #$c8 #$a9 #$a0 #$20 #$c9 #$e3 #$c4 #$ef #$b0 #$f7
  #$60 #$20 #$b1 #$e7 #$20 #$15 #$e7 #$a5 #$cf #$10 #$0a #$a9 #$ad #$20 #$c9 #$e3
  #$20 #$72 #$e7 #$50 #$ef #$88 #$84 #$d5 #$86 #$cf #$a6 #$ce #$20 #$1b #$e5 #$a6
- #$cf #$60 #$20 #$15 #$e7 #$a5 #$ce #$85 #$ec #$a5 #$cf #$85 #$ed #$88 #$84 #$40
- #$c8 #$a9 #$0a #$85 #$ea #$84 #$eb #$60 #$20 #$15 #$e7 #$a5 #$ce #$a4 #$cf #$10
+ #$cf #$60 #$20 #$15 #$e7 #$a5 #$ce #$85 #$ed #$a5 #$cf #$85 #$ee #$88 #$84 #$40
+ #$c8 #$a9 #$0a #$85 #$eb #$84 #$ec #$60 #$20 #$15 #$e7 #$a5 #$ce #$a4 #$cf #$10
 
 *=$e800
  #$f2 #$20 #$15 #$e7 #$b5 #$50 #$85 #$da #$b5 #$78 #$85 #$db #$a5 #$ce #$91 #$da
@@ -973,7 +986,7 @@ _MSG=*
  #$c9 #$08 #$b0 #$5e #$a8 #$e6 #$44 #$a5 #$e0 #$99 #$00 #$11 #$a5 #$e1 #$99 #$08
  #$11 #$a5 #$dc #$99 #$10 #$11 #$a5 #$dd #$99 #$18 #$11 #$20 #$15 #$e7 #$20 #$6d
  #$e5 #$90 #$04 #$a0 #$37 #$d0 #$3b #$a5 #$e4 #$a4 #$e5 #$85 #$dc #$84 #$dd #$2c
- #$0f #$00 #$10 #$4f #$18 #$69 #$03 #$90 #$01 #$c8 #$a2 #$ff #$86 #$d9 #$9a #$85
+ #$11 #$d0 #$30 #$4f #$18 #$69 #$03 #$90 #$01 #$c8 #$a2 #$f7 #$86 #$d9 #$9a #$85
  #$e0 #$84 #$e1 #$20 #$79 #$e6 #$24 #$d9 #$10 #$49 #$18 #$a0 #$00 #$a5 #$dc #$71
  #$dc #$a4 #$dd #$90 #$01 #$c8 #$c5 #$4c #$d0 #$d1 #$c4 #$4d #$d0 #$cd #$a0 #$34
  #$46 #$d9 #$4c #$e0 #$e3 #$a0 #$4a #$a5 #$44 #$f0 #$f7 #$c6 #$44 #$a8 #$b9 #$0f
@@ -1031,7 +1044,7 @@ _MSG=*
  #$c4 #$c9 #$4d #$d3 #$d4 #$d2 #$a0 #$cf #$d6 #$c6 #$4c #$dc #$0d #$d2 #$c5 #$d4
  #$d9 #$d0 #$c5 #$a0 #$cc #$c9 #$ce #$c5 #$8d #$3f #$46 #$d9 #$90 #$03 #$4c #$c3
  #$e8 #$a6 #$cf #$9a #$a6 #$ce #$a0 #$8d #$d0 #$02 #$a0 #$99 #$20 #$c4 #$e3 #$86
- #$ce #$ba #$86 #$cf #$a0 #$fe #$84 #$d9 #$c8 #$84 #$c8 #$20 #$99 #$e2 #$84 #$3f
+ #$ce #$ba #$86 #$cf #$a0 #$fe #$84 #$d9 #$c8 #$84 #$c8 #$20 #$99 #$e2 #$84 #$e8
  #$a2 #$20 #$a9 #$30 #$20 #$91 #$e4 #$e6 #$d9 #$a6 #$ce #$a4 #$c8 #$0a #$85 #$ce
  #$c8 #$b9 #$00 #$02 #$c9 #$74 #$f0 #$d2 #$49 #$b0 #$c9 #$0a #$b0 #$f0 #$c8 #$c8
  #$84 #$c8 #$b9 #$00 #$02 #$48 #$b9 #$ff #$01 #$a0 #$00 #$20 #$08 #$e7 #$68 #$95
@@ -1131,10 +1144,11 @@ _MSG=*
 
      _IN=$200
 
-    _KBD=$D010
-  _KBDCR=$D011
-    _DSP=$D012
-  _DSPCR=$D013
+       _KBD=$D010
+     _KBDCR=$D011
+_DSP_minus1=$D011
+       _DSP=$D012
+     _DSPCR=$D013
 
 _RESET=*        #_CLD_                  { Clear decimal arithmetic mode.          }
                 #_CLI_
@@ -1156,7 +1170,7 @@ _GETLINE=*      #_LDAIM_ #$8D           { CR.                                   
                 #_LDYIM_ #$01           { Initiallize text index.                 }
 _BACKSPACE=*    #_DEY_                  { Back up text index.                     }
                 #_BMI_   #@_GETLINE     { Beyond start of line, reinitialize.     }
-_NEXTCHAR=*     #_JSR_   ##_WAITKEY     { [Gigatron] No KBDCR and KBD (yet!)      }
+_NEXTCHAR=*     #_LDA_   ##_KBDCR       { Key ready?                              }
                 #_BPL_   #@_NEXTCHAR    { Loop until ready.                       }
                 #_LDA_   ##_KBD         { Load character. B7 should be '1'.       }
                 #_STAAY_ ##_IN          { Add to text buffer.                     }
@@ -1228,8 +1242,8 @@ _NXTPRNT=*      #_BNE_   #@_PRDATA      { NE means no address to print.         
                 #_JSR_   ##_PRBYTE      { Output it in hex format.                }
                 #_LDAIM_ #$BA           { ":".                                    }
                 #_JSR_   ##_ECHO        { Output it.                              }
-_PRDATA=*       #_LDAIM_ #$04           { [Gigatron] 4 pixels wide blank.         }
-                #_JSR_   ##_BLANK       { [Gigatron] Output it.                   }
+_PRDATA=*       #_LDAIM_ #$A0           { Blank.                                  }
+                #_JSR_   ##_ECHO        { Output it.                              }
                 #_LDAIX_ #_XAML         { Get data byte at 'examine index'.       }
                 #_JSR_   ##_PRBYTE      { Output it in hex format.                }
 _XAMNEXT=*      #_STXZ_  #_MODE         { 0->MODE (XAM mode).                     }
@@ -1256,16 +1270,12 @@ _PRHEX=*        #_ANDIM_ #$0F           { Mask LSD for hex print.               
                 #_CMPIM_ #$BA           { Digit?                                  }
                 #_BCC_   #@_ECHO        { Yes, output it.                         }
                 #_ADCIM_ #$06           { Add offset for letter.                  }
-_CHAROUT=*
-_ECHO=*         #_PHA_                  { [Gigatron]                              }
-                #_BRK_                  { [Gigatron] Transfer to vCPU for display.}
-                #_PLA_                  { [Gigatron]                              }
-                #_RTS_                  { [Gigatron] Return.                      }
-_BLANK=*        #_CLC_                  { [Gigatron] Advance few pixels so BLOCK  }
-                #_ADCZ_  #<p            { [Gigatron]   XAM doesn't wrap around    }
-                #_STAZ_  #<p            { [Gigatron]   the 160 pixel wide screen. }
-                #_RTS_                  { [Gigatron]                              }
-                #$00                    { (unused)                                }
+                                        { [Gigatron] Order reversed for fake TIA  }
+_ECHO=*         #_STA_   ##_DSP         { Output character.  Sets DA.             }
+_WAITECHO=*     #_BIT_   ##_DSP         { DA bit (B7) cleared yet?                }
+                #_BMI_   #@_WAITECHO    { No, wait for display.                   }
+                #_RTS_                  { Return.                                 }
+                #$00 #$00               { (unused)                                }
 {FFFA}          ##$0000                 { (NMI)                                   }
 {FFFC}          ##_RESET                { (RESET)                                 }
 {FFFE}          ##$0000                 { (IRQ/BRK)                               }

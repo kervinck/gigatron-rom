@@ -478,6 +478,8 @@ class Program:
   def emit(self, byte, comment=None):
     # Next program byte in RAM
     self.prepareSegment()
+    if not isinstance(byte, int):
+      self.error('Invalid value (number expected, got %s)' % repr(byte))
     if byte < -128 or byte >= 256:
       self.error('Value %s out of range (must be -128..255)' % repr(byte))
     self.putInRomTable(byte, comment)

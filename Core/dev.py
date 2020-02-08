@@ -112,13 +112,13 @@
 #  DONE Expander: Auto-detect banking, 64K and 128K
 #  DONE Expander: Boot from *.GT1 file if SDC/MMC detected
 #  XXX  Add CMPHS/CMPHU instructions to vCPU XXX Still needs testing
-#  XXX  SPI: Simple command line interface (solve "EXE vs COM" dilemma)
-#  XXX  SPI: Tutorial on formatting FAT32 partitions. (Linux=mkdosfs, apple=newfs_msdos)
-#  XXX  Apple-1: Memory mapped PIA emulation using interrupt (D010-D013)
-#  XXX  Apple-1: Include A1 BASIC
+#  XXX  GTOS: Simple command line interface (solve "EXE vs COM" dilemma)
+#  XXX  GTOS: Tutorial on formatting FAT32 partitions. (Linux=mkdosfs, apple=newfs_msdos)
+#  DONE Apple-1: Memory mapped PIA emulation using interrupt (D010-D013)
+#  DONE Apple-1: Include A1 BASIC
 #  XXX  Apple-1: Original 2514 font? Suppress lower case?
-#  XXX  Apple-1: Include assembler
-#  XXX  Apple-1: Intercept cassette interface
+#  DONE Apple-1: Include assembler
+#  DONE Apple-1: Intercept cassette interface
 #  XXX  Racer: Make noise when crashing
 #  XXX  Racer: Control speed with up/down (better for TypeC controllers)
 #  XXX  Reduce the Pictures application ROM footprint #120
@@ -130,12 +130,12 @@
 #  XXX  Babelfish freeze at power-on?
 #  XXX  Loader: make noise while loading (only channel 1 is safe to use)
 #  XXX  v6502: add 65c02 opcodes? http://nparker.llx.com/a2/opcodes.html
+#  XXX  Video: Increase vertical resolution with same videoTable (160 lines?)
 #
 #  Ideas for ROM v6+
 #  XXX  Pucrunch (well documented) or eximozer 3.0.2 (better compression)
 #  XXX  SPI: Think about SPI modes (polarities)
 #  XXX  Reset.c and Main.c (that is: port these from GCL to C)
-#  XXX  Sprites by scan line 4 reset method? ("videoG"=graphics)
 #  XXX  Need keymaps in ROM? (perhaps undocumented if not tested)
 #  XXX  FrogStroll (not in Contrib/)
 #  XXX  How it works memo: brief description of every software function
@@ -5039,10 +5039,10 @@ suba(2)                         #90
 st([vPC])                       #91
 ld([Y,vIRQ_DEVROM+1])           #92
 st([vPC+1])                     #93
-ld([vCpuSelect])                #94 Allow interrupt to save this itself
-st([vAC])                       #95
-ld(0)                           #96 Tidy up vACH
-st([vAC+1])                     #97
+ld([vCpuSelect])                #94 Handler must save this if needed
+st([vAC+1])                     #95
+ld(0)                           #96
+st([vAC])                       #97
 ld(hi('ENTER'))                 #98 Set vCpuSelect to ENTER (=regular vCPU)
 st([vCpuSelect])                #99
 runVcpu(186-100-extra,          #100 Application cycles (scan line 0)
