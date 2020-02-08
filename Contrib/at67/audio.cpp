@@ -5,6 +5,7 @@
 #include <atomic>
 
 #include "memory.h"
+#include "loader.h"
 #include "cpu.h"
 #include "audio.h"
 #include "timing.h"
@@ -71,7 +72,7 @@ namespace Audio
     void initialise(void)
     {
         // Loader config
-        INIReader iniReader(AUDIO_CONFIG_INI);
+        INIReader iniReader(Loader::getExePath() + "/" + AUDIO_CONFIG_INI);
         _configIniReader = iniReader;
         if(_configIniReader.ParseError() == 0)
         {
@@ -83,7 +84,7 @@ namespace Audio
             {
                 if(section.find(sectionString) == section.end())
                 {
-                    fprintf(stderr, "Loader::initialise() : INI file '%s' has bad Sections : reverting to default values.\n", AUDIO_CONFIG_INI);
+                    fprintf(stderr, "Audio::initialise() : INI file '%s' has bad Sections : reverting to default values.\n", AUDIO_CONFIG_INI);
                     break;
                 }
 
@@ -101,7 +102,7 @@ namespace Audio
         }
         else
         {
-            fprintf(stderr, "Loader::initialise() : couldn't find loader configuration INI file '%s' : reverting to default values.\n", AUDIO_CONFIG_INI);
+            fprintf(stderr, "Audio::initialise() : couldn't find audio configuration INI file '%s' : reverting to default values.\n", AUDIO_CONFIG_INI);
         }
 
         SDL_AudioSpec audSpec;
@@ -119,13 +120,32 @@ namespace Audio
             _EXIT_(EXIT_FAILURE);
         }
 
-        initialiseChannels();
+        initialiseChannels(false, Cpu::ROMERR);
 
         SDL_PauseAudio(0);
     }
 
-    void initialiseChannels(void)
+    void initialiseChannels(bool coldBoot, Cpu::RomType romType)
     {
+        static uint8_t waveTables[256];
+
+        // ROM's V1 to V3 do not re-initialise RAM Audio Wave Tables on soft reboot
+        if(romType > Cpu::ROMERR  &&  romType < Cpu::ROMv4)
+        {
+            // Save Audio Wave Tables on cold reboot
+            if(coldBoot)
+            {
+                //fprintf(stderr, "Audio::initialiseChannels() : Saving Audio Wave Tables\n");
+                for(uint16_t i=0; i<256; i++) waveTables[i] = Cpu::getRAM(0x0700 + i);
+            }
+            // Restore Audio Wave Tables on warm reboot
+            else
+            {
+                //fprintf(stderr, "Audio::initialiseChannels() : Restoring Audio Wave Tables\n");
+                for(uint16_t i=0; i<256; i++) Cpu::setRAM(0x0700 + i, waveTables[i]);
+            }
+        }
+
         for(uint16_t i=0; i<GIGA_SOUND_CHANNELS; i++)
         {
             Cpu::setRAM(GIGA_CH0_WAV_A + i*GIGA_CHANNEL_OFFSET, 0x00); // sample index modification for advanced noise generation
@@ -183,7 +203,7 @@ namespace Audio
 
     void nextScore(void)
     {
-        initialiseChannels();
+        initialiseChannels(false, Cpu::ROMERR);
 
         if(++_scoreIndex >= 1) _scoreIndex = 0;
         _scorePtr = (uint8_t*)_score[_scoreIndex];
@@ -197,7 +217,7 @@ namespace Audio
         if(firstTime == true)
         {
             firstTime = false;
-            initialiseChannels();            
+            initialiseChannels(false, Cpu::ROMERR);            
         }
 
         static int16_t midiDelay = 0;

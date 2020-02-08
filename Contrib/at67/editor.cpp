@@ -5,16 +5,13 @@
 
 
 #if defined(_WIN32)
-#include <direct.h>
 #include "dirent/dirent.h"
-#define getcwd _getcwd
 #undef max
 #undef min
 #else
 #include <unistd.h>
 #include <dirent.h>
 #endif
-
 
 #include <SDL.h>
 #include "memory.h"
@@ -63,8 +60,7 @@ namespace Editor
     uint16_t _singleStepVpc = 0x0000;
     uint16_t _singleStepAddress = VIDEO_Y_ADDRESS;
 
-    std::string _cwdPath = ".";
-    std::string _filePath = "./";
+    std::string _browserPath = "./";
 
     MouseState _mouseState;
     MemoryMode _memoryMode = RAM;
@@ -114,8 +110,6 @@ namespace Editor
     bool getPageDnButton(void) {return _pageDnButton;}
     bool getDelAllButton(void) {return _delAllButton;}
  
-    const std::string& getCwdPath(void) {return _cwdPath;}
-
     MemoryMode getMemoryMode(void) {return _memoryMode;}
     EditorMode getEditorMode(void) {return _editorMode;}
     KeyboardMode getKeyboardMode(void) {return _keyboardMode;}
@@ -213,13 +207,6 @@ namespace Editor
         //fprintf(stderr, "%d %d %d  %d %d %d  %08x\n", x, y, cy, _pageUpButton, _pageDnButton, _delAllButton, _mouseState._state);
     }
 
-    std::string getBrowserPath(bool removeSlash)
-    {
-        std::string str = _filePath;
-        if(removeSlash  &&  str.length()) str.erase(str.length()-1);
-        return str;
-    }
-
     bool scanCodeFromIniKey(const std::string& sectionString, const std::string& iniKey, const std::string& defaultKey, KeyCodeMod& keyCodeMod)
     {
         keyCodeMod._keyMod = KMOD_NONE;
@@ -264,16 +251,23 @@ namespace Editor
         return _emulator[keyWord]._keyMod;
     }
 
+    std::string getBrowserPath(bool removeSlash)
+    {
+        std::string str = _browserPath;
+        if(removeSlash  &&  str.length()) str.erase(str.length()-1);
+        return str;
+    }
+    void setBrowserPath(const std::string& path)
+    {
+        _browserPath = path;
+    }
+
 
     void initialise(void)
     {
         SDL_StartTextInput();
 
-        // Current working directory
-        char cwdPath[FILENAME_MAX];
-        if(!getcwd(cwdPath, FILENAME_MAX)) strcpy(cwdPath, ".");
-        _cwdPath = std::string(cwdPath);
-        _filePath = _cwdPath + "/";
+        _browserPath = Loader::getCwdPath() + "/";
 
         // Keyboard to SDL key mapping
         _sdlKeys["ENTER"]       = SDLK_RETURN;
@@ -414,7 +408,6 @@ namespace Editor
         _emulator["ImageEditor"]  = {SDLK_i, KMOD_LCTRL};
         _emulator["ScanlineMode"] = {SDLK_s, KMOD_LCTRL};
         _emulator["Reset"]        = {SDLK_F1, KMOD_LCTRL};
-        _emulator["Execute"]      = {SDLK_F5, KMOD_LCTRL};
         _emulator["Help"]         = {SDLK_h, KMOD_LCTRL};
         _emulator["Quit"]         = {SDLK_q, KMOD_LCTRL};
 
@@ -430,8 +423,7 @@ namespace Editor
         _keyboard["B"]      = {SDLK_SLASH, KMOD_NONE};
 
         // Hardware INI key to SDL key mapping
-        _hardware["Reset"]   = {SDLK_F1, KMOD_LALT};
-        _hardware["Execute"] = {SDLK_F5, KMOD_LALT};
+        _hardware["Reset"]   = {SDLK_F2, KMOD_LCTRL};
 
         // Debugger INI key to SDL key mapping
         _debugger["Debug"]     = {SDLK_F6, KMOD_LCTRL};
@@ -440,7 +432,7 @@ namespace Editor
         _debugger["StepWatch"] = {SDLK_F9, KMOD_LCTRL};
 
         // Input configuration
-        INIReader iniReader(INPUT_CONFIG_INI);
+        INIReader iniReader(Loader::getExePath() + "/" + INPUT_CONFIG_INI);
         _configIniReader = iniReader;
         if(_configIniReader.ParseError() < 0)
         {
@@ -477,7 +469,6 @@ namespace Editor
                     scanCodeFromIniKey(sectionString, "ImageEditor",  "CTRL+I",   _emulator["ImageEditor"]);
                     scanCodeFromIniKey(sectionString, "ScanlineMode", "CTRL+S",   _emulator["ScanlineMode"]);
                     scanCodeFromIniKey(sectionString, "Reset",        "CTRL+F1",  _emulator["Reset"]);
-                    scanCodeFromIniKey(sectionString, "Execute",      "CTRL+F5",  _emulator["Execute"]);
                     scanCodeFromIniKey(sectionString, "Help",         "CTRL+H",   _emulator["Help"]);
                     scanCodeFromIniKey(sectionString, "Quit",         "CTRL+Q",   _emulator["Quit"]);
                 }
@@ -499,8 +490,7 @@ namespace Editor
 
                 case Hardware:
                 {
-                    scanCodeFromIniKey(sectionString, "Reset",   "ALT+F1", _hardware["Reset"]);
-                    scanCodeFromIniKey(sectionString, "Execute", "ALT+F5", _hardware["Execute"]);
+                    scanCodeFromIniKey(sectionString, "Reset",   "CTRL+F2", _hardware["Reset"]);
                 }
                 break;
 
@@ -520,17 +510,17 @@ namespace Editor
 
     void backOneDirectory(void)
     {
-        size_t slash = _filePath.find_last_of("\\/", _filePath.size()-2);
+        size_t slash = _browserPath.find_last_of("\\/", _browserPath.size()-2);
         if(slash != std::string::npos)
         {
-            _filePath = _filePath.substr(0, slash + 1);
+            _browserPath = _browserPath.substr(0, slash + 1);
         }
     }
 
     void browseDirectory(void)
     {
-        std::string path = _filePath  + ".";
-        Assembler::setIncludePath(_filePath);
+        std::string path = _browserPath  + ".";
+        Assembler::setIncludePath(_browserPath);
 
         _fileEntries.clear();
 
@@ -588,7 +578,7 @@ namespace Editor
 
         if(entry != "..")
         {
-            _filePath += entry + "/";
+            _browserPath += entry + "/";
         }
         else
         {
@@ -1339,12 +1329,6 @@ namespace Editor
             Cpu::swapMemoryModel();
         }
 
-        // Hardware upload and execute
-        else if(_sdlKeyScanCode == _hardware["Execute"]._scanCode  &&  _sdlKeyModifier == _hardware["Execute"]._keyMod)
-        {
-            Loader::setUploadTarget(Loader::Hardware);
-        }
-
         updateEditor();
 
         // PS2 Keyboard emulation mode
@@ -1502,11 +1486,6 @@ namespace Editor
         // Pause simulation and handle debugging keys
         while(_singleStepEnabled)
         {
-#if 0
-            _onVarType = updateOnVarType();
-            Graphics::refreshScreen();
-            Graphics::render(false);
-#else
             // Update graphics but only once every 16.66667ms
             static uint64_t prevFrameCounter = 0;
             double frameTime = double(SDL_GetPerformanceCounter() - prevFrameCounter) / double(SDL_GetPerformanceFrequency());
@@ -1521,7 +1500,6 @@ namespace Editor
                 Graphics::refreshScreen();
                 Graphics::render(false);
             }
-#endif
 
             SDL_Event event;
             while(SDL_PollEvent(&event))

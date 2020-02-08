@@ -279,7 +279,7 @@ namespace Graphics
         _posY = 40;
 
         // Parse graphics config file
-        INIReader iniReader(GRAPHICS_CONFIG_INI);
+        INIReader iniReader(Loader::getExePath() + "/" + GRAPHICS_CONFIG_INI);
         _configIniReader = iniReader;
         if(_configIniReader.ParseError() < 0)
         {

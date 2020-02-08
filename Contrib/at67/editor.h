@@ -79,8 +79,6 @@ namespace Editor
     bool getPageDnButton(void);
     bool getDelAllButton(void);
 
-    const std::string& getCwdPath(void);
-
     MemoryMode getMemoryMode(void);
     EditorMode getEditorMode(void);
     KeyboardMode getKeyboardMode(void);
@@ -139,18 +137,23 @@ namespace Editor
     void getMouseState(MouseState& mouseState);
     void getMouseMenuCursor(int& x, int& y, int& cy);
 
-    std::string getBrowserPath(bool removeSlash=false);
-
     int getEmulatorScanCode(const std::string& keyWord);
+
 #ifndef STAND_ALONE
     SDL_Keymod getEmulatorKeyMod(const std::string& keyWord);
 #endif
+
+    std::string getBrowserPath(bool removeSlash=false);
+    void setBrowserPath(const std::string& path);
+
     void initialise(void);
+
     void browseDirectory(void);
 
 #ifndef STAND_ALONE
     void handleGuiEvents(SDL_Event& event);
 #endif
+
     bool handleDebugger(void);
     void handleInput(void);
     void handleTerminalInput(void);

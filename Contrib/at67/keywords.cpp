@@ -6,6 +6,7 @@
 
 #include "memory.h"
 #include "cpu.h"
+#include "loader.h"
 #include "image.h"
 #include "assembler.h"
 #include "keywords.h"
@@ -1628,14 +1629,8 @@ namespace Keywords
 
         // Print heading string
         bool foundHeadingString = false;
-        if(tokens.size())
+        if(tokens.size()  &&  Expression::isValidString(tokens[0]))
         {
-            if(!Expression::isValidString(tokens[0]))
-            {
-                fprintf(stderr, "Keywords::keywordINPUT() : Syntax error in heading string '%s' of INPUT statement, in '%s' on line %d\n", tokens[0].c_str(), codeLine._code.c_str(), codeLineIndex);
-                return false;
-            }
-
             size_t lquote = tokens[0].find_first_of("\"");
             size_t rquote = tokens[0].find_first_of("\"", lquote + 1);
             if(lquote != std::string::npos  &&  rquote != std::string::npos)
@@ -1717,7 +1712,7 @@ namespace Keywords
             std::string name;
             uint16_t address;
             int index = (foundHeadingString) ? i + 1 : i;
-            std::string str = (index < int(strings.size())) ? strings[index] : "\"?\"";
+            std::string str = (index < int(strings.size())) ? strings[index] : "\"?\";;";
             size_t fquote = str.find_first_of('"');
             size_t lquote = str.find_last_of('"');
 
@@ -1728,19 +1723,24 @@ namespace Keywords
             if(str.back() == ';') str.erase(str.size() - 1, 1);
 
             // Text length field
+            uint8_t length = USER_STR_SIZE;
             if(str.size() > lquote + 1  &&  isdigit((unsigned char)str[lquote + 1]))
             {
-                uint8_t length;
                 std::string field = str.substr(lquote + 1);
                 if(!Expression::stringToU8(field, length))
                 {
                     fprintf(stderr, "Keywords::keywordINPUT() : Syntax error in text size field of string '%s' of INPUT statement, in '%s' on line %d\n", str.c_str(), codeLine._code.c_str(), codeLineIndex);
                     return false;
                 }
+                if(length > USER_STR_SIZE)
+                {
+                    fprintf(stderr, "Keywords::keywordINPUT() : Text size field > %d of string '%s' of INPUT statement, in '%s' on line %d\n", USER_STR_SIZE, str.c_str(), codeLine._code.c_str(), codeLineIndex);
+                    return false;
+                }
 
                 str.erase(lquote + 1, field.size());
-                typesLut[i] |= (length + 1) << 8; // increment length as INPUT VASM code counts cursor
             }
+            typesLut[i] |= (length + 1) << 8; // increment length as INPUT VASM code counts cursor
         
             // Remove quotes, (remove last quote first)
             str.erase(lquote, 1);
@@ -1975,7 +1975,8 @@ namespace Keywords
         std::string forNextCmd;
         if(optimise)
         {
-            if(abs(loopStep) == 1)
+            // INC + BLE in ForNextFarInc will fail when loopEnd = 255
+            if(abs(loopStep) == 1  &&  !(loopStep == 1  &&  loopEnd >= 255))
             {
                 // Increment/decrement step
                 forNextCmd = (loopStep > 0) ? (farJump) ? "%ForNextFarInc" : "%ForNextInc" : (farJump) ? "%ForNextFarDec" : "%ForNextDec";
@@ -2607,12 +2608,6 @@ namespace Keywords
             }
             Compiler::parseExpression(codeLineIndex, addrTokens[0], operand, addrNumeric);
             address = int16_t(std::lround(addrNumeric._value));
-            if(address < DEFAULT_START_ADDRESS)
-            {
-                fprintf(stderr, "Keywords::keywordDEF() : Address field must be above %04x, found %s in '%s' on line %d\n", DEFAULT_START_ADDRESS, addrText.c_str(), codeLine._code.c_str(), codeLineIndex);
-                return false;
-            }
-
             typePos = lbra;
             foundAddress = true;
         }
@@ -2710,15 +2705,15 @@ namespace Keywords
             {
                 std::vector<uint8_t> dataBytes(int(count), 0);
                 for(int i=0; i<int(dataBytes.size()); i++) dataBytes[i] = uint8_t(funcData[i]);
-                Compiler::getDefDataBytes().push_back({address, dataBytes});
                 if(!Memory::takeFreeRAM(address, int(dataBytes.size()))) return false;
+                Compiler::getDefDataBytes().push_back({address, dataBytes});
             }
             else if(typeText == "WORD")
             {
                 std::vector<int16_t> dataWords(int(count), 0);
                 for(int i=0; i<int(dataWords.size()); i++) dataWords[i] = int16_t(funcData[i]);
-                Compiler::getDefDataWords().push_back({address, dataWords});
                 if(!Memory::takeFreeRAM(address, int(dataWords.size()) * 2)) return false;
+                Compiler::getDefDataWords().push_back({address, dataWords});
             }
 
             return true;
@@ -2752,18 +2747,20 @@ namespace Keywords
             // New address entry
             if(foundAddress)
             {
+                if(address >= DEFAULT_START_ADDRESS  &&  !Memory::takeFreeRAM(address, int(dataBytes.size()))) return false;
                 Compiler::getDefDataBytes().push_back({address, dataBytes});
-                if(!Memory::takeFreeRAM(address, int(dataBytes.size()))) return false;
             }
             // Update current address data
             else
             {
-                // Append data
+                // Address
                 address = Compiler::getDefDataBytes().back()._address + uint16_t(Compiler::getDefDataBytes().back()._data.size());
-                for(int i=0; i<int(dataBytes.size()); i++) Compiler::getDefDataBytes().back()._data.push_back(dataBytes[i]);
 
                 // Mark new RAM chunk as used
-                if(!Memory::takeFreeRAM(address, int(dataBytes.size()))) return false;
+                if(address >= DEFAULT_START_ADDRESS  &&  !Memory::takeFreeRAM(address, int(dataBytes.size()))) return false;
+
+                // Append data
+                for(int i=0; i<int(dataBytes.size()); i++) Compiler::getDefDataBytes().back()._data.push_back(dataBytes[i]);
             }
         }
         // WORD data
@@ -2785,18 +2782,20 @@ namespace Keywords
             // New address entry
             if(foundAddress)
             {
+                if(address >= DEFAULT_START_ADDRESS  &&  !Memory::takeFreeRAM(address, int(dataWords.size()) * 2)) return false;
                 Compiler::getDefDataWords().push_back({address, dataWords});
-                if(!Memory::takeFreeRAM(address, int(dataWords.size()) * 2)) return false;
             }
             // Update current address data
             else
             {
-                // Append data
+                // Address
                 address = Compiler::getDefDataWords().back()._address + uint16_t(Compiler::getDefDataWords().back()._data.size()) * 2;
-                for(int i=0; i<int(dataWords.size()); i++) Compiler::getDefDataWords().back()._data.push_back(dataWords[i]);
 
                 // Mark new RAM chunk as used
-                if(!Memory::takeFreeRAM(address, int(dataWords.size()) * 2)) return false;
+                if(address >= DEFAULT_START_ADDRESS  &&  !Memory::takeFreeRAM(address, int(dataWords.size()) * 2)) return false;
+
+                // Append data
+                for(int i=0; i<int(dataWords.size()); i++) Compiler::getDefDataWords().back()._data.push_back(dataWords[i]);
             }
         }
 
@@ -3517,15 +3516,23 @@ namespace Keywords
         // Handle Image
         if(tokens[0] == "IMAGE")
         {
-            Expression::stripWhitespace(tokens[2]);
-            std::string ext = tokens[2];
+            std::string filename = tokens[2];
+            Expression::stripWhitespace(filename);
+            std::string ext = filename;
             Expression::strToUpper(ext);
             if(ext.find(".TGA") != std::string::npos)
             {
+                std::string filepath = Loader::getFilePath();
+                size_t slash = filepath.find_last_of("\\/");
+                filepath = (slash != std::string::npos) ? filepath.substr(0, slash) : ".";
+                filename = filepath + "/" + filename;
                 Image::TgaFile tgaFile;
-                if(!Image::loadTgaFile(tokens[2], tgaFile))
+
+                //fprintf(stderr, "\nKeywords::keywordLOAD() : %s\n", filename.c_str());
+
+                if(!Image::loadTgaFile(filename, tgaFile))
                 {
-                    fprintf(stderr, "Keywords::keywordLOAD() : File '%s' failed to load, in '%s' on line %d\n", tokens[2].c_str(), codeLine._text.c_str(), codeLineIndex);
+                    fprintf(stderr, "Keywords::keywordLOAD() : File '%s' failed to load, in '%s' on line %d\n", filename.c_str(), codeLine._text.c_str(), codeLineIndex);
                     return false;
                 }
 
@@ -3535,7 +3542,7 @@ namespace Keywords
                 Image::convertRGB8toRGB2(tgaFile._data, gtRgbFile._data, tgaFile._header._width, tgaFile._header._height, tgaFile._imageOrigin);
                 if(gtRgbFile._header._width > 256  ||  gtRgbFile._header._width + (address & 0x00FF) > 256)
                 {
-                    fprintf(stderr, "Keywords::keywordLOAD() : Width > 256, (%d, %d), for %s; in '%s' on line %d\n", gtRgbFile._header._width, gtRgbFile._header._height, tokens[2].c_str(), codeLine._text.c_str(), codeLineIndex);
+                    fprintf(stderr, "Keywords::keywordLOAD() : Width > 256, (%d, %d), for %s; in '%s' on line %d\n", gtRgbFile._header._width, gtRgbFile._header._height, filename.c_str(), codeLine._text.c_str(), codeLineIndex);
                     return false;
                 }
 

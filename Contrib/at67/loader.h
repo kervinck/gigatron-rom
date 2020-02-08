@@ -2,6 +2,7 @@
 #define LOADER_H
 
 
+#include <string>
 #include <vector>
 
 #include "timing.h"
@@ -40,11 +41,23 @@ namespace Loader
         uint8_t _loStart=DEFAULT_START_ADDRESS_LO;
     };
 
+    const std::string& getExePath(void);
+    const std::string& getCwdPath(void);
+    const std::string& getFilePath(void);
+    const std::string& getCurrentGame(void);
+    void setFilePath(const std::string& launchName);
 
     bool loadGt1File(const std::string& filename, Gt1File& gt1File);
     bool saveGt1File(const std::string& filepath, Gt1File& gt1File, std::string& filename);
     uint16_t printGt1Stats(const std::string& filename, const Gt1File& gt1File);
 
+#ifdef _WIN32
+    char* getcwd(char* dst, int size);
+    int chdir(const char* path);
+#endif
+    std::string getExeDir(void);
+
+    void initialise(void);
 
 #ifndef STAND_ALONE
     enum Endianness {Little, Big};
@@ -69,16 +82,14 @@ namespace Loader
     };
 
 
-    std::string& getCurrentGame(void);
     void setCurrentGame(const std::string& currentGame);
 
     UploadTarget getUploadTarget(void);
     void setUploadTarget(UploadTarget target);
+    void uploadDirect(UploadTarget uploadTarget, const std::string& name);
 
     int getConfigRomsSize(void);
     ConfigRom* getConfigRom(int index);
-
-    void initialise(void);
 
     void disableUploads(bool disable);
 

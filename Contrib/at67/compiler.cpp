@@ -893,37 +893,19 @@ namespace Compiler
         }
         else
         {
-            // TODO: currently makes code bigger AND slower because of optimiser
-            if(0) //Assembler::getUseOpcodeCALLI()  &&  _codeOptimiseType == CodeSize)
+            emitVcpuAsm("STW",  "register1", false, codeLineIndex);
+            emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr), false, codeLineIndex);
+            emitVcpuAsm("ADDW", "register1", false, codeLineIndex);
+            emitVcpuAsm("ADDW", "register1", false, codeLineIndex);
+            emitVcpuAsm("STW",  "register1", false, codeLineIndex);
+            emitVcpuAsm("LDW",  "register0", false, codeLineIndex);
+            switch(codeLine._int16Byte)
             {
-                // Saves 7 bytes per array access but costs an extra 2 instructions in performance
-                emitVcpuAsm("STW", "memIndex", false, codeLineIndex);
-                emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr), false, codeLineIndex);
-                switch(codeLine._int16Byte)
-                {
-                    case Expression::Int16Low:  emitVcpuAsm("CALLI", "setArrayInt16Low",  false, codeLineIndex); break;
-                    case Expression::Int16High: emitVcpuAsm("CALLI", "setArrayInt16High", false, codeLineIndex); break;
-                    case Expression::Int16Both: emitVcpuAsm("CALLI", "setArrayInt16",     false, codeLineIndex); break;
+                case Expression::Int16Low:  emitVcpuAsm("POKE", "register1", false, codeLineIndex);                                                         break;
+                case Expression::Int16High: emitVcpuAsm("INC",  "register1", false, codeLineIndex); emitVcpuAsm("POKE", "register1", false, codeLineIndex); break;
+                case Expression::Int16Both: emitVcpuAsm("DOKE", "register1", false, codeLineIndex);                                                         break;
 
-                    default: break;
-                }
-            }
-            //else if(_codeOptimiseType == CodeSpeed)
-            {
-                emitVcpuAsm("STW",  "register1", false, codeLineIndex);
-                emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr), false, codeLineIndex);
-                emitVcpuAsm("ADDW", "register1", false, codeLineIndex);
-                emitVcpuAsm("ADDW", "register1", false, codeLineIndex);
-                emitVcpuAsm("STW",  "register1", false, codeLineIndex);
-                emitVcpuAsm("LDW",  "register0", false, codeLineIndex);
-                switch(codeLine._int16Byte)
-                {
-                    case Expression::Int16Low:  emitVcpuAsm("POKE", "register1", false, codeLineIndex);                                                         break;
-                    case Expression::Int16High: emitVcpuAsm("INC",  "register1", false, codeLineIndex); emitVcpuAsm("POKE", "register1", false, codeLineIndex); break;
-                    case Expression::Int16Both: emitVcpuAsm("DOKE", "register1", false, codeLineIndex);                                                         break;
-
-                    default: break;
-                }
+                default: break;
             }
         }
 
@@ -1716,6 +1698,18 @@ namespace Compiler
         else if(Expression::find("RAND"))
         {
             numeric = factor(0); numeric = Operators::operatorRAND(numeric);
+        }
+        else if(Expression::find("REV16"))
+        {
+            numeric = factor(0); numeric = Operators::operatorREV16(numeric);
+        }
+        else if(Expression::find("REV8"))
+        {
+            numeric = factor(0); numeric = Operators::operatorREV8(numeric);
+        }
+        else if(Expression::find("REV4"))
+        {
+            numeric = factor(0); numeric = Operators::operatorREV4(numeric);
         }
         else
         {

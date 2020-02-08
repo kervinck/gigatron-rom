@@ -39,10 +39,11 @@
 
 namespace Audio
 {
+#ifndef STAND_ALONE
     bool getRealTimeAudio(void);
 
     void initialise(void);
-    void initialiseChannels(void);
+    void initialiseChannels(bool coldBoot, Cpu::RomType romType);
 
     void fillCallbackBuffer(void);
     void fillBuffer(void);
@@ -52,6 +53,7 @@ namespace Audio
 
     void playMusic(void);
     void nextScore(void);
+#endif
 }
 
 #endif
