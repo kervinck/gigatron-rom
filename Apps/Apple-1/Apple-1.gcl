@@ -45,7 +45,7 @@ gcl0x
         $32-$33         _i
         $34-$3b         WozMon variables
         $3c-$3d         _j
-        $3e-$3f         _TIA
+        $3e-$3f         _PIA
         $40-$4c         Mini-assembler
 
         $f8-$ff         Interrupt handling
@@ -69,7 +69,7 @@ gcl0x
 
 _i=$32          {2 bytes}
 _j=$3c          {2 bytes}
-_TIA=$3e        {2 bytes}
+_PIA=$3e        {2 bytes}
 
 _stackBottom=$f8
 _cursorTimer=$f8
@@ -607,23 +607,23 @@ _vIRQ_ENTER=*
   {-- Handle KBD --}
   &_lastKey, _serialRaw^ 255&   {First trigger on key changes}
   [if<>0
-    &_KBD _TIA=                 {Pointer to TIA register}
+    &_KBD _PIA=                 {Pointer to PIA register}
     &_serialRaw, &_lastKey.     {"serialLast" isn't useful for this}
     255^ [if<>0 255^            {But ignore key releases}
       $60- [if>=0 $20-] $60+    {Map to upper case, delete becomes rubout}
       10^ [if=0 7] 10^          {Map 10 CR to 13 LF}
       127& 128-                 {Set bits 7..15}
-      _TIA:                     {Update KBD and KBDCR in one go}
+      _PIA:                     {Update KBD and KBDCR in one go}
     ]]
 
   {-- Handle DSP --}
   &_DSP_minus1 deek             {Test DSP bit 7}
   [if<0
-    &_DSP _TIA=                 {Pointer to TIA register}
+    &_DSP _PIA=                 {Pointer to PIA register}
     peek &_CharOut!             {Emit character when set}
-    &_KBDCR _TIA.               {Setting DSP to $11 clears bit 7}
+    &_KBDCR _PIA.               {Setting DSP to $11 clears bit 7}
     _vAC.]                      {Also clear *KBDCR* bit 7. This is NOT how the}
-                                { true TIA works, but it fools most programs.}
+                                { true PIA works, but it fools most programs.}
 
   {-- Handle cursor --}
   <_cursorTimer++               {Advance cursor timer}
@@ -1270,7 +1270,7 @@ _PRHEX=*        #_ANDIM_ #$0F           { Mask LSD for hex print.               
                 #_CMPIM_ #$BA           { Digit?                                  }
                 #_BCC_   #@_ECHO        { Yes, output it.                         }
                 #_ADCIM_ #$06           { Add offset for letter.                  }
-                                        { [Gigatron] Order reversed for fake TIA  }
+                                        { [Gigatron] Order reversed for fake PIA  }
 _ECHO=*         #_STA_   ##_DSP         { Output character.  Sets DA.             }
 _WAITECHO=*     #_BIT_   ##_DSP         { DA bit (B7) cleared yet?                }
                 #_BMI_   #@_WAITECHO    { No, wait for display.                   }
