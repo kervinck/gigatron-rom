@@ -117,6 +117,8 @@ $101 {videoTable+1} p= $60 p.   {Use offsets 96..255 for pixel data, not 0..159}
 |       Assembler and disassembler                                      |
 +-----------------------------------------------------------------------}
 
+*=$bee          #_JMP_          ##_CMDLINE      { Courtesy Jac Goudsmit }
+
 {
         WRITTEN BY STEVE WOZNIAK & ALLEN BAUM
         AND PUBLISHED IN DOCTOR DOBBS JOURNAL
