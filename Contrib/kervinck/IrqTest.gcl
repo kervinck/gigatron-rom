@@ -3,9 +3,9 @@ gcl0x
 4--                             {Reserve bottom of stack for saved context}
 \vIRQ_DEVROM p=
 [def                            {Interrupt handler}
-  $901 p= peek 23+ p.           {Flash second pixel}
-  226 \frameCount.              {256-60: next interrupt after .5 second}
-  $400 0??                      {vRTI sequence}
+  $901 p= peek 1+ p.            {Flash second pixel}
+  226 \frameCount.              {256-30: next interrupt after .5 second}
+  \vIRQ_Return 0??              {vRTI sequence}
 ] p:
 
 $800 q=                         {Main loop}
