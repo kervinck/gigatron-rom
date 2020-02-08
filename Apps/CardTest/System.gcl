@@ -14,21 +14,74 @@
 gcl0x
 
 {
-  XXX  Namespace. Shall we have device letters, or a Unix-like
-       namespace (/dev/...) and/or file descriptors or libc style
-       FILE*?
-       Answer: GTOS will have "drive letters" that are actually
-       a single hexnum, 0..9A-F (16 files is enough for everybody)
-        0: stdin
-        1: stdout
-        2: stderr
-        3..9: active files/streams/resources
-        A: SPI0 a.k.a. SD card 0
-        B: SPI1
-        C: SPI2
-        D: SPI3
-        E: ...      (/dev/null? E for "Empty")
-        F: ROM disk (F for "Fixed")
+  XXX  API and registers
+
+        +-------+       +--//--+-----//------+-------+-------+
+        | GTOS  |       |      | r0, r1, ... |vIRQ_PC|vIRQ_AC|
+        +-------+       +--//--+-----//------+-------+-------+
+           vLR          ^      ^                             ^
+                        vSP    $e0                        $100
+
+        .L2:    LD    vLR
+                STW   MyGtos
+                ...
+                LDI   0
+                CALL  MyGtos
+
+        Path/command sequences:
+                <name
+                >name
+                0<name
+                0>name
+                <0:name
+                >0:name
+                >>0:name
+                A:name
+                A:name:command
+
+        --------------------------
+        A>type file.txt
+        hello gigatron
+        A>_
+        --------------------------
+
+        Function codes:
+                0. Warm restart and reload Command.gt1
+                1. Read single console input with echo
+                2. Console output
+                3. X Read from reader
+                4. X Write to punch
+                5. X Write to list device
+                6. Read console input without echo
+                10. Read line buffer
+                11. Console ready?
+                12. Read list status
+                30. Set list echo status
+                31. Read list echo status
+
+                Send char to console
+                Read char from line buffer
+                Open directory
+                Walk through directory
+                Open (after lookup)
+                Read char from file
+
+        Logical devices
+                CON     Console (in/out)
+                RDR     Paper tape reader device
+                PUN     Paper tape punch device
+                LST     List output device
+        Physical devices
+                TTY     Teletype
+                CRT     Screen
+                BAT     Batch processing (??)
+                UC1     User-defined console
+                PTR     Paper tape reader (high speed reader)
+                UR1
+                UR2
+                PTP     Paper tape punch
+                LPT     Line printer
+
   XXX Positive card detection:
         Read MISO's
         Invert
