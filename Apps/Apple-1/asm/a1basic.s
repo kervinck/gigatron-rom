@@ -651,10 +651,12 @@ crout:  LDA     #$00            ; character output
 Le3d3:  INC     ch
 
 ; Send character to display. Char is in A.
-Le3d5:  STA     DSP             ;[Gigatron] Reversed wait/write order
-Le3d8:  BIT     DSP
-        BMI     Le3d8
-        RTS                  ; and return
+Le3d5:  ORA     #$80            ;[Gigatron] Set bit7
+        JMP     $FFEF           ;[Gigatron] And go through ECHO
+        NOP                     ;
+        NOP                     ;
+        NOP                     ;
+        NOP                     ;
 
 too_long_err:   LDY     #$06
 
