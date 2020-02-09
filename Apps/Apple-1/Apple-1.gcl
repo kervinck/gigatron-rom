@@ -45,7 +45,6 @@ gcl0x
         $32-$33         _i
         $34-$3b         WozMon variables
         $3c-$3d         _j
-        $3e-$3f         _PIA
         $40-$4c         Mini-assembler
 
         $f8-$ff         Interrupt handling
@@ -54,7 +53,8 @@ gcl0x
         +--------------------------+
         |3E-7F,81-FF FREE ZP+STACK!|
         |0100-01F9   VIDEO+SYSTEM  |
-        |0200-0FFF   FREE RAM      |
+        |0200-027F   KEYBD BUFFER  |
+        |0280-0FFF   FREE RAM      |
         |1060-5DFF   SCREEN        | 78 scanlines = 11*7+1
         |5E00-5FFF   PIA EMULATION | Add entry points at D010-D013 = 5010-5013
         |E000-EFFF   A1 BASIC      | alias 6000-6FFF -> A1 BASIC
@@ -69,12 +69,12 @@ gcl0x
 
 _i=$32          {2 bytes}
 _j=$3c          {2 bytes}
-_PIA=$3e        {2 bytes}
 
 _stackBottom=$f8
 _cursorTimer=$f8
 _lastKey=$f9
 _vCpuState=$fa
+_PIA=$fc        {overlap with vIRQ-saved, but useless, vPC}
 
 {-----------------------------------------------------------------------+
 |       ROM type check                                                  |
@@ -107,7 +107,7 @@ $101 {videoTable+1} p= $60 p.   {Use offsets 96..255 for pixel data, not 0..159}
 &_vIRQ_DEVROM _i=
 &_vIRQ_ENTER _i:                {Set vIRQ vector}
 
-255 \frameCount.                {First interrupt in next frame}
+254 \frameCount.                {First interrupt after at least one full frame}
 
 &_Apple1 _vLR=                  {Prepare transfer to main loop}
 &_PRE_RESET                     {Start address for 6502 program}
@@ -789,7 +789,7 @@ _CharOut=*
                 #_LDAIM_ #$aa           {`*'}
                 #_JSR_   ##_ECHO
 _MENU=*
-                #_LDXIM_ #59            {Print welcome message}
+                #_LDXIM_ #48            {Print welcome message}
 _L4=*           #_LDAAX_ ##_MSG
                 #_JSR_   ##_ECHO
                 #_DEX_
@@ -808,18 +808,11 @@ _MSG=*
                 #$f3 #$e1 #$ad #$e9 #$ee #$e9 #$cd #$a0
                 #$a0 #$d2 #$c5 #$c5 #$c5
 
-                { '200   Free\r' }
-                #$8d #$e5 #$e5 #$f2 #$c6 #$a0 #$a0 #$a0
-                #$b0 #$b0 #$b2
-
                 { 'Apple-1 on TTL\r' }
                 #$8d #$cc #$d4 #$d4 #$a0 #$ee #$ef #$a0
                 #$b1 #$ad #$e5 #$ec #$f0 #$f0 #$c1
 
                 { '\r' }
-                #$8d
-
-
                 #$8d
 
                 {
@@ -885,7 +878,7 @@ _MSG=*
  #$02 #$c8 #$10 #$0a #$a0 #$8b #$20 #$c4 #$e3 #$a0 #$01 #$88 #$30 #$f6 #$20 #$03
  #$e0 #$ea #$ea #$20 #$c9 #$e3 #$c9 #$8d #$d0 #$d6 #$a9 #$df #$99 #$00 #$02 #$60
  #$20 #$d3 #$ef #$20 #$cd #$e3 #$46 #$d9 #$a9 #$be #$20 #$c9 #$e3 #$a0 #$00 #$84
- #$42 #$24 #$40 #$10 #$0c #$a6 #$ed #$a5 #$ee #$20 #$1b #$e5 #$a9 #$a0 #$20 #$c9
+ #$42 #$24 #$40 #$10 #$0c #$a6 #$3e #$a5 #$3f #$20 #$1b #$e5 #$a9 #$a0 #$20 #$c9
  #$e3 #$a2 #$f7 #$9a #$20 #$9e #$e2 #$84 #$e8 #$8a #$85 #$c8 #$a2 #$20 #$20 #$91
  #$e4 #$a5 #$c8 #$69 #$00 #$85 #$e0 #$a9 #$00 #$aa #$69 #$02 #$85 #$e1 #$a1 #$e0
  #$29 #$f0 #$c9 #$b0 #$f0 #$03 #$4c #$83 #$e8 #$a0 #$02 #$b1 #$e0 #$99 #$cd #$00
@@ -896,8 +889,8 @@ _MSG=*
  #$a5 #$e5 #$e5 #$cd #$90 #$45 #$a5 #$ca #$f1 #$e0 #$85 #$e6 #$a5 #$cb #$e9 #$00
  #$85 #$e7 #$b1 #$ca #$91 #$e6 #$e6 #$ca #$d0 #$02 #$e6 #$cb #$a5 #$e2 #$c5 #$ca
  #$a5 #$e3 #$e5 #$cb #$b0 #$e0 #$b5 #$e4 #$95 #$ca #$ca #$10 #$f9 #$b1 #$e0 #$a8
- #$88 #$b1 #$e0 #$91 #$e6 #$98 #$d0 #$f8 #$24 #$40 #$10 #$09 #$b5 #$ee #$75 #$ec
- #$95 #$ee #$e8 #$f0 #$f7 #$10 #$7e #$00 #$00 #$00 #$00 #$a0 #$14 #$d0 #$71 #$20
+ #$88 #$b1 #$e0 #$91 #$e6 #$98 #$d0 #$f8 #$24 #$40 #$10 #$09 #$b5 #$3f #$75 #$ec
+ #$95 #$3f #$e8 #$f0 #$f7 #$10 #$7e #$00 #$00 #$00 #$00 #$a0 #$14 #$d0 #$71 #$20
  #$15 #$e7 #$a5 #$e2 #$85 #$e6 #$a5 #$e3 #$85 #$e7 #$20 #$75 #$e5 #$a5 #$e2 #$85
  #$e4 #$a5 #$e3 #$85 #$e5 #$d0 #$0e #$20 #$15 #$e7 #$20 #$6d #$e5 #$a5 #$e6 #$85
  #$e2 #$a5 #$e7 #$85 #$e3 #$a0 #$00 #$a5 #$ca #$c5 #$e4 #$a5 #$cb #$e5 #$e5 #$b0
@@ -977,7 +970,7 @@ _MSG=*
  #$60 #$a5 #$ef #$09 #$07 #$a8 #$c8 #$a9 #$a0 #$20 #$c9 #$e3 #$c4 #$ef #$b0 #$f7
  #$60 #$20 #$b1 #$e7 #$20 #$15 #$e7 #$a5 #$cf #$10 #$0a #$a9 #$ad #$20 #$c9 #$e3
  #$20 #$72 #$e7 #$50 #$ef #$88 #$84 #$d5 #$86 #$cf #$a6 #$ce #$20 #$1b #$e5 #$a6
- #$cf #$60 #$20 #$15 #$e7 #$a5 #$ce #$85 #$ed #$a5 #$cf #$85 #$ee #$88 #$84 #$40
+ #$cf #$60 #$20 #$15 #$e7 #$a5 #$ce #$85 #$3e #$a5 #$cf #$85 #$3f #$88 #$84 #$40
  #$c8 #$a9 #$0a #$85 #$eb #$84 #$ec #$60 #$20 #$15 #$e7 #$a5 #$ce #$a4 #$cf #$10
 
 *=$e800
