@@ -1,6 +1,9 @@
 ; Apple 1 BASIC
 ;
 ; Modifications for Gigatron by Marcel van Kervinck <marcelk@bitpit.net>
+;       - Zero-page and stack area arrays rearranged
+;       - Output through wozmon ECHO ($FFEF)
+;       - Stack from $F7 instead of $1FF
 ;
 ; Modifications to build with CC65 by Jeff Tranter <tranter@pobox.com>
 ;
@@ -124,7 +127,8 @@ Le022:  JSR     cout
         DEY
         BNE     Le022
 
-nextbyte:       LDY     #$00
+nextbyte:
+        LDY     #$00
         LDA     (p1),Y
         INC     p1
         BNE     Le034
@@ -132,7 +136,8 @@ nextbyte:       LDY     #$00
 Le034:  RTS
 
 ; token $75 - "," in LIST command
-list_comman:    JSR     get16bit
+list_comman:
+        JSR     get16bit
         JSR     find_line2
 Le03b:  LDA     p1
         CMP     p3
@@ -143,7 +148,8 @@ Le03b:  LDA     p1
         JMP     Le03b
 
 ; token $76 - LIST command w/ no args
-list_all:       LDA     pp
+list_all:
+        LDA     pp
         STA     p1
         LDA     pp+1
         STA     p1+1
@@ -154,7 +160,8 @@ list_all:       LDA     pp
         BNE     Le03b
 
 ; token $74 - LIST command w/ line number(s)
-list_cmd:       JSR     get16bit
+list_cmd:
+        JSR     get16bit
         JSR     find_line
         LDA     p2
         STA     p1
@@ -163,14 +170,16 @@ list_cmd:       JSR     get16bit
         BCS     Le034
 
 ; list one program line
-list_line:      STX     x_save
+list_line:
+        STX     x_save
         LDA     #$A0
         STA     leadzr
         JSR     nextbyte
         TYA
 
 ; list an integer (line number or literal)
-list_int:       STA     p2
+list_int:
+        STA     p2
         JSR     nextbyte
         TAX
         JSR     nextbyte
@@ -193,7 +202,8 @@ Le099:  LDA     #$25
         STA     p2
 
 ; list a single token
-list_token:     CMP     #$01
+list_token:
+        CMP     #$01
         BNE     Le0ac
         LDX     x_save
         JMP     crout
@@ -242,15 +252,19 @@ Le0ed:  JSR     Se00c
         BEQ     Le099
 
 ; token $2A - left paren for substring like A$(3,5)
-paren_substr:   JSR     Se118
+paren_substr:
+        JSR     Se118
         STA     noun_stk_l,X
         CMP     noun_stk_h_str,X
 Le102:  BCC     Le115
-string_err:     LDY     #$2B
-go_errmess_1:   JMP     print_err_msg
+string_err:
+        LDY     #$2B
+go_errmess_1:
+        JMP     print_err_msg
 
 ; token $2B - comma for substring like A$(3,5)
-comma_substr:   JSR     getbyte
+comma_substr:
+        JSR     getbyte
         CMP     noun_stk_l,X
         BCC     string_err
         JSR     Sefe4
@@ -265,7 +279,8 @@ Se118:  JSR     getbyte
 
 ; token $42 - left paren for string array as dest
 ; A$(1)="FOO"
-str_arr_dest:   JSR     Se118
+str_arr_dest:
+        JSR     Se118
         STA     noun_stk_l,X
         CLC
         SBC     noun_stk_h_str,X
@@ -275,7 +290,8 @@ Le12c:  LDY     #$14
 
 ; token $43 - comma, next var in DIM statement is string
 ; token $4E - "DIM", next var in DIM is string
-dim_str:        JSR     Se118
+dim_str:
+        JSR     Se118
         INX
 Le134:  LDA     noun_stk_l,X
         STA     aux
@@ -314,7 +330,8 @@ Le16d:  LDY     #$80
 Le16f:  BNE     go_errmess_1
 
 ; token ???
-input_str:      LDA     #$00
+input_str:
+        LDA     #$00
         JSR     push_a_noun_stk
         LDY     #$02
         STY     noun_stk_h_str,X
@@ -329,7 +346,8 @@ input_str:      LDA     #$00
         NOP
 
 ; token $70 - string literal
-string_lit:     LDA     noun_stk_l+1,X
+string_lit:
+        LDA     noun_stk_l+1,X
         STA     acc
         LDA     noun_stk_h_str+1,X
         STA     acc+1
@@ -374,7 +392,8 @@ Se1bc:  LDA     noun_stk_l+1,X
         RTS
 
 ; token $39 - "=" for string equality operator
-string_eq:      LDA     noun_stk_l+3,X
+string_eq:
+        LDA     noun_stk_l+3,X
         STA     acc
         LDA     noun_stk_h_str+3,X
         STA     acc+1
@@ -417,11 +436,13 @@ Le206:  TAY
         BCS     Le1f3
 
 ; token $3A - "#" for string inequality operator
-string_neq:     JSR     string_eq
+string_neq:
+        JSR     string_eq
         JMP     not_op
 
 ; token $14 - "*" for numeric multiplication
-mult_op:        JSR     Se254
+mult_op:
+        JSR     Se254
 Le225:  ASL     acc
         ROL     acc+1
         BCC     Le238
@@ -468,39 +489,40 @@ Le279:  RTS
 
 ; token $1f - "MOD"
 mod_op: JSR     See6c
-        BEQ     Le244
-        .byte   $FF
-Le280:  CMP     #$84
+        BEQ     Le244           ; Always taken
+
+Le280:  CMP     #$84            ; XXX <Ctrl-D> ???
         BNE     Le286
-        LSR     auto_flag
-Le286:  CMP     #$DF
+        LSR     auto_flag       ; Manual
+Le286:  CMP     #$DF            ; <rub>
         BEQ     Le29b
-        CMP     #$9B
+        CMP     #$9B            ; <esc>
         BEQ     Le294
         STA     buffer,Y
         INY
         BPL     read_line
-Le294:  LDY     #$8B
-        JSR     Se3c4
-
+Le294:  LDY     #$8B            ; "\\\n"
+        JSR     msgout
 Se299:  LDY     #$01
 Le29b:  DEY
         BMI     Le294
-
+        .byte   $2C             ;[Gigatron] Skip LDX ins
+read_line_ldx:                   ;[Gigatron] Special entry point
+        LDX     #$FF            ;[Gigatron]
 ; read a line from keyboard (using rdkey) into buffer
-read_line:      JSR     rdkey
-        NOP
-        NOP
+read_line:
+        JSR     rdkey
         JSR     cout
-        CMP     #$8D
+        CMP     #$8D            ; <lf>
         BNE     Le280
-        LDA     #$DF
+        LDA     #$DF            ; <rubout>
         STA     buffer,Y
         RTS
+
 cold:   JSR     mem_init_4k
         .export warm
 warm:   JSR     crout           ; BASIC warm start entry point
-Le2b6:  LSR     run_flag
+prompt: LSR     run_flag
         LDA     #'>'+$80        ; Prompt character (high bit set)
         JSR     cout
         LDY     #$00
@@ -514,7 +536,7 @@ Le2b6:  LSR     run_flag
         JSR     cout
 Le2d1:  LDX     #$F7            ;[Gigatron] Was: $FF
         TXS
-        JSR     read_line
+        JSR     read_line_ldx
         STY     token_index
         TXA
         STA     text_index
@@ -541,7 +563,7 @@ Le2fb:  LDA     (pverb),Y
         LDA     token_index
         SBC     text_index
         CMP     #$04
-        BEQ     Le2b6
+        BEQ     prompt
         STA     (pverb),Y
         LDA     pp
         SBC     (pverb),Y
@@ -588,13 +610,14 @@ Le35c:  LDA     auto_ln+1,X
         STA     auto_ln+1,X
         INX
         BEQ     Le35c
-Le365:  BPL     Le3e5
+Le365:  BPL     Le3e5           ; Returns to prompt
         .byte   $00,$00,$00,$00
 Le36b:  LDY     #$14
         BNE     print_err_msg
 
 ; token $0a - "," in DEL command
-del_comma:      JSR     get16bit
+del_comma:
+        JSR     get16bit
         LDA     p1
         STA     p3
         LDA     p1+1
@@ -607,7 +630,8 @@ del_comma:      JSR     get16bit
         BNE     Le395
 
 ; token $09 - "DEL"
-del_cmd:        JSR     get16bit
+del_cmd:
+        JSR     get16bit
 
 Se38a:  JSR     find_line
         LDA     p3
@@ -639,15 +663,15 @@ Le3b7:  LDA     p3
 Le3c0:  JSR     cout
         INY
 
-Se3c4:  LDA     error_msg_tbl,Y
+msgout: LDA     error_msg_tbl,Y
         BMI     Le3c0
 
-cout:   CMP     #$8D
+cout:   CMP     #$8D            ; <lf>
         BNE     Le3d3
 
 crout:  LDA     #$00            ; character output
         STA     ch
-        LDA     #$8D
+        LDA     #$8D            ; <lf>
 Le3d3:  INC     ch
 
 ; Send character to display. Char is in A.
@@ -658,13 +682,16 @@ Le3d5:  ORA     #$80            ;[Gigatron] Set bit7
         NOP                     ;
         NOP                     ;
 
-too_long_err:   LDY     #$06
+too_long_err:
+        LDY     #$06
 
-print_err_msg:  JSR     print_err_msg1  ; print error message specified in Y
+print_err_msg:
+        JSR     print_err_msg1  ; print error message specified in Y
         BIT     run_flag
 Le3e5:  BMI     Le3ea
-        JMP     Le2b6
+        JMP     prompt
 Le3ea:  JMP     Leb9a
+
 Le3ed:  ROL
         ADC     #$A0
         CMP     buffer,X
@@ -697,7 +724,8 @@ Le413:  INY
 
 ; write a token to the buffer
 ; buffer [++tokndx] = A
-put_token:      INC     token_index
+put_token:
+        INC     token_index
         LDX     token_index
         BEQ     too_long_err
         STA     buffer,X
@@ -773,7 +801,8 @@ Le49c:  STX     synstkdx
         BMI     Le426
         BNE     Le4a9
         LDY     #$0E
-go_errmess_2:   JMP     print_err_msg
+go_errmess_2:
+        JMP     print_err_msg
 Le4a9:  CMP     #$03
         BCS     Le470
         LSR
@@ -783,7 +812,7 @@ Le4b1:  LDA     buffer,X
         BCC     Le4ba
         CMP     #$A2
         BEQ     Le4c4
-Le4ba:  CMP     #$DF
+Le4ba:  CMP     #$DF            ; <rubout>
         BEQ     Le4c4
         STX     text_index
 Le4c0:  JSR     put_token
@@ -881,14 +910,17 @@ dectabl:        .byte   $01,$0A,$64,$E8,$10             ; "..dh."
 ; powers of 10 table, high byte
 dectabh:        .byte   $00,$00,$00,$03,$27             ; "....'"
 
-find_line:      LDA     pp
+find_line:
+        LDA     pp
         STA     p3
         LDA     pp+1
         STA     p3+1
 
-find_line1:     INX
+find_line1:
+        INX
 
-find_line2:     LDA     p3+1
+find_line2:
+        LDA     p3+1
         STA     p2+1
         LDA     p3
         STA     p2
@@ -920,7 +952,8 @@ Le5a0:  INY
 Le5ac:  RTS
 
 ; token $0B - "NEW"
-new_cmd:        LSR     auto_flag
+new_cmd:
+        LSR     auto_flag
         LDA     himem
         STA     pp
         LDA     himem+1
@@ -972,7 +1005,8 @@ Le5e5:  LDA     acc
         STA     pv+1
         LDA     srch
         BCC     Le64f
-execute_var:    STA     acc
+execute_var:
+        STA     acc
         STY     acc+1
         JSR     get_next_prog_byte
         BMI     Le623
@@ -1027,14 +1061,17 @@ Le670:  INC     noun_stk_h_str,X
         BMI     Le670
         BPL     fetch_prog_byte
 
-execute_stmt:   LDA     #$00
+execute_stmt:
+        LDA     #$00
         STA     if_flag
         STA     cr_flag
         LDX     #$20
 
 ; push old verb on stack for later use in precedence test
-push_old_verb:  PHA
-fetch_prog_byte:        LDY     #$00
+push_old_verb:
+        PHA
+fetch_prog_byte:
+        LDY     #$00
         LDA     (pverb),Y
 Le686:  BPL     execute_token
         ASL
@@ -1049,7 +1086,8 @@ Le696:  BIT     if_flag
 Le69b:  JSR     get_next_prog_byte
         BCS     Le686
 
-execute_token:  CMP     #$28
+execute_token:
+        CMP     #$28
         BNE     execute_verb
         LDA     pverb
         JSR     push_a_noun_stk
@@ -1065,7 +1103,8 @@ Le6ba:  INC     noun_stk_h_str,X
 Le6bc:  JSR     get_next_prog_byte
         BMI     Le6ba
         BCS     Le696
-execute_verb:   BIT     if_flag
+execute_verb:
+        BIT     if_flag
         BPL     Le6cd
         CMP     #$04
         BCS     Le69b
@@ -1087,7 +1126,8 @@ Le6d8:  PLA
         JSR     get_next_prog_byte
         LDA     current_verb
         BCC     push_old_verb
-do_verb:        LDA     verb_adr_l,Y
+do_verb:
+        LDA     verb_adr_l,Y
         STA     acc
         LDA     verb_adr_h,Y
         STA     acc+1
@@ -1096,7 +1136,8 @@ do_verb:        LDA     verb_adr_l,Y
 
 Se6fc:  JMP     (acc)
 
-get_next_prog_byte:     INC     pverb
+get_next_prog_byte:
+        INC     pverb
         BNE     Le705
         INC     pverb+1
 Le705:  LDA     (pverb),Y
@@ -1104,14 +1145,16 @@ Le705:  LDA     (pverb),Y
 
 push_ya_noun_stk:       STY     syn_stk_h+31,X
 
-push_a_noun_stk:        DEX
+push_a_noun_stk:
+        DEX
         BMI     Le710
         STA     noun_stk_l,X
         RTS
 Le710:  LDY     #$66
 go_errmess_3:   JMP     print_err_msg
 
-get16bit:       LDY     #$00
+get16bit:
+        LDY     #$00
         LDA     noun_stk_l,X
         STA     acc
         LDA     noun_stk_h_int,X
@@ -1183,7 +1226,8 @@ Le77e:  LDY     #$00
         BPL     go_errmess_3
 
 ; token $13 - "-" for numeric subtraction
-subtract:       JSR     negate
+subtract:
+        JSR     negate
 
 ; token $12 - "+" for numeric addition
 add:    JSR     get16bit
@@ -1203,7 +1247,8 @@ Se793:  CLC
 Le7a1:  STA     noun_stk_h_int,X
 
 ; token $35 - "+" for unary positive
-unary_pos:      RTS
+unary_pos:
+        RTS
 
 ; token $50 - "TAB" function
 tab_fn: JSR     get16bit
@@ -1226,10 +1271,12 @@ Le7bc:  CPY     ch
         RTS
 
 ; token $49 - "," in print, numeric follows
-print_com_num:  JSR     tabout
+print_com_num:
+        JSR     tabout
 
 ; token $62 - "PRINT" numeric
-print_num:      JSR     get16bit
+print_num:
+        JSR     get16bit
         LDA     acc+1
         BPL     Le7d5
         LDA     #$AD
@@ -1245,7 +1292,8 @@ Le7d5:  DEY
         RTS
 
 ; token $0D - "AUTO" command
-auto_cmd:       JSR     get16bit
+auto_cmd:
+        JSR     get16bit
         LDA     acc
         STA     auto_ln
         LDA     acc+1
@@ -1259,14 +1307,16 @@ Le7f3:  STA     auto_inc
         RTS
 
 ; token $0E - "," in AUTO command
-auto_com:       JSR     get16bit
+auto_com:
+        JSR     get16bit
         LDA     acc
         LDY     acc+1
         BPL     Le7f3
 
 ; token $56 - "=" in FOR statement
 ; token $71 - "=" in LET (or implied LET) statement
-var_assign:     JSR     get16bit
+var_assign:
+        JSR     get16bit
         LDA     noun_stk_l,X
         STA     aux
         LDA     noun_stk_h_str,X
@@ -1290,10 +1340,12 @@ colon:  BIT     cr_flag
         BPL     Le822
 
 ; token $63 - "PRINT" with no arg
-print_cr:       JSR     crout
+print_cr:
+        JSR     crout
 
 ; token $47 - ";" at end of print statement
-print_semi:     LSR     cr_flag
+print_semi:
+        LSR     cr_flag
 Le822:  RTS
 
 
@@ -1301,14 +1353,17 @@ Le822:  RTS
 ; token $34 - "(" in numeric DIM
 ; token $38 - "(" in numeric expression
 ; token $3F - "(" in some PEEK, RND, SGN, ABS (PDL)
-left_paren:     LDY     #$FF
+left_paren:
+       LDY     #$FF
         STY     precedence
 
 ; token $72 - ")" everywhere
-right_paren:    RTS
+right_paren:
+        RTS
 
 ; token $60 - "IF" statement
-if_stmt:        JSR     Sefcd
+if_stmt:
+        JSR     Sefcd
         BEQ     Le834
         LDA     #$25
         STA     current_verb
@@ -1317,12 +1372,14 @@ if_stmt:        JSR     Sefcd
 Le834:  INX
         RTS
 ; RUN without CLR, used by Apple DOS
-run_warm:       LDA     pp
+run_warm:
+        LDA     pp
         LDY     pp+1
         BNE     Le896
 
 ; token $5C - "GOSUB" statement
-gosub_stmt:     LDY     #$41
+gosub_stmt:
+        LDY     #$41
         LDA     gosub_nest_count
         CMP     #$08
         BCS     go_errmess_4
@@ -1339,7 +1396,8 @@ gosub_stmt:     LDY     #$41
 
 ; token $24 - "THEN"
 ; token $5F - "GOTO" statement
-goto_stmt:      JSR     get16bit
+goto_stmt:
+        JSR     get16bit
         JSR     find_line
         BCC     Le867
         LDY     #$37
@@ -1348,15 +1406,17 @@ Le867:  LDA     p2
         LDY     p2+1
 
 ; loop to run a program
-run_loop:       STA     pline
+run_loop:
+        STA     pline
         STY     pline+1
-        BIT     KBDCR
-        BMI     Le8c3
-        CLC
+        BIT     KBDCR           ; Test keyboard
+        BMI     stop            ; Stop if key pressed
+        CLC                     ; Continue
         ADC     #$03
-        BCC     Le87a
+        BCC     getnext
         INY
-Le87a:  LDX     #$F7            ;[Gigatron] Was $FF
+getnext:                        ; Fetch next statement from text
+        LDX     #$F7            ;[Gigatron] Was $FF
         STX     run_flag
         TXS
         STA     pverb
@@ -1377,10 +1437,12 @@ Le896:  CMP     himem
         BNE     run_loop
         LDY     #$34
         LSR     run_flag
-go_errmess_4:   JMP     print_err_msg
+go_errmess_4:
+        JMP     print_err_msg
 
 ; token $5B - "RETURN" statement
-return_stmt:    LDY     #$4A
+return_stmt:
+        LDY     #$4A
         LDA     gosub_nest_count
         BEQ     go_errmess_4
         DEC     gosub_nest_count
@@ -1393,9 +1455,9 @@ return_stmt:    LDY     #$4A
         LDA     gstk_pverbh-1,Y
 Le8be:  TAY
         TXA
-        JMP     Le87a
-Le8c3:  LDY     #$63
-        JSR     Se3c4
+        JMP     getnext
+stop:   LDY     #$63            ; "Stopped at"
+        JSR     msgout
         LDY     #$01
         LDA     (pline),Y
         TAX
@@ -1404,12 +1466,14 @@ Le8c3:  LDY     #$63
         JSR     prdec
 
 ; token $51 - "END" statement
-end_stmt:       JMP     warm
+end_stmt:
+        JMP     warm
 Le8d6:  DEC     for_nest_count
 
 ; token $59 - "NEXT" statement
 ; token $5A - "," in NEXT statement
-next_stmt:      LDY     #$5B
+next_stmt:
+        LDY     #$5B
         LDA     for_nest_count
 Le8dc:  BEQ     go_errmess_4
         TAY
@@ -1453,7 +1517,8 @@ Le937:  DEC     for_nest_count
         RTS
 
 ; token $55 - "FOR" statement
-for_stmt:       LDY     #$54
+for_stmt:
+        LDY     #$54
         LDA     for_nest_count
         CMP     #$08
         BEQ     Le8dc
@@ -1466,7 +1531,8 @@ for_stmt:       LDY     #$54
         RTS
 
 ; token $57 - "TO"
-to_clause:      JSR     get16bit
+to_clause:
+        JSR     get16bit
         LDY     for_nest_count
         LDA     acc
         STA     fstk_tol-1,Y
@@ -1571,18 +1637,20 @@ error_msg_tbl:
         .byte   $DC,$0D                         ; "\\\n"
         .byte   $D2,$C5,$D4,$D9,$D0,$C5,$A0,$CC,$C9,$CE,$C5,$8D ; "RETYPE LINE\n"
         .byte   $3F                             ; "?"
+
 Leb9a:  LSR     run_flag
         BCC     Leba1
-        JMP     Le8c3
-Leba1:  LDX     acc+1
+        JMP     stop
+Leba1:  LDX     acc+1                   ; Retry input query
         TXS
         LDX     acc
-        LDY     #$8D
-        BNE     Lebac
+        LDY     #$8D                    ; "Retype line"
+        BNE     Lebac                   ; Always taken
 
 ; token $54 - "INPUT" statement, numeric, no prompt
-input_num_stmt: LDY     #$99
-Lebac:  JSR     Se3c4
+input_num_stmt:
+        LDY     #$99                    ; "?"
+Lebac:  JSR     msgout
         STX     acc
         TSX
         STX     acc+1
@@ -1599,7 +1667,8 @@ Lebac:  JSR     Se3c4
         LDX     acc
 
 ; token $27 - "," numeric input
-input_num_comma:        LDY     text_index
+input_num_comma:
+        LDY     text_index
         ASL
 Lebce:  STA     acc
         INY
@@ -1717,11 +1786,13 @@ syntabl2:
         .byte   $BF,$60,$03,$BF,$1F             ; "?`.?."
 
 ; token $48 - "," string output
-print_str_comma:        JSR     tabout
+print_str_comma:
+        JSR     tabout
 
 ; token $45 - ";" string output
 ; token $61 - "PRINT" string
-print_str:      INX
+print_str:
+        INX
         INX
         LDA     rnd+1,X
         STA     aux
@@ -1752,14 +1823,16 @@ len_fn: INX
 
         .byte   $FF
 
-getbyte:        JSR     get16bit
+getbyte:
+        JSR     get16bit
         LDA     acc+1
         BNE     gr_255_err
         LDA     acc
         RTS
 
 ; token $68 - "," for PLOT statement (???)
-plot_comma:     JSR     getbyte
+plot_comma:
+        JSR     getbyte
         LDY     text_index
         CMP     #$30
         BCS     range_err
@@ -1782,9 +1855,12 @@ l123:   LDY     acc,X
         BEQ     l123
         TAX
         RTS
-gr_255_err:     LDY     #$77            ; > 255 error
-go_errmess_5:   JMP     print_err_msg
-range_err:      LDY     #$7B            ; range error
+gr_255_err:
+        LDY     #$77            ; > 255 error
+go_errmess_5:
+        JMP     print_err_msg
+range_err:
+        LDY     #$7B            ; range error
         BNE     go_errmess_5
 
 See6c:  JSR     Se254
@@ -1814,7 +1890,8 @@ Lee96:  DEY
         .byte   $FF,$FF,$FF,$FF,$FF,$FF
 
 ; token $4D - "CALL" statement
-call_stmt:      JSR     get16bit
+call_stmt:
+        JSR     get16bit
         JMP     (acc)
 l1233:  LDA     himem
         BNE     l1235
@@ -1844,13 +1921,13 @@ Leecb:  BCS     range_err
 print_err_msg1:
         TYA
         TAX
-        LDY     #$6E
-        JSR     Se3c4
+        LDY     #$6E            ; "*** "
+        JSR     msgout
         TXA
         TAY
-        JSR     Se3c4
-        LDY     #$72
-        JMP     Se3c4
+        JSR     msgout
+        LDY     #$72            ; " ERR."
+        JMP     msgout
 
 Seee4:  JSR     get16bit
 Leee7:  ASL     acc
@@ -1863,13 +1940,15 @@ Leee7:  ASL     acc
 Leef5:  RTS
 
 ; token $2E - "PEEK" fn (uses $3F left paren)
-peek_fn:        JSR     get16bit
+peek_fn:
+        JSR     get16bit
         LDA     (acc),Y
         STY     syn_stk_l+31,X
         JMP     push_ya_noun_stk
 
 ; token $65 - "," for POKE statement
-poke_stmt:      JSR     getbyte
+poke_stmt:
+        JSR     getbyte
         LDA     acc
         PHA
         JSR     get16bit
@@ -1890,11 +1969,13 @@ divide: JSR     See6c
 
 ; token $44 - "," next var in DIM statement is numeric
 ; token $4F - "DIM", next var is numeric
-dim_num:        JSR     Seee4
+dim_num:
+        JSR     Seee4
         JMP     Le134
 
 ; token $2D - "(" for numeric array subscript
-num_array_subs: JSR     Seee4
+num_array_subs:
+        JSR     Seee4
         LDY     noun_stk_h_str,X
         LDA     noun_stk_l,X
         ADC     #$FE
@@ -1974,11 +2055,13 @@ Lefb3:  JSR     Sefc9
 
 ; token $26 - "," for string input
 ; token $52 - "INPUT" statement for string
-string_input:   JSR     input_str
+string_input:
+        JSR     input_str
         JMP     Lefbf
 
 ; token $53 - "INPUT" with literal string prompt
-input_prompt:   JSR     print_str
+input_prompt:
+        JSR     print_str
 Lefbf:  LDA     #$FF
         STA     text_index
         LDA     #$74
@@ -1993,7 +2076,8 @@ Sefcd:  JSR     not_op
         RTS
 
 ; memory initialization for 4K RAM
-mem_init_4k:    LDA     #$00
+mem_init_4k:
+        LDA     #$00
         STA     lomem
         STA     himem
         LDA     #$08
