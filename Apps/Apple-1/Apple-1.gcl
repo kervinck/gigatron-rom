@@ -698,16 +698,17 @@ _CharOut=*
 [
   {Minimalistic terminal output, with bit 7 set by WozMon}
 
-  8-- %0=                       {Park character in stack area}
+  6--
+  _sysArgs0 %0=
+  _sysArgs2 %2=
+  _sysArgs4 %4=
 
-  _sysArgs0 %2=
-  _sysArgs2 %4=
-  _sysArgs4 %6=
+  \sysArgs3.                    {Park character}
 
   \SYS_VDrawBits_134 _sysFn=    {Prepare SYS calls}
   $3f00 _sysArgs0=              {White on black}
 
-  %0                            {Get character back}
+  \sysArgs3,                    {Get character back}
   $8d^ [if<>0                   {Test for CR...}
     <p, 251- if>0 0]            {...or line wrap}
   [if=0
@@ -743,7 +744,7 @@ _CharOut=*
     { The cleared text row has now bubbled down to the bottom }
   ]
 
-  %0 $a0-                       {WozMon sends ASCII with bit 7 set}
+  \sysArgs3, $a0-               {WozMon sends ASCII with bit 7 set}
   [if>=0                        {If printable}
 
     {-------------------------------------------------------------------+
@@ -760,7 +761,6 @@ _CharOut=*
     _j+ _j=                     {Add to page address to reach bitmap data}
 
     p _sysArgs4=                {Screen position for character}
-    %0=                         {Remember this position}
     6+ p=                       {Advance by 6 pixels}
 
     5 [do _i=                   {Draw character as 5 vertical bit slices}
@@ -771,15 +771,12 @@ _CharOut=*
       134!!                     {SYS call to draw 8 pixels vertically}
       <_j++ <_sysArgs4++        {Advance to next byte}
       _i 1- if>0loop]           {Looping}
-
-    %0                          {Return position for backspace}
   ]
 
-  %2 _sysArgs0=
-  %4 _sysArgs2=
-  %6 _sysArgs4=
-
-  8++ ret
+  %0 _sysArgs0=
+  %2 _sysArgs2=
+  %4 _sysArgs4=
+  6++ ret
 ]
 
 {-----------------------------------------------------------------------+
