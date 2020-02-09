@@ -688,7 +688,7 @@ _v6502_PC=                      {Reset v6502 PC}
 [do
   \SYS_Run6502_v4_80 _sysFn=
   80!!                          {Run 6502 code until BRK}
-  loop]                         {TODO Simulate 6502 IRQ}
+  loop]                         {XXX TODO Simulate 6502 IRQ}
 
 {-----------------------------------------------------------------------+
 |       Character output with automatic scrolling                       |
@@ -698,17 +698,17 @@ _CharOut=*
 [
   {Minimalistic terminal output, with bit 7 set by WozMon}
 
-  6--
-  _sysArgs0 %0=
-  _sysArgs2 %2=
-  _sysArgs4 %4=
+  _i=                           {Temp park argument here}
 
-  \sysArgs3.                    {Park character}
+  6--                           {Preserve v6502 state}
+  _sysArgs0 %0=                 {v6502_ADL v6502_ADH}
+  _sysArgs2 %2=                 {v6502_IR  v6502_P}
+  _sysArgs4 %4=                 {v6502_Qz  v6502_Qn}
 
   \SYS_VDrawBits_134 _sysFn=    {Prepare SYS calls}
   $3f00 _sysArgs0=              {White on black}
 
-  \sysArgs3,                    {Get character back}
+  _i \sysArgs3.                 {Keep copy of character in sysArgs3}
   $8d^ [if<>0                   {Test for CR...}
     <p, 251- if>0 0]            {...or line wrap}
   [if=0
