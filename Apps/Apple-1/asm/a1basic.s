@@ -8,10 +8,9 @@
 ; Uses disassembly copyright 2003 Eric Smith <eric@brouhaha.com>
 ; http://www.brouhaha.com/~eric/retrocomputing/apple/apple1/basic/
 
-Z1d     =       $1D
-YSAV    =       $3A     ;[Gigatron]
-ch      =       $EF     ;[Gigatron] was: $24 ; horizontal cursor location
-var     =       $48
+Z1d     =       $1D     ;[Gigatron] same as vTmp, so harmless
+ch      =       $34     ;[Gigatron] was: $24 ; horizontal cursor location
+var     =       $48     ; (2 bytes)
 lomem   =       $4A     ; lower limit of memory used by BASIC (2 bytes)
 himem   =       $4C     ; upper limit of memory used by BASIC (2 bytes)
 rnd     =       $4E     ; random number (2 bytes)
@@ -54,23 +53,23 @@ current_verb =  $D6
 precedence =    $D7
 x_save  =       $D8
 run_flag =      $D9
-aux     =       $DA
+aux     =       $DA     ; (2 bytes)
 pline   =       $DC     ; pointer to current program line (2 bytes)
-pverb   =       $E0     ; pointer to current verb (2 bytes)
-p1      =       $E2
-p2      =       $E4
-p3      =       $E6
-token_index =   $E8    ;[Gigatron] was: $F1    ; pointer used to write tokens into buffer  2 bytes)
-pcon    =       $E9    ;[Gigatron] was: $F2.$F3; temp used in decimal output (2 bytes)
-auto_inc =      $EB    ;[Gigatron] was: $F4.$F5
-auto_ln =       $3E    ;[Gigatron] was: $F6.$F7
-auto_flag =     $40    ;[Gigatron] was: $F8
-char    =       $41    ;[Gigatron] was: $F9
-leadzr  =       $42    ;[Gigatron] was: $FA
-for_nest_count = $43   ;[Gigatron] was: $FB  ; count of active (nested) FOR loops
-gosub_nest_count = $44 ;[Gigatron] was: $FC  ; count of active (nested) subroutines calls (GOSUB)
-synstkdx =      $45    ;[Gigatron] was: $FD
-synpag  =       $46    ;[Gigatron] was: $FE
+pverb   =       $DE     ;[Gigatron] was: $E0.$E1 ; pointer to current verb (2 bytes)
+p1      =       $E0     ;[Gigatron] was: $E2.$E3
+p2      =       $35     ;[Gigatron] was: $E4.$E5
+p3      =       $37     ;[Gigatron] was: $E6.$E7
+token_index =   $39     ;[Gigatron] was: $F1    ; pointer used to write tokens into buffer
+pcon    =       $3A     ;[Gigatron] was: $F2.$F3; temp used in decimal output (2 bytes)
+auto_inc =      $3C     ;[Gigatron] was: $F4.$F5
+auto_ln =       $3E     ;[Gigatron] was: $F6.$F7
+auto_flag =     $40     ;[Gigatron] was: $F8
+char    =       $41     ;[Gigatron] was: $F9
+leadzr  =       $42     ;[Gigatron] was: $FA
+for_nest_count = $43    ;[Gigatron] was: $FB  ; count of active (nested) FOR loops
+gosub_nest_count = $44  ;[Gigatron] was: $FC  ; count of active (nested) subroutines calls (GOSUB)
+synstkdx =      $45     ;[Gigatron] was: $FD
+synpag  =       $46     ;[Gigatron] was: $FE.$FF (2 bytes)
 
 ; GOSUB stack, max eight entries
 ; note that the Apple II version has sixteen entries
