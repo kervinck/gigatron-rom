@@ -12,12 +12,10 @@ gcl0x
   Issues:
 
   XXX Restore cursor `@'
-  XXX Don't crash BASIC (free up more zero page, eg. saving of vPC)
   XXX Restore 'spacers' to make wozmon output fit again
   XXX Normally we need RESET to get out of A1 BASIC. Can we use Ctrl-C?
   XXX BASIC: AUTO doesn't work well
   XXX Preload Mastermind game at $300
-  XXX NMI/IRQ(=BRK)/RESET back into to wozmon (through vector)
 
   References:
 
@@ -636,6 +634,8 @@ _vIRQ_ENTER=*
   }
 
   {-- Return from interrupt --}
+
+  &_Break_minus2 _PIA=          {Restore the vPC damage we did here}
   pop
   255 \frameCount.              {New interrupt in next frame. Note: "255"}
                                 { *may* cause a race condition and crash!}
@@ -674,21 +674,32 @@ _L2=*           #_STAAX_ ##\videoTable
 _ROWS=*         { Page of each row's first pixel line, backwards }
                 #$70 #$56 #$4f #$48 #$41 #$3a #$33 #$2c #$25 #$1e #$17 #$10 #$77 #$70
 
-*=$5f00
+
+_BREAK=*        #_CLD_
+                #_CLI_
+                #_LDXIM_ #$F7
+                #_TXS_
+                #_JMP_   ##_ESCAPE
 
 {-----------------------------------------------------------------------+
 |       Main vCPU loop                                                  |
 +-----------------------------------------------------------------------}
+*=$5f00
 
 _Apple1=*
 
 { Main loop from the perspective of the Gigatron I/O system }
 
-_v6502_PC=                      {Reset v6502 PC}
 [do
+  _v6502_PC=                    {Reset v6502 PC}
   \SYS_Run6502_v4_80 _sysFn=
+
+_Break_minus2=*                 {To help our overly thrifty vIRQ handler}
   80!!                          {Run 6502 code until BRK}
-  loop]                         {XXX TODO Simulate 6502 IRQ}
+
+{_Break=*}                      {After v6502 BRK instruction, resume here}
+  $fffe deek                    {Fake 6502 IRQ}
+  loop]
 
 {-----------------------------------------------------------------------+
 |       Character output with automatic scrolling                       |
@@ -1271,7 +1282,7 @@ _WAITECHO=*     #_BIT_   ##_DSP         { DA bit (B7) cleared yet?              
                 #$00 #$00               { (unused)                                }
 {FFFA}          ##$0000                 { (NMI)                                   }
 {FFFC}          ##_RESET                { (RESET)                                 }
-{FFFE}          ##$0000                 { (IRQ/BRK)                               }
+{FFFE}          ##_BREAK                { (IRQ/BRK)                               }
 
 {-----------------------------------------------------------------------+
 |                                                                       |
