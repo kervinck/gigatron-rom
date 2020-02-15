@@ -622,6 +622,8 @@ _vIRQ_ENTER=*
   [if<0
     &_DSP _PIA=                 {Pointer to PIA register}
     peek &_CharOut!             {Emit character when set}
+    $f6; 66+ [if=0              {If return address is $ffbe}
+      p 2- p=]                  { make wozmon output fit on small screen}
     &_KBDCR _PIA.               {Setting DSP to $11 clears bit 7}
     _vAC.]                      {Also clear *KBDCR* bit 7. This is NOT how the}
                                 { true PIA works, but it fools most programs.}
