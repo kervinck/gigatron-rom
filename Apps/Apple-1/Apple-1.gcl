@@ -11,10 +11,9 @@ gcl0x
 {
   Issues:
 
-  XXX Restore cursor `@'
-  XXX Restore 'spacers' to make wozmon output fit again
   XXX Normally we need RESET to get out of A1 BASIC. Can we use Ctrl-C?
   XXX BASIC: AUTO doesn't work well
+  XXX BASIC: Delete doesn't work on empty buffer
   XXX Preload Mastermind game at $300
 
   References:
@@ -612,7 +611,9 @@ _vIRQ_ENTER=*
     &_serialRaw, &_lastKey.     {"serialLast" isn't useful for this}
     255^ [if<>0 255^            {But ignore key releases}
       $60- [if>=0 $20-] $60+    {Map to upper case, delete becomes rubout}
-      10^ [if=0 7] 10^          {Map 10 CR to 13 LF}
+      10^ [if=0
+        0 <_cursorTimer.        {Force cursor to disappear below}
+        7] 10^                  {Map 10 CR to 13 LF}
       127& 128-                 {Set bits 7..15}
       _PIA:                     {Update KBD and KBDCR in one go}
     ]]
@@ -622,18 +623,40 @@ _vIRQ_ENTER=*
   [if<0
     &_DSP _PIA=                 {Pointer to PIA register}
     peek &_CharOut!             {Emit character when set}
-    $f6; 66+ [if=0              {If return address is $ffbe}
+    \vSP, 2+ deek 66+ [if=0     {If return address is $ffbe}
       p 2- p=]                  { make wozmon output fit on small screen}
     &_KBDCR _PIA.               {Setting DSP to $11 clears bit 7}
-    _vAC.]                      {Also clear *KBDCR* bit 7. This is NOT how the}
+    _vAC.                       {Also clear *KBDCR* bit 7. This is NOT how the}
                                 { true PIA works, but it fools most programs.}
+    31 <_cursorTimer.]          {Restart cursor cycle}
 
   {-- Handle cursor --}
-  <_cursorTimer++               {Advance cursor timer}
   {
+    Flashing rate and duty cycle are given by the 555 bistable circuit.
+    From the the schematic:
+        R1  =  10K
+        R2  =  10K
+        C   =  25 uF
+    Giving:
+        f   =  1.44  / ((R1 + 2*R2) * C)  =  1.92 Hz  =  31.2 frames
+        T1  =  0.693 * ((R1 + R2)   * C)  =   346 ms  =  20.8 frames
+        T2  =  0.693 * ( R2         * C)  =   173 ms  =  10.4 frames
+
+    Video taken from the Apple-1 on display at LCM+L:
+        https://www.youtube.com/watch?v=FtOCumsDtlE
+        (11 frames up, 5 frames down at 30 fps)
+  }
+  <_cursorTimer, 1-
+  [if<0
+    $a0 &_CharOut!              {` '}
+    p 6- p=                     {Go back}
+    30                          {31 frames at 60 Hz}
+  ]
+  <_cursorTimer.
+  20^ [if=0                     {67% duty cycle}
     $c0 &_CharOut!              {`@'}
     p 6- p=                     {Go back}
-  }
+  ]
 
   {-- Return from interrupt --}
 
