@@ -11,9 +11,10 @@ gcl0x
 {
   Issues:
 
-  XXX Normally we need RESET to get out of A1 BASIC. Can we use Ctrl-C?
   XXX BASIC: AUTO doesn't work well
   XXX BASIC: Delete doesn't work on empty buffer
+  XXX Mini-assembler: doesn't always assemble
+  XXX Cursor: Can be sticky in mini-assembler
   XXX Preload Mastermind game at $300
 
   References:
