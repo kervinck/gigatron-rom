@@ -824,7 +824,7 @@ _CharOut=*
                 #_LDAIM_ #$aa           {`*'}
                 #_JSR_   ##_ECHO
 _MENU=*
-                #_LDXIM_ #48            {Print welcome message}
+                #_LDXIM_ #56            {Print welcome message}
 _L4=*           #_LDAAX_ ##_MSG
                 #_JSR_   ##_ECHO
                 #_DEX_
@@ -838,16 +838,17 @@ _MSG=*
                 #$8d #$c3 #$c9 #$d3 #$c1 #$c2 #$a0 #$d2
                 #$b0 #$b0 #$b0 #$c5
 
-                { 'EEER  Mini-assembler\r' }
-                #$8d #$f2 #$e5 #$ec #$e2 #$ed #$e5 #$f3
-                #$f3 #$e1 #$ad #$e9 #$ee #$e9 #$cd #$a0
+                { 'EEER  MINI-ASSEMBLER\r' }
+                #$8d #$d2 #$c5 #$cc #$c2 #$cd #$c5 #$d3
+                #$d3 #$c1 #$ad #$c9 #$ce #$c9 #$cd #$a0
                 #$a0 #$d2 #$c5 #$c5 #$c5
 
-                { 'Apple-1 on TTL\r' }
-                #$8d #$cc #$d4 #$d4 #$a0 #$ee #$ef #$a0
-                #$b1 #$ad #$e5 #$ec #$f0 #$f0 #$c1
+                { 'APPLE-1 ON TTL\r' }
+                #$8d #$cc #$d4 #$d4 #$a0 #$ce #$cf #$a0
+                #$b1 #$ad #$c5 #$cc #$d0 #$d0 #$c1
 
                 { '\r' }
+                #$8d #$8d #$8d #$8d #$8d #$8d #$8d #$8d
                 #$8d
 
                 {
