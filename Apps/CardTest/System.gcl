@@ -82,6 +82,9 @@ gcl0x
                 PTP     Paper tape punch
                 LPT     Line printer
 
+        Function set in QIODevice
+                https://doc.qt.io/archives/qt-4.8/qiodevice.html
+
   XXX Positive card detection:
         Read MISO's
         Invert
