@@ -35,6 +35,22 @@ rnd     =       $4E     ; random number (2 bytes)
 ;       noun_stk_h_int = any
 ; Since noun_stk_h_str determines whether stack entry is integer or string,
 ; strings can't start in zero page.
+;
+; Visually:
+;       ------------------------------------------------------------
+;       noun_stk_l      50....6F
+;       syn_stk_h         58....77
+;       noun_stk_h_str            78....97
+;       syn_stk_l                   80....9F
+;       noun_stk_h_int                      A0....BF
+;       txtndxstk                             A8....C7
+;       text_index                                    C8
+;       tokndxstk                                         D1....F0
+;       token_index                                               F1
+;       ------------------------------------------------------------
+
+;stksize = 32
+stksize = 24            ; [Gigatron]
 
 noun_stk_l =    $50
 syn_stk_h =     $58     ; through $77
@@ -42,19 +58,20 @@ noun_stk_h_str = $78
 syn_stk_l  =    $80     ; through $9F
 noun_stk_h_int = $A0
 txtndxstk  =    $A8     ; through $C7
-text_index =    $C8     ; index into text being tokenized (in buffer at $0200)
+;text_index =    $C8     ; index into text being tokenized (in buffer at $0200)
+text_index = txtndxstk + stksize
 leadbl  =       $C9     ; leading blanks
-pp      =       $CA     ; pointer to end of program (2 bytes)
-pv      =       $CC     ; pointer to end of variable storage (2 bytes)
-acc     =       $CE     ; (2 bytes)
-srch    =       $D0
-tokndxstk =     $D1
-srch2   =       $D2
-if_flag =       $D4
-cr_flag =       $D5
+pp      =       $CA     ; start of program (2 bytes)
+pv      =       $CC     ; end of variables (2 bytes)
+acc     =       $CE     ; main accumulator (2 bytes)
+srch    =       $D0     ; search var
+tokndxstk =     $D1     ; through $F0
+srch2   =       $D2     ; variable search pointer
+if_flag =       $D4     ; if/then fail flag
+cr_flag =       $D5     ; cariage return flag for print
 current_verb =  $D6
-precedence =    $D7
-x_save  =       $D8
+precedence =    $D7     ; aka print it now flag
+x_save  =       $D8     ; temp Xreg save
 run_flag =      $D9
 aux     =       $DA     ; (2 bytes)
 pline   =       $DC     ; pointer to current program line (2 bytes)
@@ -62,9 +79,11 @@ pverb   =       $DE     ;[Gigatron] was: $E0.$E1 ; pointer to current verb (2 by
 p1      =       $E0     ;[Gigatron] was: $E2.$E3
 p2      =       $35     ;[Gigatron] was: $E4.$E5
 p3      =       $37     ;[Gigatron] was: $E6.$E7
-token_index =   $39     ;[Gigatron] was: $F1    ; pointer used to write tokens into buffer
+; XXX $39 is unused
+;token_index =   $F1     ; pointer used to write tokens into buffer
+token_index = tokndxstk + stksize
 pcon    =       $3A     ;[Gigatron] was: $F2.$F3; temp used in decimal output (2 bytes)
-auto_inc =      $3C     ;[Gigatron] was: $F4.$F5
+auto_inc =      $3C     ;[Gigatron] was: $F4.$F5 XXX conflicts with _j
 auto_ln =       $3E     ;[Gigatron] was: $F6.$F7
 auto_flag =     $40     ;[Gigatron] was: $F8
 char    =       $41     ;[Gigatron] was: $F9
@@ -110,23 +129,20 @@ rdkey:  LDA     KBDCR           ; Read control register
 
 Se00c:  TXA
         AND     #$20
-        BEQ     Le034
-
-Se011:  LDA     #$A0
+        BEQ     Le034           ; To RTS
+Se011:  LDA     #$A0            ; " "
         STA     p2
         JMP     cout
 
-Se018:  LDA     #$20
-
+Se018:  LDA     #$20            ; 32 chars
 Se01a:  CMP     ch
         BCS     nextbyte
-        LDA     #$8D
+        LDA     #$8D            ; Emit CR
         LDY     #$07
-Le022:  JSR     cout
+Le022:  JSR     cout            ; Followed by 6 spaces
         LDA     #$A0
         DEY
         BNE     Le022
-
 nextbyte:
         LDY     #$00
         LDA     (p1),Y
@@ -491,12 +507,13 @@ Le279:  RTS
 mod_op: JSR     See6c
         BEQ     Le244           ; Always taken
 
-Le280:  CMP     #$84            ; XXX <Ctrl-D> ???
+; Line edit loop
+Le280:  CMP     #$84            ; Ctrl-D?
         BNE     Le286
         LSR     auto_flag       ; Manual
-Le286:  CMP     #$DF            ; <rub>
+Le286:  CMP     #$DF            ; "<-"?
         BEQ     Le29b
-        CMP     #$9B            ; <esc>
+        CMP     #$9B            ; ESC?
         BEQ     Le294
         STA     buffer,Y
         INY
@@ -506,16 +523,16 @@ Le294:  LDY     #$8B            ; "\\\n"
 Se299:  LDY     #$01
 Le29b:  DEY
         BMI     Le294
-        .byte   $2C             ;[Gigatron] Skip LDX ins
-read_line_ldx:                   ;[Gigatron] Special entry point
-        LDX     #$FF            ;[Gigatron]
+        .byte   $2C             ;[Gigatron] Hop over next LDX ins.
+read_line_ldx:                  ;[Gigatron] Special entry point to
+        LDX     #$FF            ;[Gigatron]  init X for text_index.
 ; read a line from keyboard (using rdkey) into buffer
 read_line:
         JSR     rdkey
         JSR     cout
-        CMP     #$8D            ; <lf>
+        CMP     #$8D            ; CR?
         BNE     Le280
-        LDA     #$DF            ; <rubout>
+        LDA     #$DF            ; "<-"
         STA     buffer,Y
         RTS
 
@@ -529,37 +546,37 @@ prompt: LSR     run_flag
         STY     leadzr
         BIT     auto_flag
         BPL     Le2d1
-        LDX     auto_ln
+        LDX     auto_ln         ; Print auto line
         LDA     auto_ln+1
         JSR     prdec
-        LDA     #$A0
+        LDA     #$A0            ; Blank.
         JSR     cout
 Le2d1:  LDX     #$F7            ;[Gigatron] Was: $FF
         TXS
         JSR     read_line_ldx
-        STY     token_index
+        STY     token_index     ; Points at terminating "<-"
         TXA
-        STA     text_index
-        LDX     #$20
-        JSR     Se491
+        STA     text_index      ; Points one before first character
+        LDX     #stksize
+        JSR     tokenize
         LDA     text_index
         ADC     #$00
         STA     pverb
         LDA     #$00
-        TAX
+        TAX                     ; Clears X
         ADC     #$02
         STA     pverb+1
         LDA     (pverb,X)
         AND     #$F0
         CMP     #$B0
         BEQ     Le2f9
-        JMP     Le883
+        JMP     execute_line
 Le2f9:  LDY     #$02
 Le2fb:  LDA     (pverb),Y
-        STA     pv+1,Y
+        STA     acc-1,Y
         DEY
         BNE     Le2fb
-        JSR     Se38a
+        JSR     delline         ; Also increments X!
         LDA     token_index
         SBC     text_index
         CMP     #$04
@@ -575,7 +592,7 @@ Le2fb:  LDA     (pverb),Y
         CMP     pv
         LDA     p2+1
         SBC     pv+1
-        BCC     Le36b
+        BCC     memfull
 Le326:  LDA     pp
         SBC     (pverb),Y
         STA     p3
@@ -592,7 +609,7 @@ Le33c:  LDA     p1
         LDA     p1+1
         SBC     pp+1
         BCS     Le326
-Le346:  LDA     p2,X
+Le346:  LDA     p2,X            ; X begins as 1
         STA     pp,X
         DEX
         BPL     Le346
@@ -605,14 +622,15 @@ Le350:  DEY
         BNE     Le350
         BIT     auto_flag
         BPL     Le365
-Le35c:  LDA     auto_ln+1,X
+Le35c:  LDA     auto_ln+1,X     ; X = 255, wraps around in zero-page
         ADC     auto_inc+1,X
         STA     auto_ln+1,X
         INX
         BEQ     Le35c
 Le365:  BPL     Le3e5           ; Returns to prompt
         .byte   $00,$00,$00,$00
-Le36b:  LDY     #$14
+memfull:
+        LDY     #$14            ; "MEM FULL"
         BNE     print_err_msg
 
 ; token $0a - "," in DEL command
@@ -632,12 +650,15 @@ del_comma:
 ; token $09 - "DEL"
 del_cmd:
         JSR     get16bit
-
-Se38a:  JSR     find_line
-        LDA     p3
+delline:
+        JSR     find_line
+        ; pp ..... p2 .. p3 ...
+        LDA     p3              ; Remove p2..p3 from program
         STA     p1
         LDA     p3+1
         STA     p1+1
+        ; pp ..... p2 .. p3 ...
+        ;                p1
 Le395:  LDY     #$00
 Le397:  LDA     pp
         CMP     p2
@@ -655,11 +676,17 @@ Le3af:  DEC     p3
         LDA     (p2),Y
         STA     (p3),Y
         BCC     Le397
-Le3b7:  LDA     p3
+Le3b7:  ; p2 .. p3 ..... p1 ...
+        ; pp
+        LDA     p3
         STA     pp
         LDA     p3+1
         STA     pp+1
+        ; After:
+        ; p2 .. p3 ..... p1 ...
+        ;       pp
         RTS
+
 Le3c0:  JSR     cout
         INY
 
@@ -683,7 +710,7 @@ Le3d5:  ORA     #$80            ;[Gigatron] Set bit7
         NOP                     ;
 
 too_long_err:
-        LDY     #$06
+        LDY     #$06            ; "TOO LONG"
 
 print_err_msg:
         JSR     print_err_msg1  ; print error message specified in Y
@@ -734,7 +761,7 @@ Le426:  LDX     text_index
 Le428:  LDA     #$A0
 Le42a:  INX
         CMP     buffer,X
-        BCS     Le42a
+        BCS     Le42a           ; Skip control chars and spaces
         LDA     (synpag),Y
         AND     #$3F
         LSR
@@ -753,11 +780,11 @@ Le44a:  INY
         AND     #$E0
         CMP     #$20
         BEQ     Le4cd
-        LDA     txtndxstk,X
+        LDA     txtndxstk,X     ; Pop from stack
         STA     text_index
         LDA     tokndxstk,X
         STA     token_index
-Le45b:  DEY
+Le45b:  DEY                     ; Skip word
         LDA     (synpag),Y
         ASL
         BPL     Le45b
@@ -773,24 +800,24 @@ Le45b:  DEY
 Le470:  BEQ     Le425
         CMP     #$7E
         BCS     Le498
-        DEX
+        DEX                     ; Push onto stack
         BPL     Le47d
-        LDY     #$06
+        LDY     #$06            ; "TOO LONG"
         BPL     go_errmess_2
-Le47d:  STY     syn_stk_l,X
+Le47d:  STY     syn_stk_l,X     ; push synpag/Y
         LDY     synpag+1
-        STY     syn_stk_h,X
+        STY     syn_stk_h,X     ; push synpag+1
         LDY     text_index
-        STY     txtndxstk,X
+        STY     txtndxstk,X     ; push text_index
         LDY     token_index
-        STY     tokndxstk,X
+        STY     tokndxstk,X     ; push token_index
         AND     #$1F
         TAY
         LDA     syntabl_index,Y
-
-Se491:  ASL
+tokenize:
+        ASL
         TAY
-        LDA     #$76
+        LDA     #>syntabl_index/2
         ROL
         STA     synpag+1
 Le498:  BNE     Le49b
@@ -800,7 +827,7 @@ Le49c:  STX     synstkdx
         LDA     (synpag),Y
         BMI     Le426
         BNE     Le4a9
-        LDY     #$0E
+        LDY     #$0E            ; "SYNTAX"
 go_errmess_2:
         JMP     print_err_msg
 Le4a9:  CMP     #$03
@@ -812,7 +839,7 @@ Le4b1:  LDA     buffer,X
         BCC     Le4ba
         CMP     #$A2
         BEQ     Le4c4
-Le4ba:  CMP     #$DF            ; <rubout>
+Le4ba:  CMP     #$DF            ; End of line?
         BEQ     Le4c4
         STX     text_index
 Le4c0:  JSR     put_token
@@ -866,7 +893,7 @@ Le4f3:  ADC     pcon
         LDA     pcon+1
         BCS     Le4c0
 Le517:  LDY     #$00
-        BPL     go_errmess_2
+        BPL     go_errmess_2    ; Always taken
 
 prdec:  STA     pcon+1  ; output A:X in decimal
         STX     pcon
@@ -911,23 +938,21 @@ dectabl:        .byte   $01,$0A,$64,$E8,$10             ; "..dh."
 dectabh:        .byte   $00,$00,$00,$03,$27             ; "....'"
 
 find_line:
-        LDA     pp
+        LDA     pp              ; Start of program
         STA     p3
         LDA     pp+1
         STA     p3+1
-
 find_line1:
-        INX
-
+        INX                     ; Side effect!
 find_line2:
-        LDA     p3+1
+        LDA     p3+1            ; Advance p2
         STA     p2+1
         LDA     p3
         STA     p2
         CMP     himem
         LDA     p2+1
         SBC     himem+1
-        BCS     Le5ac
+        BCS     Le5ac           ; Not found
         LDY     #$01
         LDA     (p2),Y
         SBC     acc
@@ -936,19 +961,19 @@ find_line2:
         SBC     acc+1
         BCS     Le5ac
         LDY     #$00
-        LDA     p3
+        LDA     p3              ; p3 points to next line
         ADC     (p2),Y
         STA     p3
         BCC     Le5a0
         INC     p3+1
         CLC
 Le5a0:  INY
-        LDA     acc
+        LDA     acc             ; Compare line numbers
         SBC     (p2),Y
         INY
         LDA     acc+1
         SBC     (p2),Y
-        BCS     find_line2
+        BCS     find_line2      ; Continue if different
 Le5ac:  RTS
 
 ; token $0B - "NEW"
@@ -971,6 +996,7 @@ clr:    LDA     lomem
         LDA     #$00
         STA     Z1d
         RTS
+
 Le5cc:  LDA     srch
         ADC     #$05
         STA     srch2
@@ -982,7 +1008,7 @@ Le5cc:  LDA     srch
         LDA     srch2+1
         SBC     pp+1
         BCC     Le5e5
-        JMP     Le36b
+        JMP     memfull
 Le5e5:  LDA     acc
         STA     (srch),Y
         LDA     acc+1
@@ -1013,7 +1039,7 @@ execute_var:
         CMP     #$40
         BEQ     Le623
         JMP     Le628
-        .byte   $06,$C9,$49,$D0,$07,$A9,$49   
+        .byte   $06,$C9,$49,$D0,$07,$A9,$49
 Le623:  STA     acc+1
         JSR     get_next_prog_byte
 Le628:  LDA     lomem+1
@@ -1065,7 +1091,7 @@ execute_stmt:
         LDA     #$00
         STA     if_flag
         STA     cr_flag
-        LDX     #$20
+        LDX     #stksize        ; Le67f
 
 ; push old verb on stack for later use in precedence test
 push_old_verb:
@@ -1131,10 +1157,9 @@ do_verb:
         STA     acc
         LDA     verb_adr_h,Y
         STA     acc+1
-        JSR     Se6fc
+        JSR     Le6fc
         JMP     Le6d8
-
-Se6fc:  JMP     (acc)
+Le6fc:  JMP     (acc)
 
 get_next_prog_byte:
         INC     pverb
@@ -1143,7 +1168,8 @@ get_next_prog_byte:
 Le705:  LDA     (pverb),Y
         RTS
 
-push_ya_noun_stk:       STY     syn_stk_h+31,X
+push_ya_noun_stk:
+        STY     syn_stk_h+31,X
 
 push_a_noun_stk:
         DEX
@@ -1279,7 +1305,7 @@ print_num:
         JSR     get16bit
         LDA     acc+1
         BPL     Le7d5
-        LDA     #$AD
+        LDA     #$AD            ; "-"
         JSR     cout
         JSR     Se772
         BVC     print_num
@@ -1311,7 +1337,7 @@ auto_com:
         JSR     get16bit
         LDA     acc
         LDY     acc+1
-        BPL     Le7f3
+        BPL     Le7f3           ; Always taken
 
 ; token $56 - "=" in FOR statement
 ; token $71 - "=" in LET (or implied LET) statement
@@ -1354,7 +1380,7 @@ Le822:  RTS
 ; token $38 - "(" in numeric expression
 ; token $3F - "(" in some PEEK, RND, SGN, ABS (PDL)
 left_paren:
-       LDY     #$FF
+        LDY     #$FF
         STY     precedence
 
 ; token $72 - ")" everywhere
@@ -1421,7 +1447,8 @@ getnext:                        ; Fetch next statement from text
         TXS
         STA     pverb
         STY     pverb+1
-Le883:  JSR     execute_stmt
+execute_line:
+        JSR     execute_stmt
         BIT     run_flag
         BPL     end_stmt
         CLC
@@ -1644,7 +1671,7 @@ Leb9a:  LSR     run_flag
 Leba1:  LDX     acc+1                   ; Retry input query
         TXS
         LDX     acc
-        LDY     #$8D                    ; "Retype line"
+        LDY     #$8D                    ; "RETYPE LINE"
         BNE     Lebac                   ; Always taken
 
 ; token $54 - "INPUT" statement, numeric, no prompt
@@ -1660,9 +1687,9 @@ Lebac:  JSR     msgout
         STY     text_index
         JSR     Se299
         STY     token_index
-        LDX     #$20
+        LDX     #stksize
         LDA     #$30
-        JSR     Se491
+        JSR     tokenize
         INC     run_flag
         LDX     acc
 
@@ -1694,7 +1721,7 @@ Lebce:  STA     acc
         JSR     negate
 Lebfa:  JMP     var_assign
 
-        .byte   $FF,$FF,$FF,$50            
+        .byte   $FF,$FF,$FF,$50
 
 Tec01:  JSR     Tec13
         BNE     Lec1b
@@ -1711,7 +1738,7 @@ Lec16:  JSR     sgn_fn
         LSR     noun_stk_l,X
 Lec1b:  JMP     not_op
 
-        .byte   $FF,$FF                  
+        .byte   $FF,$FF
 
 ; indexes into syntabl
 syntabl_index:
