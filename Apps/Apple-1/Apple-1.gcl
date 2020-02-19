@@ -15,7 +15,7 @@ gcl0x
   XXX BASIC: AUTO doesn't work well -> _j conflicts with auto_inc
   XXX BASIC: Free up $00fc-$00ff and restore BASIC for the $F7 hack
   XXX Preload Mastermind game at $300
-  XXX Preload BASIC game
+  XXX Preload BASIC game (WUMPUS)
   XXX Mini-assembler: move to $444, under the BASIC area 800.fff
 
   References:
@@ -826,7 +826,7 @@ _CharOut=*
                 #_LDAIM_ #$aa           {`*'}
                 #_JSR_   ##_ECHO
 _MENU=*
-                #_LDXIM_ #84            {Print welcome message}
+                #_LDXIM_ #75            {Print welcome message}
 _L4=*           #_LDAAX_ ##_MSG
                 #_JSR_   ##_ECHO
                 #_DEX_
@@ -836,13 +836,9 @@ _L5=*           #_BIT_   ##_DSP         {Wait for processing of char}
                 #_JMP_   ##_RESET
 
 _MSG=*
-                { 'CTL-Z BREAK' }
-                #$8d #$cb #$c1 #$c5 #$d2 #$c2 #$a0 #$da
-                #$ad #$cc #$d4 #$c3
-
-                { 'FF00  WOZMON' }
+                { 'CTL-Z WOZMON' }
                 #$8d #$ce #$cf #$cd #$da #$cf #$d7 #$a0
-                #$a0 #$b0 #$b0 #$c6 #$c6
+                #$da #$ad #$cc #$d4 #$c3
 
                 { 'E000R BASIC\r' }
                 #$8d #$c3 #$c9 #$d3 #$c1 #$c2 #$a0 #$d2
@@ -853,10 +849,10 @@ _MSG=*
                 #$d3 #$c1 #$ad #$c9 #$ce #$c9 #$cd #$a0
                 #$a0 #$d2 #$c5 #$c5 #$c5
 
-                { 'APPLE-1 ON 7400 TTL\r' }
+                { '8K APPLE-1 ON 7400 TTL\r' }
                 #$8d #$cc #$d4 #$d4 #$a0 #$b0 #$b0 #$b4
                 #$b7 #$a0 #$ce #$cf #$a0 #$b1 #$ad #$c5
-                #$cc #$d0 #$d0 #$c1
+                #$cc #$d0 #$d0 #$c1 #$a0 #$cb #$b8
 
                 { '\r' }
                 #$8d #$8d #$8d #$8d #$8d #$8d #$8d
