@@ -12,10 +12,10 @@ gcl0x
   Issues:
 
   XXX Cursor: Can be sticky in mini-assembler
+  XXX *300R  MASTERMIND
+      *7F0R  WUMPUS
   XXX BASIC: AUTO doesn't work well -> _j conflicts with auto_inc
   XXX BASIC: Free up $00fc-$00ff and restore BASIC for the $F7 hack
-  XXX Preload Mastermind game at $300
-  XXX Preload BASIC game (WUMPUS)
   XXX Mini-assembler: move to $444, under the BASIC area 800.fff
 
   References:
@@ -826,36 +826,63 @@ _CharOut=*
                 #_LDAIM_ #$aa           {`*'}
                 #_JSR_   ##_ECHO
 _MENU=*
-                #_LDXIM_ #75            {Print welcome message}
-_L4=*           #_LDAAX_ ##_MSG
+                #_LDX_   ##_MSG1        {Print welcome message part 1}
+_L3=*           #_LDAAX_ ##_MSG1
                 #_JSR_   ##_ECHO
                 #_DEX_
-                #_BPL_   #@_L4
-_L5=*           #_BIT_   ##_DSP         {Wait for processing of char}
+                #_BNE_   #@_L3
+
+                #_LDX_   ##_MSG2        {Print welcome message part 2}
+_L4=*           #_LDAAX_ ##_MSG2
+                #_JSR_   ##_ECHO
+                #_DEX_
+                #_BNE_   #@_L4
+
+_L5=*           #_BIT_   ##_DSP         {Wait for processing of last char}
                 #_BMI_   #@_L5
                 #_JMP_   ##_RESET
 
-_MSG=*
+_MSG2=*
+                #@_MSG2_END
+
                 { 'CTL-Z WOZMON' }
                 #$8d #$ce #$cf #$cd #$da #$cf #$d7 #$a0
                 #$da #$ad #$cc #$d4 #$c3
 
-                { 'E000R BASIC\r' }
-                #$8d #$c3 #$c9 #$d3 #$c1 #$c2 #$a0 #$d2
-                #$b0 #$b0 #$b0 #$c5
+                { 'E2B3R BASIC WARM START\r' }
+                #$8d #$d4 #$d2 #$c1 #$d4 #$d3 #$a0 #$cd
+                #$d2 #$c1 #$d7 #$a0 #$c3 #$c9 #$d3 #$c1
+                #$c2 #$a0 #$d2 #$b3 #$c2 #$b2 #$c5
+
+_MSG2_END=*
+
+*=$c200
+
+_MSG1=*
+                #@_MSG1_END
+
+                { 'E000R BASIC COLD START\r' }
+                #$8d #$d4 #$d2 #$c1 #$d4 #$d3 #$a0 #$c4
+                #$cc #$cf #$c3 #$a0 #$c3 #$c9 #$d3 #$c1
+                #$c2 #$a0 #$d2 #$b0 #$b0 #$b0 #$c5
+
+                { 'C100R MENU\r' }
+                #$8d #$d5 #$ce #$c5 #$cd #$a0 #$d2 #$b0
+                #$b0 #$b1 #$c3
 
                 { 'EEER  MINI-ASSEMBLER\r' }
                 #$8d #$d2 #$c5 #$cc #$c2 #$cd #$c5 #$d3
                 #$d3 #$c1 #$ad #$c9 #$ce #$c9 #$cd #$a0
                 #$a0 #$d2 #$c5 #$c5 #$c5
 
-                { '8K APPLE-1 ON 7400 TTL\r' }
-                #$8d #$cc #$d4 #$d4 #$a0 #$b0 #$b0 #$b4
-                #$b7 #$a0 #$ce #$cf #$a0 #$b1 #$ad #$c5
-                #$cc #$d0 #$d0 #$c1 #$a0 #$cb #$b8
+                { '8K APPLE-1 ON 7400 TTL\r\r' }
+                #$8d #$8d #$cc #$d4 #$d4 #$a0 #$b0 #$b0
+                #$b4 #$b7 #$a0 #$ce #$cf #$a0 #$b1 #$ad
+                #$c5 #$cc #$d0 #$d0 #$c1 #$a0 #$cb #$b8
 
-                { '\r' }
-                #$8d #$8d #$8d #$8d #$8d #$8d #$8d
+                { '\r' ... }
+                #$8d #$8d #$8d #$8d #$8d
+_MSG1_END=*
 
                 {
                   Create message with:
