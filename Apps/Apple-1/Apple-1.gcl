@@ -12,8 +12,8 @@ gcl0x
   Issues:
 
   XXX Cursor: Can be sticky in mini-assembler
-  XXX *300R  MASTERMIND
-      *7F0R  WUMPUS
+  XXX WUMPUS: Add as preloaded BASIC game
+  XXX PIA: It is impossible to stop BASIC when it is continously printing
   XXX BASIC: AUTO doesn't work well -> _j conflicts with auto_inc
   XXX BASIC: Free up $00fc-$00ff and restore BASIC for the $F7 hack
   XXX Mini-assembler: move to $444, under the BASIC area 800.fff
@@ -114,7 +114,147 @@ $101 {videoTable+1} p= $60 p.   {Use offsets 96..255 for pixel data, not 0..159}
 [ret]                           {Jump to Main (the brackets avoid the automatic vLR patch)}
 
 {-----------------------------------------------------------------------+
-|       Assembler and disassembler                                      |
+|                                                                       |
+|       Mastermind                                                      |
+|                                                                       |
++-----------------------------------------------------------------------}
+*=$300
+
+{
+        WRITTEN BY STEVE WOZNIAK
+        PUBLISHED IN DOCTOR DOBBS JOURNAL SEPT 1976
+
+        """MASTERMIND is a number guessing game. In this version the computer
+        generates a 5-digit, random number where the digits are limited to
+        0 through 7. The user attemtps to guess the number in the fewest
+        possible tries. After each guess the computer informs the user as
+        to how many digits were correct (contained in the random number)
+        and in the correct position by printing `+' signs, and how many
+        digits are correct and in the wrong position with `-' signs. The
+        user is not informed as to exactly which digit positions the `+'
+        and the `-' signs correspond. A skilled player can usuualle win in
+        6 or 7 tries."""
+
+        https://www.applefritter.com/files/Apple1WozDrDobbsMastermind.pdf
+}
+
+
+_TRIES=$72      {[Gigatron] Was: $F2}
+_RNDL=$73       {[Gigatron] Was: $F3}
+_RNDH=$74       {[Gigatron] Was: $F4}
+_RND2L=$75      {[Gigatron] Was: $F5}
+_N=$76          {[Gigatron] Was: $F6}
+_N_minus1=$75
+_N_plus5=$7B
+_GUESS=$7B      {[Gigatron] Was: $FB}
+_GUESS_plus4=$7F
+_GUESS_plus5=$80
+
+_MSTMIND=*      #_LDXIM_        #$8
+_MSGLP=*        #_LDAAX_        ##_MSG_minus1
+                #_JSR_          ##_ECHO         {PRINT 'READY?'}
+                #_DEX_
+                #_BNE_          #@_MSGLP
+                #_STXZ_         #_TRIES         {SET TRIES TO ZERO.}
+_RNDLP=*        #_INCZ_         #_RNDL
+                #_BNE_          #@_RND2         {FORM 2-BYTE RANDOM NUMBER}
+                #_INCZ_         #_RNDH          {UNTIL KET DOWN.}
+_RND2=*         #_LDA_          ##_KBDCR
+                #_BPL_          #@_RNDLP
+                #_JSR_          ##_CHARIN       {CLEAR STROBE.}
+_NXTRY=*        #_SEC_
+                #_SED_
+                #_TXA_
+                #_ADCZ_         #_TRIES         {ADD 1 TO TRIES IN DECIMAL MODE}
+                #_STAZ_         #_TRIES
+                #_CLD_
+_NXTLIN=*       #_JSR_          ##_CRLF
+                #_LDAZ_         #_TRIES         {OUTPUT CRLF AND TRIES (IN BCD)}
+                #_JSR_          ##_PRBYTE
+                #_LDAIM_        #$A0            {OUTPUT BLANK.}
+                #_TAY_
+                #_JSR_          ##_ECHO
+                #_LDAZ_         #_RNDL
+                #_STAZ_         #_RND2L
+                #_LDAZ_         #_RNDH
+                #_LDXIM_        #$5             {SET ARRAY N TO 5 DIGITS OF}
+_DIGEN=*        #_STYZX_        #_N_minus1      {RANDOM NUMBER.  DIGITS ARE}
+                #_LDYIM_        #$3             {0 THROUGH 7.}
+_BITGEN=*       #_LSRA_
+                #_ROLZ_         #_RND2L
+                #_ROLZX_        #_N_minus1
+                #_DEY_
+                #_BNE_          #@_BITGEN
+                #_DEX_
+                #_BNE_          #@_DIGEN
+_RDKEY=*        #_JSR_          ##_CHARIN
+                #_JSR_          ##_ECHO
+                #_EORIM_        #$B0            {CONVERTS DIGITS TO TRUE VALUE.}
+                #_CMPIM_        #$8             {IF NOT 0 TO 7 THEN REPEAT LINE}
+                #_BCS_          #@_NXTLIN       {WITH SAME TRIES VALUE.}
+                #_STAZX_        #_GUESS_plus4   {SAVE USER DIGIT.}
+                #_DEX_
+                #_CPXIM_        #$FB            {DONE 5 DIGITS?}
+                #_BNE_          #@_RDKEY
+                #_LDYIM_        #$FB            {WIN COUNT (FOR 5 MATCHES).}
+                #_LDAIM_        #$A0            {PRINT BLANK.}
+_PLUS1=*        #_JSR_          ##_ECHO
+_PLUS2=*        #_LDAZX_        #_GUESS_plus5   {DOES GUESS MATCH RANDOM NUMBER}
+                #_CMPZX_        #_N_plus5       {FOR THIS DIGIT POSITION?}
+                #_BNE_          #@_PLUS3        {NO, TRY NEXT POSITION}
+                #_STYZX_        #_N_plus5       {SET DIG OF RAND NUMBER TO $FB}
+                #_LDAIM_        #$AB            {-$FF SO NO 'MINUS' MATCH.}
+                #_STAZX_        #_GUESS_plus5   {SET DIG OF GUESS TO $AB SO}
+                #_INY_                          {*  NO 'MINUS' MATCH.}
+                #_BNE_          #@_PLUS1        {INCR. WIN COUNTER AND LOOP.}
+                #_LDXIM_        #$11            {IF WIN, OUTPUT WIN MESSAGE}
+                #_BNE_          #@_MSGLP        {*  AND BEGIN NEW GAME.}
+_PLUS3=*        #_INX_                          {*  NEXT DIGIT OF 'PLUS' SCAN.}
+                #_BNE_          #@_PLUS2
+                #_LDYIM_        #$FB
+_MINUS1=*       #_LDXZY_        #_GUESS_plus5   {GET DIGIT OF USER GUESS.}
+                #_TXA_
+                #_LDXIM_        #$FB
+_MINUS2=*       #_CMPZX_        #_N_plus5       {COMP TO DIGIT OF RAND NUMBER.}
+                #_BNE_          #@_MINUS3       {NO MATCH.}
+                #_STYZX_        #_N_plus5       {SET RAND DIGIT TO $FB-$FF}
+                #_LDAIM_        #$AD            {SUBSTITUTE $AD FOR GUESS DIGIT}
+                #_JSR_          ##_ECHO
+_MINUS3=*       #_INX_                          {* NEXT RANDOM DIGIT.}
+                #_BNE_          #@_MINUS2       {*    LOOP.}
+                #_INY_                          {* NEXT USER DIGIT.}
+                #_BNE_          #@_MINUS1       {     LOOP.}
+                #_BEQ_
+_MSG_minus1=*
+                                #@_NXTRY        {UPDATE TRIES FOR NEXT LINE.}
+_MSG=*          #$BF                            {'?'}
+                #$D9                            {'Y'}
+                #$C4                            {'D'}
+                #$C1                            {'A'}
+                #$C5                            {'E'}
+                #$D2                            {'R'}
+                #$8D                            {CR.}
+                #$8D                            {CR.}
+                #$CE                            {'N'}
+                #$C9                            {'I'}
+                #$D7                            {'W'}
+                #$A0                            {BLANK}
+                #$D5                            {'U'}
+                #$CF                            {'O'}
+                #$D9                            {'Y'}
+                #$A0                            {BLANK}
+                #$AB                            {'+'}
+_CRLF=*         #_LDAIM_        #$8D
+                #_JMP_          ##_ECHO
+_CHARIN=*       #_LDA_          ##_KBDCR        {WAIT FOR STROBE}
+                #_BPL_          #@_CHARIN
+                #_LDA_          ##_KBD          {READ KEY AND CLEAR STROBE.}
+                #_RTS_
+
+{-----------------------------------------------------------------------+
+|                                                                       |
+|       Mini-assembler (and disassembler)                               |
+|                                                                       |
 +-----------------------------------------------------------------------}
 
 *=$bee          #_JMP_          ##_CMDLINE      { Courtesy Jac Goudsmit }
@@ -405,9 +545,9 @@ _PRADR2=*       #_LDAZ_         #_FORMAT
                 #_BNE_          #@_PRADR2
 _PRADR3=*       #_ASLZ_         #_FORMAT        { TEST NEXT PRINT FORMAT BIT. }
                 #_BCC_          #@_PRADR4       { IF 0, DONT PRINT }
-                #_LDAAX_        ##_CHAR1_MINUS1 { CORRESPONDING CHAR. }
+                #_LDAAX_        ##_CHAR1_minus1 { CORRESPONDING CHAR. }
                 #_JSR_          ##_ECHO         { OUTPUT 1 OR 2 CHARS. }
-                #_LDAAX_        ##_CHAR2_MINUS1 { *   (IF CHAR FROM CHAR2 IS 0, }
+                #_LDAAX_        ##_CHAR2_minus1 { *   (IF CHAR FROM CHAR2 IS 0, }
                 #_BEQ_          #@_PRADR4       { *     DON'T FRINT IT) }
                 #_JSR_          ##_ECHO
 _PRADR4=*       #_DEX_
@@ -543,14 +683,14 @@ _MODE2=*        #$0                             { ERR }
                 #$86                            { ABS,Y }
                 #$4A                            { (ABS) }
                 #$85                            { Z-PAG,Y }
-_CHAR1_MINUS1=* #$9D                            { REL }
+_CHAR1_minus1=* #$9D                            { REL }
 
 _CHAR1=*        #$AC                            { ',' }
                 #$A9                            { ')' }
                 #$AC                            { ',' }
                 #$A3                            { '#' }
                 #$A8                            { '(' }
-_CHAR2_MINUS1=* #$A4                            { '$' }
+_CHAR2_minus1=* #$A4                            { '$' }
 
 _CHAR2=*        #$D9                            { 'Y' }
                 #$0
@@ -842,8 +982,7 @@ _L5=*           #_BIT_   ##_DSP         {Wait for processing of last char}
                 #_BMI_   #@_L5
                 #_JMP_   ##_RESET
 
-_MSG2=*
-                #@_MSG2_END
+_MSG2=*         #@_MSG2_END
 
                 { 'CTL-Z WOZMON' }
                 #$8d #$ce #$cf #$cd #$da #$cf #$d7 #$a0
@@ -854,15 +993,12 @@ _MSG2=*
                 #$d2 #$c1 #$d7 #$a0 #$c3 #$c9 #$d3 #$c1
                 #$c2 #$a0 #$d2 #$b3 #$c2 #$b2 #$c5
 
-_MSG2_END=*
-
-*=$c200
-
-_MSG1=*
-                #@_MSG1_END
-
                 { 'E000R BASIC COLD START\r' }
                 #$8d #$d4 #$d2 #$c1 #$d4 #$d3 #$a0 #$c4
+_MSG2_END=*
+*=$c200
+_MSG1=*         #@_MSG1_END
+
                 #$cc #$cf #$c3 #$a0 #$c3 #$c9 #$d3 #$c1
                 #$c2 #$a0 #$d2 #$b0 #$b0 #$b0 #$c5
 
@@ -875,13 +1011,18 @@ _MSG1=*
                 #$d3 #$c1 #$ad #$c9 #$ce #$c9 #$cd #$a0
                 #$a0 #$d2 #$c5 #$c5 #$c5
 
+                { '300R  MASTERMIND\r'}
+                #$8d #$c4 #$ce #$c9 #$cd #$d2 #$c5 #$d4
+                #$d3 #$c1 #$cd #$a0 #$a0 #$d2 #$b0 #$b0
+                #$b3
+
                 { '8K APPLE-1 ON 7400 TTL\r\r' }
                 #$8d #$8d #$cc #$d4 #$d4 #$a0 #$b0 #$b0
                 #$b4 #$b7 #$a0 #$ce #$cf #$a0 #$b1 #$ad
                 #$c5 #$cc #$d0 #$d0 #$c1 #$a0 #$cb #$b8
 
                 { '\r' ... }
-                #$8d #$8d #$8d #$8d #$8d
+                #$8d #$8d #$8d #$8d
 _MSG1_END=*
 
                 {
@@ -1195,11 +1336,11 @@ _MSG1_END=*
 
         { Original ZP usage is 24.2B, but that's taken by Gigatron }
 
-   _XAML=$34        _XAML_MINUS1=$33
+   _XAML=$34        _XAML_minus1=$33
    _XAMH=$35
-    _STL=$36         _STL_MINUS1=$35
+    _STL=$36         _STL_minus1=$35
     _STH=$37
-      _L=$38           _L_MINUS1=$37
+      _L=$38           _L_minus1=$37
       _H=$39
    _YSAV=$3A
    _MODE=$3B
@@ -1292,9 +1433,9 @@ _TONEXTITEM=*   #_JMP_   ##_NEXTITEM    { Get next command item.                
 _RUN=*          #_JMI_   ##_XAML        { Run at current XAM index.               }
 _NOTSTOR=*      #_BMI_   #@_XAMNEXT     { B7 = 0 for XAM, 1 for BLOCK XAM.        }
                 #_LDXIM_ #$02           { Byte count.                             }
-_SETADR=*       #_LDAZX_ #_L_MINUS1     { Copy hex data to                        }
-                #_STAZX_ #_STL_MINUS1   {   'store index'.                        }
-                #_STAZX_ #_XAML_MINUS1  { And to 'XAM index'.                     }
+_SETADR=*       #_LDAZX_ #_L_minus1     { Copy hex data to                        }
+                #_STAZX_ #_STL_minus1   {   'store index'.                        }
+                #_STAZX_ #_XAML_minus1  { And to 'XAM index'.                     }
                 #_DEX_                  { Next of 2 bytes.                        }
                 #_BNE_   #@_SETADR      { Loop unless X = 0.                      }
 _NXTPRNT=*      #_BNE_   #@_PRDATA      { NE means no address to print.           }
