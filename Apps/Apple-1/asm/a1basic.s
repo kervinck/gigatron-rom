@@ -21,9 +21,7 @@ rnd     =       $4E     ; random number (2 bytes)
 ; The noun stack and syntax stack appear to overlap, which is OK since
 ; they apparently are not used simultaneously.
 
-; The noun stack size appears to be 32 entries, based on LDX #$20
-; instruction at e67f.  However, there seems to be enough room for
-; another 8 entries.  The noun stack builds down from noun_stk_<part>+$1f
+; The noun stack builds down from noun_stk_<part>+$1f
 ; to noun_stk_<part>+$00, indexed by the X register.
 
 ; Noun stack usage appears to be:

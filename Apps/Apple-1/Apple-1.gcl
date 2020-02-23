@@ -1010,14 +1010,16 @@ _MSG2=*         #@_MSG2_END
                 #$d2 #$c1 #$d7 #$a0 #$c3 #$c9 #$d3 #$c1
                 #$c2 #$a0 #$d2 #$b3 #$c2 #$b2 #$c5
 
-                { 'E000R BASIC COLD START\r' }
+                {       'BASIC COLD START\r' }
                 #$8d #$d4 #$d2 #$c1 #$d4 #$d3 #$a0 #$c4
+                #$cc #$cf #$c3 #$a0 #$c3 #$c9 #$d3 #$c1
+                #$c2
 _MSG2_END=*
 *=$c200
 _MSG1=*         #@_MSG1_END
 
-                #$cc #$cf #$c3 #$a0 #$c3 #$c9 #$d3 #$c1
-                #$c2 #$a0 #$d2 #$b0 #$b0 #$b0 #$c5
+                { 'E000R ' }
+                #$a0 #$d2 #$b0 #$b0 #$b0 #$c5
 
                 { 'C100R MENU\r' }
                 #$8d #$d5 #$ce #$c5 #$cd #$a0 #$d2 #$b0
@@ -1027,6 +1029,10 @@ _MSG1=*         #@_MSG1_END
                 #$8d #$d2 #$c5 #$cc #$c2 #$cd #$c5 #$d3
                 #$d3 #$c1 #$ad #$c9 #$ce #$c9 #$cd #$a0
                 #$a0 #$d2 #$c5 #$c5 #$c5
+
+                { 'XXXR  WUMPUS\r' }
+                #$8d #$d3 #$d5 #$d0 #$cd #$d5 #$d7 #$a0
+                #$a0 #$d2 #$d8 #$d8 #$d8
 
                 { '300R  MASTERMIND\r'}
                 #$8d #$c4 #$ce #$c9 #$cd #$d2 #$c5 #$d4
@@ -1039,7 +1045,7 @@ _MSG1=*         #@_MSG1_END
                 #$c5 #$cc #$d0 #$d0 #$c1 #$a0 #$cb #$b8
 
                 { '\r' ... }
-                #$8d #$8d #$8d #$8d
+                #$8d #$8d #$8d
 _MSG1_END=*
 
                 {
