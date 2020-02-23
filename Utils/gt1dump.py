@@ -248,7 +248,7 @@ while True:
           asm += ' $%02x%02x' % (hiAddress, (byte+2)&255)
         elif ins in bccIns6502:                 # Relative branch v6502
           to = address + i + 1 + (byte ^ 128) - 128
-          asm += ' .$%04x' % (to & 0xffff)
+          asm += ' $%04x' % (to & 0xffff)
         elif ins == 'SYS':                      # Operand to SYS
           if byte != 128:
             maxCycles = 28-2*((byte^128)-128)
