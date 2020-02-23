@@ -269,7 +269,7 @@ while True:
       print(' ', end='')
       j += 1
 
-    text += chr(byte & 127) if 32<=(byte & 127) else '.' # ASCII
+    text += chr(byte & 127) if 32<=(byte & 127)<127 else '.' # ASCII
 
     if ops == 0:
       if ins:
