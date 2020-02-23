@@ -13,7 +13,6 @@ gcl0x
 
   XXX Cursor: Can be sticky in mini-assembler
   XXX WUMPUS: Add as preloaded BASIC game
-  XXX PIA: It is impossible to stop BASIC when it is continously printing
   XXX BASIC: AUTO doesn't work well -> _j conflicts with auto_inc
   XXX BASIC: Free up $00fc-$00ff and restore BASIC for the $F7 hack
   XXX Mini-assembler: move to $444, under the BASIC area 800.fff
@@ -25,6 +24,9 @@ gcl0x
 
   Apple BASIC Users Manual -- October 1976:
         https://archive.org/details/apple1_basic_manual
+
+  A Number Game for the 6502 -- September 1976:
+        https://www.applefritter.com/files/Apple1WozDrDobbsMastermind.pdf
 
   Using The Woz Monitor:
         https://www.sbprojects.net/projects/apple1/wozmon.php
@@ -72,6 +74,7 @@ _j=$3c          {2 bytes}
 
 _stackBottom=$f8
 _cursorTimer=$f8
+_tmpChar=$f8
 _lastKey=$f9
 _vCpuState=$fa
 _PIA=$fc        {overlap with (otherwise useless) vIRQ-saved vPC}
@@ -132,7 +135,7 @@ $101 {videoTable+1} p= $60 p.   {Use offsets 96..255 for pixel data, not 0..159}
         and in the correct position by printing `+' signs, and how many
         digits are correct and in the wrong position with `-' signs. The
         user is not informed as to exactly which digit positions the `+'
-        and the `-' signs correspond. A skilled player can usuualle win in
+        and the `-' signs correspond. A skilled player can usually win in
         6 or 7 tries."""
 
         https://www.applefritter.com/files/Apple1WozDrDobbsMastermind.pdf
@@ -163,11 +166,12 @@ _RND2=*         #_LDA_          ##_KBDCR
                 #_BPL_          #@_RNDLP
                 #_JSR_          ##_CHARIN       {CLEAR STROBE.}
 _NXTRY=*        #_SEC_
-                #_SED_
-                #_TXA_
+              { #_SED_                        }
+                #_JSR_          ##_NXTBCD       {[Gigatron] Patch to increment in BCD mode}
+              { #_TXA_                        }
                 #_ADCZ_         #_TRIES         {ADD 1 TO TRIES IN DECIMAL MODE}
                 #_STAZ_         #_TRIES
-                #_CLD_
+              { #_CLD_                        }
 _NXTLIN=*       #_JSR_          ##_CRLF
                 #_LDAZ_         #_TRIES         {OUTPUT CRLF AND TRIES (IN BCD)}
                 #_JSR_          ##_PRBYTE
@@ -250,6 +254,14 @@ _CHARIN=*       #_LDA_          ##_KBDCR        {WAIT FOR STROBE}
                 #_BPL_          #@_CHARIN
                 #_LDA_          ##_KBD          {READ KEY AND CLEAR STROBE.}
                 #_RTS_
+
+_NXTBCD=*       #_LDAZ_         #_TRIES         {[Gigatron] Get low nibble}
+                #_ANDIM_        #$F             {[Gigatron]}
+                #_CMPIM_        #$9             {[Gigatron] Is it 9?}
+                #_BEQ_          #@_LOW9         {[Gigatron] If yes, add 7}
+                #_LDAIM_        #4              {[Gigatron] Otherwise add 1}
+_LOW9=*         #_SBCIM_        #3              {[Gigatron]}
+                #_RTS_                          {[Gigatron]}
 
 {-----------------------------------------------------------------------+
 |                                                                       |
@@ -764,14 +776,19 @@ _vIRQ_ENTER=*
   {-- Handle DSP --}
   &_DSP_minus1 deek             {Test DSP bit 7}
   [if<0
-    &_DSP _PIA=                 {Pointer to PIA register}
-    peek &_CharOut!             {Emit character when set}
+    &_DSP _PIA= peek            {Pointer to PIA register}
+    <_tmpChar.                  {Copy for for below}
+    &_CharOut!                  {Emit character}
     \vSP, 2+ deek 66+ [if=0     {If return address is $ffbe}
       p 2- p=]                  { make wozmon output fit on small screen}
-    &_KBDCR _PIA.               {Setting DSP to $11 clears bit 7}
-    _vAC.                       {Also clear *KBDCR* bit 7. This is NOT how the}
+    0 _PIA.                     {Clear DSP bit 7}
+    &_KBD _PIA= peek            {If last key press compares equal to}
+    _tmpChar^ 255&              { the char just displayed, or}
+    [if<>0 <_tmpChar, $8D^]     { is CRLF, then}
+    [if=0 _PIA:]                { also clear KBDCR bit 7. This is NOT how the}
                                 { true PIA works, but it fools most programs.}
-    31 <_cursorTimer.]          {Restart cursor cycle}
+    31 <_cursorTimer.]          {Restart the cursor cycle. This prevents it}
+                                { from getting drawn a bit too soon.}
 
   {-- Handle cursor --}
   {
