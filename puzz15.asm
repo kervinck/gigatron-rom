@@ -8,10 +8,6 @@
 
 
 
-; TODO: UPdate maketape to create monitor text file
-;    https://www.applefritter.com/node/24600#comment-60100
-; TODO: Rewrite initpuzz and checkwin to refer to an A-O string? Does that save any bytes?
-
         processor 6502
         
         ; Contants
