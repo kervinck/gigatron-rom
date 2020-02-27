@@ -480,7 +480,7 @@ TXT_INSTRUCT
         .byte $0D
         dc "LETTER (AND ANY IN BETWEEN) TOWARD THE"
         .byte $0D
-        dc "SPACE.  TYPE Q to QUIT."
+        dc "SPACE.  TYPE Q TO QUIT."
         .byte $0D
         .byte $0D
         dc "SOLVED PUZZLE LOOKS LIKE THIS:"
