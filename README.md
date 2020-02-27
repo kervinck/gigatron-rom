@@ -1,8 +1,8 @@
 # Apple 1 "15 Puzzle"
     
-![example run](https://github.com/JeffJetton/apple1-15-puzzle/blob/master/img/screenshot1.png)
+<img src="https://github.com/JeffJetton/apple1-15-puzzle/blob/master/img/screenshot1.png" width="400">
+    
 [(View full example run)](https://github.com/JeffJetton/apple1-15-puzzle/blob/master/img/combined_screenshots.png)
-
 
 * **puzz15.asm**
     * The 6502 assembly language source code
