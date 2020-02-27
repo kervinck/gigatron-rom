@@ -3,6 +3,8 @@
 <img src="https://github.com/JeffJetton/apple1-15-puzzle/blob/master/img/screenshot1.png" width="400">
     
 [(View full example run)](https://github.com/JeffJetton/apple1-15-puzzle/blob/master/img/combined_screenshots.png)
+    
+## Files in the Repo:
 
 * **puzz15.asm**
     * The 6502 assembly language source code
@@ -22,9 +24,7 @@
     * In theory, you could also send this over to a real Apple 1 (or replica/clone) via serial communication
 
 
-# Sample Run
-
-# Tweaks/Hacks
+## Tweaks/Hacks
 
 **Always ask for instructions**
 
