@@ -48,13 +48,13 @@ The above change essentially starts the game over every round, including the ini
 
 Game difficulty is determined by the number of "shuffles" a fresh (solved) puzzle gets. The easiest setting (level 1) just does three random moves to mix the board up for you, while the hardest (level 5) does 255.
 
-The number of shuffles that correspond to each difficulty level can be found in bytes `$0533` to `$0536`:
+The number of shuffles that correspond to each difficulty level can be found in bytes `$0532` to `$0536`:
 
 ![monitor screenshot](https://github.com/JeffJetton/apple1-15-puzzle/blob/master/img/monitor.png)
 
 So if, for example, you wanted to make level two slightly harder, just increase that second value by a couple of shuffles:
 
 ```
-0534: 0B
+0533: 0B
 ```
 
