@@ -165,13 +165,19 @@ _RNDLP=*        #_INCZ_         #_RNDL
 _RND2=*         #_LDA_          ##_KBDCR
                 #_BPL_          #@_RNDLP
                 #_JSR_          ##_CHARIN       {CLEAR STROBE.}
-_NXTRY=*        #_SEC_
+_NXTRY=*      { #_SEC_                        }
               { #_SED_                        }
-                #_JSR_          ##_NXTBCD       {[Gigatron] Patch to increment in BCD mode}
               { #_TXA_                        }
-                #_ADCZ_         #_TRIES         {ADD 1 TO TRIES IN DECIMAL MODE}
-                #_STAZ_         #_TRIES
+              { #_ADCZ_         #_TRIES       } {ADD 1 TO TRIES IN DECIMAL MODE}
+              { #_STAZ_         #_TRIES       }
               { #_CLD_                        }
+              { vvvvvvvvvvvvvvvvvvvvvvvvvvvvv BCD increment without SED by Michael T. Barry }
+                #_INCZ_         #_TRIES
+                #_LDAZ_         #_TRIES
+                #_ANDIM_        #$F
+                #_CMPIM_        #10
+                #_BCS_          #@_NXTRY
+              { ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ }
 _NXTLIN=*       #_JSR_          ##_CRLF
                 #_LDAZ_         #_TRIES         {OUTPUT CRLF AND TRIES (IN BCD)}
                 #_JSR_          ##_PRBYTE
@@ -254,14 +260,6 @@ _CHARIN=*       #_LDA_          ##_KBDCR        {WAIT FOR STROBE}
                 #_BPL_          #@_CHARIN
                 #_LDA_          ##_KBD          {READ KEY AND CLEAR STROBE.}
                 #_RTS_
-
-_NXTBCD=*       #_LDAZ_         #_TRIES         {[Gigatron] Get low nibble}
-                #_ANDIM_        #$F             {[Gigatron]}
-                #_CMPIM_        #$9             {[Gigatron] Is it 9?}
-                #_BEQ_          #@_LOW9         {[Gigatron] If yes, add 7}
-                #_LDAIM_        #4              {[Gigatron] Otherwise add 1}
-_LOW9=*         #_SBCIM_        #3              {[Gigatron]}
-                #_RTS_                          {[Gigatron]}
 
 {-----------------------------------------------------------------------+
 |                                                                       |
