@@ -950,7 +950,7 @@ _CharOut=*
     { Draw ASCII character (32..127) on screen in 5x8 pixels }
     { and advance cursor position }
 
-    50-                         {Map ASCII code to offset in font table}
+    64- [if>=0 32-] 14+         {Map ASCII 96..127 to 64..95}
     [if<0 50+ _i= \font32up     {ASCII 32..81}
      else     _i= \font82up]    {ASCII 82..127}
     _j= _i 2<< _i+              {Multiply char code by 5}
