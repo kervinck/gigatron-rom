@@ -1040,10 +1040,10 @@ _MSG1=*         #@_MSG1_END
                 #$d3 #$c1 #$cd #$a0 #$a0 #$d2 #$b0 #$b0
                 #$b3
 
-                { '8K APPLE-1 ON 7400 TTL\r\r' }
+                { 'APPLE-1 ON 7400 TTL\r\r' }
                 #$8d #$8d #$cc #$d4 #$d4 #$a0 #$b0 #$b0
                 #$b4 #$b7 #$a0 #$ce #$cf #$a0 #$b1 #$ad
-                #$c5 #$cc #$d0 #$d0 #$c1 #$a0 #$cb #$b8
+                #$c5 #$cc #$d0 #$d0 #$c1
 
                 { '\r' ... }
                 #$8d #$8d #$8d
