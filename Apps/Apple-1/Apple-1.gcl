@@ -11,7 +11,6 @@ gcl0x
 {
   Issues:
 
-  XXX Cursor: Can be sticky in mini-assembler
   XXX WUMPUS: Add as preloaded BASIC game
   XXX BASIC: AUTO doesn't work well -> _j conflicts with auto_inc
   XXX BASIC: Free up $00fc-$00ff and restore BASIC for the $F7 hack
@@ -77,7 +76,7 @@ _cursorTimer=$f8
 _tmpChar=$f8
 _lastKey=$f9
 _vCpuState=$fa
-_PIA=$fc        {overlap with (otherwise useless) vIRQ-saved vPC}
+_PIA=$fc        {Overlap with (otherwise useless) vIRQ-saved vPC}
 
 {-----------------------------------------------------------------------+
 |       ROM type check                                                  |
@@ -763,10 +762,8 @@ _vIRQ_ENTER=*
     &_serialRaw, &_lastKey.     {"serialLast" isn't useful for this}
     255^ [if<>0 255^            {But ignore key releases}
       $60- [if>=0 $20-] $60+    {Map to upper case, delete becomes rubout}
-      10^ [if=0                 {Enter}
-        0 <_cursorTimer.        {Force cursor to disappear below}
-        7] 10^                  {Map 10 CR to 13 LF}
-      26^ [if=0 %0=] 26^        {Attempt BRK on Ctrl-Z, may need retries}
+      10^ [if=0 7] 10^          {Map 10 CR to 13 LF}
+      26^ [if=0 %0=] 26^        {Attempt BRK on Ctrl-Z; May need retries}
       127& 128-                 {Set bits 7..15}
       _PIA:                     {Update KBD and KBDCR in one go}
     ]]
@@ -786,7 +783,7 @@ _vIRQ_ENTER=*
     [if=0 _PIA:]                { also clear KBDCR bit 7. This is NOT how the}
                                 { true PIA works, but it fools most programs.}
     31 <_cursorTimer.]          {Restart the cursor cycle. This prevents it}
-                                { from getting drawn a bit too soon.}
+                                { from getting drawn within the next 10 frames.}
 
   {-- Handle cursor --}
   {
@@ -808,13 +805,11 @@ _vIRQ_ENTER=*
   [if<0
     $a0 &_CharOut!              {` '}
     p 6- p=                     {Go back}
-    30                          {31 frames at 60 Hz}
-  ]
+    30]                         {31 frames at 60 Hz}
   <_cursorTimer.
   20^ [if=0                     {67% duty cycle}
     $c0 &_CharOut!              {`@'}
-    p 6- p=                     {Go back}
-  ]
+    p 6- p=]                    {Go back}
 
   {-- Return from interrupt --}
 
@@ -900,7 +895,8 @@ _CharOut=*
   _sysArgs4 %4=                 {v6502_Qz  v6502_Qn}
 
   \SYS_VDrawBits_134 _sysFn=    {Prepare SYS calls}
-  $3f00 _sysArgs0=              {White on black}
+  $3f00 _sysArgs0=              {White pen color and clear bitmask}
+  \sysArgs2.                    {Clear bitmask}
 
   _i \sysArgs3.                 {Keep copy of character in sysArgs3}
   $8d^ [if<>0                   {Test for CR...}
@@ -910,6 +906,13 @@ _CharOut=*
     {-------------------------------------------------------------------+
     |       Newline                                                     |
     +-------------------------------------------------------------------}
+
+    { Clear cursor symbol }
+    p _sysArgs4=                {Set drawing position}
+    255& 251- [if<=0 -5]        {Clear 5 or 1 slices depending on margin}
+    [do
+      134!! <_sysArgs4++        {Whipes out any `@'}
+      1+ if<0loop]
 
     { Find the top text row }
     $62 <p.                     {Go to start of line, nicely indent by 2 pixels}
