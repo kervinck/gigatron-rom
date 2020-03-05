@@ -17,6 +17,7 @@ KBDCR   equ $D011           ; Keyboard control: Indicator that a new input
 PRBYTE  equ $FFDC           ; WozMon routine to diaplay register A in hex
 ECHO    equ $FFEF           ; WozMon routine to display register A char
 GETLINE equ $FF1F           ; Entry point back to WozMonitor
+ERR_MAX equ $09             ; Bad game inputs before redisplaying board
 
 
         ; Zero-page variables
@@ -38,6 +39,7 @@ TXTHI   ds 1    ;   (two bytes)
 PRNG    ds 1    ; Running pseudo-random number generator
 SHUFCTR ds 1    ; Counter of valid moves when "shuffling" new puzzle in INITPUZ
 PREVMOV ds 1    ; Keeps track of previous randomly-selected move in INITPUZ
+ERRCNT  ds 1    ; Tracks number of invalid moves in a row (to redisplay board)
         
         
 ; Main program  --------------------------------------------------------------
@@ -85,8 +87,11 @@ GETMOVE jsr GETKEY      ; Grab keyboard input
 NOQUIT  jsr HNDLMOV     ; Get move and, if valid, update puzzle board
         lda CUROFF      ; Is the current offset 16 (i.e. move was invalid?)
         cmp #16
-        bne SKIPERR    ; Skip error display if the move was valid
-        jsr PRINERR
+        bne SKIPERR     ; Skip error display if the move was valid
+        dec ERRCNT      ; Reprint puzzle every ERROR_MAX errors
+        bne SKIPRP
+        jsr PRINPUZ     ; (this also resets ERRCNT)
+SKIPRP  jsr PRINERR     ; Show error message
         jmp GETMOVE     ; Get new move, but don't incr. counter or show move #
         
 SKIPERR jsr PRINPUZ     ; Display current board state
@@ -157,7 +162,7 @@ GETKEY  SUBROUTINE  ; Get one character of input and munge it into valid ASCII
         bpl GETKEY      ; Loop if A is "positive" (bit 7 low)
         lda KBD         ; Get the keyboard character
         and #%01111111  ; Clear bit 7, which is always set for some reason
-        rts
+.done   rts
 
 
 
@@ -186,6 +191,7 @@ NEXTRND SUBROUTINE  ; Cycle the PRNG (simple 8-bit Xorshift)
 
 
 PRINPUZ SUBROUTINE  ; Display the current puzzle state
+                    ; And reset the error counter
         jsr NEWLINE
         jsr NEWLINE
         ldx #0      ; Offset into PUZZ data
@@ -200,6 +206,8 @@ PRINPUZ SUBROUTINE  ; Display the current puzzle state
         cpx #16
         bne .loop
         jsr NEWLINE
+        lda #ERR_MAX
+        sta ERRCNT
         rts
 
 
@@ -271,7 +279,7 @@ INITPUZ SUBROUTINE  ; Create a new, ordered puzzle
 
 
 SHUFPUZ SUBROUTINE  ; Randomly shuffle puzzle board and init game variables
-        ; Reset move counter and seed the previous valid move variable
+        ; Reset move counter and seed previous valid move variable
         lda #0
         sta MOVELO
         sta MOVEHI
@@ -315,6 +323,8 @@ HNDLMOV SUBROUTINE  ; Handle the current move in register A
         
         ; Step 1: Did the user pick a letter that's on the board? If so, where?
         sta CURMOV      ; Store input letter as current move
+        cmp #" "        ; Did user type a space?
+        beq .badmv
         ldx #0
 .loop   lda PUZZ,X      ; Look at one of the tiles on the board
         cmp CURMOV      ; Is it the current move?
@@ -322,8 +332,7 @@ HNDLMOV SUBROUTINE  ; Handle the current move in register A
         inx             ; Nope. Bump up the offset...
         cpx #16         ; Are we at the end of the board?
         bne .loop       ; No? Keep checking
-        stx CUROFF      ; Otherwise, we're done. User chose a weird letter.
-        rts             ; Return with offset set to 16 (indicating bad move)
+        jmp .badmv      ; Otherwise, we're done. User chose a weird letter.
 
         ; Step 2: Is the tile moveable toward the space? If so, how?
 .found  stx CUROFF
@@ -353,7 +362,7 @@ HNDLMOV SUBROUTINE  ; Handle the current move in register A
         and #%00000011  ; Same for offset of empty space
         cmp TEMPCMP     ; If they match, they're in the same column
         beq .setadj
-        ldx #16         ; Load X with 16, indicating an invalid move
+.badmv  ldx #16         ; Load X with 16, indicating an invalid move
         stx CUROFF
         rts             ; Back to the game at hand
         
@@ -421,7 +430,7 @@ GETDIFF SUBROUTINE      ; Prompt for and get/set difficulty level
 .nxtchk lda #"5"        ; Subtract input from ascii 5
         sec
         sbc DIFFLVL
-        bmi .inval      ; If result is negative, input was > 5 and invalid
+ZERO    bmi .inval      ; If result is negative, input was > 5 and invalid
         rts             ; At this point, we're good, so return
 .inval  jsr PRINERR
         jmp .input
