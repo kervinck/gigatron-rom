@@ -711,6 +711,10 @@ _TMPZP=$00003E
 
 _Setup=*
 [
+  { Preemptively switch to MODE 3 because, honestly, people
+    will just try a simple benchmark and leave it at that... }
+  \SYS_SetMode_v2_80 _sysFn= 3 80!
+
   \TISTR0 p= 0 p: <p++ <p++ p:  {Reset TI$ for BASIC}
 
   { Setup alternative video indirection table }
