@@ -50,16 +50,16 @@ RAMSTART2       := $7100        ; User space
 ENTROPY         := $06
 
 ; monitor functions
-CHROUT          := $2A00        ; Send char or newline to video terminal
-GETIN           := $2B00        ; Get key stroke, update TI$
-ISCNTC          := $2C00        ; Check for Ctrl-C, update TI$
-TICK            := $2D00        ; Update TISTR
+CHROUT          := $2B00        ; Send char or newline to video terminal
+GETIN           := $2C00        ; Get key stroke, update TI$
+ISCNTC          := $2D00        ; Check for Ctrl-C, update TI$
+TICK            := $2E00        ; Update TISTR
 CLALL           := TICK         ; Not implemented, do nothing
-LINEEDIT        := $2E00        ; Delete character or line if needed
+LINEEDIT        := $2F00        ; Delete character or line if needed
 MONCOUT         := CHROUT
 MONRDKEY        := GETIN
-LOAD            := $3100        ; Not implemented, give help message
-SAVE            := $2F00        ; Send program list to BabelFish
+LOAD            := $3200        ; Not implemented, give help message
+SAVE            := $3000        ; Send program list to BabelFish
 VERIFY          := SYNERR       ; Not implemented, give error
 
 ; patches

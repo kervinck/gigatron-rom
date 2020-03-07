@@ -1,7 +1,7 @@
 gcl0x
 {-----------------------------------------------------------------------+
 |                                                                       |
-|       Micro-Soft BASIC for Gigatron                                   |
+|       Micro-Soft's 6502 BASIC for Gigatron                            |
 |                                                                       |
 |       Based on https://github.com/mist64/msbasic                      |
 |                                                                       |
@@ -59,15 +59,16 @@ gcl0x
         $2600 -                 Main vCPU loop (BRK call handling); DrawChar
         $2700 -                 CharOut
         $2800 -                 Newline
-        $2900 -                 (6502) WAITKEY
-        $2a00 -                 (6502) CHROUT
-        $2b00 -                 (6502) GETIN
-        $2c00 -                 (6502) ISCNTC
-        $2d00 -                 (6502) CLALL
-        $2e00 -                 (6502) LINEEDIT
-        $2f00 -                 (6502) SAVE
-        $3000 -                 SaveChar
-        $3100 -                 (6502) LOAD
+        $2900 -                 ControlCode
+        $2a00 -                 (6502) WAITKEY
+        $2b00 -                 (6502) CHROUT
+        $2c00 -                 (6502) GETIN
+        $2d00 -                 (6502) ISCNTC
+        $2e00 -                 (6502) CLALL
+        $2f00 -                 (6502) LINEEDIT
+        $3000 -                 (6502) SAVE
+        $3100 -                 SaveChar
+        $3200 -                 (6502) LOAD
         $7100 - $7fff           Free RAM giving 3840 bytes user space
 }
 
@@ -103,7 +104,7 @@ _TMPZP=$00003E
 *=$218
  #$27 #$09 #$3e #$08 #$90 #$0d #$e6 #$09
  #$51 #$0c #$c5 #$10 #$7f #$0c #$93 #$0a #$93 #$09 #$6b #$09 #$16 #$0a #$16 #$09
- #$76 #$09 #$c0 #$09 #$29 #$0a #$25 #$09 #$39 #$0a #$71 #$18 #$ff #$30 #$ff #$2e
+ #$76 #$09 #$c0 #$09 #$29 #$0a #$25 #$09 #$39 #$0a #$71 #$18 #$ff #$31 #$ff #$2f
  #$6d #$0f #$ee #$13 #$68 #$18 #$78 #$0b #$51 #$09 #$9b #$07 #$5d #$07 #$3f #$0c
  #$41 #$07 #$b1 #$1c #$44 #$1d #$d0 #$1c #$38 #$00 #$b8 #$13 #$d9 #$13 #$ca #$1f
  #$eb #$20 #$62 #$1a #$46 #$20 #$40 #$21 #$47 #$21 #$90 #$21 #$fe #$21 #$4a #$18
@@ -143,7 +144,7 @@ _TMPZP=$00003E
  #$4e #$c7 #$46 #$4f #$52 #$4d #$55 #$4c #$41 #$20 #$54 #$4f #$4f #$20 #$43 #$4f
  #$4d #$50 #$4c #$45 #$d8 #$43 #$41 #$4e #$27 #$54 #$20 #$43 #$4f #$4e #$54 #$49
  #$4e #$55 #$c5 #$55 #$4e #$44 #$45 #$46 #$27 #$44 #$20 #$46 #$55 #$4e #$43 #$54
- #$49 #$4f #$ce #$20 #$00 #$2d #$38 #$4c #$cc #$0f #$a0 #$1b #$18 #$88 #$69 #$06
+ #$49 #$4f #$ce #$20 #$00 #$2e #$38 #$4c #$cc #$0f #$a0 #$1b #$18 #$88 #$69 #$06
  #$90 #$fb #$60 #$20 #$45 #$52 #$52 #$4f #$52 #$00 #$20 #$49 #$4e #$20 #$00 #$0d
  #$0a #$52 #$45 #$41 #$44 #$59 #$2e #$0d #$0a #$00 #$0d #$0a #$42 #$52 #$45 #$41
  #$4b #$00 #$ba #$e8 #$e8 #$e8 #$e8 #$b5 #$01 #$c9 #$81 #$d0 #$1d #$a5 #$7c #$d0
@@ -178,8 +179,8 @@ _TMPZP=$00003E
  #$84 #$55 #$18 #$a0 #$01 #$b1 #$54 #$f0 #$1d #$a0 #$04 #$c8 #$b1 #$54 #$d0 #$fb
  #$c8 #$98 #$65 #$54 #$aa #$a0 #$00 #$91 #$54 #$a5 #$55 #$69 #$00 #$c8 #$91 #$54
  #$86 #$54 #$85 #$55 #$90 #$dd #$60 #$a2 #$00 #$20 #$6e #$06 #$c9 #$0d #$f0 #$0b
- #$20 #$00 #$2e #$f0 #$f4 #$9d #$05 #$24 #$e8 #$d0 #$ee #$4c #$a3 #$0b #$20 #$00
- #$2b #$c9 #$0f #$d0 #$08 #$48 #$a5 #$45 #$49 #$ff #$85 #$45 #$68 #$60 #$a6 #$a6
+ #$20 #$00 #$2f #$f0 #$f4 #$9d #$05 #$24 #$e8 #$d0 #$ee #$4c #$a3 #$0b #$20 #$00
+ #$2c #$c9 #$0f #$d0 #$08 #$48 #$a5 #$45 #$49 #$ff #$85 #$45 #$68 #$60 #$a6 #$a6
  #$a0 #$04 #$84 #$41 #$bd #$00 #$24 #$10 #$07 #$c9 #$ff #$f0 #$3e #$e8 #$d0 #$f4
  #$c9 #$20 #$f0 #$37 #$85 #$3c #$c9 #$22 #$f0 #$56 #$24 #$41 #$70 #$2d #$c9 #$3f
  #$d0 #$04 #$a9 #$97 #$d0 #$25 #$c9 #$30 #$90 #$04 #$c9 #$3c #$90 #$1d #$84 #$a4
@@ -196,14 +197,14 @@ _TMPZP=$00003E
  #$88 #$d1 #$92 #$90 #$0c #$f0 #$0a #$88 #$b1 #$92 #$aa #$88 #$b1 #$92 #$b0 #$d7
  #$18 #$60 #$d0 #$fd #$a9 #$00 #$a8 #$91 #$5d #$c8 #$91 #$5d #$a5 #$5d #$18 #$69
  #$02 #$85 #$5f #$a5 #$5e #$69 #$00 #$85 #$60 #$20 #$8e #$07 #$a9 #$00 #$d0 #$2d
- #$a5 #$69 #$a4 #$6a #$85 #$65 #$84 #$66 #$20 #$00 #$2d #$a5 #$5f #$a4 #$60 #$85
+ #$a5 #$69 #$a4 #$6a #$85 #$65 #$84 #$66 #$20 #$00 #$2e #$a5 #$5f #$a4 #$60 #$85
  #$61 #$84 #$62 #$85 #$63 #$84 #$64 #$20 #$17 #$09 #$a2 #$4b #$86 #$48 #$68 #$a8
  #$68 #$a2 #$ff #$9a #$48 #$98 #$48 #$a9 #$00 #$85 #$70 #$85 #$42 #$60 #$18 #$a5
  #$5d #$69 #$ff #$85 #$a6 #$a5 #$5e #$69 #$ff #$85 #$a7 #$60 #$90 #$06 #$f0 #$04
  #$c9 #$a5 #$d0 #$e9 #$20 #$5a #$0a #$20 #$13 #$07 #$20 #$71 #$22 #$f0 #$0c #$c9
  #$a5 #$d0 #$8e #$20 #$6b #$22 #$20 #$5a #$0a #$d0 #$86 #$68 #$68 #$a5 #$46 #$05
  #$47 #$d0 #$06 #$a9 #$ff #$85 #$46 #$85 #$47 #$a0 #$01 #$84 #$41 #$b1 #$92 #$f0
- #$43 #$20 #$00 #$2c #$20 #$ac #$0b #$c8 #$b1 #$92 #$aa #$c8 #$b1 #$92 #$c5 #$47
+ #$43 #$20 #$00 #$2d #$20 #$ac #$0b #$c8 #$b1 #$92 #$aa #$c8 #$b1 #$92 #$c5 #$47
  #$d0 #$04 #$e4 #$46 #$f0 #$02 #$b0 #$2c #$84 #$7b #$20 #$45 #$1e #$a9 #$20 #$a4
  #$7b #$29 #$7f #$20 #$11 #$0c #$c9 #$22 #$d0 #$06 #$a5 #$41 #$49 #$ff #$85 #$41
 
@@ -218,7 +219,7 @@ _TMPZP=$00003E
  #$f9 #$0d #$20 #$f6 #$0d #$a5 #$99 #$09 #$7f #$25 #$95 #$85 #$95 #$a9 #$88 #$a0
  #$08 #$85 #$54 #$84 #$55 #$4c #$af #$0e #$a9 #$34 #$a0 #$1a #$20 #$1a #$1c #$20
  #$71 #$22 #$c9 #$a3 #$d0 #$06 #$20 #$6b #$22 #$20 #$f6 #$0d #$20 #$a3 #$1c #$20
- #$a4 #$0e #$a5 #$7c #$48 #$a5 #$7b #$48 #$a9 #$81 #$48 #$20 #$00 #$2c #$a5 #$a6
+ #$a4 #$0e #$a5 #$7c #$48 #$a5 #$7b #$48 #$a9 #$81 #$48 #$20 #$00 #$2d #$a5 #$a6
  #$a4 #$a7 #$c0 #$24 #$ea #$f0 #$04 #$85 #$6f #$84 #$70 #$a0 #$00 #$b1 #$a6 #$d0
  #$40 #$a0 #$02 #$b1 #$a6 #$18 #$d0 #$03 #$4c #$42 #$09 #$c8 #$b1 #$a6 #$85 #$6b
  #$c8 #$b1 #$a6 #$85 #$6c #$98 #$65 #$a6 #$85 #$a6 #$90 #$02 #$e6 #$a7 #$20 #$6b
@@ -281,7 +282,7 @@ _TMPZP=$00003E
 
 *=$c00
  #$0c #$c8 #$c9 #$0d #$d0 #$f3 #$20 #$b6 #$0b #$4c #$f9 #$0b #$a9 #$20 #$2c #$a9
- #$3f #$24 #$45 #$30 #$03 #$20 #$00 #$2a #$29 #$ff #$60 #$a5 #$43 #$f0 #$11 #$30
+ #$3f #$24 #$45 #$30 #$03 #$20 #$00 #$2b #$29 #$ff #$60 #$a5 #$43 #$f0 #$11 #$30
  #$04 #$a0 #$ff #$d0 #$04 #$a5 #$71 #$a4 #$72 #$85 #$6b #$84 #$6c #$4c #$6e #$0f
  #$a9 #$7e #$a0 #$0d #$20 #$ef #$0b #$a5 #$6f #$a4 #$70 #$85 #$a6 #$84 #$a7 #$60
  #$20 #$e2 #$13 #$a2 #$06 #$a0 #$24 #$a9 #$00 #$8d #$06 #$24 #$a9 #$40 #$20 #$89
@@ -291,7 +292,7 @@ _TMPZP=$00003E
  #$a6 #$73 #$a4 #$74 #$a9 #$98 #$2c #$a9 #$00 #$85 #$43 #$86 #$75 #$84 #$76 #$20
  #$d0 #$10 #$85 #$7b #$84 #$7c #$a5 #$a6 #$a4 #$a7 #$85 #$7d #$84 #$7e #$a6 #$75
  #$a4 #$76 #$86 #$a6 #$84 #$a7 #$20 #$71 #$22 #$d0 #$1c #$24 #$43 #$50 #$0c #$20
- #$00 #$2b #$8d #$05 #$24 #$a2 #$04 #$a0 #$24 #$d0 #$08 #$30 #$71 #$20 #$0f #$0c
+ #$00 #$2c #$8d #$05 #$24 #$a2 #$04 #$a0 #$24 #$d0 #$08 #$30 #$71 #$20 #$0f #$0c
  #$20 #$77 #$0c #$86 #$a6 #$84 #$a7 #$20 #$6b #$22 #$24 #$3f #$10 #$31 #$24 #$43
  #$50 #$09 #$e8 #$86 #$a6 #$a9 #$00 #$85 #$3b #$f0 #$0c #$85 #$3b #$c9 #$22 #$f0
  #$07 #$a9 #$3a #$85 #$3b #$a9 #$2c #$18 #$85 #$3c #$a5 #$a6 #$a4 #$a7 #$69 #$00
@@ -508,7 +509,7 @@ _TMPZP=$00003E
  #$a0 #$1f #$4c #$df #$18 #$20 #$04 #$1b #$a5 #$99 #$49 #$ff #$85 #$99 #$45 #$a1
  #$85 #$a2 #$a5 #$94 #$4c #$e2 #$18 #$a5 #$46 #$49 #$e8 #$d0 #$08 #$a2 #$14 #$45
  #$47 #$49 #$1c #$f0 #$0e #$a5 #$46 #$c9 #$66 #$d0 #$c6 #$a5 #$47 #$e9 #$19 #$d0
- #$c0 #$a2 #$0a #$bd #$e9 #$21 #$29 #$3f #$49 #$20 #$18 #$69 #$20 #$20 #$00 #$2a
+ #$c0 #$a2 #$0a #$bd #$e9 #$21 #$29 #$3f #$49 #$20 #$18 #$69 #$20 #$20 #$00 #$2b
  #$ca #$49 #$21 #$d0 #$ee #$c6 #$7b #$d0 #$e8 #$60 #$20 #$11 #$1a #$90 #$3c #$20
  #$04 #$1b #$d0 #$03 #$4c #$74 #$1c #$a6 #$a3 #$86 #$89 #$a2 #$9c #$a5 #$9c #$a8
  #$f0 #$9b #$38 #$e5 #$94 #$f0 #$24 #$90 #$12 #$84 #$94 #$a4 #$a1 #$84 #$99 #$49
@@ -717,9 +718,9 @@ _Setup=*
   \videoTable p=                {First variable at $30, will become p later}
   &_CharOut CharOut=            {Prepare for vCPU calls}
 
- $a000 _sysArgs0=               {Clear last pixel row}
- $7060 _sysArgs2=
- \SYS_SetMemory_v2_54 _sysFn= 54!!
+  $a000 _sysArgs0=              {Clear last pixel row}
+  $7060 _sysArgs2=
+  \SYS_SetMemory_v2_54 _sysFn= 54!!
 ]
 
 \Setup1 call
@@ -786,10 +787,16 @@ _v6502_PC=                      {Reset v6502 PC}
 |       DrawChar                                                        |
 +-----------------------------------------------------------------------}
 
+{
+   Continuation of CharOut
+   Draws the glyph from the ROM address in j
+   Preserve the 8th line because of the compressed video layout: the
+   first line of the top text row is there!
+   Tail function: pops without push
+}
 _DrawChar=*
 [
-  { Tail function: pops without push }
-
+  \SYS_VDrawBits_134 _sysFn=    {Prepare SYS calls}
   $b00 _sysArgs0=               {Amber on black}
   p _sysArgs4=                  {Screen position for character}
   6+ p=                         {Advance by 6 pixels}
@@ -815,40 +822,35 @@ _CharOut=*
 [
   {
     Simple video terminal output with automatic line feed.
-    Takes ASCII, bit with bit 7 set (like Apple-1,2)
-    Returns screen position if printable (for backspace)
   }
-
   push
-  %-2=                          {Park character in stack area}
+  255- [if<>0                   {Check for 255: pi}
+    223+ [if<0                  {Check for less than 255-223 = 32}
+      _sysArgs0=                {Store argument because we're clobbering vAC}
+      \ControlCode call         {Handle other ASCII control codes}
+      [if=0 pop ret]            {Don't draw character if zero returned}
+      #_LDWI #155 #>\font32up   {Inline asm to point to `?'}
+    else
+      95- [if>0 -64]            {Map 128..254 to `?'}
+      45+                       {Map ASCII code to offset in font table}
+      [if<0 50+ i= \font32up    {ASCII 32..81}
+       else     i= \font82up]   {ASCII 82..127}
+      j= i 2<< i+               {Multiply char code by 5}
+      j+                        {Add to page address to reach bitmap data}
+    ]
+  else                          {Handle pi}
+    #_LDWI #12 #>\font82up      {Inline asm to point to font82up+12, see below}
+  ]
+  j=                            {Pass to DrawChar}
 
-  \SYS_VDrawBits_134 _sysFn=    {Prepare SYS calls}
+  <p, 251- [if>0 \Newline call] {Line wrap if current line is full}
 
-  %-2                           {Get character back}
-  13^ [if<>0 <p, 251- if>0 0]   {Test for CR or line wrap}
+  \DrawChar call                {Tail call: doesn't return here}
+]
 
-  [if=0 \Newline call]          {Advance to next line}
+{
+      Combining right half of 'T' and left half of 'U' makes 'pi':
 
-  %-2 32-
-  [if<0                         {Skip control codes}
-    $19+ [if=0 6 \soundTimer.]  {Ring a bell for chr(7)}
-    pop ret]
-
-  {
-    Draw ASCII character (32..127) on screen in 5x8 pixels
-    and advance cursor position
-  }
-
-  100- [if<0
-    50+                         {Map ASCII code to offset in font table}
-    [if<0 50+ i= \font32up      {ASCII 32..81}
-     else     i= \font82up]     {ASCII 82..127}
-    j= i 2<< i+                 {Multiply char code by 5}
-    j+                          {Add to page address to reach bitmap data}
-  else                          {Anything from 132 will be rendered as Pi}
-    #_LDWI #12 #>\font82up      {Inline assembly to point to font82up+12}
-                                {Combining right half of 'T' and left half of 'U'}
-    {
       R         S         T   pi    U
       |         |         |   |     |
       v         v         v   v     v
@@ -864,24 +866,20 @@ _CharOut=*
       ^                               0 1 2 3
       |
       font82up
-    }
-  ]
-  j=
-
-  \DrawChar call                {Tail call: doesn't return here}
-]
+}
 
 {-----------------------------------------------------------------------+
 |       Newline                                                         |
 +-----------------------------------------------------------------------}
 *=$2800
 
+{
+  Newline function for the compressed layout (7 pixel lines per text row)
+  Returns 0
+}
 _Newline=*
 [
-  {
-    Newline function for the compressed layout (7 pixel lines per text row)
-  }
-
+  \SYS_VDrawBits_134 _sysFn=    {Prepare SYS calls}
   $b00 _sysArgs0=               {Amber on black}
 
   { Find the top text row }
@@ -890,7 +888,7 @@ _Newline=*
   $9e+ i=                       {i==$100: start of the video table}
   peek >p.                      {Go to what is now still the top text row}
 
-  { Clear the text row }
+  { Clear this text row }
 
   p 2- _sysArgs4=               {Set drawing position for clearing}
   [do
@@ -904,11 +902,12 @@ _Newline=*
     Scroll everything up by modifying the video indirection table.
     [This may be a cool effect to watch in slow motion?]
   }
+
   [do
-    i 22+ j=                    {j looks 11 entries ahead of i}
-    peek \sysArgs7.             {Swap scanlines}
-    i, j.
-    \sysArgs7, i.
+    i 22+ _sysArgs4=            {_sysArgs4 looks 11 entries ahead of i}
+    peek \sysArgs2.             {Swap scanlines}
+    i, _sysArgs4.
+    \sysArgs2, i.
     <i++ <i++                   {Advance to next entry in video table}
     <i, 218^ if<>0loop]         {Until all done}
 
@@ -918,9 +917,32 @@ _Newline=*
 ]
 
 {-----------------------------------------------------------------------+
-|       WAITKEY                                                         |
+|       ControlCode                                                     |
 +-----------------------------------------------------------------------}
 *=$2900
+
+{
+  Output handler for ASCII codes 0..31 except newline (13).
+  Input is offset by -13
+}
+_ControlCode=*
+[
+  _sysArgs0                     {Retrieve argument}
+  19+ [if=0                     {Check for 255-223-19 = 13 = CR}
+    push
+    \Newline call               {Create new line and scroll screen up}
+    pop ret]                    {Returns 0}
+  3+ [if<>0                     {Return 0 if 10 = LF}
+    3+ [if=0
+      6 \soundTimer.            {CHR$(7) rings a bell}
+      pop]]                     {Don't print a glyph as well}
+  ret
+]
+
+{-----------------------------------------------------------------------+
+|       WAITKEY                                                         |
++-----------------------------------------------------------------------}
+*=$2a00
 
 {
   Wait for next key press and return ASCII result
@@ -975,7 +997,7 @@ _GOBACK1=*      #_RTS_
 {-----------------------------------------------------------------------+
 |       CHROUT                                                          |
 +-----------------------------------------------------------------------}
-*=$2a00
+*=$2b00
 
 _CHROUT=*
                 #_STAZ_  #_INPUTFLG     {!!! HACK !!! Forces GETIN out of GET mode}
@@ -1001,7 +1023,7 @@ _CHROUT=*
 {-----------------------------------------------------------------------+
 |       GETIN                                                           |
 +-----------------------------------------------------------------------}
-*=$2b00
+*=$2c00
 
 _GETIN=*        #_BITZ_  #_INPUTFLG     {EDIT, INPUT or GET}
                 #_BVC_   #@_GETIN1
@@ -1055,7 +1077,7 @@ _SKIPECHO=*     #_STAZ_  #_TMPZP
 {-----------------------------------------------------------------------+
 |       ISCNTC                                                          |
 +-----------------------------------------------------------------------}
-*=$2c00
+*=$2d00
 
 _ISCNTC=*
                 #_LDAZ_  #_serialRaw
@@ -1074,7 +1096,7 @@ _SKIPTICK=*     #_RTS_
 {-----------------------------------------------------------------------+
 |       TICK                                                            |
 +-----------------------------------------------------------------------}
-*=$2d00
+*=$2e00
 
 {
   Advance TI$ once in a while with [frameCount] as base clock.
@@ -1114,7 +1136,7 @@ _NOWRAP=*       #_RTS_
 {-----------------------------------------------------------------------+
 |       LINEEDIT                                                        |
 +-----------------------------------------------------------------------}
-*=$2e00
+*=$2f00
 
 _LINEEDIT=*     #_CMPIM_ #$5f           {"_" or RUBOUT}
                 #_BEQ_   #@_EDIT1
@@ -1147,7 +1169,7 @@ _EDIT4=*        #_LDAIM_ #$3f           {"?" to signal buffer clearing}
 {-----------------------------------------------------------------------+
 |       SAVE                                                            |
 +-----------------------------------------------------------------------}
-*=$2f00
+*=$3000
 
 _Buffer=$2405
 
@@ -1190,7 +1212,7 @@ _SaveEnd=*
 {-----------------------------------------------------------------------+
 |       SaveChar                                                        |
 +-----------------------------------------------------------------------}
-*=$3000
+*=$3100
 
 _SaveChar=$30fe                 {vCPU adds 2 and wraps to $3000}
 [do
@@ -1228,7 +1250,7 @@ _SaveChar=$30fe                 {vCPU adds 2 and wraps to $3000}
 {-----------------------------------------------------------------------+
 |       LOAD                                                            |
 +-----------------------------------------------------------------------}
-*=$3100
+*=$3200
 
 _LOAD=*         #_LDYIM_ #0             {Print message}
 _load1=*        #_LDAAY_ ##_LoadMsg
