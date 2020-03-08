@@ -70,7 +70,7 @@ ERRCNT  ds 1    ; Tracks number of invalid moves in a row (to redisplay board)
         lda #>TXT_INSTRUCT
         sta TXTHI
         jsr PRINTXT
-        jsr PRINPUZ         ; Show the (currently solved) puzzle as an example
+        jsr PRINPUZ     ; Show the (currently solved) puzzle as an example
 
 NEWGAME jsr GETDIFF     ; Ask for difficulty level
         jsr SHUFPUZ     ; Shuffle up a new puzzle and reset move counter
@@ -79,7 +79,6 @@ NEWGAME jsr GETDIFF     ; Ask for difficulty level
 NXTMOVE jsr INCMOVE     ; Handle next move by first incrementing  move counter
         jsr PRINMOV     ; Show that move number
 GETMOVE jsr GETKEY      ; Grab keyboard input
-        jsr ECHO
         cmp #"Q"        ; Is user trying to quit?
         bne NOQUIT
         jmp ENDGAME
@@ -139,8 +138,7 @@ ENDGAME lda #<TXT_BYE
 
 NEWLINE SUBROUTINE  ; Just print out a newline (destroys A)
         lda #$0D
-        jsr ECHO
-        rts
+        jmp ECHO
 
 
 
@@ -162,13 +160,12 @@ GETKEY  SUBROUTINE  ; Get one character of input and munge it into valid ASCII
         bpl GETKEY      ; Loop if A is "positive" (bit 7 low)
         lda KBD         ; Get the keyboard character
         and #%01111111  ; Clear bit 7, which is always set for some reason
-.done   rts
+        jmp ECHO        ; Always echo what the user just typed (Thanks Marcel!)
 
 
 
 GETYN   SUBROUTINE  ; Gets a valid Y or N response from user. Sets Z flag on Y.
         jsr GETKEY
-        jsr ECHO
         cmp #"N"
         beq .nope
         cmp #"Y"
@@ -241,13 +238,11 @@ PRINERR SUBROUTINE  ; Displays a standard input error message
         sta TXTLO
         lda #>TXT_BADMOVE
         sta TXTHI
-        jsr PRINTXT
-        rts
+        jmp PRINTXT
 
 
 
 PRINYAY SUBROUTINE      ; Prints a randomly-selected expression of joy
-        jsr NEXTRND
         lda PRNG        ; Put latest random number in A
         and #%00111000  ; Get bits 3-5 as a "multiple of 8" offset
         tax
@@ -422,7 +417,6 @@ GETDIFF SUBROUTINE      ; Prompt for and get/set difficulty level
         sta TXTHI
         jsr PRINTXT
 .input  jsr GETKEY
-        jsr ECHO
         sta DIFFLVL     ; Store input as ASCII code, not as actual number
         cmp #"1"        ; Compare input (in register A) to ascii 1
         bpl .nxtchk     ; If result is positive, input was >= 1. So far so good.
