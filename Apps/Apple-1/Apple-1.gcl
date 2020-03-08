@@ -921,8 +921,8 @@ _CharOut=*
       1+ if<0loop]
 
     { Find the top text row }
-    $62 <p.                     {Go to start of line, nicely indent by 2 pixels}
-    $9e+ _i=                    {i==$100: start of the video table}
+    $61 <p.                     {Go to start of line, nicely indent by 1 pixel}
+    $9f+ _i=                    {i==$100: start of the video table}
     peek >p.                    {Go to what is now still the top text row}
 
     { Clear the text row }
