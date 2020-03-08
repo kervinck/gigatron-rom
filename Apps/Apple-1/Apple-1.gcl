@@ -11,10 +11,16 @@ gcl0x
 {
   Issues:
 
-  XXX WUMPUS: Add as preloaded BASIC game
+  XXX 15PUZ: Add as preloaded game
   XXX BASIC: AUTO doesn't work well -> _j conflicts with auto_inc
   XXX BASIC: Free up $00fc-$00ff and restore BASIC for the $F7 hack
   XXX Mini-assembler: move to $444, under the BASIC area 800.fff
+  XXX Mini-assembler: stress test for quirks
+  XXX Mini-assembler: add help text like this;
+                        !800:PHA  |ASSEMBLE ONE
+                        ! LDA #1  |ASSEMBLE NEXT
+                        !800L     |DISASSEMBLE
+                        --------------------------
 
   References:
 
@@ -981,7 +987,7 @@ _CharOut=*
 +-----------------------------------------------------------------------}
 
 *=$c100
-                #_LDAIM_ #$aa           {`*'}
+                #_LDAIM_ #$aa           {`*' for authenticity}
                 #_JSR_   ##_ECHO
 _MENU=*
                 #_LDX_   ##_MSG1        {Print welcome message part 1}
@@ -1031,9 +1037,9 @@ _MSG1=*         #@_MSG1_END
                 #$d3 #$c1 #$ad #$c9 #$ce #$c9 #$cd #$a0
                 #$a0 #$d2 #$c5 #$c5 #$c5
 
-                { 'XXXR  WUMPUS\r' }
-                #$8d #$d3 #$d5 #$d0 #$cd #$d5 #$d7 #$a0
-                #$a0 #$d2 #$d8 #$d8 #$d8
+                { '400R  15-PUZZLE\r' }
+                #$8d #$c5 #$cc #$da #$da #$d5 #$d0 #$ad
+                #$b5 #$b1 #$a0 #$a0 #$d2 #$b0 #$b0 #$b4
 
                 { '300R  MASTERMIND\r'}
                 #$8d #$c4 #$ce #$c9 #$cd #$d2 #$c5 #$d4
