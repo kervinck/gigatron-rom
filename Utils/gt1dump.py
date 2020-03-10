@@ -197,9 +197,9 @@ else:
 
 hiAddress = readByte(fp)
 
+cpuType, cpuTag = 0, '[vCPU]'                   # 0 for vCPU, 1 for v6502
 while True:
   # Dump next segment
-  cpuType = 0                                   # 0 for vCPU, 1 for v6502
   loAddress = readByte(fp)
   address = (hiAddress << 8) + loAddress
 
@@ -223,9 +223,10 @@ while True:
         if byte in opcodes[cpuType].keys():     # First probe the last ISA
           ins, ops = opcodes[cpuType][byte]
         else:
-          xCpu = 1 - cpuType
-          if byte in opcodes[xCpu].keys():      # Probe the other if not valid
-            cpuType = xCpu                      # Swap on success
+          xCpu = 1 - cpuType                    # 0 <-> 1
+          if byte in opcodes[xCpu].keys():      # Probe the other if current not valid
+            cpuType = xCpu                      # Swap if second is valid
+            cpuTag = '[v6502]' if xCpu else '[vCPU]'
             ins, ops = opcodes[cpuType][byte]
 
         if ins:
@@ -276,7 +277,8 @@ while True:
         # Print as disassembled instruction
         # Convert single digit operand to decimal
         asm = re.sub(r'\$0([0-9])$', r'\1', asm)
-        print('%s%-25s|%s|' % ((26 - j) * ' ', asm, text))
+        prefix, cpuTag = (25 * ' ') + cpuTag, ''
+        print('%s %-25s|%s|' % (prefix[-25+j:], asm, text))
         ins, j, text = None, 0, ''
 
       elif (address + i) & 15 == 15 or i == segmentSize - 1:
