@@ -23,7 +23,7 @@ ERR_MAX equ $09             ; Bad game inputs before redisplaying board
         ; Zero-page variables
         seg.u VARS
 
-        org $0000
+        org $0040
 
 PUZZ    ds 16   ; The puzzle board state
 CURMOV  ds 1    ; ASCII code of the letter chosen as the current move
@@ -45,7 +45,7 @@ ERRCNT  ds 1    ; Tracks number of invalid moves in a row (to redisplay board)
 ; Main program  --------------------------------------------------------------
 
         seg CODE
-        org $0300
+        org $0400
         
         ; Init the program
         cld                 ; Start with BCD mode off
