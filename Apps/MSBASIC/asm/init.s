@@ -520,7 +520,7 @@ QT_BASIC:
         .byte   "### COMMODORE BASIC ###"
         .byte   CR,CR,0
     .else
-        .byte   "### CBM BASIC ###"
+        .byte   "### MS BASIC ###"
         .byte   CR,CR,0
     .endif
   .endif
