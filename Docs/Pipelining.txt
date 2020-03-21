@@ -10,10 +10,10 @@ is already being fetched from program memory.
 
 This makes high speeds possible, but comes with an artefact: when
 a branch is executing, the instruction immediately behind the branch
-has already been fetched and will be executed before the branch
-taking effect and arriving on the new program location. Or worded
-more properly: the effect of branches is always delayed by 1 clock
-cycle.
+has already been fetched. This instruction will be executed before
+the branch takes effect and we continue from the new program location.
+Or worded more properly: the effect of branches is always delayed
+by 1 clock cycle.
 
 When you don't want to think about these spurious instructions you
 just place a nop (no-operation) behind every branch instruction.
