@@ -116,8 +116,8 @@ $1ee p= {videoTable+119*2}      {First GCL variable at $30, later used as Pos}
 $101 {videoTable+1} p= $60 p.   {Use offsets 96..255 for pixel data, not 0..159}
                                 {The reason is that it makes important}
                                 { addresses available: $c100, $d010..$d013}
-255 p=                          {Put cursor on right side. This causes an automatic
-                                 newline, and _p reinit, at the initial _CharOut}
+$10ff p=                        {Put cursor on right side. This causes an automatic
+                                 newline at the first invokation of _CharOut}
 
 &_stackBottom \vSP.             {Reserve bottom of stack for IRQ context}
 &_vIRQ_DEVROM _i=
