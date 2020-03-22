@@ -6,6 +6,24 @@
 ; Written for the dasm assembler, but should assemble under others
 ; with a few tweaks here and there.
 
+; Marcel van Kervinck
+; March 2020
+;
+; Adapted for Apple-1 emulation on Gigaton TTL computer.
+; Gigatron-specific changes:
+; - Replace INCMOVE with code that doesn't use BCD mode
+; - Accomodate for smaller screen
+;   - Reduce ERR_MAX from 9 to 8
+;   - Be more economical, but consistent, with newlines
+;   - Squeeze instructions into 6 lines
+;   - Shorten INVALID CHOICE message to SORRY
+;   - Split win-message over 2 lines
+; - Start from $400
+; - Jump to $C100 on exit, so we go through the emulator menu again
+; General changes:
+; - Put a space after the move number for readability
+; - Go back to welcome and instructions after ERR_MAX wrong entries
+; Total size: 984 bytes
 
 
         processor 6502
@@ -53,7 +71,7 @@ ERRCNT  ds 1    ; Tracks number of invalid moves in a row (to redisplay board)
         txs                 ; Reset stack to $FF
         lda #42             ; Set PNRG seed
         sta PRNG
-        jsr INITPUZ         ; Set up an ordered puzzle board
+RESTART jsr INITPUZ         ; Set up an ordered puzzle board
         
         ; Show welcome message and ask if user wants instructions
         lda #<TXT_WELCOME   ; Store low byte of text data location
@@ -75,6 +93,7 @@ ERRCNT  ds 1    ; Tracks number of invalid moves in a row (to redisplay board)
 NEWGAME jsr GETDIFF     ; Ask for difficulty level
         jsr SHUFPUZ     ; Shuffle up a new puzzle and reset move counter
         jsr PRINPUZ     ; Print initial board state
+        jsr NEWLINE
 
 NXTMOVE jsr INCMOVE     ; Handle next move by first incrementing  move counter
         jsr PRINMOV     ; Show that move number
@@ -87,10 +106,9 @@ NOQUIT  jsr HNDLMOV     ; Get move and, if valid, update puzzle board
         lda CUROFF      ; Is the current offset 16 (i.e. move was invalid?)
         cmp #16
         bne SKIPERR     ; Skip error display if the move was valid
-        dec ERRCNT      ; Reprint puzzle every ERROR_MAX errors
-        bne SKIPRP
-        jsr PRINPUZ     ; (this also resets ERRCNT)
-SKIPRP  jsr PRINERR     ; Show error message
+        dec ERRCNT      ; Restart game after ERR_MAX errors
+        beq RESTART
+        jsr PRINERR     ; Show error message
         jmp GETMOVE     ; Get new move, but don't incr. counter or show move #
         
 SKIPERR jsr PRINPUZ     ; Display current board state
@@ -128,7 +146,7 @@ ENDGAME lda #<TXT_BYE
         lda #>TXT_BYE
         sta TXTHI
         jsr PRINTXT
-        jmp GETLINE         ; Return to WozMonitor
+        jmp $C100           ; Return to menu [Gigatron] and WozMonitor
 
 
 
@@ -202,25 +220,30 @@ PRINPUZ SUBROUTINE  ; Display the current puzzle state
 .skipln inx
         cpx #16
         bne .loop
-        jsr NEWLINE
         lda #ERR_MAX
         sta ERRCNT
         rts
 
 
 
-INCMOVE SUBROUTINE  ; Does some BCD fussing around to increment the counter
-        sed
+INCMOVE SUBROUTINE      ; Increments the two-byte BCD move counter,
+                        ; without using BCD mode, up to 9999
+        inc MOVELO
         lda MOVELO
-        clc
-        adc #1
+        and #$0F
+        cmp #$0A
+        bcs INCMOVE
+        lda MOVELO
+        sec
+        sbc #$A0
+        bcc .done
         sta MOVELO
+.nexthi inc MOVEHI
         lda MOVEHI
-        adc #0      ; Add anything in the carry bit to the high byte
-        sta MOVEHI
-        cld
-        rts
-        
+        and #$0F
+        cmp #$0A
+        bcs .nexthi
+.done   rts
         
         
 PRINMOV SUBROUTINE  ; Displays move number. Destroys A.
@@ -229,14 +252,15 @@ PRINMOV SUBROUTINE  ; Displays move number. Destroys A.
         jsr PRBYTE
 .low    lda MOVELO
         jsr PRBYTE
-        rts
+        lda #" "
+        jmp ECHO
 
 
 
 PRINERR SUBROUTINE  ; Displays a standard input error message
-        lda #<TXT_BADMOVE
+        lda #<TXT_SORRY
         sta TXTLO
-        lda #>TXT_BADMOVE
+        lda #>TXT_SORRY
         sta TXTHI
         jmp PRINTXT
 
@@ -477,32 +501,27 @@ TXT_WELCOME
 TXT_INSTRUCT
         .byte $0D
         .byte $0D
-        dc "TYPE A LETTER THAT'S ON THE SAME ROW OR"
-        .byte $0D
-        dc "COLUMN AS THE EMPTY SPACE TO SLIDE THAT"
-        .byte $0D
-        dc "LETTER (AND ANY IN BETWEEN) TOWARD THE"
-        .byte $0D
-        dc "SPACE.  TYPE Q TO QUIT."
-        .byte $0D
-        .byte $0D
-        dc "SOLVED PUZZLE LOOKS LIKE THIS:"
-        .byte $0D
+        dc "TYPE A LETTER ON THE SAME",$0D
+        dc "ROW OR COLUMN AS THE EMPTY",$0D
+        dc "SPACE TO SLIDE THAT LETTER",$0D
+        dc "(AND ANY BETWEEN) TOWARDS",$0D
+        dc "THE SPACE. TYPE Q TO QUIT.",$0D
+        dc "THIS IS THE SOLVED PUZZLE:"
         .byte $00
         
 TXT_DIFFASK
         .byte $0D
-        .byte $0D
         dc "DIFFICULTY LEVEL (1-5)? "
         .byte $00
 
-TXT_BADMOVE
+TXT_SORRY
         .byte $0D
-        dc "INVALID CHOICE.  TRY AGAIN: "
+        dc "SORRY. TRY AGAIN: "
         .byte $00
         
 TXT_WINNER1
-        dc "  YOU SOLVED A LEVEL "
+        dc " YOU SOLVED",$0D
+        dc "A LEVEL "
         .byte $00
         
 TXT_WINNER2
@@ -522,6 +541,5 @@ TXT_BYE
         .byte $0D
         .byte $0D
         dc "BYE!"
-        .byte $0D
         .byte $0D
         byte $00
