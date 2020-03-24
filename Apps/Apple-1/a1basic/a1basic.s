@@ -1537,7 +1537,7 @@ Le8dc:  BEQ     go_errmess_4
         DEX
         LDY     for_nest_count
         LDA     fstk_toh-1,Y
-        STA     syn_stk_l+31+16,X
+        STA     noun_stk_h_int-1,X
         LDA     fstk_tol-1,Y
         LDY     #$00
         JSR     push_ya_noun_stk
