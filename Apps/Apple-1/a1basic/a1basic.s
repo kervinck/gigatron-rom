@@ -1986,7 +1986,7 @@ Leef5:  RTS
 peek_fn:
         JSR     get16bit
         LDA     (acc),Y
-        STY     syn_stk_l+31+16,X
+        STY     noun_stk_h_int-1,X
         JMP     push_ya_noun_stk
 
 ; token $65 - "," for POKE statement

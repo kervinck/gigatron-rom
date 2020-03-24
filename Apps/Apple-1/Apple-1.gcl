@@ -11,8 +11,6 @@ gcl0x
 {
   Issues:
 
-  XXX README.md
-  XXX BASIC: Stopping (again...)
   XXX Mini-assembler: add help text
         --------------------------
         USAGE:
@@ -27,6 +25,7 @@ gcl0x
         --------------------------
         GUESS FIVE DIGITS FROM 0-7
         --------------------------
+  XXX README.md
 
   References:
 
@@ -1438,7 +1437,7 @@ _MSG1_END=*
  #$a5 #$cb #$e5 #$4d #$90 #$e0 #$4c #$53 #$ee #$c9 #$28 #$b0 #$9b #$a8 #$a5 #$c8
  #$60 #$ea #$ea #$98 #$aa #$a0 #$6e #$20 #$c4 #$e3 #$8a #$a8 #$20 #$c4 #$e3 #$a0
  #$72 #$4c #$c4 #$e3 #$20 #$15 #$e7 #$06 #$ce #$26 #$cf #$30 #$fa #$b0 #$dc #$d0
- #$04 #$c5 #$ce #$b0 #$d6 #$60 #$20 #$15 #$e7 #$b1 #$ce #$94 #$bf #$4c #$08 #$e7
+ #$04 #$c5 #$ce #$b0 #$d6 #$60 #$20 #$15 #$e7 #$b1 #$ce #$94 #$a7 #$4c #$08 #$e7
 
 *=$ef00
  #$20 #$34 #$ee #$a5 #$ce #$48 #$20 #$15 #$e7 #$68 #$91 #$ce #$60 #$ff #$ff #$ff
