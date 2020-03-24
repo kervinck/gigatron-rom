@@ -116,27 +116,26 @@
 #  DONE Apple-1: Include Mastermind and 15-Puzzle
 #  DONE Apple-1: Include assembler
 #  DONE Apple-1: Intercept cassette interface
+#  XXX  Horizon Easter Egg
+#  XXX  Reduce the Pictures application ROM footprint #120
+#  XXX  Loader: make noise while loading (only channel 1 is safe to use)
 #  XXX  Add CMPHS/CMPHU instructions to vCPU XXX Still needs testing
 #  XXX  GTOS: Simple command line interface (solve "EXE vs COM" dilemma)
 #  XXX  GTOS: Tutorial on formatting FAT32 partitions. (Linux=mkdosfs, apple=newfs_msdos)
 #  XXX  Racer: Make noise when crashing
 #  XXX  Racer: Control speed with up/down (better for TypeC controllers)
-#  XXX  Reduce the Pictures application ROM footprint #120
 #  XXX  Main: Some startup logo as intro? Rotating 3D letters?
 #  XXX  Main: Better startup chime
 #  XXX  Faster SYS_Exec_88, with start address (GT1)?
 #  XXX  Let SYS_Exec_88 clear channelMask when loading into live channels
 #  XXX  ROM functions: SYS_PrintString, control codes, SYS_DrawChar, SYS_Newline
 #  XXX  Babelfish freeze at power-on?
-#  XXX  Loader: make noise while loading (only channel 1 is safe to use)
-#  XXX  v6502: add 65c02 opcodes? http://nparker.llx.com/a2/opcodes.html
 #  XXX  Video: Increase vertical resolution with same videoTable (160 lines?)
-#  XXX  Horizon Easter Egg
 #
 #  Ideas for ROM v6+
 #  XXX  Pucrunch (well documented) or eximozer 3.0.2 (better compression)
 #  XXX  SPI: Think about SPI modes (polarities)
-#  XXX  I2C: Turn SPI port 2-3 into a I2C port
+#  XXX  I2C: Turn SPI port 2-3 into a I2C port as suggesred by jwolfram
 #  XXX  Reset.c and Main.c (that is: port these from GCL to C, but requires LCC fixed)
 #  XXX  Need keymaps in ROM? (perhaps undocumented if not tested)
 #  XXX  FrogStroll (not in Contrib/)
