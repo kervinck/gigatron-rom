@@ -10,17 +10,6 @@ gcl0x
 
 {
   Issues:
-
-  XXX Mini-assembler: add help text
-        --------------------------
-        USAGE:
-         !800:PHA    ASSEMBLE 1ST
-         ! LDA #1    ASSEMBLE NEXT
-         !800L       DISASSEMBLE
-         !L          NEXT SCREEN
-         !(RETURN)   EXIT
-         BEER        DIRECT ENTER
-        --------------------------
   XXX README.md
 
   References:
@@ -46,6 +35,9 @@ gcl0x
 
   Online Apple 1 Emulator (Hit [RESET] to enter WozMon):
         https://www.scullinsteel.com/apple1/
+
+  Jeff Jetton's 15-puzzle for the Apple-1
+        https://www.applefritter.com/content/my-first-apple-i-program-15-puzzle
 
 
   Zero page usage:
@@ -367,8 +359,23 @@ _CHARIN=*       #_LDA_          ##_KBDCR        {WAIT FOR STROBE}
 |       Mini-assembler (and disassembler)                               |
 |                                                                       |
 +-----------------------------------------------------------------------}
+*=$be5
 
-*=$bee          #_JMP_          ##_CMDLINE      { Courtesy Jac Goudsmit }
+_USAGE1=*       #_JSR_          ##_ECHO
+                #_INX_
+_USAGE=*        #_LDAAX_        ##_USAGE2       { WozMon has X=0 on G }
+                #_BNE_          #@_USAGE1
+{$0BEE}         #_JMP_          ##_CMDLINE      { BEER. Courtesy Jac Goudsmit }
+
+_USAGE2=*                                  #$0D
+                `USAGE:                    #$0D
+                ``!800:P
+*=$c00                 `HA````ASSEMBLE`1ST  #$0D
+                ``!`LDA`#1````ASSEMBLE`NEXT #$0D
+                ``!800L```````DISASSEMBLE   #$0D
+                ``!L``````````NEXT`SCREEN   #$0D
+                ``!(RETURN)```EXIT          #$0D
+                ``BEER````````SKIP`USAGE    #0
 
 {
         WRITTEN BY STEVE WOZNIAK & ALLEN BAUM
@@ -743,7 +750,7 @@ _NXTCHR=*       #_LDAAY_        ##_IN           { GET CHAR }
                                                 {   X=0: NO NUMBER }
                                                 {   X=1: NUMBER }
 
-_XMON=* {EEE}   #_JMP_          ##_CMDLINE      { [Gigatron] Easy to remember entry point }
+_XMON=* {$0EEE} #_JMP_          ##_USAGE        { [Gigatron] Easy to remember entry point }
 
 _PCADJ=*        #_LDAZ_         #_LENGTH        { 0=1-BYTE, 1=2-BYTE, 2=3-BYTE. }
                 #_SEC_
