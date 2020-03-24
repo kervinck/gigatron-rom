@@ -1,6 +1,7 @@
 gcl0x
 
-4--                             {Reserve bottom of stack for saved context}
+zpReset=$34                     {Relocate variables because vIRQ uses $30..$33}
+
 \vIRQ_DEVROM p=
 [def                            {Interrupt handler}
   $901 p= peek 1+ p.            {Flash second pixel}

@@ -104,21 +104,21 @@
 #  DONE Replace egg with something new
 #  DONE Split interface.json and interface-dev.json
 #  DONE MSBASIC
-#  XXX  MSBASIC spurious pi-symbols
 #  DONE Speed up SetMemory by 300% using bursts #126
 #  DONE Discoverable ROM contents #46
 #  DONE Vertical blank interrupt #125
 #  DONE TinyBASIC: Support hexadecimal numbers $....
-#  DONE Expander: Auto-detect banking, 64K and 128K
+#  XXX  Expander: Auto-detect banking, 64K and 128K XXX Fix screen corruption
 #  DONE Expander: Boot from *.GT1 file if SDC/MMC detected
+#  DONE Apple-1: Memory mapped PIA emulation using interrupt (D010-D013)
+#  DONE Apple-1: Include A1 Integer BASIC
+#  DONE Apple-1: Suppress lower case?
+#  DONE Apple-1: Include Mastermind and 15-Puzzle
+#  DONE Apple-1: Include assembler
+#  DONE Apple-1: Intercept cassette interface
 #  XXX  Add CMPHS/CMPHU instructions to vCPU XXX Still needs testing
 #  XXX  GTOS: Simple command line interface (solve "EXE vs COM" dilemma)
 #  XXX  GTOS: Tutorial on formatting FAT32 partitions. (Linux=mkdosfs, apple=newfs_msdos)
-#  DONE Apple-1: Memory mapped PIA emulation using interrupt (D010-D013)
-#  DONE Apple-1: Include A1 BASIC
-#  XXX  Apple-1: Original 2514 font? Suppress lower case?
-#  DONE Apple-1: Include assembler
-#  DONE Apple-1: Intercept cassette interface
 #  XXX  Racer: Make noise when crashing
 #  XXX  Racer: Control speed with up/down (better for TypeC controllers)
 #  XXX  Reduce the Pictures application ROM footprint #120
@@ -131,11 +131,13 @@
 #  XXX  Loader: make noise while loading (only channel 1 is safe to use)
 #  XXX  v6502: add 65c02 opcodes? http://nparker.llx.com/a2/opcodes.html
 #  XXX  Video: Increase vertical resolution with same videoTable (160 lines?)
+#  XXX  Horizon Easter Egg
 #
 #  Ideas for ROM v6+
 #  XXX  Pucrunch (well documented) or eximozer 3.0.2 (better compression)
 #  XXX  SPI: Think about SPI modes (polarities)
-#  XXX  Reset.c and Main.c (that is: port these from GCL to C)
+#  XXX  I2C: Turn SPI port 2-3 into a I2C port
+#  XXX  Reset.c and Main.c (that is: port these from GCL to C, but requires LCC fixed)
 #  XXX  Need keymaps in ROM? (perhaps undocumented if not tested)
 #  XXX  FrogStroll (not in Contrib/)
 #  XXX  How it works memo: brief description of every software function
@@ -2288,13 +2290,13 @@ ld(-20/2)                       #18
 #       LUP  $xx        -> vRTI and switch interpreter type as stored in [$xx]
 fillers(until=251-11)
 label('vRTI#15')
-ld([0xfc])                      #15 Continue with vCPU in the same timeslice (faster)
+ld([0x30])                      #15 Continue with vCPU in the same timeslice (faster)
 st([vPC])                       #16
-ld([0xfd])                      #17
+ld([0x31])                      #17
 st([vPC+1])                     #18
-ld([0xfe])                      #19
+ld([0x32])                      #19
 st([vAC])                       #20
-ld([0xff])                      #21
+ld([0x33])                      #21
 st([vAC+1])                     #22
 ld(hi('REENTER'),Y)             #23
 jmp(Y,'REENTER')                #24
@@ -5027,13 +5029,13 @@ runVcpu(186-82-extra,           #82 Application cycles (scan line 0)
     returnTo='vBlankFirst#186')
 
 label('vBlankFirst#82')
-st([0xfc])                      #82 Save vPC
+st([0x30])                      #82 Save vPC
 ld([vPC+1])                     #83
-st([0xfd])                      #84
+st([0x31])                      #84
 ld([vAC])                       #85 Save vAC
-st([0xfe])                      #86
+st([0x32])                      #86
 ld([vAC+1])                     #87
-st([0xff])                      #88
+st([0x33])                      #88
 ld([Y,vIRQ_DEVROM])             #89 Set vPC to vIRQ
 suba(2)                         #90
 st([vPC])                       #91
@@ -5053,13 +5055,13 @@ runVcpu(186-100-extra,          #100 Application cycles (scan line 0)
 label('vRTI#18')
 ld([X])                         #18
 st([vCpuSelect])                #19
-ld([0xfc])                      #20
+ld([0x30])                      #20
 st([vPC])                       #21
-ld([0xfd])                      #22
+ld([0x31])                      #22
 st([vPC+1])                     #23
-ld([0xfe])                      #24
+ld([0x32])                      #24
 st([vAC])                       #25
-ld([0xff])                      #26
+ld([0x33])                      #26
 st([vAC+1])                     #27
 nop()                           #0
 ld(hi('RESYNC'),Y)              #1

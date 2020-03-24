@@ -35,7 +35,7 @@ KBDCR   equ $D011           ; Keyboard control: Indicator that a new input
 PRBYTE  equ $FFDC           ; WozMon routine to diaplay register A in hex
 ECHO    equ $FFEF           ; WozMon routine to display register A char
 GETLINE equ $FF1F           ; Entry point back to WozMonitor
-ERR_MAX equ $09             ; Bad game inputs before redisplaying board
+ERR_MAX equ $08             ; Bad game inputs before redisplaying board
 
 
         ; Zero-page variables

@@ -11,8 +11,8 @@
 ; Uses disassembly copyright 2003 Eric Smith <eric@brouhaha.com>
 ; http://www.brouhaha.com/~eric/retrocomputing/apple/apple1/basic/
 
-Z1d     =       $1D     ;[Gigatron] same as vTmp, so harmless
-ch      =       $34     ;[Gigatron] was: $24 ; horizontal cursor location
+Z1d     =       $1D     ; [Gigatron] same as vTmp, so harmless
+ch      =       $81     ; [Gigatron] was: $24 ; horizontal cursor location
 var     =       $48     ; (2 bytes)
 lomem   =       $4A     ; lower limit of memory used by BASIC (2 bytes)
 himem   =       $4C     ; upper limit of memory used by BASIC (2 bytes)
@@ -47,23 +47,37 @@ rnd     =       $4E     ; random number (2 bytes)
 ;       token_index                                               F1
 ;       ------------------------------------------------------------
 
-;stksize = 32
-stksize = 24            ; [Gigatron]
+;
+; Gigatron:
+;
+stksize = 24            ; [Gigatron] was: 32
+;       ---------------------------------------------------------------
+;       noun_stk_l      50....67
+;       syn_stk_h         58....6F
+;       noun_stk_h_str             88....9F
+;       syn_stk_l                    90....A7
+;       noun_stk_h_int                       A8....BF
+;       txtndxstk                              B0....C7
+;       text_index                                     C8
+;       tokndxstk                                         D1....E8
+;       token_index                                               E9
+;       v6502 stack                                           E0.....FF
+;       ---------------------------------------------------------------
 
 noun_stk_l =    $50
-syn_stk_h =     $58     ; through $77
-noun_stk_h_str = $78
-syn_stk_l  =    $80     ; through $9F
-noun_stk_h_int = $A0
-txtndxstk  =    $A8     ; through $C7
+syn_stk_h =     $58     ; [Gigatron] through 6F, was: $58.$77
+noun_stk_h_str = $88    ; [Gigatron] through 9F, was: $78.$97
+syn_stk_l  =    $90     ; [Gigatron] through A7, was: $80.$9F
+noun_stk_h_int = $A8    ; [Gigatron] was: $A0
+txtndxstk  =    $B0     ; [Gigatron] was: $A8.$C7
 ;text_index =    $C8     ; index into text being tokenized (in buffer at $0200)
-text_index = txtndxstk + stksize
+text_index = txtndxstk + stksize ; = $C8
 leadbl  =       $C9     ; leading blanks
 pp      =       $CA     ; start of program (2 bytes)
 pv      =       $CC     ; end of variables (2 bytes)
 acc     =       $CE     ; main accumulator (2 bytes)
 srch    =       $D0     ; search var
-tokndxstk =     $D1     ; through $F0
+tokndxstk =     $D1     ; [Gigatron] through $E8, was: $D1.$F0
 srch2   =       $D2     ; variable search pointer
 if_flag =       $D4     ; if/then fail flag
 cr_flag =       $D5     ; cariage return flag for print
@@ -73,43 +87,42 @@ x_save  =       $D8     ; temp Xreg save
 run_flag =      $D9
 aux     =       $DA     ; (2 bytes)
 pline   =       $DC     ; pointer to current program line (2 bytes)
-pverb   =       $DE     ;[Gigatron] was: $E0.$E1 ; pointer to current verb (2 bytes)
-p1      =       $E0     ;[Gigatron] was: $E2.$E3
-p2      =       $35     ;[Gigatron] was: $E4.$E5
-p3      =       $37     ;[Gigatron] was: $E6.$E7
-; XXX $39 is unused
+pverb   =       $DE     ; [Gigatron] was: $E0.$E1 ; pointer to current verb (2 bytes)
+p1      =       $42     ; [Gigatron] was: $E2.$E3
+p2      =       $44     ; [Gigatron] was: $E4.$E5
+p3      =       $46     ; [Gigatron] was: $E6.$E7
 ;token_index =   $F1     ; pointer used to write tokens into buffer
-token_index = tokndxstk + stksize
-pcon    =       $3A     ;[Gigatron] was: $F2.$F3; temp used in decimal output (2 bytes)
-auto_inc =      $3C     ;[Gigatron] was: $F4.$F5 XXX conflicts with _j
-auto_ln =       $3E     ;[Gigatron] was: $F6.$F7
-auto_flag =     $40     ;[Gigatron] was: $F8
-char    =       $41     ;[Gigatron] was: $F9
-leadzr  =       $42     ;[Gigatron] was: $FA
-for_nest_count = $43    ;[Gigatron] was: $FB  ; count of active (nested) FOR loops
-gosub_nest_count = $44  ;[Gigatron] was: $FC  ; count of active (nested) subroutines calls (GOSUB)
-synstkdx =      $45     ;[Gigatron] was: $FD
-synpag  =       $46     ;[Gigatron] was: $FE.$FF (2 bytes)
+token_index = tokndxstk + stksize ; $E9
+pcon    =       $72     ; [Gigatron] was: $F2.$F3 ; temp used in decimal output (2 bytes)
+auto_inc =      $74     ; [Gigatron] was: $F4.$F5
+auto_ln =       $76     ; [Gigatron] was: $F6.$F7
+auto_flag =     $78     ; [Gigatron] was: $F8
+char    =       $79     ; [Gigatron] was: $F9
+leadzr  =       $82     ; [Gigatron] was: $FA
+for_nest_count = $83    ; [Gigatron] was: $FB  ; count of active (nested) FOR loops
+gosub_nest_count = $84  ; [Gigatron] was: $FC  ; count of active (nested) subroutines calls (GOSUB)
+synstkdx =      $85     ; [Gigatron] was: $FD
+synpag  =       $86     ; [Gigatron] was: $FE.$FF (2 bytes)
 
 ; GOSUB stack, max eight entries
 ; note that the Apple II version has sixteen entries
-gstk_pverbl     =       $1100 ;[Gigatron] was: $0100    ; saved pverb
-gstk_pverbh     =       $1108 ;[Gigatron] was: $0100
-gstk_plinel     =       $1110 ;[Gigatron] was: $0100    ; saved pline
-gstk_plineh     =       $1118 ;[Gigatron] was: $0100
+gstk_pverbl     =       $1100 ; [Gigatron] was: $0100    ; saved pverb
+gstk_pverbh     =       $1108 ; [Gigatron] was: $0108
+gstk_plinel     =       $1110 ; [Gigatron] was: $0110    ; saved pline
+gstk_plineh     =       $1118 ; [Gigatron] was: $0118
 
 ; FOR stack, max eight entries
 ; note that the Apple II version has sixteen entries
-fstk_varl       =       $1200 ;[Gigatron] was: $0120   ; pointer to index variable
-fstk_varh       =       $1208 ;[Gigatron] was: $0128
-fstk_stepl      =       $1210 ;[Gigatron] was: $0130   ; step value
-fstk_steph      =       $1218 ;[Gigatron] was: $0138
-fstk_plinel     =       $1220 ;[Gigatron] was: $0140   ; saved pline
-fstk_plineh     =       $1228 ;[Gigatron] was: $0148
-fstk_pverbl     =       $1230 ;[Gigatron] was: $0150   ; saved pverb
-fstk_pverbh     =       $1238 ;[Gigatron] was: $0158
-fstk_tol        =       $1240 ;[Gigatron] was: $0160   ; "to" (limit) value
-fstk_toh        =       $1248 ;[Gigatron] was: $0168
+fstk_varl       =       $1200 ; [Gigatron] was: $0120   ; pointer to index variable
+fstk_varh       =       $1208 ; [Gigatron] was: $0128
+fstk_stepl      =       $1210 ; [Gigatron] was: $0130   ; step value
+fstk_steph      =       $1218 ; [Gigatron] was: $0138
+fstk_plinel     =       $1220 ; [Gigatron] was: $0140   ; saved pline
+fstk_plineh     =       $1228 ; [Gigatron] was: $0148
+fstk_pverbl     =       $1230 ; [Gigatron] was: $0150   ; saved pverb
+fstk_pverbh     =       $1238 ; [Gigatron] was: $0158
+fstk_tol        =       $1240 ; [Gigatron] was: $0160   ; "to" (limit) value
+fstk_toh        =       $1248 ; [Gigatron] was: $0168
 buffer  =       $0200
 KBD     =       $D010
 KBDCR   =       $D011
@@ -369,7 +382,7 @@ string_lit:
         INX
         JSR     Se1bc
 Le199:  LDA     rnd,X
-        CMP     syn_stk_h+30,X
+        CMP     noun_stk_h_str-2,X
         BCS     Le1b4
         INC     rnd,X
         TAY
@@ -424,11 +437,11 @@ string_eq:
         INY
         STY     noun_stk_l,X
 Le1f3:  LDA     himem+1,X
-        CMP     syn_stk_h+29,X
+        CMP     noun_stk_h_str-3,X
         PHP
         PHA
         LDA     rnd+1,X
-        CMP     syn_stk_h+31,X
+        CMP     noun_stk_h_str-1,X
         BCC     Le206
         PLA
         PLP
@@ -504,6 +517,7 @@ Le279:  RTS
 ; token $1f - "MOD"
 mod_op: JSR     See6c
         BEQ     Le244           ; Always taken
+        .byte   $FF             ; Unused
 
 ; Line edit loop
 Le280:  CMP     #$84            ; Ctrl-D?
@@ -521,12 +535,12 @@ Le294:  LDY     #$8B            ; "\\\n"
 Se299:  LDY     #$01
 Le29b:  DEY
         BMI     Le294
-        .byte   $2C             ;[Gigatron] Hop over next LDX ins.
-read_line_ldx:                  ;[Gigatron] Special entry point to
-        LDX     #$FF            ;[Gigatron]  init X for text_index.
+
 ; read a line from keyboard (using rdkey) into buffer
 read_line:
         JSR     rdkey
+        NOP
+        NOP
         JSR     cout
         CMP     #$8D            ; CR?
         BNE     Le280
@@ -549,9 +563,9 @@ prompt: LSR     run_flag
         JSR     prdec
         LDA     #$A0            ; Blank.
         JSR     cout
-Le2d1:  LDX     #$F7            ;[Gigatron] Was: $FF
+Le2d1:  LDX     #$FF
         TXS
-        JSR     read_line_ldx
+        JSR     read_line
         STY     token_index     ; Points at terminating "<-"
         TXA
         STA     text_index      ; Points one before first character
@@ -574,7 +588,7 @@ Le2fb:  LDA     (pverb),Y
         STA     acc-1,Y
         DEY
         BNE     Le2fb
-        JSR     delline         ; Also increments X!
+        JSR     delline         ; Also increments X as side effect
         LDA     token_index
         SBC     text_index
         CMP     #$04
@@ -607,7 +621,7 @@ Le33c:  LDA     p1
         LDA     p1+1
         SBC     pp+1
         BCS     Le326
-Le346:  LDA     p2,X            ; X begins as 1
+Le346:  LDA     p2,X            ; X starts as 1 because side effect in delline/find_line
         STA     pp,X
         DEX
         BPL     Le346
@@ -656,6 +670,7 @@ delline:
         LDA     p3+1
         STA     p1+1
         ; pp ..... p2 .. p3 ...
+        ;                ^^
         ;                p1
 Le395:  LDY     #$00
 Le397:  LDA     pp
@@ -675,6 +690,7 @@ Le3af:  DEC     p3
         STA     (p3),Y
         BCC     Le397
 Le3b7:  ; p2 .. p3 ..... p1 ...
+        ; ^^
         ; pp
         LDA     p3
         STA     pp
@@ -682,6 +698,7 @@ Le3b7:  ; p2 .. p3 ..... p1 ...
         STA     pp+1
         ; After:
         ; p2 .. p3 ..... p1 ...
+        ;       ^^
         ;       pp
         RTS
 
@@ -700,8 +717,9 @@ crout:  LDA     #$00            ; character output
 Le3d3:  INC     ch
 
 ; Send character to display. Char is in A.
-Le3d5:  ORA     #$80            ;[Gigatron] Set bit7
-        JMP     $FFEF           ;[Gigatron] And go through ECHO
+Le3d5:  JMP     $FFEF           ; [Gigatron] Go through modified ECHO
+        NOP                     ;
+        NOP                     ;
         NOP                     ;
         NOP                     ;
         NOP                     ;
@@ -941,7 +959,7 @@ find_line:
         LDA     pp+1
         STA     p3+1
 find_line1:
-        INX                     ; Side effect!
+        INX                     ; Side effect to clear X for Le346!
 find_line2:
         LDA     p3+1            ; Advance p2
         STA     p2+1
@@ -1167,7 +1185,7 @@ Le705:  LDA     (pverb),Y
         RTS
 
 push_ya_noun_stk:
-        STY     syn_stk_h+31,X
+        STY     noun_stk_h_str-1,X
 
 push_a_noun_stk:
         DEX
@@ -1440,7 +1458,7 @@ run_loop:
         BCC     getnext
         INY
 getnext:                        ; Fetch next statement from text
-        LDX     #$F7            ;[Gigatron] Was $FF
+        LDX     #$FF
         STX     run_flag
         TXS
         STA     pverb
@@ -1519,7 +1537,7 @@ Le8dc:  BEQ     go_errmess_4
         DEX
         LDY     for_nest_count
         LDA     fstk_toh-1,Y
-        STA     syn_stk_l+31,X
+        STA     syn_stk_l+31+16,X
         LDA     fstk_tol-1,Y
         LDY     #$00
         JSR     push_ya_noun_stk
@@ -1821,11 +1839,11 @@ print_str:
         INX
         LDA     rnd+1,X
         STA     aux
-        LDA     syn_stk_h+31,X
+        LDA     noun_stk_h_str-1,X
         STA     aux+1
         LDY     rnd,X
 Lee0f:  TYA
-        CMP     syn_stk_h+30,X
+        CMP     noun_stk_h_str-2,X
         BCS     Lee1d
         LDA     (aux),Y
         JSR     cout
@@ -1840,7 +1858,7 @@ len_fn: INX
         LDA     #$00
         STA     noun_stk_h_str,X
         STA     noun_stk_h_int,X
-        LDA     syn_stk_h+31,X
+        LDA     noun_stk_h_str-1,X
         SEC
         SBC     rnd+1,X
         STA     noun_stk_l,X
@@ -1968,7 +1986,7 @@ Leef5:  RTS
 peek_fn:
         JSR     get16bit
         LDA     (acc),Y
-        STY     syn_stk_l+31,X
+        STY     syn_stk_l+31+16,X
         JMP     push_ya_noun_stk
 
 ; token $65 - "," for POKE statement

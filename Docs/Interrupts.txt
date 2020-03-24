@@ -17,7 +17,7 @@ around to 0 (and the interrupt vector is non-zero).
 
 Interrupt vector: $1f6.$1f7
 
-Minimal context of vPC and vAC will be stored at $fc..$ff. The
+Minimal context of vPC and vAC will be stored at $30..$33. The
 mechanism won't save any further context (vLR, vSP, sysArgs, ...)!
 
 Return from interrupt sequence: 
@@ -30,9 +30,9 @@ time slice (48 cycles).
 
 If we potentially interrupt non-vCPU code (v6502), the interrupt
 handler must store, in zero page ($xx), the vAC value it receives.
-Upon entry, vAC holds additional state information that allows
-switching back to non-vCPU. For future extendibility, the handler
-must store the whole word.
+The programmer can decide on the address $xx. Upon entry, vAC holds
+additional state information that allows switching back to non-vCPU.
+For future extendibility, the handler must store the whole word.
 
         STW $xx
 
