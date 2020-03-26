@@ -9,9 +9,6 @@
 gcl0x
 
 {
-  Issues:
-  XXX README.md
-
   References:
 
   Apple-1 Operation Manual:
@@ -121,7 +118,8 @@ $10ff _p=                       {Put cursor on right side. This causes an automa
 
 &_Apple1 _vLR=                  {Prepare transfer to main loop}
 &_PRE_RESET                     {Start address for 6502 program}
-[ret]                           {Jump to Main (the brackets avoid the automatic vLR patch)}
+[ret]                           {Jump to Main (the brackets avoid the
+                                 automatic vLR patch by compilegcl.py)}
 
 {-----------------------------------------------------------------------+
 |                                                                       |
@@ -160,7 +158,7 @@ _GUESS=$EB      {[Gigatron] Was: $FB}
 _GUESS_plus4=$EF
 _GUESS_plus5=$F0
 
-_MSTMIND=*      #_LDXIM_        #$23            {[Gigatron] Include help}
+_MSTMIND=*      #_LDXIM_        #$24            {[Gigatron] Include help}
 _MSGLP=*        #_LDAAX_        ##_MSG_minus1
                 #_JSR_          ##_ECHO         {PRINT 'READY?'}
                 #_DEX_
@@ -224,7 +222,7 @@ _PLUS2=*        #_LDAZX_        #_GUESS_plus5   {DOES GUESS MATCH RANDOM NUMBER}
                 #_STAZX_        #_GUESS_plus5   {SET DIG OF GUESS TO $AB SO}
                 #_INY_                          {*  NO 'MINUS' MATCH.}
                 #_BNE_          #@_PLUS1        {INCR. WIN COUNTER AND LOOP.}
-                #_LDXIM_        #$2C            {IF WIN, OUTPUT WIN MESSAGE [Gigatron] Include help}
+                #_LDXIM_        #$2D            {IF WIN, OUTPUT WIN MESSAGE [Gigatron] Include help}
                 #_BNE_          #@_MSGLP        {*  AND BEGIN NEW GAME.}
 _PLUS3=*        #_INX_                          {*  NEXT DIGIT OF 'PLUS' SCAN.}
                 #_BNE_          #@_PLUS2
@@ -250,11 +248,13 @@ _MSG=*          #$BF                            {'?'}
                 #$C1                            {'A'}
                 #$C5                            {'E'}
                 #$D2                            {'R'}
-                #$8D #$B7 #$AD #$B0 #$A0 #$CD   {'GUESS FIVE DIGITS FROM 0-7\r'}
-                #$CF #$D2 #$C6 #$A0 #$D3 #$D4
-                #$C9 #$C7 #$C9 #$C4 #$A0 #$C5
-                #$D6 #$C9 #$C6 #$A0 #$D3 #$D3
-                #$C5 #$D5 #$C7
+                #$8D                            {CR.}
+                #$8D                            {CR.}
+                #$B7 #$AD #$B0 #$A0 #$CD #$CF   {'GUESS FIVE DIGITS FROM 0-7'}
+                #$D2 #$C6 #$A0 #$D3 #$D4 #$C9
+                #$C7 #$C9 #$C4 #$A0 #$C5 #$D6
+                #$C9 #$C6 #$A0 #$D3 #$D3 #$C5
+                #$D5 #$C7
                 #$8D                            {CR.}
                 #$8D                            {CR.}
                 #$CE                            {'N'}
@@ -885,7 +885,7 @@ _vIRQ_ENTER=*
       _p 2- _p=]                { 2 pixels and let wozmon fit on a small screen}
     0 _PIA.                     {Clear DSP}
     &_KBD _PIA= peek            {If last key press compares equal to the char}
-    [if<>0 _tmpChar^ 255&]      { that was just emitted (or 0, for wozmon),}
+    [if<>0 _tmpChar^ 127&]      { that was just emitted (or 0, for wozmon),}
     [if=0 _PIA:]                { then also clear KBDCR. This is NOT how the}
                                 { true PIA works, but it fools most programs...}
     31 <_cursorTimer.]          {Restart the cursor cycle. This prevents it}
