@@ -112,10 +112,10 @@
 #  DONE Expander: Boot from *.GT1 file if SDC/MMC detected
 #  DONE Apple-1: Memory mapped PIA emulation using interrupt (D010-D013)
 #  DONE Apple-1: Include A1 Integer BASIC
-#  DONE Apple-1: Suppress lower case?
+#  DONE Apple-1: Suppress lower case
 #  DONE Apple-1: Include Mastermind and 15-Puzzle
-#  DONE Apple-1: Include assembler
-#  DONE Apple-1: Intercept cassette interface
+#  DONE Apple-1: Include mini-assembler
+#  DONE Apple-1: Intercept cassette interface = menu
 #  XXX  Horizon Easter Egg
 #  XXX  Reduce the Pictures application ROM footprint #120
 #  XXX  Loader: make noise while loading (only channel 1 is safe to use)

@@ -3,7 +3,6 @@
 ; Modifications for Gigatron by Marcel van Kervinck <marcelk@bitpit.net>
 ;       - Zero-page and stack area arrays rearranged
 ;       - Output through wozmon ECHO ($FFEF)
-;       - Stack from $F7 instead of $1FF
 ;
 ; Modifications to build with CC65 by Jeff Tranter <tranter@pobox.com>
 ;
@@ -47,10 +46,7 @@ rnd     =       $4E     ; random number (2 bytes)
 ;       token_index                                               F1
 ;       ------------------------------------------------------------
 
-;
 ; Gigatron:
-;
-stksize = 24            ; [Gigatron] was: 32
 ;       ---------------------------------------------------------------
 ;       noun_stk_l      50....67
 ;       syn_stk_h         58....6F
@@ -63,6 +59,7 @@ stksize = 24            ; [Gigatron] was: 32
 ;       token_index                                               E9
 ;       v6502 stack                                           E0.....FF
 ;       ---------------------------------------------------------------
+stksize = 24            ; [Gigatron] was: 32
 
 noun_stk_l =    $50
 syn_stk_h =     $58     ; [Gigatron] through 6F, was: $58.$77
