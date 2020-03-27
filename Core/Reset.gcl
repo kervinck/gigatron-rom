@@ -32,10 +32,13 @@ $1f8 CtrlBits=
         sector read and flush it
   }
 
-  0 $7c.                        {Setup ctrl detection}
   \SYS_ExpanderControl_v4_40    {SYS function}
-  _sysFn= $7c 40!!              {Disable SPI, set MOSI low, bank 1}
-  $7c, [if<>0
+  _sysFn=
+
+  $aa $7c.                      {I/O expander detection}
+  $7c 40!!                      { Expanded: Disable SPI, set MOSI low, bank 1}
+                                { Unexpanded: Store undefined value in [$7c]}
+  $7c, $aa^ [if<>0              {Note: doesn't work if undefined value was $aa!}
     0 CtrlBits.                 {No expander board detected}
   else
     $8024 q=                    {sysArgs0 + 32K}
@@ -44,13 +47,13 @@ $1f8 CtrlBits=
     _sysArgs0=                  {Copy result in sysArgs}
     255^ q.                     {Invert memory value again}
     _sysArgs0^                  {Compare with inverted copy}
-    [if<>0                      {If different we detected 128K}
+    [if<>0                      {If different there we have an A16 and 128K}
       $31 Char= PrintChar!      {'1'}
-      112 i=]                   {28*4 for '28' below}
+      112 i=]                   {28*4 to give '28' below}
     $807c 40!!                  {Set MOSI high, bank 1}
   ]
 
-  { Convert memory page count to K in decimal }
+  { Convert memory page count to K in two decimals }
 
   $2f2f Char= i                 {Two ASCII counters, both starting at '0'-1}
   [do <Char++ 40- if>=0loop] 40+{Count number of 10K chunks}
