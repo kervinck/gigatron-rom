@@ -84,8 +84,8 @@ FaceRight!                      {Moving right}
   [do \videoY, 179^ if<>0loop]  {Wait for start of vertical blank}
 
   Image \sysArgs0: p o+         {Setup SYS call}
-  64!                           {Draw first half}
-  64!                           {Draw second half}
+  64!!                          {Draw first half}
+  64!!                          {Draw second half}
 
   p u+ v+ p=                    {Update position}
   255& 148^ [if=0 FaceLeft!]    {Reached right border}

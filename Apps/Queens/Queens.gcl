@@ -20,8 +20,8 @@ $ffff FFFF=
 
     0% {cols} next^ [if<>0
       cols=
-      2% {diagL} next^ 1<< {LSLW} diagL=
-      4% {diagR} next^ 48! {LSRW} diagR=
+      2% {diagL} next^ 1<<  {LSLW} diagL=
+      4% {diagR} next^ 48!! {LSRW} diagR=
       Search!
 
       avail next^ avail=

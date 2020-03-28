@@ -10,78 +10,78 @@
 gcl0x
 
 {-----------------------------------------------------------------------+
-|                       RAM Page 2                                      |
+|                       RAM page 2                                      |
 +-----------------------------------------------------------------------}
 
-\Overworld midiStream=          { MIDI data }
+\Overworld midiStream=          {MIDI data}
 
-$1fc midiChannels=              { Reset audio system }
-2- ptr= $200 ptr:               { Channel 1: Pulse }
->ptr++       ptr:               { Channel 2: Pulse }
->ptr++  $100 ptr:               { Channel 3: Triangle }
->ptr++  $068 ptr:               { Channel 4: Metallic (softened) }
+$1fc midiChannels=              {Reset audio system}
+2- ptr= $200 ptr:               {Channel 1: Pulse}
+>ptr++       ptr:               {Channel 2: Pulse}
+>ptr++  $100 ptr:               {Channel 3: Triangle}
+>ptr++  $068 ptr:               {Channel 4: Metallic (softened)}
 
-{ Play notes from MIDI stream, use this after your main VBlank loop }
-{ This player also works reasonably well in video mode 0 }
+{Play notes from MIDI stream, use this after your main VBlank loop}
+{This player also works reasonably well in video mode 0}
 [def
-  midiNow midiNext- 128&        { Signed comparison of low 8-bits }
-  [if<>0 ret]                   { Return if midiNow < midiNext }
+  midiNow midiNext- 128&        {Signed comparison of low 8-bits}
+  [if<>0 ret]                   {Return if midiNow < midiNext}
 
-  push                          { Execute MIDI commands otherwise }
+  push                          {Execute MIDI commands otherwise}
   [do
-    midiStream, midiCommand=    { midiCommand = Peek(midiStream) }
-    $f0& i=                     { Clear channel bits }
-    <midiStream++               { midiStream.lo++ }
+    midiStream, midiCommand=    {midiCommand = Peek(midiStream)}
+    $f0& i=                     {Clear channel bits}
+    <midiStream++               {midiStream.lo++}
 
-    i $80& [if=0                { MIDI command $00: delay }
-      midiCommand [if=0 Time=]  { Reset the displayed timer }
-      midiNext+ midiNext=       { Keep pace }
+    i $80& [if=0                {MIDI command $00: delay}
+      midiCommand [if=0 Time=]  {Reset the displayed timer}
+      midiNext+ midiNext=       {Keep pace}
       pop ret]
 
-    i $90^ [if=0                { MIDI command $90: start note }
+    i $90^ [if=0                {MIDI command $90: start note}
       MidiStartNote! loop]
 
-    $10^ [if=0                  { MIDI command $80: stop note }
+    $10^ [if=0                  {MIDI command $80: stop note}
       MidiEndNote! loop]
 
-    $50^ [if=0                  { MIDI command $d0: new address }
+    $50^ [if=0                  {MIDI command $d0: new address}
       midiStream; midiStream=]
     loop]
 ] PlayMidi=
 
 [def
-  \notesTable ptr=              { Note-to-frequency ROM table }
-  midiStream, 11- 1<< ptr+      { Map MIDI note to Gigatron index }
-  ptr= 0? <midiNote.            { midiNote.lo = LUP(ptr+0) }
-  ptr  1? >midiNote.            { midiNote.hi = LUP(ptr+1) }
-  midiCommand 3& >ptr.          { ptr.hi = channel }
-  0 <ptr.                       { ptr.lo = 0 }
-  ptr midiChannels+ ptr=        { ptr += midiChannels }
-  midiNote ptr:                 { Doke(ptr, midiNote) }
+  \notesTable ptr=              {Note-to-frequency ROM table}
+  midiStream, 11- 1<< ptr+      {Map MIDI note to Gigatron index}
+  ptr= 0? <midiNote.            {midiNote.lo = LUP(ptr+0)}
+  ptr  1? >midiNote.            {midiNote.hi = LUP(ptr+1)}
+  midiCommand 3& >ptr.          {ptr.hi = channel}
+  0 <ptr.                       {ptr.lo = 0}
+  ptr midiChannels+ ptr=        {ptr += midiChannels}
+  midiNote ptr:                 {Doke(ptr, midiNote)}
 
-  midiStream, 255^ $72+ >ptr.   { Y coordinate }
-  midiNow <ptr.                 { X coordinate }
-  63 ptr.                       { Plot a white dot }
+  midiStream, 255^ $72+ >ptr.   {Y coordinate}
+  midiNow <ptr.                 {X coordinate}
+  63 ptr.                       {Plot a white dot}
 
-  <midiStream++                 { midiStream.lo++ }
+  <midiStream++                 {midiStream.lo++}
   ret
 ] MidiStartNote=
 
 [def
-  <ptr.                         { ptr.lo = 0 }
-  midiCommand 3& >ptr.          { ptr.hi = channel }
-  ptr midiChannels+ ptr=        { ptr += midiChannels }
-  0 ptr:                        { Doke(ptr,0) }
+  <ptr.                         {ptr.lo = 0}
+  midiCommand 3& >ptr.          {ptr.hi = channel}
+  ptr midiChannels+ ptr=        {ptr += midiChannels}
+  0 ptr:                        {Doke(ptr,0)}
   ret
 ] MidiEndNote=
 
 {-----------------------------------------------------------------------+
-|}>\vLR++ ret{          RAM Page 3                                      |
+|}>\vLR++ ret{          RAM page 3                                      |
 +-----------------------------------------------------------------------}
 
 *=$0300
 
-{ Render elapsed time as M:SS.s, skipping unchanged digits for speed }
+{Render elapsed time as M:SS.s, skipping unchanged digits for speed}
 [def
   push
   Time Value=
@@ -95,7 +95,7 @@ $1fc midiChannels=              { Reset audio system }
   pop ret
 ] PrintTime=
 
-{ Helper for PrintTime }
+{Helper for PrintTime}
 [def
   $30 Char=
   Value Radix- [if>=0
@@ -108,77 +108,77 @@ $1fc midiChannels=              { Reset audio system }
   Char ret
 ] ExtractDigit=
 
-{ Print ASCII character (32..127) on screen using the 5x8 pixel built-in font }
+{Print ASCII character (32..127) on screen using the 5x8 pixel built-in font}
 [def
-  82-                           { Map ASCII code to offset in font table }
-  [if<0 50+ i= \font32up        { First page for ASCII 32..81 }
-   else     i= \font82up] j=    { Second page is ASCII 82..127 }
-  i 2<< i+                      { Multiply by 5 }
-  j+ j=                         { Add page address to reach bitmap data }
-  \SYS_VDrawBits_134 \sysFn:    { SYS function }
-  Pos \sysArgs4:                { Position of character }
-  5 [do i=                      { Loop to draw 5 vertical slices of 8 pixels }
-    j 0? \sysArgs2.             { Get byte from ROM using `LUP 0' instruction }
-    134!                        { Call SYS function to draw 8 vertical pixels }
-    <j++ <\sysArgs4++           { Advance to next slice in ROM and on screen }
-    i 1- if>0loop]              { Looping }
-  Pos ret                       { Return position }
+  82-                           {Map ASCII code to offset in font table}
+  [if<0 50+ i= \font32up        {First page for ASCII 32..81}
+   else     i= \font82up] j=    {Second page is ASCII 82..127}
+  i 2<< i+                      {Multiply by 5}
+  j+ j=                         {Add page address to reach bitmap data}
+  \SYS_VDrawBits_134 \sysFn:    {SYS function}
+  Pos \sysArgs4:                {Position of character}
+  5 [do i=                      {Loop to draw 5 vertical slices of 8 pixels}
+    j 0? \sysArgs2.             {Get byte from ROM using `LUP 0' instruction}
+    134!!                       {Call SYS function to draw 8 vertical pixels}
+    <j++ <\sysArgs4++           {Advance to next slice in ROM and on screen}
+    i 1- if>0loop]              {Looping}
+  Pos ret                       {Return position}
 ] PrintChar=
 
 {-----------------------------------------------------------------------+
-|}>\vLR++ ret{          RAM Page 4                                      |
+|}>\vLR++ ret{          RAM page 4                                      |
 +-----------------------------------------------------------------------}
 
 *=$0400
 
-{ Main }
+{Main}
 
-$500c Pos=                      { Center text message }
-$3f20 _sysArgs0=                { White on blue }
-[def `-:--.-`Overworld #0] ptr= { Message string }
-[do ptr, if<>0 PrintChar!       { Print message }
+$500c Pos=                      {Center text message}
+$3f20 _sysArgs0=                {White on blue}
+[def `-:--.-`Overworld #0] ptr= {Message string}
+[do ptr, if<>0 PrintChar!       {Print message}
   6+ Pos= <ptr++ loop]
 
-Prev1= Prev2= Prev3=            { Reset timer digits }
+Prev1= Prev2= Prev3=            {Reset timer digits}
 
-159 \frameCount. midiNow=       { For smooth start of scroller }
+159 \frameCount. midiNow=       {For smooth start of scroller}
 midiNext=
 
-$101 dX1=                       { Video table: line 0 (top of screen) }
-$181 dX2=                       { Video table: line 64 }
+$101 dX1=                       {Video table: line 0 (top of screen)}
+$181 dX2=                       {Video table: line 64}
 
-{ Loop forever }
+{Loop forever}
 
 [do
-  [do \videoY, 1& if=0loop]     { Wait for vertical blank interval }
+  [do \videoY, 1& if=0loop]     {Wait for vertical blank interval}
 
-  midiNow midiLast=             { Use video frame counter as absolute }
-  \frameCount, midiNow=         {  reference to track elapsed time }
+  midiNow midiLast=             {Use video frame counter as absolute}
+  \frameCount, midiNow=         { reference to track elapsed time}
 
-  160-    dX1.                  { Scroll top 64 lines }
-  255^ 1+ dX2.                  { Counter scroll bottom of screen }
+  160-    dX1.                  {Scroll top 64 lines}
+  255^ 1+ dX2.                  {Counter scroll bottom of screen}
 
-  midiLast \sysArgs4.           { Clear screen area for scroller }
-  [do midiNow- 128& if<>0       { Can be more than 1 frame that passed }
-    <_sysArgs4++                { Clear at X offset [midiLast+1..midiNow] }
-    $40 [do $48^ \sysArgs5.     { Iterate from $8 to $48 }
-      134!                      { Clear pixels with SYS_VDrawBits_134 }
-      \sysArgs5, 8+ $48^        { In steps of 8 }
+  midiLast \sysArgs4.           {Clear screen area for scroller}
+  [do midiNow- 128& if<>0       {Can be more than 1 frame that passed}
+    <_sysArgs4++                {Clear at X offset [midiLast+1..midiNow]}
+    $40 [do $48^ \sysArgs5.     {Iterate from $8 to $48}
+      134!!                     {Clear pixels with SYS_VDrawBits_134}
+      \sysArgs5, 8+ $48^        {In steps of 8}
       if<>0loop]
     \sysArgs4,
     loop]
 
-  PlayMidi!                     { Play (and plot) notes from MIDI stream }
+  PlayMidi!                     {Play (and plot) notes from MIDI stream}
 
-  $4fc ptr= ptr;                { Only if channel 4 is playing, }
-  [if<>0 $4fb ptr=              {  turn its waveform from metallic into }
-    \entropy, $fc& ptr.]        {  true noise by wavX modulation }
+  $4fc ptr= ptr;                {Only if channel 4 is playing,}
+  [if<>0 $4fb ptr=              { turn its waveform from metallic into}
+    \entropy, $fc& ptr.]        { true noise by wavX modulation}
 
-  10 \soundTimer.               { Always keep sound open for a few more frames }
+  10 \soundTimer.               {Always keep sound open for a few more frames}
 
-  midiNow midiLast- 255&        { Time is for display purposes only }
+  midiNow midiLast- 255&        {Time is for display purposes only}
   Time+ Time=
-  $500c Pos= PrintTime!         { Draw timer on screen }
+  $500c Pos= PrintTime!         {Draw timer on screen}
 
   loop]
 
@@ -195,7 +195,7 @@ $181 dX2=                       { Video table: line 64 }
 
 _Overworld=*
 
-  #$00 { Reset display timer }
+  #$00 {Reset display timer}
   #$90 #$4c #$91 #$42 #$92 #$32 #$93 #$68 #$06 #$80 #$81 #$82 #$03 #$90 #$4c
   #$91 #$42 #$92 #$32 #$02 #$83 #$03 #$80 #$81 #$82 #$03 #$93 #$68 #$06
   #$83 #$03 #$90 #$4c #$91 #$42 #$92 #$32 #$93 #$68 #$05 #$80 #$81 #$82
@@ -730,7 +730,7 @@ _Overworld=*
 
   #$91 #$40 #$93 #$68 #$06 #$81 #$83 #$03 #$91 #$3c #$92 #$30 #$93 #$68
   #$06 #$81 #$82 #$05 #$83 #$06 #$93 #$68 #$06 #$83
-  #120 { 2 seconds break }
+  #120 {2 seconds break}
   #$d0 #$a0 #$4a
 
 {-----------------------------------------------------------------------+

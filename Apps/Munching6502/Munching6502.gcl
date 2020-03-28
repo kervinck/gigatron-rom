@@ -37,9 +37,9 @@ gcl0x
 
 0 {Black}
 [do
-  push                          { Save start address on stack }
-  23+                           { New color }
-  80!                           { Run v6502 until BRK }
-  pop                           { Restore start address }
-  loop]                         { Forever }
+  push                          {Save start address on stack}
+  23+                           {New color}
+  80!!                          {Run v6502 until BRK}
+  pop                           {Restore start address}
+  loop]                         {Forever}
 

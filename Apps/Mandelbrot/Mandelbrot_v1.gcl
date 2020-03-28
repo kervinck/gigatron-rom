@@ -43,7 +43,7 @@ gcl0x
     else
       {Shift prematurely in an attempt to avoid overflow, this is where
        the algorithm loses some accuracy}
-      B 48! {ShiftRight} B=
+      B 48!! {ShiftRight} B=
       shift 1- shift=]
 
     {Add partial product}
@@ -51,17 +51,17 @@ gcl0x
       A=
       C B+ C=]
 
-    bit 48! {ShiftRight} if<>0loop]
+    bit 48!! {ShiftRight} if<>0loop]
 
   {Normalise by shifting the word right}
   {Organized as a switch statement for some more speed}
-  shift 7^ [if=0 \SYS_LSRW7_30 \sysFn: {Shift Right 7} C 30! else
-  shift 6^ [if=0 \SYS_LSRW6_48 \sysFn: {Shift Right 6} C 48! else
-  shift 5^ [if=0 \SYS_LSRW5_50 \sysFn: {Shift Right 5} C 50! else
-  shift 4^ [if=0 \SYS_LSRW4_50 \sysFn: {Shift Right 4} C 50! else
-  shift 3^ [if=0 \SYS_LSRW3_52 \sysFn: {Shift Right 3} C 52! else
-  shift 2^ [if=0 \SYS_LSRW2_52 \sysFn: {Shift Right 2} C 52! else
-  shift 1^ [if=0{\SYS_LSRW1_48 \sysFn:}{Shift Right 1} C 48!]]]]]]] C=
+  shift 7^ [if=0 \SYS_LSRW7_30 \sysFn: {Shift Right 7} C 30!! else
+  shift 6^ [if=0 \SYS_LSRW6_48 \sysFn: {Shift Right 6} C 48!! else
+  shift 5^ [if=0 \SYS_LSRW5_50 \sysFn: {Shift Right 5} C 50!! else
+  shift 4^ [if=0 \SYS_LSRW4_50 \sysFn: {Shift Right 4} C 50!! else
+  shift 3^ [if=0 \SYS_LSRW3_52 \sysFn: {Shift Right 3} C 52!! else
+  shift 2^ [if=0 \SYS_LSRW2_52 \sysFn: {Shift Right 2} C 52!! else
+  shift 1^ [if=0{\SYS_LSRW1_48 \sysFn:}{Shift Right 1} C 48!!]]]]]]] C=
 
   {Apply sign to return value}
   sign [if<>0 0 C- else C]
@@ -163,7 +163,7 @@ $0400:
     32 [do
       i=
       Pen, 63& i- [if>=0 Pen. i 21& [if<>0 1 else 2] Level+ Level=]
-      i 48! {ShiftRight}
+      i 48!! {ShiftRight}
       if>0loop]
     {Level in 0..9}
     Pen. {Paint it black}
@@ -277,7 +277,7 @@ $0500:
   6+      Pos=
   \SYS_VDrawBits_134 \sysFn:
   $fb i= [do
-    fontData 0? fontData<++ \sysArgs2. 134!
+    fontData 0? fontData<++ \sysArgs2. 134!!
     \sysArgs4<++
     i<++ i if<>0loop]
   ret

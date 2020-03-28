@@ -255,7 +255,7 @@ $01df deek Pos=                 {Bottom character row in screen memory}
   [if<>0
     Expression!
     \SYS_Random_34 \sysFn:      {Prepare SYS call}
-    [do 34! if<0loop]           {Get positive random number}
+    [do 34!! if<0loop]          {Get positive random number}
     Divide!                     {Modulo expression}
     i Value=
   else
@@ -345,11 +345,11 @@ $01df deek Pos=                 {Bottom character row in screen memory}
 
       5 [do i=                  {Draw 5 vertical slices}
         k 0?? \sysArgs2.        {Get slice from ROM}
-        134!                    {Invoke SYS function to draw pixels}
+        134!!                   {Invoke SYS function to draw pixels}
         <k++ <\sysArgs4++       {Advance to next slice}
         i 1- if>0loop]          {Looping}
 
-      \sysArgs2. 134!           {Render 6th slice}
+      \sysArgs2. 134!!          {Render 6th slice}
 
       $fe%]                     {Return effective position}
   ret
@@ -555,7 +555,7 @@ _Statements2=*
     \romTypeValue_ROMv2-
     [if>=0
       \SYS_SetMode_v2_80        {Available from ROM v2}
-      \sysFn: Value 80!]
+      \sysFn: Value 80!!]
     EndOfLine!]
 
   Keyword! `save #0
@@ -1253,7 +1253,7 @@ _Save=*
       \sysArgs0:                {Prepare SYS call}
       1 \sysArgs2.              {First bit}
       \SYS_SendSerial1_v3_80
-      \sysFn: 80!               {SYS call to send bits to serial port}
+      \sysFn: 80!!              {SYS call to send bits to serial port}
       [if<>0                    {'BreakError' would be better}
         3 \serialRaw.           {Not a great hack...}
         TestBreak!]             {...to initiate a break error}
@@ -1296,8 +1296,8 @@ _Newline=*
 
   Pos \sysArgs4:                {sysArgs[4:5] is position on screen}
   [do
-    134! <\sysArgs4++           {SYS call and advance to next slice}
-    134! <\sysArgs4++           {A bit unrolling for speed}
+    134!! <\sysArgs4++          {SYS call and advance to next slice}
+    134!! <\sysArgs4++          {A bit unrolling for speed}
     \sysArgs4, 160^             {Test for end of screen}
     if<>0loop]
 

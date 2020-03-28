@@ -74,14 +74,14 @@ gcl0x
 
 [do
 
-  push $a5 80! pop              { LDA }
-  push $25 80! pop              { AND }
-  push $05 80! pop              { ORA }
-  push $45 80! pop              { XOR }
-  push $65 80! pop              { ADC }
-  push $e5 80! pop              { SBC }
-  push $c5 80! pop              { CMP }
-  push $24 80! pop              { BIT }
+  push $a5 80!! pop             { LDA }
+  push $25 80!! pop             { AND }
+  push $05 80!! pop             { ORA }
+  push $45 80!! pop             { XOR }
+  push $65 80!! pop             { ADC }
+  push $e5 80!! pop             { SBC }
+  push $c5 80!! pop             { CMP }
+  push $24 80!! pop             { BIT }
 
   loop]                         { Forever }
 

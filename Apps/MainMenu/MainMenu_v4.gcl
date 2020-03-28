@@ -10,7 +10,7 @@ gcl0x
 \buttonState;                   {Fetch buttonState and resetTimer}
 [if>0                           {If resetTimer positive}
   16& [if=0                     {And [Start] pressed}
-  \Egg \sysArgs0: 88!]]         {Start program. SYS_Exec_88 still in sysFn}
+  \Egg \sysArgs0: 88!!]]        {Start program. SYS_Exec_88 still in sysFn}
 
 { Print ASCII character (32..127) on screen in 5x8 pixels }
 [def
@@ -27,7 +27,7 @@ gcl0x
   6+      Pos=
   \SYS_VDrawBits_134 \sysFn:
   $fb i= [do
-    fontData 0? <fontData++ \sysArgs2. 134!
+    fontData 0? <fontData++ \sysArgs2. 134!!
     <\sysArgs4++
     <i++ i if<>0loop]
   ret
@@ -191,7 +191,7 @@ Pos 48+ j& q=                   {Box of current cursor}
   [do
     48+ j& q^ [if<>0            {Don't clear selected item}
       >p, $78^ if<>0            {Also don't clear the bottom row}
-      134!]                     {Clears 8 pixels vertically}
+      134!!]                    {Clears 8 pixels vertically}
     $800
     #\ADDW #\sysArgs4           {Inline assembly}
     \sysArgs4:
@@ -210,7 +210,7 @@ Item 7^ [if=0                   {Bricks workaround}
   $80 \vSP.]                    { 1. Zero-page conflict: move stack}
 Item 8^ [if=0                   {TicTacToe needs special launcher}
   &_LaunchTicTacToe call]
-88!                             {Load from ROM and execute}
+88!!                            {Load from ROM and execute}
 
 {-----------------------------------------------------------------------+
 |       Tetronis patch                                                  |
@@ -229,10 +229,10 @@ _TetronisPatch=*
 *=$7fa0 _LaunchTicTacToe=*
 
   11+ _vLR=                     {Return to this program after SYS}
-  \TinyBASIC \sysArgs0: 88!     {Load only, SYS_Exec_88 still in sysFn}
+  \TinyBASIC \sysArgs0: 88!!    {Load only, SYS_Exec_88 still in sysFn}
                                 {Return here}
   \userCode _vLR=
-  \TicTac \sysArgs0: 88!        {Load Tic-Tac-Toe and execute BASIC}
+  \TicTac \sysArgs0: 88!!       {Load Tic-Tac-Toe and execute BASIC}
 
 {-----------------------------------------------------------------------+
 |                                                                       |

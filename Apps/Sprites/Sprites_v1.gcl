@@ -87,8 +87,8 @@ $500 T=                         {Pointer to sine table}
     p j+ 255& T+ peek p>.       {Y coordinate}
     Image \sysArgs0:            {Setup SYS call}
     p
-    64!                         {Draw first half}
-    64!                         {Draw second half}
+    64!!                        {Draw first half}
+    64!!                        {Draw second half}
     p<. 255& 170-               {Until right edge}
     if<0loop]
 

@@ -817,7 +817,7 @@ _vLR=                           {Reset v6502 PC}
 [do
   \SYS_Run6502_v4_80 _sysFn=
   \k,                           {ASCII code in A}
-  80!                           {Run 6502 code until BRK}
+  80!!                          {Run 6502 code until BRK}
   push                          {Save v6502 PC}
   [if=0                         {A=0 reads from keyboard}
     [do
@@ -868,7 +868,7 @@ _PrintChar=*
     \sysArgs4:                  {Set screen position}
     \sysArgs2.                  {Set all-zero output pattern}
     [do
-      134!                      {SYS call to draw 8 pixels vertically}
+      134!!                     {SYS call to draw 8 pixels vertically}
       <\sysArgs4++              {Step 1 pixel right}
       \sysArgs4, 160^           {Test for end of line}
       if<>0loop]
@@ -905,7 +905,7 @@ _PrintChar=*
 
     5 [do _i=                   {Draw character as 5 vertical bit slices}
       _j 0? \sysArgs2.          {Get bit slice as byte from ROM table}
-      134!                      {SYS call to draw 8 pixels vertically}
+      134!!                     {SYS call to draw 8 pixels vertically}
       <_j++ <\sysArgs4++        {Advance to next byte}
       _i 1- if>0loop]           {Looping}
 

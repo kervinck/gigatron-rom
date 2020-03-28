@@ -24,7 +24,7 @@ gcl0x
   Pos     \sysArgs4:
   \SYS_VDrawBits_134 \sysFn:
   $fb i= [do
-    fontData 0? <fontData++ \sysArgs2. 134!
+    fontData 0? <fontData++ \sysArgs2. 134!!
     <\sysArgs4++
     <i++ i if<>0loop]
   ret
@@ -43,7 +43,7 @@ $7800 Pos=
   32 \sysArgs0. \sysArgs1. {All blue}
   \SYS_VDrawBits_134 \sysFn:
   [do
-    134!
+    134!!
     <\sysArgs4++
     \sysArgs4, 160^ if<>0loop]
 

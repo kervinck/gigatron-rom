@@ -73,7 +73,7 @@ $01df deek Pos=                 {Bottom character row in screen memory}
 
   5 [do i=                      {Draw 5 vertical slices}
     k 0? \sysArgs2.             {Get slice from ROM}
-    134!                        {Invoke SYS function to draw pixels}
+    134!!                       {Invoke SYS function to draw pixels}
     k<++ \sysArgs4<++           {Advance to next slice}
     i 1- if>0loop]              {Looping}
 
@@ -90,7 +90,7 @@ $01df deek Pos=                 {Bottom character row in screen memory}
     \sysArgs4:                  {sysArgs[4:5] is position on screen}
     \sysArgs2.                  {All-zero output pattern}
     [do
-      134!                      {SYS call}
+      134!!                     {SYS call}
       \sysArgs4<++              {Advance to next slice}
       \sysArgs4, 160^           {Test for end of screen}
       if<>0loop]
@@ -111,7 +111,7 @@ $01df deek Pos=                 {Bottom character row in screen memory}
   push
   tmp=                          {Save value}
   \SYS_LSRW4_50 \sysFn:         {Prepare SYS call for shift}
-  tmp 50!                       {Shift right 4 bits}
+  tmp 50!!                      {Shift right 4 bits}
   10- [if>=0 7+] $3a+           {Convert to hex digit}
   PrintChar!
   tmp 15&                       {Low 4 bits}
