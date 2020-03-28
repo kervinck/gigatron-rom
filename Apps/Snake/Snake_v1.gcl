@@ -42,7 +42,7 @@ XXX Increase speed when pressing button
   6+      Pos=
   \SYS_VDrawBits_134 \sysFn:
   $fb i= [do
-    fontData 0? fontData<++ \sysArgs2. 134!
+    fontData 0? fontData<++ \sysArgs2. 134!!
     \sysArgs4<++
     i<++ i if<>0loop]
   ret

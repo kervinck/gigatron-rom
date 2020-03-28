@@ -280,10 +280,17 @@ Versioning
 ----------
 gcl0x gcl1      GCL version. `x' denotes experimental/extended versions
 
-There are two versions of GCL: gcl0x and gcl1. gcl0x is what we
-used to make the built-in applications of ROM v1. It is still evolving.
-gcl1 will be the planned cosmetic upgrade in notation once we've settled
-on what GCL should really look like.
+We foresee three versions of GCL: gcl0x, gcl1 and gcl2.
+
+gcl0x is what we used to make the built-in applications of ROM v1.
+It is still evolving, sometimes in backward incompatible ways.
+
+gcl1 will be the final update in notation once we've settled on
+what GCL should really look like. gcl0x has some inconsistencies
+in notation that are confusing. Some aren't easy to resolve while
+maintaining its spirit. We won't take this step easily.
+
+gcl2 will add a macro system. The parenthesis are reserved for that.
 
 -----------------
 Program structure

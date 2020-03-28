@@ -18,7 +18,7 @@ gcl0x                           {GCL version for this program}
   \sysArgs2.                    {All-zero 8-bit pattern}
   [do                           {Outer horizontal loop}
     [do                         {Inner vertical loop}
-      \sysArgs4: 134!           {VDrawBits SYS call clears 8 pixels vertically}
+      \sysArgs4: 134!!          {VDrawBits SYS call clears 8 pixels vertically}
       i+ if>0loop]              {Go down and repeat for entire vertical stripe}
     255& 159^ if<>0             {Until completing X=159 position}
     \sysArgs4; j+ loop]         {Step to next vertical stripe and repeat}
@@ -36,7 +36,7 @@ gcl0x                           {GCL version for this program}
   6+ Pos=                       {Advance position by 6 pixels for next call}
   5 [do i=                      {Loop to draw 5 vertical slices of 8 pixels}
     j 0? \sysArgs2.             {Get byte from ROM using `LUP 0' instruction}
-    134!                        {Invoke SYS function to draw 8 vertical pixels}
+    134!!                       {Invoke SYS function to draw 8 vertical pixels}
     <j++ <\sysArgs4++           {Advance to next slice in ROM and on screen}
     i 1- if>0loop]              {Looping}
   ret

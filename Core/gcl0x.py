@@ -1,5 +1,4 @@
 
-# XXX Change to Python3
 # XXX Backquoted words should have precedence over grouping
 # XXX Give warning when starting new block after calls were made
 # XXX Give warning when def-block contains 'call' put no 'push'
@@ -178,7 +177,7 @@ class Program:
         elif op == '!':
           if isinstance(con, int) and 0 <= con < 256:
             # XXX Deprecate in gcl1, replace with i!!
-            self.emitOp('SYS'); con = self.sysTicks(con)
+            self.emitOp('SYS'); con = self.sysTicks(con);self.depr('i!', 'i!!')
           else:
             self.emitOp('CALLI_DEVROM').emit(lo(con)); con = hi(con)
         elif op == '?':    self.emitOp('LUP');          #self.depr('i?', 'i??')
@@ -478,7 +477,7 @@ class Program:
   def emit(self, byte, comment=None):
     # Next program byte in RAM
     self.prepareSegment()
-    if not isinstance(byte, int):
+    if not isinstance(byte, (int, float)):
       self.error('Invalid value (number expected, got %s)' % repr(byte))
     if byte < -128 or byte >= 256:
       self.error('Value %s out of range (must be -128..255)' % repr(byte))
