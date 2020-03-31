@@ -100,6 +100,7 @@
 #  DONE Fix possible video timing error in Loader #100
 #  DONE Fix zero page usage in Bricks and Tetronis #41
 #  DONE Add CALLI instruction to vCPU
+#  XXX  Add CMPHS/CMPHU instructions to vCPU XXX Still needs testing
 #  DONE Main: add Apple1 to main menu
 #  DONE Replace egg with something new
 #  DONE Split interface.json and interface-dev.json
@@ -108,7 +109,7 @@
 #  DONE Discoverable ROM contents #46
 #  DONE Vertical blank interrupt #125
 #  DONE TinyBASIC: Support hexadecimal numbers $....
-#  XXX  Expander: Auto-detect banking, 64K and 128K XXX Fix screen corruption
+#  DONE  Expander: Auto-detect banking, 64K and 128K
 #  DONE Expander: Boot from *.GT1 file if SDC/MMC detected
 #  DONE Apple-1: Memory mapped PIA emulation using interrupt (D010-D013)
 #  DONE Apple-1: Include A1 Integer BASIC
@@ -116,23 +117,24 @@
 #  DONE Apple-1: Include Mastermind and 15-Puzzle
 #  DONE Apple-1: Include mini-assembler
 #  DONE Apple-1: Intercept cassette interface = menu
-#  XXX  Horizon Easter Egg
 #  XXX  Reduce the Pictures application ROM footprint #120
-#  XXX  Loader: make noise while loading (only channel 1 is safe to use)
-#  XXX  Add CMPHS/CMPHU instructions to vCPU XXX Still needs testing
-#  XXX  GTOS: Simple command line interface (solve "EXE vs COM" dilemma)
-#  XXX  GTOS: Tutorial on formatting FAT32 partitions. (Linux=mkdosfs, apple=newfs_msdos)
+#  XXX  Main: Better startup chime
+#  XXX  Main: Some startup logo as intro
+#  XXX  Horizon Easter Egg, add sound
+#  XXX  CardBoot: Strip non-essentials
 #  XXX  Racer: Make noise when crashing
 #  XXX  Racer: Control speed with up/down (better for TypeC controllers)
-#  XXX  Main: Some startup logo as intro? Rotating 3D letters?
-#  XXX  Main: Better startup chime
+#  XXX  Loader: make noise while loading (only channel 1 is safe to use)
 #  XXX  Faster SYS_Exec_88, with start address (GT1)?
 #  XXX  Let SYS_Exec_88 clear channelMask when loading into live channels
-#  XXX  ROM functions: SYS_PrintString, control codes, SYS_DrawChar, SYS_Newline
 #  XXX  Babelfish freeze at power-on?
-#  XXX  Video: Increase vertical resolution with same videoTable (160 lines?)
 #
 #  Ideas for ROM v6+
+#  XXX  ROM functions: SYS_PrintString, control codes, SYS_DrawChar, SYS_Newline
+#  XXX  v8080 prepping for CP/M
+#  XXX  vForth virtual CPU
+#  XXX  Video: Increase vertical resolution with same videoTable (160 lines?)
+#  XXX  Video mode for 12.5 MHz systems
 #  XXX  Pucrunch (well documented) or eximozer 3.0.2 (better compression)
 #  XXX  SPI: Think about SPI modes (polarities)
 #  XXX  I2C: Turn SPI port 2-3 into a I2C port as suggesred by jwolfram
@@ -147,7 +149,6 @@
 #  XXX  Scroll out the top line of text, or generic vertical scroll SYS call
 #  XXX  SYS function for plotting a full character in one go
 #  XXX  Multitasking/threading/sleeping (start with date/time clock in GCL)
-#  XXX  Video mode for 12.5 MHz systems
 #-----------------------------------------------------------------------
 
 import importlib

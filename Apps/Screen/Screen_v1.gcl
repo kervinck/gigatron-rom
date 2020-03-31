@@ -1,19 +1,25 @@
 
 {-----------------------------------------------------------------------+
+|                                                                       |
 |       Screen test                                                     |
+|                                                                       |
 +-----------------------------------------------------------------------}
-
 gcl0x
+
+{
+  This is the original Easter Egg "hidden" in ROM v1
+}
 
 $0101 ShiftControl=
 
 [def
+  {Select random screen memory position q. X in 0..255 and Y in 8..127}
   [do
-    \SYS_Random_34 _sysFn= 34!! q=
+    &_SYS_Random_34 _sysFn= 34!! q=
     q>, 120- if>=0loop]
   128+ q>.
 
-  q r= 72+ r<. {End of line}
+  q r= 72+ r<. {End of line, 72 pixels wide image}
   0 i=
   n= {Count, or -1 when reading new count}
 
