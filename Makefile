@@ -34,14 +34,14 @@ CFLAGS:=-std=c11 -O3 -Wall
 # Development towards "ROM v5"
 dev.rom: Core/* Apps/*/* Makefile interface.json
 	python3 Core/dev.py\
-		gigatronRaw=Apps/Screen/gigatron.rgb\
+		packedImages=Apps/Pictures/packedImages.rgb\
 		Snake=Apps/Snake/Snake_v3.gcl\
 		SYS_Racer_v1.py\
 		zippedRacerHorizon=Apps/Racer/Horizon-256x16.rgb\
 		Racer=Apps/Racer/Racer_v2.gcl\
 		Mandelbrot=Apps/Mandelbrot/Mandelbrot_v1.gcl\
 		SYS_Loader.py\
-		Pictures=Apps/Screen/Screen_v1.gcl\
+		Pictures=Apps/Pictures/Pictures_vX.gcl\
 		Loader=Apps/Loader/Loader.gcl\
 		Credits=Apps/Credits/Credits_v3.gcl\
 		Tetronis=Apps/Tetronis/Tetronis.gt1\

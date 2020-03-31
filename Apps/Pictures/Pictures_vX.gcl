@@ -1,14 +1,13 @@
 
 {-----------------------------------------------------------------------+
 |                                                                       |
-|       Screen test                                                     |
+|       Pictures with small images                                      |
 |                                                                       |
 +-----------------------------------------------------------------------}
 gcl0x
 
 {
-  This is the original Easter Egg "hidden" in ROM v1.
-  So the names are obscured, and originally this file was uncommented.
+  Based on the original Easter Egg "hidden" in ROM v1.
 
   The image data is a stream of packed 6-bit pixels from ROM.
   The pixel data is XORed with all-ones (63).
@@ -84,7 +83,7 @@ $0101 ShiftControl=
 {--- Run ---}
 
 [do
-  \gigatronRaw p=               {Pointer to packed image data}
+  \packedImages p=              {Pointer to packed image data}
                                 { Contains the packed image data for}
                                 { Marcel's and Walter's portraits}
   Transfer!                     {Unpack and draw first image}
