@@ -1,0 +1,4 @@
+/.venv/
+/_gtemu.c
+_gtemu*.pyd
+/Release/
