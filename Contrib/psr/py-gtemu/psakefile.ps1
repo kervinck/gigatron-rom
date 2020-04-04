@@ -3,9 +3,9 @@ $ErrorActionPreference = 'Stop';
 $dirExcludes = '.venv', '.pytest_cache'
 $fileExcludes = @()
 $filesToFormat = get-childitem -Exclude $dirExcludes -Directory | % { get-childitem -path $_ -Recurse -Include '*.py' }
-$filesToFormat += get-childitem -Name '*.py' -Exclude $fileExcludes
+$filesToFormat += get-item 'gtemu_extension_build.py'
 
-task default -depends isort, Blacken, Flake8, Test
+task default -depends isort, Blacken, Flake8, Extension, Test
 
 task isort {
     & '.\.venv\Scripts\isort.exe' $filesToFormat

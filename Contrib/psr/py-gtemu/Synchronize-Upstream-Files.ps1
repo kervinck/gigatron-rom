@@ -11,8 +11,11 @@ $INTEGRATION_BRANCH_LAST_COMMIT = Get-Content -Encoding ASCII .\LAST_INTEGRATION
 $ROOT = "Contrib/psr/py-gtemu"
 
 $FILES = @(
-    ,  # To force an array - Powershell!
     # Upstream                      # Our code
+    @('interface.json',             'interface.json'),
+    @('Core/asm.py',                'asm.py'),
+    @('Core/gcl0x.py',              'gcl0x.py'),
+    @('Core/ROMv4.py',              'ROMv4.py'),
     @('Docs/gtemu.c',               'gtemu.c')
 )
 
