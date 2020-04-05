@@ -84,10 +84,9 @@ $0101 ShiftControl=
 
 [do
   \packedImages p=              {Pointer to packed image data}
-                                { Contains the packed image data for}
-                                { Marcel's and Walter's portraits}
-  Transfer!                     {Unpack and draw first image}
-  Transfer!                     {Unpack and draw second image}
+  Transfer!                     {Unpack and draw three images}
+  Transfer!
+  Transfer!
   loop]                         {Repeat forever}
 
 {-----------------------------------------------------------------------+
