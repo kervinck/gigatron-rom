@@ -50,8 +50,8 @@ dev.rom: Core/* Apps/*/* Makefile interface.json
 		TicTac=Apps/TicTac/TicTac.gcl\
 		TicTacGtb=Apps/TicTac/TicTac_v2.gtb\
 		WozMon=Apps/WozMon/WozMon_v2.gcl\
-		Apple1=Apps/Apple-1/Apple-1.gcl\
-		MSBASIC=Apps/MSBASIC/MSBASIC.gcl\
+		Apple1=Apps/Apple-1/Apple-1.gt1x\
+		MSBASIC=Apps/MSBASIC/MSBASIC.gt1\
 		Egg=Apps/Horizon/Horizon_at67.gt1\
 		Boot=Apps/CardTest/CardBoot.gcl\
 		Main=Apps/MainMenu/MainMenu.gcl\
