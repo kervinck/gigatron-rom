@@ -266,7 +266,7 @@ const byte bricks_gt1[]    PROGMEM = {
   #include "bricks.h"
 };
 const byte lines_gt1[]     PROGMEM = {
-  #include "lines.h"
+  #include "Lines.h"
 };
 const byte life3_gt1[]     PROGMEM = {
   #include "life3.h"
