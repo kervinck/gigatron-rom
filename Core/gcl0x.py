@@ -116,7 +116,7 @@ class Program:
       if word in ['gcl0x']:
         self.version = word
       else:
-        self.error('(%s) Invalid GCL version' % word)
+        self.error('Invalid GCL version')
     elif word == 'def':       self.emitDef()
     elif word == 'do':        self.loops[self.thisBlock()] = self.vPC
     elif word == 'loop':      self.emitLoop()
@@ -514,10 +514,10 @@ class Program:
     self.warning('%s is deprecated, please use %s' % (old, new))
 
   def warning(self, message):
-    print(self.prefix('Warning'), message)
+    highlight(self.prefix('Warning'), message)
 
   def error(self, message):
-    print(self.prefix('Error'), message)
+    highlight(self.prefix('Error'), message)
     sys.exit(1)
 
   def prefix(self, prefix):

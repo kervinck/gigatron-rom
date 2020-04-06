@@ -790,7 +790,7 @@ if soundDiscontinuity == 2:
   C('Sound continuity')
   extra += 1
 if soundDiscontinuity > 2:
-  print('Warning: sound discontinuity not suppressed')
+  highlight('Warning: sound discontinuity not suppressed')
 
 runVcpu(189-74-extra, 'line0')  #74 Application cycles (scan line 0)
 
@@ -3435,7 +3435,7 @@ for application in argv[1:]:
       raw = f.read()
     raw = raw[:-2] # Drop start address
     if raw[0] == 0 and raw[1] + raw[2] > 0xc0:
-      print('Warning: zero-page conflict with ROM loader (SYS_Exec_88)')
+      highlight('Warning: zero-page conflict with ROM loader (SYS_Exec_88)')
     zpReset(userVars)
     label(name)
     program = gcl.Program(name)

@@ -866,7 +866,7 @@ if soundDiscontinuity == 2:
   st(sample, [sample])          # Sound continuity
   extra += 1
 if soundDiscontinuity > 2:
-  print('Warning: sound discontinuity not suppressed')
+  highlight('Warning: sound discontinuity not suppressed')
 
 runVcpu(186-72-extra, '---D line 0')#72 Application cycles (scan line 0)
 
@@ -4866,7 +4866,7 @@ for application in argv[1:]:
     label(name)
     raw = raw[:-2] # Drop start address
     if raw[0] == 0 and raw[1] + raw[2] > 0xc0:
-      print('Warning: zero-page conflict with ROM loader (SYS_Exec_88)')
+      highlight('Warning: zero-page conflict with ROM loader (SYS_Exec_88)')
     program = gcl.Program(None)
     for byte in raw:
       program.putInRomTable(byte)
@@ -4897,7 +4897,7 @@ for application in argv[1:]:
     program = gcl.Program(name)
     address = symbol('BasicProgram')
     if not has(address):
-      print(' Error: TinyBASIC must be compiled-in first')
+      highlight('Error: TinyBASIC must be compiled-in first')
     program.org(address)
     i = 0
     for line in open(application):

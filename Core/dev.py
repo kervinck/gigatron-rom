@@ -1049,7 +1049,7 @@ if soundDiscontinuity == 2:
   st(sample, [sample])          # Sound continuity
   extra += 1
 if soundDiscontinuity > 2:
-  print('Warning: sound discontinuity not suppressed')
+  highlight('Warning: sound discontinuity not suppressed')
 
 # vCPU interrupt
 ld([frameCount])                #72
@@ -5494,13 +5494,20 @@ for application in argv[1:]:
     label(name)
     raw = raw[:-2] # Drop start address
     if raw[0] == 0 and raw[1] + raw[2] > 0xc0:
-      print('Warning: zero-page conflict with ROM loader (SYS_Exec_88)')
+      highlight('Warning: zero-page conflict with ROM loader (SYS_Exec_88)')
     program = gcl.Program(None)
     for byte in raw:
       program.putInRomTable(byte)
     program.end()
 
   # GCL files
+  #----------------------------------------------------------------
+  #  !!! GCL programs using *labels* "_L=xx" must be cautious !!!
+  # Those labels end up in the same symbol table as the ROM build,
+  # and name clashes cause havoc. It's safer to precompile such
+  # applications into .gt1/.gt1x files. (This warning doesn't apply
+  # to ordinary GCL variable names "xx A=".)
+  #----------------------------------------------------------------
   elif application.endswith('.gcl'):
     print('Compile type .gcl at $%04x' % pc())
     insertRomDir(name)
@@ -5527,7 +5534,7 @@ for application in argv[1:]:
     # BasicProgram comes from TinyBASIC.gcl
     address = symbol('BasicProgram')
     if not has(address):
-      print(' Error: TinyBASIC must be compiled-in first')
+      highlight('Error: TinyBASIC must be compiled-in first')
     program.org(address)
     i = 0
     for line in open(application):

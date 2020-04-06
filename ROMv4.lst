@@ -797,7 +797,7 @@ vBlankStart:  0104 c20a  st   [$0a]       773   st([videoSync0])                
                                           866     st(sample, [sample])          # Sound continuity
                                           867     extra += 1
                                           868   if soundDiscontinuity > 2:
-                                          869     print('Warning: sound discontinuity not suppressed')
+                                          869     highlight('Warning: sound discontinuity not suppressed')
                                           870
                                           871   runVcpu(186-72-extra, '---D line 0')#72 Application cycles (scan line 0)
               014b 0050  ld   $50         ;Run vCPU for 114 cycles gross (---D line 0)

@@ -881,7 +881,7 @@ if soundDiscontinuity == 1:
   C('Sound continuity')
   extra += 1
 if soundDiscontinuity > 1:
-  print('Warning: sound discontinuity not suppressed')
+  highlight('Warning: sound discontinuity not suppressed')
 
 runVcpu(189-73-extra, 'line0')  #73 Application cycles (scan line 0)
 
