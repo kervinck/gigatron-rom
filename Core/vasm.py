@@ -11,11 +11,16 @@
 #       BYTE(byte,...)  Insert data
 #       END(address)    Finish assembly, address is execution address
 
+import json
 import sys
 
-_gt1 = []       # [addr, [byte, ...], addr, [byte, ...], ...]
-                # `byte' can be integer, symbol string, or expression tuple
-_symbols = {}   # name -> value
+_gt1 = [0x200, []]      # [addr, [byte, ...], addr, [byte, ...], ...]
+                        # `byte' can be int, symbol string, or expression tuple
+
+_symbols = {}           # name -> value
+with open('interface.json') as file:
+  for (name, value) in json.load(file).items():
+    _symbols[name] = value if isinstance(value, int) else int(value, base=0)
 
 def ORG(addr): _gt1.extend((addr, []))
 def LDWI(op):  return _emit((0x11, (_lo,op), (_hi,op)))
@@ -64,8 +69,8 @@ def L(name):
     error('Redefined %s' % repr(name))
   _symbols[name] = _gt1[-2] + len(_gt1[-1])
 
-def END(start):
-  with open('out.gt1', 'wb') as fp:
+def END(start=0x200):
+  with open('out.gt1', 'wb') as file:
     for ix in range(0, len(_gt1), 2):
       address, segment = _gt1[ix:ix+2]
       if len(segment) == 0:
@@ -73,13 +78,11 @@ def END(start):
       if address + len(segment) > (address | 255) + 1:
         error('Page overrun in segment 0x%04X' % address)
       segment = [_eval(x) for x in segment]
-      fp.write(bytes([address >> 8, address & 255, len(segment) & 255]))
-      fp.write(bytes(segment))
-    fp.write(bytes([0, start >> 8, start & 255]))
+      file.write(bytes([address >> 8, address & 255, len(segment) & 255]))
+      file.write(bytes(segment))
+    file.write(bytes([0, start >> 8, start & 255]))
 
 def _emit(ins):
-  if len(_gt1) == 0:
-    error('ORG missing')
   _gt1[-1].extend(ins)
   return 0
 
