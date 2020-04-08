@@ -1,3 +1,4 @@
+# Please build this from the Makefile
 from vasm import *
 
 p=0x30                          # User variables start from $30 in zero page
