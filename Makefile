@@ -206,6 +206,10 @@ ROMv3y.rom: Core/* Apps/*/* Makefile interface.json
 %.gt1x: %.gcl
 	Core/compilegcl.py -x "$<" `dirname "./$@"`
 
+%.gt1: %.vasm.py
+	env PYTHONPATH=Core python3 "$<"
+	mv out.gt1 "$@"
+
 %.h: %.gt1
 	# Convert GT1 file into header for including as PROGMEM data
 	od -t x1 -v < "$<" |\
