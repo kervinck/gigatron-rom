@@ -18,7 +18,7 @@ _gt1 = [0x200, []]      # [addr, [byte, ...], addr, [byte, ...], ...]
                         # `byte' can be int, symbol string, or expression tuple
 
 _symbols = {}           # name -> value
-with open('interface.json') as file:
+with open('interface.json') as file:    # Preload system-defined symbols
   for (name, value) in json.load(file).items():
     _symbols[name] = value if isinstance(value, int) else int(value, base=0)
 
@@ -86,15 +86,15 @@ def _emit(ins):
   _gt1[-1].extend(ins)
   return 0
 
-def _lo(x): return x & 255
-def _hi(x): return x >> 8
-def _br(x): return (x - 2) & 255
+def _lo(x): return x & 255              # Low byte of word
+def _hi(x): return x >> 8               # High byte of word
+def _br(x): return (x - 2) & 255        # Correct for pre-increment of vPC
 
 def _eval(x):
-  fn = lambda x: x
-  if isinstance(x, tuple):
+  fn = lambda x: x                      # No operation
+  if isinstance(x, tuple):              # Tuple expressions
     fn, x = x[0], x[1]
-  if isinstance(x, str):
+  if isinstance(x, str):                # Resolve symbol strings
     if x not in _symbols:
       error('Undefined %s' % repr(x))
     x = _symbols[x]
