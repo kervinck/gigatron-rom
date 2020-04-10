@@ -25,7 +25,7 @@ $0101 ShiftControl=
     q>, 120- if>=0loop]
   128+ q>.
 
-  q r= 72+ r<.                  {End of line `r', 72 pixels wide image}
+  q r= 64+ r<.                  {End of line `r', 64 pixels wide image}
   0 i=                          {Index in unpacked byte buffer}
   n=                            {Count, or -1 when reading new count}
 
@@ -71,7 +71,7 @@ $0101 ShiftControl=
     { Wrap write pointer }
     q r- [if=0
        0 q.                     {1 pixel border/shadow on the right side}
-       q 72- q<. q>++           {Next line}
+       q 64- q<. q>++           {Next line}
        q [if<0 $8800 q+ q=]     {Wrap around bottom of screen memory}
        q>, r>.
     ]
@@ -83,7 +83,7 @@ $0101 ShiftControl=
 {--- Run ---}
 
 [do
-  \packedImages p=              {Pointer to packed image data}
+  \packedPictures p=            {Pointer to packed image data}
   Transfer!                     {Unpack and draw three images}
   Transfer!
   Transfer!

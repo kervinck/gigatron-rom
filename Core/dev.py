@@ -5613,7 +5613,7 @@ for application in argv[1:]:
     print(' Pixels %dx%d' % (width, height))
 
   # XXX Provisionally bring ROMv1 egg back as placeholder for Pictures
-  elif application.endswith(('/gigatron.rgb', '/packedImages.rgb')):
+  elif application.endswith(('/gigatron.rgb', '/packedPictures.rgb')):
     print(('Convert type gigatron.rgb at $%04x' % pc()))
     f = open(application, 'rb')
     raw = bytearray(f.read())

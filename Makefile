@@ -34,7 +34,7 @@ CFLAGS:=-std=c11 -O3 -Wall
 # Development towards "ROM v5"
 dev.rom: Core/* Apps/*/* Makefile interface.json
 	python3 Core/dev.py\
-		packedImages=Apps/Pictures/packedImages.rgb\
+		packedPictures=Apps/Pictures/packedPictures.rgb\
 		Snake=Apps/Snake/Snake_v3.gcl\
 		SYS_Racer_v1.py\
 		zippedRacerHorizon=Apps/Racer/Horizon-256x16.rgb\
