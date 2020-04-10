@@ -1,4 +1,4 @@
-* source: Core/ROMv4.py
+* source: Core/ROMv4.asm.py
                                           84    enableListing()
                                           85    #-----------------------------------------------------------------------
                                           86    #

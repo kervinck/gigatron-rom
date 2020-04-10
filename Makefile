@@ -33,7 +33,7 @@ CFLAGS:=-std=c11 -O3 -Wall
 
 # Development towards "ROM v5"
 dev.rom: Core/* Apps/*/* Makefile interface.json
-	python3 Core/dev.py\
+	python3 Core/dev.asm.py\
 		packedPictures=Apps/Pictures/packedPictures.rgb\
 		Snake=Apps/Snake/Snake_v3.gcl\
 		SYS_Racer_v1.py\
@@ -102,7 +102,7 @@ burn85:
 # ROM v4 support `TypeC' game controller signals. There are
 # many small changes under the hood, but no new applications.
 ROMv4.rom: Core/* Apps/*/* Makefile interface.json
-	python3 Core/ROMv4.py\
+	python3 Core/ROMv4.asm.py\
 		packedParrot=Apps/Pictures/Parrot-160x120.rgb\
 		packedJupiter=Apps/Pictures/Jupiter-160x120.rgb\
 		Apps/Racer/SYS_Racer_v1.py\
@@ -130,7 +130,7 @@ burnv4: ROMv4.rom
 # vPulse modulation (for SAVE in BASIC), sprite acceleration
 # Note: ROM builder still directly incudes TicTac_v1.gtb
 ROMv3.rom: Core/* Apps/*/* Makefile interface.json
-	python3 Core/ROMv3.py\
+	python3 Core/ROMv3.asm.py\
 		Apps/Snake/Snake_v2.gcl\
 		Apps/Racer/Racer_v1.gcl\
 		Apps/Mandelbrot/Mandelbrot_v1.gcl\
@@ -150,7 +150,7 @@ burnv3: ROMv3.rom
 
 # ROM v2 minor changes only
 ROMv2.rom: Core/* Apps/*/* Makefile interface.json
-	python3 Core/ROMv2.py\
+	python3 Core/ROMv2.asm.py\
 		Apps/Snake/Snake_v2.gcl\
 		Apps/Racer/Racer_v1.gcl\
 		Apps/Mandelbrot/Mandelbrot_v1.gcl\
@@ -164,7 +164,7 @@ ROMv2.rom: Core/* Apps/*/* Makefile interface.json
 
 # ROM v1 as shipped with first batches of kits
 ROMv1.rom: Core/* Apps/*/* Makefile interface.json
-	python3 Core/ROMv1.py\
+	python3 Core/ROMv1.asm.py\
 		Apps/Snake/Snake_v1.gcl\
 		Apps/Racer/Racer_v1.gcl\
 		Apps/Mandelbrot/Mandelbrot_v1.gcl\
@@ -174,27 +174,6 @@ ROMv1.rom: Core/* Apps/*/* Makefile interface.json
 		Apps/Screen/Screen_v1.gcl\
 		Apps/MainMenu/Main_v1.gcl\
 		Core/Reset_v1.gcl
-
-#-----------------------------------------------------------------------
-#	Experimental and temporary (to be removed)
-#-----------------------------------------------------------------------
-
-# Adds vCPU slices on scanlines to get 400 cycles per scanline
-ROMv3y.rom: Core/* Apps/*/* Makefile interface.json
-	python3 Core/ROMv3y.py\
-		Apps/Snake/Snake_v2.gcl\
-		Apps/Racer/Racer_v1.gcl\
-		Apps/Mandelbrot/Mandelbrot_v1.gcl\
-		Apps/Pictures/Pictures_v2.gcl\
-		Apps/Credits/Credits_v2.gcl\
-		Apps/Loader/Loader_v2.gcl\
-		Apps/Tetronis/Tetronis_v1.gt1\
-		Apps/Bricks/Bricks_v1.gt1\
-		Apps/TinyBASIC/TinyBASIC_v2.gcl\
-		Apps/WozMon/WozMon_v2.gt1\
-		Egg=Apps/Sprites/Sprites_v1.gt1\
-		Main=Apps/MainMenu/MainMenu_v3.gcl\
-		Core/Reset_v3y.gcl
 
 #-----------------------------------------------------------------------
 #	Generic rules

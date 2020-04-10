@@ -5,8 +5,9 @@
 # assembler! Specifically, asm.py is just the back end, while the Python
 # interpreter acts as the front end. By using Python in this way, we get
 # parsing and a powerful macro system for free. Assembly source files are
-# simple .py files, not .asm files. (But we can produce .lst files as a program
-# listing in a more conventional notation.)
+# Python files and not traditional .asm files. We recognize them with the
+# .asm.py extension. During assembly we produce .lst files as a program
+# listing in a more conventional notation.
 
 import inspect
 import json
@@ -510,7 +511,8 @@ def getRom1():
 def writeRomFiles(sourceFile):
 
   # Determine stem for file names
-  stem, _ = splitext(sourceFile)
+  stem, _ = splitext(sourceFile)        # Remove .py
+  stem, _ = splitext(stem)              # Remove .asm
   stem = basename(stem)
   if stem == '': stem = 'out'
 
