@@ -109,8 +109,11 @@
 #  DONE Discoverable ROM contents #46
 #  DONE Vertical blank interrupt #125
 #  DONE TinyBASIC: Support hexadecimal numbers $....
-#  DONE  Expander: Auto-detect banking, 64K and 128K
-#  DONE Expander: Boot from *.GT1 file if SDC/MMC detected
+#  XXX  Expander: Auto-detect banking, 64K and 128K -> needs FIX
+#  DONE Cardboot: Boot from *.GT1 file if SDC/MMC detected
+#  XXX  CardBoot: Strip non-essentials
+#  XXX  CardBoot: Fix card type detection
+#  XXX  CardBoot: Read full sector
 #  DONE Apple-1: Memory mapped PIA emulation using interrupt (D010-D013)
 #  DONE Apple-1: Include A1 Integer BASIC
 #  DONE Apple-1: Suppress lower case
@@ -118,16 +121,15 @@
 #  DONE Apple-1: Include mini-assembler
 #  DONE Apple-1: Intercept cassette interface = menu
 #  XXX  Reduce the Pictures application ROM footprint #120
-#  XXX  Main: Better startup chime
-#  XXX  Main: Some startup logo as intro
-#  XXX  Horizon Easter Egg, add sound
-#  XXX  CardBoot: Strip non-essentials
-#  XXX  Racer: Make noise when crashing
+#  XXX  Mandelbrot: add more color schemes, eg. with permutations of RGB
+#  XXX  Main: Better startup chime, eg. sequence the 4 notes and then decay
+#  XXX  Main: Some startup logo as intro, eg. gigatron letters from the box
 #  XXX  Racer: Control speed with up/down (better for TypeC controllers)
+#  XXX  Racer: Make noise when crashing
 #  XXX  Loader: make noise while loading (only channel 1 is safe to use)
 #  XXX  Faster SYS_Exec_88, with start address (GT1)?
 #  XXX  Let SYS_Exec_88 clear channelMask when loading into live channels
-#  XXX  Babelfish freeze at power-on?
+#  XXX  Investigate: Babelfish sometimes freezes during power-on?
 #
 #  Ideas for ROM v6+
 #  XXX  ROM functions: SYS_PrintString, control codes, SYS_DrawChar, SYS_Newline
