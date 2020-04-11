@@ -1,4 +1,3 @@
-
 # SYNOPSIS: from vasm import *
 #
 # This is the (back end for) a minimalistic vCPU assembler in Python.
@@ -23,7 +22,7 @@ with open('interface.json') as file:    # Preload system-defined symbols
     _symbols[name] = value if isinstance(value, int) else int(value, base=0)
 
 def ORG(addr): _gt1.extend((addr, []))
-def LDWI(op):  return _emit((0x11, (_lo,op), (_hi,op)))
+def LDWI(op):  return _emit((0x11, (LO,op), (HI,op)))
 def LD(op):    return _emit((0x1a, op))
 def LDW(op):   return _emit((0x21, op))
 def STW(op):   return _emit((0x2b, op))
@@ -45,7 +44,7 @@ def BRA(op):   return _emit((0x90, (_br,op)))
 def INC(op):   return _emit((0x93, op))
 def ADDW(op):  return _emit((0x99, op))
 def PEEK(op):  return _emit((0xad, op))
-def SYS(op):   return _emit((0xb4, 270-op/2 if op>28 else 0))
+def SYS(op):   return _emit((0xb4, 270-op//2 if op>28 else 0))
 def SUBW(op):  return _emit((0xb8, op))
 def DEF(op):   return _emit((0xcd, (_br,op)))
 def CALL(op):  return _emit((0xcf, op))
@@ -66,41 +65,43 @@ def BYTE(*op): return _emit(op)
 
 def L(name):
   if name in _symbols:
-    error('Redefined %s' % repr(name))
+    ERR('Redefined %s' % repr(name))
   _symbols[name] = _gt1[-2] + len(_gt1[-1])
 
 def END(start=0x200):
   with open('out.gt1', 'wb') as file:
     for ix in range(0, len(_gt1), 2):
       address, segment = _gt1[ix:ix+2]
-      if len(segment) == 0:
-        continue
-      if address + len(segment) > (address | 255) + 1:
-        error('Page overrun in segment 0x%04X' % address)
-      segment = [_eval(x) for x in segment]
-      file.write(bytes([address >> 8, address & 255, len(segment) & 255]))
-      file.write(bytes(segment))
+      if len(segment) > 0:
+        if address + len(segment) > (address | 255) + 1:
+          ERR('Page overrun in segment 0x%04X' % address)
+        segment = [_byte(_eval(x)) for x in segment]
+        file.write(bytes([address >> 8, address & 255, len(segment) & 255]))
+        file.write(bytes(segment))
     file.write(bytes([0, start >> 8, start & 255]))
 
 def _emit(ins):
   _gt1[-1].extend(ins)
   return 0
 
-def _lo(x): return x & 255              # Low byte of word
-def _hi(x): return x >> 8               # High byte of word
-def _br(x): return (x - 2) & 255        # Correct for pre-increment of vPC
+def LO(x): return _eval(x) & 255        # Low byte of word
+def HI(x): return _eval(x) >> 8         # High byte of word
+def _br(x): return (_eval(x) - 2) & 255 # Adjust for pre-increment of vPC
 
 def _eval(x):
   fn = lambda x: x                      # No operation
   if isinstance(x, tuple):              # Tuple expressions
-    fn, x = x[0], x[1]
+    fn, x = x[0], _eval(x[1])
   if isinstance(x, str):                # Resolve symbol strings
-    if x not in _symbols:
-      error('Undefined %s' % repr(x))
-    x = _symbols[x]
-  return fn(x) & 255
+    x = _symbols[x] if x in _symbols else ERR('Undefined %s' % repr(x))
+  return fn(x)
 
-def error(*args):
+def _byte(x):
+  if x < -128 or x > 255:
+    ERR('Out of byte range: %s' % repr(x))
+  return x & 255
+
+def ERR(*args):
   line = 'Error: ' + ' '.join(args)
   print('\033[1m' + line + '\033[0m' if sys.stdout.isatty() else line)
   sys.exit(1)
