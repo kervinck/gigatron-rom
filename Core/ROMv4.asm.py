@@ -133,6 +133,10 @@ videoYline0 = 1-2*(vFront+vPulse+vBack-2)
 # Mismatch between video lines and sound channels
 soundDiscontinuity = (vFront+vPulse+vBack) % 4
 
+# QQVGA resolution
+qqVgaWidth      = 160
+qqVgaHeight     = 120
+
 # Game controller bits (actual controllers in kit have negative output)
 # +----------------------------------------+
 # |       Up                        B*     |
@@ -4804,7 +4808,8 @@ define('keyH',       keyH)
 define('oscL',       oscL)
 define('oscH',       oscH)
 define('maxTicks',   maxTicks)
-
+define('qqVgaWidth', qqVgaWidth)
+define('qqVgaHeight',qqVgaHeight)
 define('buttonRight',buttonRight)
 define('buttonLeft', buttonLeft)
 define('buttonDown', buttonDown)
@@ -4945,7 +4950,6 @@ for application in argv[1:]:
 
   # Random access RGB files (for Pictures application)
   elif application.endswith('-160x120.rgb'):
-    width, height = 160, 120
     if pc()&255 > 0:
       trampoline()
     print('Convert type .rgb/parallel at $%04x' % pc())
@@ -4953,15 +4957,15 @@ for application in argv[1:]:
     raw = f.read()
     f.close()
     label(name)
-    for y in range(0, height, 2):
+    for y in range(0, qqVgaHeight, 2):
       for j in range(2):
         comment = 'Pixels for %s line %s' % (name, y+j)
-        for x in range(0, width, 4):
+        for x in range(0, qqVgaWidth, 4):
           bytes = []
           for i in range(4):
-            R = raw[3 * ((y + j) * width + x + i) + 0]
-            G = raw[3 * ((y + j) * width + x + i) + 1]
-            B = raw[3 * ((y + j) * width + x + i) + 2]
+            R = raw[3 * ((y + j) * qqVgaWidth + x + i) + 0]
+            G = raw[3 * ((y + j) * qqVgaWidth + x + i) + 1]
+            B = raw[3 * ((y + j) * qqVgaWidth + x + i) + 2]
             bytes.append( (R//85) + 4*(G//85) + 16*(B//85) )
           # Pack 4 pixels in 3 bytes
           ld( ((bytes[0]&0b111111)>>0) + ((bytes[1]&0b000011)<<6) ); comment = C(comment)
@@ -4971,7 +4975,7 @@ for application in argv[1:]:
           trampoline3a()
         else:
           trampoline3b()
-    print(' Pixels %dx%d' % (width, height))
+    print(' Pixels %dx%d' % (qqVgaWidth, qqVgaHeight))
 
   else:
     assert False

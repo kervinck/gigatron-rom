@@ -54,6 +54,9 @@
  "soundTable"           : "0x0700",
  "screenMemory"         : "0x0800",
 
+ "qqVgaWidth"           : 160,
+ "qqVgaHeight"          : 120,
+
  "channel1"             : "0x0100",
  "channel2"             : "0x0200",
  "channel3"             : "0x0300",

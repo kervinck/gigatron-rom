@@ -20,5 +20,8 @@
  "dev1"                       : "0x42",
  "dev2"                       : "0x44",
  "devA"                       : "0x46",
- "LoadGt1"                    : "0x78a0"
+ "LoadGt1"                    : "0x78a0",
+
+ "hqVgaWidth"                   : 240,
+ "hqVgaHeight"                  : 160
 }
