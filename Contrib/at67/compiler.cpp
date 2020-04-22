@@ -2777,6 +2777,7 @@ namespace Compiler
     void outputIncludes(void)
     {
         _output.push_back("; Includes\n");
+        _output.push_back("%includePath" + std::string(LABEL_TRUNC_SIZE - strlen("%includePath"), ' ') + "\"" + Assembler::getIncludePath() + "\"\n"); //"\"../runtime\"\n");
         _output.push_back("%include" + std::string(LABEL_TRUNC_SIZE - strlen("%include"), ' ') + "gigatron.i\n");
 
         if(!Assembler::getUseOpcodeCALLI())
