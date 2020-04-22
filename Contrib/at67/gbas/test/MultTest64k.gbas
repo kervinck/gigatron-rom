@@ -1,0 +1,54 @@
+_runtimePath_ "../runtime"
+
+const ADDR=&h8000
+const SIZE=1000
+
+cls : mode 2
+
+def word(ADDR + SIZE*0, 0, SIZE, SIZE) = rand(360) - 180
+def word(ADDR + SIZE*2, 0, SIZE, SIZE) = rand(360) - 180
+def word(ADDR + SIZE*4, 0, SIZE, SIZE) = 0
+
+
+result=0 : timer=result : tick=peek(14)
+for i=0 to SIZE-1
+    ticks=tick : tick=peek(14) : ticks=tick-ticks
+    if ticks &&< 0 then ticks=ticks+256
+    timer=timer+ticks
+    gosub math
+next i    
+
+for i=0 to SIZE-1
+    'print deek(ADDR + SIZE*4 + (i LSL 1));" ";
+next i
+
+print : print timer/60;" ";timer % 60;"/60"
+
+q=0 : r=q
+n=15000 : d=153
+q = n/d
+r = n%d
+'gosub div
+print : print q;" ";r
+
+end
+
+
+math:
+    a = deek(ADDR + SIZE*0 + (i LSL 1))
+    b = deek(ADDR + SIZE*2 + (i LSL 1))
+    doke ADDR + SIZE*4 + (i LSL 1), a / b
+return
+
+div:
+    q=0 : r=q
+    if d = 0 then return
+    
+    mask = &h8000
+    while mask <> 0
+        r = r LSL 1
+        if n AND mask <> 0 then inc r
+        if r >= d then r = r - d : q = q OR mask
+        mask = mask LSR 1
+    wend
+return    

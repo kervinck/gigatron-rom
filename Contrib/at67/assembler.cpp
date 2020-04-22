@@ -1762,6 +1762,30 @@ namespace Assembler
                     ++adjustedLineIndex -= int(includeLineTokens.end() - includeLineTokens.begin());
                     includeFound = true;
                 }
+                // Include path
+                else if(tokens[0] == "%INCLUDEPATH"  &&  tokens.size() > 1)
+                {
+                    if(Expression::isValidString(tokens[1]))
+                    {
+                        // Strip quotes
+                        std::string includePath = tokens[1];
+                        includePath.erase(0, 1);
+                        includePath.erase(includePath.size()-1, 1);
+
+                        // Prepend current file path to relative paths
+                        if(includePath.find(":") == std::string::npos  &&  includePath[0] != '/')
+                        {
+                            std::string filepath = Loader::getFilePath();
+                            size_t slash = filepath.find_last_of("\\/");
+                            filepath = (slash != std::string::npos) ? filepath.substr(0, slash) : ".";
+                            includePath = filepath + "/" + includePath;
+                        }
+
+                        _includePath = includePath;
+                        itLine = lineTokens.erase(itLine);
+                        includeFound = true;
+                    }
+                }
                 // Build macro
                 else if(doMacros)
                 {

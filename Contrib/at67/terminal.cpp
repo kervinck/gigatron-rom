@@ -633,7 +633,7 @@ namespace Terminal
                 _terminalText.push_back(line);
                 _terminalScrollDelta = 1;
 
-                if(line.find("Cmd?") != std::string::npos  ||  line.find("Ctrl-D") != std::string::npos)
+                if(line.find("?") != std::string::npos  ||  line.find("Ctrl-D") != std::string::npos)
                 {
                     _waitForPromptGiga = false;
                     _terminalScrollDelta = 2;

@@ -38,8 +38,8 @@ int main(int argc, char* argv[])
     }
 
     Memory::initialise();
-    Cpu::initialise();
     Loader::initialise();
+    Cpu::initialise();
     Audio::initialise();
     Image::initialise();
     Editor::initialise();

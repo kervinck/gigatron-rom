@@ -241,12 +241,13 @@ namespace Compiler
     CodeOptimiseType getCodeOptimiseType(void);
     bool getCompilingError(void);
     bool getArrayIndiciesOne(void);
-
-    std::string& getTempVarStartStr(void);
     int getCurrentLabelIndex(void);
-    std::string& getNextInternalLabel(void);
+    const std::string& getRuntimePath(void);
+    const std::string& getTempVarStartStr(void);
+    const std::string& getNextInternalLabel(void);
 
     void setRuntimeEnd(uint16_t runtimeEnd);
+    void setRuntimePath(const std::string& runtimePath);
     void setRuntimeStart(uint16_t runtimeStart);
     void setTempVarStart(uint16_t tempVarStart);
     void setStrWorkArea(uint16_t strWorkArea);
