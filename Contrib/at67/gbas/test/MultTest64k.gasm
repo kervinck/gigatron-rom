@@ -1,0 +1,913 @@
+_startAddress_      EQU                     0x0200
+
+; Internal variables
+serialRawPrev       EQU                     0x0081
+register0           EQU                     0x0082
+register1           EQU                     register0 + 0x02
+register2           EQU                     register0 + 0x04
+register3           EQU                     register0 + 0x06
+register4           EQU                     register0 + 0x08
+register5           EQU                     register0 + 0x0A
+register6           EQU                     register0 + 0x0C
+register7           EQU                     register0 + 0x0E
+register8           EQU                     register0 + 0x10
+register9           EQU                     register0 + 0x12
+register10          EQU                     register0 + 0x14
+register11          EQU                     register0 + 0x16
+register12          EQU                     register0 + 0x18
+register13          EQU                     register0 + 0x1A
+register14          EQU                     register0 + 0x1C
+register15          EQU                     register0 + 0x1E
+fgbgColour          EQU                     register0 + 0x20
+cursorXY            EQU                     register0 + 0x22
+midiStream          EQU                     register0 + 0x24
+midiDelay           EQU                     register0 + 0x26
+frameCountPrev      EQU                     register0 + 0x28
+miscFlags           EQU                     register0 + 0x2A
+highByteMask        EQU                     register0 + 0x2C
+
+; Internal buffers
+textWorkArea        EQU                     0xffa0
+
+; Includes
+%include            gigatron.i
+%include            macros.i
+
+; Labels
+_entryPoint_        EQU                     0x0200
+_math               EQU                     0x0368
+_div                EQU                     0x03a0
+_next_0x026b        EQU                     0x0267
+_else_0x0291        EQU                     0x027f
+_next_0x02bd        EQU                     0x02a9
+_page_0x0300        EQU                     0x0300
+_end_0x0378         EQU                     0x0366
+_else_0x03de        EQU                     0x03b4
+_while_0x03e3       EQU                     0x03b9
+_else_0x0416        EQU                     0x03da
+_page_0x0400        EQU                     0x0400
+_else_0x0438        EQU                     0x0404
+_wend_0x044a        EQU                     0x0414
+_end_0x044c         EQU                     0x0416
+
+; Variables
+_result             EQU                     0x0030
+_timer              EQU                     0x0032
+_tick               EQU                     0x0034
+_i                  EQU                     0x0036
+_ticks              EQU                     0x0038
+_q                  EQU                     0x003a
+_r                  EQU                     0x003c
+_n                  EQU                     0x003e
+_d                  EQU                     0x0040
+_a                  EQU                     0x0042
+_b                  EQU                     0x0044
+_mask               EQU                     0x0046
+
+; Strings
+_str_0xff9d         EQU                     0xff9d
+_str_0xff9d         DB                      1 ' ' 0
+_str_0xff98         EQU                     0xff98
+_str_0xff98         DB                      3 '/60' 0
+
+; Define Bytes
+
+; Define Words
+def_words_0x8000    EQU                     0x8000
+def_words_0x8000    DW                      46 132 122 53 -44 24 50 18 -107 -148 -89 162 98 -65 3 13 -164 -159 158 44 142 17 -24 178 -168 156 -37 -45 -178 135 -60 3 -45 -153 -37 -21 160 -34 64 -57 -166 -175 -151 -116 107 -144 -94 -72 -9 -99 -20 162 73 -151 -111 -92 47 -157 -153 45 -140 90 67 68 -4 -139 -33 -174 13 137 39 -128 133 131 -119 -111 -2 23 140 -47 57 -175 -14 86 146 161 -136 29 -48 44 165 104 176 144 9 -33 -118 -72 41 165 -100 25 -32 76 -131 -108 88 -101 -163 134 105 7 -164 116 -23 16 56 34 29 14 -14 78 -34 11 -53 121 -136 42 -149 -106 -153 105 -133 110 155 -61 108 90 -75 -39 95 115 -134 -174 62 -57 -152 128 -134 -108 135 -162 63 90 -142 -9 -155 100 6 127 41 48 -94 -168 11 23 119 70 -7 -9 81 116 -164 -161 143 11 -127 -14 0 -113 42 47 -145 37 -26 -88 -136 -94 -145 67 67 -178 50 14 121 -127 93 46 52 172 -44 9 -92 43 -52 121 167 -95 59 -76 -135 -179 -9 -5 -124 -141 79 -168 121 -42 -33 -116 -40 5 72 -121 172 20 -97 -31 83 133 -92 -64 -27 110 -81 -109 -173 116 -154 -129 82 64 -95 -144 135 169 -150 -158 -179 -13 -113 48 -92 -82 138 165 -139 66 -13 -119 -68 -15 -5 -10 -123 -19 5 131 50 -43 97 25 -37 58 -32 5 135 -170 95 37 75 167 45 -113 89 33 135 6 -166 146 -153 85 -34 -47 -152 113 75 9 102 -77 -123 3 75 -69 53 -78 76 -13 45 43 -10 -157 -61 -28 -173 32 -108 -60 177 99 139 28 109 87 162 52 28 -45 64 -175 170 49 131 -90 6 -35 -88 136 134 -22 -23 15 39 -134 62 -103 112 -19 87 89 -145 100 -143 177 -28 21 55 123 -131 -14 179 110 -167 117 109 -138 -47 175 -45 93 84 58 2 -166 -142 59 124 111 -13 156 -54 47 73 128 19 -17 115 -103 -138 149 12 15 157 126 -173 -15 139 -140 -164 1 7 -120 -89 179 105 132 7 94 -76 29 38 -154 148 -113 127 17 -37 -111 -164 -7 95 -54 -151 -63 -131 -180 -167 124 148 71 151 34 -5 -46 -1 -140 -123 -106 -177 98 119 131 144 19 -146 -145 -95 29 -138 -12 -138 125 129 -150 85 82 29 -155 -47 -163 -23 104 162 -133 0 25 13 -50 -65 95 -80 -111 20 178 -135 83 -24 10 -137 157 38 -22 -79 15 12 14 -162 152 26 139 -75 117 169 110 69 -124 -162 151 55 105 110 47 75 105 -172 -87 -111 101 -79 -131 -62 97 -173 -78 85 -10 81 21 -139 -92 94 -91 -85 68 93 33 -79 173 -172 28 -129 -99 171 -17 -111 19 -178 160 -176 18 129 -174 -64 9 149 -147 146 -63 -96 7 67 -74 -127 131 101 106 172 -7 4 -138 50 54 -29 -134 -154 -74 -96 55 67 -97 70 26 -94 72 -126 100 -110 -175 -96 -23 88 -107 -154 134 -150 -19 -7 -146 23 -73 63 -82 -22 -97 -179 95 -122 76 178 12 43 -49 -45 -131 -63 -81 -16 -36 -163 -151 -81 142 74 142 -112 179 -86 76 -167 -95 -43 -70 83 -18 -63 -50 -12 -155 -125 74 -130 100 45 -9 -64 -93 137 -104 -13 -17 -148 -62 64 7 -10 -54 8 143 81 -80 -92 28 -144 -94 -106 94 18 -164 16 77 103 95 179 -83 154 87 123 44 -17 2 177 -106 -104 102 -111 118 -101 106 -114 -168 118 111 -174 -124 -99 -64 -110 46 67 -72 -175 -156 71 115 -21 -160 -159 -104 -35 71 -2 37 -20 -119 64 -44 43 -159 161 148 121 -145 -79 123 -69 124 -146 -101 -19 54 68 -158 78 -91 -74 -65 165 -27 163 -175 7 53 -68 -38 131 -169 -148 -148 151 -111 17 123 107 172 -109 163 -97 -149 155 -157 -87 53 118 -93 65 -161 146 -127 57 140 103 -126 119 -58 177 -80 125 82 -42 103 -133 134 83 -100 163 102 156 64 150 -120 99 1 5 61 65 97 162 -167 35 60 -113 -116 -114 52 -161 -54 14 -145 28 -24 140 -36 -63 16 -170 -135 89 127 -85 1 64 -172 7 44 89 172 -84 -9 79 -12 -30 61 111 -97 -160 -10 -179 -175 83 -112 135 2 -114 83 88 -73 131 -127 -91 85 -71 142 125 -65 135 156 -180 -165 135 -110 -111 -72 -137 -2 -23 -117 52 32 19 -54 -97 -63 -146 24 -75 45 71 162 -23 -75 -128 -111 -19 -81 133 -23 -22 1 176 26 -132 92 96 -91 -31 142 -11 -23 42 147 88 -138 11 93 -95 -47 8 121 24 -142 129 -157 56 -101 8 -155 -72 10 48 108 172 -8 -160 140 132 83 96 -147 172 40 132 -66 60 101 174 -103 128 175 17 -129 122 -177 -157 -27 54 -174 42 47 103 -39 74 100 128 150 174 -54 -170 129 22 108 44 -6 87 65 -9 15 97 143 -125 56 -51 -89 -139 57 110 115 18 -168 -102 -75 -160 24 96 146 -156 -99 28 127 140 8 168 -110 46 -147 126 109 -16 -76 148 -10 130 117 -66 130 -151 96 74 -125 
+def_words_0x87d0    EQU                     0x87d0
+def_words_0x87d0    DW                      -35 139 -128 -48 165 -59 105 -171 57 179 138 -166 -112 -96 -167 136 115 83 -105 -16 -167 51 -74 -162 -59 -114 -140 39 -10 91 -95 111 125 -12 22 -129 -52 73 14 13 -67 -176 -87 35 80 -55 55 -180 41 122 -142 -12 42 166 55 -88 12 59 111 -121 -108 99 64 39 -140 123 161 122 -57 -61 62 -86 -79 -82 -23 -141 -18 115 10 -136 -158 -142 -88 1 105 -61 0 -125 -176 -53 101 -143 -109 72 -118 129 168 -64 -116 74 164 53 58 5 -51 -164 -23 -127 -64 -27 -101 -77 100 -11 57 -82 -97 -5 -87 -80 143 40 89 165 11 -134 84 -49 131 -37 -36 142 -19 117 122 -163 -174 89 66 -75 -16 25 -126 -178 153 -166 60 -5 60 165 -111 37 147 176 97 -69 -52 -55 -111 -47 108 131 -108 22 -151 76 -51 -134 -82 -162 147 -160 -155 -27 38 -80 -56 -112 -174 80 152 163 -39 60 -46 -92 -74 52 143 -43 -105 29 -53 41 -38 123 -80 138 -84 -11 91 123 -99 145 -25 138 48 17 -31 -24 74 38 172 -29 97 -43 -106 -28 -161 -17 -6 -179 -74 -115 87 133 -90 115 2 39 -42 -107 55 -89 -169 -72 158 23 -105 82 -132 34 -115 84 118 -177 -136 -130 157 71 -116 -132 31 42 127 128 82 -169 -63 9 -57 163 -29 -174 100 28 -134 61 -166 94 -140 -102 -159 69 -134 42 48 -147 -162 129 57 15 -145 -140 60 -12 -150 71 75 62 3 -174 -17 45 157 -171 25 -40 46 -31 -53 5 175 129 -40 147 58 97 24 101 -156 125 -159 18 30 102 -37 -37 -178 -71 50 52 -157 -80 42 -146 -62 109 -178 -28 170 147 -7 37 -81 -177 137 82 -108 64 176 129 -22 171 -11 57 113 -6 -14 -162 20 86 -145 -177 34 -78 72 -2 106 -30 51 64 -177 -20 -92 -2 -68 -27 148 99 2 111 -81 143 -57 2 76 148 -95 1 59 103 -13 6 -85 -168 -176 152 41 101 -26 -52 71 -60 124 -54 -20 -48 -81 -38 -31 166 73 15 148 -135 92 -118 -56 58 61 -118 157 44 -76 66 124 -105 43 -125 -11 3 -122 52 164 120 178 143 -158 -117 -128 55 168 -53 -101 -73 17 -3 16 -92 -48 -43 -65 77 -104 -58 -9 57 -109 -100 -162 114 -59 -177 81 81 97 107 -72 -69 -148 6 102 -30 73 -78 128 -33 109 76 -44 -42 5 131 52 -54 44 -19 -69 -37 -72 -170 -81 94 -1 -45 95 12 -145 -146 159 108 75 90 138 -67 -51 -70 103 -113 0 -107 104 98 173 -163 14 -78 -63 -128 137 -71 52 94 31 101 -83 -67 74 -12 4 97 -25 12 -128 167 179 0 -86 -132 -15 160 10 -158 -125 -168 65 -133 -123 60 31 -47 -120 -86 -35 93 53 65 -155 -50 127 -39 -127 -124 55 51 65 149 -14 41 -54 104 86 161 107 -127 61 -89 -167 5 -151 41 110 102 160 38 -91 57 -6 -119 -23 69 -55 43 102 95 111 -81 88 -124 15 66 -141 -26 101 -29 -29 -173 -25 -169 -155 114 -120 -88 -26 80 147 -130 18 -110 -27 166 151 -92 -122 179 76 -71 -15 -6 124 139 -71 -69 71 -10 -146 13 18 168 -63 -40 -10 140 61 41 175 -73 -1 -135 -122 -14 -129 95 -79 49 -138 96 153 75 2 -60 36 -156 49 -14 109 15 19 -1 -31 168 -150 115 -30 97 -130 92 -127 -77 -156 -49 48 47 71 -100 -74 -83 146 66 142 -107 -115 123 66 -59 -74 49 84 3 -55 -31 -50 98 -61 -65 91 90 -4 66 61 -93 107 -167 -161 -102 -18 166 126 -120 -174 162 100 -137 -144 169 141 -145 145 103 -50 -24 -157 -28 122 112 -13 -60 151 -57 -178 -54 -47 -31 75 118 -147 123 -132 12 161 -118 117 -97 -86 -143 -125 77 -139 -15 137 -67 -110 30 14 15 -50 -96 107 91 136 -97 -84 68 -122 83 54 150 -167 -22 112 14 47 107 4 73 63 162 55 168 -62 -99 15 -126 -72 -9 -163 130 24 147 -21 171 -75 -52 -104 49 -139 138 -55 146 99 -137 130 -4 -144 -86 -122 161 149 84 -108 49 28 161 178 46 -48 114 -114 -42 -118 -15 -54 124 -67 140 -120 -160 -75 -75 -50 136 107 -103 -148 135 44 0 36 -147 -5 61 97 32 -157 135 -101 25 58 30 113 -158 178 -127 -55 70 90 -104 84 105 157 -154 -155 -30 -127 -87 11 -122 11 -99 45 56 -15 -74 54 45 -177 -179 -166 -76 -170 148 -89 134 154 -155 -153 -70 179 136 149 61 -57 -173 78 24 -3 -169 66 98 -67 113 98 63 7 -81 5 33 105 179 -146 14 164 -108 -144 75 177 147 -163 151 -176 75 -174 -13 154 86 -40 105 -152 11 -81 -135 -6 -44 -13 44 173 15 -61 -101 127 -69 152 16 -3 -170 -69 -9 -89 -108 34 -82 -39 83 77 155 -131 -11 -173 -155 96 157 -6 37 67 85 175 -2 59 -105 -13 -85 74 -165 127 -175 -89 -103 -119 -171 148 -152 151 22 -66 -98 179 101 42 -96 -56 124 174 76 84 -2 70 -19 -33 70 
+def_words_0x8fa0    EQU                     0x8fa0
+def_words_0x8fa0    DW                      0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+
+; Define Images
+
+; Lookup Tables
+
+; Code
+_entryPoint_        InitRealTimeProc        
+                    InitEqOp                
+                    InitNeOp                
+                    InitLeOp                
+                    InitGeOp                
+                    InitLtOp                
+                    InitGtOp                
+                    Initialise                                              ; INIT
+
+                    LDWI                    clearVertBlinds
+                    CALL                    giga_vAC
+                    LDI                     2
+                    STW                     graphicsMode
+                    ScanlineMode                                            ; cls : mode 2
+
+                    LDI                     0
+                    STW                     _result
+                    STW                     _timer
+                    LD                      0x0e
+                    STW                     _tick                           ; result=0 : timer=result : tick=peek(14)
+
+                    LDWI                    0
+                    STW                     _i
+                    LDWI                    999
+                    STW                     0xb0
+                    LDWI                    1
+                    STW                     0xb2                            ; for i=0 to SIZE-1
+
+_next_0x026b        LDW                     _tick
+                    STW                     _ticks
+                    LD                      0x0e
+                    STW                     _tick
+                    SUBW                    _ticks
+                    STW                     _ticks                          ; ticks=tick : tick=peek(14) : ticks=tick-ticks
+
+                    LDW                     _ticks
+                    BGE                     _else_0x0291
+                    LDWI                    256
+                    ADDW                    _ticks
+                    STW                     _ticks                          ; if ticks &&< 0 then ticks=ticks+256
+
+_else_0x0291        LDW                     _timer
+                    ADDW                    _ticks
+                    STW                     _timer                          ; timer=timer+ticks
+
+                    LDWI                    _math
+                    CALL                    giga_vAC                        ; gosub math
+
+                    ForNextFarVarPos        _i _next_0x026b 0xb0 0xb2       ; next i
+
+                    LDWI                    0
+                    STW                     _i
+                    LDWI                    999
+                    STW                     0xb0
+                    LDWI                    1
+                    STW                     0xb2                            ; for i=0 to SIZE-1
+
+_next_0x02bd        ForNextFarVarPos        _i _next_0x02bd 0xb0 0xb2       ; next i
+
+                    NewLine                 
+                    LDW                     _timer
+                    STW                     mathX
+                    LDI                     60
+                    STW                     mathY
+                    LDWI                    divide16bit
+                    CALL                    giga_vAC
+                    PrintAcInt16            
+                    PrintString             _str_0xff9d
+                    LDW                     _timer
+                    STW                     mathX
+                    LDI                     60
+                    STW                     mathY
+                    LDWI                    divide16bit
+                    CALL                    giga_vAC
+                    LDW                     mathRem
+                    PrintAcInt16            
+                    STW                     0xde
+                    LDWI                    _page_0x0300
+                    CALL                    giga_vAC
+_page_0x0300        LDW                     0xde
+                    PrintString             _str_0xff98
+                    NewLine                                                 ; print : print timer/60;" ";timer % 60;"/60"
+
+                    LDI                     0
+                    STW                     _q
+                    STW                     _r                              ; q=0 : r=q
+
+                    LDWI                    15000
+                    STW                     _n
+                    LDI                     153
+                    STW                     _d                              ; n=15000 : d=153
+
+                    LDW                     _n
+                    STW                     mathX
+                    LDW                     _d
+                    STW                     mathY
+                    LDWI                    divide16bit
+                    CALL                    giga_vAC
+                    STW                     _q                              ; q = n/d
+
+                    LDW                     _n
+                    STW                     mathX
+                    LDW                     _d
+                    STW                     mathY
+                    LDWI                    divide16bit
+                    CALL                    giga_vAC
+                    LDW                     mathRem
+                    STW                     _r                              ; r = n%d
+
+                    NewLine                 
+                    LDW                     _q
+                    PrintAcInt16            
+                    PrintString             _str_0xff9d
+                    LDW                     _r
+                    PrintAcInt16            
+                    NewLine                                                 ; print : print q;" ";r
+
+_end_0x0378         BRA                     _end_0x0378                     ; end
+
+_math               PUSH                    
+                    LDW                     _i
+                    LSLW                    
+                    STW                     0xc2
+                    LDWI                    -32768
+                    ADDW                    0xc2
+                    DEEK                    
+                    STW                     _a                              ; a = deek(ADDR + SIZE*0 + (i LSL 1))
+
+                    LDW                     _i
+                    LSLW                    
+                    STW                     0xc2
+                    LDWI                    -30768
+                    ADDW                    0xc2
+                    DEEK                    
+                    STW                     _b                              ; b = deek(ADDR + SIZE*2 + (i LSL 1))
+
+                    LDW                     _i
+                    LSLW                    
+                    STW                     0xc2
+                    LDWI                    -28768
+                    ADDW                    0xc2
+                    STW                     0xc2
+                    LDW                     _a
+                    STW                     mathX
+                    LDW                     _b
+                    STW                     mathY
+                    LDWI                    divide16bit
+                    CALL                    giga_vAC
+                    DOKE                    0xc2                            ; doke ADDR + SIZE*4 + (i LSL 1), a / b
+
+                    POP                     
+                    RET                                                     ; return
+
+_div                LDI                     0
+                    STW                     _q
+                    STW                     _r                              ; q=0 : r=q
+
+                    LDW                     _d
+                    CALL                    convertEqOpAddr
+                    JumpFalse               _else_0x03de 1
+                    POP                     
+                    RET                                                     ; if d = 0 then return
+
+_else_0x03de        LDWI                    -32768
+                    STW                     _mask                           ; mask = &h8000
+
+_while_0x03e3       LDW                     _mask
+                    CALL                    convertNeOpAddr
+                    JumpFalse               _wend_0x044a 4                  ; while mask <> 0
+
+                    LDW                     _r
+                    LSLW                    
+                    STW                     _r                              ; r = r LSL 1
+
+                    LDW                     _n
+                    ANDW                    _mask
+                    CALL                    convertNeOpAddr
+                    JumpFalse               _else_0x0416 2
+                    INC                     _r                              ; if n AND mask <> 0 then inc r
+
+_else_0x0416        LDW                     _r
+                    SUBW                    _d
+                    CALL                    convertGeOpAddr
+                    JumpFalse               _else_0x0438 3
+                    LDW                     _r
+                    SUBW                    _d
+                    STW                     _r
+                    LDW                     _q
+                    ORW                     _mask
+                    STW                     0xde
+                    LDWI                    _page_0x0400
+                    CALL                    giga_vAC
+_page_0x0400        LDW                     0xde
+                    STW                     _q                              ; if r >= d then r = r - d : q = q OR mask
+
+_else_0x0438        LDW                     _mask
+                    STW                     mathShift
+                    ShiftRight1bit          
+                    STW                     _mask                           ; mask = mask LSR 1
+
+                    LDWI                    _while_0x03e3
+                    CALL                    giga_vAC                        ; wend
+
+_wend_0x044a        POP                     
+                    RET                                                     ; return
+
+_end_0x044c         BRA                     _end_0x044c                     ; END
+
+
+
+;****************************************************************************************************************************************
+;****************************************************************************************************************************************
+;* Internal runtime, DO NOT MODIFY PAST THIS POINT, modifications must be made in the original include files                            *
+;****************************************************************************************************************************************
+;****************************************************************************************************************************************
+
+realTimeProc        EQU     0xff8f
+convertEqOp         EQU     0xff86
+convertNeOp         EQU     0xff7d
+convertLeOp         EQU     0xff74
+convertGeOp         EQU     0xff6b
+convertLtOp         EQU     0xff62
+convertGtOp         EQU     0xff59
+divide16bit         EQU     0xfe10
+shiftRight1bit      EQU     0xfe06
+scanlineMode        EQU     0xff22
+resetVideoTable     EQU     0xfd8c
+initClearFuncs      EQU     0xff36
+clearVertBlinds     EQU     0xfec5
+clearCursorRow      EQU     0xfd43
+printInit           EQU     0xfd28
+printText           EQU     0xff09
+printDigit          EQU     0xfd06
+printInt16          EQU     0xfdab
+printChar           EQU     0xfca7
+newLineScroll       EQU     0xfe67
+realTimeProcAddr    EQU     0x00dc
+convertEqOpAddr     EQU     0x00d0
+convertNeOpAddr     EQU     0x00d2
+convertLeOpAddr     EQU     0x00d4
+convertGeOpAddr     EQU     0x00d6
+convertLtOpAddr     EQU     0x00d8
+convertGtOpAddr     EQU     0x00da
+
+
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+numericLabel        EQU     register0
+defaultLabel        EQU     register1
+lutLabs             EQU     register2
+lutAddrs            EQU     register3
+lutIndex            EQU     register8
+
+
+                    ; runs real time, (time sliced), code at regular intervals
+realTimeProc        PUSH
+                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI/SPRITE etc routines
+                    CALL    giga_vAC
+                    POP
+                    RET
+                    
+realTimeStub        RET
+
+
+                    ; convert equal to into a boolean
+convertEqOp         BEQ     convertEq_1
+                    LDI     0
+                    RET
+convertEq_1         LDI     1
+                    RET
+
+
+                    ; convert not equal to into a boolean
+convertNeOp         BNE     convertNe_1
+                    LDI     0
+                    RET
+convertNe_1         LDI     1
+                    RET
+
+
+                    ; convert less than or equal to into a boolean
+convertLeOp         BLE     convertLe_1
+                    LDI     0
+                    RET
+convertLe_1         LDI     1
+                    RET
+
+
+                    ; convert greater than or equal to into a boolean
+convertGeOp         BGE     convertGe_1
+                    LDI     0
+                    RET
+convertGe_1         LDI     1
+                    RET
+
+
+                    ; convert less than into a boolean
+convertLtOp         BLT     convertLt_1
+                    LDI     0
+                    RET
+convertLt_1         LDI     1
+                    RET
+
+
+                    ; convert greater than into boolean
+convertGtOp         BGT     convertGt_1
+                    LDI     0
+                    RET
+convertGt_1         LDI     1
+                    RET
+
+
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+mathX               EQU     register8
+mathY               EQU     register9
+mathSum             EQU     register12
+mathRem             EQU     register12
+mathMask            EQU     register13
+mathSign            EQU     register14
+mathQuot            EQU     register15
+mathShift           EQU     register15
+mathBase            EQU     register10
+mathPow             EQU     register11
+mathResult          EQU     register14
+
+
+                    ; accumulator:mathRem = mathX / mathY, (results 16bit)
+divide16bit         LDW     mathX
+                    XORW    mathY
+                    STW     mathSign
+                    LDW     mathX
+                    BGE     divide16_pos0
+                    LDI     0
+                    SUBW    mathX
+                    STW     mathX
+                    
+divide16_pos0       LDW     mathY                     
+                    BGE     divide16_pos1
+                    LDI     0
+                    SUBW    mathY
+                    STW     mathY
+                    
+divide16_pos1       LDI     0
+                    STW     mathRem
+                    LDI     1
+    
+divide16_loop       STW     mathMask
+                    LDW     mathRem
+                    LSLW
+                    STW     mathRem
+                    LDW     mathX
+                    BGE     divide16_incr
+                    INC     mathRem
+                    
+divide16_incr       LDW     mathX
+                    LSLW
+                    STW     mathX
+                    LDW     mathRem
+                    SUBW    mathY
+                    BLT     divide16_incx
+                    STW     mathRem
+                    INC     mathX
+                    
+divide16_incx       LDW     mathMask
+                    LSLW
+                    BNE     divide16_loop
+                    PUSH
+                    CALL    realTimeProcAddr
+                    POP
+                    LDW     mathSign
+                    BGE     divide16_exit
+                    LDI     0
+                    SUBW    mathX
+                    RET
+                    
+divide16_exit       LDW     mathX
+                    RET
+
+
+shiftRight1bit      LDWI    SYS_LSRW1_48
+                    STW     giga_sysFn
+                    LDW     mathShift
+                    SYS     48
+                    RET
+
+
+; do *NOT* use register4 to register7 during time slicing if you use realTimeProc
+graphicsMode        EQU     register0
+waitVBlankNum       EQU     register0
+
+drawHLine_x1        EQU     register0
+drawHLine_y1        EQU     register1
+drawHLine_x2        EQU     register2
+drawHLine_x4        EQU     register3
+
+drawVLine_x1        EQU     register0
+drawVLine_y1        EQU     register1
+drawVLine_y2        EQU     register2
+drawVLine_y8        EQU     register3
+
+drawLine_x1         EQU     register0
+drawLine_y1         EQU     register1
+drawLine_x2         EQU     register2
+drawLine_y2         EQU     register3
+drawLine_xy1        EQU     register0
+drawLine_xy2        EQU     register1
+drawLine_dxy1       EQU     register2
+drawLine_dxy2       EQU     register3
+drawLine_dx1        EQU     register4           ; register4 to register7 used for temp values, state will be invalidated during time slicing
+drawLine_dy1        EQU     register5
+drawLine_dx2        EQU     register6
+drawLine_dy2        EQU     register7
+drawLine_sx         EQU     register8
+drawLine_sy         EQU     register9
+drawLine_h          EQU     register10
+drawLine_num        EQU     register11
+drawLine_count      EQU     register12
+drawLine_addr       EQU     register13
+drawLine_tmp        EQU     register14
+  
+drawCircle_cx       EQU     register0
+drawCircle_cy       EQU     register1
+drawCircle_r        EQU     register2
+drawCircle_a        EQU     register3
+drawCircle_d        EQU     register8
+drawCircle_x        EQU     register9
+drawCircle_y        EQU     register10
+drawCircle_ch0      EQU     register11
+drawCircle_ch1      EQU     register12
+drawCircle_ch2      EQU     register13
+drawCircle_ch3      EQU     register14
+
+drawCircleF_x1      EQU     register0
+drawCircleF_y1      EQU     register1
+drawCircleF_x2      EQU     register2
+drawCircleF_cx      EQU     register15
+drawCircleF_cy      EQU     register10
+drawCircleF_r       EQU     register11
+drawCircleF_v       EQU     register8
+drawCircleF_w       EQU     register9
+
+drawRect_x1         EQU     register7
+drawRect_y1         EQU     register10
+drawRect_x2         EQU     register11
+drawRect_y2         EQU     register15
+
+drawRectF_x1        EQU     register0
+drawRectF_y1        EQU     register1
+drawRectF_x2        EQU     register2
+drawRectF_y2        EQU     register7
+
+drawPoly_addr       EQU     register15
+
+    
+scanlineMode        LDW     giga_romType
+                    ANDI    0xF8
+                    SUBI    romTypeValue_ROMv2
+                    BGE     scanlineM_cont
+                    RET
+    
+scanlineM_cont      LDWI    SYS_SetMode_v2_80
+                    STW     giga_sysFn
+                    LDW     graphicsMode
+                    SYS     80
+                    RET
+
+
+
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+xreset              EQU     register0
+xcount              EQU     register1
+ycount              EQU     register2
+treset              EQU     register3
+breset              EQU     register8
+top                 EQU     register9
+bot                 EQU     register10
+vramAddr            EQU     register11
+evenAddr            EQU     register12
+clsAddress          EQU     register13
+    
+    
+                    ; resets video table pointers
+resetVideoTable     PUSH
+                    LDI     8
+                    STW     vramAddr
+                    LDWI    giga_videoTable
+                    STW     evenAddr
+    
+resetVT_loop        CALL    realTimeProcAddr
+                    LDW     vramAddr
+                    DOKE    evenAddr
+                    INC     evenAddr
+                    INC     evenAddr
+                    INC     vramAddr
+                    LD      vramAddr
+                    SUBI    giga_yres + 8
+                    BLT     resetVT_loop
+                    POP
+                    RET
+
+
+initClearFuncs      PUSH
+                    LDWI    resetVideoTable
+                    CALL    giga_vAC
+    
+                    LDWI    0x0002                              ; starting cursor position
+                    STW     cursorXY
+                    LDWI    0x7FFF
+                    ANDW    miscFlags
+                    STW     miscFlags                           ; reset on bottom row flag
+            
+                    LD      fgbgColour
+                    ST      giga_sysArg0
+                    ST      giga_sysArg0 + 1
+                    ST      giga_sysArg2
+                    ST      giga_sysArg2 + 1                    ; 4 pixels of fg colour
+    
+                    LDWI    SYS_Draw4_30                        ; setup 4 pixel SYS routine
+                    STW     giga_sysFn
+                    POP
+                    RET
+
+
+                    ; clears the viewable screen using a vertical blinds effect
+clearVertBlinds     PUSH
+                    LDWI    initClearFuncs
+                    CALL    giga_vAC
+
+                    LDWI    giga_vram
+                    STW     giga_sysArg4
+                    LD      giga_sysArg4 + 1
+                    ST      top
+    
+clearVB_loop        CALL    realTimeProcAddr
+                    LD      top
+                    ST      giga_sysArg4 + 1                    ; top line
+                    SYS     30
+    
+                    LDWI    giga_yres - 1 + 16
+                    SUBW    top
+                    ST      giga_sysArg4 + 1                    ; bottom line
+                    SYS     30
+    
+                    LD      giga_sysArg4
+                    ADDI    0x04
+                    ST      giga_sysArg4
+                    SUBI    giga_xres
+                    BLT     clearVB_loop
+    
+                    LDI     0
+                    ST      giga_sysArg4
+                    INC     top                                 ; next top line
+                    LD      top
+                    SUBI    giga_yres / 2 + 8
+                    BLT     clearVB_loop
+                    POP
+                    RET
+
+
+
+; do *NOT* use register4 to register7 during time slicing if you use realTimeProc
+textStr             EQU     register0
+textNum             EQU     register0
+textBak             EQU     register0
+textLen             EQU     register1
+textOfs             EQU     register2
+textChr             EQU     register3
+textHex             EQU     register8
+textFont            EQU     register9
+textSlice           EQU     register10
+scanLine            EQU     register11
+digitMult           EQU     register12
+digitIndex          EQU     register13
+clearLoop           EQU     register14
+    
+    
+printInit           LDWI    SYS_VDrawBits_134
+                    STW     giga_sysFn
+                    LDW     fgbgColour
+                    STW     giga_sysArg0
+                    
+                    LDWI    giga_videoTable
+                    STW     giga_sysArg4
+                    LD      cursorXY + 1
+                    LSLW
+                    ADDW    giga_sysArg4
+                    PEEK
+                    ST      giga_sysArg4 + 1
+                    LD      cursorXY
+                    ST      giga_sysArg4                    ; xy position
+                    RET
+
+
+
+                    ; prints text string pointed to by textStr
+printText           PUSH
+                    LDWI    printInit
+                    CALL    giga_vAC
+
+                    ; first byte is length
+printT_char         INC     textStr                         ; next char
+                    LDW     textStr             
+                    PEEK
+                    BEQ     printT_exit                     ; check for delimiting zero
+                    ST      textChr
+                    LDWI    printChar
+                    CALL    giga_vAC
+                    BRA     printT_char
+                    
+printT_exit         POP
+                    RET
+
+
+
+                    ; prints single digit in textNum
+printDigit          PUSH
+                    LDW     textNum
+printD_index        SUBW    digitMult
+                    BLT     printD_cont
+                    STW     textNum
+                    INC     digitIndex
+                    BRA     printD_index
+    
+printD_cont         LD      digitIndex
+                    BEQ     printD_exit
+                    ORI     0x30
+                    ST      textChr
+                    LDWI    printChar
+                    CALL    giga_vAC
+                    LDI     0x30
+                    ST      digitIndex
+printD_exit         POP
+                    RET
+
+
+                    ; prints 16bit int in textNum
+printInt16          PUSH
+                    LDWI    printInit
+                    CALL    giga_vAC
+                    LDI     0
+                    ST      digitIndex
+                    LDW     textNum
+                    BGE     printI16_pos
+                    LDI     0x2D
+                    ST      textChr
+                    LDWI    printChar
+                    CALL    giga_vAC
+                    LDWI    0
+                    SUBW    textNum
+                    STW     textNum    
+    
+printI16_pos        LDWI    10000
+                    STW     digitMult
+                    LDWI    printDigit
+                    CALL    giga_vAC
+                    LDWI    1000
+                    STW     digitMult
+                    LDWI    printDigit
+                    CALL    giga_vAC
+                    LDWI    100
+                    STW     digitMult
+                    LDWI    printDigit
+                    CALL    giga_vAC
+                    LDWI    10
+                    STW     digitMult
+                    LDWI    printDigit
+                    CALL    giga_vAC
+                    LD      textNum
+                    ORI     0x30
+                    ST      textChr
+                    LDWI    printChar
+                    CALL    giga_vAC
+                    POP
+                    RET
+
+
+                    ; prints char in textChr
+printChar           LD      textChr
+                    ANDI    0x7F                            ; char can't be bigger than 127
+                    SUBI    82
+                    BGE     printC_text82
+                    ADDI    50
+                    BLT     printC_exit                     ; char<32 exit
+                    STW     textChr                         ; char-32
+                    LDWI    giga_text32                     ; text font slice base address for chars 32-81
+                    BRA     printC_font
+                    
+printC_text82       STW     textChr                         ; char-82
+                    LDWI    giga_text82                     ; text font slice base address for chars 82+
+                    
+printC_font         STW     textFont
+                    LD      textChr
+                    LSLW    
+                    LSLW    
+                    ADDW    textChr
+                    ADDW    textFont
+                    STW     textFont                        ; char*5 + textFont
+                    LDI     0x05
+
+printC_slice        ST      textSlice
+                    LDW     textFont                        ; text font slice base address
+                    LUP     0x00                            ; get ROM slice
+                    ST      giga_sysArg2
+                    SYS     134                             ; draw vertical slice, SYS_VDrawBits_134, 270 - 134/2 = 0xCB
+                    INC     textFont                        ; next vertical slice
+                    INC     giga_sysArg4                    ; next x
+                    LD      textSlice
+                    SUBI    1
+                    BNE     printC_slice
+                    
+                    ST      giga_sysArg2                    ; result of printC_slice is 0
+                    SYS     134                             ; draw last blank slice
+                    INC     giga_sysArg4                    ; using sysArg4 as a temporary cursor address for multiple char prints
+                    
+                    PUSH
+                    CALL    realTimeProcAddr
+                    LD      cursorXY
+                    ADDI    0x06
+                    ST      cursorXY
+                    SUBI    giga_xres - 5                   ; giga_xres - 6, (154), is last possible char in row
+                    BLT     printC_pop
+                    LDWI    newLineScroll                   ; next row, scroll at bottom
+                    CALL    giga_vAC
+                    
+printC_pop          POP
+
+printC_exit         RET
+
+
+
+                    ; clears the top 8 lines of pixels in preparation of text scrolling
+clearCursorRow      PUSH
+                    LD      fgbgColour
+                    ST      giga_sysArg0
+                    ST      giga_sysArg0 + 1
+                    ST      giga_sysArg2
+                    ST      giga_sysArg2 + 1                ; 4 pixels of colour
+    
+                    LDWI    SYS_Draw4_30                    ; setup 4 pixel SYS routine
+                    STW     giga_sysFn
+    
+                    LDWI    giga_videoTable                 ; current cursor position
+                    PEEK
+                    ST      giga_sysArg4 + 1
+                    LDI     8
+
+clearCR_loopy       ST      clearLoop
+                    CALL    realTimeProcAddr
+                    LDI     giga_xres
+                    
+clearCR_loopx       SUBI    4                               ; loop is unrolled 4 times
+                    ST      giga_sysArg4
+                    SYS     30
+                    SUBI    4
+                    ST      giga_sysArg4
+                    SYS     30
+                    SUBI    4
+                    ST      giga_sysArg4
+                    SYS     30
+                    SUBI    4
+                    ST      giga_sysArg4
+                    SYS     30
+                    BGT     clearCR_loopx
+                    
+                    INC     giga_sysArg4 + 1                ; next line
+                    LD      clearLoop
+                    SUBI    1
+                    BNE     clearCR_loopy
+
+                    LDWI    printInit
+                    CALL    giga_vAC                        ; re-initialise the SYS registers
+                    POP
+                    RET
+
+
+                    ; print from top row to bottom row, then start scrolling 
+newLineScroll       LDI     0x02                            ; x offset slightly
+                    ST      cursorXY
+                    ST      giga_sysArg4
+                    LDWI    0x0001
+                    ANDW    miscFlags
+                    BNE     newLS_cont0                     ; scroll on or off
+                    RET
+                    
+newLS_cont0         PUSH
+                    LDWI    0x8000
+                    ANDW    miscFlags                       ; on bottom row flag
+                    BNE     newLS_cont1
+                    LD      cursorXY + 1
+                    ADDI    8
+                    ST      cursorXY + 1
+                    SUBI    giga_yres
+                    BLT     newLS_exit
+                    LDI     giga_yres - 8
+                    ST      cursorXY + 1
+                    
+newLS_cont1         LDWI    clearCursorRow
+                    CALL    giga_vAC
+                    LDWI    giga_videoTable
+                    STW     scanLine
+    
+newLS_scroll        CALL    realTimeProcAddr
+                    LDW     scanLine
+                    PEEK
+                    ADDI    8
+                    ANDI    0x7F
+                    SUBI    8
+                    BGE     newLS_adjust
+                    ADDI    8
+                    
+newLS_adjust        ADDI    8
+                    POKE    scanLine
+                    INC     scanLine                        ; scanline pointers are 16bits
+                    INC     scanLine
+                    LD      scanLine
+                    SUBI    0xF0                            ; scanline pointers end at 0x01EE
+                    BLT     newLS_scroll
+                    
+                    LDWI    0x8000
+                    ORW     miscFlags
+                    STW     miscFlags                       ; set on bottom row flag
+                    
+newLS_exit          LDWI    printInit
+                    CALL    giga_vAC                        ; re-initialise the SYS registers
+                    POP
+                    RET
+

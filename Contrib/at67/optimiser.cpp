@@ -679,7 +679,7 @@ RESTART_OPTIMISE:
                                     linesDeleted = true;
                                     itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine + 2);
                                     adjustLabelAddresses(i, firstLine + 2, -2);
-                                    adjustVasmAddresses(i, firstLine+ 2, -2);
+                                    adjustVasmAddresses(i, firstLine + 2, -2);
                                 }
                                 break;
 

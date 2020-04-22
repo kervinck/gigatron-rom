@@ -43,6 +43,7 @@ namespace Compiler
     int _currentCodeLineIndex = 0;
     int _jumpFalseUniqueId = 0;
 
+    std::string _runtimePath = ".";
     std::string _tempVarStartStr;
     std::string _nextInternalLabel;
 
@@ -84,11 +85,13 @@ namespace Compiler
     CodeOptimiseType getCodeOptimiseType(void) {return _codeOptimiseType;}
     bool getCompilingError(void) {return _compilingError;}
     bool getArrayIndiciesOne(void) {return _arrayIndiciesOne;}
-    std::string& getTempVarStartStr(void) {return _tempVarStartStr;}
     int getCurrentLabelIndex(void) {return _currentLabelIndex;}
-    std::string& getNextInternalLabel(void) {return _nextInternalLabel;}
+    const std::string& getRuntimePath(void) {return _runtimePath;}
+    const std::string& getTempVarStartStr(void) {return _tempVarStartStr;}
+    const std::string& getNextInternalLabel(void) {return _nextInternalLabel;}
 
     void setRuntimeEnd(uint16_t runtimeEnd) {_runtimeEnd = runtimeEnd;}
+    void setRuntimePath(const std::string& runtimePath) {_runtimePath = runtimePath;}
     void setRuntimeStart(uint16_t runtimeStart) {_runtimeStart = runtimeStart;}
     void setTempVarStart(uint16_t tempVarStart) {_tempVarStart = tempVarStart;}
     void setStrWorkArea(uint16_t strWorkArea) {_strWorkArea = strWorkArea;}
@@ -710,7 +713,7 @@ namespace Compiler
 
     bool initialiseMacros(void)
     {
-        std::string filename = (!Assembler::getUseOpcodeCALLI()) ? "/include/macros.i" : "/include/macros_CALLI.i";
+        std::string filename = (!Assembler::getUseOpcodeCALLI()) ? "/macros.i" : "/macros_CALLI.i";
         filename = Assembler::getIncludePath() + filename;
         std::ifstream infile(filename);
 
@@ -1246,13 +1249,12 @@ namespace Compiler
         // By default do not support CALLI
         Assembler::setUseOpcodeCALLI(false);
 
-        // Parse each line of input for pragmas
+        // Parse each line of input for pragmas, (pragmas are case sensitive)
         for(int j=0; j<numLines; j++)
         {
             std::vector<size_t> offsets;
             std::string input = _input[j];
             input = Expression::removeCommentsNotInStrings(input);
-            Expression::strToUpper(input);
             Keywords::KeywordResult keywordResult = Keywords::handlePragmas(input, j);
             switch(keywordResult)
             {
@@ -2775,15 +2777,15 @@ namespace Compiler
     void outputIncludes(void)
     {
         _output.push_back("; Includes\n");
-        _output.push_back("%include" + std::string(LABEL_TRUNC_SIZE - strlen("%include"), ' ') + "include/gigatron.i\n");
+        _output.push_back("%include" + std::string(LABEL_TRUNC_SIZE - strlen("%include"), ' ') + "gigatron.i\n");
 
         if(!Assembler::getUseOpcodeCALLI())
         {
-            _output.push_back("%include" + std::string(LABEL_TRUNC_SIZE - strlen("%include"), ' ') + "include/macros.i\n");
+            _output.push_back("%include" + std::string(LABEL_TRUNC_SIZE - strlen("%include"), ' ') + "macros.i\n");
         }
         else
         {
-            _output.push_back("%include" + std::string(LABEL_TRUNC_SIZE - strlen("%include"), ' ') + "include/macros_CALLI.i\n");
+            _output.push_back("%include" + std::string(LABEL_TRUNC_SIZE - strlen("%include"), ' ') + "macros_CALLI.i\n");
         }
 
         _output.push_back("\n");

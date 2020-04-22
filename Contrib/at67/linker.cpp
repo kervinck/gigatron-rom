@@ -334,8 +334,7 @@ namespace Linker
         // Include file already loaded
         if(_subIncludeFiles.find(filename) != _subIncludeFiles.end()) return true;
 
-        std::string path = Assembler::getIncludePath() + "/include/";
-        std::ifstream infile(path + filename);
+        std::ifstream infile(Assembler::getIncludePath() + "/" + filename);
         if(!infile.is_open())
         {
             fprintf(stderr, "Linker::loadInclude() : Failed to open file : '%s'\n", filename.c_str());

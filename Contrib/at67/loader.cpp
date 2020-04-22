@@ -386,7 +386,9 @@ namespace Loader
         if(_numComPorts == 0) fprintf(stderr, "Loader::initialise() : no COM ports found.\n");
 
         // Loader config
-        INIReader iniReader(_exePath + "/" + LOADER_CONFIG_INI);
+        std::string configPath = _exePath + "/" + LOADER_CONFIG_INI;
+        //fprintf(stderr, "%s\n", configPath.c_str());
+        INIReader iniReader(configPath);
         _configIniReader = iniReader;
         if(_configIniReader.ParseError() == 0)
         {
@@ -620,6 +622,8 @@ namespace Loader
         // Replace '\n'
         line.back() = 0;
 
+        //fprintf(stderr, "%s\n", line.c_str());
+
         return true;
     }
 
@@ -650,7 +654,7 @@ namespace Loader
 
             text.push_back(line);
         }
-        while(line.find("Cmd?") == std::string::npos);
+        while(line.find("?") == std::string::npos);
 
         return true;
     }
@@ -673,7 +677,7 @@ namespace Loader
                 return false;
             }
         }
-        while(line.find("Cmd?") == std::string::npos);
+        while(line.find("?") == std::string::npos);
 
         return true;
     }

@@ -113,7 +113,11 @@ int main(int argc, char* argv[])
 
     // Don't save gt1 file for any asm files that contain native rom code
     std::string gt1FileName;
-    if(!hasRomCode  &&  !saveGt1File(filename, gt1File, gt1FileName)) return 1;
+    if(!hasRomCode  &&  !saveGt1File(filename, gt1File, gt1FileName))
+    {
+        fprintf(stderr, "Couldn't compile %s from %s : contains Native code or file system error\n", gt1FileName.c_str(), name.c_str());
+        return 1;
+    }
 
     Loader::printGt1Stats(gt1FileName, gt1File);
 

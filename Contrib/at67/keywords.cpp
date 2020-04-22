@@ -69,11 +69,12 @@ namespace Keywords
         _functions["TIME"] = "TIME";
 
         // Pragmas
-        _pragmas["_USEOPCODECALLI_"]   = {"_USEOPCODECALLI_",   pragmaUSEOPCODECALLI  };
-        _pragmas["_RUNTIMESTART_"]     = {"_RUNTIMESTART_",     pragmaRUNTIMESTART    };
-        _pragmas["_STRINGWORKAREA_"]   = {"_STRINGWORKAREA_",   pragmaSTRINGWORKAREA  };
-        _pragmas["_CODEOPTIMISETYPE_"] = {"_CODEOPTIMISETYPE_", pragmaCODEOPTIMISETYPE};
-        _pragmas["_ARRAYINDICIESONE_"] = {"_ARRAYINDICIESONE_", pragmaARRAYINDICIESONE};
+        _pragmas["_useOpcodeCALLI_"]   = {"_useOpcodeCALLI_",   pragmaUSEOPCODECALLI  };
+        _pragmas["_runtimePath_"]      = {"_runtimePath_",      pragmaRUNTIMEPATH     };
+        _pragmas["_runtimeStart_"]     = {"_runtimeStart_",     pragmaRUNTIMESTART    };
+        _pragmas["_stringWorkArea_"]   = {"_stringWorkArea_",   pragmaSTRINGWORKAREA  };
+        _pragmas["_codeOptimiseType_"] = {"_codeOptimiseType_", pragmaCODEOPTIMISETYPE};
+        _pragmas["_arrayIndiciesOne_"] = {"_arrayIndiciesOne_", pragmaARRAYINDICIESONE};
 
         // Keywords
         _keywords["LET"    ] = {"LET",     keywordLET,     Compiler::SingleStatementParsed};
@@ -148,7 +149,6 @@ namespace Keywords
 
     bool findPragma(std::string code, const std::string& pragma, size_t& foundPos)
     {
-        Expression::strToUpper(code);
         foundPos = code.find(pragma);
         if(foundPos != std::string::npos)
         {
@@ -973,6 +973,36 @@ namespace Keywords
         UNREFERENCED_PARAM(codeLineIndex);
 
         Assembler::setUseOpcodeCALLI(true);
+
+        return true;
+    }
+
+    bool pragmaRUNTIMEPATH(const std::string& input, int codeLineIndex, size_t foundPos)
+    {
+        std::string pragma = input;
+        Expression::stripNonStringWhitespace(pragma);
+        if(foundPos > pragma.size()-3  ||  !Expression::isValidString(pragma.substr(foundPos)))
+        {
+            fprintf(stderr, "Keywords::pragmaRUNTIMEPATH() : Syntax error, _runtimePath_ <\"Path to runtime\">, in '%s' on line %d\n", input.c_str(), codeLineIndex);
+            return false;
+        }
+
+        // Strip quotes
+        std::string runtimePath = pragma.substr(foundPos);
+        runtimePath.erase(0, 1);
+        runtimePath.erase(runtimePath.size()-1, 1);
+
+        // Prepend current file path to relative paths
+        if(runtimePath.find(":") == std::string::npos  &&  runtimePath[0] != '/')
+        {
+            std::string filepath = Loader::getFilePath();
+            size_t slash = filepath.find_last_of("\\/");
+            filepath = (slash != std::string::npos) ? filepath.substr(0, slash) : ".";
+            runtimePath = filepath + "/" + runtimePath;
+        }
+
+        Assembler::setIncludePath(runtimePath);
+        Compiler::setRuntimePath(runtimePath);
 
         return true;
     }
