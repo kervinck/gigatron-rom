@@ -30,8 +30,9 @@ highByteMask        EQU                     register0 + 0x2C
 textWorkArea        EQU                     0x06a0
 
 ; Includes
-%include            include/gigatron.i
-%include            include/macros.i
+%includePath        "D:/Projects/Gigatron TTL/buildx64/gbas/graphics/../runtime"
+%include            gigatron.i
+%include            macros.i
 
 ; Labels
 _entryPoint_        EQU                     0x0200
