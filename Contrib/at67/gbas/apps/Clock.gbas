@@ -14,29 +14,29 @@ const HOURY = &h65A0
 const CENTERX = 80
 const CENTERY = 59
 
-const SECSLEN = 45
-const MINSLEN = 37
-const HOURLEN = 29
+const SECS_LEN = 45
+const MINS_LEN = 37
+const HOUR_LEN = 29
 
-const BKCOLOUR = &h30
-const DIALCOLOUR = &h10
-const DIALRADIUS = 43
+const BACK_COLOUR = &h30
+const DIAL_COLOUR = &h10
+const DIAL_RADIUS = 43
 
 'Seconds
-def byte(SECSX, x, -90.0, 270.0, TICKS) = cos(x)*SECSLEN + CENTERX
-def byte(SECSY, y, -90.0, 270.0, TICKS) = sin(y)*SECSLEN + CENTERY
+def byte(SECSX, x, -90.0, 270.0, TICKS) = cos(x)*SECS_LEN + CENTERX
+def byte(SECSY, y, -90.0, 270.0, TICKS) = sin(y)*SECS_LEN + CENTERY
 
 'Minutes
-def byte(MINSX, x, -90.0, 270.0, TICKS) = cos(x)*MINSLEN + CENTERX
-def byte(MINSY, y, -90.0, 270.0, TICKS) = sin(y)*MINSLEN + CENTERY
+def byte(MINSX, x, -90.0, 270.0, TICKS) = cos(x)*MINS_LEN + CENTERX
+def byte(MINSY, y, -90.0, 270.0, TICKS) = sin(y)*MINS_LEN + CENTERY
 
 'Hours
-def byte(HOURX, x, -90.0, 270.0, TICKS) = cos(x)*HOURLEN + CENTERX
-def byte(HOURY, y, -90.0, 270.0, TICKS) = sin(y)*HOURLEN + CENTERY
+def byte(HOURX, x, -90.0, 270.0, TICKS) = cos(x)*HOUR_LEN + CENTERX
+def byte(HOURY, y, -90.0, 270.0, TICKS) = sin(y)*HOUR_LEN + CENTERY
 
 ' disable video, (except last line so that we don't lose sync), for fast cls
 poke &h01F9, 238
-poke 162,BKCOLOUR
+poke 162,BACK_COLOUR
 cls
 poke &h01F9, 0  'enable video
 
@@ -75,7 +75,7 @@ poke &h01F9, 0  'enable video
 drawDigits:
     poke 162,&h00
     poke 163,&h0C : at 57,82 : print H/10;H%10;":";M/10;M%10;":";S/10;S%10;
-    poke 162,DIALCOLOUR
+    poke 162,DIAL_COLOUR
 return
 
 drawClock:
@@ -119,15 +119,15 @@ return
 
 
 drawDial:
-    poke 163, DIALCOLOUR
-    circlef CENTERX, CENTERY, DIALRADIUS
+    poke 163, DIAL_COLOUR
+    circlef CENTERX, CENTERY, DIAL_RADIUS
     
     ox=CENTERX : oy=CENTERY
-    cr=DIALRADIUS + 1 : cc=&h00 : gosub jitterCircle
-    cr=DIALRADIUS + 3 : cc=&h00 : gosub jitterCircle
-    cr=DIALRADIUS + 5 : cc=&h01 : gosub jitterCircle
-    cr=DIALRADIUS + 9 : cc=&h03 : gosub jitterCircle
-    cr=DIALRADIUS + 7 : cc=&h02 : gosub jitterCircle
+    cr=DIAL_RADIUS + 1 : cc=&h00 : gosub jitterCircle
+    cr=DIAL_RADIUS + 3 : cc=&h00 : gosub jitterCircle
+    cr=DIAL_RADIUS + 5 : cc=&h01 : gosub jitterCircle
+    cr=DIAL_RADIUS + 9 : cc=&h03 : gosub jitterCircle
+    cr=DIAL_RADIUS + 7 : cc=&h02 : gosub jitterCircle
     
     for i=0 to TICKS-1
         gosub drawTicks
@@ -135,7 +135,7 @@ drawDial:
 return
 
 eraseSecondHand:
-    poke 163,DIALCOLOUR : line CENTERX,CENTERY, peek(SECSX + SS),peek(SECSY + SS)
+    poke 163,DIAL_COLOUR : line CENTERX,CENTERY, peek(SECSX + SS),peek(SECSY + SS)
 return
     
 drawSecondHand:
@@ -143,7 +143,7 @@ drawSecondHand:
 return
 
 eraseMinuteHand:
-    poke 163,DIALCOLOUR : line CENTERX,CENTERY, peek(MINSX + MM),peek(MINSY + MM)
+    poke 163,DIAL_COLOUR : line CENTERX,CENTERY, peek(MINSX + MM),peek(MINSY + MM)
 return
 
 drawMinuteHand:
@@ -151,7 +151,7 @@ drawMinuteHand:
 return
 
 eraseHourHand:
-    poke 163,DIALCOLOUR: line CENTERX,CENTERY, peek(HOURX + Hx5 + MMd12),peek(HOURY + Hx5 + MMd12)
+    poke 163,DIAL_COLOUR: line CENTERX,CENTERY, peek(HOURX + Hx5 + MMd12),peek(HOURY + Hx5 + MMd12)
 return
 
 drawHourHand:

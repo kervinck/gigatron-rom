@@ -30,7 +30,7 @@ highByteMask        EQU                     register0 + 0x2C
 textWorkArea        EQU                     0x06a0
 
 ; Includes
-%includePath        "D:/Projects/Gigatron TTL/buildx64/gbas/graphics/../runtime"
+%includePath        "../runtime"
 %include            gigatron.i
 %include            macros.i
 
@@ -53,10 +53,10 @@ _x2                 EQU                     0x0034
 _x3                 EQU                     0x0036
 _x4                 EQU                     0x0038
 _x5                 EQU                     0x003a
-_speed8             EQU                     0x003c
-_speed4             EQU                     0x003e
-_speed2             EQU                     0x0040
-_speed1             EQU                     0x0042
+_speed1             EQU                     0x003c
+_speed2             EQU                     0x003e
+_speed4             EQU                     0x0040
+_speed8             EQU                     0x0042
 
 ; Strings
 
@@ -358,57 +358,57 @@ _entryPoint_        InitRealTimeProc
                     STW                     _x5                             ; x0 = 0 : x1 = x0 : x2 = x1 : x3 = x2 : x4 = x3 : x5 = x4
 
                     LDI                     128
-                    STW                     _speed8                         ; speed8 = 128
+                    STW                     _speed1                         ; speed1 = 128
 
 _loop               WaitVBlank                                              ; wait
 
-                    LDW                     _speed8
-                    LSLW                    
-                    STW                     _speed4
+                    LDW                     _speed1
                     LSLW                    
                     STW                     _speed2
                     LSLW                    
-                    STW                     _speed1                         ; speed4 = speed8 LSL 1 : speed2 = speed4 LSL 1 : speed1 = speed2 LSL 1
+                    STW                     _speed4
+                    LSLW                    
+                    STW                     _speed8                         ; speed2 = speed1 LSL 1 : speed4 = speed2 LSL 1 : speed8 = speed4 LSL 1
 
                     LDWI                    257
                     STW                     register0
                     LD                      _x0 + 1
                     POKE                    register0
                     LDW                     _x0
-                    ADDW                    _speed1
-                    STW                     _x0                             ; poke &h0101, x0.hi : x0 = x0 + speed1
+                    ADDW                    _speed8
+                    STW                     _x0                             ; poke &h0101, x0.hi : x0 = x0 + speed8
 
                     LDWI                    305
                     STW                     register0
                     LD                      _x1 + 1
                     POKE                    register0
                     LDW                     _x1
-                    SUBW                    _speed2
-                    STW                     _x1                             ; poke &h0131, x1.hi : x1 = x1 - speed2
+                    SUBW                    _speed4
+                    STW                     _x1                             ; poke &h0131, x1.hi : x1 = x1 - speed4
 
                     LDWI                    347
                     STW                     register0
                     LD                      _x2 + 1
                     POKE                    register0
                     LDW                     _x2
-                    SUBW                    _speed4
-                    STW                     _x2                             ; poke &h015B, x2.hi : x2 = x2 - speed4
+                    SUBW                    _speed2
+                    STW                     _x2                             ; poke &h015B, x2.hi : x2 = x2 - speed2
 
                     LDWI                    377
                     STW                     register0
                     LD                      _x3 + 1
                     POKE                    register0
                     LDW                     _x3
-                    SUBW                    _speed8
-                    STW                     _x3                             ; poke &h0179, x3.hi : x3 = x3 - speed8
+                    SUBW                    _speed1
+                    STW                     _x3                             ; poke &h0179, x3.hi : x3 = x3 - speed1
 
                     LDWI                    387
                     STW                     register0
                     LD                      _x4 + 1
                     POKE                    register0
                     LDW                     _x4
-                    ADDW                    _speed8
-                    STW                     _x4                             ; poke &h0183, x4.hi : x4 = x4 + speed8
+                    ADDW                    _speed1
+                    STW                     _x4                             ; poke &h0183, x4.hi : x4 = x4 + speed1
 
                     LDWI                    403
                     STW                     register0
@@ -419,8 +419,8 @@ _loop               WaitVBlank                                              ; wa
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
-                    ADDW                    _speed4
-                    STW                     _x5                             ; poke &h0193, x5.hi : x5 = x5 + speed4
+                    ADDW                    _speed2
+                    STW                     _x5                             ; poke &h0193, x5.hi : x5 = x5 + speed2
 
                     LDWI                    419
                     STW                     register0
@@ -448,41 +448,41 @@ _page_0x0300        LDW                     0xde
                     CALL                    giga_vAC                        ; goto loop
 
 _254                PUSH                    
-                    LDW                     _speed8
+                    LDW                     _speed1
                     ADDI                    2
-                    STW                     _speed8
+                    STW                     _speed1
                     LDWI                    256
-                    SUBW                    _speed8
+                    SUBW                    _speed1
                     BGT                     _else_0x0367
                     LDWI                    256
-                    STW                     _speed8                         ; speed8 = speed8 + 2 : if speed8 &&> 256 then speed8 = 256
+                    STW                     _speed1                         ; speed1 = speed1 + 2 : if speed1 &&> 256 then speed1 = 256
 
 _else_0x0367        POP                     
                     RET                                                     ; return
 
 _253                PUSH                    
-                    LDW                     _speed8
+                    LDW                     _speed1
                     SUBI                    2
-                    STW                     _speed8
+                    STW                     _speed1
                     SUBI                    64
                     BGE                     _else_0x0381
                     LDI                     64
-                    STW                     _speed8                         ; speed8 = speed8 - 2 : if speed8 &&< 64 then speed8 = 64
+                    STW                     _speed1                         ; speed1 = speed1 - 2 : if speed1 &&< 64 then speed1 = 64
 
 _else_0x0381        POP                     
                     RET                                                     ; return
 
 _191                PUSH                    
                     LDI                     128
-                    STW                     _speed8
+                    STW                     _speed1
                     POP                     
-                    RET                                                     ; speed8 = 128 : return
+                    RET                                                     ; speed1 = 128 : return
 
 _127                PUSH                    
                     LDI                     128
-                    STW                     _speed8
+                    STW                     _speed1
                     POP                     
-                    RET                                                     ; speed8 = 128 : return
+                    RET                                                     ; speed1 = 128 : return
 
 _end_0x0391         BRA                     _end_0x0391                     ; END
 

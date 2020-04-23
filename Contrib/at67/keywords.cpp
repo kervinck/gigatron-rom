@@ -998,10 +998,14 @@ namespace Keywords
             std::string filepath = Loader::getFilePath();
             size_t slash = filepath.find_last_of("\\/");
             filepath = (slash != std::string::npos) ? filepath.substr(0, slash) : ".";
-            runtimePath = filepath + "/" + runtimePath;
+            std::string includePath = filepath + "/" + runtimePath;
+            Assembler::setIncludePath(includePath);
+        }
+        else
+        {
+            Assembler::setIncludePath(runtimePath);
         }
 
-        Assembler::setIncludePath(runtimePath);
         Compiler::setRuntimePath(runtimePath);
 
         return true;

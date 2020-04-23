@@ -30,7 +30,7 @@ highByteMask        EQU                     register0 + 0x2C
 textWorkArea        EQU                     0x06a0
 
 ; Includes
-%includePath        "D:/Projects/Gigatron TTL/buildx64/gbas/graphics/../runtime"
+%includePath        "../runtime"
 %include            gigatron.i
 %include            macros.i
 

@@ -190,8 +190,8 @@ namespace Validater
                     // Check for existing label, (after label adjustments)
                     int labelIndex = -1;
                     std::string labelName;
-                    Compiler::VasmLine* vasm0 = &itCode->_vasm[itVasm - itCode->_vasm.begin()]; // points to CALLI and LDW
-                    Compiler::VasmLine* vasm1 = &itCode->_vasm[itVasm + 1 - itCode->_vasm.begin()]; // points to instruction after CALLI and after LDW
+                    Compiler::VasmLine* vasmCurr = &itCode->_vasm[itVasm - itCode->_vasm.begin()]; // points to CALLI and LDW
+                    Compiler::VasmLine* vasmNext = &itCode->_vasm[itVasm + 1 - itCode->_vasm.begin()]; // points to instruction after CALLI and after LDW
                     if(Compiler::findLabel(nextPC) >= 0)
                     {
                         labelIndex = Compiler::findLabel(nextPC);
@@ -203,25 +203,25 @@ namespace Validater
                         if(Assembler::getUseOpcodeCALLI())
                         {
                             // Code referencing these labels must be fixed later in outputLabels, (discarded label addresses must be updated if they match page jump address)
-                            if(vasm1->_internalLabel.size())
+                            if(vasmNext->_internalLabel.size())
                             {
-                                Compiler::getDiscardedLabels().push_back({vasm1->_address, vasm1->_internalLabel});
-                                Compiler::adjustDiscardedLabels(vasm1->_internalLabel, vasm1->_address);
+                                Compiler::getDiscardedLabels().push_back({vasmNext->_address, vasmNext->_internalLabel});
+                                Compiler::adjustDiscardedLabels(vasmNext->_internalLabel, vasmNext->_address);
                             }
             
-                            vasm1->_internalLabel = nextPClabel;
+                            vasmNext->_internalLabel = nextPClabel;
                         }
                         // Create pre-CALLI page jump label, (created later in outputCode())
                         else
                         {
                             // Code referencing these labels must be fixed later in outputLabels, (discarded label addresses must be updated if they match page jump address)
-                            if(vasm0->_internalLabel.size())
+                            if(vasmCurr->_internalLabel.size())
                             {
-                                Compiler::getDiscardedLabels().push_back({vasm0->_address, vasm0->_internalLabel});
-                                Compiler::adjustDiscardedLabels(vasm0->_internalLabel, vasm0->_address);
+                                Compiler::getDiscardedLabels().push_back({vasmCurr->_address, vasmCurr->_internalLabel});
+                                Compiler::adjustDiscardedLabels(vasmCurr->_internalLabel, vasmCurr->_address);
                             }
 
-                            vasm0->_internalLabel = nextPClabel;
+                            vasmCurr->_internalLabel = nextPClabel;
                         }
                     }
                     // Existing label at the PAGE JUMP address, so use it
@@ -231,7 +231,7 @@ namespace Validater
                         if(Assembler::getUseOpcodeCALLI())
                         {
                             // Macro labels are underscored by default
-                            vasm0->_code = (labelName[0] == '_') ? "CALLI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + labelName : "CALLI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "_" + labelName;
+                            vasmCurr->_code = (labelName[0] == '_') ? "CALLI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + labelName : "CALLI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "_" + labelName;
                         }
                         // Update pre-CALLI page jump label
                         else

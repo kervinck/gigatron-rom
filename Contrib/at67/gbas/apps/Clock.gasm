@@ -30,7 +30,7 @@ highByteMask        EQU                     register0 + 0x2C
 textWorkArea        EQU                     0x7fa0
 
 ; Includes
-%includePath        "D:/Projects/Gigatron TTL/buildx64/gbas/apps/../runtime"
+%includePath        "../runtime"
 %include            gigatron.i
 %include            macros.i
 
@@ -155,7 +155,7 @@ _entryPoint_        InitRealTimeProc
                     POKE                    register0                       ; poke &h01F9, 238
 
                     LDI                     48
-                    ST                      162                             ; poke 162,BKCOLOUR
+                    ST                      162                             ; poke 162,BACK_COLOUR
 
                     LDWI                    clearVertBlinds
                     CALL                    giga_vAC                        ; cls
@@ -403,7 +403,7 @@ _page_0x0400        LDW                     0xde
                     PrintAcInt16                                            ; poke 163,&h0C : at 57,82 : print H/10;H%10;":";M/10;M%10;":";S/10;S%10;
 
                     LDI                     16
-                    ST                      162                             ; poke 162,DIALCOLOUR
+                    ST                      162                             ; poke 162,DIAL_COLOUR
 
                     POP                     
                     RET                                                     ; return
@@ -534,7 +534,7 @@ _drawTicks          PUSH
 
 _drawDial           PUSH                    
                     LDI                     16
-                    ST                      163                             ; poke 163, DIALCOLOUR
+                    ST                      163                             ; poke 163, DIAL_COLOUR
 
                     LDI                     80
                     STW                     drawCircleF_cx
@@ -542,7 +542,7 @@ _drawDial           PUSH
                     STW                     drawCircleF_cy
                     LDI                     43
                     STW                     drawCircleF_r
-                    DrawCircleF                                             ; circlef CENTERX, CENTERY, DIALRADIUS
+                    DrawCircleF                                             ; circlef CENTERX, CENTERY, DIAL_RADIUS
 
                     LDI                     80
                     STW                     _ox
@@ -554,35 +554,35 @@ _drawDial           PUSH
                     LDI                     0
                     STW                     _cc
                     LDWI                    _jitterCircle
-                    CALL                    giga_vAC                        ; cr=DIALRADIUS + 1 : cc=&h00 : gosub jitterCircle
+                    CALL                    giga_vAC                        ; cr=DIAL_RADIUS + 1 : cc=&h00 : gosub jitterCircle
 
                     LDI                     46
                     STW                     _cr
                     LDI                     0
                     STW                     _cc
                     LDWI                    _jitterCircle
-                    CALL                    giga_vAC                        ; cr=DIALRADIUS + 3 : cc=&h00 : gosub jitterCircle
+                    CALL                    giga_vAC                        ; cr=DIAL_RADIUS + 3 : cc=&h00 : gosub jitterCircle
 
                     LDI                     48
                     STW                     _cr
                     LDI                     1
                     STW                     _cc
                     LDWI                    _jitterCircle
-                    CALL                    giga_vAC                        ; cr=DIALRADIUS + 5 : cc=&h01 : gosub jitterCircle
+                    CALL                    giga_vAC                        ; cr=DIAL_RADIUS + 5 : cc=&h01 : gosub jitterCircle
 
                     LDI                     52
                     STW                     _cr
                     LDI                     3
                     STW                     _cc
                     LDWI                    _jitterCircle
-                    CALL                    giga_vAC                        ; cr=DIALRADIUS + 9 : cc=&h03 : gosub jitterCircle
+                    CALL                    giga_vAC                        ; cr=DIAL_RADIUS + 9 : cc=&h03 : gosub jitterCircle
 
                     LDI                     50
                     STW                     _cr
                     LDI                     2
                     STW                     _cc
                     LDWI                    _jitterCircle
-                    CALL                    giga_vAC                        ; cr=DIALRADIUS + 7 : cc=&h02 : gosub jitterCircle
+                    CALL                    giga_vAC                        ; cr=DIAL_RADIUS + 7 : cc=&h02 : gosub jitterCircle
 
                     LDI                     0
                     STW                     _i                              ; for i=0 to TICKS-1
@@ -614,7 +614,7 @@ _page_0x0600        LDW                     0xde
                     ADDW                    _SS
                     PEEK                    
                     STW                     drawLine_y2
-                    DrawLine                                                ; poke 163,DIALCOLOUR : line CENTERX,CENTERY, peek(SECSX + SS),peek(SECSY + SS)
+                    DrawLine                                                ; poke 163,DIAL_COLOUR : line CENTERX,CENTERY, peek(SECSX + SS),peek(SECSY + SS)
 
                     POP                     
                     RET                                                     ; return
@@ -654,7 +654,7 @@ _eraseMinuteHand    PUSH
                     ADDW                    _MM
                     PEEK                    
                     STW                     drawLine_y2
-                    DrawLine                                                ; poke 163,DIALCOLOUR : line CENTERX,CENTERY, peek(MINSX + MM),peek(MINSY + MM)
+                    DrawLine                                                ; poke 163,DIAL_COLOUR : line CENTERX,CENTERY, peek(MINSX + MM),peek(MINSY + MM)
 
                     POP                     
                     RET                                                     ; return
@@ -696,7 +696,7 @@ _eraseHourHand      PUSH
                     ADDW                    _MMd12
                     PEEK                    
                     STW                     drawLine_y2
-                    DrawLine                                                ; poke 163,DIALCOLOUR: line CENTERX,CENTERY, peek(HOURX + Hx5 + MMd12),peek(HOURY + Hx5 + MMd12)
+                    DrawLine                                                ; poke 163,DIAL_COLOUR: line CENTERX,CENTERY, peek(HOURX + Hx5 + MMd12),peek(HOURY + Hx5 + MMd12)
 
                     POP                     
                     RET                                                     ; return

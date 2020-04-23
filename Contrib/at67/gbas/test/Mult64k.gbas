@@ -1,4 +1,5 @@
 _runtimePath_ "../runtime"
+_runtimeStart_ &hFFFF
 
 const ADDR=&h8000
 const SIZE=10
