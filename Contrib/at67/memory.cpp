@@ -321,7 +321,7 @@ namespace Memory
                         uint16_t left = uint16_t(_freeRam[j]._size - i);
                         uint16_t addr = uint16_t(_freeRam[j]._address + i);
 
-                        if(addr >= min  &&  addr + size - 1 <= max  &&  size <= left)
+                        if(addr >= min  &&  addr + size-1 <= max  &&  size <= left)
                         {
                             // Skip if request must be within a page and it isn't
                             if(withinPage  &&  HI_BYTE(addr) != HI_BYTE(addr + size - 1)) continue;

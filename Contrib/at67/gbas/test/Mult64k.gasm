@@ -30,7 +30,7 @@ highByteMask        EQU                     register0 + 0x2C
 textWorkArea        EQU                     0xffa0
 
 ; Includes
-%includePath        "D:/Projects/Gigatron TTL/buildx64/gbas/test/../runtime"
+%includePath        "../runtime"
 %include            gigatron.i
 %include            macros.i
 
@@ -63,9 +63,9 @@ _str_0xff98         DB                      3 '/60' 0
 
 ; Define Words
 def_words_0x8000    EQU                     0x8000
-def_words_0x8000    DW                      -159 106 86 117 149 155 82 -167 -6 -146 
+def_words_0x8000    DW                      165 115 41 45 -144 -107 88 87 -178 56 
 def_words_0x8014    EQU                     0x8014
-def_words_0x8014    DW                      -88 -169 -21 42 -89 -80 70 55 145 -46 
+def_words_0x8014    DW                      -18 -124 -118 61 -44 98 -131 19 -27 -158 
 def_words_0x8028    EQU                     0x8028
 def_words_0x8028    DW                      0 0 0 0 0 0 0 0 0 0 
 

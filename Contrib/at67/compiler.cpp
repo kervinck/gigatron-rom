@@ -29,8 +29,8 @@ namespace Compiler
     uint16_t _vasmPC         = USER_CODE_START;
     uint16_t _tempVarStart   = TEMP_VAR_START;
     uint16_t _userVarStart   = USER_VAR_START;
-    uint16_t _runtimeEnd     = 0xFFFF;
-    uint16_t _runtimeStart   = 0xFFFF;
+    uint16_t _runtimeEnd     = 0x7FFF;
+    uint16_t _runtimeStart   = 0x7FFF;
     uint16_t _strWorkArea    = 0x0000;
 
     CodeOptimiseType _codeOptimiseType = CodeSpeed;
@@ -2777,7 +2777,7 @@ namespace Compiler
     void outputIncludes(void)
     {
         _output.push_back("; Includes\n");
-        _output.push_back("%includePath" + std::string(LABEL_TRUNC_SIZE - strlen("%includePath"), ' ') + "\"" + Assembler::getIncludePath() + "\"\n"); //"\"../runtime\"\n");
+        _output.push_back("%includePath" + std::string(LABEL_TRUNC_SIZE - strlen("%includePath"), ' ') + "\"" + getRuntimePath() + "\"\n");
         _output.push_back("%include" + std::string(LABEL_TRUNC_SIZE - strlen("%include"), ' ') + "gigatron.i\n");
 
         if(!Assembler::getUseOpcodeCALLI())
@@ -2894,8 +2894,8 @@ namespace Compiler
         _vasmPC         = USER_CODE_START;
         _tempVarStart   = TEMP_VAR_START;
         _userVarStart   = USER_VAR_START;
-        _runtimeEnd     = 0xFFFF;
-        _runtimeStart   = 0xFFFF;
+        _runtimeEnd     = 0x7FFF;
+        _runtimeStart   = 0x7FFF;
         _strWorkArea    = 0x0000;
 
         _codeOptimiseType = CodeSpeed;

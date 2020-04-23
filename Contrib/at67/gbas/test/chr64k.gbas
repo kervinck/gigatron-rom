@@ -1,4 +1,5 @@
 _runtimePath_ "../runtime"
+_runtimeStart_ &hFFFF
 
 frog$ = hexw$(&hb00b)
 print frog$
