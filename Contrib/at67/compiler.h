@@ -95,6 +95,7 @@ namespace Compiler
     {
         uint16_t _address;
         std::string _opcode;
+        std::string _operand;
         std::string _code;
         std::string _internalLabel;
         bool _pageJump = false;

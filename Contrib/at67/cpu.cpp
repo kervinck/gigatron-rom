@@ -351,6 +351,11 @@ namespace Cpu
         _RAM[(address+1) & (Memory::getSizeRAM()-1)] = uint8_t(HI_BYTE(data));
     }
 
+    void setSizeRAM(size_t size)
+    {
+        _RAM.resize(size);
+    }
+
     void clearUserRAM(void)
     {
         // Not great for the Gigatron's RNG, will statistically bias it's results
@@ -378,7 +383,34 @@ namespace Cpu
         if(!_checkRomType) return;
         _checkRomType = false;
 
-        uint8_t romType = getRAM(ROM_TYPE) & ROM_TYPE_MASK;
+        uint8_t romType = ROMERR;
+#if 1
+        // This is the correct way to do it
+        romType = getRAM(ROM_TYPE) & ROM_TYPE_MASK;
+#else
+        // Directly read from hard coded addresses in ROM, because RAM can be corrupted in emulation mode and resets to 
+        // correct the corruption are not guaranteed, (unlike real hardware)
+        if(getROM(0x009A, 1) == 0x1C)
+        {
+            romType = ROMv1;
+        }
+        else if(getROM(0x0098, 1) == 0x20)
+        {
+            romType = ROMv2;
+        }
+        else if(getROM(0x0098, 1) == 0x28)
+        {
+            romType = ROMv3;
+        }
+        else if(getROM(0x007E, 1) == 0x38)
+        {
+            romType = ROMv4;
+        }
+        else if(getROM(0x005E, 1) == 0xF8)
+        {
+            romType = DEVROM;
+        }
+#endif
         switch((RomType)romType)
         {
             case ROMv1:

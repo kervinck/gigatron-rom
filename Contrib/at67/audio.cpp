@@ -127,10 +127,12 @@ namespace Audio
 
     void initialiseChannels(bool coldBoot, Cpu::RomType romType)
     {
+        UNREFERENCED_PARAM(romType);
+
         static uint8_t waveTables[256];
 
-        // ROM's V1 to V3 do not re-initialise RAM Audio Wave Tables on soft reboot
-        if(romType > Cpu::ROMERR  &&  romType < Cpu::ROMv4)
+        // ROM's V1 to V3 do not re-initialise RAM Audio Wave Tables on soft reboot, (we re-initialise them for ALL ROM versions)
+        //if(romType > Cpu::ROMERR  &&  romType < Cpu::ROMv4)
         {
             // Save Audio Wave Tables on cold reboot
             if(coldBoot)
