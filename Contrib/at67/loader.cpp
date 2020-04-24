@@ -352,6 +352,8 @@ namespace Loader
     std::string _configGclBuild = ".";
     bool _configGclBuildFound = false;
 
+    bool _autoSet64k = true;
+
     std::vector<ConfigRom> _configRoms;
 
     std::string _currentGame = "";
@@ -393,10 +395,11 @@ namespace Loader
         if(_configIniReader.ParseError() == 0)
         {
             // Parse Loader Keys
-            enum Section {Comms, ROMS};
+            enum Section {Comms, ROMS, RAM};
             std::map<std::string, Section> section;
             section["Comms"] = Comms;
             section["ROMS"]  = ROMS;
+            section["RAM"]   = RAM;
 
             for(auto sectionString : _configIniReader.Sections())
             {
@@ -451,6 +454,13 @@ namespace Loader
 
                             _configRoms.push_back(configRom);
                         }
+                    }
+                    break;
+
+                    case RAM:
+                    {
+                        getKeyAsString(_configIniReader, sectionString, "AutoSet64k", "1", result, false);
+                        _autoSet64k = strtol(result.c_str(), nullptr, 10);
                     }
                     break;
 
@@ -790,7 +800,7 @@ namespace Loader
     {
         SaveData sdata = saveData;
         std::string filename = sdata._filename + ".dat";
-        std::ifstream infile(filename, std::ios::binary | std::ios::in);
+        std::ifstream infile(_exePath + "/" + filename, std::ios::binary | std::ios::in);
         if(!infile.is_open())
         {
             fprintf(stderr, "Loader::loadDataFile() : failed to open '%s'\n", filename.c_str());
@@ -875,7 +885,7 @@ namespace Loader
     bool saveDataFile(SaveData& saveData)
     {
         std::string filename = saveData._filename + ".dat";
-        std::ofstream outfile(filename, std::ios::binary | std::ios::out);
+        std::ofstream outfile(_exePath + "/" + filename, std::ios::binary | std::ios::out);
         if(!outfile.is_open())
         {
             fprintf(stderr, "Loader::saveDataFile() : failed to open '%s'\n", filename.c_str());
@@ -1161,6 +1171,21 @@ namespace Loader
             return;
         }
 
+        // Choose memory model
+        if(_autoSet64k  &&  (filename.find("64k") != std::string::npos  ||  filename.find("64K") != std::string::npos))
+        {
+            if(Memory::getSizeRAM() == RAM_SIZE_LO)
+            {
+                Memory::setSizeRAM(RAM_SIZE_HI);
+                Memory::initialise();
+                Cpu::setSizeRAM(Memory::getSizeRAM());
+                Cpu::setRAM(0x0001, 0x00); // inform system that RAM is 64k
+            }
+        }
+
+        // Enable all 4 audio channels by default
+        Cpu::setRAM(CHANNEL_MASK, uint8_t(Cpu::getRomType()) | 0x03);
+
         // Compile gbas to gasm
         if(filename.find(".gbas") != filename.npos)
         {
@@ -1224,7 +1249,7 @@ namespace Loader
                 gt1FileBuilt = true;
             }
         }
-        
+
         // Upload gt1
         if(filename.find(".gt1") != filename.npos)
         {

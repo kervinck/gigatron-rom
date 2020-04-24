@@ -1219,18 +1219,18 @@ namespace Keywords
 
         // Parse labels
         std::vector<size_t> gOffsets;
-        std::vector<std::string> gotoTokens = Expression::tokenise(codeLine._code.substr(gOffset + gSize), ',', gOffsets, false);
-        if(gotoTokens.size() < 1)
+        std::vector<std::string> gTokens = Expression::tokenise(codeLine._code.substr(gOffset + gSize), ',', gOffsets, false);
+        if(gTokens.size() < 1)
         {
-            fprintf(stderr, "Keywords::keywordON() : Syntax error, must have at least one label after GOTO, in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordON() : Syntax error, must have at least one label after GOTO/GOSUB, in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
-        // Create label LUT
+        // Create on goto/gosub label LUT
         Compiler::getCodeLines()[codeLineIndex]._onGotoGosubLut._lut.clear();
-        for(int i=0; i<int(gotoTokens.size()); i++)
+        for(int i=0; i<int(gTokens.size()); i++)
         {
-            std::string gotoLabel = gotoTokens[i];
+            std::string gotoLabel = gTokens[i];
             Expression::stripWhitespace(gotoLabel);
             int labelIndex = Compiler::findLabel(gotoLabel);
             if(labelIndex == -1)
@@ -1248,7 +1248,7 @@ namespace Keywords
         }
 
         // Allocate giga memory for LUT
-        int size = int(gotoTokens.size()) * 2;
+        int size = int(gTokens.size()) * 2;
         uint16_t address;
         if(!Memory::getFreeRAM(Memory::FitDescending, size, 0x0200, Compiler::getRuntimeStart(), address))
         {

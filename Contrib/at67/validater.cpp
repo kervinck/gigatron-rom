@@ -55,7 +55,7 @@ namespace Validater
     }
 
     auto insertPageJumpInstruction(const std::vector<Compiler::CodeLine>::iterator& itCode, const std::vector<Compiler::VasmLine>::iterator& itVasm,
-                                   const std::string& opcode, const std::string& code, uint16_t address, int vasmSize)
+                                   const std::string& opcode, const std::string& operand, const std::string& code, uint16_t address, int vasmSize)
     {
         if(itVasm >= itCode->_vasm.end())
         {
@@ -65,7 +65,7 @@ namespace Validater
 
         Memory::takeFreeRAM(address, vasmSize, true);
 
-        return itCode->_vasm.insert(itVasm, {address, opcode, code, "", true, vasmSize});
+        return itCode->_vasm.insert(itVasm, {address, opcode, operand, code, "", true, vasmSize});
     }
 
     // TODO: make this more flexible, (e.g. sound channels off etc)
@@ -163,7 +163,7 @@ namespace Validater
                         // CALLI PAGE JUMP
                         std::string codeCALLI;
                         int sizeCALLI = Compiler::createVcpuAsm("CALLI", nextPClabel, codeLineIndex, codeCALLI);
-                        itVasm = insertPageJumpInstruction(itCode, itVasm, "CALLI",  codeCALLI,  uint16_t(currPC), sizeCALLI);
+                        itVasm = insertPageJumpInstruction(itCode, itVasm, "CALLI", nextPClabel, codeCALLI,  uint16_t(currPC), sizeCALLI);
                     }
                     else
                     {
@@ -173,10 +173,10 @@ namespace Validater
                         int sizeLDWI = Compiler::createVcpuAsm("LDWI", nextPClabel, codeLineIndex, codeLDWI);
                         int sizeCALL = Compiler::createVcpuAsm("CALL", "giga_vAC", codeLineIndex, codeCALL);
                         int sizeLDW  = Compiler::createVcpuAsm("LDW", Expression::byteToHexString(VAC_SAVE_START), codeLineIndex, codeLDW);
-                        itVasm = insertPageJumpInstruction(itCode, itVasm + 0, "STW",  codeSTW,  uint16_t(currPC),                      sizeSTW);
-                        itVasm = insertPageJumpInstruction(itCode, itVasm + 1, "LDWI", codeLDWI, uint16_t(currPC + sizeSTW),            sizeLDWI);
-                        itVasm = insertPageJumpInstruction(itCode, itVasm + 1, "CALL", codeCALL, uint16_t(currPC + sizeSTW + sizeLDWI), sizeCALL);
-                        itVasm = insertPageJumpInstruction(itCode, itVasm + 1, "LDW",  codeLDW,  uint16_t(nextPC),                      sizeLDW);
+                        itVasm = insertPageJumpInstruction(itCode, itVasm + 0, "STW",  Expression::byteToHexString(VAC_SAVE_START), codeSTW,  uint16_t(currPC), sizeSTW);
+                        itVasm = insertPageJumpInstruction(itCode, itVasm + 1, "LDWI", nextPClabel, codeLDWI, uint16_t(currPC + sizeSTW), sizeLDWI);
+                        itVasm = insertPageJumpInstruction(itCode, itVasm + 1, "CALL", "giga_vAC", codeCALL, uint16_t(currPC + sizeSTW + sizeLDWI), sizeCALL);
+                        itVasm = insertPageJumpInstruction(itCode, itVasm + 1, "LDW",  Expression::byteToHexString(VAC_SAVE_START), codeLDW,  uint16_t(nextPC), sizeLDW);
 
                         // New page address is offset by size of vAC restore
                         restoreOffset = sizeLDW;

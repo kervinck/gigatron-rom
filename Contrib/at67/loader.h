@@ -17,6 +17,7 @@
 
 #define ZERO_CONST_ADDRESS        0x00
 #define ONE_CONST_ADDRESS         0x80
+#define CHANNEL_MASK              0x21
 
 #define LOADER_CONFIG_INI  "loader_config.ini"
 #define HIGH_SCORES_INI    "high_scores.ini"

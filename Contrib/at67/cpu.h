@@ -134,6 +134,7 @@ namespace Cpu
     void setRAM16(uint16_t address, uint16_t data);
     void setROM16(uint16_t base, uint16_t address, uint16_t data);
     void setRomType(void);
+    void setSizeRAM(size_t size);
 
     void saveScanlineModes(void);
     void restoreScanlineModes(void);

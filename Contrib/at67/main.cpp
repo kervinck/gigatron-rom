@@ -59,7 +59,6 @@ int main(int argc, char* argv[])
     {
         std::string name = std::string(argv[1]);
         size_t slash = name.find_last_of("\\/");
-        size_t ram64k = name.find("64k");
         std::string path = (slash != std::string::npos) ? name.substr(0, slash) : ".";
         Expression::replaceText(path, "\\", "/");
         name = (slash != std::string::npos) ? name.substr(slash + 1) : name;
@@ -71,7 +70,17 @@ int main(int argc, char* argv[])
         Assembler::setIncludePath(path);
         Loader::setFilePath(path + "/" + name);
         Loader::setUploadTarget(Loader::Emulator);
-        if(ram64k != std::string::npos) Cpu::swapMemoryModel();
+
+        // Choose memory model
+        if(name.find("64k") != std::string::npos  ||  name.find("64K") != std::string::npos)
+        {
+            if(Memory::getSizeRAM() == RAM_SIZE_LO)
+            {
+                Memory::setSizeRAM(RAM_SIZE_HI);
+                Memory::initialise();
+                Cpu::setSizeRAM(Memory::getSizeRAM());
+            }
+        }
     }
 
 #if 0
