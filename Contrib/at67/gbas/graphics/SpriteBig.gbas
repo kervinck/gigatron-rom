@@ -1,0 +1,24 @@
+_runtimePath_ "../runtime"
+_runtimeStart_ &h7FFF
+
+mode 2
+poke 162, &h00
+poke 163, &h3F
+cls
+
+load sprite, ../../images/gbas/Turrican.tga
+load sprite, ../../images/gbas/Bubble.tga
+
+loop:
+    for x=0 to 130
+        wait
+        sprite 0, x, 15
+        sprite 0, x, 65
+    next x
+
+    for x=129 to 1
+        wait
+        sprite 0, x, 15
+        sprite 0, x, 65
+    next x
+goto loop

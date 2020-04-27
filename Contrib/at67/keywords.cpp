@@ -121,6 +121,7 @@ namespace Keywords
         _keywords["DOKE"   ] = {"DOKE",    keywordDOKE,    Compiler::SingleStatementParsed};
         _keywords["PLAY"   ] = {"PLAY",    keywordPLAY,    Compiler::SingleStatementParsed};
         _keywords["LOAD"   ] = {"LOAD",    keywordLOAD,    Compiler::SingleStatementParsed};
+        _keywords["SPRITE" ] = {"SPRITE",  keywordSPRITE,  Compiler::SingleStatementParsed};
 
         // String keywords
         _stringKeywords["CHR$"  ] = "CHR$";
@@ -1038,7 +1039,7 @@ namespace Keywords
         // String work area needs to be updated, (return old work area and get a new one)
         uint16_t strWorkArea;
         Memory::giveFreeRAM(Compiler::getStrWorkArea(), USER_STR_SIZE + 2);
-        if(!Memory::getFreeRAM(Memory::FitDescending, USER_STR_SIZE + 2, 0x0200, address, strWorkArea))
+        if(!Memory::getFreeRAM(Memory::FitDescending, USER_STR_SIZE + 2, USER_CODE_START, address, strWorkArea))
         {
             fprintf(stderr, "Keywords::pragmaRUNTIMESTART() : Setting new String Work Area failed, in '%s' on line %d\n", input.c_str(), codeLineIndex);
             return false;
@@ -1250,7 +1251,7 @@ namespace Keywords
         // Allocate giga memory for LUT
         int size = int(gTokens.size()) * 2;
         uint16_t address;
-        if(!Memory::getFreeRAM(Memory::FitDescending, size, 0x0200, Compiler::getRuntimeStart(), address))
+        if(!Memory::getFreeRAM(Memory::FitDescending, size, USER_CODE_START, Compiler::getRuntimeStart(), address))
         {
             fprintf(stderr, "Keywords::keywordON() : Not enough RAM for onGotoGosub LUT of size %d\n", size);
             return false;
@@ -1787,22 +1788,22 @@ namespace Keywords
         // INPUT LUTs
         const int lutSize = 3;
         uint16_t lutAddr, varsAddr, strsAddr, typesAddr;
-        if(!Memory::getFreeRAM(Memory::FitDescending, lutSize*2, 0x0200, Compiler::getRuntimeStart(), lutAddr))
+        if(!Memory::getFreeRAM(Memory::FitDescending, lutSize*2, USER_CODE_START, Compiler::getRuntimeStart(), lutAddr))
         {
             fprintf(stderr, "Keywords::keywordINPUT() : Not enough RAM for INPUT LUT of size %d, in '%s' on line %d\n", lutSize*2, codeLine._code.c_str(), codeLineIndex);
             return false;
         }
-        if(!Memory::getFreeRAM(Memory::FitDescending, int(varsLut.size()*2), 0x0200, Compiler::getRuntimeStart(), varsAddr))
+        if(!Memory::getFreeRAM(Memory::FitDescending, int(varsLut.size()*2), USER_CODE_START, Compiler::getRuntimeStart(), varsAddr))
         {
             fprintf(stderr, "Keywords::keywordINPUT() : Not enough RAM for INPUT Vars LUT of size %d, in '%s' on line %d\n", int(varsLut.size()*2), codeLine._code.c_str(), codeLineIndex);
             return false;
         }
-        if(!Memory::getFreeRAM(Memory::FitDescending, int(strsLut.size()*2), 0x0200, Compiler::getRuntimeStart(), strsAddr))
+        if(!Memory::getFreeRAM(Memory::FitDescending, int(strsLut.size()*2), USER_CODE_START, Compiler::getRuntimeStart(), strsAddr))
         {
             fprintf(stderr, "Keywords::keywordINPUT() : Not enough RAM for INPUT Strings LUT of size %d, in '%s' on line %d\n", int(strsLut.size()*2), codeLine._code.c_str(), codeLineIndex);
             return false;
         }
-        if(!Memory::getFreeRAM(Memory::FitDescending, int(typesLut.size()*2), 0x0200, Compiler::getRuntimeStart(), typesAddr))
+        if(!Memory::getFreeRAM(Memory::FitDescending, int(typesLut.size()*2), USER_CODE_START, Compiler::getRuntimeStart(), typesAddr))
         {
             fprintf(stderr, "Keywords::keywordINPUT() : Not enough RAM for INPUT Var Types LUT of size %d, in '%s' on line %d\n", int(typesLut.size()*2), codeLine._code.c_str(), codeLineIndex);
             return false;
@@ -2083,7 +2084,7 @@ namespace Keywords
 
         // Create label on next line of vasm code
         Compiler::setNextInternalLabel("_else_" + Expression::wordToHexString(Compiler::getVasmPC()));
-        std::string nextInternalLabel = Compiler::getNextInternalLabel() + " " + std::to_string(Compiler::incJumpFalseUniqueId());
+        std::string nextInternalLabel = Compiler::getNextInternalLabel() + " " + std::to_string(Compiler::getNextJumpFalseUniqueId());
 
         // Update if's jump to this new label
         Compiler::VasmLine* vasm = &Compiler::getCodeLines()[codeLineIndex]._vasm[jmpIndex];
@@ -2147,7 +2148,7 @@ namespace Keywords
 
         // Create label on next line of vasm code
         Compiler::setNextInternalLabel("_elseif_" + Expression::wordToHexString(Compiler::getVasmPC()));
-        std::string nextInternalLabel = Compiler::getNextInternalLabel() + " " + std::to_string(Compiler::incJumpFalseUniqueId());
+        std::string nextInternalLabel = Compiler::getNextInternalLabel() + " " + std::to_string(Compiler::getNextJumpFalseUniqueId());
 
         // Update if's jump to this new label
         Compiler::VasmLine* vasm = &Compiler::getCodeLines()[codeIndex]._vasm[jmpIndex];
@@ -2221,7 +2222,7 @@ namespace Keywords
 
         // Create label on next line of vasm code
         Compiler::setNextInternalLabel("_else_" + Expression::wordToHexString(Compiler::getVasmPC()));
-        std::string nextInternalLabel = Compiler::getNextInternalLabel() + " " + std::to_string(Compiler::incJumpFalseUniqueId());
+        std::string nextInternalLabel = Compiler::getNextInternalLabel() + " " + std::to_string(Compiler::getNextJumpFalseUniqueId());
 
         // Update if's or elseif's jump to this new label
         Compiler::VasmLine* vasm = &Compiler::getCodeLines()[codeIndex]._vasm[jmpIndex];
@@ -2267,7 +2268,7 @@ namespace Keywords
 
         // Create label on next line of vasm code
         Compiler::setNextInternalLabel("_endif_" + Expression::wordToHexString(Compiler::getVasmPC()));
-        std::string nextInternalLabel = Compiler::getNextInternalLabel() + " " + std::to_string(Compiler::incJumpFalseUniqueId());
+        std::string nextInternalLabel = Compiler::getNextInternalLabel() + " " + std::to_string(Compiler::getNextJumpFalseUniqueId());
 
         // Update if's/elseif's jump to this new label
         if(ifElseEndType == Compiler::IfBlock  ||  ifElseEndType == Compiler::ElseIfBlock)
@@ -2375,9 +2376,9 @@ namespace Keywords
         Compiler::VasmLine* vasm = &Compiler::getCodeLines()[whileWendData._codeLineIndex]._vasm[whileWendData._jmpIndex];
         switch(whileWendData._ccType)
         {
-            case Expression::BooleanCC: vasm->_code = "JumpFalse" + std::string(OPCODE_TRUNC_SIZE - (sizeof("JumpFalse")-1), ' ') + Compiler::getNextInternalLabel() + " " + std::to_string(Compiler::incJumpFalseUniqueId()); break;
-            case Expression::NormalCC:  addLabelToJumpCC(Compiler::getCodeLines()[whileWendData._codeLineIndex]._vasm, Compiler::getNextInternalLabel() + " " + std::to_string(Compiler::incJumpFalseUniqueId()));             break;
-            case Expression::FastCC:    addLabelToJumpCC(Compiler::getCodeLines()[whileWendData._codeLineIndex]._vasm, Compiler::getNextInternalLabel());                                                                      break;
+            case Expression::BooleanCC: vasm->_code = "JumpFalse" + std::string(OPCODE_TRUNC_SIZE - (sizeof("JumpFalse")-1), ' ') + Compiler::getNextInternalLabel() + " " + std::to_string(Compiler::getNextJumpFalseUniqueId()); break;
+            case Expression::NormalCC:  addLabelToJumpCC(Compiler::getCodeLines()[whileWendData._codeLineIndex]._vasm, Compiler::getNextInternalLabel() + " " + std::to_string(Compiler::getNextJumpFalseUniqueId()));             break;
+            case Expression::FastCC:    addLabelToJumpCC(Compiler::getCodeLines()[whileWendData._codeLineIndex]._vasm, Compiler::getNextInternalLabel());                                                                          break;
 
             default: break;
         }
@@ -2420,9 +2421,9 @@ namespace Keywords
         // Branch if condition false to instruction after REPEAT
         switch(condition._ccType)
         {
-            case Expression::BooleanCC: Compiler::emitVcpuAsm("%JumpFalse", repeatUntilData._labelName + " " + std::to_string(Compiler::incJumpFalseUniqueId()), false, codeLineIndex);       break;
-            case Expression::NormalCC:  addLabelToJumpCC(Compiler::getCodeLines()[codeLineIndex]._vasm, repeatUntilData._labelName + " " + std::to_string(Compiler::incJumpFalseUniqueId())); break;
-            case Expression::FastCC:    addLabelToJumpCC(Compiler::getCodeLines()[codeLineIndex]._vasm, repeatUntilData._labelName);                                                          break;
+            case Expression::BooleanCC: Compiler::emitVcpuAsm("%JumpFalse", repeatUntilData._labelName + " " + std::to_string(Compiler::getNextJumpFalseUniqueId()), false, codeLineIndex);       break;
+            case Expression::NormalCC:  addLabelToJumpCC(Compiler::getCodeLines()[codeLineIndex]._vasm, repeatUntilData._labelName + " " + std::to_string(Compiler::getNextJumpFalseUniqueId())); break;
+            case Expression::FastCC:    addLabelToJumpCC(Compiler::getCodeLines()[codeLineIndex]._vasm, repeatUntilData._labelName);                                                              break;
 
             default: break;
         }
@@ -2590,7 +2591,7 @@ namespace Keywords
 
         arraySize *= 2;
         uint16_t arrayStart = 0x0000;
-        if(!Memory::getFreeRAM(Memory::FitDescending, arraySize, 0x0200, Compiler::getRuntimeStart(), arrayStart, false)) // arrays do not need to be contained within pages
+        if(!Memory::getFreeRAM(Memory::FitDescending, arraySize, USER_CODE_START, Compiler::getRuntimeStart(), arrayStart, false)) // arrays do not need to be contained within pages
         {
             fprintf(stderr, "Keywords::keywordDIM() : Not enough RAM for int array of size %d in '%s' on line %d\n", arraySize, codeLine._code.c_str(), codeLineIndex);
             return false;
@@ -3503,9 +3504,9 @@ namespace Keywords
         UNREFERENCED_PARAM(tokenIndex);
 
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), " ,", false);
-        if(tokens.size() != 3)
+        if(tokens.size() != 2  &&  tokens.size() != 3)
         {
-            fprintf(stderr, "Keywords::keywordLOAD() : Syntax error, use 'LOAD MIDI/IMAGE/SPRITE, <address/variable>, <filename>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordLOAD() : Syntax error, use 'LOAD MIDI/IMAGE/SPRITE, <filename> <optional image_address/sprite_id>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -3514,43 +3515,14 @@ namespace Keywords
         Expression::stripWhitespace(tokens[0]);
         if(tokens[0] != "MIDI"  &&  tokens[0] != "IMAGE"  &&  tokens[0] != "SPRITE")
         {
-            fprintf(stderr, "Keywords::keywordLOAD() : Syntax error, use 'LOAD MIDI/IMAGE/SPRITE, <address/variable>, <filename>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordLOAD() : Syntax error, use 'LOAD MIDI/IMAGE/SPRITE, <filename> <optional address>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
-        // Address/variable
-        uint16_t address = 0x0000;
-        std::string addrVar = tokens[1];
-        Expression::stripWhitespace(addrVar);
-        int varIndex = Compiler::findVar(addrVar, false);
-        if(varIndex >= 0)
+        // Handle Image and Sprite
+        if(tokens[0] == "IMAGE"  ||  tokens[0] == "SPRITE")
         {
-            // Image always returns vram start, (i.e. 0x0800), if address is not explicitly stated
-            if(tokens[0] == "IMAGE")
-            {
-                address = 0x0800;
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(address), false, codeLineIndex);
-                Compiler::emitVcpuAsm("STW", "_" + addrVar, false, codeLineIndex);
-            }
-        }
-        else
-        // Parse address
-        {
-            Expression::Numeric addrNumeric;
-            std::string addrOperand;
-            Compiler::parseExpression(codeLineIndex, addrVar, addrOperand, addrNumeric);
-            address = uint16_t(std::lround(addrNumeric._value));
-            if(address < DEFAULT_START_ADDRESS)
-            {
-                fprintf(stderr, "Keywords::keywordLOAD() : Address field must be above %04x, found %s in '%s' on line %d\n", DEFAULT_START_ADDRESS, addrVar.c_str(), codeLine._text.c_str(), codeLineIndex);
-                return false;
-            }
-        }
-
-        // Handle Image
-        if(tokens[0] == "IMAGE")
-        {
-            std::string filename = tokens[2];
+            std::string filename = tokens[1];
             Expression::stripWhitespace(filename);
             std::string ext = filename;
             Expression::strToUpper(ext);
@@ -3570,39 +3542,211 @@ namespace Keywords
                     return false;
                 }
 
+                // Load image/sprite
                 std::vector<uint8_t> data;
                 std::vector<uint16_t> optional;
                 Image::GtRgbFile gtRgbFile{GTRGB_IDENTIFIER, Image::GT_RGB_222, tgaFile._header._width, tgaFile._header._height, data, optional};
                 Image::convertRGB8toRGB2(tgaFile._data, gtRgbFile._data, tgaFile._header._width, tgaFile._header._height, tgaFile._imageOrigin);
-                if(gtRgbFile._header._width > 256  ||  gtRgbFile._header._width + (address & 0x00FF) > 256)
-                {
-                    fprintf(stderr, "Keywords::keywordLOAD() : Width > 256, (%d, %d), for %s; in '%s' on line %d\n", gtRgbFile._header._width, gtRgbFile._header._height, filename.c_str(), codeLine._text.c_str(), codeLineIndex);
-                    return false;
-                }
 
-                uint16_t stride = 256;
-                Compiler::DefDataImage defDataImage = {address, tgaFile._header._width, tgaFile._header._height, stride, gtRgbFile._data};
-                Compiler::getDefDataImages().push_back(defDataImage);
-
-                // Allocate RAM for image
-                int size = gtRgbFile._header._width;
-                for(int y=0; y<gtRgbFile._header._height; y++)
+                // Image
+                if(tokens[0] == "IMAGE")
                 {
-                    if(address >= 0x0800  &&  address <= 0x7FFF)
+                    const uint16_t stride = 256;
+
+                    // Parse optional address
+                    uint16_t address = RAM_VIDEO_START;
+                    if(tokens.size() == 3)
                     {
-                        size = gtRgbFile._header._width + (address & 0x00FF) - 160;
+                        std::string addrToken = tokens[2];
+                        Expression::stripWhitespace(addrToken);
+                        Expression::Numeric addrNumeric;
+                        std::string addrOperand;
+                        Compiler::parseExpression(codeLineIndex, addrToken, addrOperand, addrNumeric);
+                        address = uint16_t(std::lround(addrNumeric._value));
+                        if(address < DEFAULT_START_ADDRESS)
+                        {
+                            fprintf(stderr, "Keywords::keywordLOAD() : Address field must be above %04x, found %s in '%s' on line %d\n", DEFAULT_START_ADDRESS, addrToken.c_str(), codeLine._text.c_str(), codeLineIndex);
+                            return false;
+                        }
                     }
 
-                    if(!Memory::takeFreeRAM(address + 0x00A0, size))
+                    if(gtRgbFile._header._width > stride  ||  gtRgbFile._header._width + (address & 0x00FF) > stride)
                     {
-                        fprintf(stderr, "Keywords::keywordLOAD() : Allocating RAM for pixel row %d failed, in '%s' on line %d\n", y, codeLine._text.c_str(), codeLineIndex);
+                        fprintf(stderr, "Keywords::keywordLOAD() : Image width %d + starting address 0x%04x overflow, for %s; in '%s' on line %d\n", gtRgbFile._header._width, address, filename.c_str(), codeLine._text.c_str(), codeLineIndex);
                         return false;
                     }
 
-                    address += stride;
+                    Compiler::DefDataImage defDataImage = {address, tgaFile._header._width, tgaFile._header._height, stride, gtRgbFile._data};
+                    Compiler::getDefDataImages().push_back(defDataImage);
+
+                    // Take offscreen memory from compiler for images wider than visible screen resolution
+                    int size = gtRgbFile._header._width;
+                    for(int y=0; y<gtRgbFile._header._height; y++)
+                    {
+                        if(address >= RAM_VIDEO_START  &&  address <= 0x7FFF)
+                        {
+                            size = gtRgbFile._header._width + (address & 0x00FF) - RAM_SCANLINE_SIZE;
+                            if(size > 0)
+                            {
+                                if(!Memory::takeFreeRAM(address + RAM_SCANLINE_SIZE, size))
+                                {
+                                    fprintf(stderr, "Keywords::keywordLOAD() : Allocating RAM for pixel row %d failed, in '%s' on line %d\n", y, codeLine._text.c_str(), codeLineIndex);
+                                    return false;
+                                }
+                            }
+                        }
+
+                        // Next destination row
+                        address += stride; 
+                    }
+                }
+                // Sprite
+                else if(tokens[0] == "SPRITE")
+                {
+                    if(gtRgbFile._header._width > SPRITE_CHUNK_SIZE*10  ||  gtRgbFile._header._width % SPRITE_CHUNK_SIZE != 0)
+                    {
+                        fprintf(stderr, "Keywords::keywordLOAD() : Sprite width > %d or not a multiple of %d, (%d x %d), for %s; in '%s' on line %d\n", SPRITE_CHUNK_SIZE*10, SPRITE_CHUNK_SIZE, gtRgbFile._header._width, 
+                                                                                                                                                       gtRgbFile._header._height, filename.c_str(), codeLine._text.c_str(), codeLineIndex);
+                        return false;
+                    }
+
+                    // Parse optional sprite address, (not used for now, addresses are auto managed)
+                    if(tokens.size() == 3)
+                    {
+                    }
+
+                    int spriteUniqueId = Compiler::getNextSpriteUniqueId();
+                    if(spriteUniqueId >= MAX_NUM_SPRITES)
+                    {
+                        fprintf(stderr, "Keywords::keywordLOAD() : Sprite count %d exceeded maximum %d, in '%s' on line %d\n", spriteUniqueId, MAX_NUM_SPRITES, codeLine._text.c_str(), codeLineIndex);
+                        return false;
+                    }
+
+                    // Build sprite data from image data
+                    uint16_t numColumns = gtRgbFile._header._width / SPRITE_CHUNK_SIZE;
+                    uint16_t remStripeChunks = gtRgbFile._header._height % MAX_SPRITE_CHUNKS_PER_STRIPE;
+                    uint16_t numStripesPerCol = gtRgbFile._header._height / MAX_SPRITE_CHUNKS_PER_STRIPE + int(remStripeChunks > 0);
+                    uint16_t numStripeChunks = (numStripesPerCol == 1) ? gtRgbFile._header._height : MAX_SPRITE_CHUNKS_PER_STRIPE;
+                    std::vector<uint16_t> stripeAddrs;
+                    std::vector<uint8_t> spriteData;
+
+                    // Allocate sprite memory
+                    uint16_t address = 0x0000;
+                    for(int i=0; i<numColumns; i++)
+                    {
+                        // One stripe per column
+                        if(numStripesPerCol == 1)
+                        {
+                            if(!Memory::getFreeRAM(Memory::FitDescending, numStripeChunks*SPRITE_CHUNK_SIZE + 1, USER_CODE_START, Compiler::getRuntimeStart(), address))
+                            {
+                                fprintf(stderr, "Keywords::keywordLOAD() : Getting Sprite memory failed, in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+                                return false;
+                            }
+                            stripeAddrs.push_back(address);
+                            stripeAddrs.push_back(uint16_t(0 + i*6)); // destination offsets
+
+                            // Copy sprite data and delimiter
+                            for(int j=0; j<numStripeChunks; j++)
+                            {
+                                for(int k=0; k<SPRITE_CHUNK_SIZE; k++)
+                                {
+                                    spriteData.push_back(gtRgbFile._data[i*SPRITE_CHUNK_SIZE + j*SPRITE_CHUNK_SIZE*numColumns + k]);
+                                }
+                            }
+                            spriteData.push_back(uint8_t(-gtRgbFile._header._height));
+                        }
+                        // Multiple stripes per column
+                        else
+                        {
+                            // MAX_SPRITE_CHUNKS_PER_STRIPE stripes
+                            for(int j=0; j<numStripesPerCol-1; j++)
+                            {
+                                if(!Memory::getFreeRAM(Memory::FitDescending, numStripeChunks*SPRITE_CHUNK_SIZE + 1, USER_CODE_START, Compiler::getRuntimeStart(), address))
+                                {
+                                    fprintf(stderr, "Keywords::keywordLOAD() : Getting Sprite memory failed, in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+                                    return false;
+                                }
+                                stripeAddrs.push_back(address);
+                                stripeAddrs.push_back(uint16_t(j*numStripeChunks*256 + i*6)); // destination offsets
+
+                                // Copy sprite data and delimiter
+                                for(int k=0; k<numStripeChunks; k++)
+                                {
+                                    for(int l=0; l<SPRITE_CHUNK_SIZE; l++)
+                                    {
+                                        spriteData.push_back(gtRgbFile._data[i*SPRITE_CHUNK_SIZE + j*numStripeChunks*SPRITE_CHUNK_SIZE*numColumns + k*SPRITE_CHUNK_SIZE*numColumns + l]);
+                                    }
+                                }
+                                spriteData.push_back(255);
+                            }
+
+                            // Remainder stripe
+                            if(!Memory::getFreeRAM(Memory::FitDescending, remStripeChunks*SPRITE_CHUNK_SIZE + 1, USER_CODE_START, Compiler::getRuntimeStart(), address))
+                            {
+                                fprintf(stderr, "Keywords::keywordLOAD() : Getting Sprite memory failed, in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+                                return false;
+                            }
+                            stripeAddrs.push_back(address);
+                            stripeAddrs.push_back(uint16_t((numStripesPerCol-1)*numStripeChunks*256 + i*6)); // destination offsets
+
+                            // Copy sprite data and delimiter
+                            for(int j=0; j<remStripeChunks; j++)
+                            {
+                                for(int k=0; k<SPRITE_CHUNK_SIZE; k++)
+                                {
+                                    spriteData.push_back(gtRgbFile._data[i*SPRITE_CHUNK_SIZE + (numStripesPerCol-1)*numStripeChunks*SPRITE_CHUNK_SIZE*numColumns + j*SPRITE_CHUNK_SIZE*numColumns + k]);
+                                }
+                            }
+                            spriteData.push_back(255);
+                        }
+                    }
+
+                    Compiler::DefDataSprite defDataSprite = {spriteUniqueId, tgaFile._header._width, tgaFile._header._height, numColumns, numStripesPerCol, numStripeChunks, remStripeChunks, stripeAddrs, spriteData};
+                    Compiler::getDefDataSprites().push_back(defDataSprite);
                 }
             }
         }
+
+        return true;
+    }
+
+    bool keywordSPRITE(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
+
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), " ,", false);
+        if(tokens.size() != 3)
+        {
+            fprintf(stderr, "Keywords::keywordSPRITE() : Syntax error, use 'SPRITE <id>, <x postion>, <y position>'; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            return false;
+        }
+
+        // Sprite identifier
+        std::string idToken = Expression::strToUpper(tokens[0]);
+        Expression::stripWhitespace(idToken);
+        Expression::Numeric idParam;
+        Compiler::parseExpression(codeLineIndex, idToken, idParam);
+        Compiler::emitVcpuAsm("STW", "spriteId", false, codeLineIndex);
+
+        // Sprite X position
+        std::string xposToken = tokens[1];
+        Expression::stripWhitespace(xposToken);
+        Expression::Numeric xposParam;
+        Compiler::parseExpression(codeLineIndex, xposToken, xposParam);
+        Compiler::emitVcpuAsm("ST", "spriteXY", false, codeLineIndex);
+
+        // Sprite Y position
+        std::string yposToken = tokens[2];
+        Expression::stripWhitespace(yposToken);
+        Expression::Numeric yposParam;
+        Compiler::parseExpression(codeLineIndex, yposToken, yposParam);
+        Compiler::emitVcpuAsm("ADDI", "8", false, codeLineIndex);
+        Compiler::emitVcpuAsm("ST", "spriteXY + 1", false, codeLineIndex);
+
+        // Draw sprite
+        Compiler::emitVcpuAsm("LDWI", "drawSprite", false, codeLineIndex);
+        Compiler::emitVcpuAsm("CALL", "giga_vAC", false);
 
         return true;
     }
