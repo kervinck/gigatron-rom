@@ -2826,7 +2826,7 @@ namespace Compiler
             _output.push_back(lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(lutAddress) + "\n");
             
             std::string dwString = lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
-            for(int j=0; j<_defDataSprites[i]._stripeAddrs.size(); j++)
+            for(int j=0; j<int(_defDataSprites[i]._stripeAddrs.size()); j++)
             {
                 uint16_t address = _defDataSprites[i]._stripeAddrs[j];
                 dwString += Expression::wordToHexString(address) + " ";
@@ -2850,7 +2850,7 @@ namespace Compiler
             _output.push_back(lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(lutAddress) + "\n");
             
             std::string dwString = lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
-            for(int i=0; i<_spritesAddrLut._spriteAddrs.size(); i++)
+            for(int i=0; i<int(_spritesAddrLut._spriteAddrs.size()); i++)
             {
                 uint16_t address = _spritesAddrLut._spriteAddrs[i];
                 dwString += Expression::wordToHexString(address) + " ";

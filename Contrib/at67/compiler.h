@@ -18,7 +18,7 @@
 #define MAX_SPRITE_STRIPES           10
 #define MAX_SPRITE_CHUNKS_PER_STRIPE 40
 
-// 18 bytes, (0x00EE <-> 0x00FF), reserved for vCPU stack, allows for 9 nested calls. The amount of GOSUBS you can use is dependant on how
+// 32 bytes, (0x00E0 <-> 0x00FF), reserved for vCPU stack, allows for 16 nested calls. The amount of GOSUBS you can use is dependant on how
 // much of the stack is being used by nested system calls. *NOTE* there is NO call table for user code for this compiler
 #define USER_VAR_START    0x0030  // 80 bytes, (0x0030 <-> 0x007F), reserved for BASIC user variables
 #define INT_VAR_START     0x0082  // 46 bytes, (0x0082 <-> 0x00AF), internal register variables, used by the BASIC runtime
