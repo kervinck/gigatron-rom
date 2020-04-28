@@ -9,11 +9,14 @@
 #include "expression.h"
 
 
-#define LABEL_TRUNC_SIZE  20      // The smaller you make this, the more your BASIC label names will be truncated in the resultant .vasm code
-#define OPCODE_TRUNC_SIZE 24      // The smaller you make this, the more your VASM opcode/macro names will be truncated in the resultant .vasm code
-#define USER_STR_SIZE     94
+#define LABEL_TRUNC_SIZE   20     // The smaller you make this, the more your BASIC label names will be truncated in the resultant .vasm code
+#define OPCODE_TRUNC_SIZE  24     // The smaller you make this, the more your VASM opcode/macro names will be truncated in the resultant .vasm code
+#define USER_STR_SIZE      94
 
-// 18 bytes, (0x00EE <-> 0x00FF), reserved for vCPU stack, allows for 9 nested calls. The amount of GOSUBS you can use is dependant on how
+#define SPRITE_CHUNK_SIZE            6
+#define MAX_SPRITE_CHUNKS_PER_STRIPE 40
+
+// 32 bytes, (0x00E0 <-> 0x00FF), reserved for vCPU stack, allows for 16 nested calls. The amount of GOSUBS you can use is dependant on how
 // much of the stack is being used by nested system calls. *NOTE* there is NO call table for user code for this compiler
 #define USER_VAR_START    0x0030  // 80 bytes, (0x0030 <-> 0x007F), reserved for BASIC user variables
 #define INT_VAR_START     0x0082  // 46 bytes, (0x0082 <-> 0x00AF), internal register variables, used by the BASIC runtime
@@ -36,6 +39,7 @@ namespace Compiler
     enum OperandType {OperandVar, OperandTemp, OperandConst};
     enum StatementResult {StatementError, StatementSuccess, StatementExpression, SingleStatementParsed, MultiStatementParsed, StringStatementParsed};
     enum CodeOptimiseType {CodeSpeed, CodeSize};
+    enum SpriteFlipType {FlipNone=0, FlipX, FlipY, FlipXY};
 
     struct Constant
     {
@@ -233,6 +237,24 @@ namespace Compiler
         std::vector<uint8_t> _data;
     };
 
+    struct DefDataSprite
+    {
+        int _id;
+        uint16_t _width, _height;
+        uint16_t _numColumns, _numStripesPerCol;
+        uint16_t _numStripeChunks, _remStripeChunks;
+        std::vector<uint16_t> _stripeAddrs;
+        std::vector<uint8_t> _data;
+        std::string _filename;
+        SpriteFlipType _flipType = FlipNone;
+        bool _isInstanced = false;
+    };
+
+    struct SpritesAddrLut
+    {
+        uint16_t _address;
+        std::vector<uint16_t> _spriteAddrs;
+    };
 
     uint16_t getVasmPC(void);
     uint16_t getRuntimeEnd(void);
@@ -257,7 +279,7 @@ namespace Compiler
     void setCompilingError(bool compilingError);
     void setArrayIndiciesOne(bool arrayIndiciesOne);
 
-    int incJumpFalseUniqueId(void);
+    int getNextJumpFalseUniqueId(void);
 
     std::vector<Label>& getLabels(void);
     std::vector<Constant>& getConstants(void);
@@ -271,6 +293,9 @@ namespace Compiler
     std::vector<DefDataByte>& getDefDataBytes(void);
     std::vector<DefDataWord>& getDefDataWords(void);
     std::vector<DefDataImage>& getDefDataImages(void);
+
+    std::map<int, DefDataSprite>& getDefDataSprites(void);
+    SpritesAddrLut& getSpritesAddrLut(void);
 
     std::map<std::string, MacroIndexEntry>& getMacroIndexEntries(void);
 

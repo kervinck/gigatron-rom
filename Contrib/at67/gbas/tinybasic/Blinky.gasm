@@ -22,9 +22,7 @@ fgbgColour          EQU                     register0 + 0x20
 cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
-frameCountPrev      EQU                     register0 + 0x28
-miscFlags           EQU                     register0 + 0x2A
-highByteMask        EQU                     register0 + 0x2C
+miscFlags           EQU                     register0 + 0x28
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -36,13 +34,13 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x0240
-_20                 EQU                     0x0240
-_30                 EQU                     0x0240
-_40                 EQU                     0x024c
-_50                 EQU                     0x0240
-_60                 EQU                     0x0262
-_end_0x0278         EQU                     0x026a
+_10                 EQU                     0x023b
+_20                 EQU                     0x023b
+_30                 EQU                     0x023b
+_40                 EQU                     0x0247
+_50                 EQU                     0x023b
+_60                 EQU                     0x025d
+_end_0x0273         EQU                     0x0265
 
 ; Variables
 _X                  EQU                     0x0030
@@ -57,6 +55,8 @@ _P                  EQU                     0x0036
 ; Define Words
 
 ; Define Images
+
+; Define Sprites
 
 ; Lookup Tables
 
@@ -83,9 +83,9 @@ _40                 LDWI                    256
                     PEEK                    
                     STW                     0xc2
                     LD                      0xc2
-                    ST                      0xc4 + 1
-                    LDW                     0xc4
-                    ANDW                    highByteMask
+                    ST                      giga_vAC + 1
+                    ORI                     0xFF
+                    XORI                    0xFF
                     ADDW                    _X
                     STW                     _P                              ; P=(PEEK(256+Y+Y) LSL 8)+X
 
@@ -94,7 +94,7 @@ _60                 LDW                     _I
                     INC                     _I
                     BRA                     _60                             ; POKE P,I:INC I:GOTO &60
 
-_end_0x0278         BRA                     _end_0x0278                     ; END
+_end_0x0273         BRA                     _end_0x0273                     ; END
 
 
 

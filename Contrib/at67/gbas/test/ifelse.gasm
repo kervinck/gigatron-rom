@@ -22,9 +22,7 @@ fgbgColour          EQU                     register0 + 0x20
 cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
-frameCountPrev      EQU                     register0 + 0x28
-miscFlags           EQU                     register0 + 0x2A
-highByteMask        EQU                     register0 + 0x2C
+miscFlags           EQU                     register0 + 0x28
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -36,12 +34,12 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_loop               EQU                     0x0245
-_elseif_0x026f      EQU                     0x0269
-_elseif_0x0293      EQU                     0x0289
-_else_0x02b7        EQU                     0x02a9
-_endif_0x02ce       EQU                     0x02c0
-_end_0x02d3         EQU                     0x02c5
+_loop               EQU                     0x0240
+_elseif_0x026a      EQU                     0x0264
+_elseif_0x028e      EQU                     0x0284
+_else_0x02b2        EQU                     0x02a4
+_endif_0x02c9       EQU                     0x02bb
+_end_0x02ce         EQU                     0x02c0
 
 ; Variables
 _p                  EQU                     0x0030
@@ -61,6 +59,8 @@ _str_0x7ee4         DB                      5 'none ' 0
 ; Define Words
 
 ; Define Images
+
+; Define Sprites
 
 ; Lookup Tables
 
@@ -82,7 +82,7 @@ _loop               LD                      0x0f
 
                     LDW                     _p
                     SUBI                    49
-                    BNE                     _elseif_0x026f                  ; if p &&= 49
+                    BNE                     _elseif_0x026a                  ; if p &&= 49
 
                     LDI                     2
                     ST                      cursorXY
@@ -91,11 +91,11 @@ _loop               LD                      0x0f
                     LDWI                    atTextCursor
                     CALL                    giga_vAC
                     PrintString             _str_0x7ef9
-                    BRA                     _endif_0x02ce                   ; at 2,40 : print "one  ";
+                    BRA                     _endif_0x02c9                   ; at 2,40 : print "one  ";
 
-_elseif_0x026f      LDW                     _p
+_elseif_0x026a      LDW                     _p
                     SUBI                    50
-                    BNE                     _elseif_0x0293                  ; elseif p &&= 50
+                    BNE                     _elseif_0x028e                  ; elseif p &&= 50
 
                     LDI                     2
                     ST                      cursorXY
@@ -104,11 +104,11 @@ _elseif_0x026f      LDW                     _p
                     LDWI                    atTextCursor
                     CALL                    giga_vAC
                     PrintString             _str_0x7ef2
-                    BRA                     _endif_0x02ce                   ; at 2,40 : print "two  ";
+                    BRA                     _endif_0x02c9                   ; at 2,40 : print "two  ";
 
-_elseif_0x0293      LDW                     _p
+_elseif_0x028e      LDW                     _p
                     SUBI                    51
-                    BNE                     _else_0x02b7                    ; elseif p &&= 51
+                    BNE                     _else_0x02b2                    ; elseif p &&= 51
 
                     LDI                     2
                     ST                      cursorXY
@@ -117,9 +117,9 @@ _elseif_0x0293      LDW                     _p
                     LDWI                    atTextCursor
                     CALL                    giga_vAC
                     PrintString             _str_0x7eeb
-                    BRA                     _endif_0x02ce                   ; at 2,40 : print "three";
+                    BRA                     _endif_0x02c9                   ; at 2,40 : print "three";
 
-_else_0x02b7        LDI                     2
+_else_0x02b2        LDI                     2
                     ST                      cursorXY
                     LDI                     40
                     ST                      cursorXY + 1
@@ -127,10 +127,10 @@ _else_0x02b7        LDI                     2
                     CALL                    giga_vAC
                     PrintString             _str_0x7ee4                     ; at 2,40 : print "none ";
 
-_endif_0x02ce       LDWI                    _loop
+_endif_0x02c9       LDWI                    _loop
                     CALL                    giga_vAC                        ; goto loop
 
-_end_0x02d3         BRA                     _end_0x02d3                     ; END
+_end_0x02ce         BRA                     _end_0x02ce                     ; END
 
 
 

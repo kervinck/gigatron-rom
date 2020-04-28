@@ -11,13 +11,13 @@
 
 namespace Image
 {
-    // Possible future formats, GT_RGB_222 is the only one currently supported
+    // Possible future formats, (GT_RGB_222 is the only one currently supported)
     enum GtRgbFormats {GT_RGB_222=0, GT_RGBA_2222, GT_Index_8, GT_RGB_565, GT_RGBA_5551, GT_RGBA_4444, GT_RGB_888, GT_RGBA_8888};
     enum DiffusionType {LumError0=0, LumError1, LumError2, LumError3, RgbError, NumDiffusionTypes};
 
     
-    // Byte align and pack the structs so that we can read/write them directly
-    #pragma pack(push, 1) // should be compatible for Windows, Linux and hopefully MacOS
+    // Byte align and pack the structs so that we can read/write them directly, (should be compatible for Windows, Linux and hopefully MacOS)
+    #pragma pack(push, 1)
     struct GtRgbHeader
     {
         char _name[6] = GTRGB_IDENTIFIER;

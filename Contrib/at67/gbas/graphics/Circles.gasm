@@ -22,9 +22,7 @@ fgbgColour          EQU                     register0 + 0x20
 cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
-frameCountPrev      EQU                     register0 + 0x28
-miscFlags           EQU                     register0 + 0x2A
-highByteMask        EQU                     register0 + 0x2C
+miscFlags           EQU                     register0 + 0x28
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -36,14 +34,14 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_loop               EQU                     0x0258
-_circle             EQU                     0x0294
-_end_0x02b0         EQU                     0x0292
-_repeat_0x02c3      EQU                     0x02a3
+_loop               EQU                     0x0253
+_circle             EQU                     0x028f
+_end_0x02ab         EQU                     0x028d
+_repeat_0x02be      EQU                     0x029e
 _page_0x0300        EQU                     0x0300
-_else_0x0394        EQU                     0x033b
-_endif_0x03b6       EQU                     0x034d
-_end_0x03ca         EQU                     0x035d
+_else_0x038f        EQU                     0x0337
+_endif_0x03b1       EQU                     0x0349
+_end_0x03c5         EQU                     0x0359
 
 ; Variables
 _ch0                EQU                     0x0030
@@ -66,6 +64,8 @@ _a                  EQU                     0x0046
 ; Define Words
 
 ; Define Images
+
+; Define Sprites
 
 ; Lookup Tables
 
@@ -116,7 +116,7 @@ _loop               LDI                     0x64
                     LDWI                    _loop
                     CALL                    giga_vAC                        ; goto loop
 
-_end_0x02b0         BRA                     _end_0x02b0                     ; end
+_end_0x02ab         BRA                     _end_0x02ab                     ; end
 
 _circle             PUSH                    
                     LDI                     1
@@ -129,7 +129,7 @@ _circle             PUSH
                     LDW                     _r
                     STW                     _y                              ; y = r
 
-_repeat_0x02c3      LDW                     _cy
+_repeat_0x02be      LDW                     _cy
                     ADDW                    _y
                     ST                      _ch0 + 1                        ; ch0.hi = cy + y
 
@@ -177,13 +177,13 @@ _repeat_0x02c3      LDW                     _cy
                     ADDW                    _y
                     ADDW                    _ch2
                     STW                     _a
+                    LDW                     _c
+                    POKE                    _a                              ; a = cx + y + ch2 : poke a, c
+
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
-                    LDW                     _c
-                    POKE                    _a                              ; a = cx + y + ch2 : poke a, c
-
                     LDW                     _cx
                     SUBW                    _y
                     ADDW                    _ch2
@@ -206,7 +206,7 @@ _page_0x0300        LDW                     0xde
                     POKE                    _a                              ; a = cx - y + ch3 : poke a, c
 
                     LDW                     _d
-                    BGE                     _else_0x0394                    ; if d &&< 0
+                    BGE                     _else_0x038f                    ; if d &&< 0
 
                     LDW                     _x
                     LSLW                    
@@ -214,9 +214,9 @@ _page_0x0300        LDW                     0xde
                     ADDW                    _d
                     ADDI                    3
                     STW                     _d
-                    BRA                     _endif_0x03b6                   ; d = d + (x LSL 2) + 3
+                    BRA                     _endif_0x03b1                   ; d = d + (x LSL 2) + 3
 
-_else_0x0394        LDW                     _x
+_else_0x038f        LDW                     _x
                     SUBW                    _y
                     LSLW                    
                     LSLW                    
@@ -228,16 +228,16 @@ _else_0x0394        LDW                     _x
                     SUBI                    1
                     STW                     _y                              ; y = y - 1
 
-_endif_0x03b6       INC                     _x                              ; inc x
+_endif_0x03b1       INC                     _x                              ; inc x
 
                     LDW                     _x
                     SUBW                    _y
-                    JumpGT                  _repeat_0x02c3 2                ; until x &> y
+                    JumpGT                  _repeat_0x02be 2                ; until x &> y
 
                     POP                     
                     RET                                                     ; return
 
-_end_0x03ca         BRA                     _end_0x03ca                     ; END
+_end_0x03c5         BRA                     _end_0x03c5                     ; END
 
 
 

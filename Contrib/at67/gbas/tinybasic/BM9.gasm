@@ -22,9 +22,7 @@ fgbgColour          EQU                     register0 + 0x20
 cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
-frameCountPrev      EQU                     register0 + 0x28
-miscFlags           EQU                     register0 + 0x2A
-highByteMask        EQU                     register0 + 0x2C
+miscFlags           EQU                     register0 + 0x28
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -36,29 +34,29 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_100                EQU                     0x0245
-_101                EQU                     0x024f
-_102                EQU                     0x0259
-_103                EQU                     0x0263
-_104                EQU                     0x0272
-_105                EQU                     0x027c
-_110                EQU                     0x028b
-_120                EQU                     0x028f
-_130                EQU                     0x0293
-_140                EQU                     0x02a4
-_150                EQU                     0x02b3
-_160                EQU                     0x02bd
-_170                EQU                     0x02c9
-_180                EQU                     0x02d8
-_190                EQU                     0x02e2
-_200                EQU                     0x02f0
+_100                EQU                     0x0240
+_101                EQU                     0x024a
+_102                EQU                     0x0254
+_103                EQU                     0x025e
+_104                EQU                     0x026d
+_105                EQU                     0x0277
+_110                EQU                     0x0286
+_120                EQU                     0x028a
+_130                EQU                     0x028e
+_140                EQU                     0x029f
+_150                EQU                     0x02ae
+_160                EQU                     0x02b8
+_170                EQU                     0x02c4
+_180                EQU                     0x02d3
+_190                EQU                     0x02dd
+_200                EQU                     0x02eb
 _210                EQU                     0x030e
 _220                EQU                     0x031c
 _230                EQU                     0x0321
 _240                EQU                     0x0326
 _250                EQU                     0x0335
 _page_0x0300        EQU                     0x0300
-_end_0x033f         EQU                     0x0335
+_end_0x033a         EQU                     0x0335
 
 ; Variables
 _N                  EQU                     0x0030
@@ -87,6 +85,8 @@ _str_0x7ead         DB                      4 'DONE' 0
 ; Define Words
 
 ; Define Images
+
+; Define Sprites
 
 ; Lookup Tables
 

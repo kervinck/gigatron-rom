@@ -22,9 +22,7 @@ fgbgColour          EQU                     register0 + 0x20
 cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
-frameCountPrev      EQU                     register0 + 0x28
-miscFlags           EQU                     register0 + 0x2A
-highByteMask        EQU                     register0 + 0x2C
+miscFlags           EQU                     register0 + 0x28
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -36,10 +34,10 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_loop               EQU                     0x024e
-_next_0x028a        EQU                     0x027e
-_end_0x02df         EQU                     0x02cb
-_end_0x02e1         EQU                     0x02cd
+_loop               EQU                     0x0249
+_next_0x0285        EQU                     0x0279
+_end_0x02da         EQU                     0x02c6
+_end_0x02dc         EQU                     0x02c8
 
 ; Variables
 _ox                 EQU                     0x0030
@@ -55,6 +53,8 @@ def_bytes_0x0600    DB                      0 0 0 0 0 0 0 0 0 0 255
 ; Define Words
 
 ; Define Images
+
+; Define Sprites
 
 ; Lookup Tables
 
@@ -95,7 +95,7 @@ _loop               Rand
                     LDI                     0
                     STW                     _i                              ; for i=0 &to POLYSIZE*2 - 4 step 2
 
-_next_0x028a        LDWI                    1536
+_next_0x0285        LDWI                    1536
                     ADDW                    _i
                     STW                     0xc0
                     LDI                     0xa0
@@ -109,7 +109,7 @@ _next_0x028a        LDWI                    1536
                     RandMod                 
                     POKE                    0xc0                            ; poke POLYADDR + 1 + i, rnd(120)
 
-                    ForNextAdd              _i _next_0x028a 6 2             ; next i
+                    ForNextAdd              _i _next_0x0285 6 2             ; next i
 
                     LDWI                    1544
                     STW                     register0
@@ -127,9 +127,9 @@ _next_0x028a        LDWI                    1536
 
                     BRA                     _loop                           ; goto &loop
 
-_end_0x02df         BRA                     _end_0x02df                     ; end
+_end_0x02da         BRA                     _end_0x02da                     ; end
 
-_end_0x02e1         BRA                     _end_0x02e1                     ; END
+_end_0x02dc         BRA                     _end_0x02dc                     ; END
 
 
 

@@ -50,7 +50,7 @@ namespace Memory
         if(_sizeRAM == RAM_SIZE_HI) _freeRam.push_back({RAM_EXPANSION_START, RAM_EXPANSION_SIZE});
 
         // VRAM 0x0800 <-> 0c7F00
-        for(uint16_t i=RAM_VIDEO_START; i<=RAM_VIDEO_END; i+=RAM_VIDEO_OFS) _videoRam.push_back({i, RAM_VIDEO_SIZE});
+        for(uint16_t i=RAM_VIDEO_START; i<=RAM_VIDEO_END; i+=RAM_VIDEO_OFS) _videoRam.push_back({i, RAM_SCANLINE_SIZE});
 
         _baseFreeRAM = _sizeRAM - RAM_USED_DEFAULT;
         _sizeFreeRAM = _baseFreeRAM;

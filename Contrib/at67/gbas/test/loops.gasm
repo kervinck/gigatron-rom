@@ -22,9 +22,7 @@ fgbgColour          EQU                     register0 + 0x20
 cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
-frameCountPrev      EQU                     register0 + 0x28
-miscFlags           EQU                     register0 + 0x2A
-highByteMask        EQU                     register0 + 0x2C
+miscFlags           EQU                     register0 + 0x28
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -36,11 +34,11 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_repeat_0x0249      EQU                     0x0249
-_while_0x0264       EQU                     0x0260
-_else_0x0285        EQU                     0x0277
-_endif_0x0293       EQU                     0x0285
-_wend_0x029d        EQU                     0x028d
+_repeat_0x0244      EQU                     0x0244
+_while_0x025f       EQU                     0x025b
+_else_0x0280        EQU                     0x0272
+_endif_0x028e       EQU                     0x0280
+_wend_0x0298        EQU                     0x0288
 
 ; Variables
 _a                  EQU                     0x0030
@@ -52,6 +50,8 @@ _a                  EQU                     0x0030
 ; Define Words
 
 ; Define Images
+
+; Define Sprites
 
 ; Lookup Tables
 
@@ -71,7 +71,7 @@ _entryPoint_        InitRealTimeProc
                     LDI                     1
                     STW                     _a                              ; LET a=1
 
-_repeat_0x0249      LDW                     _a
+_repeat_0x0244      LDW                     _a
                     PrintAcInt16            
                     NewLine                                                 ; print a
 
@@ -79,30 +79,30 @@ _repeat_0x0249      LDW                     _a
 
                     LDW                     _a
                     SUBI                    8
-                    BNE                     _repeat_0x0249                  ; until a &&= count + 1
+                    BNE                     _repeat_0x0244                  ; until a &&= count + 1
 
-_while_0x0264       LDW                     _a
-                    BLE                     _wend_0x029d                    ; while a &&> 0
+_while_0x025f       LDW                     _a
+                    BLE                     _wend_0x0298                    ; while a &&> 0
 
                     LDW                     _a
                     SUBI                    1
-                    BNE                     _else_0x0285                    ; if a &&= 1
+                    BNE                     _else_0x0280                    ; if a &&= 1
 
                     LDW                     _a
                     PrintAcInt16            
-                    BRA                     _endif_0x0293                   ; print a;
+                    BRA                     _endif_0x028e                   ; print a;
 
-_else_0x0285        LDW                     _a
+_else_0x0280        LDW                     _a
                     PrintAcInt16            
                     NewLine                                                 ; print a
 
-_endif_0x0293       LDW                     _a
+_endif_0x028e       LDW                     _a
                     SUBI                    1
                     STW                     _a                              ; a=a-1
 
-                    BRA                     _while_0x0264                   ; wend
+                    BRA                     _while_0x025f                   ; wend
 
-_wend_0x029d        BRA                     _wend_0x029d                    ; END
+_wend_0x0298        BRA                     _wend_0x0298                    ; END
 
 
 

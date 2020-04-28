@@ -22,9 +22,7 @@ fgbgColour          EQU                     register0 + 0x20
 cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
-frameCountPrev      EQU                     register0 + 0x28
-miscFlags           EQU                     register0 + 0x2A
-highByteMask        EQU                     register0 + 0x2C
+miscFlags           EQU                     register0 + 0x28
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -40,7 +38,7 @@ _page_0x0300        EQU                     0x0300
 _page_0x0400        EQU                     0x0400
 _page_0x0500        EQU                     0x0500
 _page_0x0600        EQU                     0x0600
-_end_0x0720         EQU                     0x06b1
+_end_0x071b         EQU                     0x06b1
 
 ; Variables
 _arr_array          EQU                     0x7ef4
@@ -98,6 +96,8 @@ _str_0x78f7         DB                      7 'Testing' 0
 ; Define Words
 
 ; Define Images
+
+; Define Sprites
 
 ; Lookup Tables
 _concat_0x7ecc      EQU                     0x7ecc
@@ -188,11 +188,11 @@ _entryPoint_        InitRealTimeProc
                     PrintString             _cat$
                     PrintString             _str_0x7ec9
                     LDW                     _hours
+                    PrintAcInt16            
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
-                    PrintAcInt16            
                     PrintString             _str_0x7ec9
                     LDW                     _minutes
                     PrintAcInt16            
@@ -203,7 +203,9 @@ _page_0x0300        LDW                     0xde
 
                     LDI                     2
                     RandMod                 
-                    ADDI                    2
+                    STW                     0xc2
+                    LDI                     2
+                    ADDW                    0xc2
                     STW                     0xc4
                     LDWI                    0x79a0
                     PEEK                    
@@ -212,7 +214,9 @@ _page_0x0300        LDW                     0xde
                     STW                     _a                              ; a = rnd(len(dog)) + len(dog) + len(cat$) + 27
 
                     LDI                     53
-                    ADDI                    2
+                    STW                     0xc0
+                    LDI                     2
+                    ADDW                    0xc0
                     STW                     0xc2
                     LDI                     65
                     STW                     strChr
@@ -426,7 +430,7 @@ _page_0x0600        LDW                     0xde
                     PrintInt16              0x0004
                     NewLine                                                 ; print sin(56.8333333)*1000;" ";cs;" ";db;" ";1.5333333333 * 2.32
 
-_end_0x0720         BRA                     _end_0x0720                     ; end
+_end_0x071b         BRA                     _end_0x071b                     ; end
 
 
 

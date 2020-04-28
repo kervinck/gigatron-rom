@@ -22,9 +22,7 @@ fgbgColour          EQU                     register0 + 0x20
 cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
-frameCountPrev      EQU                     register0 + 0x28
-miscFlags           EQU                     register0 + 0x2A
-highByteMask        EQU                     register0 + 0x2C
+miscFlags           EQU                     register0 + 0x28
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -39,9 +37,9 @@ _entryPoint_        EQU                     0x0200
 _page_0x0300        EQU                     0x0300
 _page_0x0400        EQU                     0x0400
 _page_0x0500        EQU                     0x0500
-_repeat_0x054a      EQU                     0x0543
-_else_0x056c        EQU                     0x0559
-_end_0x05a3         EQU                     0x0586
+_repeat_0x0545      EQU                     0x0543
+_else_0x0567        EQU                     0x0559
+_end_0x059e         EQU                     0x0586
 
 ; Variables
 _a                  EQU                     0x0030
@@ -66,6 +64,8 @@ _str_0x7efd         DB                      1 ' ' 0
 ; Define Words
 
 ; Define Images
+
+; Define Sprites
 
 ; Lookup Tables
 
@@ -136,12 +136,12 @@ _entryPoint_        InitRealTimeProc
                     STW                     mathX
                     LDI                     2
                     STW                     mathY
+                    LDWI                    power16bit
+                    CALL                    giga_vAC
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
-                    LDWI                    power16bit
-                    CALL                    giga_vAC
                     PrintAcInt16            
                     PrintString             _str_0x7efd
                     LDW                     _a
@@ -319,9 +319,9 @@ _page_0x0500        LDW                     0xde
                     LDI                     1
                     STW                     _r                              ; r = 1
 
-_repeat_0x054a      LDW                     _y
+_repeat_0x0545      LDW                     _y
                     ANDI                    1
-                    BEQ                     _else_0x056c
+                    BEQ                     _else_0x0567
                     LDW                     _r
                     STW                     mathX
                     LDW                     _x
@@ -330,7 +330,7 @@ _repeat_0x054a      LDW                     _y
                     CALL                    giga_vAC
                     STW                     _r                              ; if (y AND 1) &&<> 0 then r = r * x
 
-_else_0x056c        LDW                     _x
+_else_0x0567        LDW                     _x
                     STW                     mathX
                     LDW                     _x
                     STW                     mathY
@@ -344,13 +344,13 @@ _else_0x056c        LDW                     _x
                     STW                     _y                              ; y = y LSR 1
 
                     LDW                     _y
-                    BNE                     _repeat_0x054a                  ; until y &&= 0
+                    BNE                     _repeat_0x0545                  ; until y &&= 0
 
                     LDW                     _r
                     PrintAcInt16            
                     NewLine                                                 ; print r
 
-_end_0x05a3         BRA                     _end_0x05a3                     ; end
+_end_0x059e         BRA                     _end_0x059e                     ; end
 
 
 

@@ -22,9 +22,7 @@ fgbgColour          EQU                     register0 + 0x20
 cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
-frameCountPrev      EQU                     register0 + 0x28
-miscFlags           EQU                     register0 + 0x2A
-highByteMask        EQU                     register0 + 0x2C
+miscFlags           EQU                     register0 + 0x28
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -36,31 +34,31 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x0240
-_11                 EQU                     0x0244
-_12                 EQU                     0x0250
-_13                 EQU                     0x025a
-_14                 EQU                     0x0268
-_20                 EQU                     0x0276
-_21                 EQU                     0x027a
-_22                 EQU                     0x027e
-_23                 EQU                     0x0282
-_24                 EQU                     0x0286
-_25                 EQU                     0x028a
-_26                 EQU                     0x028e
-_30                 EQU                     0x0292
-_31                 EQU                     0x0296
-_32                 EQU                     0x02a4
-_33                 EQU                     0x02aa
-_34                 EQU                     0x02ba
-_35                 EQU                     0x02c0
-_36                 EQU                     0x02cc
-_37                 EQU                     0x02da
-_38                 EQU                     0x02de
+_10                 EQU                     0x023b
+_11                 EQU                     0x023f
+_12                 EQU                     0x024b
+_13                 EQU                     0x0255
+_14                 EQU                     0x0263
+_20                 EQU                     0x0271
+_21                 EQU                     0x0275
+_22                 EQU                     0x0279
+_23                 EQU                     0x027d
+_24                 EQU                     0x0281
+_25                 EQU                     0x0285
+_26                 EQU                     0x0289
+_30                 EQU                     0x028d
+_31                 EQU                     0x0291
+_32                 EQU                     0x029f
+_33                 EQU                     0x02a5
+_34                 EQU                     0x02b5
+_35                 EQU                     0x02bb
+_36                 EQU                     0x02c7
+_37                 EQU                     0x02d5
+_38                 EQU                     0x02d9
 _39                 EQU                     0x0302
-_next_0x02b8        EQU                     0x02ae
+_next_0x02b3        EQU                     0x02a9
 _page_0x0300        EQU                     0x0300
-_end_0x031d         EQU                     0x0310
+_end_0x0318         EQU                     0x0310
 
 ; Variables
 _c                  EQU                     0x0030
@@ -74,6 +72,8 @@ _n                  EQU                     0x0034
 ; Define Words
 
 ; Define Images
+
+; Define Sprites
 
 ; Lookup Tables
 
@@ -91,9 +91,9 @@ _10                 LDI                     1
                     STW                     _c                              ; for c=1 to 4
 
 _11                 LD                      _c
-                    ST                      0xc0 + 1
-                    LDW                     0xc0
-                    ANDW                    highByteMask
+                    ST                      giga_vAC + 1
+                    ORI                     0xFF
+                    XORI                    0xFF
                     ADDI                    252
                     STW                     _p                              ; p=(c LSL 8)+252
 
@@ -147,10 +147,10 @@ _32                 LDW                     _n
 
 _33                 LDI                     1
                     STW                     _c
-_next_0x02b8        LD                      _c
-                    ST                      0xc0 + 1
-                    LDW                     0xc0
-                    ANDW                    highByteMask
+_next_0x02b3        LD                      _c
+                    ST                      giga_vAC + 1
+                    ORI                     0xFF
+                    XORI                    0xFF
                     ADDI                    252
                     STW                     _p                              ; for c=1 to 4 : p=(c LSL 8)+252
 
@@ -165,7 +165,7 @@ _35                 LDW                     _p
                     CALL                    giga_vAC
                     POKE                    0xc0                            ; poke p+1,usr(&hE0):'Fhi
 
-_36                 ForNextFarInc           _c _next_0x02b8 4               ; next c
+_36                 ForNextFarInc           _c _next_0x02b3 4               ; next c
 
 _37                 LDI                     15
                     ST                      44                              ; poke 44,15:'0.25 secs
@@ -181,7 +181,7 @@ _38                 LD                      0x2c
 _page_0x0300        LDW                     0xde
 _39                 ForNextFarInc           _n _31 95                       ; next n
 
-_end_0x031d         BRA                     _end_0x031d                     ; END
+_end_0x0318         BRA                     _end_0x0318                     ; END
 
 
 

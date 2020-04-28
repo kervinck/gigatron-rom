@@ -22,9 +22,7 @@ fgbgColour          EQU                     register0 + 0x20
 cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
-frameCountPrev      EQU                     register0 + 0x28
-miscFlags           EQU                     register0 + 0x2A
-highByteMask        EQU                     register0 + 0x2C
+miscFlags           EQU                     register0 + 0x28
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -36,18 +34,18 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_1                  EQU                     0x0240
-_2                  EQU                     0x0240
-_3                  EQU                     0x0240
-_10                 EQU                     0x0240
-_19                 EQU                     0x0240
-_20                 EQU                     0x0248
-_29                 EQU                     0x0240
-_30                 EQU                     0x0251
-_40                 EQU                     0x025a
-_50                 EQU                     0x02b3
-_60                 EQU                     0x02bd
-_end_0x030f         EQU                     0x02bf
+_1                  EQU                     0x023b
+_2                  EQU                     0x023b
+_3                  EQU                     0x023b
+_10                 EQU                     0x023b
+_19                 EQU                     0x023b
+_20                 EQU                     0x0243
+_29                 EQU                     0x023b
+_30                 EQU                     0x024c
+_40                 EQU                     0x0255
+_50                 EQU                     0x02ae
+_60                 EQU                     0x02b8
+_end_0x030a         EQU                     0x02ba
 
 ; Variables
 _x                  EQU                     0x0030
@@ -62,6 +60,8 @@ _str_0x7ef5         DB                      9 'Gigatron!' 0
 ; Define Words
 
 ; Define Images
+
+; Define Sprites
 
 ; Lookup Tables
 
@@ -125,7 +125,7 @@ _50                 PrintString             _str_0x7ef5                     ; pr
 
 _60                 BRA                     _20                             ; goto &20
 
-_end_0x030f         BRA                     _end_0x030f                     ; END
+_end_0x030a         BRA                     _end_0x030a                     ; END
 
 
 

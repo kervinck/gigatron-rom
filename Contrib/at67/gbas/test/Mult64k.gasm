@@ -22,9 +22,7 @@ fgbgColour          EQU                     register0 + 0x20
 cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
-frameCountPrev      EQU                     register0 + 0x28
-miscFlags           EQU                     register0 + 0x2A
-highByteMask        EQU                     register0 + 0x2C
+miscFlags           EQU                     register0 + 0x28
 
 ; Internal buffers
 textWorkArea        EQU                     0xffa0
@@ -36,13 +34,13 @@ textWorkArea        EQU                     0xffa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_math               EQU                     0x031a
-_next_0x0260        EQU                     0x025c
-_else_0x0286        EQU                     0x0274
-_next_0x02a5        EQU                     0x0291
+_math               EQU                     0x0313
+_next_0x025b        EQU                     0x0257
+_else_0x0281        EQU                     0x026f
+_next_0x02a0        EQU                     0x028c
 _page_0x0300        EQU                     0x0300
-_end_0x0327         EQU                     0x0318
-_end_0x0371         EQU                     0x0352
+_end_0x0322         EQU                     0x0311
+_end_0x036c         EQU                     0x034b
 
 ; Variables
 _result             EQU                     0x0030
@@ -63,13 +61,15 @@ _str_0xff98         DB                      3 '/60' 0
 
 ; Define Words
 def_words_0x8000    EQU                     0x8000
-def_words_0x8000    DW                      165 115 41 45 -144 -107 88 87 -178 56 
+def_words_0x8000    DW                      -106 41 167 179 -21 -54 69 87 -139 3 
 def_words_0x8014    EQU                     0x8014
-def_words_0x8014    DW                      -18 -124 -118 61 -44 98 -131 19 -27 -158 
+def_words_0x8014    DW                      -104 -129 -3 -56 22 156 -85 100 111 152 
 def_words_0x8028    EQU                     0x8028
 def_words_0x8028    DW                      0 0 0 0 0 0 0 0 0 0 
 
 ; Define Images
+
+; Define Sprites
 
 ; Lookup Tables
 
@@ -98,7 +98,7 @@ _entryPoint_        InitRealTimeProc
                     LDI                     0
                     STW                     _i                              ; for i=0 to SIZE-1
 
-_next_0x0260        LDW                     _tick
+_next_0x025b        LDW                     _tick
                     STW                     _ticks
                     LD                      0x0e
                     STW                     _tick
@@ -106,24 +106,24 @@ _next_0x0260        LDW                     _tick
                     STW                     _ticks                          ; ticks=tick : tick=peek(14) : ticks=tick-ticks
 
                     LDW                     _ticks
-                    BGE                     _else_0x0286
+                    BGE                     _else_0x0281
                     LDWI                    256
                     ADDW                    _ticks
                     STW                     _ticks                          ; if ticks &&< 0 then ticks=ticks+256
 
-_else_0x0286        LDW                     _timer
+_else_0x0281        LDW                     _timer
                     ADDW                    _ticks
                     STW                     _timer                          ; timer=timer+ticks
 
                     LDWI                    _math
                     CALL                    giga_vAC                        ; gosub math
 
-                    ForNextFarInc           _i _next_0x0260 9               ; next i
+                    ForNextFarInc           _i _next_0x025b 9               ; next i
 
                     LDI                     0
                     STW                     _i                              ; for i=0 to SIZE-1
 
-_next_0x02a5        LDW                     _i
+_next_0x02a0        LDW                     _i
                     LSLW                    
                     STW                     0xc2
                     LDWI                    -32728
@@ -132,7 +132,7 @@ _next_0x02a5        LDW                     _i
                     PrintAcInt16            
                     PrintString             _str_0xff9d                     ; print deek(ADDR + SIZE*4 + (i LSL 1));" ";
 
-                    ForNextFarInc           _i _next_0x02a5 9               ; next i
+                    ForNextFarInc           _i _next_0x02a0 9               ; next i
 
                     NewLine                 
                     LDW                     _timer
@@ -150,15 +150,15 @@ _next_0x02a5        LDW                     _i
                     LDWI                    divide16bit
                     CALL                    giga_vAC
                     LDW                     mathRem
+                    PrintAcInt16            
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
-                    PrintAcInt16            
                     PrintString             _str_0xff98
                     NewLine                                                 ; print : print timer/60;" ";timer % 60;"/60"
 
-_end_0x0327         BRA                     _end_0x0327                     ; end
+_end_0x0322         BRA                     _end_0x0322                     ; end
 
 _math               PUSH                    
                     LDW                     _i
@@ -194,7 +194,7 @@ _math               PUSH
                     POP                     
                     RET                                                     ; return
 
-_end_0x0371         BRA                     _end_0x0371                     ; END
+_end_0x036c         BRA                     _end_0x036c                     ; END
 
 
 

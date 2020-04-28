@@ -22,9 +22,7 @@ fgbgColour          EQU                     register0 + 0x20
 cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
-frameCountPrev      EQU                     register0 + 0x28
-miscFlags           EQU                     register0 + 0x2A
-highByteMask        EQU                     register0 + 0x2C
+miscFlags           EQU                     register0 + 0x28
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -36,14 +34,14 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_loop               EQU                     0x0267
-_math               EQU                     0x0358
-_next_0x026d        EQU                     0x026b
-_next_0x02af        EQU                     0x02a1
-_next_0x02ed        EQU                     0x02d7
+_loop               EQU                     0x0262
+_math               EQU                     0x0354
+_next_0x0268        EQU                     0x0266
+_next_0x02aa        EQU                     0x029c
+_next_0x02e8        EQU                     0x02d2
 _page_0x0300        EQU                     0x0300
-_next_0x032f        EQU                     0x031d
-_end_0x03b2         EQU                     0x0376
+_next_0x032a        EQU                     0x0319
+_end_0x03ad         EQU                     0x0372
 
 ; Variables
 _x                  EQU                     0x0030
@@ -158,6 +156,8 @@ def_bytes_0x40a0    DB                      122 146 38 144 26 145 65 147 62 122 
 
 ; Define Images
 
+; Define Sprites
+
 ; Lookup Tables
 
 ; Code
@@ -185,7 +185,7 @@ _entryPoint_        InitRealTimeProc
 _loop               LDI                     0
                     STW                     _i                              ; for i=0 to 19
 
-_next_0x026d        LDWI                    _math
+_next_0x0268        LDWI                    _math
                     CALL                    giga_vAC                        ; gosub math
 
                     LD                      0xa3
@@ -204,12 +204,12 @@ _next_0x026d        LDWI                    _math
                     STW                     drawLine_y2
                     DrawLine                                                ; line x,119, 159,119-y
 
-                    ForNextFarInc           _i _next_0x026d 19              ; next i
+                    ForNextFarInc           _i _next_0x0268 19              ; next i
 
                     LDI                     19
                     STW                     _i                              ; for i=19 to 0
 
-_next_0x02af        LDWI                    _math
+_next_0x02aa        LDWI                    _math
                     CALL                    giga_vAC                        ; gosub math
 
                     LD                      0xa3
@@ -227,12 +227,12 @@ _next_0x02af        LDWI                    _math
                     STW                     drawLine_y2
                     DrawLine                                                ; line 159,y, x,0
 
-                    ForNextFarDec           _i _next_0x02af 0               ; next i
+                    ForNextFarDec           _i _next_0x02aa 0               ; next i
 
                     LDI                     0
                     STW                     _i                              ; for i=0 to 19
 
-_next_0x02ed        LDWI                    _math
+_next_0x02e8        LDWI                    _math
                     CALL                    giga_vAC                        ; gosub math
 
                     LD                      0xa3
@@ -247,20 +247,20 @@ _next_0x02ed        LDWI                    _math
                     LDI                     159
                     SUBW                    _x
                     STW                     drawLine_x2
+                    LDI                     0
+                    STW                     drawLine_y2
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
-                    LDI                     0
-                    STW                     drawLine_y2
                     DrawLine                                                ; line 0,y, 159-x,0
 
-                    ForNextFarInc           _i _next_0x02ed 19              ; next i
+                    ForNextFarInc           _i _next_0x02e8 19              ; next i
 
                     LDI                     19
                     STW                     _i                              ; for i=19 to 0
 
-_next_0x032f        LDWI                    _math
+_next_0x032a        LDWI                    _math
                     CALL                    giga_vAC                        ; gosub math
 
                     LD                      0xa3
@@ -280,7 +280,7 @@ _next_0x032f        LDWI                    _math
                     STW                     drawLine_y2
                     DrawLine                                                ; line 159-x,119, 0,119-y
 
-                    ForNextFarDec           _i _next_0x032f 0               ; next i
+                    ForNextFarDec           _i _next_0x032a 0               ; next i
 
                     LDWI                    _loop
                     CALL                    giga_vAC                        ; goto  loop
@@ -306,7 +306,7 @@ _math               PUSH
                     POP                     
                     RET                                                     ; return
 
-_end_0x03b2         BRA                     _end_0x03b2                     ; END
+_end_0x03ad         BRA                     _end_0x03ad                     ; END
 
 
 

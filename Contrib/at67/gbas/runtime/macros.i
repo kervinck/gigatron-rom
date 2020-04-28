@@ -574,9 +574,6 @@ _id_    CALL    giga_vAC
         LDWI    0x0001
         STW     miscFlags                               ; reset flags
         
-        LDWI    0xFF00
-        STW     highByteMask
-        
         LDWI    0x0000
         STW     midiStream                              ; reset MIDI
         LDI     0x00
