@@ -3646,7 +3646,7 @@ namespace Keywords
                         std::string flipOperand;
                         Compiler::parseExpression(codeLineIndex, flipToken, flipOperand, flipNumeric);
                         uint16_t flip = uint16_t(std::lround(flipNumeric._value));
-                        if(flip >= Compiler::FlipNone  &&  flip <= Compiler::FlipXY) flipType = Compiler::SpriteFlipType(flip);
+                        if(flip <= uint16_t(Compiler::FlipXY)) flipType = Compiler::SpriteFlipType(flip);
                     }
 
                     // Build sprite data from image data
