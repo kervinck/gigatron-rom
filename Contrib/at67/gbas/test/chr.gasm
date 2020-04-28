@@ -22,9 +22,7 @@ fgbgColour          EQU                     register0 + 0x20
 cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
-frameCountPrev      EQU                     register0 + 0x28
-miscFlags           EQU                     register0 + 0x2A
-highByteMask        EQU                     register0 + 0x2C
+miscFlags           EQU                     register0 + 0x28
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -36,15 +34,15 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x0258
+_10                 EQU                     0x0253
 _20                 EQU                     0x0358
-_next_0x0260        EQU                     0x0260
-_next_0x0264        EQU                     0x0264
-_next_0x0268        EQU                     0x0268
-_next_0x029e        EQU                     0x029e
+_next_0x025b        EQU                     0x025b
+_next_0x025f        EQU                     0x025f
+_next_0x0263        EQU                     0x0263
+_next_0x0299        EQU                     0x0299
 _page_0x0300        EQU                     0x0300
-_next_0x0354        EQU                     0x0323
-_end_0x038e         EQU                     0x035d
+_next_0x034f        EQU                     0x0323
+_end_0x0389         EQU                     0x035d
 
 ; Variables
 _a                  EQU                     0x0030
@@ -247,6 +245,8 @@ def_bytes_0x67a0    DB                      10 128 129 131 208 160 16
 
 ; Define Images
 
+; Define Sprites
+
 ; Lookup Tables
 
 ; Code
@@ -270,13 +270,13 @@ _10                 LDI                     1
                     LDI                     0
                     STW                     _k                              ; for k = 0 to 1
 
-_next_0x0260        LDI                     0
+_next_0x025b        LDI                     0
                     STW                     _j                              ; for j = 0 to 1
 
-_next_0x0264        LDI                     0
+_next_0x025f        LDI                     0
                     STW                     _i                              ; for i = 0 to 1
 
-_next_0x0268        PrintString             _str_0x7ee2                     ; print "yahooowalllallllalalalwallla";
+_next_0x0263        PrintString             _str_0x7ee2                     ; print "yahooowalllallllalalalwallla";
 
                     PrintString             _str_0x7edd
                     PrintString             _str_0x7eda                     ; print "yes";" ";
@@ -287,7 +287,7 @@ _next_0x0268        PrintString             _str_0x7ee2                     ; pr
                     LDI                     32
                     STW                     _char                           ; for char = 32 to 127
 
-_next_0x029e        LDW                     _a
+_next_0x0299        LDW                     _a
                     ADDI                    1
                     STW                     _a                              ; a = a + 1
 
@@ -307,17 +307,17 @@ _next_0x029e        LDW                     _a
                     ADDW                    0xc0
                     PrintAcChar                                             ; print chr$(char+1 +a+a+a - 32*0 + 50/0 + a/0 + 3 - a -a -a -4 + j*0 + (k-k));
 
-                    ForNextFarInc           _char _next_0x029e 127          ; next char
+                    ForNextFarInc           _char _next_0x0299 127          ; next char
 
-                    ForNextFarInc           _i _next_0x0268 1               ; next i
+                    ForNextFarInc           _i _next_0x0263 1               ; next i
 
-                    ForNextFarInc           _j _next_0x0264 1               ; next j
+                    ForNextFarInc           _j _next_0x025f 1               ; next j
 
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
-                    ForNextFarInc           _k _next_0x0260 1               ; next k
+                    ForNextFarInc           _k _next_0x025b 1               ; next k
 
                     PrintString             _str_0x7eb6
                     NewLine                                                 ; print "wooooooooooooooooooooooooooooow!!!"
@@ -325,13 +325,13 @@ _page_0x0300        LDW                     0xde
                     LDI                     0
                     STW                     _i                              ; for i = 0 to 6
 
-_next_0x0354        PrintString             _str_0x7eb1
+_next_0x034f        PrintString             _str_0x7eb1
                     PrintString             _str_0x7eda
                     LDW                     _i
                     PrintAcInt16            
                     NewLine                                                 ; print "dog";" ";i
 
-                    ForNextFarInc           _i _next_0x0354 6               ; next i
+                    ForNextFarInc           _i _next_0x034f 6               ; next i
 
                     LDWI                    clearVertBlinds
                     CALL                    giga_vAC                        ; cls
@@ -339,7 +339,7 @@ _next_0x0354        PrintString             _str_0x7eb1
 _20                 LDWI                    _10
                     CALL                    giga_vAC                        ; goto 10
 
-_end_0x038e         BRA                     _end_0x038e                     ; END
+_end_0x0389         BRA                     _end_0x0389                     ; END
 
 
 

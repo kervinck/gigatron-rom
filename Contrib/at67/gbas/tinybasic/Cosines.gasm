@@ -22,9 +22,7 @@ fgbgColour          EQU                     register0 + 0x20
 cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
-frameCountPrev      EQU                     register0 + 0x28
-miscFlags           EQU                     register0 + 0x2A
-highByteMask        EQU                     register0 + 0x2C
+miscFlags           EQU                     register0 + 0x28
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -36,15 +34,15 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x0240
-_20                 EQU                     0x0249
-_30                 EQU                     0x024d
-_40                 EQU                     0x025a
-_50                 EQU                     0x025e
-_60                 EQU                     0x0285
-_70                 EQU                     0x029e
-_80                 EQU                     0x02ac
-_end_0x02c7         EQU                     0x02b7
+_10                 EQU                     0x023b
+_20                 EQU                     0x0244
+_30                 EQU                     0x0248
+_40                 EQU                     0x0255
+_50                 EQU                     0x0259
+_60                 EQU                     0x0286
+_70                 EQU                     0x029f
+_80                 EQU                     0x02ad
+_end_0x02c2         EQU                     0x02b8
 
 ; Variables
 _p                  EQU                     0x0030
@@ -61,6 +59,8 @@ _y                  EQU                     0x003a
 ; Define Words
 
 ; Define Images
+
+; Define Sprites
 
 ; Lookup Tables
 
@@ -103,7 +103,10 @@ _50                 LDW                     _u
                     SUBW                    0xc0
                     STW                     0xc0
                     LD                      0xc0
-                    ST                      _y + 1
+                    ST                      giga_vAC + 1
+                    ORI                     0xFF
+                    XORI                    0xFF
+                    STW                     _y
                     LDI                     0
                     ST                      _y
                     LDW                     _y
@@ -133,7 +136,7 @@ _80                 LDW                     _c
                     LDWI                    _40
                     CALL                    giga_vAC                        ; c=c+23:goto 40
 
-_end_0x02c7         BRA                     _end_0x02c7                     ; END
+_end_0x02c2         BRA                     _end_0x02c2                     ; END
 
 
 

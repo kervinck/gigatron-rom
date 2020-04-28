@@ -22,9 +22,7 @@ fgbgColour          EQU                     register0 + 0x20
 cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
-frameCountPrev      EQU                     register0 + 0x28
-miscFlags           EQU                     register0 + 0x2A
-highByteMask        EQU                     register0 + 0x2C
+miscFlags           EQU                     register0 + 0x28
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -36,17 +34,17 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x0240
-_20                 EQU                     0x0249
-_30                 EQU                     0x025b
-_40                 EQU                     0x0282
-_50                 EQU                     0x02a3
-_60                 EQU                     0x02d1
-_70                 EQU                     0x0311
-_80                 EQU                     0x0338
-_90                 EQU                     0x035d
+_10                 EQU                     0x023b
+_20                 EQU                     0x0244
+_30                 EQU                     0x0256
+_40                 EQU                     0x027d
+_50                 EQU                     0x029e
+_60                 EQU                     0x02cc
+_70                 EQU                     0x030d
+_80                 EQU                     0x0334
+_90                 EQU                     0x0359
 _page_0x0300        EQU                     0x0300
-_else_0x03bc        EQU                     0x037f
+_else_0x03b7        EQU                     0x037b
 
 ; Variables
 _Z_array            EQU                     0x0642
@@ -69,6 +67,8 @@ _str_0x7ef8         DB                      1 '.' 0
 ; Define Words
 
 ; Define Images
+
+; Define Sprites
 
 ; Lookup Tables
 
@@ -162,12 +162,12 @@ _60                 LDW                     _J
                     STW                     register1
                     LDW                     mathRem
                     DOKE                    register1
+                    LDW                     _D
+                    STW                     mathX
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
-                    LDW                     _D
-                    STW                     mathX
                     LDW                     _A
                     STW                     mathY
                     LDWI                    divide16bit
@@ -209,11 +209,11 @@ _90                 LDW                     _E
                     PrintAcInt16            
                     LDW                     _M
                     SUBI                    10
-                    BLE                     _else_0x03bc
+                    BLE                     _else_0x03b7
                     LDWI                    _40
                     CALL                    giga_vAC                        ; PRINT E%10;:IF M &&> 10 THEN GOTO 40
 
-_else_0x03bc        BRA                     _else_0x03bc                    ; END
+_else_0x03b7        BRA                     _else_0x03b7                    ; END
 
 
 

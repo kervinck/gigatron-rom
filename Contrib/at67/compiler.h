@@ -13,9 +13,7 @@
 #define OPCODE_TRUNC_SIZE  24     // The smaller you make this, the more your VASM opcode/macro names will be truncated in the resultant .vasm code
 #define USER_STR_SIZE      94
 
-#define MAX_NUM_SPRITES              32
 #define SPRITE_CHUNK_SIZE            6
-#define MAX_SPRITE_STRIPES           10
 #define MAX_SPRITE_CHUNKS_PER_STRIPE 40
 
 // 32 bytes, (0x00E0 <-> 0x00FF), reserved for vCPU stack, allows for 16 nested calls. The amount of GOSUBS you can use is dependant on how
@@ -41,6 +39,7 @@ namespace Compiler
     enum OperandType {OperandVar, OperandTemp, OperandConst};
     enum StatementResult {StatementError, StatementSuccess, StatementExpression, SingleStatementParsed, MultiStatementParsed, StringStatementParsed};
     enum CodeOptimiseType {CodeSpeed, CodeSize};
+    enum SpriteFlipType {FlipNone=0, FlipX, FlipY, FlipXY};
 
     struct Constant
     {
@@ -246,6 +245,9 @@ namespace Compiler
         uint16_t _numStripeChunks, _remStripeChunks;
         std::vector<uint16_t> _stripeAddrs;
         std::vector<uint8_t> _data;
+        std::string _filename;
+        SpriteFlipType _flipType = FlipNone;
+        bool _isInstanced = false;
     };
 
     struct SpritesAddrLut
@@ -278,7 +280,6 @@ namespace Compiler
     void setArrayIndiciesOne(bool arrayIndiciesOne);
 
     int getNextJumpFalseUniqueId(void);
-    int getNextSpriteUniqueId(void);
 
     std::vector<Label>& getLabels(void);
     std::vector<Constant>& getConstants(void);
@@ -292,8 +293,8 @@ namespace Compiler
     std::vector<DefDataByte>& getDefDataBytes(void);
     std::vector<DefDataWord>& getDefDataWords(void);
     std::vector<DefDataImage>& getDefDataImages(void);
-    std::vector<DefDataSprite>& getDefDataSprites(void);
 
+    std::map<int, DefDataSprite>& getDefDataSprites(void);
     SpritesAddrLut& getSpritesAddrLut(void);
 
     std::map<std::string, MacroIndexEntry>& getMacroIndexEntries(void);

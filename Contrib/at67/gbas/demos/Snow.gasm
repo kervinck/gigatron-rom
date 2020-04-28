@@ -22,9 +22,7 @@ fgbgColour          EQU                     register0 + 0x20
 cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
-frameCountPrev      EQU                     register0 + 0x28
-miscFlags           EQU                     register0 + 0x2A
-highByteMask        EQU                     register0 + 0x2C
+miscFlags           EQU                     register0 + 0x28
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -36,31 +34,31 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x0240
-_20                 EQU                     0x0240
-_30                 EQU                     0x0248
-_40                 EQU                     0x025a
-_50                 EQU                     0x026b
-_60                 EQU                     0x0275
-_70                 EQU                     0x0286
-_80                 EQU                     0x029e
-_90                 EQU                     0x02a2
-_100                EQU                     0x02be
-_110                EQU                     0x0306
-_120                EQU                     0x0328
-_130                EQU                     0x0339
-_140                EQU                     0x0351
-_150                EQU                     0x0367
-_160                EQU                     0x0381
-_170                EQU                     0x038b
-_180                EQU                     0x03a5
-_190                EQU                     0x03b8
-_200                EQU                     0x03c2
-_210                EQU                     0x03d8
-_220                EQU                     0x0402
+_10                 EQU                     0x023b
+_20                 EQU                     0x023b
+_30                 EQU                     0x0243
+_40                 EQU                     0x0255
+_50                 EQU                     0x0266
+_60                 EQU                     0x0270
+_70                 EQU                     0x0281
+_80                 EQU                     0x0299
+_90                 EQU                     0x029d
+_100                EQU                     0x02b9
+_110                EQU                     0x0302
+_120                EQU                     0x0324
+_130                EQU                     0x0335
+_140                EQU                     0x034d
+_150                EQU                     0x0363
+_160                EQU                     0x037d
+_170                EQU                     0x0387
+_180                EQU                     0x03a1
+_190                EQU                     0x03b4
+_200                EQU                     0x03be
+_210                EQU                     0x03d4
+_220                EQU                     0x03ee
 _page_0x0300        EQU                     0x0300
 _page_0x0400        EQU                     0x0400
-_end_0x0499         EQU                     0x0414
+_end_0x0494         EQU                     0x040f
 
 ; Variables
 _X_array            EQU                     0x0600
@@ -114,6 +112,8 @@ def_bytes_0x17a0    DB                      145 66 146 45 18 144 74 146 50 17 14
 ; Define Words
 
 ; Define Images
+
+; Define Sprites
 
 ; Lookup Tables
 
@@ -197,21 +197,21 @@ _100                Rand
                     ADDW                    _S
                     ADDW                    _S
                     STW                     register1
+                    LDW                     register0
+                    DOKE                    register1                       ; X(S) = 2 + (rnd(0) AND &h3F) + (rnd(0) AND &h3F) + (rnd(0) AND &h0F) + (rnd(0) AND &h0F) '2+rnd(W-3)
+
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
-                    LDW                     register0
-                    DOKE                    register1                       ; X(S) = 2 + (rnd(0) AND &h3F) + (rnd(0) AND &h3F) + (rnd(0) AND &h0F) + (rnd(0) AND &h0F) '2+rnd(W-3)
-
 _110                Rand                    
                     ANDI                    63
                     ADDI                    8
                     STW                     0xc0
                     LD                      0xc0
-                    ST                      0xc2 + 1
-                    LDW                     0xc2
-                    ANDW                    highByteMask
+                    ST                      giga_vAC + 1
+                    ORI                     0xFF
+                    XORI                    0xFF
                     STW                     register0
                     LDWI                    0x0500
                     ADDW                    _S
@@ -317,12 +317,12 @@ _210                LDWI                    0x0500
                     LDI                     127
                     POKE                    0xc2                            ; poke Y(S)+X(S),C+64
 
+_220                LDWI                    0x0500
+                    ADDW                    _S
                     STW                     0xde
                     LDWI                    _page_0x0400
                     CALL                    giga_vAC
 _page_0x0400        LDW                     0xde
-_220                LDWI                    0x0500
-                    ADDW                    _S
                     ADDW                    _S
                     STW                     register1
                     LDI                     0
@@ -330,7 +330,7 @@ _220                LDWI                    0x0500
                     LDWI                    _180
                     CALL                    giga_vAC                        ; Y(S)=0 : goto 180
 
-_end_0x0499         BRA                     _end_0x0499                     ; END
+_end_0x0494         BRA                     _end_0x0494                     ; END
 
 
 

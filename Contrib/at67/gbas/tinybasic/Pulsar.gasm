@@ -22,9 +22,7 @@ fgbgColour          EQU                     register0 + 0x20
 cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
-frameCountPrev      EQU                     register0 + 0x28
-miscFlags           EQU                     register0 + 0x2A
-highByteMask        EQU                     register0 + 0x2C
+miscFlags           EQU                     register0 + 0x28
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -36,18 +34,18 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x0240
-_20                 EQU                     0x0255
-_30                 EQU                     0x0267
-_40                 EQU                     0x027c
-_50                 EQU                     0x028f
-_60                 EQU                     0x0293
-_65                 EQU                     0x02ab
-_70                 EQU                     0x02b8
-_80                 EQU                     0x02d0
-_90                 EQU                     0x0304
+_10                 EQU                     0x023b
+_20                 EQU                     0x0250
+_30                 EQU                     0x0262
+_40                 EQU                     0x0277
+_50                 EQU                     0x028a
+_60                 EQU                     0x028e
+_65                 EQU                     0x02a6
+_70                 EQU                     0x02b3
+_80                 EQU                     0x02cb
+_90                 EQU                     0x0302
 _page_0x0300        EQU                     0x0300
-_end_0x0335         EQU                     0x0317
+_end_0x0330         EQU                     0x0315
 
 ; Variables
 _w                  EQU                     0x0030
@@ -65,6 +63,8 @@ _x                  EQU                     0x003c
 ; Define Words
 
 ; Define Images
+
+; Define Sprites
 
 ; Lookup Tables
 
@@ -161,17 +161,17 @@ _80                 LDW                     _p
                     STW                     0xc4
                     LDW                     _v
                     SUBW                    0xc4
+                    STW                     _v                              ; y=y+p*v:v=v-y/q
+
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
-                    STW                     _v                              ; y=y+p*v:v=v-y/q
-
 _90                 ForNextFarInc           _x _60 30
                     LDWI                    _20
                     CALL                    giga_vAC                        ; next x:goto 20
 
-_end_0x0335         BRA                     _end_0x0335                     ; END
+_end_0x0330         BRA                     _end_0x0330                     ; END
 
 
 

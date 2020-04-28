@@ -77,51 +77,54 @@ namespace Keywords
         _pragmas["_arrayIndiciesOne_"] = {"_arrayIndiciesOne_", pragmaARRAYINDICIESONE};
 
         // Keywords
-        _keywords["LET"    ] = {"LET",     keywordLET,     Compiler::SingleStatementParsed};
-        _keywords["END"    ] = {"END",     keywordEND,     Compiler::SingleStatementParsed};
-        _keywords["INC"    ] = {"INC",     keywordINC,     Compiler::SingleStatementParsed};
-        _keywords["DEC"    ] = {"DEC",     keywordDEC,     Compiler::SingleStatementParsed};
-        _keywords["ON"     ] = {"ON",      keywordON,      Compiler::SingleStatementParsed};
-        _keywords["GOTO"   ] = {"GOTO",    keywordGOTO,    Compiler::SingleStatementParsed};
-        _keywords["GOSUB"  ] = {"GOSUB",   keywordGOSUB,   Compiler::SingleStatementParsed};
-        _keywords["RETURN" ] = {"RETURN",  keywordRETURN,  Compiler::SingleStatementParsed};
-        _keywords["CLS"    ] = {"CLS",     keywordCLS,     Compiler::SingleStatementParsed};
-        _keywords["?"      ] = {"?",       keywordPRINT,   Compiler::SingleStatementParsed};
-        _keywords["PRINT"  ] = {"PRINT",   keywordPRINT,   Compiler::SingleStatementParsed};
-        _keywords["INPUT"  ] = {"INPUT",   keywordINPUT,   Compiler::SingleStatementParsed};
-        _keywords["FOR"    ] = {"FOR",     keywordFOR,     Compiler::SingleStatementParsed};
-        _keywords["NEXT"   ] = {"NEXT",    keywordNEXT,    Compiler::SingleStatementParsed};
-        _keywords["IF"     ] = {"IF",      keywordIF,      Compiler::MultiStatementParsed };
-        _keywords["ELSEIF" ] = {"ELSEIF",  keywordELSEIF,  Compiler::SingleStatementParsed};
-        _keywords["ELSE"   ] = {"ELSE",    keywordELSE,    Compiler::SingleStatementParsed};
-        _keywords["ENDIF"  ] = {"ENDIF",   keywordENDIF,   Compiler::SingleStatementParsed};
-        _keywords["WHILE"  ] = {"WHILE",   keywordWHILE,   Compiler::SingleStatementParsed};
-        _keywords["WEND"   ] = {"WEND",    keywordWEND,    Compiler::SingleStatementParsed};
-        _keywords["REPEAT" ] = {"REPEAT",  keywordREPEAT,  Compiler::SingleStatementParsed};
-        _keywords["UNTIL"  ] = {"UNTIL",   keywordUNTIL,   Compiler::SingleStatementParsed};
-        _keywords["CONST"  ] = {"CONST",   keywordCONST,   Compiler::SingleStatementParsed};
-        _keywords["DIM"    ] = {"DIM",     keywordDIM,     Compiler::SingleStatementParsed};
-        _keywords["DEF"    ] = {"DEF",     keywordDEF,     Compiler::SingleStatementParsed};
-        _keywords["ALLOC"  ] = {"ALLOC",   keywordALLOC,   Compiler::SingleStatementParsed};
-        _keywords["FREE"   ] = {"FREE",    keywordFREE,    Compiler::SingleStatementParsed};
-        _keywords["AT"     ] = {"AT",      keywordAT,      Compiler::SingleStatementParsed};
-        _keywords["PUT"    ] = {"PUT",     keywordPUT,     Compiler::SingleStatementParsed};
-        _keywords["MODE"   ] = {"MODE",    keywordMODE,    Compiler::SingleStatementParsed};
-        _keywords["WAIT"   ] = {"WAIT",    keywordWAIT,    Compiler::SingleStatementParsed};
-        _keywords["LINE"   ] = {"LINE",    keywordLINE,    Compiler::SingleStatementParsed};
-        _keywords["HLINE"  ] = {"HLINE",   keywordHLINE,   Compiler::SingleStatementParsed};
-        _keywords["VLINE"  ] = {"VLINE",   keywordVLINE,   Compiler::SingleStatementParsed};
-        _keywords["CIRCLE" ] = {"CIRCLE",  keywordCIRCLE,  Compiler::SingleStatementParsed};
-        _keywords["CIRCLEF"] = {"CIRCLEF", keywordCIRCLEF, Compiler::SingleStatementParsed};
-        _keywords["RECT"   ] = {"RECT",    keywordRECT,    Compiler::SingleStatementParsed};
-        _keywords["RECTF"  ] = {"RECTF",   keywordRECTF,   Compiler::SingleStatementParsed};
-        _keywords["POLY"   ] = {"POLY",    keywordPOLY,    Compiler::SingleStatementParsed};
-        _keywords["SCROLL" ] = {"SCROLL",  keywordSCROLL,  Compiler::SingleStatementParsed};
-        _keywords["POKE"   ] = {"POKE",    keywordPOKE,    Compiler::SingleStatementParsed};
-        _keywords["DOKE"   ] = {"DOKE",    keywordDOKE,    Compiler::SingleStatementParsed};
-        _keywords["PLAY"   ] = {"PLAY",    keywordPLAY,    Compiler::SingleStatementParsed};
-        _keywords["LOAD"   ] = {"LOAD",    keywordLOAD,    Compiler::SingleStatementParsed};
-        _keywords["SPRITE" ] = {"SPRITE",  keywordSPRITE,  Compiler::SingleStatementParsed};
+        _keywords["LET"     ] = {"LET",      keywordLET,      Compiler::SingleStatementParsed};
+        _keywords["END"     ] = {"END",      keywordEND,      Compiler::SingleStatementParsed};
+        _keywords["INC"     ] = {"INC",      keywordINC,      Compiler::SingleStatementParsed};
+        _keywords["DEC"     ] = {"DEC",      keywordDEC,      Compiler::SingleStatementParsed};
+        _keywords["ON"      ] = {"ON",       keywordON,       Compiler::SingleStatementParsed};
+        _keywords["GOTO"    ] = {"GOTO",     keywordGOTO,     Compiler::SingleStatementParsed};
+        _keywords["GOSUB"   ] = {"GOSUB",    keywordGOSUB,    Compiler::SingleStatementParsed};
+        _keywords["RETURN"  ] = {"RETURN",   keywordRETURN,   Compiler::SingleStatementParsed};
+        _keywords["CLS"     ] = {"CLS",      keywordCLS,      Compiler::SingleStatementParsed};
+        _keywords["?"       ] = {"?",        keywordPRINT,    Compiler::SingleStatementParsed};
+        _keywords["PRINT"   ] = {"PRINT",    keywordPRINT,    Compiler::SingleStatementParsed};
+        _keywords["INPUT"   ] = {"INPUT",    keywordINPUT,    Compiler::SingleStatementParsed};
+        _keywords["FOR"     ] = {"FOR",      keywordFOR,      Compiler::SingleStatementParsed};
+        _keywords["NEXT"    ] = {"NEXT",     keywordNEXT,     Compiler::SingleStatementParsed};
+        _keywords["IF"      ] = {"IF",       keywordIF,       Compiler::MultiStatementParsed };
+        _keywords["ELSEIF"  ] = {"ELSEIF",   keywordELSEIF,   Compiler::SingleStatementParsed};
+        _keywords["ELSE"    ] = {"ELSE",     keywordELSE,     Compiler::SingleStatementParsed};
+        _keywords["ENDIF"   ] = {"ENDIF",    keywordENDIF,    Compiler::SingleStatementParsed};
+        _keywords["WHILE"   ] = {"WHILE",    keywordWHILE,    Compiler::SingleStatementParsed};
+        _keywords["WEND"    ] = {"WEND",     keywordWEND,     Compiler::SingleStatementParsed};
+        _keywords["REPEAT"  ] = {"REPEAT",   keywordREPEAT,   Compiler::SingleStatementParsed};
+        _keywords["UNTIL"   ] = {"UNTIL",    keywordUNTIL,    Compiler::SingleStatementParsed};
+        _keywords["CONST"   ] = {"CONST",    keywordCONST,    Compiler::SingleStatementParsed};
+        _keywords["DIM"     ] = {"DIM",      keywordDIM,      Compiler::SingleStatementParsed};
+        _keywords["DEF"     ] = {"DEF",      keywordDEF,      Compiler::SingleStatementParsed};
+        _keywords["ALLOC"   ] = {"ALLOC",    keywordALLOC,    Compiler::SingleStatementParsed};
+        _keywords["FREE"    ] = {"FREE",     keywordFREE,     Compiler::SingleStatementParsed};
+        _keywords["AT"      ] = {"AT",       keywordAT,       Compiler::SingleStatementParsed};
+        _keywords["PUT"     ] = {"PUT",      keywordPUT,      Compiler::SingleStatementParsed};
+        _keywords["MODE"    ] = {"MODE",     keywordMODE,     Compiler::SingleStatementParsed};
+        _keywords["WAIT"    ] = {"WAIT",     keywordWAIT,     Compiler::SingleStatementParsed};
+        _keywords["LINE"    ] = {"LINE",     keywordLINE,     Compiler::SingleStatementParsed};
+        _keywords["HLINE"   ] = {"HLINE",    keywordHLINE,    Compiler::SingleStatementParsed};
+        _keywords["VLINE"   ] = {"VLINE",    keywordVLINE,    Compiler::SingleStatementParsed};
+        _keywords["CIRCLE"  ] = {"CIRCLE",   keywordCIRCLE,   Compiler::SingleStatementParsed};
+        _keywords["CIRCLEF" ] = {"CIRCLEF",  keywordCIRCLEF,  Compiler::SingleStatementParsed};
+        _keywords["RECT"    ] = {"RECT",     keywordRECT,     Compiler::SingleStatementParsed};
+        _keywords["RECTF"   ] = {"RECTF",    keywordRECTF,    Compiler::SingleStatementParsed};
+        _keywords["POLY"    ] = {"POLY",     keywordPOLY,     Compiler::SingleStatementParsed};
+        _keywords["SCROLL"  ] = {"SCROLL",   keywordSCROLL,   Compiler::SingleStatementParsed};
+        _keywords["POKE"    ] = {"POKE",     keywordPOKE,     Compiler::SingleStatementParsed};
+        _keywords["DOKE"    ] = {"DOKE",     keywordDOKE,     Compiler::SingleStatementParsed};
+        _keywords["PLAY"    ] = {"PLAY",     keywordPLAY,     Compiler::SingleStatementParsed};
+        _keywords["LOAD"    ] = {"LOAD",     keywordLOAD,     Compiler::SingleStatementParsed};
+        _keywords["SPRITE"  ] = {"SPRITE",   keywordSPRITE,   Compiler::SingleStatementParsed};
+        _keywords["SPRITEX" ] = {"SPRITEX",  keywordSPRITEX,  Compiler::SingleStatementParsed};
+        _keywords["SPRITEY" ] = {"SPRITEY",  keywordSPRITEY,  Compiler::SingleStatementParsed};
+        _keywords["SPRITEXY"] = {"SPRITEXY", keywordSPRITEXY, Compiler::SingleStatementParsed};
 
         // String keywords
         _stringKeywords["CHR$"  ] = "CHR$";
@@ -1128,11 +1131,13 @@ namespace Keywords
     bool keywordLET(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(foundPos);
         UNREFERENCED_PARAM(tokenIndex);
         UNREFERENCED_PARAM(codeLineIndex);
+        UNREFERENCED_PARAM(codeLine);
 
         // Remove LET from code
-        eraseKeywordFromCode(codeLine, "LET", foundPos);
+        //eraseKeywordFromCode(codeLine, "LET", foundPos);
 
         return true;
     }
@@ -3504,9 +3509,10 @@ namespace Keywords
         UNREFERENCED_PARAM(tokenIndex);
 
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), " ,", false);
-        if(tokens.size() != 2  &&  tokens.size() != 3)
+        if(tokens.size() < 2  ||  tokens.size() > 4)
         {
-            fprintf(stderr, "Keywords::keywordLOAD() : Syntax error, use 'LOAD MIDI/IMAGE/SPRITE, <filename> <optional image_address/sprite_id>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordLOAD() : Syntax error, use 'LOAD IMAGE, <filename>, <optional address>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordLOAD() : Syntax error, use 'LOAD SPRITE, <id>, <filename>, <optional flip>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -3515,7 +3521,8 @@ namespace Keywords
         Expression::stripWhitespace(tokens[0]);
         if(tokens[0] != "MIDI"  &&  tokens[0] != "IMAGE"  &&  tokens[0] != "SPRITE")
         {
-            fprintf(stderr, "Keywords::keywordLOAD() : Syntax error, use 'LOAD MIDI/IMAGE/SPRITE, <filename> <optional address>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordLOAD() : Syntax error, use 'LOAD IMAGE, <filename>, <optional address>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordLOAD() : Syntax error, use 'LOAD SPRITE, <filename>, <id>, <optional flip>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -3603,23 +3610,43 @@ namespace Keywords
                 // Sprite
                 else if(tokens[0] == "SPRITE")
                 {
-                    if(gtRgbFile._header._width > SPRITE_CHUNK_SIZE*10  ||  gtRgbFile._header._width % SPRITE_CHUNK_SIZE != 0)
+                    if(gtRgbFile._header._width > SPRITE_CHUNK_SIZE*15  ||  gtRgbFile._header._width % SPRITE_CHUNK_SIZE != 0)
                     {
-                        fprintf(stderr, "Keywords::keywordLOAD() : Sprite width > %d or not a multiple of %d, (%d x %d), for %s; in '%s' on line %d\n", SPRITE_CHUNK_SIZE*10, SPRITE_CHUNK_SIZE, gtRgbFile._header._width, 
+                        fprintf(stderr, "Keywords::keywordLOAD() : Sprite width > %d or not a multiple of %d, (%d x %d), for %s; in '%s' on line %d\n", SPRITE_CHUNK_SIZE*15, SPRITE_CHUNK_SIZE, gtRgbFile._header._width, 
                                                                                                                                                        gtRgbFile._header._height, filename.c_str(), codeLine._text.c_str(), codeLineIndex);
                         return false;
                     }
 
-                    // Parse optional sprite address, (not used for now, addresses are auto managed)
-                    if(tokens.size() == 3)
+                    if(tokens.size() < 3)
                     {
+                        fprintf(stderr, "Keywords::keywordLOAD() : Syntax error, use 'LOAD SPRITE, <filename>, <id>, <optional flip>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+                        return false;
                     }
 
-                    int spriteUniqueId = Compiler::getNextSpriteUniqueId();
-                    if(spriteUniqueId >= MAX_NUM_SPRITES)
+                    // Unique sprite ID
+                    std::string idToken = tokens[2];
+                    Expression::stripWhitespace(idToken);
+                    Expression::Numeric idNumeric;
+                    std::string idOperand;
+                    Compiler::parseExpression(codeLineIndex, idToken, idOperand, idNumeric);
+                    int spriteId = int(std::lround(idNumeric._value));
+                    if(Compiler::getDefDataSprites().find(spriteId) != Compiler::getDefDataSprites().end())
                     {
-                        fprintf(stderr, "Keywords::keywordLOAD() : Sprite count %d exceeded maximum %d, in '%s' on line %d\n", spriteUniqueId, MAX_NUM_SPRITES, codeLine._text.c_str(), codeLineIndex);
+                        fprintf(stderr, "Keywords::keywordLOAD() : Sprite id not unique, %d; in '%s' on line %d\n", spriteId, codeLine._text.c_str(), codeLineIndex);
                         return false;
+                    }
+
+                    // Parse optional sprite flip
+                    Compiler::SpriteFlipType flipType = Compiler::FlipNone;
+                    if(tokens.size() == 4)
+                    {
+                        std::string flipToken = tokens[3];
+                        Expression::stripWhitespace(flipToken);
+                        Expression::Numeric flipNumeric;
+                        std::string flipOperand;
+                        Compiler::parseExpression(codeLineIndex, flipToken, flipOperand, flipNumeric);
+                        uint16_t flip = uint16_t(std::lround(flipNumeric._value));
+                        if(flip >= Compiler::FlipNone  &&  flip <= Compiler::FlipXY) flipType = Compiler::SpriteFlipType(flip);
                     }
 
                     // Build sprite data from image data
@@ -3630,20 +3657,51 @@ namespace Keywords
                     std::vector<uint16_t> stripeAddrs;
                     std::vector<uint8_t> spriteData;
 
+                    // Search sprite image for instancing
+                    int parentInstance = 0;
+                    bool isInstanced = false;
+                    for(auto it=Compiler::getDefDataSprites().begin(); it!=Compiler::getDefDataSprites().end(); ++it)
+                    {
+                        if(it->second._filename == filename)
+                        {
+                            spriteData = it->second._data;
+                            parentInstance = it->first;
+                            isInstanced = true;
+                            break;
+                        }
+                    }
+
                     // Allocate sprite memory
+                    int addrIndex = 0;
                     uint16_t address = 0x0000;
                     for(int i=0; i<numColumns; i++)
                     {
                         // One stripe per column
                         if(numStripesPerCol == 1)
                         {
-                            if(!Memory::getFreeRAM(Memory::FitDescending, numStripeChunks*SPRITE_CHUNK_SIZE + 1, USER_CODE_START, Compiler::getRuntimeStart(), address))
+                            if(isInstanced)
                             {
-                                fprintf(stderr, "Keywords::keywordLOAD() : Getting Sprite memory failed, in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
-                                return false;
+                                address = Compiler::getDefDataSprites()[parentInstance]._stripeAddrs[addrIndex];
+                                addrIndex += 2;
+                            }
+                            else
+                            {
+                                if(!Memory::getFreeRAM(Memory::FitDescending, numStripeChunks*SPRITE_CHUNK_SIZE + 1, USER_CODE_START, Compiler::getRuntimeStart(), address))
+                                {
+                                    fprintf(stderr, "Keywords::keywordLOAD() : Getting Sprite memory for stripe %d failed, in '%s' on line %d\n", int(stripeAddrs.size()/2 + 1), codeLine._text.c_str(), codeLineIndex);
+                                    return false;
+                                }
                             }
                             stripeAddrs.push_back(address);
-                            stripeAddrs.push_back(uint16_t(0 + i*6)); // destination offsets
+                            switch(flipType)
+                            {
+                                // destination offsets
+                                case Compiler::FlipNone: stripeAddrs.push_back(uint16_t(0 + i*6));                                      break;
+                                case Compiler::FlipX:    stripeAddrs.push_back(uint16_t(0 + (numColumns-1-i)*6));                       break;
+                                case Compiler::FlipY:    stripeAddrs.push_back(uint16_t((numStripeChunks-1)*256 + i*6));                break;
+                                case Compiler::FlipXY:   stripeAddrs.push_back(uint16_t((numStripeChunks-1)*256 + (numColumns-1-i)*6)); break;
+                                break;
+                            }
 
                             // Copy sprite data and delimiter
                             for(int j=0; j<numStripeChunks; j++)
@@ -3661,13 +3719,29 @@ namespace Keywords
                             // MAX_SPRITE_CHUNKS_PER_STRIPE stripes
                             for(int j=0; j<numStripesPerCol-1; j++)
                             {
-                                if(!Memory::getFreeRAM(Memory::FitDescending, numStripeChunks*SPRITE_CHUNK_SIZE + 1, USER_CODE_START, Compiler::getRuntimeStart(), address))
+                                if(isInstanced)
                                 {
-                                    fprintf(stderr, "Keywords::keywordLOAD() : Getting Sprite memory failed, in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
-                                    return false;
+                                    address = Compiler::getDefDataSprites()[parentInstance]._stripeAddrs[addrIndex];
+                                    addrIndex += 2;
+                                }
+                                else
+                                {
+                                    if(!Memory::getFreeRAM(Memory::FitDescending, numStripeChunks*SPRITE_CHUNK_SIZE + 1, USER_CODE_START, Compiler::getRuntimeStart(), address))
+                                    {
+                                        fprintf(stderr, "Keywords::keywordLOAD() : Getting Sprite memory failed for stripe %d, in '%s' on line %d\n", int(stripeAddrs.size()/2 + 1), codeLine._text.c_str(), codeLineIndex);
+                                        return false;
+                                    }
                                 }
                                 stripeAddrs.push_back(address);
-                                stripeAddrs.push_back(uint16_t(j*numStripeChunks*256 + i*6)); // destination offsets
+                                switch(flipType)
+                                {
+                                    // destination offsets
+                                    case Compiler::FlipNone: stripeAddrs.push_back(uint16_t(j*numStripeChunks*256 + i*6));                                                         break;
+                                    case Compiler::FlipX:    stripeAddrs.push_back(uint16_t(j*numStripeChunks*256 + (numColumns-1-i)*6));                                          break;
+                                    case Compiler::FlipY:    stripeAddrs.push_back(uint16_t(((numStripesPerCol-1-j)*numStripeChunks+remStripeChunks-1)*256 + i*6));                break;
+                                    case Compiler::FlipXY:   stripeAddrs.push_back(uint16_t(((numStripesPerCol-1-j)*numStripeChunks+remStripeChunks-1)*256 + (numColumns-1-i)*6)); break;
+                                    break;
+                                }
 
                                 // Copy sprite data and delimiter
                                 for(int k=0; k<numStripeChunks; k++)
@@ -3681,13 +3755,29 @@ namespace Keywords
                             }
 
                             // Remainder stripe
-                            if(!Memory::getFreeRAM(Memory::FitDescending, remStripeChunks*SPRITE_CHUNK_SIZE + 1, USER_CODE_START, Compiler::getRuntimeStart(), address))
+                            if(isInstanced)
                             {
-                                fprintf(stderr, "Keywords::keywordLOAD() : Getting Sprite memory failed, in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
-                                return false;
+                                address = Compiler::getDefDataSprites()[parentInstance]._stripeAddrs[addrIndex];
+                                addrIndex += 2;
+                            }
+                            else
+                            {
+                                if(!Memory::getFreeRAM(Memory::FitDescending, remStripeChunks*SPRITE_CHUNK_SIZE + 1, USER_CODE_START, Compiler::getRuntimeStart(), address))
+                                {
+                                    fprintf(stderr, "Keywords::keywordLOAD() : Getting Sprite memory failed for stripe %d, in '%s' on line %d\n", int(stripeAddrs.size()/2 + 1), codeLine._text.c_str(), codeLineIndex);
+                                    return false;
+                                }
                             }
                             stripeAddrs.push_back(address);
-                            stripeAddrs.push_back(uint16_t((numStripesPerCol-1)*numStripeChunks*256 + i*6)); // destination offsets
+                            switch(flipType)
+                            {
+                                // Destination offsets
+                                case Compiler::FlipNone: stripeAddrs.push_back(uint16_t((numStripesPerCol-1)*numStripeChunks*256 + i*6));                break;
+                                case Compiler::FlipX:    stripeAddrs.push_back(uint16_t((numStripesPerCol-1)*numStripeChunks*256 + (numColumns-1-i)*6)); break;
+                                case Compiler::FlipY:    stripeAddrs.push_back(uint16_t((remStripeChunks-1)*256 + i*6));                                 break;
+                                case Compiler::FlipXY:   stripeAddrs.push_back(uint16_t((remStripeChunks-1)*256 + (numColumns-1-i)*6));                  break;
+                                break;
+                            }
 
                             // Copy sprite data and delimiter
                             for(int j=0; j<remStripeChunks; j++)
@@ -3701,8 +3791,8 @@ namespace Keywords
                         }
                     }
 
-                    Compiler::DefDataSprite defDataSprite = {spriteUniqueId, tgaFile._header._width, tgaFile._header._height, numColumns, numStripesPerCol, numStripeChunks, remStripeChunks, stripeAddrs, spriteData};
-                    Compiler::getDefDataSprites().push_back(defDataSprite);
+                    Compiler::DefDataSprite defDataSprite = {spriteId, tgaFile._header._width, tgaFile._header._height, numColumns, numStripesPerCol, numStripeChunks, remStripeChunks, stripeAddrs, spriteData, filename, flipType, isInstanced};
+                    Compiler::getDefDataSprites()[spriteId] = defDataSprite;
                 }
             }
         }
@@ -3723,7 +3813,7 @@ namespace Keywords
         }
 
         // Sprite identifier
-        std::string idToken = Expression::strToUpper(tokens[0]);
+        std::string idToken = tokens[0];
         Expression::stripWhitespace(idToken);
         Expression::Numeric idParam;
         Compiler::parseExpression(codeLineIndex, idToken, idParam);
@@ -3745,8 +3835,159 @@ namespace Keywords
         Compiler::emitVcpuAsm("ST", "spriteXY + 1", false, codeLineIndex);
 
         // Draw sprite
-        Compiler::emitVcpuAsm("LDWI", "drawSprite", false, codeLineIndex);
-        Compiler::emitVcpuAsm("CALL", "giga_vAC", false);
+        if(Assembler::getUseOpcodeCALLI())
+        {
+            Compiler::emitVcpuAsm("CALLI", "drawSprite", false, codeLineIndex);
+        }
+        else
+        {
+            Compiler::emitVcpuAsm("LDWI", "drawSprite", false, codeLineIndex);
+            Compiler::emitVcpuAsm("CALL", "giga_vAC", false, codeLineIndex);
+        }
+
+        return true;
+    }
+
+    bool keywordSPRITEX(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
+
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), " ,", false);
+        if(tokens.size() != 3)
+        {
+            fprintf(stderr, "Keywords::keywordSPRITE() : Syntax error, use 'SPRITEX <id>, <x postion>, <y position>'; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            return false;
+        }
+
+        // Sprite identifier
+        std::string idToken = tokens[0];
+        Expression::stripWhitespace(idToken);
+        Expression::Numeric idParam;
+        Compiler::parseExpression(codeLineIndex, idToken, idParam);
+        Compiler::emitVcpuAsm("STW", "spriteId", false, codeLineIndex);
+
+        // Sprite X position
+        std::string xposToken = tokens[1];
+        Expression::stripWhitespace(xposToken);
+        Expression::Numeric xposParam;
+        Compiler::parseExpression(codeLineIndex, xposToken, xposParam);
+        Compiler::emitVcpuAsm("ST", "spriteXY", false, codeLineIndex);
+
+        // Sprite Y position
+        std::string yposToken = tokens[2];
+        Expression::stripWhitespace(yposToken);
+        Expression::Numeric yposParam;
+        Compiler::parseExpression(codeLineIndex, yposToken, yposParam);
+        Compiler::emitVcpuAsm("ADDI", "8", false, codeLineIndex);
+        Compiler::emitVcpuAsm("ST", "spriteXY + 1", false, codeLineIndex);
+
+        // Draw sprite
+        if(Assembler::getUseOpcodeCALLI())
+        {
+            Compiler::emitVcpuAsm("CALLI", "drawSpriteX", false, codeLineIndex);
+        }
+        else
+        {
+            Compiler::emitVcpuAsm("LDWI", "drawSpriteX", false, codeLineIndex);
+            Compiler::emitVcpuAsm("CALL", "giga_vAC", false, codeLineIndex);
+        }
+
+        return true;
+    }
+
+    bool keywordSPRITEY(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
+
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), " ,", false);
+        if(tokens.size() != 3)
+        {
+            fprintf(stderr, "Keywords::keywordSPRITE() : Syntax error, use 'SPRITEY <id>, <x postion>, <y position>'; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            return false;
+        }
+
+        // Sprite identifier
+        std::string idToken = tokens[0];
+        Expression::stripWhitespace(idToken);
+        Expression::Numeric idParam;
+        Compiler::parseExpression(codeLineIndex, idToken, idParam);
+        Compiler::emitVcpuAsm("STW", "spriteId", false, codeLineIndex);
+
+        // Sprite X position
+        std::string xposToken = tokens[1];
+        Expression::stripWhitespace(xposToken);
+        Expression::Numeric xposParam;
+        Compiler::parseExpression(codeLineIndex, xposToken, xposParam);
+        Compiler::emitVcpuAsm("ST", "spriteXY", false, codeLineIndex);
+
+        // Sprite Y position
+        std::string yposToken = tokens[2];
+        Expression::stripWhitespace(yposToken);
+        Expression::Numeric yposParam;
+        Compiler::parseExpression(codeLineIndex, yposToken, yposParam);
+        Compiler::emitVcpuAsm("ADDI", "8", false, codeLineIndex);
+        Compiler::emitVcpuAsm("ST", "spriteXY + 1", false, codeLineIndex);
+
+        // Draw sprite
+        if(Assembler::getUseOpcodeCALLI())
+        {
+            Compiler::emitVcpuAsm("CALLI", "drawSpriteY", false, codeLineIndex);
+        }
+        else
+        {
+            Compiler::emitVcpuAsm("LDWI", "drawSpriteY", false, codeLineIndex);
+            Compiler::emitVcpuAsm("CALL", "giga_vAC", false, codeLineIndex);
+        }
+
+        return true;
+    }
+
+    bool keywordSPRITEXY(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
+
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), " ,", false);
+        if(tokens.size() != 3)
+        {
+            fprintf(stderr, "Keywords::keywordSPRITE() : Syntax error, use 'SPRITEXY <id>, <x postion>, <y position>'; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            return false;
+        }
+
+        // Sprite identifier
+        std::string idToken = tokens[0];
+        Expression::stripWhitespace(idToken);
+        Expression::Numeric idParam;
+        Compiler::parseExpression(codeLineIndex, idToken, idParam);
+        Compiler::emitVcpuAsm("STW", "spriteId", false, codeLineIndex);
+
+        // Sprite X position
+        std::string xposToken = tokens[1];
+        Expression::stripWhitespace(xposToken);
+        Expression::Numeric xposParam;
+        Compiler::parseExpression(codeLineIndex, xposToken, xposParam);
+        Compiler::emitVcpuAsm("ST", "spriteXY", false, codeLineIndex);
+
+        // Sprite Y position
+        std::string yposToken = tokens[2];
+        Expression::stripWhitespace(yposToken);
+        Expression::Numeric yposParam;
+        Compiler::parseExpression(codeLineIndex, yposToken, yposParam);
+        Compiler::emitVcpuAsm("ADDI", "8", false, codeLineIndex);
+        Compiler::emitVcpuAsm("ST", "spriteXY + 1", false, codeLineIndex);
+
+        // Draw sprite
+        if(Assembler::getUseOpcodeCALLI())
+        {
+            Compiler::emitVcpuAsm("CALLI", "drawSpriteXY", false, codeLineIndex);
+        }
+        else
+        {
+            Compiler::emitVcpuAsm("LDWI", "drawSpriteXY", false, codeLineIndex);
+            Compiler::emitVcpuAsm("CALL", "giga_vAC", false, codeLineIndex);
+        }
 
         return true;
     }

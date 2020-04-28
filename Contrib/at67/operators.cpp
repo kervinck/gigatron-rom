@@ -649,9 +649,9 @@ namespace Operators
                 left._varType = Expression::TmpVar;
                 left._name = Compiler::getTempVarStartStr();
 
-                Compiler::emitVcpuAsm("ST", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())) + " + 1", false);
-                Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
-                Compiler::emitVcpuAsm("ANDW", "highByteMask", false);
+                Compiler::emitVcpuAsm("ST", "giga_vAC + 1", false);
+                Compiler::emitVcpuAsm("ORI", "0xFF", false);
+                Compiler::emitVcpuAsm("XORI", "0xFF", false);
             }
             else
             {

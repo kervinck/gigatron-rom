@@ -1,39 +1,68 @@
 ; do *NOT* use register4 to register7 during time slicing if you use realTimeProc
 spriteId            EQU     register0
 spriteXY            EQU     register1
-spritesLut          EQU     register2
 spriteAddrs         EQU     register2
 
     
-%SUB                drawSprite
-drawSprite          LDWI    SYS_Sprite6_v3_64
-                    STW     giga_sysFn
-                    LDW     spritesLut
+%SUB                draw_sprite
+draw_sprite         PUSH
+                    LDWI    _spritesLut_
                     ADDW    spriteId
                     ADDW    spriteId
                     DEEK
                     STW     spriteAddrs                     ; get sprite address table
                     
-drawSprite_loop     DEEK
-                    BEQ     drawSprite_exit
+draw_s_loop         LDW     spriteAddrs
+                    DEEK
+                    BEQ     draw_s_exit
                     STW     giga_sysArg0
-                    LDW     spriteXY
+                    INC     spriteAddrs
+                    INC     spriteAddrs
+                    LDW     spriteAddrs
+                    DEEK
+                    ADDW    spriteXY
                     SYS     64
                     INC     spriteAddrs
                     INC     spriteAddrs
-                    BRA     drawSprite_loop
+                    CALLI   realTimeProc
+                    BRA     draw_s_loop
                     
-drawSprite_exit     RET
+draw_s_exit         POP
+                    RET
 %ENDS
 
-%SUB                drawSpriteFlipX
-drawSpriteFlipX     RET
+%SUB                drawSprite
+drawSprite          PUSH
+                    LDWI    SYS_Sprite6_v3_64
+                    STW     giga_sysFn
+                    CALLI   draw_sprite
+                    POP
+                    RET
 %ENDS
 
-%SUB                drawSpriteFlipY
-drawSpriteFlipY     RET
+%SUB                drawSpriteX
+drawSpriteX         PUSH
+                    LDWI    SYS_Sprite6x_v3_64
+                    STW     giga_sysFn
+                    CALLI   draw_sprite
+                    POP
+                    RET
 %ENDS
 
-%SUB                drawSpriteFlipXY
-drawSpriteFlipXY    RET
+%SUB                drawSpriteY
+drawSpriteY         PUSH
+                    LDWI    SYS_Sprite6y_v3_64
+                    STW     giga_sysFn
+                    CALLI   draw_sprite
+                    POP
+                    RET
+%ENDS
+
+%SUB                drawSpriteXY
+drawSpriteXY        PUSH
+                    LDWI    SYS_Sprite6xy_v3_64
+                    STW     giga_sysFn
+                    CALLI   draw_sprite
+                    POP
+                    RET
 %ENDS

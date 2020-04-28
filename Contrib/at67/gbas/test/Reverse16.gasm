@@ -22,9 +22,7 @@ fgbgColour          EQU                     register0 + 0x20
 cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
-frameCountPrev      EQU                     register0 + 0x28
-miscFlags           EQU                     register0 + 0x2A
-highByteMask        EQU                     register0 + 0x2C
+miscFlags           EQU                     register0 + 0x28
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -36,9 +34,9 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_loop               EQU                     0x0245
-_end_0x028a         EQU                     0x027e
-_end_0x028c         EQU                     0x0280
+_loop               EQU                     0x0240
+_end_0x0285         EQU                     0x0279
+_end_0x0287         EQU                     0x027b
 
 ; Variables
 _out16              EQU                     0x0030
@@ -55,6 +53,8 @@ def_bytes_0x0600    DB                      0 128 64 192 32 160 96 224 16 144 80
 ; Define Words
 
 ; Define Images
+
+; Define Sprites
 
 ; Lookup Tables
 _inputVars_0x7ef5   EQU                     0x7ef5
@@ -106,9 +106,9 @@ _loop               LDI                     0
                     LDWI                    _loop
                     CALL                    giga_vAC                        ; goto loop
 
-_end_0x028a         BRA                     _end_0x028a                     ; end
+_end_0x0285         BRA                     _end_0x0285                     ; end
 
-_end_0x028c         BRA                     _end_0x028c                     ; END
+_end_0x0287         BRA                     _end_0x0287                     ; END
 
 
 

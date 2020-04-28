@@ -22,9 +22,7 @@ fgbgColour          EQU                     register0 + 0x20
 cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
-frameCountPrev      EQU                     register0 + 0x28
-miscFlags           EQU                     register0 + 0x2A
-highByteMask        EQU                     register0 + 0x2C
+miscFlags           EQU                     register0 + 0x28
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -36,9 +34,8 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_next_0x0248        EQU                     0x0248
-_page_0x0300        EQU                     0x0300
-_end_0x0305         EQU                     0x0310
+_next_0x0243        EQU                     0x0243
+_end_0x0300         EQU                     0x02f0
 
 ; Variables
 _z                  EQU                     0x0030
@@ -59,6 +56,8 @@ _str_0x7efd         DB                      1 ' ' 0
 
 ; Define Images
 
+; Define Sprites
+
 ; Lookup Tables
 
 ; Code
@@ -77,7 +76,7 @@ _entryPoint_        InitRealTimeProc
                     LDI                     0
                     STW                     _i                              ; for i=0 to 5
 
-_next_0x0248        LDI                     16
+_next_0x0243        LDI                     16
                     STW                     _a                              ; a = &h10
 
                     LDW                     _a
@@ -124,13 +123,9 @@ _next_0x0248        LDI                     16
                     LDW                     _z
                     PrintAcInt16            
                     NewLine                 
-                    STW                     0xde
-                    LDWI                    _page_0x0300
-                    CALL                    giga_vAC
-_page_0x0300        LDW                     0xde
-                    ForNextFarInc           _i _next_0x0248 5               ; print a;" ";b;" ";c;" ";hex$(d);" ";hexw$(e);" ";z : next i
+                    ForNextFarInc           _i _next_0x0243 5               ; print a;" ";b;" ";c;" ";hex$(d);" ";hexw$(e);" ";z : next i
 
-_end_0x0305         BRA                     _end_0x0305                     ; END
+_end_0x0300         BRA                     _end_0x0300                     ; END
 
 
 

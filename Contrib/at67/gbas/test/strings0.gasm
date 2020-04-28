@@ -22,9 +22,7 @@ fgbgColour          EQU                     register0 + 0x20
 cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
-frameCountPrev      EQU                     register0 + 0x28
-miscFlags           EQU                     register0 + 0x2A
-highByteMask        EQU                     register0 + 0x2C
+miscFlags           EQU                     register0 + 0x28
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -37,8 +35,8 @@ textWorkArea        EQU                     0x7fa0
 ; Labels
 _entryPoint_        EQU                     0x0200
 _page_0x0300        EQU                     0x0300
-_next_0x02ff        EQU                     0x0307
-_end_0x0321         EQU                     0x0329
+_next_0x02fa        EQU                     0x0302
+_end_0x031c         EQU                     0x0324
 
 ; Variables
 _j                  EQU                     0x0030
@@ -64,6 +62,8 @@ _x$                 DB                      22 'YOUR TEXT BACKWARDS IS' 0
 ; Define Words
 
 ; Define Images
+
+; Define Sprites
 
 ; Lookup Tables
 
@@ -125,23 +125,23 @@ _entryPoint_        InitRealTimeProc
                     STW                     _j
                     LDI                     0
                     STW                     0xb0
+                    LDWI                    -1
+                    STW                     0xb2                            ; for j = len(x$)-1 to 0 step -1
+
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
-                    LDWI                    -1
-                    STW                     0xb2                            ; for j = len(x$)-1 to 0 step -1
-
-_next_0x02ff        LDW                     _j
+_next_0x02fa        LDW                     _j
                     STW                     textOfs
                     LDI                     1
                     STW                     textLen
                     LDWI                    0x79a0
                     PrintAcMid                                              ; print mid$(x$, j, 1);
 
-                    ForNextFarVarNeg        _j _next_0x02ff 0xb0 0xb2       ; next j
+                    ForNextFarVarNeg        _j _next_0x02fa 0xb0 0xb2       ; next j
 
-_end_0x0321         BRA                     _end_0x0321                     ; end
+_end_0x031c         BRA                     _end_0x031c                     ; end
 
 
 

@@ -22,9 +22,7 @@ fgbgColour          EQU                     register0 + 0x20
 cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
-frameCountPrev      EQU                     register0 + 0x28
-miscFlags           EQU                     register0 + 0x2A
-highByteMask        EQU                     register0 + 0x2C
+miscFlags           EQU                     register0 + 0x28
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -36,21 +34,21 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_1                  EQU                     0x0240
-_2                  EQU                     0x0249
-_3                  EQU                     0x0273
-_4                  EQU                     0x029d
-_5                  EQU                     0x02b2
-_6                  EQU                     0x02c7
-_7                  EQU                     0x02dd
-_8                  EQU                     0x030c
-_9                  EQU                     0x0324
-_10                 EQU                     0x0336
-_11                 EQU                     0x0346
-_12                 EQU                     0x035b
+_1                  EQU                     0x023b
+_2                  EQU                     0x0244
+_3                  EQU                     0x026e
+_4                  EQU                     0x0298
+_5                  EQU                     0x02ad
+_6                  EQU                     0x02c2
+_7                  EQU                     0x02d8
+_8                  EQU                     0x0304
+_9                  EQU                     0x031c
+_10                 EQU                     0x032e
+_11                 EQU                     0x033e
+_12                 EQU                     0x0353
 _page_0x0300        EQU                     0x0300
-_next_0x039b        EQU                     0x0342
-_end_0x03da         EQU                     0x0371
+_next_0x0399        EQU                     0x033a
+_end_0x03d8         EQU                     0x0369
 
 ; Variables
 _a                  EQU                     0x0030
@@ -72,6 +70,8 @@ _t                  EQU                     0x0044
 ; Define Words
 
 ; Define Images
+
+; Define Sprites
 
 ; Lookup Tables
 
@@ -155,19 +155,20 @@ _6                  LDWI                    256
                     STW                     _v                              ; v=256 : if y &&< 0 then y=-y : v=-v
 
 _7                  LD                      _b
-                    ST                      0xc0 + 1
-                    LDW                     0xc0
-                    ANDW                    highByteMask
+                    ST                      giga_vAC + 1
+                    ORI                     0xFF
+                    XORI                    0xFF
                     ADDW                    _a
                     STW                     _p
                     LDW                     _y
                     SUBW                    _x
+                    JumpLT                  _8 2
+                    LDWI                    _9
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
-                    JumpLT                  _8 2
-                    BRA                     _9                              ; p=a + (b LSL 8) : if y &< x then goto &9
+                    CALL                    giga_vAC                        ; p=a + (b LSL 8) : if y &< x then goto 9
 
 _8                  LDW                     _x
                     STW                     _t
@@ -198,7 +199,7 @@ _10                 LDW                     _d
                     STW                     0xb0
                     LDI                     1
                     STW                     0xb2
-_next_0x039b        LDW                     _q
+_next_0x0399        LDW                     _q
                     POKE                    _p                              ; for t=d &to 0 : poke p,q
 
 _11                 LDW                     _d
@@ -215,11 +216,11 @@ _11                 LDW                     _d
 _12                 LDW                     _p
                     ADDW                    _u
                     STW                     _p
-                    ForNextVarPos           _t _next_0x039b 0xb0 0xb2
+                    ForNextVarPos           _t _next_0x0399 0xb0 0xb2
                     LDWI                    _2
                     CALL                    giga_vAC                        ; p=p+u : next t : goto 2
 
-_end_0x03da         BRA                     _end_0x03da                     ; END
+_end_0x03d8         BRA                     _end_0x03d8                     ; END
 
 
 

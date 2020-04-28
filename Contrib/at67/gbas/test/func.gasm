@@ -22,9 +22,7 @@ fgbgColour          EQU                     register0 + 0x20
 cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
-frameCountPrev      EQU                     register0 + 0x28
-miscFlags           EQU                     register0 + 0x2A
-highByteMask        EQU                     register0 + 0x2C
+miscFlags           EQU                     register0 + 0x28
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -36,13 +34,13 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x0245
-_blamo              EQU                     0x036f
+_10                 EQU                     0x0240
+_blamo              EQU                     0x0375
 _page_0x0300        EQU                     0x0300
-_end_0x039a         EQU                     0x036d
-_next_0x03ae        EQU                     0x037f
+_end_0x0395         EQU                     0x0373
+_next_0x03a9        EQU                     0x0385
 _page_0x0400        EQU                     0x0400
-_end_0x043a         EQU                     0x0402
+_end_0x0435         EQU                     0x0408
 
 ; Variables
 _addr               EQU                     0x0030
@@ -72,6 +70,8 @@ _c$                 DB                      0 '' 0
 ; Define Words
 
 ; Define Images
+
+; Define Sprites
 
 ; Lookup Tables
 
@@ -161,7 +161,10 @@ _page_0x0300        LDW                     0xde
                     ANDI                    63
                     STW                     0xc0
                     LD                      0xc0
-                    ST                      _z + 1                          ; z = (x AND &h3F) LSL 8
+                    ST                      giga_vAC + 1
+                    ORI                     0xFF
+                    XORI                    0xFF
+                    STW                     _z                              ; z = (x AND &h3F) LSL 8
 
                     LDW                     _x
                     ST                      cursorXY
@@ -178,7 +181,7 @@ _page_0x0300        LDW                     0xde
                     PrintAcHexWord          
                     NewLine                                                 ; print hexw$(x);" ";hexw$(z)
 
-_end_0x039a         BRA                     _end_0x039a                     ; END
+_end_0x0395         BRA                     _end_0x0395                     ; END
 
 _blamo              PUSH                    
                     LDWI                    23205
@@ -191,7 +194,7 @@ _blamo              PUSH
                     LDI                     0
                     STW                     _i                              ; for i = 0 to 10
 
-_next_0x03ae        LDI                     32
+_next_0x03a9        LDI                     32
                     STW                     strChr
                     LDWI                    0x7da0
                     STW                     strDstAddr
@@ -224,7 +227,7 @@ _next_0x03ae        LDI                     32
                     PrintAcHexWord          
                     NewLine                                                 ; print i; " " ; hexw$(b)
 
-                    ForNextFarInc           _i _next_0x03ae 10              ; next i
+                    ForNextFarInc           _i _next_0x03a9 10              ; next i
 
                     LDWI                    -1
                     SUBW                    _g
@@ -235,17 +238,17 @@ _next_0x03ae        LDI                     32
 
                     LDWI                    -1
                     SUBW                    _a
+                    STW                     0xde
+                    LDWI                    _page_0x0400
+                    CALL                    giga_vAC
+_page_0x0400        LDW                     0xde
                     SUBW                    _d
                     STW                     _h                              ; h = NOT a - d
 
                     POP                     
                     RET                                                     ; return
 
-                    STW                     0xde
-                    LDWI                    _page_0x0400
-                    CALL                    giga_vAC
-_page_0x0400        LDW                     0xde
-_end_0x043a         BRA                     _end_0x043a                     ; END
+_end_0x0435         BRA                     _end_0x0435                     ; END
 
 
 

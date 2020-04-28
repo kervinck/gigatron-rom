@@ -92,6 +92,7 @@ namespace Linker
         {0x0000, 0x0000, "drawRectF"        , "", false, false},
         {0x0000, 0x0000, "drawPoly"         , "", false, false},
         {0x0000, 0x0000, "atLineCursor"     , "", false, false},
+        {0x0000, 0x0000, "draw_sprite"      , "", false, false},
         {0x0000, 0x0000, "drawSprite"       , "", false, false},
         {0x0000, 0x0000, "drawSpriteX"      , "", false, false},
         {0x0000, 0x0000, "drawSpriteY"      , "", false, false},

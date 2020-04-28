@@ -42,7 +42,6 @@ namespace Compiler
     int _currentLabelIndex = -1;
     int _currentCodeLineIndex = 0;
     int _jumpFalseUniqueId = 0;
-    int _spriteUniqueId = 0;
 
     std::string _runtimePath = ".";
     std::string _tempVarStartStr;
@@ -76,7 +75,7 @@ namespace Compiler
     std::vector<DefDataByte>   _defDataBytes;
     std::vector<DefDataWord>   _defDataWords;
     std::vector<DefDataImage>  _defDataImages;
-    std::vector<DefDataSprite> _defDataSprites;
+    std::map<int, DefDataSprite> _defDataSprites;
 
     SpritesAddrLut _spritesAddrLut;
 
@@ -105,7 +104,6 @@ namespace Compiler
     void setCodeOptimiseType(CodeOptimiseType codeOptimiseType) {_codeOptimiseType = codeOptimiseType;}
 
     int getNextJumpFalseUniqueId(void) {return _jumpFalseUniqueId++;}
-    int getNextSpriteUniqueId(void) {return _spriteUniqueId++;}
 
     std::vector<Label>& getLabels(void) {return _labels;}
     std::vector<Constant>& getConstants(void) {return _constants;}
@@ -119,8 +117,8 @@ namespace Compiler
     std::vector<DefDataByte>& getDefDataBytes(void) {return _defDataBytes;}
     std::vector<DefDataWord>& getDefDataWords(void) {return _defDataWords;}
     std::vector<DefDataImage>& getDefDataImages(void) {return _defDataImages;}
-    std::vector<DefDataSprite>& getDefDataSprites(void) {return _defDataSprites;}
 
+    std::map<int, DefDataSprite>& getDefDataSprites(void) {return _defDataSprites;}
     SpritesAddrLut& getSpritesAddrLut(void) {return _spritesAddrLut;}
 
     std::map<std::string, MacroIndexEntry>& getMacroIndexEntries(void) {return _macroIndexEntries;}
@@ -2497,8 +2495,10 @@ namespace Compiler
         _output.push_back("\n");
     }
 
-    void outputSpriteDef(int spriteIndex, int numStripeChunks, uint16_t address, int& dataIndex)
+    bool outputSpriteDef(int spriteId, int numStripeChunks, uint16_t address, int& dataIndex)
     {
+        if(_defDataSprites.find(spriteId) == _defDataSprites.end()) return false;
+
         std::string defName = "def_sprites_" + Expression::wordToHexString(address);
         _output.push_back(defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(address) + "\n");
         std::string dbString = defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "DB" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
@@ -2508,13 +2508,15 @@ namespace Compiler
         {
             for(int j=0; j<SPRITE_CHUNK_SIZE; j++)
             {
-                dbString += std::to_string(_defDataSprites[spriteIndex]._data[dataIndex++]) + " ";
+                dbString += std::to_string(_defDataSprites[spriteId]._data[dataIndex++]) + " ";
             }
         }
 
         // Output stripe delimiter
-        dbString += std::to_string(_defDataSprites[spriteIndex]._data[dataIndex++]) + " ";
+        dbString += std::to_string(_defDataSprites[spriteId]._data[dataIndex++]) + " ";
         _output.push_back(dbString + "\n");
+
+        return true;
     }
     bool outputDefs(void)
     {
@@ -2582,40 +2584,44 @@ namespace Compiler
 
         // Create def sprite data
         _output.push_back("; Define Sprites\n");
-        for(int i=0; i<int(_defDataSprites.size()); i++)
+        for(auto it=_defDataSprites.begin(); it!=_defDataSprites.end(); ++it)
         {
             // Skip invalid sprite
-            if(_defDataSprites[i]._stripeAddrs.size() == 0)
+            if(it->second._stripeAddrs.size() == 0)
             {
-                fprintf(stderr, "Compiler::outputDefs() : Warning, sprite %d is missing stripe addresses\n", i);
+                fprintf(stderr, "Compiler::outputDefs() : Warning, sprite %d is missing stripe addresses\n", it->first);
                 continue;
             }
 
             int dataIndex = 0;
-            uint16_t numColumns = _defDataSprites[i]._numColumns;
-            uint16_t numStripesPerCol = _defDataSprites[i]._numStripesPerCol;
-            uint16_t numStripeChunks = _defDataSprites[i]._numStripeChunks;
-            uint16_t remStripeChunks = _defDataSprites[i]._remStripeChunks;
+            uint16_t numColumns = it->second._numColumns;
+            uint16_t numStripesPerCol = it->second._numStripesPerCol;
+            uint16_t numStripeChunks = it->second._numStripeChunks;
+            uint16_t remStripeChunks = it->second._remStripeChunks;
+            uint16_t isInstanced = it->second._isInstanced;
 
-            // For each column of sprite data
-            for(int j=0; j<numColumns; j++)
+            if(!isInstanced)
             {
-                // Multiple stripes per column
-                if(numStripesPerCol > 1)
+                // For each column of sprite data
+                for(int j=0; j<numColumns; j++)
                 {
-                    for(int k=0; k<numStripesPerCol-1; k++)
+                    // Multiple stripes per column
+                    if(numStripesPerCol > 1)
                     {
-                        uint16_t address = _defDataSprites[i]._stripeAddrs[j*numStripesPerCol*2 + k*2];
-                        outputSpriteDef(i, numStripeChunks, address, dataIndex);
+                        for(int k=0; k<numStripesPerCol-1; k++)
+                        {
+                            uint16_t address = it->second._stripeAddrs[j*numStripesPerCol*2 + k*2];
+                            outputSpriteDef(it->first, numStripeChunks, address, dataIndex);
+                        }
+                        uint16_t address = it->second._stripeAddrs[j*numStripesPerCol*2 + (numStripesPerCol-1)*2];
+                        outputSpriteDef(it->first, remStripeChunks, address, dataIndex);
                     }
-                    uint16_t address = _defDataSprites[i]._stripeAddrs[j*numStripesPerCol*2 + (numStripesPerCol-1)*2];
-                    outputSpriteDef(i, remStripeChunks, address, dataIndex);
-                }
-                // Single stripe per column
-                else
-                {
-                    uint16_t address = _defDataSprites[i]._stripeAddrs[j*2];
-                    outputSpriteDef(i, numStripeChunks, address, dataIndex);
+                    // Single stripe per column
+                    else
+                    {
+                        uint16_t address = it->second._stripeAddrs[j*2];
+                        outputSpriteDef(it->first, numStripeChunks, address, dataIndex);
+                    }
                 }
             }
         }
@@ -2804,17 +2810,17 @@ namespace Compiler
         }
 
         // SPRITE ADDRESS LUTs
-        for(int i=0; i<int(_defDataSprites.size()); i++)
+        for(auto it=_defDataSprites.begin(); it!=_defDataSprites.end(); ++it)
         {
             // Skip invalid sprite
-            if(_defDataSprites[i]._stripeAddrs.size() == 0)
+            if(it->second._stripeAddrs.size() == 0)
             {
-                fprintf(stderr, "Compiler::outputLuts() : Warning, sprite %d is missing stripe addresses\n", i);
+                fprintf(stderr, "Compiler::outputLuts() : Warning, sprite %d is missing stripe addresses\n", it->first);
                 continue;
             }
 
             uint16_t lutAddress;
-            int lutSize = int(_defDataSprites[i]._stripeAddrs.size()) * 2;
+            int lutSize = int(it->second._stripeAddrs.size()) * 2;
             if(!Memory::getFreeRAM(Memory::FitDescending, lutSize + 2, USER_CODE_START, _runtimeStart, lutAddress))
             {
                 fprintf(stderr, "Compiler::outputLuts() : Not enough RAM for sprite address LUT of size %d\n", lutSize + 2);
@@ -2826,9 +2832,9 @@ namespace Compiler
             _output.push_back(lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(lutAddress) + "\n");
             
             std::string dwString = lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
-            for(int j=0; j<int(_defDataSprites[i]._stripeAddrs.size()); j++)
+            for(int j=0; j<int(it->second._stripeAddrs.size()); j++)
             {
-                uint16_t address = _defDataSprites[i]._stripeAddrs[j];
+                uint16_t address = it->second._stripeAddrs[j];
                 dwString += Expression::wordToHexString(address) + " ";
             }
             _output.push_back(dwString + "0x0000\n");
@@ -2889,9 +2895,7 @@ namespace Compiler
         _output.push_back("cursorXY"       + std::string(LABEL_TRUNC_SIZE - strlen("cursorXY"), ' ')       + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x22\n");
         _output.push_back("midiStream"     + std::string(LABEL_TRUNC_SIZE - strlen("midiStream"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x24\n");
         _output.push_back("midiDelay"      + std::string(LABEL_TRUNC_SIZE - strlen("midiDelay"), ' ')      + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x26\n");
-        _output.push_back("frameCountPrev" + std::string(LABEL_TRUNC_SIZE - strlen("frameCountPrev"), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x28\n");
-        _output.push_back("miscFlags"      + std::string(LABEL_TRUNC_SIZE - strlen("miscFlags"), ' ')      + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x2A\n");
-        _output.push_back("highByteMask"   + std::string(LABEL_TRUNC_SIZE - strlen("highByteMask"), ' ')   + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x2C\n");
+        _output.push_back("miscFlags"      + std::string(LABEL_TRUNC_SIZE - strlen("miscFlags"), ' ')      + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x28\n");
         _output.push_back("\n");
 
         _output.push_back("; Internal buffers\n");
@@ -3032,7 +3036,6 @@ namespace Compiler
         _currentLabelIndex = -1;
         _currentCodeLineIndex = 0;
         _jumpFalseUniqueId = 0;
-        _spriteUniqueId = 0;
 
         _tempVarStartStr = "";
 

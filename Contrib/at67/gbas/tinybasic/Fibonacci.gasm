@@ -22,9 +22,7 @@ fgbgColour          EQU                     register0 + 0x20
 cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
-frameCountPrev      EQU                     register0 + 0x28
-miscFlags           EQU                     register0 + 0x2A
-highByteMask        EQU                     register0 + 0x2C
+miscFlags           EQU                     register0 + 0x28
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -36,22 +34,22 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_1                  EQU                     0x0240
-_2                  EQU                     0x024d
-_3                  EQU                     0x0256
-_4                  EQU                     0x026d
-_5                  EQU                     0x0290
-_6                  EQU                     0x02b1
-_7                  EQU                     0x02e0
-_8                  EQU                     0x0310
-_9                  EQU                     0x0327
-_10                 EQU                     0x033e
-_11                 EQU                     0x034b
-_12                 EQU                     0x0365
-_next_0x0285        EQU                     0x0279
+_1                  EQU                     0x023b
+_2                  EQU                     0x0248
+_3                  EQU                     0x0251
+_4                  EQU                     0x0268
+_5                  EQU                     0x028b
+_6                  EQU                     0x02ac
+_7                  EQU                     0x02db
+_8                  EQU                     0x0308
+_9                  EQU                     0x031f
+_10                 EQU                     0x0336
+_11                 EQU                     0x0343
+_12                 EQU                     0x035d
+_next_0x0280        EQU                     0x0274
 _page_0x0300        EQU                     0x0300
-_end_0x038c         EQU                     0x0349
-_end_0x03bd         EQU                     0x036a
+_end_0x0387         EQU                     0x0341
+_end_0x03b8         EQU                     0x0362
 
 ; Variables
 _n                  EQU                     0x0030
@@ -72,6 +70,8 @@ _str_0x7efc         DB                      2 ': ' 0
 ; Define Words
 
 ; Define Images
+
+; Define Sprites
 
 ; Lookup Tables
 
@@ -109,7 +109,7 @@ _4                  LDI                     0
                     STW                     0xb0
                     LDI                     1
                     STW                     0xb2
-_next_0x0285        LDW                     _j
+_next_0x0280        LDW                     _j
                     SUBW                    _i
                     STW                     register2
                     LDWI                    0x0634
@@ -119,7 +119,7 @@ _next_0x0285        LDW                     _j
                     ADDI                    48
                     PrintAcChar                                             ; for i=0 to j : put b(j-i)+48
 
-_5                  ForNextFarVarPos        _i _next_0x0285 0xb0 0xb2
+_5                  ForNextFarVarPos        _i _next_0x0280 0xb0 0xb2
                     NewLine                 
                     LDI                     0
                     STW                     _i
@@ -159,11 +159,11 @@ _7                  LDWI                    0x0634
                     LDW                     _c
                     DOKE                    register1
                     SUBI                    10
+                    JumpLT                  _8 0
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
-                    JumpLT                  _8 0
                     LDI                     0
                     STW                     _c
                     BRA                     _9                              ; b(i)=c : if c &< 10 then c=0 : goto &9
@@ -190,7 +190,7 @@ _10                 LDW                     _j
                     STW                     _j
                     SUBI                    50
                     BNE                     _11
-_end_0x038c         BRA                     _end_0x038c                     ; j=j+1 : if j &&= 50 then END
+_end_0x0387         BRA                     _end_0x0387                     ; j=j+1 : if j &&= 50 then END
 
 _11                 LDWI                    0x069a
                     ADDW                    _j
@@ -208,7 +208,7 @@ _11                 LDWI                    0x069a
 _12                 LDWI                    _3
                     CALL                    giga_vAC                        ; goto 3
 
-_end_0x03bd         BRA                     _end_0x03bd                     ; END
+_end_0x03b8         BRA                     _end_0x03b8                     ; END
 
 
 

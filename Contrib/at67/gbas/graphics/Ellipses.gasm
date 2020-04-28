@@ -22,9 +22,7 @@ fgbgColour          EQU                     register0 + 0x20
 cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
-frameCountPrev      EQU                     register0 + 0x28
-miscFlags           EQU                     register0 + 0x2A
-highByteMask        EQU                     register0 + 0x2C
+miscFlags           EQU                     register0 + 0x28
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -36,17 +34,17 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_loop               EQU                     0x024e
-_ellipse            EQU                     0x02b6
-_else_0x0294        EQU                     0x027e
-_endif_0x0298       EQU                     0x0282
-_end_0x02de         EQU                     0x02b4
+_loop               EQU                     0x0249
+_ellipse            EQU                     0x02b1
+_else_0x028f        EQU                     0x0279
+_endif_0x0293       EQU                     0x027d
+_end_0x02d9         EQU                     0x02af
 _page_0x0300        EQU                     0x0300
-_while_0x034f       EQU                     0x0321
-_else_0x037f        EQU                     0x0341
-_endif_0x039d       EQU                     0x0359
-_wend_0x03cf        EQU                     0x0387
-_end_0x03d1         EQU                     0x0389
+_while_0x034a       EQU                     0x031c
+_else_0x037a        EQU                     0x033c
+_endif_0x0398       EQU                     0x0354
+_wend_0x03ca        EQU                     0x0382
+_end_0x03cc         EQU                     0x0384
 
 ; Variables
 _color              EQU                     0x0030
@@ -76,6 +74,8 @@ _x                  EQU                     0x0054
 ; Define Words
 
 ; Define Images
+
+; Define Sprites
 
 ; Lookup Tables
 
@@ -110,16 +110,16 @@ _loop               Rand
 
                     LDW                     _a
                     SUBW                    _b
-                    BLE                     _else_0x0294                    ; if a &&> b
+                    BLE                     _else_0x028f                    ; if a &&> b
 
                     LDW                     _a
                     STW                     _t
-                    BRA                     _endif_0x0298                   ; t = a
+                    BRA                     _endif_0x0293                   ; t = a
 
-_else_0x0294        LDW                     _b
+_else_0x028f        LDW                     _b
                     STW                     _t                              ; t = b
 
-_endif_0x0298       LDW                     _t
+_endif_0x0293       LDW                     _t
                     LSLW                    
                     STW                     0xc2
                     LDI                     160
@@ -143,7 +143,7 @@ _endif_0x0298       LDW                     _t
                     LDWI                    _loop
                     CALL                    giga_vAC                        ; goto loop
 
-_end_0x02de         BRA                     _end_0x02de                     ; end
+_end_0x02d9         BRA                     _end_0x02d9                     ; end
 
 _ellipse            PUSH                    
                     LDW                     _mx
@@ -182,14 +182,14 @@ _ellipse            PUSH
                     STW                     _dx                             ; aa = a      : dx = aa LSL 1
 
                     LDW                     _b
-                    STW                     0xde
-                    LDWI                    _page_0x0300
-                    CALL                    giga_vAC
-_page_0x0300        LDW                     0xde
                     STW                     _bb
                     LSLW                    
                     STW                     _dy                             ; bb = b      : dy = bb LSL 1
 
+                    STW                     0xde
+                    LDWI                    _page_0x0300
+                    CALL                    giga_vAC
+_page_0x0300        LDW                     0xde
                     LDW                     _a
                     STW                     mathX
                     LDW                     _bb
@@ -206,11 +206,11 @@ _page_0x0300        LDW                     0xde
                     LDW                     _a
                     STW                     _x                              ; x  = a
 
-_while_0x034f       LDW                     _x
-                    BLE                     _wend_0x03cf                    ; while x &&> 0
+_while_0x034a       LDW                     _x
+                    BLE                     _wend_0x03ca                    ; while x &&> 0
 
                     LDW                     _r
-                    BLE                     _else_0x037f                    ; if r &&> 0
+                    BLE                     _else_0x037a                    ; if r &&> 0
 
                     INC                     _my1
                     LDW                     _my2
@@ -223,9 +223,9 @@ _while_0x034f       LDW                     _x
                     LDW                     _r
                     SUBW                    _ry
                     STW                     _r
-                    BRA                     _endif_0x039d                   ; ry = ry + dx : r = r - ry
+                    BRA                     _endif_0x0398                   ; ry = ry + dx : r = r - ry
 
-_else_0x037f        LDW                     _x
+_else_0x037a        LDW                     _x
                     SUBI                    1
                     STW                     _x
                     INC                     _mx1
@@ -239,7 +239,7 @@ _else_0x037f        LDW                     _x
                     ADDW                    _r
                     STW                     _r                              ; rx = rx - dy : r = rx + r
 
-_endif_0x039d       LDW                     _my1
+_endif_0x0398       LDW                     _my1
                     ADDI                    8
                     ST                      _addr + 1                       ; addr.hi = my1 + 8
 
@@ -267,12 +267,12 @@ _endif_0x039d       LDW                     _my1
                     LDW                     _color
                     POKE                    _addr                           ; addr.lo = mx2 : poke addr, color
 
-                    BRA                     _while_0x034f                   ; wend
+                    BRA                     _while_0x034a                   ; wend
 
-_wend_0x03cf        POP                     
+_wend_0x03ca        POP                     
                     RET                                                     ; return
 
-_end_0x03d1         BRA                     _end_0x03d1                     ; END
+_end_0x03cc         BRA                     _end_0x03cc                     ; END
 
 
 

@@ -22,9 +22,7 @@ fgbgColour          EQU                     register0 + 0x20
 cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
-frameCountPrev      EQU                     register0 + 0x28
-miscFlags           EQU                     register0 + 0x2A
-highByteMask        EQU                     register0 + 0x2C
+miscFlags           EQU                     register0 + 0x28
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -36,24 +34,24 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_loop               EQU                     0x0285
-_50                 EQU                     0x029b
-_51                 EQU                     0x02ab
-_53                 EQU                     0x02bb
-_54                 EQU                     0x02cb
-_55                 EQU                     0x02db
-_101                EQU                     0x02eb
-_105                EQU                     0x030b
-_113                EQU                     0x031b
-_114                EQU                     0x032b
-_116                EQU                     0x033b
-_117                EQU                     0x034b
-_119                EQU                     0x035b
-_121                EQU                     0x036b
-_note               EQU                     0x037b
+_loop               EQU                     0x0280
+_50                 EQU                     0x0296
+_51                 EQU                     0x02a6
+_53                 EQU                     0x02b6
+_54                 EQU                     0x02c6
+_55                 EQU                     0x02d6
+_101                EQU                     0x02e6
+_105                EQU                     0x0306
+_113                EQU                     0x0316
+_114                EQU                     0x0326
+_116                EQU                     0x0336
+_117                EQU                     0x0346
+_119                EQU                     0x0356
+_121                EQU                     0x0366
+_note               EQU                     0x0376
 _page_0x0300        EQU                     0x0300
-_next_0x0374        EQU                     0x0380
-_end_0x03a8         EQU                     0x03ae
+_next_0x036f        EQU                     0x037b
+_end_0x03a3         EQU                     0x03a9
 
 ; Variables
 _a                  EQU                     0x0030
@@ -74,11 +72,13 @@ _str_0x7ee1         DB                      15 'Q W E R T Y U I' 0
 
 ; Define Images
 
+; Define Sprites
+
 ; Lookup Tables
 _lut_numericLabs    EQU                     0x7ca9
 _lut_numericLabs    DW                      50 51 53 54 55 101 105 113 114 116 117 119 121 0
 _lut_numericAddrs   EQU                     0x7ab3
-_lut_numericAddrs   DW                      0x029b 0x02ab 0x02bb 0x02cb 0x02db 0x02eb 0x030b 0x031b 0x032b 0x033b 0x034b 0x035b 0x036b 
+_lut_numericAddrs   DW                      0x0296 0x02a6 0x02b6 0x02c6 0x02d6 0x02e6 0x0306 0x0316 0x0326 0x0336 0x0346 0x0356 0x0366 
 
 ; Code
 _entryPoint_        InitRealTimeProc        
@@ -184,12 +184,12 @@ _101                PUSH
                     LDI                     103
                     STW                     _a
                     LDI                     10
+                    STW                     _b
+                    LDWI                    _note
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
-                    STW                     _b
-                    LDWI                    _note
                     CALL                    giga_vAC
                     POP                     
                     RET                                                     ; a=103 : b=10 : gosub note : return
@@ -267,10 +267,10 @@ _121                PUSH
 _note               PUSH                    
                     LDI                     1
                     STW                     _c
-_next_0x0374        LD                      _c
-                    ST                      0xc0 + 1
-                    LDW                     0xc0
-                    ANDW                    highByteMask
+_next_0x036f        LD                      _c
+                    ST                      giga_vAC + 1
+                    ORI                     0xFF
+                    XORI                    0xFF
                     ADDI                    252
                     STW                     _p
                     LDW                     _a
@@ -280,7 +280,7 @@ _next_0x0374        LD                      _c
                     STW                     0xc2
                     LDW                     _b
                     POKE                    0xc2
-                    ForNextFarInc           _c _next_0x0374 4               ; for c=1 to 4 : p=(c LSL 8)+252 : poke p,a : poke p+1,b : next c
+                    ForNextFarInc           _c _next_0x036f 4               ; for c=1 to 4 : p=(c LSL 8)+252 : poke p,a : poke p+1,b : next c
 
                     LDI                     15
                     ST                      44                              ; poke 44,15
@@ -288,7 +288,7 @@ _next_0x0374        LD                      _c
                     POP                     
                     RET                                                     ; return
 
-_end_0x03a8         BRA                     _end_0x03a8                     ; END
+_end_0x03a3         BRA                     _end_0x03a3                     ; END
 
 
 

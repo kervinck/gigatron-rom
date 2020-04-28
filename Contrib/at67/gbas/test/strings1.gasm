@@ -22,9 +22,7 @@ fgbgColour          EQU                     register0 + 0x20
 cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
-frameCountPrev      EQU                     register0 + 0x28
-miscFlags           EQU                     register0 + 0x2A
-highByteMask        EQU                     register0 + 0x2C
+miscFlags           EQU                     register0 + 0x28
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -39,7 +37,7 @@ _entryPoint_        EQU                     0x0200
 _page_0x0300        EQU                     0x0300
 _page_0x0400        EQU                     0x0400
 _page_0x0500        EQU                     0x0500
-_end_0x04fc         EQU                     0x051f
+_end_0x04f7         EQU                     0x0513
 
 ; Variables
 _aa_array           EQU                     0x7ed6
@@ -83,6 +81,8 @@ _str_0x7ea0         DB                      2 'gc' 0
 ; Define Words
 
 ; Define Images
+
+; Define Sprites
 
 ; Lookup Tables
 _concat_0x7eac      EQU                     0x7eac
@@ -171,11 +171,11 @@ _entryPoint_        InitRealTimeProc
                     STW                     strDstAddr
                     StringCopy                                              ; g$ = b$
 
+                    PrintString             _str_0x7ed0
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
-                    PrintString             _str_0x7ed0
                     PrintString             _str_0x7ea9
                     PrintString             _str_0x7eba
                     PrintString             _str_0x7ea9
@@ -224,12 +224,12 @@ _page_0x0300        LDW                     0xde
                     STW                     textLen
                     LDWI                    0x7eba
                     PrintAcMid              
+                    NewLine                                                 ; print mid$("dogcat", 2, 2);" ";mid$(b$, cc+1, cc-1)
+
                     STW                     0xde
                     LDWI                    _page_0x0400
                     CALL                    giga_vAC
 _page_0x0400        LDW                     0xde
-                    NewLine                                                 ; print mid$("dogcat", 2, 2);" ";mid$(b$, cc+1, cc-1)
-
                     PrintString             _c$
                     PrintString             _str_0x7ea9
                     PrintString             _d$
@@ -265,18 +265,18 @@ _page_0x0400        LDW                     0xde
                     PrintString             _str_0x7ea9
                     LDWI                    0x7ea4
                     PrintAcString           
+                    PrintString             _str_0x7ea9
+                    LDI                     5
                     STW                     0xde
                     LDWI                    _page_0x0500
                     CALL                    giga_vAC
 _page_0x0500        LDW                     0xde
-                    PrintString             _str_0x7ea9
-                    LDI                     5
                     STW                     textLen
                     LDWI                    0x7eba
                     PrintAcLeft             
                     NewLine                                                 ; print chr$(65);" ";hex$(15);" ";hexw$(bb);" ";left$("dogcat", 3);" ";left$(b$, 5)
 
-_end_0x04fc         BRA                     _end_0x04fc                     ; end
+_end_0x04f7         BRA                     _end_0x04f7                     ; end
 
 
 

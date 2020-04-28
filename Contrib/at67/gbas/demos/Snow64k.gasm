@@ -22,9 +22,7 @@ fgbgColour          EQU                     register0 + 0x20
 cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
-frameCountPrev      EQU                     register0 + 0x28
-miscFlags           EQU                     register0 + 0x2A
-highByteMask        EQU                     register0 + 0x2C
+miscFlags           EQU                     register0 + 0x28
 
 ; Internal buffers
 textWorkArea        EQU                     0xffa0
@@ -36,31 +34,31 @@ textWorkArea        EQU                     0xffa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x0240
-_20                 EQU                     0x0240
-_30                 EQU                     0x0248
-_40                 EQU                     0x025a
-_50                 EQU                     0x026b
-_60                 EQU                     0x0275
-_70                 EQU                     0x0286
-_80                 EQU                     0x029e
-_90                 EQU                     0x02ad
-_100                EQU                     0x02c9
-_110                EQU                     0x0311
-_120                EQU                     0x0333
-_130                EQU                     0x0344
-_140                EQU                     0x035c
-_150                EQU                     0x0372
-_160                EQU                     0x038c
-_170                EQU                     0x0396
-_180                EQU                     0x03b0
-_190                EQU                     0x03c5
-_200                EQU                     0x03cf
-_210                EQU                     0x03e5
-_220                EQU                     0x040f
+_10                 EQU                     0x023b
+_20                 EQU                     0x023b
+_30                 EQU                     0x0243
+_40                 EQU                     0x0255
+_50                 EQU                     0x0266
+_60                 EQU                     0x0270
+_70                 EQU                     0x0281
+_80                 EQU                     0x0299
+_90                 EQU                     0x02a8
+_100                EQU                     0x02c4
+_110                EQU                     0x030c
+_120                EQU                     0x032e
+_130                EQU                     0x033f
+_140                EQU                     0x0357
+_150                EQU                     0x036d
+_160                EQU                     0x0387
+_170                EQU                     0x0391
+_180                EQU                     0x03ab
+_190                EQU                     0x03c0
+_200                EQU                     0x03ca
+_210                EQU                     0x03e0
+_220                EQU                     0x040a
 _page_0x0300        EQU                     0x0300
 _page_0x0400        EQU                     0x0400
-_end_0x04a6         EQU                     0x0421
+_end_0x04a1         EQU                     0x041c
 
 ; Variables
 _X_array            EQU                     0xfd44
@@ -114,6 +112,8 @@ def_bytes_0x17a0    DB                      145 66 146 45 18 144 74 146 50 17 14
 ; Define Words
 
 ; Define Images
+
+; Define Sprites
 
 ; Lookup Tables
 
@@ -196,12 +196,12 @@ _100                Rand
                     Rand                    
                     ANDI                    15
                     ADDW                    0xc4
+                    STW                     register0
+                    LDWI                    0xfd44
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
-                    STW                     register0
-                    LDWI                    0xfd44
                     ADDW                    _S
                     ADDW                    _S
                     STW                     register1
@@ -213,9 +213,9 @@ _110                Rand
                     ADDI                    8
                     STW                     0xc0
                     LD                      0xc0
-                    ST                      0xc2 + 1
-                    LDW                     0xc2
-                    ANDW                    highByteMask
+                    ST                      giga_vAC + 1
+                    ORI                     0xFF
+                    XORI                    0xFF
                     STW                     register0
                     LDWI                    0xfae8
                     ADDW                    _S
@@ -313,13 +313,13 @@ _210                LDWI                    0xfae8
                     DEEK                    
                     STW                     0xc0
                     LDWI                    0xfd44
+                    ADDW                    _S
+                    ADDW                    _S
+                    DEEK                    
                     STW                     0xde
                     LDWI                    _page_0x0400
                     CALL                    giga_vAC
 _page_0x0400        LDW                     0xde
-                    ADDW                    _S
-                    ADDW                    _S
-                    DEEK                    
                     ADDW                    0xc0
                     STW                     0xc2
                     LDI                     127
@@ -334,7 +334,7 @@ _220                LDWI                    0xfae8
                     LDWI                    _180
                     CALL                    giga_vAC                        ; Y(S)=0 : goto 180
 
-_end_0x04a6         BRA                     _end_0x04a6                     ; END
+_end_0x04a1         BRA                     _end_0x04a1                     ; END
 
 
 

@@ -22,9 +22,7 @@ fgbgColour          EQU                     register0 + 0x20
 cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
-frameCountPrev      EQU                     register0 + 0x28
-miscFlags           EQU                     register0 + 0x2A
-highByteMask        EQU                     register0 + 0x2C
+miscFlags           EQU                     register0 + 0x28
 
 ; Internal buffers
 textWorkArea        EQU                     0x06a0
@@ -36,9 +34,9 @@ textWorkArea        EQU                     0x06a0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_loop               EQU                     0x024d
-_repeat_0x0274      EQU                     0x0270
-_end_0x029d         EQU                     0x0293
+_loop               EQU                     0x0248
+_repeat_0x026f      EQU                     0x026b
+_end_0x0298         EQU                     0x028e
 
 ; Variables
 _x                  EQU                     0x0030
@@ -53,6 +51,8 @@ _nx2                EQU                     0x0036
 ; Define Words
 
 ; Define Images
+
+; Define Sprites
 
 ; Lookup Tables
 
@@ -93,7 +93,7 @@ _loop               LDI                     1
                     SUBW                    _x2
                     STW                     _nx2                            ; nx2 = -x2
 
-_repeat_0x0274      LDW                     _nx2
+_repeat_0x026f      LDW                     _nx2
                     POKE                    _p                              ; poke p, nx2
 
                     LDW                     _p
@@ -108,14 +108,14 @@ _repeat_0x0274      LDW                     _nx2
 
                     LDWI                    465
                     SUBW                    _p
-                    BGE                     _repeat_0x0274                  ; until p &&>= &h01D1
+                    BGE                     _repeat_0x026f                  ; until p &&>= &h01D1
 
                     INC                     _x                              ; inc x
 
                     LDWI                    _loop
                     CALL                    giga_vAC                        ; goto loop
 
-_end_0x029d         BRA                     _end_0x029d                     ; END
+_end_0x0298         BRA                     _end_0x0298                     ; END
 
 
 
@@ -134,7 +134,7 @@ convertLtOp         EQU     0x066a
 convertGtOp         EQU     0x0661
 scanlineMode        EQU     0x062a
 waitVBlanks         EQU     0x0617
-waitVBlank          EQU     0x0607
+waitVBlank          EQU     0x060b
 resetVideoTable     EQU     0x05e0
 initClearFuncs      EQU     0x063e
 realTimeProcAddr    EQU     0x00dc
@@ -308,11 +308,9 @@ waitVB_vblank       LDWI    waitVBlank
                     BRA     waitVB_loop
 
 
-waitVBlank          LD      giga_frameCount
-                    SUBW    frameCountPrev
-                    BEQ     waitVBlank
-                    LD      giga_frameCount
-                    STW     frameCountPrev
+waitVBlank          LD      giga_videoY
+                    XORI    179
+                    BNE     waitVBlank
                     PUSH
                     CALL    realTimeProcAddr
                     POP

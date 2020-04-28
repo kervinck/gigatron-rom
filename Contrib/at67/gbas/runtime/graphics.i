@@ -96,11 +96,9 @@ waitVB_vblank       LDWI    waitVBlank
 %ENDS   
 
 %SUB                waitVBlank
-waitVBlank          LD      giga_frameCount
-                    SUBW    frameCountPrev
-                    BEQ     waitVBlank
-                    LD      giga_frameCount
-                    STW     frameCountPrev
+waitVBlank          LD      giga_videoY
+                    XORI    179
+                    BNE     waitVBlank
                     PUSH
                     CALL    realTimeProcAddr
                     POP

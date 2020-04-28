@@ -22,9 +22,7 @@ fgbgColour          EQU                     register0 + 0x20
 cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
-frameCountPrev      EQU                     register0 + 0x28
-miscFlags           EQU                     register0 + 0x2A
-highByteMask        EQU                     register0 + 0x2C
+miscFlags           EQU                     register0 + 0x28
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -36,15 +34,15 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x0240
-_20                 EQU                     0x024c
-_30                 EQU                     0x0257
-_40                 EQU                     0x026e
-_50                 EQU                     0x0285
-_60                 EQU                     0x0295
-_70                 EQU                     0x02a4
-_80                 EQU                     0x02b4
-_else_0x0301        EQU                     0x02c3
+_10                 EQU                     0x023b
+_20                 EQU                     0x0247
+_30                 EQU                     0x0252
+_40                 EQU                     0x0269
+_50                 EQU                     0x0280
+_60                 EQU                     0x0290
+_70                 EQU                     0x029f
+_80                 EQU                     0x02af
+_else_0x02fc        EQU                     0x02be
 
 ; Variables
 _x                  EQU                     0x0030
@@ -60,6 +58,8 @@ _w                  EQU                     0x0038
 ; Define Words
 
 ; Define Images
+
+; Define Sprites
 
 ; Lookup Tables
 
@@ -132,11 +132,11 @@ _70                 LDW                     _w
                     STW                     _u                              ; w=w-u-u+1:u=u-1
 
 _80                 LDW                     _u
-                    JumpGT                  _else_0x0301 1
+                    JumpGT                  _else_0x02fc 1
                     LDWI                    _60
                     CALL                    giga_vAC                        ; if u&>0 then goto 60
 
-_else_0x0301        BRA                     _else_0x0301                    ; END
+_else_0x02fc        BRA                     _else_0x02fc                    ; END
 
 
 

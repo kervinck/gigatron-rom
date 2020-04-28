@@ -1,0 +1,47 @@
+_runtimePath_ "../runtime"
+_runtimeStart_ &hFFFF
+
+mode 2
+poke 162, &h2A
+poke 163, &h3F
+cls
+
+load sprite, ../../images/gbas/Boing0.tga, 0
+load sprite, ../../images/gbas/Boing1.tga, 1
+load sprite, ../../images/gbas/Boing2.tga, 2
+load sprite, ../../images/gbas/Boing3.tga, 3
+load sprite, ../../images/gbas/Boing4.tga, 4
+load sprite, ../../images/gbas/Boing5.tga, 5
+load sprite, ../../images/gbas/Boing6.tga, 6
+load sprite, ../../images/gbas/Boing7.tga, 7
+load sprite, ../../images/gbas/Boing8.tga, 8
+load sprite, ../../images/gbas/Boing9.tga, 9
+load sprite, ../../images/gbas/Boing10.tga, 10
+load sprite, ../../images/gbas/Boing11.tga, 11
+load sprite, ../../images/gbas/Boing12.tga, 12
+load sprite, ../../images/gbas/Boing13.tga, 13
+
+const g = 3
+f = 1 : x = 0 : y = &h0100
+fstep = 1 : xstep = 150 : ystep = 0
+
+loop:
+    wait
+    sprite f, x.hi, y.hi
+    f = f + fstep
+    if f &&> 13 then f = 0
+    if f &&< 0 then f = 13
+  
+    x = x + xstep
+    if (x.hi > 111) or (x.hi < 0) 
+        xstep = -xstep
+        fstep = -fstep
+    endif
+    
+    ystep = ystep + g
+    y = y + ystep
+    if y.hi &&> 79
+        y.hi = 79
+        ystep = -ystep
+    endif
+goto &loop

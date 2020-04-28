@@ -22,9 +22,7 @@ fgbgColour          EQU                     register0 + 0x20
 cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
-frameCountPrev      EQU                     register0 + 0x28
-miscFlags           EQU                     register0 + 0x2A
-highByteMask        EQU                     register0 + 0x2C
+miscFlags           EQU                     register0 + 0x28
 
 ; Internal buffers
 textWorkArea        EQU                     0x06a0
@@ -36,15 +34,15 @@ textWorkArea        EQU                     0x06a0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_loop               EQU                     0x0292
-_254                EQU                     0x0333
-_253                EQU                     0x0349
-_191                EQU                     0x035b
-_127                EQU                     0x0362
+_loop               EQU                     0x028d
+_254                EQU                     0x032f
+_253                EQU                     0x0345
+_191                EQU                     0x0357
+_127                EQU                     0x035e
 _page_0x0300        EQU                     0x0300
-_else_0x0367        EQU                     0x0347
-_else_0x0381        EQU                     0x0359
-_end_0x0391         EQU                     0x0369
+_else_0x0362        EQU                     0x0343
+_else_0x037c        EQU                     0x0355
+_end_0x038c         EQU                     0x0365
 
 ; Variables
 _x0                 EQU                     0x0030
@@ -302,11 +300,13 @@ def_images_0x7e00   DB                      12 12 8 12 8 8 13 8 8 8 9 8 24 8 9 2
 def_images_0x7f00   EQU                     0x7f00
 def_images_0x7f00   DB                      12 8 12 8 12 8 8 12 8 9 8 8 9 8 8 9 8 9 8 9 12 8 8 8 12 8 12 8 12 12 12 8 12 12 8 12 8 12 12 8 12 24 12 8 28 8 28 8 12 24 12 8 28 8 12 8 12 8 12 8 8 12 8 12 9 12 12 8 13 12 8 12 12 12 12 8 12 12 12 12 12 12 12 12 8 12 8 12 12 8 12 12 12 8 12 12 12 12 12 8 12 12 12 8 12 8 8 8 12 8 8 8 8 8 12 8 12 8 12 12 12 12 12 12 12 8 12 8 12 8 29 8 28 8 12 8 12 9 28 8 12 8 12 12 12 12 8 12 12 8 12 8 12 8 9 12 8 8 12 24 8 8 8 8 8 8 8 8 12 8 8 12 8 12 8 12 12 12 12 12 8 12 24 12 8 28 8 28 8 24 12 8 12 8 12 8 12 12 8 12 12 12 8 12 8 12 8 12 12 8 12 8 12 8 12 8 12 12 12 12 12 12 12 12 8 12 12 8 12 8 12 8 12 12 8 12 12 12 12 12 12 8 12 8 12 8 12 8 12 8 12 8 12 12 8 12 
 
+; Define Sprites
+
 ; Lookup Tables
-_lut_numericLabs    EQU                     0x0610
+_lut_numericLabs    EQU                     0x0614
 _lut_numericLabs    DW                      254 253 191 127 0
-_lut_numericAddrs   EQU                     0x0608
-_lut_numericAddrs   DW                      0x0333 0x0349 0x035b 0x0362 
+_lut_numericAddrs   EQU                     0x060c
+_lut_numericAddrs   DW                      0x032f 0x0345 0x0357 0x035e 
 
 ; Code
 _entryPoint_        InitRealTimeProc        
@@ -415,13 +415,13 @@ _loop               WaitVBlank                                              ; wa
                     LD                      _x5 + 1
                     POKE                    register0
                     LDW                     _x5
+                    ADDW                    _speed2
+                    STW                     _x5                             ; poke &h0193, x5.hi : x5 = x5 + speed2
+
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
-                    ADDW                    _speed2
-                    STW                     _x5                             ; poke &h0193, x5.hi : x5 = x5 + speed2
-
                     LDWI                    419
                     STW                     register0
                     LD                      _x5 + 1
@@ -453,11 +453,11 @@ _254                PUSH
                     STW                     _speed1
                     LDWI                    256
                     SUBW                    _speed1
-                    BGT                     _else_0x0367
+                    BGT                     _else_0x0362
                     LDWI                    256
                     STW                     _speed1                         ; speed1 = speed1 + 2 : if speed1 &&> 256 then speed1 = 256
 
-_else_0x0367        POP                     
+_else_0x0362        POP                     
                     RET                                                     ; return
 
 _253                PUSH                    
@@ -465,11 +465,11 @@ _253                PUSH
                     SUBI                    2
                     STW                     _speed1
                     SUBI                    64
-                    BGE                     _else_0x0381
+                    BGE                     _else_0x037c
                     LDI                     64
                     STW                     _speed1                         ; speed1 = speed1 - 2 : if speed1 &&< 64 then speed1 = 64
 
-_else_0x0381        POP                     
+_else_0x037c        POP                     
                     RET                                                     ; return
 
 _191                PUSH                    
@@ -484,7 +484,7 @@ _127                PUSH
                     POP                     
                     RET                                                     ; speed1 = 128 : return
 
-_end_0x0391         BRA                     _end_0x0391                     ; END
+_end_0x038c         BRA                     _end_0x038c                     ; END
 
 
 
@@ -503,7 +503,7 @@ convertLtOp         EQU     0x066a
 convertGtOp         EQU     0x0661
 gosubNumericLabel   EQU     0x0570
 scanlineMode        EQU     0x062a
-waitVBlank          EQU     0x061a
+waitVBlank          EQU     0x061e
 resetVideoTable     EQU     0x0551
 initClearFuncs      EQU     0x063e
 drawHLine           EQU     0x05a2
@@ -696,11 +696,9 @@ scanlineM_cont      LDWI    SYS_SetMode_v2_80
                     RET
 
 
-waitVBlank          LD      giga_frameCount
-                    SUBW    frameCountPrev
-                    BEQ     waitVBlank
-                    LD      giga_frameCount
-                    STW     frameCountPrev
+waitVBlank          LD      giga_videoY
+                    XORI    179
+                    BNE     waitVBlank
                     PUSH
                     CALL    realTimeProcAddr
                     POP
