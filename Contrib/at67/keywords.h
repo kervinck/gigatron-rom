@@ -56,6 +56,7 @@ namespace Keywords
     Expression::Numeric functionUSR(Expression::Numeric& numeric);
     Expression::Numeric functionRND(Expression::Numeric& numeric);
     Expression::Numeric functionLEN(Expression::Numeric& numeric);
+    Expression::Numeric functionASC(Expression::Numeric& numeric);
     Expression::Numeric functionCHR$(Expression::Numeric& numeric);
     Expression::Numeric functionHEX$(Expression::Numeric& numeric);
     Expression::Numeric functionHEXW$(Expression::Numeric& numeric);

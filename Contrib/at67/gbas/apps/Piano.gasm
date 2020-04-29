@@ -555,7 +555,7 @@ _next_0x054e        LDWI                    0x7eec
                     ADDW                    _c
                     ADDW                    _c
                     STW                     register1
-                    LDI                     15
+                    LDI                     20
                     DOKE                    register1
                     BRA                     _playExit                       ; if note(c) &&= k then chan(c) = NOTELEN : goto &playExit
 
@@ -568,7 +568,7 @@ _else_0x057e        LDWI                    0x7ef6
                     ADDW                    _c
                     ADDW                    _c
                     STW                     register1
-                    LDI                     15
+                    LDI                     20
                     DOKE                    register1
                     LDWI                    0x7eec
                     ADDW                    _c
@@ -990,8 +990,6 @@ scanlineM_cont      LDWI    SYS_SetMode_v2_80
 waitVBlank          LD      giga_videoY
                     XORI    179
                     BNE     waitVBlank
-                    ;LD      giga_frameCount
-                    ;STW     frameCountPrev
                     PUSH
                     CALL    realTimeProcAddr
                     POP

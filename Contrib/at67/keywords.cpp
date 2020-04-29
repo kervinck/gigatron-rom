@@ -655,6 +655,76 @@ namespace Keywords
         return numeric;
     }
 
+    Expression::Numeric functionASC(Expression::Numeric& numeric)
+    {
+        if(numeric._varType != Expression::Number)
+        {
+            Compiler::getNextTempVar();
+
+            // Handle non variables
+            if(numeric._index == -1)
+            {
+                switch(numeric._varType)
+                {
+                    // Get or create constant string
+                    case Expression::String:
+                    {
+                        int index;
+                        Compiler::getOrCreateConstString(numeric._text, index);
+                        numeric._index = int16_t(index);
+                        numeric._varType = Expression::StrVar;
+                    }
+                    break;
+
+                    case Expression::TmpStrVar:
+                    {
+                    }
+                    break;
+
+                    default:
+                    {
+                        fprintf(stderr, "Keywords::functionASC() : couldn't find variable name '%s'\n", numeric._name.c_str());
+                        return numeric;
+                    }
+                }
+            }
+
+            uint8_t ascii = 0;
+            switch(numeric._varType)
+            {
+                case Expression::StrVar:   ascii = Compiler::getStringVars()[numeric._index]._text[0]; break;
+                case Expression::Constant: ascii = Compiler::getConstants()[numeric._index]._text[0];  break;
+
+                default: break;
+            }
+
+            // Variable lengths
+            if(numeric._varType == Expression::StrVar  &&  !Compiler::getStringVars()[numeric._index]._constant)
+            {
+                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStringVars()[numeric._index]._address) + " + 1", false);
+                Compiler::emitVcpuAsm("PEEK", "", false);
+            }
+            else if(numeric._varType == Expression::TmpStrVar)
+            {
+                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStrWorkArea()) + " + 1", false);
+                Compiler::emitVcpuAsm("PEEK", "", false);
+            }
+            // Constants lengths
+            else
+            {
+                Compiler::emitVcpuAsm("LDI", std::to_string(ascii), false);
+            }
+
+            numeric._value = uint8_t(Compiler::getTempVarStart());
+            numeric._varType = Expression::TmpVar;
+            numeric._name = Compiler::getTempVarStartStr();
+            Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
+            
+        }
+
+        return numeric;
+    }
+
     Expression::Numeric functionCHR$(Expression::Numeric& numeric)
     {
         int index;
@@ -690,7 +760,7 @@ namespace Keywords
             Compiler::emitVcpuAsm("STW", "strDstAddr", false);
             Compiler::emitVcpuAsm("%StringChr", "", false);
 
-            return Expression::Numeric(dstAddr, uint16_t(index), true, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+            return Expression::Numeric(0, uint16_t(index), true, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
         }
 
         Compiler::getNextTempVar();
@@ -707,7 +777,7 @@ namespace Keywords
         Compiler::emitVcpuAsm("STW", "strDstAddr", false);
         Compiler::emitVcpuAsm("%StringChr", "", false);
 
-        return Expression::Numeric(dstAddr, uint16_t(index), true, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+        return Expression::Numeric(0, uint16_t(index), true, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
     }
 
     Expression::Numeric functionHEX$(Expression::Numeric& numeric)
@@ -745,7 +815,7 @@ namespace Keywords
             Compiler::emitVcpuAsm("STW", "strDstAddr", false);
             Compiler::emitVcpuAsm("%StringHex", "", false);
 
-            return Expression::Numeric(dstAddr, uint16_t(index), true, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+            return Expression::Numeric(0, uint16_t(index), true, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
         }
 
         Compiler::getNextTempVar();
@@ -762,7 +832,7 @@ namespace Keywords
         Compiler::emitVcpuAsm("STW", "strDstAddr", false);
         Compiler::emitVcpuAsm("%StringHex", "", false);
 
-        return Expression::Numeric(dstAddr, uint16_t(index), true, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+        return Expression::Numeric(0, uint16_t(index), true, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
     }
 
     Expression::Numeric functionHEXW$(Expression::Numeric& numeric)
@@ -800,7 +870,7 @@ namespace Keywords
             Compiler::emitVcpuAsm("STW", "strDstAddr", false);
             Compiler::emitVcpuAsm("%StringHexw", "", false);
 
-            return Expression::Numeric(dstAddr, uint16_t(index), true, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+            return Expression::Numeric(0, uint16_t(index), true, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
         }
 
         Compiler::getNextTempVar();
@@ -817,7 +887,7 @@ namespace Keywords
         Compiler::emitVcpuAsm("STW", "strDstAddr", false);
         Compiler::emitVcpuAsm("%StringHexw", "", false);
 
-        return Expression::Numeric(dstAddr, uint16_t(index), true, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+        return Expression::Numeric(0, uint16_t(index), true, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
     }
 
     Expression::Numeric functionLEFT$(Expression::Numeric& numeric)
@@ -837,6 +907,7 @@ namespace Keywords
         {
             std::string name;
             uint16_t srcAddr;
+            Expression::VarType varType = Expression::StrVar;
 
             int index = int(numeric._index);
             getOrCreateString(numeric, name, srcAddr, index);
@@ -850,7 +921,17 @@ namespace Keywords
             }
             else
             {
-                uint16_t dstAddr = Compiler::getStringVars()[Expression::getOutputNumeric()._index]._address;
+                uint16_t dstAddr;
+                if(Expression::getOutputNumeric()._varType == Expression::StrVar)
+                {
+                    dstAddr = Compiler::getStringVars()[Expression::getOutputNumeric()._index]._address;
+                }
+                else
+                {
+                    index = -1;
+                    dstAddr = Compiler::getStrWorkArea();
+                    varType = Expression::TmpStrVar;
+                }
 
                 handleStringParameter(numeric._parameters[0]);
                 Compiler::emitVcpuAsm("STW", "strLength", false);
@@ -861,7 +942,7 @@ namespace Keywords
                 Compiler::emitVcpuAsm("%StringLeft", "", false);
             }
 
-            return Expression::Numeric(0, uint16_t(index), true, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
+            return Expression::Numeric(0, uint16_t(index), true, varType, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
         }
 
         return numeric;
@@ -884,6 +965,7 @@ namespace Keywords
         {
             std::string name;
             uint16_t srcAddr;
+            Expression::VarType varType = Expression::StrVar;
 
             int index = int(numeric._index);
             getOrCreateString(numeric, name, srcAddr, index);
@@ -897,7 +979,17 @@ namespace Keywords
             }
             else
             {
-                uint16_t dstAddr = Compiler::getStringVars()[Expression::getOutputNumeric()._index]._address;
+                uint16_t dstAddr;
+                if(Expression::getOutputNumeric()._varType == Expression::StrVar)
+                {
+                    dstAddr = Compiler::getStringVars()[Expression::getOutputNumeric()._index]._address;
+                }
+                else
+                {
+                    index = -1;
+                    dstAddr = Compiler::getStrWorkArea();
+                    varType = Expression::TmpStrVar;
+                }
 
                 handleStringParameter(numeric._parameters[0]);
                 Compiler::emitVcpuAsm("STW", "strLength", false);
@@ -908,7 +1000,7 @@ namespace Keywords
                 Compiler::emitVcpuAsm("%StringRight", "", false);
             }
 
-            return Expression::Numeric(0, uint16_t(index), true, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
+            return Expression::Numeric(0, uint16_t(index), true, varType, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
         }
 
         return numeric;
@@ -932,6 +1024,7 @@ namespace Keywords
         {
             std::string name;
             uint16_t srcAddr;
+            Expression::VarType varType = Expression::StrVar;
 
             int index = int(numeric._index);
             getOrCreateString(numeric, name, srcAddr, index);
@@ -947,7 +1040,17 @@ namespace Keywords
             }
             else
             {
-                uint16_t dstAddr = Compiler::getStringVars()[Expression::getOutputNumeric()._index]._address;
+                uint16_t dstAddr;
+                if(Expression::getOutputNumeric()._varType == Expression::StrVar)
+                {
+                    dstAddr = Compiler::getStringVars()[Expression::getOutputNumeric()._index]._address;
+                }
+                else
+                {
+                    index = -1;
+                    dstAddr = Compiler::getStrWorkArea();
+                    varType = Expression::TmpStrVar;
+                }
 
                 handleStringParameter(numeric._parameters[0]);
                 Compiler::emitVcpuAsm("STW", "strOffset", false);
@@ -960,7 +1063,7 @@ namespace Keywords
                 Compiler::emitVcpuAsm("%StringMid", "", false);
             }
 
-            return Expression::Numeric(0, uint16_t(index), true, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
+            return Expression::Numeric(0, uint16_t(index), true, varType, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
         }
 
         return numeric;
@@ -3508,7 +3611,7 @@ namespace Keywords
         UNREFERENCED_PARAM(result);
         UNREFERENCED_PARAM(tokenIndex);
 
-        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), " ,", false);
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ",", false);
         if(tokens.size() < 2  ||  tokens.size() > 4)
         {
             fprintf(stderr, "Keywords::keywordLOAD() : Syntax error, use 'LOAD IMAGE, <filename>, <optional address>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
@@ -3686,7 +3789,7 @@ namespace Keywords
                             }
                             else
                             {
-                                if(!Memory::getFreeRAM(Memory::FitDescending, numStripeChunks*SPRITE_CHUNK_SIZE + 1, USER_CODE_START, Compiler::getRuntimeStart(), address))
+                                if(!Memory::getFreeRAM(Memory::FitAscending, numStripeChunks*SPRITE_CHUNK_SIZE + 1, RAM_SEGMENTS_START, Compiler::getRuntimeStart(), address))
                                 {
                                     fprintf(stderr, "Keywords::keywordLOAD() : Getting Sprite memory for stripe %d failed, in '%s' on line %d\n", int(stripeAddrs.size()/2 + 1), codeLine._text.c_str(), codeLineIndex);
                                     return false;
@@ -3726,7 +3829,7 @@ namespace Keywords
                                 }
                                 else
                                 {
-                                    if(!Memory::getFreeRAM(Memory::FitDescending, numStripeChunks*SPRITE_CHUNK_SIZE + 1, USER_CODE_START, Compiler::getRuntimeStart(), address))
+                                    if(!Memory::getFreeRAM(Memory::FitAscending, numStripeChunks*SPRITE_CHUNK_SIZE + 1, RAM_SEGMENTS_START, Compiler::getRuntimeStart(), address))
                                     {
                                         fprintf(stderr, "Keywords::keywordLOAD() : Getting Sprite memory failed for stripe %d, in '%s' on line %d\n", int(stripeAddrs.size()/2 + 1), codeLine._text.c_str(), codeLineIndex);
                                         return false;
@@ -3762,7 +3865,7 @@ namespace Keywords
                             }
                             else
                             {
-                                if(!Memory::getFreeRAM(Memory::FitDescending, remStripeChunks*SPRITE_CHUNK_SIZE + 1, USER_CODE_START, Compiler::getRuntimeStart(), address))
+                                if(!Memory::getFreeRAM(Memory::FitAscending, remStripeChunks*SPRITE_CHUNK_SIZE + 1, RAM_SEGMENTS_START, Compiler::getRuntimeStart(), address))
                                 {
                                     fprintf(stderr, "Keywords::keywordLOAD() : Getting Sprite memory failed for stripe %d, in '%s' on line %d\n", int(stripeAddrs.size()/2 + 1), codeLine._text.c_str(), codeLineIndex);
                                     return false;
@@ -3805,7 +3908,7 @@ namespace Keywords
         UNREFERENCED_PARAM(result);
         UNREFERENCED_PARAM(tokenIndex);
 
-        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), " ,", false);
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ",", false);
         if(tokens.size() != 3)
         {
             fprintf(stderr, "Keywords::keywordSPRITE() : Syntax error, use 'SPRITE <id>, <x postion>, <y position>'; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
@@ -3853,7 +3956,7 @@ namespace Keywords
         UNREFERENCED_PARAM(result);
         UNREFERENCED_PARAM(tokenIndex);
 
-        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), " ,", false);
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ",", false);
         if(tokens.size() != 3)
         {
             fprintf(stderr, "Keywords::keywordSPRITE() : Syntax error, use 'SPRITEX <id>, <x postion>, <y position>'; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
@@ -3901,7 +4004,7 @@ namespace Keywords
         UNREFERENCED_PARAM(result);
         UNREFERENCED_PARAM(tokenIndex);
 
-        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), " ,", false);
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ",", false);
         if(tokens.size() != 3)
         {
             fprintf(stderr, "Keywords::keywordSPRITE() : Syntax error, use 'SPRITEY <id>, <x postion>, <y position>'; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
@@ -3949,7 +4052,7 @@ namespace Keywords
         UNREFERENCED_PARAM(result);
         UNREFERENCED_PARAM(tokenIndex);
 
-        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), " ,", false);
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ",", false);
         if(tokens.size() != 3)
         {
             fprintf(stderr, "Keywords::keywordSPRITE() : Syntax error, use 'SPRITEXY <id>, <x postion>, <y position>'; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);

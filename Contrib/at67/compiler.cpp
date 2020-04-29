@@ -1635,6 +1635,10 @@ namespace Compiler
         {
             numeric = factor(0); numeric = Keywords::functionLEN(numeric);
         }
+        else if(Expression::find("ASC"))
+        {
+            numeric = factor(0); numeric = Keywords::functionASC(numeric);
+        }
         else if(Expression::find("CHR$"))
         {
             numeric = factor(0); numeric = Keywords::functionCHR$(numeric);
@@ -2823,7 +2827,7 @@ namespace Compiler
             int lutSize = int(it->second._stripeAddrs.size()) * 2;
             if(!Memory::getFreeRAM(Memory::FitDescending, lutSize + 2, USER_CODE_START, _runtimeStart, lutAddress))
             {
-                fprintf(stderr, "Compiler::outputLuts() : Not enough RAM for sprite address LUT of size %d\n", lutSize + 2);
+                fprintf(stderr, "Compiler::outputLuts() : Not enough RAM for sprite %d address LUT of size %d\n", it->first, lutSize + 2);
                 return false;
             }
             _spritesAddrLut._spriteAddrs.push_back(lutAddress);
@@ -2847,7 +2851,7 @@ namespace Compiler
             int lutSize = int(_spritesAddrLut._spriteAddrs.size()) * 2;
             if(!Memory::getFreeRAM(Memory::FitDescending, lutSize + 2, USER_CODE_START, _runtimeStart, lutAddress))
             {
-                fprintf(stderr, "Compiler::outputLuts() : Not enough RAM for sprite address LUT of size %d\n", lutSize + 2);
+                fprintf(stderr, "Compiler::outputLuts() : Not enough RAM for sprites LUT of size %d\n", lutSize + 2);
                 return false;
             }
             _spritesAddrLut._address = lutAddress;
@@ -3152,7 +3156,7 @@ namespace Compiler
             return false;
         }
 
-        //Memory::printFreeRamList(Memory::NoSort); //Memory::SizeAscending);
+        Memory::printFreeRamList(Memory::NoSort); //Memory::SizeAscending);
 
         // Write .vasm file
         std::ofstream outfile(outputFilename, std::ios::binary | std::ios::out);

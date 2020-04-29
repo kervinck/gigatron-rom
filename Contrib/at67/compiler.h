@@ -14,7 +14,7 @@
 #define USER_STR_SIZE      94
 
 #define SPRITE_CHUNK_SIZE            6
-#define MAX_SPRITE_CHUNKS_PER_STRIPE 40
+#define MAX_SPRITE_CHUNKS_PER_STRIPE 15 // Use 15 or 40, 15 fits in a 96 byte page and 40 fits in a 256 byte page
 
 // 32 bytes, (0x00E0 <-> 0x00FF), reserved for vCPU stack, allows for 16 nested calls. The amount of GOSUBS you can use is dependant on how
 // much of the stack is being used by nested system calls. *NOTE* there is NO call table for user code for this compiler
