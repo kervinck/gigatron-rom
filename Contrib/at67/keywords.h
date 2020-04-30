@@ -64,15 +64,15 @@ namespace Keywords
     Expression::Numeric functionRIGHT$(Expression::Numeric& numeric);
     Expression::Numeric functionMID$(Expression::Numeric& numeric);
 
-    bool pragmaUSEOPCODECALLI(const std::string& input,   int codeLineIndex, size_t foundPos);
-    bool pragmaRUNTIMEPATH(const std::string& input,      int codeLineIndex, size_t foundPos);
-    bool pragmaRUNTIMESTART(const std::string& input,     int codeLineIndex, size_t foundPos);
-    bool pragmaSTRINGWORKAREA(const std::string& input,   int codeLineIndex, size_t foundPos);
-    bool pragmaCODEOPTIMISETYPE(const std::string& input, int codeLineIndex, size_t foundPos);
-    bool pragmaARRAYINDICIESONE(const std::string& input, int codeLineIndex, size_t foundPos);
+    bool pragmaUSEOPCODECALLI(const std::string& input,     int codeLineIndex, size_t foundPos);
+    bool pragmaRUNTIMEPATH(const std::string& input,        int codeLineIndex, size_t foundPos);
+    bool pragmaRUNTIMESTART(const std::string& input,       int codeLineIndex, size_t foundPos);
+    bool pragmaSTRINGWORKAREA(const std::string& input,     int codeLineIndex, size_t foundPos);
+    bool pragmaCODEOPTIMISETYPE(const std::string& input,   int codeLineIndex, size_t foundPos);
+    bool pragmaARRAYINDICIESONE(const std::string& input,   int codeLineIndex, size_t foundPos);
+    bool pragmaSPRITESTRIPECHUNKS(const std::string& input, int codeLineIndex, size_t foundPos);
 
     // Keywords
-    bool keywordLET(Compiler::CodeLine& codeLine,      int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordEND(Compiler::CodeLine& codeLine,      int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordINC(Compiler::CodeLine& codeLine,      int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordDEC(Compiler::CodeLine& codeLine,      int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);

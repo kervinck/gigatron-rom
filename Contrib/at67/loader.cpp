@@ -243,7 +243,7 @@ namespace Loader
         return true;
     }
 
-    uint16_t printGt1Stats(const std::string& filename, const Gt1File& gt1File)
+    uint16_t printGt1Stats(const std::string& filename, const Gt1File& gt1File, bool isGbasFile)
     {
         size_t nameSuffix = filename.find_last_of(".");
         std::string output = filename.substr(0, nameSuffix) + ".gt1";
@@ -267,6 +267,7 @@ namespace Loader
         fprintf(stderr, "*                   Loading                    \n");
         fprintf(stderr, "**********************************************\n");
         fprintf(stderr, "* %-20s : 0x%04x  : %5d bytes\n", output.c_str(), startAddress, totalSize);
+#if 0
         fprintf(stderr, "**********************************************\n");
         fprintf(stderr, "*   Segment   :  Type  : Address : Memory Used\n");
         fprintf(stderr, "**********************************************\n");
@@ -323,8 +324,11 @@ namespace Loader
                 }
             }
         }
+#endif
+        if(!isGbasFile) Memory::setSizeFreeRAM(Memory::getBaseFreeRAM() - totalSize); 
+
         fprintf(stderr, "**********************************************\n");
-        fprintf(stderr, "* Free RAM after load  :  %5d\n", Memory::getBaseFreeRAM() - totalSize);
+        fprintf(stderr, "* Free RAM after load  :  %5d\n", Memory::getSizeFreeRAM());
         fprintf(stderr, "**********************************************\n");
 
         return totalSize;
@@ -1150,6 +1154,7 @@ namespace Loader
         bool gt1FileBuilt = false;
         bool isGtbFile = false;
         bool isGt1File = false;
+        bool isGbasFile = false;
         bool hasRomCode = false;
         bool hasRamCode = false;
 
@@ -1195,6 +1200,7 @@ namespace Loader
             // Create gasm name and path
             filename = filename.substr(0, nameSuffix) + ".gasm";
             filepath = filepath.substr(0, pathSuffix) + ".gasm";
+            isGbasFile = true;
         }
         // Load to gtb and launch TinyBasic
         else if(_configGclBuildFound  &&  filename.find(".gtb") != filename.npos)
@@ -1370,8 +1376,9 @@ namespace Loader
 
         if(uploadTarget == Emulator) fprintf(stderr, "\nTarget : Emulator");
         else if(uploadTarget == Hardware) fprintf(stderr, "\nTarget : Gigatron");
-        uint16_t totalSize = printGt1Stats(filename, gt1File);
-        Memory::setSizeFreeRAM(Memory::getBaseFreeRAM() - totalSize); 
+
+        // BASIC calculates the correct value of free RAM as part of the compilation
+        printGt1Stats(filename, gt1File, isGbasFile);
 
         if(uploadTarget == Emulator)
         {

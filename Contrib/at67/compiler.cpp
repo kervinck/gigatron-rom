@@ -26,13 +26,16 @@ namespace Compiler
     enum LabelResult {LabelError=-1, LabelNotFound, LabelFound};
 
 
-    uint16_t _vasmPC         = USER_CODE_START;
-    uint16_t _tempVarStart   = TEMP_VAR_START;
-    uint16_t _userVarStart   = USER_VAR_START;
-    uint16_t _runtimeEnd     = 0x7FFF;
-    uint16_t _runtimeStart   = 0x7FFF;
-    uint16_t _strWorkArea    = 0x0000;
+    uint16_t _vasmPC                 = USER_CODE_START;
+    uint16_t _tempVarStart           = TEMP_VAR_START;
+    uint16_t _userVarStart           = USER_VAR_START;
+    uint16_t _runtimeEnd             = 0x7FFF;
+    uint16_t _runtimeStart           = 0x7FFF;
+    uint16_t _strWorkArea            = 0x0000;
+    uint16_t _spriteStripeChunks     = 15;
+    uint16_t _spriteStripeMinAddress = USER_CODE_START;
 
+    Memory::FitType _spriteStripeFitType = Memory::FitDescending;
     CodeOptimiseType _codeOptimiseType = CodeSpeed;
 
     bool _compilingError = false;
@@ -85,6 +88,9 @@ namespace Compiler
     uint16_t getRuntimeStart(void) {return _runtimeStart;}
     uint16_t getTempVarStart(void) {return _tempVarStart;}
     uint16_t getStrWorkArea(void) {return _strWorkArea;}
+    uint16_t getSpriteStripeChunks(void) {return _spriteStripeChunks;}
+    uint16_t getSpriteStripeMinAddress(void) {return _spriteStripeMinAddress;}
+    Memory::FitType getSpriteStripeFitType(void) {return _spriteStripeFitType;}
     CodeOptimiseType getCodeOptimiseType(void) {return _codeOptimiseType;}
     bool getCompilingError(void) {return _compilingError;}
     bool getArrayIndiciesOne(void) {return _arrayIndiciesOne;}
@@ -98,10 +104,13 @@ namespace Compiler
     void setRuntimeStart(uint16_t runtimeStart) {_runtimeStart = runtimeStart;}
     void setTempVarStart(uint16_t tempVarStart) {_tempVarStart = tempVarStart;}
     void setStrWorkArea(uint16_t strWorkArea) {_strWorkArea = strWorkArea;}
+    void setSpriteStripeChunks(uint16_t spriteStripeChunks) {_spriteStripeChunks = spriteStripeChunks;}
+    void setSpriteStripeMinAddress(uint16_t spriteStripeMinAddress) {_spriteStripeMinAddress = spriteStripeMinAddress;}
+    void setSpriteStripeFitType(Memory::FitType spriteStripeFitType) {_spriteStripeFitType = spriteStripeFitType;}
+    void setCodeOptimiseType(CodeOptimiseType codeOptimiseType) {_codeOptimiseType = codeOptimiseType;}
+    void setCreateNumericLabelLut(bool createNumericLabelLut) {_createNumericLabelLut = createNumericLabelLut;}
     void setCompilingError(bool compilingError) {_compilingError = compilingError;}
     void setArrayIndiciesOne(bool arrayIndiciesOne) {_arrayIndiciesOne = arrayIndiciesOne;}
-    void setCreateNumericLabelLut(bool createNumericLabelLut) {_createNumericLabelLut = createNumericLabelLut;}
-    void setCodeOptimiseType(CodeOptimiseType codeOptimiseType) {_codeOptimiseType = codeOptimiseType;}
 
     int getNextJumpFalseUniqueId(void) {return _jumpFalseUniqueId++;}
 
@@ -1367,7 +1376,7 @@ namespace Compiler
                 if(address < _runtimeEnd) _runtimeEnd = address;
 
                 name = "str_" + Expression::wordToHexString(address);
-                StringVar stringVar = {uint8_t(str.size()), uint8_t(str.size()), address, str, name, "_" + name + std::string(LABEL_TRUNC_SIZE - name.size() - 1, ' '), -1, true};
+                StringVar stringVar = {uint8_t(str.size()), uint8_t(str.size()), address, 0x0000, str, name, "_" + name + std::string(LABEL_TRUNC_SIZE - name.size() - 1, ' '), -1, true, 0};
                 _stringVars.push_back(stringVar);
                 index = int(_stringVars.size()) - 1;
             }
@@ -1385,7 +1394,7 @@ namespace Compiler
             // Save end of runtime/strings
             if(address < _runtimeEnd) _runtimeEnd = address;
 
-            StringVar stringVar = {uint8_t(str.size()), maxSize, address, str, name, "_" + name + std::string(LABEL_TRUNC_SIZE - name.size() - 1, ' '), -1, false};
+            StringVar stringVar = {uint8_t(str.size()), maxSize, address, 0x0000, str, name, "_" + name + std::string(LABEL_TRUNC_SIZE - name.size() - 1, ' '), -1, false, 0};
             _stringVars.push_back(stringVar);
             index = int(_stringVars.size()) - 1;
         }
@@ -2284,19 +2293,7 @@ namespace Compiler
 
     bool parseCode(void)
     {
-        size_t foundPos;
         CodeLine codeLine;
-
-        // LET modifies code
-        for(int i=0; i<int(_codeLines.size()); i++)
-        {
-            Keywords::KeywordFuncResult result;
-
-            if(Keywords::findKeyword(_codeLines[i]._code, "LET", foundPos))
-            {
-                Keywords::keywordLET(_codeLines[i], i, 0, foundPos - 3, result);
-            }
-        }
 
         // Add END to code
         if(_codeLines.size())
@@ -3156,7 +3153,7 @@ namespace Compiler
             return false;
         }
 
-        Memory::printFreeRamList(Memory::NoSort); //Memory::SizeAscending);
+        //Memory::printFreeRamList(Memory::NoSort); //Memory::SizeAscending);
 
         // Write .vasm file
         std::ofstream outfile(outputFilename, std::ios::binary | std::ios::out);

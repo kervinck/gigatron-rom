@@ -697,7 +697,7 @@ RESTART_OPTIMISE:
                             }
                             break;
 
-                            // Match STW LDWI ADDW PEEK
+                            // Match LDW STW LDWI ADDW PEEK end up with LDWI ADDW PEEK
                             case PeekArray:
                             {
                                 // Save previous line LDW, if opcode is not LDW then can't optimise
@@ -719,7 +719,7 @@ RESTART_OPTIMISE:
                             }
                             break;
 
-                            // Match STW LDWI ADDW ADDW DEEK
+                            // Match LDW STW LDWI ADDW ADDW DEEK end up with LDWI ADDW ADDW DEEK
                             case DeekArray:
                             {
                                 // Save previous line LDW, if opcode is not LDW then can't optimise
@@ -742,18 +742,21 @@ RESTART_OPTIMISE:
                             }
                             break;
 
-                            // Match STW LDWI STW LDW POKE/DOKE
+                            // Match LD<X> STW LDWI STW LDW POKE/DOKE end up with LDWI STW LD<X> POKE/DOKE
                             case PokeArray:
                             case DokeArray:
                             {
+                                uint16_t offset = 9;
+
                                 // Save previous line LD<X>, if opcode is not some sort of LD then can't optimise
                                 Compiler::VasmLine savedLD = Compiler::getCodeLines()[i]._vasm[firstLine - 1];
                                 if(savedLD._opcode.find("LD") == std::string::npos) break;
+                                if(savedLD._opcode.find("LDWI") != std::string::npos) offset += 1;
 
                                 // Discard it's label, (it's no longer needed), and adjust it's address
                                 if(!migrateInternalLabel(i, firstLine - 1, firstLine + 1)) break;
                                 savedLD._internalLabel = "";
-                                savedLD._address += 9; // LD<X> is moved 9bytes
+                                savedLD._address += offset; // LD<X> is moved 9bytes, LDWI is moved 10 bytes
 
                                 // Delete previous line LD<X>, first STW and LDW
                                 linesDeleted = true;
@@ -762,13 +765,25 @@ RESTART_OPTIMISE:
                                 itVasm = Compiler::getCodeLines()[i]._vasm.erase(itVasm + 2);
 
                                 // Replace LDW with saved LD<X> and operand
-                                itVasm = Compiler::getCodeLines()[i]._vasm.insert(itVasm, savedLD);
-                                adjustLabelAddresses(i, firstLine - 1, -4);
-                                adjustVasmAddresses(i, firstLine - 1, -4);
+                                if(offset == 9)
+                                {
+                                    itVasm = Compiler::getCodeLines()[i]._vasm.insert(itVasm, savedLD);
+                                    adjustLabelAddresses(i, firstLine - 1, -4);
+                                    adjustVasmAddresses(i, firstLine - 1, -4);
+                                }
+                                // LDW is replaced with LDWI so push everything forward starting at the POKE/DOKE by 1 more byte
+                                else
+                                {
+                                    itVasm = Compiler::getCodeLines()[i]._vasm.insert(itVasm, savedLD);
+                                    adjustLabelAddresses(i, firstLine - 1, -5);
+                                    adjustVasmAddresses(i, firstLine - 1, -5);
+                                    adjustLabelAddresses(i, firstLine + 2, 1);
+                                    adjustVasmAddresses(i, firstLine + 2, 1);
+                                }
                             }
                             break;
 
-                            // Match STW LDW STW LDWI ADDW STW LDW POKE
+                            // Match LD<X> STW LDW STW LDWI ADDW STW LDW POKE
                             case PokeVarArray:
                             case PokeTmpArray:
                             {

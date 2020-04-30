@@ -1406,10 +1406,13 @@ namespace Assembler
 
                 // Force a new segment, (this could fail if an instruction straddles a page boundary, but
                 // the page boundary crossing detection logic will stop the assembler before we get here)
-                if(!_instructions[i]._isCustomAddress  &&  segmentOffset % 256 == 0)
+                if(!_instructions[i]._isCustomAddress  &&  (HI_BYTE(segmentAddress + segmentOffset) != HI_BYTE(segmentAddress)))
                 {
+                    segmentAddress += segmentOffset;
+                    segmentOffset = 0x0000;
+
                     _instructions[i]._isCustomAddress = true;
-                    _instructions[i]._address = segmentAddress + segmentOffset;
+                    _instructions[i]._address = segmentAddress;
                 }
 
                 segmentOffset += uint16_t(_instructions[i]._byteSize);

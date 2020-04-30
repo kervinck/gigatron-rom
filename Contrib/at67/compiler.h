@@ -13,8 +13,9 @@
 #define OPCODE_TRUNC_SIZE  24     // The smaller you make this, the more your VASM opcode/macro names will be truncated in the resultant .vasm code
 #define USER_STR_SIZE      94
 
-#define SPRITE_CHUNK_SIZE            6
-#define MAX_SPRITE_CHUNKS_PER_STRIPE 15 // Use 15 or 40, 15 fits in a 96 byte page and 40 fits in a 256 byte page
+#define SPRITE_CHUNK_SIZE        6
+#define SPRITE_STRIPE_CHUNKS_LO 15 // 15 fits in a 96 byte page
+#define SPRITE_STRIPE_CHUNKS_HI 40 // 40 fits in a 256 byte page
 
 // 32 bytes, (0x00E0 <-> 0x00FF), reserved for vCPU stack, allows for 16 nested calls. The amount of GOSUBS you can use is dependant on how
 // much of the stack is being used by nested system calls. *NOTE* there is NO call table for user code for this compiler
@@ -71,11 +72,13 @@ namespace Compiler
         uint8_t _size;
         uint8_t _maxSize;
         uint16_t _address;
+        uint16_t _array;
         std::string _text;
         std::string _name;
         std::string _output;
         int _codeLineIndex = -1;
         bool _constant = true;
+        int _arrSize = 0;
     };
 
     struct InternalLabel
@@ -256,11 +259,15 @@ namespace Compiler
         std::vector<uint16_t> _spriteAddrs;
     };
 
+
     uint16_t getVasmPC(void);
     uint16_t getRuntimeEnd(void);
     uint16_t getRuntimeStart(void);
     uint16_t getTempVarStart(void);
     uint16_t getStrWorkArea(void);
+    uint16_t getSpriteStripeChunks(void);
+    uint16_t getSpriteStripeMinAddress(void);
+    Memory::FitType getSpriteStripeFitType(void);
     CodeOptimiseType getCodeOptimiseType(void);
     bool getCompilingError(void);
     bool getArrayIndiciesOne(void);
@@ -274,8 +281,11 @@ namespace Compiler
     void setRuntimeStart(uint16_t runtimeStart);
     void setTempVarStart(uint16_t tempVarStart);
     void setStrWorkArea(uint16_t strWorkArea);
-    void setCreateNumericLabelLut(bool createNumericLabelLut);
+    void setSpriteStripeChunks(uint16_t spriteStripeChunks);
+    void setSpriteStripeMinAddress(uint16_t spriteStripeMinAddress);
+    void setSpriteStripeFitType(Memory::FitType spriteStripeFitType);
     void setCodeOptimiseType(CodeOptimiseType codeOptimiseType);
+    void setCreateNumericLabelLut(bool createNumericLabelLut);
     void setCompilingError(bool compilingError);
     void setArrayIndiciesOne(bool arrayIndiciesOne);
 

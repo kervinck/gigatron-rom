@@ -93,7 +93,7 @@ int main(int argc, char* argv[])
     std::string gt1FileName;
     if(!hasRomCode  &&  !saveGt1File(filename, gt1File, gt1FileName)) return 1;
 
-    Loader::printGt1Stats(gt1FileName, gt1File);
+    Loader::printGt1Stats(gt1FileName, gt1File, false);
 
     return 0;
 }

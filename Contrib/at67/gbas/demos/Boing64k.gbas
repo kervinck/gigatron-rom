@@ -2,52 +2,34 @@ _runtimePath_ "../runtime"
 _runtimeStart_ &hFFFF
 _stringWorkArea_ &h69A0 'move string work area for scrolling of text, (defaults to &h7FA0)
 
-'alloc offscreen scrolling area, so that compiler does not try and use it
-const offscreenArea = &h6AA0
-alloc offscreenArea + &h0000, 96
-alloc offscreenArea + &h0100, 96
-alloc offscreenArea + &h0200, 96
-alloc offscreenArea + &h0300, 96
-alloc offscreenArea + &h0400, 96
-alloc offscreenArea + &h0500, 96
-alloc offscreenArea + &h0600, 96
-alloc offscreenArea + &h0700, 96
-alloc offscreenArea + &h0800, 96
-alloc offscreenArea + &h0900, 96
-alloc offscreenArea + &h0A00, 96
-alloc offscreenArea + &h0B00, 96
-alloc offscreenArea + &h0C00, 96
-alloc offscreenArea + &h0D00, 96
-alloc offscreenArea + &h0E00, 96
-alloc offscreenArea + &h0F00, 96
-alloc offscreenArea + &h1000, 96
-alloc offscreenArea + &h1100, 96
-alloc offscreenArea + &h1200, 96
-alloc offscreenArea + &h1300, 96
-alloc offscreenArea + &h1400, 96
-alloc offscreenArea + &h1500, 96
+'defines the amount of contiguous RAM needed for sprite stripes, (in this case 15*6 + 1)
+_spriteStripeChunks_ 15, &h18A0, ascending
+
+'alloc offscreen scrolling area, (<address>, <optional size>, <optional count>, <optional offset>), so that compiler does not try and use it
+alloc &h6AA0, 96, 22, &h0100
 
 'maximum string length is 94
 conf0$  = "greetings    welcome to gtbasic    this demo shows some of the advanced features that the "
 conf1$  = "compiler is capable of    thank you to marcel and walter for making this possible    "
-conf2$  = "if i have seen further than others it is by standing upon the shoulders of giants    "
-conf3$  = "what you do not want done to yourself do not do to others    "
-conf4$  = "i hear and i forget i see and i remember i do and i understand    "
-conf5$  = "he who learns but does not think is lost he who thinks but does not learn is in great danger  "
-conf6$  = "to see what is right and not to do it is want of courage or of principle    "
-conf7$  = "the superior man is modest in his speech but exceeds in his actions    "
-conf8$  = "humility is the solid foundation of all virtues    "
-conf9$  = "to see the right and not to do it is cowardice    "
-conf10$ = "when you are laboring for others let it be with the same zeal as if it were for yourself    "
-conf11$ = "the strength of a nation derives from the integrity of the home    "
-conf12$ = "to see and listen to the wicked is already the beginning of wickedness    "
-conf13$ = "our greatest glory is not in never falling but in rising every time we fall    "
-conf14$ = "everything has beauty but not everyone sees it    "
-conf15$ = "the superior man acts before he speaks and afterwards speaks according to his action    "
-conf16$ = "learning without thought is labor lost thought without learning is perilous    "
-conf17$ = "without feelings of respect what is there to distinguish men from beasts    "
-conf18$ = "it is more shameful to distrust our friends than to be deceived by them    "
-conf19$ = "an oppressive government is more to be feared than a tiger    "
+conf2$  = "and now it is time for some quotes whilst you are being mesmerised by boing    "
+conf3$  = "if i have seen further than others it is by standing upon the shoulders of giants    "
+conf4$  = "what you do not want done to yourself do not do to others    "
+conf5$  = "i hear and i forget i see and i remember i do and i understand    "
+conf6$  = "he who learns but does not think is lost he who thinks but does not learn is in great danger  "
+conf7$  = "to see what is right and not to do it is want of courage or of principle    "
+conf8$  = "the superior man is modest in his speech but exceeds in his actions    "
+conf9$  = "humility is the solid foundation of all virtues    "
+conf10$ = "to see the right and not to do it is cowardice    "
+conf11$ = "when you are laboring for others let it be with the same zeal as if it were for yourself    "
+conf12$ = "the strength of a nation derives from the integrity of the home    "
+conf13$ = "to see and listen to the wicked is already the beginning of wickedness    "
+conf14$ = "our greatest glory is not in never falling but in rising every time we fall    "
+conf15$ = "everything has beauty but not everyone sees it    "
+conf16$ = "the superior man acts before he speaks and afterwards speaks according to his action    "
+conf17$ = "learning without thought is labor lost thought without learning is perilous    "
+conf18$ = "without feelings of respect what is there to distinguish men from beasts    "
+conf19$ = "it is more shameful to distrust our friends than to be deceived by them    "
+conf20$ = "an oppressive government is more to be feared than a tiger    "
 
 mode 2
 poke 162, &h15
@@ -55,7 +37,7 @@ poke 163, &h3F
 cls
 
 poke 163, 0
-rectf 0, 97, 159 + 96, 119 'clear text scrolling offscreen area
+rectf 0, 97, 159 + 96, 119 'clear text scrolling onscreen and offscreen area
 
 const fontStart = 0
 load sprite, ../../images/gbas/DemoFont/a.tga, fontStart + 0
@@ -107,40 +89,33 @@ fontWidths(8) = 6 : fontWidths(11) = 6 'i and l
 fontWidths(12) = 18 : fontWidths(22) = 18 'm and w
 fontWidths(26) = 6 'space
 
-'can't have an array of strings yet, so manually construct one
-'@ function does not work with arrays yet, so use a temporary var
-dim quoteAddrs(19)=&h0000
-tmp = @conf0$  : quoteAddrs(0)  = tmp + 1
-tmp = @conf1$  : quoteAddrs(1)  = tmp + 1
-tmp = @conf2$  : quoteAddrs(2)  = tmp + 1
-tmp = @conf3$  : quoteAddrs(3)  = tmp + 1
-tmp = @conf4$  : quoteAddrs(4)  = tmp + 1
-tmp = @conf5$  : quoteAddrs(5)  = tmp + 1
-tmp = @conf6$  : quoteAddrs(6)  = tmp + 1
-tmp = @conf7$  : quoteAddrs(7)  = tmp + 1
-tmp = @conf8$  : quoteAddrs(8)  = tmp + 1
-tmp = @conf9$  : quoteAddrs(9)  = tmp + 1
-tmp = @conf10$ : quoteAddrs(10) = tmp + 1
-tmp = @conf11$ : quoteAddrs(11) = tmp + 1
-tmp = @conf12$ : quoteAddrs(12) = tmp + 1
-tmp = @conf13$ : quoteAddrs(13) = tmp + 1
-tmp = @conf14$ : quoteAddrs(14) = tmp + 1
-tmp = @conf15$ : quoteAddrs(15) = tmp + 1
-tmp = @conf16$ : quoteAddrs(16) = tmp + 1
-tmp = @conf17$ : quoteAddrs(17) = tmp + 1
-tmp = @conf18$ : quoteAddrs(18) = tmp + 1
-tmp = @conf19$ : quoteAddrs(19) = tmp + 1
+'can't have an array of strings yet, so manually construct one, (+ 1 skips past the length byte)
+dim quoteAddrs(20)=&h0000
+quoteAddrs(0) = @conf0$ + 1
+quoteAddrs(1) = @conf1$ + 1
+quoteAddrs(2) = @conf2$ + 1
+quoteAddrs(3) = @conf3$ + 1
+quoteAddrs(4) = @conf4$ + 1
+quoteAddrs(5) = @conf5$ + 1
+quoteAddrs(6) = @conf6$ + 1
+quoteAddrs(7) = @conf7$ + 1
+quoteAddrs(8) = @conf8$ + 1
+quoteAddrs(9) = @conf9$ + 1
+quoteAddrs(10) = @conf10$ + 1
+quoteAddrs(11) = @conf11$ + 1
+quoteAddrs(12) = @conf12$ + 1
+quoteAddrs(13) = @conf13$ + 1
+quoteAddrs(14) = @conf14$ + 1
+quoteAddrs(15) = @conf15$ + 1
+quoteAddrs(16) = @conf16$ + 1
+quoteAddrs(17) = @conf17$ + 1
+quoteAddrs(18) = @conf18$ + 1
+quoteAddrs(19) = @conf19$ + 1
+quoteAddrs(20) = @conf20$ + 1
 
 const g = 4
-f = boingStart : x = 0 : y = &h0100
-fstep = 1 : xstep = 100 : ystep = 0
-scrl = 0
-char = 0
-text = 160
-stamp = 0
-fw = 0
-quote = 0
-
+f = boingStart : y = &h0100 : text = 160 : fstep = 1 : xstep = 100
+x = 0 : ystep = x : scrl = ystep : char = scrl : stamp = char : width = stamp : quote = width
 
 loop:
     wait
@@ -177,15 +152,15 @@ goto loop
 
 
 printText:
-    if stamp &= 0
+    if stamp &&= 0
 getChar:    
         c = peek(quoteAddrs(quote) + char)
         inc char
         
-        if c &= 0
+        if c &&= 0
             char = 0
             inc quote
-            if quote &&= 20 then quote = 0
+            if quote &&= 21 then quote = 0
             goto getChar
         elseif c &&= 32
             c = 26
@@ -195,10 +170,10 @@ getChar:
         
         sprite fontStart + c, text, 98
         
-        fw = fontWidths(c)
-        text = text + fw
+        width = fontWidths(c)
+        text = text + width
     endif
     
     inc stamp
-    if stamp &&= fw then stamp = 0
+    if stamp &&= width then stamp = 0
 return

@@ -50,7 +50,7 @@ namespace Loader
 
     bool loadGt1File(const std::string& filename, Gt1File& gt1File);
     bool saveGt1File(const std::string& filepath, Gt1File& gt1File, std::string& filename);
-    uint16_t printGt1Stats(const std::string& filename, const Gt1File& gt1File);
+    uint16_t printGt1Stats(const std::string& filename, const Gt1File& gt1File, bool isGbasFile);
 
 #ifdef _WIN32
     char* getcwd(char* dst, int size);

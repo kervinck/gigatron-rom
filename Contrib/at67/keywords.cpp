@@ -69,15 +69,15 @@ namespace Keywords
         _functions["TIME"] = "TIME";
 
         // Pragmas
-        _pragmas["_useOpcodeCALLI_"]   = {"_useOpcodeCALLI_",   pragmaUSEOPCODECALLI  };
-        _pragmas["_runtimePath_"]      = {"_runtimePath_",      pragmaRUNTIMEPATH     };
-        _pragmas["_runtimeStart_"]     = {"_runtimeStart_",     pragmaRUNTIMESTART    };
-        _pragmas["_stringWorkArea_"]   = {"_stringWorkArea_",   pragmaSTRINGWORKAREA  };
-        _pragmas["_codeOptimiseType_"] = {"_codeOptimiseType_", pragmaCODEOPTIMISETYPE};
-        _pragmas["_arrayIndiciesOne_"] = {"_arrayIndiciesOne_", pragmaARRAYINDICIESONE};
+        _pragmas["_useOpcodeCALLI_"]     = {"_useOpcodeCALLI_",     pragmaUSEOPCODECALLI    };
+        _pragmas["_runtimePath_"]        = {"_runtimePath_",        pragmaRUNTIMEPATH       };
+        _pragmas["_runtimeStart_"]       = {"_runtimeStart_",       pragmaRUNTIMESTART      };
+        _pragmas["_stringWorkArea_"]     = {"_stringWorkArea_",     pragmaSTRINGWORKAREA    };
+        _pragmas["_codeOptimiseType_"]   = {"_codeOptimiseType_",   pragmaCODEOPTIMISETYPE  };
+        _pragmas["_arrayIndiciesOne_"]   = {"_arrayIndiciesOne_",   pragmaARRAYINDICIESONE  };
+        _pragmas["_spriteStripeChunks_"] = {"_spriteStripeChunks_", pragmaSPRITESTRIPECHUNKS};
 
         // Keywords
-        _keywords["LET"     ] = {"LET",      keywordLET,      Compiler::SingleStatementParsed};
         _keywords["END"     ] = {"END",      keywordEND,      Compiler::SingleStatementParsed};
         _keywords["INC"     ] = {"INC",      keywordINC,      Compiler::SingleStatementParsed};
         _keywords["DEC"     ] = {"DEC",      keywordDEC,      Compiler::SingleStatementParsed};
@@ -1169,7 +1169,6 @@ namespace Keywords
         Expression::Numeric addrNumeric;
         std::string addrOperand;
         Compiler::parseExpression(codeLineIndex, tokens[0], addrOperand, addrNumeric);
-
         uint16_t strWorkArea = uint16_t(std::lround(addrNumeric._value));
         if(strWorkArea < DEFAULT_START_ADDRESS)
         {
@@ -1227,24 +1226,74 @@ namespace Keywords
         return true;
     }
 
-
-    // ********************************************************************************************
-    // Keywords
-    // ********************************************************************************************
-    bool keywordLET(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
+    bool pragmaSPRITESTRIPECHUNKS(const std::string& input, int codeLineIndex, size_t foundPos)
     {
-        UNREFERENCED_PARAM(result);
-        UNREFERENCED_PARAM(foundPos);
-        UNREFERENCED_PARAM(tokenIndex);
-        UNREFERENCED_PARAM(codeLineIndex);
-        UNREFERENCED_PARAM(codeLine);
+        std::string pragma = input;
+        Expression::stripWhitespace(pragma);
+        std::vector<std::string> tokens = Expression::tokenise(pragma.substr(foundPos), ',', false, true);
+        if(tokens.size() < 1  ||  tokens.size() > 3)
+        {
+            fprintf(stderr, "Keywords::pragmaSPRITESTRIPECHUNKS() : Syntax error, _spriteStripeChunks_ <num chunks>, <optional minimum address>, <optional ascending/descending> in '%s' on line %d\n", input.c_str(), codeLineIndex);
+            return false;
+        }
 
-        // Remove LET from code
-        //eraseKeywordFromCode(codeLine, "LET", foundPos);
+        // Number of chunks
+        Expression::Numeric chunksNumeric;
+        std::string chunksOperand;
+        Compiler::parseExpression(codeLineIndex, tokens[0], chunksOperand, chunksNumeric);
+        uint16_t spriteStripeChunks = uint16_t(std::lround(chunksNumeric._value));
+        if(spriteStripeChunks != SPRITE_STRIPE_CHUNKS_LO  &&  spriteStripeChunks != SPRITE_STRIPE_CHUNKS_HI)
+        {
+            fprintf(stderr, "Keywords::pragmaSPRITESTRIPECHUNKS() : Num chunks field must be either %d or %d, found %s in '%s' on line %d\n", SPRITE_STRIPE_CHUNKS_LO, SPRITE_STRIPE_CHUNKS_HI, tokens[0].c_str(), input.c_str(), codeLineIndex);
+            return false;
+        }
+
+        Compiler::setSpriteStripeChunks(spriteStripeChunks);
+
+        // RAM minimum address
+        if(tokens.size() >= 2)
+        {
+            Expression::Numeric addrNumeric;
+            std::string addrOperand;
+            Compiler::parseExpression(codeLineIndex, tokens[1], addrOperand, addrNumeric);
+            uint16_t minAddress = uint16_t(std::lround(addrNumeric._value));
+            if(minAddress < DEFAULT_START_ADDRESS)
+            {
+                fprintf(stderr, "Keywords::pragmaSPRITESTRIPECHUNKS() : Address field must be above %04x, found %s in '%s' on line %d\n", DEFAULT_START_ADDRESS, tokens[1].c_str(), input.c_str(), codeLineIndex);
+                return false;
+            }
+
+            Compiler::setSpriteStripeMinAddress(minAddress);
+        }
+
+        // RAM fit type
+        if(tokens.size() == 3)
+        {
+            if(tokens[2] == "ASCENDING")
+            {
+                Compiler::setSpriteStripeFitType(Memory::FitAscending);
+                return true;
+            }
+            else if(tokens[2] == "DESCENDING")
+            {
+                Compiler::setSpriteStripeFitType(Memory::FitDescending);
+                return true;
+            }
+            else
+            {
+                fprintf(stderr, "Keywords::pragmaSPRITESTRIPECHUNKS() : Search direction field must be 'ascending or descending', found '%s' in '%s' on line %d\n", tokens[2].c_str(), input.c_str(), codeLineIndex);
+                return false;
+            }
+        }
 
         return true;
     }
 
+
+
+    // ********************************************************************************************
+    // Keywords
+    // ********************************************************************************************
     bool keywordEND(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         UNREFERENCED_PARAM(result);
@@ -2750,7 +2799,7 @@ namespace Keywords
                 return false;
             }
             Compiler::parseExpression(codeLineIndex, addrTokens[0], operand, addrNumeric);
-            address = int16_t(std::lround(addrNumeric._value));
+            address = uint16_t(std::lround(addrNumeric._value));
             typePos = lbra;
             foundAddress = true;
         }
@@ -2951,26 +3000,61 @@ namespace Keywords
         UNREFERENCED_PARAM(tokenIndex);
 
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
-        if(tokens.size() < 1  &&  tokens.size() > 2)
+        if(tokens.size() < 1  &&  tokens.size() > 4)
         {
-            fprintf(stderr, "Keywords::keywordALLOC() : Syntax error, '<address>, <optional size>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordALLOC() : Syntax error, '<address>, <optional size>, <optional count>, <optional offset=0x0100>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
-        Expression::Numeric addrNumeric, sizeNumeric;
-        std::string addrOperand, sizeOperand;
+        int count = 1;
+        uint16_t address, end, size = 0x0000, offset = 0x0100;
+        std::string addrOperand, sizeOperand, countOperand, offsetOperand;
+        Expression::Numeric addrNumeric, sizeNumeric, countNumeric, offsetNumeric;
         Compiler::parseExpression(codeLineIndex, tokens[0], addrOperand, addrNumeric);
-        if(tokens.size() == 2) Compiler::parseExpression(codeLineIndex, tokens[1], sizeOperand, sizeNumeric);
+        if(tokens.size() >= 2)
+        {
+            Compiler::parseExpression(codeLineIndex, tokens[1], sizeOperand, sizeNumeric);
+            size = uint16_t(std::lround(sizeNumeric._value));
+        }
+        if(tokens.size() >= 3)
+        {
+            Compiler::parseExpression(codeLineIndex, tokens[2], countOperand, countNumeric);
+            count = std::lround(countNumeric._value);
+        }
+        if(tokens.size() >= 4)
+        {
+            Compiler::parseExpression(codeLineIndex, tokens[3], offsetOperand, offsetNumeric);
+            offset = uint16_t(std::lround(offsetNumeric._value));
+            if(count == 0  ||  offset == 0)
+            {
+                fprintf(stderr, "Keywords::keywordALLOC() : Count and offset must both be non zero, found %d and 0x%04x in '%s' on line %d\n", count, offset, codeLine._code.c_str(), codeLineIndex);
+                return false;
+            }
+        }
 
-        uint16_t address = int16_t(std::lround(addrNumeric._value));
+        address = uint16_t(std::lround(addrNumeric._value));
         if(address < DEFAULT_START_ADDRESS)
         {
             fprintf(stderr, "Keywords::keywordALLOC() : Address field must be above %04x, found %s in '%s' on line %d\n", DEFAULT_START_ADDRESS, tokens[0].c_str(), codeLine._code.c_str(), codeLineIndex);
             return false;
         }
 
-        int end = (tokens.size() == 2) ? address + std::lround(sizeNumeric._value) : 0xFFFF;
-        for(int i=address; i<end; i++) Memory::takeFreeRAM(uint16_t(i), 1, false);
+        end = (size == 0) ? 0xFFFF : address + size;
+        for(int i=0; i<count; i++)
+        {
+            //fprintf(stderr, "0x%04x 0x%04x %d\n", address, end, end - address);
+            for(uint16_t j=address; j<end; j++)
+            {
+                if(!Memory::takeFreeRAM(j, 1, false))
+                {
+                    fprintf(stderr, "Keywords::keywordALLOC() : Trying to allocate already allocated memory at 0x%04x in '%s' on line %d\n", j, codeLine._code.c_str(), codeLineIndex);
+                    return false;
+                }
+            }
+            address += offset;
+            end += offset;
+        }
+    
         //Memory::printFreeRamList(Memory::NoSort);
 
         return true;
@@ -2992,8 +3076,8 @@ namespace Keywords
         std::string addrOperand, sizeOperand;
         Compiler::parseExpression(codeLineIndex, tokens[0], addrOperand, addrNumeric);
         Compiler::parseExpression(codeLineIndex, tokens[1], sizeOperand, sizeNumeric);
-        uint16_t address = int16_t(std::lround(addrNumeric._value));
-        uint16_t size = int16_t(std::lround(sizeNumeric._value));
+        uint16_t address = uint16_t(std::lround(addrNumeric._value));
+        uint16_t size = uint16_t(std::lround(sizeNumeric._value));
 
         //Memory::printFreeRamList(Memory::NoSort);
         Memory::giveFreeRAM(address, size);
@@ -3745,18 +3829,17 @@ namespace Keywords
                     {
                         std::string flipToken = tokens[3];
                         Expression::stripWhitespace(flipToken);
-                        Expression::Numeric flipNumeric;
-                        std::string flipOperand;
-                        Compiler::parseExpression(codeLineIndex, flipToken, flipOperand, flipNumeric);
-                        uint16_t flip = uint16_t(std::lround(flipNumeric._value));
-                        if(flip <= uint16_t(Compiler::FlipXY)) flipType = Compiler::SpriteFlipType(flip);
+                        Expression::strToUpper(flipToken);
+                        if(flipToken == "FLIPX")       flipType = Compiler::FlipX;
+                        else if(flipToken == "FLIPY")  flipType = Compiler::FlipY;
+                        else if(flipToken == "FLIPXY") flipType = Compiler::FlipXY;
                     }
 
                     // Build sprite data from image data
                     uint16_t numColumns = gtRgbFile._header._width / SPRITE_CHUNK_SIZE;
-                    uint16_t remStripeChunks = gtRgbFile._header._height % MAX_SPRITE_CHUNKS_PER_STRIPE;
-                    uint16_t numStripesPerCol = gtRgbFile._header._height / MAX_SPRITE_CHUNKS_PER_STRIPE + int(remStripeChunks > 0);
-                    uint16_t numStripeChunks = (numStripesPerCol == 1) ? gtRgbFile._header._height : MAX_SPRITE_CHUNKS_PER_STRIPE;
+                    uint16_t remStripeChunks = gtRgbFile._header._height % Compiler::getSpriteStripeChunks();
+                    uint16_t numStripesPerCol = gtRgbFile._header._height / Compiler::getSpriteStripeChunks() + int(remStripeChunks > 0);
+                    uint16_t numStripeChunks = (numStripesPerCol == 1) ? gtRgbFile._header._height : Compiler::getSpriteStripeChunks();
                     std::vector<uint16_t> stripeAddrs;
                     std::vector<uint8_t> spriteData;
 
@@ -3789,7 +3872,7 @@ namespace Keywords
                             }
                             else
                             {
-                                if(!Memory::getFreeRAM(Memory::FitAscending, numStripeChunks*SPRITE_CHUNK_SIZE + 1, RAM_SEGMENTS_START, Compiler::getRuntimeStart(), address))
+                                if(!Memory::getFreeRAM(Compiler::getSpriteStripeFitType(), numStripeChunks*SPRITE_CHUNK_SIZE + 1, Compiler::getSpriteStripeMinAddress(), Compiler::getRuntimeStart(), address))
                                 {
                                     fprintf(stderr, "Keywords::keywordLOAD() : Getting Sprite memory for stripe %d failed, in '%s' on line %d\n", int(stripeAddrs.size()/2 + 1), codeLine._text.c_str(), codeLineIndex);
                                     return false;
@@ -3829,7 +3912,7 @@ namespace Keywords
                                 }
                                 else
                                 {
-                                    if(!Memory::getFreeRAM(Memory::FitAscending, numStripeChunks*SPRITE_CHUNK_SIZE + 1, RAM_SEGMENTS_START, Compiler::getRuntimeStart(), address))
+                                    if(!Memory::getFreeRAM(Compiler::getSpriteStripeFitType(), numStripeChunks*SPRITE_CHUNK_SIZE + 1, Compiler::getSpriteStripeMinAddress(), Compiler::getRuntimeStart(), address))
                                     {
                                         fprintf(stderr, "Keywords::keywordLOAD() : Getting Sprite memory failed for stripe %d, in '%s' on line %d\n", int(stripeAddrs.size()/2 + 1), codeLine._text.c_str(), codeLineIndex);
                                         return false;
@@ -3865,7 +3948,7 @@ namespace Keywords
                             }
                             else
                             {
-                                if(!Memory::getFreeRAM(Memory::FitAscending, remStripeChunks*SPRITE_CHUNK_SIZE + 1, RAM_SEGMENTS_START, Compiler::getRuntimeStart(), address))
+                                if(!Memory::getFreeRAM(Compiler::getSpriteStripeFitType(), remStripeChunks*SPRITE_CHUNK_SIZE + 1, Compiler::getSpriteStripeMinAddress(), Compiler::getRuntimeStart(), address))
                                 {
                                     fprintf(stderr, "Keywords::keywordLOAD() : Getting Sprite memory failed for stripe %d, in '%s' on line %d\n", int(stripeAddrs.size()/2 + 1), codeLine._text.c_str(), codeLineIndex);
                                     return false;

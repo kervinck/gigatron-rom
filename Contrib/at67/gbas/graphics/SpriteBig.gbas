@@ -1,20 +1,23 @@
 _runtimePath_ "../runtime"
 _runtimeStart_ &h7FFF
 
+'defines the amount of contiguous RAM needed for sprite stripes, (in this case 40*6 + 1)
+_spriteStripeChunks_ 40, &h0200, descending
+
 mode 2
 poke 162, &h00
 poke 163, &h3F
 cls
 
-'first load allocates memory, further loads are instanced but have different stripe destination offsets
-load sprite, ../../images/gbas/Turrican.tga, 0, 0 'normal orientation
-load sprite, ../../images/gbas/Turrican.tga, 1, 1 'x flipped orientation
-load sprite, ../../images/gbas/Turrican.tga, 2, 2 'y flipped orientation
-load sprite, ../../images/gbas/Turrican.tga, 3, 3 'xy flipped orientation
+'first load allocates memory, further loads of the same filename are instanced but have different stripe destination offsets
+load sprite, ../../images/gbas/Turrican.tga, 0         'normal orientation
+load sprite, ../../images/gbas/Turrican.tga, 1, FlipX  'x flipped orientation
+load sprite, ../../images/gbas/Turrican.tga, 2, FlipY  'y flipped orientation
+load sprite, ../../images/gbas/Turrican.tga, 3, FlipXY 'xy flipped orientation
 
 'first load allocates memory, second is instanced but has different stripe destination offsets
-load sprite, ../../images/gbas/Bullet.tga, 4, 0 'normal orientation
-load sprite, ../../images/gbas/Bullet.tga, 5, 1 'x flipped orientation
+load sprite, ../../images/gbas/Bullet.tga, 4        'normal orientation
+load sprite, ../../images/gbas/Bullet.tga, 5, FlipX 'x flipped orientation
 
 loop:
     x0 = 28
