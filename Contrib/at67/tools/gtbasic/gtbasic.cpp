@@ -119,7 +119,7 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    Loader::printGt1Stats(gt1FileName, gt1File);
+    Loader::printGt1Stats(gt1FileName, gt1File, true);
 
     return 0;
 }

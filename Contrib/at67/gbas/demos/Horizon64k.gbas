@@ -67,7 +67,7 @@ for y=horizonY-1 to 0 step -1
     poke &h01F9, y+y
 next y
 
-play midi &h8000,3
+play midi,&h8000,3
 
 x=0 : v=8
 loop:   i = x AND 255

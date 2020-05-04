@@ -69,7 +69,7 @@ _entryPoint_        InitRealTimeProc
                     CALL                    giga_vAC                        ; cls
 
                     LDI                     1
-                    STW                     _a                              ; LET a=1
+                    STW                     _a                              ; a=1
 
 _repeat_0x0244      LDW                     _a
                     PrintAcInt16            
@@ -112,19 +112,19 @@ _wend_0x0298        BRA                     _wend_0x0298                    ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7ef6
-convertEqOp         EQU     0x7eed
-convertNeOp         EQU     0x7ee4
-convertLeOp         EQU     0x7edb
-convertGeOp         EQU     0x7ed2
-convertLtOp         EQU     0x7ec9
-convertGtOp         EQU     0x7ec0
-resetVideoTable     EQU     0x7ea1
+realTimeProc        EQU     0x7ef2
+convertEqOp         EQU     0x7ee9
+convertNeOp         EQU     0x7ee0
+convertLeOp         EQU     0x7ed7
+convertGeOp         EQU     0x7ece
+convertLtOp         EQU     0x7ec5
+convertGtOp         EQU     0x7ebc
+resetVideoTable     EQU     0x7ae0
 initClearFuncs      EQU     0x7ddc
 clearVertBlinds     EQU     0x7da2
-clearCursorRow      EQU     0x7ab6
-printInit           EQU     0x79e4
-printDigit          EQU     0x79c2
+clearCursorRow      EQU     0x79b6
+printInit           EQU     0x7ea1
+printDigit          EQU     0x7abe
 printInt16          EQU     0x7cab
 printChar           EQU     0x78a7
 newLineScroll       EQU     0x7ba1
@@ -147,7 +147,9 @@ lutIndex            EQU     register8
 
                     ; runs real time, (time sliced), code at regular intervals
 realTimeProc        PUSH
-                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI/SPRITE etc routines
+                    LDI     0x08                            ; keep pumping soundTimer
+                    ST      giga_soundTimer
+                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI routine
                     CALL    giga_vAC
                     POP
                     RET

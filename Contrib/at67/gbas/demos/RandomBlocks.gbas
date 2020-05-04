@@ -2,7 +2,7 @@ _runtimePath_ "../runtime"
 
 scroll off
 
-play midi &h10a0,3
+play midi,&h10a0,3
 
 10 poke 162,&h2A:cls:'Paper
 20 poke 163,rnd(0) AND 63:'Pen

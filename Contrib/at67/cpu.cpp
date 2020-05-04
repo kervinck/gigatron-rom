@@ -1015,7 +1015,7 @@ namespace Cpu
 
             if(_initAudio  &&  _clock > STARTUP_DELAY_CLOCKS*10.0)
             {
-                Audio::initialiseChannels(_coldBoot, _romType);
+                Audio::initialiseChannels(_coldBoot);
 
                 _coldBoot = false;
                 _initAudio = false;

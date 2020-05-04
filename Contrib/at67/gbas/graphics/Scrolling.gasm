@@ -23,6 +23,7 @@ cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
 miscFlags           EQU                     register0 + 0x28
+fontLutId           EQU                     0x00e0
 
 ; Internal buffers
 textWorkArea        EQU                     0x06a0
@@ -34,9 +35,9 @@ textWorkArea        EQU                     0x06a0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_loop               EQU                     0x0248
-_repeat_0x026f      EQU                     0x026b
-_end_0x0298         EQU                     0x028e
+_loop               EQU                     0x024b
+_repeat_0x0272      EQU                     0x026e
+_end_0x029b         EQU                     0x0291
 
 ; Variables
 _x                  EQU                     0x0030
@@ -53,6 +54,7 @@ _nx2                EQU                     0x0036
 ; Define Images
 
 ; Define Sprites
+; Define Fonts
 
 ; Lookup Tables
 
@@ -66,9 +68,9 @@ _entryPoint_        InitRealTimeProc
                     InitGtOp                
                     Initialise                                              ; INIT
 
-                    LDI                     0
+                    LDI                     1
                     STW                     graphicsMode
-                    ScanlineMode                                            ; mode 0
+                    ScanlineMode                                            ; mode 1
 
                     LDI                     0
                     STW                     _x                              ; x = 0
@@ -93,7 +95,7 @@ _loop               LDI                     1
                     SUBW                    _x2
                     STW                     _nx2                            ; nx2 = -x2
 
-_repeat_0x026f      LDW                     _nx2
+_repeat_0x0272      LDW                     _nx2
                     POKE                    _p                              ; poke p, nx2
 
                     LDW                     _p
@@ -108,14 +110,14 @@ _repeat_0x026f      LDW                     _nx2
 
                     LDWI                    465
                     SUBW                    _p
-                    BGE                     _repeat_0x026f                  ; until p &&>= &h01D1
+                    BGE                     _repeat_0x0272                  ; until p &&>= &h01D1
 
                     INC                     _x                              ; inc x
 
                     LDWI                    _loop
                     CALL                    giga_vAC                        ; goto loop
 
-_end_0x0298         BRA                     _end_0x0298                     ; END
+_end_0x029b         BRA                     _end_0x029b                     ; END
 
 
 
@@ -156,7 +158,7 @@ lutIndex            EQU     register8
 
                     ; runs real time, (time sliced), code at regular intervals
 realTimeProc        PUSH
-                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI/SPRITE etc routines
+                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI routine
                     CALL    giga_vAC
                     POP
                     RET

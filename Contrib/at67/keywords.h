@@ -56,6 +56,9 @@ namespace Keywords
     Expression::Numeric functionUSR(Expression::Numeric& numeric);
     Expression::Numeric functionRND(Expression::Numeric& numeric);
     Expression::Numeric functionLEN(Expression::Numeric& numeric);
+    Expression::Numeric functionGET(Expression::Numeric& numeric);
+    Expression::Numeric functionABS(Expression::Numeric& numeric);
+    Expression::Numeric functionASC(Expression::Numeric& numeric);
     Expression::Numeric functionCHR$(Expression::Numeric& numeric);
     Expression::Numeric functionHEX$(Expression::Numeric& numeric);
     Expression::Numeric functionHEXW$(Expression::Numeric& numeric);
@@ -63,15 +66,15 @@ namespace Keywords
     Expression::Numeric functionRIGHT$(Expression::Numeric& numeric);
     Expression::Numeric functionMID$(Expression::Numeric& numeric);
 
-    bool pragmaUSEOPCODECALLI(const std::string& input,   int codeLineIndex, size_t foundPos);
-    bool pragmaRUNTIMEPATH(const std::string& input,      int codeLineIndex, size_t foundPos);
-    bool pragmaRUNTIMESTART(const std::string& input,     int codeLineIndex, size_t foundPos);
-    bool pragmaSTRINGWORKAREA(const std::string& input,   int codeLineIndex, size_t foundPos);
-    bool pragmaCODEOPTIMISETYPE(const std::string& input, int codeLineIndex, size_t foundPos);
-    bool pragmaARRAYINDICIESONE(const std::string& input, int codeLineIndex, size_t foundPos);
+    bool pragmaUSEOPCODECALLI(const std::string& input,     int codeLineIndex, size_t foundPos);
+    bool pragmaRUNTIMEPATH(const std::string& input,        int codeLineIndex, size_t foundPos);
+    bool pragmaRUNTIMESTART(const std::string& input,       int codeLineIndex, size_t foundPos);
+    bool pragmaSTRINGWORKAREA(const std::string& input,     int codeLineIndex, size_t foundPos);
+    bool pragmaCODEOPTIMISETYPE(const std::string& input,   int codeLineIndex, size_t foundPos);
+    bool pragmaARRAYINDICIESONE(const std::string& input,   int codeLineIndex, size_t foundPos);
+    bool pragmaSPRITESTRIPECHUNKS(const std::string& input, int codeLineIndex, size_t foundPos);
 
     // Keywords
-    bool keywordLET(Compiler::CodeLine& codeLine,      int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordEND(Compiler::CodeLine& codeLine,      int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordINC(Compiler::CodeLine& codeLine,      int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordDEC(Compiler::CodeLine& codeLine,      int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
@@ -115,9 +118,8 @@ namespace Keywords
     bool keywordPLAY(Compiler::CodeLine& codeLine,     int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordLOAD(Compiler::CodeLine& codeLine,     int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordSPRITE(Compiler::CodeLine& codeLine,   int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
-    bool keywordSPRITEX(Compiler::CodeLine& codeLine,  int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
-    bool keywordSPRITEY(Compiler::CodeLine& codeLine,  int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
-    bool keywordSPRITEXY(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
+    bool keywordSOUND(Compiler::CodeLine& codeLine,    int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
+    bool keywordSET(Compiler::CodeLine& codeLine,      int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
 }
 
 #endif

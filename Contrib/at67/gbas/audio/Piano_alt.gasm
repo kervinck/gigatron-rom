@@ -132,8 +132,7 @@ _1                  LDI                     0
                     LDI                     2
                     STW                     graphicsMode
                     ScanlineMode            
-                    LDWI                    clearVertBlinds
-                    CALL                    giga_vAC
+                    ClearVertBlinds         
                     LDI                     2
                     STW                     _z
                     LDI                     0
@@ -202,8 +201,7 @@ _204                LDI                     2
                     ST                      cursorXY
                     LDI                     24
                     ST                      cursorXY + 1
-                    LDWI                    atTextCursor
-                    CALL                    giga_vAC
+                    AtTextCursor            
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
@@ -487,7 +485,7 @@ lutIndex            EQU     register8
 
                     ; runs real time, (time sliced), code at regular intervals
 realTimeProc        PUSH
-                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI/SPRITE etc routines
+                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI routine
                     CALL    giga_vAC
                     POP
                     RET

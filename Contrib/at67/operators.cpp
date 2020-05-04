@@ -28,6 +28,28 @@ namespace Operators
     }
 
 
+    void createSingleOp(const std::string& opcodeStr, Expression::Numeric& numeric)
+    {
+        switch(numeric._varType)
+        {
+            // Temporary variable address
+            case Expression::TmpVar:
+            {
+                Compiler::emitVcpuAsm(opcodeStr, Expression::byteToHexString(uint8_t(std::lround(numeric._value))), false);
+            }
+            break;
+
+            // User variable name
+            case Expression::IntVar:
+            {
+                Compiler::emitVcpuAsmUserVar(opcodeStr, numeric, false);
+            }
+            break;
+
+            default: break;
+        }
+    }
+
     void handleSingleOp(const std::string& opcodeStr, Expression::Numeric& numeric)
     {
         switch(numeric._varType)
@@ -443,6 +465,16 @@ namespace Operators
     // ********************************************************************************************
     // Unary Math Operators
     // ********************************************************************************************
+    Expression::Numeric operatorEXP(Expression::Numeric& numeric)
+    {
+        if(numeric._varType == Expression::Number)
+        {
+            numeric._value = exp(numeric._value);
+        }
+
+        return numeric;
+    }
+
     Expression::Numeric operatorSIN(Expression::Numeric& numeric)
     {
         if(numeric._varType == Expression::Number)

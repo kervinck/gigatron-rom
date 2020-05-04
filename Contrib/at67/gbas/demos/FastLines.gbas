@@ -1,6 +1,6 @@
 _runtimePath_ "../runtime"
 
-play midi &h10a0,3
+play midi,&h10a0,3
 
 x=0 : y=x : mode 2
 

@@ -1,20 +1,23 @@
 _runtimePath_ "../runtime"
 _runtimeStart_ &h7FFF
 
+'defines the amount of contiguous RAM needed for sprite stripes, (in this case 40*6 + 1)
+_spriteStripeChunks_ 40, &h0200, descending
+
 mode 2
 poke 162, &h00
 poke 163, &h3F
 cls
 
-'first load allocates memory, further loads are instanced but have different stripe destination offsets
-load sprite, ../../images/gbas/Turrican.tga, 0, 0 'normal orientation
-load sprite, ../../images/gbas/Turrican.tga, 1, 1 'x flipped orientation
-load sprite, ../../images/gbas/Turrican.tga, 2, 2 'y flipped orientation
-load sprite, ../../images/gbas/Turrican.tga, 3, 3 'xy flipped orientation
+'first load allocates memory, further loads of the same filename are instanced but have different stripe destination offsets
+load sprite, ../../images/gbas/Turrican.tga, 0         'normal orientation
+load sprite, ../../images/gbas/Turrican.tga, 1, FlipX  'x flipped orientation
+load sprite, ../../images/gbas/Turrican.tga, 2, FlipY  'y flipped orientation
+load sprite, ../../images/gbas/Turrican.tga, 3, FlipXY 'xy flipped orientation
 
 'first load allocates memory, second is instanced but has different stripe destination offsets
-load sprite, ../../images/gbas/Bullet.tga, 4, 0 'normal orientation
-load sprite, ../../images/gbas/Bullet.tga, 5, 1 'x flipped orientation
+load sprite, ../../images/gbas/Bullet.tga, 4        'normal orientation
+load sprite, ../../images/gbas/Bullet.tga, 5, FlipX 'x flipped orientation
 
 loop:
     x0 = 28
@@ -22,8 +25,8 @@ loop:
 
     for x=0 to 130
         wait
-        sprite 0, x, 15
-        spriteX 1, 130-x, 65
+        sprite noFlip, 0, x, 15
+        sprite flipX, 1, 130-x, 65
         gosub bullets0
     next x
 
@@ -32,28 +35,28 @@ loop:
 
     for x=129 to 1
         wait
-        spriteX 1, x, 15
-        sprite 0, 130-x, 65
+        sprite flipX, 1, x, 15
+        sprite noFlip, 0, 130-x, 65
         gosub bullets1
     next x
 goto loop
 
 bullets0:
-    spriteX 5, x0, 24
+    sprite flipX, 5, x0, 24
     x0 = x0 + 2
     if x0 &&> 159 then x0 = x + 28
 
-    sprite 4, x1, 74
+    sprite noFlip, 4, x1, 74
     x1 = x1 - 2
     if x1 &&< -12 then x1 = 120-x
 return
 
 bullets1:
-    sprite 4, x0, 24
+    sprite noFlip, 4, x0, 24
     x0 = x0 - 2
     if x0 &&< -12 then x0 = x - 10
 
-    spriteX 5, x1, 74
+    sprite flipX, 5, x1, 74
     x1 = x1 + 2
     if x1 &&> 159 then x1 = 158-x
 return

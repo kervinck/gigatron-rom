@@ -23,6 +23,7 @@ cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
 miscFlags           EQU                     register0 + 0x28
+fontLutId           EQU                     0x00e0
 
 ; Internal buffers
 textWorkArea        EQU                     0x06a0
@@ -34,15 +35,15 @@ textWorkArea        EQU                     0x06a0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_loop               EQU                     0x028d
-_254                EQU                     0x032f
-_253                EQU                     0x0345
-_191                EQU                     0x0357
-_127                EQU                     0x035e
+_loop               EQU                     0x028b
+_254                EQU                     0x032c
+_253                EQU                     0x0342
+_191                EQU                     0x0354
+_127                EQU                     0x035b
 _page_0x0300        EQU                     0x0300
-_else_0x0362        EQU                     0x0343
-_else_0x037c        EQU                     0x0355
-_end_0x038c         EQU                     0x0365
+_else_0x0360        EQU                     0x0340
+_else_0x037a        EQU                     0x0352
+_end_0x038a         EQU                     0x0362
 
 ; Variables
 _x0                 EQU                     0x0030
@@ -301,12 +302,13 @@ def_images_0x7f00   EQU                     0x7f00
 def_images_0x7f00   DB                      12 8 12 8 12 8 8 12 8 9 8 8 9 8 8 9 8 9 8 9 12 8 8 8 12 8 12 8 12 12 12 8 12 12 8 12 8 12 12 8 12 24 12 8 28 8 28 8 12 24 12 8 28 8 12 8 12 8 12 8 8 12 8 12 9 12 12 8 13 12 8 12 12 12 12 8 12 12 12 12 12 12 12 12 8 12 8 12 12 8 12 12 12 8 12 12 12 12 12 8 12 12 12 8 12 8 8 8 12 8 8 8 8 8 12 8 12 8 12 12 12 12 12 12 12 8 12 8 12 8 29 8 28 8 12 8 12 9 28 8 12 8 12 12 12 12 8 12 12 8 12 8 12 8 9 12 8 8 12 24 8 8 8 8 8 8 8 8 12 8 8 12 8 12 8 12 12 12 12 12 8 12 24 12 8 28 8 28 8 24 12 8 12 8 12 8 12 12 8 12 12 12 8 12 8 12 8 12 12 8 12 8 12 8 12 8 12 12 12 12 12 12 12 12 8 12 12 8 12 8 12 8 12 12 8 12 12 12 12 12 12 8 12 8 12 8 12 8 12 8 12 8 12 12 8 12 
 
 ; Define Sprites
+; Define Fonts
 
 ; Lookup Tables
-_lut_numericLabs    EQU                     0x0614
+_lut_numericLabs    EQU                     0x0615
 _lut_numericLabs    DW                      254 253 191 127 0
-_lut_numericAddrs   EQU                     0x060c
-_lut_numericAddrs   DW                      0x032f 0x0345 0x0357 0x035e 
+_lut_numericAddrs   EQU                     0x060d
+_lut_numericAddrs   DW                      0x032c 0x0342 0x0354 0x035b 
 
 ; Code
 _entryPoint_        InitRealTimeProc        
@@ -418,11 +420,11 @@ _loop               WaitVBlank                                              ; wa
                     ADDW                    _speed2
                     STW                     _x5                             ; poke &h0193, x5.hi : x5 = x5 + speed2
 
+                    LDWI                    419
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
-                    LDWI                    419
                     STW                     register0
                     LD                      _x5 + 1
                     POKE                    register0                       ; poke &h01A3, x5.hi
@@ -441,8 +443,7 @@ _page_0x0300        LDW                     0xde
                     STW                     numericLabel
                     LDI                     0
                     STW                     defaultLabel
-                    LDWI                    gosubNumericLabel
-                    CALL                    giga_vAC                        ; gosub peek(17)
+                    GosubNumeric                                            ; gosub peek(17)
 
                     LDWI                    _loop
                     CALL                    giga_vAC                        ; goto loop
@@ -453,11 +454,11 @@ _254                PUSH
                     STW                     _speed1
                     LDWI                    256
                     SUBW                    _speed1
-                    BGT                     _else_0x0362
+                    BGT                     _else_0x0360
                     LDWI                    256
                     STW                     _speed1                         ; speed1 = speed1 + 2 : if speed1 &&> 256 then speed1 = 256
 
-_else_0x0362        POP                     
+_else_0x0360        POP                     
                     RET                                                     ; return
 
 _253                PUSH                    
@@ -465,11 +466,11 @@ _253                PUSH
                     SUBI                    2
                     STW                     _speed1
                     SUBI                    64
-                    BGE                     _else_0x037c
+                    BGE                     _else_0x037a
                     LDI                     64
                     STW                     _speed1                         ; speed1 = speed1 - 2 : if speed1 &&< 64 then speed1 = 64
 
-_else_0x037c        POP                     
+_else_0x037a        POP                     
                     RET                                                     ; return
 
 _191                PUSH                    
@@ -484,7 +485,7 @@ _127                PUSH
                     POP                     
                     RET                                                     ; speed1 = 128 : return
 
-_end_0x038c         BRA                     _end_0x038c                     ; END
+_end_0x038a         BRA                     _end_0x038a                     ; END
 
 
 
@@ -502,10 +503,10 @@ convertGeOp         EQU     0x0673
 convertLtOp         EQU     0x066a
 convertGtOp         EQU     0x0661
 gosubNumericLabel   EQU     0x0570
-scanlineMode        EQU     0x062a
-waitVBlank          EQU     0x061e
+scanlineMode        EQU     0x062b
+waitVBlank          EQU     0x061f
 resetVideoTable     EQU     0x0551
-initClearFuncs      EQU     0x063e
+initClearFuncs      EQU     0x063f
 drawHLine           EQU     0x05a2
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
@@ -526,7 +527,7 @@ lutIndex            EQU     register8
 
                     ; runs real time, (time sliced), code at regular intervals
 realTimeProc        PUSH
-                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI/SPRITE etc routines
+                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI routine
                     CALL    giga_vAC
                     POP
                     RET
@@ -743,7 +744,7 @@ initClearFuncs      PUSH
                     LDWI    resetVideoTable
                     CALL    giga_vAC
     
-                    LDWI    0x0002                              ; starting cursor position
+                    LDI     0x02                                ; starting cursor position
                     STW     cursorXY
                     LDWI    0x7FFF
                     ANDW    miscFlags

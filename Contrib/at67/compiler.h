@@ -13,10 +13,11 @@
 #define OPCODE_TRUNC_SIZE  24     // The smaller you make this, the more your VASM opcode/macro names will be truncated in the resultant .vasm code
 #define USER_STR_SIZE      94
 
-#define SPRITE_CHUNK_SIZE            6
-#define MAX_SPRITE_CHUNKS_PER_STRIPE 40
+#define SPRITE_CHUNK_SIZE        6
+#define SPRITE_STRIPE_CHUNKS_LO 15 // 15 fits in a 96 byte page
+#define SPRITE_STRIPE_CHUNKS_HI 40 // 40 fits in a 256 byte page
 
-// 32 bytes, (0x00E0 <-> 0x00FF), reserved for vCPU stack, allows for 16 nested calls. The amount of GOSUBS you can use is dependant on how
+// 30 bytes, (0x00E2 <-> 0x00FF), reserved for vCPU stack, allows for 15 nested calls. The amount of nested GOSUBS you can use is dependant on how
 // much of the stack is being used by nested system calls. *NOTE* there is NO call table for user code for this compiler
 #define USER_VAR_START    0x0030  // 80 bytes, (0x0030 <-> 0x007F), reserved for BASIC user variables
 #define INT_VAR_START     0x0082  // 46 bytes, (0x0082 <-> 0x00AF), internal register variables, used by the BASIC runtime
@@ -25,6 +26,7 @@
 #define CONVERT_CC_OPS    0x00D0  // 12 bytes, (0x00D0 <-> 0x00DB), critical relational operator routines that can't straddle page boundaries
 #define REAL_TIME_PROC    0x00DC  // 2 bytes,  (0x00DC <-> 0x00DD), critical time sliced routine that usually handles AUDIO/MIDI, etc
 #define VAC_SAVE_START    0x00DE  // 2 bytes,  (0x00DE <-> 0x00DF), reserved for saving vAC
+#define FONT_LUT_ID       0x00E0  // 2 bytes,  (0x00E0 <-> 0x00E1), reserved for currently selected font
 #define USER_CODE_START   0x0200
 #define USER_VAR_END      0x007F
 
@@ -39,7 +41,7 @@ namespace Compiler
     enum OperandType {OperandVar, OperandTemp, OperandConst};
     enum StatementResult {StatementError, StatementSuccess, StatementExpression, SingleStatementParsed, MultiStatementParsed, StringStatementParsed};
     enum CodeOptimiseType {CodeSpeed, CodeSize};
-    enum SpriteFlipType {FlipNone=0, FlipX, FlipY, FlipXY};
+    enum SpriteFlipType {NoFlip=0, FlipX, FlipY, FlipXY};
 
     struct Constant
     {
@@ -64,6 +66,7 @@ namespace Compiler
         VarType _varType = VarInt16;
         int _intSize = Int16;
         int _arrSize = 0;
+        std::vector<int16_t> _arrInits;
     };
 
     struct StringVar
@@ -71,11 +74,13 @@ namespace Compiler
         uint8_t _size;
         uint8_t _maxSize;
         uint16_t _address;
+        uint16_t _array;
         std::string _text;
         std::string _name;
         std::string _output;
         int _codeLineIndex = -1;
         bool _constant = true;
+        int _arrSize = 0;
     };
 
     struct InternalLabel
@@ -240,13 +245,13 @@ namespace Compiler
     struct DefDataSprite
     {
         int _id;
+        std::string _filename;
         uint16_t _width, _height;
         uint16_t _numColumns, _numStripesPerCol;
         uint16_t _numStripeChunks, _remStripeChunks;
         std::vector<uint16_t> _stripeAddrs;
         std::vector<uint8_t> _data;
-        std::string _filename;
-        SpriteFlipType _flipType = FlipNone;
+        SpriteFlipType _flipType = NoFlip;
         bool _isInstanced = false;
     };
 
@@ -256,11 +261,33 @@ namespace Compiler
         std::vector<uint16_t> _spriteAddrs;
     };
 
+    struct DefDataFont
+    {
+        int id;
+        std::string _filename;
+        uint16_t _width, _height;
+        std::vector<uint16_t> _charAddrs;
+        std::vector<std::vector<uint8_t>> _data;
+        uint16_t _mapAddr;
+        std::vector<uint8_t> _mapping;
+        uint16_t _baseAddr;
+    };
+
+    struct FontsAddrLut
+    {
+        uint16_t _address;
+        std::vector<uint16_t> _fontAddrs;
+    };
+
+
     uint16_t getVasmPC(void);
     uint16_t getRuntimeEnd(void);
     uint16_t getRuntimeStart(void);
     uint16_t getTempVarStart(void);
     uint16_t getStrWorkArea(void);
+    uint16_t getSpriteStripeChunks(void);
+    uint16_t getSpriteStripeMinAddress(void);
+    Memory::FitType getSpriteStripeFitType(void);
     CodeOptimiseType getCodeOptimiseType(void);
     bool getCompilingError(void);
     bool getArrayIndiciesOne(void);
@@ -274,8 +301,11 @@ namespace Compiler
     void setRuntimeStart(uint16_t runtimeStart);
     void setTempVarStart(uint16_t tempVarStart);
     void setStrWorkArea(uint16_t strWorkArea);
-    void setCreateNumericLabelLut(bool createNumericLabelLut);
+    void setSpriteStripeChunks(uint16_t spriteStripeChunks);
+    void setSpriteStripeMinAddress(uint16_t spriteStripeMinAddress);
+    void setSpriteStripeFitType(Memory::FitType spriteStripeFitType);
     void setCodeOptimiseType(CodeOptimiseType codeOptimiseType);
+    void setCreateNumericLabelLut(bool createNumericLabelLut);
     void setCompilingError(bool compilingError);
     void setArrayIndiciesOne(bool arrayIndiciesOne);
 
@@ -296,6 +326,9 @@ namespace Compiler
 
     std::map<int, DefDataSprite>& getDefDataSprites(void);
     SpritesAddrLut& getSpritesAddrLut(void);
+
+    std::map<int, DefDataFont>& getDefDataFonts(void);
+    FontsAddrLut& getFontsAddrLut(void);
 
     std::map<std::string, MacroIndexEntry>& getMacroIndexEntries(void);
 
@@ -323,7 +356,9 @@ namespace Compiler
 
     bool createCodeLine(const std::string& code, int codeLineOffset, int labelIndex, int varIndex, Expression::Int16Byte int16Byte, bool vars, CodeLine& codeLine);
     void createLabel(uint16_t address, const std::string& name, int codeLineIndex, Label& label, bool numeric=false, bool addUnderscore=true, bool pageJump=false, bool gosub=false);
-    void createIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, int& varIndex, VarType varType=VarInt16, uint16_t arrayStart=0x0000, int intSize=Int16, int arrSize=0);
+    void createIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, int& varIndex);
+    void createIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, int& varIndex, const std::vector<int16_t>& arrInits, 
+                      VarType varType, uint16_t arrayStart, int intSize, int arrSize);
     int getOrCreateString(CodeLine& codeLine, int codeLineIndex, const std::string& str, std::string& name, uint16_t& address, uint8_t maxSize=USER_STR_SIZE, bool constString=true);
     uint16_t getOrCreateConstString(const std::string& input, int& index);
     uint16_t getOrCreateConstString(ConstStrType constStrType, int16_t input, int& index);
@@ -334,7 +369,8 @@ namespace Compiler
     bool findMacroText(const std::string& macroName, const std::string& text);
     int getMacroSize(const std::string& macroName);
     int createVcpuAsm(const std::string& opcodeStr, const std::string& operandStr, int codeLineIdx, std::string& line);
-    void emitVcpuAsm(const std::string& opcodeStr, const std::string& operandStr, bool nextTempVar, int codeLineIdx=-1, const std::string& internalLabel="", bool pageJump=false);
+    std::pair<int, int> emitVcpuAsm(const std::string& opcodeStr, const std::string& operandStr, bool nextTempVar, int codeLineIdx=-1, const std::string& internalLabel="", bool pageJump=false);
+    void createVcpuAsmLabel(int codeLineIdxBra, int vcpuAsmBra, int codeLineIdxDst, int vcpuAsmDst, const std::string& label);
     bool emitVcpuAsmUserVar(const std::string& opcodeStr, Expression::Numeric& numeric, bool nextTempVar);
     void getNextTempVar(void);
 

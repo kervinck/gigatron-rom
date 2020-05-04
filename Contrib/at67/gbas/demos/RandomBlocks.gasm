@@ -23,6 +23,7 @@ cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
 miscFlags           EQU                     register0 + 0x28
+fontLutId           EQU                     0x00e0
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -34,12 +35,12 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x025a
-_20                 EQU                     0x0263
-_30                 EQU                     0x026c
-_40                 EQU                     0x0287
-_50                 EQU                     0x0290
-_end_0x02a2         EQU                     0x0292
+_10                 EQU                     0x0258
+_20                 EQU                     0x0261
+_30                 EQU                     0x026a
+_40                 EQU                     0x0285
+_50                 EQU                     0x028e
+_end_0x02a0         EQU                     0x0290
 
 ; Variables
 
@@ -228,6 +229,7 @@ def_bytes_0x67a0    DB                      10 128 129 131 208 160 16
 ; Define Images
 
 ; Define Sprites
+; Define Fonts
 
 ; Lookup Tables
 
@@ -248,12 +250,11 @@ _entryPoint_        InitRealTimeProc
                     LDI                     3
                     ST                      waveType
                     LDWI                    4256
-                    PlayMidi                                                ; play midi &h10a0,3
+                    PlayMidi                                                ; play midi,&h10a0,3
 
 _10                 LDI                     42
                     ST                      162
-                    LDWI                    clearVertBlinds
-                    CALL                    giga_vAC                        ; poke 162,&h2A:cls:'Paper
+                    ClearVertBlinds                                         ; poke 162,&h2A:cls:'Paper
 
 _20                 Rand                    
                     ANDI                    63
@@ -265,15 +266,14 @@ _30                 LDI                     0x9b
                     LDI                     0x71
                     RandMod                 
                     ST                      cursorXY + 1
-                    LDWI                    atTextCursor
-                    CALL                    giga_vAC                        ; at rnd(155),rnd(113)
+                    AtTextCursor                                            ; at rnd(155),rnd(113)
 
 _40                 LDI                     127
                     PrintAcChar                                             ; put 127:'Block
 
 _50                 BRA                     _20                             ; goto &20
 
-_end_0x02a2         BRA                     _end_0x02a2                     ; END
+_end_0x02a0         BRA                     _end_0x02a0                     ; END
 
 
 
@@ -294,12 +294,12 @@ divide16bit         EQU     0x79a8
 rand16bit           EQU     0x7eb8
 randMod16bit        EQU     0x7ea5
 resetVideoTable     EQU     0x7ba6
-initClearFuncs      EQU     0x7ddc
+initClearFuncs      EQU     0x7ddd
 clearVertBlinds     EQU     0x7bc5
 clearCursorRow      EQU     0x78b6
-resetAudio          EQU     0x7da5
+resetAudio          EQU     0x7da4
 playMidi            EQU     0x7caf
-midiStartNote       EQU     0x77be
+midiStartNote       EQU     0x77b3
 printInit           EQU     0x7ab7
 printChr            EQU     0x7ca2
 printChar           EQU     0x76a7
@@ -324,7 +324,7 @@ lutIndex            EQU     register8
 
                     ; runs real time, (time sliced), code at regular intervals
 realTimeProc        PUSH
-                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI/SPRITE etc routines
+                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI routine
                     CALL    giga_vAC
                     POP
                     RET
@@ -504,7 +504,7 @@ initClearFuncs      PUSH
                     LDWI    resetVideoTable
                     CALL    giga_vAC
     
-                    LDWI    0x0002                              ; starting cursor position
+                    LDI     0x02                                ; starting cursor position
                     STW     cursorXY
                     LDWI    0x7FFF
                     ANDW    miscFlags
@@ -559,37 +559,42 @@ clearVB_loop        CALL    realTimeProcAddr
 
 
 numChannels         EQU     register0
-audioPtr            EQU     register1
+audioAddr           EQU     register1
 waveType            EQU     register2
-midiNote            EQU     register4           ; register4 to register7 are the only free registers during time slicing, (state is invalidated each time slice)
+midiNote            EQU     register4                       ; register4 to register7 are the only free registers during time slicing, (state is invalidated each time slice)
 midiCommand         EQU     register5
 midiPtr             EQU     register6
+sndChannel          EQU     register8
+sndFrequency        EQU     register9
+sndVolume           EQU     register10
+sndWaveType         EQU     register11
 
 
-resetAudio          LDI     0
-                    STW     midiDelay
+resetAudio          LD      giga_frameCount
+                    ADDI    1
+                    STW     midiDelay                       ; instant startup
                     LDWI    giga_soundChan1
-                    STW     audioPtr
+                    STW     audioAddr
                     LD      waveType
                     ANDI    0x03
                     ST      waveType + 1
                     LDI     0x00
-                    ST      waveType            ; waveform type
+                    ST      waveType                        ; waveform type
                     LDI     0x04
 
 resetA_loop         ST      numChannels
-                    LDI     giga_soundChan1     ; reset low byte
-                    ST      audioPtr
+                    LDI     giga_soundChan1
+                    ST      audioAddr                       ; reset low byte
                     LDW     waveType
-                    DOKE    audioPtr            ; wavA and wavX
-                    INC     audioPtr
-                    INC     audioPtr    
+                    DOKE    audioAddr                       ; wavA and wavX
+                    INC     audioAddr
+                    INC     audioAddr    
                     LDI     0
-                    DOKE    audioPtr            ; keyL and keyH
-                    INC     audioPtr
-                    INC     audioPtr
-                    DOKE    audioPtr            ; oscL and oscH
-                    INC     audioPtr + 1        ; increment high byte
+                    DOKE    audioAddr                       ; keyL and keyH
+                    INC     audioAddr
+                    INC     audioAddr
+                    DOKE    audioAddr                       ; oscL and oscH
+                    INC     audioAddr + 1                   ; increment high byte
                     
                     LD      numChannels
                     SUBI    1
@@ -599,8 +604,8 @@ resetA_loop         ST      numChannels
 
 
 playMidi            LDW     midiStream
-                    BEQ     playM_exit0         ; 0x0000 = stop
-                    LDI     0x08                ; keep pumping soundTimer, so that global sound stays alive
+                    BEQ     playM_exit0                     ; 0x0000 = stop
+                    LDI     0x08                            ; keep pumping soundTimer
                     ST      giga_soundTimer
                     LD      giga_frameCount
                     SUBW    midiDelay
@@ -609,77 +614,85 @@ playM_exit0         RET
 
 playM_start         PUSH
 playM_process       LDW     midiStream
-                    PEEK                        ; get midi stream byte
+                    PEEK                                    ; get midi stream byte
                     STW     midiCommand
                     LDW     midiStream
                     ADDI    0x01
                     STW     midiStream
                     LDI     0xF0
                     ANDW    midiCommand
-                    XORI    0x90                ; check for start note
+                    XORI    0x90                            ; check for start note
                     BNE     playM_endnote
     
                     LDWI    midiStartNote
-                    CALL    giga_vAC            ; start note
+                    CALL    giga_vAC            			; start note
                     BRA     playM_process
                     
-playM_endnote       XORI    0x10                ; check for end note
+playM_endnote       XORI    0x10                            ; check for end note
                     BNE     playM_segment
     
-                    LDWI    midiEndNote         ; end note
+                    LDWI    midiEndNote         			; end note
                     CALL    giga_vAC
                     BRA     playM_process
 
-playM_segment       XORI    0x50                ; check for new segment
+playM_segment       XORI    0x50                            ; check for new segment
                     BNE     playM_delay
     
-                    LDW     midiStream          ; midi score
+                    LDW     midiStream                      ; midi score
                     DEEK
-                    STW     midiStream          ; 0xD0 new midi segment address
-                    BEQ     playM_exit1         ; 0x0000 = stop
+                    STW     midiStream                      ; 0xD0 new midi segment address
+                    BEQ     playM_exit1                     ; 0x0000 = stop
                     BRA     playM_process
     
-playM_delay         LD      giga_frameCount     ; midiDelay = (midiCommand + peek(frameCount)) & 0x00FF 
+playM_delay         LD      giga_frameCount                 ; midiDelay = (midiCommand + peek(frameCount)) & 0x00FF 
                     ADDW    midiCommand
                     ST      midiDelay
 playM_exit1         POP
                     RET
 
 
-midiStartNote       LDWI    giga_notesTable     ; note table in ROM
+midiStartNote       LDWI    giga_notesTable                 ; note table in ROM
                     STW     midiPtr
-                    LDW     midiStream          ; midi score
+                    LDW     midiStream                      ; midi note
                     PEEK
                     SUBI    11
                     LSLW
                     ADDW    midiPtr
                     STW     midiPtr
-                    LUP     0x00                ; get ROM midi note low byte
+                    LUP     0x00                            ; get ROM midi note low byte
                     ST      midiNote
                     LDW     midiPtr
-                    LUP     0x01                ; get ROM midi note high byte
+                    LUP     0x01                            ; get ROM midi note high byte
                     ST      midiNote + 1
                     LDW     midiCommand
-                    ANDI    0x03                ; get channel
-                    ADDI    0x01                
+                    ANDI    0x03                            ; get channel
+                    ADDI    0x01
                     ST      midiPtr + 1
                     LDI     0xFC
-                    ST      midiPtr             ; channels address 0x01FC <-> 0x04FC
+                    ST      midiPtr                         ; note address 0x01FC <-> 0x04FC
                     LDW     midiNote
-                    DOKE    midiPtr             ; set note
-                    LDW     midiStream
-                    ADDI    0x01                ; midiStream++
+                    DOKE    midiPtr                         ; set note
+                    
+midiSN_exit         LDW     midiStream
+                    ADDI    0x01                            ; midiStream++
                     STW     midiStream
                     RET
+
+midiSetVolume       LDI     0xFA
+                    ST      midiPtr                         ; wavA address 0x01FA <-> 0x04FA, (midiPtr is still valid from midiStartNote)
+                    LDW     midiStream                      ; midi volume
+                    PEEK
+                    POKE    midiPtr
+                    BRA     midiSN_exit                     ; save a few bytes by using midiStartNote's epilogue
                     
 midiEndNote         LDW     midiCommand
-                    ANDI    0x03                ; get channel
+                    ANDI    0x03                            ; get channel
                     ADDI    0x01                
                     ST      midiPtr + 1
                     LDI     0xFC
-                    ST      midiPtr             ; channels address 0x01FC <-> 0x04FC
+                    ST      midiPtr                         ; channels address 0x01FC <-> 0x04FC
                     LDI     0
-                    DOKE    midiPtr             ; end note
+                    DOKE    midiPtr                         ; end note
                     RET
 
 

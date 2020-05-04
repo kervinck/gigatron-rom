@@ -12,6 +12,14 @@ mathPow             EQU     register11
 mathResult          EQU     register14
 
 
+%SUB                absolute
+absolute            BGE     abs_exit
+                    STW     mathX
+                    LDI     0
+                    SUBW    mathX
+abs_exit            RET
+%ENDS
+
 %SUB                power16bit
                     ; accumulator = mathX ** mathY, (result 16bit)
 power16bit          LDW     mathX

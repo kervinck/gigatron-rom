@@ -23,6 +23,7 @@ cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
 miscFlags           EQU                     register0 + 0x28
+fontLutId           EQU                     0x00e0
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -34,14 +35,14 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_loop               EQU                     0x0253
-_circle             EQU                     0x028f
-_end_0x02ab         EQU                     0x028d
-_repeat_0x02be      EQU                     0x029e
+_loop               EQU                     0x0251
+_circle             EQU                     0x028d
+_end_0x02a9         EQU                     0x028b
+_repeat_0x02bc      EQU                     0x029c
 _page_0x0300        EQU                     0x0300
-_else_0x038f        EQU                     0x0337
-_endif_0x03b1       EQU                     0x0349
-_end_0x03c5         EQU                     0x0359
+_else_0x038d        EQU                     0x0335
+_endif_0x03af       EQU                     0x0347
+_end_0x03c3         EQU                     0x0357
 
 ; Variables
 _ch0                EQU                     0x0030
@@ -66,6 +67,7 @@ _a                  EQU                     0x0046
 ; Define Images
 
 ; Define Sprites
+; Define Fonts
 
 ; Lookup Tables
 
@@ -79,8 +81,7 @@ _entryPoint_        InitRealTimeProc
                     InitGtOp                
                     Initialise                                              ; INIT
 
-                    LDWI                    clearVertBlinds
-                    CALL                    giga_vAC
+                    ClearVertBlinds         
                     LDI                     2
                     STW                     graphicsMode
                     ScanlineMode                                            ; cls : mode 2
@@ -116,7 +117,7 @@ _loop               LDI                     0x64
                     LDWI                    _loop
                     CALL                    giga_vAC                        ; goto loop
 
-_end_0x02ab         BRA                     _end_0x02ab                     ; end
+_end_0x02a9         BRA                     _end_0x02a9                     ; end
 
 _circle             PUSH                    
                     LDI                     1
@@ -129,7 +130,7 @@ _circle             PUSH
                     LDW                     _r
                     STW                     _y                              ; y = r
 
-_repeat_0x02be      LDW                     _cy
+_repeat_0x02bc      LDW                     _cy
                     ADDW                    _y
                     ST                      _ch0 + 1                        ; ch0.hi = cy + y
 
@@ -180,11 +181,11 @@ _repeat_0x02be      LDW                     _cy
                     LDW                     _c
                     POKE                    _a                              ; a = cx + y + ch2 : poke a, c
 
+                    LDW                     _cx
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
-                    LDW                     _cx
                     SUBW                    _y
                     ADDW                    _ch2
                     STW                     _a
@@ -206,7 +207,7 @@ _page_0x0300        LDW                     0xde
                     POKE                    _a                              ; a = cx - y + ch3 : poke a, c
 
                     LDW                     _d
-                    BGE                     _else_0x038f                    ; if d &&< 0
+                    BGE                     _else_0x038d                    ; if d &&< 0
 
                     LDW                     _x
                     LSLW                    
@@ -214,9 +215,9 @@ _page_0x0300        LDW                     0xde
                     ADDW                    _d
                     ADDI                    3
                     STW                     _d
-                    BRA                     _endif_0x03b1                   ; d = d + (x LSL 2) + 3
+                    BRA                     _endif_0x03af                   ; d = d + (x LSL 2) + 3
 
-_else_0x038f        LDW                     _x
+_else_0x038d        LDW                     _x
                     SUBW                    _y
                     LSLW                    
                     LSLW                    
@@ -228,16 +229,16 @@ _else_0x038f        LDW                     _x
                     SUBI                    1
                     STW                     _y                              ; y = y - 1
 
-_endif_0x03b1       INC                     _x                              ; inc x
+_endif_0x03af       INC                     _x                              ; inc x
 
                     LDW                     _x
                     SUBW                    _y
-                    JumpGT                  _repeat_0x02be 2                ; until x &> y
+                    JumpGT                  _repeat_0x02bc 2                ; until x &> y
 
                     POP                     
                     RET                                                     ; return
 
-_end_0x03c5         BRA                     _end_0x03c5                     ; END
+_end_0x03c3         BRA                     _end_0x03c3                     ; END
 
 
 
@@ -259,8 +260,8 @@ rand16bit           EQU     0x7ea4
 randMod16bit        EQU     0x7cec
 scanlineMode        EQU     0x7eac
 resetVideoTable     EQU     0x7ccd
-initClearFuncs      EQU     0x7ddc
-clearVertBlinds     EQU     0x7da2
+initClearFuncs      EQU     0x7ddd
+clearVertBlinds     EQU     0x7da3
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -280,7 +281,7 @@ lutIndex            EQU     register8
 
                     ; runs real time, (time sliced), code at regular intervals
 realTimeProc        PUSH
-                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI/SPRITE etc routines
+                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI routine
                     CALL    giga_vAC
                     POP
                     RET
@@ -541,7 +542,7 @@ initClearFuncs      PUSH
                     LDWI    resetVideoTable
                     CALL    giga_vAC
     
-                    LDWI    0x0002                              ; starting cursor position
+                    LDI     0x02                                ; starting cursor position
                     STW     cursorXY
                     LDWI    0x7FFF
                     ANDW    miscFlags

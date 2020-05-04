@@ -23,6 +23,7 @@ cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
 miscFlags           EQU                     register0 + 0x28
+fontLutId           EQU                     0x00e0
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -34,13 +35,13 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_break              EQU                     0x02ce
-_next_0x0252        EQU                     0x0252
-_next_0x025b        EQU                     0x025b
-_next_0x026f        EQU                     0x0269
-_else_0x02ba        EQU                     0x02a0
+_break              EQU                     0x02cc
+_next_0x0250        EQU                     0x0250
+_next_0x0259        EQU                     0x0259
+_next_0x026d        EQU                     0x0267
+_else_0x02b8        EQU                     0x029e
 _page_0x0300        EQU                     0x0300
-_end_0x036a         EQU                     0x0334
+_end_0x0368         EQU                     0x0332
 
 ; Variables
 _cy                 EQU                     0x0030
@@ -64,6 +65,7 @@ def_bytes_0x0600    DB                      1 2 3 7 11 15 14 13 12 60 56 52 48 3
 ; Define Images
 
 ; Define Sprites
+; Define Fonts
 
 ; Lookup Tables
 
@@ -81,8 +83,7 @@ _entryPoint_        InitRealTimeProc
                     STW                     graphicsMode
                     ScanlineMode                                            ; mode 2
 
-                    LDWI                    clearVertBlinds
-                    CALL                    giga_vAC                        ; cls
+                    ClearVertBlinds                                         ; cls
 
                     LDWI                    -60
                     STW                     _cy                             ; cy = ymin
@@ -90,13 +91,13 @@ _entryPoint_        InitRealTimeProc
                     LDI                     8
                     STW                     _py                             ; for py=8 to 67
 
-_next_0x0252        LDWI                    -90
+_next_0x0250        LDWI                    -90
                     STW                     _cx                             ; cx = xmin
 
                     LDI                     0
                     STW                     _px                             ; for px=0 to 159
 
-_next_0x025b        LDI                     0
+_next_0x0259        LDI                     0
                     STW                     _x
                     STW                     _y
                     STW                     _x2
@@ -105,7 +106,7 @@ _next_0x025b        LDI                     0
                     LDI                     0
                     STW                     _c                              ; for c=0 to 14
 
-_next_0x026f        LDW                     _x
+_next_0x026d        LDW                     _x
                     STW                     mathX
                     LDW                     _x
                     STW                     mathY
@@ -128,10 +129,10 @@ _next_0x026f        LDW                     _x
                     LDW                     _x2
                     ADDW                    _y2
                     SUBI                    128
-                    BLE                     _else_0x02ba
+                    BLE                     _else_0x02b8
                     BRA                     _break                          ; if x2+y2 &&> (2**fracbits * 4) then goto &break
 
-_else_0x02ba        LDW                     _x
+_else_0x02b8        LDW                     _x
                     STW                     mathX
                     LDW                     _y
                     STW                     mathY
@@ -147,7 +148,7 @@ _else_0x02ba        LDW                     _x
                     ADDW                    _cx
                     STW                     _x                              ; x = x2 - y2 + cx
 
-                    ForNextFarInc           _c _next_0x026f 14              ; next c
+                    ForNextFarInc           _c _next_0x026d 14              ; next c
 
 _break              LD                      _py
                     ST                      giga_vAC + 1
@@ -168,11 +169,11 @@ _break              LD                      _py
                     ORI                     0xFF
                     XORI                    0xFF
                     ADDW                    _px
+                    STW                     0xc2
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
-                    STW                     0xc2
                     LDWI                    1536
                     ADDW                    _c
                     PEEK                    
@@ -182,15 +183,15 @@ _page_0x0300        LDW                     0xde
                     ADDI                    1
                     STW                     _cx                             ; cx = cx + dx
 
-                    ForNextFarInc           _px _next_0x025b 159            ; next px
+                    ForNextFarInc           _px _next_0x0259 159            ; next px
 
                     LDW                     _cy
                     ADDI                    1
                     STW                     _cy                             ; cy = cy + dy
 
-                    ForNextFarInc           _py _next_0x0252 67             ; next py
+                    ForNextFarInc           _py _next_0x0250 67             ; next py
 
-_end_0x036a         BRA                     _end_0x036a                     ; END
+_end_0x0368         BRA                     _end_0x0368                     ; END
 
 
 
@@ -212,8 +213,8 @@ shiftRight5bit      EQU     0x7ea2
 shiftRightSgn4bit   EQU     0x7cb0
 scanlineMode        EQU     0x7eac
 resetVideoTable     EQU     0x7be0
-initClearFuncs      EQU     0x7ddc
-clearVertBlinds     EQU     0x7da2
+initClearFuncs      EQU     0x7ddd
+clearVertBlinds     EQU     0x7da3
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -233,7 +234,7 @@ lutIndex            EQU     register8
 
                     ; runs real time, (time sliced), code at regular intervals
 realTimeProc        PUSH
-                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI/SPRITE etc routines
+                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI routine
                     CALL    giga_vAC
                     POP
                     RET
@@ -477,7 +478,7 @@ initClearFuncs      PUSH
                     LDWI    resetVideoTable
                     CALL    giga_vAC
     
-                    LDWI    0x0002                              ; starting cursor position
+                    LDI     0x02                                ; starting cursor position
                     STW     cursorXY
                     LDWI    0x7FFF
                     ANDW    miscFlags

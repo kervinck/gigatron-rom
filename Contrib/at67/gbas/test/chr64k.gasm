@@ -266,6 +266,7 @@ _str_0xff22         DB                      25 'lalalalala23d455345634650' 0
 ; Define Images
 
 ; Define Sprites
+; Define Fonts
 
 ; Lookup Tables
 
@@ -289,7 +290,7 @@ _entryPoint_        InitRealTimeProc
                     NewLine                                                 ; print frog$
 
                     LDI                     33
-                    STW                     _z                              ; let z = 33
+                    STW                     _z                              ; z = 33
 
                     LDW                     _z
                     STW                     mathX
@@ -7877,7 +7878,7 @@ lutIndex            EQU     register8
 
                     ; runs real time, (time sliced), code at regular intervals
 realTimeProc        PUSH
-                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI/SPRITE etc routines
+                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI routine
                     CALL    giga_vAC
                     POP
                     RET

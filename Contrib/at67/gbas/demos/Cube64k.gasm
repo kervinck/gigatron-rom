@@ -23,6 +23,7 @@ cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
 miscFlags           EQU                     register0 + 0x28
+fontLutId           EQU                     0x00e0
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -34,34 +35,34 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x0286
-_20                 EQU                     0x028f
-_25                 EQU                     0x0298
-_30                 EQU                     0x02b6
-_35                 EQU                     0x02d6
-_40                 EQU                     0x0308
-_45                 EQU                     0x0325
-_50                 EQU                     0x0329
-_60                 EQU                     0x035d
-_setup              EQU                     0x0391
-_process            EQU                     0x044b
-_draw               EQU                     0x050f
-_erase              EQU                     0x05ae
+_10                 EQU                     0x0284
+_20                 EQU                     0x028d
+_25                 EQU                     0x0296
+_30                 EQU                     0x02b4
+_35                 EQU                     0x02d4
+_40                 EQU                     0x0306
+_45                 EQU                     0x0323
+_50                 EQU                     0x0327
+_60                 EQU                     0x035b
+_setup              EQU                     0x038f
+_process            EQU                     0x0449
+_draw               EQU                     0x050d
+_erase              EQU                     0x05ac
 _254                EQU                     0x0657
 _253                EQU                     0x068b
 _flip               EQU                     0x06c1
 _page_0x0300        EQU                     0x0300
-_next_0x0449        EQU                     0x03c2
-_else_0x046f        EQU                     0x03da
+_next_0x0447        EQU                     0x03c0
+_else_0x046d        EQU                     0x03d8
 _page_0x0400        EQU                     0x0400
-_end_0x04d9         EQU                     0x0449
-_next_0x04e0        EQU                     0x0450
+_end_0x04d7         EQU                     0x0447
+_next_0x04de        EQU                     0x044e
 _page_0x0500        EQU                     0x0500
 _page_0x0600        EQU                     0x0600
-_else_0x0711        EQU                     0x066d
-_else_0x074d        EQU                     0x06a3
-_repeat_0x0779      EQU                     0x06cd
-_end_0x0799         EQU                     0x06e7
+_else_0x070f        EQU                     0x066d
+_else_0x074b        EQU                     0x06a3
+_repeat_0x0777      EQU                     0x06cd
+_end_0x0797         EQU                     0x06e7
 
 ; Variables
 _videoTable         EQU                     0x0030
@@ -107,6 +108,7 @@ _str_0x87b8         DB                      3 '/60' 0
 ; Define Images
 
 ; Define Sprites
+; Define Fonts
 
 ; Lookup Tables
 
@@ -149,12 +151,10 @@ _entryPoint_        InitRealTimeProc
                     LDI                     238
                     POKE                    register0                       ; poke &h01F9, 238
 
-                    LDWI                    clearVertBlinds
-                    CALL                    giga_vAC
+                    ClearVertBlinds         
                     LDWI                    -30720
                     STW                     clsAddress
-                    LDWI                    clearScreen
-                    CALL                    giga_vAC                        ; cls : cls &h8800
+                    ClearScreen                                             ; cls : cls &h8800
 
                     LDWI                    505
                     STW                     register0
@@ -217,11 +217,11 @@ _35                 LDWI                    0x87f0
                     LDWI                    0x87f0
                     ADDW                    register1
                     ADDW                    register1
+                    STW                     register1
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
-                    STW                     register1
                     LDW                     register0
                     DOKE                    register1                       ; P(I+4)=160-P(I)
 
@@ -329,7 +329,7 @@ _setup              LDI                     45
                     LDI                     0
                     STW                     _i                              ; for i=0 to 100
 
-_next_0x0449        LDW                     _tick
+_next_0x0447        LDW                     _tick
                     STW                     _ticks
                     LD                      0x0e
                     STW                     _tick
@@ -337,25 +337,25 @@ _next_0x0449        LDW                     _tick
                     STW                     _ticks                          ; ticks=tick : tick=peek(14) : ticks=tick-ticks
 
                     LDW                     _ticks
-                    BGE                     _else_0x046f
+                    BGE                     _else_0x046d
                     LDWI                    256
                     ADDW                    _ticks
                     STW                     _ticks                          ; if ticks &&< 0 then ticks=ticks+256
 
-_else_0x046f        LDW                     _timer
+_else_0x046d        LDW                     _timer
                     ADDW                    _ticks
                     STW                     _timer                          ; timer=timer+ticks
 
                     LDWI                    _254
                     CALL                    giga_vAC                        ; gosub 254
 
-                    ForNextFarInc           _i _next_0x0449 100             ; next i
+                    ForNextFarInc           _i _next_0x0447 100             ; next i
 
+                    LDI                     15
                     STW                     0xde
                     LDWI                    _page_0x0400
                     CALL                    giga_vAC
 _page_0x0400        LDW                     0xde
-                    LDI                     15
                     ST                      163                             ; poke 163, &h0F
 
                     LDW                     _timer
@@ -377,12 +377,12 @@ _page_0x0400        LDW                     0xde
                     PrintString             _str_0x87b8
                     NewLine                                                 ; print timer/60;" ";timer % 60;"/60"
 
-_end_0x04d9         BRA                     _end_0x04d9                     ; end
+_end_0x04d7         BRA                     _end_0x04d7                     ; end
 
 _process            PUSH                    
                     LDI                     0
                     STW                     _j
-_next_0x04e0        LDWI                    0x87f0
+_next_0x04de        LDWI                    0x87f0
                     ADDW                    _j
                     ADDW                    _j
                     DEEK                    
@@ -404,7 +404,7 @@ _next_0x04e0        LDWI                    0x87f0
                     STW                     register1
                     LDW                     register0
                     DOKE                    register1
-                    ForNextFarInc           _j _next_0x04e0 7               ; for j=0 to 7 : PP(j)=P(j) : QQ(j)=Q(j) : next j
+                    ForNextFarInc           _j _next_0x04de 7               ; for j=0 to 7 : PP(j)=P(j) : QQ(j)=Q(j) : next j
 
                     LDI                     0
                     STW                     _I
@@ -459,11 +459,11 @@ _next_0x04e0        LDWI                    0x87f0
                     LDI                     0
                     SUBW                    _L
                     STW                     _L
+                    LDI                     0
                     STW                     0xde
                     LDWI                    _page_0x0500
                     CALL                    giga_vAC
 _page_0x0500        LDW                     0xde
-                    LDI                     0
                     SUBW                    _N
                     STW                     _N
                     LDWI                    _20
@@ -657,11 +657,11 @@ _254                PUSH
                     ADDI                    5
                     STW                     _S
                     SUBI                    45
-                    JumpGE                  _else_0x0711 1
+                    JumpGE                  _else_0x070f 1
                     LDWI                    -40
                     STW                     _S                              ; S = S + 5 : if S &>= 45 then S = -40
 
-_else_0x0711        LDI                     15
+_else_0x070f        LDI                     15
                     ST                      163
                     LDWI                    _process
                     CALL                    giga_vAC
@@ -685,11 +685,11 @@ _253                PUSH
                     STW                     _S
                     LDWI                    -45
                     SUBW                    _S
-                    JumpGT                  _else_0x074d 2
+                    JumpGT                  _else_0x074b 2
                     LDI                     40
                     STW                     _S                              ; S = S - 5 : if S &<= -45 then S = 40
 
-_else_0x074d        LDI                     15
+_else_0x074b        LDI                     15
                     ST                      163
                     LDWI                    _process
                     CALL                    giga_vAC
@@ -715,7 +715,7 @@ _flip               PUSH
                     ORI                     40
                     STW                     _scanLine                       ; scanLine = pageFlip OR &h28
 
-_repeat_0x0779      LDW                     _scanLine
+_repeat_0x0777      LDW                     _scanLine
                     POKE                    _videoTable                     ; poke videoTable, scanLine
 
                     INC                     _scanLine                       ; inc scanLine
@@ -726,7 +726,7 @@ _repeat_0x0779      LDW                     _scanLine
 
                     LDWI                    432
                     SUBW                    _videoTable
-                    BNE                     _repeat_0x0779                  ; until videoTable &&= VideoTableEnd
+                    BNE                     _repeat_0x0777                  ; until videoTable &&= VideoTableEnd
 
                     LDW                     _pageFlip
                     XORI                    128
@@ -735,7 +735,7 @@ _repeat_0x0779      LDW                     _scanLine
                     POP                     
                     RET                                                     ; return
 
-_end_0x0799         BRA                     _end_0x0799                     ; END
+_end_0x0797         BRA                     _end_0x0797                     ; END
 
 
 
@@ -754,11 +754,11 @@ convertLtOp         EQU     0x8782
 convertGtOp         EQU     0x8779
 multiply16bit       EQU     0x85cd
 divide16bit         EQU     0x8667
-scanlineMode        EQU     0x8742
+scanlineMode        EQU     0x8743
 resetVideoTable     EQU     0x84e0
-initClearFuncs      EQU     0x8756
+initClearFuncs      EQU     0x8757
 clearScreen         EQU     0x86be
-clearVertBlinds     EQU     0x8708
+clearVertBlinds     EQU     0x8709
 clearCursorRow      EQU     0x8497
 drawLine            EQU     0x8612
 drawLineExt         EQU     0x845e
@@ -789,7 +789,7 @@ lutIndex            EQU     register8
 
                     ; runs real time, (time sliced), code at regular intervals
 realTimeProc        PUSH
-                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI/SPRITE etc routines
+                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI routine
                     CALL    giga_vAC
                     POP
                     RET
@@ -1062,7 +1062,7 @@ initClearFuncs      PUSH
                     LDWI    resetVideoTable
                     CALL    giga_vAC
     
-                    LDWI    0x0002                              ; starting cursor position
+                    LDI     0x02                                ; starting cursor position
                     STW     cursorXY
                     LDWI    0x7FFF
                     ANDW    miscFlags

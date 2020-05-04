@@ -4,7 +4,7 @@ _runtimeStart_ &hFFFF
 frog$ = hexw$(&hb00b)
 print frog$
 
-let z = 33
+z = 33
 b = z * 2 + 1000
 
 bb = (b <= 1) - (b >= 1) - (b = 33) - (b <> 32)
