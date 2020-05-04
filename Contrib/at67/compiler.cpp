@@ -78,9 +78,12 @@ namespace Compiler
     std::vector<DefDataByte>   _defDataBytes;
     std::vector<DefDataWord>   _defDataWords;
     std::vector<DefDataImage>  _defDataImages;
+    
     std::map<int, DefDataSprite> _defDataSprites;
-
     SpritesAddrLut _spritesAddrLut;
+
+    std::map<int, DefDataFont> _defDataFonts;
+    FontsAddrLut _fontsAddrLut;
 
 
     uint16_t getVasmPC(void) {return _vasmPC;}
@@ -129,6 +132,9 @@ namespace Compiler
 
     std::map<int, DefDataSprite>& getDefDataSprites(void) {return _defDataSprites;}
     SpritesAddrLut& getSpritesAddrLut(void) {return _spritesAddrLut;}
+
+    std::map<int, DefDataFont>& getDefDataFonts(void) {return _defDataFonts;}
+    FontsAddrLut& getFontsAddrLut(void) {return _fontsAddrLut;}
 
     std::map<std::string, MacroIndexEntry>& getMacroIndexEntries(void) {return _macroIndexEntries;}
 
@@ -311,7 +317,34 @@ namespace Compiler
         _currentLabelIndex = int(_labels.size() - 1);
     }
 
-    void createIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, int& varIndex, VarType varType, uint16_t arrayStart, int intSize, int arrSize)
+    void createIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, int& varIndex)
+    {
+        // Create var
+        varIndex = int(_integerVars.size());
+        codeLine._containsVars = containsVars;
+        codeLine._varIndex = varIndex;
+        codeLine._varType = VarInt16;
+
+        std::vector<int16_t> arrInits;
+        IntegerVar integerVar = {data, init, _userVarStart, 0x0000, varName, varName, codeLineIndex, VarInt16, Int16, 0, arrInits};
+        _integerVars.push_back(integerVar);
+
+        // Create var output
+        std::string line = "_" + _integerVars[varIndex]._name;
+        Expression::addString(line, LABEL_TRUNC_SIZE - int(line.size()));
+        size_t space = line.find_first_of(" ");
+        if(space == std::string::npos  ||  space >= LABEL_TRUNC_SIZE - 1)
+        {
+            line = line.substr(0, LABEL_TRUNC_SIZE);
+            line[LABEL_TRUNC_SIZE - 1] = ' ';
+        }
+        _integerVars[varIndex]._output = line;
+        _userVarStart += Int16;
+        if(_userVarStart >= USER_VAR_END) _userVarStart = USER_VAR_START;
+    }
+
+    void createIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, int& varIndex, const std::vector<int16_t>& arrInits,
+                      VarType varType, uint16_t arrayStart, int intSize, int arrSize)
     {
         // Create var
         varIndex = int(_integerVars.size());
@@ -320,7 +353,7 @@ namespace Compiler
         codeLine._varType = VarInt16;
 
         uint16_t varStart = (varType == VarArray) ? 0x0000 : _userVarStart;
-        IntegerVar integerVar = {data, init, varStart, arrayStart, varName, varName, codeLineIndex, varType, intSize, arrSize};
+        IntegerVar integerVar = {data, init, varStart, arrayStart, varName, varName, codeLineIndex, varType, intSize, arrSize, arrInits};
         _integerVars.push_back(integerVar);
 
         // Create var output
@@ -828,7 +861,7 @@ namespace Compiler
         return vasmSize;
     }
 
-    void emitVcpuAsm(const std::string& opcodeStr, const std::string& operandStr, bool nextTempVar, int codeLineIdx, const std::string& internalLabel, bool pageJump)
+    std::pair<int, int> emitVcpuAsm(const std::string& opcodeStr, const std::string& operandStr, bool nextTempVar, int codeLineIdx, const std::string& internalLabel, bool pageJump)
     {
         if(codeLineIdx == -1) codeLineIdx = _currentCodeLineIndex;
 
@@ -836,16 +869,27 @@ namespace Compiler
         int vasmSize = createVcpuAsm(opcodeStr, operandStr, codeLineIdx, line);
 
         // NEXT and THEN don't know where the next vasm instruction is, so they use _nextInternalLabel, (which has priority over internalLabel)
-        std::string label = (_nextInternalLabel.size()) ? _nextInternalLabel : internalLabel;
+        std::string intLabel = (_nextInternalLabel.size()) ? _nextInternalLabel : internalLabel;
 
         // Discarded labels are replaced correctly later in outputLabels()
         if(_nextInternalLabel.size()  &&  internalLabel.size()) _discardedLabels.push_back({_vasmPC, internalLabel});
 
-        _codeLines[codeLineIdx]._vasm.push_back({uint16_t(_vasmPC - vasmSize), opcodeStr, operandStr, line, label, pageJump, vasmSize});
+        _codeLines[codeLineIdx]._vasm.push_back({uint16_t(_vasmPC - vasmSize), opcodeStr, operandStr, line, intLabel, pageJump, vasmSize});
         _codeLines[codeLineIdx]._vasmSize += vasmSize;
 
         if(nextTempVar) getNextTempVar();
         _nextInternalLabel = "";
+
+        // Return current vasm instruction index
+        return std::make_pair(codeLineIdx, int(_codeLines[codeLineIdx]._vasm.size()) - 1);
+    }
+
+    void createVcpuAsmLabel(int codeLineIdxBra, int vcpuAsmBra, int codeLineIdxDst, int vcpuAsmDst, const std::string& label)
+    {
+        std::string opcode = _codeLines[codeLineIdxBra]._vasm[vcpuAsmBra]._opcode;
+        _codeLines[codeLineIdxBra]._vasm[vcpuAsmBra]._code = opcode + std::string(OPCODE_TRUNC_SIZE - opcode.size(), ' ') + label;
+        _codeLines[codeLineIdxBra]._vasm[vcpuAsmBra]._operand = label;
+        _codeLines[codeLineIdxDst]._vasm[vcpuAsmDst]._internalLabel = label;
     }
 
     // Generic LDW expression parser
@@ -1644,6 +1688,14 @@ namespace Compiler
         {
             numeric = factor(0); numeric = Keywords::functionLEN(numeric);
         }
+        else if(Expression::find("GET"))
+        {
+            numeric = factor(0); numeric = Keywords::functionGET(numeric);
+        }
+        else if(Expression::find("ABS"))
+        {
+            numeric = factor(0); numeric = Keywords::functionABS(numeric);
+        }
         else if(Expression::find("ASC"))
         {
             numeric = factor(0); numeric = Keywords::functionASC(numeric);
@@ -1691,6 +1743,10 @@ namespace Compiler
         else if(Expression::find("NOT "))
         {
             numeric = factor(0); numeric = Operators::operatorNOT(numeric);
+        }
+        else if(Expression::find("EXP"))
+        {
+            numeric = factor(0); numeric = Operators::operatorEXP(numeric);
         }
         else if(Expression::find("SIN"))
         {
@@ -2470,7 +2526,25 @@ namespace Compiler
                     std::string dbString = arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
                     for(int j=0; j<_integerVars[i]._arrSize/2; j++)
                     {
-                        dbString += Expression::wordToHexString(_integerVars[i]._init) + " ";
+                        // Single initialisation value
+                        if(_integerVars[i]._arrInits.size() == 0)
+                        {
+                            dbString += Expression::wordToHexString(_integerVars[i]._init) + " ";
+                        }
+                        // Multiple initialisation values
+                        else
+                        {
+                            // Number of initialisation values may be smaller than array size
+                            if(j <= int(_integerVars[i]._arrInits.size()))
+                            {
+                                dbString += Expression::wordToHexString(_integerVars[i]._arrInits[j]) + " ";
+                            }
+                            // Use default initialisation value for the rest of the array
+                            else
+                            {
+                                dbString += Expression::wordToHexString(_integerVars[i]._init) + " ";
+                            }
+                        }
                     }
                     _output.push_back(dbString + "\n");
                 }
@@ -2498,8 +2572,6 @@ namespace Compiler
 
     bool outputSpriteDef(int spriteId, int numStripeChunks, uint16_t address, int& dataIndex)
     {
-        if(_defDataSprites.find(spriteId) == _defDataSprites.end()) return false;
-
         std::string defName = "def_sprites_" + Expression::wordToHexString(address);
         _output.push_back(defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(address) + "\n");
         std::string dbString = defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "DB" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
@@ -2587,10 +2659,12 @@ namespace Compiler
         _output.push_back("; Define Sprites\n");
         for(auto it=_defDataSprites.begin(); it!=_defDataSprites.end(); ++it)
         {
+            int spriteId = it->first;
+
             // Skip invalid sprite
             if(it->second._stripeAddrs.size() == 0)
             {
-                fprintf(stderr, "Compiler::outputDefs() : Warning, sprite %d is missing stripe addresses\n", it->first);
+                fprintf(stderr, "Compiler::outputDefs() : Warning, sprite %d is missing stripe addresses\n", spriteId);
                 continue;
             }
 
@@ -2612,18 +2686,75 @@ namespace Compiler
                         for(int k=0; k<numStripesPerCol-1; k++)
                         {
                             uint16_t address = it->second._stripeAddrs[j*numStripesPerCol*2 + k*2];
-                            outputSpriteDef(it->first, numStripeChunks, address, dataIndex);
+                            outputSpriteDef(spriteId, numStripeChunks, address, dataIndex);
                         }
                         uint16_t address = it->second._stripeAddrs[j*numStripesPerCol*2 + (numStripesPerCol-1)*2];
-                        outputSpriteDef(it->first, remStripeChunks, address, dataIndex);
+                        outputSpriteDef(spriteId, remStripeChunks, address, dataIndex);
                     }
                     // Single stripe per column
                     else
                     {
                         uint16_t address = it->second._stripeAddrs[j*2];
-                        outputSpriteDef(it->first, numStripeChunks, address, dataIndex);
+                        outputSpriteDef(spriteId, numStripeChunks, address, dataIndex);
                     }
                 }
+            }
+        }
+
+        // Create def font data
+        _output.push_back("; Define Fonts\n");
+        for(auto it=_defDataFonts.begin(); it!=_defDataFonts.end(); ++it)
+        {
+            int fontId = it->first;
+
+            // Skip invalid font
+            if(it->second._mapping.size() == 0)
+            {
+                fprintf(stderr, "Compiler::outputDefs() : Warning, font %d is missing mapping table\n", fontId);
+                continue;
+            }
+
+            // Font mapping table
+            uint16_t address = it->second._mapAddr;
+            int mapSize = int(it->second._mapping.size());
+            std::string defName = "def_map_" + Expression::wordToHexString(address);
+            _output.push_back(defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(address) + "\n");
+            std::string dbString = defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "DB" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+            for(int i=0; i<mapSize; i++)
+            {
+                uint8_t mapData = it->second._mapping[i];
+                dbString += std::to_string(mapData) + " ";
+            }
+            _output.push_back(dbString + "\n");
+
+            // For each char of font data
+            int numChars = int(it->second._data.size());
+            for(int i=0; i<numChars; i++)
+            {
+                address = it->second._charAddrs[i];
+
+                defName = "def_char_" + Expression::wordToHexString(address);
+                _output.push_back(defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(address) + "\n");
+                dbString = defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "DB" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+
+                // Output each char
+                std::vector<uint8_t>& charData = it->second._data[i];
+                for(int j=0; j<int(charData.size()); j++)
+                {
+                    dbString += std::to_string(charData[j]) + " ";
+                }
+                _output.push_back(dbString + "\n");
+            }
+
+            // Baseline for each char, (shared by all chars and fonts)
+            if(fontId == 0)
+            {
+                address = it->second._baseAddr;
+                defName = "def_baseline_"; // + Expression::wordToHexString(address);
+                _output.push_back(defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(address) + "\n");
+                dbString = defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "DB" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+                dbString += "0 0 0 0 0 0 255";
+                _output.push_back(dbString + "\n");
             }
         }
         _output.push_back("\n");
@@ -2813,10 +2944,12 @@ namespace Compiler
         // SPRITE ADDRESS LUTs
         for(auto it=_defDataSprites.begin(); it!=_defDataSprites.end(); ++it)
         {
+            int spriteId = it->first;
+
             // Skip invalid sprite
             if(it->second._stripeAddrs.size() == 0)
             {
-                fprintf(stderr, "Compiler::outputLuts() : Warning, sprite %d is missing stripe addresses\n", it->first);
+                fprintf(stderr, "Compiler::outputLuts() : Warning, sprite %d is missing stripe addresses\n", spriteId);
                 continue;
             }
 
@@ -2824,7 +2957,7 @@ namespace Compiler
             int lutSize = int(it->second._stripeAddrs.size()) * 2;
             if(!Memory::getFreeRAM(Memory::FitDescending, lutSize + 2, USER_CODE_START, _runtimeStart, lutAddress))
             {
-                fprintf(stderr, "Compiler::outputLuts() : Not enough RAM for sprite %d address LUT of size %d\n", it->first, lutSize + 2);
+                fprintf(stderr, "Compiler::outputLuts() : Not enough RAM for sprite %d address LUT of size %d\n", spriteId, lutSize + 2);
                 return false;
             }
             _spritesAddrLut._spriteAddrs.push_back(lutAddress);
@@ -2865,6 +2998,68 @@ namespace Compiler
             _output.push_back(dwString + "\n");
         }
 
+        // FONT ADDRESS LUTs
+        for(auto it=_defDataFonts.begin(); it!=_defDataFonts.end(); ++it)
+        {
+            int fontId = it->first;
+
+            // Skip invalid font
+            if(it->second._charAddrs.size() == 0)
+            {
+                fprintf(stderr, "Compiler::outputLuts() : Warning, font %d is missing char addresses\n", fontId);
+                continue;
+            }
+
+            uint16_t lutAddress;
+            int lutSize = int(it->second._charAddrs.size()) * 2;
+            if(!Memory::getFreeRAM(Memory::FitDescending, lutSize + 2, USER_CODE_START, _runtimeStart, lutAddress))
+            {
+                fprintf(stderr, "Compiler::outputLuts() : Not enough RAM for font %d address LUT of size %d\n", fontId, lutSize + 2);
+                return false;
+            }
+            _fontsAddrLut._fontAddrs.push_back(lutAddress);
+
+            std::string lutName = "_fontLut_" + Expression::wordToHexString(lutAddress);
+            _output.push_back(lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(lutAddress) + "\n");
+
+            // Mapping table
+            std::string dwString = lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+            uint16_t address = it->second._mapAddr;
+            dwString += Expression::wordToHexString(address) + " ";
+
+            // Characters
+            for(int j=0; j<int(it->second._charAddrs.size()); j++)
+            {
+                address = it->second._charAddrs[j];
+                dwString += Expression::wordToHexString(address) + " ";
+            }
+            _output.push_back(dwString + "\n");
+        }
+
+        // FONTS LUT
+        if(_fontsAddrLut._fontAddrs.size())
+        {
+            uint16_t lutAddress;
+            int lutSize = int(_fontsAddrLut._fontAddrs.size()) * 2;
+            if(!Memory::getFreeRAM(Memory::FitDescending, lutSize + 2, USER_CODE_START, _runtimeStart, lutAddress))
+            {
+                fprintf(stderr, "Compiler::outputLuts() : Not enough RAM for fonts LUT of size %d\n", lutSize + 2);
+                return false;
+            }
+            _fontsAddrLut._address = lutAddress;
+
+            std::string lutName = "_fontsLut_"; // + Expression::wordToHexString(lutAddress);
+            _output.push_back(lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(lutAddress) + "\n");
+            
+            std::string dwString = lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+            for(int i=0; i<int(_fontsAddrLut._fontAddrs.size()); i++)
+            {
+                uint16_t address = _fontsAddrLut._fontAddrs[i];
+                dwString += Expression::wordToHexString(address) + " ";
+            }
+            _output.push_back(dwString + "\n");
+        }
+
         _output.push_back("\n");
 
         return true;
@@ -2897,6 +3092,7 @@ namespace Compiler
         _output.push_back("midiStream"     + std::string(LABEL_TRUNC_SIZE - strlen("midiStream"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x24\n");
         _output.push_back("midiDelay"      + std::string(LABEL_TRUNC_SIZE - strlen("midiDelay"), ' ')      + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x26\n");
         _output.push_back("miscFlags"      + std::string(LABEL_TRUNC_SIZE - strlen("miscFlags"), ' ')      + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x28\n");
+        _output.push_back("fontLutId"      + std::string(LABEL_TRUNC_SIZE - strlen("fontLutId"), ' ')      + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(FONT_LUT_ID) + "\n");
         _output.push_back("\n");
 
         _output.push_back("; Internal buffers\n");
@@ -3058,12 +3254,17 @@ namespace Compiler
         _defDataWords.clear();
         _defDataImages.clear();
         _defDataSprites.clear();
+        _defDataFonts.clear();
 
         _spritesAddrLut._address = 0x0000;
         _spritesAddrLut._spriteAddrs.clear();
 
+        _fontsAddrLut._address = 0x0000;
+        _fontsAddrLut._fontAddrs.clear();
+
         Linker::resetIncludeFiles();
         Linker::resetInternalSubs();
+        Linker::disableFontLinking();
 
         Memory::initialise();
         Operators::initialise();
@@ -3109,7 +3310,7 @@ namespace Compiler
         // Check for compiler errors
         if(_compilingError)
         {
-            _PAUSE_;
+            //_PAUSE_;
             return false;
         }
 
@@ -3149,11 +3350,11 @@ namespace Compiler
         // Check for validation errors
         if(_compilingError)
         {
-            _PAUSE_;
+            //_PAUSE_;
             return false;
         }
 
-        //Memory::printFreeRamList(Memory::NoSort); //Memory::SizeAscending);
+        //Memory::printFreeRamList(Memory::SizeDescending);
 
         // Write .vasm file
         std::ofstream outfile(outputFilename, std::ios::binary | std::ios::out);

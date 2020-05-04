@@ -120,16 +120,17 @@ namespace Audio
             _EXIT_(EXIT_FAILURE);
         }
 
-        initialiseChannels(false, Cpu::ROMERR);
+        initialiseChannels();
 
         SDL_PauseAudio(0);
     }
 
-    void initialiseChannels(bool coldBoot, Cpu::RomType romType)
+    void initialiseChannels(bool coldBoot)
     {
-        UNREFERENCED_PARAM(romType);
-
         static uint8_t waveTables[256];
+
+        // Enable all 4 audio channels by default
+        Cpu::setRAM(CHANNEL_MASK, uint8_t(Cpu::getRomType()) | 0x03);
 
         // ROM's V1 to V3 do not re-initialise RAM Audio Wave Tables on soft reboot, (we re-initialise them for ALL ROM versions)
         //if(romType > Cpu::ROMERR  &&  romType < Cpu::ROMv4)
@@ -205,7 +206,7 @@ namespace Audio
 
     void nextScore(void)
     {
-        initialiseChannels(false, Cpu::ROMERR);
+        initialiseChannels();
 
         if(++_scoreIndex >= 1) _scoreIndex = 0;
         _scorePtr = (uint8_t*)_score[_scoreIndex];
@@ -219,7 +220,7 @@ namespace Audio
         if(firstTime == true)
         {
             firstTime = false;
-            initialiseChannels(false, Cpu::ROMERR);            
+            initialiseChannels();            
         }
 
         static int16_t midiDelay = 0;

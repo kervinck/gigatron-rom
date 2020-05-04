@@ -23,6 +23,7 @@ cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
 miscFlags           EQU                     register0 + 0x28
+fontLutId           EQU                     0x00e0
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -34,9 +35,9 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_loop               EQU                     0x0249
-_end_0x029d         EQU                     0x0285
-_end_0x029f         EQU                     0x0287
+_loop               EQU                     0x024c
+_end_0x02a0         EQU                     0x0288
+_end_0x02a2         EQU                     0x028a
 
 ; Variables
 
@@ -49,6 +50,7 @@ _end_0x029f         EQU                     0x0287
 ; Define Images
 
 ; Define Sprites
+; Define Fonts
 
 ; Lookup Tables
 
@@ -62,8 +64,7 @@ _entryPoint_        InitRealTimeProc
                     InitGtOp                
                     Initialise                                              ; INIT
 
-                    LDWI                    clearVertBlinds
-                    CALL                    giga_vAC
+                    ClearVertBlinds         
                     LDI                     2
                     STW                     graphicsMode
                     ScanlineMode                                            ; cls : mode 2
@@ -88,9 +89,9 @@ _loop               Rand
 
                     BRA                     _loop                           ; goto &loop
 
-_end_0x029d         BRA                     _end_0x029d                     ; end
+_end_0x02a0         BRA                     _end_0x02a0                     ; end
 
-_end_0x029f         BRA                     _end_0x029f                     ; END
+_end_0x02a2         BRA                     _end_0x02a2                     ; END
 
 
 
@@ -136,7 +137,7 @@ lutIndex            EQU     register8
 
                     ; runs real time, (time sliced), code at regular intervals
 realTimeProc        PUSH
-                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI/SPRITE etc routines
+                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI routine
                     CALL    giga_vAC
                     POP
                     RET

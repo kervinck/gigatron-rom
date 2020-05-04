@@ -62,6 +62,11 @@ namespace Expression
     }
 
     // Unary math operators
+    Numeric& operatorEXP(Numeric& numeric)
+    {
+        numeric._value = exp(numeric._value);
+        return numeric;
+    }
     Numeric& operatorSIN(Numeric& numeric)
     {
         numeric._value = sin(numeric._value);
@@ -1185,6 +1190,10 @@ namespace Expression
             }
         }
         // Functions
+        else if(Expression::find("EXP"))
+        {
+            numeric = factor(0); numeric = operatorEXP(numeric);
+        }
         else if(Expression::find("SIN"))
         {
             numeric = factor(0); numeric = operatorSIN(numeric);

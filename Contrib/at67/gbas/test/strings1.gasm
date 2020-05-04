@@ -286,13 +286,13 @@ _end_0x04f7         BRA                     _end_0x04f7                     ; en
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x75f2
-convertEqOp         EQU     0x75e9
-convertNeOp         EQU     0x75e0
-convertLeOp         EQU     0x75d7
-convertGeOp         EQU     0x75ce
-convertLtOp         EQU     0x75c5
-convertGtOp         EQU     0x75bc
+realTimeProc        EQU     0x75ee
+convertEqOp         EQU     0x75e5
+convertNeOp         EQU     0x75dc
+convertLeOp         EQU     0x75d3
+convertGeOp         EQU     0x75ca
+convertLtOp         EQU     0x75c1
+convertGtOp         EQU     0x75b8
 resetVideoTable     EQU     0x6be0
 initClearFuncs      EQU     0x74dc
 clearVertBlinds     EQU     0x74a2
@@ -309,7 +309,7 @@ printChar           EQU     0x69a7
 printHexByte        EQU     0x6cca
 printHexWord        EQU     0x6cb1
 newLineScroll       EQU     0x6ea1
-stringChr           EQU     0x75ab
+stringChr           EQU     0x75a7
 stringHex           EQU     0x73ed
 stringHexw          EQU     0x73ce
 createHex           EQU     0x68d7
@@ -338,7 +338,9 @@ lutIndex            EQU     register8
 
                     ; runs real time, (time sliced), code at regular intervals
 realTimeProc        PUSH
-                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI/SPRITE etc routines
+                    LDI     0x08                            ; keep pumping soundTimer
+                    ST      giga_soundTimer
+                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI routine
                     CALL    giga_vAC
                     POP
                     RET

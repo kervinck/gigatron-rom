@@ -56,6 +56,8 @@ namespace Keywords
     Expression::Numeric functionUSR(Expression::Numeric& numeric);
     Expression::Numeric functionRND(Expression::Numeric& numeric);
     Expression::Numeric functionLEN(Expression::Numeric& numeric);
+    Expression::Numeric functionGET(Expression::Numeric& numeric);
+    Expression::Numeric functionABS(Expression::Numeric& numeric);
     Expression::Numeric functionASC(Expression::Numeric& numeric);
     Expression::Numeric functionCHR$(Expression::Numeric& numeric);
     Expression::Numeric functionHEX$(Expression::Numeric& numeric);
@@ -116,9 +118,8 @@ namespace Keywords
     bool keywordPLAY(Compiler::CodeLine& codeLine,     int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordLOAD(Compiler::CodeLine& codeLine,     int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordSPRITE(Compiler::CodeLine& codeLine,   int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
-    bool keywordSPRITEX(Compiler::CodeLine& codeLine,  int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
-    bool keywordSPRITEY(Compiler::CodeLine& codeLine,  int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
-    bool keywordSPRITEXY(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
+    bool keywordSOUND(Compiler::CodeLine& codeLine,    int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
+    bool keywordSET(Compiler::CodeLine& codeLine,      int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
 }
 
 #endif

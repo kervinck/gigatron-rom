@@ -3,7 +3,7 @@ _runtimeStart_ &hFFFF
 
 'Falling snow flakes
 'N must be 6*n+1 or 6*n-1
-const n=50
+const n=100
 const N=6*n+1
 const C=63
 const D=16
@@ -15,7 +15,7 @@ const W=159
 40 poke 163,72 : at 32,96
 50 print "Merry Christmas!";
 60 hline 0, 119, W 'at 0,119 : line W,0
-70 play midi &h08a0,3
+70 play midi,&h08a0,3
 80 for S=0 to N
 90 play midi : if Y(S)>0 then goto 120
 100 X(S) = 2 + (rnd(0) AND &h3F) + (rnd(0) AND &h3F) + (rnd(0) AND &h0F) + (rnd(0) AND &h0F) '2+rnd(W-3)

@@ -348,7 +348,7 @@ printC_slice        ST      textSlice
 printC_pop          POP
 
 printC_exit         RET
-%ENDS   
+%ENDS
     
 %SUB                newLineScroll
                     ; print from top row to bottom row, then start scrolling 

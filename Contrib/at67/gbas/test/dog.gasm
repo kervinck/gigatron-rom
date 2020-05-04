@@ -145,13 +145,13 @@ _end_0x0314         BRA                     _end_0x0314                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7eed
-convertEqOp         EQU     0x7ee4
-convertNeOp         EQU     0x7edb
-convertLeOp         EQU     0x7ed2
-convertGeOp         EQU     0x7ec9
-convertLtOp         EQU     0x7ec0
-convertGtOp         EQU     0x7eb7
+realTimeProc        EQU     0x7ee9
+convertEqOp         EQU     0x7ee0
+convertNeOp         EQU     0x7ed7
+convertLeOp         EQU     0x7ece
+convertGeOp         EQU     0x7ec5
+convertLtOp         EQU     0x7ebc
+convertGtOp         EQU     0x7eb3
 resetVideoTable     EQU     0x7da4
 initClearFuncs      EQU     0x7ddc
 clearCursorRow      EQU     0x7ab6
@@ -180,7 +180,9 @@ lutIndex            EQU     register8
 
                     ; runs real time, (time sliced), code at regular intervals
 realTimeProc        PUSH
-                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI/SPRITE etc routines
+                    LDI     0x08                            ; keep pumping soundTimer
+                    ST      giga_soundTimer
+                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI routine
                     CALL    giga_vAC
                     POP
                     RET

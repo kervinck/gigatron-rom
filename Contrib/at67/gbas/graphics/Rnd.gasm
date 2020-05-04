@@ -23,6 +23,7 @@ cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
 miscFlags           EQU                     register0 + 0x28
+fontLutId           EQU                     0x00e0
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -34,10 +35,10 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_loop               EQU                     0x0272
-_next_0x0244        EQU                     0x0244
-_else_0x030d        EQU                     0x02d5
-_end_0x030f         EQU                     0x02d7
+_loop               EQU                     0x0275
+_next_0x0247        EQU                     0x0247
+_else_0x0310        EQU                     0x02d8
+_end_0x0312         EQU                     0x02da
 
 ; Variables
 _a_array            EQU                     0x0600
@@ -54,6 +55,7 @@ _r                  EQU                     0x0032
 ; Define Images
 
 ; Define Sprites
+; Define Fonts
 
 ; Lookup Tables
 
@@ -67,13 +69,12 @@ _entryPoint_        InitRealTimeProc
                     InitGtOp                
                     Initialise                                              ; INIT
 
-                    LDWI                    clearVertBlinds
-                    CALL                    giga_vAC                        ; cls
+                    ClearVertBlinds                                         ; cls
 
                     LDI                     0
                     STW                     _i                              ; for i=0 to max
 
-_next_0x0244        LDWI                    0x0600
+_next_0x0247        LDWI                    0x0600
                     ADDW                    _i
                     ADDW                    _i
                     DEEK                    
@@ -90,7 +91,7 @@ _next_0x0244        LDWI                    0x0600
                     LDI                     63
                     POKE                    0xc4                            ; poke (127 - a(i) LSL 8) + i, &h3F
 
-                    ForNextFarInc           _i _next_0x0244 127             ; next i
+                    ForNextFarInc           _i _next_0x0247 127             ; next i
 
 _loop               Rand                    
                     ANDI                    127
@@ -131,7 +132,7 @@ _loop               Rand
                     DEEK                    
                     SUBI                    120
                     CALL                    convertEqOpAddr
-                    JumpFalse               _else_0x030d 0
+                    JumpFalse               _else_0x0310 0
                     LDWI                    0x0600
                     ADDW                    _r
                     ADDW                    _r
@@ -139,9 +140,9 @@ _loop               Rand
                     LDI                     119
                     DOKE                    register1                       ; a(r) = a(r) + 1 : if a(r) = 120 then a(r) = 119
 
-_else_0x030d        BRA                     _loop                           ; goto &loop
+_else_0x0310        BRA                     _loop                           ; goto &loop
 
-_end_0x030f         BRA                     _end_0x030f                     ; end
+_end_0x0312         BRA                     _end_0x0312                     ; end
 
 
 
@@ -181,7 +182,7 @@ lutIndex            EQU     register8
 
                     ; runs real time, (time sliced), code at regular intervals
 realTimeProc        PUSH
-                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI/SPRITE etc routines
+                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI routine
                     CALL    giga_vAC
                     POP
                     RET

@@ -32,6 +32,7 @@
 
 #include "memory.h"
 #include "cpu.h"
+#include "audio.h"
 #include "loader.h"
 #include "expression.h"
 #include "assembler.h"
@@ -1188,8 +1189,7 @@ namespace Loader
             }
         }
 
-        // Enable all 4 audio channels by default
-        Cpu::setRAM(CHANNEL_MASK, uint8_t(Cpu::getRomType()) | 0x03);
+        Audio::initialiseChannels();
 
         // Compile gbas to gasm
         if(filename.find(".gbas") != filename.npos)

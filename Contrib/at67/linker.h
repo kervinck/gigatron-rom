@@ -6,6 +6,9 @@ namespace Linker
 {
     bool initialise(void);
 
+    bool enableFontLinking(void);
+    bool disableFontLinking(void);
+
     bool parseIncludes(void);
 
     bool linkInternalSubs(void);

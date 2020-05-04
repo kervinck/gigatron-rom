@@ -15,6 +15,7 @@ namespace Operators
 {
     bool initialise(void);
 
+    void createSingleOp(const std::string& opcodeStr, Expression::Numeric& numeric);
     void handleSingleOp(const std::string& opcodeStr, Expression::Numeric& numeric);
 
     // Unary logic operators
@@ -23,6 +24,7 @@ namespace Operators
     Expression::Numeric operatorNOT(Expression::Numeric& numeric);
 
     // Unary math operators
+    Expression::Numeric operatorEXP(Expression::Numeric& numeric);
     Expression::Numeric operatorSIN(Expression::Numeric& numeric);
     Expression::Numeric operatorCOS(Expression::Numeric& numeric);
     Expression::Numeric operatorTAN(Expression::Numeric& numeric);

@@ -9,7 +9,7 @@ lutIndex            EQU     register8
 %SUB                realTimeProc
                     ; runs real time, (time sliced), code at regular intervals
 realTimeProc        PUSH
-                    CALLI   realTimeStub                    ; realTimeStub gets replaced by MIDI/SPRITE etc routines
+                    CALLI   realTimeStub                    ; realTimeStub gets replaced by MIDI routine
                     POP
                     RET
                     

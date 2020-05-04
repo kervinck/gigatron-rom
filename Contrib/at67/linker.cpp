@@ -29,6 +29,7 @@ namespace Linker
         {0x0000, 0x0000, "convertGeOp"      , "", true,  false},
         {0x0000, 0x0000, "convertLtOp"      , "", true,  false},
         {0x0000, 0x0000, "convertGtOp"      , "", true,  false},
+        {0x0000, 0x0000, "absolute"         , "", true,  false},
         {0x0000, 0x0000, "power16bit"       , "", false, false},
         {0x0000, 0x0000, "power16bitExt"    , "", false, false},
         {0x0000, 0x0000, "multiply16bit"    , "", false, false},
@@ -99,7 +100,13 @@ namespace Linker
         {0x0000, 0x0000, "drawSpriteXY"     , "", false, false},
         {0x0000, 0x0000, "resetAudio"       , "", false, false},
         {0x0000, 0x0000, "playMidi"         , "", false, false},
+        {0x0000, 0x0000, "playMidiVol"      , "", false, false},
         {0x0000, 0x0000, "midiStartNote"    , "", false, false},
+        {0x0000, 0x0000, "soundAllOff"      , "", false, false},
+        {0x0000, 0x0000, "soundOff"         , "", false, false},
+        {0x0000, 0x0000, "soundOn"          , "", false, false},
+        {0x0000, 0x0000, "soundOnV"         , "", false, false},
+        {0x0000, 0x0000, "soundMod"         , "", false, false},
         {0x0000, 0x0000, "input"            , "", false, false},
         {0x0000, 0x0000, "inputExt1"        , "", false, false},
         {0x0000, 0x0000, "inputExt2"        , "", false, false},
@@ -113,6 +120,8 @@ namespace Linker
         {0x0000, 0x0000, "inputNewline"     , "", false, false},
         {0x0000, 0x0000, "printInit"        , "", false, false},
         {0x0000, 0x0000, "printText"        , "", false, false},
+        {0x0000, 0x0000, "printInitFont"    , "", false, false},
+        {0x0000, 0x0000, "printCharFont"    , "", false, false},
         {0x0000, 0x0000, "printLeft"        , "", false, false},
         {0x0000, 0x0000, "printRight"       , "", false, false},
         {0x0000, 0x0000, "printMid"         , "", false, false},
@@ -136,7 +145,7 @@ namespace Linker
         {0x0000, 0x0000, "stringRight"      , "", false, false},
         {0x0000, 0x0000, "integerStr"       , "", false, false},
     };
-    const std::vector<std::string> _subIncludes = 
+    std::vector<std::string> _subIncludes = 
     {
         "math.i"        ,
         "memory.i"      ,
@@ -147,11 +156,11 @@ namespace Linker
         "sprite.i"      ,
         "audio.i"       ,
         "input.i"       ,
-        "print_text.i"  ,
+        "print_font.i"  ,
         "string.i"      ,
         "numeric.i"     ,
     };
-    const std::vector<std::string> _subIncludesCALLI = 
+    std::vector<std::string> _subIncludesCALLI = 
     {
         "math_CALLI.i"        ,
         "memory_CALLI.i"      ,
@@ -173,6 +182,54 @@ namespace Linker
         return true;
     }
 
+
+    bool enableFontLinking(void)
+    {
+        Linker::resetIncludeFiles();
+
+        for(int i=0; i<int(_subIncludes.size()); i++)
+        {
+            size_t textPos = _subIncludes[i].find("text");
+            if(textPos != std::string::npos)
+            {
+                _subIncludes[i].replace(textPos, 4, "font");
+            }
+        }
+
+        for(int i=0; i<int(_subIncludesCALLI.size()); i++)
+        {
+            size_t textPos = _subIncludesCALLI[i].find("text");
+            if(textPos != std::string::npos)
+            {
+                _subIncludesCALLI[i].replace(textPos, 4, "font");
+            }
+        }
+
+        return Linker::parseIncludes();
+    }
+
+    bool disableFontLinking(void)
+    {
+        for(int i=0; i<int(_subIncludes.size()); i++)
+        {
+            size_t textPos = _subIncludes[i].find("font");
+            if(textPos != std::string::npos)
+            {
+                _subIncludes[i].replace(textPos, 4, "text");
+            }
+        }
+
+        for(int i=0; i<int(_subIncludesCALLI.size()); i++)
+        {
+            size_t textPos = _subIncludesCALLI[i].find("font");
+            if(textPos != std::string::npos)
+            {
+                _subIncludesCALLI[i].replace(textPos, 4, "text");
+            }
+        }
+
+        return true;
+    }
 
     bool findSub(const std::vector<std::string>& tokens, const std::string& subName)
     {

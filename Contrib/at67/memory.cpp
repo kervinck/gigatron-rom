@@ -286,6 +286,26 @@ namespace Memory
         return false;
     }
 
+    bool getFreeRAMLargest(uint16_t& address, int& size)
+    {
+        // Sort entries from highest size to lowest size
+        std::sort(_freeRam.begin(), _freeRam.end(), [](const RamEntry& ramEntryA, const RamEntry& ramEntryB)
+        {
+            int sizeA = ramEntryA._size;
+            int sizeB = ramEntryB._size;
+            return (sizeA > sizeB);
+        });
+
+        if(_freeRam.size() == 0) return false;
+
+        address = _freeRam[0]._address;
+        size = _freeRam[0]._size;
+
+        updateFreeRAM();
+
+        return true;
+    }
+
     bool getFreeRAM(FitType fitType, int size, uint16_t min, uint16_t max, uint16_t& address, bool withinPage)
     {
         switch(fitType)
@@ -372,7 +392,7 @@ namespace Memory
             }
             break;
 
-            // Sort entries from lowest address to highest address
+            // Sort entries from lowest size to highest size
             case SizeAscending:
             {
                 std::sort(freeRam.begin(), freeRam.end(), [](const RamEntry& ramEntryA, const RamEntry& ramEntryB)
@@ -384,7 +404,7 @@ namespace Memory
             }
             break;
 
-            // Sort entries from highest address to lowest address
+            // Sort entries from highest size to lowest size
             case SizeDescending:
             {
                 std::sort(freeRam.begin(), freeRam.end(), [](const RamEntry& ramEntryA, const RamEntry& ramEntryB)

@@ -99,7 +99,7 @@ waitVBlank          LD      giga_videoY
                     XORI    179
                     BNE     waitVBlank
                     PUSH
-                    CALLI   realTimeProcAddr
+                    CALLI   realTimeProc
                     POP
                     RET
 %ENDS

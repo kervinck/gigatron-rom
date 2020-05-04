@@ -1,12 +1,23 @@
 _runtimePath_ "../runtime"
 _runtimeStart_ &hFFFF
 _stringWorkArea_ &h69A0 'move string work area for scrolling of text, (defaults to &h7FA0)
+'_useOpcodeCALLI_
 
 'defines the amount of contiguous RAM needed for sprite stripes, (in this case 15*6 + 1)
-_spriteStripeChunks_ 15, &h18A0, ascending
+_spriteStripeChunks_ 15, &h16A0, ascending
 
 'alloc offscreen scrolling area, (<address>, <optional size>, <optional count>, <optional offset>), so that compiler does not try and use it
 alloc &h6AA0, 96, 22, &h0100
+
+'volume extinction function, (modelled in Desmos), used to control ADSR
+const V_LUT=&h13A0
+const V_SIZ=64
+def byte(V_LUT, y, 0.0, 0.5, V_SIZ) = 63.0 - exp(-0.5*y)*(1.0-exp(-3.0*y))*1.6125*63.0
+
+'frequency sweep
+const F_LUT=&h13E0
+const F_SIZ=16
+def word(F_LUT, y, 0.0, 360.0, F_SIZ) = sin(y)*200.0 + 1000.0
 
 'maximum string length is 94
 conf0$  = "greetings    welcome to gtbasic    this demo shows some of the advanced features that the "
@@ -115,12 +126,12 @@ quoteAddrs(20) = @conf20$ + 1
 
 const g = 4
 f = boingStart : y = &h0100 : text = 160 : fstep = 1 : xstep = 100
-x = 0 : ystep = x : scrl = ystep : char = scrl : stamp = char : width = stamp : quote = width
+x = 0 : ystep = x : scrl = ystep : char = scrl : stamp = char : width = stamp : quote = width : crash = quote : time = crash
 
 loop:
-    wait
+    poke &h2C, 2
     
-    sprite f, x.hi, y.hi
+    sprite noFlip, f, x.hi, y.hi
     
     'boing frame
     f = f + fstep
@@ -129,17 +140,26 @@ loop:
   
     'boing xpos
     x = x + xstep
-    if x.hi &&> 111 'performs the following check if (x.hi > 111) or (x.hi < 0)
+    if x.hi &> 111 'performs the following check if (x.hi > 111) or (x.hi < 0)
         xstep = -xstep
         fstep = -fstep
+        crash = 1
+        time = 0
     endif
     
     'boing ypos
     ystep = ystep + g
     y = y + ystep
-    if y.hi &&> 56
+    if y.hi &> 56
         y.hi = 56
         ystep = -ystep
+        crash = 1
+        time = 0
+    endif
+    
+    'collision sound
+    if crash = 1
+        gosub crashSound
     endif
     
     'print character one at a time offscreen
@@ -168,7 +188,7 @@ getChar:
             c = c - 97
         endif
         
-        sprite fontStart + c, text, 98
+        sprite noFlip, fontStart + c, text, 98
         
         width = fontWidths(c)
         text = text + width
@@ -176,4 +196,20 @@ getChar:
     
     inc stamp
     if stamp &&= width then stamp = 0
+return
+
+crashSound:
+    volume = PEEK(V_LUT + (time AND (V_SIZ-1)))
+    freq = DEEK(F_LUT + ((time AND (F_SIZ-1)) LSL 1))
+    foffs = 0
+    for i=1 &to 4
+        sound on, i, freq + foffs, volume, 0
+        foffs = foffs + 100
+    next i
+
+    inc time
+    if time &&= 64
+        time = 0
+        crash = 0
+    endif
 return

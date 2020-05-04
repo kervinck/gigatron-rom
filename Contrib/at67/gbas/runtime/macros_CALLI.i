@@ -143,6 +143,26 @@ _label_ CALLI   _label
 _label_ CALLI   _label
 %ENDM
 
+%MACRO  GotoNumeric
+        CALLI   gotoNumericLabel
+%ENDM
+
+%MACRO  GosubNumeric
+        CALLI   gosubNumericLabel
+%ENDM
+
+%MACRO  ClearScreen
+        CALLI   clearScreen
+%ENDM
+
+%MACRO  ClearVertBlinds
+        CALLI   clearVertBlinds
+%ENDM
+
+%MACRO  AtTextCursor
+        CALLI   atTextCursor
+%ENDM
+
 %MACRO  Input
         CALLI   input
 %ENDM
@@ -257,6 +277,10 @@ _label_ CALLI   _label
 
 %MACRO  StringRight
         CALLI   stringRight
+%ENDM
+
+%MACRO  Absolute
+        CALLI   absolute
 %ENDM
 
 %MACRO  Rand
@@ -401,8 +425,61 @@ _label_ CALLI   _label
         DOKE    register0                               ; self modifying code, replaces realTimeProc stub with playMidi routine
 %ENDM
 
+%MACRO  PlayMidiV
+        STW     midiStream
+        CALLI   resetAudio
+        LDWI    realTimeProc + 2
+        STW     register0
+        LDWI    playMidiVol
+        DOKE    register0                               ; self modifying code, replaces realTimeProc stub with playMidi routine
+%ENDM
+
 %MACRO  TickMidi
         CALLI   playMidi
+%ENDM
+
+%MACRO  TickMidiV
+        CALLI   playMidiVol
+%ENDM
+
+%MACRO  DrawSprite
+        CALLI   drawSprite
+%ENDM
+
+%MACRO  DrawSpriteX
+        CALLI   drawSpriteX
+%ENDM
+
+%MACRO  DrawSpriteY
+        CALLI   drawSpriteY
+%ENDM
+
+%MACRO  DrawSpriteXY
+        CALLI   drawSpriteXY
+%ENDM
+
+%MACRO  SoundAll
+        CALLI   soundAll
+%ENDM
+
+%MACRO  SoundAllOff
+        CALLI   soundAllOff
+%ENDM
+
+%MACRO  SoundOff
+        CALLI   soundOff
+%ENDM
+
+%MACRO  SoundOn
+        CALLI   soundOn
+%ENDM
+
+%MACRO  SoundOnV
+        CALLI   soundOnV
+%ENDM
+
+%MACRO  SoundMod
+        CALLI   soundMod
 %ENDM
 
 %MACRO  JumpFalse _label id
@@ -444,14 +521,14 @@ _id_    CALLI   _label
         LDWI    0x0F20
         STW     fgbgColour                              ; yellow on blue
 
-        LDWI    0x0001
+        LDI     0x01
         STW     miscFlags                               ; reset flags
 
-        LDWI    0x0000
-        STW     midiStream                              ; reset MIDI
         LDI     0x00
+        STW     midiStream                              ; reset MIDI
         ST      giga_soundTimer                         ; reset soundTimer, (stops any current Audio)
-
+        STW     fontLutId
+        
         CALLI   initClearFuncs
 %ENDM
 

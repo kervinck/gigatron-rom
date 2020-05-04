@@ -72,6 +72,7 @@ _str_0x7efd         DB                      1 ' ' 0
 ; Define Images
 
 ; Define Sprites
+; Define Fonts
 
 ; Lookup Tables
 
@@ -641,7 +642,7 @@ lutIndex            EQU     register8
 
                     ; runs real time, (time sliced), code at regular intervals
 realTimeProc        PUSH
-                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI/SPRITE etc routines
+                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI routine
                     CALL    giga_vAC
                     POP
                     RET

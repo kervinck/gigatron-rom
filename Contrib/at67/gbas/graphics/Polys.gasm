@@ -23,6 +23,7 @@ cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
 miscFlags           EQU                     register0 + 0x28
+fontLutId           EQU                     0x00e0
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -34,10 +35,10 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_loop               EQU                     0x0249
-_next_0x0285        EQU                     0x0279
-_end_0x02da         EQU                     0x02c6
-_end_0x02dc         EQU                     0x02c8
+_loop               EQU                     0x024c
+_next_0x0288        EQU                     0x027c
+_end_0x02dd         EQU                     0x02c9
+_end_0x02df         EQU                     0x02cb
 
 ; Variables
 _ox                 EQU                     0x0030
@@ -55,6 +56,7 @@ def_bytes_0x0600    DB                      0 0 0 0 0 0 0 0 0 0 255
 ; Define Images
 
 ; Define Sprites
+; Define Fonts
 
 ; Lookup Tables
 
@@ -68,8 +70,7 @@ _entryPoint_        InitRealTimeProc
                     InitGtOp                
                     Initialise                                              ; INIT
 
-                    LDWI                    clearVertBlinds
-                    CALL                    giga_vAC
+                    ClearVertBlinds         
                     LDI                     2
                     STW                     graphicsMode
                     ScanlineMode                                            ; cls : mode 2
@@ -89,13 +90,12 @@ _loop               Rand
                     ST                      cursorXY
                     LDW                     _oy
                     ST                      cursorXY + 1
-                    LDWI                    atTextCursor
-                    CALL                    giga_vAC                        ; at ox, oy
+                    AtTextCursor                                            ; at ox, oy
 
                     LDI                     0
                     STW                     _i                              ; for i=0 &to POLYSIZE*2 - 4 step 2
 
-_next_0x0285        LDWI                    1536
+_next_0x0288        LDWI                    1536
                     ADDW                    _i
                     STW                     0xc0
                     LDI                     0xa0
@@ -109,7 +109,7 @@ _next_0x0285        LDWI                    1536
                     RandMod                 
                     POKE                    0xc0                            ; poke POLYADDR + 1 + i, rnd(120)
 
-                    ForNextAdd              _i _next_0x0285 6 2             ; next i
+                    ForNextAdd              _i _next_0x0288 6 2             ; next i
 
                     LDWI                    1544
                     STW                     register0
@@ -127,9 +127,9 @@ _next_0x0285        LDWI                    1536
 
                     BRA                     _loop                           ; goto &loop
 
-_end_0x02da         BRA                     _end_0x02da                     ; end
+_end_0x02dd         BRA                     _end_0x02dd                     ; end
 
-_end_0x02dc         BRA                     _end_0x02dc                     ; END
+_end_0x02df         BRA                     _end_0x02df                     ; END
 
 
 
@@ -178,7 +178,7 @@ lutIndex            EQU     register8
 
                     ; runs real time, (time sliced), code at regular intervals
 realTimeProc        PUSH
-                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI/SPRITE etc routines
+                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI routine
                     CALL    giga_vAC
                     POP
                     RET

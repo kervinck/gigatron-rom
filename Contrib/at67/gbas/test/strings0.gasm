@@ -151,21 +151,21 @@ _end_0x031c         BRA                     _end_0x031c                     ; en
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7eef
-convertEqOp         EQU     0x7ee6
-convertNeOp         EQU     0x7edd
-convertLeOp         EQU     0x7ed4
-convertGeOp         EQU     0x7ecb
-convertLtOp         EQU     0x7ec2
-convertGtOp         EQU     0x7eb9
+realTimeProc        EQU     0x7eeb
+convertEqOp         EQU     0x7ee2
+convertNeOp         EQU     0x7ed9
+convertLeOp         EQU     0x7ed0
+convertGeOp         EQU     0x7ec7
+convertLtOp         EQU     0x7ebe
+convertGtOp         EQU     0x7eb5
 resetVideoTable     EQU     0x76a8
 initClearFuncs      EQU     0x78dc
 clearVertBlinds     EQU     0x78a2
-clearCursorRow      EQU     0x73b6
+clearCursorRow      EQU     0x72b6
 printInit           EQU     0x75a8
-printText           EQU     0x7ea0
-printMid            EQU     0x77a3
-printChar           EQU     0x72a7
+printText           EQU     0x77b2
+printMid            EQU     0x73d7
+printChar           EQU     0x71a7
 newLineScroll       EQU     0x74a1
 stringMid           EQU     0x75c3
 stringLeft          EQU     0x77cb
@@ -189,7 +189,9 @@ lutIndex            EQU     register8
 
                     ; runs real time, (time sliced), code at regular intervals
 realTimeProc        PUSH
-                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI/SPRITE etc routines
+                    LDI     0x08                            ; keep pumping soundTimer
+                    ST      giga_soundTimer
+                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI routine
                     CALL    giga_vAC
                     POP
                     RET

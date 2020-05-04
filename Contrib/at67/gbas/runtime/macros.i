@@ -149,6 +149,31 @@ _label_ CALL    giga_vAC
 _label_ CALL    giga_vAC
 %ENDM
 
+%MACRO  GotoNumeric
+        LDWI    gotoNumericLabel
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  GosubNumeric
+        LDWI    gosubNumericLabel
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  ClearScreen
+        LDWI    clearScreen
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  ClearVertBlinds
+        LDWI    clearVertBlinds
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  AtTextCursor
+        LDWI    atTextCursor
+        CALL    giga_vAC
+%ENDM
+
 %MACRO  Input
         STW     inpLutAddr
         LDWI    input
@@ -306,6 +331,12 @@ _label_ CALL    giga_vAC
 
 %MACRO  StringRight
         LDWI    stringRight
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  Absolute
+        STW     mathX
+        LDWI    absolute
         CALL    giga_vAC
 %ENDM
 
@@ -485,8 +516,73 @@ _label_ CALL    giga_vAC
         DOKE    register0                               ; self modifying code, replaces realTimeProc stub with playMidi routine
 %ENDM
 
+%MACRO  PlayMidiV
+        STW     midiStream
+        LDWI    resetAudio
+        CALL    giga_vAC
+        LDWI    realTimeProc + 2
+        STW     register0
+        LDWI    playMidiVol
+        DOKE    register0                               ; self modifying code, replaces realTimeProc stub with playMidi routine
+%ENDM
+
 %MACRO  TickMidi
         LDWI    playMidi
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  TickMidiV
+        LDWI    playMidiVol
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  DrawSprite
+        LDWI    drawSprite
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  DrawSpriteX
+        LDWI    drawSpriteX
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  DrawSpriteY
+        LDWI    drawSpriteY
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  DrawSpriteXY
+        LDWI    drawSpriteXY
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  SoundAll
+        LDWI    soundAll
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  SoundAllOff
+        LDWI    soundAllOff
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  SoundOff
+        LDWI    soundOff
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  SoundOn
+        LDWI    soundOn
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  SoundOnV
+        LDWI    soundOnV
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  SoundMod
+        LDWI    soundMod
         CALL    giga_vAC
 %ENDM
 
@@ -571,13 +667,13 @@ _id_    CALL    giga_vAC
         LDWI    0x0F20
         STW     fgbgColour                              ; yellow on blue
 
-        LDWI    0x0001
+        LDI     0x01
         STW     miscFlags                               ; reset flags
         
-        LDWI    0x0000
-        STW     midiStream                              ; reset MIDI
         LDI     0x00
+        STW     midiStream                              ; reset MIDI
         ST      giga_soundTimer                         ; reset soundTimer, (stops any current Audio)
+        STW     fontLutId
 
         LDWI    initClearFuncs
         CALL    giga_vAC

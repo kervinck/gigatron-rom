@@ -23,6 +23,7 @@ cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
 miscFlags           EQU                     register0 + 0x28
+fontLutId           EQU                     0x00e0
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -34,17 +35,17 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_loop               EQU                     0x0249
-_ellipse            EQU                     0x02b1
-_else_0x028f        EQU                     0x0279
-_endif_0x0293       EQU                     0x027d
-_end_0x02d9         EQU                     0x02af
+_loop               EQU                     0x0247
+_ellipse            EQU                     0x02af
+_else_0x028d        EQU                     0x0277
+_endif_0x0291       EQU                     0x027b
+_end_0x02d7         EQU                     0x02ad
 _page_0x0300        EQU                     0x0300
-_while_0x034a       EQU                     0x031c
-_else_0x037a        EQU                     0x033c
-_endif_0x0398       EQU                     0x0354
-_wend_0x03ca        EQU                     0x0382
-_end_0x03cc         EQU                     0x0384
+_while_0x0348       EQU                     0x031a
+_else_0x0378        EQU                     0x033a
+_endif_0x0396       EQU                     0x0352
+_wend_0x03c8        EQU                     0x0380
+_end_0x03ca         EQU                     0x0382
 
 ; Variables
 _color              EQU                     0x0030
@@ -76,6 +77,7 @@ _x                  EQU                     0x0054
 ; Define Images
 
 ; Define Sprites
+; Define Fonts
 
 ; Lookup Tables
 
@@ -89,8 +91,7 @@ _entryPoint_        InitRealTimeProc
                     InitGtOp                
                     Initialise                                              ; INIT
 
-                    LDWI                    clearVertBlinds
-                    CALL                    giga_vAC
+                    ClearVertBlinds         
                     LDI                     2
                     STW                     graphicsMode
                     ScanlineMode                                            ; cls : mode 2
@@ -110,16 +111,16 @@ _loop               Rand
 
                     LDW                     _a
                     SUBW                    _b
-                    BLE                     _else_0x028f                    ; if a &&> b
+                    BLE                     _else_0x028d                    ; if a &&> b
 
                     LDW                     _a
                     STW                     _t
-                    BRA                     _endif_0x0293                   ; t = a
+                    BRA                     _endif_0x0291                   ; t = a
 
-_else_0x028f        LDW                     _b
+_else_0x028d        LDW                     _b
                     STW                     _t                              ; t = b
 
-_endif_0x0293       LDW                     _t
+_endif_0x0291       LDW                     _t
                     LSLW                    
                     STW                     0xc2
                     LDI                     160
@@ -143,7 +144,7 @@ _endif_0x0293       LDW                     _t
                     LDWI                    _loop
                     CALL                    giga_vAC                        ; goto loop
 
-_end_0x02d9         BRA                     _end_0x02d9                     ; end
+_end_0x02d7         BRA                     _end_0x02d7                     ; end
 
 _ellipse            PUSH                    
                     LDW                     _mx
@@ -186,11 +187,11 @@ _ellipse            PUSH
                     LSLW                    
                     STW                     _dy                             ; bb = b      : dy = bb LSL 1
 
+                    LDW                     _a
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
-                    LDW                     _a
                     STW                     mathX
                     LDW                     _bb
                     STW                     mathY
@@ -206,11 +207,11 @@ _page_0x0300        LDW                     0xde
                     LDW                     _a
                     STW                     _x                              ; x  = a
 
-_while_0x034a       LDW                     _x
-                    BLE                     _wend_0x03ca                    ; while x &&> 0
+_while_0x0348       LDW                     _x
+                    BLE                     _wend_0x03c8                    ; while x &&> 0
 
                     LDW                     _r
-                    BLE                     _else_0x037a                    ; if r &&> 0
+                    BLE                     _else_0x0378                    ; if r &&> 0
 
                     INC                     _my1
                     LDW                     _my2
@@ -223,9 +224,9 @@ _while_0x034a       LDW                     _x
                     LDW                     _r
                     SUBW                    _ry
                     STW                     _r
-                    BRA                     _endif_0x0398                   ; ry = ry + dx : r = r - ry
+                    BRA                     _endif_0x0396                   ; ry = ry + dx : r = r - ry
 
-_else_0x037a        LDW                     _x
+_else_0x0378        LDW                     _x
                     SUBI                    1
                     STW                     _x
                     INC                     _mx1
@@ -239,7 +240,7 @@ _else_0x037a        LDW                     _x
                     ADDW                    _r
                     STW                     _r                              ; rx = rx - dy : r = rx + r
 
-_endif_0x0398       LDW                     _my1
+_endif_0x0396       LDW                     _my1
                     ADDI                    8
                     ST                      _addr + 1                       ; addr.hi = my1 + 8
 
@@ -267,12 +268,12 @@ _endif_0x0398       LDW                     _my1
                     LDW                     _color
                     POKE                    _addr                           ; addr.lo = mx2 : poke addr, color
 
-                    BRA                     _while_0x034a                   ; wend
+                    BRA                     _while_0x0348                   ; wend
 
-_wend_0x03ca        POP                     
+_wend_0x03c8        POP                     
                     RET                                                     ; return
 
-_end_0x03cc         BRA                     _end_0x03cc                     ; END
+_end_0x03ca         BRA                     _end_0x03ca                     ; END
 
 
 
@@ -295,8 +296,8 @@ rand16bit           EQU     0x7ea4
 randMod16bit        EQU     0x7cec
 scanlineMode        EQU     0x7eac
 resetVideoTable     EQU     0x7ae0
-initClearFuncs      EQU     0x7ddc
-clearVertBlinds     EQU     0x7da2
+initClearFuncs      EQU     0x7ddd
+clearVertBlinds     EQU     0x7da3
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -316,7 +317,7 @@ lutIndex            EQU     register8
 
                     ; runs real time, (time sliced), code at regular intervals
 realTimeProc        PUSH
-                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI/SPRITE etc routines
+                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI routine
                     CALL    giga_vAC
                     POP
                     RET
@@ -608,7 +609,7 @@ initClearFuncs      PUSH
                     LDWI    resetVideoTable
                     CALL    giga_vAC
     
-                    LDWI    0x0002                              ; starting cursor position
+                    LDI     0x02                                ; starting cursor position
                     STW     cursorXY
                     LDWI    0x7FFF
                     ANDW    miscFlags
