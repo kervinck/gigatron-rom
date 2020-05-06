@@ -191,9 +191,9 @@
                                           353   videoTable      = 0x0100 # Indirection table: Y[0] dX[0]  ..., Y[119] dX[119]
                                           354
                                           355   vReset          = 0x01f0
-                                          356   vIRQ_DEVROM     = 0x01f6
+                                          356   vIRQ_v5         = 0x01f6
                                           357   ctrlBits        = 0x01f8
-                                          358   videoTop_DEVROM = 0x01f9 # Number of skip lines
+                                          358   videoTop_v5     = 0x01f9 # Number of skip lines
                                           359
                                           360   # Highest bytes are for sound channel variables
                                           361   wavA = 250      # Waveform modulation with `adda'
@@ -443,8 +443,8 @@
               0040 dc22  st   $22,[y,x++] 599   st(sysFn,             [Y,Xpp])
               0041 dcb4  st   $b4,[y,x++] 600   st('SYS',             [Y,Xpp])  # SYS -> SYS_Reset_88 -> SYS_Exec_88
               0042 dce2  st   $e2,[y,x++] 601   st(256-88//2+maxTicks,[Y,Xpp])
-              0043 dc00  st   $00,[y,x++] 602   st(0,                 [Y,Xpp])  # vIRQ_DEVROM: Disable interrupts
-              0044 dc00  st   $00,[y,x++] 603   st(0,                 [Y,Xpp])  # vIRQ_DEVROM
+              0043 dc00  st   $00,[y,x++] 602   st(0,                 [Y,Xpp])  # vIRQ_v5: Disable interrupts
+              0044 dc00  st   $00,[y,x++] 603   st(0,                 [Y,Xpp])  # vIRQ_v5
               0045 dcfc  st   $fc,[y,x++] 604   st(0b11111100,        [Y,Xpp])  # Control register
               0046 dc00  st   $00,[y,x++] 605   st(0,                 [Y,Xpp])  # videoTop
                                           606
@@ -498,10 +498,10 @@ SYS_Reset_88: 005e 0040  ld   $40         653   ld(romTypeValue)                
               005f c221  st   [$21]       654   st([romType])                   #16
               0060 0000  ld   $00         655   ld(0)                           #17
               0061 c21c  st   [$1c]       656   st([vSP])                       #18 vSP
-              0062 1401  ld   $01,y       657   ld(hi('videoTop_DEVROM'),Y)     #19
-              0063 caf9  st   [y,$f9]     658   st([Y,lo('videoTop_DEVROM')])   #20 Show all 120 pixel lines
-              0064 caf6  st   [y,$f6]     659   st([Y,vIRQ_DEVROM])             #21 Disable vIRQ dispatch
-              0065 caf7  st   [y,$f7]     660   st([Y,vIRQ_DEVROM+1])           #22
+              0062 1401  ld   $01,y       657   ld(hi('videoTop_v5'),Y)         #19
+              0063 caf9  st   [y,$f9]     658   st([Y,lo('videoTop_v5')])       #20 Show all 120 pixel lines
+              0064 caf6  st   [y,$f6]     659   st([Y,vIRQ_v5])                 #21 Disable vIRQ dispatch
+              0065 caf7  st   [y,$f7]     660   st([Y,vIRQ_v5+1])               #22
               0066 c22c  st   [$2c]       661   st([soundTimer])                #23 soundTimer
                                           662   assert userCode&255 == 0
               0067 c21a  st   [$1a]       663   st([vLR])                       #24 vLR
@@ -736,7 +736,7 @@ SYS_LoadBytes_DEVROM_XXX:
               00ee 151b  ld   [$1b],y     888   ld([vLR+1],Y)                   #17
                                           889
                                           890   #-----------------------------------------------------------------------
-                                          891   # Extension SYS_ReadRomDir_DEVROM_80
+                                          891   # Extension SYS_ReadRomDir_v5_80
                                           892   #-----------------------------------------------------------------------
                                           893
                                           894   # Get next entry from ROM file system. Use vAC=0 to get the first entry.
@@ -745,8 +745,8 @@ SYS_LoadBytes_DEVROM_XXX:
                                           897   #       vAC             Start address of current entry (inout)
                                           898   #       sysArgs[0:7]    File name, padded with zeroes (out)
                                           899
-                                          900   label('SYS_ReadRomDir_DEVROM_80')
-SYS_ReadRomDir_DEVROM_80:
+                                          900   label('SYS_ReadRomDir_v5_80')
+SYS_ReadRomDir_v5_80:
               00ef 14fb  ld   $fb,y       901   ld(hi('sys_ReadRomDir'),Y)      #15
               00f0 e0d5  jmp  y,$d5       902   jmp(Y,'sys_ReadRomDir')         #16
               00f1 0119  ld   [$19]       903   ld([vAC+1])                     #17
@@ -926,7 +926,7 @@ vBlankStart:  0104 c21f  st   [$1f]       962   st([videoSync0])                
 vBlankFirst#75:
               0152 1412  ld   $12,y       1069  ld(hi('vBlankFirst#78'),Y)      #75
               0153 e000  jmp  y,$00       1070  jmp(Y,'vBlankFirst#78')         #76
-              0154 1401  ld   $01,y       1071  ld(hi(vIRQ_DEVROM),Y)           #77
+              0154 1401  ld   $01,y       1071  ld(hi(vIRQ_v5),Y)               #77
                                           1072  label('vBlankFirst#186')
                                           1073
                                           1074  # Mitigation for rogue channelMask (3 cycles)
@@ -1151,8 +1151,8 @@ vBlankLast#52:
                                           1269  # AC==0 now
                                           1270  label('vBlankEnd#191')
 vBlankEnd#191:
-              01ea 1401  ld   $01,y       1271  ld(videoTop_DEVROM>>8,Y)        #191
-              01eb 09f9  ld   [y,$f9]     1272  ld([Y,videoTop_DEVROM])         #192
+              01ea 1401  ld   $01,y       1271  ld(videoTop_v5>>8,Y)            #191
+              01eb 09f9  ld   [y,$f9]     1272  ld([Y,videoTop_v5])             #192
               01ec c209  st   [$09]       1273  st([videoY])                    #193
               01ed c21f  st   [$1f]       1274  st([frameX])                    #194
               01ee ecf1  bne  $01f1       1275  bne(pc()+3)                     #195
@@ -1414,8 +1414,8 @@ LD:           031a 1200  ld   ac,x        1512  ld(AC,X)                        
               031e c218  st   [$18]       1516  st([vAC])                       #14
                                           1517
                                           1518  # Instruction CMPHS: Adjust high byte for signed compare (vACH=XXX), 28 cycles
-                                          1519  label('CMPHS_DEVROM')
-CMPHS_DEVROM: 031f 140b  ld   $0b,y       1520  ld(hi('cmphs#13'),Y)            #10
+                                          1519  label('CMPHS_v5')
+CMPHS_v5:     031f 140b  ld   $0b,y       1520  ld(hi('cmphs#13'),Y)            #10
               0320 e0bc  jmp  y,$bc       1521  jmp(Y,'cmphs#13')               #11
                                           1522  #ld(AC,X)                       #12 Overlap
                                           1523  #
@@ -1577,8 +1577,8 @@ ANDI:         0382 1404  ld   $04,y       1677  ld(hi('andi#13'),Y)             
               0384 2118  anda [$18]       1679  anda([vAC])                     #12
                                           1680
                                           1681  # Instruction CALLI: Goto immediate address and remember vPC (vLR,vPC=vPC+3,$HHLL-2), 28 cycles
-                                          1682  label('CALLI_DEVROM')
-CALLI_DEVROM: 0385 140b  ld   $0b,y       1683  ld(hi('calli#13'),Y)            #10
+                                          1682  label('CALLI_v5')
+CALLI_v5:     0385 140b  ld   $0b,y       1683  ld(hi('calli#13'),Y)            #10
               0386 e0b0  jmp  y,$b0       1684  jmp(Y,'calli#13')               #11
               0387 0116  ld   [$16]       1685  ld([vPC])                       #12
                                           1686
@@ -1610,8 +1610,8 @@ INC:          0393 1200  ld   ac,x        1709  ld(AC,X)                        
               0396 0001  ld   $01         1712  ld(1)                           #13
                                           1713
                                           1714  # Instruction CMPHU: Adjust high byte for unsigned compare (vACH=XXX), 28 cycles
-                                          1715  label('CMPHU_DEVROM')
-CMPHU_DEVROM: 0397 140b  ld   $0b,y       1716  ld(hi('cmphu#13'),Y)            #10
+                                          1715  label('CMPHU_v5')
+CMPHU_v5:     0397 140b  ld   $0b,y       1716  ld(hi('cmphu#13'),Y)            #10
               0398 e0c8  jmp  y,$c8       1717  jmp(Y,'cmphu#13')               #11
                                           1718  #ld(AC,X)                       #12 Overlap
                                           1719  #
@@ -6440,8 +6440,8 @@ v6502_rti:    11e4 011c  ld   [$1c]       4997  ld([v6502_S])                   
                                           5027  # Check if an IRQ handler is defined
                                           5028  label('vBlankFirst#78')
 vBlankFirst#78:
-              1200 09f6  ld   [y,$f6]     5029  ld([Y,vIRQ_DEVROM])             #78
-              1201 49f7  ora  [y,$f7]     5030  ora([Y,vIRQ_DEVROM+1])          #79
+              1200 09f6  ld   [y,$f6]     5029  ld([Y,vIRQ_v5])                 #78
+              1201 49f7  ora  [y,$f7]     5030  ora([Y,vIRQ_v5+1])              #79
                                           5031  bne('vBlankFirst#82')           #80
               1202 ec09  bne  vBlankFirst#82
               1203 0116  ld   [$16]       5032  ld([vPC])                       #81
@@ -6462,10 +6462,10 @@ vBlankFirst#82:
               120d c232  st   [$32]       5042  st([0x32])                      #86
               120e 0119  ld   [$19]       5043  ld([vAC+1])                     #87
               120f c233  st   [$33]       5044  st([0x33])                      #88
-              1210 09f6  ld   [y,$f6]     5045  ld([Y,vIRQ_DEVROM])             #89 Set vPC to vIRQ
+              1210 09f6  ld   [y,$f6]     5045  ld([Y,vIRQ_v5])                 #89 Set vPC to vIRQ
               1211 a002  suba $02         5046  suba(2)                         #90
               1212 c216  st   [$16]       5047  st([vPC])                       #91
-              1213 09f7  ld   [y,$f7]     5048  ld([Y,vIRQ_DEVROM+1])           #92
+              1213 09f7  ld   [y,$f7]     5048  ld([Y,vIRQ_v5+1])               #92
               1214 c217  st   [$17]       5049  st([vPC+1])                     #93
               1215 0105  ld   [$05]       5050  ld([vCpuSelect])                #94 Handler must save this if needed
               1216 c219  st   [$19]       5051  st([vAC+1])                     #95

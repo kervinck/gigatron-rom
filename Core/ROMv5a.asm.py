@@ -353,9 +353,9 @@ userVars        = zpByte(0)
 videoTable      = 0x0100 # Indirection table: Y[0] dX[0]  ..., Y[119] dX[119]
 
 vReset          = 0x01f0
-vIRQ_DEVROM     = 0x01f6
+vIRQ_v5         = 0x01f6
 ctrlBits        = 0x01f8
-videoTop_DEVROM = 0x01f9 # Number of skip lines
+videoTop_v5     = 0x01f9 # Number of skip lines
 
 # Highest bytes are for sound channel variables
 wavA = 250      # Waveform modulation with `adda'
@@ -599,8 +599,8 @@ st('STW',             [Y,Xpp])
 st(sysFn,             [Y,Xpp])
 st('SYS',             [Y,Xpp])  # SYS -> SYS_Reset_88 -> SYS_Exec_88
 st(256-88//2+maxTicks,[Y,Xpp])
-st(0,                 [Y,Xpp])  # vIRQ_DEVROM: Disable interrupts
-st(0,                 [Y,Xpp])  # vIRQ_DEVROM
+st(0,                 [Y,Xpp])  # vIRQ_v5: Disable interrupts
+st(0,                 [Y,Xpp])  # vIRQ_v5
 st(0b11111100,        [Y,Xpp])  # Control register
 st(0,                 [Y,Xpp])  # videoTop
 
@@ -654,10 +654,10 @@ ld(romTypeValue)                #15 Set ROM type/version and clear channel mask
 st([romType])                   #16
 ld(0)                           #17
 st([vSP])                       #18 vSP
-ld(hi('videoTop_DEVROM'),Y)     #19
-st([Y,lo('videoTop_DEVROM')])   #20 Show all 120 pixel lines
-st([Y,vIRQ_DEVROM])             #21 Disable vIRQ dispatch
-st([Y,vIRQ_DEVROM+1])           #22
+ld(hi('videoTop_v5'),Y)         #19
+st([Y,lo('videoTop_v5')])       #20 Show all 120 pixel lines
+st([Y,vIRQ_v5])                 #21 Disable vIRQ dispatch
+st([Y,vIRQ_v5+1])               #22
 st([soundTimer])                #23 soundTimer
 assert userCode&255 == 0
 st([vLR])                       #24 vLR
@@ -888,7 +888,7 @@ jmp(Y,'sys_LoadBytes')          #16
 ld([vLR+1],Y)                   #17
 
 #-----------------------------------------------------------------------
-# Extension SYS_ReadRomDir_DEVROM_80
+# Extension SYS_ReadRomDir_v5_80
 #-----------------------------------------------------------------------
 
 # Get next entry from ROM file system. Use vAC=0 to get the first entry.
@@ -897,7 +897,7 @@ ld([vLR+1],Y)                   #17
 #       vAC             Start address of current entry (inout)
 #       sysArgs[0:7]    File name, padded with zeroes (out)
 
-label('SYS_ReadRomDir_DEVROM_80')
+label('SYS_ReadRomDir_v5_80')
 ld(hi('sys_ReadRomDir'),Y)      #15
 jmp(Y,'sys_ReadRomDir')         #16
 ld([vAC+1])                     #17
@@ -1068,7 +1068,7 @@ runVcpu(186-74-extra,           #74 Application cycles (scan line 0)
 label('vBlankFirst#75')
 ld(hi('vBlankFirst#78'),Y)      #75
 jmp(Y,'vBlankFirst#78')         #76
-ld(hi(vIRQ_DEVROM),Y)           #77
+ld(hi(vIRQ_v5),Y)               #77
 label('vBlankFirst#186')
 
 # Mitigation for rogue channelMask (3 cycles)
@@ -1268,8 +1268,8 @@ runVcpu(191-73, '---D line 40') #73 Application cycles (scan line 40)
 
 # AC==0 now
 label('vBlankEnd#191')
-ld(videoTop_DEVROM>>8,Y)        #191
-ld([Y,videoTop_DEVROM])         #192
+ld(videoTop_v5>>8,Y)            #191
+ld([Y,videoTop_v5])             #192
 st([videoY])                    #193
 st([frameX])                    #194
 bne(pc()+3)                     #195
@@ -1516,7 +1516,7 @@ jmp(Y,'ld#15')                  #13
 st([vAC])                       #14
 
 # Instruction CMPHS: Adjust high byte for signed compare (vACH=XXX), 28 cycles
-label('CMPHS_DEVROM')
+label('CMPHS_v5')
 ld(hi('cmphs#13'),Y)            #10
 jmp(Y,'cmphs#13')               #11
 #ld(AC,X)                       #12 Overlap
@@ -1679,7 +1679,7 @@ jmp(Y,'andi#13')                #11
 anda([vAC])                     #12
 
 # Instruction CALLI: Goto immediate address and remember vPC (vLR,vPC=vPC+3,$HHLL-2), 28 cycles
-label('CALLI_DEVROM')
+label('CALLI_v5')
 ld(hi('calli#13'),Y)            #10
 jmp(Y,'calli#13')               #11
 ld([vPC])                       #12
@@ -1712,7 +1712,7 @@ jmp(Y,'inc#14')                 #12
 ld(1)                           #13
 
 # Instruction CMPHU: Adjust high byte for unsigned compare (vACH=XXX), 28 cycles
-label('CMPHU_DEVROM')
+label('CMPHU_v5')
 ld(hi('cmphu#13'),Y)            #10
 jmp(Y,'cmphu#13')               #11
 #ld(AC,X)                       #12 Overlap
@@ -5026,8 +5026,8 @@ align(0x100)
 
 # Check if an IRQ handler is defined
 label('vBlankFirst#78')
-ld([Y,vIRQ_DEVROM])             #78
-ora([Y,vIRQ_DEVROM+1])          #79
+ld([Y,vIRQ_v5])                 #78
+ora([Y,vIRQ_v5+1])              #79
 bne('vBlankFirst#82')           #80
 ld([vPC])                       #81
 runVcpu(186-82-extra,           #82 Application cycles (scan line 0)
@@ -5042,10 +5042,10 @@ ld([vAC])                       #85 Save vAC
 st([0x32])                      #86
 ld([vAC+1])                     #87
 st([0x33])                      #88
-ld([Y,vIRQ_DEVROM])             #89 Set vPC to vIRQ
+ld([Y,vIRQ_v5])                 #89 Set vPC to vIRQ
 suba(2)                         #90
 st([vPC])                       #91
-ld([Y,vIRQ_DEVROM+1])           #92
+ld([Y,vIRQ_v5+1])               #92
 st([vPC+1])                     #93
 ld([vCpuSelect])                #94 Handler must save this if needed
 st([vAC+1])                     #95
@@ -5399,8 +5399,8 @@ define('ledState_v2',ledState_v2)
 define('ledTempo',   ledTempo)
 define('userVars',   userVars)
 define('videoTable', videoTable)
-define('vIRQ_DEVROM',vIRQ_DEVROM)
-define('videoTop_DEVROM',videoTop_DEVROM)
+define('vIRQ_v5',    vIRQ_v5)
+define('videoTop_v5',videoTop_v5)
 define('userCode',   userCode)
 define('soundTable', soundTable)
 define('screenMemory',screenMemory)
