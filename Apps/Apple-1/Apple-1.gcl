@@ -87,7 +87,7 @@ _PIA=$30        {Overlap with (otherwise useless) vIRQ-saved vPC}
 
 *=$200
 
-\romType, \romTypeValue_DEVROM- {Version check >= DEVROM, see Docs/GT1-files.txt}
+\romType, \romTypeValue_ROMv5-  {Version check >= ROMv5, see Docs/GT1-files.txt}
 [if<0 do _frameCount _vPCH:     {https://forum.gigatron.io/viewtopic.php?f=4&t=130}
       loop]
 

@@ -125,6 +125,9 @@ ROMv5a.rom: Core/* Apps/*/* Makefile interface.json
 		Main=Apps/MainMenu/MainMenu.gcl\
 		Reset=Core/Reset.gcl
 
+burnv5: ROMv5a.rom
+	minipro -p 'AT27C1024 @DIP40' -w "$<" -y -s
+
 # ROM v4 support `TypeC' game controller signals. There are
 # many small changes under the hood, but no new applications.
 ROMv4.rom: Core/* Apps/*/* Makefile interface.json
