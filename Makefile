@@ -55,7 +55,7 @@ dev.rom: Core/* Apps/*/* Makefile interface.json
 		Egg=Apps/Horizon/Horizon_at67_v1.gt1\
 		Boot=Apps/CardTest/CardBoot_v1.gcl\
 		Main=Apps/MainMenu/MainMenu_v5.gcl\
-		Reset=Core/Reset_v5.gcl
+		Reset=Core/Reset.gcl
 
 run: Docs/gtemu $(DEV)
 	# Run ROM in reference emulator on console
