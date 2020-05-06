@@ -282,7 +282,7 @@ $814 Pos=
 CheckMemory!
 [def `K`***` #10
   ``TTL`microcomputer
-  ``DEVROM #0]                  {ROM`vN for versioned release ROMs}
+  ``ROM`v5a #0]                 {ROM`vN for versioned release ROMs}
 PrintS!
 
 { Change into default video mode }
