@@ -121,6 +121,10 @@ gcl0x
 |                       RAM page 2                                      |
 +-----------------------------------------------------------------------}
 
+{
+  The version check below is a BUG of ROM v5a, and the reason that
+  ROM v5a won't boot from an SD card
+}
 \romType, \romTypeValue_DEVROM- {Version check >= DEVROM}
 [if<0 do _frameCount _vPCH: loop]
 
