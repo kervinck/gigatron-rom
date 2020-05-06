@@ -99,6 +99,32 @@ burn85:
 #	Released ROM versions
 #-----------------------------------------------------------------------
 
+# Untested freeze of dev.rom
+ROMv5a.rom: Core/* Apps/*/* Makefile interface.json
+	python3 Core/ROMv5a.asm.py\
+		packedPictures=Apps/Pictures/packedPictures.rgb\
+		Snake=Apps/Snake/Snake_v3.gcl\
+		SYS_Racer_v1.py\
+		zippedRacerHorizon=Apps/Racer/Horizon-256x16.rgb\
+		Racer=Apps/Racer/Racer_v2.gcl\
+		Mandelbrot=Apps/Mandelbrot/Mandelbrot_v1.gcl\
+		SYS_Loader.py\
+		Pictures=Apps/Pictures/Pictures_vX.gcl\
+		Loader=Apps/Loader/Loader.gcl\
+		Credits=Apps/Credits/Credits_v3.gcl\
+		Tetronis=Apps/Tetronis/Tetronis.gt1\
+		Bricks=Apps/Bricks/Bricks.gt1\
+		TinyBASIC=Apps/TinyBASIC/TinyBASIC.gcl\
+		TicTac=Apps/TicTac/TicTac.gcl\
+		TicTacGtb=Apps/TicTac/TicTac_v2.gtb\
+		WozMon=Apps/WozMon/WozMon_v2.gcl\
+		Apple1=Apps/Apple-1/Apple-1.gt1x\
+		MSBASIC=Apps/MSBASIC/MSBASIC.gt1\
+		Egg=Apps/Horizon/Horizon_at67.gt1\
+		Boot=Apps/CardTest/CardBoot.gcl\
+		Main=Apps/MainMenu/MainMenu.gcl\
+		Reset=Core/Reset.gcl
+
 # ROM v4 support `TypeC' game controller signals. There are
 # many small changes under the hood, but no new applications.
 ROMv4.rom: Core/* Apps/*/* Makefile interface.json

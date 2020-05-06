@@ -3,6 +3,7 @@
  "romTypeValue_ROMv2"   : "0x20",
  "romTypeValue_ROMv3"   : "0x28",
  "romTypeValue_ROMv4"   : "0x38",
+ "romTypeValue_ROMv5"   : "0x40",
  "romTypeValue_DEVROM"  : "0xf8",
 
  "zeroConst"            : "0x0000",
