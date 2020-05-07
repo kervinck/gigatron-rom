@@ -29,8 +29,10 @@ drawLine_sy         EQU     register9
 drawLine_h          EQU     register10
 drawLine_num        EQU     register11
 drawLine_count      EQU     register12
-drawLine_addr       EQU     register13
-drawLine_tmp        EQU     register14
+drawLine_tmp        EQU     register13
+
+drawPixel_xy        EQU     register15
+readPixel_xy        EQU     register15
 
 drawCircle_cx       EQU     register0
 drawCircle_cy       EQU     register1
@@ -103,6 +105,30 @@ waitVBlank          LD      giga_videoY
                     POP
                     RET
 %ENDS
+
+%SUB                readPixel
+readPixel           STW     readPixel_xy
+                    LD      readPixel_xy + 1    ; xy = peek(256+2*y)*256 + x
+                    LSLW
+                    INC     giga_vAC + 1
+                    PEEK
+                    ST      readPixel_xy + 1
+                    LDW     readPixel_xy
+                    PEEK
+                    RET
+%ENDS
+
+%SUB                drawPixel
+drawPixel           STW     drawPixel_xy
+                    LD      drawPixel_xy + 1    ; xy = peek(256+2*y)*256 + x
+                    LSLW
+                    INC     giga_vAC + 1
+                    PEEK
+                    ST      drawPixel_xy + 1
+                    LD      fgbgColour + 1
+                    POKE    drawPixel_xy
+                    RET
+%ENDS   
 
 %SUB                drawHLine
 drawHLine           PUSH
@@ -354,8 +380,6 @@ drawLineLoadDXY     LDWI    SYS_LSLW8_24
 
 %SUB                drawVTLine
 drawVTLine          PUSH                        ; matches drawVTLineLoop's POP
-                    LDWI    giga_videoTable
-                    STW     drawLine_addr
                     LDI     1
                     STW     drawLine_dx1
                     STW     drawLine_dx2
@@ -430,10 +454,10 @@ drawVTL_num         LDWI    SYS_LSRW1_48
 
 %SUB                drawVTLineLoop
 drawVTLineLoop      LDW     drawLine_xy1
-                    CALLI   drawVTLineAddress   ; plot start pixel
+                    CALLI   drawPixel           ; plot start pixel
 
                     LDW     drawLine_xy2
-                    CALLI   drawVTLineAddress   ; plot end pixel, (meet in middle)
+                    CALLI   drawPixel           ; plot end pixel, (meet in middle)
                     
                     LDW     drawLine_num        ; numerator += sy
                     ADDW    drawLine_sy
@@ -465,16 +489,6 @@ drawVTL_count       CALLI   realTimeProc
                     STW     drawLine_count
                     BGT     drawVTLineLoop
                     POP                         ; matches drawVTLine's PUSH
-                    RET
-                    
-drawVTLineAddress   STW     drawLine_tmp
-                    LD      drawLine_tmp + 1
-                    LSLW
-                    ADDW    drawLine_addr
-                    PEEK
-                    ST      drawLine_tmp + 1
-                    LD      fgbgColour + 1
-                    POKE    drawLine_tmp
                     RET
 %ENDS   
     

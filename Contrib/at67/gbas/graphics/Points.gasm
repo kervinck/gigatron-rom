@@ -35,24 +35,24 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x0239
-_20                 EQU                     0x0239
-_30                 EQU                     0x0241
-_40                 EQU                     0x025a
-_50                 EQU                     0x025e
-_60                 EQU                     0x0270
-_70                 EQU                     0x0276
-_80                 EQU                     0x0288
-_90                 EQU                     0x029f
-_100                EQU                     0x02a5
-_end_0x02ab         EQU                     0x02a7
+_loop               EQU                     0x02de
+_page_0x0300        EQU                     0x0300
+_else_0x0395        EQU                     0x035d
+_end_0x03c8         EQU                     0x0388
+_end_0x03ca         EQU                     0x038a
 
 ; Variables
-_X                  EQU                     0x0030
-_V                  EQU                     0x0032
-_I                  EQU                     0x0034
+_x                  EQU                     0x0030
+_y                  EQU                     0x0032
+_c                  EQU                     0x0034
 
 ; Strings
+_str_0x7ee5         EQU                     0x7ee5
+_str_0x7ee5         DB                      25 '_________________________' 0
+_str_0x7eca         EQU                     0x7eca
+_str_0x7eca         DB                      25 '  Random Pixel Flipping  ' 0
+_str_0x7eaf         EQU                     0x7eaf
+_str_0x7eaf         DB                      25 '1234567890987654321012345' 0
 
 ; Define Bytes
 
@@ -75,52 +75,142 @@ _entryPoint_        InitRealTimeProc
                     InitGtOp                
                     Initialise                                              ; INIT
 
-_20                 LDI                     2
-                    STW                     _X
-                    LDI                     6
-                    STW                     _V                              ; X=2:V=6
+                    LDI                     2
+                    STW                     graphicsMode
+                    ScanlineMode                                            ; mode 2
 
-_30                 ClearVertBlinds         
-                    LDW                     _X
-                    ST                      cursorXY
-                    LDI                     56
-                    ST                      cursorXY + 1
-                    AtTextCursor            
-                    LDWI                    0xFFFE
-                    ANDW                    miscFlags
-                    STW                     miscFlags                       ; CLS:AT X,56 : SCROLL OFF
+                    LDWI                    8224
+                    STW                     fgbgColour                      ; set fgbgcolour, &h2020
 
-_40                 LDI                     1
-                    STW                     _I                              ; FOR I=1 TO 25
+                    LDI                     0
+                    STW                     drawRectF_x1
+                    LDI                     0
+                    STW                     drawRectF_y1
+                    LDI                     159
+                    STW                     drawRectF_x2
+                    LDI                     59
+                    STW                     drawRectF_y2
+                    DrawRectF                                               ; rectf 0, 0, 159, 59
 
-_50                 LDW                     _X
-                    ST                      cursorXY
-                    AtTextCursor            
-                    LDI                     32
-                    PrintAcChar                                             ; AT X:PUT 32:REM CLEAR
+                    LDI                     0
+                    ST                      fgbgColour + 1                  ; set fgcolour, &h00
 
-_60                 LDW                     _X
-                    ADDW                    _V
-                    STW                     _X                              ; X=X+V
+                    LDI                     0
+                    STW                     drawRectF_x1
+                    LDI                     60
+                    STW                     drawRectF_y1
+                    LDI                     159
+                    STW                     drawRectF_x2
+                    LDI                     119
+                    STW                     drawRectF_y2
+                    DrawRectF                                               ; rectf 0, 60, 159, 119
 
-_70                 LDW                     _X
-                    ST                      cursorXY
-                    AtTextCursor            
-                    LDI                     79
-                    PrintAcChar                                             ; AT X:PUT 79:REM DRAW O
+                    LDI                     3
+                    ST                      fgbgColour + 1                  ; set fgcolour, &h03
 
-_80                 LDI                     1
-                    STW                     waitVBlankNum
-                    WaitVBlanks             
-                    ForNextFarInc           _I _50 25                       ; WAIT 1:NEXT I
+                    PrintString             _str_0x7ee5
+                    NewLine                                                 ; print "_________________________"
 
-_90                 LDI                     0
-                    SUBW                    _V
-                    STW                     _V                              ; V=-V
+                    NewLine                                                 ; print
 
-_100                BRA                     _40                             ; GOTO &40
+                    LDI                     12
+                    ST                      fgbgColour + 1                  ; set fgcolour, &h0C
 
-_end_0x02ab         BRA                     _end_0x02ab                     ; END
+                    PrintString             _str_0x7eca
+                    NewLine                                                 ; print "  Random Pixel Flipping  "
+
+                    LDI                     15
+                    ST                      fgbgColour + 1                  ; set fgcolour, &h0F
+
+                    PrintString             _str_0x7ee5
+                    NewLine                                                 ; print "_________________________"
+
+                    NewLine                                                 ; print
+
+                    LDI                     51
+                    ST                      fgbgColour + 1                  ; set fgcolour, &h33
+
+                    PrintString             _str_0x7eaf
+                    NewLine                                                 ; print "1234567890987654321012345"
+
+                    LDI                     60
+                    ST                      fgbgColour + 1                  ; set fgcolour, &h3C
+
+                    PrintString             _str_0x7ee5
+                    NewLine                                                 ; print "_________________________"
+
+_loop               Rand                    
+                    ANDI                    127
+                    STW                     0xc0
+                    Rand                    
+                    ANDI                    31
+                    ADDW                    0xc0
+                    STW                     0xc2
+                    STW                     0xde
+                    LDWI                    _page_0x0300
+                    CALL                    giga_vAC
+_page_0x0300        LDW                     0xde
+                    Rand                    
+                    ANDI                    1
+                    ADDW                    0xc2
+                    STW                     _x                              ; x = (rnd(0) AND &h7F) + (rnd(0) AND &h1F) + (rnd(0) AND &h01)
+
+                    Rand                    
+                    ANDI                    31
+                    STW                     0xc0
+                    Rand                    
+                    ANDI                    7
+                    ADDW                    0xc0
+                    STW                     0xc2
+                    Rand                    
+                    ANDI                    7
+                    ADDW                    0xc2
+                    STW                     0xc4
+                    Rand                    
+                    ANDI                    7
+                    ADDW                    0xc4
+                    STW                     0xc6
+                    Rand                    
+                    ANDI                    7
+                    ADDW                    0xc6
+                    STW                     _y                              ; y = (rnd(0) AND &h1F) + (rnd(0) AND &h07) + (rnd(0) AND &h07) + (rnd(0) AND &h07) + (rnd(0) AND &h07)
+
+                    LDW                     _x
+                    ST                      readPixel_xy
+                    LDW                     _y
+                    ST                      readPixel_xy + 1
+                    ReadPixel               
+                    STW                     _c
+                    ANDI                    128
+                    SUBI                    128
+                    BNE                     _else_0x0395
+                    LDWI                    _loop
+                    CALL                    giga_vAC                        ; c = point(x, y) : if(c AND 0x80) &&= 0x80 then goto loop
+
+_else_0x0395        LDI                     159
+                    SUBW                    _x
+                    ST                      drawPixel_xy
+                    LDI                     119
+                    SUBW                    _y
+                    ST                      drawPixel_xy + 1
+                    LDW                     _c
+                    ST                      fgbgColour + 1
+                    DrawPixel                                               ; pset 159-x, 119-y, c
+
+                    LDW                     _x
+                    ST                      drawPixel_xy
+                    LDW                     _y
+                    ST                      drawPixel_xy + 1
+                    LDI                     128
+                    ST                      fgbgColour + 1
+                    DrawPixel                                               ; pset x, y, &h80 'c OR &h80 AND &b10101010
+
+                    LDWI                    _loop
+                    CALL                    giga_vAC                        ; goto loop
+
+_end_0x03c8         BRA                     _end_0x03c8                     ; end
+
+_end_0x03ca         BRA                     _end_0x03ca                     ; END
 
 
 
@@ -130,24 +220,26 @@ _end_0x02ab         BRA                     _end_0x02ab                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7ef6
-convertEqOp         EQU     0x7eed
-convertNeOp         EQU     0x7ee4
-convertLeOp         EQU     0x7edb
-convertGeOp         EQU     0x7ed2
-convertLtOp         EQU     0x7ec9
-convertGtOp         EQU     0x7ec0
-waitVBlanks         EQU     0x7ea0
-waitVBlank          EQU     0x7cc6
-resetVideoTable     EQU     0x7ca7
-initClearFuncs      EQU     0x7ddd
-clearVertBlinds     EQU     0x7da3
-clearCursorRow      EQU     0x7bb6
-printInit           EQU     0x7ba0
-printChr            EQU     0x7eb3
-printChar           EQU     0x7aa7
-atTextCursor        EQU     0x7cd2
-newLineScroll       EQU     0x79a2
+realTimeProc        EQU     0x7ea6
+convertEqOp         EQU     0x7df6
+convertNeOp         EQU     0x7ded
+convertLeOp         EQU     0x7de4
+convertGeOp         EQU     0x7ddb
+convertLtOp         EQU     0x7dd2
+convertGtOp         EQU     0x7dc9
+rand16bit           EQU     0x7ca2
+scanlineMode        EQU     0x7ceb
+resetVideoTable     EQU     0x7ac7
+initClearFuncs      EQU     0x7da7
+clearCursorRow      EQU     0x79b6
+readPixel           EQU     0x7af3
+drawPixel           EQU     0x7ae6
+drawHLine           EQU     0x78a2
+drawRectF           EQU     0x7cc3
+printInit           EQU     0x7ab1
+printText           EQU     0x7caa
+printChar           EQU     0x77a7
+newLineScroll       EQU     0x7ba2
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -223,6 +315,25 @@ convertGt_1         LDI     1
                     RET
 
 
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+mathX               EQU     register8
+mathY               EQU     register9
+mathSum             EQU     register12
+mathRem             EQU     register12
+mathMask            EQU     register13
+mathSign            EQU     register14
+mathQuot            EQU     register15
+mathShift           EQU     register15
+mathBase            EQU     register10
+mathPow             EQU     register11
+mathResult          EQU     register14
+
+
+rand16bit           LDWI    SYS_Random_34
+                    STW     giga_sysFn
+                    SYS     34
+                    RET
+
 
 ; do *NOT* use register4 to register7 during time slicing if you use realTimeProc
 graphicsMode        EQU     register0
@@ -257,8 +368,9 @@ drawLine_num        EQU     register11
 drawLine_count      EQU     register12
 drawLine_tmp        EQU     register13
 
-drawPixel_xy        EQU     register14
-  
+drawPixel_xy        EQU     register15
+readPixel_xy        EQU     register15
+
 drawCircle_cx       EQU     register0
 drawCircle_cy       EQU     register1
 drawCircle_r        EQU     register2
@@ -293,26 +405,16 @@ drawRectF_y2        EQU     register7
 drawPoly_addr       EQU     register15
 
     
-waitVBlanks         PUSH
-
-waitVB_loop         LDW     waitVBlankNum
-                    SUBI    0x01
-                    STW     waitVBlankNum
-                    BGE     waitVB_vblank
-                    POP
+scanlineMode        LDW     giga_romType
+                    ANDI    0xF8
+                    SUBI    romTypeValue_ROMv2
+                    BGE     scanlineM_cont
                     RET
     
-waitVB_vblank       LDWI    waitVBlank
-                    CALL    giga_vAC
-                    BRA     waitVB_loop
-
-
-waitVBlank          LD      giga_videoY
-                    XORI    179
-                    BNE     waitVBlank
-                    PUSH
-                    CALL    realTimeProcAddr
-                    POP
+scanlineM_cont      LDWI    SYS_SetMode_v2_80
+                    STW     giga_sysFn
+                    LDW     graphicsMode
+                    SYS     80
                     RET
 
 
@@ -372,38 +474,100 @@ initClearFuncs      PUSH
                     RET
 
 
-                    ; clears the viewable screen using a vertical blinds effect
-clearVertBlinds     PUSH
-                    LDWI    initClearFuncs
-                    CALL    giga_vAC
+readPixel           LD      readPixel_xy + 1    ; xy = peek(256+2*y)*256 + x
+                    LSLW
+                    INC     giga_vAC + 1
+                    PEEK
+                    ST      readPixel_xy + 1
+                    LDW     readPixel_xy
+                    PEEK
+                    RET
 
-                    LDWI    giga_vram
-                    STW     giga_sysArg4
-                    LD      giga_sysArg4 + 1
-                    ST      top
-    
-clearVB_loop        CALL    realTimeProcAddr
-                    LD      top
-                    ST      giga_sysArg4 + 1                    ; top line
-                    SYS     30
-    
-                    LDWI    giga_yres - 1 + 16
-                    SUBW    top
-                    ST      giga_sysArg4 + 1                    ; bottom line
-                    SYS     30
-    
+
+drawPixel           LD      drawPixel_xy + 1    ; xy = peek(256+2*y)*256 + x
+                    LSLW
+                    INC     giga_vAC + 1
+                    PEEK
+                    ST      drawPixel_xy + 1
+                    LD      fgbgColour + 1
+                    POKE    drawPixel_xy
+                    RET
+
+
+
+drawHLine           PUSH
+                    LDW     drawHLine_x2
+                    SUBW    drawHLine_x1
+                    BGE     drawHL_cont
+                    LDW     drawHLine_x2
+                    STW     drawLine_tmp
+                    LDW     drawHLine_x1
+                    STW     drawHLine_x2
+                    LDW     drawLine_tmp
+                    STW     drawHLine_x1        ; if x2 < x1 then swap x2 with x1
+                    
+drawHL_cont         LD      drawHLine_x1
+                    ST      giga_sysArg4
+                    LD      drawHLine_y1
+                    ADDI    8
+                    ST      giga_sysArg4 + 1
+                    LDW     drawHLine_x2
+                    SUBW    drawHLine_x1
+                    SUBI    4
+                    BLT     drawHL_loop1
+                    
+                    LD      fgbgColour + 1
+                    ST      giga_sysArg0
+                    ST      giga_sysArg0 + 1
+                    ST      giga_sysArg2
+                    ST      giga_sysArg2 + 1    ; 4 pixels of fg colour
+                    LDWI    SYS_Draw4_30        ; setup 4 pixel SYS routine
+                    STW     giga_sysFn
+                    
+                    LDW     drawHLine_x2        
+                    SUBI    3
+                    STW     drawHLine_x4        ; 4 pixel chunks limit
+
+drawHL_loop0        SYS     30
+                    CALL    realTimeProcAddr
                     LD      giga_sysArg4
-                    ADDI    0x04
+                    ADDI    4
                     ST      giga_sysArg4
-                    SUBI    giga_xres
-                    BLT     clearVB_loop
-    
-                    LDI     0
-                    ST      giga_sysArg4
-                    INC     top                                 ; next top line
-                    LD      top
-                    SUBI    giga_yres / 2 + 8
-                    BLT     clearVB_loop
+                    SUBW    drawHLine_x4
+                    BLT     drawHL_loop0        ; all 4 pixel chunks
+                    
+drawHL_loop1        LD      fgbgColour + 1
+                    POKE    giga_sysArg4
+                    INC     giga_sysArg4
+                    LD      giga_sysArg4
+                    BEQ     drawHL_exit
+                    SUBW    drawHLine_x2
+                    BLE     drawHL_loop1        ; remaining pixels
+                    
+drawHL_exit         POP
+                    RET
+
+
+drawRectF           PUSH
+                    LDW     drawRectF_y2
+                    SUBW    drawRectF_y1
+                    BGE     drawRF_loop
+                    LDW     drawRectF_y2
+                    STW     drawLine_tmp
+                    LDW     drawRectF_y1
+                    STW     drawRectF_y2
+                    LDW     drawLine_tmp
+                    STW     drawRectF_y1        ; if y2 < y1 then swap y2 with y1
+                    
+drawRF_loop         LDW     drawRectF_y1
+                    STW     drawHLine_y1
+                    LDWI    drawHLine
+                    CALL    giga_vAC
+                    INC     drawRectF_y1
+                    LDW     drawRectF_y1
+                    SUBW    drawRectF_y2
+                    BLE     drawRF_loop
+
                     POP
                     RET
 
@@ -440,15 +604,23 @@ printInit           LDWI    SYS_VDrawBits_134
 
 
 
-                    ; prints char in textChr for standalone calls
-printChr            PUSH
+                    ; prints text string pointed to by textStr
+printText           PUSH
                     LDWI    printInit
                     CALL    giga_vAC
+
+                    ; first byte is length
+printT_char         INC     textStr                         ; next char
+                    LDW     textStr             
+                    PEEK
+                    BEQ     printT_exit                     ; check for delimiting zero
+                    ST      textChr
                     LDWI    printChar
                     CALL    giga_vAC
-                    POP
+                    BRA     printT_char
+                    
+printT_exit         POP
                     RET
-
 
 
                     ; prints char in textChr
@@ -502,32 +674,6 @@ printC_slice        ST      textSlice
 printC_pop          POP
 
 printC_exit         RET
-
-
-atTextCursor        LD      cursorXY
-                    SUBI    giga_xres
-                    BLT     atTC_skip0
-                    LDI     0
-                    ST      cursorXY
-                    
-atTC_skip0          LD      cursorXY + 1
-                    SUBI    giga_yres
-                    BLT     atTC_skip1
-                    LDI     giga_yres - 1
-                    ST      cursorXY + 1
-                    
-atTC_skip1          LD      cursorXY + 1
-                    SUBI    giga_yres - 8
-                    BGE     atTC_skip2
-                    LDWI    0x7FFF
-                    ANDW    miscFlags
-                    STW     miscFlags                       ; reset on bottom row flag
-                    RET
-                    
-atTC_skip2          LDWI    0x8000
-                    ORW     miscFlags
-                    STW     miscFlags                       ; set on bottom row flag
-                    RET
 
 
 

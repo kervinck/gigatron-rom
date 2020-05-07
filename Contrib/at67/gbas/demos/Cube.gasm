@@ -64,16 +64,16 @@ _245                EQU                     0x04be
 _250                EQU                     0x04cb
 _255                EQU                     0x04d8
 _254                EQU                     0x04e7
-_253                EQU                     0x0528
+_253                EQU                     0x052d
 _page_0x0300        EQU                     0x0300
 _next_0x0397        EQU                     0x0346
 _else_0x03bd        EQU                     0x035e
 _end_0x0427         EQU                     0x03be
 _page_0x0400        EQU                     0x0400
 _page_0x0500        EQU                     0x0500
-_else_0x0582        EQU                     0x051d
-_else_0x05bc        EQU                     0x0551
-_end_0x05c7         EQU                     0x055c
+_else_0x0587        EQU                     0x0522
+_else_0x05c6        EQU                     0x055b
+_end_0x05d1         EQU                     0x0566
 
 ; Variables
 _K                  EQU                     0x0030
@@ -263,7 +263,7 @@ _100                LDI                     45
                     STW                     _tick                           ; timer=0 : tick=get("FRAMECOUNT")
 
                     LDI                     0
-                    STW                     _i                              ; for i=0 to 100
+                    STW                     _i                              ; for i=0 &to 100
 
 _next_0x0397        LDW                     _tick
                     STW                     _ticks
@@ -285,10 +285,12 @@ _else_0x03bd        LDW                     _timer
                     LDWI                    _254
                     CALL                    giga_vAC                        ; gosub 254
 
-                    ForNextFarInc           _i _next_0x0397 100             ; next i
+                    ForNextInc              _i _next_0x0397 100             ; next i
 
+                    LDWI                    giga_videoTop
+                    STW                     register0
                     LDI                     0
-                    ST                      giga_videoTop                   ; set VIDEOTOP, 0 'enable full video output
+                    POKE                    register0                       ; set VIDEOTOP, 0 'enable full video output
 
                     LDW                     _timer
                     STW                     mathX
@@ -467,30 +469,34 @@ _255                LDI                     7
                     Return                                                  ; return
 
 _254                PUSH                    
+                    LDWI                    giga_videoTop
+                    STW                     register0
                     LDI                     238
-                    ST                      giga_videoTop                   ; set VIDEOTOP, 238 'disable video output
+                    POKE                    register0                       ; set VIDEOTOP, 238 'disable video output
 
                     LDI                     0
-                    ST                      fgbgColour + 1
-                    LDWI                    _200
                     STW                     0xde
                     LDWI                    _page_0x0500
                     CALL                    giga_vAC
 _page_0x0500        LDW                     0xde
+                    ST                      fgbgColour + 1
+                    LDWI                    _200
                     CALL                    giga_vAC                        ; set FGCOLOUR, &h00 : gosub 200 'erase cube
 
+                    LDWI                    giga_videoTop
+                    STW                     register0
                     LDI                     40
-                    ST                      giga_videoTop                   ; set VIDEOTOP, 40 'enable video output
+                    POKE                    register0                       ; set VIDEOTOP, 40 'enable video output
 
                     LDW                     _S
                     ADDI                    5
                     STW                     _S
                     SUBI                    45
-                    JumpGE                  _else_0x0582 1
+                    BLT                     _else_0x0587
                     LDWI                    -40
-                    STW                     _S                              ; S = S + 5 : if S &>= 45 then S = -40
+                    STW                     _S                              ; S = S + 5 : if S &&>= 45 then S = -40
 
-_else_0x0582        LDI                     63
+_else_0x0587        LDI                     63
                     ST                      fgbgColour + 1
                     LDWI                    _110
                     CALL                    giga_vAC                        ; set FGCOLOUR, &h3F : gosub 110 'draw cube
@@ -498,34 +504,38 @@ _else_0x0582        LDI                     63
                     Return                                                  ; return
 
 _253                PUSH                    
+                    LDWI                    giga_videoTop
+                    STW                     register0
                     LDI                     238
-                    ST                      giga_videoTop                   ; set VIDEOTOP, 238 'disable video output
+                    POKE                    register0                       ; set VIDEOTOP, 238 'disable video output
 
                     LDI                     0
                     ST                      fgbgColour + 1
                     LDWI                    _200
                     CALL                    giga_vAC                        ; set FGCOLOUR, &h00 : gosub 200 'erase cube
 
+                    LDWI                    giga_videoTop
+                    STW                     register0
                     LDI                     40
-                    ST                      giga_videoTop                   ; set VIDEOTOP, 40 'enable video output
+                    POKE                    register0                       ; set VIDEOTOP, 40 'enable video output
 
                     LDW                     _S
                     SUBI                    5
                     STW                     _S
                     LDWI                    -45
                     SUBW                    _S
-                    JumpGT                  _else_0x05bc 2
+                    BLE                     _else_0x05c6
                     LDI                     40
-                    STW                     _S                              ; S = S - 5 : if S &<= -45 then S = 40
+                    STW                     _S                              ; S = S - 5 : if S &&<= -45 then S = 40
 
-_else_0x05bc        LDI                     63
+_else_0x05c6        LDI                     63
                     ST                      fgbgColour + 1
                     LDWI                    _110
                     CALL                    giga_vAC                        ; set FGCOLOUR, &h3F : gosub 110 'draw cube
 
                     Return                                                  ; return
 
-_end_0x05c7         BRA                     _end_0x05c7                     ; END
+_end_0x05d1         BRA                     _end_0x05d1                     ; END
 
 
 
@@ -763,8 +773,9 @@ drawLine_sy         EQU     register9
 drawLine_h          EQU     register10
 drawLine_num        EQU     register11
 drawLine_count      EQU     register12
-drawLine_addr       EQU     register13
-drawLine_tmp        EQU     register14
+drawLine_tmp        EQU     register13
+
+drawPixel_xy        EQU     register15
   
 drawCircle_cx       EQU     register0
 drawCircle_cy       EQU     register1

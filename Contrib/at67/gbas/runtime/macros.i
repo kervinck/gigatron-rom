@@ -466,6 +466,16 @@ _label_ CALL    giga_vAC
         CALL    giga_vAC
 %ENDM
 
+%MACRO  ReadPixel
+        LDWI    readPixel
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  DrawPixel
+        LDWI    drawPixel
+        CALL    giga_vAC
+%ENDM
+
 %MACRO  DrawLine
         LDWI    drawLine
         CALL    giga_vAC

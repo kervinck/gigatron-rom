@@ -54,7 +54,7 @@ setup:
 
 
 timer=0 : tick=get("FRAMECOUNT")
-for i=0 to 100
+for i=0 &to 100
     ticks=tick : tick=get("FRAMECOUNT") : ticks=tick-ticks
     if ticks &&< 0 then ticks=ticks+256
     timer=timer+ticks
@@ -67,10 +67,10 @@ end
 
 'loop: 
 '    gosub get("BUTTONSTATE")
-'goto loop
+'goto &loop
 
 process: 
-    for j=0 to 7 : PP(j)=P(j) : QQ(j)=Q(j) : next j
+    for j=0 &to 7 : PP(j)=P(j) : QQ(j)=Q(j) : next j
     I=0:X=U*U
     K=S:M=U*C
     L=C:N=U*S:GOSUB 20
@@ -109,14 +109,14 @@ erase:
     A=7:B=3:GOSUB 60
 return
 
-254: S = S + 5 : if S &>= 45 then S = -40
+254: S = S + 5 : if S &&>= 45 then S = -40
 
      set FGCOLOUR, &h0F : gosub process : gosub draw
      gosub flip
      set FGCOLOUR, &h20 : gosub erase
      return
      
-253: S = S - 5 : if S &<= -45 then S = 40
+253: S = S - 5 : if S &&<= -45 then S = 40
     
      set FGCOLOUR, &h0F : gosub process : gosub draw
      gosub flip

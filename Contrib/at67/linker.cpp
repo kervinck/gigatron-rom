@@ -75,6 +75,8 @@ namespace Linker
         {0x0000, 0x0000, "clearVertBlinds"  , "", false, false},
         {0x0000, 0x0000, "clearRVertBlinds" , "", false, false},
         {0x0000, 0x0000, "clearCursorRow"   , "", false, false},
+        {0x0000, 0x0000, "readPixel"        , "", false, false},
+        {0x0000, 0x0000, "drawPixel"        , "", false, false},
         {0x0000, 0x0000, "drawHLine"        , "", false, false},
         {0x0000, 0x0000, "drawVLine"        , "", false, false},
         {0x0000, 0x0000, "drawLine"         , "", false, false},

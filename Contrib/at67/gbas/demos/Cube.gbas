@@ -27,7 +27,7 @@ set FGBGCOLOUR, &h3F00
     gosub 110
 
 timer=0 : tick=get("FRAMECOUNT")
-for i=0 to 100
+for i=0 &to 100
     ticks=tick : tick=get("FRAMECOUNT") : ticks=tick-ticks
     if ticks &&< 0 then ticks=ticks+256
     timer=timer+ticks
@@ -39,7 +39,7 @@ print timer/60;" ";timer % 60;"/60"
 end
 
 'loop: gosub get("BUTTONSTATE")
-'      goto loop
+'      goto &loop
 
 'PROCESS CUBE CORNERS
 110 I=0:X=U*U
@@ -69,7 +69,7 @@ end
      set FGCOLOUR, &h00 : gosub 200 'erase cube
      
      set VIDEOTOP, 40 'enable video output
-     S = S + 5 : if S &>= 45 then S = -40
+     S = S + 5 : if S &&>= 45 then S = -40
      set FGCOLOUR, &h3F : gosub 110 'draw cube
      return
      
@@ -77,6 +77,6 @@ end
      set FGCOLOUR, &h00 : gosub 200 'erase cube
      
      set VIDEOTOP, 40 'enable video output
-     S = S - 5 : if S &<= -45 then S = 40
+     S = S - 5 : if S &&<= -45 then S = 40
      set FGCOLOUR, &h3F : gosub 110 'draw cube
      return

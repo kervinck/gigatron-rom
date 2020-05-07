@@ -55,25 +55,26 @@ namespace Keywords
         _operators.push_back(">>"   );
 
         // Functions
-        _functions["PEEK"] = "PEEK";
-        _functions["DEEK"] = "DEEK";
-        _functions["USR" ] = "USR";
-        _functions["RND" ] = "RND";
-        _functions["LEN" ] = "LEN";
-        _functions["GET" ] = "GET";
-        _functions["POS" ] = "POS";
-        _functions["ABS" ] = "ABS";
-        _functions["ASC" ] = "ASC";
-        _functions["SIN" ] = "SIN";
-        _functions["COS" ] = "COS";
-        _functions["TAN" ] = "TAN";
-        _functions["ASN" ] = "ASN";
-        _functions["ACS" ] = "ACS";
-        _functions["ATN" ] = "ATN";
-        _functions["EXP" ] = "EXP";
-        _functions["LOG" ] = "LOG";
-        _functions["FRE" ] = "FRE";
-        _functions["TIME"] = "TIME";
+        _functions["PEEK"]  = "PEEK";
+        _functions["DEEK"]  = "DEEK";
+        _functions["USR" ]  = "USR";
+        _functions["RND" ]  = "RND";
+        _functions["LEN" ]  = "LEN";
+        _functions["GET" ]  = "GET";
+        _functions["POS" ]  = "POS";
+        _functions["ABS" ]  = "ABS";
+        _functions["ASC" ]  = "ASC";
+        _functions["SIN" ]  = "SIN";
+        _functions["COS" ]  = "COS";
+        _functions["TAN" ]  = "TAN";
+        _functions["ASN" ]  = "ASN";
+        _functions["ACS" ]  = "ACS";
+        _functions["ATN" ]  = "ATN";
+        _functions["EXP" ]  = "EXP";
+        _functions["LOG" ]  = "LOG";
+        _functions["FRE" ]  = "FRE";
+        _functions["TIME"]  = "TIME";
+        _functions["POINT"] = "POINT";
 
         // Pragmas
         _pragmas["_useOpcodeCALLI_"]     = {"_useOpcodeCALLI_",     pragmaUSEOPCODECALLI    };
@@ -115,6 +116,7 @@ namespace Keywords
         _keywords["PUT"     ] = {"PUT",      keywordPUT,      Compiler::SingleStatementParsed};
         _keywords["MODE"    ] = {"MODE",     keywordMODE,     Compiler::SingleStatementParsed};
         _keywords["WAIT"    ] = {"WAIT",     keywordWAIT,     Compiler::SingleStatementParsed};
+        _keywords["PSET"    ] = {"PSET",     keywordPSET,     Compiler::SingleStatementParsed};
         _keywords["LINE"    ] = {"LINE",     keywordLINE,     Compiler::SingleStatementParsed};
         _keywords["HLINE"   ] = {"HLINE",    keywordHLINE,    Compiler::SingleStatementParsed};
         _keywords["VLINE"   ] = {"VLINE",    keywordVLINE,    Compiler::SingleStatementParsed};
@@ -1313,6 +1315,43 @@ namespace Keywords
             }
 
             return Expression::Numeric(0, uint16_t(index), true, varType, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
+        }
+
+        return numeric;
+    }
+
+    Expression::Numeric functionPOINT(Expression::Numeric& numeric)
+    {
+        if(numeric._parameters.size() == 1)
+        {
+            if(numeric._varType == Expression::Number)
+            {
+                Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(std::lround(numeric._value))), false);
+                Compiler::emitVcpuAsm("ST", "readPixel_xy", false);
+            }
+            else
+            {
+                Operators::createSingleOp("LDW", numeric);
+                Compiler::emitVcpuAsm("ST", "readPixel_xy", false);
+            }
+
+            if(numeric._parameters[0]._varType == Expression::Number)
+            {
+                Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(std::lround(numeric._parameters[0]._value))), false);
+                Compiler::emitVcpuAsm("ST", "readPixel_xy + 1", false);
+            }
+            else
+            {
+                Operators::createSingleOp("LDW", numeric._parameters[0]);
+                Compiler::emitVcpuAsm("ST", "readPixel_xy + 1", false);
+            }
+
+            Compiler::getNextTempVar();
+            numeric._value = uint8_t(Compiler::getTempVarStart());
+            numeric._varType = Expression::TmpVar;
+            numeric._name = Compiler::getTempVarStartStr();
+            Compiler::emitVcpuAsm("%ReadPixel", "", false);
+            Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
         }
 
         return numeric;
@@ -3307,7 +3346,7 @@ namespace Keywords
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() < 1  &&  tokens.size() > 4)
         {
-            fprintf(stderr, "Keywords::keywordALLOC() : Syntax error, '<address>, <optional size>, <optional count>, <optional offset=0x0100>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordALLOC() : Syntax error, 'ALLOC <address>, <optional size>, <optional count>, <optional offset=0x0100>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -3373,7 +3412,7 @@ namespace Keywords
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() != 2)
         {
-            fprintf(stderr, "Keywords::keywordFREE() : Syntax error, '<address>, <size>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordFREE() : Syntax error, 'FREE <address>, <size>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -3397,27 +3436,23 @@ namespace Keywords
         UNREFERENCED_PARAM(tokenIndex);
 
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
-        if(tokens.size() < 1  &&  tokens.size() > 2)
+        if(tokens.size() < 1  ||  tokens.size() > 2)
         {
-            fprintf(stderr, "Keywords::keywordAT() : Syntax error, 'AT X' or 'AT X,Y', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordAT() : Syntax error, 'AT <x>' or 'AT <x>, <y>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
-        std::vector<Expression::Numeric> params = {Expression::Numeric(), Expression::Numeric()};
-        for(int i=0; i<int(tokens.size()); i++)
-        {
-            Compiler::parseExpression(codeLineIndex, tokens[i], params[i]);
-            switch(i)
-            {
-                case 0: Compiler::emitVcpuAsm("ST", "cursorXY",     false, codeLineIndex); break;
-                case 1: Compiler::emitVcpuAsm("ST", "cursorXY + 1", false, codeLineIndex); break;
+        Expression::Numeric numeric;
+        Compiler::parseExpression(codeLineIndex, tokens[0], numeric);
+        Compiler::emitVcpuAsm("ST", "cursorXY", false, codeLineIndex);
 
-                default: break;
-            }
+        if(tokens.size() == 2)
+        {
+            Compiler::parseExpression(codeLineIndex, tokens[1], numeric);
+            Compiler::emitVcpuAsm("ST", "cursorXY + 1", false, codeLineIndex);
         }
 
         Compiler::emitVcpuAsm("%AtTextCursor", "", false, codeLineIndex);
-
         return true;
     }
 
@@ -3426,15 +3461,15 @@ namespace Keywords
         UNREFERENCED_PARAM(result);
         UNREFERENCED_PARAM(tokenIndex);
 
-        std::string expression = codeLine._code.substr(foundPos);
-        if(expression.size() == 0)
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
+        if(tokens.size() != 1)
         {
-            fprintf(stderr, "Keywords::keywordPUT() : Syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordPUT() : Syntax error, 'PUT <ascii>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
-        Expression::Numeric param;
-        Compiler::parseExpression(codeLineIndex, expression, param);
+        Expression::Numeric numeric;
+        Compiler::parseExpression(codeLineIndex, tokens[0], numeric);
         Compiler::emitVcpuAsm("%PrintAcChar", "", false, codeLineIndex);
 
         return true;
@@ -3445,15 +3480,15 @@ namespace Keywords
         UNREFERENCED_PARAM(result);
         UNREFERENCED_PARAM(tokenIndex);
 
-        std::string expression = codeLine._code.substr(foundPos);
-        if(expression.size() == 0)
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
+        if(tokens.size() != 1)
         {
-            fprintf(stderr, "Keywords::keywordMODE() : Syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordMODE() : Syntax error, 'MODE <0 - 3>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
-        Expression::Numeric param;
-        Compiler::parseExpression(codeLineIndex, expression, param);
+        Expression::Numeric numeric;
+        Compiler::parseExpression(codeLineIndex, tokens[0], numeric);
         Compiler::emitVcpuAsm("STW", "graphicsMode", false, codeLineIndex);
         Compiler::emitVcpuAsm("%ScanlineMode", "",   false, codeLineIndex);
 
@@ -3465,18 +3500,52 @@ namespace Keywords
         UNREFERENCED_PARAM(result);
         UNREFERENCED_PARAM(tokenIndex);
 
-        std::string expression = codeLine._code.substr(foundPos);
-        if(expression.size() == 0)
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
+        if(tokens.size() > 1)
+        {
+            fprintf(stderr, "Keywords::keywordWAIT() : Syntax error, 'WAIT <optional vblank count>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            return false;
+        }
+
+        if(tokens.size() == 0)
         {
             Compiler::emitVcpuAsm("%WaitVBlank", "", false, codeLineIndex);
             return true;
         }
 
-        Expression::Numeric param;
-        Compiler::parseExpression(codeLineIndex, expression, param);
+        Expression::Numeric numeric;
+        Compiler::parseExpression(codeLineIndex, tokens[0], numeric);
         Compiler::emitVcpuAsm("STW", "waitVBlankNum", false, codeLineIndex);
-        Compiler::emitVcpuAsm("%WaitVBlanks", "",      false, codeLineIndex);
+        Compiler::emitVcpuAsm("%WaitVBlanks", "",     false, codeLineIndex);
 
+        return true;
+    }
+
+    bool keywordPSET(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
+
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
+        if(tokens.size() < 2  ||  tokens.size() > 3)
+        {
+            fprintf(stderr, "Keywords::keywordPSET() : Syntax error, 'PSET <x>, <y>' or 'PSET <x>, <y>, <colour>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            return false;
+        }
+
+        Expression::Numeric numeric;
+        Compiler::parseExpression(codeLineIndex, tokens[0], numeric);
+        Compiler::emitVcpuAsm("ST", "drawPixel_xy", false, codeLineIndex);
+        Compiler::parseExpression(codeLineIndex, tokens[1], numeric);
+        Compiler::emitVcpuAsm("ST", "drawPixel_xy + 1", false, codeLineIndex);
+
+        if(tokens.size() == 3)
+        {
+            Compiler::parseExpression(codeLineIndex, tokens[2], numeric);
+            Compiler::emitVcpuAsm("ST", "fgbgColour + 1", false, codeLineIndex);
+        }
+
+        Compiler::emitVcpuAsm("%DrawPixel", "", false, codeLineIndex);
         return true;
     }
 
@@ -3488,7 +3557,7 @@ namespace Keywords
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() != 2  &&  tokens.size() != 4)
         {
-            fprintf(stderr, "Keywords::keywordLINE() : Syntax error, 'LINE X,Y' or 'LINE X1,Y1,X2,Y2', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordLINE() : Syntax error, 'LINE <x>, <y>' or 'LINE <x1>, <y1>, <x2>, <y2>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -3541,7 +3610,7 @@ namespace Keywords
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() != 3)
         {
-            fprintf(stderr, "Keywords::keywordHLINE() : Syntax error, 'HLINE X1, Y, X2', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordHLINE() : Syntax error, 'HLINE <x1>, <y>, <x2>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -3572,7 +3641,7 @@ namespace Keywords
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() != 3)
         {
-            fprintf(stderr, "Keywords::keywordVLINE() : Syntax error, 'VLINE X, Y1, Y2', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordVLINE() : Syntax error, 'VLINE <x>, <y1>, <y2>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -3603,7 +3672,7 @@ namespace Keywords
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() != 3)
         {
-            fprintf(stderr, "Keywords::keywordCIRCLE() : Syntax error, 'CIRCLE X,Y,R', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordCIRCLE() : Syntax error, 'CIRCLE <x>, <y>, <radius>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -3634,7 +3703,7 @@ namespace Keywords
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() != 3)
         {
-            fprintf(stderr, "Keywords::keywordCIRCLEF() : Syntax error, 'CIRCLEF X,Y,R', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordCIRCLEF() : Syntax error, 'CIRCLEF <x>, <y>, <radius>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -3665,7 +3734,7 @@ namespace Keywords
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() != 4)
         {
-            fprintf(stderr, "Keywords::keywordRECT() : Syntax error, 'RECT X1,Y1,X2,Y2', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordRECT() : Syntax error, 'RECT <x1>, <y1>, <x2>, <y2>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -3697,7 +3766,7 @@ namespace Keywords
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() != 4)
         {
-            fprintf(stderr, "Keywords::keywordRECTF() : Syntax error, 'RECTF X1,Y1,X2,Y2', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordRECTF() : Syntax error, 'RECTF <x1>, <y1>, <x2>, <y2>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -3729,7 +3798,7 @@ namespace Keywords
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() != 1)
         {
-            fprintf(stderr, "Keywords::keywordPOLY() : Syntax error, 'POLY ADDR', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordPOLY() : Syntax error, 'POLY <coords address>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -3784,7 +3853,7 @@ namespace Keywords
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() != 2)
         {
-            fprintf(stderr, "Keywords::keywordPOKE() : Syntax error, 'POKE A,X', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordPOKE() : Syntax error, 'POKE <address>, <value>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -3863,7 +3932,7 @@ namespace Keywords
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() != 2)
         {
-            fprintf(stderr, "Keywords::keywordDOKE() : syntax error, 'DOKE A,X', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordDOKE() : syntax error, 'DOKE <address>, <value>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -4748,8 +4817,10 @@ namespace Keywords
         }
         else if(sysVarName == "VIDEOTOP"  &&  tokens.size() == 2)
         {
+            Compiler::emitVcpuAsm("LDWI", "giga_videoTop", false, codeLineIndex);
+            Compiler::emitVcpuAsm("STW", "register0", false, codeLineIndex);
             Compiler::parseExpression(codeLineIndex, token1, param1);
-            Compiler::emitVcpuAsm("ST", "giga_videoTop", false, codeLineIndex);
+            Compiler::emitVcpuAsm("POKE", "register0", false, codeLineIndex);
             return true;
         }
         else if(sysVarName == "LEDTEMPO"  &&  tokens.size() == 2)

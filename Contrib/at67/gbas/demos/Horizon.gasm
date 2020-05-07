@@ -35,28 +35,28 @@ textWorkArea        EQU                     0x26a0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_loop               EQU                     0x03be
-_254                EQU                     0x0445
-_253                EQU                     0x0457
-_191                EQU                     0x046d
-_127                EQU                     0x0474
-_calcPitch          EQU                     0x047b
-_next_0x02e7        EQU                     0x02b9
-_else_0x0333        EQU                     0x02ef
+_loop               EQU                     0x0379
+_254                EQU                     0x03ee
+_253                EQU                     0x040d
+_191                EQU                     0x0423
+_127                EQU                     0x042a
+_calcPitch          EQU                     0x0431
+_next_0x027f        EQU                     0x0271
+_endif_0x02bf       EQU                     0x029f
+_else_0x02ff        EQU                     0x02cb
+_endif_0x0303       EQU                     0x02cf
 _page_0x0300        EQU                     0x0300
-_else_0x0373        EQU                     0x032a
-_endif_0x0377       EQU                     0x032e
-_next_0x03ae        EQU                     0x035d
-_else_0x03c3        EQU                     0x036a
-_endif_0x03cb       EQU                     0x0370
-_else_0x03e6        EQU                     0x0381
-_endif_0x03ee       EQU                     0x0387
-_next_0x044f        EQU                     0x03e2
+_next_0x033a        EQU                     0x030e
+_else_0x034f        EQU                     0x031b
+_endif_0x0357       EQU                     0x0321
+_else_0x0372        EQU                     0x0332
+_endif_0x037a       EQU                     0x0338
+_next_0x03e5        EQU                     0x039d
+_repeat_0x0414      EQU                     0x03c2
 _page_0x0400        EQU                     0x0400
-_repeat_0x047e      EQU                     0x0416
-_else_0x04dd        EQU                     0x0455
-_else_0x04f9        EQU                     0x046b
-_end_0x0524         EQU                     0x0492
+_else_0x046a        EQU                     0x040b
+_else_0x0486        EQU                     0x0421
+_end_0x04b1         EQU                     0x0448
 
 ; Variables
 _y                  EQU                     0x0030
@@ -69,10 +69,10 @@ _yy                 EQU                     0x003c
 _color1             EQU                     0x003e
 _color2             EQU                     0x0040
 _horizonY           EQU                     0x0042
-_c1_array           EQU                     0x25f6
-_c1_array           DW                      0x0000 0x0000 0x0000 0x0000 0x0000 
-_c2_array           EQU                     0x25ec
-_c2_array           DW                      0x0000 0x0000 0x0000 0x0000 0x0000 
+_c1_array           EQU                     0x25f8
+_c1_array           DW                      0x003f 0x002a 0x0015 0x0000 
+_c2_array           EQU                     0x25f0
+_c2_array           DW                      0x0003 0x0002 0x0001 0x0000 
 _fade               EQU                     0x0044
 _cIndex             EQU                     0x0046
 _decay              EQU                     0x0048
@@ -95,7 +95,7 @@ _q                  EQU                     0x004e
 _lut_numericLabs    EQU                     0x22b7
 _lut_numericLabs    DW                      254 253 191 127 0x0000
 _lut_numericAddrs   EQU                     0x23a0
-_lut_numericAddrs   DW                      0x0445 0x0457 0x046d 0x0474 
+_lut_numericAddrs   DW                      0x03ee 0x040d 0x0423 0x042a 
 
 ; Code
 _entryPoint_        InitRealTimeProc        
@@ -125,40 +125,6 @@ _entryPoint_        InitRealTimeProc
                     LDI                     32
                     STW                     _horizonY                       ; color1 = &h3F : color2 = &h03 : horizonY = 32
 
-                    LDWI                    0x25f6
-                    STW                     register1
-                    LDI                     63
-                    DOKE                    register1
-                    LDWI                    0x25f8
-                    STW                     register1
-                    LDI                     42
-                    DOKE                    register1
-                    LDWI                    0x25fa
-                    STW                     register1
-                    LDI                     21
-                    DOKE                    register1
-                    LDWI                    0x25fc
-                    STW                     register1
-                    LDI                     0
-                    DOKE                    register1                       ; dim c1(4)=0 : c1(0)=&h3F : c1(1)=&h2A : c1(2)=&h15 : c1(3)=&h00
-
-                    LDWI                    0x25ec
-                    STW                     register1
-                    LDI                     3
-                    DOKE                    register1
-                    LDWI                    0x25ee
-                    STW                     register1
-                    LDI                     2
-                    DOKE                    register1
-                    LDWI                    0x25f0
-                    STW                     register1
-                    LDI                     1
-                    DOKE                    register1
-                    LDWI                    0x25f2
-                    STW                     register1
-                    LDI                     0
-                    DOKE                    register1                       ; dim c2(4)=0 : c2(0)=&h03 : c2(1)=&h02 : c2(2)=&h01 : c2(3)=&h00
-
                     LDI                     0
                     STW                     _fade
                     STW                     _cIndex
@@ -172,41 +138,36 @@ _entryPoint_        InitRealTimeProc
                     LDWI                    -1
                     STW                     0xb2                            ; for y=119 to horizonY step -1
 
-_next_0x02e7        LDWI                    0x25f6
+_next_0x027f        LDWI                    0x25f8
                     ADDW                    _cIndex
                     ADDW                    _cIndex
                     DEEK                    
                     STW                     _color1
-                    LDWI                    0x25ec
+                    LDWI                    0x25f0
                     ADDW                    _cIndex
                     ADDW                    _cIndex
                     DEEK                    
                     STW                     _color2                         ; color1 = c1(cIndex) : color2 = c2(cIndex)
 
-                    LDW                     _fade
-                    ADDI                    1
-                    STW                     _fade                           ; fade = fade + 1
+                    INC                     _fade                           ; inc fade
 
                     LDW                     _fade
                     SUBW                    _decay
-                    BNE                     _else_0x0333
-                    LDW                     _cIndex
-                    ADDI                    1
-                    STW                     _cIndex
+                    BNE                     _endif_0x02bf                   ; if fade &&= decay
+
+                    INC                     _cIndex                         ; inc cIndex
+
                     LDI                     0
-                    STW                     _fade
+                    STW                     _fade                           ; fade = 0
+
                     LDW                     _decay
                     STW                     mathShift
                     ShiftRight1bit          
-                    STW                     _decay                          ; if fade &&= decay then cIndex = cIndex + 1 : fade = 0 : decay = decay LSR 1
+                    STW                     _decay                          ; decay = decay LSR 1
 
-_else_0x0333        LDW                     _y
+_endif_0x02bf       LDW                     _y
                     STW                     _yy                             ; yy = y
 
-                    STW                     0xde
-                    LDWI                    _page_0x0300
-                    CALL                    giga_vAC
-_page_0x0300        LDW                     0xde
                     LDWI                    _calcPitch
                     CALL                    giga_vAC                        ; gosub calcPitch
 
@@ -221,17 +182,17 @@ _page_0x0300        LDW                     0xde
                     LDWI                    divide16bit
                     CALL                    giga_vAC
                     ANDI                    1
-                    BNE                     _else_0x0373                    ; if ((400 / (y-horizonY+40)) AND 1) &&= 0
+                    BNE                     _else_0x02ff                    ; if((400 / (y-horizonY+40)) AND 1) &&= 0
 
                     LDW                     _color1
                     XORW                    _color2
                     STW                     _j
-                    BRA                     _endif_0x0377                   ; j = color1 XOR color2
+                    BRA                     _endif_0x0303                   ; j = color1 XOR color2
 
-_else_0x0373        LDI                     0
+_else_0x02ff        LDI                     0
                     STW                     _j                              ; j = 0
 
-_endif_0x0377       LDI                     80
+_endif_0x0303       LDI                     80
                     STW                     mathX
                     LDW                     _pitch
                     STW                     mathY
@@ -250,6 +211,10 @@ _endif_0x0377       LDI                     80
                     STW                     _a                              ; a = ((y + 8) LSL 8)
 
                     LDI                     0
+                    STW                     0xde
+                    LDWI                    _page_0x0300
+                    CALL                    giga_vAC
+_page_0x0300        LDW                     0xde
                     STW                     _x
                     LDW                     _pitch
                     ADDI                    159
@@ -257,48 +222,52 @@ _endif_0x0377       LDI                     80
                     LDI                     1
                     STW                     0xb6                            ; for x=0 &to pitch + 159
 
-_next_0x03ae        LDW                     _i
-                    BNE                     _else_0x03c3                    ; if i &&= 0
+_next_0x033a        LDW                     _i
+                    BNE                     _else_0x034f                    ; if i &&= 0
 
                     LDW                     _pitch
                     SUBI                    1
                     STW                     _i
-                    BRA                     _endif_0x03cb                   ; i = pitch - 1
+                    BRA                     _endif_0x0357                   ; i = pitch - 1
 
-_else_0x03c3        LDW                     _i
+_else_0x034f        LDW                     _i
                     SUBI                    1
                     STW                     _i                              ; i = i - 1
 
-_endif_0x03cb       LDW                     _i
+_endif_0x0357       LDW                     _i
                     ADDW                    _i
                     SUBW                    _pitch
-                    BLT                     _else_0x03e6                    ; if i+i &&>= pitch
+                    BLT                     _else_0x0372                    ; if i+i &&>= pitch
 
                     LDW                     _color1
                     XORW                    _j
                     STW                     _p
-                    BRA                     _endif_0x03ee                   ; p = color1 XOR j
+                    BRA                     _endif_0x037a                   ; p = color1 XOR j
 
-_else_0x03e6        LDW                     _color2
+_else_0x0372        LDW                     _color2
                     XORW                    _j
                     STW                     _p                              ; p = color2 XOR j
 
-_endif_0x03ee       LDW                     _a
+_endif_0x037a       LDW                     _a
                     ADDW                    _x
                     STW                     0xc0
                     LDW                     _p
                     POKE                    0xc0                            ; poke a+x,p
 
-                    ForNextVarPos           _x _next_0x03ae 0xb4 0xb6       ; next x
+                    ForNextVarPos           _x _next_0x033a 0xb4 0xb6       ; next x
 
+                    LDWI                    giga_videoTop
+                    STW                     register0
                     LDW                     _y
                     ADDW                    _y
-                    ST                      giga_videoTop                   ; set VIDEOTOP, y+y
+                    POKE                    register0                       ; set VIDEOTOP, y+y
 
-                    ForNextFarVarNeg        _y _next_0x02e7 0xb0 0xb2       ; next y
+                    ForNextFarVarNeg        _y _next_0x027f 0xb0 0xb2       ; next y
 
+                    LDWI                    giga_videoTop
+                    STW                     register0
                     LDI                     0
-                    ST                      giga_videoTop                   ; set VIDEOTOP, 0
+                    POKE                    register0                       ; set VIDEOTOP, 0
 
                     LDI                     0
                     STW                     _x
@@ -328,16 +297,12 @@ _loop               LDW                     _x
                     LDI                     1
                     STW                     0xb2                            ; for y=0 &to pitch
 
-_next_0x044f        LDW                     _j
+_next_0x03e5        LDW                     _j
                     ADDW                    _i
                     STW                     _j                              ; j = j + i
 
-                    ForNextVarPos           _y _next_0x044f 0xb0 0xb2       ; next y
+                    ForNextVarPos           _y _next_0x03e5 0xb0 0xb2       ; next y
 
-                    STW                     0xde
-                    LDWI                    _page_0x0400
-                    CALL                    giga_vAC
-_page_0x0400        LDW                     0xde
                     LDW                     _i
                     ADDW                    _i
                     STW                     _i                              ; i = i + i
@@ -349,7 +314,7 @@ _page_0x0400        LDW                     0xde
 
                     WaitVBlank                                              ; wait
 
-_repeat_0x047e      LD                      _j + 1
+_repeat_0x0414      LD                      _j + 1
                     POKE                    _p                              ; poke p, j LSR 8
 
                     LDW                     _j
@@ -361,7 +326,7 @@ _repeat_0x047e      LD                      _j + 1
                     ADDI                    4
                     STW                     _p
                     SUBW                    _q
-                    BLT                     _repeat_0x047e                  ; p = p + 4 : until p &&>= q
+                    BLT                     _repeat_0x0414                  ; p = p + 4 : until p &&>= q
 
                     LD                      giga_buttonState
                     STW                     numericLabel
@@ -373,19 +338,21 @@ _repeat_0x047e      LD                      _j + 1
                     ADDW                    _v
                     STW                     _x                              ; x = x + v
 
-                    LDWI                    _loop
-                    CALL                    giga_vAC                        ; goto loop
+                    BRA                     _loop                           ; goto &loop
 
 _254                PUSH                    
+                    INC                     _v
                     LDW                     _v
-                    ADDI                    1
-                    STW                     _v
+                    STW                     0xde
+                    LDWI                    _page_0x0400
+                    CALL                    giga_vAC
+_page_0x0400        LDW                     0xde
                     SUBI                    32
-                    BLE                     _else_0x04dd
+                    BLE                     _else_0x046a
                     LDI                     32
-                    STW                     _v                              ; v = v + 1 : if v &&> 32 then v = 32
+                    STW                     _v                              ; inc v : if v &&> 32 then v = 32
 
-_else_0x04dd        Return                                                  ; return
+_else_0x046a        Return                                                  ; return
 
 _253                PUSH                    
                     LDW                     _v
@@ -393,11 +360,11 @@ _253                PUSH
                     STW                     _v
                     LDWI                    -32
                     SUBW                    _v
-                    BLT                     _else_0x04f9
+                    BLT                     _else_0x0486
                     LDWI                    -32
                     STW                     _v                              ; v = v - 1 : if v &&< -32 then v = -32
 
-_else_0x04f9        Return                                                  ; return
+_else_0x0486        Return                                                  ; return
 
 _191                PUSH                    
                     LDI                     0
@@ -423,7 +390,7 @@ _calcPitch          PUSH
 
                     Return                                                  ; return
 
-_end_0x0524         BRA                     _end_0x0524                     ; END
+_end_0x04b1         BRA                     _end_0x04b1                     ; END
 
 
 
@@ -433,15 +400,15 @@ _end_0x0524         BRA                     _end_0x0524                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x25e3
-convertEqOp         EQU     0x25da
-convertNeOp         EQU     0x25d1
-convertLeOp         EQU     0x25c8
-convertGeOp         EQU     0x25bf
-convertLtOp         EQU     0x25b6
-convertGtOp         EQU     0x25ad
+realTimeProc        EQU     0x25e7
+convertEqOp         EQU     0x25de
+convertNeOp         EQU     0x25d5
+convertLeOp         EQU     0x25cc
+convertGeOp         EQU     0x25c3
+convertLtOp         EQU     0x25ba
+convertGtOp         EQU     0x25b1
 divide16bit         EQU     0x23a8
-shiftRight1bit      EQU     0x25a3
+shiftRight1bit      EQU     0x25a7
 gosubNumericLabel   EQU     0x22c1
 waitVBlank          EQU     0x22f3
 resetVideoTable     EQU     0x21e0
@@ -660,8 +627,9 @@ drawLine_sy         EQU     register9
 drawLine_h          EQU     register10
 drawLine_num        EQU     register11
 drawLine_count      EQU     register12
-drawLine_addr       EQU     register13
-drawLine_tmp        EQU     register14
+drawLine_tmp        EQU     register13
+
+drawPixel_xy        EQU     register15
   
 drawCircle_cx       EQU     register0
 drawCircle_cy       EQU     register1

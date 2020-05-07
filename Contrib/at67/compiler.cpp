@@ -1749,6 +1749,10 @@ namespace Compiler
         {
             numeric = factor(0); numeric = Keywords::functionRND(numeric);
         }
+        else if(Expression::find("POINT"))
+        {
+            numeric = factor(0); numeric = Keywords::functionPOINT(numeric);
+        }
         else if(Expression::find("NOT "))
         {
             numeric = factor(0); numeric = Operators::operatorNOT(numeric);

@@ -385,6 +385,14 @@ _label_ CALLI   _label
         CALLI   waitVBlank
 %ENDM
 
+%MACRO  ReadPixel
+        CALLI   readPixel
+%ENDM
+
+%MACRO  DrawPixel
+        CALLI   drawPixel
+%ENDM
+
 %MACRO  DrawLine
         CALLI   drawLine
 %ENDM

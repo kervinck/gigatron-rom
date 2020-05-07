@@ -20,6 +20,7 @@
 #include "gigatron_0x20.h"
 #include "gigatron_0x28.h"
 #include "gigatron_0x38.h"
+#include "gigatron_0x40.h"
 #endif
 
 #ifdef _WIN32
@@ -426,10 +427,11 @@ namespace Cpu
             }
             break;
 
-            case ROMv2:  
-            case ROMv3:  
-            case ROMv4:  
-            case DEVROM: 
+            case ROMv2: 
+            case ROMv3: 
+            case ROMv4:
+            case ROMv5a:
+            case DEVROM:
             {
                 _romType = (RomType)romType;
                 setRAM(VIDEO_MODE_D, 0xEC);
@@ -599,8 +601,9 @@ namespace Cpu
         _romFiles.push_back(_gigatron_0x20_rom);
         _romFiles.push_back(_gigatron_0x28_rom);
         _romFiles.push_back(_gigatron_0x38_rom);
-        uint8_t types[NUM_INT_ROMS] = {0x1c, 0x20, 0x28, 0x38};
-        std::string names[NUM_INT_ROMS] = {"ROMv1.rom", "ROMv2.rom", "ROMv3.rom", "ROMv4.rom"};
+        _romFiles.push_back(_gigatron_0x40_rom);
+        uint8_t types[NUM_INT_ROMS] = {0x1c, 0x20, 0x28, 0x38, 0x40};
+        std::string names[NUM_INT_ROMS] = {"ROMv1.rom", "ROMv2.rom", "ROMv3.rom", "ROMv4.rom", "ROMv5a.rom"};
         for(int i=0; i<NUM_INT_ROMS; i++) Editor::addRomEntry(types[i], names[i]);
 
         // Latest internal ROM is the one that is loaded at startup
@@ -650,7 +653,7 @@ namespace Cpu
 //#define CREATE_ROM_HEADER
 #ifdef CREATE_ROM_HEADER
         // Create a header file representation of a ROM, (match the ROM type number with the ROM file before enabling and running this code)
-        createRomHeader((uint8_t *)_ROM, "gigatron_xxxx.h", "_gigatron_xxxx_rom", sizeof(_ROM));
+        createRomHeader((uint8_t *)_ROM, "gigatron_0x40.h", "_gigatron_0x40_rom", sizeof(_ROM));
 #endif
 
 //#define CUSTOM_ROM

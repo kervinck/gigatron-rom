@@ -35,34 +35,34 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x027a
-_20                 EQU                     0x0283
-_25                 EQU                     0x028c
-_30                 EQU                     0x02aa
-_35                 EQU                     0x02ca
-_40                 EQU                     0x02ed
-_45                 EQU                     0x031a
-_50                 EQU                     0x031e
-_60                 EQU                     0x0352
-_setup              EQU                     0x0386
-_process            EQU                     0x0441
+_10                 EQU                     0x0284
+_20                 EQU                     0x028d
+_25                 EQU                     0x0296
+_30                 EQU                     0x02b4
+_35                 EQU                     0x02d4
+_40                 EQU                     0x0306
+_45                 EQU                     0x0323
+_50                 EQU                     0x0327
+_60                 EQU                     0x035b
+_setup              EQU                     0x038f
+_process            EQU                     0x0445
 _draw               EQU                     0x0504
 _erase              EQU                     0x05a3
 _254                EQU                     0x064c
-_253                EQU                     0x0680
-_flip               EQU                     0x06b6
+_253                EQU                     0x067b
+_flip               EQU                     0x06ac
 _page_0x0300        EQU                     0x0300
-_next_0x043d        EQU                     0x03b7
-_else_0x0463        EQU                     0x03cf
+_next_0x0447        EQU                     0x03c0
+_else_0x046d        EQU                     0x03d8
 _page_0x0400        EQU                     0x0400
-_end_0x04cd         EQU                     0x043f
-_next_0x04d4        EQU                     0x0446
+_end_0x04d2         EQU                     0x0443
+_next_0x04d9        EQU                     0x044a
 _page_0x0500        EQU                     0x0500
 _page_0x0600        EQU                     0x0600
-_else_0x0705        EQU                     0x0662
-_else_0x0741        EQU                     0x0698
-_repeat_0x076d      EQU                     0x06c2
-_end_0x078d         EQU                     0x06dc
+_else_0x0700        EQU                     0x065d
+_else_0x0737        EQU                     0x068e
+_repeat_0x0763      EQU                     0x06b8
+_end_0x0783         EQU                     0x06d2
 
 ; Variables
 _videoTable         EQU                     0x0030
@@ -146,16 +146,20 @@ _entryPoint_        InitRealTimeProc
                     STW                     graphicsMode
                     ScanlineMode                                            ; mode 3
 
+                    LDWI                    giga_videoTop
+                    STW                     register0
                     LDI                     238
-                    ST                      giga_videoTop                   ; set VIDEOTOP, 238
+                    POKE                    register0                       ; set VIDEOTOP, 238
 
                     ClearVertBlinds         
                     LDWI                    -30720
                     STW                     clsAddress
                     ClearScreen                                             ; cls : cls &h8800
 
+                    LDWI                    giga_videoTop
+                    STW                     register0
                     LDI                     0
-                    ST                      giga_videoTop                   ; set VIDEOTOP, 0
+                    POKE                    register0                       ; set VIDEOTOP, 0
 
 _10                 LDI                     48
                     STW                     _U
@@ -214,15 +218,15 @@ _35                 LDWI                    0x87f0
                     ADDW                    register1
                     ADDW                    register1
                     STW                     register1
+                    STW                     0xde
+                    LDWI                    _page_0x0300
+                    CALL                    giga_vAC
+_page_0x0300        LDW                     0xde
                     LDW                     register0
                     DOKE                    register1                       ; P(I+4)=160-P(I)
 
 _40                 LDWI                    0x87d0
                     ADDW                    _I
-                    STW                     0xde
-                    LDWI                    _page_0x0300
-                    CALL                    giga_vAC
-_page_0x0300        LDW                     0xde
                     ADDW                    _I
                     DEEK                    
                     STW                     register0
@@ -320,9 +324,9 @@ _setup              LDI                     45
                     STW                     _tick                           ; timer=0 : tick=get("FRAMECOUNT")
 
                     LDI                     0
-                    STW                     _i                              ; for i=0 to 100
+                    STW                     _i                              ; for i=0 &to 100
 
-_next_0x043d        LDW                     _tick
+_next_0x0447        LDW                     _tick
                     STW                     _ticks
                     LD                      giga_frameCount
                     STW                     _tick
@@ -330,30 +334,30 @@ _next_0x043d        LDW                     _tick
                     STW                     _ticks                          ; ticks=tick : tick=get("FRAMECOUNT") : ticks=tick-ticks
 
                     LDW                     _ticks
-                    BGE                     _else_0x0463
+                    BGE                     _else_0x046d
                     LDWI                    256
                     ADDW                    _ticks
                     STW                     _ticks                          ; if ticks &&< 0 then ticks=ticks+256
 
-_else_0x0463        LDW                     _timer
+_else_0x046d        LDW                     _timer
                     ADDW                    _ticks
                     STW                     _timer                          ; timer=timer+ticks
 
                     LDWI                    _254
                     CALL                    giga_vAC                        ; gosub 254
 
-                    ForNextFarInc           _i _next_0x043d 100             ; next i
+                    ForNextInc              _i _next_0x0447 100             ; next i
 
                     LDI                     15
                     ST                      fgbgColour + 1                  ; set FGCOLOUR, &h0F
 
                     LDW                     _timer
-                    STW                     mathX
-                    LDI                     60
                     STW                     0xde
                     LDWI                    _page_0x0400
                     CALL                    giga_vAC
 _page_0x0400        LDW                     0xde
+                    STW                     mathX
+                    LDI                     60
                     STW                     mathY
                     LDWI                    divide16bit
                     CALL                    giga_vAC
@@ -370,12 +374,12 @@ _page_0x0400        LDW                     0xde
                     PrintString             _str_0x87b8
                     NewLine                                                 ; print timer/60;" ";timer % 60;"/60"
 
-_end_0x04cd         BRA                     _end_0x04cd                     ; end
+_end_0x04d2         BRA                     _end_0x04d2                     ; end
 
 _process            PUSH                    
                     LDI                     0
                     STW                     _j
-_next_0x04d4        LDWI                    0x87f0
+_next_0x04d9        LDWI                    0x87f0
                     ADDW                    _j
                     ADDW                    _j
                     DEEK                    
@@ -397,7 +401,7 @@ _next_0x04d4        LDWI                    0x87f0
                     STW                     register1
                     LDW                     register0
                     DOKE                    register1
-                    ForNextFarInc           _j _next_0x04d4 7               ; for j=0 to 7 : PP(j)=P(j) : QQ(j)=Q(j) : next j
+                    ForNextInc              _j _next_0x04d9 7               ; for j=0 &to 7 : PP(j)=P(j) : QQ(j)=Q(j) : next j
 
                     LDI                     0
                     STW                     _I
@@ -647,11 +651,11 @@ _254                PUSH
                     ADDI                    5
                     STW                     _S
                     SUBI                    45
-                    JumpGE                  _else_0x0705 1
+                    BLT                     _else_0x0700
                     LDWI                    -40
-                    STW                     _S                              ; S = S + 5 : if S &>= 45 then S = -40
+                    STW                     _S                              ; S = S + 5 : if S &&>= 45 then S = -40
 
-_else_0x0705        LDI                     15
+_else_0x0700        LDI                     15
                     ST                      fgbgColour + 1
                     LDWI                    _process
                     CALL                    giga_vAC
@@ -674,11 +678,11 @@ _253                PUSH
                     STW                     _S
                     LDWI                    -45
                     SUBW                    _S
-                    JumpGT                  _else_0x0741 2
+                    BLE                     _else_0x0737
                     LDI                     40
-                    STW                     _S                              ; S = S - 5 : if S &<= -45 then S = 40
+                    STW                     _S                              ; S = S - 5 : if S &&<= -45 then S = 40
 
-_else_0x0741        LDI                     15
+_else_0x0737        LDI                     15
                     ST                      fgbgColour + 1
                     LDWI                    _process
                     CALL                    giga_vAC
@@ -703,7 +707,7 @@ _flip               PUSH
                     ORI                     40
                     STW                     _scanLine                       ; scanLine = pageFlip OR &h28
 
-_repeat_0x076d      LDW                     _scanLine
+_repeat_0x0763      LDW                     _scanLine
                     POKE                    _videoTable                     ; poke videoTable, scanLine
 
                     INC                     _scanLine                       ; inc scanLine
@@ -714,7 +718,7 @@ _repeat_0x076d      LDW                     _scanLine
 
                     LDWI                    432
                     SUBW                    _videoTable
-                    BNE                     _repeat_0x076d                  ; until videoTable &&= VideoTableEnd
+                    BNE                     _repeat_0x0763                  ; until videoTable &&= VideoTableEnd
 
                     LDW                     _pageFlip
                     XORI                    128
@@ -722,7 +726,7 @@ _repeat_0x076d      LDW                     _scanLine
 
                     Return                                                  ; return
 
-_end_0x078d         BRA                     _end_0x078d                     ; END
+_end_0x0783         BRA                     _end_0x0783                     ; END
 
 
 
@@ -961,8 +965,9 @@ drawLine_sy         EQU     register9
 drawLine_h          EQU     register10
 drawLine_num        EQU     register11
 drawLine_count      EQU     register12
-drawLine_addr       EQU     register13
-drawLine_tmp        EQU     register14
+drawLine_tmp        EQU     register13
+
+drawPixel_xy        EQU     register15
   
 drawCircle_cx       EQU     register0
 drawCircle_cy       EQU     register1
