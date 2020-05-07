@@ -87,7 +87,7 @@ _PIA=$30        {Overlap with (otherwise useless) vIRQ-saved vPC}
 
 *=$200
 
-\romType, \romTypeValue_DEVROM- {Version check >= DEVROM, see Docs/GT1-files.txt}
+\romType, \romTypeValue_ROMv5-  {Version check >= ROMv5, see Docs/GT1-files.txt}
 [if<0 do _frameCount _vPCH:     {https://forum.gigatron.io/viewtopic.php?f=4&t=130}
       loop]
 
@@ -111,7 +111,7 @@ $101 {videoTable+1} _p= $60 _p. {Use offsets 96..255 for pixel data, not 0..159}
 $10ff _p=                       {Put cursor on right side. This causes an automatic
                                  newline at the first invokation of _CharOut}
 
-&_vIRQ_DEVROM _i=
+&_vIRQ_v5 _i=
 &_vIRQ_ENTER _i:                {Set vIRQ vector}
 
 254 \frameCount.                {First interrupt after at least one full frame}

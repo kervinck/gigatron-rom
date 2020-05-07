@@ -40,21 +40,21 @@ dev.rom: Core/* Apps/*/* Makefile interface.json
 		zippedRacerHorizon=Apps/Racer/Horizon-256x16.rgb\
 		Racer=Apps/Racer/Racer_v2.gcl\
 		Mandelbrot=Apps/Mandelbrot/Mandelbrot_v1.gcl\
-		SYS_Loader.py\
-		Pictures=Apps/Pictures/Pictures_vX.gcl\
-		Loader=Apps/Loader/Loader.gcl\
+		SYS_Loader_v4.py\
+		Pictures=Apps/Pictures/Pictures_v3.gcl\
+		Loader=Apps/Loader/Loader_v4.gcl\
 		Credits=Apps/Credits/Credits_v3.gcl\
-		Tetronis=Apps/Tetronis/Tetronis.gt1\
-		Bricks=Apps/Bricks/Bricks.gt1\
-		TinyBASIC=Apps/TinyBASIC/TinyBASIC.gcl\
-		TicTac=Apps/TicTac/TicTac.gcl\
+		Tetronis=Apps/Tetronis/Tetronis_v2.gt1\
+		Bricks=Apps/Bricks/Bricks_v2.gt1\
+		TinyBASIC=Apps/TinyBASIC/TinyBASIC_v4.gcl\
+		TicTac=Apps/TicTac/LoadTicTac_v1.gcl\
 		TicTacGtb=Apps/TicTac/TicTac_v2.gtb\
 		WozMon=Apps/WozMon/WozMon_v2.gcl\
-		Apple1=Apps/Apple-1/Apple-1.gt1x\
-		MSBASIC=Apps/MSBASIC/MSBASIC.gt1\
-		Egg=Apps/Horizon/Horizon_at67.gt1\
+		Apple1=Apps/Apple-1/Apple-1_v2.gt1\
+		MSBASIC=Apps/MSBASIC/MSBASIC_v1.gt1\
+		Egg=Apps/Horizon/Horizon_at67_v1.gt1\
 		Boot=Apps/CardTest/CardBoot.gcl\
-		Main=Apps/MainMenu/MainMenu.gcl\
+		Main=Apps/MainMenu/MainMenu_v5.gcl\
 		Reset=Core/Reset.gcl
 
 run: Docs/gtemu $(DEV)
@@ -98,6 +98,35 @@ burn85:
 #-----------------------------------------------------------------------
 #	Released ROM versions
 #-----------------------------------------------------------------------
+
+# Untested freeze of dev.rom
+ROMv5a.rom: Core/* Apps/*/* Makefile interface.json
+	python3 Core/ROMv5a.asm.py\
+		packedPictures=Apps/Pictures/packedPictures.rgb\
+		Snake=Apps/Snake/Snake_v3.gcl\
+		SYS_Racer_v1.py\
+		zippedRacerHorizon=Apps/Racer/Horizon-256x16.rgb\
+		Racer=Apps/Racer/Racer_v2.gcl\
+		Mandelbrot=Apps/Mandelbrot/Mandelbrot_v1.gcl\
+		SYS_Loader_v4.py\
+		Pictures=Apps/Pictures/Pictures_v3.gcl\
+		Loader=Apps/Loader/Loader_v4.gcl\
+		Credits=Apps/Credits/Credits_v3.gcl\
+		Tetronis=Apps/Tetronis/Tetronis_v2.gt1\
+		Bricks=Apps/Bricks/Bricks_v2.gt1\
+		TinyBASIC=Apps/TinyBASIC/TinyBASIC_v4.gcl\
+		TicTac=Apps/TicTac/LoadTicTac_v1.gcl\
+		TicTacGtb=Apps/TicTac/TicTac_v2.gtb\
+		WozMon=Apps/WozMon/WozMon_v2.gcl\
+		Apple1=Apps/Apple-1/Apple-1_v2.gt1\
+		MSBASIC=Apps/MSBASIC/MSBASIC_v1.gt1\
+		Egg=Apps/Horizon/Horizon_at67_v1.gt1\
+		Boot=Apps/CardTest/CardBoot_v1.gcl\
+		Main=Apps/MainMenu/MainMenu_v5.gcl\
+		Reset=Core/Reset_v5.gcl
+
+burnv5a: ROMv5a.rom
+	minipro -p 'AT27C1024 @DIP40' -w "$<" -y -s
 
 # ROM v4 support `TypeC' game controller signals. There are
 # many small changes under the hood, but no new applications.
