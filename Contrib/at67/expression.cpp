@@ -311,7 +311,7 @@ namespace Expression
         static int chrPrev = -1;
         bool result = true;
 
-        if(chr == '"') containsQuotes = !containsQuotes;
+        if(chr == '"'  &&  chrPrev != '\\') containsQuotes = !containsQuotes;
         if(chr != ':'  ||  containsQuotes) result = false;
 
         chrPrev = chr;
