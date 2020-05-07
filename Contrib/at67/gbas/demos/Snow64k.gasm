@@ -35,31 +35,31 @@ textWorkArea        EQU                     0xffa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x023e
-_20                 EQU                     0x023e
-_30                 EQU                     0x0246
-_40                 EQU                     0x0258
-_50                 EQU                     0x0269
-_60                 EQU                     0x0273
-_70                 EQU                     0x0284
-_80                 EQU                     0x029c
-_90                 EQU                     0x02ab
-_100                EQU                     0x02c7
-_110                EQU                     0x030f
-_120                EQU                     0x0331
-_130                EQU                     0x0342
-_140                EQU                     0x035a
-_150                EQU                     0x0370
-_160                EQU                     0x038a
-_170                EQU                     0x0394
-_180                EQU                     0x03ae
-_190                EQU                     0x03c3
-_200                EQU                     0x03cd
-_210                EQU                     0x03e3
-_220                EQU                     0x040d
+_10                 EQU                     0x0239
+_20                 EQU                     0x0239
+_30                 EQU                     0x0241
+_40                 EQU                     0x0253
+_50                 EQU                     0x0264
+_60                 EQU                     0x026e
+_70                 EQU                     0x027f
+_80                 EQU                     0x0297
+_90                 EQU                     0x02a6
+_100                EQU                     0x02c2
+_110                EQU                     0x030a
+_120                EQU                     0x032c
+_130                EQU                     0x033d
+_140                EQU                     0x0355
+_150                EQU                     0x036b
+_160                EQU                     0x0385
+_170                EQU                     0x038f
+_180                EQU                     0x03a9
+_190                EQU                     0x03be
+_200                EQU                     0x03c8
+_210                EQU                     0x03de
+_220                EQU                     0x0408
 _page_0x0300        EQU                     0x0300
 _page_0x0400        EQU                     0x0400
-_end_0x04a4         EQU                     0x041f
+_end_0x049f         EQU                     0x041a
 
 ; Variables
 _X_array            EQU                     0xfaec
@@ -135,19 +135,19 @@ _20                 LDI                     1
                     STW                     _J                              ; I=1 : J=0
 
 _30                 LDI                     16
-                    ST                      162
+                    ST                      fgbgColour
                     LDI                     1
                     STW                     graphicsMode
                     ScanlineMode            
-                    ClearVertBlinds                                         ; poke 162,D : mode 1 : cls
+                    ClearVertBlinds                                         ; set BGCOLOUR,D : mode 1 : cls
 
 _40                 LDI                     72
-                    ST                      163
+                    ST                      fgbgColour + 1
                     LDI                     32
                     ST                      cursorXY
                     LDI                     96
                     ST                      cursorXY + 1
-                    AtTextCursor                                            ; poke 163,72 : at 32,96
+                    AtTextCursor                                            ; set FGCOLOUR,72 : at 32,96
 
 _50                 PrintString             _str_0xf626                     ; print "Merry Christmas!";
 
@@ -197,12 +197,12 @@ _100                Rand
                     ANDI                    15
                     ADDW                    0xc4
                     STW                     register0
+                    LDWI                    0xfaec
+                    ADDW                    _S
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
-                    LDWI                    0xfaec
-                    ADDW                    _S
                     ADDW                    _S
                     STW                     register1
                     LDW                     register0
@@ -314,13 +314,13 @@ _210                LDWI                    0xf638
                     STW                     0xc0
                     LDWI                    0xfaec
                     ADDW                    _S
+                    ADDW                    _S
+                    DEEK                    
+                    ADDW                    0xc0
                     STW                     0xde
                     LDWI                    _page_0x0400
                     CALL                    giga_vAC
 _page_0x0400        LDW                     0xde
-                    ADDW                    _S
-                    DEEK                    
-                    ADDW                    0xc0
                     STW                     0xc2
                     LDI                     127
                     POKE                    0xc2                            ; poke Y(S)+X(S),C+64
@@ -334,7 +334,7 @@ _220                LDWI                    0xf638
                     LDWI                    _180
                     CALL                    giga_vAC                        ; Y(S)=0 : goto 180
 
-_end_0x04a4         BRA                     _end_0x04a4                     ; END
+_end_0x049f         BRA                     _end_0x049f                     ; END
 
 
 
@@ -351,21 +351,21 @@ convertLeOp         EQU     0xf602
 convertGeOp         EQU     0xf5f6
 convertLtOp         EQU     0xf5ed
 convertGtOp         EQU     0xf5e4
-rand16bit           EQU     0xf525
-scanlineMode        EQU     0xf5ad
-resetVideoTable     EQU     0xf506
-initClearFuncs      EQU     0xf5c1
-clearVertBlinds     EQU     0xf573
+rand16bit           EQU     0xf526
+scanlineMode        EQU     0xf5ae
+resetVideoTable     EQU     0xf507
+initClearFuncs      EQU     0xf5c2
+clearVertBlinds     EQU     0xf574
 clearCursorRow      EQU     0xf3b6
 drawHLine           EQU     0xf4a2
 resetAudio          EQU     0xf469
 playMidi            EQU     0xf419
 midiStartNote       EQU     0xf36a
-printInit           EQU     0xf34f
-printText           EQU     0xf52d
-printChar           EQU     0xf2a7
-atTextCursor        EQU     0xf546
-newLineScroll       EQU     0xf249
+printInit           EQU     0xf403
+printText           EQU     0xf52e
+printChar           EQU     0xf312
+atTextCursor        EQU     0xf547
+newLineScroll       EQU     0xf2a2
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -492,8 +492,9 @@ drawLine_sy         EQU     register9
 drawLine_h          EQU     register10
 drawLine_num        EQU     register11
 drawLine_count      EQU     register12
-drawLine_addr       EQU     register13
-drawLine_tmp        EQU     register14
+drawLine_tmp        EQU     register13
+
+drawPixel_xy        EQU     register15
   
 drawCircle_cx       EQU     register0
 drawCircle_cy       EQU     register1
@@ -580,7 +581,7 @@ initClearFuncs      PUSH
                     LDWI    resetVideoTable
                     CALL    giga_vAC
     
-                    LDWI    0x0002                              ; starting cursor position
+                    LDI     0x02                                ; starting cursor position
                     STW     cursorXY
                     LDWI    0x7FFF
                     ANDW    miscFlags
@@ -733,8 +734,8 @@ resetA_loop         ST      numChannels
 
 
 playMidi            LDW     midiStream
-                    BEQ     playM_exit0         ; 0x0000 = stop
-                    LDI     0x08                ; keep pumping soundTimer, so that global sound stays alive
+                    BEQ     playM_exit0                     ; 0x0000 = stop
+                    LDI     0x08                            ; keep pumping soundTimer
                     ST      giga_soundTimer
                     LD      giga_frameCount
                     SUBW    midiDelay
@@ -743,37 +744,37 @@ playM_exit0         RET
 
 playM_start         PUSH
 playM_process       LDW     midiStream
-                    PEEK                        ; get midi stream byte
+                    PEEK                                    ; get midi stream byte
                     STW     midiCommand
                     LDW     midiStream
                     ADDI    0x01
                     STW     midiStream
                     LDI     0xF0
                     ANDW    midiCommand
-                    XORI    0x90                ; check for start note
+                    XORI    0x90                            ; check for start note
                     BNE     playM_endnote
     
                     LDWI    midiStartNote
-                    CALL    giga_vAC            ; start note
+                    CALL    giga_vAC            			; start note
                     BRA     playM_process
                     
-playM_endnote       XORI    0x10                ; check for end note
+playM_endnote       XORI    0x10                            ; check for end note
                     BNE     playM_segment
     
-                    LDWI    midiEndNote         ; end note
+                    LDWI    midiEndNote         			; end note
                     CALL    giga_vAC
                     BRA     playM_process
 
-playM_segment       XORI    0x50                ; check for new segment
+playM_segment       XORI    0x50                            ; check for new segment
                     BNE     playM_delay
     
-                    LDW     midiStream          ; midi score
+                    LDW     midiStream                      ; midi score
                     DEEK
-                    STW     midiStream          ; 0xD0 new midi segment address
-                    BEQ     playM_exit1         ; 0x0000 = stop
+                    STW     midiStream                      ; 0xD0 new midi segment address
+                    BEQ     playM_exit1                     ; 0x0000 = stop
                     BRA     playM_process
     
-playM_delay         LD      giga_frameCount     ; midiDelay = (midiCommand + peek(frameCount)) & 0x00FF 
+playM_delay         LD      giga_frameCount                 ; midiDelay = (midiCommand + peek(frameCount)) & 0x00FF 
                     ADDW    midiCommand
                     ST      midiDelay
 playM_exit1         POP
@@ -846,12 +847,9 @@ printInit           LDWI    SYS_VDrawBits_134
                     STW     giga_sysFn
                     LDW     fgbgColour
                     STW     giga_sysArg0
-                    
-                    LDWI    giga_videoTable
-                    STW     giga_sysArg4
-                    LD      cursorXY + 1
+                    LD      cursorXY + 1                    ; xy = peek(256+2*y)*256 + x
                     LSLW
-                    ADDW    giga_sysArg4
+                    INC     giga_vAC + 1
                     PEEK
                     ST      giga_sysArg4 + 1
                     LD      cursorXY
@@ -1009,7 +1007,7 @@ clearCR_loopx       SUBI    4                               ; loop is unrolled 4
 newLineScroll       LDI     0x02                            ; x offset slightly
                     ST      cursorXY
                     ST      giga_sysArg4
-                    LDWI    0x0001
+                    LDI     0x01
                     ANDW    miscFlags
                     BNE     newLS_cont0                     ; scroll on or off
                     RET

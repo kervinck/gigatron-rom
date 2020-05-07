@@ -43,11 +43,10 @@ conf19$ = "it is more shameful to distrust our friends than to be deceived by th
 conf20$ = "an oppressive government is more to be feared than a tiger    "
 
 mode 2
-poke 162, &h15
-poke 163, &h3F
+set FGBGCOLOUR, &h3F15
 cls
 
-poke 163, 0
+set FGCOLOUR, 0
 rectf 0, 97, 159 + 96, 119 'clear text scrolling onscreen and offscreen area
 
 const fontStart = 0
@@ -95,41 +94,20 @@ load sprite, ../../images/gbas/Boing/Boing11.tga, boingStart + 11
 load sprite, ../../images/gbas/Boing/Boing12.tga, boingStart + 12
 load sprite, ../../images/gbas/Boing/Boing13.tga, boingStart + 13
 
-dim fontWidths(26)=12
-fontWidths(8) = 6 : fontWidths(11) = 6 'i and l
-fontWidths(12) = 18 : fontWidths(22) = 18 'm and w
-fontWidths(26) = 6 'space
+'i and l = 6, m and w = 18, space = 6
+'static initialisation of the array produces no code, always attempt this first
+dim fontWidths(26) = 12, 12, 12, 12, 12, 12, 12, 12, 6, 12, 12, 6, 18, 12, 12, 12, 12, 12, 12, 12, 12, 12, 18, 12, 12, 12, 6
 
 'can't have an array of strings yet, so manually construct one, (+ 1 skips past the length byte)
-dim quoteAddrs(20)=&h0000
-quoteAddrs(0) = @conf0$ + 1
-quoteAddrs(1) = @conf1$ + 1
-quoteAddrs(2) = @conf2$ + 1
-quoteAddrs(3) = @conf3$ + 1
-quoteAddrs(4) = @conf4$ + 1
-quoteAddrs(5) = @conf5$ + 1
-quoteAddrs(6) = @conf6$ + 1
-quoteAddrs(7) = @conf7$ + 1
-quoteAddrs(8) = @conf8$ + 1
-quoteAddrs(9) = @conf9$ + 1
-quoteAddrs(10) = @conf10$ + 1
-quoteAddrs(11) = @conf11$ + 1
-quoteAddrs(12) = @conf12$ + 1
-quoteAddrs(13) = @conf13$ + 1
-quoteAddrs(14) = @conf14$ + 1
-quoteAddrs(15) = @conf15$ + 1
-quoteAddrs(16) = @conf16$ + 1
-quoteAddrs(17) = @conf17$ + 1
-quoteAddrs(18) = @conf18$ + 1
-quoteAddrs(19) = @conf19$ + 1
-quoteAddrs(20) = @conf20$ + 1
+'static initialisation of the array produces no code, always attempt this first
+dim quoteAddrs(20) = @conf0$+1, @conf1$+1, @conf2$+1, @conf3$+1, @conf4$+1, @conf5$+1, @conf6$+1, @conf7$+1, @conf8$+1, @conf9$+1, @conf10$+1, @conf11$+1, @conf12$+1, @conf13$+1, @conf14$+1, @conf15$+1, @conf16$+1, @conf17$+1, @conf18$+1, @conf19$+1, @conf20$+1
 
 const g = 4
 f = boingStart : y = &h0100 : text = 160 : fstep = 1 : xstep = 100
 x = 0 : ystep = x : scrl = ystep : char = scrl : stamp = char : width = stamp : quote = width : crash = quote : time = crash
 
 loop:
-    poke &h2C, 2
+    set SOUNDTIMER, 2
     
     sprite noFlip, f, x.hi, y.hi
     
@@ -140,8 +118,8 @@ loop:
   
     'boing xpos
     x = x + xstep
-    if x.hi &> 111 'performs the following check if (x.hi > 111) or (x.hi < 0)
-        xstep = -xstep
+    if x.hi &&> 111 'performs the following check if (x.hi > 111) or (x.hi < 0)
+        xstep = -xstep : x = xstep + x
         fstep = -fstep
         crash = 1
         time = 0
@@ -150,7 +128,7 @@ loop:
     'boing ypos
     ystep = ystep + g
     y = y + ystep
-    if y.hi &> 56
+    if y.hi &&> 56
         y.hi = 56
         ystep = -ystep
         crash = 1
@@ -158,7 +136,7 @@ loop:
     endif
     
     'collision sound
-    if crash = 1
+    if crash &&= 1
         gosub crashSound
     endif
     
@@ -180,7 +158,9 @@ getChar:
         if c &&= 0
             char = 0
             inc quote
-            if quote &&= 21 then quote = 0
+            if quote &&= 21
+                quote = 0
+            endif
             goto getChar
         elseif c &&= 32
             c = 26
@@ -195,21 +175,22 @@ getChar:
     endif
     
     inc stamp
-    if stamp &&= width then stamp = 0
+    if stamp &&= width
+        stamp = 0
+    endif
 return
 
 crashSound:
-    volume = PEEK(V_LUT + (time AND (V_SIZ-1)))
-    freq = DEEK(F_LUT + ((time AND (F_SIZ-1)) LSL 1))
+    volume = peek(V_LUT + (time AND (V_SIZ-1)))
+    freq = deek(F_LUT + ((time AND (F_SIZ-1)) LSL 1))
     foffs = 0
-    for i=1 &to 4
+    for i=1 to 4
         sound on, i, freq + foffs, volume, 0
         foffs = foffs + 100
     next i
 
     inc time
     if time &&= 64
-        time = 0
-        crash = 0
+        time = 0 : crash = 0
     endif
 return

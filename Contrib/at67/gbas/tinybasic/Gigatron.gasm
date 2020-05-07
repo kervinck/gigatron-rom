@@ -23,6 +23,7 @@ cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
 miscFlags           EQU                     register0 + 0x28
+fontLutId           EQU                     0x00e0
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -34,18 +35,16 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_1                  EQU                     0x023b
-_2                  EQU                     0x023b
-_3                  EQU                     0x023b
-_10                 EQU                     0x023b
-_19                 EQU                     0x023b
-_20                 EQU                     0x0243
-_29                 EQU                     0x023b
-_30                 EQU                     0x024c
-_40                 EQU                     0x0255
-_50                 EQU                     0x02ae
-_60                 EQU                     0x02b8
-_end_0x030a         EQU                     0x02ba
+_1                  EQU                     0x0239
+_2                  EQU                     0x0239
+_3                  EQU                     0x0239
+_10                 EQU                     0x0239
+_20                 EQU                     0x0241
+_30                 EQU                     0x024a
+_40                 EQU                     0x0253
+_50                 EQU                     0x02ac
+_60                 EQU                     0x02b6
+_end_0x0308         EQU                     0x02b8
 
 ; Variables
 _x                  EQU                     0x0030
@@ -62,6 +61,7 @@ _str_0x7ef5         DB                      9 'Gigatron!' 0
 ; Define Images
 
 ; Define Sprites
+; Define Fonts
 
 ; Lookup Tables
 
@@ -82,11 +82,11 @@ _10                 LDI                     107
 
 _20                 Rand                    
                     ANDI                    63
-                    ST                      162                             ; poke 162,rnd(0) AND 63
+                    ST                      fgbgColour                      ; set BGCOLOUR, rnd(0) AND 63
 
 _30                 Rand                    
                     ANDI                    63
-                    ST                      163                             ; poke 163,rnd(0) AND 63
+                    ST                      fgbgColour + 1                  ; set FGCOLOUR, rnd(0) AND 63
 
 _40                 Rand                    
                     ANDI                    63
@@ -118,14 +118,13 @@ _40                 Rand
                     ANDI                    3
                     ADDW                    0xcc
                     ST                      cursorXY + 1
-                    LDWI                    atTextCursor
-                    CALL                    giga_vAC                        ; at (rnd(0) AND &h3F) + (rnd(0) AND &h1F) + (rnd(0) AND &h07) + (rnd(0) AND &h07), (rnd(0) AND &h3F) + (rnd(0) AND &h1F) + (rnd(0) AND &h0F) + (rnd(0) AND &h03)
+                    AtTextCursor                                            ; at (rnd(0) AND &h3F) + (rnd(0) AND &h1F) + (rnd(0) AND &h07) + (rnd(0) AND &h07), (rnd(0) AND &h3F) + (rnd(0) AND &h1F) + (rnd(0) AND &h0F) + (rnd(0) AND &h03)
 
 _50                 PrintString             _str_0x7ef5                     ; print "Gigatron!";
 
 _60                 BRA                     _20                             ; goto &20
 
-_end_0x030a         BRA                     _end_0x030a                     ; END
+_end_0x0308         BRA                     _end_0x0308                     ; END
 
 
 
@@ -144,13 +143,13 @@ convertLtOp         EQU     0x7ebf
 convertGtOp         EQU     0x7eb6
 rand16bit           EQU     0x7eae
 resetVideoTable     EQU     0x7cc7
-initClearFuncs      EQU     0x7ddc
+initClearFuncs      EQU     0x7ddd
 clearCursorRow      EQU     0x7bb6
-printInit           EQU     0x7cac
+printInit           EQU     0x7cb1
 printText           EQU     0x7ce6
 printChar           EQU     0x7aa7
-atTextCursor        EQU     0x7daf
-newLineScroll       EQU     0x79a1
+atTextCursor        EQU     0x7db0
+newLineScroll       EQU     0x79a2
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -170,7 +169,7 @@ lutIndex            EQU     register8
 
                     ; runs real time, (time sliced), code at regular intervals
 realTimeProc        PUSH
-                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI/SPRITE etc routines
+                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI routine
                     CALL    giga_vAC
                     POP
                     RET
@@ -284,7 +283,7 @@ initClearFuncs      PUSH
                     LDWI    resetVideoTable
                     CALL    giga_vAC
     
-                    LDWI    0x0002                              ; starting cursor position
+                    LDI     0x02                                ; starting cursor position
                     STW     cursorXY
                     LDWI    0x7FFF
                     ANDW    miscFlags
@@ -323,12 +322,9 @@ printInit           LDWI    SYS_VDrawBits_134
                     STW     giga_sysFn
                     LDW     fgbgColour
                     STW     giga_sysArg0
-                    
-                    LDWI    giga_videoTable
-                    STW     giga_sysArg4
-                    LD      cursorXY + 1
+                    LD      cursorXY + 1                    ; xy = peek(256+2*y)*256 + x
                     LSLW
-                    ADDW    giga_sysArg4
+                    INC     giga_vAC + 1
                     PEEK
                     ST      giga_sysArg4 + 1
                     LD      cursorXY
@@ -486,7 +482,7 @@ clearCR_loopx       SUBI    4                               ; loop is unrolled 4
 newLineScroll       LDI     0x02                            ; x offset slightly
                     ST      cursorXY
                     ST      giga_sysArg4
-                    LDWI    0x0001
+                    LDI     0x01
                     ANDW    miscFlags
                     BNE     newLS_cont0                     ; scroll on or off
                     RET

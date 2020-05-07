@@ -23,6 +23,7 @@ cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
 miscFlags           EQU                     register0 + 0x28
+fontLutId           EQU                     0x00e0
 
 ; Internal buffers
 textWorkArea        EQU                     0xffa0
@@ -35,18 +36,18 @@ textWorkArea        EQU                     0xffa0
 ; Labels
 _entryPoint_        EQU                     0x0200
 _10                 EQU                     0x037f
-_test               EQU                     0x059f
+_test               EQU                     0x05a1
 _Big                EQU                     0x06ca
 _page_0x0300        EQU                     0x0300
-_next_0x039d        EQU                     0x038f
-_next_0x03a1        EQU                     0x0393
-_next_0x03a5        EQU                     0x0397
-_next_0x03a9        EQU                     0x039b
+_next_0x039b        EQU                     0x038f
+_next_0x039f        EQU                     0x0393
+_next_0x03a3        EQU                     0x0397
+_next_0x03a7        EQU                     0x039b
 _page_0x0400        EQU                     0x0400
 _page_0x0500        EQU                     0x0500
-_end_0x0591         EQU                     0x0584
-_next_0x0597        EQU                     0x058a
-_end_0x05aa         EQU                     0x059d
+_end_0x0591         EQU                     0x0586
+_next_0x0597        EQU                     0x058c
+_end_0x05aa         EQU                     0x059f
 _page_0x0600        EQU                     0x0600
 _page_0x08a0        EQU                     0x08a0
 _page_0x09a0        EQU                     0x09a0
@@ -226,7 +227,7 @@ _page_0xb600        EQU                     0xb600
 _page_0xb700        EQU                     0xb700
 _page_0xb800        EQU                     0xb800
 _page_0xb900        EQU                     0xb900
-_end_0x6dcf         EQU                     0xb90e
+_end_0x6dd1         EQU                     0xb90e
 
 ; Variables
 _z                  EQU                     0x0030
@@ -398,16 +399,16 @@ _10                 LDW                     _z
                     LDI                     2
                     STW                     0xb2                            ; for i=z+1 to dog-1 step 2
 
-_next_0x039d        LDI                     1
+_next_0x039b        LDI                     1
                     STW                     _j                              ; for j = 1 to 0
 
-_next_0x03a1        LDI                     1
+_next_0x039f        LDI                     1
                     STW                     _jj                             ; for jj = 1 to 2 step 1
 
-_next_0x03a5        LDI                     1
+_next_0x03a3        LDI                     1
                     STW                     _ss                             ; for ss = 1 to 5 step 1
 
-_next_0x03a9        LDW                     _i
+_next_0x03a7        LDW                     _i
                     STW                     mathX
                     LDI                     3
                     STW                     mathY
@@ -453,13 +454,13 @@ _page_0x0400        LDW                     0xde
                     PrintAcInt16            
                     NewLine                                                 ; print i*3+1;" ";i/2;" ";j*3;" ";j+23;" ";i+55;" ";i+j;" ";i-j
 
-                    ForNextFarInc           _ss _next_0x03a9 5              ; next ss
+                    ForNextFarInc           _ss _next_0x03a7 5              ; next ss
 
-                    ForNextFarInc           _jj _next_0x03a5 2              ; next jj
+                    ForNextFarInc           _jj _next_0x03a3 2              ; next jj
 
-                    ForNextFarDec           _j _next_0x03a1 0               ; next j
+                    ForNextFarDec           _j _next_0x039f 0               ; next j
 
-                    ForNextFarVarPos        _i _next_0x039d 0xb0 0xb2       ; next i
+                    ForNextFarVarPos        _i _next_0x039b 0xb0 0xb2       ; next i
 
                     LDWI                    _test
                     CALL                    giga_vAC                        ; gosub   test
@@ -487,10 +488,11 @@ _page_0x0500        LDW                     0xde
                     LDI                     48
                     PrintAcChar             
                     PrintString             _str_0xff3d
-                    LD                      0x21
+                    LD                      giga_romType
+                    ANDI                    0xF8
                     ANDI                    252
                     PrintAcHexByte          
-                    PrintString             _str_0xff3d                     ; print bb;" ";w$;" ";hexw$(x);" ";x$;" ";y$;" ";chr$(bb+60);" ";chr$(&h30);" ";hex$(peek(&h21) AND &hFC);" ";
+                    PrintString             _str_0xff3d                     ; print bb;" ";w$;" ";hexw$(x);" ";x$;" ";y$;" ";chr$(bb+60);" ";chr$(&h30);" ";hex$(get("ROMTYPE") AND &hFC);" ";
 
                     LDI                     0x50
                     PrintAcHexByte          
@@ -573,13 +575,13 @@ _page_0x0600        LDW                     0xde
                     PrintAcInt16            
                     NewLine                                                 ; print 20*3+1;" ";i;" ";j;" ";j+23;" ";i+55;" ";i+j;" ";i-j;" ";i-j+1;" ";i+j+j
 
-                    POP                     
-                    RET                                                     ; return
+                    Return                                                  ; return
 
 _Big                PUSH                    
-                    LD                      0x21
+                    LD                      giga_romType
+                    ANDI                    0xF8
                     ANDI                    252
-                    STW                     _a                              ; a = peek(&h21) AND &hFC
+                    STW                     _a                              ; a = get("ROMTYPE") AND &hFC
 
                     LDW                     _a
                     PrintAcHexByte          
@@ -593,12 +595,12 @@ _Big                PUSH
                     STW                     _f                              ; f = &h1111
 
                     LDWI                    -21846
-                    STW                     _g                              ; g = &hAAAA
-
                     STW                     0xde
                     LDWI                    _page_0x08a0
                     CALL                    giga_vAC
 _page_0x08a0        LDW                     0xde
+                    STW                     _g                              ; g = &hAAAA
+
                     LDWI                    -1
                     SUBW                    _g
                     XORW                    _f
@@ -616,11 +618,11 @@ _page_0x08a0        LDW                     0xde
                     LDW                     _z
                     PrintAcInt16            
                     PrintString             _str_0xff3d
-                    LDWI                    -6
                     STW                     0xde
                     LDWI                    _page_0x09a0
                     CALL                    giga_vAC
 _page_0x09a0        LDW                     0xde
+                    LDWI                    -6
                     STW                     mathX
                     LDW                     _z
                     STW                     mathY
@@ -7821,10 +7823,9 @@ _page_0xb800        LDW                     0xde
 _page_0xb900        LDW                     0xde
                     PrintString             _str_0xff22                     ; print "lalalalala23d455345634650";
 
-                    POP                     
-                    RET                                                     ; return
+                    Return                                                  ; return
 
-_end_0x6dcf         BRA                     _end_0x6dcf                     ; END
+_end_0x6dd1         BRA                     _end_0x6dd1                     ; END
 
 
 
@@ -7842,23 +7843,23 @@ convertGeOp         EQU     0xfe2e
 convertLtOp         EQU     0xfe25
 convertGtOp         EQU     0xfe1c
 multiply16bit       EQU     0xfccd
-divide16bit         EQU     0xfba8
-resetVideoTable     EQU     0xfc11
-initClearFuncs      EQU     0xfd7d
-clearCursorRow      EQU     0xfb2a
-printInit           EQU     0xfb0f
+divide16bit         EQU     0xfc02
+resetVideoTable     EQU     0xfb85
+initClearFuncs      EQU     0xfd7e
+clearCursorRow      EQU     0xfb3c
+printInit           EQU     0xfb26
 printText           EQU     0xfe03
-printDigit          EQU     0xfadd
-printInt16          EQU     0xfc79
-printChr            EQU     0xfc30
-printChar           EQU     0xfa85
-printHexByte        EQU     0xfb73
-printHexWord        EQU     0xfc3d
-newLineScroll       EQU     0xfd00
-stringChr           EQU     0xfc68
-stringHex           EQU     0xfc56
-stringHexw          EQU     0xfd5e
-createHex           EQU     0xfa5d
+printDigit          EQU     0xfb04
+printInt16          EQU     0xfc7c
+printChr            EQU     0xfbd9
+printChar           EQU     0xfaa7
+printHexByte        EQU     0xfba4
+printHexWord        EQU     0xfbe6
+newLineScroll       EQU     0xfd02
+stringChr           EQU     0xfc6b
+stringHex           EQU     0xfc59
+stringHexw          EQU     0xfd5f
+createHex           EQU     0xfa7f
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -8070,7 +8071,7 @@ initClearFuncs      PUSH
                     LDWI    resetVideoTable
                     CALL    giga_vAC
     
-                    LDWI    0x0002                              ; starting cursor position
+                    LDI     0x02                                ; starting cursor position
                     STW     cursorXY
                     LDWI    0x7FFF
                     ANDW    miscFlags
@@ -8109,12 +8110,9 @@ printInit           LDWI    SYS_VDrawBits_134
                     STW     giga_sysFn
                     LDW     fgbgColour
                     STW     giga_sysArg0
-                    
-                    LDWI    giga_videoTable
-                    STW     giga_sysArg4
-                    LD      cursorXY + 1
+                    LD      cursorXY + 1                    ; xy = peek(256+2*y)*256 + x
                     LSLW
-                    ADDW    giga_sysArg4
+                    INC     giga_vAC + 1
                     PEEK
                     ST      giga_sysArg4 + 1
                     LD      cursorXY
@@ -8176,7 +8174,7 @@ printInt16          PUSH
                     ST      textChr
                     LDWI    printChar
                     CALL    giga_vAC
-                    LDWI    0
+                    LDI     0
                     SUBW    textNum
                     STW     textNum    
     
@@ -8188,11 +8186,11 @@ printI16_pos        LDWI    10000
                     STW     digitMult
                     LDWI    printDigit
                     CALL    giga_vAC
-                    LDWI    100
+                    LDI     100
                     STW     digitMult
                     LDWI    printDigit
                     CALL    giga_vAC
-                    LDWI    10
+                    LDI     10
                     STW     digitMult
                     LDWI    printDigit
                     CALL    giga_vAC
@@ -8362,7 +8360,7 @@ clearCR_loopx       SUBI    4                               ; loop is unrolled 4
 newLineScroll       LDI     0x02                            ; x offset slightly
                     ST      cursorXY
                     ST      giga_sysArg4
-                    LDWI    0x0001
+                    LDI     0x01
                     ANDW    miscFlags
                     BNE     newLS_cont0                     ; scroll on or off
                     RET

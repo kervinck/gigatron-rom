@@ -23,7 +23,7 @@ for py=8 to 67
         x=0 : y=x : x2=y : y2=x2
         
         'c=15 when Mandelbrot equation tends to infinity
-        for c=0 to 14
+        for c=0 &to 14
             x2 = (x*x) LSR fracbits
             y2 = (y*y) LSR fracbits
             if x2+y2 &&> (2**fracbits * 4) then goto &break

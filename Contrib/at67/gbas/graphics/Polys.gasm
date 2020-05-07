@@ -35,10 +35,10 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_loop               EQU                     0x024c
-_next_0x0288        EQU                     0x027c
-_end_0x02dd         EQU                     0x02c9
-_end_0x02df         EQU                     0x02cb
+_loop               EQU                     0x0247
+_next_0x0283        EQU                     0x0277
+_end_0x02d8         EQU                     0x02c4
+_end_0x02da         EQU                     0x02c6
 
 ; Variables
 _ox                 EQU                     0x0030
@@ -95,7 +95,7 @@ _loop               Rand
                     LDI                     0
                     STW                     _i                              ; for i=0 &to POLYSIZE*2 - 4 step 2
 
-_next_0x0288        LDWI                    1536
+_next_0x0283        LDWI                    1536
                     ADDW                    _i
                     STW                     0xc0
                     LDI                     0xa0
@@ -109,7 +109,7 @@ _next_0x0288        LDWI                    1536
                     RandMod                 
                     POKE                    0xc0                            ; poke POLYADDR + 1 + i, rnd(120)
 
-                    ForNextAdd              _i _next_0x0288 6 2             ; next i
+                    ForNextAdd              _i _next_0x0283 6 2             ; next i
 
                     LDWI                    1544
                     STW                     register0
@@ -127,9 +127,9 @@ _next_0x0288        LDWI                    1536
 
                     BRA                     _loop                           ; goto &loop
 
-_end_0x02dd         BRA                     _end_0x02dd                     ; end
+_end_0x02d8         BRA                     _end_0x02d8                     ; end
 
-_end_0x02df         BRA                     _end_0x02df                     ; END
+_end_0x02da         BRA                     _end_0x02da                     ; END
 
 
 
@@ -151,8 +151,8 @@ rand16bit           EQU     0x7ea4
 randMod16bit        EQU     0x7cec
 scanlineMode        EQU     0x7eac
 resetVideoTable     EQU     0x7ca0
-initClearFuncs      EQU     0x7ddc
-clearVertBlinds     EQU     0x7da2
+initClearFuncs      EQU     0x7ddd
+clearVertBlinds     EQU     0x7da3
 drawLine            EQU     0x79aa
 drawLineExt         EQU     0x78c6
 drawLineLoop        EQU     0x77c5
@@ -351,8 +351,9 @@ drawLine_sy         EQU     register9
 drawLine_h          EQU     register10
 drawLine_num        EQU     register11
 drawLine_count      EQU     register12
-drawLine_addr       EQU     register13
-drawLine_tmp        EQU     register14
+drawLine_tmp        EQU     register13
+
+drawPixel_xy        EQU     register14
   
 drawCircle_cx       EQU     register0
 drawCircle_cy       EQU     register1
@@ -439,7 +440,7 @@ initClearFuncs      PUSH
                     LDWI    resetVideoTable
                     CALL    giga_vAC
     
-                    LDWI    0x0002                              ; starting cursor position
+                    LDI     0x02                                ; starting cursor position
                     STW     cursorXY
                     LDWI    0x7FFF
                     ANDW    miscFlags

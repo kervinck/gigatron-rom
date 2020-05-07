@@ -23,6 +23,7 @@ cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
 miscFlags           EQU                     register0 + 0x28
+fontLutId           EQU                     0x00e0
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -34,13 +35,12 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x0240
-_blamo              EQU                     0x0375
+_10                 EQU                     0x023e
+_blamo              EQU                     0x036d
 _page_0x0300        EQU                     0x0300
-_end_0x0395         EQU                     0x0373
-_next_0x03a9        EQU                     0x0385
-_page_0x0400        EQU                     0x0400
-_end_0x0435         EQU                     0x0408
+_end_0x0395         EQU                     0x036b
+_next_0x03a9        EQU                     0x037d
+_end_0x0435         EQU                     0x03f1
 
 ; Variables
 _addr               EQU                     0x0030
@@ -72,6 +72,7 @@ _c$                 DB                      0 '' 0
 ; Define Images
 
 ; Define Sprites
+; Define Fonts
 
 ; Lookup Tables
 
@@ -85,8 +86,7 @@ _entryPoint_        InitRealTimeProc
                     InitGtOp                
                     Initialise                                              ; INIT
 
-                    LDWI                    clearVertBlinds
-                    CALL                    giga_vAC                        ; cls
+                    ClearVertBlinds                                         ; cls
 
 _10                 LDI                     33
                     STW                     _addr                           ; addr = &h21
@@ -141,18 +141,19 @@ _10                 LDI                     33
                     PrintString             _str_0x7ef2
                     PrintString             _str_0x7efd
                     PrintInt16              0x0064
+                    PrintString             _str_0x7efd
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
-                    PrintString             _str_0x7efd
                     LDW                     _a
                     PrintAcInt16            
                     PrintString             _str_0x7efd
-                    LD                      0x21
+                    LD                      giga_romType
+                    ANDI                    0xF8
                     ANDI                    252
                     PrintAcHexByte          
-                    NewLine                                                 ; print "test";" ";"dog";" ";56+44;" ";a;" ";hex$(peek(&h21) AND &hFC)
+                    NewLine                                                 ; print "test";" ";"dog";" ";56+44;" ";a;" ";hex$(get("ROMTYPE") AND &hFC)
 
                     LDI                     128
                     STW                     _x                              ; x = &h0080
@@ -171,8 +172,7 @@ _page_0x0300        LDW                     0xde
                     LDW                     _z
                     ANDI                    63
                     ST                      cursorXY + 1
-                    LDWI                    atTextCursor
-                    CALL                    giga_vAC                        ; at x, (z AND &h3F)
+                    AtTextCursor                                            ; at x, (z AND &h3F)
 
                     LDW                     _x
                     PrintAcHexWord          
@@ -238,15 +238,10 @@ _next_0x03a9        LDI                     32
 
                     LDWI                    -1
                     SUBW                    _a
-                    STW                     0xde
-                    LDWI                    _page_0x0400
-                    CALL                    giga_vAC
-_page_0x0400        LDW                     0xde
                     SUBW                    _d
                     STW                     _h                              ; h = NOT a - d
 
-                    POP                     
-                    RET                                                     ; return
+                    Return                                                  ; return
 
 _end_0x0435         BRA                     _end_0x0435                     ; END
 
@@ -258,27 +253,27 @@ _end_0x0435         BRA                     _end_0x0435                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7ee5
-convertEqOp         EQU     0x7edc
-convertNeOp         EQU     0x7ed3
-convertLeOp         EQU     0x7eca
-convertGeOp         EQU     0x7ec1
-convertLtOp         EQU     0x7eb8
-convertGtOp         EQU     0x7eaf
+realTimeProc        EQU     0x7ee9
+convertEqOp         EQU     0x7ee0
+convertNeOp         EQU     0x7ed7
+convertLeOp         EQU     0x7ece
+convertGeOp         EQU     0x7ec5
+convertLtOp         EQU     0x7ebc
+convertGtOp         EQU     0x7eb3
 resetVideoTable     EQU     0x77e0
-initClearFuncs      EQU     0x7cdc
-clearVertBlinds     EQU     0x7ca2
+initClearFuncs      EQU     0x7cdd
+clearVertBlinds     EQU     0x7ca3
 clearCursorRow      EQU     0x76b6
-printInit           EQU     0x77c5
+printInit           EQU     0x7aa3
 printText           EQU     0x7bb1
-printDigit          EQU     0x77a3
-printInt16          EQU     0x78ab
+printDigit          EQU     0x77be
+printInt16          EQU     0x78ae
 printChar           EQU     0x75a7
 printHexByte        EQU     0x7bca
 printHexWord        EQU     0x7ae6
 atTextCursor        EQU     0x7ab9
-newLineScroll       EQU     0x79a1
-stringChr           EQU     0x7ba0
+newLineScroll       EQU     0x79a2
+stringChr           EQU     0x7ea2
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -298,8 +293,6 @@ lutIndex            EQU     register8
 
                     ; runs real time, (time sliced), code at regular intervals
 realTimeProc        PUSH
-                    LDI     0x08                            ; keep pumping soundTimer
-                    ST      giga_soundTimer
                     LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI routine
                     CALL    giga_vAC
                     POP
@@ -394,7 +387,7 @@ initClearFuncs      PUSH
                     LDWI    resetVideoTable
                     CALL    giga_vAC
     
-                    LDWI    0x0002                              ; starting cursor position
+                    LDI     0x02                                ; starting cursor position
                     STW     cursorXY
                     LDWI    0x7FFF
                     ANDW    miscFlags
@@ -469,12 +462,9 @@ printInit           LDWI    SYS_VDrawBits_134
                     STW     giga_sysFn
                     LDW     fgbgColour
                     STW     giga_sysArg0
-                    
-                    LDWI    giga_videoTable
-                    STW     giga_sysArg4
-                    LD      cursorXY + 1
+                    LD      cursorXY + 1                    ; xy = peek(256+2*y)*256 + x
                     LSLW
-                    ADDW    giga_sysArg4
+                    INC     giga_vAC + 1
                     PEEK
                     ST      giga_sysArg4 + 1
                     LD      cursorXY
@@ -536,7 +526,7 @@ printInt16          PUSH
                     ST      textChr
                     LDWI    printChar
                     CALL    giga_vAC
-                    LDWI    0
+                    LDI     0
                     SUBW    textNum
                     STW     textNum    
     
@@ -548,11 +538,11 @@ printI16_pos        LDWI    10000
                     STW     digitMult
                     LDWI    printDigit
                     CALL    giga_vAC
-                    LDWI    100
+                    LDI     100
                     STW     digitMult
                     LDWI    printDigit
                     CALL    giga_vAC
-                    LDWI    10
+                    LDI     10
                     STW     digitMult
                     LDWI    printDigit
                     CALL    giga_vAC
@@ -738,7 +728,7 @@ clearCR_loopx       SUBI    4                               ; loop is unrolled 4
 newLineScroll       LDI     0x02                            ; x offset slightly
                     ST      cursorXY
                     ST      giga_sysArg4
-                    LDWI    0x0001
+                    LDI     0x01
                     ANDW    miscFlags
                     BNE     newLS_cont0                     ; scroll on or off
                     RET

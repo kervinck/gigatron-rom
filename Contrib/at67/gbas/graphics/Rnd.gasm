@@ -35,10 +35,10 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_loop               EQU                     0x0275
-_next_0x0247        EQU                     0x0247
-_else_0x0310        EQU                     0x02d8
-_end_0x0312         EQU                     0x02da
+_loop               EQU                     0x0270
+_next_0x0242        EQU                     0x0242
+_else_0x030b        EQU                     0x02d3
+_end_0x030d         EQU                     0x02d5
 
 ; Variables
 _a_array            EQU                     0x0600
@@ -74,7 +74,7 @@ _entryPoint_        InitRealTimeProc
                     LDI                     0
                     STW                     _i                              ; for i=0 to max
 
-_next_0x0247        LDWI                    0x0600
+_next_0x0242        LDWI                    0x0600
                     ADDW                    _i
                     ADDW                    _i
                     DEEK                    
@@ -91,7 +91,7 @@ _next_0x0247        LDWI                    0x0600
                     LDI                     63
                     POKE                    0xc4                            ; poke (127 - a(i) LSL 8) + i, &h3F
 
-                    ForNextFarInc           _i _next_0x0247 127             ; next i
+                    ForNextFarInc           _i _next_0x0242 127             ; next i
 
 _loop               Rand                    
                     ANDI                    127
@@ -132,7 +132,7 @@ _loop               Rand
                     DEEK                    
                     SUBI                    120
                     CALL                    convertEqOpAddr
-                    JumpFalse               _else_0x0310 0
+                    JumpFalse               _else_0x030b 0
                     LDWI                    0x0600
                     ADDW                    _r
                     ADDW                    _r
@@ -140,9 +140,9 @@ _loop               Rand
                     LDI                     119
                     DOKE                    register1                       ; a(r) = a(r) + 1 : if a(r) = 120 then a(r) = 119
 
-_else_0x0310        BRA                     _loop                           ; goto &loop
+_else_0x030b        BRA                     _loop                           ; goto &loop
 
-_end_0x0312         BRA                     _end_0x0312                     ; end
+_end_0x030d         BRA                     _end_0x030d                     ; end
 
 
 
@@ -161,8 +161,8 @@ convertLtOp         EQU     0x7ec9
 convertGtOp         EQU     0x7ec0
 rand16bit           EQU     0x7eb8
 resetVideoTable     EQU     0x7ce0
-initClearFuncs      EQU     0x7ddc
-clearVertBlinds     EQU     0x7da2
+initClearFuncs      EQU     0x7ddd
+clearVertBlinds     EQU     0x7da3
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -296,7 +296,7 @@ initClearFuncs      PUSH
                     LDWI    resetVideoTable
                     CALL    giga_vAC
     
-                    LDWI    0x0002                              ; starting cursor position
+                    LDI     0x02                                ; starting cursor position
                     STW     cursorXY
                     LDWI    0x7FFF
                     ANDW    miscFlags

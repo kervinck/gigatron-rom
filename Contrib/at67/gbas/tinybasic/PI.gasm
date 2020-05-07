@@ -23,6 +23,7 @@ cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
 miscFlags           EQU                     register0 + 0x28
+fontLutId           EQU                     0x00e0
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -34,17 +35,17 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x023b
-_20                 EQU                     0x0244
-_30                 EQU                     0x0256
-_40                 EQU                     0x027d
-_50                 EQU                     0x029e
-_60                 EQU                     0x02cc
-_70                 EQU                     0x030d
-_80                 EQU                     0x0334
-_90                 EQU                     0x0359
+_10                 EQU                     0x0239
+_20                 EQU                     0x0242
+_30                 EQU                     0x0254
+_40                 EQU                     0x027b
+_50                 EQU                     0x029c
+_60                 EQU                     0x02ca
+_70                 EQU                     0x030b
+_80                 EQU                     0x0332
+_90                 EQU                     0x0357
 _page_0x0300        EQU                     0x0300
-_else_0x03b7        EQU                     0x037b
+_else_0x03b5        EQU                     0x0379
 
 ; Variables
 _Z_array            EQU                     0x0642
@@ -69,6 +70,7 @@ _str_0x7ef8         DB                      1 '.' 0
 ; Define Images
 
 ; Define Sprites
+; Define Fonts
 
 ; Lookup Tables
 
@@ -82,8 +84,7 @@ _entryPoint_        InitRealTimeProc
                     InitGtOp                
                     Initialise                                              ; INIT
 
-                    LDWI                    clearVertBlinds
-                    CALL                    giga_vAC
+                    ClearVertBlinds         
                     LDI                     0
                     STW                     _D                              ; DIM Z(94)=0:CLS:D=0
 
@@ -164,11 +165,11 @@ _60                 LDW                     _J
                     DOKE                    register1
                     LDW                     _D
                     STW                     mathX
+                    LDW                     _A
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
-                    LDW                     _A
                     STW                     mathY
                     LDWI                    divide16bit
                     CALL                    giga_vAC
@@ -209,11 +210,11 @@ _90                 LDW                     _E
                     PrintAcInt16            
                     LDW                     _M
                     SUBI                    10
-                    BLE                     _else_0x03b7
+                    BLE                     _else_0x03b5
                     LDWI                    _40
                     CALL                    giga_vAC                        ; PRINT E%10;:IF M &&> 10 THEN GOTO 40
 
-_else_0x03b7        BRA                     _else_0x03b7                    ; END
+_else_0x03b5        BRA                     _else_0x03b5                    ; END
 
 
 
@@ -233,15 +234,15 @@ convertGtOp         EQU     0x7eb9
 multiply16bit       EQU     0x7bcd
 divide16bit         EQU     0x7ca8
 resetVideoTable     EQU     0x7bae
-initClearFuncs      EQU     0x7ddc
-clearVertBlinds     EQU     0x7da2
+initClearFuncs      EQU     0x7ddd
+clearVertBlinds     EQU     0x7da3
 clearCursorRow      EQU     0x79b6
-printInit           EQU     0x78e4
+printInit           EQU     0x79a0
 printText           EQU     0x7ea0
-printDigit          EQU     0x78c2
-printInt16          EQU     0x7aab
+printDigit          EQU     0x78dd
+printInt16          EQU     0x7aae
 printChar           EQU     0x77a7
-newLineScroll       EQU     0x76a1
+newLineScroll       EQU     0x76a2
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -261,7 +262,7 @@ lutIndex            EQU     register8
 
                     ; runs real time, (time sliced), code at regular intervals
 realTimeProc        PUSH
-                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI/SPRITE etc routines
+                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI routine
                     CALL    giga_vAC
                     POP
                     RET
@@ -453,7 +454,7 @@ initClearFuncs      PUSH
                     LDWI    resetVideoTable
                     CALL    giga_vAC
     
-                    LDWI    0x0002                              ; starting cursor position
+                    LDI     0x02                                ; starting cursor position
                     STW     cursorXY
                     LDWI    0x7FFF
                     ANDW    miscFlags
@@ -528,12 +529,9 @@ printInit           LDWI    SYS_VDrawBits_134
                     STW     giga_sysFn
                     LDW     fgbgColour
                     STW     giga_sysArg0
-                    
-                    LDWI    giga_videoTable
-                    STW     giga_sysArg4
-                    LD      cursorXY + 1
+                    LD      cursorXY + 1                    ; xy = peek(256+2*y)*256 + x
                     LSLW
-                    ADDW    giga_sysArg4
+                    INC     giga_vAC + 1
                     PEEK
                     ST      giga_sysArg4 + 1
                     LD      cursorXY
@@ -595,7 +593,7 @@ printInt16          PUSH
                     ST      textChr
                     LDWI    printChar
                     CALL    giga_vAC
-                    LDWI    0
+                    LDI     0
                     SUBW    textNum
                     STW     textNum    
     
@@ -607,11 +605,11 @@ printI16_pos        LDWI    10000
                     STW     digitMult
                     LDWI    printDigit
                     CALL    giga_vAC
-                    LDWI    100
+                    LDI     100
                     STW     digitMult
                     LDWI    printDigit
                     CALL    giga_vAC
-                    LDWI    10
+                    LDI     10
                     STW     digitMult
                     LDWI    printDigit
                     CALL    giga_vAC
@@ -728,7 +726,7 @@ clearCR_loopx       SUBI    4                               ; loop is unrolled 4
 newLineScroll       LDI     0x02                            ; x offset slightly
                     ST      cursorXY
                     ST      giga_sysArg4
-                    LDWI    0x0001
+                    LDI     0x01
                     ANDW    miscFlags
                     BNE     newLS_cont0                     ; scroll on or off
                     RET

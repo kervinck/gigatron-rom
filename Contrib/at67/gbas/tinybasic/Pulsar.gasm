@@ -23,6 +23,7 @@ cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
 miscFlags           EQU                     register0 + 0x28
+fontLutId           EQU                     0x00e0
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -34,18 +35,18 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x023b
-_20                 EQU                     0x0250
-_30                 EQU                     0x0262
-_40                 EQU                     0x0277
-_50                 EQU                     0x028a
-_60                 EQU                     0x028e
-_65                 EQU                     0x02a6
-_70                 EQU                     0x02b3
-_80                 EQU                     0x02cb
+_10                 EQU                     0x0242
+_20                 EQU                     0x0254
+_30                 EQU                     0x0266
+_40                 EQU                     0x027b
+_50                 EQU                     0x028e
+_60                 EQU                     0x0292
+_65                 EQU                     0x02aa
+_70                 EQU                     0x02b7
+_80                 EQU                     0x02cf
 _90                 EQU                     0x0302
 _page_0x0300        EQU                     0x0300
-_end_0x0330         EQU                     0x0315
+_end_0x0334         EQU                     0x0315
 
 ; Variables
 _w                  EQU                     0x0030
@@ -65,6 +66,7 @@ _x                  EQU                     0x003c
 ; Define Images
 
 ; Define Sprites
+; Define Fonts
 
 ; Lookup Tables
 
@@ -78,23 +80,23 @@ _entryPoint_        InitRealTimeProc
                     InitGtOp                
                     Initialise                                              ; INIT
 
-_10                 LDI                     0
-                    ST                      162
-                    LDI                     63
-                    ST                      163
-                    LDWI                    clearVertBlinds
-                    CALL                    giga_vAC
+                    LDI                     2
+                    STW                     graphicsMode
+                    ScanlineMode                                            ; mode 2
+
+_10                 LDWI                    16128
+                    STW                     fgbgColour
+                    ClearVertBlinds         
                     LDI                     0
                     STW                     _w
                     LDI                     0
-                    STW                     _z                              ; poke 162,0:poke 163,63:cls:w=0:z=0
+                    STW                     _z                              ; set FGBGCOLOUR,&h3F00:cls:w=0:z=0
 
 _20                 LDI                     0
                     ST                      cursorXY
                     LDI                     112
                     ST                      cursorXY + 1
-                    LDWI                    atTextCursor
-                    CALL                    giga_vAC
+                    AtTextCursor            
                     NewLine                                                 ; at 0,112:print
 
 _30                 LDI                     0x1e
@@ -128,12 +130,12 @@ _60                 LDW                     _y
                     LDI                     0
                     STW                     _w                              ; w=5+y/q:if w &&> 0 then w=0
 
-_65                 LD                      0x06
+_65                 LD                      giga_rand0
                     SUBI                    128
                     BGE                     _70
                     LDW                     _w
                     ADDI                    1
-                    STW                     _w                              ; if peek(6) &&< 128 then w=w+1
+                    STW                     _w                              ; if get("RAND0") &&< 128 then w=w+1
 
 _70                 LDI                     5
                     STW                     drawLine_x2
@@ -171,7 +173,7 @@ _90                 ForNextFarInc           _x _60 30
                     LDWI                    _20
                     CALL                    giga_vAC                        ; next x:goto 20
 
-_end_0x0330         BRA                     _end_0x0330                     ; END
+_end_0x0334         BRA                     _end_0x0334                     ; END
 
 
 
@@ -188,21 +190,23 @@ convertLeOp         EQU     0x7edb
 convertGeOp         EQU     0x7ed2
 convertLtOp         EQU     0x7ec9
 convertGtOp         EQU     0x7ec0
-multiply16bit       EQU     0x7ca0
+multiply16bit       EQU     0x77cd
 divide16bit         EQU     0x7aa8
-randMod16bit        EQU     0x7ead
-resetVideoTable     EQU     0x79a1
-initClearFuncs      EQU     0x7ddc
-clearVertBlinds     EQU     0x7da2
-clearCursorRow      EQU     0x77b6
-drawVTLine          EQU     0x78a5
-drawVTLineExt       EQU     0x76c6
-drawVTLineLoop      EQU     0x75ac
-drawVTLineLoadXY    EQU     0x74d8
+randMod16bit        EQU     0x7cbf
+scanlineMode        EQU     0x7eac
+resetVideoTable     EQU     0x7ca0
+initClearFuncs      EQU     0x7ddd
+clearVertBlinds     EQU     0x7da3
+clearCursorRow      EQU     0x76b6
+drawPixel           EQU     0x79b3
+drawVTLine          EQU     0x78aa
+drawVTLineExt       EQU     0x75c6
+drawVTLineLoop      EQU     0x74b9
+drawVTLineLoadXY    EQU     0x77a6
 atLineCursor        EQU     0x79c0
-printInit           EQU     0x76ab
+printInit           EQU     0x76a0
 atTextCursor        EQU     0x7cd2
-newLineScroll       EQU     0x7ba1
+newLineScroll       EQU     0x7ba2
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -222,7 +226,7 @@ lutIndex            EQU     register8
 
                     ; runs real time, (time sliced), code at regular intervals
 realTimeProc        PUSH
-                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI/SPRITE etc routines
+                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI routine
                     CALL    giga_vAC
                     POP
                     RET
@@ -388,6 +392,88 @@ randMod16bit        PUSH
                     RET
 
 
+; do *NOT* use register4 to register7 during time slicing if you use realTimeProc
+graphicsMode        EQU     register0
+waitVBlankNum       EQU     register0
+
+drawHLine_x1        EQU     register0
+drawHLine_y1        EQU     register1
+drawHLine_x2        EQU     register2
+drawHLine_x4        EQU     register3
+
+drawVLine_x1        EQU     register0
+drawVLine_y1        EQU     register1
+drawVLine_y2        EQU     register2
+drawVLine_y8        EQU     register3
+
+drawLine_x1         EQU     register0
+drawLine_y1         EQU     register1
+drawLine_x2         EQU     register2
+drawLine_y2         EQU     register3
+drawLine_xy1        EQU     register0
+drawLine_xy2        EQU     register1
+drawLine_dxy1       EQU     register2
+drawLine_dxy2       EQU     register3
+drawLine_dx1        EQU     register4           ; register4 to register7 used for temp values, state will be invalidated during time slicing
+drawLine_dy1        EQU     register5
+drawLine_dx2        EQU     register6
+drawLine_dy2        EQU     register7
+drawLine_sx         EQU     register8
+drawLine_sy         EQU     register9
+drawLine_h          EQU     register10
+drawLine_num        EQU     register11
+drawLine_count      EQU     register12
+drawLine_tmp        EQU     register13
+
+drawPixel_xy        EQU     register15
+  
+drawCircle_cx       EQU     register0
+drawCircle_cy       EQU     register1
+drawCircle_r        EQU     register2
+drawCircle_a        EQU     register3
+drawCircle_d        EQU     register8
+drawCircle_x        EQU     register9
+drawCircle_y        EQU     register10
+drawCircle_ch0      EQU     register11
+drawCircle_ch1      EQU     register12
+drawCircle_ch2      EQU     register13
+drawCircle_ch3      EQU     register14
+
+drawCircleF_x1      EQU     register0
+drawCircleF_y1      EQU     register1
+drawCircleF_x2      EQU     register2
+drawCircleF_cx      EQU     register15
+drawCircleF_cy      EQU     register10
+drawCircleF_r       EQU     register11
+drawCircleF_v       EQU     register8
+drawCircleF_w       EQU     register9
+
+drawRect_x1         EQU     register7
+drawRect_y1         EQU     register10
+drawRect_x2         EQU     register11
+drawRect_y2         EQU     register15
+
+drawRectF_x1        EQU     register0
+drawRectF_y1        EQU     register1
+drawRectF_x2        EQU     register2
+drawRectF_y2        EQU     register7
+
+drawPoly_addr       EQU     register15
+
+    
+scanlineMode        LDW     giga_romType
+                    ANDI    0xF8
+                    SUBI    romTypeValue_ROMv2
+                    BGE     scanlineM_cont
+                    RET
+    
+scanlineM_cont      LDWI    SYS_SetMode_v2_80
+                    STW     giga_sysFn
+                    LDW     graphicsMode
+                    SYS     80
+                    RET
+
+
 
 ; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 xreset              EQU     register0
@@ -426,7 +512,7 @@ initClearFuncs      PUSH
                     LDWI    resetVideoTable
                     CALL    giga_vAC
     
-                    LDWI    0x0002                              ; starting cursor position
+                    LDI     0x02                                ; starting cursor position
                     STW     cursorXY
                     LDWI    0x7FFF
                     ANDW    miscFlags
@@ -482,77 +568,7 @@ clearVB_loop        CALL    realTimeProcAddr
 
 
 
-; do *NOT* use register4 to register7 during time slicing if you use realTimeProc
-graphicsMode        EQU     register0
-waitVBlankNum       EQU     register0
-
-drawHLine_x1        EQU     register0
-drawHLine_y1        EQU     register1
-drawHLine_x2        EQU     register2
-drawHLine_x4        EQU     register3
-
-drawVLine_x1        EQU     register0
-drawVLine_y1        EQU     register1
-drawVLine_y2        EQU     register2
-drawVLine_y8        EQU     register3
-
-drawLine_x1         EQU     register0
-drawLine_y1         EQU     register1
-drawLine_x2         EQU     register2
-drawLine_y2         EQU     register3
-drawLine_xy1        EQU     register0
-drawLine_xy2        EQU     register1
-drawLine_dxy1       EQU     register2
-drawLine_dxy2       EQU     register3
-drawLine_dx1        EQU     register4           ; register4 to register7 used for temp values, state will be invalidated during time slicing
-drawLine_dy1        EQU     register5
-drawLine_dx2        EQU     register6
-drawLine_dy2        EQU     register7
-drawLine_sx         EQU     register8
-drawLine_sy         EQU     register9
-drawLine_h          EQU     register10
-drawLine_num        EQU     register11
-drawLine_count      EQU     register12
-drawLine_addr       EQU     register13
-drawLine_tmp        EQU     register14
-  
-drawCircle_cx       EQU     register0
-drawCircle_cy       EQU     register1
-drawCircle_r        EQU     register2
-drawCircle_a        EQU     register3
-drawCircle_d        EQU     register8
-drawCircle_x        EQU     register9
-drawCircle_y        EQU     register10
-drawCircle_ch0      EQU     register11
-drawCircle_ch1      EQU     register12
-drawCircle_ch2      EQU     register13
-drawCircle_ch3      EQU     register14
-
-drawCircleF_x1      EQU     register0
-drawCircleF_y1      EQU     register1
-drawCircleF_x2      EQU     register2
-drawCircleF_cx      EQU     register15
-drawCircleF_cy      EQU     register10
-drawCircleF_r       EQU     register11
-drawCircleF_v       EQU     register8
-drawCircleF_w       EQU     register9
-
-drawRect_x1         EQU     register7
-drawRect_y1         EQU     register10
-drawRect_x2         EQU     register11
-drawRect_y2         EQU     register15
-
-drawRectF_x1        EQU     register0
-drawRectF_y1        EQU     register1
-drawRectF_x2        EQU     register2
-drawRectF_y2        EQU     register7
-
-drawPoly_addr       EQU     register15
-
-    
 drawVTLine          PUSH                        ; matches drawVTLineLoop's POP
-                    LDWI    giga_videoTable
-                    STW     drawLine_addr
                     LDI     1
                     STW     drawLine_dx1
                     STW     drawLine_dx2
@@ -629,14 +645,25 @@ drawVTL_num         LDWI    SYS_LSRW1_48
                     CALL    giga_vAC
 
 
+
+drawPixel           LD      drawPixel_xy + 1    ; xy = peek(256+2*y)*256 + x
+                    LSLW
+                    INC     giga_vAC + 1
+                    PEEK
+                    ST      drawPixel_xy + 1
+                    LD      fgbgColour + 1
+                    POKE    drawPixel_xy
+                    RET
+
+
 drawVTLineLoop      LDW     drawLine_xy1
-                    STW     drawLine_tmp
-                    LDWI    drawVTLineAddress
+                    STW     drawPixel_xy
+                    LDWI    drawPixel
                     CALL    giga_vAC            ; plot start pixel
 
                     LDW     drawLine_xy2
-                    STW     drawLine_tmp
-                    LDWI    drawVTLineAddress
+                    STW     drawPixel_xy
+                    LDWI    drawPixel
                     CALL    giga_vAC            ; plot end pixel, (meet in middle)
                     
                     LDW     drawLine_num        ; numerator += sy
@@ -669,15 +696,6 @@ drawVTL_count       CALL    realTimeProcAddr
                     STW     drawLine_count
                     BGT     drawVTLineLoop
                     POP                         ; matches drawVTLine's PUSH
-                    RET
-                    
-drawVTLineAddress   LD      drawLine_tmp + 1
-                    LSLW
-                    ADDW    drawLine_addr
-                    PEEK
-                    ST      drawLine_tmp + 1
-                    LD      fgbgColour + 1
-                    POKE    drawLine_tmp
                     RET
 
 
@@ -835,12 +853,9 @@ printInit           LDWI    SYS_VDrawBits_134
                     STW     giga_sysFn
                     LDW     fgbgColour
                     STW     giga_sysArg0
-                    
-                    LDWI    giga_videoTable
-                    STW     giga_sysArg4
-                    LD      cursorXY + 1
+                    LD      cursorXY + 1                    ; xy = peek(256+2*y)*256 + x
                     LSLW
-                    ADDW    giga_sysArg4
+                    INC     giga_vAC + 1
                     PEEK
                     ST      giga_sysArg4 + 1
                     LD      cursorXY
@@ -852,7 +867,7 @@ printInit           LDWI    SYS_VDrawBits_134
 newLineScroll       LDI     0x02                            ; x offset slightly
                     ST      cursorXY
                     ST      giga_sysArg4
-                    LDWI    0x0001
+                    LDI     0x01
                     ANDW    miscFlags
                     BNE     newLS_cont0                     ; scroll on or off
                     RET

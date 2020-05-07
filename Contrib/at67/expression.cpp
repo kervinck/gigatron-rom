@@ -18,7 +18,6 @@ namespace Expression
     int _lineNumber = 0;
 
     bool _advanceError = false;
-    bool _containsQuotes = false;
     bool _enableOptimisedPrint = false;
 
     bool _binaryChars[256]      = {false};
@@ -271,7 +270,7 @@ namespace Expression
         {
             for(int i=1; i<int(str.size())-1; i++)
             {
-                if(str[i] == '"') return false;
+                if(str[i] == '"'  &&  str[i-1] != '\\') return false;
             }
 
             return true;
@@ -282,40 +281,55 @@ namespace Expression
 
     bool hasNonStringWhiteSpace(int chr)
     {
-        if(chr == '"') _containsQuotes = !_containsQuotes;
-        if(!isspace((unsigned char)chr) || _containsQuotes) return false;
-        return true;    
+        static bool containsQuotes = false;
+        static int chrPrev = -1;
+        bool result = true;
+
+        if(chr == '"'  &&  chrPrev != '\\') containsQuotes = !containsQuotes;
+        if(!isspace((unsigned char)chr) || containsQuotes) result = false;
+
+        chrPrev = chr;
+        return result;
     }
 
     bool hasNonStringEquals(int chr)
     {
-        if(chr == '"') _containsQuotes = !_containsQuotes;
-        if(chr != '='  ||  _containsQuotes) return false;
-        return true;    
+        static bool containsQuotes = false;
+        static int chrPrev = -1;
+        bool result = true;
+
+        if(chr == '"'  &&  chrPrev != '\\') containsQuotes = !containsQuotes;
+        if(chr != '='  ||  containsQuotes) result = false;
+
+        chrPrev = chr;
+        return result;
     }
 
     bool hasNonStringColon(int chr)
     {
-        if(chr == '"') _containsQuotes = !_containsQuotes;
-        if(chr != ':'  ||  _containsQuotes) return false;
-        return true;    
+        static bool containsQuotes = false;
+        static int chrPrev = -1;
+        bool result = true;
+
+        if(chr == '"'  &&  chrPrev != '\\') containsQuotes = !containsQuotes;
+        if(chr != ':'  ||  containsQuotes) result = false;
+
+        chrPrev = chr;
+        return result;
     }
 
     std::string::const_iterator findNonStringEquals(const std::string& input)
     {
-        _containsQuotes = false;
         return std::find_if(input.begin(), input.end(), hasNonStringEquals);
     }
 
     std::string::const_iterator findNonStringColon(const std::string& input)
     {
-        _containsQuotes = false;
         return std::find_if(input.begin(), input.end(), hasNonStringColon);
     }
 
     void stripNonStringWhitespace(std::string& input)
     {
-        _containsQuotes = false;
         input.erase(remove_if(input.begin(), input.end(), hasNonStringWhiteSpace), input.end());
     }
 
@@ -420,7 +434,7 @@ namespace Expression
 
         for(int i=0; i<int(input.size()); i++)
         {
-            if(input[i] == '\"') inString = !inString;
+            if((i==0  &&  input[i] == '\"')  ||  (i > 0  &&  input[i] == '\"'  &&  input[i-1] != '\\')) inString = !inString;
 
             if(isspace((unsigned char)input[i]))
             {
@@ -452,7 +466,10 @@ namespace Expression
         for(int i=0; i<int(input.size()); i++)
         {
             // Check for string
-            if(!inComment  &&  input[i] == '\"') inString = !inString;
+            if(!inComment)
+            {
+                if((i==0  &&  input[i] == '\"')  ||  (i > 0  &&  input[i] == '\"'  &&  input[i-1] != '\\')) inString = !inString;
+            }
 
             // Check for comment, ' and REM
             if(!inString)
@@ -907,8 +924,14 @@ namespace Expression
                         delimiterStart = false;
                     }
                 }
-                // String delimiters
-                else if(strchr("\'\"", line[i]))
+                // Single quote string delimiters
+                else if(line[i] == '\'')
+                {
+                    delimiterState = Quotes;
+                    stringStart = !stringStart;
+                }
+                // Double quote string delimiter
+                else if((i==0  &&  line[i] == '\"')  ||  (i > 0  &&  line[i] == '\"'  &&  line[i-1] != '\\'))
                 {
                     delimiterState = Quotes;
                     stringStart = !stringStart;
@@ -996,7 +1019,7 @@ namespace Expression
                     }
                 }
                 // String delimiters
-                else if(strchr("\"", line[i]))
+                else if((i==0  &&  line[i] == '\"')  ||  (i > 0  &&  line[i] == '\"'  &&  line[i-1] != '\\'))
                 {
                     delimiterState = Quotes;
                     stringStart = !stringStart;

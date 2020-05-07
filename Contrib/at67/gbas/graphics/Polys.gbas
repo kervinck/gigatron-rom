@@ -23,8 +23,8 @@ loop:
     poly POLYADDR
     
 'key:    
-'    k = peek(17) : if k = 255 then goto key
-'    poke 17, 255
+'    k = get("BUTTONSTATE") : if k = 255 then goto key
+'    set BUTTONSTATE, 255
     
     goto &loop
 

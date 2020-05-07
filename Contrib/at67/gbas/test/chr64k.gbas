@@ -32,7 +32,7 @@ dog = 39
 
     gosub   test
     
-    print bb;" ";w$;" ";hexw$(x);" ";x$;" ";y$;" ";chr$(bb+60);" ";chr$(&h30);" ";hex$(peek(&h21) AND &hFC);" ";
+    print bb;" ";w$;" ";hexw$(x);" ";x$;" ";y$;" ";chr$(bb+60);" ";chr$(&h30);" ";hex$(get("ROMTYPE") AND &hFC);" ";
     print hex$(80);" ";hexw$(&hdead);" ";hexw$(&hbeef);
 
     END
@@ -50,7 +50,7 @@ test: print hex$(i+40);" ";hex$(j+30);" "
       return
       
       
-Big: a = peek(&h21) AND &hFC
+Big: a = get("ROMTYPE") AND &hFC
      print hex$(a)
      print hexw$(&hFFFF OR &h1111)
      f = &h1111

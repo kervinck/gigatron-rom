@@ -250,15 +250,15 @@ _entryPoint_        InitRealTimeProc
                     LDI                     3
                     ST                      waveType
                     LDWI                    4256
-                    PlayMidi                                                ; play midi,&h10a0,3
+                    PlayMidi                                                ; play midi, &h10a0, 3
 
 _10                 LDI                     42
-                    ST                      162
-                    ClearVertBlinds                                         ; poke 162,&h2A:cls:'Paper
+                    ST                      fgbgColour
+                    ClearVertBlinds                                         ; set BGCOLOUR, &h2A : cls : 'Paper
 
 _20                 Rand                    
                     ANDI                    63
-                    ST                      163                             ; poke 163,rnd(0) AND 63:'Pen
+                    ST                      fgbgColour + 1                  ; set FGCOLOUR,rnd(0) AND 63 : 'Pen
 
 _30                 LDI                     0x9b
                     RandMod                 
@@ -266,10 +266,10 @@ _30                 LDI                     0x9b
                     LDI                     0x71
                     RandMod                 
                     ST                      cursorXY + 1
-                    AtTextCursor                                            ; at rnd(155),rnd(113)
+                    AtTextCursor                                            ; at rnd(155), rnd(113)
 
 _40                 LDI                     127
-                    PrintAcChar                                             ; put 127:'Block
+                    PrintAcChar                                             ; put 127 : 'Block
 
 _50                 BRA                     _20                             ; goto &20
 
@@ -300,11 +300,11 @@ clearCursorRow      EQU     0x78b6
 resetAudio          EQU     0x7da4
 playMidi            EQU     0x7caf
 midiStartNote       EQU     0x77b3
-printInit           EQU     0x7ab7
+printInit           EQU     0x7abc
 printChr            EQU     0x7ca2
 printChar           EQU     0x76a7
 atTextCursor        EQU     0x7ad2
-newLineScroll       EQU     0x75a1
+newLineScroll       EQU     0x75a2
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -717,12 +717,9 @@ printInit           LDWI    SYS_VDrawBits_134
                     STW     giga_sysFn
                     LDW     fgbgColour
                     STW     giga_sysArg0
-                    
-                    LDWI    giga_videoTable
-                    STW     giga_sysArg4
-                    LD      cursorXY + 1
+                    LD      cursorXY + 1                    ; xy = peek(256+2*y)*256 + x
                     LSLW
-                    ADDW    giga_sysArg4
+                    INC     giga_vAC + 1
                     PEEK
                     ST      giga_sysArg4 + 1
                     LD      cursorXY
@@ -871,7 +868,7 @@ clearCR_loopx       SUBI    4                               ; loop is unrolled 4
 newLineScroll       LDI     0x02                            ; x offset slightly
                     ST      cursorXY
                     ST      giga_sysArg4
-                    LDWI    0x0001
+                    LDI     0x01
                     ANDW    miscFlags
                     BNE     newLS_cont0                     ; scroll on or off
                     RET

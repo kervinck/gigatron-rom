@@ -65,6 +65,7 @@ namespace Keywords
     Expression::Numeric functionLEFT$(Expression::Numeric& numeric);
     Expression::Numeric functionRIGHT$(Expression::Numeric& numeric);
     Expression::Numeric functionMID$(Expression::Numeric& numeric);
+    Expression::Numeric functionPOINT(Expression::Numeric& numeric);
 
     bool pragmaUSEOPCODECALLI(const std::string& input,     int codeLineIndex, size_t foundPos);
     bool pragmaRUNTIMEPATH(const std::string& input,        int codeLineIndex, size_t foundPos);
@@ -104,6 +105,7 @@ namespace Keywords
     bool keywordPUT(Compiler::CodeLine& codeLine,      int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordMODE(Compiler::CodeLine& codeLine,     int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordWAIT(Compiler::CodeLine& codeLine,     int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
+    bool keywordPSET(Compiler::CodeLine& codeLine,     int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordLINE(Compiler::CodeLine& codeLine,     int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordHLINE(Compiler::CodeLine& codeLine,    int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordVLINE(Compiler::CodeLine& codeLine,    int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);

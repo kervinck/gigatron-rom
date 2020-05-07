@@ -23,6 +23,7 @@ cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
 miscFlags           EQU                     register0 + 0x28
+fontLutId           EQU                     0x00e0
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -34,13 +35,13 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x023b
-_20                 EQU                     0x023b
-_30                 EQU                     0x023b
-_40                 EQU                     0x0247
-_50                 EQU                     0x023b
-_60                 EQU                     0x025d
-_end_0x0273         EQU                     0x0265
+_10                 EQU                     0x0239
+_20                 EQU                     0x0239
+_30                 EQU                     0x0239
+_40                 EQU                     0x0245
+_50                 EQU                     0x0239
+_60                 EQU                     0x025b
+_end_0x0271         EQU                     0x0263
 
 ; Variables
 _X                  EQU                     0x0030
@@ -57,6 +58,7 @@ _P                  EQU                     0x0036
 ; Define Images
 
 ; Define Sprites
+; Define Fonts
 
 ; Lookup Tables
 
@@ -94,7 +96,7 @@ _60                 LDW                     _I
                     INC                     _I
                     BRA                     _60                             ; POKE P,I:INC I:GOTO &60
 
-_end_0x0273         BRA                     _end_0x0273                     ; END
+_end_0x0271         BRA                     _end_0x0271                     ; END
 
 
 
@@ -112,7 +114,7 @@ convertGeOp         EQU     0x7ed2
 convertLtOp         EQU     0x7ec9
 convertGtOp         EQU     0x7ec0
 resetVideoTable     EQU     0x7ea1
-initClearFuncs      EQU     0x7ddc
+initClearFuncs      EQU     0x7ddd
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -132,7 +134,7 @@ lutIndex            EQU     register8
 
                     ; runs real time, (time sliced), code at regular intervals
 realTimeProc        PUSH
-                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI/SPRITE etc routines
+                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI routine
                     CALL    giga_vAC
                     POP
                     RET
@@ -226,7 +228,7 @@ initClearFuncs      PUSH
                     LDWI    resetVideoTable
                     CALL    giga_vAC
     
-                    LDWI    0x0002                              ; starting cursor position
+                    LDI     0x02                                ; starting cursor position
                     STW     cursorXY
                     LDWI    0x7FFF
                     ANDW    miscFlags

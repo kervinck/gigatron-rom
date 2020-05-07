@@ -35,16 +35,16 @@ def byte(HOURX, x, -90.0, 270.0, TICKS) = cos(x)*HOUR_LEN + CENTERX
 def byte(HOURY, y, -90.0, 270.0, TICKS) = sin(y)*HOUR_LEN + CENTERY
 
 ' disable video, (except last line so that we don't lose sync), for fast cls
-poke &h01F9, 238
-poke 162,BACK_COLOUR
+set VIDEOTOP, 238
+set BGCOLOUR, BACK_COLOUR
 cls
-poke &h01F9, 0  'enable video
+set VIDEOTOP, 0  'enable video
 
 input "Enter Time ", H,"H:";2;, M,"M:";2;, S,"S:";2;
-B=peek(14)
+B=get("FRAMECOUNT")
 at 2,0 : print "                          ";
 
-if H=0
+if H &&= 0
     H=12
 else
     H=H%13
@@ -58,24 +58,24 @@ Hm12=H%12
 Md12=M/12 : MMd12=Md12
 
 ' disable video, (except last line so that we don't lose sync), for fast dial draw
-poke &h01F9, 238  'disable video
+set VIDEOTOP, 238  'disable video
 gosub drawDial
 gosub drawClock
-poke &h01F9, 0  'enable video
+set VIDEOTOP, 0  'enable video
 
-20 T=S*60 : V=3599 : goto 50
-30 if T>=V then T=T-V : M=M+1
-40 if M>59 then M=M-60 : H=H+1
-50 if H>12 then H=H-12
-60 S=T/60 : if S<>SS then gosub drawClock : SS=S
-70 A=B : B=peek(14) : A=B-A
-80 if A<0 then A=A+256
-90 T=T+A : goto 30 'use T=T+2500 for debugging
+20 T=S*60 : V=3599 : goto &50
+30 if T &&>= V then T=T-V : inc M
+40 if M &&> 59 then M=M-60 : inc H
+50 if H &&> 12 then H=H-12
+60 S=T/60 : if S &&<> SS then gosub drawClock : SS=S
+70 A=B : B=get("FRAMECOUNT") : A=B-A
+80 if A &&< 0 then A=A+256
+90 T=T+A : goto &30 'use T=T+2500 for debugging
 
 drawDigits:
-    poke 162,&h00
-    poke 163,&h0C : at 57,82 : print H/10;H%10;":";M/10;M%10;":";S/10;S%10;
-    poke 162,DIAL_COLOUR
+    set FGBGCOLOUR, &h0C00
+    at 57,82 : print H/10;H%10;":";M/10;M%10;":";S/10;S%10;
+    set BGCOLOUR, DIAL_COLOUR
 return
 
 drawClock:
@@ -92,10 +92,10 @@ drawSeconds:
 return
 
 drawMinutes:
-    if M<>MM 
+    if M &&<> MM 
         gosub eraseMinuteHand
         MM=M : Md12=M/12
-        if Md12<>MMd12
+        if Md12 &&<> MMd12
             gosub eraseHourHand
             MMd12=Md12
         endif
@@ -104,7 +104,7 @@ drawMinutes:
 return
 
 drawHours:
-    if H<>HH
+    if H &&<> HH
         HH=H : Hm12=H%12
     endif
     Hx5=(Hm12 LSL 2)+Hm12
@@ -119,7 +119,7 @@ return
 
 
 drawDial:
-    poke 163, DIAL_COLOUR
+    set FGCOLOUR, DIAL_COLOUR
     circlef CENTERX, CENTERY, DIAL_RADIUS
     
     ox=CENTERX : oy=CENTERY
@@ -129,39 +129,45 @@ drawDial:
     cr=DIAL_RADIUS + 9 : cc=&h03 : gosub jitterCircle
     cr=DIAL_RADIUS + 7 : cc=&h02 : gosub jitterCircle
     
-    for i=0 to TICKS-1
+    for i=0 &to TICKS-1
         gosub drawTicks
     next i
 return
 
 eraseSecondHand:
-    poke 163,DIAL_COLOUR : line CENTERX,CENTERY, peek(SECSX + SS),peek(SECSY + SS)
+    set FGCOLOUR, DIAL_COLOUR
+    line CENTERX,CENTERY, peek(SECSX + SS),peek(SECSY + SS)
 return
     
 drawSecondHand:
-    poke 163,&h3F : line CENTERX,CENTERY, peek(SECSX + S),peek(SECSY + S)
+    set FGCOLOUR, &h3F
+    line CENTERX,CENTERY, peek(SECSX + S),peek(SECSY + S)
 return
 
 eraseMinuteHand:
-    poke 163,DIAL_COLOUR : line CENTERX,CENTERY, peek(MINSX + MM),peek(MINSY + MM)
+    set FGCOLOUR, DIAL_COLOUR
+    line CENTERX,CENTERY, peek(MINSX + MM),peek(MINSY + MM)
 return
 
 drawMinuteHand:
-    poke 163,&h2A : line CENTERX,CENTERY, peek(MINSX + M),peek(MINSY + M)
+    set FGCOLOUR, &h2A
+    line CENTERX,CENTERY, peek(MINSX + M),peek(MINSY + M)
 return
 
 eraseHourHand:
-    poke 163,DIAL_COLOUR: line CENTERX,CENTERY, peek(HOURX + Hx5 + MMd12),peek(HOURY + Hx5 + MMd12)
+    set FGCOLOUR, DIAL_COLOUR
+    line CENTERX,CENTERY, peek(HOURX + Hx5 + MMd12),peek(HOURY + Hx5 + MMd12)
 return
 
 drawHourHand:
-    poke 163,&h15 : line CENTERX,CENTERY, peek(HOURX + Hx5 + Md12),peek(HOURY + Hx5 + Md12)
+    set FGCOLOUR, &h15
+    line CENTERX,CENTERY, peek(HOURX + Hx5 + Md12),peek(HOURY + Hx5 + Md12)
 return
 
 jitterCircle:
     for oxx=ox-1 to ox+1
         for oyy=oy-1 to oy+1
-            poke 163,cc
+                set FGCOLOUR, cc
             circle oxx, oyy, cr
         next oyy
     next oxx

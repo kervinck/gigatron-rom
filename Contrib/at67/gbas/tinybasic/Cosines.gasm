@@ -23,6 +23,7 @@ cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
 miscFlags           EQU                     register0 + 0x28
+fontLutId           EQU                     0x00e0
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -34,15 +35,15 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x023b
-_20                 EQU                     0x0244
-_30                 EQU                     0x0248
-_40                 EQU                     0x0255
-_50                 EQU                     0x0259
-_60                 EQU                     0x0286
-_70                 EQU                     0x029f
-_80                 EQU                     0x02ad
-_end_0x02c2         EQU                     0x02b8
+_10                 EQU                     0x0239
+_20                 EQU                     0x0242
+_30                 EQU                     0x0246
+_40                 EQU                     0x0253
+_50                 EQU                     0x0257
+_60                 EQU                     0x0284
+_70                 EQU                     0x029d
+_80                 EQU                     0x02ab
+_end_0x02c0         EQU                     0x02b6
 
 ; Variables
 _p                  EQU                     0x0030
@@ -61,6 +62,7 @@ _y                  EQU                     0x003a
 ; Define Images
 
 ; Define Sprites
+; Define Fonts
 
 ; Lookup Tables
 
@@ -75,9 +77,8 @@ _entryPoint_        InitRealTimeProc
                     Initialise                                              ; INIT
 
 _10                 LDI                     21
-                    ST                      162
-                    LDWI                    clearVertBlinds
-                    CALL                    giga_vAC                        ; poke 162, &h15 : cls
+                    STW                     fgbgColour
+                    ClearVertBlinds                                         ; set FGBGCOLOUR, &h15 : cls
 
 _20                 LDI                     45
                     STW                     _p                              ; p=45 'input p:if p<1 goto 20
@@ -136,7 +137,7 @@ _80                 LDW                     _c
                     LDWI                    _40
                     CALL                    giga_vAC                        ; c=c+23:goto 40
 
-_end_0x02c2         BRA                     _end_0x02c2                     ; END
+_end_0x02c0         BRA                     _end_0x02c0                     ; END
 
 
 
@@ -155,8 +156,8 @@ convertLtOp         EQU     0x7ec9
 convertGtOp         EQU     0x7ec0
 divide16bit         EQU     0x7ca8
 resetVideoTable     EQU     0x7ea1
-initClearFuncs      EQU     0x7ddc
-clearVertBlinds     EQU     0x7da2
+initClearFuncs      EQU     0x7ddd
+clearVertBlinds     EQU     0x7da3
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -176,7 +177,7 @@ lutIndex            EQU     register8
 
                     ; runs real time, (time sliced), code at regular intervals
 realTimeProc        PUSH
-                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI/SPRITE etc routines
+                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI routine
                     CALL    giga_vAC
                     POP
                     RET
@@ -337,7 +338,7 @@ initClearFuncs      PUSH
                     LDWI    resetVideoTable
                     CALL    giga_vAC
     
-                    LDWI    0x0002                              ; starting cursor position
+                    LDI     0x02                                ; starting cursor position
                     STW     cursorXY
                     LDWI    0x7FFF
                     ANDW    miscFlags

@@ -35,21 +35,20 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_loop               EQU                     0x0260
-_math               EQU                     0x0354
-_next_0x0266        EQU                     0x0264
-_next_0x02a8        EQU                     0x029a
-_next_0x02e6        EQU                     0x02d0
+_loop               EQU                     0x0265
+_math               EQU                     0x034d
+_next_0x026b        EQU                     0x0269
+_next_0x02ab        EQU                     0x029d
+_next_0x02e7        EQU                     0x02d1
 _page_0x0300        EQU                     0x0300
-_next_0x0328        EQU                     0x0319
-_end_0x03ab         EQU                     0x0372
+_next_0x0327        EQU                     0x0314
+_end_0x03a8         EQU                     0x036b
 
 ; Variables
 _x                  EQU                     0x0030
 _y                  EQU                     0x0032
 _i                  EQU                     0x0034
-_p                  EQU                     0x0036
-_sh                 EQU                     0x0038
+_sh                 EQU                     0x0036
 
 ; Strings
 
@@ -172,6 +171,12 @@ _entryPoint_        InitRealTimeProc
                     InitGtOp                
                     Initialise                                              ; INIT
 
+                    LDI                     2
+                    STW                     graphicsMode
+                    ScanlineMode                                            ; mode 2
+
+                    ClearVertBlinds                                         ; cls
+
                     LDI                     3
                     ST                      waveType
                     LDWI                    4256
@@ -179,21 +184,17 @@ _entryPoint_        InitRealTimeProc
 
                     LDI                     0
                     STW                     _x
-                    STW                     _y
-                    LDI                     2
-                    STW                     graphicsMode
-                    ScanlineMode                                            ; x=0 : y=x : mode 2
+                    STW                     _y                              ; x=0 : y=x
 
 _loop               LDI                     0
                     STW                     _i                              ; for i=0 to 19
 
-_next_0x0266        LDWI                    _math
+_next_0x026b        LDWI                    _math
                     CALL                    giga_vAC                        ; gosub math
 
-                    LD                      0xa3
+                    LD                      fgbgColour + 1
                     ADDI                    7
-                    STW                     _p
-                    ST                      163                             ; p=peek(163)+7 : poke 163,p
+                    ST                      fgbgColour + 1                  ; set FGCOLOUR, get("FGCOLOUR") + 7
 
                     LDW                     _x
                     STW                     drawLine_x1
@@ -206,18 +207,17 @@ _next_0x0266        LDWI                    _math
                     STW                     drawLine_y2
                     DrawLine                                                ; line x,119, 159,119-y
 
-                    ForNextFarInc           _i _next_0x0266 19              ; next i
+                    ForNextFarInc           _i _next_0x026b 19              ; next i
 
                     LDI                     19
                     STW                     _i                              ; for i=19 to 0
 
-_next_0x02a8        LDWI                    _math
+_next_0x02ab        LDWI                    _math
                     CALL                    giga_vAC                        ; gosub math
 
-                    LD                      0xa3
+                    LD                      fgbgColour + 1
                     ADDI                    7
-                    STW                     _p
-                    ST                      163                             ; p=peek(163)+7 : poke 163,p
+                    ST                      fgbgColour + 1                  ; set FGCOLOUR, get("FGCOLOUR") + 7
 
                     LDI                     159
                     STW                     drawLine_x1
@@ -229,18 +229,17 @@ _next_0x02a8        LDWI                    _math
                     STW                     drawLine_y2
                     DrawLine                                                ; line 159,y, x,0
 
-                    ForNextFarDec           _i _next_0x02a8 0               ; next i
+                    ForNextFarDec           _i _next_0x02ab 0               ; next i
 
                     LDI                     0
                     STW                     _i                              ; for i=0 to 19
 
-_next_0x02e6        LDWI                    _math
+_next_0x02e7        LDWI                    _math
                     CALL                    giga_vAC                        ; gosub math
 
-                    LD                      0xa3
+                    LD                      fgbgColour + 1
                     ADDI                    7
-                    STW                     _p
-                    ST                      163                             ; p=peek(163)+7 : poke 163,p
+                    ST                      fgbgColour + 1                  ; set FGCOLOUR, get("FGCOLOUR") + 7
 
                     LDI                     0
                     STW                     drawLine_x1
@@ -251,24 +250,23 @@ _next_0x02e6        LDWI                    _math
                     STW                     drawLine_x2
                     LDI                     0
                     STW                     drawLine_y2
+                    DrawLine                                                ; line 0,y, 159-x,0
+
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
-                    DrawLine                                                ; line 0,y, 159-x,0
-
-                    ForNextFarInc           _i _next_0x02e6 19              ; next i
+                    ForNextFarInc           _i _next_0x02e7 19              ; next i
 
                     LDI                     19
                     STW                     _i                              ; for i=19 to 0
 
-_next_0x0328        LDWI                    _math
+_next_0x0327        LDWI                    _math
                     CALL                    giga_vAC                        ; gosub math
 
-                    LD                      0xa3
+                    LD                      fgbgColour + 1
                     ADDI                    7
-                    STW                     _p
-                    ST                      163                             ; p=peek(163)+7 : poke 163,p
+                    ST                      fgbgColour + 1                  ; set FGCOLOUR, get("FGCOLOUR") + 7
 
                     LDI                     159
                     SUBW                    _x
@@ -282,7 +280,7 @@ _next_0x0328        LDWI                    _math
                     STW                     drawLine_y2
                     DrawLine                                                ; line 159-x,119, 0,119-y
 
-                    ForNextFarDec           _i _next_0x0328 0               ; next i
+                    ForNextFarDec           _i _next_0x0327 0               ; next i
 
                     LDWI                    _loop
                     CALL                    giga_vAC                        ; goto  loop
@@ -305,10 +303,9 @@ _math               PUSH
                     ADDI                    3
                     STW                     _y                              ; y = sh + sh + sh + 3
 
-                    POP                     
-                    RET                                                     ; return
+                    Return                                                  ; return
 
-_end_0x03ab         BRA                     _end_0x03ab                     ; END
+_end_0x03a8         BRA                     _end_0x03a8                     ; END
 
 
 
@@ -326,15 +323,16 @@ convertGeOp         EQU     0x7ed2
 convertLtOp         EQU     0x7ec9
 convertGtOp         EQU     0x7ec0
 scanlineMode        EQU     0x7eac
-resetVideoTable     EQU     0x7ae0
+resetVideoTable     EQU     0x7ca7
 initClearFuncs      EQU     0x7ddd
-drawLine            EQU     0x7baa
-drawLineExt         EQU     0x7aa7
-drawLineLoop        EQU     0x79c5
-drawLineLoadXY      EQU     0x78d4
-resetAudio          EQU     0x7da4
-playMidi            EQU     0x7caf
-midiStartNote       EQU     0x77b3
+clearVertBlinds     EQU     0x7da3
+drawLine            EQU     0x7aaa
+drawLineExt         EQU     0x79c6
+drawLineLoop        EQU     0x78c5
+drawLineLoadXY      EQU     0x77d4
+resetAudio          EQU     0x7cc6
+playMidi            EQU     0x7baf
+midiStartNote       EQU     0x76b3
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -441,8 +439,9 @@ drawLine_sy         EQU     register9
 drawLine_h          EQU     register10
 drawLine_num        EQU     register11
 drawLine_count      EQU     register12
-drawLine_addr       EQU     register13
-drawLine_tmp        EQU     register14
+drawLine_tmp        EQU     register13
+
+drawPixel_xy        EQU     register14
   
 drawCircle_cx       EQU     register0
 drawCircle_cy       EQU     register1
@@ -543,6 +542,42 @@ initClearFuncs      PUSH
     
                     LDWI    SYS_Draw4_30                        ; setup 4 pixel SYS routine
                     STW     giga_sysFn
+                    POP
+                    RET
+
+
+                    ; clears the viewable screen using a vertical blinds effect
+clearVertBlinds     PUSH
+                    LDWI    initClearFuncs
+                    CALL    giga_vAC
+
+                    LDWI    giga_vram
+                    STW     giga_sysArg4
+                    LD      giga_sysArg4 + 1
+                    ST      top
+    
+clearVB_loop        CALL    realTimeProcAddr
+                    LD      top
+                    ST      giga_sysArg4 + 1                    ; top line
+                    SYS     30
+    
+                    LDWI    giga_yres - 1 + 16
+                    SUBW    top
+                    ST      giga_sysArg4 + 1                    ; bottom line
+                    SYS     30
+    
+                    LD      giga_sysArg4
+                    ADDI    0x04
+                    ST      giga_sysArg4
+                    SUBI    giga_xres
+                    BLT     clearVB_loop
+    
+                    LDI     0
+                    ST      giga_sysArg4
+                    INC     top                                 ; next top line
+                    LD      top
+                    SUBI    giga_yres / 2 + 8
+                    BLT     clearVB_loop
                     POP
                     RET
 

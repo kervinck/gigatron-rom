@@ -2,7 +2,7 @@
 _runtimePath_ "../runtime"
 _runtimeStart_ &hFFFF
 
-poke &h01F9, 238 'disables video output, cls becomes almost instant
+set VIDEOTOP, 238 'disables video output, cls becomes almost instant
 cls
 
 const horizonY = 32
@@ -10,8 +10,8 @@ const horizonY = 32
 y=0 : x=y : i=x : j=i : a=j : pitch=a : yy=pitch
 color1 = &h3F : color2 = &h03
 
-dim c1(2)=0 : c1(0)=&h3F : c1(1)=&h2A : c1(2)=&h15
-dim c2(2)=0 : c2(0)=&h03 : c2(1)=&h02 : c2(2)=&h01
+dim c1(2) = &h3F, &h2A, &h15
+dim c2(2) = &h03, &h02, &h01
 
 fade=0 : cIndex=fade : decay=54
 
@@ -19,12 +19,16 @@ fade=0 : cIndex=fade : decay=54
 for y=119 to horizonY step -1
     color1 = c1(cIndex) : color2 = c2(cIndex)
     inc fade
-    if fade &&= decay then inc cIndex : fade = 0 : decay = decay LSR 1
+    if fade &&= decay
+        inc cIndex
+        fade = 0
+        decay = decay LSR 1
+    endif
     
     yy = y
     gosub calcPitch
 
-    if ((400 / (y-horizonY+40)) AND 1) &&= 0
+    if((400 / (y-horizonY+40)) AND 1) &&= 0
         j = color1 XOR color2
     else
         j = 0
@@ -33,7 +37,7 @@ for y=119 to horizonY step -1
     i = 80 % pitch
     a = ((y + 8) LSL 8)
 
-    for x=0 to pitch + 159
+    for x=0 &to pitch + 159
         if i &&= 0
             i = pitch - 1
         else
@@ -48,23 +52,27 @@ for y=119 to horizonY step -1
 
         poke a+x, p
     next x
-    poke &h01F9, y+y
+    set VIDEOTOP, y+y
 next y
 
-dim sky(2)=0 : sky(0)=&h10 : sky(1)=&h20 : sky(2)=&h30
+dim sky(2) = &h10, &h20, &h30
 
 ' sky
 fade=0 : cIndex=fade : decay = 5
-for y=horizonY-1 to 0 step -1
+for y=horizonY-1 &to 0 step -1
     inc fade
-    if fade &&= decay then inc cIndex : fade = 0 : decay = decay LSL 1
+    if fade &&= decay
+        inc cIndex
+        fade = 0
+        decay = decay LSL 1
+    endif
 
-    for x=0 to 159
+    for x=0 &to 159
         a = ((y + 8) LSL 8)
         poke a+x, sky(cIndex)
     next x
     
-    poke &h01F9, y+y
+    set VIDEOTOP, y+y
 next y
 
 play midi,&h8000,3
@@ -75,7 +83,7 @@ loop:   i = x AND 255
         q = &h0100 + 240
         yy = horizonY
         gosub calcPitch
-        for y=0 to pitch
+        for y=0 &to pitch
             j = j + i
         next y
         
@@ -88,7 +96,7 @@ loop:   i = x AND 255
             j = i + (j AND 255)
         p = p + 4 : until p &&>= q
         
-        gosub peek(17)
+        gosub get("BUTTONSTATE")
         
         x = x + v
 goto loop

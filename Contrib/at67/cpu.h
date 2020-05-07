@@ -7,14 +7,14 @@
 #include <algorithm>
 
 
-#define MAJOR_VERSION "0.8"
-#define MINOR_VERSION "27"
+#define MAJOR_VERSION "0.9"
+#define MINOR_VERSION "2B"
 #define VERSION_STR "gtemuAT67 v" MAJOR_VERSION "." MINOR_VERSION
  
 #define ROM_INST 0
 #define ROM_DATA 1
 
-#define NUM_INT_ROMS 4
+#define NUM_INT_ROMS 5
 
 #define ROM_TITLE_ADDRESS 0xFEB1
 #define MAX_TITLE_CHARS   25
@@ -66,7 +66,7 @@
 
 namespace Cpu
 {
-    enum RomType {ROMERR=0x00, ROMv1=0x1c, ROMv2=0x20, ROMv3=0x28, ROMv4=0x38, DEVROM=0xf8};
+    enum RomType {ROMERR=0x00, ROMv1=0x1c, ROMv2=0x20, ROMv3=0x28, ROMv4=0x38, ROMv5a=0x40, DEVROM=0xf8};
     enum ScanlineMode {Normal=0, VideoB, VideoC, VideoBC, NumScanlineModes};
     enum InternalGt1Id {SnakeGt1=0, RacerGt1=1, MandelbrotGt1=2, PicturesGt1=3, CreditsGt1=4, LoaderGt1=5, NumInternalGt1s};
     enum Endianness {LittleEndian = 0x03020100ul, BigEndian = 0x00010203ul};

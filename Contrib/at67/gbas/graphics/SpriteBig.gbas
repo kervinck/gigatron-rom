@@ -5,8 +5,7 @@ _runtimeStart_ &h7FFF
 _spriteStripeChunks_ 40, &h0200, descending
 
 mode 2
-poke 162, &h00
-poke 163, &h3F
+set FGBGCOLOUR, &h3F00
 cls
 
 'first load allocates memory, further loads of the same filename are instanced but have different stripe destination offsets

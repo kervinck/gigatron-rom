@@ -35,13 +35,13 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_break              EQU                     0x02cc
+_break              EQU                     0x02c7
 _next_0x0250        EQU                     0x0250
 _next_0x0259        EQU                     0x0259
 _next_0x026d        EQU                     0x0267
 _else_0x02b8        EQU                     0x029e
 _page_0x0300        EQU                     0x0300
-_end_0x0368         EQU                     0x0332
+_end_0x0363         EQU                     0x032c
 
 ; Variables
 _cy                 EQU                     0x0030
@@ -104,7 +104,7 @@ _next_0x0259        LDI                     0
                     STW                     _y2                             ; x=0 : y=x : x2=y : y2=x2
 
                     LDI                     0
-                    STW                     _c                              ; for c=0 to 14
+                    STW                     _c                              ; for c=0 &to 14
 
 _next_0x026d        LDW                     _x
                     STW                     mathX
@@ -148,7 +148,7 @@ _else_0x02b8        LDW                     _x
                     ADDW                    _cx
                     STW                     _x                              ; x = x2 - y2 + cx
 
-                    ForNextFarInc           _c _next_0x026d 14              ; next c
+                    ForNextInc              _c _next_0x026d 14              ; next c
 
 _break              LD                      _py
                     ST                      giga_vAC + 1
@@ -170,13 +170,13 @@ _break              LD                      _py
                     XORI                    0xFF
                     ADDW                    _px
                     STW                     0xc2
+                    LDWI                    1536
+                    ADDW                    _c
+                    PEEK                    
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
-                    LDWI                    1536
-                    ADDW                    _c
-                    PEEK                    
                     POKE                    0xc2                            ; poke ((135 - py) LSL 8) + px, peek(colours + c)
 
                     LDW                     _cx
@@ -191,7 +191,7 @@ _page_0x0300        LDW                     0xde
 
                     ForNextFarInc           _py _next_0x0250 67             ; next py
 
-_end_0x0368         BRA                     _end_0x0368                     ; END
+_end_0x0363         BRA                     _end_0x0363                     ; END
 
 
 
@@ -390,8 +390,9 @@ drawLine_sy         EQU     register9
 drawLine_h          EQU     register10
 drawLine_num        EQU     register11
 drawLine_count      EQU     register12
-drawLine_addr       EQU     register13
-drawLine_tmp        EQU     register14
+drawLine_tmp        EQU     register13
+
+drawPixel_xy        EQU     register15
   
 drawCircle_cx       EQU     register0
 drawCircle_cy       EQU     register1

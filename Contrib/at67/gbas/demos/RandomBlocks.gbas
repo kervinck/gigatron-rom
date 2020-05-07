@@ -2,12 +2,12 @@ _runtimePath_ "../runtime"
 
 scroll off
 
-play midi,&h10a0,3
+play midi, &h10a0, 3
 
-10 poke 162,&h2A:cls:'Paper
-20 poke 163,rnd(0) AND 63:'Pen
-30 at rnd(155),rnd(113)
-40 put 127:'Block
+10 set BGCOLOUR, &h2A : cls : 'Paper
+20 set FGCOLOUR,rnd(0) AND 63 : 'Pen
+30 at rnd(155), rnd(113)
+40 put 127 : 'Block
 50 goto &20
 
 

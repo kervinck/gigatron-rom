@@ -1,7 +1,7 @@
 _runtimePath_ "../runtime"
 
 'Plot cosine
-10 poke 162, &h15 : cls
+10 set FGBGCOLOUR, &h15 : cls
 20 p=45 'input p:if p<1 goto 20
 30 u=50*100:v=0:c=0
 40 for x=0 to 159

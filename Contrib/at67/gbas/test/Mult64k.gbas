@@ -11,9 +11,9 @@ def word(ADDR + SIZE*2, 0, SIZE, SIZE) = rand(360) - 180
 def word(ADDR + SIZE*4, 0, SIZE, SIZE) = 0
 
 
-result=0 : timer=result : tick=peek(14)
+result=0 : timer=result : tick=get("FRAMECOUNT")
 for i=0 to SIZE-1
-    ticks=tick : tick=peek(14) : ticks=tick-ticks
+    ticks=tick : tick=get("FRAMECOUNT") : ticks=tick-ticks
     if ticks &&< 0 then ticks=ticks+256
     timer=timer+ticks
     gosub math

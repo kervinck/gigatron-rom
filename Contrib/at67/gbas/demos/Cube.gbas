@@ -7,8 +7,7 @@ K=0:X=K:M=X:N=M:I=N:A=I:B=A:L=B:F=L
 DIM P(7)=0
 DIM Q(7)=0
 
-poke 162, &h00
-poke 163, &h3F
+set FGBGCOLOUR, &h3F00
 
 10 MODE 3:CLS:U=48:GOTO 100
 
@@ -27,20 +26,20 @@ poke 163, &h3F
 100 S=45:C=45:F=U LSL 2
     gosub 110
 
-timer=0 : tick=peek(14)
-for i=0 to 100
-    ticks=tick : tick=peek(14) : ticks=tick-ticks
+timer=0 : tick=get("FRAMECOUNT")
+for i=0 &to 100
+    ticks=tick : tick=get("FRAMECOUNT") : ticks=tick-ticks
     if ticks &&< 0 then ticks=ticks+256
     timer=timer+ticks
     gosub 254
 next i    
 
-poke &h01F9, 0 'enable full video output
+set VIDEOTOP, 0 'enable full video output
 print timer/60;" ";timer % 60;"/60"
 end
 
-'loop: gosub peek(17)
-'      goto loop
+'loop: gosub get("BUTTONSTATE")
+'      goto &loop
 
 'PROCESS CUBE CORNERS
 110 I=0:X=U*U
@@ -66,18 +65,18 @@ end
 255 A=7:B=3:GOSUB 50
     return
 
-254: poke &h01F9, 238 'disable video output
-     poke 163, &h00 : gosub 200 'erase cube
+254: set VIDEOTOP, 238 'disable video output
+     set FGCOLOUR, &h00 : gosub 200 'erase cube
      
-     poke &h01F9, 40 'enable video output
-     S = S + 5 : if S &>= 45 then S = -40
-     poke 163, &h3F : gosub 110 'draw cube
+     set VIDEOTOP, 40 'enable video output
+     S = S + 5 : if S &&>= 45 then S = -40
+     set FGCOLOUR, &h3F : gosub 110 'draw cube
      return
      
-253: poke &h01F9, 238 'disable video output
-     poke 163, &h00 : gosub 200 'erase cube
+253: set VIDEOTOP, 238 'disable video output
+     set FGCOLOUR, &h00 : gosub 200 'erase cube
      
-     poke &h01F9, 40 'enable video output
-     S = S - 5 : if S &<= -45 then S = 40
-     poke 163, &h3F : gosub 110 'draw cube
+     set VIDEOTOP, 40 'enable video output
+     S = S - 5 : if S &&<= -45 then S = 40
+     set FGCOLOUR, &h3F : gosub 110 'draw cube
      return

@@ -35,9 +35,9 @@ textWorkArea        EQU                     0x06a0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_loop               EQU                     0x024b
-_repeat_0x0272      EQU                     0x026e
-_end_0x029b         EQU                     0x0291
+_loop               EQU                     0x0246
+_repeat_0x026d      EQU                     0x0269
+_end_0x0296         EQU                     0x028c
 
 ; Variables
 _x                  EQU                     0x0030
@@ -95,7 +95,7 @@ _loop               LDI                     1
                     SUBW                    _x2
                     STW                     _nx2                            ; nx2 = -x2
 
-_repeat_0x0272      LDW                     _nx2
+_repeat_0x026d      LDW                     _nx2
                     POKE                    _p                              ; poke p, nx2
 
                     LDW                     _p
@@ -110,14 +110,14 @@ _repeat_0x0272      LDW                     _nx2
 
                     LDWI                    465
                     SUBW                    _p
-                    BGE                     _repeat_0x0272                  ; until p &&>= &h01D1
+                    BGE                     _repeat_0x026d                  ; until p &&>= &h01D1
 
                     INC                     _x                              ; inc x
 
                     LDWI                    _loop
                     CALL                    giga_vAC                        ; goto loop
 
-_end_0x029b         BRA                     _end_0x029b                     ; END
+_end_0x0296         BRA                     _end_0x0296                     ; END
 
 
 
@@ -134,11 +134,11 @@ convertLeOp         EQU     0x067c
 convertGeOp         EQU     0x0673
 convertLtOp         EQU     0x066a
 convertGtOp         EQU     0x0661
-scanlineMode        EQU     0x062a
-waitVBlanks         EQU     0x0617
-waitVBlank          EQU     0x060b
+scanlineMode        EQU     0x062b
+waitVBlanks         EQU     0x0618
+waitVBlank          EQU     0x060c
 resetVideoTable     EQU     0x05e0
-initClearFuncs      EQU     0x063e
+initClearFuncs      EQU     0x063f
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -357,7 +357,7 @@ initClearFuncs      PUSH
                     LDWI    resetVideoTable
                     CALL    giga_vAC
     
-                    LDWI    0x0002                              ; starting cursor position
+                    LDI     0x02                                ; starting cursor position
                     STW     cursorXY
                     LDWI    0x7FFF
                     ANDW    miscFlags

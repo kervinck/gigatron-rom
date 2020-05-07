@@ -270,8 +270,7 @@ _endif_0x0396       LDW                     _my1
 
                     BRA                     _while_0x0348                   ; wend
 
-_wend_0x03c8        POP                     
-                    RET                                                     ; return
+_wend_0x03c8        Return                                                  ; return
 
 _end_0x03ca         BRA                     _end_0x03ca                     ; END
 
@@ -521,8 +520,9 @@ drawLine_sy         EQU     register9
 drawLine_h          EQU     register10
 drawLine_num        EQU     register11
 drawLine_count      EQU     register12
-drawLine_addr       EQU     register13
-drawLine_tmp        EQU     register14
+drawLine_tmp        EQU     register13
+
+drawPixel_xy        EQU     register15
   
 drawCircle_cx       EQU     register0
 drawCircle_cy       EQU     register1

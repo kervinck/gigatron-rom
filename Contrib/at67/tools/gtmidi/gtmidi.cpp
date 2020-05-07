@@ -24,7 +24,7 @@
 #define MAX_ELEMENTS          16
 
 #define GTMIDI_MAJOR_VERSION "0.5"
-#define GTMIDI_MINOR_VERSION "2"
+#define GTMIDI_MINOR_VERSION "3"
 #define GTMIDI_VERSION_STR "gtmidi v" GTMIDI_MAJOR_VERSION "." GTMIDI_MINOR_VERSION
 
 
@@ -245,13 +245,14 @@ void outputDelay(std::ofstream& outfile, Format format, uint8_t delay8, double t
 
 int main(int argc, char* argv[])
 {
-    if(argc != 9)
+    if(argc < 9  ||  argc > 10)
     {
         fprintf(stderr, "%s\n", GTMIDI_VERSION_STR);
-        fprintf(stderr, "Usage:   gtmidi <input filename> <output filename> <midi name> <format name> <uint16_t start_address in hex>\n         <uint16_t segment_offset in hex> <int segment_size> <float timing_adjust>\n");
-        fprintf(stderr, "Example: gtmidi game_over.bin game_over.i gameOver vCPU 0x8000 0 0 0.5\n");
-        fprintf(stderr, "Input:   miditones binary file produced with miditones, e.g. miditones -t4 -b -s1 -pi <filename>.bin\n");
-        fprintf(stderr, "Format:  'gtMID', 'vCPU', 'GBAS', 'GCL', 'CPP', 'Py'\n");
+        fprintf(stderr, "Usage:    gtmidi <input filename> <output filename> <midi name> <format name> <uint16_t start_address in hex>\n         <uint16_t segment_offset in hex> <int segment_size> <float timing_adjust> <optional -v>\n");
+        fprintf(stderr, "Example:  gtmidi game_over.bin game_over.i gameOver vCPU 0x8000 0 0 0.5 -v\n");
+        fprintf(stderr, "Input:    miditones binary file produced with miditones, e.g. miditones -t4 -b -s1 -pi <filename>.bin\n");
+        fprintf(stderr, "Format:   'gtMID', 'vCPU', 'GBAS', 'GCL', 'CPP', 'Py'\n");
+        fprintf(stderr, "Optional: -v use volume/velocity values\n");
         return 1;
     }
 
@@ -280,6 +281,20 @@ int main(int argc, char* argv[])
     uint16_t segment = startAddress;
     uint16_t segmentSize = uint16_t(strtol(argv[7], nullptr, 10));
     double timingAdjust = strtod(argv[8], nullptr);
+
+    bool useVolume = false;
+    if(argc == 10)
+    {
+        std::string volume = argv[9];
+        Expression::strToUpper(volume);
+        if(volume != "-V")
+        {
+            fprintf(stderr, "Optional volume specifier must be '-v'\n");
+            return 1;
+        }
+
+        useVolume = true;
+    }
 
     std::ifstream infile(inFilename, std::ios::binary | std::ios::in);
     if(!infile.is_open())
@@ -344,18 +359,22 @@ int main(int argc, char* argv[])
                 segmentCount += 2;
 
                 // Volume, (0 -> 127), needs to be scaled, inverted and offset into (127 -> 64)
-                uint8_t volume = *midiPtr++; midiSize--;
-                volume = (63 - ((volume & 127) >>1)) + 64;
-                gigaSize += 1;
-                segmentCount += 1;
+                uint8_t volume;
+                if(useVolume)
+                {
+                    volume = *midiPtr++; midiSize--;
+                    volume = (63 - ((volume & 127) >>1)) + 64;
+                    gigaSize += 1;
+                    segmentCount += 1;
+                }
 
                 switch(format)
                 {
-                    case Format::vCPU: outputVCPUcommand(outfile, command); outputVCPUcommand(outfile, note); outputVCPUcommand(outfile, volume); break;
-                    case Format::GBAS: outputGBAScommand(outfile, command); outputGBAScommand(outfile, note); outputGBAScommand(outfile, volume); break;
-                    case Format::GCL:  outputGCLcommand(outfile,  command); outputGCLcommand(outfile,  note); outputGCLcommand(outfile,  volume); break;
-                    case Format::CPP:  outputCPPcommand(outfile,  command); outputCPPcommand(outfile,  note); outputCPPcommand(outfile,  volume); break;
-                    case Format::PY:   outputPYcommand(outfile,   command); outputPYcommand(outfile,   note); outputPYcommand(outfile,   volume); break;
+                    case Format::vCPU: outputVCPUcommand(outfile, command); outputVCPUcommand(outfile, note); if(useVolume) outputVCPUcommand(outfile, volume); break;
+                    case Format::GBAS: outputGBAScommand(outfile, command); outputGBAScommand(outfile, note); if(useVolume) outputGBAScommand(outfile, volume); break;
+                    case Format::GCL:  outputGCLcommand(outfile,  command); outputGCLcommand(outfile,  note); if(useVolume) outputGCLcommand(outfile,  volume); break;
+                    case Format::CPP:  outputCPPcommand(outfile,  command); outputCPPcommand(outfile,  note); if(useVolume) outputCPPcommand(outfile,  volume); break;
+                    case Format::PY:   outputPYcommand(outfile,   command); outputPYcommand(outfile,   note); if(useVolume) outputPYcommand(outfile,   volume); break;
 
                     default: break;
                 }

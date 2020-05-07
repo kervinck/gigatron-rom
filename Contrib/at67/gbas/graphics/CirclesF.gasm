@@ -70,7 +70,7 @@ _entryPoint_        InitRealTimeProc
 
 _loop               Rand                    
                     ANDI                    63
-                    ST                      163                             ; poke 163, rnd(0) AND &h3F
+                    ST                      fgbgColour + 1                  ; set FGCOLOUR, rnd(0) AND &h3F
 
                     LDI                     0x64
                     RandMod                 
@@ -306,8 +306,9 @@ drawLine_sy         EQU     register9
 drawLine_h          EQU     register10
 drawLine_num        EQU     register11
 drawLine_count      EQU     register12
-drawLine_addr       EQU     register13
-drawLine_tmp        EQU     register14
+drawLine_tmp        EQU     register13
+
+drawPixel_xy        EQU     register15
   
 drawCircle_cx       EQU     register0
 drawCircle_cy       EQU     register1

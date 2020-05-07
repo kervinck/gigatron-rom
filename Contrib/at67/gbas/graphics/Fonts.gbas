@@ -1,17 +1,18 @@
 _runtimePath_ "../runtime"
 _runtimeStart_ &h7FFF
 
-load font, ../../images/gbas/Fonts/Bold/Bold.tga, 0, &h002A
-load font, ../../images/gbas/Fonts/Goth/Goth.tga, 1, &h000C
-load font, ../../images/gbas/Fonts/Prac/Prac.tga, 2, &h0033
-load font, ../../images/gbas/Fonts/Scifi/Scifi.tga, 3, &h003C
-load font, ../../images/gbas/Fonts/Script/Script.tga, 4, &h0003
+load font, ../../images/gbas/Fonts/Bold/Bold.tga, 0, &h2A00
+load font, ../../images/gbas/Fonts/Adv/Adv.tga, 1, &h0C00
+load font, ../../images/gbas/Fonts/Scifi/Scifi.tga, 2, &h3C00
+load font, ../../images/gbas/Fonts/Prac/Prac.tga, 3, &h0300
+load font, ../../images/gbas/Fonts/Sinc/Sinc.tga, 4, &h0F00
 
-poke 162, 0
-poke 163, &h3F
+set FGBGCOLOUR, &h3F00
 cls
+
 for i=0 to 4
     set fontId, i
     print "ABCDEFGHIJKLMNOPQRSTUVWXYZ !?. 0123456789"
 next i
+
 end

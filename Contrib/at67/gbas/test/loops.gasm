@@ -23,6 +23,7 @@ cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
 miscFlags           EQU                     register0 + 0x28
+fontLutId           EQU                     0x00e0
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -34,11 +35,11 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_repeat_0x0244      EQU                     0x0244
-_while_0x025f       EQU                     0x025b
-_else_0x0280        EQU                     0x0272
-_endif_0x028e       EQU                     0x0280
-_wend_0x0298        EQU                     0x0288
+_repeat_0x0242      EQU                     0x0242
+_while_0x025d       EQU                     0x0259
+_else_0x027e        EQU                     0x0270
+_endif_0x028c       EQU                     0x027e
+_wend_0x0296        EQU                     0x0286
 
 ; Variables
 _a                  EQU                     0x0030
@@ -52,6 +53,7 @@ _a                  EQU                     0x0030
 ; Define Images
 
 ; Define Sprites
+; Define Fonts
 
 ; Lookup Tables
 
@@ -65,13 +67,12 @@ _entryPoint_        InitRealTimeProc
                     InitGtOp                
                     Initialise                                              ; INIT
 
-                    LDWI                    clearVertBlinds
-                    CALL                    giga_vAC                        ; cls
+                    ClearVertBlinds                                         ; cls
 
                     LDI                     1
                     STW                     _a                              ; a=1
 
-_repeat_0x0244      LDW                     _a
+_repeat_0x0242      LDW                     _a
                     PrintAcInt16            
                     NewLine                                                 ; print a
 
@@ -79,30 +80,30 @@ _repeat_0x0244      LDW                     _a
 
                     LDW                     _a
                     SUBI                    8
-                    BNE                     _repeat_0x0244                  ; until a &&= count + 1
+                    BNE                     _repeat_0x0242                  ; until a &&= count + 1
 
-_while_0x025f       LDW                     _a
-                    BLE                     _wend_0x0298                    ; while a &&> 0
+_while_0x025d       LDW                     _a
+                    BLE                     _wend_0x0296                    ; while a &&> 0
 
                     LDW                     _a
                     SUBI                    1
-                    BNE                     _else_0x0280                    ; if a &&= 1
+                    BNE                     _else_0x027e                    ; if a &&= 1
 
                     LDW                     _a
                     PrintAcInt16            
-                    BRA                     _endif_0x028e                   ; print a;
+                    BRA                     _endif_0x028c                   ; print a;
 
-_else_0x0280        LDW                     _a
+_else_0x027e        LDW                     _a
                     PrintAcInt16            
                     NewLine                                                 ; print a
 
-_endif_0x028e       LDW                     _a
+_endif_0x028c       LDW                     _a
                     SUBI                    1
                     STW                     _a                              ; a=a-1
 
-                    BRA                     _while_0x025f                   ; wend
+                    BRA                     _while_0x025d                   ; wend
 
-_wend_0x0298        BRA                     _wend_0x0298                    ; END
+_wend_0x0296        BRA                     _wend_0x0296                    ; END
 
 
 
@@ -112,22 +113,22 @@ _wend_0x0298        BRA                     _wend_0x0298                    ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7ef2
-convertEqOp         EQU     0x7ee9
-convertNeOp         EQU     0x7ee0
-convertLeOp         EQU     0x7ed7
-convertGeOp         EQU     0x7ece
-convertLtOp         EQU     0x7ec5
-convertGtOp         EQU     0x7ebc
-resetVideoTable     EQU     0x7ae0
-initClearFuncs      EQU     0x7ddc
-clearVertBlinds     EQU     0x7da2
-clearCursorRow      EQU     0x79b6
-printInit           EQU     0x7ea1
-printDigit          EQU     0x7abe
-printInt16          EQU     0x7cab
+realTimeProc        EQU     0x7ef6
+convertEqOp         EQU     0x7eed
+convertNeOp         EQU     0x7ee4
+convertLeOp         EQU     0x7edb
+convertGeOp         EQU     0x7ed2
+convertLtOp         EQU     0x7ec9
+convertGtOp         EQU     0x7ec0
+resetVideoTable     EQU     0x7ea1
+initClearFuncs      EQU     0x7ddd
+clearVertBlinds     EQU     0x7da3
+clearCursorRow      EQU     0x7ab6
+printInit           EQU     0x7aa0
+printDigit          EQU     0x79dd
+printInt16          EQU     0x7cae
 printChar           EQU     0x78a7
-newLineScroll       EQU     0x7ba1
+newLineScroll       EQU     0x7ba2
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -147,8 +148,6 @@ lutIndex            EQU     register8
 
                     ; runs real time, (time sliced), code at regular intervals
 realTimeProc        PUSH
-                    LDI     0x08                            ; keep pumping soundTimer
-                    ST      giga_soundTimer
                     LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI routine
                     CALL    giga_vAC
                     POP
@@ -243,7 +242,7 @@ initClearFuncs      PUSH
                     LDWI    resetVideoTable
                     CALL    giga_vAC
     
-                    LDWI    0x0002                              ; starting cursor position
+                    LDI     0x02                                ; starting cursor position
                     STW     cursorXY
                     LDWI    0x7FFF
                     ANDW    miscFlags
@@ -318,12 +317,9 @@ printInit           LDWI    SYS_VDrawBits_134
                     STW     giga_sysFn
                     LDW     fgbgColour
                     STW     giga_sysArg0
-                    
-                    LDWI    giga_videoTable
-                    STW     giga_sysArg4
-                    LD      cursorXY + 1
+                    LD      cursorXY + 1                    ; xy = peek(256+2*y)*256 + x
                     LSLW
-                    ADDW    giga_sysArg4
+                    INC     giga_vAC + 1
                     PEEK
                     ST      giga_sysArg4 + 1
                     LD      cursorXY
@@ -366,7 +362,7 @@ printInt16          PUSH
                     ST      textChr
                     LDWI    printChar
                     CALL    giga_vAC
-                    LDWI    0
+                    LDI     0
                     SUBW    textNum
                     STW     textNum    
     
@@ -378,11 +374,11 @@ printI16_pos        LDWI    10000
                     STW     digitMult
                     LDWI    printDigit
                     CALL    giga_vAC
-                    LDWI    100
+                    LDI     100
                     STW     digitMult
                     LDWI    printDigit
                     CALL    giga_vAC
-                    LDWI    10
+                    LDI     10
                     STW     digitMult
                     LDWI    printDigit
                     CALL    giga_vAC
@@ -498,7 +494,7 @@ clearCR_loopx       SUBI    4                               ; loop is unrolled 4
 newLineScroll       LDI     0x02                            ; x offset slightly
                     ST      cursorXY
                     ST      giga_sysArg4
-                    LDWI    0x0001
+                    LDI     0x01
                     ANDW    miscFlags
                     BNE     newLS_cont0                     ; scroll on or off
                     RET
