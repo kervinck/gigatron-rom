@@ -24,8 +24,8 @@ giga_rand2                      EQU     0x08
 giga_videoY                     EQU     0x09
 giga_frameCount                 EQU     0x0E
 giga_serialRaw                  EQU     0x0F
-giga_serialLast                 EQU     0x10
 giga_buttonState                EQU     0x11
+giga_xoutMask                   EQU     0x14
 giga_vPC                        EQU     0x16
 giga_vAC                        EQU     0x18
 giga_vLR                        EQU     0x1A
@@ -42,6 +42,8 @@ giga_sysArg5                    EQU     0x29
 giga_sysArg6                    EQU     0x2A
 giga_sysArg7                    EQU     0x2B
 giga_soundTimer                 EQU     0x2C
+giga_ledState                   EQU     0x2E
+giga_ledTempo                   EQU     0x2F
 
 ; ROM types
 romTypeValue_ROMv1              EQU     0x1c

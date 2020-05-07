@@ -23,6 +23,7 @@ cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
 miscFlags           EQU                     register0 + 0x28
+fontLutId           EQU                     0x00e0
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -34,9 +35,9 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
+_next_0x02f8        EQU                     0x02f0
 _page_0x0300        EQU                     0x0300
-_next_0x02fa        EQU                     0x0302
-_end_0x031c         EQU                     0x0324
+_end_0x031a         EQU                     0x0322
 
 ; Variables
 _j                  EQU                     0x0030
@@ -64,6 +65,7 @@ _x$                 DB                      22 'YOUR TEXT BACKWARDS IS' 0
 ; Define Images
 
 ; Define Sprites
+; Define Fonts
 
 ; Lookup Tables
 
@@ -77,8 +79,7 @@ _entryPoint_        InitRealTimeProc
                     InitGtOp                
                     Initialise                                              ; INIT
 
-                    LDWI                    clearVertBlinds
-                    CALL                    giga_vAC                        ; cls
+                    ClearVertBlinds                                         ; cls
 
                     LDI                     5
                     STW                     strLength
@@ -128,20 +129,20 @@ _entryPoint_        InitRealTimeProc
                     LDWI                    -1
                     STW                     0xb2                            ; for j = len(x$)-1 to 0 step -1
 
+_next_0x02f8        LDW                     _j
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
-_next_0x02fa        LDW                     _j
                     STW                     textOfs
                     LDI                     1
                     STW                     textLen
                     LDWI                    0x79a0
                     PrintAcMid                                              ; print mid$(x$, j, 1);
 
-                    ForNextFarVarNeg        _j _next_0x02fa 0xb0 0xb2       ; next j
+                    ForNextFarVarNeg        _j _next_0x02f8 0xb0 0xb2       ; next j
 
-_end_0x031c         BRA                     _end_0x031c                     ; end
+_end_0x031a         BRA                     _end_0x031a                     ; end
 
 
 
@@ -151,22 +152,22 @@ _end_0x031c         BRA                     _end_0x031c                     ; en
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7eeb
-convertEqOp         EQU     0x7ee2
-convertNeOp         EQU     0x7ed9
-convertLeOp         EQU     0x7ed0
-convertGeOp         EQU     0x7ec7
-convertLtOp         EQU     0x7ebe
-convertGtOp         EQU     0x7eb5
+realTimeProc        EQU     0x7eef
+convertEqOp         EQU     0x7ee6
+convertNeOp         EQU     0x7edd
+convertLeOp         EQU     0x7ed4
+convertGeOp         EQU     0x7ecb
+convertLtOp         EQU     0x7ec2
+convertGtOp         EQU     0x7eb9
 resetVideoTable     EQU     0x76a8
-initClearFuncs      EQU     0x78dc
-clearVertBlinds     EQU     0x78a2
-clearCursorRow      EQU     0x72b6
-printInit           EQU     0x75a8
-printText           EQU     0x77b2
-printMid            EQU     0x73d7
-printChar           EQU     0x71a7
-newLineScroll       EQU     0x74a1
+initClearFuncs      EQU     0x78dd
+clearVertBlinds     EQU     0x78a3
+clearCursorRow      EQU     0x73b6
+printInit           EQU     0x75ad
+printText           EQU     0x7ea0
+printMid            EQU     0x77a3
+printChar           EQU     0x72a7
+newLineScroll       EQU     0x74a2
 stringMid           EQU     0x75c3
 stringLeft          EQU     0x77cb
 stringRight         EQU     0x76c7
@@ -189,8 +190,6 @@ lutIndex            EQU     register8
 
                     ; runs real time, (time sliced), code at regular intervals
 realTimeProc        PUSH
-                    LDI     0x08                            ; keep pumping soundTimer
-                    ST      giga_soundTimer
                     LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI routine
                     CALL    giga_vAC
                     POP
@@ -285,7 +284,7 @@ initClearFuncs      PUSH
                     LDWI    resetVideoTable
                     CALL    giga_vAC
     
-                    LDWI    0x0002                              ; starting cursor position
+                    LDI     0x02                                ; starting cursor position
                     STW     cursorXY
                     LDWI    0x7FFF
                     ANDW    miscFlags
@@ -360,12 +359,9 @@ printInit           LDWI    SYS_VDrawBits_134
                     STW     giga_sysFn
                     LDW     fgbgColour
                     STW     giga_sysArg0
-                    
-                    LDWI    giga_videoTable
-                    STW     giga_sysArg4
-                    LD      cursorXY + 1
+                    LD      cursorXY + 1                    ; xy = peek(256+2*y)*256 + x
                     LSLW
-                    ADDW    giga_sysArg4
+                    INC     giga_vAC + 1
                     PEEK
                     ST      giga_sysArg4 + 1
                     LD      cursorXY
@@ -521,7 +517,7 @@ clearCR_loopx       SUBI    4                               ; loop is unrolled 4
 newLineScroll       LDI     0x02                            ; x offset slightly
                     ST      cursorXY
                     ST      giga_sysArg4
-                    LDWI    0x0001
+                    LDI     0x01
                     ANDW    miscFlags
                     BNE     newLS_cont0                     ; scroll on or off
                     RET

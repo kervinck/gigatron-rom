@@ -2,7 +2,7 @@
 _runtimePath_ "../runtime"
 _runtimeStart_ &hFFFF
 
-poke &h01F9, 238 'disables video output, cls becomes almost instant
+set VIDEOTOP, 238 'disables video output, cls becomes almost instant
 cls
 
 const horizonY = 32
@@ -24,7 +24,7 @@ for y=119 to horizonY step -1
     yy = y
     gosub calcPitch
 
-    if ((400 / (y-horizonY+40)) AND 1) &&= 0
+    if ((400 / (y-horizonY+40)) AND 1) &= 0
         j = color1 XOR color2
     else
         j = 0
@@ -33,7 +33,7 @@ for y=119 to horizonY step -1
     i = 80 % pitch
     a = ((y + 8) LSL 8)
 
-    for x=0 to pitch + 159
+    for x=0 &to pitch + 159
         if i &&= 0
             i = pitch - 1
         else
@@ -48,7 +48,7 @@ for y=119 to horizonY step -1
 
         poke a+x, p
     next x
-    poke &h01F9, y+y
+    set VIDEOTOP, y+y
 next y
 
 dim sky(2)=0 : sky(0)=&h10 : sky(1)=&h20 : sky(2)=&h30
@@ -64,7 +64,7 @@ for y=horizonY-1 to 0 step -1
         poke a+x, sky(cIndex)
     next x
     
-    poke &h01F9, y+y
+    set VIDEOTOP, y+y
 next y
 
 play midi,&h8000,3
@@ -75,7 +75,7 @@ loop:   i = x AND 255
         q = &h0100 + 240
         yy = horizonY
         gosub calcPitch
-        for y=0 to pitch
+        for y=0 &to pitch
             j = j + i
         next y
         
@@ -88,7 +88,7 @@ loop:   i = x AND 255
             j = i + (j AND 255)
         p = p + 4 : until p &&>= q
         
-        gosub peek(17)
+        gosub get("BUTTONSTATE")
         
         x = x + v
 goto loop

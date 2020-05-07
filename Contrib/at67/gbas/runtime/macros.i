@@ -149,6 +149,11 @@ _label_ CALL    giga_vAC
 _label_ CALL    giga_vAC
 %ENDM
 
+%MACRO  Return
+        POP
+        RET
+%ENDM
+
 %MACRO  GotoNumeric
         LDWI    gotoNumericLabel
         CALL    giga_vAC
@@ -156,6 +161,11 @@ _label_ CALL    giga_vAC
 
 %MACRO  GosubNumeric
         LDWI    gosubNumericLabel
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  ResetVideoTable
+        LDWI    resetVideoTable
         CALL    giga_vAC
 %ENDM
 
@@ -556,6 +566,11 @@ _label_ CALL    giga_vAC
         CALL    giga_vAC
 %ENDM
 
+%MACRO  GetSpriteLUT
+        LDWI    getSpriteLUT
+        CALL    giga_vAC
+%ENDM
+
 %MACRO  SoundAll
         LDWI    soundAll
         CALL    giga_vAC
@@ -672,8 +687,8 @@ _id_    CALL    giga_vAC
         
         LDI     0x00
         STW     midiStream                              ; reset MIDI
-        ST      giga_soundTimer                         ; reset soundTimer, (stops any current Audio)
         STW     fontLutId
+        ST      giga_soundTimer                         ; reset soundTimer, (stops any current Audio)
 
         LDWI    initClearFuncs
         CALL    giga_vAC

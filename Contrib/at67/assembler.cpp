@@ -688,7 +688,7 @@ namespace Assembler
         const size_t len = input.length();
         if(pos >= len) return std::string::npos;
 
-        const std::string separators = "+-*/().,!?;#'\"[]<> \t\n\r";
+        const std::string separators = "+-*/().,!?;#'[]<> \t\n\r";
         const std::vector<std::string> operators = {"**", ">>", "<<", "==", "!=", "<=", ">="};
 
         for(;;)
@@ -987,12 +987,14 @@ namespace Assembler
         bool success = false;
 
         // Handle case where first operand is a string
-        size_t quote1 = tokens[tokenIndex].find_first_of("'\"");
-        size_t quote2 = tokens[tokenIndex].find_first_of("'\"", quote1+1);
+        size_t quote1 = tokens[tokenIndex].find_first_of("'");
+        size_t quote2 = tokens[tokenIndex].find_first_of("'", quote1+1);
         bool quotes = (quote1 != std::string::npos  &&  quote2 != std::string::npos  &&  (quote2 - quote1 > 1));
         if(quotes)
         {
+            // Remove single quotes and escape char
             std::string token = tokens[tokenIndex].substr(quote1+1, quote2 - (quote1+1));
+            token.erase(std::remove(token.begin(), token.end(), '\\'), token.end());
             if(createInstruction)
             {
                 for(int j=1; j<int(token.size()); j++) // First instruction was created by callee
@@ -1008,12 +1010,14 @@ namespace Assembler
         for(int i=tokenIndex+1; i<int(tokens.size()); i++)
         {
             // Handle all other variations of strings
-            quote1 = tokens[i].find_first_of("'\"");
-            quote2 = tokens[i].find_first_of("'\"", quote1+1);
+            quote1 = tokens[i].find_first_of("'");
+            quote2 = tokens[i].find_first_of("'", quote1+1);
             quotes = (quote1 != std::string::npos  &&  quote2 != std::string::npos);
             if(quotes)
             {
+                // Remove single quotes and escape char
                 std::string token = tokens[i].substr(quote1+1, quote2 - (quote1+1));
+                token.erase(std::remove(token.begin(), token.end(), '\\'), token.end());
                 if(createInstruction)
                 {
                     for(int j=0; j<int(token.size()); j++)
@@ -2481,8 +2485,8 @@ namespace Assembler
                                 Equate equate;
 
                                 // String
-                                size_t quote1 = tokens[tokenIndex].find_first_of("'\"");
-                                size_t quote2 = tokens[tokenIndex].find_first_of("'\"", quote1+1);
+                                size_t quote1 = tokens[tokenIndex].find_first_of("'");
+                                size_t quote2 = tokens[tokenIndex].find_first_of("'", quote1+1);
                                 bool quotes = (quote1 != std::string::npos  &&  quote2 != std::string::npos  &&  (quote2 - quote1 > 1));
                                 if(quotes)
                                 {

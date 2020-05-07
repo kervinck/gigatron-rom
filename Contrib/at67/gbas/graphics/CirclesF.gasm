@@ -70,7 +70,7 @@ _entryPoint_        InitRealTimeProc
 
 _loop               Rand                    
                     ANDI                    63
-                    ST                      163                             ; poke 163, rnd(0) AND &h3F
+                    ST                      fgbgColour + 1                  ; set FGCOLOUR, rnd(0) AND &h3F
 
                     LDI                     0x64
                     RandMod                 

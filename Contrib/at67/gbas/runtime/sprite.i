@@ -70,3 +70,12 @@ drawSpriteXY        PUSH
                     POP
                     RET
 %ENDS
+
+%SUB                getSpriteLUT
+getSpriteLUT        LDWI    _spritesLut_
+                    ADDW    spriteId
+                    ADDW    spriteId
+                    DEEK
+                    DEEK
+                    RET
+%ENDS

@@ -35,9 +35,9 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_loop               EQU                     0x024c
-_end_0x02a0         EQU                     0x0288
-_end_0x02a2         EQU                     0x028a
+_loop               EQU                     0x0247
+_end_0x029b         EQU                     0x0283
+_end_0x029d         EQU                     0x0285
 
 ; Variables
 
@@ -71,7 +71,7 @@ _entryPoint_        InitRealTimeProc
 
 _loop               Rand                    
                     ANDI                    63
-                    ST                      163                             ; poke 163, rnd(0) AND &h3F
+                    ST                      fgbgColour + 1                  ; set FGCOLOUR, rnd(0) AND &h3F
 
                     LDI                     0xa0
                     RandMod                 
@@ -89,9 +89,9 @@ _loop               Rand
 
                     BRA                     _loop                           ; goto &loop
 
-_end_0x02a0         BRA                     _end_0x02a0                     ; end
+_end_0x029b         BRA                     _end_0x029b                     ; end
 
-_end_0x02a2         BRA                     _end_0x02a2                     ; END
+_end_0x029d         BRA                     _end_0x029d                     ; END
 
 
 
@@ -113,8 +113,8 @@ rand16bit           EQU     0x7ea4
 randMod16bit        EQU     0x7cec
 scanlineMode        EQU     0x7eac
 resetVideoTable     EQU     0x7ae0
-initClearFuncs      EQU     0x7ddc
-clearVertBlinds     EQU     0x7da2
+initClearFuncs      EQU     0x7ddd
+clearVertBlinds     EQU     0x7da3
 drawHLine           EQU     0x79a2
 drawVLine           EQU     0x78a1
 drawRect            EQU     0x7cad
@@ -398,7 +398,7 @@ initClearFuncs      PUSH
                     LDWI    resetVideoTable
                     CALL    giga_vAC
     
-                    LDWI    0x0002                              ; starting cursor position
+                    LDI     0x02                                ; starting cursor position
                     STW     cursorXY
                     LDWI    0x7FFF
                     ANDW    miscFlags

@@ -35,33 +35,32 @@ textWorkArea        EQU                     0x69a0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_loop               EQU                     0x03a0
-_printText          EQU                     0x045a
-_getChar            EQU                     0x0460
-_crashSound         EQU                     0x04d3
+_loop               EQU                     0x028e
+_printText          EQU                     0x033c
+_getChar            EQU                     0x0342
+_crashSound         EQU                     0x03b5
+_else_0x02cc        EQU                     0x02b6
+_else_0x02db        EQU                     0x02c1
+_endif_0x030e       EQU                     0x02e6
 _page_0x0300        EQU                     0x0300
-_else_0x0436        EQU                     0x03c8
-_else_0x0445        EQU                     0x03d3
+_endif_0x033d       EQU                     0x031b
+_endif_0x034d       EQU                     0x0327
+_endif_0x03ab       EQU                     0x0367
+_elseif_0x03b2      EQU                     0x036e
+_else_0x03c3        EQU                     0x037b
+_endif_0x03cb       EQU                     0x0381
+_endif_0x03fc       EQU                     0x03a6
+_endif_0x040d       EQU                     0x03b3
+_next_0x0445        EQU                     0x03db
 _page_0x0400        EQU                     0x0400
-_endif_0x0475       EQU                     0x0408
-_endif_0x04a9       EQU                     0x0432
-_endif_0x04c0       EQU                     0x0445
-_else_0x051e        EQU                     0x0485
-_elseif_0x0525      EQU                     0x048c
-_else_0x0536        EQU                     0x0499
-_endif_0x053e       EQU                     0x049f
-_endif_0x056f       EQU                     0x04c4
-_else_0x0580        EQU                     0x04d1
-_page_0x0500        EQU                     0x0500
-_next_0x05b8        EQU                     0x0508
-_endif_0x05f9       EQU                     0x053f
-_end_0x05fb         EQU                     0x0541
+_endif_0x048b       EQU                     0x0427
+_end_0x048d         EQU                     0x0429
 
 ; Variables
 _fontWidths_array   EQU                     0xff0a
-_fontWidths_array   DW                      0x000c 0x000c 0x000c 0x000c 0x000c 0x000c 0x000c 0x000c 0x000c 0x000c 0x000c 0x000c 0x000c 0x000c 0x000c 0x000c 0x000c 0x000c 0x000c 0x000c 0x000c 0x000c 0x000c 0x000c 0x000c 0x000c 0x000c 
+_fontWidths_array   DW                      0x000c 0x000c 0x000c 0x000c 0x000c 0x000c 0x000c 0x000c 0x0006 0x000c 0x000c 0x0006 0x0012 0x000c 0x000c 0x000c 0x000c 0x000c 0x000c 0x000c 0x000c 0x000c 0x0012 0x000c 0x000c 0x000c 0x0006 
 _quoteAddrs_array   EQU                     0xfe16
-_quoteAddrs_array   DW                      0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_quoteAddrs_array   DW                      0xffa1 0xff41 0xfea1 0xfe41 0xfda1 0xfd41 0xfca1 0xfc41 0xfba1 0xfb41 0xfaa1 0xfa41 0xf9a1 0xf941 0xf8a1 0xf841 0xf7a1 0xf741 0xf6a1 0xf641 0xf5a1 
 _f                  EQU                     0x0030
 _y                  EQU                     0x0032
 _text               EQU                     0x0034
@@ -1106,7 +1105,7 @@ _spriteLut_0x063c   EQU                     0x063c
 _spriteLut_0x063c   DW                      0xdf00 0x0000 0xdf5b 0x0f00 0xdfb6 0x1e00 0xe000 0x0006 0xe05b 0x0f06 0xe0b6 0x1e06 0xe100 0x000c 0xe15b 0x0f0c 0xe1b6 0x1e0c 0xe200 0x0012 0xe25b 0x0f12 0xe2b6 0x1e12 0xe300 0x0018 0xe35b 0x0f18 0xe3b6 0x1e18 0xe400 0x001e 0xe45b 0x0f1e 0xe4b6 0x1e1e 0xe500 0x0024 0xe55b 0x0f24 0xe5b6 0x1e24 0xe600 0x002a 0xe65b 0x0f2a 0xe6b6 0x1e2a 0x0000
 _spriteLut_0x059e   EQU                     0x059e
 _spriteLut_0x059e   DW                      0xe700 0x0000 0xe75b 0x0f00 0xe7b6 0x1e00 0xe800 0x0006 0xe85b 0x0f06 0xe8b6 0x1e06 0xe900 0x000c 0xe95b 0x0f0c 0xe9b6 0x1e0c 0xea00 0x0012 0xea5b 0x0f12 0xeab6 0x1e12 0xeb00 0x0018 0xeb5b 0x0f18 0xebb6 0x1e18 0xec00 0x001e 0xec5b 0x0f1e 0xecb6 0x1e1e 0xed00 0x0024 0xed5b 0x0f24 0xedb6 0x1e24 0xee00 0x002a 0xee5b 0x0f2a 0xeeb6 0x1e2a 0x0000
-_spritesLut_        EQU                     0x15ac
+_spritesLut_        EQU                     0x15ae
 _spritesLut_        DW                      0xfa06 0xf906 0xf82e 0xf81c 0xf80a 0xf72e 0xf71c 0xf70a 0xfc07 0xf62e 0xf61c 0xf800 0xf602 0xf58e 0xf57c 0xf56a 0xf558 0xf546 0xf534 0xf522 0xf510 0xf4ee 0xf4d4 0xf4c2 0xf4b0 0xf49e 0xf700 0xf43c 0xf39e 0xf33c 0xf29e 0xf23c 0xf19e 0xf13c 0xf09e 0xf03c 0xef9e 0xef3c 0x069e 0x063c 0x059e 
 
 ; Code
@@ -1123,16 +1122,13 @@ _entryPoint_        InitRealTimeProc
                     STW                     graphicsMode
                     ScanlineMode                                            ; mode 2
 
-                    LDI                     21
-                    ST                      162                             ; poke 162, &h15
-
-                    LDI                     63
-                    ST                      163                             ; poke 163, &h3F
+                    LDWI                    16149
+                    STW                     fgbgColour                      ; set FGBGCOLOUR, &h3F15
 
                     ClearVertBlinds                                         ; cls
 
                     LDI                     0
-                    ST                      163                             ; poke 163, 0
+                    ST                      fgbgColour + 1                  ; set FGCOLOUR, 0
 
                     LDI                     0
                     STW                     drawRectF_x1
@@ -1143,138 +1139,6 @@ _entryPoint_        InitRealTimeProc
                     LDI                     119
                     STW                     drawRectF_y2
                     DrawRectF                                               ; rectf 0, 97, 159 + 96, 119 'clear text scrolling onscreen and offscreen area
-
-                    LDWI                    0xff1a
-                    STW                     register1
-                    LDI                     6
-                    DOKE                    register1
-                    LDWI                    0xff20
-                    STW                     register1
-                    LDI                     6
-                    DOKE                    register1                       ; fontWidths(8) = 6 : fontWidths(11) = 6 'i and l
-
-                    LDWI                    0xff22
-                    STW                     register1
-                    LDI                     18
-                    DOKE                    register1
-                    LDWI                    0xff36
-                    STW                     register1
-                    LDI                     18
-                    DOKE                    register1                       ; fontWidths(12) = 18 : fontWidths(22) = 18 'm and w
-
-                    LDWI                    0xff3e
-                    STW                     register1
-                    LDI                     6
-                    DOKE                    register1                       ; fontWidths(26) = 6 'space
-
-                    LDWI                    0xfe16
-                    STW                     register1
-                    LDWI                    -95
-                    DOKE                    register1                       ; quoteAddrs(0) = @conf0$ + 1
-
-                    LDWI                    0xfe18
-                    STW                     register1
-                    LDWI                    -191
-                    DOKE                    register1                       ; quoteAddrs(1) = @conf1$ + 1
-
-                    LDWI                    0xfe1a
-                    STW                     register1
-                    LDWI                    -351
-                    DOKE                    register1                       ; quoteAddrs(2) = @conf2$ + 1
-
-                    LDWI                    0xfe1c
-                    STW                     register1
-                    LDWI                    -447
-                    DOKE                    register1                       ; quoteAddrs(3) = @conf3$ + 1
-
-                    LDWI                    0xfe1e
-                    STW                     register1
-                    LDWI                    -607
-                    DOKE                    register1                       ; quoteAddrs(4) = @conf4$ + 1
-
-                    LDWI                    0xfe20
-                    STW                     register1
-                    LDWI                    -703
-                    DOKE                    register1                       ; quoteAddrs(5) = @conf5$ + 1
-
-                    LDWI                    0xfe22
-                    STW                     register1
-                    LDWI                    -863
-                    DOKE                    register1                       ; quoteAddrs(6) = @conf6$ + 1
-
-                    LDWI                    0xfe24
-                    STW                     register1
-                    LDWI                    -959
-                    DOKE                    register1                       ; quoteAddrs(7) = @conf7$ + 1
-
-                    LDWI                    0xfe26
-                    STW                     register1
-                    LDWI                    -1119
-                    DOKE                    register1                       ; quoteAddrs(8) = @conf8$ + 1
-
-                    LDWI                    0xfe28
-                    STW                     0xde
-                    LDWI                    _page_0x0300
-                    CALL                    giga_vAC
-_page_0x0300        LDW                     0xde
-                    STW                     register1
-                    LDWI                    -1215
-                    DOKE                    register1                       ; quoteAddrs(9) = @conf9$ + 1
-
-                    LDWI                    0xfe2a
-                    STW                     register1
-                    LDWI                    -1375
-                    DOKE                    register1                       ; quoteAddrs(10) = @conf10$ + 1
-
-                    LDWI                    0xfe2c
-                    STW                     register1
-                    LDWI                    -1471
-                    DOKE                    register1                       ; quoteAddrs(11) = @conf11$ + 1
-
-                    LDWI                    0xfe2e
-                    STW                     register1
-                    LDWI                    -1631
-                    DOKE                    register1                       ; quoteAddrs(12) = @conf12$ + 1
-
-                    LDWI                    0xfe30
-                    STW                     register1
-                    LDWI                    -1727
-                    DOKE                    register1                       ; quoteAddrs(13) = @conf13$ + 1
-
-                    LDWI                    0xfe32
-                    STW                     register1
-                    LDWI                    -1887
-                    DOKE                    register1                       ; quoteAddrs(14) = @conf14$ + 1
-
-                    LDWI                    0xfe34
-                    STW                     register1
-                    LDWI                    -1983
-                    DOKE                    register1                       ; quoteAddrs(15) = @conf15$ + 1
-
-                    LDWI                    0xfe36
-                    STW                     register1
-                    LDWI                    -2143
-                    DOKE                    register1                       ; quoteAddrs(16) = @conf16$ + 1
-
-                    LDWI                    0xfe38
-                    STW                     register1
-                    LDWI                    -2239
-                    DOKE                    register1                       ; quoteAddrs(17) = @conf17$ + 1
-
-                    LDWI                    0xfe3a
-                    STW                     register1
-                    LDWI                    -2399
-                    DOKE                    register1                       ; quoteAddrs(18) = @conf18$ + 1
-
-                    LDWI                    0xfe3c
-                    STW                     register1
-                    LDWI                    -2495
-                    DOKE                    register1                       ; quoteAddrs(19) = @conf19$ + 1
-
-                    LDWI                    0xfe3e
-                    STW                     register1
-                    LDWI                    -2655
-                    DOKE                    register1                       ; quoteAddrs(20) = @conf20$ + 1
 
                     LDI                     27
                     STW                     _f
@@ -1299,7 +1163,7 @@ _page_0x0300        LDW                     0xde
                     STW                     _time                           ; x = 0 : ystep = x : scrl = ystep : char = scrl : stamp = char : width = stamp : quote = width : crash = quote : time = crash
 
 _loop               LDI                     2
-                    ST                      44                              ; poke &h2C, 2
+                    ST                      giga_soundTimer                 ; set SOUNDTIMER, 2
 
                     LDW                     _f
                     STW                     spriteId
@@ -1316,43 +1180,41 @@ _loop               LDI                     2
 
                     LDW                     _f
                     SUBI                    40
-                    BLE                     _else_0x0436
+                    BLE                     _else_0x02cc
                     LDI                     27
                     STW                     _f                              ; if f &&> boingStart + 13 then f = boingStart
 
-_else_0x0436        LDW                     _f
+_else_0x02cc        LDW                     _f
                     SUBI                    27
-                    BGE                     _else_0x0445
+                    BGE                     _else_0x02db
                     LDI                     40
                     STW                     _f                              ; if f &&< boingStart then f = boingStart + 13
 
-_else_0x0445        LDW                     _x
+_else_0x02db        LDW                     _x
                     ADDW                    _xstep
                     STW                     _x                              ; x = x + xstep
 
                     LD                      _x + 1
                     SUBI                    111
-                    JumpGT                  _endif_0x0475 2                 ; if x.hi &> 111 'performs the following check if (x.hi > 111) or (x.hi < 0)
+                    BLE                     _endif_0x030e                   ; if x.hi &&> 111 'performs the following check if (x.hi > 111) or (x.hi < 0)
 
                     LDI                     0
                     SUBW                    _xstep
-                    STW                     _xstep                          ; xstep = -xstep
+                    STW                     _xstep
+                    ADDW                    _x
+                    STW                     _x                              ; xstep = -xstep : x = xstep + x
 
                     LDI                     0
                     SUBW                    _fstep
                     STW                     _fstep                          ; fstep = -fstep
 
                     LDI                     1
-                    STW                     0xde
-                    LDWI                    _page_0x0400
-                    CALL                    giga_vAC
-_page_0x0400        LDW                     0xde
                     STW                     _crash                          ; crash = 1
 
                     LDI                     0
                     STW                     _time                           ; time = 0
 
-_endif_0x0475       LDW                     _ystep
+_endif_0x030e       LDW                     _ystep
                     ADDI                    4
                     STW                     _ystep                          ; ystep = ystep + g
 
@@ -1360,9 +1222,13 @@ _endif_0x0475       LDW                     _ystep
                     ADDW                    _ystep
                     STW                     _y                              ; y = y + ystep
 
+                    STW                     0xde
+                    LDWI                    _page_0x0300
+                    CALL                    giga_vAC
+_page_0x0300        LDW                     0xde
                     LD                      _y + 1
                     SUBI                    56
-                    JumpGT                  _endif_0x04a9 3                 ; if y.hi &> 56
+                    BLE                     _endif_0x033d                   ; if y.hi &&> 56
 
                     LDI                     56
                     ST                      _y + 1                          ; y.hi = 56
@@ -1377,15 +1243,14 @@ _endif_0x0475       LDW                     _ystep
                     LDI                     0
                     STW                     _time                           ; time = 0
 
-_endif_0x04a9       LDW                     _crash
+_endif_0x033d       LDW                     _crash
                     SUBI                    1
-                    CALL                    convertEqOpAddr
-                    JumpFalse               _endif_0x04c0 4                 ; if crash = 1
+                    BNE                     _endif_0x034d                   ; if crash &&= 1
 
                     LDWI                    _crashSound
                     CALL                    giga_vAC                        ; gosub crashSound
 
-_endif_0x04c0       LDWI                    _printText
+_endif_0x034d       LDWI                    _printText
                     CALL                    giga_vAC                        ; gosub printText
 
                     LDWI                    453
@@ -1400,7 +1265,7 @@ _endif_0x04c0       LDWI                    _printText
 
 _printText          PUSH                    
                     LDW                     _stamp
-                    BNE                     _endif_0x056f                   ; if stamp &&= 0
+                    BNE                     _endif_0x03fc                   ; if stamp &&= 0
 
 _getChar            LDWI                    0xfe16
                     ADDW                    _quote
@@ -1413,7 +1278,7 @@ _getChar            LDWI                    0xfe16
                     INC                     _char                           ; inc char
 
                     LDW                     _c
-                    BNE                     _elseif_0x0525                  ; if c &&= 0
+                    BNE                     _elseif_0x03b2                  ; if c &&= 0
 
                     LDI                     0
                     STW                     _char                           ; char = 0
@@ -1422,27 +1287,28 @@ _getChar            LDWI                    0xfe16
 
                     LDW                     _quote
                     SUBI                    21
-                    BNE                     _else_0x051e
+                    BNE                     _endif_0x03ab                   ; if quote &&= 21
+
                     LDI                     0
-                    STW                     _quote                          ; if quote &&= 21 then quote = 0
+                    STW                     _quote                          ; quote = 0
 
-_else_0x051e        LDWI                    _getChar
+_endif_0x03ab       LDWI                    _getChar
                     CALL                    giga_vAC
-                    BRA                     _endif_0x053e                   ; goto getChar
+                    BRA                     _endif_0x03cb                   ; goto getChar
 
-_elseif_0x0525      LDW                     _c
+_elseif_0x03b2      LDW                     _c
                     SUBI                    32
-                    BNE                     _else_0x0536                    ; elseif c &&= 32
+                    BNE                     _else_0x03c3                    ; elseif c &&= 32
 
                     LDI                     26
                     STW                     _c
-                    BRA                     _endif_0x053e                   ; c = 26
+                    BRA                     _endif_0x03cb                   ; c = 26
 
-_else_0x0536        LDW                     _c
+_else_0x03c3        LDW                     _c
                     SUBI                    97
                     STW                     _c                              ; c = c - 97
 
-_endif_0x053e       LDI                     0
+_endif_0x03cb       LDI                     0
                     ADDW                    _c
                     STW                     spriteId
                     LDW                     _text
@@ -1462,16 +1328,16 @@ _endif_0x053e       LDI                     0
                     ADDW                    _width
                     STW                     _text                           ; text = text + width
 
-_endif_0x056f       INC                     _stamp                          ; inc stamp
+_endif_0x03fc       INC                     _stamp                          ; inc stamp
 
                     LDW                     _stamp
                     SUBW                    _width
-                    BNE                     _else_0x0580
-                    LDI                     0
-                    STW                     _stamp                          ; if stamp &&= width then stamp = 0
+                    BNE                     _endif_0x040d                   ; if stamp &&= width
 
-_else_0x0580        POP                     
-                    RET                                                     ; return
+                    LDI                     0
+                    STW                     _stamp                          ; stamp = 0
+
+_endif_0x040d       Return                                                  ; return
 
 _crashSound         PUSH                    
                     LDW                     _time
@@ -1480,7 +1346,7 @@ _crashSound         PUSH
                     LDWI                    5024
                     ADDW                    0xc0
                     PEEK                    
-                    STW                     _volume                         ; volume = PEEK(V_LUT + (time AND (V_SIZ-1)))
+                    STW                     _volume                         ; volume = peek(V_LUT + (time AND (V_SIZ-1)))
 
                     LDW                     _time
                     ANDI                    15
@@ -1489,19 +1355,15 @@ _crashSound         PUSH
                     LDWI                    5088
                     ADDW                    0xc2
                     DEEK                    
-                    STW                     _freq                           ; freq = DEEK(F_LUT + ((time AND (F_SIZ-1)) LSL 1))
+                    STW                     _freq                           ; freq = deek(F_LUT + ((time AND (F_SIZ-1)) LSL 1))
 
                     LDI                     0
-                    STW                     0xde
-                    LDWI                    _page_0x0500
-                    CALL                    giga_vAC
-_page_0x0500        LDW                     0xde
                     STW                     _foffs                          ; foffs = 0
 
                     LDI                     1
-                    STW                     _i                              ; for i=1 &to 4
+                    STW                     _i                              ; for i=1 to 4
 
-_next_0x05b8        LDW                     _i
+_next_0x0445        LDW                     _i
                     ST                      sndChannel + 1
                     LDW                     _freq
                     ADDW                    _foffs
@@ -1512,28 +1374,30 @@ _next_0x05b8        LDW                     _i
                     STW                     sndWaveType
                     SoundOnV                                                ; sound on, i, freq + foffs, volume, 0
 
+                    STW                     0xde
+                    LDWI                    _page_0x0400
+                    CALL                    giga_vAC
+_page_0x0400        LDW                     0xde
                     LDW                     _foffs
                     ADDI                    100
                     STW                     _foffs                          ; foffs = foffs + 100
 
-                    ForNextInc              _i _next_0x05b8 4               ; next i
+                    ForNextFarInc           _i _next_0x0445 4               ; next i
 
                     INC                     _time                           ; inc time
 
                     LDW                     _time
                     SUBI                    64
-                    BNE                     _endif_0x05f9                   ; if time &&= 64
+                    BNE                     _endif_0x048b                   ; if time &&= 64
 
                     LDI                     0
-                    STW                     _time                           ; time = 0
-
+                    STW                     _time
                     LDI                     0
-                    STW                     _crash                          ; crash = 0
+                    STW                     _crash                          ; time = 0 : crash = 0
 
-_endif_0x05f9       POP                     
-                    RET                                                     ; return
+_endif_0x048b       Return                                                  ; return
 
-_end_0x05fb         BRA                     _end_0x05fb                     ; END
+_end_0x048d         BRA                     _end_0x048d                     ; END
 
 
 

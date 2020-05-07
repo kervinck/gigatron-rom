@@ -271,6 +271,7 @@ namespace Compiler
         uint16_t _mapAddr;
         std::vector<uint8_t> _mapping;
         uint16_t _baseAddr;
+        uint16_t _fgbgColour;
     };
 
     struct FontsAddrLut

@@ -35,28 +35,11 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_loop               EQU                     0x0251
-_circle             EQU                     0x028d
-_end_0x02a9         EQU                     0x028b
-_repeat_0x02bc      EQU                     0x029c
-_page_0x0300        EQU                     0x0300
-_else_0x038d        EQU                     0x0335
-_endif_0x03af       EQU                     0x0347
-_end_0x03c3         EQU                     0x0357
+_loop               EQU                     0x0247
+_end_0x02a0         EQU                     0x027e
+_end_0x02a2         EQU                     0x0280
 
 ; Variables
-_ch0                EQU                     0x0030
-_ch1                EQU                     0x0032
-_ch2                EQU                     0x0034
-_ch3                EQU                     0x0036
-_cx                 EQU                     0x0038
-_cy                 EQU                     0x003a
-_r                  EQU                     0x003c
-_c                  EQU                     0x003e
-_d                  EQU                     0x0040
-_x                  EQU                     0x0042
-_y                  EQU                     0x0044
-_a                  EQU                     0x0046
 
 ; Strings
 
@@ -86,159 +69,29 @@ _entryPoint_        InitRealTimeProc
                     STW                     graphicsMode
                     ScanlineMode                                            ; cls : mode 2
 
-                    LDI                     0
-                    STW                     _ch0
-                    STW                     _ch1
-                    STW                     _ch2
-                    STW                     _ch3                            ; ch0=0 : ch1=ch0 : ch2=ch1 : ch3=ch2
+_loop               Rand                    
+                    ANDI                    63
+                    ST                      fgbgColour + 1                  ; set FGCOLOUR, rnd(0) AND &h3F
 
-_loop               LDI                     0x64
+                    LDI                     0x64
                     RandMod                 
                     ADDI                    30
-                    STW                     _cx                             ; cx = rnd(100) + (- 50 + 80)
-
+                    STW                     drawCircle_cx
                     LDI                     0x3c
                     RandMod                 
                     ADDI                    38
-                    STW                     _cy                             ; cy = rnd(60) + (- 30 + 60 + 8)
-
+                    STW                     drawCircle_cy
                     LDI                     0x1e
                     RandMod                 
                     ADDI                    1
-                    STW                     _r                              ; r = rnd(30) + 1
+                    STW                     drawCircle_r
+                    DrawCircle                                              ; circle rnd(100) + (- 50 + 80), rnd(60) + (- 30 + 60), rnd(30) + 1
 
-                    Rand                    
-                    ANDI                    63
-                    STW                     _c                              ; c = rnd(0) AND &h3F
+                    BRA                     _loop                           ; goto &loop
 
-                    LDWI                    _circle
-                    CALL                    giga_vAC                        ; gosub circle
+_end_0x02a0         BRA                     _end_0x02a0                     ; end
 
-                    LDWI                    _loop
-                    CALL                    giga_vAC                        ; goto loop
-
-_end_0x02a9         BRA                     _end_0x02a9                     ; end
-
-_circle             PUSH                    
-                    LDI                     1
-                    SUBW                    _r
-                    STW                     _d                              ; d = 1 - r
-
-                    LDI                     0
-                    STW                     _x                              ; x = 0
-
-                    LDW                     _r
-                    STW                     _y                              ; y = r
-
-_repeat_0x02bc      LDW                     _cy
-                    ADDW                    _y
-                    ST                      _ch0 + 1                        ; ch0.hi = cy + y
-
-                    LDW                     _cy
-                    SUBW                    _y
-                    ST                      _ch1 + 1                        ; ch1.hi = cy - y
-
-                    LDW                     _cy
-                    ADDW                    _x
-                    ST                      _ch2 + 1                        ; ch2.hi = cy + x
-
-                    LDW                     _cy
-                    SUBW                    _x
-                    ST                      _ch3 + 1                        ; ch3.hi = cy - x
-
-                    LDW                     _cx
-                    ADDW                    _x
-                    ADDW                    _ch0
-                    STW                     _a
-                    LDW                     _c
-                    POKE                    _a                              ; a = cx + x + ch0 : poke a, c
-
-                    LDW                     _cx
-                    SUBW                    _x
-                    ADDW                    _ch0
-                    STW                     _a
-                    LDW                     _c
-                    POKE                    _a                              ; a = cx - x + ch0 : poke a, c
-
-                    LDW                     _cx
-                    ADDW                    _x
-                    ADDW                    _ch1
-                    STW                     _a
-                    LDW                     _c
-                    POKE                    _a                              ; a = cx + x + ch1 : poke a, c
-
-                    LDW                     _cx
-                    SUBW                    _x
-                    ADDW                    _ch1
-                    STW                     _a
-                    LDW                     _c
-                    POKE                    _a                              ; a = cx - x + ch1 : poke a, c
-
-                    LDW                     _cx
-                    ADDW                    _y
-                    ADDW                    _ch2
-                    STW                     _a
-                    LDW                     _c
-                    POKE                    _a                              ; a = cx + y + ch2 : poke a, c
-
-                    LDW                     _cx
-                    STW                     0xde
-                    LDWI                    _page_0x0300
-                    CALL                    giga_vAC
-_page_0x0300        LDW                     0xde
-                    SUBW                    _y
-                    ADDW                    _ch2
-                    STW                     _a
-                    LDW                     _c
-                    POKE                    _a                              ; a = cx - y + ch2 : poke a, c
-
-                    LDW                     _cx
-                    ADDW                    _y
-                    ADDW                    _ch3
-                    STW                     _a
-                    LDW                     _c
-                    POKE                    _a                              ; a = cx + y + ch3 : poke a, c
-
-                    LDW                     _cx
-                    SUBW                    _y
-                    ADDW                    _ch3
-                    STW                     _a
-                    LDW                     _c
-                    POKE                    _a                              ; a = cx - y + ch3 : poke a, c
-
-                    LDW                     _d
-                    BGE                     _else_0x038d                    ; if d &&< 0
-
-                    LDW                     _x
-                    LSLW                    
-                    LSLW                    
-                    ADDW                    _d
-                    ADDI                    3
-                    STW                     _d
-                    BRA                     _endif_0x03af                   ; d = d + (x LSL 2) + 3
-
-_else_0x038d        LDW                     _x
-                    SUBW                    _y
-                    LSLW                    
-                    LSLW                    
-                    ADDW                    _d
-                    ADDI                    5
-                    STW                     _d                              ; d = d + ((x - y) LSL 2) + 5
-
-                    LDW                     _y
-                    SUBI                    1
-                    STW                     _y                              ; y = y - 1
-
-_endif_0x03af       INC                     _x                              ; inc x
-
-                    LDW                     _x
-                    SUBW                    _y
-                    JumpGT                  _repeat_0x02bc 2                ; until x &> y
-
-                    POP                     
-                    RET                                                     ; return
-
-_end_0x03c3         BRA                     _end_0x03c3                     ; END
+_end_0x02a2         BRA                     _end_0x02a2                     ; END
 
 
 
@@ -259,9 +112,12 @@ divide16bit         EQU     0x7ba8
 rand16bit           EQU     0x7ea4
 randMod16bit        EQU     0x7cec
 scanlineMode        EQU     0x7eac
-resetVideoTable     EQU     0x7ccd
+resetVideoTable     EQU     0x7ae0
 initClearFuncs      EQU     0x7ddd
 clearVertBlinds     EQU     0x7da3
+drawCircle          EQU     0x7ca2
+drawCircleExt1      EQU     0x79b1
+drawCircleExt2      EQU     0x7aae
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -592,6 +448,132 @@ clearVB_loop        CALL    realTimeProcAddr
                     LD      top
                     SUBI    giga_yres / 2 + 8
                     BLT     clearVB_loop
+                    POP
+                    RET
+
+
+
+drawCircle          PUSH
+                    LDI     0
+                    STW     drawCircle_ch0
+                    STW     drawCircle_ch1
+                    STW     drawCircle_ch2
+                    STW     drawCircle_ch3
+                    STW     drawCircle_x
+                    LDW     drawCircle_r
+                    STW     drawCircle_y
+                    LDI     1
+                    SUBW    drawCircle_r
+                    STW     drawCircle_d
+                    
+drawC_loop          LDWI    drawCircleExt1
+                    CALL    giga_vAC
+                    
+                    LDW     drawCircle_d
+                    BGE     drawC_skip
+                    LDW     drawCircle_x
+                    LSLW
+                    LSLW
+                    ADDW    drawCircle_d
+                    ADDI    3
+                    STW     drawCircle_d
+                    BRA     drawC_cont
+                    
+drawC_skip          LDW     drawCircle_x
+                    SUBW    drawCircle_y
+                    LSLW
+                    LSLW
+                    ADDW    drawCircle_d
+                    ADDI    5
+                    STW     drawCircle_d
+                    LDW     drawCircle_y
+                    SUBI    1
+                    STW     drawCircle_y
+
+drawC_cont          INC     drawCircle_x
+                    LDW     drawCircle_x
+                    SUBW    drawCircle_y
+                    BLE     drawC_loop
+
+                    POP
+                    RET
+
+
+
+drawCircleExt1      PUSH
+                    LDW     drawCircle_cy
+                    ADDW    drawCircle_y
+                    ST      drawCircle_ch0 + 1
+                    LDW     drawCircle_cy
+                    SUBW    drawCircle_y
+                    ST      drawCircle_ch1 + 1
+                    LDW     drawCircle_cy
+                    ADDW    drawCircle_x
+                    ST      drawCircle_ch2 + 1
+                    LDW     drawCircle_cy
+                    SUBW    drawCircle_x
+                    ST      drawCircle_ch3 + 1
+
+                    LDW     drawCircle_cx
+                    ADDW    drawCircle_x
+                    ADDW    drawCircle_ch0
+                    STW     drawCircle_a
+                    LD      fgbgColour + 1
+                    POKE    drawCircle_a
+
+                    LDW     drawCircle_cx
+                    SUBW    drawCircle_x
+                    ADDW    drawCircle_ch0
+                    STW     drawCircle_a
+                    LD      fgbgColour + 1
+                    POKE    drawCircle_a
+                    
+                    LDW     drawCircle_cx
+                    ADDW    drawCircle_x
+                    ADDW    drawCircle_ch1
+                    STW     drawCircle_a
+                    LD      fgbgColour + 1
+                    POKE    drawCircle_a
+
+                    LDW     drawCircle_cx
+                    SUBW    drawCircle_x
+                    ADDW    drawCircle_ch1
+                    STW     drawCircle_a
+                    LD      fgbgColour + 1
+                    POKE    drawCircle_a
+                    
+                    LDWI    drawCircleExt2
+                    CALL    giga_vAC            ; doesn't return to here
+
+
+drawCircleExt2      LDW     drawCircle_cx
+                    ADDW    drawCircle_y
+                    ADDW    drawCircle_ch2
+                    STW     drawCircle_a
+                    LD      fgbgColour + 1
+                    POKE    drawCircle_a
+
+                    LDW     drawCircle_cx
+                    SUBW    drawCircle_y
+                    ADDW    drawCircle_ch2
+                    STW     drawCircle_a
+                    LD      fgbgColour + 1
+                    POKE    drawCircle_a
+                    
+                    LDW     drawCircle_cx
+                    ADDW    drawCircle_y
+                    ADDW    drawCircle_ch3
+                    STW     drawCircle_a
+                    LD      fgbgColour + 1
+                    POKE    drawCircle_a
+
+                    LDW     drawCircle_cx
+                    SUBW    drawCircle_y
+                    ADDW    drawCircle_ch3
+                    STW     drawCircle_a
+                    LD      fgbgColour + 1
+                    POKE    drawCircle_a
+                    
                     POP
                     RET
 

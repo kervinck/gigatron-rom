@@ -35,42 +35,47 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_loop               EQU                     0x0272
-_midiOff            EQU                     0x02a6
-_1                  EQU                     0x02ae
-_2                  EQU                     0x02bb
-_3                  EQU                     0x02c8
-_49                 EQU                     0x02ef
-_50                 EQU                     0x030a
-_51                 EQU                     0x0315
-_vuMeter            EQU                     0x031c
-_decay              EQU                     0x038c
-_siren              EQU                     0x09f4
-_crash              EQU                     0x4dd9
-_else_0x0299        EQU                     0x0293
-_else_0x02f8        EQU                     0x02e8
-_endif_0x02fd       EQU                     0x02ed
+_loop               EQU                     0x0274
+_midiOff            EQU                     0x02a8
+_1                  EQU                     0x02af
+_2                  EQU                     0x02bc
+_3                  EQU                     0x02c9
+_4                  EQU                     0x02d6
+_49                 EQU                     0x031f
+_50                 EQU                     0x032a
+_51                 EQU                     0x0335
+_52                 EQU                     0x0340
+_vuMeter            EQU                     0x0347
+_decay              EQU                     0x03b7
+_siren              EQU                     0x4cc1
+_crash              EQU                     0x4ea9
+_beep               EQU                     0x4fea
+_else_0x029b        EQU                     0x0295
 _page_0x0300        EQU                     0x0300
-_next_0x0321        EQU                     0x0321
-_else_0x0398        EQU                     0x036c
-_endif_0x03dd       EQU                     0x03a3
+_else_0x030e        EQU                     0x0318
+_endif_0x0313       EQU                     0x031d
+_next_0x0342        EQU                     0x034c
+_else_0x03b9        EQU                     0x0397
+_endif_0x03fe       EQU                     0x03ce
 _page_0x04cf        EQU                     0x04cf
-_endif_0x0460       EQU                     0x04ef
 _page_0x08e0        EQU                     0x08e0
 _page_0x09e0        EQU                     0x09e0
+_endif_0x047d       EQU                     0x09ed
 _page_0x4ca0        EQU                     0x4ca0
 _page_0x4da0        EQU                     0x4da0
-_endif_0x0543       EQU                     0x4dd7
 _page_0x4ea0        EQU                     0x4ea0
+_endif_0x0565       EQU                     0x4ea7
 _page_0x4fa0        EQU                     0x4fa0
-_endif_0x05f9       EQU                     0x4fc2
-_end_0x05fb         EQU                     0x4fc4
+_endif_0x061b       EQU                     0x4fe8
+_page_0x50a0        EQU                     0x50a0
+_endif_0x0653       EQU                     0x50c6
+_end_0x0655         EQU                     0x50c8
 
 ; Variables
 _t                  EQU                     0x0030
-_volume_array       EQU                     0x7ee3
+_volume_array       EQU                     0x7edf
 _volume_array       DW                      0x007f 0x007f 0x007f 0x007f 0x007f 
-_ypos_array         EQU                     0x7ed9
+_ypos_array         EQU                     0x7ed5
 _ypos_array         DW                      0x0001 0x0001 0x0001 0x0001 0x0001 
 _kk                 EQU                     0x0032
 _state              EQU                     0x0034
@@ -88,8 +93,8 @@ _f_lut              EQU                     0x004a
 _d_lut              EQU                     0x004c
 
 ; Strings
-_str_0x7eed         EQU                     0x7eed
-_str_0x7eed         DB                      17 'Keys: <1> <2> <3>' 0
+_str_0x7ee9         EQU                     0x7ee9
+_str_0x7ee9         DB                      21 'Keys: <1> <2> <3> <4>' 0
 
 ; Define Bytes
 def_bytes_0x08a0    EQU                     0x08a0
@@ -245,16 +250,16 @@ def_sprites_0x040e  DB                      4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 
 ; Define Fonts
 
 ; Lookup Tables
-_lut_numericLabs    EQU                     0x78c9
-_lut_numericLabs    DW                      1 2 3 49 50 51 0
-_lut_numericAddrs   EQU                     0x78bd
-_lut_numericAddrs   DW                      0x02ae 0x02bb 0x02c8 0x02ef 0x030a 0x0315 
+_lut_numericLabs    EQU                     0x78b8
+_lut_numericLabs    DW                      1 2 3 4 49 50 51 52 0x0000
+_lut_numericAddrs   EQU                     0x78a8
+_lut_numericAddrs   DW                      0x02af 0x02bc 0x02c9 0x02d6 0x031f 0x032a 0x0335 0x0340 
 _spriteLut_0x79a0   EQU                     0x79a0
 _spriteLut_0x79a0   DW                      0x0400 0x0000 0x0407 0x0006 0x0000
-_spriteLut_0x7da1   EQU                     0x7da1
-_spriteLut_0x7da1   DW                      0x040e 0x1f00 0x0000
-_spritesLut_        EQU                     0x78b7
-_spritesLut_        DW                      0x79a0 0x7da1 
+_spriteLut_0x7ea2   EQU                     0x7ea2
+_spriteLut_0x7ea2   DW                      0x040e 0x1f00 0x0000
+_spritesLut_        EQU                     0x7aa1
+_spritesLut_        DW                      0x79a0 0x7ea2 
 
 ; Code
 _entryPoint_        InitRealTimeProc        
@@ -269,11 +274,10 @@ _entryPoint_        InitRealTimeProc
                     LDI                     0
                     STW                     _t                              ; t = 0
 
-                    LDI                     0
-                    ST                      162                             ; poke 162,0
+                    SoundAllOff                                             ; sound off
 
-                    LDI                     60
-                    ST                      163                             ; poke 163, &h3C
+                    LDWI                    15360
+                    STW                     fgbgColour                      ; set FGBGCOLOUR, &h3C00
 
                     ClearVertBlinds                                         ; cls
 
@@ -281,13 +285,13 @@ _entryPoint_        InitRealTimeProc
                     STW                     graphicsMode
                     ScanlineMode                                            ; mode 1
 
-                    LDI                     30
+                    LDI                     18
                     ST                      cursorXY
                     LDI                     2
                     ST                      cursorXY + 1
-                    AtTextCursor                                            ; at 30,2
+                    AtTextCursor                                            ; at 18,2
 
-                    PrintString             _str_0x7eed                     ; print "Keys: <1> <2> <3>";
+                    PrintString             _str_0x7ee9                     ; print "Keys: <1> <2> <3> <4>";
 
                     LDI                     255
                     STW                     _kk                             ; kk = 255
@@ -296,24 +300,24 @@ _entryPoint_        InitRealTimeProc
                     STW                     _state                          ; state = 0
 
 _loop               LDI                     5
-                    ST                      44                              ; poke &h2C, 5
+                    ST                      giga_soundTimer                 ; set SOUNDTIMER, 5
 
                     LDWI                    _vuMeter
                     CALL                    giga_vAC                        ; gosub vuMeter
 
-                    LD                      0x10
-                    STW                     _k                              ; k = peek(16)
+                    LD                      giga_serialRaw
+                    STW                     _k                              ; k = get("SERIALRAW")
 
                     LDW                     _kk
                     SUBI                    255
-                    BNE                     _else_0x0299
+                    BNE                     _else_0x029b
                     LDW                     _k
                     STW                     numericLabel
                     LDI                     0
                     STW                     defaultLabel
                     GosubNumeric                                            ; if kk &&= 255 then gosub k
 
-_else_0x0299        LDW                     _state
+_else_0x029b        LDW                     _state
                     STW                     numericLabel
                     LDI                     0
                     STW                     defaultLabel
@@ -325,11 +329,10 @@ _else_0x0299        LDW                     _state
                     BRA                     _loop                           ; goto &loop
 
 _midiOff            PUSH                    
-                    LDWI                    0
-                    STW                     166                             ; doke MIDI_STREAM, &h0000
+                    LDI                     0
+                    STW                     midiStream                      ; set MIDISTREAM, &h0000
 
-                    POP                     
-                    RET                                                     ; return
+                    Return                                                  ; return
 
 _1                  PUSH                    
                     LDWI                    _midiOff
@@ -338,8 +341,7 @@ _1                  PUSH
                     LDWI                    _siren
                     CALL                    giga_vAC                        ; gosub siren
 
-                    POP                     
-                    RET                                                     ; return
+                    Return                                                  ; return
 
 _2                  PUSH                    
                     LDWI                    _midiOff
@@ -348,37 +350,44 @@ _2                  PUSH
                     LDWI                    _crash
                     CALL                    giga_vAC                        ; gosub crash
 
-                    POP                     
-                    RET                                                     ; return
+                    Return                                                  ; return
 
 _3                  PUSH                    
-                    LDW                     0xa6
-                    BNE                     _else_0x02f8                    ; if deek(MIDI_STREAM) &&= &h0000
+                    LDWI                    _midiOff
+                    CALL                    giga_vAC                        ; gosub midiOff
+
+                    LDWI                    _beep
+                    CALL                    giga_vAC                        ; gosub beep
+
+                    Return                                                  ; return
+
+_4                  PUSH                    
+                    LDW                     midiStream
+                    JumpEQ                  _else_0x030e 1                  ; if get("MIDISTREAM") &= &h0000
 
                     LDI                     2
                     ST                      waveType
                     LDWI                    2720
-                    PlayMidiV               
-                    BRA                     _endif_0x02fd                   ; play midiv, &h0AA0, 2
-
-_else_0x02f8        TickMidiV                                               ; play midiv
-
-_endif_0x02fd       POP                     
-                    RET                                                     ; return
-
-_49                 PUSH                    
-                    LDI                     0
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
+                    PlayMidiV               
+                    LDWI                    _endif_0x0313
+                    CALL                    giga_vAC                        ; play midiv, &h0AA0, 2
+
+_else_0x030e        TickMidiV                                               ; play midiv
+
+_endif_0x0313       Return                                                  ; return
+
+_49                 PUSH                    
+                    LDI                     0
                     STW                     _t                              ; t = 0
 
                     LDI                     1
                     STW                     _state                          ; state = 1
 
-                    POP                     
-                    RET                                                     ; return
+                    Return                                                  ; return
 
 _50                 PUSH                    
                     LDI                     0
@@ -387,21 +396,28 @@ _50                 PUSH
                     LDI                     2
                     STW                     _state                          ; state = 2
 
-                    POP                     
-                    RET                                                     ; return
+                    Return                                                  ; return
 
 _51                 PUSH                    
+                    LDI                     0
+                    STW                     _t                              ; t = 0
+
                     LDI                     3
                     STW                     _state                          ; state = 3
 
-                    POP                     
-                    RET                                                     ; return
+                    Return                                                  ; return
+
+_52                 PUSH                    
+                    LDI                     4
+                    STW                     _state                          ; state = 4
+
+                    Return                                                  ; return
 
 _vuMeter            PUSH                    
                     LDI                     1
                     STW                     _i                              ; for i=1 to 4
 
-_next_0x0321        LD                      _i
+_next_0x0342        LD                      _i
                     ST                      giga_vAC + 1
                     ORI                     0xFF
                     XORI                    0xFF
@@ -412,13 +428,13 @@ _next_0x0321        LD                      _i
                     PEEK                    
                     STW                     _v                              ; v = peek(i8 + &h00FA)
 
-                    LDWI                    0x7ee3
+                    LDWI                    0x7edf
                     ADDW                    _i
                     ADDW                    _i
                     DEEK                    
                     STW                     _vol                            ; vol = volume(i)
 
-                    LDWI                    0x7ed9
+                    LDWI                    0x7ed5
                     ADDW                    _i
                     ADDW                    _i
                     DEEK                    
@@ -426,7 +442,7 @@ _next_0x0321        LD                      _i
 
                     LDW                     _v
                     SUBI                    64
-                    JumpGE                  _endif_0x0460 7                 ; if v &>= VU_LEVELS
+                    JumpGE                  _endif_0x047d 7                 ; if v &>= VU_LEVELS
 
                     LDW                     _i
                     STW                     mathShift
@@ -437,11 +453,11 @@ _next_0x0321        LD                      _i
                     LDW                     _i8
                     ADDI                    252
                     DEEK                    
-                    BNE                     _else_0x0398
+                    BNE                     _else_0x03b9
                     LDWI                    _decay
                     CALL                    giga_vAC                        ; if deek(i8 + &h00FC) &&= 0 then goto decay 'if frequency is 0, (i.e. note off), then decay
 
-_else_0x0398        LDW                     _v
+_else_0x03b9        LDW                     _v
                     SUBW                    _vol
                     BGE                     _decay                          ; if v &&< vol
 
@@ -456,7 +472,7 @@ _else_0x0398        LDW                     _v
 
                     LDW                     _v
                     STW                     _vol
-                    BRA                     _endif_0x03dd                   ; vol = v
+                    BRA                     _endif_0x03fe                   ; vol = v
 
 _decay              LDW                     _y
                     SUBI                    1
@@ -466,7 +482,7 @@ _decay              LDW                     _y
 
                     LDW                     _y
                     SUBI                    1
-                    BGE                     _endif_0x03dd                   ; if y &&< 1
+                    BGE                     _endif_0x03fe                   ; if y &&< 1
 
                     INC                     _y                              ; inc y
 
@@ -474,7 +490,7 @@ _decay              LDW                     _y
                     SUBI                    1
                     STW                     _vol                            ; dec vol
 
-_endif_0x03dd       LDI                     0
+_endif_0x03fe       LDI                     0
                     STW                     spriteId
                     LDW                     _i4
                     ST                      spriteXY
@@ -493,13 +509,13 @@ _endif_0x03dd       LDI                     0
                     ADDW                    _y
                     ADDW                    _y
                     STW                     0xc4
+                    STW                     0xde
+                    LDWI                    _page_0x04cf
+                    CALL                    giga_vAC
+_page_0x04cf        LDW                     0xde
                     LDI                     0x01
-                    STW                     0xc6
-                    LDWI                    _spritesLut_
-                    ADDW                    0xc6
-                    ADDW                    0xc6
-                    DEEK                    
-                    DEEK                    
+                    STW                     spriteId
+                    GetSpriteLUT            
                     ADDW                    0xc4
                     STW                     _addr                           ; addr = (y LSL 2) + y + y + get("SPRITELUT", 1)
 
@@ -516,11 +532,11 @@ _endif_0x03dd       LDI                     0
                     ST                      spriteXY
                     LDI                     46
                     ADDI                    8
-                    ST                      spriteXY + 1
                     STW                     0xde
-                    LDWI                    _page_0x04cf
+                    LDWI                    _page_0x08e0
                     CALL                    giga_vAC
-_page_0x04cf        LDW                     0xde
+_page_0x08e0        LDW                     0xde
+                    ST                      spriteXY + 1
                     DrawSpriteY                                             ; sprite flipY, 1, i4, Y_POS
 
                     LDI                     1
@@ -530,51 +546,46 @@ _page_0x04cf        LDW                     0xde
                     ST                      spriteXY
                     LDI                     46
                     ADDI                    8
+                    STW                     0xde
+                    LDWI                    _page_0x09e0
+                    CALL                    giga_vAC
+_page_0x09e0        LDW                     0xde
                     ST                      spriteXY + 1
                     DrawSpriteY                                             ; sprite flipY, 1, i4 + 6, Y_POS
 
                     LDW                     _save
                     POKE                    _addr                           ; poke addr, save
 
-_endif_0x0460       LDWI                    0x7ee3
-                    STW                     0xde
-                    LDWI                    _page_0x08e0
-                    CALL                    giga_vAC
-_page_0x08e0        LDW                     0xde
+_endif_0x047d       LDWI                    0x7edf
                     ADDW                    _i
                     ADDW                    _i
                     STW                     register1
                     LDW                     _vol
-                    DOKE                    register1                       ; volume(i) = vol
-
-                    LDWI                    0x7ed9
-                    ADDW                    _i
-                    ADDW                    _i
-                    STW                     register1
-                    LDW                     _y
-                    STW                     0xde
-                    LDWI                    _page_0x09e0
-                    CALL                    giga_vAC
-_page_0x09e0        LDW                     0xde
-                    DOKE                    register1                       ; ypos(i) = y
-
-                    ForNextFarInc           _i _next_0x0321 4               ; next i
-
-                    POP                     
-                    RET                                                     ; return
-
-_siren              PUSH                    
-                    LDW                     _t
                     STW                     0xde
                     LDWI                    _page_0x4ca0
                     CALL                    giga_vAC
 _page_0x4ca0        LDW                     0xde
+                    DOKE                    register1                       ; volume(i) = vol
+
+                    LDWI                    0x7ed5
+                    ADDW                    _i
+                    ADDW                    _i
+                    STW                     register1
+                    LDW                     _y
+                    DOKE                    register1                       ; ypos(i) = y
+
+                    ForNextFarInc           _i _next_0x0342 4               ; next i
+
+                    Return                                                  ; return
+
+_siren              PUSH                    
+                    LDW                     _t
                     ANDI                    63
                     STW                     0xc0
                     LDWI                    2208
                     ADDW                    0xc0
                     PEEK                    
-                    STW                     _v_lut                          ; v_lut = PEEK(V_LUT + (t AND (V_SIZ - 1)))
+                    STW                     _v_lut                          ; v_lut = peek(V_LUT + (t AND (V_SIZ - 1)))
 
                     LDW                     _t
                     LSLW                    
@@ -582,7 +593,7 @@ _page_0x4ca0        LDW                     0xde
                     LDWI                    1280
                     ADDW                    0xc2
                     DEEK                    
-                    STW                     _f_lut                          ; f_lut = DEEK(F_LUT + (t LSL 1))
+                    STW                     _f_lut                          ; f_lut = deek(F_LUT + (t LSL 1))
 
                     LDI                     1
                     ST                      sndChannel + 1
@@ -597,6 +608,10 @@ _page_0x4ca0        LDW                     0xde
                     LDI                     2
                     ST                      sndChannel + 1
                     LDW                     _f_lut
+                    STW                     0xde
+                    LDWI                    _page_0x4da0
+                    CALL                    giga_vAC
+_page_0x4da0        LDW                     0xde
                     ADDI                    100
                     STW                     sndFrequency
                     LDW                     _v_lut
@@ -613,10 +628,6 @@ _page_0x4ca0        LDW                     0xde
                     LDW                     _v_lut
                     STW                     sndVolume
                     LDI                     2
-                    STW                     0xde
-                    LDWI                    _page_0x4da0
-                    CALL                    giga_vAC
-_page_0x4da0        LDW                     0xde
                     STW                     sndWaveType
                     SoundOnV                                                ; sound on, 3, f_lut+200, v_lut, 2
 
@@ -635,7 +646,7 @@ _page_0x4da0        LDW                     0xde
 
                     LDW                     _t
                     SUBI                    64
-                    BNE                     _endif_0x0543                   ; if t &&= 64
+                    JumpEQ                  _endif_0x0565 8                 ; if t &= 64
 
                     LDI                     0
                     STW                     _t                              ; t = 0
@@ -643,10 +654,13 @@ _page_0x4da0        LDW                     0xde
                     LDI                     0
                     STW                     _state                          ; state = 0
 
+                    STW                     0xde
+                    LDWI                    _page_0x4ea0
+                    CALL                    giga_vAC
+_page_0x4ea0        LDW                     0xde
                     SoundAllOff                                             ; sound off
 
-_endif_0x0543       POP                     
-                    RET                                                     ; return
+_endif_0x0565       Return                                                  ; return
 
 _crash              PUSH                    
                     LDW                     _t
@@ -655,7 +669,7 @@ _crash              PUSH
                     LDWI                    2464
                     ADDW                    0xc0
                     PEEK                    
-                    STW                     _d_lut                          ; d_lut = PEEK(D_LUT + (t AND (D_SIZ - 1)))
+                    STW                     _d_lut                          ; d_lut = peek(D_LUT + (t AND (D_SIZ - 1)))
 
                     LDW                     _t
                     ANDI                    1
@@ -664,12 +678,8 @@ _crash              PUSH
                     LDWI                    1280
                     ADDW                    0xc2
                     DEEK                    
-                    STW                     _f_lut                          ; f_lut = DEEK(F_LUT + ((t AND 1) LSL 1))
+                    STW                     _f_lut                          ; f_lut = deek(F_LUT + ((t AND 1) LSL 1))
 
-                    STW                     0xde
-                    LDWI                    _page_0x4ea0
-                    CALL                    giga_vAC
-_page_0x4ea0        LDW                     0xde
                     LDI                     1
                     ST                      sndChannel + 1
                     LDW                     _f_lut
@@ -693,6 +703,10 @@ _page_0x4ea0        LDW                     0xde
 
                     LDI                     3
                     ST                      sndChannel + 1
+                    STW                     0xde
+                    LDWI                    _page_0x4fa0
+                    CALL                    giga_vAC
+_page_0x4fa0        LDW                     0xde
                     LDW                     _f_lut
                     ADDI                    200
                     STW                     sndFrequency
@@ -711,17 +725,13 @@ _page_0x4ea0        LDW                     0xde
                     STW                     sndVolume
                     LDI                     0
                     STW                     sndWaveType
-                    STW                     0xde
-                    LDWI                    _page_0x4fa0
-                    CALL                    giga_vAC
-_page_0x4fa0        LDW                     0xde
                     SoundOnV                                                ; sound on, 4, f_lut+300, d_lut, 0
 
                     INC                     _t                              ; inc t
 
                     LDW                     _t
                     SUBI                    64
-                    JumpEQ                  _endif_0x05f9 9                 ; if t &= 64
+                    JumpEQ                  _endif_0x061b 9                 ; if t &= 64
 
                     LDI                     0
                     STW                     _t                              ; t = 0
@@ -731,10 +741,40 @@ _page_0x4fa0        LDW                     0xde
 
                     SoundAllOff                                             ; sound off
 
-_endif_0x05f9       POP                     
-                    RET                                                     ; return
+_endif_0x061b       Return                                                  ; return
 
-_end_0x05fb         BRA                     _end_0x05fb                     ; END
+_beep               PUSH                    
+                    LDI                     1
+                    ST                      sndChannel + 1
+                    LDWI                    8000
+                    STW                     sndFrequency
+                    LDI                     63
+                    STW                     sndVolume
+                    STW                     0xde
+                    LDWI                    _page_0x50a0
+                    CALL                    giga_vAC
+_page_0x50a0        LDW                     0xde
+                    LDI                     1
+                    STW                     sndWaveType
+                    SoundOnV                                                ; sound on, 1, 8000, 63, 1
+
+                    INC                     _t                              ; inc t
+
+                    LDW                     _t
+                    SUBI                    3
+                    JumpEQ                  _endif_0x0653 10                ; if t &= 3
+
+                    LDI                     0
+                    STW                     _t                              ; t = 0
+
+                    LDI                     0
+                    STW                     _state                          ; state = 0
+
+                    SoundAllOff                                             ; sound off
+
+_endif_0x0653       Return                                                  ; return
+
+_end_0x0655         BRA                     _end_0x0655                     ; END
 
 
 
@@ -744,34 +784,35 @@ _end_0x05fb         BRA                     _end_0x05fb                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7ed0
-convertEqOp         EQU     0x7ec7
-convertNeOp         EQU     0x7ebe
-convertLeOp         EQU     0x7eb5
-convertGeOp         EQU     0x7eac
-convertLtOp         EQU     0x7ea3
-convertGtOp         EQU     0x7df6
-shiftLeft4bit       EQU     0x7cbb
-shiftRight1bit      EQU     0x7cb1
+realTimeProc        EQU     0x7ecc
+convertEqOp         EQU     0x7ec3
+convertNeOp         EQU     0x7eba
+convertLeOp         EQU     0x7eb1
+convertGeOp         EQU     0x7ea8
+convertLtOp         EQU     0x7df6
+convertGtOp         EQU     0x7ded
+shiftLeft4bit       EQU     0x7ca2
+shiftRight1bit      EQU     0x7abc
 gosubNumericLabel   EQU     0x7ba0
-scanlineMode        EQU     0x7dc0
+scanlineMode        EQU     0x7da1
 resetVideoTable     EQU     0x77e0
-initClearFuncs      EQU     0x7dd4
+initClearFuncs      EQU     0x7dcb
 clearVertBlinds     EQU     0x7cc5
 clearCursorRow      EQU     0x76b6
 draw_sprite         EQU     0x77b8
-drawSprite          EQU     0x7ca4
-drawSpriteY         EQU     0x7ab9
+drawSprite          EQU     0x7aaf
+drawSpriteY         EQU     0x78f2
+getSpriteLUT        EQU     0x7aa5
 resetAudio          EQU     0x7ac6
 playMidiVol         EQU     0x79aa
 midiStartNote       EQU     0x75b3
-soundAllOff         EQU     0x7aa3
-soundOnV            EQU     0x78d7
-printInit           EQU     0x74e4
-printText           EQU     0x7da7
-printChar           EQU     0x73a7
+soundAllOff         EQU     0x7db5
+soundOnV            EQU     0x78ca
+printInit           EQU     0x77a2
+printText           EQU     0x7cac
+printChar           EQU     0x74a7
 atTextCursor        EQU     0x7bd2
-newLineScroll       EQU     0x72a1
+newLineScroll       EQU     0x73a2
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -1132,6 +1173,14 @@ drawSpriteY         PUSH
                     RET
 
 
+getSpriteLUT        LDWI    _spritesLut_
+                    ADDW    spriteId
+                    ADDW    spriteId
+                    DEEK
+                    DEEK
+                    RET
+
+
 numChannels         EQU     register0
 audioAddr           EQU     register1
 waveType            EQU     register2
@@ -1328,12 +1377,9 @@ printInit           LDWI    SYS_VDrawBits_134
                     STW     giga_sysFn
                     LDW     fgbgColour
                     STW     giga_sysArg0
-                    
-                    LDWI    giga_videoTable
-                    STW     giga_sysArg4
-                    LD      cursorXY + 1
+                    LD      cursorXY + 1                    ; xy = peek(256+2*y)*256 + x
                     LSLW
-                    ADDW    giga_sysArg4
+                    INC     giga_vAC + 1
                     PEEK
                     ST      giga_sysArg4 + 1
                     LD      cursorXY
@@ -1491,7 +1537,7 @@ clearCR_loopx       SUBI    4                               ; loop is unrolled 4
 newLineScroll       LDI     0x02                            ; x offset slightly
                     ST      cursorXY
                     ST      giga_sysArg4
-                    LDWI    0x0001
+                    LDI     0x01
                     ANDW    miscFlags
                     BNE     newLS_cont0                     ; scroll on or off
                     RET

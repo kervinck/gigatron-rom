@@ -1390,7 +1390,15 @@ namespace Compiler
         UNREFERENCED_PARAM(codeLine);
         UNREFERENCED_PARAM(codeLineIndex);
 
-        int index = -1;
+        int index = -1, strLength = int(str.size());
+
+        // Don't count escape char '\'
+        int escCount = 0;
+        for(int i=0; i<strLength; i++)
+        {
+            if(str[i] == '\\') escCount++;
+        }
+        strLength -= escCount;
 
         // Reuse const string if possible
         if(constString)
@@ -1410,9 +1418,10 @@ namespace Compiler
             }
             else
             {
-                if(!Memory::getFreeRAM(Memory::FitDescending, int(str.size()) + 2, USER_CODE_START, _runtimeStart, address))
+                // Allocate RAM for string + length and delimiter bytes
+                if(!Memory::getFreeRAM(Memory::FitDescending, strLength + 2, USER_CODE_START, _runtimeStart, address))
                 {
-                    fprintf(stderr, "Compiler::getOrCreateString() : Not enough RAM for string %s='%s' of size %d\n", name.c_str(), str.c_str(), int(str.size()));
+                    fprintf(stderr, "Compiler::getOrCreateString() : Not enough RAM for string %s='%s' of size %d\n", name.c_str(), str.c_str(), strLength + 2);
                     return -1;
                 }
 
@@ -1420,7 +1429,7 @@ namespace Compiler
                 if(address < _runtimeEnd) _runtimeEnd = address;
 
                 name = "str_" + Expression::wordToHexString(address);
-                StringVar stringVar = {uint8_t(str.size()), uint8_t(str.size()), address, 0x0000, str, name, "_" + name + std::string(LABEL_TRUNC_SIZE - name.size() - 1, ' '), -1, true, 0};
+                StringVar stringVar = {uint8_t(strLength), uint8_t(strLength), address, 0x0000, str, name, "_" + name + std::string(LABEL_TRUNC_SIZE - name.size() - 1, ' '), -1, true, 0};
                 _stringVars.push_back(stringVar);
                 index = int(_stringVars.size()) - 1;
             }
@@ -1428,7 +1437,7 @@ namespace Compiler
         // Variable strings
         else
         {
-            // Allocate string
+            // Allocate RAM for string + length and delimiter bytes
             if(!Memory::getFreeRAM(Memory::FitDescending, maxSize + 2, USER_CODE_START, _runtimeStart, address))
             {
                 fprintf(stderr, "Compiler::getOrCreateString() : Not enough RAM for string %s='%s' of size %d\n", name.c_str(), str.c_str(), maxSize + 2);
@@ -1438,7 +1447,7 @@ namespace Compiler
             // Save end of runtime/strings
             if(address < _runtimeEnd) _runtimeEnd = address;
 
-            StringVar stringVar = {uint8_t(str.size()), maxSize, address, 0x0000, str, name, "_" + name + std::string(LABEL_TRUNC_SIZE - name.size() - 1, ' '), -1, false, 0};
+            StringVar stringVar = {uint8_t(strLength), maxSize, address, 0x0000, str, name, "_" + name + std::string(LABEL_TRUNC_SIZE - name.size() - 1, ' '), -1, false, 0};
             _stringVars.push_back(stringVar);
             index = int(_stringVars.size()) - 1;
         }
@@ -2535,7 +2544,7 @@ namespace Compiler
                         else
                         {
                             // Number of initialisation values may be smaller than array size
-                            if(j <= int(_integerVars[i]._arrInits.size()))
+                            if(j < int(_integerVars[i]._arrInits.size()))
                             {
                                 dbString += Expression::wordToHexString(_integerVars[i]._arrInits[j]) + " ";
                             }
@@ -2714,18 +2723,21 @@ namespace Compiler
                 continue;
             }
 
-            // Font mapping table
+            // Font mapping table, (null means 32 to 127 of the ASCII set is represented, so a mapping table is not required)
             uint16_t address = it->second._mapAddr;
-            int mapSize = int(it->second._mapping.size());
-            std::string defName = "def_map_" + Expression::wordToHexString(address);
-            _output.push_back(defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(address) + "\n");
-            std::string dbString = defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "DB" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
-            for(int i=0; i<mapSize; i++)
+            if(address)
             {
-                uint8_t mapData = it->second._mapping[i];
-                dbString += std::to_string(mapData) + " ";
+                int mapSize = int(it->second._mapping.size());
+                std::string defName = "def_map_" + Expression::wordToHexString(address);
+                _output.push_back(defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(address) + "\n");
+                std::string dbString = defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "DB" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+                for(int i=0; i<mapSize; i++)
+                {
+                    uint8_t mapData = it->second._mapping[i];
+                    dbString += std::to_string(mapData) + " ";
+                }
+                _output.push_back(dbString + "\n");
             }
-            _output.push_back(dbString + "\n");
 
             // For each char of font data
             int numChars = int(it->second._data.size());
@@ -2733,9 +2745,9 @@ namespace Compiler
             {
                 address = it->second._charAddrs[i];
 
-                defName = "def_char_" + Expression::wordToHexString(address);
+                std::string defName = "def_char_" + Expression::wordToHexString(address);
                 _output.push_back(defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(address) + "\n");
-                dbString = defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "DB" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+                std::string dbString = defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "DB" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
 
                 // Output each char
                 std::vector<uint8_t>& charData = it->second._data[i];
@@ -2746,16 +2758,15 @@ namespace Compiler
                 _output.push_back(dbString + "\n");
             }
 
-            // Baseline for each char, (shared by all chars and fonts)
-            if(fontId == 0)
-            {
-                address = it->second._baseAddr;
-                defName = "def_baseline_"; // + Expression::wordToHexString(address);
-                _output.push_back(defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(address) + "\n");
-                dbString = defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "DB" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
-                dbString += "0 0 0 0 0 0 255";
-                _output.push_back(dbString + "\n");
-            }
+            // Baseline for each char, (shared by all chars in one font)
+            address = it->second._baseAddr;
+            uint16_t fgbgColour = it->second._fgbgColour;
+            std::string defName = "def_baseline_" + Expression::wordToHexString(address);
+            _output.push_back(defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(address) + "\n");
+            std::string dbString = defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "DB" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+            for(int i=0; i<6; i++) dbString += Expression::byteToHexString(fgbgColour & 0x00FF) + " ";
+            dbString += "255";
+            _output.push_back(dbString + "\n");
         }
         _output.push_back("\n");
 
@@ -2789,8 +2800,8 @@ namespace Compiler
 
             if(numericLabels.size())
             {
-                // Create numeric labels LUT, (delimited by -1)
-                int lutSize = int(numericLabels.size()) * 2;
+                // Create numeric labels LUT, (delimited by 0)
+                int lutSize = int(numericLabels.size())*2;
                 uint16_t lutAddress;
                 if(!Memory::getFreeRAM(Memory::FitDescending, lutSize + 2, USER_CODE_START, _runtimeStart, lutAddress))
                 {
@@ -2806,9 +2817,9 @@ namespace Compiler
                 {
                     dwString += std::to_string(numericLabels[i]) + " ";
                 }
-                _output.push_back(dwString + "0\n");
+                _output.push_back(dwString + "0x0000\n");
 
-                // Create numeric addresses LUT
+                // Create numeric addresses LUT, (same size as above, but no delimiter)
                 if(!Memory::getFreeRAM(Memory::FitDescending, lutSize, USER_CODE_START, _runtimeStart, lutAddress))
                 {
                     fprintf(stderr, "Compiler::outputLuts() : Not enough RAM for numeric addresses LUT of size %d\n", lutSize);
@@ -2953,11 +2964,12 @@ namespace Compiler
                 continue;
             }
 
+            // Allocate RAM for sprite addresses/offsets and delimiter
             uint16_t lutAddress;
-            int lutSize = int(it->second._stripeAddrs.size()) * 2;
-            if(!Memory::getFreeRAM(Memory::FitDescending, lutSize + 2, USER_CODE_START, _runtimeStart, lutAddress))
+            int lutSize = int(it->second._stripeAddrs.size())*2 + 2;
+            if(!Memory::getFreeRAM(Memory::FitDescending, lutSize, USER_CODE_START, _runtimeStart, lutAddress))
             {
-                fprintf(stderr, "Compiler::outputLuts() : Not enough RAM for sprite %d address LUT of size %d\n", spriteId, lutSize + 2);
+                fprintf(stderr, "Compiler::outputLuts() : Not enough RAM for sprite %d address LUT of size %d\n", spriteId, lutSize);
                 return false;
             }
             _spritesAddrLut._spriteAddrs.push_back(lutAddress);
@@ -2977,16 +2989,17 @@ namespace Compiler
         // SPRITES LUT
         if(_spritesAddrLut._spriteAddrs.size())
         {
+            // Allocate RAM for sprites LUT
             uint16_t lutAddress;
             int lutSize = int(_spritesAddrLut._spriteAddrs.size()) * 2;
-            if(!Memory::getFreeRAM(Memory::FitDescending, lutSize + 2, USER_CODE_START, _runtimeStart, lutAddress))
+            if(!Memory::getFreeRAM(Memory::FitDescending, lutSize, USER_CODE_START, _runtimeStart, lutAddress))
             {
-                fprintf(stderr, "Compiler::outputLuts() : Not enough RAM for sprites LUT of size %d\n", lutSize + 2);
+                fprintf(stderr, "Compiler::outputLuts() : Not enough RAM for sprites LUT of size %d\n", lutSize);
                 return false;
             }
             _spritesAddrLut._address = lutAddress;
 
-            std::string lutName = "_spritesLut_"; // + Expression::wordToHexString(lutAddress);
+            std::string lutName = "_spritesLut_";
             _output.push_back(lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(lutAddress) + "\n");
             
             std::string dwString = lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
@@ -3010,11 +3023,12 @@ namespace Compiler
                 continue;
             }
 
+            // Allocate memory for font chars + map address + baseline address
             uint16_t lutAddress;
-            int lutSize = int(it->second._charAddrs.size()) * 2;
-            if(!Memory::getFreeRAM(Memory::FitDescending, lutSize + 2, USER_CODE_START, _runtimeStart, lutAddress))
+            int lutSize = int(it->second._charAddrs.size())*2 + 4;
+            if(!Memory::getFreeRAM(Memory::FitDescending, lutSize, USER_CODE_START, _runtimeStart, lutAddress))
             {
-                fprintf(stderr, "Compiler::outputLuts() : Not enough RAM for font %d address LUT of size %d\n", fontId, lutSize + 2);
+                fprintf(stderr, "Compiler::outputLuts() : Not enough RAM for font %d address LUT of size %d\n", fontId, lutSize);
                 return false;
             }
             _fontsAddrLut._fontAddrs.push_back(lutAddress);
@@ -3022,9 +3036,13 @@ namespace Compiler
             std::string lutName = "_fontLut_" + Expression::wordToHexString(lutAddress);
             _output.push_back(lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(lutAddress) + "\n");
 
-            // Mapping table
+            // Mapping table, (mapping address is null when full ASCII set, 32 to 127, is represented)
             std::string dwString = lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
             uint16_t address = it->second._mapAddr;
+            dwString += Expression::wordToHexString(address) + " ";
+
+            // Font baseline address, baseline pixels shared by every char in a font
+            address = it->second._baseAddr;
             dwString += Expression::wordToHexString(address) + " ";
 
             // Characters
@@ -3039,16 +3057,17 @@ namespace Compiler
         // FONTS LUT
         if(_fontsAddrLut._fontAddrs.size())
         {
+            // Allocate RAM for fonts addresses
             uint16_t lutAddress;
             int lutSize = int(_fontsAddrLut._fontAddrs.size()) * 2;
-            if(!Memory::getFreeRAM(Memory::FitDescending, lutSize + 2, USER_CODE_START, _runtimeStart, lutAddress))
+            if(!Memory::getFreeRAM(Memory::FitDescending, lutSize, USER_CODE_START, _runtimeStart, lutAddress))
             {
-                fprintf(stderr, "Compiler::outputLuts() : Not enough RAM for fonts LUT of size %d\n", lutSize + 2);
+                fprintf(stderr, "Compiler::outputLuts() : Not enough RAM for fonts LUT of size %d\n", lutSize);
                 return false;
             }
             _fontsAddrLut._address = lutAddress;
 
-            std::string lutName = "_fontsLut_"; // + Expression::wordToHexString(lutAddress);
+            std::string lutName = "_fontsLut_";
             _output.push_back(lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(lutAddress) + "\n");
             
             std::string dwString = lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
@@ -3277,7 +3296,7 @@ namespace Compiler
         while(!_whileWendDataStack.empty())   _whileWendDataStack.pop();
         while(!_repeatUntilDataStack.empty()) _repeatUntilDataStack.pop();
 
-        // Allocate default string work area, (for string functions like LEFT$, MID$, etc)
+        // Allocate default string work area, (for string functions like LEFT$, MID$, etc), the + 2 is for the length and delimiter bytes
         Memory::getFreeRAM(Memory::FitDescending, USER_STR_SIZE + 2, USER_CODE_START, _runtimeStart, _strWorkArea);
     }
 

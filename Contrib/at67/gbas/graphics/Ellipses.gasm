@@ -270,8 +270,7 @@ _endif_0x0396       LDW                     _my1
 
                     BRA                     _while_0x0348                   ; wend
 
-_wend_0x03c8        POP                     
-                    RET                                                     ; return
+_wend_0x03c8        Return                                                  ; return
 
 _end_0x03ca         BRA                     _end_0x03ca                     ; END
 

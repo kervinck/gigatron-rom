@@ -254,15 +254,21 @@ namespace Validater
         return true;
     }
 
-    bool opcodeIsBranch(const std::string& opcode)
+    bool opcodeHasBranch(const std::string& opcode)
     {
-        if(opcode == "BRA") return true;
-        if(opcode == "BEQ") return true;
-        if(opcode == "BNE") return true;
-        if(opcode == "BGE") return true;
-        if(opcode == "BLE") return true;
-        if(opcode == "BGT") return true;
-        if(opcode == "BLT") return true;
+        if(opcode == "BRA")            return true;
+        if(opcode == "BEQ")            return true;
+        if(opcode == "BNE")            return true;
+        if(opcode == "BGE")            return true;
+        if(opcode == "BLE")            return true;
+        if(opcode == "BGT")            return true;
+        if(opcode == "BLT")            return true;
+        if(opcode == "%ForNextInc")    return true;
+        if(opcode == "%ForNextDec")    return true;
+        if(opcode == "%ForNextAdd")    return true;
+        if(opcode == "%ForNextSub")    return true;
+        if(opcode == "%ForNextVarPos") return true;
+        if(opcode == "%ForNextVarNeg") return true;
 
         return false;
     }
@@ -280,13 +286,24 @@ namespace Validater
                 std::string basic = Compiler::getCodeLines()[i]._code;
 
                 Expression::stripWhitespace(opcode);
-                if(opcodeIsBranch(opcode))
+                if(opcodeHasBranch(opcode))
                 {
                     std::vector<std::string> tokens = Expression::tokenise(code, " ", false);
-                    if(tokens.size() != 2) continue;
+                    if(tokens.size() < 2) continue;
 
-                    Expression::stripWhitespace(tokens[1]);
-                    std::string operand = tokens[1];
+                    // Normal branch
+                    std::string operand;
+                    if(tokens.size() == 2)
+                    {
+                        Expression::stripWhitespace(tokens[1]);
+                        operand = tokens[1];
+                    }
+                    // Branch embedded in a FOR NEXT macro
+                    else if(tokens.size() > 2)
+                    {
+                        Expression::stripWhitespace(tokens[2]);
+                        operand = tokens[2];
+                    }
 
                     // Remove underscores from BASIC labels for matching
                     if(operand.size() > 1  &&  operand[0] == '_') operand.erase(0, 1);
@@ -298,7 +315,7 @@ namespace Validater
                         uint16_t labAddr = Compiler::getLabels()[labelIndex]._address;
                         if(HI_MASK(opcAddr) != HI_MASK(labAddr))
                         {
-                            fprintf(stderr, "\nValidater::checkBranchLabels() : *** Warning ***, %s is branching from 0x%04x to 0x%04x, for '%s' on line %d\n\n", opcode.c_str(), opcAddr, labAddr, basic.c_str(), i + 1);
+                            fprintf(stderr, "\nValidater::checkBranchLabels() : *** Error ***, %s is branching from 0x%04x to 0x%04x, for '%s' on line %d\n\n", opcode.c_str(), opcAddr, labAddr, basic.c_str(), i + 1);
                             //_PAUSE_;
                             Compiler::setCompilingError(true);
                         }
@@ -315,7 +332,7 @@ namespace Validater
                             uint16_t labAddr = Compiler::getInternalLabels()[labelIndex]._address;
                             if(HI_MASK(opcAddr) != HI_MASK(labAddr))
                             {
-                                fprintf(stderr, "\nValidater::checkBranchLabels() : *** Warning ***, %s is branching from 0x%04x to 0x%04x, for '%s' on line %d\n\n", opcode.c_str(), opcAddr, labAddr, basic.c_str(), i + 1);
+                                fprintf(stderr, "\nValidater::checkBranchLabels() : *** Error ***, %s is branching from 0x%04x to 0x%04x, for '%s' on line %d\n\n", opcode.c_str(), opcAddr, labAddr, basic.c_str(), i + 1);
                                 //_PAUSE_;
                                 Compiler::setCompilingError(true);
                             }

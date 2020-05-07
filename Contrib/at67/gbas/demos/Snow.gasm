@@ -135,19 +135,19 @@ _20                 LDI                     1
                     STW                     _J                              ; I=1 : J=0
 
 _30                 LDI                     16
-                    ST                      162
+                    ST                      fgbgColour
                     LDI                     1
                     STW                     graphicsMode
                     ScanlineMode            
-                    ClearVertBlinds                                         ; poke 162,D : mode 1 : cls
+                    ClearVertBlinds                                         ; set BGCOLOUR,D : mode 1 : cls
 
 _40                 LDI                     72
-                    ST                      163
+                    ST                      fgbgColour + 1
                     LDI                     32
                     ST                      cursorXY
                     LDI                     96
                     ST                      cursorXY + 1
-                    AtTextCursor                                            ; poke 163,72 : at 32,96
+                    AtTextCursor                                            ; set FGCOLOUR,72 : at 32,96
 
 _50                 PrintString             _str_0x7eee                     ; print "Merry Christmas!";
 
@@ -357,11 +357,11 @@ drawHLine           EQU     0x7aa2
 resetAudio          EQU     0x79c6
 playMidi            EQU     0x78af
 midiStartNote       EQU     0x76b3
-printInit           EQU     0x7bb7
+printInit           EQU     0x7bbc
 printText           EQU     0x7db0
 printChar           EQU     0x75a7
 atTextCursor        EQU     0x7bd2
-newLineScroll       EQU     0x74a1
+newLineScroll       EQU     0x74a2
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -842,12 +842,9 @@ printInit           LDWI    SYS_VDrawBits_134
                     STW     giga_sysFn
                     LDW     fgbgColour
                     STW     giga_sysArg0
-                    
-                    LDWI    giga_videoTable
-                    STW     giga_sysArg4
-                    LD      cursorXY + 1
+                    LD      cursorXY + 1                    ; xy = peek(256+2*y)*256 + x
                     LSLW
-                    ADDW    giga_sysArg4
+                    INC     giga_vAC + 1
                     PEEK
                     ST      giga_sysArg4 + 1
                     LD      cursorXY
@@ -1005,7 +1002,7 @@ clearCR_loopx       SUBI    4                               ; loop is unrolled 4
 newLineScroll       LDI     0x02                            ; x offset slightly
                     ST      cursorXY
                     ST      giga_sysArg4
-                    LDWI    0x0001
+                    LDI     0x01
                     ANDW    miscFlags
                     BNE     newLS_cont0                     ; scroll on or off
                     RET

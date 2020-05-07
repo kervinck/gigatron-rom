@@ -23,6 +23,7 @@ cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
 miscFlags           EQU                     register0 + 0x28
+fontLutId           EQU                     0x00e0
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -34,12 +35,12 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_loop               EQU                     0x0240
-_elseif_0x026a      EQU                     0x0264
-_elseif_0x028e      EQU                     0x0284
-_else_0x02b2        EQU                     0x02a4
-_endif_0x02c9       EQU                     0x02bb
-_end_0x02ce         EQU                     0x02c0
+_loop               EQU                     0x023e
+_elseif_0x0268      EQU                     0x0262
+_elseif_0x028c      EQU                     0x0282
+_else_0x02b0        EQU                     0x02a2
+_endif_0x02c7       EQU                     0x02b9
+_end_0x02cc         EQU                     0x02be
 
 ; Variables
 _p                  EQU                     0x0030
@@ -61,6 +62,7 @@ _str_0x7ee4         DB                      5 'none ' 0
 ; Define Images
 
 ; Define Sprites
+; Define Fonts
 
 ; Lookup Tables
 
@@ -74,63 +76,58 @@ _entryPoint_        InitRealTimeProc
                     InitGtOp                
                     Initialise                                              ; INIT
 
-                    LDWI                    clearVertBlinds
-                    CALL                    giga_vAC                        ; cls
+                    ClearVertBlinds                                         ; cls
 
 _loop               LD                      0x0f
                     STW                     _p                              ; p=peek(15)
 
                     LDW                     _p
                     SUBI                    49
-                    BNE                     _elseif_0x026a                  ; if p &&= 49
+                    BNE                     _elseif_0x0268                  ; if p &&= 49
 
                     LDI                     2
                     ST                      cursorXY
                     LDI                     40
                     ST                      cursorXY + 1
-                    LDWI                    atTextCursor
-                    CALL                    giga_vAC
+                    AtTextCursor            
                     PrintString             _str_0x7ef9
-                    BRA                     _endif_0x02c9                   ; at 2,40 : print "one  ";
+                    BRA                     _endif_0x02c7                   ; at 2,40 : print "one  ";
 
-_elseif_0x026a      LDW                     _p
+_elseif_0x0268      LDW                     _p
                     SUBI                    50
-                    BNE                     _elseif_0x028e                  ; elseif p &&= 50
+                    BNE                     _elseif_0x028c                  ; elseif p &&= 50
 
                     LDI                     2
                     ST                      cursorXY
                     LDI                     40
                     ST                      cursorXY + 1
-                    LDWI                    atTextCursor
-                    CALL                    giga_vAC
+                    AtTextCursor            
                     PrintString             _str_0x7ef2
-                    BRA                     _endif_0x02c9                   ; at 2,40 : print "two  ";
+                    BRA                     _endif_0x02c7                   ; at 2,40 : print "two  ";
 
-_elseif_0x028e      LDW                     _p
+_elseif_0x028c      LDW                     _p
                     SUBI                    51
-                    BNE                     _else_0x02b2                    ; elseif p &&= 51
+                    BNE                     _else_0x02b0                    ; elseif p &&= 51
 
                     LDI                     2
                     ST                      cursorXY
                     LDI                     40
                     ST                      cursorXY + 1
-                    LDWI                    atTextCursor
-                    CALL                    giga_vAC
+                    AtTextCursor            
                     PrintString             _str_0x7eeb
-                    BRA                     _endif_0x02c9                   ; at 2,40 : print "three";
+                    BRA                     _endif_0x02c7                   ; at 2,40 : print "three";
 
-_else_0x02b2        LDI                     2
+_else_0x02b0        LDI                     2
                     ST                      cursorXY
                     LDI                     40
                     ST                      cursorXY + 1
-                    LDWI                    atTextCursor
-                    CALL                    giga_vAC
+                    AtTextCursor            
                     PrintString             _str_0x7ee4                     ; at 2,40 : print "none ";
 
-_endif_0x02c9       LDWI                    _loop
+_endif_0x02c7       LDWI                    _loop
                     CALL                    giga_vAC                        ; goto loop
 
-_end_0x02ce         BRA                     _end_0x02ce                     ; END
+_end_0x02cc         BRA                     _end_0x02cc                     ; END
 
 
 
@@ -140,22 +137,22 @@ _end_0x02ce         BRA                     _end_0x02ce                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7ed7
-convertEqOp         EQU     0x7ece
-convertNeOp         EQU     0x7ec5
-convertLeOp         EQU     0x7ebc
-convertGeOp         EQU     0x7eb3
-convertLtOp         EQU     0x7eaa
-convertGtOp         EQU     0x7ea1
+realTimeProc        EQU     0x7edb
+convertEqOp         EQU     0x7ed2
+convertNeOp         EQU     0x7ec9
+convertLeOp         EQU     0x7ec0
+convertGeOp         EQU     0x7eb7
+convertLtOp         EQU     0x7eae
+convertGtOp         EQU     0x7ea5
 resetVideoTable     EQU     0x7be0
-initClearFuncs      EQU     0x7ddc
-clearVertBlinds     EQU     0x7da2
+initClearFuncs      EQU     0x7ddd
+clearVertBlinds     EQU     0x7da3
 clearCursorRow      EQU     0x7ab6
-printInit           EQU     0x7bc5
+printInit           EQU     0x7ca3
 printText           EQU     0x7cb9
 printChar           EQU     0x79a7
 atTextCursor        EQU     0x7cd2
-newLineScroll       EQU     0x78a1
+newLineScroll       EQU     0x78a2
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -175,8 +172,6 @@ lutIndex            EQU     register8
 
                     ; runs real time, (time sliced), code at regular intervals
 realTimeProc        PUSH
-                    LDI     0x08                            ; keep pumping soundTimer
-                    ST      giga_soundTimer
                     LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI routine
                     CALL    giga_vAC
                     POP
@@ -271,7 +266,7 @@ initClearFuncs      PUSH
                     LDWI    resetVideoTable
                     CALL    giga_vAC
     
-                    LDWI    0x0002                              ; starting cursor position
+                    LDI     0x02                                ; starting cursor position
                     STW     cursorXY
                     LDWI    0x7FFF
                     ANDW    miscFlags
@@ -346,12 +341,9 @@ printInit           LDWI    SYS_VDrawBits_134
                     STW     giga_sysFn
                     LDW     fgbgColour
                     STW     giga_sysArg0
-                    
-                    LDWI    giga_videoTable
-                    STW     giga_sysArg4
-                    LD      cursorXY + 1
+                    LD      cursorXY + 1                    ; xy = peek(256+2*y)*256 + x
                     LSLW
-                    ADDW    giga_sysArg4
+                    INC     giga_vAC + 1
                     PEEK
                     ST      giga_sysArg4 + 1
                     LD      cursorXY
@@ -509,7 +501,7 @@ clearCR_loopx       SUBI    4                               ; loop is unrolled 4
 newLineScroll       LDI     0x02                            ; x offset slightly
                     ST      cursorXY
                     ST      giga_sysArg4
-                    LDWI    0x0001
+                    LDI     0x01
                     ANDW    miscFlags
                     BNE     newLS_cont0                     ; scroll on or off
                     RET

@@ -143,12 +143,21 @@ _label_ CALLI   _label
 _label_ CALLI   _label
 %ENDM
 
+%MACRO  Return
+        POP
+        RET
+%ENDM
+
 %MACRO  GotoNumeric
         CALLI   gotoNumericLabel
 %ENDM
 
 %MACRO  GosubNumeric
         CALLI   gosubNumericLabel
+%ENDM
+
+%MACRO  ResetVideoTable
+        CALLI   resetVideoTable
 %ENDM
 
 %MACRO  ClearScreen
@@ -458,6 +467,10 @@ _label_ CALLI   _label
         CALLI   drawSpriteXY
 %ENDM
 
+%MACRO  GetSpriteLUT
+        CALLI   getSpriteLUT
+%ENDM
+
 %MACRO  SoundAll
         CALLI   soundAll
 %ENDM
@@ -526,8 +539,8 @@ _id_    CALLI   _label
 
         LDI     0x00
         STW     midiStream                              ; reset MIDI
-        ST      giga_soundTimer                         ; reset soundTimer, (stops any current Audio)
         STW     fontLutId
+        ST      giga_soundTimer                         ; reset soundTimer, (stops any current Audio)
         
         CALLI   initClearFuncs
 %ENDM

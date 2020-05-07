@@ -306,7 +306,7 @@ def_images_0x7f00   DB                      12 8 12 8 12 8 8 12 8 9 8 8 9 8 8 9 
 
 ; Lookup Tables
 _lut_numericLabs    EQU                     0x0615
-_lut_numericLabs    DW                      254 253 191 127 0
+_lut_numericLabs    DW                      254 253 191 127 0x0000
 _lut_numericAddrs   EQU                     0x060d
 _lut_numericAddrs   DW                      0x032c 0x0342 0x0354 0x035b 
 
@@ -325,7 +325,7 @@ _entryPoint_        InitRealTimeProc
                     ScanlineMode                                            ; mode 1
 
                     LDI                     48
-                    ST                      163                             ; poke 163, &h30
+                    ST                      fgbgColour + 1                  ; set FGCOLOUR, &h30
 
                     LDI                     0
                     STW                     drawHLine_x1
@@ -439,11 +439,11 @@ _page_0x0300        LDW                     0xde
                     LD                      _x5 + 1
                     POKE                    register0                       ; poke &h01D3, x5.hi
 
-                    LD                      0x11
+                    LD                      giga_buttonState
                     STW                     numericLabel
                     LDI                     0
                     STW                     defaultLabel
-                    GosubNumeric                                            ; gosub peek(17)
+                    GosubNumeric                                            ; gosub get("BUTTONSTATE")
 
                     LDWI                    _loop
                     CALL                    giga_vAC                        ; goto loop
@@ -458,8 +458,7 @@ _254                PUSH
                     LDWI                    256
                     STW                     _speed1                         ; speed1 = speed1 + 2 : if speed1 &&> 256 then speed1 = 256
 
-_else_0x0360        POP                     
-                    RET                                                     ; return
+_else_0x0360        Return                                                  ; return
 
 _253                PUSH                    
                     LDW                     _speed1
@@ -470,20 +469,17 @@ _253                PUSH
                     LDI                     64
                     STW                     _speed1                         ; speed1 = speed1 - 2 : if speed1 &&< 64 then speed1 = 64
 
-_else_0x037a        POP                     
-                    RET                                                     ; return
+_else_0x037a        Return                                                  ; return
 
 _191                PUSH                    
                     LDI                     128
                     STW                     _speed1
-                    POP                     
-                    RET                                                     ; speed1 = 128 : return
+                    Return                                                  ; speed1 = 128 : return
 
 _127                PUSH                    
                     LDI                     128
                     STW                     _speed1
-                    POP                     
-                    RET                                                     ; speed1 = 128 : return
+                    Return                                                  ; speed1 = 128 : return
 
 _end_0x038a         BRA                     _end_0x038a                     ; END
 

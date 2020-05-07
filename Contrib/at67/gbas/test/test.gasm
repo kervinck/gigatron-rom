@@ -23,6 +23,7 @@ cursorXY            EQU                     register0 + 0x22
 midiStream          EQU                     register0 + 0x24
 midiDelay           EQU                     register0 + 0x26
 miscFlags           EQU                     register0 + 0x28
+fontLutId           EQU                     0x00e0
 
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
@@ -34,22 +35,22 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_init               EQU                     0x023b
-_324532453245435435 EQU                     0x0243
-_10                 EQU                     0x0248
-_31                 EQU                     0x02ae
-_32                 EQU                     0x02c9
-_33                 EQU                     0x02e4
-_34                 EQU                     0x030e
-_35                 EQU                     0x0329
-_36                 EQU                     0x0344
-_37                 EQU                     0x035f
-_40                 EQU                     0x06aa
+_init               EQU                     0x0239
+_324532453245435435 EQU                     0x0241
+_10                 EQU                     0x0246
+_31                 EQU                     0x02ac
+_32                 EQU                     0x02c7
+_33                 EQU                     0x02e2
+_34                 EQU                     0x030c
+_35                 EQU                     0x0327
+_36                 EQU                     0x0342
+_37                 EQU                     0x035d
+_40                 EQU                     0x06a8
 _page_0x0300        EQU                     0x0300
 _page_0x0400        EQU                     0x0400
 _page_0x0500        EQU                     0x0500
 _page_0x0600        EQU                     0x0600
-_end_0x06ec         EQU                     0x06af
+_end_0x06ea         EQU                     0x06ad
 
 ; Variables
 _a                  EQU                     0x0030
@@ -186,11 +187,11 @@ _33                 LDI                     0
                     ADDW                    0xc0
                     STW                     0xc0
                     LDI                     24
+                    SUBW                    _g
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
-                    SUBW                    _g
                     STW                     0xc2
                     LDW                     0xc0
                     SUBW                    0xc2
@@ -310,11 +311,11 @@ _37                 LDI                     0
                     LDWI                    -900
                     ADDW                    _f
                     STW                     0xc4
+                    LDW                     0xc2
                     STW                     0xde
                     LDWI                    _page_0x0400
                     CALL                    giga_vAC
 _page_0x0400        LDW                     0xde
-                    LDW                     0xc2
                     SUBW                    0xc4
                     STW                     0xc4
                     LDW                     0xc0
@@ -431,12 +432,12 @@ _page_0x0400        LDW                     0xde
                     STW                     0xc4
                     LDW                     0xc0
                     SUBW                    0xc4
+                    STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
+
                     STW                     0xde
                     LDWI                    _page_0x0500
                     CALL                    giga_vAC
 _page_0x0500        LDW                     0xde
-                    STW                     _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
-
                     LDWI                    -2949
                     ADDW                    _b
                     STW                     0xc0
@@ -554,11 +555,11 @@ _page_0x0500        LDW                     0xde
                     STW                     0xc0
                     LDWI                    300
                     ADDW                    _e
+                    STW                     0xc2
                     STW                     0xde
                     LDWI                    _page_0x0600
                     CALL                    giga_vAC
 _page_0x0600        LDW                     0xde
-                    STW                     0xc2
                     LDWI                    -900
                     ADDW                    _f
                     STW                     0xc4
@@ -597,7 +598,7 @@ _page_0x0600        LDW                     0xde
 _40                 LDWI                    _10
                     CALL                    giga_vAC                        ; goto 10
 
-_end_0x06ec         BRA                     _end_0x06ec                     ; end
+_end_0x06ea         BRA                     _end_0x06ea                     ; end
 
 
 
@@ -614,15 +615,15 @@ convertLeOp         EQU     0x7ed9
 convertGeOp         EQU     0x7ed0
 convertLtOp         EQU     0x7ec7
 convertGtOp         EQU     0x7ebe
-resetVideoTable     EQU     0x7dbd
-initClearFuncs      EQU     0x7ddc
+resetVideoTable     EQU     0x7dbe
+initClearFuncs      EQU     0x7ddd
 clearCursorRow      EQU     0x7ab6
-printInit           EQU     0x7da2
+printInit           EQU     0x7da8
 printText           EQU     0x7ea5
 printDigit          EQU     0x79dd
-printInt16          EQU     0x7cab
+printInt16          EQU     0x7cae
 printChar           EQU     0x78a7
-newLineScroll       EQU     0x7ba1
+newLineScroll       EQU     0x7ba2
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -736,7 +737,7 @@ initClearFuncs      PUSH
                     LDWI    resetVideoTable
                     CALL    giga_vAC
     
-                    LDWI    0x0002                              ; starting cursor position
+                    LDI     0x02                                ; starting cursor position
                     STW     cursorXY
                     LDWI    0x7FFF
                     ANDW    miscFlags
@@ -775,12 +776,9 @@ printInit           LDWI    SYS_VDrawBits_134
                     STW     giga_sysFn
                     LDW     fgbgColour
                     STW     giga_sysArg0
-                    
-                    LDWI    giga_videoTable
-                    STW     giga_sysArg4
-                    LD      cursorXY + 1
+                    LD      cursorXY + 1                    ; xy = peek(256+2*y)*256 + x
                     LSLW
-                    ADDW    giga_sysArg4
+                    INC     giga_vAC + 1
                     PEEK
                     ST      giga_sysArg4 + 1
                     LD      cursorXY
@@ -842,7 +840,7 @@ printInt16          PUSH
                     ST      textChr
                     LDWI    printChar
                     CALL    giga_vAC
-                    LDWI    0
+                    LDI     0
                     SUBW    textNum
                     STW     textNum    
     
@@ -854,11 +852,11 @@ printI16_pos        LDWI    10000
                     STW     digitMult
                     LDWI    printDigit
                     CALL    giga_vAC
-                    LDWI    100
+                    LDI     100
                     STW     digitMult
                     LDWI    printDigit
                     CALL    giga_vAC
-                    LDWI    10
+                    LDI     10
                     STW     digitMult
                     LDWI    printDigit
                     CALL    giga_vAC
@@ -974,7 +972,7 @@ clearCR_loopx       SUBI    4                               ; loop is unrolled 4
 newLineScroll       LDI     0x02                            ; x offset slightly
                     ST      cursorXY
                     ST      giga_sysArg4
-                    LDWI    0x0001
+                    LDI     0x01
                     ANDW    miscFlags
                     BNE     newLS_cont0                     ; scroll on or off
                     RET

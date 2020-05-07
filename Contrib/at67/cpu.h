@@ -7,8 +7,8 @@
 #include <algorithm>
 
 
-#define MAJOR_VERSION "0.8"
-#define MINOR_VERSION "27"
+#define MAJOR_VERSION "0.9"
+#define MINOR_VERSION "0B"
 #define VERSION_STR "gtemuAT67 v" MAJOR_VERSION "." MINOR_VERSION
  
 #define ROM_INST 0

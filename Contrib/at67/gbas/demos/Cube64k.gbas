@@ -25,9 +25,9 @@ DIM Q(7)=0 : DIM QQ(7)=0
 mode 3
 
 ' disable video, (except last line so that we don't lose sync), for fast cls, cls both buffers, enable video
-poke &h01F9, 238
+set VIDEOTOP, 238
 cls : cls &h8800
-poke &h01F9, 0
+set VIDEOTOP, 0
 
 10 U=48:GOTO setup
 
@@ -53,20 +53,20 @@ setup:
     pageFlip = &h80
 
 
-timer=0 : tick=peek(14)
+timer=0 : tick=get("FRAMECOUNT")
 for i=0 to 100
-    ticks=tick : tick=peek(14) : ticks=tick-ticks
+    ticks=tick : tick=get("FRAMECOUNT") : ticks=tick-ticks
     if ticks &&< 0 then ticks=ticks+256
     timer=timer+ticks
     gosub 254
 next i    
 
-poke 163, &h0F
+set FGCOLOUR, &h0F
 print timer/60;" ";timer % 60;"/60"
 end
 
 'loop: 
-'    gosub peek(17)
+'    gosub get("BUTTONSTATE")
 'goto loop
 
 process: 
@@ -111,16 +111,16 @@ return
 
 254: S = S + 5 : if S &>= 45 then S = -40
 
-     poke 163, &h0F : gosub process : gosub draw
+     set FGCOLOUR, &h0F : gosub process : gosub draw
      gosub flip
-     poke 163, &h20 : gosub erase
+     set FGCOLOUR, &h20 : gosub erase
      return
      
 253: S = S - 5 : if S &<= -45 then S = 40
     
-     poke 163, &h0F : gosub process : gosub draw
+     set FGCOLOUR, &h0F : gosub process : gosub draw
      gosub flip
-     poke 163, &h20 : gosub erase
+     set FGCOLOUR, &h20 : gosub erase
      return
      
 flip: 

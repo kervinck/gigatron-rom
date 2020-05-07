@@ -18,7 +18,7 @@ load image, ../../images/gbas/Parallax.tga, &h0800
 ' and paste the &h5900 to &h5B00 strip AFTER loading has finished to
 ' avoid corrupting 'Loader.gcl', here we just draw some blue lines
 ' *NOTE* the compiler will NOT write to &h5900, &h5A00 or &h5B00 scanlines
-poke 163, &h30
+set FGCOLOUR, &h30
 hline 0, &h51, 255
 hline 0, &h52, 255
 hline 0, &h53, 255
@@ -40,7 +40,7 @@ loop:
     poke &h01BB, x5.hi
     poke &h01D3, x5.hi
     
-    gosub peek(17)
+    gosub get("BUTTONSTATE")
 goto loop
 
 254: speed1 = speed1 + 2 : if speed1 &&> 256 then speed1 = 256

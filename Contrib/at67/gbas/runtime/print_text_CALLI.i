@@ -64,12 +64,9 @@ printInit           LDWI    SYS_VDrawBits_134
                     STW     giga_sysFn
                     LDW     fgbgColour
                     STW     giga_sysArg0
-                    
-                    LDWI    giga_videoTable
-                    STW     giga_sysArg4
-                    LD      cursorXY + 1
+                    LD      cursorXY + 1                    ; xy = peek(256+2*y)*256 + x
                     LSLW
-                    ADDW    giga_sysArg4
+                    INC     giga_vAC + 1
                     PEEK
                     ST      giga_sysArg4 + 1
                     LD      cursorXY
@@ -204,7 +201,7 @@ printInt16          PUSH
                     LDI     0x2D
                     ST      textChr
                     CALLI   printChar
-                    LDWI    0
+                    LDI     0
                     SUBW    textNum
                     STW     textNum    
     
@@ -214,10 +211,10 @@ printI16_pos        LDWI    10000
                     LDWI    1000
                     STW     digitMult
                     CALLI   printDigit
-                    LDWI    100
+                    LDI     100
                     STW     digitMult
                     CALLI   printDigit
-                    LDWI    10
+                    LDI     10
                     STW     digitMult
                     CALLI   printDigit
                     LD      textNum
@@ -335,7 +332,7 @@ printC_exit         RET
 newLineScroll       LDI     0x02                            ; x offset slightly
                     ST      cursorXY
                     ST      giga_sysArg4
-                    LDWI    0x0001
+                    LDI     0x01
                     ANDW    miscFlags
                     BNE     newLS_cont0                     ; scroll on or off
                     RET

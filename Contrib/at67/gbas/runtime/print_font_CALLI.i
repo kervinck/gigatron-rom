@@ -14,10 +14,10 @@ digitIndex          EQU     register13
 clearLoop           EQU     register14
 fontId              EQU     register9
 fontAddrs           EQU     register10
-fontMap             EQU     register11
+fontBase            EQU     register11
 fontPosXY           EQU     register15
 
-    
+
 %SUB                clearCursorRow
                     ; clears the top 8 lines of pixels in preparation of text scrolling
 clearCursorRow      PUSH
@@ -36,7 +36,7 @@ clearCursorRow      PUSH
                     LDI     8
 
 clearCR_loopy       ST      clearLoop
-                    CALL    realTimeProcAddr
+                    CALLI   realTimeProc
                     LDI     giga_xres
                     
 clearCR_loopx       SUBI    4                               ; loop is unrolled 4 times
@@ -58,32 +58,29 @@ clearCR_loopx       SUBI    4                               ; loop is unrolled 4
                     SUBI    1
                     BNE     clearCR_loopy
 
-                    LDWI    printInitFont
-                    CALL    giga_vAC                        ; re-initialise the SYS registers
+                    CALLI   printInit                      ; re-initialise the SYS registers
                     POP
                     RET
 %ENDS
 
-%SUB                printInitFont
-printInitFont       LDWI    SYS_Sprite6_v3_64
+%SUB                printInit
+printInit           LDWI    SYS_Sprite6_v3_64
                     STW     giga_sysFn
-                    LDWI    giga_videoTable
-                    STW     fontPosXY
-                    LD      cursorXY + 1
+                    LD      cursorXY + 1                    ; xy = peek(256+2*y)*256 + x
                     LSLW
-                    ADDW    fontPosXY
+                    INC     giga_vAC + 1
                     PEEK
                     ST      fontPosXY + 1
                     LD      cursorXY
                     ST      fontPosXY                       ; xy position
                     RET
 %ENDS
-                    
+
 %SUB                printText
                     ; prints text string pointed to by textStr
 printText           PUSH
-                    LDWI    printInitFont
-                    CALL    giga_vAC
+                    STW     textStr
+                    CALLI   printInit
 
                     ; first byte is length
 printT_char         INC     textStr                         ; next char
@@ -91,8 +88,7 @@ printT_char         INC     textStr                         ; next char
                     PEEK
                     BEQ     printT_exit                     ; check for delimiting zero
                     ST      textChr
-                    LDWI    printCharFont
-                    CALL    giga_vAC
+                    CALLI   printChar
                     BRA     printT_char
                     
 printT_exit         POP
@@ -102,8 +98,8 @@ printT_exit         POP
 %SUB                printLeft
                     ; prints left sub string pointed to by the accumulator
 printLeft           PUSH
-                    LDWI    printInitFont
-                    CALL    giga_vAC
+                    STW     textStr
+                    CALLI   printInit
                     LD      textLen
                     BEQ     printL_exit
     
@@ -112,8 +108,7 @@ printL_char         ST      textLen
                     LDW     textStr             
                     PEEK
                     ST      textChr
-                    LDWI    printCharFont
-                    CALL    giga_vAC
+                    CALLI   printChar
 
                     LD      textLen
                     SUBI    1
@@ -125,8 +120,8 @@ printL_exit         POP
 %SUB                printRight
                     ; prints right sub string pointed to by the accumulator
 printRight          PUSH
-                    LDWI    printInitFont
-                    CALL    giga_vAC
+                    STW     textStr
+                    CALLI   printInit
                     LDW     textStr
                     PEEK                                    ; text length
                     ADDW    textStr
@@ -140,8 +135,7 @@ printR_char         ST      textLen
                     LDW     textStr             
                     PEEK
                     ST      textChr
-                    LDWI    printCharFont
-                    CALL    giga_vAC
+                    CALLI   printChar
 
                     LD      textLen
                     SUBI    1
@@ -153,8 +147,8 @@ printR_exit         POP
 %SUB                printMid
                     ; prints sub string pointed to by the accumulator
 printMid            PUSH
-                    LDWI    printInitFont
-                    CALL    giga_vAC
+                    STW     textStr
+                    CALLI   printInit
                     LDW     textStr
                     ADDW    textOfs
                     STW     textStr                         ; textStr += textOfs
@@ -166,8 +160,7 @@ printM_char         ST      textLen
                     LDW     textStr             
                     PEEK
                     ST      textChr
-                    LDWI    printCharFont
-                    CALL    giga_vAC
+                    CALLI   printChar
 
                     LD      textLen
                     SUBI    1
@@ -179,6 +172,7 @@ printM_exit         POP
 %SUB                printDigit
                     ; prints single digit in textNum
 printDigit          PUSH
+                    STW     digitMult
                     LDW     textNum
 printD_index        SUBW    digitMult
                     BLT     printD_cont
@@ -190,8 +184,7 @@ printD_cont         LD      digitIndex
                     BEQ     printD_exit
                     ORI     0x30
                     ST      textChr
-                    LDWI    printCharFont
-                    CALL    giga_vAC
+                    CALLI   printChar
                     LDI     0x30
                     ST      digitIndex
 printD_exit         POP
@@ -201,41 +194,35 @@ printD_exit         POP
 %SUB                printInt16
                     ; prints 16bit int in textNum
 printInt16          PUSH
-                    LDWI    printInitFont
-                    CALL    giga_vAC
+                    STW     textNum
+                    CALLI   printInit
                     LDI     0
                     ST      digitIndex
                     LDW     textNum
                     BGE     printI16_pos
                     LDI     0x2D
                     ST      textChr
-                    LDWI    printCharFont
-                    CALL    giga_vAC
-                    LDWI    0
+                    CALLI   printChar
+                    LDI     0
                     SUBW    textNum
                     STW     textNum    
     
 printI16_pos        LDWI    10000
                     STW     digitMult
-                    LDWI    printDigit
-                    CALL    giga_vAC
+                    CALLI   printDigit
                     LDWI    1000
                     STW     digitMult
-                    LDWI    printDigit
-                    CALL    giga_vAC
-                    LDWI    100
+                    CALLI   printDigit
+                    LDI     100
                     STW     digitMult
-                    LDWI    printDigit
-                    CALL    giga_vAC
-                    LDWI    10
+                    CALLI   printDigit
+                    LDI     10
                     STW     digitMult
-                    LDWI    printDigit
-                    CALL    giga_vAC
+                    CALLI   printDigit
                     LD      textNum
                     ORI     0x30
                     ST      textChr
-                    LDWI    printCharFont
-                    CALL    giga_vAC
+                    CALLI   printChar
                     POP
                     RET
 %ENDS
@@ -243,6 +230,7 @@ printI16_pos        LDWI    10000
 %SUB                printHexByte
                     ; print hex byte in textHex
 printHexByte        PUSH
+                    ST      textHex
                     LDWI    SYS_LSRW4_50                    ; shift right by 4 SYS routine
                     STW     giga_sysFn
                     LD      textHex
@@ -252,10 +240,8 @@ printHexByte        PUSH
                     ADDI    7
 printH_skip0        ADDI    0x3A
                     ST      textChr
-                    LDWI    printInitFont
-                    CALL    giga_vAC
-                    LDWI    printCharFont
-                    CALL    giga_vAC
+                    CALLI   printInit
+                    CALLI   printChar
                     LD      textHex
                     ANDI    0x0F
                     SUBI    10
@@ -263,8 +249,7 @@ printH_skip0        ADDI    0x3A
                     ADDI    7
 printH_skip1        ADDI    0x3A
                     ST      textChr
-                    LDWI    printCharFont
-                    CALL    giga_vAC
+                    CALLI   printChar
                     POP
                     RET
 %ENDS                    
@@ -272,16 +257,11 @@ printH_skip1        ADDI    0x3A
 %SUB                printHexWord     
                     ; print hex word in textHex
 printHexWord        PUSH
-                    LD      textHex
-                    ST      textBak
-                    LD      textHex + 1
-                    ST      textHex
-                    LDWI    printHexByte
-                    CALL    giga_vAC
+                    STW     textBak
+                    LD      textBak + 1
+                    CALLI   printHexByte
                     LD      textBak
-                    ST      textHex
-                    LDWI    printHexByte
-                    CALL    giga_vAC
+                    CALLI   printHexByte
                     POP
                     RET
 %ENDS   
@@ -289,81 +269,74 @@ printHexWord        PUSH
 %SUB                printChr
                     ; prints char in textChr for standalone calls
 printChr            PUSH
-                    LDWI    printInitFont
-                    CALL    giga_vAC
-                    LDWI    printCharFont
-                    CALL    giga_vAC
+                    ST      textChr
+                    CALLI   printInit
+                    CALLI   printChar
                     POP
                     RET
 %ENDS
 
-%SUB                printCharFont
+%SUB                printChar
                     ; prints char in textChr
-printCharFont       LD      textChr
+printChar           LD      textChr
                     ANDI    0x7F                            ; char can't be bigger than 127
                     SUBI    32
                     BLT     printCF_exit
                     STW     textChr                         ; char-32                    
 
                     LDWI    _fontsLut_                      ; fonts table
-                    ;ADDW    fontId
-                    ;ADDW    fontId
+                    ADDW    fontLutId
+                    ADDW    fontLutId
                     DEEK
                     STW     fontAddrs                       ; get font address table
-                    DEEK
-                    STW     fontMap                         ; get font mapping table
                     INC     fontAddrs
                     INC     fontAddrs
-                    
-                    LDW     fontMap
+                    DEEK                                    ; get font mapping table
+                    BEQ     printCF_noMap                   ; no mapping table means font contains all chars 32 -> 127 in the correct order
                     ADDW    textChr
                     PEEK
+                    STW     textChr                         ; get mapped char
+                    
+printCF_noMap       LDW     fontAddrs
+                    DEEK
+                    STW     fontBase                        ; baseline address, shared by all chars in a font
+                    INC     fontAddrs
+                    INC     fontAddrs
+                    LDW     textChr
                     LSLW
                     ADDW    fontAddrs
                     DEEK                                    ; get char address
                     STW     giga_sysArg0
-                    LDW     fontPosXY                       ; XY pos generated in printInitFont
-                    SYS     64
+                    LDW     fontPosXY                       ; XY pos generated in printInit
+                    SYS     64                              ; draw char
                     STW     fontPosXY
                     
-                    LDWI    def_baseline_
+                    LDW     fontBase
                     STW     giga_sysArg0
                     LDWI    0x0F00
                     ADDW    cursorXY
-                    SYS     64
+                    SYS     64                              ; draw baseline for char
                     
                     PUSH
-                    CALL    realTimeProcAddr
+                    CALLI   realTimeProc
                     LD      cursorXY
                     ADDI    0x06
                     ST      cursorXY
                     SUBI    giga_xres - 5                   ; giga_xres - 6, (154), is last possible char in row
                     BLT     printCF_pop
-                    LDWI    newLineScroll                   ; next row, scroll at bottom
-                    CALL    giga_vAC
+                    CALLI   newLineScroll                   ; next row, scroll at bottom
                     
 printCF_pop         POP
 
 printCF_exit        RET
 %ENDS
 
-%SUB                printChr
-                    ; prints char in textChr for standalone calls
-printChr            PUSH
-                    LDWI    printInitFont
-                    CALL    giga_vAC
-                    LDWI    printCharFont
-                    CALL    giga_vAC
-                    POP
-                    RET
-%ENDS
-    
 %SUB                newLineScroll
                     ; print from top row to bottom row, then start scrolling 
 newLineScroll       LDI     0x02                            ; x offset slightly
                     ST      cursorXY
                     ST      fontPosXY
-                    LDWI    0x0001
+                    LDI     0x01
                     ANDW    miscFlags
                     BNE     newLS_cont0                     ; scroll on or off
                     RET
@@ -380,12 +353,11 @@ newLS_cont0         PUSH
                     LDI     giga_yres - 8
                     ST      cursorXY + 1
                     
-newLS_cont1         LDWI    clearCursorRow
-                    CALL    giga_vAC
+newLS_cont1         CALLI   clearCursorRow
                     LDWI    giga_videoTable
                     STW     scanLine
     
-newLS_scroll        CALL    realTimeProcAddr
+newLS_scroll        CALLI   realTimeProc
                     LDW     scanLine
                     PEEK
                     ADDI    8
@@ -406,8 +378,7 @@ newLS_adjust        ADDI    8
                     ORW     miscFlags
                     STW     miscFlags                       ; set on bottom row flag
                     
-newLS_exit          LDWI    printInitFont
-                    CALL    giga_vAC                        ; re-initialise the SYS registers
+newLS_exit          CALLI   printInit                       ; re-initialise the SYS registers
                     POP
                     RET
 %ENDS   

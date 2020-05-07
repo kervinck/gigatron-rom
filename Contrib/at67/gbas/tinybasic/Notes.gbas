@@ -29,6 +29,6 @@ _runtimePath_ "../runtime"
 34 poke p,  usr(&hE0):'Flo
 35 poke p+1,usr(&hE0):'Fhi
 36 next c
-37 poke 44,15:'0.25 secs
-38 if peek(44)&>0 then goto 38
+37 set SOUNDTIMER,15:'0.25 secs
+38 if get("SOUNDTIMER") >0 then goto 38
 39 next n

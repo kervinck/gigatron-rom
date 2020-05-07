@@ -15,7 +15,7 @@ fade=0 : cIndex=fade : decay = 54
 for y=119 to horizonY step -1
     color1 = c1(cIndex) : color2 = c2(cIndex)
     fade = fade + 1
-    if fade &= decay then cIndex = cIndex + 1 : fade = 0 : decay = decay LSR 1
+    if fade &&= decay then cIndex = cIndex + 1 : fade = 0 : decay = decay LSR 1
 
     yy = y
     gosub calcPitch
@@ -44,9 +44,9 @@ for y=119 to horizonY step -1
 
         poke a+x,p 
     next x
-    poke &h01F9, y+y
+    set VIDEOTOP, y+y
 next y
-poke &h01F9, 0
+set VIDEOTOP, 0
 
 x=0 : v=8
 loop:   i = x AND 255
@@ -67,7 +67,7 @@ loop:   i = x AND 255
             j = i + (j AND 255)
         p = p + 4 : until p &&>= q
         
-        gosub peek(17)
+        gosub get("BUTTONSTATE")
         
         x = x + v
 goto loop

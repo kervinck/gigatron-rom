@@ -20,21 +20,19 @@ const D_LUT=&h09A0
 const D_SIZ=64
 def byte(D_LUT, y, 0.0, 0.5, D_SIZ) = 63.0 - exp(-y)*(1.0-exp(-2.0*y))*2.5*58.0
 
-const MIDI_STREAM = &h00A6
-
 _spriteStripeChunks_ 32, &h0400, ascending
 load sprite, ../../images/gbas/VUerase.tga, 0
 load sprite, ../../images/gbas/VUdraw.tga, 1, FlipY
 
 t = 0
 
-poke 162,0
-poke 163, &h3C
+sound off
+set FGBGCOLOUR, &h3C00
 cls
 mode 1
 
-at 30,2
-print "Keys: <1> <2> <3>";
+at 18,2
+print "Keys: <1> <2> <3> <4>";
 
 dim volume(4) = 127
 dim ypos(4) = 1
@@ -43,18 +41,18 @@ kk = 255
 state = 0
 
 loop:
-    poke &h2C, 5
+    set SOUNDTIMER, 5
 
     gosub vuMeter
     
-    k = peek(16)
+    k = get("SERIALRAW")
     if kk &&= 255 then gosub k
     gosub state
     kk = k
 goto &loop
 
 midiOff:
-    doke MIDI_STREAM, &h0000
+    set MIDISTREAM, &h0000
 return
 
 1:  gosub midiOff
@@ -64,8 +62,12 @@ return
 2:  gosub midiOff
     gosub crash
     return
+
+3:  gosub midiOff
+    gosub beep
+    return
     
-3:  if deek(MIDI_STREAM) &&= &h0000
+4:  if get("MIDISTREAM") &= &h0000
         play midiv, &h0AA0, 2
     else
         play midiv
@@ -80,7 +82,11 @@ return
     state = 2
     return
     
-51: state = 3
+51: t = 0
+    state = 3
+    return
+
+52: state = 4
     return
 
 vuMeter:
@@ -124,14 +130,14 @@ decay:
 return
 
 siren:
-    v_lut = PEEK(V_LUT + (t AND (V_SIZ - 1)))
-    f_lut = DEEK(F_LUT + (t LSL 1))
+    v_lut = peek(V_LUT + (t AND (V_SIZ - 1)))
+    f_lut = deek(F_LUT + (t LSL 1))
     sound on, 1, f_lut    , v_lut, 2 
     sound on, 2, f_lut+100, v_lut, 2
     sound on, 3, f_lut+200, v_lut, 2
     sound on, 4, f_lut+300, v_lut, 2
     inc t
-    if t &&= 64
+    if t &= 64
         t = 0
         state = 0
         sound off
@@ -139,8 +145,8 @@ siren:
 return
 
 crash:
-    d_lut = PEEK(D_LUT + (t AND (D_SIZ - 1)))
-    f_lut = DEEK(F_LUT + ((t AND 1) LSL 1))
+    d_lut = peek(D_LUT + (t AND (D_SIZ - 1)))
+    f_lut = deek(F_LUT + ((t AND 1) LSL 1))
     sound on, 1, f_lut    , d_lut, 0
     sound on, 2, f_lut+100, d_lut, 0
     sound on, 3, f_lut+200, d_lut, 0
@@ -153,6 +159,15 @@ crash:
     endif
 return
 
+beep:
+    sound on, 1, 8000, 63, 1
+    inc t
+    if t &= 3
+        t = 0
+        state = 0
+        sound off
+    endif
+return
 
 def byte(&h0aa0) =  &h90, &h47, &h47, &h91, &h36, &h49, &h0e, &h90, &h46, &h55, &h91, &h3d, &h41, &h04, &h90, &h47,
 def byte         =  &h4a, &h04, &h90, &h46, &h51, &h07, &h90, &h42, &h4c, &h91, &h36, &h4c, &h0e, &h90, &h49, &h4c,

@@ -61,6 +61,7 @@ namespace Keywords
         _functions["RND" ] = "RND";
         _functions["LEN" ] = "LEN";
         _functions["GET" ] = "GET";
+        _functions["POS" ] = "POS";
         _functions["ABS" ] = "ABS";
         _functions["ASC" ] = "ASC";
         _functions["SIN" ] = "SIN";
@@ -647,7 +648,17 @@ namespace Keywords
             // Constants lengths
             else
             {
-                (length <= 255) ? Compiler::emitVcpuAsm("LDI", std::to_string(length), false) : Compiler::emitVcpuAsm("LDWI", std::to_string(length), false);
+                // Generate code to save result into a var
+                if(Expression::getOutputNumeric()._index > -1)
+                {
+                    (length <= 255) ? Compiler::emitVcpuAsm("LDI", std::to_string(length), false) : Compiler::emitVcpuAsm("LDWI", std::to_string(length), false);
+                }
+                // No code needed for static initialisation
+                else
+                {
+                    numeric._value = length;
+                    return numeric;
+                }
             }
 
             numeric._value = uint8_t(Compiler::getTempVarStart());
@@ -664,7 +675,9 @@ namespace Keywords
     {
         if(numeric._varType == Expression::String)
         {
-            if(numeric._text == "SPRITELUT")
+            std::string sysVarName = numeric._text;
+            Expression::strToUpper(sysVarName);
+            if(sysVarName == "SPRITELUT"  &&  numeric._parameters.size() == 1)
             {
                 // Literal constant
                 if(numeric._parameters[0]._varType == Expression::Number)
@@ -675,14 +688,175 @@ namespace Keywords
                 // Look up sprite lut from sprites lut using a sprite index, (handleSingleOp LDW is skipped if above was a constant literal)
                 Compiler::getNextTempVar();
                 Operators::handleSingleOp("LDW", numeric._parameters[0]);
-                Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
-                Compiler::emitVcpuAsm("LDWI", "_spritesLut_", false);
-                Compiler::emitVcpuAsm("ADDW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
-                Compiler::emitVcpuAsm("ADDW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
-                Compiler::emitVcpuAsm("DEEK", "", false);
-                Compiler::emitVcpuAsm("DEEK", "", false);
+                Compiler::emitVcpuAsm("STW", "spriteId", false);
+                Compiler::emitVcpuAsm("%GetSpriteLUT", "", false);
                 Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
                 return numeric._parameters[0];
+            }
+            else if(numeric._parameters.size() == 0)
+            {
+                Compiler::getNextTempVar();
+                numeric._value = uint8_t(Compiler::getTempVarStart());
+                numeric._varType = Expression::TmpVar;
+                numeric._name = Compiler::getTempVarStartStr();
+
+                if(sysVarName == "CURSORX")
+                {
+                    Compiler::emitVcpuAsm("LD", "cursorXY", false);
+                }
+                else if(sysVarName == "CURSORY")
+                {
+                    Compiler::emitVcpuAsm("LD", "cursorXY + 1", false);
+                }
+                else if(sysVarName == "CURSORXY")
+                {
+                    Compiler::emitVcpuAsm("LDW", "cursorXY", false);
+                }
+                else if(sysVarName == "FGCOLOUR")
+                {
+                    Compiler::emitVcpuAsm("LD", "fgbgColour + 1", false);
+                }
+                else if(sysVarName == "BGCOLOUR")
+                {
+                    Compiler::emitVcpuAsm("LD", "fgbgColour", false);
+                }
+                else if(sysVarName == "FGBGCOLOUR")
+                {
+                    Compiler::emitVcpuAsm("LDW", "fgbgColour", false);
+                }
+                else if(sysVarName == "MIDISTREAM")
+                {
+                    Compiler::emitVcpuAsm("LDW", "midiStream", false);
+                }
+                else if(sysVarName == "LEDTEMPO")
+                {
+                    Compiler::emitVcpuAsm("LD", "giga_ledTempo", false);
+                }
+                else if(sysVarName == "LEDSTATE")
+                {
+                    Compiler::emitVcpuAsm("LD", "giga_ledState", false);
+                }
+                else if(sysVarName == "SOUNDTIMER")
+                {
+                    Compiler::emitVcpuAsm("LD", "giga_soundTimer", false);
+                }
+                else if(sysVarName == "CHANNELMASK")
+                {
+                    Compiler::emitVcpuAsm("LD", "giga_channelMask", false);
+                    Compiler::emitVcpuAsm("ANDI", "0x03", false);
+                }
+                else if(sysVarName == "ROMTYPE")
+                {
+                    Compiler::emitVcpuAsm("LD", "giga_romType", false);
+                    Compiler::emitVcpuAsm("ANDI", "0xF8", false);
+                }
+                else if(sysVarName == "VSP")
+                {
+                    Compiler::emitVcpuAsm("LD", "giga_vSP", false);
+                }
+                else if(sysVarName == "VLR")
+                {
+                    Compiler::emitVcpuAsm("LD", "giga_vLR", false);
+                }
+                else if(sysVarName == "VAC")
+                {
+                    Compiler::emitVcpuAsm("LD", "giga_vAC", false);
+                }
+                else if(sysVarName == "VPC")
+                {
+                    Compiler::emitVcpuAsm("LD", "giga_vPC", false);
+                }
+                else if(sysVarName == "XOUTMASK")
+                {
+                    Compiler::emitVcpuAsm("LD", "giga_xoutMask", false);
+                }
+                else if(sysVarName == "BUTTONSTATE")
+                {
+                    Compiler::emitVcpuAsm("LD", "giga_buttonState", false);
+                }
+                else if(sysVarName == "SERIALRAW")
+                {
+                    Compiler::emitVcpuAsm("LD", "giga_serialRaw", false);
+                }
+                else if(sysVarName == "FRAMECOUNT")
+                {
+                    Compiler::emitVcpuAsm("LD", "giga_frameCount", false);
+                }
+                else if(sysVarName == "VIDEOY")
+                {
+                    Compiler::emitVcpuAsm("LD", "giga_videoY", false);
+                }
+                else if(sysVarName == "RAND2")
+                {
+                    Compiler::emitVcpuAsm("LD", "giga_rand2", false);
+                }
+                else if(sysVarName == "RAND1")
+                {
+                    Compiler::emitVcpuAsm("LD", "giga_rand1", false);
+                }
+                else if(sysVarName == "RAND0")
+                {
+                    Compiler::emitVcpuAsm("LD", "giga_rand0", false);
+                }
+                else if(sysVarName == "MEMSIZE")
+                {
+                    Compiler::emitVcpuAsm("LD", "giga_memSize", false);
+                }
+                else if(sysVarName == "YRES")
+                {
+                    Compiler::emitVcpuAsm("LDI", "giga_yres", false);
+                }
+                else if(sysVarName == "XRES")
+                {
+                    Compiler::emitVcpuAsm("LDI", "giga_xres", false);
+                }
+                else if(sysVarName == "SNDCHN4")
+                {
+                    Compiler::emitVcpuAsm("LDWI", "giga_soundChan4", false);
+                }
+                else if(sysVarName == "SNDCHN3")
+                {
+                    Compiler::emitVcpuAsm("LDWI", "giga_soundChan3", false);
+                }
+                else if(sysVarName == "SNDCHN2")
+                {
+                    Compiler::emitVcpuAsm("LDWI", "giga_soundChan2", false);
+                }
+                else if(sysVarName == "SNDCHN1")
+                {
+                    Compiler::emitVcpuAsm("LDWI", "giga_soundChan1", false);
+                }
+                else if(sysVarName == "VTOP")
+                {
+                    Compiler::emitVcpuAsm("LDWI", "giga_videoTop", false);
+                }
+                else if(sysVarName == "VTABLE")
+                {
+                    Compiler::emitVcpuAsm("LDWI", "giga_videoTable", false);
+                }
+                else if(sysVarName == "VRAM")
+                {
+                    Compiler::emitVcpuAsm("LDWI", "giga_vram", false);
+                }
+                else if(sysVarName == "ROMNOTES")
+                {
+                    Compiler::emitVcpuAsm("LDWI", "giga_notesTable", false);
+                }
+                else if(sysVarName == "ROMTEXT82")
+                {
+                    Compiler::emitVcpuAsm("LDWI", "giga_text82", false);
+                }
+                else if(sysVarName == "ROMTEXT32")
+                {
+                    Compiler::emitVcpuAsm("LDWI", "giga_text32", false);
+                }
+                else
+                {
+                    fprintf(stderr, "*** Warning *** Keywords::functionGET() : system variable name '%s' does not exist\n", numeric._text.c_str());
+                    return numeric;
+                }
+
+                Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
             }
         }
 
@@ -777,7 +951,17 @@ namespace Keywords
             // Constants lengths
             else
             {
-                Compiler::emitVcpuAsm("LDI", std::to_string(ascii), false);
+                // Generate code to save result into a var
+                if(Expression::getOutputNumeric()._index > -1)
+                {
+                    Compiler::emitVcpuAsm("LDI", std::to_string(ascii), false);
+                }
+                // No code needed for static initialisation
+                else
+                {
+                    numeric._value = ascii;
+                    return numeric;
+                }
             }
 
             numeric._value = uint8_t(Compiler::getTempVarStart());
@@ -1659,8 +1843,8 @@ namespace Keywords
         UNREFERENCED_PARAM(tokenIndex);
         UNREFERENCED_PARAM(codeLine);
 
-        Compiler::emitVcpuAsm("POP", "", false, codeLineIndex);
-        Compiler::emitVcpuAsm("RET", "", false, codeLineIndex);
+        // Use a macro instead of separate "POP" and "RET", otherwise page jumps could be inserted in between the "POP" and "RET" causing havoc and mayhem
+        Compiler::emitVcpuAsm("%Return", "", false, codeLineIndex);
 
         return true;
     }
@@ -1679,10 +1863,19 @@ namespace Keywords
 
         if(codeLine._tokens.size() == 2)
         {
-            Expression::Numeric param;
-            Compiler::parseExpression(codeLineIndex, codeLine._tokens[1], param);
-            Compiler::emitVcpuAsm("STW", "clsAddress", false, codeLineIndex);
-            Compiler::emitVcpuAsm("%ClearScreen", "", false, codeLineIndex);
+            std::string token = codeLine._tokens[1];
+            Expression::strToUpper(token);
+            if(token == "INIT")
+            {
+                Compiler::emitVcpuAsm("%ResetVideoTable", "", false, codeLineIndex);
+            }
+            else
+            {
+                Expression::Numeric param;
+                Compiler::parseExpression(codeLineIndex, codeLine._tokens[1], param);
+                Compiler::emitVcpuAsm("STW", "clsAddress", false, codeLineIndex);
+                Compiler::emitVcpuAsm("%ClearScreen", "", false, codeLineIndex);
+            }
         }
         else
         {
@@ -2673,8 +2866,17 @@ namespace Keywords
                 tokens[1].erase(0, 1);
                 tokens[1].erase(tokens[1].size()-1, 1);
 
+                // Don't count escape char '\'
+                int escCount = 0;
+                int strLength = int(tokens[1].size());
+                for(int i=0; i<strLength; i++)
+                {
+                    if(tokens[1][i] == '\\') escCount++;
+                }
+                strLength -= escCount;
+
                 Compiler::getOrCreateString(codeLine, codeLineIndex, tokens[1], internalName, address);
-                Compiler::getConstants().push_back({uint8_t(tokens[1].size()), 0, address, tokens[1], tokens[0], internalName, Compiler::ConstStr});
+                Compiler::getConstants().push_back({uint8_t(strLength), 0, address, tokens[1], tokens[0], internalName, Compiler::ConstStr});
             }
             // String keyword
             else
@@ -3732,6 +3934,11 @@ namespace Keywords
         return true;
     }
 
+    void usagePLAY(Compiler::CodeLine& codeLine, int codeLineIndex)
+    {
+        fprintf(stderr, "Keywords::keywordPLAY() : Syntax error, use 'PLAY MIDI, <address>, <waveType>', where <address> and <waveType> are optional; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+        fprintf(stderr, "Keywords::keywordPLAY() : Syntax error, use 'PLAY MIDIV, <address>, <waveType>', where <address> and <waveType> are optional; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+    }
     bool keywordPLAY(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         UNREFERENCED_PARAM(result);
@@ -3740,8 +3947,7 @@ namespace Keywords
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ",", false);
         if(tokens.size() < 1  ||  tokens.size() > 3)
         {
-            fprintf(stderr, "Keywords::keywordPLAY() : Syntax error, use 'PLAY MIDI, <address>, <waveType>', where <address> and <waveType> are optional; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
-            fprintf(stderr, "Keywords::keywordPLAY() : Syntax error, use 'PLAY MIDIV, <address>, <waveType>', where <address> and <waveType> are optional; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            usagePLAY(codeLine, codeLineIndex);
             return false;
         }
 
@@ -3749,8 +3955,7 @@ namespace Keywords
         Expression::stripWhitespace(midiToken);
         if(midiToken != "MIDI"  &&  midiToken != "MIDIV")
         {
-            fprintf(stderr, "Keywords::keywordPLAY() : Syntax error, use 'PLAY MIDI, <address>, <waveType>', where <address> and <waveType> are optional; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
-            fprintf(stderr, "Keywords::keywordPLAY() : Syntax error, use 'PLAY MIDIV, <address>, <waveType>', where <address> and <waveType> are optional; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            usagePLAY(codeLine, codeLineIndex);
             return false;
         }
 
@@ -3787,6 +3992,12 @@ namespace Keywords
         return true;
     }
 
+    void usageLOAD(Compiler::CodeLine& codeLine, int codeLineIndex)
+    {
+            fprintf(stderr, "Keywords::keywordLOAD() : Syntax error, use 'LOAD IMAGE, <filename>, <optional address>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordLOAD() : Syntax error, use 'LOAD SPRITE, <filename>, <id>, <optional flip>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordLOAD() : Syntax error, use 'LOAD FONT, <filename>, <id>, <optional 16 bit bg:fg colours>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+    }
     bool keywordLOAD(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         UNREFERENCED_PARAM(result);
@@ -3795,10 +4006,7 @@ namespace Keywords
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ",", false);
         if(tokens.size() < 2  ||  tokens.size() > 4)
         {
-            fprintf(stderr, "Keywords::keywordLOAD() : Syntax error, use 'LOAD IMAGE, <filename>, <optional address>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
-            fprintf(stderr, "Keywords::keywordLOAD() : Syntax error, use 'LOAD SPRITE, <filename>, <id>, <optional flip>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
-            fprintf(stderr, "Keywords::keywordLOAD() : Syntax error, use 'LOAD FONT, <filename>, <id>, <optional 16 bit bg:fg colours>', in '%s' on line %d\n", codeLine._text.c_str(),
-                                                                                                                                                                codeLineIndex);
+            usageLOAD(codeLine, codeLineIndex);
             return false;
         }
 
@@ -3807,10 +4015,7 @@ namespace Keywords
         Expression::stripWhitespace(tokens[0]);
         if(tokens[0] != "MIDI"  &&  tokens[0] != "IMAGE"  &&  tokens[0] != "SPRITE"  &&  tokens[0] != "FONT")
         {
-            fprintf(stderr, "Keywords::keywordLOAD() : Syntax error, use 'LOAD IMAGE, <filename>, <optional address>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
-            fprintf(stderr, "Keywords::keywordLOAD() : Syntax error, use 'LOAD SPRITE, <filename>, <id>, <optional flip>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
-            fprintf(stderr, "Keywords::keywordLOAD() : Syntax error, use 'LOAD FONT, <filename>, <id>, <optional 16 bit bg:fg colours>', in '%s' on line %d\n", codeLine._text.c_str(),
-                                                                                                                                                                codeLineIndex);
+            usageLOAD(codeLine, codeLineIndex);
             return false;
         }
 
@@ -4102,7 +4307,7 @@ namespace Keywords
                 {
                     if(tokens.size() < 3  ||  tokens.size() > 4)
                     {
-                        fprintf(stderr, "Keywords::keywordLOAD() : Syntax error, use 'LOAD FONT, <filename>, <id>, <optional 16 bit bg:fg colours>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+                        fprintf(stderr, "Keywords::keywordLOAD() : Syntax error, use 'LOAD FONT, <filename>, <id>, <optional 16 bit fg:bg colours>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
                         return false;
                     }
 
@@ -4119,16 +4324,16 @@ namespace Keywords
                         return false;
                     }
 
-                    // Background/foreground colours
-                    uint16_t bgfgColour = 0x0000;
+                    // Foreground/background colours
+                    uint16_t fgbgColour = 0x0000;
                     if(tokens.size() == 4)
                     {
-                        std::string bgfgToken = tokens[3];
-                        Expression::stripWhitespace(bgfgToken);
-                        Expression::Numeric bgfgNumeric;
-                        std::string bgfgOperand;
-                        Compiler::parseExpression(codeLineIndex, bgfgToken, bgfgOperand, bgfgNumeric);
-                        bgfgColour = uint16_t(std::lround(bgfgNumeric._value));
+                        std::string fgbgToken = tokens[3];
+                        Expression::stripWhitespace(fgbgToken);
+                        Expression::Numeric fgbgNumeric;
+                        std::string fgbgOperand;
+                        Compiler::parseExpression(codeLineIndex, fgbgToken, fgbgOperand, fgbgNumeric);
+                        fgbgColour = uint16_t(std::lround(fgbgNumeric._value));
                     }
 
                     // Width
@@ -4146,53 +4351,57 @@ namespace Keywords
                     }
 
                     // Load font mapping file
+                    bool foundMapFile = true;
                     size_t nameSuffix = filename.find_last_of(".");
                     filename = filename.substr(0, nameSuffix) + ".map";
                     std::ifstream infile(filename, std::ios::in);
                     if(!infile.is_open())
                     {
-                        fprintf(stderr, "Keywords::keywordLOAD() : failed to load Mapping file %s; in '%s' on line %d\n", filename.c_str(), codeLine._text.c_str(), codeLineIndex);
-                        return false;
+                        foundMapFile = false;
                     }
 
                     // Parse font mapping file
-                    int ascii, index, line = 0, maxIndex = -1;
+                    int maxIndex = -1;
+                    uint16_t mapAddr = 0x0000;
                     std::vector<uint8_t> mapping(MAPPING_SIZE);
-                    std::vector<uint8_t> charData;
-                    std::vector<uint16_t> charAddrs;
-                    std::vector<std::vector<uint8_t>> fontData;
-                    while(!infile.eof())
+                    if(foundMapFile)
                     {
-                        infile >> ascii >> index;
-                        if(index > maxIndex) maxIndex = index;
-                        if(!infile.good() && !infile.eof())
+                        int ascii, index, line = 0;
+                        while(!infile.eof())
                         {
-                            fprintf(stderr, "Keywords::keywordLOAD() : error in Mapping file %s on line %d; in '%s' on line %d\n", filename.c_str(), line + 1, codeLine._text.c_str(), codeLineIndex);
+                            infile >> ascii >> index;
+                            if(index > maxIndex) maxIndex = index;
+                            if(!infile.good() && !infile.eof())
+                            {
+                                fprintf(stderr, "Keywords::keywordLOAD() : error in Mapping file %s on line %d; in '%s' on line %d\n", filename.c_str(), line + 1, codeLine._text.c_str(), codeLineIndex);
+                                return false;
+                            }
+
+                            if(line >= MAPPING_SIZE) break;
+                            mapping[line++] = uint8_t(index);
+                        }
+
+                        if(line != MAPPING_SIZE)
+                        {
+                            fprintf(stderr, "Keywords::keywordLOAD() : warning, found an incorrect number of map entries %d for file %s, should be %d; in '%s' on line %d\n", line - 1, filename.c_str(), MAPPING_SIZE,
+                                                                                                                                                                              codeLine._text.c_str(), codeLineIndex);
                             return false;
                         }
 
-                        mapping[line % MAPPING_SIZE] = uint8_t(index);
-                        line++;
-                    }
-
-                    if(line != MAPPING_SIZE + 1  )
-                    {
-                        fprintf(stderr, "Keywords::keywordLOAD() : warning, found an incorrect number of map entries %d for file %s, should be %d; in '%s' on line %d\n", line - 1, filename.c_str(), MAPPING_SIZE,
-                                                                                                                                                                          codeLine._text.c_str(), codeLineIndex);
-                        return false;
-                    }
-
-                    uint16_t mapAddr = 0x0000;
-                    if(!Memory::getFreeRAM(Memory::FitDescending, MAPPING_SIZE, 0x0200, Compiler::getRuntimeStart(), mapAddr))
-                    {
-                        fprintf(stderr, "Keywords::keywordLOAD() : Getting Mapping memory for Map size of %d failed, in '%s' on line %d\n", MAPPING_SIZE, codeLine._text.c_str(), codeLineIndex);
-                        return false;
+                        if(!Memory::getFreeRAM(Memory::FitDescending, MAPPING_SIZE, 0x0200, Compiler::getRuntimeStart(), mapAddr))
+                        {
+                            fprintf(stderr, "Keywords::keywordLOAD() : Getting Mapping memory for Map size of %d failed, in '%s' on line %d\n", MAPPING_SIZE, codeLine._text.c_str(), codeLineIndex);
+                            return false;
+                        }
                     }
 
                     // 8th line is implemented as a separate sprite call, to save memory and allow for more efficient memory packing
                     const int kCharHeight = FONT_HEIGHT-1;
 
                     // Copy font data and create delimiter
+                    std::vector<uint8_t> charData;
+                    std::vector<uint16_t> charAddrs;
+                    std::vector<std::vector<uint8_t>> fontData;
                     for(int j=0; j<tgaFile._header._height; j+=FONT_HEIGHT)
                     {
                         for(int i=0; i<tgaFile._header._width; i+=FONT_WIDTH)
@@ -4203,10 +4412,10 @@ namespace Keywords
                                 for(int k=0; k<FONT_WIDTH; k++)
                                 {
                                     uint8_t pixel = gtRgbFile._data[j*tgaFile._header._width + i + l*tgaFile._header._width + k];
-                                    if(bgfgColour)
+                                    if(fgbgColour)
                                     {
-                                        if(pixel == 0x00) pixel = bgfgColour >> 8;
-                                        if(pixel == 0x3F) pixel = bgfgColour & 0x00FF;
+                                        if(pixel == 0x00) pixel = fgbgColour & 0x00FF;
+                                        if(pixel == 0x3F) pixel = fgbgColour >> 8;
                                     }
                                     charData.push_back(pixel);
                                 }
@@ -4226,25 +4435,22 @@ namespace Keywords
                         }
                     }
 
-                    if(maxIndex + 1 != int(fontData.size()))
+                    if(foundMapFile  &&  maxIndex + 1 != int(fontData.size()))
                     {
                         fprintf(stderr, "Keywords::keywordLOAD() : Font mapping table does not match font data, found a mapping count of %d and a chars count of %d, in '%s' on line %d\n", 
                                         maxIndex + 1, int(fontData.size()), codeLine._text.c_str(), codeLineIndex);
                         return false;
                     }
 
-                    // Create baseline for all chars, all fonts share the same baseline
-                    static uint16_t baseAddr = 0x0000;
-                    if(fontId == 0)
+                    // Create baseline for all chars in each font
+                    uint16_t baseAddr = 0x0000;
+                    if(!Memory::getFreeRAM(Memory::FitDescending, FONT_WIDTH + 1, 0x0200, Compiler::getRuntimeStart(), baseAddr))
                     {
-                        if(!Memory::getFreeRAM(Memory::FitDescending, FONT_WIDTH + 1, 0x0200, Compiler::getRuntimeStart(), baseAddr))
-                        {
-                            fprintf(stderr, "Keywords::keywordLOAD() : Getting font memory for char %d failed, in '%s' on line %d\n", int(fontData.size() - 1), codeLine._text.c_str(), codeLineIndex);
-                            return false;
-                        }
+                        fprintf(stderr, "Keywords::keywordLOAD() : Getting font memory for char %d failed, in '%s' on line %d\n", int(fontData.size() - 1), codeLine._text.c_str(), codeLineIndex);
+                        return false;
                     }
 
-                    Compiler::DefDataFont defDataFont = {fontId, filename, tgaFile._header._width, tgaFile._header._height, charAddrs, fontData, mapAddr, mapping, baseAddr};
+                    Compiler::DefDataFont defDataFont = {fontId, filename, tgaFile._header._width, tgaFile._header._height, charAddrs, fontData, mapAddr, mapping, baseAddr, fgbgColour};
                     Compiler::getDefDataFonts()[fontId] = defDataFont;
 
                     Linker::enableFontLinking();
@@ -4313,6 +4519,12 @@ namespace Keywords
         return true;
     }
 
+    void usageSOUND(Compiler::CodeLine& codeLine, int codeLineIndex)
+    {
+        fprintf(stderr, "Keywords::keywordSOUND() : Syntax error, use 'SOUND ON, <channel>, <frequency>, <optional volume>, <optional waveform>'; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+        fprintf(stderr, "Keywords::keywordSOUND() : Syntax error, use 'SOUND MOD, <channel>, <wavX>, <optional wavA>'; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+        fprintf(stderr, "Keywords::keywordSOUND() : Syntax error, use 'SOUND OFF, <optional channel>'; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+    }
     bool keywordSOUND(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         UNREFERENCED_PARAM(result);
@@ -4321,9 +4533,7 @@ namespace Keywords
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ",", false);
         if(tokens.size() < 1  ||  tokens.size() > 5)
         {
-            fprintf(stderr, "Keywords::keywordSOUND() : Syntax error, use 'SOUND ON, <channel>, <frequency>, <optional volume>, <optional waveform>'; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
-            fprintf(stderr, "Keywords::keywordSOUND() : Syntax error, use 'SOUND MOD, <channel>, <wavX>, <optional wavA>'; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
-            fprintf(stderr, "Keywords::keywordSOUND() : Syntax error, use 'SOUND OFF, <optional channel>'; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            usageSOUND(codeLine, codeLineIndex);
             return false;
         }
 
@@ -4444,39 +4654,148 @@ namespace Keywords
             return true;
         }
 
-        fprintf(stderr, "Keywords::keywordSOUND() : Syntax error, use 'SOUND ON, <channel>, <frequency>, <optional volume>, <optional waveform>'; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
-        fprintf(stderr, "Keywords::keywordSOUND() : Syntax error, use 'SOUND MOD, <channel>, <wavX>, <optional wavA>'; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
-        fprintf(stderr, "Keywords::keywordSOUND() : Syntax error, use 'SOUND OFF, <optional channel>'; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+        usageSOUND(codeLine, codeLineIndex);
         return false;
     }
 
+    void usageSET(Compiler::CodeLine& codeLine, int codeLineIndex)
+    {
+        fprintf(stderr, "Keywords::keywordSET() : Syntax error, use 'SET FONTID, <fontId>'; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+    }
     bool keywordSET(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         UNREFERENCED_PARAM(result);
         UNREFERENCED_PARAM(tokenIndex);
 
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ",", false);
-        if(tokens.size() < 2  ||  tokens.size() > 2)
+        if(tokens.size() < 1  ||  tokens.size() > 3)
         {
-            fprintf(stderr, "Keywords::keywordSET() : Syntax error, use 'SET FONTID, <fontId>'; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            usageSET(codeLine, codeLineIndex);
             return false;
         }
 
-        // Variable to set
-        std::string varToken = tokens[0];
-        Expression::stripWhitespace(varToken);
-        Expression::strToUpper(varToken);
+        // System variable to set
+        std::string sysVarName = tokens[0];
+        Expression::stripWhitespace(sysVarName);
+        Expression::strToUpper(sysVarName);
 
-        // Font id variable
-        if(varToken == "FONTID")
+        // First parameter after system var name
+        std::string token1;
+        Expression::Numeric param1;
+        if(tokens.size() >= 2)
         {
-            std::string fontIdToken = tokens[1];
-            Expression::stripWhitespace(fontIdToken);
-            Expression::Numeric fontIdParam;
-            Compiler::parseExpression(codeLineIndex, fontIdToken, fontIdParam);
-            Compiler::emitVcpuAsm("STW", "fontLutId", false, codeLineIndex);
+            token1 = tokens[1];
+            Expression::stripWhitespace(token1);
         }
 
-        return true;
+        // Second parameter after system var name
+        std::string token2;
+        Expression::Numeric param2;
+        if(tokens.size() >= 3)
+        {
+            token2 = tokens[2];
+            Expression::stripWhitespace(token2);
+        }
+
+        // Font id variable
+        if(sysVarName == "FONTID"  &&  tokens.size() == 2)
+        {
+            Compiler::parseExpression(codeLineIndex, token1, param1);
+            Compiler::emitVcpuAsm("STW", "fontLutId", false, codeLineIndex);
+            return true;
+        }
+        else if(sysVarName == "CURSORX"  &&  tokens.size() == 2)
+        {
+            Compiler::parseExpression(codeLineIndex, token1, param1);
+            Compiler::emitVcpuAsm("ST", "cursorXY", false, codeLineIndex);
+            return true;
+        }
+        else if(sysVarName == "CURSORY"  &&  tokens.size() == 2)
+        {
+            Compiler::parseExpression(codeLineIndex, token1, param1);
+            Compiler::emitVcpuAsm("ST", "cursorXY + 1", false, codeLineIndex);
+            return true;
+        }
+        else if(sysVarName == "CURSORXY"  &&  tokens.size() == 2)
+        {
+            Compiler::parseExpression(codeLineIndex, token1, param1);
+            Compiler::emitVcpuAsm("STW", "cursorXY", false, codeLineIndex);
+            return true;
+        }
+        else if(sysVarName == "FGCOLOUR"  &&  tokens.size() == 2)
+        {
+            Compiler::parseExpression(codeLineIndex, token1, param1);
+            Compiler::emitVcpuAsm("ST", "fgbgColour + 1", false, codeLineIndex);
+            return true;
+        }
+        else if(sysVarName == "BGCOLOUR"  &&  tokens.size() == 2)
+        {
+            Compiler::parseExpression(codeLineIndex, token1, param1);
+            Compiler::emitVcpuAsm("ST", "fgbgColour", false, codeLineIndex);
+            return true;
+        }
+        else if(sysVarName == "FGBGCOLOUR"  &&  tokens.size() == 2)
+        {
+            Compiler::parseExpression(codeLineIndex, token1, param1);
+            Compiler::emitVcpuAsm("STW", "fgbgColour", false, codeLineIndex);
+            return true;
+        }
+        else if(sysVarName == "MIDISTREAM"  &&  tokens.size() == 2)
+        {
+            Compiler::parseExpression(codeLineIndex, token1, param1);
+            Compiler::emitVcpuAsm("STW", "midiStream", false, codeLineIndex);
+            return true;
+        }
+        else if(sysVarName == "VIDEOTOP"  &&  tokens.size() == 2)
+        {
+            Compiler::parseExpression(codeLineIndex, token1, param1);
+            Compiler::emitVcpuAsm("ST", "giga_videoTop", false, codeLineIndex);
+            return true;
+        }
+        else if(sysVarName == "LEDTEMPO"  &&  tokens.size() == 2)
+        {
+            Compiler::parseExpression(codeLineIndex, token1, param1);
+            Compiler::emitVcpuAsm("ST", "giga_ledTempo", false, codeLineIndex);
+            return true;
+        }
+        else if(sysVarName == "LEDSTATE"  &&  tokens.size() == 2)
+        {
+            Compiler::parseExpression(codeLineIndex, token1, param1);
+            Compiler::emitVcpuAsm("ST", "giga_ledState", false, codeLineIndex);
+            return true;
+        }
+        else if(sysVarName == "SOUNDTIMER"  &&  tokens.size() == 2)
+        {
+            Compiler::parseExpression(codeLineIndex, token1, param1);
+            Compiler::emitVcpuAsm("ST", "giga_soundTimer", false, codeLineIndex);
+            return true;
+        }
+        else if(sysVarName == "CHANNELMASK"  &&  tokens.size() == 2)
+        {
+            Compiler::parseExpression(codeLineIndex, token1, param1);
+            Compiler::emitVcpuAsm("ST", "giga_channelMask", false, codeLineIndex);
+            return true;
+        }
+        else if(sysVarName == "XOUTMASK"  &&  tokens.size() == 2)
+        {
+            Compiler::parseExpression(codeLineIndex, token1, param1);
+            Compiler::emitVcpuAsm("ST", "giga_xoutMask", false, codeLineIndex);
+            return true;
+        }
+        else if(sysVarName == "BUTTONSTATE"  &&  tokens.size() == 2)
+        {
+            Compiler::parseExpression(codeLineIndex, token1, param1);
+            Compiler::emitVcpuAsm("ST", "giga_buttonState", false, codeLineIndex);
+            return true;
+        }
+        else if(sysVarName == "FRAMECOUNT"  &&  tokens.size() == 2)
+        {
+            Compiler::parseExpression(codeLineIndex, token1, param1);
+            Compiler::emitVcpuAsm("ST", "giga_frameCount", false, codeLineIndex);
+            return true;
+        }
+
+        usageSET(codeLine, codeLineIndex);
+        return false;
     }
 }
