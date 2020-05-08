@@ -386,7 +386,7 @@ shiftRightSgn5bit   EQU     0x78c5
 shiftRightSgn6bit   EQU     0x78a8
 shiftRightSgn7bit   EQU     0x77d8
 shiftRightSgn8bit   EQU     0x77b1
-resetVideoTable     EQU     0x76ae
+resetVideoTable     EQU     0x76a5
 initClearFuncs      EQU     0x7ddd
 clearVertBlinds     EQU     0x7da3
 clearCursorRow      EQU     0x74b6
@@ -795,6 +795,11 @@ resetVT_loop        CALL    realTimeProcAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
+                    
+                    LDWI    giga_videoTop                       ; reset videoTop
+                    STW     register0
+                    LDI     0
+                    POKE    register0
                     POP
                     RET
 

@@ -43,4 +43,7 @@ print g$
 print ch$;" ";hb$;" ";hw$
 print chr$(65);" ";hex$(15);" ";hexw$(bb);" ";left$("dogcat", 3);" ";left$(b$, 5)
 
+for i=32 to 127
+    print chr$(i);
+next i
 end

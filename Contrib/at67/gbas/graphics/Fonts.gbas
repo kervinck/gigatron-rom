@@ -15,4 +15,23 @@ for i=0 to 4
     print "ABCDEFGHIJKLMNOPQRSTUVWXYZ !?. 0123456789"
 next i
 
+s$ = "The font routines are integrated into gtBASIC correctly!"
+
+for i=1 to 10
+    r = rnd(5)
+    set fontId, r
+    print s$
+    wait 120
+next i
+
+scroll off 'stop text scrolling
+cls init 'initialise video indirection table
+
+forever:
+    r = rnd(5)
+    set fontId, r
+    x = rnd(136) : y = rnd(112)
+    at x,y : print "Text"
+goto forever
+
 end

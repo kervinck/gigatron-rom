@@ -18,17 +18,23 @@ namespace Expression
     {
         Numeric()
         {
-            _value = 0.0; _index = -1; _isValid = false; _varType = Number; _ccType = BooleanCC; _int16Byte = Int16Both; _name = ""; _text = "";
+            _value = 0.0; _index = -1; _isValid = false; _staticInit = false; _varType = Number; _ccType = BooleanCC; _int16Byte = Int16Both; _name = ""; _text = "";
         }
 
-        Numeric(double value, int16_t index, bool isValid, VarType varType, CCType ccType, Int16Byte int16Byte, const std::string& name, const std::string& text)
+        Numeric(bool staticInit) : Numeric()
         {
-            _value = value; _index = index; _isValid = isValid; _varType = varType; _ccType = ccType; _int16Byte = int16Byte; _name = name; _text = text;
+            _staticInit = staticInit;
+        }
+
+        Numeric(double value, int16_t index, bool isValid, bool staticInit, VarType varType, CCType ccType, Int16Byte int16Byte, const std::string& name, const std::string& text)
+        {
+            _value = value; _index = index; _isValid = isValid; _staticInit = staticInit; _varType = varType; _ccType = ccType; _int16Byte = int16Byte; _name = name; _text = text;
         }
 
         double _value = 0.0;
         int16_t _index = -1;
         bool _isValid = false;
+        bool _staticInit = false;
         VarType _varType = Number;
         CCType _ccType = BooleanCC;
         Int16Byte _int16Byte = Int16Both;

@@ -194,17 +194,17 @@ multiply16bit       EQU     0x77cd
 divide16bit         EQU     0x7aa8
 randMod16bit        EQU     0x7cbf
 scanlineMode        EQU     0x7eac
-resetVideoTable     EQU     0x7ca0
+resetVideoTable     EQU     0x77a5
 initClearFuncs      EQU     0x7ddd
 clearVertBlinds     EQU     0x7da3
 clearCursorRow      EQU     0x76b6
-drawPixel           EQU     0x79b3
+drawPixel           EQU     0x7cb2
 drawVTLine          EQU     0x78aa
 drawVTLineExt       EQU     0x75c6
 drawVTLineLoop      EQU     0x74b9
-drawVTLineLoadXY    EQU     0x77a6
+drawVTLineLoadXY    EQU     0x73d8
 atLineCursor        EQU     0x79c0
-printInit           EQU     0x76a0
+printInit           EQU     0x79aa
 atTextCursor        EQU     0x7cd2
 newLineScroll       EQU     0x7ba2
 realTimeProcAddr    EQU     0x00dc
@@ -426,7 +426,8 @@ drawLine_count      EQU     register12
 drawLine_tmp        EQU     register13
 
 drawPixel_xy        EQU     register15
-  
+readPixel_xy        EQU     register15
+
 drawCircle_cx       EQU     register0
 drawCircle_cy       EQU     register1
 drawCircle_r        EQU     register2
@@ -504,6 +505,11 @@ resetVT_loop        CALL    realTimeProcAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
+                    
+                    LDWI    giga_videoTop                       ; reset videoTop
+                    STW     register0
+                    LDI     0
+                    POKE    register0
                     POP
                     RET
 

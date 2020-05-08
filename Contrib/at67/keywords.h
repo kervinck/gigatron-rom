@@ -65,6 +65,7 @@ namespace Keywords
     Expression::Numeric functionLEFT$(Expression::Numeric& numeric);
     Expression::Numeric functionRIGHT$(Expression::Numeric& numeric);
     Expression::Numeric functionMID$(Expression::Numeric& numeric);
+    Expression::Numeric functionSTRCMP(Expression::Numeric& numeric);
     Expression::Numeric functionPOINT(Expression::Numeric& numeric);
 
     bool pragmaUSEOPCODECALLI(const std::string& input,     int codeLineIndex, size_t foundPos);

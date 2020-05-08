@@ -795,11 +795,11 @@ shiftLeft4bit       EQU     0x7ca2
 shiftRight1bit      EQU     0x7abc
 gosubNumericLabel   EQU     0x7ba0
 scanlineMode        EQU     0x7da1
-resetVideoTable     EQU     0x77e0
+resetVideoTable     EQU     0x77d7
 initClearFuncs      EQU     0x7dcb
 clearVertBlinds     EQU     0x7cc5
 clearCursorRow      EQU     0x76b6
-draw_sprite         EQU     0x77b8
+draw_sprite         EQU     0x77af
 drawSprite          EQU     0x7aaf
 drawSpriteY         EQU     0x78f2
 getSpriteLUT        EQU     0x7aa5
@@ -808,7 +808,7 @@ playMidiVol         EQU     0x79aa
 midiStartNote       EQU     0x75b3
 soundAllOff         EQU     0x7db5
 soundOnV            EQU     0x78ca
-printInit           EQU     0x77a2
+printInit           EQU     0x76a0
 printText           EQU     0x7cac
 printChar           EQU     0x74a7
 atTextCursor        EQU     0x7bd2
@@ -983,7 +983,8 @@ drawLine_count      EQU     register12
 drawLine_tmp        EQU     register13
 
 drawPixel_xy        EQU     register15
-  
+readPixel_xy        EQU     register15
+
 drawCircle_cx       EQU     register0
 drawCircle_cy       EQU     register1
 drawCircle_r        EQU     register2
@@ -1061,6 +1062,11 @@ resetVT_loop        CALL    realTimeProcAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
+                    
+                    LDWI    giga_videoTop                       ; reset videoTop
+                    STW     register0
+                    LDI     0
+                    POKE    register0
                     POP
                     RET
 

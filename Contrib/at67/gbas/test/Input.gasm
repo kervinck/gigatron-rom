@@ -39,7 +39,7 @@ _page_0x0300        EQU                     0x0300
 _page_0x0400        EQU                     0x0400
 _page_0x0500        EQU                     0x0500
 _page_0x0600        EQU                     0x0600
-_end_0x070d         EQU                     0x06b1
+_end_0x0719         EQU                     0x06b1
 
 ; Variables
 _arr_array          EQU                     0x7ef4
@@ -381,7 +381,7 @@ _page_0x0500        LDW                     0xde
                     ANDI                    63
                     PrintAcInt16            
                     PrintString             _str_0x7ec9
-                    LDW                     0xc2
+                    LDI                     53
                     PrintAcInt16            
                     PrintString             _str_0x7ec9
                     LD                      0x00
@@ -400,14 +400,14 @@ _page_0x0600        LDW                     0xde
                     LDI                     7
                     STW                     _t                              ; t = len("Testing")
 
-                    LDW                     0xc0
+                    LDI                     53
                     PrintAcInt16            
                     PrintString             _str_0x7ec9
                     LDWI                    0x79a0
                     PEEK                    
                     PrintAcInt16            
                     PrintString             _str_0x7ec9
-                    LDW                     0xc4
+                    LDI                     7
                     PrintAcInt16            
                     PrintString             _str_0x7ec9
                     LDW                     _t
@@ -431,7 +431,7 @@ _page_0x0600        LDW                     0xde
                     PrintInt16              0x0004
                     NewLine                                                 ; print sin(56.8333333)*1000;" ";cs;" ";db;" ";1.5333333333 * 2.32
 
-_end_0x070d         BRA                     _end_0x070d                     ; end
+_end_0x0719         BRA                     _end_0x0719                     ; end
 
 
 
@@ -452,7 +452,7 @@ multiply16bit       EQU     0x73cd
 divide16bit         EQU     0x70a8
 rand16bit           EQU     0x78a3
 randMod16bit        EQU     0x76ab
-resetVideoTable     EQU     0x71ab
+resetVideoTable     EQU     0x71a2
 initClearFuncs      EQU     0x77dd
 clearVertBlinds     EQU     0x77a3
 clearCursorRow      EQU     0x6fb6
@@ -706,6 +706,11 @@ resetVT_loop        CALL    realTimeProcAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
+                    
+                    LDWI    giga_videoTop                       ; reset videoTop
+                    STW     register0
+                    LDI     0
+                    POKE    register0
                     POP
                     RET
 
@@ -1410,6 +1415,7 @@ newLS_exit          LDWI    printInit
 ; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 strChr              EQU     register0
 strHex              EQU     register1
+strCmpRes           EQU     register2
 strLength           EQU     register0
 strFinish           EQU     register0
 strSrcAddr          EQU     register1
@@ -1542,25 +1548,25 @@ stringA_exit        LDW     strLength
 stringConcat        PUSH
                     LDW     strLutAddr
                     DEEK
-                    BEQ     stringC_exit
+                    BEQ     stringCC_exit
                     STW     strSrcAddr
                     LDW     strDstAddr
                     STW     strBakAddr
                     
-stringC_loop        INC     strLutAddr
+stringCC_loop       INC     strLutAddr
                     INC     strLutAddr
                     LDW     strLutAddr
                     DEEK
-                    BEQ     stringC_exit
+                    BEQ     stringCC_exit
                     STW     strSrcAddr2
                     LDWI    stringAdd
                     CALL    giga_vAC
                     LDW     strBakAddr
                     STW     strDstAddr
                     STW     strSrcAddr
-                    BRA     stringC_loop
+                    BRA     stringCC_loop
                     
-stringC_exit        POP
+stringCC_exit       POP
                     RET
 
 

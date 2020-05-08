@@ -323,13 +323,13 @@ convertGeOp         EQU     0x7ed2
 convertLtOp         EQU     0x7ec9
 convertGtOp         EQU     0x7ec0
 scanlineMode        EQU     0x7eac
-resetVideoTable     EQU     0x7ca7
+resetVideoTable     EQU     0x79d7
 initClearFuncs      EQU     0x7ddd
 clearVertBlinds     EQU     0x7da3
 drawLine            EQU     0x7aaa
-drawLineExt         EQU     0x79c6
-drawLineLoop        EQU     0x78c5
-drawLineLoadXY      EQU     0x77d4
+drawLineExt         EQU     0x78c6
+drawLineLoop        EQU     0x77c5
+drawLineLoadXY      EQU     0x79ac
 resetAudio          EQU     0x7cc6
 playMidi            EQU     0x7baf
 midiStartNote       EQU     0x76b3
@@ -441,8 +441,9 @@ drawLine_num        EQU     register11
 drawLine_count      EQU     register12
 drawLine_tmp        EQU     register13
 
-drawPixel_xy        EQU     register14
-  
+drawPixel_xy        EQU     register15
+readPixel_xy        EQU     register15
+
 drawCircle_cx       EQU     register0
 drawCircle_cy       EQU     register1
 drawCircle_r        EQU     register2
@@ -520,6 +521,11 @@ resetVT_loop        CALL    realTimeProcAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
+                    
+                    LDWI    giga_videoTop                       ; reset videoTop
+                    STW     register0
+                    LDI     0
+                    POKE    register0
                     POP
                     RET
 

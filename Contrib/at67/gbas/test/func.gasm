@@ -260,13 +260,13 @@ convertLeOp         EQU     0x7ece
 convertGeOp         EQU     0x7ec5
 convertLtOp         EQU     0x7ebc
 convertGtOp         EQU     0x7eb3
-resetVideoTable     EQU     0x77e0
+resetVideoTable     EQU     0x77d7
 initClearFuncs      EQU     0x7cdd
 clearVertBlinds     EQU     0x7ca3
 clearCursorRow      EQU     0x76b6
 printInit           EQU     0x7aa3
 printText           EQU     0x7bb1
-printDigit          EQU     0x77be
+printDigit          EQU     0x77b5
 printInt16          EQU     0x78ae
 printChar           EQU     0x75a7
 printHexByte        EQU     0x7bca
@@ -379,6 +379,11 @@ resetVT_loop        CALL    realTimeProcAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
+                    
+                    LDWI    giga_videoTop                       ; reset videoTop
+                    STW     register0
+                    LDI     0
+                    POKE    register0
                     POP
                     RET
 
@@ -780,6 +785,7 @@ newLS_exit          LDWI    printInit
 ; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 strChr              EQU     register0
 strHex              EQU     register1
+strCmpRes           EQU     register2
 strLength           EQU     register0
 strFinish           EQU     register0
 strSrcAddr          EQU     register1

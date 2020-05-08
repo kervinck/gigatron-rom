@@ -96,7 +96,7 @@ printT_exit         POP
 %ENDS   
 
 %SUB                printLeft
-                    ; prints left sub string pointed to by the accumulator
+                    ; prints left sub string pointed to by textStr
 printLeft           PUSH
                     LDWI    printInit
                     CALL    giga_vAC
@@ -119,7 +119,7 @@ printL_exit         POP
 %ENDS   
 
 %SUB                printRight
-                    ; prints right sub string pointed to by the accumulator
+                    ; prints right sub string pointed to by textStr
 printRight          PUSH
                     LDWI    printInit
                     CALL    giga_vAC
@@ -147,7 +147,7 @@ printR_exit         POP
 %ENDS   
 
 %SUB                printMid
-                    ; prints sub string pointed to by the accumulator
+                    ; prints sub string pointed to by textStr
 printMid            PUSH
                     LDWI    printInit
                     CALL    giga_vAC

@@ -2,8 +2,10 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <cmath>
+#include <ctime>
 #include <fstream>
 #include <algorithm>
+#include <random>
 
 #include "memory.h"
 #include "cpu.h"
@@ -23,6 +25,8 @@
 namespace Keywords
 {
     enum EmitStringResult {SyntaxError, InvalidStringVar, ValidStringVar};
+
+    std::mt19937_64 _randGenerator;
 
     std::vector<std::string> _operators;
     std::map<std::string, Pragma> _pragmas;
@@ -55,26 +59,27 @@ namespace Keywords
         _operators.push_back(">>"   );
 
         // Functions
-        _functions["PEEK"]  = "PEEK";
-        _functions["DEEK"]  = "DEEK";
-        _functions["USR" ]  = "USR";
-        _functions["RND" ]  = "RND";
-        _functions["LEN" ]  = "LEN";
-        _functions["GET" ]  = "GET";
-        _functions["POS" ]  = "POS";
-        _functions["ABS" ]  = "ABS";
-        _functions["ASC" ]  = "ASC";
-        _functions["SIN" ]  = "SIN";
-        _functions["COS" ]  = "COS";
-        _functions["TAN" ]  = "TAN";
-        _functions["ASN" ]  = "ASN";
-        _functions["ACS" ]  = "ACS";
-        _functions["ATN" ]  = "ATN";
-        _functions["EXP" ]  = "EXP";
-        _functions["LOG" ]  = "LOG";
-        _functions["FRE" ]  = "FRE";
-        _functions["TIME"]  = "TIME";
-        _functions["POINT"] = "POINT";
+        _functions["PEEK"]   = "PEEK";
+        _functions["DEEK"]   = "DEEK";
+        _functions["USR" ]   = "USR";
+        _functions["RND" ]   = "RND";
+        _functions["LEN" ]   = "LEN";
+        _functions["GET" ]   = "GET";
+        _functions["POS" ]   = "POS";
+        _functions["ABS" ]   = "ABS";
+        _functions["ASC" ]   = "ASC";
+        _functions["SIN" ]   = "SIN";
+        _functions["COS" ]   = "COS";
+        _functions["TAN" ]   = "TAN";
+        _functions["ASN" ]   = "ASN";
+        _functions["ACS" ]   = "ACS";
+        _functions["ATN" ]   = "ATN";
+        _functions["EXP" ]   = "EXP";
+        _functions["LOG" ]   = "LOG";
+        _functions["FRE" ]   = "FRE";
+        _functions["TIME"]   = "TIME";
+        _functions["POINT"]  = "POINT";
+        _functions["STRCMP"] = "POINT";
 
         // Pragmas
         _pragmas["_useOpcodeCALLI_"]     = {"_useOpcodeCALLI_",     pragmaUSEOPCODECALLI    };
@@ -154,6 +159,10 @@ namespace Keywords
         _equalsKeywords["ELSEIF"] = "ELSEIF";
         _equalsKeywords["WHILE" ] = "WHILE";
         _equalsKeywords["UNTIL" ] = "UNTIL";
+
+        uint64_t timeSeed = time(NULL);
+        std::seed_seq seedSequence{uint32_t(timeSeed & 0xffffffff), uint32_t(timeSeed>>32)};
+        _randGenerator.seed(seedSequence);
 
         return true;
     }
@@ -381,6 +390,12 @@ namespace Keywords
     // ********************************************************************************************
     Expression::Numeric functionARR(Expression::Numeric& numeric)
     {
+        if(Expression::getOutputNumeric()._staticInit)
+        {
+            fprintf(stderr, "Keywords::functionARR() : ARRAY() cannot be used in static initialisation!\n");
+            return numeric;
+        }
+
         Compiler::getNextTempVar();
 
         int intSize = Compiler::getIntegerVars()[numeric._index]._intSize;
@@ -399,9 +414,7 @@ namespace Keywords
                 default: break;
             }
 
-            numeric._value = uint8_t(Compiler::getTempVarStart());
-            numeric._varType = Expression::TmpVar;
-            numeric._name = Compiler::getTempVarStartStr();
+            Operators::createTmpVar(numeric);
         }
         // Variable array index
         else
@@ -426,9 +439,7 @@ namespace Keywords
                 default: break;
             }
 
-            numeric._value = uint8_t(Compiler::getTempVarStart());
-            numeric._varType = Expression::TmpVar;
-            numeric._name = Compiler::getTempVarStartStr();
+            Operators::createTmpVar(numeric);
 
             // TODO: currently makes code bigger AND slower because of optimiser
             if(0) //Assembler::getUseOpcodeCALLI()  &&  Compiler::getCodeOptimiseType() == Compiler::CodeSize)
@@ -469,6 +480,12 @@ namespace Keywords
 
     Expression::Numeric functionPEEK(Expression::Numeric& numeric)
     {
+        if(Expression::getOutputNumeric()._staticInit)
+        {
+            fprintf(stderr, "Keywords::functionPEEK() : PEEK() cannot be used in static initialisation!\n");
+            return numeric;
+        }
+
         if(numeric._varType == Expression::Number)
         {
             // Optimise for page 0
@@ -476,9 +493,7 @@ namespace Keywords
             {
                 Compiler::emitVcpuAsm("LD",  Expression::byteToHexString(uint8_t(std::lround(numeric._value))), false);
                 Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
-                numeric._value = uint8_t(Compiler::getTempVarStart());
-                numeric._varType = Expression::TmpVar;
-                numeric._name = Compiler::getTempVarStartStr();
+                Operators::createTmpVar(numeric);
                 return numeric;
             }
             else
@@ -504,9 +519,7 @@ namespace Keywords
             {
                 Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(std::lround(numeric._value))), false);
                 Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
-                numeric._value = uint8_t(Compiler::getTempVarStart());
-                numeric._varType = Expression::TmpVar;
-                numeric._name = Compiler::getTempVarStartStr();
+                Operators::createTmpVar(numeric);
                 return numeric;
             }
             else
@@ -525,6 +538,12 @@ namespace Keywords
 
     Expression::Numeric functionUSR(Expression::Numeric& numeric)
     {
+        if(Expression::getOutputNumeric()._staticInit)
+        {
+            fprintf(stderr, "Keywords::functionUSR() : USR() cannot be used in static initialisation!\n");
+            return numeric;
+        }
+
         if(numeric._varType == Expression::Number)
         {
             if(Assembler::getUseOpcodeCALLI())
@@ -560,6 +579,23 @@ namespace Keywords
         bool useMod = true;
         if(numeric._varType == Expression::Number)
         {
+            // No code needed for static initialisation
+            if(Expression::getOutputNumeric()._staticInit)
+            {
+                if(numeric._value == 0)
+                {
+                    std::uniform_int_distribution<uint16_t> distribution(0, 0xFFFF);
+                    numeric._value = distribution(_randGenerator);
+                }
+                else
+                {
+                    std::uniform_int_distribution<uint16_t> distribution(0, uint16_t(numeric._value));
+                    numeric._value = distribution(_randGenerator);
+                }
+
+                return numeric;
+            }
+
             // RND(0) skips the MOD call and allows you to filter the output manually
             if(numeric._value == 0)
             {
@@ -580,10 +616,7 @@ namespace Keywords
         }
         else
         {
-            numeric._value = uint8_t(Compiler::getTempVarStart());
-            numeric._varType = Expression::TmpVar;
-            numeric._name = Compiler::getTempVarStartStr();
-
+            Operators::createTmpVar(numeric);
             Compiler::emitVcpuAsm("%Rand", "", false);
         }
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
@@ -630,13 +663,20 @@ namespace Keywords
             {
                 case Expression::IntVar:   length = Compiler::getIntegerVars()[numeric._index]._intSize; break;
                 case Expression::ArrVar:   length = Compiler::getIntegerVars()[numeric._index]._arrSize; break;
-                case Expression::StrVar:   length = Compiler::getStringVars()[numeric._index]._maxSize;  break;
+                case Expression::StrVar:   length = Compiler::getStringVars()[numeric._index]._size;     break;
                 case Expression::Constant: length = Compiler::getConstants()[numeric._index]._size;      break;
 
                 default: break;
             }
 
-            // Variable lengths
+            // No code needed for static initialisation
+            if(Expression::getOutputNumeric()._staticInit)
+            {
+                numeric._value = length;
+                return numeric;
+            }
+
+            // Variables
             if(numeric._varType == Expression::StrVar  &&  !Compiler::getStringVars()[numeric._index]._constant)
             {
                 Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStringVars()[numeric._index]._address), false);
@@ -647,25 +687,14 @@ namespace Keywords
                 Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStrWorkArea()), false);
                 Compiler::emitVcpuAsm("PEEK", "", false);
             }
-            // Constants lengths
+            // Constants
             else
             {
-                // Generate code to save result into a var
-                if(Expression::getOutputNumeric()._index > -1)
-                {
-                    (length <= 255) ? Compiler::emitVcpuAsm("LDI", std::to_string(length), false) : Compiler::emitVcpuAsm("LDWI", std::to_string(length), false);
-                }
-                // No code needed for static initialisation
-                else
-                {
-                    numeric._value = length;
-                    return numeric;
-                }
+                // Generate code to save result into a tmp var
+                (length <= 255) ? Compiler::emitVcpuAsm("LDI", std::to_string(length), false) : Compiler::emitVcpuAsm("LDWI", std::to_string(length), false);
             }
 
-            numeric._value = uint8_t(Compiler::getTempVarStart());
-            numeric._varType = Expression::TmpVar;
-            numeric._name = Compiler::getTempVarStartStr();
+            Operators::createTmpVar(numeric);
             Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
             
         }
@@ -675,6 +704,12 @@ namespace Keywords
 
     Expression::Numeric functionGET(Expression::Numeric& numeric)
     {
+        if(Expression::getOutputNumeric()._staticInit)
+        {
+            fprintf(stderr, "Keywords::functionGET() : GET() cannot be used in static initialisation!\n");
+            return numeric;
+        }
+
         if(numeric._varType == Expression::String)
         {
             std::string sysVarName = numeric._text;
@@ -698,9 +733,7 @@ namespace Keywords
             else if(numeric._parameters.size() == 0)
             {
                 Compiler::getNextTempVar();
-                numeric._value = uint8_t(Compiler::getTempVarStart());
-                numeric._varType = Expression::TmpVar;
-                numeric._name = Compiler::getTempVarStartStr();
+                Operators::createTmpVar(numeric);
 
                 if(sysVarName == "CURSORX")
                 {
@@ -867,31 +900,31 @@ namespace Keywords
 
     Expression::Numeric functionABS(Expression::Numeric& numeric)
     {
-        if(numeric._varType == Expression::Number)
+        if(Expression::getOutputNumeric()._staticInit)
         {
-            (numeric._value > 0  && numeric._value <= 255) ? Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(std::lround(numeric._value))), false) : 
-                                                             Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(int16_t(std::lround(numeric._value))), false);
+            fprintf(stderr, "Keywords::functionABS() : ABS() cannot be used in static initialisation!\n");
+            return numeric;
         }
 
-#if 1
-        Compiler::getNextTempVar();
-        Operators::handleSingleOp("LDW", numeric);
-        Compiler::emitVcpuAsm("%Absolute", "", false);
-        Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
+        if(numeric._varType != Expression::String  &&  numeric._varType != Expression::StrVar &&  numeric._varType != Expression::TmpStrVar)
+        {
+            Compiler::getNextTempVar();
 
-#else
-        // This code fails when the BGE generated straddles a page
-        Compiler::getNextTempVar();
-        Operators::createSingleOp("LDW", numeric);
-        std::pair<int, int> bgeVcpuAsm = Compiler::emitVcpuAsm("BGE", "", false);
-        Compiler::emitVcpuAsm("LDI", "0", false);
-        Operators::handleSingleOp("SUBW", numeric);
-        std::pair<int, int> stwVcpuAsm = Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
-
-        // Fixup label for BGE
-        std::string absLabel = "_abs_" + Expression::wordToHexString(Compiler::getVasmPC());
-        Compiler::createVcpuAsmLabel(bgeVcpuAsm.first, bgeVcpuAsm.second, stwVcpuAsm.first, stwVcpuAsm.second, absLabel);
-#endif
+            if(numeric._varType == Expression::Number)
+            {
+                numeric._value = abs(numeric._value);
+                (numeric._value > 0  && numeric._value <= 255) ? Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(std::lround(numeric._value))), false) : 
+                                                                 Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(int16_t(std::lround(numeric._value))), false);
+                Operators::createTmpVar(numeric);
+                Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
+            }
+            else
+            {
+                Operators::handleSingleOp("LDW", numeric);
+                Compiler::emitVcpuAsm("%Absolute", "", false);
+                Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
+            }
+        }
 
         return numeric;
     }
@@ -939,7 +972,14 @@ namespace Keywords
                 default: break;
             }
 
-            // Variable lengths
+            // No code needed for static initialisation
+            if(Expression::getOutputNumeric()._staticInit)
+            {
+                numeric._value = ascii;
+                return numeric;
+            }
+
+            // Variables
             if(numeric._varType == Expression::StrVar  &&  !Compiler::getStringVars()[numeric._index]._constant)
             {
                 Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStringVars()[numeric._index]._address) + " + 1", false);
@@ -950,27 +990,15 @@ namespace Keywords
                 Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStrWorkArea()) + " + 1", false);
                 Compiler::emitVcpuAsm("PEEK", "", false);
             }
-            // Constants lengths
+            // Constants
             else
             {
-                // Generate code to save result into a var
-                if(Expression::getOutputNumeric()._index > -1)
-                {
-                    Compiler::emitVcpuAsm("LDI", std::to_string(ascii), false);
-                }
-                // No code needed for static initialisation
-                else
-                {
-                    numeric._value = ascii;
-                    return numeric;
-                }
+                // Generate code to save result into a tmp var
+                Compiler::emitVcpuAsm("LDI", std::to_string(ascii), false);
             }
 
-            numeric._value = uint8_t(Compiler::getTempVarStart());
-            numeric._varType = Expression::TmpVar;
-            numeric._name = Compiler::getTempVarStartStr();
+            Operators::createTmpVar(numeric);
             Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
-            
         }
 
         return numeric;
@@ -978,6 +1006,12 @@ namespace Keywords
 
     Expression::Numeric functionCHR$(Expression::Numeric& numeric)
     {
+        if(Expression::getOutputNumeric()._staticInit)
+        {
+            fprintf(stderr, "Keywords::functionCHR$() : CHR$() cannot be used in static initialisation!\n");
+            return numeric;
+        }
+
         int index;
         uint16_t dstAddr;
         Expression::VarType varType;
@@ -1011,7 +1045,7 @@ namespace Keywords
             Compiler::emitVcpuAsm("STW", "strDstAddr", false);
             Compiler::emitVcpuAsm("%StringChr", "", false);
 
-            return Expression::Numeric(0, uint16_t(index), true, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+            return Expression::Numeric(0, uint16_t(index), true, false, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
         }
 
         Compiler::getNextTempVar();
@@ -1028,11 +1062,17 @@ namespace Keywords
         Compiler::emitVcpuAsm("STW", "strDstAddr", false);
         Compiler::emitVcpuAsm("%StringChr", "", false);
 
-        return Expression::Numeric(0, uint16_t(index), true, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+        return Expression::Numeric(0, uint16_t(index), true, false, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
     }
 
     Expression::Numeric functionHEX$(Expression::Numeric& numeric)
     {
+        if(Expression::getOutputNumeric()._staticInit)
+        {
+            fprintf(stderr, "Keywords::functionHEX$() : HEX$() cannot be used in static initialisation!\n");
+            return numeric;
+        }
+
         int index;
         uint16_t dstAddr;
         Expression::VarType varType;
@@ -1066,7 +1106,7 @@ namespace Keywords
             Compiler::emitVcpuAsm("STW", "strDstAddr", false);
             Compiler::emitVcpuAsm("%StringHex", "", false);
 
-            return Expression::Numeric(0, uint16_t(index), true, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+            return Expression::Numeric(0, uint16_t(index), true, false, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
         }
 
         Compiler::getNextTempVar();
@@ -1083,11 +1123,17 @@ namespace Keywords
         Compiler::emitVcpuAsm("STW", "strDstAddr", false);
         Compiler::emitVcpuAsm("%StringHex", "", false);
 
-        return Expression::Numeric(0, uint16_t(index), true, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+        return Expression::Numeric(0, uint16_t(index), true, false, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
     }
 
     Expression::Numeric functionHEXW$(Expression::Numeric& numeric)
     {
+        if(Expression::getOutputNumeric()._staticInit)
+        {
+            fprintf(stderr, "Keywords::functionHEXW$() : HEXW$() cannot be used in static initialisation!\n");
+            return numeric;
+        }
+
         int index;
         uint16_t dstAddr;
         Expression::VarType varType;
@@ -1121,7 +1167,7 @@ namespace Keywords
             Compiler::emitVcpuAsm("STW", "strDstAddr", false);
             Compiler::emitVcpuAsm("%StringHexw", "", false);
 
-            return Expression::Numeric(0, uint16_t(index), true, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+            return Expression::Numeric(0, uint16_t(index), true, false, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
         }
 
         Compiler::getNextTempVar();
@@ -1138,11 +1184,17 @@ namespace Keywords
         Compiler::emitVcpuAsm("STW", "strDstAddr", false);
         Compiler::emitVcpuAsm("%StringHexw", "", false);
 
-        return Expression::Numeric(0, uint16_t(index), true, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+        return Expression::Numeric(0, uint16_t(index), true, false, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
     }
 
     Expression::Numeric functionLEFT$(Expression::Numeric& numeric)
     {
+        if(Expression::getOutputNumeric()._staticInit)
+        {
+            fprintf(stderr, "Keywords::functionLEFT$() : LEFT$() cannot be used in static initialisation!\n");
+            return numeric;
+        }
+
         // Literal string and parameter, (optimised case)
         if(numeric._varType == Expression::String  &&  numeric._parameters.size() == 1  &&  numeric._parameters[0]._varType == Expression::Number)
         {
@@ -1150,7 +1202,7 @@ namespace Keywords
             std::string name;
             handleConstantString(numeric, Compiler::StrLeft, name, index);
 
-            return Expression::Numeric(0, uint16_t(index), true, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
+            return Expression::Numeric(0, uint16_t(index), true, false, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
         }
 
         // Non optimised case
@@ -1193,7 +1245,7 @@ namespace Keywords
                 Compiler::emitVcpuAsm("%StringLeft", "", false);
             }
 
-            return Expression::Numeric(0, uint16_t(index), true, varType, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
+            return Expression::Numeric(0, uint16_t(index), true, false, varType, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
         }
 
         return numeric;
@@ -1201,6 +1253,12 @@ namespace Keywords
 
     Expression::Numeric functionRIGHT$(Expression::Numeric& numeric)
     {
+        if(Expression::getOutputNumeric()._staticInit)
+        {
+            fprintf(stderr, "Keywords::functionRIGHT$() : RIGHT$() cannot be used in static initialisation!\n");
+            return numeric;
+        }
+
         // Literal string and parameter, (optimised case)
         if(numeric._varType == Expression::String  &&  numeric._parameters.size() == 1  &&  numeric._parameters[0]._varType == Expression::Number)
         {
@@ -1208,7 +1266,7 @@ namespace Keywords
             std::string name;
             handleConstantString(numeric, Compiler::StrRight, name, index);
 
-            return Expression::Numeric(0, uint16_t(index), true, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
+            return Expression::Numeric(0, uint16_t(index), true, false, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
         }
 
         // Non optimised case
@@ -1251,7 +1309,7 @@ namespace Keywords
                 Compiler::emitVcpuAsm("%StringRight", "", false);
             }
 
-            return Expression::Numeric(0, uint16_t(index), true, varType, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
+            return Expression::Numeric(0, uint16_t(index), true, false, varType, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
         }
 
         return numeric;
@@ -1259,6 +1317,12 @@ namespace Keywords
 
     Expression::Numeric functionMID$(Expression::Numeric& numeric)
     {
+        if(Expression::getOutputNumeric()._staticInit)
+        {
+            fprintf(stderr, "Keywords::functionMID$() : MID$() cannot be used in static initialisation!\n");
+            return numeric;
+        }
+
         // Literal string and parameters, (optimised case)
         if(numeric._varType == Expression::String  &&  numeric._parameters.size() == 2  &&  numeric._parameters[0]._varType == Expression::Number  &&  
            numeric._parameters[1]._varType == Expression::Number)
@@ -1267,7 +1331,7 @@ namespace Keywords
             std::string name;
             handleConstantString(numeric, Compiler::StrMid, name, index);
 
-            return Expression::Numeric(0, uint16_t(index), true, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
+            return Expression::Numeric(0, uint16_t(index), true, false, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
         }
 
         // Non optimised case
@@ -1314,14 +1378,71 @@ namespace Keywords
                 Compiler::emitVcpuAsm("%StringMid", "", false);
             }
 
-            return Expression::Numeric(0, uint16_t(index), true, varType, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
+            return Expression::Numeric(0, uint16_t(index), true, false, varType, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
         }
+
+        return numeric;
+    }
+
+    Expression::Numeric functionSTRCMP(Expression::Numeric& numeric)
+    {
+        // Literal strings, (optimised case)
+        if(numeric._varType == Expression::String  &&  numeric._parameters.size() == 1  &&  numeric._parameters[0]._varType == Expression::String)
+        {
+            // No code needed for static initialisation
+            if(Expression::getOutputNumeric()._staticInit)
+            {
+                numeric._varType = Expression::Number;
+                numeric._value = uint8_t(numeric._text == numeric._parameters[0]._text);
+                return numeric;
+            }
+            // Generate code to save result into a tmp var
+            else
+            {
+                Compiler::emitVcpuAsm("LDI", std::to_string(uint8_t(numeric._text == numeric._parameters[0]._text)), false);
+            }
+        }
+        else
+        {
+            // Get addresses of strings to be compared
+            std::string name0, name1;
+            uint16_t srcAddr0, srcAddr1;
+            int index0 = int(numeric._index);
+            int index1 = int(numeric._parameters[0]._index);
+            getOrCreateString(numeric, name0, srcAddr0, index0);
+            getOrCreateString(numeric._parameters[0], name1, srcAddr1, index1);
+
+            // Bby definition this must be a match
+            if(srcAddr0 == srcAddr1)
+            {
+                Compiler::emitVcpuAsm("LDI", "1", false);
+            }
+            // Compare strings
+            else
+            {
+                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr0), false);
+                Compiler::emitVcpuAsm("STW",  "strSrcAddr", false);
+                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr1), false);
+                Compiler::emitVcpuAsm("STW",  "strSrcAddr2", false);
+                Compiler::emitVcpuAsm("%StringCmp", "", false);
+            }
+        }
+
+        Compiler::getNextTempVar();
+        Operators::createTmpVar(numeric);
+        Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
 
         return numeric;
     }
 
     Expression::Numeric functionPOINT(Expression::Numeric& numeric)
     {
+        if(Expression::getOutputNumeric()._staticInit)
+        {
+            fprintf(stderr, "Keywords::functionPOINT() : POINT() cannot be used in static initialisation!\n");
+            return numeric;
+        }
+
         if(numeric._parameters.size() == 1)
         {
             if(numeric._varType == Expression::Number)
@@ -1347,9 +1468,7 @@ namespace Keywords
             }
 
             Compiler::getNextTempVar();
-            numeric._value = uint8_t(Compiler::getTempVarStart());
-            numeric._varType = Expression::TmpVar;
-            numeric._name = Compiler::getTempVarStartStr();
+            Operators::createTmpVar(numeric);
             Compiler::emitVcpuAsm("%ReadPixel", "", false);
             Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
         }
@@ -2964,7 +3083,7 @@ namespace Keywords
         {
             Expression::stripWhitespace(tokens[1]);
 
-            Expression::Numeric numeric;
+            Expression::Numeric numeric(true); // true = static init
             Expression::parse(tokens[1], codeLineIndex, numeric);
             if(tokens[1].size() == 0  ||  !numeric._isValid  ||  numeric._varType == Expression::TmpVar  ||  numeric._varType == Expression::IntVar)
             {
@@ -3041,11 +3160,10 @@ namespace Keywords
             }
             else if(varTokens.size() == 1)
             {
-                if(!Expression::stringToU16(varText, varInit))
-                {
-                    fprintf(stderr, "Keywords::keywordDIM() : Initial value must be a constant, found %s in '%s' on line %d\n", varText.c_str(), codeLine._code.c_str(), codeLineIndex);
-                    return false;
-                }
+                std::string operand;
+                Expression::Numeric numeric(true); // true = static init
+                Compiler::parseExpression(codeLineIndex, varTokens[0], operand, numeric);
+                varInit = int16_t(std::lround(numeric._value));
             }
             else if(int(varTokens.size()) > arraySize)
             {
@@ -3058,7 +3176,7 @@ namespace Keywords
             {
                 std::string operand;
                 arrInits.resize(varTokens.size());
-                std::vector<Expression::Numeric> funcParams(varTokens.size());
+                std::vector<Expression::Numeric> funcParams(varTokens.size(), Expression::Numeric(true)); // true = static init
                 for(int i=0; i<int(varTokens.size()); i++)
                 {
                     Compiler::parseExpression(codeLineIndex, varTokens[i], operand, funcParams[i]);
@@ -3102,7 +3220,7 @@ namespace Keywords
         bool foundFunction = false;
         std::string addrText, operand;
         std::vector<std::string> addrTokens;
-        Expression::Numeric addrNumeric;
+        Expression::Numeric addrNumeric(true);  // true = static init
         if(Expression::findMatchingBrackets(codeLine._code, foundPos, lbra, rbra))
         {
             // Check for function generator
@@ -3191,9 +3309,9 @@ namespace Keywords
                 }
             }
 
-            // Parse function paramaters
+            // Parse function parameters
             int paramsOffset = (foundVar) ? 2 : 1;
-            std::vector<Expression::Numeric> funcParams = {Expression::Numeric(), Expression::Numeric(), Expression::Numeric()};
+            std::vector<Expression::Numeric> funcParams = {Expression::Numeric(true), Expression::Numeric(true), Expression::Numeric(true)}; // true = static init
             for(int i=0; i<int(funcParams.size()); i++)
             {
                 Compiler::parseExpression(codeLineIndex, addrTokens[i + paramsOffset], operand, funcParams[i]);
@@ -3270,14 +3388,9 @@ namespace Keywords
             std::vector<uint8_t> dataBytes;
             for(int i=0; i<int(dataTokens.size()); i++)
             {
-                uint8_t data;
-                Expression::stripWhitespace(dataTokens[i]);
-                if(!Expression::stringToU8(dataTokens[i], data))
-                {
-                    fprintf(stderr, "Keywords::keywordDEF() : Numeric error '%s', in '%s' on line %d\n", dataTokens[i].c_str(), codeLine._text.c_str(), codeLineIndex);
-                    return false;
-                }
-                dataBytes.push_back(data);
+                Expression::Numeric numeric(true); // true = static init
+                Compiler::parseExpression(codeLineIndex, dataTokens[i], operand, numeric);
+                dataBytes.push_back(uint8_t(std::lround(numeric._value)));
             }
 
             // New address entry
@@ -3305,14 +3418,9 @@ namespace Keywords
             std::vector<int16_t> dataWords;
             for(int i=0; i<int(dataTokens.size()); i++)
             {
-                int16_t data;
-                Expression::stripWhitespace(dataTokens[i]);
-                if(!Expression::stringToI16(dataTokens[i], data))
-                {
-                    fprintf(stderr, "Keywords::keywordDEF() : Numeric error '%s', in '%s' on line %d\n", dataTokens[i].c_str(), codeLine._text.c_str(), codeLineIndex);
-                    return false;
-                }
-                dataWords.push_back(data);
+                Expression::Numeric numeric(true); // true = static init
+                Compiler::parseExpression(codeLineIndex, dataTokens[i], operand, numeric);
+                dataWords.push_back(int16_t(std::lround(numeric._value)));
             }
 
             // New address entry
@@ -3353,7 +3461,7 @@ namespace Keywords
         int count = 1;
         uint16_t address, end, size = 0x0000, offset = 0x0100;
         std::string addrOperand, sizeOperand, countOperand, offsetOperand;
-        Expression::Numeric addrNumeric, sizeNumeric, countNumeric, offsetNumeric;
+        Expression::Numeric addrNumeric(true), sizeNumeric(true), countNumeric(true), offsetNumeric(true);
         Compiler::parseExpression(codeLineIndex, tokens[0], addrOperand, addrNumeric);
         if(tokens.size() >= 2)
         {
@@ -3416,7 +3524,7 @@ namespace Keywords
             return false;
         }
 
-        Expression::Numeric addrNumeric, sizeNumeric;
+        Expression::Numeric addrNumeric(true), sizeNumeric(true);  // true = static init
         std::string addrOperand, sizeOperand;
         Compiler::parseExpression(codeLineIndex, tokens[0], addrOperand, addrNumeric);
         Compiler::parseExpression(codeLineIndex, tokens[1], sizeOperand, sizeNumeric);

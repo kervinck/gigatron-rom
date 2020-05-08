@@ -293,14 +293,14 @@ convertGtOp         EQU     0x7ec0
 divide16bit         EQU     0x79a8
 rand16bit           EQU     0x7eb8
 randMod16bit        EQU     0x7ea5
-resetVideoTable     EQU     0x7ba6
+resetVideoTable     EQU     0x7aaa
 initClearFuncs      EQU     0x7ddd
 clearVertBlinds     EQU     0x7bc5
 clearCursorRow      EQU     0x78b6
 resetAudio          EQU     0x7da4
 playMidi            EQU     0x7caf
 midiStartNote       EQU     0x77b3
-printInit           EQU     0x7abc
+printInit           EQU     0x7baf
 printChr            EQU     0x7ca2
 printChar           EQU     0x76a7
 atTextCursor        EQU     0x7ad2
@@ -496,6 +496,11 @@ resetVT_loop        CALL    realTimeProcAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
+                    
+                    LDWI    giga_videoTop                       ; reset videoTop
+                    STW     register0
+                    LDI     0
+                    POKE    register0
                     POP
                     RET
 

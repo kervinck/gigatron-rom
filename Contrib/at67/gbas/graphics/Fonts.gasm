@@ -35,16 +35,26 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
+_forever            EQU                     0x02ad
 _next_0x0247        EQU                     0x0247
-_end_0x0268         EQU                     0x0268
-_end_0x026a         EQU                     0x026a
+_next_0x026c        EQU                     0x026c
+_page_0x0300        EQU                     0x0300
+_end_0x02fb         EQU                     0x0302
+_end_0x02fd         EQU                     0x0304
 
 ; Variables
 _i                  EQU                     0x0030
+_r                  EQU                     0x0032
+_x                  EQU                     0x0034
+_y                  EQU                     0x0036
 
 ; Strings
 _str_0x15d5         EQU                     0x15d5
 _str_0x15d5         DB                      41 'ABCDEFGHIJKLMNOPQRSTUVWXYZ !?. 0123456789' 0
+_s$                 EQU                     0x14a0
+_s$                 DB                      56 'The font routines are integrated into gtBASIC correctly!' 0
+_str_0x78a4         EQU                     0x78a4
+_str_0x78a4         DB                      4 'Text' 0
 
 ; Define Bytes
 
@@ -476,18 +486,18 @@ def_baseline_0x79a3 EQU                     0x79a3
 def_baseline_0x79a3 DB                      0x00 0x00 0x00 0x00 0x00 0x00 255
 
 ; Lookup Tables
-_fontLut_0x12ac     EQU                     0x12ac
-_fontLut_0x12ac     DW                      0x7ea0 0x7da3 0x7dd5 0x7daa 0x7cd5 0x7caa 0x7bd5 0x7baa 0x7ad5 0x7aaa 0x79d5 0x79aa 0x78d5 0x78aa 0x77d5 0x77aa 0x76d5 0x76aa 0x75d5 0x75aa 0x74d5 0x74aa 0x73d5 0x73aa 0x72d5 0x72aa 0x71d5 0x71aa 0x70d5 0x70aa 0x6fd5 0x6faa 0x6ed5 0x6eaa 0x6dd5 0x6daa 0x6cd5 0x6caa 0x6bd5 0x6baa 0x6ad5 0x6aaa 
-_fontLut_0x11ac     EQU                     0x11ac
-_fontLut_0x11ac     DW                      0x69a0 0x7ca3 0x68d5 0x68aa 0x67d5 0x67aa 0x66d5 0x66aa 0x65d5 0x65aa 0x64d5 0x64aa 0x63d5 0x63aa 0x62d5 0x62aa 0x61d5 0x61aa 0x60d5 0x60aa 0x5fd5 0x5faa 0x5ed5 0x5eaa 0x5dd5 0x5daa 0x5cd5 0x5caa 0x5bd5 0x5baa 0x5ad5 0x5aaa 0x59d5 0x59aa 0x58d5 0x58aa 0x57d5 0x57aa 0x56d5 0x56aa 0x55d5 0x55aa 
-_fontLut_0x10ac     EQU                     0x10ac
-_fontLut_0x10ac     DW                      0x54a0 0x7ba3 0x53d5 0x53aa 0x52d5 0x52aa 0x51d5 0x51aa 0x50d5 0x50aa 0x4fd5 0x4faa 0x4ed5 0x4eaa 0x4dd5 0x4daa 0x4cd5 0x4caa 0x4bd5 0x4baa 0x4ad5 0x4aaa 0x49d5 0x49aa 0x48d5 0x48aa 0x47d5 0x47aa 0x46d5 0x46aa 0x45d5 0x45aa 0x44d5 0x44aa 0x43d5 0x43aa 0x42d5 0x42aa 0x41d5 0x41aa 0x40d5 0x40aa 
 _fontLut_0x0fac     EQU                     0x0fac
-_fontLut_0x0fac     DW                      0x3fa0 0x7aa3 0x3ed5 0x3eaa 0x3dd5 0x3daa 0x3cd5 0x3caa 0x3bd5 0x3baa 0x3ad5 0x3aaa 0x39d5 0x39aa 0x38d5 0x38aa 0x37d5 0x37aa 0x36d5 0x36aa 0x35d5 0x35aa 0x34d5 0x34aa 0x33d5 0x33aa 0x32d5 0x32aa 0x31d5 0x31aa 0x30d5 0x30aa 0x2fd5 0x2faa 0x2ed5 0x2eaa 0x2dd5 0x2daa 0x2cd5 0x2caa 0x2bd5 0x2baa 
+_fontLut_0x0fac     DW                      0x7ea0 0x7da3 0x7dd5 0x7daa 0x7cd5 0x7caa 0x7bd5 0x7baa 0x7ad5 0x7aaa 0x79d5 0x79aa 0x78d5 0x78aa 0x77d5 0x77aa 0x76d5 0x76aa 0x75d5 0x75aa 0x74d5 0x74aa 0x73d5 0x73aa 0x72d5 0x72aa 0x71d5 0x71aa 0x70d5 0x70aa 0x6fd5 0x6faa 0x6ed5 0x6eaa 0x6dd5 0x6daa 0x6cd5 0x6caa 0x6bd5 0x6baa 0x6ad5 0x6aaa 
 _fontLut_0x0eac     EQU                     0x0eac
-_fontLut_0x0eac     DW                      0x2aa0 0x79a3 0x29d5 0x29aa 0x28d5 0x28aa 0x27d5 0x27aa 0x26d5 0x26aa 0x25d5 0x25aa 0x24d5 0x24aa 0x23d5 0x23aa 0x22d5 0x22aa 0x21d5 0x21aa 0x20d5 0x20aa 0x1fd5 0x1faa 0x1ed5 0x1eaa 0x1dd5 0x1daa 0x1cd5 0x1caa 0x1bd5 0x1baa 0x1ad5 0x1aaa 0x19d5 0x19aa 0x18d5 0x18aa 0x17d5 0x17aa 0x16d5 0x16aa 
-_fontsLut_          EQU                     0x71a0
-_fontsLut_          DW                      0x12ac 0x11ac 0x10ac 0x0fac 0x0eac 
+_fontLut_0x0eac     DW                      0x69a0 0x7ca3 0x68d5 0x68aa 0x67d5 0x67aa 0x66d5 0x66aa 0x65d5 0x65aa 0x64d5 0x64aa 0x63d5 0x63aa 0x62d5 0x62aa 0x61d5 0x61aa 0x60d5 0x60aa 0x5fd5 0x5faa 0x5ed5 0x5eaa 0x5dd5 0x5daa 0x5cd5 0x5caa 0x5bd5 0x5baa 0x5ad5 0x5aaa 0x59d5 0x59aa 0x58d5 0x58aa 0x57d5 0x57aa 0x56d5 0x56aa 0x55d5 0x55aa 
+_fontLut_0x0dac     EQU                     0x0dac
+_fontLut_0x0dac     DW                      0x54a0 0x7ba3 0x53d5 0x53aa 0x52d5 0x52aa 0x51d5 0x51aa 0x50d5 0x50aa 0x4fd5 0x4faa 0x4ed5 0x4eaa 0x4dd5 0x4daa 0x4cd5 0x4caa 0x4bd5 0x4baa 0x4ad5 0x4aaa 0x49d5 0x49aa 0x48d5 0x48aa 0x47d5 0x47aa 0x46d5 0x46aa 0x45d5 0x45aa 0x44d5 0x44aa 0x43d5 0x43aa 0x42d5 0x42aa 0x41d5 0x41aa 0x40d5 0x40aa 
+_fontLut_0x0cac     EQU                     0x0cac
+_fontLut_0x0cac     DW                      0x3fa0 0x7aa3 0x3ed5 0x3eaa 0x3dd5 0x3daa 0x3cd5 0x3caa 0x3bd5 0x3baa 0x3ad5 0x3aaa 0x39d5 0x39aa 0x38d5 0x38aa 0x37d5 0x37aa 0x36d5 0x36aa 0x35d5 0x35aa 0x34d5 0x34aa 0x33d5 0x33aa 0x32d5 0x32aa 0x31d5 0x31aa 0x30d5 0x30aa 0x2fd5 0x2faa 0x2ed5 0x2eaa 0x2dd5 0x2daa 0x2cd5 0x2caa 0x2bd5 0x2baa 
+_fontLut_0x0bac     EQU                     0x0bac
+_fontLut_0x0bac     DW                      0x2aa0 0x79a3 0x29d5 0x29aa 0x28d5 0x28aa 0x27d5 0x27aa 0x26d5 0x26aa 0x25d5 0x25aa 0x24d5 0x24aa 0x23d5 0x23aa 0x22d5 0x22aa 0x21d5 0x21aa 0x20d5 0x20aa 0x1fd5 0x1faa 0x1ed5 0x1eaa 0x1dd5 0x1daa 0x1cd5 0x1caa 0x1bd5 0x1baa 0x1ad5 0x1aaa 0x19d5 0x19aa 0x18d5 0x18aa 0x17d5 0x17aa 0x16d5 0x16aa 
+_fontsLut_          EQU                     0x70a0
+_fontsLut_          DW                      0x0fac 0x0eac 0x0dac 0x0cac 0x0bac 
 
 ; Code
 _entryPoint_        InitRealTimeProc        
@@ -515,9 +525,63 @@ _next_0x0247        LDW                     _i
 
                     ForNextFarInc           _i _next_0x0247 4               ; next i
 
-_end_0x0268         BRA                     _end_0x0268                     ; end
+                    LDI                     1
+                    STW                     _i                              ; for i=1 to 10
 
-_end_0x026a         BRA                     _end_0x026a                     ; END
+_next_0x026c        LDI                     0x05
+                    RandMod                 
+                    STW                     _r                              ; r = rnd(5)
+
+                    LDW                     _r
+                    STW                     fontLutId                       ; set fontId, r
+
+                    PrintString             _s$
+                    NewLine                                                 ; print s$
+
+                    LDI                     120
+                    STW                     waitVBlankNum
+                    WaitVBlanks                                             ; wait 120
+
+                    ForNextFarInc           _i _next_0x026c 10              ; next i
+
+                    LDWI                    0xFFFE
+                    ANDW                    miscFlags
+                    STW                     miscFlags                       ; scroll off 'stop text scrolling
+
+                    ResetVideoTable                                         ; cls init 'initialise video indirection table
+
+_forever            LDI                     0x05
+                    RandMod                 
+                    STW                     _r                              ; r = rnd(5)
+
+                    LDW                     _r
+                    STW                     fontLutId                       ; set fontId, r
+
+                    LDI                     0x88
+                    RandMod                 
+                    STW                     _x
+                    LDI                     0x70
+                    RandMod                 
+                    STW                     _y                              ; x = rnd(136) : y = rnd(112)
+
+                    LDW                     _x
+                    ST                      cursorXY
+                    LDW                     _y
+                    ST                      cursorXY + 1
+                    AtTextCursor            
+                    PrintString             _str_0x78a4
+                    NewLine                                                 ; at x,y : print "Text"
+
+                    LDWI                    _forever
+                    CALL                    giga_vAC                        ; goto forever
+
+                    STW                     0xde
+                    LDWI                    _page_0x0300
+                    CALL                    giga_vAC
+_page_0x0300        LDW                     0xde
+_end_0x02fb         BRA                     _end_0x02fb                     ; end
+
+_end_0x02fd         BRA                     _end_0x02fd                     ; END
 
 
 
@@ -527,21 +591,26 @@ _end_0x026a         BRA                     _end_0x026a                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x78a1
-convertEqOp         EQU     0x77a1
-convertNeOp         EQU     0x76a1
-convertLeOp         EQU     0x75a1
-convertGeOp         EQU     0x74a1
-convertLtOp         EQU     0x73a1
-convertGtOp         EQU     0x72a1
-resetVideoTable     EQU     0x0de0
+realTimeProc        EQU     0x77a1
+convertEqOp         EQU     0x76a1
+convertNeOp         EQU     0x75a1
+convertLeOp         EQU     0x74a1
+convertGeOp         EQU     0x73a1
+convertLtOp         EQU     0x72a1
+convertGtOp         EQU     0x71a1
+divide16bit         EQU     0x0aa8
+randMod16bit        EQU     0x15a0
+waitVBlanks         EQU     0x11ec
+waitVBlank          EQU     0x13a0
+resetVideoTable     EQU     0x11c4
 initClearFuncs      EQU     0x15b3
-clearVertBlinds     EQU     0x14c5
-clearCursorRow      EQU     0x0cb6
-printInit           EQU     0x15a1
-printText           EQU     0x14ac
-printChar           EQU     0x0ba6
-newLineScroll       EQU     0x13a2
+clearVertBlinds     EQU     0x13c5
+clearCursorRow      EQU     0x09b6
+printInit           EQU     0x11b2
+printText           EQU     0x13ac
+printChar           EQU     0x08a6
+atTextCursor        EQU     0x10d2
+newLineScroll       EQU     0x12a2
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -619,6 +688,179 @@ convertGt_1         LDI     1
 
 
 ; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+mathX               EQU     register8
+mathY               EQU     register9
+mathSum             EQU     register12
+mathRem             EQU     register12
+mathMask            EQU     register13
+mathSign            EQU     register14
+mathQuot            EQU     register15
+mathShift           EQU     register15
+mathBase            EQU     register10
+mathPow             EQU     register11
+mathResult          EQU     register14
+
+
+                    ; accumulator:mathRem = mathX / mathY, (results 16bit)
+divide16bit         LDW     mathX
+                    XORW    mathY
+                    STW     mathSign
+                    LDW     mathX
+                    BGE     divide16_pos0
+                    LDI     0
+                    SUBW    mathX
+                    STW     mathX
+                    
+divide16_pos0       LDW     mathY                     
+                    BGE     divide16_pos1
+                    LDI     0
+                    SUBW    mathY
+                    STW     mathY
+                    
+divide16_pos1       LDI     0
+                    STW     mathRem
+                    LDI     1
+    
+divide16_loop       STW     mathMask
+                    LDW     mathRem
+                    LSLW
+                    STW     mathRem
+                    LDW     mathX
+                    BGE     divide16_incr
+                    INC     mathRem
+                    
+divide16_incr       LDW     mathX
+                    LSLW
+                    STW     mathX
+                    LDW     mathRem
+                    SUBW    mathY
+                    BLT     divide16_incx
+                    STW     mathRem
+                    INC     mathX
+                    
+divide16_incx       LDW     mathMask
+                    LSLW
+                    BNE     divide16_loop
+                    PUSH
+                    CALL    realTimeProcAddr
+                    POP
+                    LDW     mathSign
+                    BGE     divide16_exit
+                    LDI     0
+                    SUBW    mathX
+                    RET
+                    
+divide16_exit       LDW     mathX
+                    RET
+
+
+randMod16bit        PUSH
+                    LDWI    SYS_Random_34
+                    STW     giga_sysFn
+                    SYS     34
+                    STW     mathX
+                    LDWI    divide16bit
+                    CALL    giga_vAC
+                    LDW     mathRem
+                    POP                    
+                    RET
+
+
+
+; do *NOT* use register4 to register7 during time slicing if you use realTimeProc
+graphicsMode        EQU     register0
+waitVBlankNum       EQU     register0
+
+drawHLine_x1        EQU     register0
+drawHLine_y1        EQU     register1
+drawHLine_x2        EQU     register2
+drawHLine_x4        EQU     register3
+
+drawVLine_x1        EQU     register0
+drawVLine_y1        EQU     register1
+drawVLine_y2        EQU     register2
+drawVLine_y8        EQU     register3
+
+drawLine_x1         EQU     register0
+drawLine_y1         EQU     register1
+drawLine_x2         EQU     register2
+drawLine_y2         EQU     register3
+drawLine_xy1        EQU     register0
+drawLine_xy2        EQU     register1
+drawLine_dxy1       EQU     register2
+drawLine_dxy2       EQU     register3
+drawLine_dx1        EQU     register4           ; register4 to register7 used for temp values, state will be invalidated during time slicing
+drawLine_dy1        EQU     register5
+drawLine_dx2        EQU     register6
+drawLine_dy2        EQU     register7
+drawLine_sx         EQU     register8
+drawLine_sy         EQU     register9
+drawLine_h          EQU     register10
+drawLine_num        EQU     register11
+drawLine_count      EQU     register12
+drawLine_tmp        EQU     register13
+
+drawPixel_xy        EQU     register15
+readPixel_xy        EQU     register15
+
+drawCircle_cx       EQU     register0
+drawCircle_cy       EQU     register1
+drawCircle_r        EQU     register2
+drawCircle_a        EQU     register3
+drawCircle_d        EQU     register8
+drawCircle_x        EQU     register9
+drawCircle_y        EQU     register10
+drawCircle_ch0      EQU     register11
+drawCircle_ch1      EQU     register12
+drawCircle_ch2      EQU     register13
+drawCircle_ch3      EQU     register14
+
+drawCircleF_x1      EQU     register0
+drawCircleF_y1      EQU     register1
+drawCircleF_x2      EQU     register2
+drawCircleF_cx      EQU     register15
+drawCircleF_cy      EQU     register10
+drawCircleF_r       EQU     register11
+drawCircleF_v       EQU     register8
+drawCircleF_w       EQU     register9
+
+drawRect_x1         EQU     register7
+drawRect_y1         EQU     register10
+drawRect_x2         EQU     register11
+drawRect_y2         EQU     register15
+
+drawRectF_x1        EQU     register0
+drawRectF_y1        EQU     register1
+drawRectF_x2        EQU     register2
+drawRectF_y2        EQU     register7
+
+drawPoly_addr       EQU     register15
+
+    
+waitVBlanks         PUSH
+
+waitVB_loop         LDW     waitVBlankNum
+                    SUBI    0x01
+                    STW     waitVBlankNum
+                    BGE     waitVB_vblank
+                    POP
+                    RET
+    
+waitVB_vblank       LDWI    waitVBlank
+                    CALL    giga_vAC
+                    BRA     waitVB_loop
+
+
+waitVBlank          LD      giga_videoY
+                    XORI    179
+                    BNE     waitVBlank
+                    PUSH
+                    CALL    realTimeProcAddr
+                    POP
+                    RET
+
+
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 xreset              EQU     register0
 xcount              EQU     register1
 ycount              EQU     register2
@@ -647,6 +889,11 @@ resetVT_loop        CALL    realTimeProcAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
+                    
+                    LDWI    giga_videoTop                       ; reset videoTop
+                    STW     register0
+                    LDI     0
+                    POKE    register0
                     POP
                     RET
 
@@ -815,6 +1062,32 @@ printCF_noMap       LDW     fontAddrs
 printCF_pop         POP
 
 printCF_exit        RET
+
+
+atTextCursor        LD      cursorXY
+                    SUBI    giga_xres
+                    BLT     atTC_skip0
+                    LDI     0
+                    ST      cursorXY
+                    
+atTC_skip0          LD      cursorXY + 1
+                    SUBI    giga_yres
+                    BLT     atTC_skip1
+                    LDI     giga_yres - 1
+                    ST      cursorXY + 1
+                    
+atTC_skip1          LD      cursorXY + 1
+                    SUBI    giga_yres - 8
+                    BGE     atTC_skip2
+                    LDWI    0x7FFF
+                    ANDW    miscFlags
+                    STW     miscFlags                       ; reset on bottom row flag
+                    RET
+                    
+atTC_skip2          LDWI    0x8000
+                    ORW     miscFlags
+                    STW     miscFlags                       ; set on bottom row flag
+                    RET
 
 
 

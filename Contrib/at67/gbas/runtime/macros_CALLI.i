@@ -268,6 +268,10 @@ _label_ CALLI   _label
         CALLI   stringCopy
 %ENDM
 
+%MACRO  StringCmp
+        CALLI   stringCmp
+%ENDM
+
 %MACRO  StringAdd
         CALLI   stringAdd
 %ENDM
