@@ -1598,7 +1598,7 @@ namespace Compiler
         // Last quote
         get(true);
 
-        return Expression::Numeric(0, -1, true, Expression::String, Expression::BooleanCC, Expression::Int16Both, std::string(""), text);
+        return Expression::Numeric(0, -1, true, false, Expression::String, Expression::BooleanCC, Expression::Int16Both, std::string(""), text);
     }
 
     Expression::Numeric addressOf(void)
@@ -1617,7 +1617,7 @@ namespace Compiler
         {
             Expression::advance(varName.size());
             uint16_t address = (_integerVars[varIndex]._varType == VarArray) ? _integerVars[varIndex]._array : _integerVars[varIndex]._address;
-            return Expression::Numeric(address, -1, true, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+            return Expression::Numeric(address, -1, true, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
         }
 
         // Strings
@@ -1625,7 +1625,7 @@ namespace Compiler
         {
             Expression::advance(varName.size());
             uint16_t address = _stringVars[strIndex]._address;
-            return Expression::Numeric(address, -1, true, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+            return Expression::Numeric(address, -1, true, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
         }
         
         // Constants
@@ -1633,7 +1633,7 @@ namespace Compiler
         {
             Expression::advance(varName.size());
             uint16_t address = _constants[constIndex]._address;
-            return Expression::Numeric(address, -1, true, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+            return Expression::Numeric(address, -1, true, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
         }
 
         fprintf(stderr, "Compiler::factor() : Syntax error in address of '%s' on line %d\n", _codeLines[_currentCodeLineIndex]._code.c_str(), Expression::getLineNumber());
@@ -1672,7 +1672,7 @@ namespace Compiler
             // Number
             if(number(value))
             {
-                numeric = Expression::Numeric(value, -1, true, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+                numeric = Expression::Numeric(value, -1, true, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
             }
             else
             {
@@ -1732,6 +1732,10 @@ namespace Compiler
         else if(Expression::find("MID$"))
         {
             numeric = factor(0); numeric = Keywords::functionMID$(numeric);
+        }
+        else if(Expression::find("STRCMP"))
+        {
+            numeric = factor(0); numeric = Keywords::functionSTRCMP(numeric);
         }
         else if(Expression::find("PEEK"))
         {
@@ -1810,7 +1814,7 @@ namespace Compiler
                 case '-': get(true); numeric = factor(0); numeric = Operators::operatorNEG(numeric); break;
 
                 // Reached end of expression
-                case 0: numeric = Expression::Numeric(defaultValue, -1, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string("")); break;
+                case 0: numeric = Expression::Numeric(defaultValue, -1, false, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string("")); break;
 
                 default:
                 {
@@ -1829,7 +1833,7 @@ namespace Compiler
                         if(_integerVars[varIndex]._varType == VarArray)
                         {
                             // Array numeric
-                            numeric = Expression::Numeric(defaultValue, int16_t(varIndex), true, Expression::ArrVar, Expression::BooleanCC, Expression::Int16Both, varName, std::string(""));
+                            numeric = Expression::Numeric(defaultValue, int16_t(varIndex), true, false, Expression::ArrVar, Expression::BooleanCC, Expression::Int16Both, varName, std::string(""));
 
                             // Array index numeric
                             Expression::Numeric param = factor(0); 
@@ -1850,7 +1854,7 @@ namespace Compiler
                             if(Expression::find(".HI")) int16Byte = Expression::Int16High;
 
                             // Numeric is now passed back to compiler, (rather than just numeric._value), so make sure all fields are valid
-                            numeric = Expression::Numeric(defaultValue, int16_t(varIndex), true, Expression::IntVar, Expression::BooleanCC, int16Byte, varName, std::string(""));
+                            numeric = Expression::Numeric(defaultValue, int16_t(varIndex), true, false, Expression::IntVar, Expression::BooleanCC, int16Byte, varName, std::string(""));
                         }
                     }
                     // Strings
@@ -1859,7 +1863,7 @@ namespace Compiler
                         Expression::advance(varName.size());
 
                         // Numeric is now passed back to compiler, (rather than just numeric._value), so make sure all fields are valid
-                        numeric = Expression::Numeric(defaultValue, int16_t(strIndex), true, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, varName, _stringVars[strIndex]._text);
+                        numeric = Expression::Numeric(defaultValue, int16_t(strIndex), true, false, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, varName, _stringVars[strIndex]._text);
                     }
                     // Constants
                     else if(constIndex != -1)
@@ -1871,13 +1875,13 @@ namespace Compiler
                             // Numeric is now passed back to compiler, (rather than just numeric._value), so make sure all fields are valid
                             case ConstInt16:
                             {
-                                numeric = Expression::Numeric(_constants[constIndex]._data, int16_t(constIndex), true, Expression::Number, Expression::BooleanCC, Expression::Int16Both, varName, std::string(""));
+                                numeric = Expression::Numeric(_constants[constIndex]._data, int16_t(constIndex), true, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, varName, std::string(""));
                             }
                             break;
 
                             case ConstStr:
                             {
-                                numeric = Expression::Numeric(defaultValue, int16_t(constIndex), true, Expression::Constant, Expression::BooleanCC, Expression::Int16Both, varName, _constants[constIndex]._text);
+                                numeric = Expression::Numeric(defaultValue, int16_t(constIndex), true, false, Expression::Constant, Expression::BooleanCC, Expression::Int16Both, varName, _constants[constIndex]._text);
                             }
                             break;
 
@@ -1887,7 +1891,7 @@ namespace Compiler
                     // Unknown symbol
                     else
                     {
-                        numeric = Expression::Numeric(defaultValue, -1, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+                        numeric = Expression::Numeric(defaultValue, -1, false, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
 
                         // Pragma parsing happens before any code has been parsed, so _codeLines[] may be empty
                         std::string codeText = (int(_codeLines.size()) > _currentCodeLineIndex) ? _codeLines[_currentCodeLineIndex]._code : "PRAGMA";
@@ -2202,7 +2206,7 @@ namespace Compiler
             }
             
             // Output variable, (functions can access this variable within parse())
-            numeric = Expression::Numeric(0, int16_t(codeLine._varIndex), true, varType, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
+            numeric = Expression::Numeric(0, int16_t(codeLine._varIndex), true, false, varType, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
         }
         Expression::parse(codeLine._expression, codeLineIndex, numeric);
 

@@ -126,23 +126,23 @@ convertLeOp         EQU     0x7ecb
 convertGeOp         EQU     0x7ec2
 convertLtOp         EQU     0x7eb9
 convertGtOp         EQU     0x7eb0
-resetVideoTable     EQU     0x7ca0
+resetVideoTable     EQU     0x7ad7
 initClearFuncs      EQU     0x7ddd
 clearVertBlinds     EQU     0x7da3
-clearCursorRow      EQU     0x7ab6
+clearCursorRow      EQU     0x79b6
 input               EQU     0x7cd8
-inputExt1           EQU     0x79b0
-inputExt2           EQU     0x78e1
-inputCursor         EQU     0x78bf
+inputExt1           EQU     0x78b0
+inputExt2           EQU     0x7ca1
+inputCursor         EQU     0x7ab5
 inputKeys           EQU     0x77a4
-inputIntVar         EQU     0x7aa2
-inputStrVar         EQU     0x78a8
-inputReturn         EQU     0x76c6
+inputIntVar         EQU     0x7aa1
+inputStrVar         EQU     0x76e8
+inputReturn         EQU     0x76af
 inputDelete         EQU     0x75b9
-inputPrint          EQU     0x76a7
-inputNewline        EQU     0x75a4
-printInit           EQU     0x74e9
-printText           EQU     0x74d0
+inputPrint          EQU     0x74e0
+inputNewline        EQU     0x79a1
+printInit           EQU     0x75a3
+printText           EQU     0x74c7
 printChr            EQU     0x7ea3
 printChar           EQU     0x73a7
 printHexByte        EQU     0x72ca
@@ -254,6 +254,11 @@ resetVT_loop        CALL    realTimeProcAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
+                    
+                    LDWI    giga_videoTop                       ; reset videoTop
+                    STW     register0
+                    LDI     0
+                    POKE    register0
                     POP
                     RET
 

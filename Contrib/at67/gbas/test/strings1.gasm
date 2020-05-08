@@ -38,12 +38,14 @@ _entryPoint_        EQU                     0x0200
 _page_0x0300        EQU                     0x0300
 _page_0x0400        EQU                     0x0400
 _page_0x0500        EQU                     0x0500
-_end_0x04f9         EQU                     0x0513
+_next_0x04fd        EQU                     0x0517
+_end_0x0514         EQU                     0x052e
 
 ; Variables
 _aa_array           EQU                     0x4ed6
 _aa_array           DW                      0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
 _cc                 EQU                     0x0030
+_i                  EQU                     0x0032
 
 ; Strings
 _ch$                EQU                     0x4da0
@@ -478,7 +480,15 @@ _page_0x0500        LDW                     0xde
                     PrintAcLeft             
                     NewLine                                                 ; print chr$(65);" ";hex$(15);" ";hexw$(bb);" ";left$("dogcat", 3);" ";left$(b$, 5)
 
-_end_0x04f9         BRA                     _end_0x04f9                     ; end
+                    LDI                     32
+                    STW                     _i                              ; for i=32 to 127
+
+_next_0x04fd        LDW                     _i
+                    PrintAcChar                                             ; print chr$(i);
+
+                    ForNextFarInc           _i _next_0x04fd 127             ; next i
+
+_end_0x0514         BRA                     _end_0x0514                     ; end
 
 
 
@@ -495,7 +505,7 @@ convertLeOp         EQU     0x77a1
 convertGeOp         EQU     0x76a1
 convertLtOp         EQU     0x75a1
 convertGtOp         EQU     0x74a1
-resetVideoTable     EQU     0x3ce0
+resetVideoTable     EQU     0x3cd7
 initClearFuncs      EQU     0x45dd
 clearVertBlinds     EQU     0x45a3
 clearCursorRow      EQU     0x3bb6
@@ -504,7 +514,7 @@ printText           EQU     0x43a5
 printLeft           EQU     0x42a5
 printRight          EQU     0x3ed4
 printMid            EQU     0x3eac
-printDigit          EQU     0x3cbe
+printDigit          EQU     0x3cb5
 printInt16          EQU     0x40ae
 printChr            EQU     0x41b6
 printChar           EQU     0x3aa6
@@ -626,6 +636,11 @@ resetVT_loop        CALL    realTimeProcAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
+                    
+                    LDWI    giga_videoTop                       ; reset videoTop
+                    STW     register0
+                    LDI     0
+                    POKE    register0
                     POP
                     RET
 
@@ -741,7 +756,7 @@ printT_exit         POP
                     RET
 
 
-                    ; prints left sub string pointed to by the accumulator
+                    ; prints left sub string pointed to by textStr
 printLeft           PUSH
                     LDWI    printInit
                     CALL    giga_vAC
@@ -763,7 +778,7 @@ printL_exit         POP
                     RET
 
 
-                    ; prints right sub string pointed to by the accumulator
+                    ; prints right sub string pointed to by textStr
 printRight          PUSH
                     LDWI    printInit
                     CALL    giga_vAC
@@ -790,7 +805,7 @@ printR_exit         POP
                     RET
 
 
-                    ; prints sub string pointed to by the accumulator
+                    ; prints sub string pointed to by textStr
 printMid            PUSH
                     LDWI    printInit
                     CALL    giga_vAC
@@ -1089,6 +1104,7 @@ newLS_exit          LDWI    printInit
 ; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 strChr              EQU     register0
 strHex              EQU     register1
+strCmpRes           EQU     register2
 strLength           EQU     register0
 strFinish           EQU     register0
 strSrcAddr          EQU     register1
@@ -1221,25 +1237,25 @@ stringA_exit        LDW     strLength
 stringConcat        PUSH
                     LDW     strLutAddr
                     DEEK
-                    BEQ     stringC_exit
+                    BEQ     stringCC_exit
                     STW     strSrcAddr
                     LDW     strDstAddr
                     STW     strBakAddr
                     
-stringC_loop        INC     strLutAddr
+stringCC_loop       INC     strLutAddr
                     INC     strLutAddr
                     LDW     strLutAddr
                     DEEK
-                    BEQ     stringC_exit
+                    BEQ     stringCC_exit
                     STW     strSrcAddr2
                     LDWI    stringAdd
                     CALL    giga_vAC
                     LDW     strBakAddr
                     STW     strDstAddr
                     STW     strSrcAddr
-                    BRA     stringC_loop
+                    BRA     stringCC_loop
                     
-stringC_exit        POP
+stringCC_exit       POP
                     RET
 
 

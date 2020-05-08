@@ -319,6 +319,11 @@ _label_ CALL    giga_vAC
         CALL    giga_vAC
 %ENDM
 
+%MACRO  StringCmp
+        LDWI    stringCmp
+        CALL    giga_vAC
+%ENDM
+
 %MACRO  StringAdd
         LDWI    stringAdd
         CALL    giga_vAC

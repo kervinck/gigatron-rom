@@ -62,9 +62,9 @@ _str_0xff98         DB                      3 '/60' 0
 
 ; Define Words
 def_words_0x8000    EQU                     0x8000
-def_words_0x8000    DW                      77 -96 9 -60 61 -164 173 137 -162 62 
+def_words_0x8000    DW                      -157 -160 105 -52 -67 -175 -166 96 -179 -126 
 def_words_0x8014    EQU                     0x8014
-def_words_0x8014    DW                      51 153 -176 124 -165 140 147 -83 -152 17 
+def_words_0x8014    DW                      1 -117 138 79 -5 -114 -139 -165 -134 -60 
 def_words_0x8028    EQU                     0x8028
 def_words_0x8028    DW                      0 0 0 0 0 0 0 0 0 0 
 
@@ -214,10 +214,10 @@ convertGtOp         EQU     0xff59
 multiply16bit       EQU     0xfd76
 divide16bit         EQU     0xfda8
 scanlineMode        EQU     0xff23
-resetVideoTable     EQU     0xfd57
+resetVideoTable     EQU     0xfd4e
 initClearFuncs      EQU     0xff37
 clearVertBlinds     EQU     0xfec5
-clearCursorRow      EQU     0xfd0e
+clearCursorRow      EQU     0xfd05
 printInit           EQU     0xfe01
 printText           EQU     0xff0a
 printDigit          EQU     0xfcdd
@@ -428,9 +428,11 @@ drawLine_sy         EQU     register9
 drawLine_h          EQU     register10
 drawLine_num        EQU     register11
 drawLine_count      EQU     register12
-drawLine_addr       EQU     register13
-drawLine_tmp        EQU     register14
-  
+drawLine_tmp        EQU     register13
+
+drawPixel_xy        EQU     register15
+readPixel_xy        EQU     register15
+
 drawCircle_cx       EQU     register0
 drawCircle_cy       EQU     register1
 drawCircle_r        EQU     register2
@@ -508,6 +510,11 @@ resetVT_loop        CALL    realTimeProcAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
+                    
+                    LDWI    giga_videoTop                       ; reset videoTop
+                    STW     register0
+                    LDI     0
+                    POKE    register0
                     POP
                     RET
 

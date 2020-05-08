@@ -233,7 +233,7 @@ convertLtOp         EQU     0x7ec2
 convertGtOp         EQU     0x7eb9
 multiply16bit       EQU     0x7bcd
 divide16bit         EQU     0x7ca8
-resetVideoTable     EQU     0x7bae
+resetVideoTable     EQU     0x7ba5
 initClearFuncs      EQU     0x7ddd
 clearVertBlinds     EQU     0x7da3
 clearCursorRow      EQU     0x79b6
@@ -446,6 +446,11 @@ resetVT_loop        CALL    realTimeProcAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
+                    
+                    LDWI    giga_videoTop                       ; reset videoTop
+                    STW     register0
+                    LDI     0
+                    POKE    register0
                     POP
                     RET
 

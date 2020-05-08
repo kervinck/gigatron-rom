@@ -1,6 +1,7 @@
 ; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 strChr              EQU     register0
 strHex              EQU     register1
+strCmpRes           EQU     register2
 strLength           EQU     register0
 strFinish           EQU     register0
 strSrcAddr          EQU     register1
@@ -93,6 +94,29 @@ stringCopy          LDW     strSrcAddr
                     RET
 %ENDS
 
+%SUB                stringCmp
+                    ; compares two strings
+stringCmp           LDI     0
+                    STW     strCmpRes
+
+stringC_cmp         LDW     strSrcAddr
+                    PEEK
+                    BEQ     stringC_one                         ; this assumes your strings are valid, (i.e. valid length and terminating bytes)
+                    STW     strChr
+                    LDW     strSrcAddr2
+                    PEEK
+                    SUBW    strChr
+                    BNE     stringC_zero
+                    INC     strSrcAddr
+                    INC     strSrcAddr2
+                    BRA     stringC_cmp
+                    
+stringC_one         INC     strCmpRes                           ; return 1
+
+stringC_zero        LDW     strCmpRes
+                    RET
+%ENDS
+
 %SUB                stringAdd
                     ; adds two strings together
 stringAdd           LDW     strDstAddr
@@ -135,24 +159,24 @@ stringA_exit        LDW     strLength
 stringConcat        PUSH
                     LDW     strLutAddr
                     DEEK
-                    BEQ     stringC_exit
+                    BEQ     stringCC_exit
                     STW     strSrcAddr
                     LDW     strDstAddr
                     STW     strBakAddr
                     
-stringC_loop        INC     strLutAddr
+stringCC_loop       INC     strLutAddr
                     INC     strLutAddr
                     LDW     strLutAddr
                     DEEK
-                    BEQ     stringC_exit
+                    BEQ     stringCC_exit
                     STW     strSrcAddr2
                     CALLI   stringAdd
                     LDW     strBakAddr
                     STW     strDstAddr
                     STW     strSrcAddr
-                    BRA     stringC_loop
+                    BRA     stringCC_loop
                     
-stringC_exit        POP
+stringCC_exit       POP
                     RET
 %ENDS
 

@@ -471,12 +471,12 @@ divide16bit         EQU     0xfe6e
 shiftRight1bit      EQU     0xff23
 gosubNumericLabel   EQU     0xfe03
 waitVBlank          EQU     0xff17
-resetVideoTable     EQU     0xfd90
+resetVideoTable     EQU     0xfd87
 initClearFuncs      EQU     0xff2d
 clearVertBlinds     EQU     0xfec5
 resetAudio          EQU     0xfe35
 playMidi            EQU     0xfdaf
-midiStartNote       EQU     0xfd44
+midiStartNote       EQU     0xfd3b
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -693,7 +693,8 @@ drawLine_count      EQU     register12
 drawLine_tmp        EQU     register13
 
 drawPixel_xy        EQU     register15
-  
+readPixel_xy        EQU     register15
+
 drawCircle_cx       EQU     register0
 drawCircle_cy       EQU     register1
 drawCircle_r        EQU     register2
@@ -767,6 +768,11 @@ resetVT_loop        CALL    realTimeProcAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
+                    
+                    LDWI    giga_videoTop                       ; reset videoTop
+                    STW     register0
+                    LDI     0
+                    POKE    register0
                     POP
                     RET
 

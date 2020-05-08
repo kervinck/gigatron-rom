@@ -752,7 +752,7 @@ convertLtOp         EQU     0x7dd2
 convertGtOp         EQU     0x7dc9
 multiply16bit       EQU     0x79cd
 divide16bit         EQU     0x7aa8
-resetVideoTable     EQU     0x79ae
+resetVideoTable     EQU     0x79a5
 initClearFuncs      EQU     0x7da7
 clearVertBlinds     EQU     0x7cc5
 clearCursorRow      EQU     0x74b6
@@ -780,7 +780,7 @@ printInit           EQU     0x6ba3
 printText           EQU     0x7cac
 printDigit          EQU     0x6abe
 printInt16          EQU     0x78ae
-printChr            EQU     0x79a1
+printChr            EQU     0x78a1
 printChar           EQU     0x69a7
 atTextCursor        EQU     0x7bab
 newLineScroll       EQU     0x68a2
@@ -988,6 +988,11 @@ resetVT_loop        CALL    realTimeProcAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
+                    
+                    LDWI    giga_videoTop                       ; reset videoTop
+                    STW     register0
+                    LDI     0
+                    POKE    register0
                     POP
                     RET
 
@@ -1086,7 +1091,8 @@ drawLine_count      EQU     register12
 drawLine_tmp        EQU     register13
 
 drawPixel_xy        EQU     register15
-  
+readPixel_xy        EQU     register15
+
 drawCircle_cx       EQU     register0
 drawCircle_cy       EQU     register1
 drawCircle_r        EQU     register2

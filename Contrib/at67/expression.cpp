@@ -1209,7 +1209,7 @@ namespace Expression
             }
             else
             {
-                numeric = Numeric(value, -1, true, Number, BooleanCC, Int16Both, std::string(""), std::string(""));
+                numeric = Numeric(value, -1, true, false, Number, BooleanCC, Int16Both, std::string(""), std::string(""));
             }
         }
         // Functions
@@ -1267,7 +1267,7 @@ namespace Expression
                 case '~': get(); numeric = factor(0); numeric = operatorNOT(numeric); break;
 
                 // Unknown
-                default: numeric = Numeric(defaultValue, -1, true, Number, BooleanCC, Int16Both, std::string(_expression), std::string("")); break;
+                default: numeric = Numeric(defaultValue, -1, true, false, Number, BooleanCC, Int16Both, std::string(_expression), std::string("")); break;
             }
         }
 

@@ -28,6 +28,13 @@ namespace Operators
     }
 
 
+    void createTmpVar(Expression::Numeric& numeric)
+    {
+        numeric._value = uint8_t(Compiler::getTempVarStart());
+        numeric._varType = Expression::TmpVar;
+        numeric._name = Compiler::getTempVarStartStr();
+    }
+
     void createSingleOp(const std::string& opcodeStr, Expression::Numeric& numeric)
     {
         switch(numeric._varType)
@@ -71,9 +78,7 @@ namespace Operators
             default: break;
         }
 
-        numeric._value = uint8_t(Compiler::getTempVarStart());
-        numeric._varType = Expression::TmpVar;
-        numeric._name = Compiler::getTempVarStartStr();
+        createTmpVar(numeric);
     }
 
     bool handleDualOp(const std::string& opcodeStr, Expression::Numeric& lhs, Expression::Numeric& rhs, bool outputHex)
@@ -158,10 +163,7 @@ namespace Operators
             }
         }
 
-        lhs._value = uint8_t(Compiler::getTempVarStart());
-        lhs._varType = Expression::TmpVar;
-        lhs._name = Compiler::getTempVarStartStr();
-
+        createTmpVar(lhs);
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
 
         return true;
@@ -191,9 +193,7 @@ namespace Operators
 
         if(opcode != "LSLW"  &&  opcode != "<<") Compiler::emitVcpuAsm("STW", "mathShift", false);
 
-        lhs._value = uint8_t(Compiler::getTempVarStart());
-        lhs._varType = Expression::TmpVar;
-        lhs._name = Compiler::getTempVarStartStr();
+        createTmpVar(lhs);
 
         return true;
     }
@@ -290,9 +290,7 @@ namespace Operators
             }
         }
 
-        lhs._value = uint8_t(Compiler::getTempVarStart());
-        lhs._varType = Expression::TmpVar;
-        lhs._name = Compiler::getTempVarStartStr();
+        createTmpVar(lhs);
 
         return true;
     }
@@ -387,9 +385,7 @@ namespace Operators
             Compiler::emitVcpuAsm(opcode, "giga_vAC", false);
         }
 
-        lhs._value = uint8_t(Compiler::getTempVarStart());
-        lhs._varType = Expression::TmpVar;
-        lhs._name = Compiler::getTempVarStartStr();
+        createTmpVar(lhs);
         
         if(isMod) Compiler::emitVcpuAsm("LDW", "mathRem", false);
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
@@ -677,9 +673,7 @@ namespace Operators
                     default: break;
                 }
 
-                left._value = uint8_t(Compiler::getTempVarStart());
-                left._varType = Expression::TmpVar;
-                left._name = Compiler::getTempVarStartStr();
+                createTmpVar(left);
 
                 Compiler::emitVcpuAsm("ST", "giga_vAC + 1", false);
                 Compiler::emitVcpuAsm("ORI", "0xFF", false);
@@ -760,9 +754,7 @@ namespace Operators
                     default: break;
                 }
 
-                left._value = uint8_t(Compiler::getTempVarStart());
-                left._varType = Expression::TmpVar;
-                left._name = Compiler::getTempVarStartStr();
+                createTmpVar(left);
             }
             else
             {
@@ -965,17 +957,17 @@ namespace Operators
         // Optimise base = 0
         if(left._varType == Expression::Number  &&  left._value == 0)
         {
-            return Expression::Numeric(0, -1, true, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+            return Expression::Numeric(0, -1, true, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
         }
         // Optimise base = 1
         else if(left._varType == Expression::Number  &&  left._value == 1)
         {
-            return Expression::Numeric(1, -1, true, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+            return Expression::Numeric(1, -1, true, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
         }
         // Optimise exponent = 0
         else if(right._varType == Expression::Number  &&  right._value == 0)
         {
-            return Expression::Numeric(1, -1, true, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+            return Expression::Numeric(1, -1, true, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
         }
 
         left._isValid = (Assembler::getUseOpcodeCALLI()) ? handleMathOp("CALLI", "power16bit", left, right) : handleMathOp("CALL", "power16bit", left, right);
@@ -994,7 +986,7 @@ namespace Operators
         // Optimise multiply with 0
         if((left._varType == Expression::Number  &&  left._value == 0)  ||  (right._varType == Expression::Number  &&  right._value == 0))
         {
-            return Expression::Numeric(0, -1, true, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+            return Expression::Numeric(0, -1, true, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
         }
 
         left._isValid = (Assembler::getUseOpcodeCALLI()) ? handleMathOp("CALLI", "multiply16bit", left, right) : handleMathOp("CALL", "multiply16bit", left, right);
@@ -1013,7 +1005,7 @@ namespace Operators
         // Optimise divide with 0, term() never lets denominator = 0
         if((left._varType == Expression::Number  &&  left._value == 0)  ||  (right._varType == Expression::Number  &&  right._value == 0))
         {
-            return Expression::Numeric(0, -1, true, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+            return Expression::Numeric(0, -1, true, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
         }
 
         left._isValid = (Assembler::getUseOpcodeCALLI()) ? handleMathOp("CALLI", "divide16bit", left, right) : handleMathOp("CALL", "divide16bit", left, right);
@@ -1032,7 +1024,7 @@ namespace Operators
         // Optimise divide with 0, term() never lets denominator = 0
         if((left._varType == Expression::Number  &&  left._value == 0)  ||  (right._varType == Expression::Number  &&  right._value == 0))
         {
-            return Expression::Numeric(0, -1, true, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+            return Expression::Numeric(0, -1, true, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
         }
 
         left._isValid = (Assembler::getUseOpcodeCALLI()) ? handleMathOp("CALLI", "divide16bit", left, right, true) : handleMathOp("CALL", "divide16bit", left, right, true);
