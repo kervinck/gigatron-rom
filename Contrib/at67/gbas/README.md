@@ -1,9 +1,3 @@
-<style>
-pre {
-  max-height: 50vh !important;
-}
-</style>
-
 # TIPS and TRICKS
 
 ## Constants:
@@ -85,6 +79,9 @@ input "Testing INPUT:", cat$,"Cats Name ?"32;, hours,"H ?"2;, minutes,"M ?"2;, s
 - The compiler will always produce a .GASM file that you may then view to determine how good/bad a job the compiler has performed.
 - The assembly code is fully annotated and you can directly see which gtBASIC statements have produced which vCPU mnemonics.
 - The following code is a complete assembled version of Blinky, you can see all the register/memory allocations, the annotated code and the gtBASIC runtime linked.
+<details>
+ <summary>Summary</summary>
+
 ~~~
 _startAddress_      EQU                     0x0200
 
@@ -339,6 +336,7 @@ initClearFuncs      PUSH
                     POP
                     RET
 ~~~
+</details>
 
 ## Branching:
 - Don't use 0 as a line number, 0 is used as a delimiter in GOTO/GOSUB LUT's.
