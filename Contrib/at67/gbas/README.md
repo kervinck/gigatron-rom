@@ -1,3 +1,9 @@
+<style>
+pre {
+  max-height: 50vh !important;
+}
+</style>
+
 # TIPS and TRICKS
 
 ## Constants:
@@ -523,7 +529,7 @@ goto &blah
 ## Variable Initialisation:
 - Pack the initialisation of your variables into multi-statement lines if you can, your code will be smaller and faster.
 
-[b]UNPACKED:[/b]
+### UNPACKED:
 ~~~
                     LDI                     0
                     STW                     _x                              ; x = 0
@@ -535,7 +541,7 @@ goto &blah
                     STW                     _z                              ; z = 0
 ~~~
 
-[b]PACKED:[/b]
+### PACKED:
 ~~~
                     LDI                     0
                     STW                     _x
@@ -546,7 +552,7 @@ goto &blah
 ## Expression Handler:
 - Short circuit complex literal calculations into simpler real instructions.
 
-[b]BAD:[/b]
+### BAD:
 ~~~
                     LDI                     20
                     STW                     _x                              ; x = 20
@@ -563,7 +569,7 @@ goto &blah
                     STW                     _blah                           ; blah = x*20 + 53 - 12 - 9
 ~~~
 
-[b]GOOD:[/b]
+### GOOD:
 ~~~
                     LDI                     20
                     STW                     _x                              ; x = 20
