@@ -471,7 +471,7 @@ namespace Compiler
         // Check for constant string
         else
         {
-            if(Expression::isValidString(strData))
+            if(Expression::isStringValid(strData))
             {
                 // Strip quotes
                 strData.erase(0, 1);
@@ -1215,6 +1215,12 @@ namespace Compiler
                 return LabelError;
             }
 
+            if(code[0] == '0')
+            {
+                fprintf(stderr, "Compiler::checkForLabel() : line number cannot be zero or start with zero : '%s' : on line %d\n", code.c_str(), lineNumber + 1);
+                return LabelError;
+            }
+
             // Create label
             bool numeric = false;
             bool foundGosub = false;
@@ -1250,19 +1256,7 @@ namespace Compiler
         if(colon != std::string::npos)
         {
             std::string labelName = code.substr(0, colon);
-            bool validLabel = true;
-            if(labelName.size())
-            {
-                for(int i=0; i<int(labelName.size()); i++)
-                {
-                    if(!(labelName[i] == '_')  &&  !isalnum((unsigned char)labelName[i]))
-                    {
-                        validLabel = false;
-                        break;
-                    }
-                }
-            }
-            if(validLabel)
+            if(Expression::isLabNameValid(labelName))
             {
                 bool validCode = false;
 
@@ -2046,7 +2040,7 @@ namespace Compiler
                 }
             }
         }
-        else if(Expression::isValidString(strText))
+        else if(Expression::isStringValid(strText))
         {
             // Strip quotes
             strText.erase(0, 1);
@@ -2717,6 +2711,7 @@ namespace Compiler
                 }
             }
         }
+        _output.push_back("\n");
 
         // Create def font data
         _output.push_back("; Define Fonts\n");

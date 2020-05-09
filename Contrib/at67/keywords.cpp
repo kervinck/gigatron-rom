@@ -1495,7 +1495,7 @@ namespace Keywords
     {
         std::string pragma = input;
         Expression::stripNonStringWhitespace(pragma);
-        if(foundPos > pragma.size()-3  ||  !Expression::isValidString(pragma.substr(foundPos)))
+        if(foundPos > pragma.size()-3  ||  !Expression::isStringValid(pragma.substr(foundPos)))
         {
             fprintf(stderr, "Keywords::pragmaRUNTIMEPATH() : Syntax error, _runtimePath_ <\"Path to runtime\">, in '%s' on line %d\n", input.c_str(), codeLineIndex);
             return false;
@@ -2210,7 +2210,7 @@ namespace Keywords
 
         // Print heading string
         bool foundHeadingString = false;
-        if(tokens.size()  &&  Expression::isValidString(tokens[0]))
+        if(tokens.size()  &&  Expression::isStringValid(tokens[0]))
         {
             size_t lquote = tokens[0].find_first_of("\"");
             size_t rquote = tokens[0].find_first_of("\"", lquote + 1);
@@ -3015,7 +3015,7 @@ namespace Keywords
         {
             // Strip whitespace
             Expression::stripNonStringWhitespace(tokens[1]);
-            if(Expression::isValidString(tokens[1]))
+            if(Expression::isStringValid(tokens[1]))
             {
                 uint16_t address;
                 std::string internalName;

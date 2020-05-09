@@ -1772,7 +1772,7 @@ namespace Assembler
                 // Include path
                 else if(tokens[0] == "%INCLUDEPATH"  &&  tokens.size() > 1)
                 {
-                    if(Expression::isValidString(tokens[1]))
+                    if(Expression::isStringValid(tokens[1]))
                     {
                         // Strip quotes
                         std::string includePath = tokens[1];

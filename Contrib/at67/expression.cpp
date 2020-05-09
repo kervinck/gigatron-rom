@@ -248,20 +248,34 @@ namespace Expression
     // First char must be alpha, all chars except first can be numerics, all chars except first and last can be underscores, last char can be a dollar sign
     bool isVarNameValid(const std::string& varName)
     {
-        if(varName.size() == 0)  return false;
+        if(varName.size() == 0) return false;
         if(!isalpha((unsigned char)varName[0])) return false;
+        if(!isalnum((unsigned char)varName[varName.size() - 1])  &&  varName[varName.size() - 1] != '$') return false;
 
         for(int i=1; i<int(varName.size())-1; i++)
         {
             if(!isalnum((unsigned char)varName[i])  &&  varName[i] != '_') return false;
         }
 
-        if(!isalnum((unsigned char)varName[varName.size() - 1])  &&  varName[varName.size() - 1] != '$') return false;
+        return true;
+    }
+
+    // First char must be alpha, all chars except first can be numerics, all chars except first and last can be underscores
+    bool isLabNameValid(const std::string& varName)
+    {
+        if(varName.size() == 0) return false;
+        if(!isalpha((unsigned char)varName[0])) return false;
+        if(!isalnum((unsigned char)varName[varName.size() - 1])) return false;
+
+        for(int i=1; i<int(varName.size())-1; i++)
+        {
+            if(!isalnum((unsigned char)varName[i])  &&  varName[i] != '_') return false;
+        }
 
         return true;
     }
 
-    bool isValidString(const std::string& input)
+    bool isStringValid(const std::string& input)
     {
         std::string str = input;
         stripNonStringWhitespace(str);
