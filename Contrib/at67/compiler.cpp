@@ -330,7 +330,8 @@ namespace Compiler
 
         std::vector<uint16_t> arrSizes;
         std::vector<int16_t> arrInits;
-        IntegerVar integerVar = {data, init, _userVarStart, varName, varName, codeLineIndex, VarInt16, Int16, arrSizes, arrInits};
+        std::vector<std::vector<uint16_t>> arrAddrs;
+        IntegerVar integerVar = {data, init, _userVarStart, varName, varName, codeLineIndex, VarInt16, Int16, arrSizes, arrInits, arrAddrs};
         _integerVars.push_back(integerVar);
 
         // Create var output
@@ -348,7 +349,7 @@ namespace Compiler
     }
 
     void createIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, int& varIndex, VarType varType, int intSize,
-                      uint16_t address, std::vector<uint16_t>& arrSizes, const std::vector<int16_t>& arrInits)
+                      uint16_t address, std::vector<uint16_t>& arrSizes, const std::vector<int16_t>& arrInits, std::vector<std::vector<uint16_t>>& arrAddrs)
     {
         // Create var
         varIndex = int(_integerVars.size());
@@ -357,7 +358,7 @@ namespace Compiler
         codeLine._varType = VarInt16;
 
         uint16_t varAddr = (varType == VarInt16) ? _userVarStart : address;
-        IntegerVar integerVar = {data, init, varAddr, varName, varName, codeLineIndex, varType, intSize, arrSizes, arrInits};
+        IntegerVar integerVar = {data, init, varAddr, varName, varName, codeLineIndex, varType, intSize, arrSizes, arrInits, arrAddrs};
         _integerVars.push_back(integerVar);
 
         // Create var output

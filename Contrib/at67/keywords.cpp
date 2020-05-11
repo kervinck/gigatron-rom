@@ -3252,7 +3252,7 @@ namespace Keywords
         }
 
         //uint16_t address = (arrAddrs.size() == 1) ? arrAddrs[0] : 0x0000;
-        Compiler::createIntVar(varName, 0, varInit, codeLine, codeLineIndex, false, varIndex, Compiler::VarArray, Compiler::Int16, address, arrSizes, arrInits);
+        Compiler::createIntVar(varName, 0, varInit, codeLine, codeLineIndex, false, varIndex, Compiler::VarArray, Compiler::Int16, address, arrSizes, arrInits, arrAddrs);
         return true;
     }
 
