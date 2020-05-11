@@ -84,25 +84,20 @@ st([sysArgs+6])                 #37
 suba(1)                         #38 Check if writing into sound channel page (1..4)
 anda(0xfc)                      #39
 ora([vTmp])                     #40 Combine second condition with first
-bne(pc()+3)                     #41
-bra(pc()+3)                     #42
-ld(0xfc);                       C('Unsafe')#43  Clear low channelMask bits so it becomes safe
-ld(0xff);                       C('Safe')#43(!) No change to channelMask because already safe
-anda([channelMask])             #44
-st([channelMask])               #45
-ld([sysArgs+4])                 #46
-bne('.sysPi#49')                #47
+st([vTmp])                      #41
+ld([sysArgs+4])                 #42 Check copy count
+bne('.sysPi#45')                #43
 # Execute code (don't care about checksum anymore)
-ld([sysArgs+5]);                C('Execute')#48 Low run address
-st([vLR])                       #49 https://forum.gigatron.io/viewtopic.php?p=29#p29
-suba(2)                         #50
-st([vPC])                       #51
-ld([sysArgs+6])                 #52 High run address
-st([vPC+1])                     #53
-st([vLR+1])                     #54
-ld(hi('REENTER'),Y)             #55
-jmp(Y,'REENTER')                #56
-ld(-60/2)                       #57
+ld([sysArgs+5]);                C('Execute')#44 Low run address
+st([vLR])                       #45 https://forum.gigatron.io/viewtopic.php?p=29#p29
+suba(2)                         #46
+st([vPC])                       #47
+ld([sysArgs+6])                 #48 High run address
+st([vPC+1])                     #49
+st([vLR+1])                     #50
+ld(hi('REENTER'),Y)             #51
+jmp(Y,'REENTER')                #52
+ld(-56/2)                       #53
 # Invalid checksum
 label('.sysPi#19')
 wait(25-19);                    C('Invalid checksum')#19 Reset checksum
@@ -114,14 +109,21 @@ ld(hi('REENTER'),Y)             #27
 jmp(Y,'REENTER')                #28
 ld(-32/2)                       #29
 # Loading data
-label('.sysPi#49')
-ld([sysArgs+0]);                C('Loading data')#49 Continue checksum
-suba(1,X)                       #50 Point at last byte
-ld([Y,X])                       #51
-st([sysArgs+2])                 #52
-ld(hi('REENTER'),Y)             #53
-jmp(Y,'REENTER')                #54
-ld(-58/2)                       #55
+label('.sysPi#45')
+ld([vTmp]);                     C('Loading data')#45
+bne(pc()+3)                     #46
+bra(pc()+3)                     #47
+ld(0xfc);                       C('Unsafe')#48  Clear low channelMask bits so it becomes safe
+ld(0xff);                       C('Safe')#48(!) No change to channelMask because already safe
+anda([channelMask])             #49
+st([channelMask])               #50
+ld([sysArgs+0])                 #51 Continue checksum
+suba(1,X)                       #52 Point at last byte
+ld([Y,X])                       #53
+st([sysArgs+2])                 #54
+ld(hi('REENTER'),Y)             #55
+jmp(Y,'REENTER')                #56
+ld(-60/2)                       #57
 
 #-----------------------------------------------------------------------
 # Extension SYS_LoaderPayloadCopy_34

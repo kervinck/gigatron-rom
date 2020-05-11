@@ -121,7 +121,7 @@ gcl0x
 |                       RAM page 2                                      |
 +-----------------------------------------------------------------------}
 
-\romType, \romTypeValue_DEVROM- {Version check >= DEVROM}
+\romType, \romTypeValue_ROMv5-  {Version check >= ROMv5}
 [if<0 do _frameCount _vPCH: loop]
 
 $500 Address=                   {512 bytes memory for one sector}
