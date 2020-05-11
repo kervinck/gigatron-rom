@@ -70,24 +70,24 @@ bne('.sysPi#25')                #23
 ld([Y,X]);                      C('Valid command')#24 Length byte
 st([Y,Xpp]);                    C('Just X++')#25
 anda(63)                        #26 Bit 6:7 are garbage
-st([sysArgs+4])                 #27 Copy count
-adda([Y,X])                     #28 One past last address
-adda(1)                         #29 $ff->0, $00->1
-anda(0xfe)                      #30 Zero if writing top 2 bytes in page
-st([vTmp])                      #31
+st([sysArgs+4])                 #27 Copy count 0..60
+adda([Y,X])                     #28 One location past (+1) the last byte of fragment
+adda(1)                         #29 254+1 = $ff becomes 0, 255+1 = $00 becomes 1
+anda(0xfe)                      #30 Will be zero iff writing in top 2 bytes of page
+st([vTmp])                      #31 Remember as first condition
 ld([Y,X])                       #32 Low copy address
 st([Y,Xpp]);                    C('Just X++')#33
 st([sysArgs+5])                 #34
 ld([Y,X])                       #35 High copy address
 st([Y,Xpp]);                    C('Just X++')#36
 st([sysArgs+6])                 #37
-suba(1)                         #38 Check if writing to sound channel page
+suba(1)                         #38 Check if writing into sound channel page (1..4)
 anda(0xfc)                      #39
-ora([vTmp])                     #40
+ora([vTmp])                     #40 Combine second condition with first
 bne(pc()+3)                     #41
 bra(pc()+3)                     #42
-ld(0xfc);                       C('Unsafe')#43
-ld(0xff);                       C('Safe')#43(!)
+ld(0xfc);                       C('Unsafe')#43  Clear low channelMask bits so it becomes safe
+ld(0xff);                       C('Safe')#43(!) No change to channelMask because already safe
 anda([channelMask])             #44
 st([channelMask])               #45
 ld([sysArgs+4])                 #46
