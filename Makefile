@@ -40,7 +40,7 @@ dev.rom: Core/* Apps/*/* Makefile interface.json
 		zippedRacerHorizon=Apps/Racer/Horizon-256x16.rgb\
 		Racer=Apps/Racer/Racer_v2.gcl\
 		Mandelbrot=Apps/Mandelbrot/Mandelbrot_v1.gcl\
-		SYS_Loader_v4.py\
+		SYS_Loader_vX.py\
 		Pictures=Apps/Pictures/Pictures_v3.gcl\
 		Loader=Apps/Loader/Loader_v4.gcl\
 		Credits=Apps/Credits/Credits_v3.gcl\

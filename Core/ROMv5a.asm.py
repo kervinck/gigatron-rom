@@ -159,7 +159,7 @@ from os  import getenv
 
 from asm import *
 import gcl0x as gcl
-import font_vX as font
+import font_v4 as font
 
 enableListing()
 #-----------------------------------------------------------------------
