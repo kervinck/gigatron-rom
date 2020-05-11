@@ -34,9 +34,10 @@ namespace Compiler
     uint16_t _strWorkArea            = 0x0000;
     uint16_t _spriteStripeChunks     = 15;
     uint16_t _spriteStripeMinAddress = USER_CODE_START;
-
+    
     Memory::FitType _spriteStripeFitType = Memory::FitDescending;
     CodeOptimiseType _codeOptimiseType = CodeSpeed;
+    Cpu::RomType _codeRomType = Cpu::ROMv1;
 
     bool _compilingError = false;
     bool _arrayIndiciesOne = false;
@@ -95,6 +96,7 @@ namespace Compiler
     uint16_t getSpriteStripeMinAddress(void) {return _spriteStripeMinAddress;}
     Memory::FitType getSpriteStripeFitType(void) {return _spriteStripeFitType;}
     CodeOptimiseType getCodeOptimiseType(void) {return _codeOptimiseType;}
+    Cpu::RomType getCodeRomType(void) {return _codeRomType;}
     bool getCompilingError(void) {return _compilingError;}
     bool getArrayIndiciesOne(void) {return _arrayIndiciesOne;}
     int getCurrentLabelIndex(void) {return _currentLabelIndex;}
@@ -111,6 +113,7 @@ namespace Compiler
     void setSpriteStripeMinAddress(uint16_t spriteStripeMinAddress) {_spriteStripeMinAddress = spriteStripeMinAddress;}
     void setSpriteStripeFitType(Memory::FitType spriteStripeFitType) {_spriteStripeFitType = spriteStripeFitType;}
     void setCodeOptimiseType(CodeOptimiseType codeOptimiseType) {_codeOptimiseType = codeOptimiseType;}
+    void setCodeRomType(Cpu::RomType codeRomType) {_codeRomType = codeRomType;}
     void setCreateNumericLabelLut(bool createNumericLabelLut) {_createNumericLabelLut = createNumericLabelLut;}
     void setCompilingError(bool compilingError) {_compilingError = compilingError;}
     void setArrayIndiciesOne(bool arrayIndiciesOne) {_arrayIndiciesOne = arrayIndiciesOne;}
@@ -325,8 +328,10 @@ namespace Compiler
         codeLine._varIndex = varIndex;
         codeLine._varType = VarInt16;
 
+        std::vector<uint16_t> arrSizes;
         std::vector<int16_t> arrInits;
-        IntegerVar integerVar = {data, init, _userVarStart, 0x0000, varName, varName, codeLineIndex, VarInt16, Int16, 0, arrInits};
+        std::vector<std::vector<uint16_t>> arrAddrs;
+        IntegerVar integerVar = {data, init, _userVarStart, varName, varName, codeLineIndex, VarInt16, Int16, arrSizes, arrInits, arrAddrs};
         _integerVars.push_back(integerVar);
 
         // Create var output
@@ -343,8 +348,8 @@ namespace Compiler
         if(_userVarStart >= USER_VAR_END) _userVarStart = USER_VAR_START;
     }
 
-    void createIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, int& varIndex, const std::vector<int16_t>& arrInits,
-                      VarType varType, uint16_t arrayStart, int intSize, int arrSize)
+    void createIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, int& varIndex, VarType varType, int intSize,
+                      uint16_t address, std::vector<uint16_t>& arrSizes, const std::vector<int16_t>& arrInits, std::vector<std::vector<uint16_t>>& arrAddrs)
     {
         // Create var
         varIndex = int(_integerVars.size());
@@ -352,8 +357,8 @@ namespace Compiler
         codeLine._varIndex = varIndex;
         codeLine._varType = VarInt16;
 
-        uint16_t varStart = (varType == VarArray) ? 0x0000 : _userVarStart;
-        IntegerVar integerVar = {data, init, varStart, arrayStart, varName, varName, codeLineIndex, varType, intSize, arrSize, arrInits};
+        uint16_t varAddr = (varType == VarInt16) ? _userVarStart : address;
+        IntegerVar integerVar = {data, init, varAddr, varName, varName, codeLineIndex, varType, intSize, arrSizes, arrInits, arrAddrs};
         _integerVars.push_back(integerVar);
 
         // Create var output
@@ -370,7 +375,11 @@ namespace Compiler
         if(varType == VarInt16)
         {
             _userVarStart += Int16;
-            if(_userVarStart >= USER_VAR_END) _userVarStart = USER_VAR_START;
+            if(_userVarStart >= USER_VAR_END)
+            {
+                _userVarStart = USER_VAR_START;
+                fprintf(stderr, "Warning: you have exceeded the maximum number of page zero global variables : on line %d\n", codeLineIndex); 
+            }
         }
     }
 
@@ -471,7 +480,7 @@ namespace Compiler
         // Check for constant string
         else
         {
-            if(Expression::isValidString(strData))
+            if(Expression::isStringValid(strData))
             {
                 // Strip quotes
                 strData.erase(0, 1);
@@ -761,7 +770,7 @@ namespace Compiler
 
     bool initialiseMacros(void)
     {
-        std::string filename = (!Assembler::getUseOpcodeCALLI()) ? "/macros.i" : "/macros_CALLI.i";
+        std::string filename = (_codeRomType < Cpu::ROMv5a) ? "/macros.i" : "/macros_ROMv5a.i";
         filename = Assembler::getIncludePath() + filename;
         std::ifstream infile(filename);
 
@@ -936,7 +945,7 @@ namespace Compiler
         uint32_t expressionType = parseArrayVarExpression(codeLine, codeLineIndex, arrText, arrIndex);
 
         int intSize = _integerVars[varIndex]._intSize;
-        uint16_t arrayPtr = _integerVars[varIndex]._array;
+        uint16_t arrayPtr = _integerVars[varIndex]._address;
 
         // Constant index
         if(!(expressionType & Expression::HasIntVars))
@@ -1215,6 +1224,12 @@ namespace Compiler
                 return LabelError;
             }
 
+            if(code[0] == '0')
+            {
+                fprintf(stderr, "Compiler::checkForLabel() : line number cannot be zero or start with zero : '%s' : on line %d\n", code.c_str(), lineNumber + 1);
+                return LabelError;
+            }
+
             // Create label
             bool numeric = false;
             bool foundGosub = false;
@@ -1250,19 +1265,7 @@ namespace Compiler
         if(colon != std::string::npos)
         {
             std::string labelName = code.substr(0, colon);
-            bool validLabel = true;
-            if(labelName.size())
-            {
-                for(int i=0; i<int(labelName.size()); i++)
-                {
-                    if(!(labelName[i] == '_')  &&  !isalnum((unsigned char)labelName[i]))
-                    {
-                        validLabel = false;
-                        break;
-                    }
-                }
-            }
-            if(validLabel)
+            if(Expression::isLabNameValid(labelName))
             {
                 bool validCode = false;
 
@@ -1305,9 +1308,6 @@ namespace Compiler
 
     bool parsePragmas(int numLines)
     {
-        // By default do not support CALLI
-        Assembler::setUseOpcodeCALLI(false);
-
         // Parse each line of input for pragmas, (pragmas are case sensitive)
         for(int j=0; j<numLines; j++)
         {
@@ -1337,17 +1337,27 @@ namespace Compiler
         return true;
     }
 
-    bool parseLabels(int numLines)
+
+    bool initialiseCode(void)
     {
-        // Relies on _useOpcodeCALLI_, so make sure it is already initialised
+        // Relies on _codeRomType_, so make sure it is already initialised
         initialiseMacros();
 
         // Entry point initialisation
         Label label;
-        CodeLine codeLine;
         createLabel(_vasmPC, "_entryPoint_", 0, label, false, false, false, false);
+
+        // BASIC INIT
+        CodeLine codeLine;
         if(createCodeLine("INIT", 0, 0, -1, Expression::Int16Both, false, codeLine)) _codeLines.push_back(codeLine);
-        if(!Assembler::getUseOpcodeCALLI())
+
+        // Rom check
+        emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(_codeRomType)), false, 0);
+        emitVcpuAsm("STW", "romType", false, 0);
+        emitVcpuAsm("%RomCheck", "", false, 0);
+
+        // Realtime proc and relational operators are CALLS from zero page for efficiency
+        if(_codeRomType < Cpu::ROMv5a)
         {
             // Handles time sliced, (real time), code such as AUDIO and/or MIDI
             emitVcpuAsm("%InitRealTimeProc", "", false, 0);
@@ -1360,8 +1370,15 @@ namespace Compiler
             emitVcpuAsm("%InitLtOp", "", false, 0);
             emitVcpuAsm("%InitGtOp", "", false, 0);
         }
+
+        // Initialise
         emitVcpuAsm("%Initialise", "", false, 0);
 
+        return true;
+    }
+
+    bool parseLabels(int numLines)
+    {
         // GOSUB labels
         for(int i=0; i<numLines; i++)
         {
@@ -1616,7 +1633,7 @@ namespace Compiler
         if(varIndex != -1)
         {
             Expression::advance(varName.size());
-            uint16_t address = (_integerVars[varIndex]._varType == VarArray) ? _integerVars[varIndex]._array : _integerVars[varIndex]._address;
+            uint16_t address = _integerVars[varIndex]._address;
             return Expression::Numeric(address, -1, true, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
         }
 
@@ -1695,67 +1712,67 @@ namespace Compiler
         // Functions
         else if(Expression::find("LEN"))
         {
-            numeric = factor(0); numeric = Keywords::functionLEN(numeric);
+            numeric = factor(0); numeric = Keywords::functionLEN(numeric, _currentCodeLineIndex);
         }
         else if(Expression::find("GET"))
         {
-            numeric = factor(0); numeric = Keywords::functionGET(numeric);
+            numeric = factor(0); numeric = Keywords::functionGET(numeric, _currentCodeLineIndex);
         }
         else if(Expression::find("ABS"))
         {
-            numeric = factor(0); numeric = Keywords::functionABS(numeric);
+            numeric = factor(0); numeric = Keywords::functionABS(numeric, _currentCodeLineIndex);
         }
         else if(Expression::find("ASC"))
         {
-            numeric = factor(0); numeric = Keywords::functionASC(numeric);
+            numeric = factor(0); numeric = Keywords::functionASC(numeric, _currentCodeLineIndex);
         }
         else if(Expression::find("CHR$"))
         {
-            numeric = factor(0); numeric = Keywords::functionCHR$(numeric);
+            numeric = factor(0); numeric = Keywords::functionCHR$(numeric, _currentCodeLineIndex);
         }
         else if(Expression::find("HEX$"))
         {
-            numeric = factor(0); numeric = Keywords::functionHEX$(numeric);
+            numeric = factor(0); numeric = Keywords::functionHEX$(numeric, _currentCodeLineIndex);
         }
         else if(Expression::find("HEXW$"))
         {
-            numeric = factor(0); numeric = Keywords::functionHEXW$(numeric);
+            numeric = factor(0); numeric = Keywords::functionHEXW$(numeric, _currentCodeLineIndex);
         }
         else if(Expression::find("LEFT$"))
         {
-            numeric = factor(0); numeric = Keywords::functionLEFT$(numeric);
+            numeric = factor(0); numeric = Keywords::functionLEFT$(numeric, _currentCodeLineIndex);
         }
         else if(Expression::find("RIGHT$"))
         {
-            numeric = factor(0); numeric = Keywords::functionRIGHT$(numeric);
+            numeric = factor(0); numeric = Keywords::functionRIGHT$(numeric, _currentCodeLineIndex);
         }
         else if(Expression::find("MID$"))
         {
-            numeric = factor(0); numeric = Keywords::functionMID$(numeric);
+            numeric = factor(0); numeric = Keywords::functionMID$(numeric, _currentCodeLineIndex);
         }
         else if(Expression::find("STRCMP"))
         {
-            numeric = factor(0); numeric = Keywords::functionSTRCMP(numeric);
+            numeric = factor(0); numeric = Keywords::functionSTRCMP(numeric, _currentCodeLineIndex);
         }
         else if(Expression::find("PEEK"))
         {
-            numeric = factor(0); numeric = Keywords::functionPEEK(numeric);
+            numeric = factor(0); numeric = Keywords::functionPEEK(numeric, _currentCodeLineIndex);
         }
         else if(Expression::find("DEEK"))
         {
-            numeric = factor(0); numeric = Keywords::functionDEEK(numeric);
+            numeric = factor(0); numeric = Keywords::functionDEEK(numeric, _currentCodeLineIndex);
         }
         else if(Expression::find("USR"))
         {
-            numeric = factor(0); numeric = Keywords::functionUSR(numeric);
+            numeric = factor(0); numeric = Keywords::functionUSR(numeric, _currentCodeLineIndex);
         }
         else if(Expression::find("RND"))
         {
-            numeric = factor(0); numeric = Keywords::functionRND(numeric);
+            numeric = factor(0); numeric = Keywords::functionRND(numeric, _currentCodeLineIndex);
         }
         else if(Expression::find("POINT"))
         {
-            numeric = factor(0); numeric = Keywords::functionPOINT(numeric);
+            numeric = factor(0); numeric = Keywords::functionPOINT(numeric, _currentCodeLineIndex);
         }
         else if(Expression::find("NOT "))
         {
@@ -1844,7 +1861,7 @@ namespace Compiler
                             if(Expression::find(".HI")) int16Byte = Expression::Int16High;
                             numeric._int16Byte = int16Byte;
 
-                            numeric = Keywords::functionARR(numeric);
+                            numeric = Keywords::functionARR(numeric, _currentCodeLineIndex);
                         }
                         // Vars
                         else
@@ -2046,7 +2063,7 @@ namespace Compiler
                 }
             }
         }
-        else if(Expression::isValidString(strText))
+        else if(Expression::isStringValid(strText))
         {
             // Strip quotes
             strText.erase(0, 1);
@@ -2336,7 +2353,7 @@ namespace Compiler
     {
         for(int i=0; i<int(vasm.size()); i++)
         {
-            if(Assembler::getUseOpcodeCALLI())
+            if(_codeRomType >= Cpu::ROMv5a)
             {
                 if(vasm[i]._code.find("CALLI_JUMP") != std::string::npos)
                 {
@@ -2538,10 +2555,10 @@ namespace Compiler
                 case VarArray:
                 {
                     std::string arrName = "_" + _integerVars[i]._name + "_array";
-                    _output.push_back(arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(_integerVars[i]._array) + "\n");
+                    _output.push_back(arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(_integerVars[i]._address) + "\n");
             
                     std::string dbString = arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
-                    for(int j=0; j<_integerVars[i]._arrSize/2; j++)
+                    for(int j=0; j<_integerVars[i]._arrSizes[2]; j++)
                     {
                         // Single initialisation value
                         if(_integerVars[i]._arrInits.size() == 0)
@@ -2717,6 +2734,7 @@ namespace Compiler
                 }
             }
         }
+        _output.push_back("\n");
 
         // Create def font data
         _output.push_back("; Define Fonts\n");
@@ -3097,29 +3115,36 @@ namespace Compiler
     {
         _output.push_back("\n");
         _output.push_back("; Internal variables\n");
-        _output.push_back("serialRawPrev"  + std::string(LABEL_TRUNC_SIZE - strlen("serialRawPrev"), ' ')  + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(0x0081) + "\n");
-        _output.push_back("register0"      + std::string(LABEL_TRUNC_SIZE - strlen("register0"), ' ')      + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(INT_VAR_START) + "\n");
-        _output.push_back("register1"      + std::string(LABEL_TRUNC_SIZE - strlen("register1"), ' ')      + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x02\n");
-        _output.push_back("register2"      + std::string(LABEL_TRUNC_SIZE - strlen("register2"), ' ')      + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x04\n");
-        _output.push_back("register3"      + std::string(LABEL_TRUNC_SIZE - strlen("register3"), ' ')      + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x06\n");
-        _output.push_back("register4"      + std::string(LABEL_TRUNC_SIZE - strlen("register4"), ' ')      + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x08\n");
-        _output.push_back("register5"      + std::string(LABEL_TRUNC_SIZE - strlen("register5"), ' ')      + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x0A\n");
-        _output.push_back("register6"      + std::string(LABEL_TRUNC_SIZE - strlen("register6"), ' ')      + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x0C\n");
-        _output.push_back("register7"      + std::string(LABEL_TRUNC_SIZE - strlen("register7"), ' ')      + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x0E\n");
-        _output.push_back("register8"      + std::string(LABEL_TRUNC_SIZE - strlen("register8"), ' ')      + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x10\n");
-        _output.push_back("register9"      + std::string(LABEL_TRUNC_SIZE - strlen("register9"), ' ')      + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x12\n");
-        _output.push_back("register10"     + std::string(LABEL_TRUNC_SIZE - strlen("register10"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x14\n");
-        _output.push_back("register11"     + std::string(LABEL_TRUNC_SIZE - strlen("register11"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x16\n");
-        _output.push_back("register12"     + std::string(LABEL_TRUNC_SIZE - strlen("register12"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x18\n");
-        _output.push_back("register13"     + std::string(LABEL_TRUNC_SIZE - strlen("register13"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x1A\n");
-        _output.push_back("register14"     + std::string(LABEL_TRUNC_SIZE - strlen("register14"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x1C\n");
-        _output.push_back("register15"     + std::string(LABEL_TRUNC_SIZE - strlen("register15"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x1E\n");
-        _output.push_back("fgbgColour"     + std::string(LABEL_TRUNC_SIZE - strlen("fgbgColour"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x20\n");
-        _output.push_back("cursorXY"       + std::string(LABEL_TRUNC_SIZE - strlen("cursorXY"), ' ')       + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x22\n");
-        _output.push_back("midiStream"     + std::string(LABEL_TRUNC_SIZE - strlen("midiStream"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x24\n");
-        _output.push_back("midiDelay"      + std::string(LABEL_TRUNC_SIZE - strlen("midiDelay"), ' ')      + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x26\n");
-        _output.push_back("miscFlags"      + std::string(LABEL_TRUNC_SIZE - strlen("miscFlags"), ' ')      + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x28\n");
-        _output.push_back("fontLutId"      + std::string(LABEL_TRUNC_SIZE - strlen("fontLutId"), ' ')      + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(FONT_LUT_ID) + "\n");
+        _output.push_back("serialRawPrev" + std::string(LABEL_TRUNC_SIZE - strlen("serialRawPrev"), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(0x0081) + "\n");
+        _output.push_back("register0"     + std::string(LABEL_TRUNC_SIZE - strlen("register0"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(INT_VAR_START) + "\n");
+        _output.push_back("register1"     + std::string(LABEL_TRUNC_SIZE - strlen("register1"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x02\n");
+        _output.push_back("register2"     + std::string(LABEL_TRUNC_SIZE - strlen("register2"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x04\n");
+        _output.push_back("register3"     + std::string(LABEL_TRUNC_SIZE - strlen("register3"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x06\n");
+        _output.push_back("register4"     + std::string(LABEL_TRUNC_SIZE - strlen("register4"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x08\n");
+        _output.push_back("register5"     + std::string(LABEL_TRUNC_SIZE - strlen("register5"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x0A\n");
+        _output.push_back("register6"     + std::string(LABEL_TRUNC_SIZE - strlen("register6"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x0C\n");
+        _output.push_back("register7"     + std::string(LABEL_TRUNC_SIZE - strlen("register7"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x0E\n");
+        _output.push_back("register8"     + std::string(LABEL_TRUNC_SIZE - strlen("register8"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x10\n");
+        _output.push_back("register9"     + std::string(LABEL_TRUNC_SIZE - strlen("register9"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x12\n");
+        _output.push_back("register10"    + std::string(LABEL_TRUNC_SIZE - strlen("register10"), ' ')    + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x14\n");
+        _output.push_back("register11"    + std::string(LABEL_TRUNC_SIZE - strlen("register11"), ' ')    + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x16\n");
+        _output.push_back("register12"    + std::string(LABEL_TRUNC_SIZE - strlen("register12"), ' ')    + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x18\n");
+        _output.push_back("register13"    + std::string(LABEL_TRUNC_SIZE - strlen("register13"), ' ')    + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x1A\n");
+        _output.push_back("register14"    + std::string(LABEL_TRUNC_SIZE - strlen("register14"), ' ')    + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x1C\n");
+        _output.push_back("register15"    + std::string(LABEL_TRUNC_SIZE - strlen("register15"), ' ')    + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x1E\n");
+        _output.push_back("fgbgColour"    + std::string(LABEL_TRUNC_SIZE - strlen("fgbgColour"), ' ')    + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x20\n");
+        _output.push_back("cursorXY"      + std::string(LABEL_TRUNC_SIZE - strlen("cursorXY"), ' ')      + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x22\n");
+        _output.push_back("midiStream"    + std::string(LABEL_TRUNC_SIZE - strlen("midiStream"), ' ')    + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x24\n");
+        _output.push_back("midiDelay"     + std::string(LABEL_TRUNC_SIZE - strlen("midiDelay"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x26\n");
+        _output.push_back("miscFlags"     + std::string(LABEL_TRUNC_SIZE - strlen("miscFlags"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x28\n");
+        _output.push_back("fontLutId"     + std::string(LABEL_TRUNC_SIZE - strlen("fontLutId"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(FONT_LUT_ID) + "\n");
+        _output.push_back("\n");
+
+        _output.push_back("; Internal Constants\n");
+        _output.push_back("ENABLE_SCROLL_BIT" + std::string(LABEL_TRUNC_SIZE - strlen("ENABLE_SCROLL_BIT"), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(ENABLE_SCROLL_BIT) + "\n");
+        _output.push_back("ON_BOTTOM_ROW_BIT" + std::string(LABEL_TRUNC_SIZE - strlen("ON_BOTTOM_ROW_BIT"), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(ON_BOTTOM_ROW_BIT) + "\n");
+        _output.push_back("ENABLE_SCROLL_MSK" + std::string(LABEL_TRUNC_SIZE - strlen("ENABLE_SCROLL_MSK"), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(ENABLE_SCROLL_MSK) + "\n");
+        _output.push_back("ON_BOTTOM_ROW_MSK" + std::string(LABEL_TRUNC_SIZE - strlen("ON_BOTTOM_ROW_MSK"), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(ON_BOTTOM_ROW_MSK) + "\n");
         _output.push_back("\n");
 
         _output.push_back("; Internal buffers\n");
@@ -3133,13 +3158,13 @@ namespace Compiler
         _output.push_back("%includePath" + std::string(LABEL_TRUNC_SIZE - strlen("%includePath"), ' ') + "\"" + getRuntimePath() + "\"\n");
         _output.push_back("%include" + std::string(LABEL_TRUNC_SIZE - strlen("%include"), ' ') + "gigatron.i\n");
 
-        if(!Assembler::getUseOpcodeCALLI())
+        if(_codeRomType < Cpu::ROMv5a)
         {
             _output.push_back("%include" + std::string(LABEL_TRUNC_SIZE - strlen("%include"), ' ') + "macros.i\n");
         }
         else
         {
-            _output.push_back("%include" + std::string(LABEL_TRUNC_SIZE - strlen("%include"), ' ') + "macros_CALLI.i\n");
+            _output.push_back("%include" + std::string(LABEL_TRUNC_SIZE - strlen("%include"), ' ') + "macros_ROMv5a.i\n");
         }
 
         _output.push_back("\n");
@@ -3252,6 +3277,7 @@ namespace Compiler
         _strWorkArea    = 0x0000;
 
         _codeOptimiseType = CodeSpeed;
+        _codeRomType = Cpu::ROMv3;
 
         _compilingError = false;
         _arrayIndiciesOne = false;
@@ -3304,7 +3330,7 @@ namespace Compiler
         while(!_whileWendDataStack.empty())   _whileWendDataStack.pop();
         while(!_repeatUntilDataStack.empty()) _repeatUntilDataStack.pop();
 
-        // Allocate default string work area, (for string functions like LEFT$, MID$, etc), the + 2 is for the length and delimiter bytes
+        // Allocate default string work area, (for string functions like LEFT$, MID$, etc), the +2 is for the length and delimiter bytes
         Memory::getFreeRAM(Memory::FitDescending, USER_STR_SIZE + 2, USER_CODE_START, _runtimeStart, _strWorkArea);
     }
 
@@ -3324,6 +3350,9 @@ namespace Compiler
 
         // Pragmas
         if(!parsePragmas(numLines)) return false;
+
+        // Initialise
+        if(!initialiseCode()) return false;
 
         // Labels
         if(!parseLabels(numLines)) return false;

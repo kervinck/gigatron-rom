@@ -55,7 +55,8 @@ namespace Expression
 
     ExpressionType isExpression(const std::string& input);
     bool isVarNameValid(const std::string& varName);
-    bool isValidString(const std::string& input);
+    bool isLabNameValid(const std::string& varName);
+    bool isStringValid(const std::string& input);
 
     bool hasNonStringWhiteSpace(int chr);
     bool hasNonStringEquals(int chr);

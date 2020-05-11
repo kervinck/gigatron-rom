@@ -1,4 +1,5 @@
 _runtimePath_ "../runtime"
+_codeRomType_ ROMv1
 
 const ADDR = &h0600
 const SIZE = 256

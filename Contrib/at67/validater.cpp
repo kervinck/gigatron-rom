@@ -99,7 +99,7 @@ namespace Validater
             if(opcodeSize)
             {
                 // Increase opcodeSize by size of page jump prologue
-                int opSize = ((Assembler::getUseOpcodeCALLI()) ? CALLI_PAGE_JUMP_SIZE : CALL_PAGE_JUMP_SIZE) + opcodeSize;
+                int opSize = ((Compiler::getCodeRomType() >= Cpu::ROMv5a) ? CALLI_PAGE_JUMP_SIZE : CALL_PAGE_JUMP_SIZE) + opcodeSize;
 
                 // Code can't straddle page boundaries
                 if(HI_BYTE(vPC) == HI_BYTE(vPC + opSize)  &&  Memory::isFreeRAM(vPC, opSize))
@@ -122,7 +122,7 @@ namespace Validater
                     fprintf(stderr, "*******************************************************\n");
                 }
 
-                uint16_t newPC = ((Assembler::getUseOpcodeCALLI()) ? CALLI_PAGE_JUMP_OFFSET : CALL_PAGE_JUMP_OFFSET) + nextPC;
+                uint16_t newPC = ((Compiler::getCodeRomType() >= Cpu::ROMv5a) ? CALLI_PAGE_JUMP_OFFSET : CALL_PAGE_JUMP_OFFSET) + nextPC;
                 fprintf(stderr, "* %-20s : 0x%04x  :    %2d bytes : 0x%04x\n", opcode.c_str(), vPC, opcodeSize, newPC);
                 return true;
             }
@@ -158,7 +158,7 @@ namespace Validater
                     // Insert PAGE JUMP
                     int restoreOffset = 0;
                     std::string nextPClabel = "_page_" + Expression::wordToHexString(nextPC);
-                    if(Assembler::getUseOpcodeCALLI())
+                    if(Compiler::getCodeRomType() >= Cpu::ROMv5a)
                     {
                         // CALLI PAGE JUMP
                         std::string codeCALLI;
@@ -200,7 +200,7 @@ namespace Validater
                     if(labelIndex == -1)
                     {
                         // Create CALLI page jump label, (created later in outputCode())
-                        if(Assembler::getUseOpcodeCALLI())
+                        if(Compiler::getCodeRomType() >= Cpu::ROMv5a)
                         {
                             // Code referencing these labels must be fixed later in outputLabels, (discarded label addresses must be updated if they match page jump address)
                             if(vasmNext->_internalLabel.size())
@@ -228,7 +228,7 @@ namespace Validater
                     else
                     {
                         // Update CALLI page jump label
-                        if(Assembler::getUseOpcodeCALLI())
+                        if(Compiler::getCodeRomType() >= Cpu::ROMv5a)
                         {
                             // Macro labels are underscored by default
                             vasmCurr->_code = (labelName[0] == '_') ? "CALLI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + labelName : "CALLI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "_" + labelName;

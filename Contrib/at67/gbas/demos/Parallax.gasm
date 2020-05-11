@@ -25,6 +25,12 @@ midiDelay           EQU                     register0 + 0x26
 miscFlags           EQU                     register0 + 0x28
 fontLutId           EQU                     0x00e0
 
+; Internal Constants
+ENABLE_SCROLL_BIT   EQU                     0x0001
+ON_BOTTOM_ROW_BIT   EQU                     0x0002
+ENABLE_SCROLL_MSK   EQU                     0xfffe
+ON_BOTTOM_ROW_MSK   EQU                     0xfffd
+
 ; Internal buffers
 textWorkArea        EQU                     0x06a0
 
@@ -35,15 +41,15 @@ textWorkArea        EQU                     0x06a0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_loop               EQU                     0x028b
-_254                EQU                     0x032c
-_253                EQU                     0x0342
-_191                EQU                     0x0354
-_127                EQU                     0x035b
+_loop               EQU                     0x0294
+_254                EQU                     0x033b
+_253                EQU                     0x0351
+_191                EQU                     0x0363
+_127                EQU                     0x036a
 _page_0x0300        EQU                     0x0300
-_else_0x0360        EQU                     0x0340
-_else_0x037a        EQU                     0x0352
-_end_0x038a         EQU                     0x0362
+_else_0x0369        EQU                     0x034f
+_else_0x0383        EQU                     0x0361
+_end_0x0393         EQU                     0x0371
 
 ; Variables
 _x0                 EQU                     0x0030
@@ -60,8 +66,6 @@ _speed8             EQU                     0x0042
 ; Strings
 
 ; Define Bytes
-def_bytes_0x0021    EQU                     0x0021
-def_bytes_0x0021    DB                      0 
 
 ; Define Words
 
@@ -302,16 +306,20 @@ def_images_0x7f00   EQU                     0x7f00
 def_images_0x7f00   DB                      12 8 12 8 12 8 8 12 8 9 8 8 9 8 8 9 8 9 8 9 12 8 8 8 12 8 12 8 12 12 12 8 12 12 8 12 8 12 12 8 12 24 12 8 28 8 28 8 12 24 12 8 28 8 12 8 12 8 12 8 8 12 8 12 9 12 12 8 13 12 8 12 12 12 12 8 12 12 12 12 12 12 12 12 8 12 8 12 12 8 12 12 12 8 12 12 12 12 12 8 12 12 12 8 12 8 8 8 12 8 8 8 8 8 12 8 12 8 12 12 12 12 12 12 12 8 12 8 12 8 29 8 28 8 12 8 12 9 28 8 12 8 12 12 12 12 8 12 12 8 12 8 12 8 9 12 8 8 12 24 8 8 8 8 8 8 8 8 12 8 8 12 8 12 8 12 12 12 12 12 8 12 24 12 8 28 8 28 8 24 12 8 12 8 12 8 12 12 8 12 12 12 8 12 8 12 8 12 12 8 12 8 12 8 12 8 12 12 12 12 12 12 12 12 8 12 12 8 12 8 12 8 12 12 8 12 12 12 12 12 12 8 12 8 12 8 12 8 12 8 12 8 12 12 8 12 
 
 ; Define Sprites
+
 ; Define Fonts
 
 ; Lookup Tables
-_lut_numericLabs    EQU                     0x0615
+_lut_numericLabs    EQU                     0x0608
 _lut_numericLabs    DW                      254 253 191 127 0x0000
-_lut_numericAddrs   EQU                     0x060d
-_lut_numericAddrs   DW                      0x032c 0x0342 0x0354 0x035b 
+_lut_numericAddrs   EQU                     0x0600
+_lut_numericAddrs   DW                      0x033b 0x0351 0x0363 0x036a 
 
 ; Code
-_entryPoint_        InitRealTimeProc        
+_entryPoint_        LDI                     0x28
+                    STW                     romType
+                    RomCheck                
+                    InitRealTimeProc        
                     InitEqOp                
                     InitNeOp                
                     InitLeOp                
@@ -413,6 +421,10 @@ _loop               WaitVBlank                                              ; wa
                     STW                     _x4                             ; poke &h0183, x4.hi : x4 = x4 + speed1
 
                     LDWI                    403
+                    STW                     0xde
+                    LDWI                    _page_0x0300
+                    CALL                    giga_vAC
+_page_0x0300        LDW                     0xde
                     STW                     register0
                     LD                      _x5 + 1
                     POKE                    register0
@@ -421,10 +433,6 @@ _loop               WaitVBlank                                              ; wa
                     STW                     _x5                             ; poke &h0193, x5.hi : x5 = x5 + speed2
 
                     LDWI                    419
-                    STW                     0xde
-                    LDWI                    _page_0x0300
-                    CALL                    giga_vAC
-_page_0x0300        LDW                     0xde
                     STW                     register0
                     LD                      _x5 + 1
                     POKE                    register0                       ; poke &h01A3, x5.hi
@@ -454,22 +462,22 @@ _254                PUSH
                     STW                     _speed1
                     LDWI                    256
                     SUBW                    _speed1
-                    BGT                     _else_0x0360
+                    BGT                     _else_0x0369
                     LDWI                    256
                     STW                     _speed1                         ; speed1 = speed1 + 2 : if speed1 &&> 256 then speed1 = 256
 
-_else_0x0360        Return                                                  ; return
+_else_0x0369        Return                                                  ; return
 
 _253                PUSH                    
                     LDW                     _speed1
                     SUBI                    2
                     STW                     _speed1
                     SUBI                    64
-                    BGE                     _else_0x037a
+                    BGE                     _else_0x0383
                     LDI                     64
                     STW                     _speed1                         ; speed1 = speed1 - 2 : if speed1 &&< 64 then speed1 = 64
 
-_else_0x037a        Return                                                  ; return
+_else_0x0383        Return                                                  ; return
 
 _191                PUSH                    
                     LDI                     128
@@ -481,7 +489,7 @@ _127                PUSH
                     STW                     _speed1
                     Return                                                  ; speed1 = 128 : return
 
-_end_0x038a         BRA                     _end_0x038a                     ; END
+_end_0x0393         BRA                     _end_0x0393                     ; END
 
 
 
@@ -491,19 +499,20 @@ _end_0x038a         BRA                     _end_0x038a                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x0697
-convertEqOp         EQU     0x068e
-convertNeOp         EQU     0x0685
-convertLeOp         EQU     0x067c
-convertGeOp         EQU     0x0673
-convertLtOp         EQU     0x066a
-convertGtOp         EQU     0x0661
-gosubNumericLabel   EQU     0x0570
-scanlineMode        EQU     0x062b
-waitVBlank          EQU     0x061f
-resetVideoTable     EQU     0x0548
-initClearFuncs      EQU     0x063f
-drawHLine           EQU     0x05a2
+romCheck            EQU     0x0689
+realTimeProc        EQU     0x0680
+convertEqOp         EQU     0x0677
+convertNeOp         EQU     0x066e
+convertLeOp         EQU     0x0665
+convertGeOp         EQU     0x065c
+convertLtOp         EQU     0x0653
+convertGtOp         EQU     0x064a
+gosubNumericLabel   EQU     0x05a0
+scanlineMode        EQU     0x061e
+waitVBlank          EQU     0x0612
+resetVideoTable     EQU     0x0581
+initClearFuncs      EQU     0x0632
+drawHLine           EQU     0x05d2
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -519,6 +528,24 @@ defaultLabel        EQU     register1
 lutLabs             EQU     register2
 lutAddrs            EQU     register3
 lutIndex            EQU     register8
+romType             EQU     register0
+romErrAddr          EQU     register1
+romErrPixel         EQU     register2
+
+
+romCheck            LD      giga_romType
+                    ANDI    0xFC
+                    SUBW    romType
+                    BGE     romC_return
+                    LDWI    giga_vram
+                    STW     romErrAddr
+                    
+romC_loop           LD      romErrPixel
+                    POKE    romErrAddr
+                    INC     romErrPixel
+                    BRA     romC_loop                       ; flash left hand corner pixel indicating rom error
+                    
+romC_return         RET                    
 
 
                     ; runs real time, (time sliced), code at regular intervals
@@ -634,7 +661,7 @@ drawLine_xy1        EQU     register0
 drawLine_xy2        EQU     register1
 drawLine_dxy1       EQU     register2
 drawLine_dxy2       EQU     register3
-drawLine_dx1        EQU     register4           ; register4 to register7 used for temp values, state will be invalidated during time slicing
+drawLine_dx1        EQU     register4                       ; register4 to register7 used for temp values, state will be invalidated during time slicing
 drawLine_dy1        EQU     register5
 drawLine_dx2        EQU     register6
 drawLine_dy2        EQU     register7
@@ -734,11 +761,6 @@ resetVT_loop        CALL    realTimeProcAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
-                    
-                    LDWI    giga_videoTop                       ; reset videoTop
-                    STW     register0
-                    LDI     0
-                    POKE    register0
                     POP
                     RET
 
@@ -749,71 +771,38 @@ initClearFuncs      PUSH
     
                     LDI     0x02                                ; starting cursor position
                     STW     cursorXY
-                    LDWI    0x7FFF
+                    LDWI    ON_BOTTOM_ROW_MSK
                     ANDW    miscFlags
                     STW     miscFlags                           ; reset on bottom row flag
-            
-                    LD      fgbgColour
-                    ST      giga_sysArg0
-                    ST      giga_sysArg0 + 1
-                    ST      giga_sysArg2
-                    ST      giga_sysArg2 + 1                    ; 4 pixels of fg colour
     
-                    LDWI    SYS_Draw4_30                        ; setup 4 pixel SYS routine
+                    LDWI    SYS_SetMemory_v2_54                 ; setup fill memory SYS routine
                     STW     giga_sysFn
                     POP
                     RET
 
 
 drawHLine           PUSH
-                    LDW     drawHLine_x2
+                    LD      drawHLine_x1
+                    ST      giga_sysArg2                    ; low start address
+                    LD      drawHLine_x2
                     SUBW    drawHLine_x1
                     BGE     drawHL_cont
-                    LDW     drawHLine_x2
-                    STW     drawLine_tmp
-                    LDW     drawHLine_x1
-                    STW     drawHLine_x2
-                    LDW     drawLine_tmp
-                    STW     drawHLine_x1        ; if x2 < x1 then swap x2 with x1
+                    LD      drawHLine_x2
+                    ST      giga_sysArg2                    ; low start address
+                    LD      drawHLine_x1
+                    SUBW    drawHLine_x2
                     
-drawHL_cont         LD      drawHLine_x1
-                    ST      giga_sysArg4
+drawHL_cont         ADDI    1
+                    ST      giga_sysArg0                    ; count
+                    LD      fgbgColour + 1
+                    ST      giga_sysArg1                    ; fill value
                     LD      drawHLine_y1
                     ADDI    8
-                    ST      giga_sysArg4 + 1
-                    LDW     drawHLine_x2
-                    SUBW    drawHLine_x1
-                    SUBI    4
-                    BLT     drawHL_loop1
-                    
-                    LD      fgbgColour + 1
-                    ST      giga_sysArg0
-                    ST      giga_sysArg0 + 1
-                    ST      giga_sysArg2
-                    ST      giga_sysArg2 + 1    ; 4 pixels of fg colour
-                    LDWI    SYS_Draw4_30        ; setup 4 pixel SYS routine
+                    ST      giga_sysArg3                    ; high start address
+                    LDWI    SYS_SetMemory_v2_54
                     STW     giga_sysFn
-                    
-                    LDW     drawHLine_x2        
-                    SUBI    3
-                    STW     drawHLine_x4        ; 4 pixel chunks limit
-
-drawHL_loop0        SYS     30
+                    SYS     54                              ; fill memory
                     CALL    realTimeProcAddr
-                    LD      giga_sysArg4
-                    ADDI    4
-                    ST      giga_sysArg4
-                    SUBW    drawHLine_x4
-                    BLT     drawHL_loop0        ; all 4 pixel chunks
-                    
-drawHL_loop1        LD      fgbgColour + 1
-                    POKE    giga_sysArg4
-                    INC     giga_sysArg4
-                    LD      giga_sysArg4
-                    BEQ     drawHL_exit
-                    SUBW    drawHLine_x2
-                    BLE     drawHL_loop1        ; remaining pixels
-                    
-drawHL_exit         POP
+                    POP
                     RET
 

@@ -82,7 +82,7 @@ namespace Keywords
         _functions["STRCMP"] = "POINT";
 
         // Pragmas
-        _pragmas["_useOpcodeCALLI_"]     = {"_useOpcodeCALLI_",     pragmaUSEOPCODECALLI    };
+        _pragmas["_codeRomType_"]        = {"_codeRomType_",        pragmaCODEROMTYPE       };
         _pragmas["_runtimePath_"]        = {"_runtimePath_",        pragmaRUNTIMEPATH       };
         _pragmas["_runtimeStart_"]       = {"_runtimeStart_",       pragmaRUNTIMESTART      };
         _pragmas["_stringWorkArea_"]     = {"_stringWorkArea_",     pragmaSTRINGWORKAREA    };
@@ -388,18 +388,18 @@ namespace Keywords
     // ********************************************************************************************
     // Functions
     // ********************************************************************************************
-    Expression::Numeric functionARR(Expression::Numeric& numeric)
+    Expression::Numeric functionARR(Expression::Numeric& numeric, int codeLineIndex)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Keywords::functionARR() : ARRAY() cannot be used in static initialisation!\n");
+            fprintf(stderr, "Keywords::functionARR() : ARRAY() cannot be used in static initialisation : on line %d\n", codeLineIndex);
             return numeric;
         }
 
         Compiler::getNextTempVar();
 
         int intSize = Compiler::getIntegerVars()[numeric._index]._intSize;
-        uint16_t arrayPtr = Compiler::getIntegerVars()[numeric._index]._array;
+        uint16_t arrayPtr = Compiler::getIntegerVars()[numeric._index]._address;
 
         // Literal array index
         if(numeric._parameters[0]._varType == Expression::Number)
@@ -442,7 +442,7 @@ namespace Keywords
             Operators::createTmpVar(numeric);
 
             // TODO: currently makes code bigger AND slower because of optimiser
-            if(0) //Assembler::getUseOpcodeCALLI()  &&  Compiler::getCodeOptimiseType() == Compiler::CodeSize)
+            if(0) //Compiler::getCodeRomType() >= Cpu::ROMv5a  &&  Compiler::getCodeOptimiseType() == Compiler::CodeSize)
             {
                 // Saves 2 bytes per array access but costs an extra 2 instructions in performance
                 Compiler::emitVcpuAsm("STW", "memIndex", false);
@@ -478,11 +478,11 @@ namespace Keywords
         return numeric;
     }
 
-    Expression::Numeric functionPEEK(Expression::Numeric& numeric)
+    Expression::Numeric functionPEEK(Expression::Numeric& numeric, int codeLineIndex)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Keywords::functionPEEK() : PEEK() cannot be used in static initialisation!\n");
+            fprintf(stderr, "Keywords::functionPEEK() : PEEK() cannot be used in static initialisation : on line %d\n", codeLineIndex);
             return numeric;
         }
 
@@ -510,8 +510,14 @@ namespace Keywords
         return numeric;
     }
 
-    Expression::Numeric functionDEEK(Expression::Numeric& numeric)
+    Expression::Numeric functionDEEK(Expression::Numeric& numeric, int codeLineIndex)
     {
+        if(Expression::getOutputNumeric()._staticInit)
+        {
+            fprintf(stderr, "Keywords::functionPEEK() : PEEK() cannot be used in static initialisation : on line %d\n", codeLineIndex);
+            return numeric;
+        }
+
         if(numeric._varType == Expression::Number)
         {
             // Optimise for page 0
@@ -536,17 +542,17 @@ namespace Keywords
         return numeric;
     }
 
-    Expression::Numeric functionUSR(Expression::Numeric& numeric)
+    Expression::Numeric functionUSR(Expression::Numeric& numeric, int codeLineIndex)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Keywords::functionUSR() : USR() cannot be used in static initialisation!\n");
+            fprintf(stderr, "Keywords::functionUSR() : USR() cannot be used in static initialisation : on line %d\n", codeLineIndex);
             return numeric;
         }
 
         if(numeric._varType == Expression::Number)
         {
-            if(Assembler::getUseOpcodeCALLI())
+            if(Compiler::getCodeRomType() >= Cpu::ROMv5a)
             {
                 (numeric._value >= 0  && numeric._value <= 255) ? Compiler::emitVcpuAsm("CALLI", Expression::byteToHexString(uint8_t(std::lround(numeric._value))), false) : 
                                                                   Compiler::emitVcpuAsm("CALLI", Expression::wordToHexString(int16_t(std::lround(numeric._value))), false);
@@ -560,7 +566,7 @@ namespace Keywords
 
         Compiler::getNextTempVar();
 
-        if(Assembler::getUseOpcodeCALLI())
+        if(Compiler::getCodeRomType() >= Cpu::ROMv5a)
         {
             Operators::handleSingleOp("CALLI", numeric);
         }
@@ -574,8 +580,10 @@ namespace Keywords
         return numeric;
     }
 
-    Expression::Numeric functionRND(Expression::Numeric& numeric)
+    Expression::Numeric functionRND(Expression::Numeric& numeric, int codeLineIndex)
     {
+        UNREFERENCED_PARAM(codeLineIndex);
+
         bool useMod = true;
         if(numeric._varType == Expression::Number)
         {
@@ -624,7 +632,7 @@ namespace Keywords
         return numeric;
     }
 
-    Expression::Numeric functionLEN(Expression::Numeric& numeric)
+    Expression::Numeric functionLEN(Expression::Numeric& numeric, int codeLineIndex)
     {
         if(numeric._varType != Expression::Number)
         {
@@ -652,7 +660,7 @@ namespace Keywords
 
                     default:
                     {
-                        fprintf(stderr, "Keywords::functionLEN() : couldn't find variable name '%s'\n", numeric._name.c_str());
+                        fprintf(stderr, "Keywords::functionLEN() : couldn't find variable name '%s' : on line %d\n", numeric._name.c_str(), codeLineIndex);
                         return numeric;
                     }
                 }
@@ -661,10 +669,10 @@ namespace Keywords
             int length = 0;
             switch(numeric._varType)
             {
-                case Expression::IntVar:   length = Compiler::getIntegerVars()[numeric._index]._intSize; break;
-                case Expression::ArrVar:   length = Compiler::getIntegerVars()[numeric._index]._arrSize; break;
-                case Expression::StrVar:   length = Compiler::getStringVars()[numeric._index]._size;     break;
-                case Expression::Constant: length = Compiler::getConstants()[numeric._index]._size;      break;
+                case Expression::IntVar:   length = Compiler::getIntegerVars()[numeric._index]._intSize;     break;
+                case Expression::ArrVar:   length = Compiler::getIntegerVars()[numeric._index]._arrSizes[0]; break;
+                case Expression::StrVar:   length = Compiler::getStringVars()[numeric._index]._size;         break;
+                case Expression::Constant: length = Compiler::getConstants()[numeric._index]._size;          break;
 
                 default: break;
             }
@@ -702,11 +710,11 @@ namespace Keywords
         return numeric;
     }
 
-    Expression::Numeric functionGET(Expression::Numeric& numeric)
+    Expression::Numeric functionGET(Expression::Numeric& numeric, int codeLineIndex)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Keywords::functionGET() : GET() cannot be used in static initialisation!\n");
+            fprintf(stderr, "Keywords::functionGET() : GET() cannot be used in static initialisation : on line %d\n", codeLineIndex);
             return numeric;
         }
 
@@ -783,7 +791,7 @@ namespace Keywords
                 else if(sysVarName == "ROMTYPE")
                 {
                     Compiler::emitVcpuAsm("LD", "giga_romType", false);
-                    Compiler::emitVcpuAsm("ANDI", "0xF8", false);
+                    Compiler::emitVcpuAsm("ANDI", "0xFC", false);
                 }
                 else if(sysVarName == "VSP")
                 {
@@ -887,7 +895,7 @@ namespace Keywords
                 }
                 else
                 {
-                    fprintf(stderr, "*** Warning *** Keywords::functionGET() : system variable name '%s' does not exist\n", numeric._text.c_str());
+                    fprintf(stderr, "*** Warning *** Keywords::functionGET() : system variable name '%s' does not exist : on line %d\n", numeric._text.c_str(), codeLineIndex);
                     return numeric;
                 }
 
@@ -898,11 +906,11 @@ namespace Keywords
         return numeric;
     }
 
-    Expression::Numeric functionABS(Expression::Numeric& numeric)
+    Expression::Numeric functionABS(Expression::Numeric& numeric, int codeLineIndex)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Keywords::functionABS() : ABS() cannot be used in static initialisation!\n");
+            fprintf(stderr, "Keywords::functionABS() : ABS() cannot be used in static initialisation : on line %d\n", codeLineIndex);
             return numeric;
         }
 
@@ -929,7 +937,7 @@ namespace Keywords
         return numeric;
     }
 
-    Expression::Numeric functionASC(Expression::Numeric& numeric)
+    Expression::Numeric functionASC(Expression::Numeric& numeric, int codeLineIndex)
     {
         if(numeric._varType != Expression::Number)
         {
@@ -957,7 +965,7 @@ namespace Keywords
 
                     default:
                     {
-                        fprintf(stderr, "Keywords::functionASC() : couldn't find variable name '%s'\n", numeric._name.c_str());
+                        fprintf(stderr, "Keywords::functionASC() : couldn't find variable name '%s' : on line %d\n", numeric._name.c_str(), codeLineIndex);
                         return numeric;
                     }
                 }
@@ -1004,11 +1012,11 @@ namespace Keywords
         return numeric;
     }
 
-    Expression::Numeric functionCHR$(Expression::Numeric& numeric)
+    Expression::Numeric functionCHR$(Expression::Numeric& numeric, int codeLineIndex)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Keywords::functionCHR$() : CHR$() cannot be used in static initialisation!\n");
+            fprintf(stderr, "Keywords::functionCHR$() : CHR$() cannot be used in static initialisation : on line %d\n", codeLineIndex);
             return numeric;
         }
 
@@ -1065,11 +1073,11 @@ namespace Keywords
         return Expression::Numeric(0, uint16_t(index), true, false, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
     }
 
-    Expression::Numeric functionHEX$(Expression::Numeric& numeric)
+    Expression::Numeric functionHEX$(Expression::Numeric& numeric, int codeLineIndex)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Keywords::functionHEX$() : HEX$() cannot be used in static initialisation!\n");
+            fprintf(stderr, "Keywords::functionHEX$() : HEX$() cannot be used in static initialisation : on line %d\n", codeLineIndex);
             return numeric;
         }
 
@@ -1126,11 +1134,11 @@ namespace Keywords
         return Expression::Numeric(0, uint16_t(index), true, false, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
     }
 
-    Expression::Numeric functionHEXW$(Expression::Numeric& numeric)
+    Expression::Numeric functionHEXW$(Expression::Numeric& numeric, int codeLineIndex)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Keywords::functionHEXW$() : HEXW$() cannot be used in static initialisation!\n");
+            fprintf(stderr, "Keywords::functionHEXW$() : HEXW$() cannot be used in static initialisation : on line %d\n", codeLineIndex);
             return numeric;
         }
 
@@ -1187,11 +1195,11 @@ namespace Keywords
         return Expression::Numeric(0, uint16_t(index), true, false, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
     }
 
-    Expression::Numeric functionLEFT$(Expression::Numeric& numeric)
+    Expression::Numeric functionLEFT$(Expression::Numeric& numeric, int codeLineIndex)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Keywords::functionLEFT$() : LEFT$() cannot be used in static initialisation!\n");
+            fprintf(stderr, "Keywords::functionLEFT$() : LEFT$() cannot be used in static initialisation : on line %d\n", codeLineIndex);
             return numeric;
         }
 
@@ -1251,11 +1259,11 @@ namespace Keywords
         return numeric;
     }
 
-    Expression::Numeric functionRIGHT$(Expression::Numeric& numeric)
+    Expression::Numeric functionRIGHT$(Expression::Numeric& numeric, int codeLineIndex)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Keywords::functionRIGHT$() : RIGHT$() cannot be used in static initialisation!\n");
+            fprintf(stderr, "Keywords::functionRIGHT$() : RIGHT$() cannot be used in static initialisation : on line %d\n", codeLineIndex);
             return numeric;
         }
 
@@ -1315,11 +1323,11 @@ namespace Keywords
         return numeric;
     }
 
-    Expression::Numeric functionMID$(Expression::Numeric& numeric)
+    Expression::Numeric functionMID$(Expression::Numeric& numeric, int codeLineIndex)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Keywords::functionMID$() : MID$() cannot be used in static initialisation!\n");
+            fprintf(stderr, "Keywords::functionMID$() : MID$() cannot be used in static initialisation : on line %d\n", codeLineIndex);
             return numeric;
         }
 
@@ -1384,8 +1392,10 @@ namespace Keywords
         return numeric;
     }
 
-    Expression::Numeric functionSTRCMP(Expression::Numeric& numeric)
+    Expression::Numeric functionSTRCMP(Expression::Numeric& numeric, int codeLineIndex)
     {
+        UNREFERENCED_PARAM(codeLineIndex);
+
         // Literal strings, (optimised case)
         if(numeric._varType == Expression::String  &&  numeric._parameters.size() == 1  &&  numeric._parameters[0]._varType == Expression::String)
         {
@@ -1435,11 +1445,11 @@ namespace Keywords
         return numeric;
     }
 
-    Expression::Numeric functionPOINT(Expression::Numeric& numeric)
+    Expression::Numeric functionPOINT(Expression::Numeric& numeric, int codeLineIndex)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Keywords::functionPOINT() : POINT() cannot be used in static initialisation!\n");
+            fprintf(stderr, "Keywords::functionPOINT() : POINT() cannot be used in static initialisation : on line %d\n", codeLineIndex);
             return numeric;
         }
 
@@ -1480,13 +1490,19 @@ namespace Keywords
     // ********************************************************************************************
     // Pragmas
     // ********************************************************************************************
-    bool pragmaUSEOPCODECALLI(const std::string& input, int codeLineIndex, size_t foundPos)
+    bool pragmaCODEROMTYPE(const std::string& input, int codeLineIndex, size_t foundPos)
     {
-        UNREFERENCED_PARAM(input);
-        UNREFERENCED_PARAM(foundPos);
-        UNREFERENCED_PARAM(codeLineIndex);
+        // Get rom type
+        std::string pragma = input.substr(foundPos);
+        Expression::stripNonStringWhitespace(pragma);
+        Expression::strToUpper(pragma);
+        if(Cpu::getRomTypeMap().find(pragma) == Cpu::getRomTypeMap().end())
+        {
+            fprintf(stderr, "Keywords::pragmaCODEROMTYPE() : Syntax error, _codeRomType_ <\"ROM TYPE\">, in '%s' on line %d\n", input.c_str(), codeLineIndex + 1);
+            return false;
+        }
 
-        Assembler::setUseOpcodeCALLI(true);
+        Compiler::setCodeRomType(Cpu::getRomTypeMap()[pragma]);
 
         return true;
     }
@@ -1495,9 +1511,9 @@ namespace Keywords
     {
         std::string pragma = input;
         Expression::stripNonStringWhitespace(pragma);
-        if(foundPos > pragma.size()-3  ||  !Expression::isValidString(pragma.substr(foundPos)))
+        if(foundPos > pragma.size()-3  ||  !Expression::isStringValid(pragma.substr(foundPos)))
         {
-            fprintf(stderr, "Keywords::pragmaRUNTIMEPATH() : Syntax error, _runtimePath_ <\"Path to runtime\">, in '%s' on line %d\n", input.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::pragmaRUNTIMEPATH() : Syntax error, _runtimePath_ <\"Path to runtime\">, in '%s' on line %d\n", input.c_str(), codeLineIndex + 1);
             return false;
         }
 
@@ -1910,7 +1926,7 @@ namespace Keywords
         // Long jump
         else
         {
-            if(Assembler::getUseOpcodeCALLI())
+            if(Compiler::getCodeRomType() >= Cpu::ROMv5a)
             {
                 Compiler::emitVcpuAsm("CALLI", "_" + gotoToken, false, codeLineIndex);
             }
@@ -1981,7 +1997,7 @@ namespace Keywords
         // CALL label
         Compiler::getLabels()[labelIndex]._gosub = true;
 
-        if(Assembler::getUseOpcodeCALLI())
+        if(Compiler::getCodeRomType() >= Cpu::ROMv5a)
         {
             Compiler::emitVcpuAsm("CALLI", "_" + gosubToken, false, codeLineIndex);
         }
@@ -2157,13 +2173,13 @@ namespace Keywords
                     Compiler::emitVcpuAsm("%PrintString", "_" + name, false, codeLineIndex);
                 }
             }
-            else if(expressionType == Expression::HasStrConsts)
+            else if(expressionType == Expression::HasStrConsts  &&  constIndex > -1)
             {
                 // Print constant string
                 std::string internalName = Compiler::getConstants()[constIndex]._internalName;
                 Compiler::emitVcpuAsm("%PrintString", "_" + internalName, false, codeLineIndex);
             }
-            else if(expressionType == Expression::HasIntConsts)
+            else if(expressionType == Expression::HasIntConsts  &&  constIndex > -1)
             {
                 // Print constant int
                 int16_t data = Compiler::getConstants()[constIndex]._data;
@@ -2210,7 +2226,7 @@ namespace Keywords
 
         // Print heading string
         bool foundHeadingString = false;
-        if(tokens.size()  &&  Expression::isValidString(tokens[0]))
+        if(tokens.size()  &&  Expression::isStringValid(tokens[0]))
         {
             size_t lquote = tokens[0].find_first_of("\"");
             size_t rquote = tokens[0].find_first_of("\"", lquote + 1);
@@ -2671,7 +2687,7 @@ namespace Keywords
         }
 
         // Jump to endif for previous BASIC line
-        if(Assembler::getUseOpcodeCALLI())
+        if(Compiler::getCodeRomType() >= Cpu::ROMv5a)
         {
             Compiler::emitVcpuAsm("CALLI", "CALLI_JUMP", false, codeLineIndex - 1);
             Compiler::getEndIfDataStack().push({int(Compiler::getCodeLines()[codeLineIndex - 1]._vasm.size()) - 1, codeLineIndex - 1, ccType});
@@ -2745,7 +2761,7 @@ namespace Keywords
         Compiler::getElseIfDataStack().pop();
 
         // Jump to endif for previous BASIC line
-        if(Assembler::getUseOpcodeCALLI())
+        if(Compiler::getCodeRomType() >= Cpu::ROMv5a)
         {
             Compiler::emitVcpuAsm("CALLI", "CALLI_JUMP", false, codeLineIndex - 1);
             Compiler::getEndIfDataStack().push({int(Compiler::getCodeLines()[codeLineIndex - 1]._vasm.size()) - 1, codeLineIndex - 1, ccType});
@@ -2841,7 +2857,7 @@ namespace Keywords
             {
                 case Expression::BooleanCC: 
                 {
-                    if(Assembler::getUseOpcodeCALLI())
+                    if(Compiler::getCodeRomType() >= Cpu::ROMv5a)
                     {
                         vasm->_code = "CALLI" + std::string(OPCODE_TRUNC_SIZE - (sizeof("CALLI")-1), ' ') + Compiler::getNextInternalLabel();
                     }
@@ -2899,7 +2915,7 @@ namespace Keywords
         Compiler::getWhileWendDataStack().pop();
 
         // Branch to WHILE and check condition again
-        if(Assembler::getUseOpcodeCALLI())
+        if(Compiler::getCodeRomType() >= Cpu::ROMv5a)
         {
             Compiler::emitVcpuAsm("CALLI", whileWendData._labelName, false, codeLineIndex);
         }
@@ -3015,7 +3031,7 @@ namespace Keywords
         {
             // Strip whitespace
             Expression::stripNonStringWhitespace(tokens[1]);
-            if(Expression::isValidString(tokens[1]))
+            if(Expression::isStringValid(tokens[1]))
             {
                 uint16_t address;
                 std::string internalName;
@@ -3107,37 +3123,59 @@ namespace Keywords
         size_t lbra, rbra;
         if(!Expression::findMatchingBrackets(codeLine._code, foundPos, lbra, rbra))
         {
-            fprintf(stderr, "Keywords::keywordDIM() : Syntax error in DIM statement, must be DIM var(x), in '%s' on line %d\n", codeLine._code.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordDIM() : Syntax error in DIM statement, must be DIM <var>(<n1>, <optional n2>), in '%s' on line %d\n", codeLine._code.c_str(), codeLineIndex);
             return false;
         }
 
-        // Positive constant size
-        uint16_t arraySize;
-        std::string sizeText = codeLine._code.substr(lbra + 1, rbra - (lbra + 1));
-        int varIndex = -1, constIndex = -1, strIndex = -1;
-        uint32_t expressionType = Compiler::isExpression(sizeText, varIndex, constIndex, strIndex);
-        if(expressionType == Expression::HasIntConsts)
+        // Dimensions
+        const int kMaxArrayDims = 2;
+        std::vector<uint16_t> arrSizes;
+        std::vector<std::string> sizeTokens = Expression::tokenise(codeLine._code.substr(lbra + 1, rbra - (lbra + 1)), ',', true);
+        if(sizeTokens.size() > kMaxArrayDims)
         {
-            // Print constant int
-            arraySize = Compiler::getConstants()[constIndex]._data;
-        }
-        else if(!Expression::stringToU16(sizeText, arraySize)  ||  arraySize <= 0)
-        {
-            fprintf(stderr, "Keywords::keywordDIM() : Array size must be a positive constant, found %s in '%s' on line %d\n", sizeText.c_str(), codeLine._code.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordDIM() : Maximum of %d dimensions, found %d in '%s' on line %d\n", kMaxArrayDims, int(sizeTokens.size()), codeLine._code.c_str(), codeLineIndex);
             return false;
         }
 
-        // Most BASIC's declared 0 to n elements, hence size = n + 1
-        if(!Compiler::getArrayIndiciesOne())
+        int arrSizeTotal = 1;
+        for(int i=0; i<int(sizeTokens.size()); i++)
         {
-            arraySize++;
+            int varIndex = -1, constIndex = -1, strIndex = -1;
+            std::string sizeToken = sizeTokens[i];
+            Expression::stripWhitespace(sizeToken);
+            uint32_t expressionType = Compiler::isExpression(sizeToken, varIndex, constIndex, strIndex);
+
+            // Constant dimension
+            if(expressionType == Expression::HasIntConsts  &&  constIndex > -1)
+            {
+                arrSizes.push_back(Compiler::getConstants()[constIndex]._data);
+            }
+            // Literal dimension
+            else
+            {
+                uint16_t arrSize = 0;
+                if(!Expression::stringToU16(sizeToken, arrSize)  ||  arrSize <= 0)
+                {
+                    fprintf(stderr, "Keywords::keywordDIM() : Array size must be a positive constant, found %s in '%s' on line %d\n", sizeToken.c_str(), codeLine._code.c_str(), codeLineIndex);
+                    return false;
+                }
+                arrSizes.push_back(arrSize);
+            }
+
+            // Most BASIC's declared 0 to n elements, hence size = n + 1
+            if(!Compiler::getArrayIndiciesOne())
+            {
+                arrSizes.back()++;
+            }
+
+            arrSizeTotal *= arrSizes.back();
         }
 
         std::string varName = codeLine._code.substr(foundPos, lbra - foundPos);
         Expression::stripWhitespace(varName);
 
         // Var already exists?
-        varIndex = Compiler::findVar(varName);
+        int varIndex = Compiler::findVar(varName);
         if(varIndex >= 0)
         {
             fprintf(stderr, "Keywords::keywordDIM() : Var %s already exists in '%s' on line %d\n", varName.c_str(), codeLine._code.c_str(), codeLineIndex);
@@ -3165,9 +3203,9 @@ namespace Keywords
                 Compiler::parseExpression(codeLineIndex, varTokens[0], operand, numeric);
                 varInit = int16_t(std::lround(numeric._value));
             }
-            else if(int(varTokens.size()) > arraySize)
+            else if(int(varTokens.size()) > arrSizeTotal)
             {
-                fprintf(stderr, "Keywords::keywordDIM() : Too many initialisation values for size of array, found %d for a size of %d, in '%s' on line %d\n", int(varTokens.size()), arraySize,
+                fprintf(stderr, "Keywords::keywordDIM() : Too many initialisation values for size of array, found %d for a size of %d, in '%s' on line %d\n", int(varTokens.size()), arrSizeTotal,
                                                                                                                                                               codeLine._code.c_str(), codeLineIndex);
                 return false;
             }
@@ -3185,16 +3223,36 @@ namespace Keywords
             }
         }
 
-        arraySize *= 2;
-        uint16_t arrayStart = 0x0000;
-        if(!Memory::getFreeRAM(Memory::FitDescending, arraySize, USER_CODE_START, Compiler::getRuntimeStart(), arrayStart, false)) // arrays do not need to be contained within pages
+        // Represent 1 or 2 dimensional arrays as a 3 dimensional array with dimensions of 1 for the missing dimensions
+        while(arrSizes.size() != 3)
         {
-            fprintf(stderr, "Keywords::keywordDIM() : Not enough RAM for int array of size %d in '%s' on line %d\n", arraySize, codeLine._code.c_str(), codeLineIndex);
-            return false;
+            arrSizes.insert(arrSizes.begin(), 1);
         }
 
-        createIntVar(varName, 0, varInit, codeLine, codeLineIndex, false, varIndex, arrInits, Compiler::VarArray, arrayStart, Compiler::Int16, arraySize);
+        std::vector<std::vector<uint16_t>> arrAddrs;
+        arrAddrs.resize(arrSizes[0]);
+        for(int i=0; i<arrSizes[0]; i++)
+        {
+            arrAddrs[i].resize(arrSizes[1]);
+        }
 
+        // Allocate memory for k * j * i of 16 bit values
+        uint16_t address = 0x0000;
+        int iSizeBytes = arrSizes[2] * 2;
+        for(int k=0; k<arrSizes[0]; k++)
+        {
+            for(int j=0; j<arrSizes[1]; j++)
+            {
+                if(!Memory::getFreeRAM(Memory::FitDescending, iSizeBytes, USER_CODE_START, Compiler::getRuntimeStart(), address, false)) // arrays do not need to be contained within pages
+                {
+                    fprintf(stderr, "Keywords::keywordDIM() : Not enough RAM for int array of size %d in '%s' on line %d\n", iSizeBytes, codeLine._code.c_str(), codeLineIndex);
+                    return false;
+                }
+            }
+        }
+
+        //uint16_t address = (arrAddrs.size() == 1) ? arrAddrs[0] : 0x0000;
+        Compiler::createIntVar(varName, 0, varInit, codeLine, codeLineIndex, false, varIndex, Compiler::VarArray, Compiler::Int16, address, arrSizes, arrInits, arrAddrs);
         return true;
     }
 
@@ -4651,7 +4709,7 @@ namespace Keywords
         }
 
         // Flip type
-        static std::map<std::string, int> flipType = {{"NOFLIP", Compiler::NoFlip}, {"FLIPX", Compiler::FlipX}, {"FLIPY", Compiler::FlipY}, {"FLIPXY", Compiler::FlipXY}};
+        static std::map<std::string, Compiler::SpriteFlipType> flipType = {{"NOFLIP", Compiler::NoFlip}, {"FLIPX", Compiler::FlipX}, {"FLIPY", Compiler::FlipY}, {"FLIPXY", Compiler::FlipXY}};
         std::string flipToken = tokens[0];
         Expression::stripWhitespace(flipToken);
         Expression::strToUpper(flipToken);

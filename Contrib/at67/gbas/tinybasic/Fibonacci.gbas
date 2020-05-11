@@ -1,4 +1,5 @@
 _runtimePath_ "../runtime"
+_codeRomType_ ROMv1
 
 n=0 : j=n : c=j : cls
 

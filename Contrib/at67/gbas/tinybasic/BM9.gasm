@@ -25,6 +25,12 @@ midiDelay           EQU                     register0 + 0x26
 miscFlags           EQU                     register0 + 0x28
 fontLutId           EQU                     0x00e0
 
+; Internal Constants
+ENABLE_SCROLL_BIT   EQU                     0x0001
+ON_BOTTOM_ROW_BIT   EQU                     0x0002
+ENABLE_SCROLL_MSK   EQU                     0xfffe
+ON_BOTTOM_ROW_MSK   EQU                     0xfffd
+
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
 
@@ -35,29 +41,29 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_100                EQU                     0x023e
-_101                EQU                     0x0248
-_102                EQU                     0x0252
-_103                EQU                     0x025c
-_104                EQU                     0x026b
-_105                EQU                     0x0275
-_110                EQU                     0x0284
-_120                EQU                     0x0288
-_130                EQU                     0x028c
-_140                EQU                     0x029d
-_150                EQU                     0x02ac
-_160                EQU                     0x02b6
-_170                EQU                     0x02c2
-_180                EQU                     0x02d1
-_190                EQU                     0x02db
-_200                EQU                     0x02e9
-_210                EQU                     0x0307
-_220                EQU                     0x0315
-_230                EQU                     0x031a
-_240                EQU                     0x031f
-_250                EQU                     0x032e
+_100                EQU                     0x0247
+_101                EQU                     0x0251
+_102                EQU                     0x025b
+_103                EQU                     0x0265
+_104                EQU                     0x0274
+_105                EQU                     0x027e
+_110                EQU                     0x028d
+_120                EQU                     0x0291
+_130                EQU                     0x0295
+_140                EQU                     0x02a6
+_150                EQU                     0x02b5
+_160                EQU                     0x02bf
+_170                EQU                     0x02cb
+_180                EQU                     0x02da
+_190                EQU                     0x02e4
+_200                EQU                     0x0302
+_210                EQU                     0x0310
+_220                EQU                     0x031e
+_230                EQU                     0x0323
+_240                EQU                     0x0328
+_250                EQU                     0x0337
 _page_0x0300        EQU                     0x0300
-_end_0x0338         EQU                     0x032e
+_end_0x0341         EQU                     0x0337
 
 ; Variables
 _N                  EQU                     0x0030
@@ -88,12 +94,16 @@ _str_0x7ead         DB                      4 'DONE' 0
 ; Define Images
 
 ; Define Sprites
+
 ; Define Fonts
 
 ; Lookup Tables
 
 ; Code
-_entryPoint_        InitRealTimeProc        
+_entryPoint_        LDI                     0x1c
+                    STW                     romType
+                    RomCheck                
+                    InitRealTimeProc        
                     InitEqOp                
                     InitNeOp                
                     InitLeOp                
@@ -164,12 +174,12 @@ _180                LDW                     _M
 
 _190                ForNextFarInc           _K _130 100                     ; NEXT K
 
-_200                LDW                     _N
-                    PrintAcInt16            
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
+_200                LDW                     _N
+                    PrintAcInt16            
                     NewLine                                                 ; PRINT N
 
 _210                ForNextFarInc           _N _120 200                     ; NEXT N
@@ -191,24 +201,25 @@ _250                BRA                     _250                            ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
+romCheck            EQU     0x7de8
 realTimeProc        EQU     0x7ea4
-convertEqOp         EQU     0x7df6
-convertNeOp         EQU     0x7ded
-convertLeOp         EQU     0x7de4
-convertGeOp         EQU     0x7ddb
-convertLtOp         EQU     0x7dd2
-convertGtOp         EQU     0x7dc9
-divide16bit         EQU     0x7aa8
-resetVideoTable     EQU     0x78d7
-initClearFuncs      EQU     0x7da7
-clearVertBlinds     EQU     0x7cc5
+convertEqOp         EQU     0x7ddf
+convertNeOp         EQU     0x7dd6
+convertLeOp         EQU     0x7dcd
+convertGeOp         EQU     0x7dc4
+convertLtOp         EQU     0x7dbb
+convertGtOp         EQU     0x7db2
+divide16bit         EQU     0x79a8
+resetVideoTable     EQU     0x7bc7
+initClearFuncs      EQU     0x7cdd
+clearVertBlinds     EQU     0x7ca3
 clearCursorRow      EQU     0x77b6
-printInit           EQU     0x78c1
-printText           EQU     0x7cac
+printInit           EQU     0x7bb1
+printText           EQU     0x7be6
 printDigit          EQU     0x76dd
-printInt16          EQU     0x79ae
+printInt16          EQU     0x78ae
 printChar           EQU     0x75a7
-newLineScroll       EQU     0x7ba2
+newLineScroll       EQU     0x7aa4
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -224,6 +235,24 @@ defaultLabel        EQU     register1
 lutLabs             EQU     register2
 lutAddrs            EQU     register3
 lutIndex            EQU     register8
+romType             EQU     register0
+romErrAddr          EQU     register1
+romErrPixel         EQU     register2
+
+
+romCheck            LD      giga_romType
+                    ANDI    0xFC
+                    SUBW    romType
+                    BGE     romC_return
+                    LDWI    giga_vram
+                    STW     romErrAddr
+                    
+romC_loop           LD      romErrPixel
+                    POKE    romErrAddr
+                    INC     romErrPixel
+                    BRA     romC_loop                       ; flash left hand corner pixel indicating rom error
+                    
+romC_return         RET                    
 
 
                     ; runs real time, (time sliced), code at regular intervals
@@ -381,11 +410,6 @@ resetVT_loop        CALL    realTimeProcAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
-                    
-                    LDWI    giga_videoTop                       ; reset videoTop
-                    STW     register0
-                    LDI     0
-                    POKE    register0
                     POP
                     RET
 
@@ -396,7 +420,7 @@ initClearFuncs      PUSH
     
                     LDI     0x02                                ; starting cursor position
                     STW     cursorXY
-                    LDWI    0x7FFF
+                    LDWI    ON_BOTTOM_ROW_MSK
                     ANDW    miscFlags
                     STW     miscFlags                           ; reset on bottom row flag
             
@@ -627,7 +651,7 @@ clearCursorRow      PUSH
                     LDWI    SYS_Draw4_30                    ; setup 4 pixel SYS routine
                     STW     giga_sysFn
     
-                    LDWI    giga_videoTable                 ; current cursor position
+                    LDWI    giga_videoTable                 ; current cursor high byte address
                     PEEK
                     ST      giga_sysArg4 + 1
                     LDI     8
@@ -665,14 +689,14 @@ clearCR_loopx       SUBI    4                               ; loop is unrolled 4
 newLineScroll       LDI     0x02                            ; x offset slightly
                     ST      cursorXY
                     ST      giga_sysArg4
-                    LDI     0x01
+                    LDI     ENABLE_SCROLL_BIT
                     ANDW    miscFlags
-                    BNE     newLS_cont0                     ; scroll on or off
+                    BNE     newLS_cont0                     ; is scroll on or off?
                     RET
                     
 newLS_cont0         PUSH
-                    LDWI    0x8000
-                    ANDW    miscFlags                       ; on bottom row flag
+                    LDI     ON_BOTTOM_ROW_BIT
+                    ANDW    miscFlags                       ; is on bottom row flag?
                     BNE     newLS_cont1
                     LD      cursorXY + 1
                     ADDI    8
@@ -704,7 +728,7 @@ newLS_adjust        ADDI    8
                     SUBI    0xF0                            ; scanline pointers end at 0x01EE
                     BLT     newLS_scroll
                     
-                    LDWI    0x8000
+                    LDI     ON_BOTTOM_ROW_BIT
                     ORW     miscFlags
                     STW     miscFlags                       ; set on bottom row flag
                     

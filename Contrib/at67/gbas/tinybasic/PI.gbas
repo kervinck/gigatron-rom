@@ -1,4 +1,5 @@
 _runtimePath_ "../runtime"
+_codeRomType_ ROMv1
 
 DIM Z(94)=0:CLS:D=0
 

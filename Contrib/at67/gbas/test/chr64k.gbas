@@ -1,5 +1,6 @@
 _runtimePath_ "../runtime"
 _runtimeStart_ &hFFFF
+_codeRomType_ ROMv1
 
 frog$ = hexw$(&hb00b)
 print frog$

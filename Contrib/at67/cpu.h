@@ -3,12 +3,13 @@
 
 #include <stdint.h>
 #include <inttypes.h>
+#include <map>
 #include <string>
 #include <algorithm>
 
 
 #define MAJOR_VERSION "0.9"
-#define MINOR_VERSION "3B"
+#define MINOR_VERSION "4B"
 #define VERSION_STR "gtemuAT67 v" MAJOR_VERSION "." MINOR_VERSION
  
 #define ROM_INST 0
@@ -91,6 +92,7 @@ namespace Cpu
 
     uint8_t* getPtrToROM(int& romSize);
     RomType getRomType(void);
+    std::map<std::string, RomType>& getRomTypeMap(void);
 
 #ifdef _WIN32
     void enableWin32ConsoleSaveFile(bool consoleSaveFile);

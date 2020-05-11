@@ -96,7 +96,6 @@ namespace Assembler
     };
 
 
-    bool getUseOpcodeCALLI(void);
     const std::string& getIncludePath(void);
     uint16_t getStartAddress(void);
     int getCurrDasmByteCount(void);
@@ -106,7 +105,6 @@ namespace Assembler
     int getDisassembledCodeSize(void);
     DasmCode* getDisassembledCode(int index);
 
-    void setUseOpcodeCALLI(bool useOpcodeCALLI);
     void setIncludePath(const std::string& includePath);
 
     int getAsmOpcodeSize(const std::string& opcodeStr);

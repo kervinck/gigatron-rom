@@ -1,0 +1,50 @@
+_runtimePath_ "../runtime"
+_codeRomType_ ROMv1
+
+const fgBgColour = &h0008
+
+set FGBGCOLOUR, fgBgColour
+cls
+
+load font, ../../images/gbas/Fonts/sc3000/sc3000.tga, 0, fgBgColour
+
+x = 0 : y = x : z = y
+
+x = 20
+blah = (53 - 12 - 9) + x*20
+print blah
+
+x = 10
+blah = x*2*(50*exp(-1.232455)*sin(45)*cos(57.324786234) - 1000.342876324)
+print blah
+
+'loop:
+'    a = rnd(2) + 1
+'    gosub a
+'    
+'    b = rnd(2) + 3
+'    goto b
+'goto &loop
+'
+'' Numeric GOSUB identifies line numbers with ':'
+'1: print "1" : return
+'2: print "2" : return
+'
+'' Numeric GOTO identifies line numbers with '!'
+'3! print "3" : goto loop
+'4! print "4" : goto loop
+
+
+kk = 255
+
+loop:
+    k = get("SERIALRAW")
+    if kk &&= 255
+        if k&&<>255 then gosub k
+    endif
+    kk = k
+goto &loop
+
+49: print "1" : return
+50: print "2" : return
+51: print "3" : return

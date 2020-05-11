@@ -28,11 +28,6 @@ resetVT_loop        CALL    realTimeProcAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
-                    
-                    LDWI    giga_videoTop                       ; reset videoTop
-                    STW     register0
-                    LDI     0
-                    POKE    register0
                     POP
                     RET
 %ENDS   
@@ -44,7 +39,7 @@ initClearFuncs      PUSH
     
                     LDI     0x02                                ; starting cursor position
                     STW     cursorXY
-                    LDWI    0x7FFF
+                    LDWI    ON_BOTTOM_ROW_MSK
                     ANDW    miscFlags
                     STW     miscFlags                           ; reset on bottom row flag
             
@@ -98,7 +93,7 @@ clearS_loop         CALL    realTimeProcAddr
                     POP
                     RET
 %ENDS   
-    
+
 %SUB                clearVertBlinds
                     ; clears the viewable screen using a vertical blinds effect
 clearVertBlinds     PUSH
@@ -132,45 +127,6 @@ clearVB_loop        CALL    realTimeProcAddr
                     LD      top
                     SUBI    giga_yres / 2 + 8
                     BLT     clearVB_loop
-                    POP
-                    RET
-%ENDS   
-        
-%SUB                clearRVertBlinds
-                    ; clears a region using a vertical blinds effect
-clearRVertBlinds    PUSH
-                    LDWI    initClearFuncs
-                    CALL    giga_vAC
-    
-clearRVB_loop       CALL    realTimeProcAddr
-                    LDW     top
-                    STW     giga_sysArg4                        ; top line
-                    SYS     30
-    
-                    LDW     bot
-                    STW     giga_sysArg4                        ; bottom line
-                    SYS     30
-    
-                    LD      top                                 ; 4 horizontal pixels
-                    ADDI    0x04
-                    ST      top
-                    LD      bot                                 ; 4 horizontal pixels
-                    ADDI    0x04
-                    ST      bot
-                    LoopCounter xcount clearRVB_loop
-    
-                    INC     top + 1                             ; next top line
-                    LD      bot + 1                             ; next bottom line
-                    SUBI    0x01
-                    ST      bot + 1
-    
-                    LD      treset                              ; reset low bytes of treset, breset and xcount
-                    ST      top
-                    LD      breset
-                    ST      bot
-                    LD      xreset
-                    ST      xcount
-                    LoopCounter ycount clearRVB_loop
                     POP
                     RET
 %ENDS

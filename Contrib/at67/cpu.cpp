@@ -36,6 +36,8 @@
 
 namespace Cpu
 {
+    const uint8_t _endianBytes[] = {0x00, 0x01, 0x02, 0x03};
+
     int _numRoms = 0;
     int _romIndex = 0;
     int _vCpuInstPerFrame = 0;
@@ -53,6 +55,7 @@ namespace Cpu
     uint8_t _ROM[ROM_SIZE][2];
     std::vector<uint8_t*> _romFiles;
     RomType _romType = ROMERR;
+    std::map<std::string, RomType> _romTypeMap = {{"ROMV1", ROMv1}, {"ROMV2", ROMv2}, {"ROMV3", ROMv3}, {"ROMV4", ROMv4}, {"ROMV5A", ROMv5a}, {"DEVROM", DEVROM}};
 
     std::vector<uint8_t> _scanlinesRom0;
     std::vector<uint8_t> _scanlinesRom1;
@@ -65,8 +68,7 @@ namespace Cpu
 
     uint8_t* getPtrToROM(int& romSize) {romSize = sizeof(_ROM); return (uint8_t*)_ROM;}
     RomType getRomType(void) {return _romType;}
-
-    const uint8_t _endianBytes[] = {0x00, 0x01, 0x02, 0x03};
+    std::map<std::string, RomType>& getRomTypeMap(void) {return _romTypeMap;}
 
 
 //#define COLLECT_INST_STATS

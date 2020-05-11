@@ -38,9 +38,7 @@ and possibly even Android. As of v0.8.17 it has been tested on Microsoft Windows
   executable.<br/>
 
 ## YouTube
-- https://www.youtube.com/watch?v=pH4st5dz7Go<br/>
-- https://www.youtube.com/watch?v=u5AQCd47IcI<br/>
-- https://www.youtube.com/watch?v=sq8uCpBFwp8<br>
+https://www.youtube.com/channel/UCIDqjK ... ewAtLbfwQ/
 
 ## References
 - Gigatron TTL Home: https://gigatron.io/<br/>

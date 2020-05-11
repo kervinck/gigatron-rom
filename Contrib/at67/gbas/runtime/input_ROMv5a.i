@@ -75,7 +75,7 @@ inputE1_skip        LDWI    textWorkArea + 1
                     STW     printXYBak
                     CALLI   inputExt2           ; doesn't return to here
                     
-inputE1_exit        LDI     0x01
+inputE1_exit        LDI     ENABLE_SCROLL_BIT
                     ORW     miscFlags
                     STW     miscFlags           ; enable text scrolling
                     POP
@@ -285,11 +285,11 @@ inputPrint          CALLI   inputCursor         ; call cursor flash frequently
 
 %SUB                inputNewline
 inputNewline        PUSH
-                    LDI     0x01
+                    LDI     ENABLE_SCROLL_BIT
                     ORW     miscFlags
                     STW     miscFlags           ; enable text scrolling
                     CALLI   newLineScroll       ; new line
-                    LDWI    0xFFFE
+                    LDWI    ENABLE_SCROLL_MSK
                     ANDW    miscFlags
                     STW     miscFlags           ; disable text scrolling
                     POP

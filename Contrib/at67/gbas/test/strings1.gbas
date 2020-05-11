@@ -1,5 +1,5 @@
 _runtimePath_ "../runtime"
-
+_codeRomType_ ROMv1
 
 const fgBgColour = &h0008
 

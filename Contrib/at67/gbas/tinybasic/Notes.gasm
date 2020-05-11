@@ -25,6 +25,12 @@ midiDelay           EQU                     register0 + 0x26
 miscFlags           EQU                     register0 + 0x28
 fontLutId           EQU                     0x00e0
 
+; Internal Constants
+ENABLE_SCROLL_BIT   EQU                     0x0001
+ON_BOTTOM_ROW_BIT   EQU                     0x0002
+ENABLE_SCROLL_MSK   EQU                     0xfffe
+ON_BOTTOM_ROW_MSK   EQU                     0xfffd
+
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
 
@@ -35,31 +41,31 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x0239
-_11                 EQU                     0x023d
-_12                 EQU                     0x0249
-_13                 EQU                     0x0253
-_14                 EQU                     0x0261
-_20                 EQU                     0x026f
-_21                 EQU                     0x0273
-_22                 EQU                     0x0277
-_23                 EQU                     0x027b
-_24                 EQU                     0x027f
-_25                 EQU                     0x0283
-_26                 EQU                     0x0287
-_30                 EQU                     0x028b
-_31                 EQU                     0x028f
-_32                 EQU                     0x029d
-_33                 EQU                     0x02a3
-_34                 EQU                     0x02b3
-_35                 EQU                     0x02b9
-_36                 EQU                     0x02c5
-_37                 EQU                     0x02d3
-_38                 EQU                     0x02d7
+_10                 EQU                     0x0242
+_11                 EQU                     0x0246
+_12                 EQU                     0x0252
+_13                 EQU                     0x025c
+_14                 EQU                     0x026a
+_20                 EQU                     0x0278
+_21                 EQU                     0x027c
+_22                 EQU                     0x0280
+_23                 EQU                     0x0284
+_24                 EQU                     0x0288
+_25                 EQU                     0x028c
+_26                 EQU                     0x0290
+_30                 EQU                     0x0294
+_31                 EQU                     0x0298
+_32                 EQU                     0x02a6
+_33                 EQU                     0x02ac
+_34                 EQU                     0x02bc
+_35                 EQU                     0x02c2
+_36                 EQU                     0x02ce
+_37                 EQU                     0x02dc
+_38                 EQU                     0x02e0
 _39                 EQU                     0x0302
-_next_0x02b1        EQU                     0x02a7
+_next_0x02ba        EQU                     0x02b0
 _page_0x0300        EQU                     0x0300
-_end_0x0318         EQU                     0x0310
+_end_0x0321         EQU                     0x0310
 
 ; Variables
 _c                  EQU                     0x0030
@@ -75,12 +81,16 @@ _n                  EQU                     0x0034
 ; Define Images
 
 ; Define Sprites
+
 ; Define Fonts
 
 ; Lookup Tables
 
 ; Code
-_entryPoint_        InitRealTimeProc        
+_entryPoint_        LDI                     0x1c
+                    STW                     romType
+                    RomCheck                
+                    InitRealTimeProc        
                     InitEqOp                
                     InitNeOp                
                     InitLeOp                
@@ -149,7 +159,7 @@ _32                 LDW                     _n
 
 _33                 LDI                     1
                     STW                     _c
-_next_0x02b1        LD                      _c
+_next_0x02ba        LD                      _c
                     ST                      giga_vAC + 1
                     ORI                     0xFF
                     XORI                    0xFF
@@ -167,7 +177,7 @@ _35                 LDW                     _p
                     CALL                    giga_vAC
                     POKE                    0xc0                            ; poke p+1,usr(&hE0):'Fhi
 
-_36                 ForNextFarInc           _c _next_0x02b1 4               ; next c
+_36                 ForNextFarInc           _c _next_0x02ba 4               ; next c
 
 _37                 LDI                     15
                     ST                      giga_soundTimer                 ; set SOUNDTIMER,15:'0.25 secs
@@ -184,7 +194,7 @@ _38                 LD                      giga_soundTimer
 _page_0x0300        LDW                     0xde
 _39                 ForNextFarInc           _n _31 95                       ; next n
 
-_end_0x0318         BRA                     _end_0x0318                     ; END
+_end_0x0321         BRA                     _end_0x0321                     ; END
 
 
 
@@ -194,21 +204,22 @@ _end_0x0318         BRA                     _end_0x0318                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7ef6
-convertEqOp         EQU     0x7eed
-convertNeOp         EQU     0x7ee4
-convertLeOp         EQU     0x7edb
-convertGeOp         EQU     0x7ed2
-convertLtOp         EQU     0x7ec9
-convertGtOp         EQU     0x7ec0
-resetVideoTable     EQU     0x7db5
+romCheck            EQU     0x7ee8
+realTimeProc        EQU     0x7edf
+convertEqOp         EQU     0x7ed6
+convertNeOp         EQU     0x7ecd
+convertLeOp         EQU     0x7ec4
+convertGeOp         EQU     0x7ebb
+convertLtOp         EQU     0x7eb2
+convertGtOp         EQU     0x7ea9
+resetVideoTable     EQU     0x7dbe
 initClearFuncs      EQU     0x7ddd
 clearCursorRow      EQU     0x7ab6
-printInit           EQU     0x7eaa
+printInit           EQU     0x7da8
 printDigit          EQU     0x79dd
 printInt16          EQU     0x7cae
 printChar           EQU     0x78a7
-newLineScroll       EQU     0x7ba2
+newLineScroll       EQU     0x7ba4
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -224,6 +235,24 @@ defaultLabel        EQU     register1
 lutLabs             EQU     register2
 lutAddrs            EQU     register3
 lutIndex            EQU     register8
+romType             EQU     register0
+romErrAddr          EQU     register1
+romErrPixel         EQU     register2
+
+
+romCheck            LD      giga_romType
+                    ANDI    0xFC
+                    SUBW    romType
+                    BGE     romC_return
+                    LDWI    giga_vram
+                    STW     romErrAddr
+                    
+romC_loop           LD      romErrPixel
+                    POKE    romErrAddr
+                    INC     romErrPixel
+                    BRA     romC_loop                       ; flash left hand corner pixel indicating rom error
+                    
+romC_return         RET                    
 
 
                     ; runs real time, (time sliced), code at regular intervals
@@ -314,11 +343,6 @@ resetVT_loop        CALL    realTimeProcAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
-                    
-                    LDWI    giga_videoTop                       ; reset videoTop
-                    STW     register0
-                    LDI     0
-                    POKE    register0
                     POP
                     RET
 
@@ -329,7 +353,7 @@ initClearFuncs      PUSH
     
                     LDI     0x02                                ; starting cursor position
                     STW     cursorXY
-                    LDWI    0x7FFF
+                    LDWI    ON_BOTTOM_ROW_MSK
                     ANDW    miscFlags
                     STW     miscFlags                           ; reset on bottom row flag
             
@@ -505,7 +529,7 @@ clearCursorRow      PUSH
                     LDWI    SYS_Draw4_30                    ; setup 4 pixel SYS routine
                     STW     giga_sysFn
     
-                    LDWI    giga_videoTable                 ; current cursor position
+                    LDWI    giga_videoTable                 ; current cursor high byte address
                     PEEK
                     ST      giga_sysArg4 + 1
                     LDI     8
@@ -543,14 +567,14 @@ clearCR_loopx       SUBI    4                               ; loop is unrolled 4
 newLineScroll       LDI     0x02                            ; x offset slightly
                     ST      cursorXY
                     ST      giga_sysArg4
-                    LDI     0x01
+                    LDI     ENABLE_SCROLL_BIT
                     ANDW    miscFlags
-                    BNE     newLS_cont0                     ; scroll on or off
+                    BNE     newLS_cont0                     ; is scroll on or off?
                     RET
                     
 newLS_cont0         PUSH
-                    LDWI    0x8000
-                    ANDW    miscFlags                       ; on bottom row flag
+                    LDI     ON_BOTTOM_ROW_BIT
+                    ANDW    miscFlags                       ; is on bottom row flag?
                     BNE     newLS_cont1
                     LD      cursorXY + 1
                     ADDI    8
@@ -582,7 +606,7 @@ newLS_adjust        ADDI    8
                     SUBI    0xF0                            ; scanline pointers end at 0x01EE
                     BLT     newLS_scroll
                     
-                    LDWI    0x8000
+                    LDI     ON_BOTTOM_ROW_BIT
                     ORW     miscFlags
                     STW     miscFlags                       ; set on bottom row flag
                     

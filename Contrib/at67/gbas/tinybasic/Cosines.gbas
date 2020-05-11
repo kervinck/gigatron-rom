@@ -1,4 +1,5 @@
 _runtimePath_ "../runtime"
+_codeRomType_ ROMv1
 
 'Plot cosine
 10 set FGBGCOLOUR, &h15 : cls
