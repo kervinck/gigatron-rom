@@ -73,7 +73,7 @@ anda(63)                        #26 Bit 6:7 are garbage
 st([sysArgs+4])                 #27 Copy count 0..60
 adda([Y,X])                     #28 One location past (+1) the last byte of fragment
 adda(1)                         #29 254+1 = $ff becomes 0, 255+1 = $00 becomes 1
-anda(0xfe)                      #30 Will be zero iff writing in top 2 bytes of page
+anda(0xfe)                      #30 Will be zero only when writing in top 2 bytes of page
 st([vTmp])                      #31 Remember as first condition
 ld([Y,X])                       #32 Low copy address
 st([Y,Xpp]);                    C('Just X++')#33
@@ -84,7 +84,7 @@ st([sysArgs+6])                 #37
 suba(1)                         #38 Check if writing into sound channel page (1..4)
 anda(0xfc)                      #39
 ora([vTmp])                     #40 Combine second condition with first
-st([vTmp])                      #41
+st([vTmp])                      #41 Zero when overwriting one of oscL[1..4] or oscH[1..4]
 ld([sysArgs+4])                 #42 Check copy count
 bne('.sysPi#45')                #43
 # Execute code (don't care about checksum anymore)
