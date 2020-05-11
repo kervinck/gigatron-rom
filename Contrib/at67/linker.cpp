@@ -22,6 +22,7 @@ namespace Linker
 
     std::vector<Compiler::InternalSub> _internalSubs =
     {
+        {0x0000, 0x0000, "romCheck"         , "", true,  false},
         {0x0000, 0x0000, "realTimeProc"     , "", true,  false},
         {0x0000, 0x0000, "convertEqOp"      , "", true,  false},
         {0x0000, 0x0000, "convertNeOp"      , "", true,  false},
@@ -67,13 +68,12 @@ namespace Linker
         {0x0000, 0x0000, "gotoNumericLabel" , "", false, false},
         {0x0000, 0x0000, "gosubNumericLabel", "", false, false},
         {0x0000, 0x0000, "scanlineMode"     , "", false, false},
-        {0x0000, 0x0000, "waitVBlanks"      , "", false, false},
         {0x0000, 0x0000, "waitVBlank"       , "", false, false},
+        {0x0000, 0x0000, "waitVBlanks"      , "", false, false},
         {0x0000, 0x0000, "resetVideoTable"  , "", false, false},
         {0x0000, 0x0000, "initClearFuncs"   , "", false, false},
         {0x0000, 0x0000, "clearScreen"      , "", false, false},
         {0x0000, 0x0000, "clearVertBlinds"  , "", false, false},
-        {0x0000, 0x0000, "clearRVertBlinds" , "", false, false},
         {0x0000, 0x0000, "clearCursorRow"   , "", false, false},
         {0x0000, 0x0000, "readPixel"        , "", false, false},
         {0x0000, 0x0000, "drawPixel"        , "", false, false},
@@ -147,7 +147,7 @@ namespace Linker
         {0x0000, 0x0000, "stringRight"      , "", false, false},
         {0x0000, 0x0000, "integerStr"       , "", false, false},
     };
-    std::vector<std::string> _subIncludes = 
+    std::vector<std::string> _subIncludesROMv1 =
     {
         "math.i"        ,
         "memory.i"      ,
@@ -155,27 +155,70 @@ namespace Linker
         "clear_screen.i",
         "conv_conds.i"  ,
         "graphics.i"    ,
-        "sprite.i"      ,
         "audio.i"       ,
         "input.i"       ,
         "print_text.i"  ,
         "string.i"      ,
         "numeric.i"     ,
     };
-    std::vector<std::string> _subIncludesCALLI = 
+    std::vector<std::string> _subIncludesROMv2 = 
     {
-        "math_CALLI.i"        ,
-        "memory_CALLI.i"      ,
-        "flow_control_CALLI.i",
-        "clear_screen_CALLI.i",
-        "conv_conds_CALLI.i"  ,
-        "graphics_CALLI.i"    ,
-        "sprite_CALLI.i"      ,
-        "audio_CALLI.i"       ,
-        "input_CALLI.i"       ,
-        "print_text_CALLI.i"  ,
-        "string_CALLI.i"      ,
-        "numeric_CALLI.i"     ,
+        "math.i"              ,
+        "memory.i"            ,
+        "flow_control.i"      ,
+        "clear_screen_ROMv2.i",
+        "conv_conds.i"        ,
+        "graphics_ROMv2.i"    ,
+        "audio.i"             ,
+        "input.i"             ,
+        "print_text_ROMv2.i"  ,
+        "string.i"            ,
+        "numeric.i"           ,
+    };
+    std::vector<std::string> _subIncludesROMv3 =
+    {
+        "math.i"              ,
+        "memory.i"            ,
+        "flow_control.i"      ,
+        "clear_screen_ROMv2.i",
+        "conv_conds.i"        ,
+        "graphics_ROMv2.i"    ,
+        "sprite_ROMv3.i"      ,
+        "audio.i"             ,
+        "input.i"             ,
+        "print_text_ROMv3.i"  ,
+        "string.i"            ,
+        "numeric.i"           ,
+    };
+    std::vector<std::string> _subIncludesROMv4 =
+    {
+        "math.i"              ,
+        "memory.i"            ,
+        "flow_control.i"      ,
+        "clear_screen_ROMv2.i",
+        "conv_conds.i"        ,
+        "graphics_ROMv2.i"    ,
+        "sprite_ROMv3.i"      ,
+        "audio.i"             ,
+        "input.i"             ,
+        "print_text_ROMv3.i"  ,
+        "string.i"            ,
+        "numeric.i"           ,
+    };
+    std::vector<std::string> _subIncludesROMv5a =
+    {
+        "math_ROMv5a.i"        ,
+        "memory_ROMv5a.i"      ,
+        "flow_control_ROMv5a.i",
+        "clear_screen_ROMv5a.i",
+        "conv_conds_ROMv5a.i"  ,
+        "graphics_ROMv5a.i"    ,
+        "sprite_ROMv5a.i"      ,
+        "audio_ROMv5a.i"       ,
+        "input_ROMv5a.i"       ,
+        "print_text_ROMv5a.i"  ,
+        "string_ROMv5a.i"      ,
+        "numeric_ROMv5a.i"     ,
     };
 
 
@@ -189,21 +232,21 @@ namespace Linker
     {
         Linker::resetIncludeFiles();
 
-        for(int i=0; i<int(_subIncludes.size()); i++)
+        for(int i=0; i<int(_subIncludesROMv3.size()); i++)
         {
-            size_t textPos = _subIncludes[i].find("text");
+            size_t textPos = _subIncludesROMv3[i].find("text");
             if(textPos != std::string::npos)
             {
-                _subIncludes[i].replace(textPos, 4, "font");
+                _subIncludesROMv3[i].replace(textPos, 4, "font");
             }
         }
 
-        for(int i=0; i<int(_subIncludesCALLI.size()); i++)
+        for(int i=0; i<int(_subIncludesROMv5a.size()); i++)
         {
-            size_t textPos = _subIncludesCALLI[i].find("text");
+            size_t textPos = _subIncludesROMv5a[i].find("text");
             if(textPos != std::string::npos)
             {
-                _subIncludesCALLI[i].replace(textPos, 4, "font");
+                _subIncludesROMv5a[i].replace(textPos, 4, "font");
             }
         }
 
@@ -212,21 +255,21 @@ namespace Linker
 
     bool disableFontLinking(void)
     {
-        for(int i=0; i<int(_subIncludes.size()); i++)
+        for(int i=0; i<int(_subIncludesROMv3.size()); i++)
         {
-            size_t textPos = _subIncludes[i].find("font");
+            size_t textPos = _subIncludesROMv3[i].find("font");
             if(textPos != std::string::npos)
             {
-                _subIncludes[i].replace(textPos, 4, "text");
+                _subIncludesROMv3[i].replace(textPos, 4, "text");
             }
         }
 
-        for(int i=0; i<int(_subIncludesCALLI.size()); i++)
+        for(int i=0; i<int(_subIncludesROMv5a.size()); i++)
         {
-            size_t textPos = _subIncludesCALLI[i].find("font");
+            size_t textPos = _subIncludesROMv5a[i].find("font");
             if(textPos != std::string::npos)
             {
-                _subIncludesCALLI[i].replace(textPos, 4, "text");
+                _subIncludesROMv5a[i].replace(textPos, 4, "text");
             }
         }
 
@@ -384,7 +427,7 @@ namespace Linker
             // Save end of runtime/strings
             if(address < Compiler::getRuntimeEnd()) Compiler::setRuntimeEnd(address);
 
-            fprintf(stderr, "* %-20s : 0x%04x  :    %2d bytes\n", _internalSubs[subIndex]._name.c_str(), address, _internalSubs[subIndex]._size);
+            //fprintf(stderr, "* %-20s : 0x%04x  :    %2d bytes\n", _internalSubs[subIndex]._name.c_str(), address, _internalSubs[subIndex]._size);
 
             _internalSubs[subIndex]._address = address;
             _internalSubs[subIndex]._inUse = true;
@@ -432,33 +475,78 @@ namespace Linker
     bool parseIncludes(void)
     {
         // Load include files into memory
-        for(int i=0; i<int(_subIncludes.size()); i++)
+        if(Compiler::getCodeRomType() >= Cpu::ROMv5a)
         {
-            if(!Assembler::getUseOpcodeCALLI())
+            for(int i=0; i<int(_subIncludesROMv5a.size()); i++)
             {
-                if(!loadInclude(_subIncludes[i])) return false;
+                if(!loadInclude(_subIncludesROMv5a[i])) return false;
             }
-            else
+        }
+        else if(Compiler::getCodeRomType() >= Cpu::ROMv4)
+        {
+            for(int i=0; i<int(_subIncludesROMv4.size()); i++)
             {
-                if(!loadInclude(_subIncludesCALLI[i])) return false;
+                if(!loadInclude(_subIncludesROMv4[i])) return false;
+            }
+        }
+        else if(Compiler::getCodeRomType() >= Cpu::ROMv3)
+        {
+            for(int i=0; i<int(_subIncludesROMv3.size()); i++)
+            {
+                if(!loadInclude(_subIncludesROMv3[i])) return false;
+            }
+        }
+        else if(Compiler::getCodeRomType() >= Cpu::ROMv2)
+        {
+            for(int i=0; i<int(_subIncludesROMv2.size()); i++)
+            {
+                if(!loadInclude(_subIncludesROMv2[i])) return false;
+            }
+        }
+        else
+        {
+            for(int i=0; i<int(_subIncludesROMv1.size()); i++)
+            {
+                if(!loadInclude(_subIncludesROMv1[i])) return false;
             }
         }
 
         // Parse loaded includes
         for(int i=0; i<int(_internalSubs.size()); i++)
         {
-            if(!Assembler::getUseOpcodeCALLI())
+            if(Compiler::getCodeRomType() >= Cpu::ROMv5a)
             {
-                for(int j=0; j<int(_subIncludes.size()); j++)
+                for(int j=0; j<int(_subIncludesROMv5a.size()); j++)
                 {
-                    if(getIncludeSubSize(_subIncludes[j], i)) break;
+                    if(getIncludeSubSize(_subIncludesROMv5a[j], i)) break;
                 }
             }
-            else
+            else if(Compiler::getCodeRomType() >= Cpu::ROMv4)
             {
-                for(int j=0; j<int(_subIncludesCALLI.size()); j++)
+                for(int j=0; j<int(_subIncludesROMv4.size()); j++)
                 {
-                    if(getIncludeSubSize(_subIncludesCALLI[j], i)) break;
+                    if(getIncludeSubSize(_subIncludesROMv4[j], i)) break;
+                }
+            }
+            else if(Compiler::getCodeRomType() >= Cpu::ROMv3)
+            {
+                for(int j=0; j<int(_subIncludesROMv3.size()); j++)
+                {
+                    if(getIncludeSubSize(_subIncludesROMv3[j], i)) break;
+                }
+            }
+            else if(Compiler::getCodeRomType() >= Cpu::ROMv2)
+            {
+                for(int j=0; j<int(_subIncludesROMv2.size()); j++)
+                {
+                    if(getIncludeSubSize(_subIncludesROMv2[j], i)) break;
+                }
+            }
+            else if(Compiler::getCodeRomType() >= Cpu::ROMv1)
+            {
+                for(int j=0; j<int(_subIncludesROMv1.size()); j++)
+                {
+                    if(getIncludeSubSize(_subIncludesROMv1[j], i)) break;
                 }
             }
         }
@@ -468,11 +556,11 @@ namespace Linker
 
     bool linkInternalSubs(void)
     {
-        fprintf(stderr, "\n**********************************************\n");
-        fprintf(stderr, "*                   Linking                   \n");
-        fprintf(stderr, "**********************************************\n");
-        fprintf(stderr, "*        Name          : Address :    Size    \n");
-        fprintf(stderr, "**********************************************\n");
+        //fprintf(stderr, "\n**********************************************\n");
+        //fprintf(stderr, "*                   Linking                   \n");
+        //fprintf(stderr, "**********************************************\n");
+        //fprintf(stderr, "*        Name          : Address :    Size    \n");
+        //fprintf(stderr, "**********************************************\n");
         
         for(int i=0; i<int(Compiler::getCodeLines().size()); i++)
         {
@@ -578,8 +666,8 @@ RESTART_COLLECTION:
             }
         }
 
-        // Zero page call table is not needed when using CALLI
-        if(!Assembler::getUseOpcodeCALLI())
+        // Zero page call table is not needed when using ROMv5a and higher
+        if(Compiler::getCodeRomType() < Cpu::ROMv5a)
         {
             if(_internalSubs[0]._inUse) {Compiler::getOutput().push_back("realTimeProcAddr" + std::string(LABEL_TRUNC_SIZE - strlen("realTimeProcAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(REAL_TIME_PROC) + "\n");}
 

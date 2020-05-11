@@ -542,11 +542,15 @@ _id_    CALLI   _label
 _id_    CALLI   _label
 %ENDM
 
+%MACRO  RomCheck
+        CALLI   romCheck
+%ENDM
+
 %MACRO  Initialise
         LDWI    0x0F20
         STW     fgbgColour                              ; yellow on blue
 
-        LDI     0x01
+        LDI     ENABLE_SCROLL_BIT
         STW     miscFlags                               ; reset flags
 
         LDI     0x00

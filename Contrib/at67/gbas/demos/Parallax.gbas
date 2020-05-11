@@ -1,13 +1,6 @@
 _runtimePath_ "../runtime"
 _runtimeStart_ &h06FF
 
-' disable audio channels, 2,3,4, this overwrites the romType variable as well, (a reboot will re-initialise it)
-def byte(&h0021) = 0x00
-
-' free audio channel memory making it available to the compiler, (fragmented memory will be automatically coalesced)
-free &h02FA,6
-free &h03FA,6
-free &h04FA,6
 
 mode 1
 

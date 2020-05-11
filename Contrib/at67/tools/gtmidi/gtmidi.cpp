@@ -250,9 +250,9 @@ int main(int argc, char* argv[])
         fprintf(stderr, "%s\n", GTMIDI_VERSION_STR);
         fprintf(stderr, "Usage:    gtmidi <input filename> <output filename> <midi name> <format name> <uint16_t start_address in hex>\n         <uint16_t segment_offset in hex> <int segment_size> <float timing_adjust> <optional -v>\n");
         fprintf(stderr, "Example:  gtmidi game_over.bin game_over.i gameOver vCPU 0x8000 0 0 0.5 -v\n");
-        fprintf(stderr, "Input:    miditones binary file produced with miditones, e.g. miditones -t4 -b -s1 -pi <filename>.bin\n");
+        fprintf(stderr, "Input:    miditones binary file produced with miditones, e.g. miditones -t4 -b -s1 -pi -v <filename>.bin\n");
         fprintf(stderr, "Format:   'gtMID', 'vCPU', 'GBAS', 'GCL', 'CPP', 'Py'\n");
-        fprintf(stderr, "Optional: -v use volume/velocity values\n");
+        fprintf(stderr, "Optional: -v use volume/velocity values, (use -v with miditones)\n");
         return 1;
     }
 

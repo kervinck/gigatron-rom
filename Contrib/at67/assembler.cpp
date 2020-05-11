@@ -103,8 +103,6 @@ namespace Assembler
 
     int _lineNumber;
 
-    bool _useOpcodeCALLI_ = false;
-
     uint16_t _byteCount = 0;
     uint16_t _callTablePtr = 0x0000;
     uint16_t _startAddress = DEFAULT_START_ADDRESS;
@@ -128,7 +126,6 @@ namespace Assembler
     std::map<uint8_t, InstructionDasm> _nativeOpcodes;
 
 
-    bool getUseOpcodeCALLI(void) {return _useOpcodeCALLI_;}
     const std::string& getIncludePath(void) {return _includePath;}
     uint16_t getStartAddress(void) {return _startAddress;}
     int getPrevDasmByteCount(void) {return _prevDasmByteCount;}
@@ -138,7 +135,6 @@ namespace Assembler
     int getDisassembledCodeSize(void) {return int(_disassembledCode.size());}
     DasmCode* getDisassembledCode(int index) {return &_disassembledCode[index % _disassembledCode.size()];}
 
-    void setUseOpcodeCALLI(bool useOpcodeCALLI) {_useOpcodeCALLI_ = useOpcodeCALLI;}
     void setIncludePath(const std::string& includePath) {_includePath = includePath;}
 
 
@@ -848,11 +844,6 @@ namespace Assembler
                 {
                     _startAddress = equate._operand;
                     _currentAddress = _startAddress;
-                }
-                // Reserved word, (equate), _useOpcodeCALLI_
-                else if(tokens[0] == "_useOpcodeCALLI_")
-                {
-                    _useOpcodeCALLI_ = true;
                 }
 #ifndef STAND_ALONE
                 // Disable upload of the current assembler module
@@ -2175,7 +2166,6 @@ namespace Assembler
         _gprintfs.clear();
 
         _callTablePtr = 0x0000;
-        _useOpcodeCALLI_ = false;
 
         Expression::setExprFunc(Expression::expression);
 
@@ -2193,7 +2183,7 @@ namespace Assembler
             return false;
         }
 
-        fprintf(stderr, "\n\n****************************************************************************************************\n");
+        fprintf(stderr, "\n****************************************************************************************************\n");
         fprintf(stderr, "* Assembling file '%s'\n", filename.c_str());
         fprintf(stderr, "****************************************************************************************************\n");
 

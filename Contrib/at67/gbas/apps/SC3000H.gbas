@@ -89,6 +89,7 @@ ohNoes:
 
 forever:
     at posX, posY
+    wait
     print "RickRolled";
     
     if posX AND 1 == 1

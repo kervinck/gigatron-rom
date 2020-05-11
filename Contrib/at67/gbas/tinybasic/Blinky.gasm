@@ -25,6 +25,12 @@ midiDelay           EQU                     register0 + 0x26
 miscFlags           EQU                     register0 + 0x28
 fontLutId           EQU                     0x00e0
 
+; Internal Constants
+ENABLE_SCROLL_BIT   EQU                     0x0001
+ON_BOTTOM_ROW_BIT   EQU                     0x0002
+ENABLE_SCROLL_MSK   EQU                     0xfffe
+ON_BOTTOM_ROW_MSK   EQU                     0xfffd
+
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
 
@@ -35,13 +41,13 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_10                 EQU                     0x0239
-_20                 EQU                     0x0239
-_30                 EQU                     0x0239
-_40                 EQU                     0x0245
-_50                 EQU                     0x0239
-_60                 EQU                     0x025b
-_end_0x0271         EQU                     0x0263
+_10                 EQU                     0x0242
+_20                 EQU                     0x0242
+_30                 EQU                     0x0242
+_40                 EQU                     0x024e
+_50                 EQU                     0x0242
+_60                 EQU                     0x0264
+_end_0x027a         EQU                     0x026c
 
 ; Variables
 _X                  EQU                     0x0030
@@ -58,12 +64,16 @@ _P                  EQU                     0x0036
 ; Define Images
 
 ; Define Sprites
+
 ; Define Fonts
 
 ; Lookup Tables
 
 ; Code
-_entryPoint_        InitRealTimeProc        
+_entryPoint_        LDI                     0x1c
+                    STW                     romType
+                    RomCheck                
+                    InitRealTimeProc        
                     InitEqOp                
                     InitNeOp                
                     InitLeOp                
@@ -96,7 +106,7 @@ _60                 LDW                     _I
                     INC                     _I
                     BRA                     _60                             ; POKE P,I:INC I:GOTO &60
 
-_end_0x0271         BRA                     _end_0x0271                     ; END
+_end_0x027a         BRA                     _end_0x027a                     ; END
 
 
 
@@ -106,14 +116,15 @@ _end_0x0271         BRA                     _end_0x0271                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7ef6
-convertEqOp         EQU     0x7eed
-convertNeOp         EQU     0x7ee4
-convertLeOp         EQU     0x7edb
-convertGeOp         EQU     0x7ed2
-convertLtOp         EQU     0x7ec9
-convertGtOp         EQU     0x7ec0
-resetVideoTable     EQU     0x7db5
+romCheck            EQU     0x7ee8
+realTimeProc        EQU     0x7edf
+convertEqOp         EQU     0x7ed6
+convertNeOp         EQU     0x7ecd
+convertLeOp         EQU     0x7ec4
+convertGeOp         EQU     0x7ebb
+convertLtOp         EQU     0x7eb2
+convertGtOp         EQU     0x7ea9
+resetVideoTable     EQU     0x7dbe
 initClearFuncs      EQU     0x7ddd
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
@@ -130,6 +141,24 @@ defaultLabel        EQU     register1
 lutLabs             EQU     register2
 lutAddrs            EQU     register3
 lutIndex            EQU     register8
+romType             EQU     register0
+romErrAddr          EQU     register1
+romErrPixel         EQU     register2
+
+
+romCheck            LD      giga_romType
+                    ANDI    0xFC
+                    SUBW    romType
+                    BGE     romC_return
+                    LDWI    giga_vram
+                    STW     romErrAddr
+                    
+romC_loop           LD      romErrPixel
+                    POKE    romErrAddr
+                    INC     romErrPixel
+                    BRA     romC_loop                       ; flash left hand corner pixel indicating rom error
+                    
+romC_return         RET                    
 
 
                     ; runs real time, (time sliced), code at regular intervals
@@ -220,11 +249,6 @@ resetVT_loop        CALL    realTimeProcAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
-                    
-                    LDWI    giga_videoTop                       ; reset videoTop
-                    STW     register0
-                    LDI     0
-                    POKE    register0
                     POP
                     RET
 
@@ -235,7 +259,7 @@ initClearFuncs      PUSH
     
                     LDI     0x02                                ; starting cursor position
                     STW     cursorXY
-                    LDWI    0x7FFF
+                    LDWI    ON_BOTTOM_ROW_MSK
                     ANDW    miscFlags
                     STW     miscFlags                           ; reset on bottom row flag
             

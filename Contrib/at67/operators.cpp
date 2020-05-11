@@ -202,7 +202,7 @@ namespace Operators
     {
         switch(ccType)
         {
-            case Expression::BooleanCC: (Assembler::getUseOpcodeCALLI()) ? Compiler::emitVcpuAsm("CALLI", "convert" + cc + "Op", false) : Compiler::emitVcpuAsm("CALL", "convert" + cc + "OpAddr", false); break;
+            case Expression::BooleanCC: (Compiler::getCodeRomType() >= Cpu::ROMv5a) ? Compiler::emitVcpuAsm("CALLI", "convert" + cc + "Op", false) : Compiler::emitVcpuAsm("CALL", "convert" + cc + "OpAddr", false); break;
             case Expression::NormalCC: Compiler::emitVcpuAsm("%Jump" + Expression::strToUpper(cc), "", false); break;
             case Expression::FastCC: Compiler::emitVcpuAsm("B" + Expression::strToUpper(cc), "", false); break;
 
@@ -375,7 +375,7 @@ namespace Operators
 
         Compiler::emitVcpuAsm("STW", "mathY", false);
 
-        if(Assembler::getUseOpcodeCALLI())
+        if(Compiler::getCodeRomType() >= Cpu::ROMv5a)
         {
             Compiler::emitVcpuAsm(opcode, operand, false);
         }
@@ -970,7 +970,7 @@ namespace Operators
             return Expression::Numeric(1, -1, true, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
         }
 
-        left._isValid = (Assembler::getUseOpcodeCALLI()) ? handleMathOp("CALLI", "power16bit", left, right) : handleMathOp("CALL", "power16bit", left, right);
+        left._isValid = (Compiler::getCodeRomType() >= Cpu::ROMv5a) ? handleMathOp("CALLI", "power16bit", left, right) : handleMathOp("CALL", "power16bit", left, right);
 
         return left;
     }
@@ -989,7 +989,7 @@ namespace Operators
             return Expression::Numeric(0, -1, true, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
         }
 
-        left._isValid = (Assembler::getUseOpcodeCALLI()) ? handleMathOp("CALLI", "multiply16bit", left, right) : handleMathOp("CALL", "multiply16bit", left, right);
+        left._isValid = (Compiler::getCodeRomType() >= Cpu::ROMv5a) ? handleMathOp("CALLI", "multiply16bit", left, right) : handleMathOp("CALL", "multiply16bit", left, right);
 
         return left;
     }
@@ -1008,7 +1008,7 @@ namespace Operators
             return Expression::Numeric(0, -1, true, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
         }
 
-        left._isValid = (Assembler::getUseOpcodeCALLI()) ? handleMathOp("CALLI", "divide16bit", left, right) : handleMathOp("CALL", "divide16bit", left, right);
+        left._isValid = (Compiler::getCodeRomType() >= Cpu::ROMv5a) ? handleMathOp("CALLI", "divide16bit", left, right) : handleMathOp("CALL", "divide16bit", left, right);
 
         return left;
     }
@@ -1027,7 +1027,7 @@ namespace Operators
             return Expression::Numeric(0, -1, true, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
         }
 
-        left._isValid = (Assembler::getUseOpcodeCALLI()) ? handleMathOp("CALLI", "divide16bit", left, right, true) : handleMathOp("CALL", "divide16bit", left, right, true);
+        left._isValid = (Compiler::getCodeRomType() >= Cpu::ROMv5a) ? handleMathOp("CALLI", "divide16bit", left, right, true) : handleMathOp("CALL", "divide16bit", left, right, true);
 
         return left;
     }

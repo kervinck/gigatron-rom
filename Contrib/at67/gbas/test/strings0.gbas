@@ -1,4 +1,5 @@
 _runtimePath_ "../runtime"
+_codeRomType_ ROMv1
 
 yup$ = "dog"
 dim dog(3) = @yup$, len(yup$), rnd(0), sin(-90)*10000 + rnd(20)

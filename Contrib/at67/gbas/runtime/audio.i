@@ -1,7 +1,6 @@
-numChannels         EQU     register0
 audioAddr           EQU     register1
 waveType            EQU     register2
-midiNote            EQU     register4                       ; register4 to register7 are the only free registers during time slicing, (state is invalidated each time slice)
+midiNote            EQU     register4                       ; register4 to register7 are the only free registers during time slicing
 midiCommand         EQU     register5
 midiPtr             EQU     register6
 sndChannel          EQU     register8
@@ -13,7 +12,7 @@ sndWaveType         EQU     register11
 %SUB                resetAudio
 resetAudio          LD      giga_frameCount
                     ADDI    1
-                    STW     midiDelay                       ; instant startup
+                    STW     midiDelay                       ; instant MIDI startup
                     LDWI    giga_soundChan1
                     STW     audioAddr
                     LD      waveType
@@ -21,10 +20,8 @@ resetAudio          LD      giga_frameCount
                     ST      waveType + 1
                     LDI     0x00
                     ST      waveType                        ; waveform type
-                    LDI     0x04
 
-resetA_loop         ST      numChannels
-                    LDI     giga_soundChan1
+resetA_loop         LDI     giga_soundChan1
                     ST      audioAddr                       ; reset low byte
                     LDW     waveType
                     DOKE    audioAddr                       ; wavA and wavX
@@ -37,9 +34,9 @@ resetA_loop         ST      numChannels
                     DOKE    audioAddr                       ; oscL and oscH
                     INC     audioAddr + 1                   ; increment high byte
                     
-                    LD      numChannels
-                    SUBI    1
-                    BNE     resetA_loop
+                    LD      audioAddr + 1
+                    SUBI    4
+                    BLE     resetA_loop
                     RET
 %ENDS   
 

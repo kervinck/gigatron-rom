@@ -1,7 +1,6 @@
 _runtimePath_ "../runtime"
 _runtimeStart_ &hFFFF
 _stringWorkArea_ &h69A0 'move string work area for scrolling of text, (defaults to &h7FA0)
-'_useOpcodeCALLI_
 
 'defines the amount of contiguous RAM needed for sprite stripes, (in this case 15*6 + 1)
 _spriteStripeChunks_ 15, &h16A0, ascending
@@ -41,6 +40,9 @@ conf17$ = "learning without thought is labor lost thought without learning is pe
 conf18$ = "without feelings of respect what is there to distinguish men from beasts    "
 conf19$ = "it is more shameful to distrust our friends than to be deceived by them    "
 conf20$ = "an oppressive government is more to be feared than a tiger    "
+
+'poke &h21, peek(&h21) OR 3
+sound off
 
 mode 2
 set FGBGCOLOUR, &h3F15
@@ -118,7 +120,7 @@ loop:
   
     'boing xpos
     x = x + xstep
-    if x.hi &&> 111 'performs the following check if (x.hi > 111) or (x.hi < 0)
+    if x.hi &> 111 'performs the following check if (x.hi > 111) or (x.hi < 0)
         xstep = -xstep : x = xstep + x
         fstep = -fstep
         crash = 1
@@ -128,7 +130,7 @@ loop:
     'boing ypos
     ystep = ystep + g
     y = y + ystep
-    if y.hi &&> 56
+    if y.hi &> 56
         y.hi = 56
         ystep = -ystep
         crash = 1
@@ -136,7 +138,7 @@ loop:
     endif
     
     'collision sound
-    if crash &&= 1
+    if crash &= 1
         gosub crashSound
     endif
     
@@ -190,7 +192,7 @@ crashSound:
     next i
 
     inc time
-    if time &&= 64
+    if time &= 64
         time = 0 : crash = 0
     endif
 return

@@ -25,6 +25,12 @@ midiDelay           EQU                     register0 + 0x26
 miscFlags           EQU                     register0 + 0x28
 fontLutId           EQU                     0x00e0
 
+; Internal Constants
+ENABLE_SCROLL_BIT   EQU                     0x0001
+ON_BOTTOM_ROW_BIT   EQU                     0x0002
+ENABLE_SCROLL_MSK   EQU                     0xfffe
+ON_BOTTOM_ROW_MSK   EQU                     0xfffd
+
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
 
@@ -35,11 +41,11 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_repeat_0x0242      EQU                     0x0242
-_while_0x025d       EQU                     0x0259
-_else_0x027e        EQU                     0x0270
-_endif_0x028c       EQU                     0x027e
-_wend_0x0296        EQU                     0x0286
+_repeat_0x024b      EQU                     0x024b
+_while_0x0266       EQU                     0x0262
+_else_0x0287        EQU                     0x0279
+_endif_0x0295       EQU                     0x0287
+_wend_0x029f        EQU                     0x028f
 
 ; Variables
 _a                  EQU                     0x0030
@@ -53,12 +59,16 @@ _a                  EQU                     0x0030
 ; Define Images
 
 ; Define Sprites
+
 ; Define Fonts
 
 ; Lookup Tables
 
 ; Code
-_entryPoint_        InitRealTimeProc        
+_entryPoint_        LDI                     0x28
+                    STW                     romType
+                    RomCheck                
+                    InitRealTimeProc        
                     InitEqOp                
                     InitNeOp                
                     InitLeOp                
@@ -72,7 +82,7 @@ _entryPoint_        InitRealTimeProc
                     LDI                     1
                     STW                     _a                              ; a=1
 
-_repeat_0x0242      LDW                     _a
+_repeat_0x024b      LDW                     _a
                     PrintAcInt16            
                     NewLine                                                 ; print a
 
@@ -80,30 +90,30 @@ _repeat_0x0242      LDW                     _a
 
                     LDW                     _a
                     SUBI                    8
-                    BNE                     _repeat_0x0242                  ; until a &&= count + 1
+                    BNE                     _repeat_0x024b                  ; until a &&= count + 1
 
-_while_0x025d       LDW                     _a
-                    BLE                     _wend_0x0296                    ; while a &&> 0
+_while_0x0266       LDW                     _a
+                    BLE                     _wend_0x029f                    ; while a &&> 0
 
                     LDW                     _a
                     SUBI                    1
-                    BNE                     _else_0x027e                    ; if a &&= 1
+                    BNE                     _else_0x0287                    ; if a &&= 1
 
                     LDW                     _a
                     PrintAcInt16            
-                    BRA                     _endif_0x028c                   ; print a;
+                    BRA                     _endif_0x0295                   ; print a;
 
-_else_0x027e        LDW                     _a
+_else_0x0287        LDW                     _a
                     PrintAcInt16            
                     NewLine                                                 ; print a
 
-_endif_0x028c       LDW                     _a
+_endif_0x0295       LDW                     _a
                     SUBI                    1
                     STW                     _a                              ; a=a-1
 
-                    BRA                     _while_0x025d                   ; wend
+                    BRA                     _while_0x0266                   ; wend
 
-_wend_0x0296        BRA                     _wend_0x0296                    ; END
+_wend_0x029f        BRA                     _wend_0x029f                    ; END
 
 
 
@@ -113,22 +123,23 @@ _wend_0x0296        BRA                     _wend_0x0296                    ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7ef6
-convertEqOp         EQU     0x7eed
-convertNeOp         EQU     0x7ee4
-convertLeOp         EQU     0x7edb
-convertGeOp         EQU     0x7ed2
-convertLtOp         EQU     0x7ec9
-convertGtOp         EQU     0x7ec0
-resetVideoTable     EQU     0x7ad7
-initClearFuncs      EQU     0x7ddd
-clearVertBlinds     EQU     0x7da3
-clearCursorRow      EQU     0x79b6
-printInit           EQU     0x7eaa
-printDigit          EQU     0x7ab5
+romCheck            EQU     0x7ee8
+realTimeProc        EQU     0x7edf
+convertEqOp         EQU     0x7ed6
+convertNeOp         EQU     0x7ecd
+convertLeOp         EQU     0x7ec4
+convertGeOp         EQU     0x7ebb
+convertLtOp         EQU     0x7eb2
+convertGtOp         EQU     0x7ea9
+resetVideoTable     EQU     0x7ae0
+initClearFuncs      EQU     0x7de7
+clearVertBlinds     EQU     0x7dad
+clearCursorRow      EQU     0x7ab0
+printInit           EQU     0x79e9
+printDigit          EQU     0x79c7
 printInt16          EQU     0x7cae
 printChar           EQU     0x78a7
-newLineScroll       EQU     0x7ba2
+newLineScroll       EQU     0x7ba4
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -144,6 +155,24 @@ defaultLabel        EQU     register1
 lutLabs             EQU     register2
 lutAddrs            EQU     register3
 lutIndex            EQU     register8
+romType             EQU     register0
+romErrAddr          EQU     register1
+romErrPixel         EQU     register2
+
+
+romCheck            LD      giga_romType
+                    ANDI    0xFC
+                    SUBW    romType
+                    BGE     romC_return
+                    LDWI    giga_vram
+                    STW     romErrAddr
+                    
+romC_loop           LD      romErrPixel
+                    POKE    romErrAddr
+                    INC     romErrPixel
+                    BRA     romC_loop                       ; flash left hand corner pixel indicating rom error
+                    
+romC_return         RET                    
 
 
                     ; runs real time, (time sliced), code at regular intervals
@@ -234,11 +263,6 @@ resetVT_loop        CALL    realTimeProcAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
-                    
-                    LDWI    giga_videoTop                       ; reset videoTop
-                    STW     register0
-                    LDI     0
-                    POKE    register0
                     POP
                     RET
 
@@ -249,17 +273,11 @@ initClearFuncs      PUSH
     
                     LDI     0x02                                ; starting cursor position
                     STW     cursorXY
-                    LDWI    0x7FFF
+                    LDWI    ON_BOTTOM_ROW_MSK
                     ANDW    miscFlags
                     STW     miscFlags                           ; reset on bottom row flag
-            
-                    LD      fgbgColour
-                    ST      giga_sysArg0
-                    ST      giga_sysArg0 + 1
-                    ST      giga_sysArg2
-                    ST      giga_sysArg2 + 1                    ; 4 pixels of fg colour
     
-                    LDWI    SYS_Draw4_30                        ; setup 4 pixel SYS routine
+                    LDWI    SYS_SetMemory_v2_54                 ; setup fill memory SYS routine
                     STW     giga_sysFn
                     POP
                     RET
@@ -269,34 +287,33 @@ initClearFuncs      PUSH
 clearVertBlinds     PUSH
                     LDWI    initClearFuncs
                     CALL    giga_vAC
-
-                    LDWI    giga_vram
-                    STW     giga_sysArg4
-                    LD      giga_sysArg4 + 1
-                    ST      top
-    
-clearVB_loop        CALL    realTimeProcAddr
+                    LD      fgbgColour
+                    ST      giga_sysArg1                        ; fill value
+                    LDI     giga_vram >> 8
+                    STW     top  
+                    
+clearVB_loopy       LDI     giga_xres
+                    ST      giga_sysArg0
+                    LDI     0
+                    ST      giga_sysArg2                        ; low start address
                     LD      top
-                    ST      giga_sysArg4 + 1                    ; top line
-                    SYS     30
+                    ST      giga_sysArg3                        ; top line
+                    SYS     54                                  ; fill memory
     
+                    LDI     giga_xres
+                    ST      giga_sysArg0
+                    LDI     0
+                    ST      giga_sysArg2                        ; low start address
                     LDWI    giga_yres - 1 + 16
                     SUBW    top
-                    ST      giga_sysArg4 + 1                    ; bottom line
-                    SYS     30
-    
-                    LD      giga_sysArg4
-                    ADDI    0x04
-                    ST      giga_sysArg4
-                    SUBI    giga_xres
-                    BLT     clearVB_loop
-    
-                    LDI     0
-                    ST      giga_sysArg4
+                    ST      giga_sysArg3                        ; bottom line
+                    SYS     54                                  ; fill memory
                     INC     top                                 ; next top line
+                    
+                    CALL    realTimeProcAddr
                     LD      top
                     SUBI    giga_yres / 2 + 8
-                    BLT     clearVB_loop
+                    BLT     clearVB_loopy
                     POP
                     RET
 
@@ -452,43 +469,26 @@ printC_exit         RET
 
                     ; clears the top 8 lines of pixels in preparation of text scrolling
 clearCursorRow      PUSH
+                    LDWI    SYS_SetMemory_v2_54
+                    STW     giga_sysFn                      ; setup fill memory SYS routine
                     LD      fgbgColour
-                    ST      giga_sysArg0
-                    ST      giga_sysArg0 + 1
-                    ST      giga_sysArg2
-                    ST      giga_sysArg2 + 1                ; 4 pixels of colour
-    
-                    LDWI    SYS_Draw4_30                    ; setup 4 pixel SYS routine
-                    STW     giga_sysFn
-    
-                    LDWI    giga_videoTable                 ; current cursor position
+                    ST      giga_sysArg1                    ; fill value
+                    LDWI    giga_videoTable
                     PEEK
-                    ST      giga_sysArg4 + 1
+                    ST      giga_sysArg3                    ; row0 high byte address
                     LDI     8
 
-clearCR_loopy       ST      clearLoop
-                    CALL    realTimeProcAddr
+clearCR_loopy       ST      clearLoop                    
                     LDI     giga_xres
-                    
-clearCR_loopx       SUBI    4                               ; loop is unrolled 4 times
-                    ST      giga_sysArg4
-                    SYS     30
-                    SUBI    4
-                    ST      giga_sysArg4
-                    SYS     30
-                    SUBI    4
-                    ST      giga_sysArg4
-                    SYS     30
-                    SUBI    4
-                    ST      giga_sysArg4
-                    SYS     30
-                    BGT     clearCR_loopx
-                    
-                    INC     giga_sysArg4 + 1                ; next line
+                    ST      giga_sysArg0
+                    LDI     0
+                    ST      giga_sysArg2                    ; low start address
+                    SYS     54                              ; fill memory
+                    INC     giga_sysArg3                    ; next line
                     LD      clearLoop
                     SUBI    1
                     BNE     clearCR_loopy
-
+                    CALL    realTimeProcAddr
                     LDWI    printInit
                     CALL    giga_vAC                        ; re-initialise the SYS registers
                     POP
@@ -499,14 +499,14 @@ clearCR_loopx       SUBI    4                               ; loop is unrolled 4
 newLineScroll       LDI     0x02                            ; x offset slightly
                     ST      cursorXY
                     ST      giga_sysArg4
-                    LDI     0x01
+                    LDI     ENABLE_SCROLL_BIT
                     ANDW    miscFlags
-                    BNE     newLS_cont0                     ; scroll on or off
+                    BNE     newLS_cont0                     ; is scroll on or off?
                     RET
                     
 newLS_cont0         PUSH
-                    LDWI    0x8000
-                    ANDW    miscFlags                       ; on bottom row flag
+                    LDI     ON_BOTTOM_ROW_BIT
+                    ANDW    miscFlags                       ; is on bottom row flag?
                     BNE     newLS_cont1
                     LD      cursorXY + 1
                     ADDI    8
@@ -538,7 +538,7 @@ newLS_adjust        ADDI    8
                     SUBI    0xF0                            ; scanline pointers end at 0x01EE
                     BLT     newLS_scroll
                     
-                    LDWI    0x8000
+                    LDI     ON_BOTTOM_ROW_BIT
                     ORW     miscFlags
                     STW     miscFlags                       ; set on bottom row flag
                     

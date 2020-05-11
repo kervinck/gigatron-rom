@@ -25,6 +25,12 @@ midiDelay           EQU                     register0 + 0x26
 miscFlags           EQU                     register0 + 0x28
 fontLutId           EQU                     0x00e0
 
+; Internal Constants
+ENABLE_SCROLL_BIT   EQU                     0x0001
+ON_BOTTOM_ROW_BIT   EQU                     0x0002
+ENABLE_SCROLL_MSK   EQU                     0xfffe
+ON_BOTTOM_ROW_MSK   EQU                     0xfffd
+
 ; Internal buffers
 textWorkArea        EQU                     0x69a0
 
@@ -35,26 +41,26 @@ textWorkArea        EQU                     0x69a0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_loop               EQU                     0x028e
-_printText          EQU                     0x033c
-_getChar            EQU                     0x0342
-_crashSound         EQU                     0x03b5
-_else_0x02cc        EQU                     0x02b6
-_else_0x02db        EQU                     0x02c1
-_endif_0x030e       EQU                     0x02e6
+_loop               EQU                     0x029c
+_printText          EQU                     0x0358
+_getChar            EQU                     0x035e
+_crashSound         EQU                     0x03d1
+_else_0x02da        EQU                     0x02c4
+_else_0x02e9        EQU                     0x02cf
 _page_0x0300        EQU                     0x0300
-_endif_0x033d       EQU                     0x031b
-_endif_0x034d       EQU                     0x0327
-_endif_0x03ab       EQU                     0x0367
-_elseif_0x03b2      EQU                     0x036e
-_else_0x03c3        EQU                     0x037b
-_endif_0x03cb       EQU                     0x0381
-_endif_0x03fc       EQU                     0x03a6
-_endif_0x040d       EQU                     0x03b3
-_next_0x0445        EQU                     0x03db
+_endif_0x0321       EQU                     0x0308
+_endif_0x0355       EQU                     0x0332
+_endif_0x036a       EQU                     0x0343
+_endif_0x03c8       EQU                     0x0383
+_elseif_0x03cf      EQU                     0x038a
+_else_0x03e0        EQU                     0x0397
+_endif_0x03e8       EQU                     0x039d
+_endif_0x0419       EQU                     0x03c2
+_endif_0x042a       EQU                     0x03cf
 _page_0x0400        EQU                     0x0400
-_endif_0x048b       EQU                     0x0427
-_end_0x048d         EQU                     0x0429
+_next_0x0462        EQU                     0x0406
+_endif_0x04ad       EQU                     0x0447
+_end_0x04af         EQU                     0x0449
 
 ; Variables
 _fontWidths_array   EQU                     0xff0a
@@ -1020,65 +1026,66 @@ def_sprites_0xee5b  EQU                     0xee5b
 def_sprites_0xee5b  DB                      21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 255 
 def_sprites_0xeeb6  EQU                     0xeeb6
 def_sprites_0xeeb6  DB                      21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 21 255 
+
 ; Define Fonts
 
 ; Lookup Tables
-_spriteLut_0xfa06   EQU                     0xfa06
-_spriteLut_0xfa06   DW                      0x16a0 0x0000 0x17a0 0x0f00 0x18a0 0x0006 0x17c5 0x0f06 0x0000
 _spriteLut_0xf906   EQU                     0xf906
-_spriteLut_0xf906   DW                      0x19a0 0x0000 0x1aa0 0x0f00 0x1ba0 0x0006 0x1ac5 0x0f06 0x0000
+_spriteLut_0xf906   DW                      0x16a0 0x0000 0x17a0 0x0f00 0x18a0 0x0006 0x17c5 0x0f06 0x0000
 _spriteLut_0xf82e   EQU                     0xf82e
-_spriteLut_0xf82e   DW                      0x1ca0 0x0000 0x1da0 0x0f00 0x1ea0 0x0006 0x1dc5 0x0f06 0x0000
+_spriteLut_0xf82e   DW                      0x19a0 0x0000 0x1aa0 0x0f00 0x1ba0 0x0006 0x1ac5 0x0f06 0x0000
 _spriteLut_0xf81c   EQU                     0xf81c
-_spriteLut_0xf81c   DW                      0x1fa0 0x0000 0x20a0 0x0f00 0x21a0 0x0006 0x20c5 0x0f06 0x0000
+_spriteLut_0xf81c   DW                      0x1ca0 0x0000 0x1da0 0x0f00 0x1ea0 0x0006 0x1dc5 0x0f06 0x0000
 _spriteLut_0xf80a   EQU                     0xf80a
-_spriteLut_0xf80a   DW                      0x22a0 0x0000 0x23a0 0x0f00 0x24a0 0x0006 0x23c5 0x0f06 0x0000
+_spriteLut_0xf80a   DW                      0x1fa0 0x0000 0x20a0 0x0f00 0x21a0 0x0006 0x20c5 0x0f06 0x0000
 _spriteLut_0xf72e   EQU                     0xf72e
-_spriteLut_0xf72e   DW                      0x25a0 0x0000 0x26a0 0x0f00 0x27a0 0x0006 0x26c5 0x0f06 0x0000
+_spriteLut_0xf72e   DW                      0x22a0 0x0000 0x23a0 0x0f00 0x24a0 0x0006 0x23c5 0x0f06 0x0000
 _spriteLut_0xf71c   EQU                     0xf71c
-_spriteLut_0xf71c   DW                      0x28a0 0x0000 0x29a0 0x0f00 0x2aa0 0x0006 0x29c5 0x0f06 0x0000
+_spriteLut_0xf71c   DW                      0x25a0 0x0000 0x26a0 0x0f00 0x27a0 0x0006 0x26c5 0x0f06 0x0000
 _spriteLut_0xf70a   EQU                     0xf70a
-_spriteLut_0xf70a   DW                      0x2ba0 0x0000 0x2ca0 0x0f00 0x2da0 0x0006 0x2cc5 0x0f06 0x0000
-_spriteLut_0xfc07   EQU                     0xfc07
-_spriteLut_0xfc07   DW                      0x2ea0 0x0000 0x2fa0 0x0f00 0x0000
+_spriteLut_0xf70a   DW                      0x28a0 0x0000 0x29a0 0x0f00 0x2aa0 0x0006 0x29c5 0x0f06 0x0000
 _spriteLut_0xf62e   EQU                     0xf62e
-_spriteLut_0xf62e   DW                      0x30a0 0x0000 0x2fc5 0x0f00 0x31a0 0x0006 0x32a0 0x0f06 0x0000
-_spriteLut_0xf61c   EQU                     0xf61c
-_spriteLut_0xf61c   DW                      0x33a0 0x0000 0x32c5 0x0f00 0x34a0 0x0006 0x35a0 0x0f06 0x0000
+_spriteLut_0xf62e   DW                      0x2ba0 0x0000 0x2ca0 0x0f00 0x2da0 0x0006 0x2cc5 0x0f06 0x0000
 _spriteLut_0xf800   EQU                     0xf800
-_spriteLut_0xf800   DW                      0x36a0 0x0000 0x35c5 0x0f00 0x0000
-_spriteLut_0xf602   EQU                     0xf602
-_spriteLut_0xf602   DW                      0x37a0 0x0000 0x38a0 0x0f00 0x39a0 0x0006 0x38c5 0x0f06 0x3aa0 0x000c 0x3ba0 0x0f0c 0x0000
-_spriteLut_0xf58e   EQU                     0xf58e
-_spriteLut_0xf58e   DW                      0x3ca0 0x0000 0x3bc5 0x0f00 0x3da0 0x0006 0x3ea0 0x0f06 0x0000
-_spriteLut_0xf57c   EQU                     0xf57c
-_spriteLut_0xf57c   DW                      0x3fa0 0x0000 0x3ec5 0x0f00 0x40a0 0x0006 0x41a0 0x0f06 0x0000
-_spriteLut_0xf56a   EQU                     0xf56a
-_spriteLut_0xf56a   DW                      0x42a0 0x0000 0x41c5 0x0f00 0x43a0 0x0006 0x44a0 0x0f06 0x0000
-_spriteLut_0xf558   EQU                     0xf558
-_spriteLut_0xf558   DW                      0x45a0 0x0000 0x44c5 0x0f00 0x46a0 0x0006 0x47a0 0x0f06 0x0000
-_spriteLut_0xf546   EQU                     0xf546
-_spriteLut_0xf546   DW                      0x48a0 0x0000 0x47c5 0x0f00 0x49a0 0x0006 0x4aa0 0x0f06 0x0000
-_spriteLut_0xf534   EQU                     0xf534
-_spriteLut_0xf534   DW                      0x4ba0 0x0000 0x4ac5 0x0f00 0x4ca0 0x0006 0x4da0 0x0f06 0x0000
-_spriteLut_0xf522   EQU                     0xf522
-_spriteLut_0xf522   DW                      0x4ea0 0x0000 0x4dc5 0x0f00 0x4fa0 0x0006 0x50a0 0x0f06 0x0000
-_spriteLut_0xf510   EQU                     0xf510
-_spriteLut_0xf510   DW                      0x51a0 0x0000 0x50c5 0x0f00 0x52a0 0x0006 0x53a0 0x0f06 0x0000
-_spriteLut_0xf4ee   EQU                     0xf4ee
-_spriteLut_0xf4ee   DW                      0x54a0 0x0000 0x53c5 0x0f00 0x55a0 0x0006 0x56a0 0x0f06 0x0000
-_spriteLut_0xf4d4   EQU                     0xf4d4
-_spriteLut_0xf4d4   DW                      0x57a0 0x0000 0x56c5 0x0f00 0x58a0 0x0006 0x59a0 0x0f06 0x5aa0 0x000c 0x59c5 0x0f0c 0x0000
-_spriteLut_0xf4c2   EQU                     0xf4c2
-_spriteLut_0xf4c2   DW                      0x5ba0 0x0000 0x5ca0 0x0f00 0x5da0 0x0006 0x5cc5 0x0f06 0x0000
-_spriteLut_0xf4b0   EQU                     0xf4b0
-_spriteLut_0xf4b0   DW                      0x5ea0 0x0000 0x5fa0 0x0f00 0x60a0 0x0006 0x5fc5 0x0f06 0x0000
-_spriteLut_0xf49e   EQU                     0xf49e
-_spriteLut_0xf49e   DW                      0x61a0 0x0000 0x62a0 0x0f00 0x63a0 0x0006 0x62c5 0x0f06 0x0000
+_spriteLut_0xf800   DW                      0x2ea0 0x0000 0x2fa0 0x0f00 0x0000
+_spriteLut_0xf61c   EQU                     0xf61c
+_spriteLut_0xf61c   DW                      0x30a0 0x0000 0x2fc5 0x0f00 0x31a0 0x0006 0x32a0 0x0f06 0x0000
+_spriteLut_0xf60a   EQU                     0xf60a
+_spriteLut_0xf60a   DW                      0x33a0 0x0000 0x32c5 0x0f00 0x34a0 0x0006 0x35a0 0x0f06 0x0000
 _spriteLut_0xf700   EQU                     0xf700
-_spriteLut_0xf700   DW                      0x64a0 0x0000 0x65a0 0x0f00 0x0000
-_spriteLut_0xf43c   EQU                     0xf43c
-_spriteLut_0xf43c   DW                      0x66a0 0x0000 0x67a0 0x0f00 0x68a0 0x1e00 0x8000 0x0006 0x805b 0x0f06 0x80b6 0x1e06 0x8100 0x000c 0x815b 0x0f0c 0x81b6 0x1e0c 0x8200 0x0012 0x825b 0x0f12 0x82b6 0x1e12 0x8300 0x0018 0x835b 0x0f18 0x83b6 0x1e18 0x8400 0x001e 0x845b 0x0f1e 0x84b6 0x1e1e 0x8500 0x0024 0x855b 0x0f24 0x85b6 0x1e24 0x8600 0x002a 0x865b 0x0f2a 0x86b6 0x1e2a 0x0000
+_spriteLut_0xf700   DW                      0x36a0 0x0000 0x35c5 0x0f00 0x0000
+_spriteLut_0xf586   EQU                     0xf586
+_spriteLut_0xf586   DW                      0x37a0 0x0000 0x38a0 0x0f00 0x39a0 0x0006 0x38c5 0x0f06 0x3aa0 0x000c 0x3ba0 0x0f0c 0x0000
+_spriteLut_0xf574   EQU                     0xf574
+_spriteLut_0xf574   DW                      0x3ca0 0x0000 0x3bc5 0x0f00 0x3da0 0x0006 0x3ea0 0x0f06 0x0000
+_spriteLut_0xf562   EQU                     0xf562
+_spriteLut_0xf562   DW                      0x3fa0 0x0000 0x3ec5 0x0f00 0x40a0 0x0006 0x41a0 0x0f06 0x0000
+_spriteLut_0xf550   EQU                     0xf550
+_spriteLut_0xf550   DW                      0x42a0 0x0000 0x41c5 0x0f00 0x43a0 0x0006 0x44a0 0x0f06 0x0000
+_spriteLut_0xf53e   EQU                     0xf53e
+_spriteLut_0xf53e   DW                      0x45a0 0x0000 0x44c5 0x0f00 0x46a0 0x0006 0x47a0 0x0f06 0x0000
+_spriteLut_0xf52c   EQU                     0xf52c
+_spriteLut_0xf52c   DW                      0x48a0 0x0000 0x47c5 0x0f00 0x49a0 0x0006 0x4aa0 0x0f06 0x0000
+_spriteLut_0xf51a   EQU                     0xf51a
+_spriteLut_0xf51a   DW                      0x4ba0 0x0000 0x4ac5 0x0f00 0x4ca0 0x0006 0x4da0 0x0f06 0x0000
+_spriteLut_0xf508   EQU                     0xf508
+_spriteLut_0xf508   DW                      0x4ea0 0x0000 0x4dc5 0x0f00 0x4fa0 0x0006 0x50a0 0x0f06 0x0000
+_spriteLut_0xf4ee   EQU                     0xf4ee
+_spriteLut_0xf4ee   DW                      0x51a0 0x0000 0x50c5 0x0f00 0x52a0 0x0006 0x53a0 0x0f06 0x0000
+_spriteLut_0xf4dc   EQU                     0xf4dc
+_spriteLut_0xf4dc   DW                      0x54a0 0x0000 0x53c5 0x0f00 0x55a0 0x0006 0x56a0 0x0f06 0x0000
+_spriteLut_0xf4c2   EQU                     0xf4c2
+_spriteLut_0xf4c2   DW                      0x57a0 0x0000 0x56c5 0x0f00 0x58a0 0x0006 0x59a0 0x0f06 0x5aa0 0x000c 0x59c5 0x0f0c 0x0000
+_spriteLut_0xf4b0   EQU                     0xf4b0
+_spriteLut_0xf4b0   DW                      0x5ba0 0x0000 0x5ca0 0x0f00 0x5da0 0x0006 0x5cc5 0x0f06 0x0000
+_spriteLut_0xf49e   EQU                     0xf49e
+_spriteLut_0xf49e   DW                      0x5ea0 0x0000 0x5fa0 0x0f00 0x60a0 0x0006 0x5fc5 0x0f06 0x0000
+_spriteLut_0xf48c   EQU                     0xf48c
+_spriteLut_0xf48c   DW                      0x61a0 0x0000 0x62a0 0x0f00 0x63a0 0x0006 0x62c5 0x0f06 0x0000
+_spriteLut_0xf600   EQU                     0xf600
+_spriteLut_0xf600   DW                      0x64a0 0x0000 0x65a0 0x0f00 0x0000
+_spriteLut_0xf42a   EQU                     0xf42a
+_spriteLut_0xf42a   DW                      0x66a0 0x0000 0x67a0 0x0f00 0x68a0 0x1e00 0x8000 0x0006 0x805b 0x0f06 0x80b6 0x1e06 0x8100 0x000c 0x815b 0x0f0c 0x81b6 0x1e0c 0x8200 0x0012 0x825b 0x0f12 0x82b6 0x1e12 0x8300 0x0018 0x835b 0x0f18 0x83b6 0x1e18 0x8400 0x001e 0x845b 0x0f1e 0x84b6 0x1e1e 0x8500 0x0024 0x855b 0x0f24 0x85b6 0x1e24 0x8600 0x002a 0x865b 0x0f2a 0x86b6 0x1e2a 0x0000
 _spriteLut_0xf39e   EQU                     0xf39e
 _spriteLut_0xf39e   DW                      0x8700 0x0000 0x875b 0x0f00 0x87b6 0x1e00 0x8800 0x0006 0x885b 0x0f06 0x88b6 0x1e06 0x8900 0x000c 0x895b 0x0f0c 0x89b6 0x1e0c 0x8a00 0x0012 0x8a5b 0x0f12 0x8ab6 0x1e12 0x8b00 0x0018 0x8b5b 0x0f18 0x8bb6 0x1e18 0x8c00 0x001e 0x8c5b 0x0f1e 0x8cb6 0x1e1e 0x8d00 0x0024 0x8d5b 0x0f24 0x8db6 0x1e24 0x8e00 0x002a 0x8e5b 0x0f2a 0x8eb6 0x1e2a 0x0000
 _spriteLut_0xf33c   EQU                     0xf33c
@@ -1106,10 +1113,13 @@ _spriteLut_0x063c   DW                      0xdf00 0x0000 0xdf5b 0x0f00 0xdfb6 0
 _spriteLut_0x059e   EQU                     0x059e
 _spriteLut_0x059e   DW                      0xe700 0x0000 0xe75b 0x0f00 0xe7b6 0x1e00 0xe800 0x0006 0xe85b 0x0f06 0xe8b6 0x1e06 0xe900 0x000c 0xe95b 0x0f0c 0xe9b6 0x1e0c 0xea00 0x0012 0xea5b 0x0f12 0xeab6 0x1e12 0xeb00 0x0018 0xeb5b 0x0f18 0xebb6 0x1e18 0xec00 0x001e 0xec5b 0x0f1e 0xecb6 0x1e1e 0xed00 0x0024 0xed5b 0x0f24 0xedb6 0x1e24 0xee00 0x002a 0xee5b 0x0f2a 0xeeb6 0x1e2a 0x0000
 _spritesLut_        EQU                     0x15ae
-_spritesLut_        DW                      0xfa06 0xf906 0xf82e 0xf81c 0xf80a 0xf72e 0xf71c 0xf70a 0xfc07 0xf62e 0xf61c 0xf800 0xf602 0xf58e 0xf57c 0xf56a 0xf558 0xf546 0xf534 0xf522 0xf510 0xf4ee 0xf4d4 0xf4c2 0xf4b0 0xf49e 0xf700 0xf43c 0xf39e 0xf33c 0xf29e 0xf23c 0xf19e 0xf13c 0xf09e 0xf03c 0xef9e 0xef3c 0x069e 0x063c 0x059e 
+_spritesLut_        DW                      0xf906 0xf82e 0xf81c 0xf80a 0xf72e 0xf71c 0xf70a 0xf62e 0xf800 0xf61c 0xf60a 0xf700 0xf586 0xf574 0xf562 0xf550 0xf53e 0xf52c 0xf51a 0xf508 0xf4ee 0xf4dc 0xf4c2 0xf4b0 0xf49e 0xf48c 0xf600 0xf42a 0xf39e 0xf33c 0xf29e 0xf23c 0xf19e 0xf13c 0xf09e 0xf03c 0xef9e 0xef3c 0x069e 0x063c 0x059e 
 
 ; Code
-_entryPoint_        InitRealTimeProc        
+_entryPoint_        LDI                     0x28
+                    STW                     romType
+                    RomCheck                
+                    InitRealTimeProc        
                     InitEqOp                
                     InitNeOp                
                     InitLeOp                
@@ -1117,6 +1127,8 @@ _entryPoint_        InitRealTimeProc
                     InitLtOp                
                     InitGtOp                
                     Initialise                                              ; INIT
+
+                    SoundAllOff                                             ; sound off
 
                     LDI                     2
                     STW                     graphicsMode
@@ -1180,23 +1192,23 @@ _loop               LDI                     2
 
                     LDW                     _f
                     SUBI                    40
-                    BLE                     _else_0x02cc
+                    BLE                     _else_0x02da
                     LDI                     27
                     STW                     _f                              ; if f &&> boingStart + 13 then f = boingStart
 
-_else_0x02cc        LDW                     _f
+_else_0x02da        LDW                     _f
                     SUBI                    27
-                    BGE                     _else_0x02db
+                    BGE                     _else_0x02e9
                     LDI                     40
                     STW                     _f                              ; if f &&< boingStart then f = boingStart + 13
 
-_else_0x02db        LDW                     _x
+_else_0x02e9        LDW                     _x
                     ADDW                    _xstep
                     STW                     _x                              ; x = x + xstep
 
                     LD                      _x + 1
                     SUBI                    111
-                    BLE                     _endif_0x030e                   ; if x.hi &&> 111 'performs the following check if (x.hi > 111) or (x.hi < 0)
+                    JumpGT                  _endif_0x0321 2                 ; if x.hi &> 111 'performs the following check if (x.hi > 111) or (x.hi < 0)
 
                     LDI                     0
                     SUBW                    _xstep
@@ -1209,12 +1221,16 @@ _else_0x02db        LDW                     _x
                     STW                     _fstep                          ; fstep = -fstep
 
                     LDI                     1
+                    STW                     0xde
+                    LDWI                    _page_0x0300
+                    CALL                    giga_vAC
+_page_0x0300        LDW                     0xde
                     STW                     _crash                          ; crash = 1
 
                     LDI                     0
                     STW                     _time                           ; time = 0
 
-_endif_0x030e       LDW                     _ystep
+_endif_0x0321       LDW                     _ystep
                     ADDI                    4
                     STW                     _ystep                          ; ystep = ystep + g
 
@@ -1222,13 +1238,9 @@ _endif_0x030e       LDW                     _ystep
                     ADDW                    _ystep
                     STW                     _y                              ; y = y + ystep
 
-                    STW                     0xde
-                    LDWI                    _page_0x0300
-                    CALL                    giga_vAC
-_page_0x0300        LDW                     0xde
                     LD                      _y + 1
                     SUBI                    56
-                    BLE                     _endif_0x033d                   ; if y.hi &&> 56
+                    JumpGT                  _endif_0x0355 3                 ; if y.hi &> 56
 
                     LDI                     56
                     ST                      _y + 1                          ; y.hi = 56
@@ -1243,14 +1255,14 @@ _page_0x0300        LDW                     0xde
                     LDI                     0
                     STW                     _time                           ; time = 0
 
-_endif_0x033d       LDW                     _crash
+_endif_0x0355       LDW                     _crash
                     SUBI                    1
-                    BNE                     _endif_0x034d                   ; if crash &&= 1
+                    JumpEQ                  _endif_0x036a 4                 ; if crash &= 1
 
                     LDWI                    _crashSound
                     CALL                    giga_vAC                        ; gosub crashSound
 
-_endif_0x034d       LDWI                    _printText
+_endif_0x036a       LDWI                    _printText
                     CALL                    giga_vAC                        ; gosub printText
 
                     LDWI                    453
@@ -1265,7 +1277,7 @@ _endif_0x034d       LDWI                    _printText
 
 _printText          PUSH                    
                     LDW                     _stamp
-                    BNE                     _endif_0x03fc                   ; if stamp &&= 0
+                    BNE                     _endif_0x0419                   ; if stamp &&= 0
 
 _getChar            LDWI                    0xfe16
                     ADDW                    _quote
@@ -1278,7 +1290,7 @@ _getChar            LDWI                    0xfe16
                     INC                     _char                           ; inc char
 
                     LDW                     _c
-                    BNE                     _elseif_0x03b2                  ; if c &&= 0
+                    BNE                     _elseif_0x03cf                  ; if c &&= 0
 
                     LDI                     0
                     STW                     _char                           ; char = 0
@@ -1287,28 +1299,28 @@ _getChar            LDWI                    0xfe16
 
                     LDW                     _quote
                     SUBI                    21
-                    BNE                     _endif_0x03ab                   ; if quote &&= 21
+                    BNE                     _endif_0x03c8                   ; if quote &&= 21
 
                     LDI                     0
                     STW                     _quote                          ; quote = 0
 
-_endif_0x03ab       LDWI                    _getChar
+_endif_0x03c8       LDWI                    _getChar
                     CALL                    giga_vAC
-                    BRA                     _endif_0x03cb                   ; goto getChar
+                    BRA                     _endif_0x03e8                   ; goto getChar
 
-_elseif_0x03b2      LDW                     _c
+_elseif_0x03cf      LDW                     _c
                     SUBI                    32
-                    BNE                     _else_0x03c3                    ; elseif c &&= 32
+                    BNE                     _else_0x03e0                    ; elseif c &&= 32
 
                     LDI                     26
                     STW                     _c
-                    BRA                     _endif_0x03cb                   ; c = 26
+                    BRA                     _endif_0x03e8                   ; c = 26
 
-_else_0x03c3        LDW                     _c
+_else_0x03e0        LDW                     _c
                     SUBI                    97
                     STW                     _c                              ; c = c - 97
 
-_endif_0x03cb       LDI                     0
+_endif_0x03e8       LDI                     0
                     ADDW                    _c
                     STW                     spriteId
                     LDW                     _text
@@ -1328,16 +1340,16 @@ _endif_0x03cb       LDI                     0
                     ADDW                    _width
                     STW                     _text                           ; text = text + width
 
-_endif_0x03fc       INC                     _stamp                          ; inc stamp
+_endif_0x0419       INC                     _stamp                          ; inc stamp
 
                     LDW                     _stamp
                     SUBW                    _width
-                    BNE                     _endif_0x040d                   ; if stamp &&= width
+                    BNE                     _endif_0x042a                   ; if stamp &&= width
 
                     LDI                     0
                     STW                     _stamp                          ; stamp = 0
 
-_endif_0x040d       Return                                                  ; return
+_endif_0x042a       Return                                                  ; return
 
 _crashSound         PUSH                    
                     LDW                     _time
@@ -1360,10 +1372,14 @@ _crashSound         PUSH
                     LDI                     0
                     STW                     _foffs                          ; foffs = 0
 
+                    STW                     0xde
+                    LDWI                    _page_0x0400
+                    CALL                    giga_vAC
+_page_0x0400        LDW                     0xde
                     LDI                     1
                     STW                     _i                              ; for i=1 to 4
 
-_next_0x0445        LDW                     _i
+_next_0x0462        LDW                     _i
                     ST                      sndChannel + 1
                     LDW                     _freq
                     ADDW                    _foffs
@@ -1374,30 +1390,26 @@ _next_0x0445        LDW                     _i
                     STW                     sndWaveType
                     SoundOnV                                                ; sound on, i, freq + foffs, volume, 0
 
-                    STW                     0xde
-                    LDWI                    _page_0x0400
-                    CALL                    giga_vAC
-_page_0x0400        LDW                     0xde
                     LDW                     _foffs
                     ADDI                    100
                     STW                     _foffs                          ; foffs = foffs + 100
 
-                    ForNextFarInc           _i _next_0x0445 4               ; next i
+                    ForNextFarInc           _i _next_0x0462 4               ; next i
 
                     INC                     _time                           ; inc time
 
                     LDW                     _time
                     SUBI                    64
-                    BNE                     _endif_0x048b                   ; if time &&= 64
+                    JumpEQ                  _endif_0x04ad 11                ; if time &= 64
 
                     LDI                     0
                     STW                     _time
                     LDI                     0
                     STW                     _crash                          ; time = 0 : crash = 0
 
-_endif_0x048b       Return                                                  ; return
+_endif_0x04ad       Return                                                  ; return
 
-_end_0x048d         BRA                     _end_0x048d                     ; END
+_end_0x04af         BRA                     _end_0x04af                     ; END
 
 
 
@@ -1407,21 +1419,23 @@ _end_0x048d         BRA                     _end_0x048d                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
+romCheck            EQU     0xfd29
 realTimeProc        EQU     0xff01
 convertEqOp         EQU     0xfe0d
 convertNeOp         EQU     0xfe04
-convertLeOp         EQU     0xfd37
-convertGeOp         EQU     0xfd2e
-convertLtOp         EQU     0xfd25
-convertGtOp         EQU     0xfd1c
-scanlineMode        EQU     0xfd08
-resetVideoTable     EQU     0xf414
-initClearFuncs      EQU     0xfc1e
-clearVertBlinds     EQU     0xfb06
-drawHLine           EQU     0x14a2
-drawRectF           EQU     0xfa18
-draw_sprite         EQU     0xf314
-drawSprite          EQU     0xfc11
+convertLeOp         EQU     0xfd20
+convertGeOp         EQU     0xfd17
+convertLtOp         EQU     0xfd0e
+convertGtOp         EQU     0xfd05
+scanlineMode        EQU     0xfb2c
+resetVideoTable     EQU     0xf40b
+initClearFuncs      EQU     0xfc28
+clearVertBlinds     EQU     0xfa06
+drawHLine           EQU     0xf30f
+drawRectF           EQU     0xfb04
+draw_sprite         EQU     0xf214
+drawSprite          EQU     0xfc05
+soundAllOff         EQU     0xfc12
 soundOnV            EQU     0xf918
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
@@ -1438,6 +1452,24 @@ defaultLabel        EQU     register1
 lutLabs             EQU     register2
 lutAddrs            EQU     register3
 lutIndex            EQU     register8
+romType             EQU     register0
+romErrAddr          EQU     register1
+romErrPixel         EQU     register2
+
+
+romCheck            LD      giga_romType
+                    ANDI    0xFC
+                    SUBW    romType
+                    BGE     romC_return
+                    LDWI    giga_vram
+                    STW     romErrAddr
+                    
+romC_loop           LD      romErrPixel
+                    POKE    romErrAddr
+                    INC     romErrPixel
+                    BRA     romC_loop                       ; flash left hand corner pixel indicating rom error
+                    
+romC_return         RET                    
 
 
                     ; runs real time, (time sliced), code at regular intervals
@@ -1520,7 +1552,7 @@ drawLine_xy1        EQU     register0
 drawLine_xy2        EQU     register1
 drawLine_dxy1       EQU     register2
 drawLine_dxy2       EQU     register3
-drawLine_dx1        EQU     register4           ; register4 to register7 used for temp values, state will be invalidated during time slicing
+drawLine_dx1        EQU     register4                       ; register4 to register7 used for temp values, state will be invalidated during time slicing
 drawLine_dy1        EQU     register5
 drawLine_dx2        EQU     register6
 drawLine_dy2        EQU     register7
@@ -1611,11 +1643,6 @@ resetVT_loop        CALL    realTimeProcAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
-                    
-                    LDWI    giga_videoTop                       ; reset videoTop
-                    STW     register0
-                    LDI     0
-                    POKE    register0
                     POP
                     RET
 
@@ -1626,17 +1653,11 @@ initClearFuncs      PUSH
     
                     LDI     0x02                                ; starting cursor position
                     STW     cursorXY
-                    LDWI    0x7FFF
+                    LDWI    ON_BOTTOM_ROW_MSK
                     ANDW    miscFlags
                     STW     miscFlags                           ; reset on bottom row flag
-            
-                    LD      fgbgColour
-                    ST      giga_sysArg0
-                    ST      giga_sysArg0 + 1
-                    ST      giga_sysArg2
-                    ST      giga_sysArg2 + 1                    ; 4 pixels of fg colour
     
-                    LDWI    SYS_Draw4_30                        ; setup 4 pixel SYS routine
+                    LDWI    SYS_SetMemory_v2_54                 ; setup fill memory SYS routine
                     STW     giga_sysFn
                     POP
                     RET
@@ -1646,89 +1667,61 @@ initClearFuncs      PUSH
 clearVertBlinds     PUSH
                     LDWI    initClearFuncs
                     CALL    giga_vAC
-
-                    LDWI    giga_vram
-                    STW     giga_sysArg4
-                    LD      giga_sysArg4 + 1
-                    ST      top
-    
-clearVB_loop        CALL    realTimeProcAddr
+                    LD      fgbgColour
+                    ST      giga_sysArg1                        ; fill value
+                    LDI     giga_vram >> 8
+                    STW     top  
+                    
+clearVB_loopy       LDI     giga_xres
+                    ST      giga_sysArg0
+                    LDI     0
+                    ST      giga_sysArg2                        ; low start address
                     LD      top
-                    ST      giga_sysArg4 + 1                    ; top line
-                    SYS     30
+                    ST      giga_sysArg3                        ; top line
+                    SYS     54                                  ; fill memory
     
+                    LDI     giga_xres
+                    ST      giga_sysArg0
+                    LDI     0
+                    ST      giga_sysArg2                        ; low start address
                     LDWI    giga_yres - 1 + 16
                     SUBW    top
-                    ST      giga_sysArg4 + 1                    ; bottom line
-                    SYS     30
-    
-                    LD      giga_sysArg4
-                    ADDI    0x04
-                    ST      giga_sysArg4
-                    SUBI    giga_xres
-                    BLT     clearVB_loop
-    
-                    LDI     0
-                    ST      giga_sysArg4
+                    ST      giga_sysArg3                        ; bottom line
+                    SYS     54                                  ; fill memory
                     INC     top                                 ; next top line
+                    
+                    CALL    realTimeProcAddr
                     LD      top
                     SUBI    giga_yres / 2 + 8
-                    BLT     clearVB_loop
+                    BLT     clearVB_loopy
                     POP
                     RET
 
 
 
 drawHLine           PUSH
-                    LDW     drawHLine_x2
+                    LD      drawHLine_x1
+                    ST      giga_sysArg2                    ; low start address
+                    LD      drawHLine_x2
                     SUBW    drawHLine_x1
                     BGE     drawHL_cont
-                    LDW     drawHLine_x2
-                    STW     drawLine_tmp
-                    LDW     drawHLine_x1
-                    STW     drawHLine_x2
-                    LDW     drawLine_tmp
-                    STW     drawHLine_x1        ; if x2 < x1 then swap x2 with x1
+                    LD      drawHLine_x2
+                    ST      giga_sysArg2                    ; low start address
+                    LD      drawHLine_x1
+                    SUBW    drawHLine_x2
                     
-drawHL_cont         LD      drawHLine_x1
-                    ST      giga_sysArg4
+drawHL_cont         ADDI    1
+                    ST      giga_sysArg0                    ; count
+                    LD      fgbgColour + 1
+                    ST      giga_sysArg1                    ; fill value
                     LD      drawHLine_y1
                     ADDI    8
-                    ST      giga_sysArg4 + 1
-                    LDW     drawHLine_x2
-                    SUBW    drawHLine_x1
-                    SUBI    4
-                    BLT     drawHL_loop1
-                    
-                    LD      fgbgColour + 1
-                    ST      giga_sysArg0
-                    ST      giga_sysArg0 + 1
-                    ST      giga_sysArg2
-                    ST      giga_sysArg2 + 1    ; 4 pixels of fg colour
-                    LDWI    SYS_Draw4_30        ; setup 4 pixel SYS routine
+                    ST      giga_sysArg3                    ; high start address
+                    LDWI    SYS_SetMemory_v2_54
                     STW     giga_sysFn
-                    
-                    LDW     drawHLine_x2        
-                    SUBI    3
-                    STW     drawHLine_x4        ; 4 pixel chunks limit
-
-drawHL_loop0        SYS     30
+                    SYS     54                              ; fill memory
                     CALL    realTimeProcAddr
-                    LD      giga_sysArg4
-                    ADDI    4
-                    ST      giga_sysArg4
-                    SUBW    drawHLine_x4
-                    BLT     drawHL_loop0        ; all 4 pixel chunks
-                    
-drawHL_loop1        LD      fgbgColour + 1
-                    POKE    giga_sysArg4
-                    INC     giga_sysArg4
-                    LD      giga_sysArg4
-                    BEQ     drawHL_exit
-                    SUBW    drawHLine_x2
-                    BLE     drawHL_loop1        ; remaining pixels
-                    
-drawHL_exit         POP
+                    POP
                     RET
 
 
@@ -1741,7 +1734,7 @@ drawRectF           PUSH
                     LDW     drawRectF_y1
                     STW     drawRectF_y2
                     LDW     drawLine_tmp
-                    STW     drawRectF_y1        ; if y2 < y1 then swap y2 with y1
+                    STW     drawRectF_y1                    ;if y2 < y1 then swap y2 with y1
                     
 drawRF_loop         LDW     drawRectF_y1
                     STW     drawHLine_y1
@@ -1798,16 +1791,28 @@ drawSprite          PUSH
                     RET
 
 
-numChannels         EQU     register0
 audioAddr           EQU     register1
 waveType            EQU     register2
-midiNote            EQU     register4                       ; register4 to register7 are the only free registers during time slicing, (state is invalidated each time slice)
+midiNote            EQU     register4                       ; register4 to register7 are the only free registers during time slicing
 midiCommand         EQU     register5
 midiPtr             EQU     register6
 sndChannel          EQU     register8
 sndFrequency        EQU     register9
 sndVolume           EQU     register10
 sndWaveType         EQU     register11
+
+
+soundAllOff         LDWI    0x01FC
+                    STW     sndChannel
+                    LDI     0
+                    DOKE    sndChannel                      ; turn off channel 0
+                    INC     sndChannel + 1      
+                    DOKE    sndChannel                      ; turn off channel 1
+                    INC     sndChannel + 1      
+                    DOKE    sndChannel                      ; turn off channel 2
+                    INC     sndChannel + 1      
+                    DOKE    sndChannel                      ; turn off channel 3
+                    RET
 
 
 soundOnV            LDWI    SYS_LSRW1_48

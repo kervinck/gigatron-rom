@@ -20,7 +20,7 @@ drawLine_xy1        EQU     register0
 drawLine_xy2        EQU     register1
 drawLine_dxy1       EQU     register2
 drawLine_dxy2       EQU     register3
-drawLine_dx1        EQU     register4           ; register4 to register7 used for temp values, state will be invalidated during time slicing
+drawLine_dx1        EQU     register4                       ; register4 to register7 used for temp values, state will be invalidated during time slicing
 drawLine_dy1        EQU     register5
 drawLine_dx2        EQU     register6
 drawLine_dy2        EQU     register7
@@ -108,7 +108,7 @@ waitVBlank          LD      giga_videoY
 %ENDS
 
 %SUB                readPixel
-readPixel           LD      readPixel_xy + 1    ; xy = peek(256+2*y)*256 + x
+readPixel           LD      readPixel_xy + 1                ; xy = peek(256+2*y)*256 + x
                     LSLW
                     INC     giga_vAC + 1
                     PEEK
@@ -119,7 +119,7 @@ readPixel           LD      readPixel_xy + 1    ; xy = peek(256+2*y)*256 + x
 %ENDS
 
 %SUB                drawPixel
-drawPixel           LD      drawPixel_xy + 1    ; xy = peek(256+2*y)*256 + x
+drawPixel           LD      drawPixel_xy + 1                ; xy = peek(256+2*y)*256 + x
                     LSLW
                     INC     giga_vAC + 1
                     PEEK
@@ -139,13 +139,13 @@ drawHLine           PUSH
                     LDW     drawHLine_x1
                     STW     drawHLine_x2
                     LDW     drawLine_tmp
-                    STW     drawHLine_x1        ; if x2 < x1 then swap x2 with x1
+                    STW     drawHLine_x1                    ; if x2 < x1 then swap x2 with x1
                     
 drawHL_cont         LD      drawHLine_x1
                     ST      giga_sysArg4
                     LD      drawHLine_y1
                     ADDI    8
-                    ST      giga_sysArg4 + 1
+                    ST      giga_sysArg5
                     LDW     drawHLine_x2
                     SUBW    drawHLine_x1
                     SUBI    4
@@ -153,15 +153,15 @@ drawHL_cont         LD      drawHLine_x1
                     
                     LD      fgbgColour + 1
                     ST      giga_sysArg0
-                    ST      giga_sysArg0 + 1
+                    ST      giga_sysArg1
                     ST      giga_sysArg2
-                    ST      giga_sysArg2 + 1    ; 4 pixels of fg colour
-                    LDWI    SYS_Draw4_30        ; setup 4 pixel SYS routine
+                    ST      giga_sysArg3                    ; 4 pixels of fg colour
+                    LDWI    SYS_Draw4_30                    ; setup 4 pixel SYS routine
                     STW     giga_sysFn
                     
                     LDW     drawHLine_x2        
                     SUBI    3
-                    STW     drawHLine_x4        ; 4 pixel chunks limit
+                    STW     drawHLine_x4                    ; 4 pixel chunks limit
 
 drawHL_loop0        SYS     30
                     CALL    realTimeProcAddr
@@ -169,7 +169,7 @@ drawHL_loop0        SYS     30
                     ADDI    4
                     ST      giga_sysArg4
                     SUBW    drawHLine_x4
-                    BLT     drawHL_loop0        ; all 4 pixel chunks
+                    BLT     drawHL_loop0                    ; all 4 pixel chunks
                     
 drawHL_loop1        LD      fgbgColour + 1
                     POKE    giga_sysArg4
@@ -177,7 +177,7 @@ drawHL_loop1        LD      fgbgColour + 1
                     LD      giga_sysArg4
                     BEQ     drawHL_exit
                     SUBW    drawHLine_x2
-                    BLE     drawHL_loop1        ; remaining pixels
+                    BLE     drawHL_loop1                    ; remaining pixels
                     
 drawHL_exit         POP
                     RET
@@ -193,14 +193,14 @@ drawVLine           PUSH
                     LDW     drawVLine_y1
                     STW     drawVLine_y2
                     LDW     drawLine_tmp
-                    STW     drawVLine_y1        ; if y2 < y1 then swap y2 with y1
+                    STW     drawVLine_y1                    ; if y2 < y1 then swap y2 with y1
                     
 drawVL_cont         LD      drawVLine_x1
                     ST      giga_sysArg4
                     LD      drawVLine_y1
                     ADDI    8
                     ST      drawVLine_y1
-                    ST      giga_sysArg4 + 1
+                    ST      giga_sysArg5
                     LDW     drawVLine_y2
                     ADDI    8
                     ST      drawVLine_y2
@@ -211,34 +211,34 @@ drawVL_cont         LD      drawVLine_x1
                     LDW     fgbgColour
                     STW     giga_sysArg0
                     LDWI    SYS_VDrawBits_134
-                    STW     giga_sysFn          ; setup 8 pixel SYS routine
+                    STW     giga_sysFn                      ; setup 8 pixel SYS routine
                     
                     LDW     drawVLine_y2
                     SUBI    7
-                    STW     drawVLine_y8        ; 8 pixel chunks limit
+                    STW     drawVLine_y8                    ; 8 pixel chunks limit
 
 drawVL_loop0        LDI     0xFF
-                    ST      giga_sysArg2        ; 8 pixels of fg and bg colour
-                    SYS     134                 ; SYS_VDrawBits_134, 270 - 134/2 = 0xCB
+                    ST      giga_sysArg2                    ; 8 pixels of fg and bg colour
+                    SYS     134                             ; SYS_VDrawBits_134, 270 - 134/2 = 0xCB
                     CALL    realTimeProcAddr
-                    LD      giga_sysArg4 + 1
+                    LD      giga_sysArg5
                     ADDI    8
-                    ST      giga_sysArg4 + 1
+                    ST      giga_sysArg5
                     SUBW    drawVLine_y8
-                    BLT     drawVL_loop0        ; all 8 pixel chunks
+                    BLT     drawVL_loop0                    ; all 8 pixel chunks
                     
 drawVL_loop1        LD      fgbgColour + 1
                     POKE    giga_sysArg4
-                    INC     giga_sysArg4 + 1
-                    LD      giga_sysArg4 + 1
+                    INC     giga_sysArg5
+                    LD      giga_sysArg5
                     SUBW    drawVLine_y2
-                    BLE     drawVL_loop1        ; remaining pixels
+                    BLE     drawVL_loop1                    ; remaining pixels
                     POP
                     RET
 %ENDS
 
 %SUB                drawLine
-drawLine            PUSH                        ; matches drawLineLoop's POP
+drawLine            PUSH                                    ; matches drawLineLoop's POP
                     LDI     1
                     STW     drawLine_dx1
                     STW     drawLine_dx2
@@ -249,34 +249,34 @@ drawLine            PUSH                        ; matches drawLineLoop's POP
                     LDWI    0x8000
                     STW     drawLine_tmp
                     
-                    LDW     drawLine_x2         ; sx = x2 - x1
+                    LDW     drawLine_x2                     ; sx = x2 - x1
                     SUBW    drawLine_x1
                     STW     drawLine_sx
                     ANDW    drawLine_tmp        
                     BEQ     drawL_dy
                     LDWI    -1
                     STW     drawLine_dx1        
-                    STW     drawLine_dx2        ; dx1 = dx2 = (sx & 0x8000) ? -1 : 1
-                    LDI     0                   ; sx = (sx & 0x8000) ? 0 - sx : sx
+                    STW     drawLine_dx2                    ; dx1 = dx2 = (sx & 0x8000) ? -1 : 1
+                    LDI     0                               ; sx = (sx & 0x8000) ? 0 - sx : sx
                     SUBW    drawLine_sx
                     STW     drawLine_sx                
                     
 drawL_dy            LDW     drawLine_y2
                     SUBW    drawLine_y1
                     STW     drawLine_sy
-                    STW     drawLine_h          ; h = sy
+                    STW     drawLine_h                      ; h = sy
                     ANDW    drawLine_tmp
                     BEQ     drawL_ext
                     
                     LDWI    -1
-                    STW     drawLine_dy1        ; dy1 = (sy & 0x8000) ? -1 : 1
+                    STW     drawLine_dy1                    ; dy1 = (sy & 0x8000) ? -1 : 1
                     LDI     0                   
                     SUBW    drawLine_sy
-                    STW     drawLine_sy         ; sy = (sy & 0x8000) ? 0 - sy : sy
+                    STW     drawLine_sy                     ; sy = (sy & 0x8000) ? 0 - sy : sy
                     SUBW    drawLine_sx
                     BLE     drawL_ext           
                     LDW     drawLine_dy1
-                    STW     drawLine_dy2        ; if(sx < sy) dy2 = -1
+                    STW     drawLine_dy2                    ; if(sx < sy) dy2 = -1
     
 drawL_ext           LDWI    drawLineLoadXY
                     CALL    giga_vAC
@@ -289,25 +289,25 @@ drawLineExt         LDW     drawLine_sy
                     SUBW    drawLine_sx
                     BLE     drawL_num
                     LDI     0
-                    STW     drawLine_dx2        ; if(sx < sy) dx2 = 0
+                    STW     drawLine_dx2                    ; if(sx < sy) dx2 = 0
                     LDW     drawLine_sy       
                     STW     drawLine_tmp
                     LDW     drawLine_sx
                     STW     drawLine_sy
                     LDW     drawLine_tmp
-                    STW     drawLine_sx         ; swap sx with sy
+                    STW     drawLine_sx                     ; swap sx with sy
                     LDW     drawLine_h
                     BLE     drawL_num
                     LDI     1
-                    STW     drawLine_dy2        ; if(h > 0) dy2 = 1
+                    STW     drawLine_dy2                    ; if(h > 0) dy2 = 1
     
 drawL_num           LDWI    SYS_LSRW1_48
                     STW     giga_sysFn          
                     LDW     drawLine_sx
                     SYS     48
                     ADDI    1
-                    STW     drawLine_num        ; numerator = sx>>1
-                    STW     drawLine_count      ; for(count=sx>>1; counti>=0; --i)
+                    STW     drawLine_num                    ; numerator = sx>>1
+                    STW     drawLine_count                  ; for(count=sx>>1; counti>=0; --i)
                     
                     LDWI    drawLineLoadDXY
                     CALL    giga_vAC
@@ -317,39 +317,39 @@ drawL_num           LDWI    SYS_LSRW1_48
 
 %SUB                drawLineLoop
 drawLineLoop        LD      fgbgColour + 1
-                    POKE    drawLine_xy1        ; plot start pixel
-                    POKE    drawLine_xy2        ; plot end pixel, (meet in middle)
+                    POKE    drawLine_xy1                    ; plot start pixel
+                    POKE    drawLine_xy2                    ; plot end pixel, (meet in middle)
                     
-                    LDW     drawLine_num        ; numerator += sy
+                    LDW     drawLine_num                    ; numerator += sy
                     ADDW    drawLine_sy
                     STW     drawLine_num
                     SUBW    drawLine_sx
-                    BLE     drawL_flip          ; if(numerator <= sx) goto flip
-                    STW     drawLine_num        ; numerator -= sx
+                    BLE     drawL_flip                      ; if(numerator <= sx) goto flip
+                    STW     drawLine_num                    ; numerator -= sx
                     
                     LDW     drawLine_xy1
                     ADDW    drawLine_dxy1
-                    STW     drawLine_xy1        ; xy1 += dxy1
+                    STW     drawLine_xy1                    ; xy1 += dxy1
                     
                     LDW     drawLine_xy2
                     SUBW    drawLine_dxy1
-                    STW     drawLine_xy2        ; xy2 -= dxy1
+                    STW     drawLine_xy2                    ; xy2 -= dxy1
                     BRA     drawL_count
                     
 drawL_flip          LDW     drawLine_xy1        
                     ADDW    drawLine_dxy2
-                    STW     drawLine_xy1        ; xy1 += dxy2
+                    STW     drawLine_xy1                    ; xy1 += dxy2
                     
                     LDW     drawLine_xy2        
                     SUBW    drawLine_dxy2
-                    STW     drawLine_xy2        ; xy2 -= dxy2
+                    STW     drawLine_xy2                    ; xy2 -= dxy2
                     
 drawL_count         CALL    realTimeProcAddr
                     LDW     drawLine_count
                     SUBI    0x01
                     STW     drawLine_count
                     BGT     drawLineLoop
-                    POP                         ; matches drawLine's PUSH
+                    POP                                     ;matches drawLine's PUSH
                     RET
 %ENDS   
     
@@ -358,13 +358,13 @@ drawLineLoadXY      LD      drawLine_x1
                     ST      drawLine_xy1
                     LD      drawLine_y1
                     ADDI    8
-                    ST      drawLine_xy1 + 1    ; xy1 = x1 | ((y1+8)<<8)
+                    ST      drawLine_xy1 + 1                ;xy1 = x1 | ((y1+8)<<8)
                     
                     LD      drawLine_x2
                     ST      drawLine_xy2
                     LD      drawLine_y2
                     ADDI    8
-                    ST      drawLine_xy2 + 1    ; xy2 = x2 | ((y2+8)<<8)
+                    ST      drawLine_xy2 + 1                ;xy2 = x2 | ((y2+8)<<8)
                     RET
                     
 drawLineLoadDXY     LDWI    SYS_LSLW8_24
@@ -372,17 +372,17 @@ drawLineLoadDXY     LDWI    SYS_LSLW8_24
                     LDW     drawLine_dy1
                     SYS     28
                     ADDW    drawLine_dx1
-                    STW     drawLine_dxy1       ; dxy1 = dx1 + (dy1<<8)
+                    STW     drawLine_dxy1                   ;dxy1 = dx1 + (dy1<<8)
     
                     LDW     drawLine_dy2
                     SYS     28
                     ADDW    drawLine_dx2
-                    STW     drawLine_dxy2       ; dxy2 = dx2 + (dy2<<8)
+                    STW     drawLine_dxy2                   ;dxy2 = dx2 + (dy2<<8)
                     RET
 %ENDS   
 
 %SUB                drawVTLine
-drawVTLine          PUSH                        ; matches drawVTLineLoop's POP
+drawVTLine          PUSH                                    ;matches drawVTLineLoop's POP
                     LDI     1
                     STW     drawLine_dx1
                     STW     drawLine_dx2
@@ -393,34 +393,34 @@ drawVTLine          PUSH                        ; matches drawVTLineLoop's POP
                     LDWI    0x8000
                     STW     drawLine_tmp
                     
-                    LDW     drawLine_x2         ; sx = x2 - x1
+                    LDW     drawLine_x2                     ;sx = x2 - x1
                     SUBW    drawLine_x1
                     STW     drawLine_sx
                     ANDW    drawLine_tmp        
                     BEQ     drawVTL_dy
                     LDWI    -1
                     STW     drawLine_dx1        
-                    STW     drawLine_dx2        ; dx1 = dx2 = (sx & 0x8000) ? -1 : 1
-                    LDI     0                   ; sx = (sx & 0x8000) ? 0 - sx : sx
+                    STW     drawLine_dx2                    ;dx1 = dx2 = (sx & 0x8000) ? -1 : 1
+                    LDI     0                               ;sx = (sx & 0x8000) ? 0 - sx : sx
                     SUBW    drawLine_sx
                     STW     drawLine_sx                
                     
 drawVTL_dy          LDW     drawLine_y2
                     SUBW    drawLine_y1
                     STW     drawLine_sy
-                    STW     drawLine_h          ; h = sy
+                    STW     drawLine_h                      ;h = sy
                     ANDW    drawLine_tmp
                     BEQ     drawVTL_ext
                     
                     LDWI    -1
-                    STW     drawLine_dy1        ; dy1 = (sy & 0x8000) ? -1 : 1
+                    STW     drawLine_dy1                    ;dy1 = (sy & 0x8000) ? -1 : 1
                     LDI     0                   
                     SUBW    drawLine_sy
-                    STW     drawLine_sy         ; sy = (sy & 0x8000) ? 0 - sy : sy
+                    STW     drawLine_sy                     ;sy = (sy & 0x8000) ? 0 - sy : sy
                     SUBW    drawLine_sx
                     BLE     drawVTL_ext           
                     LDW     drawLine_dy1
-                    STW     drawLine_dy2        ; if(sx < sy) dy2 = -1
+                    STW     drawLine_dy2                    ;if(sx < sy) dy2 = -1
     
 drawVTL_ext         LDWI    drawVTLineLoadXY
                     CALL    giga_vAC
@@ -433,25 +433,25 @@ drawVTLineExt       LDW     drawLine_sy
                     SUBW    drawLine_sx
                     BLE     drawVTL_num
                     LDI     0
-                    STW     drawLine_dx2        ; if(sx < sy) dx2 = 0
+                    STW     drawLine_dx2                    ;if(sx < sy) dx2 = 0
                     LDW     drawLine_sy       
                     STW     drawLine_tmp
                     LDW     drawLine_sx
                     STW     drawLine_sy
                     LDW     drawLine_tmp
-                    STW     drawLine_sx         ; swap sx with sy
+                    STW     drawLine_sx                     ;swap sx with sy
                     LDW     drawLine_h
                     BLE     drawVTL_num
                     LDI     1
-                    STW     drawLine_dy2        ; if(h > 0) dy2 = 1
+                    STW     drawLine_dy2                    ;if(h > 0) dy2 = 1
     
 drawVTL_num         LDWI    SYS_LSRW1_48
                     STW     giga_sysFn          
                     LDW     drawLine_sx
                     SYS     48
                     ADDI    1
-                    STW     drawLine_num        ; numerator = sx>>1
-                    STW     drawLine_count      ; for(count=sx>>1; counti>=0; --i)
+                    STW     drawLine_num                    ;numerator = sx>>1
+                    STW     drawLine_count                  ;for(count=sx>>1; counti>=0; --i)
                     
                     LDWI    drawVTLineLoadDXY
                     CALL    giga_vAC
@@ -463,43 +463,43 @@ drawVTL_num         LDWI    SYS_LSRW1_48
 drawVTLineLoop      LDW     drawLine_xy1
                     STW     drawPixel_xy
                     LDWI    drawPixel
-                    CALL    giga_vAC            ; plot start pixel
+                    CALL    giga_vAC                        ;plot start pixel
 
                     LDW     drawLine_xy2
                     STW     drawPixel_xy
                     LDWI    drawPixel
-                    CALL    giga_vAC            ; plot end pixel, (meet in middle)
+                    CALL    giga_vAC                        ;plot end pixel, (meet in middle)
                     
-                    LDW     drawLine_num        ; numerator += sy
+                    LDW     drawLine_num                    ;numerator += sy
                     ADDW    drawLine_sy
                     STW     drawLine_num
                     SUBW    drawLine_sx
-                    BLE     drawVTL_flip        ; if(numerator <= sx) goto flip
-                    STW     drawLine_num        ; numerator -= sx
+                    BLE     drawVTL_flip                    ;if(numerator <= sx) goto flip
+                    STW     drawLine_num                    ;numerator -= sx
                     
                     LDW     drawLine_xy1
                     ADDW    drawLine_dxy1
-                    STW     drawLine_xy1        ; xy1 += dxy1
+                    STW     drawLine_xy1                    ;xy1 += dxy1
                     
                     LDW     drawLine_xy2
                     SUBW    drawLine_dxy1
-                    STW     drawLine_xy2        ; xy2 -= dxy1
+                    STW     drawLine_xy2                    ;xy2 -= dxy1
                     BRA     drawVTL_count
                     
 drawVTL_flip        LDW     drawLine_xy1        
                     ADDW    drawLine_dxy2
-                    STW     drawLine_xy1        ; xy1 += dxy2
+                    STW     drawLine_xy1                    ;xy1 += dxy2
                     
                     LDW     drawLine_xy2        
                     SUBW    drawLine_dxy2
-                    STW     drawLine_xy2        ; xy2 -= dxy2
+                    STW     drawLine_xy2                    ;xy2 -= dxy2
                     
 drawVTL_count       CALL    realTimeProcAddr
                     LDW     drawLine_count
                     SUBI    0x01
                     STW     drawLine_count
                     BGT     drawVTLineLoop
-                    POP                         ; matches drawVTLine's PUSH
+                    POP                                     ;matches drawVTLine's PUSH
                     RET
 %ENDS
 
@@ -507,12 +507,12 @@ drawVTL_count       CALL    realTimeProcAddr
 drawVTLineLoadXY    LD      drawLine_x1
                     ST      drawLine_xy1
                     LD      drawLine_y1
-                    ST      drawLine_xy1 + 1    ; xy1 = x1 | (y1<<8)
+                    ST      drawLine_xy1 + 1                ;xy1 = x1 | (y1<<8)
                     
                     LD      drawLine_x2
                     ST      drawLine_xy2
                     LD      drawLine_y2
-                    ST      drawLine_xy2 + 1    ; xy2 = x2 | (y2<<8)
+                    ST      drawLine_xy2 + 1                ;xy2 = x2 | (y2<<8)
                     RET
                     
 drawVTLineLoadDXY   LDWI    SYS_LSLW8_24
@@ -520,12 +520,12 @@ drawVTLineLoadDXY   LDWI    SYS_LSLW8_24
                     LDW     drawLine_dy1
                     SYS     28
                     ADDW    drawLine_dx1
-                    STW     drawLine_dxy1       ; dxy1 = dx1 + (dy1<<8)
+                    STW     drawLine_dxy1                   ;dxy1 = dx1 + (dy1<<8)
     
                     LDW     drawLine_dy2
                     SYS     28
                     ADDW    drawLine_dx2
-                    STW     drawLine_dxy2       ; dxy2 = dx2 + (dy2<<8)
+                    STW     drawLine_dxy2                   ;dxy2 = dx2 + (dy2<<8)
                     RET
 %ENDS   
 
@@ -620,7 +620,7 @@ drawCircleExt1      PUSH
                     POKE    drawCircle_a
                     
                     LDWI    drawCircleExt2
-                    CALL    giga_vAC            ; doesn't return to here
+                    CALL    giga_vAC                        ;doesn't return to here
 %ENDS
                     
 %SUB                drawCircleExt2
@@ -747,7 +747,7 @@ drawRectF           PUSH
                     LDW     drawRectF_y1
                     STW     drawRectF_y2
                     LDW     drawLine_tmp
-                    STW     drawRectF_y1        ; if y2 < y1 then swap y2 with y1
+                    STW     drawRectF_y1                    ;if y2 < y1 then swap y2 with y1
                     
 drawRF_loop         LDW     drawRectF_y1
                     STW     drawHLine_y1

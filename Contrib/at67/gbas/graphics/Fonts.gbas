@@ -1,5 +1,6 @@
 _runtimePath_ "../runtime"
 _runtimeStart_ &h7FFF
+_codeRomType_ ROMv3
 
 load font, ../../images/gbas/Fonts/Bold/Bold.tga, 0, &h2A00
 load font, ../../images/gbas/Fonts/Adv/Adv.tga, 1, &h0C00
@@ -11,17 +12,16 @@ set FGBGCOLOUR, &h3F00
 cls
 
 for i=0 to 4
-    set fontId, i
+    set FONTID, i
     print "ABCDEFGHIJKLMNOPQRSTUVWXYZ !?. 0123456789"
 next i
 
-s$ = "The font routines are integrated into gtBASIC correctly!"
+s$ = "Fonts can be used intrinsically just like the default system font!"
 
-for i=1 to 10
-    r = rnd(5)
-    set fontId, r
+for i=0 to 10
+    set FONTID, i % 5
     print s$
-    wait 120
+    wait 60
 next i
 
 scroll off 'stop text scrolling
@@ -29,7 +29,7 @@ cls init 'initialise video indirection table
 
 forever:
     r = rnd(5)
-    set fontId, r
+    set FONTID, r
     x = rnd(136) : y = rnd(112)
     at x,y : print "Text"
 goto forever

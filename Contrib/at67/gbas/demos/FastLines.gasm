@@ -25,6 +25,12 @@ midiDelay           EQU                     register0 + 0x26
 miscFlags           EQU                     register0 + 0x28
 fontLutId           EQU                     0x00e0
 
+; Internal Constants
+ENABLE_SCROLL_BIT   EQU                     0x0001
+ON_BOTTOM_ROW_BIT   EQU                     0x0002
+ENABLE_SCROLL_MSK   EQU                     0xfffe
+ON_BOTTOM_ROW_MSK   EQU                     0xfffd
+
 ; Internal buffers
 textWorkArea        EQU                     0x7fa0
 
@@ -35,14 +41,14 @@ textWorkArea        EQU                     0x7fa0
 
 ; Labels
 _entryPoint_        EQU                     0x0200
-_loop               EQU                     0x0265
-_math               EQU                     0x034d
-_next_0x026b        EQU                     0x0269
-_next_0x02ab        EQU                     0x029d
-_next_0x02e7        EQU                     0x02d1
+_loop               EQU                     0x026e
+_math               EQU                     0x0356
+_next_0x0274        EQU                     0x0272
+_next_0x02b4        EQU                     0x02a6
+_next_0x02f0        EQU                     0x02da
 _page_0x0300        EQU                     0x0300
-_next_0x0327        EQU                     0x0314
-_end_0x03a8         EQU                     0x036b
+_next_0x0330        EQU                     0x031d
+_end_0x03b1         EQU                     0x0374
 
 ; Variables
 _x                  EQU                     0x0030
@@ -157,12 +163,16 @@ def_bytes_0x40a0    DB                      122 146 38 144 26 145 65 147 62 122 
 ; Define Images
 
 ; Define Sprites
+
 ; Define Fonts
 
 ; Lookup Tables
 
 ; Code
-_entryPoint_        InitRealTimeProc        
+_entryPoint_        LDI                     0x28
+                    STW                     romType
+                    RomCheck                
+                    InitRealTimeProc        
                     InitEqOp                
                     InitNeOp                
                     InitLeOp                
@@ -189,7 +199,7 @@ _entryPoint_        InitRealTimeProc
 _loop               LDI                     0
                     STW                     _i                              ; for i=0 to 19
 
-_next_0x026b        LDWI                    _math
+_next_0x0274        LDWI                    _math
                     CALL                    giga_vAC                        ; gosub math
 
                     LD                      fgbgColour + 1
@@ -207,12 +217,12 @@ _next_0x026b        LDWI                    _math
                     STW                     drawLine_y2
                     DrawLine                                                ; line x,119, 159,119-y
 
-                    ForNextFarInc           _i _next_0x026b 19              ; next i
+                    ForNextFarInc           _i _next_0x0274 19              ; next i
 
                     LDI                     19
                     STW                     _i                              ; for i=19 to 0
 
-_next_0x02ab        LDWI                    _math
+_next_0x02b4        LDWI                    _math
                     CALL                    giga_vAC                        ; gosub math
 
                     LD                      fgbgColour + 1
@@ -229,12 +239,12 @@ _next_0x02ab        LDWI                    _math
                     STW                     drawLine_y2
                     DrawLine                                                ; line 159,y, x,0
 
-                    ForNextFarDec           _i _next_0x02ab 0               ; next i
+                    ForNextFarDec           _i _next_0x02b4 0               ; next i
 
                     LDI                     0
                     STW                     _i                              ; for i=0 to 19
 
-_next_0x02e7        LDWI                    _math
+_next_0x02f0        LDWI                    _math
                     CALL                    giga_vAC                        ; gosub math
 
                     LD                      fgbgColour + 1
@@ -248,20 +258,20 @@ _next_0x02e7        LDWI                    _math
                     LDI                     159
                     SUBW                    _x
                     STW                     drawLine_x2
-                    LDI                     0
-                    STW                     drawLine_y2
-                    DrawLine                                                ; line 0,y, 159-x,0
-
                     STW                     0xde
                     LDWI                    _page_0x0300
                     CALL                    giga_vAC
 _page_0x0300        LDW                     0xde
-                    ForNextFarInc           _i _next_0x02e7 19              ; next i
+                    LDI                     0
+                    STW                     drawLine_y2
+                    DrawLine                                                ; line 0,y, 159-x,0
+
+                    ForNextFarInc           _i _next_0x02f0 19              ; next i
 
                     LDI                     19
                     STW                     _i                              ; for i=19 to 0
 
-_next_0x0327        LDWI                    _math
+_next_0x0330        LDWI                    _math
                     CALL                    giga_vAC                        ; gosub math
 
                     LD                      fgbgColour + 1
@@ -280,7 +290,7 @@ _next_0x0327        LDWI                    _math
                     STW                     drawLine_y2
                     DrawLine                                                ; line 159-x,119, 0,119-y
 
-                    ForNextFarDec           _i _next_0x0327 0               ; next i
+                    ForNextFarDec           _i _next_0x0330 0               ; next i
 
                     LDWI                    _loop
                     CALL                    giga_vAC                        ; goto  loop
@@ -305,7 +315,7 @@ _math               PUSH
 
                     Return                                                  ; return
 
-_end_0x03a8         BRA                     _end_0x03a8                     ; END
+_end_0x03b1         BRA                     _end_0x03b1                     ; END
 
 
 
@@ -315,24 +325,25 @@ _end_0x03a8         BRA                     _end_0x03a8                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeProc        EQU     0x7ef6
-convertEqOp         EQU     0x7eed
-convertNeOp         EQU     0x7ee4
-convertLeOp         EQU     0x7edb
-convertGeOp         EQU     0x7ed2
-convertLtOp         EQU     0x7ec9
-convertGtOp         EQU     0x7ec0
-scanlineMode        EQU     0x7eac
-resetVideoTable     EQU     0x79d7
-initClearFuncs      EQU     0x7ddd
-clearVertBlinds     EQU     0x7da3
-drawLine            EQU     0x7aaa
+romCheck            EQU     0x7ee8
+realTimeProc        EQU     0x7edf
+convertEqOp         EQU     0x7ed6
+convertNeOp         EQU     0x7ecd
+convertLeOp         EQU     0x7ec4
+convertGeOp         EQU     0x7ebb
+convertLtOp         EQU     0x7eb2
+convertGtOp         EQU     0x7ea9
+scanlineMode        EQU     0x7dd3
+resetVideoTable     EQU     0x7db4
+initClearFuncs      EQU     0x7de7
+clearVertBlinds     EQU     0x7cc5
+drawLine            EQU     0x79aa
 drawLineExt         EQU     0x78c6
 drawLineLoop        EQU     0x77c5
-drawLineLoadXY      EQU     0x79ac
-resetAudio          EQU     0x7cc6
-playMidi            EQU     0x7baf
-midiStartNote       EQU     0x76b3
+drawLineLoadXY      EQU     0x76d4
+resetAudio          EQU     0x7bca
+playMidi            EQU     0x7aaf
+midiStartNote       EQU     0x75b3
 realTimeProcAddr    EQU     0x00dc
 convertEqOpAddr     EQU     0x00d0
 convertNeOpAddr     EQU     0x00d2
@@ -348,6 +359,24 @@ defaultLabel        EQU     register1
 lutLabs             EQU     register2
 lutAddrs            EQU     register3
 lutIndex            EQU     register8
+romType             EQU     register0
+romErrAddr          EQU     register1
+romErrPixel         EQU     register2
+
+
+romCheck            LD      giga_romType
+                    ANDI    0xFC
+                    SUBW    romType
+                    BGE     romC_return
+                    LDWI    giga_vram
+                    STW     romErrAddr
+                    
+romC_loop           LD      romErrPixel
+                    POKE    romErrAddr
+                    INC     romErrPixel
+                    BRA     romC_loop                       ; flash left hand corner pixel indicating rom error
+                    
+romC_return         RET                    
 
 
                     ; runs real time, (time sliced), code at regular intervals
@@ -430,7 +459,7 @@ drawLine_xy1        EQU     register0
 drawLine_xy2        EQU     register1
 drawLine_dxy1       EQU     register2
 drawLine_dxy2       EQU     register3
-drawLine_dx1        EQU     register4           ; register4 to register7 used for temp values, state will be invalidated during time slicing
+drawLine_dx1        EQU     register4                       ; register4 to register7 used for temp values, state will be invalidated during time slicing
 drawLine_dy1        EQU     register5
 drawLine_dx2        EQU     register6
 drawLine_dy2        EQU     register7
@@ -521,11 +550,6 @@ resetVT_loop        CALL    realTimeProcAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
-                    
-                    LDWI    giga_videoTop                       ; reset videoTop
-                    STW     register0
-                    LDI     0
-                    POKE    register0
                     POP
                     RET
 
@@ -536,17 +560,11 @@ initClearFuncs      PUSH
     
                     LDI     0x02                                ; starting cursor position
                     STW     cursorXY
-                    LDWI    0x7FFF
+                    LDWI    ON_BOTTOM_ROW_MSK
                     ANDW    miscFlags
                     STW     miscFlags                           ; reset on bottom row flag
-            
-                    LD      fgbgColour
-                    ST      giga_sysArg0
-                    ST      giga_sysArg0 + 1
-                    ST      giga_sysArg2
-                    ST      giga_sysArg2 + 1                    ; 4 pixels of fg colour
     
-                    LDWI    SYS_Draw4_30                        ; setup 4 pixel SYS routine
+                    LDWI    SYS_SetMemory_v2_54                 ; setup fill memory SYS routine
                     STW     giga_sysFn
                     POP
                     RET
@@ -556,41 +574,40 @@ initClearFuncs      PUSH
 clearVertBlinds     PUSH
                     LDWI    initClearFuncs
                     CALL    giga_vAC
-
-                    LDWI    giga_vram
-                    STW     giga_sysArg4
-                    LD      giga_sysArg4 + 1
-                    ST      top
-    
-clearVB_loop        CALL    realTimeProcAddr
+                    LD      fgbgColour
+                    ST      giga_sysArg1                        ; fill value
+                    LDI     giga_vram >> 8
+                    STW     top  
+                    
+clearVB_loopy       LDI     giga_xres
+                    ST      giga_sysArg0
+                    LDI     0
+                    ST      giga_sysArg2                        ; low start address
                     LD      top
-                    ST      giga_sysArg4 + 1                    ; top line
-                    SYS     30
+                    ST      giga_sysArg3                        ; top line
+                    SYS     54                                  ; fill memory
     
+                    LDI     giga_xres
+                    ST      giga_sysArg0
+                    LDI     0
+                    ST      giga_sysArg2                        ; low start address
                     LDWI    giga_yres - 1 + 16
                     SUBW    top
-                    ST      giga_sysArg4 + 1                    ; bottom line
-                    SYS     30
-    
-                    LD      giga_sysArg4
-                    ADDI    0x04
-                    ST      giga_sysArg4
-                    SUBI    giga_xres
-                    BLT     clearVB_loop
-    
-                    LDI     0
-                    ST      giga_sysArg4
+                    ST      giga_sysArg3                        ; bottom line
+                    SYS     54                                  ; fill memory
                     INC     top                                 ; next top line
+                    
+                    CALL    realTimeProcAddr
                     LD      top
                     SUBI    giga_yres / 2 + 8
-                    BLT     clearVB_loop
+                    BLT     clearVB_loopy
                     POP
                     RET
 
 
 
 
-drawLine            PUSH                        ; matches drawLineLoop's POP
+drawLine            PUSH                                    ; matches drawLineLoop's POP
                     LDI     1
                     STW     drawLine_dx1
                     STW     drawLine_dx2
@@ -601,34 +618,34 @@ drawLine            PUSH                        ; matches drawLineLoop's POP
                     LDWI    0x8000
                     STW     drawLine_tmp
                     
-                    LDW     drawLine_x2         ; sx = x2 - x1
+                    LDW     drawLine_x2                     ; sx = x2 - x1
                     SUBW    drawLine_x1
                     STW     drawLine_sx
                     ANDW    drawLine_tmp        
                     BEQ     drawL_dy
                     LDWI    -1
                     STW     drawLine_dx1        
-                    STW     drawLine_dx2        ; dx1 = dx2 = (sx & 0x8000) ? -1 : 1
-                    LDI     0                   ; sx = (sx & 0x8000) ? 0 - sx : sx
+                    STW     drawLine_dx2                    ; dx1 = dx2 = (sx & 0x8000) ? -1 : 1
+                    LDI     0                               ; sx = (sx & 0x8000) ? 0 - sx : sx
                     SUBW    drawLine_sx
                     STW     drawLine_sx                
                     
 drawL_dy            LDW     drawLine_y2
                     SUBW    drawLine_y1
                     STW     drawLine_sy
-                    STW     drawLine_h          ; h = sy
+                    STW     drawLine_h                      ; h = sy
                     ANDW    drawLine_tmp
                     BEQ     drawL_ext
                     
                     LDWI    -1
-                    STW     drawLine_dy1        ; dy1 = (sy & 0x8000) ? -1 : 1
+                    STW     drawLine_dy1                    ; dy1 = (sy & 0x8000) ? -1 : 1
                     LDI     0                   
                     SUBW    drawLine_sy
-                    STW     drawLine_sy         ; sy = (sy & 0x8000) ? 0 - sy : sy
+                    STW     drawLine_sy                     ; sy = (sy & 0x8000) ? 0 - sy : sy
                     SUBW    drawLine_sx
                     BLE     drawL_ext           
                     LDW     drawLine_dy1
-                    STW     drawLine_dy2        ; if(sx < sy) dy2 = -1
+                    STW     drawLine_dy2                    ; if(sx < sy) dy2 = -1
     
 drawL_ext           LDWI    drawLineLoadXY
                     CALL    giga_vAC
@@ -641,25 +658,25 @@ drawLineExt         LDW     drawLine_sy
                     SUBW    drawLine_sx
                     BLE     drawL_num
                     LDI     0
-                    STW     drawLine_dx2        ; if(sx < sy) dx2 = 0
+                    STW     drawLine_dx2                    ; if(sx < sy) dx2 = 0
                     LDW     drawLine_sy       
                     STW     drawLine_tmp
                     LDW     drawLine_sx
                     STW     drawLine_sy
                     LDW     drawLine_tmp
-                    STW     drawLine_sx         ; swap sx with sy
+                    STW     drawLine_sx                     ; swap sx with sy
                     LDW     drawLine_h
                     BLE     drawL_num
                     LDI     1
-                    STW     drawLine_dy2        ; if(h > 0) dy2 = 1
+                    STW     drawLine_dy2                    ; if(h > 0) dy2 = 1
     
 drawL_num           LDWI    SYS_LSRW1_48
                     STW     giga_sysFn          
                     LDW     drawLine_sx
                     SYS     48
                     ADDI    1
-                    STW     drawLine_num        ; numerator = sx>>1
-                    STW     drawLine_count      ; for(count=sx>>1; counti>=0; --i)
+                    STW     drawLine_num                    ; numerator = sx>>1
+                    STW     drawLine_count                  ; for(count=sx>>1; counti>=0; --i)
                     
                     LDWI    drawLineLoadDXY
                     CALL    giga_vAC
@@ -668,39 +685,39 @@ drawL_num           LDWI    SYS_LSRW1_48
 
 
 drawLineLoop        LD      fgbgColour + 1
-                    POKE    drawLine_xy1        ; plot start pixel
-                    POKE    drawLine_xy2        ; plot end pixel, (meet in middle)
+                    POKE    drawLine_xy1                    ; plot start pixel
+                    POKE    drawLine_xy2                    ; plot end pixel, (meet in middle)
                     
-                    LDW     drawLine_num        ; numerator += sy
+                    LDW     drawLine_num                    ; numerator += sy
                     ADDW    drawLine_sy
                     STW     drawLine_num
                     SUBW    drawLine_sx
-                    BLE     drawL_flip          ; if(numerator <= sx) goto flip
-                    STW     drawLine_num        ; numerator -= sx
+                    BLE     drawL_flip                      ; if(numerator <= sx) goto flip
+                    STW     drawLine_num                    ; numerator -= sx
                     
                     LDW     drawLine_xy1
                     ADDW    drawLine_dxy1
-                    STW     drawLine_xy1        ; xy1 += dxy1
+                    STW     drawLine_xy1                    ; xy1 += dxy1
                     
                     LDW     drawLine_xy2
                     SUBW    drawLine_dxy1
-                    STW     drawLine_xy2        ; xy2 -= dxy1
+                    STW     drawLine_xy2                    ; xy2 -= dxy1
                     BRA     drawL_count
                     
 drawL_flip          LDW     drawLine_xy1        
                     ADDW    drawLine_dxy2
-                    STW     drawLine_xy1        ; xy1 += dxy2
+                    STW     drawLine_xy1                    ; xy1 += dxy2
                     
                     LDW     drawLine_xy2        
                     SUBW    drawLine_dxy2
-                    STW     drawLine_xy2        ; xy2 -= dxy2
+                    STW     drawLine_xy2                    ; xy2 -= dxy2
                     
 drawL_count         CALL    realTimeProcAddr
                     LDW     drawLine_count
                     SUBI    0x01
                     STW     drawLine_count
                     BGT     drawLineLoop
-                    POP                         ; matches drawLine's PUSH
+                    POP                                     ;matches drawLine's PUSH
                     RET
 
 
@@ -708,13 +725,13 @@ drawLineLoadXY      LD      drawLine_x1
                     ST      drawLine_xy1
                     LD      drawLine_y1
                     ADDI    8
-                    ST      drawLine_xy1 + 1    ; xy1 = x1 | ((y1+8)<<8)
+                    ST      drawLine_xy1 + 1                ;xy1 = x1 | ((y1+8)<<8)
                     
                     LD      drawLine_x2
                     ST      drawLine_xy2
                     LD      drawLine_y2
                     ADDI    8
-                    ST      drawLine_xy2 + 1    ; xy2 = x2 | ((y2+8)<<8)
+                    ST      drawLine_xy2 + 1                ;xy2 = x2 | ((y2+8)<<8)
                     RET
                     
 drawLineLoadDXY     LDWI    SYS_LSLW8_24
@@ -722,19 +739,18 @@ drawLineLoadDXY     LDWI    SYS_LSLW8_24
                     LDW     drawLine_dy1
                     SYS     28
                     ADDW    drawLine_dx1
-                    STW     drawLine_dxy1       ; dxy1 = dx1 + (dy1<<8)
+                    STW     drawLine_dxy1                   ;dxy1 = dx1 + (dy1<<8)
     
                     LDW     drawLine_dy2
                     SYS     28
                     ADDW    drawLine_dx2
-                    STW     drawLine_dxy2       ; dxy2 = dx2 + (dy2<<8)
+                    STW     drawLine_dxy2                   ;dxy2 = dx2 + (dy2<<8)
                     RET
 
 
-numChannels         EQU     register0
 audioAddr           EQU     register1
 waveType            EQU     register2
-midiNote            EQU     register4                       ; register4 to register7 are the only free registers during time slicing, (state is invalidated each time slice)
+midiNote            EQU     register4                       ; register4 to register7 are the only free registers during time slicing
 midiCommand         EQU     register5
 midiPtr             EQU     register6
 sndChannel          EQU     register8
@@ -745,7 +761,7 @@ sndWaveType         EQU     register11
 
 resetAudio          LD      giga_frameCount
                     ADDI    1
-                    STW     midiDelay                       ; instant startup
+                    STW     midiDelay                       ; instant MIDI startup
                     LDWI    giga_soundChan1
                     STW     audioAddr
                     LD      waveType
@@ -753,10 +769,8 @@ resetAudio          LD      giga_frameCount
                     ST      waveType + 1
                     LDI     0x00
                     ST      waveType                        ; waveform type
-                    LDI     0x04
 
-resetA_loop         ST      numChannels
-                    LDI     giga_soundChan1
+resetA_loop         LDI     giga_soundChan1
                     ST      audioAddr                       ; reset low byte
                     LDW     waveType
                     DOKE    audioAddr                       ; wavA and wavX
@@ -769,9 +783,9 @@ resetA_loop         ST      numChannels
                     DOKE    audioAddr                       ; oscL and oscH
                     INC     audioAddr + 1                   ; increment high byte
                     
-                    LD      numChannels
-                    SUBI    1
-                    BNE     resetA_loop
+                    LD      audioAddr + 1
+                    SUBI    4
+                    BLE     resetA_loop
                     RET
 
 

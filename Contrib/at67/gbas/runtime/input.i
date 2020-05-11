@@ -81,7 +81,7 @@ inputE1_skip        LDWI    textWorkArea + 1
                     LDWI    inputExt2
                     CALL    giga_vAC            ; doesn't return to here
                     
-inputE1_exit        LDI     0x01
+inputE1_exit        LDI     ENABLE_SCROLL_BIT
                     ORW     miscFlags
                     STW     miscFlags           ; enable text scrolling
                     POP
@@ -304,12 +304,12 @@ inputPrint          LDWI    inputCursor
 
 %SUB                inputNewline
 inputNewline        PUSH
-                    LDI     0x01
+                    LDI     ENABLE_SCROLL_BIT
                     ORW     miscFlags
                     STW     miscFlags           ; enable text scrolling
                     LDWI    newLineScroll
                     CALL    giga_vAC            ; new line
-                    LDWI    0xFFFE
+                    LDWI    ENABLE_SCROLL_MSK
                     ANDW    miscFlags
                     STW     miscFlags           ; disable text scrolling
                     POP

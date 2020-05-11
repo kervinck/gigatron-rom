@@ -400,13 +400,13 @@ return
 
 ## Arithmetic:
 - Multiply and especially divide/modulus are slow.
-- Use shifts, masks, cheats and hacks as much as possible, especially in your inner most or tightest loops.
+- Use shifts, masks, LUT's, cheats and hacks as much as possible, especially in your inner most or tightest loops.
 ~~~
 ' slow, rnd(<number>) performs a modulus with that number on the random result
 ' rnd(0) foregoes the modulus so that you can do the filtering yourself
 x = rnd(160) : y = rnd(120)
 
-' Much faster, but gives a different type of noise that drastically drops off towards it's boundaries
+' much faster, but gives a different type of noise that drastically drops off towards it's boundaries
 x = (rnd(0) AND &h7F) + (rnd(0) AND &h1F) + (rnd(0) AND &h01)
 y = (rnd(0) AND &h3F) + (rnd(0) AND &h1F) + (rnd(0) AND &h0F) + (rnd(0) AND &h07) + (rnd(0) AND &h03)
 
@@ -415,6 +415,9 @@ math: sh = (i<<1)
       x = sh + sh + sh + sh + 4
       y = sh + sh + sh + 3
 return
+
+' samples a complex transcendental function into a 64 byte LUT, (use graphing calculators like Desmos to create your functions)
+def byte(&h08A0, y, 0.0, 0.5, 64) = 63.0 - exp(-0.5*y)*(1.0-exp(-3.0*y))*1.6125*63.0
 ~~~
 
 ## Memory Manager:
@@ -570,16 +573,14 @@ goto &blah
 ### GOOD:
 ~~~
                     LDI                     20
-                    STW                     _x                              ; x = 20
-
-                    LDW                     _x
+                    STW                     _x
                     STW                     mathX
                     LDI                     20
                     STW                     mathY
                     LDWI                    multiply16bit
                     CALL                    giga_vAC
                     ADDI                    32
-                    STW                     _blah                           ; blah = x*20 + (53 - 12 - 9)
+                    STW                     _blah                           ; x = 20 : blah = x*20 + (53 - 12 - 9)
 ~~~
 
 - Use as much floating point calculations with literals, (including transcendentals), as you want; it will all be calculated at full double floating point precision and then the final answer rounded down into int16_t, (the native vCPU 16 bit format).
@@ -589,9 +590,7 @@ goto &blah
 
 ~~~
                     LDI                     10
-                    STW                     _x                              ; x = 10
-
-                    LDW                     _x
+                    STW                     _x
                     STW                     mathX
                     LDI                     2
                     STW                     mathY
@@ -602,5 +601,5 @@ goto &blah
                     STW                     mathY
                     LDWI                    multiply16bit
                     CALL                    giga_vAC
-                    STW                     _blah                           ; blah = x*2*(50*exp(-1.232455)*sin(45)*cos(57.324786234) - 1000.342876324)
+                    STW                     _blah                           ; x = 10 : blah = x*2*(50*exp(-1.232455)*sin(45)*cos(57.324786234) - 1000.342876324)
 ~~~

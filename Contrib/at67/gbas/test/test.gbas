@@ -1,4 +1,7 @@
 _runtimePath_ "../runtime"
+_codeRomType_ ROMv1
+
+cls
 
 init:   a = 1
         

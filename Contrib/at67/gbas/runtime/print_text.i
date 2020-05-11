@@ -26,7 +26,7 @@ clearCursorRow      PUSH
                     LDWI    SYS_Draw4_30                    ; setup 4 pixel SYS routine
                     STW     giga_sysFn
     
-                    LDWI    giga_videoTable                 ; current cursor position
+                    LDWI    giga_videoTable                 ; current cursor high byte address
                     PEEK
                     ST      giga_sysArg4 + 1
                     LDI     8
@@ -352,14 +352,14 @@ printC_exit         RET
 newLineScroll       LDI     0x02                            ; x offset slightly
                     ST      cursorXY
                     ST      giga_sysArg4
-                    LDI     0x01
+                    LDI     ENABLE_SCROLL_BIT
                     ANDW    miscFlags
-                    BNE     newLS_cont0                     ; scroll on or off
+                    BNE     newLS_cont0                     ; is scroll on or off?
                     RET
                     
 newLS_cont0         PUSH
-                    LDWI    0x8000
-                    ANDW    miscFlags                       ; on bottom row flag
+                    LDI     ON_BOTTOM_ROW_BIT
+                    ANDW    miscFlags                       ; is on bottom row flag?
                     BNE     newLS_cont1
                     LD      cursorXY + 1
                     ADDI    8
@@ -391,7 +391,7 @@ newLS_adjust        ADDI    8
                     SUBI    0xF0                            ; scanline pointers end at 0x01EE
                     BLT     newLS_scroll
                     
-                    LDWI    0x8000
+                    LDI     ON_BOTTOM_ROW_BIT
                     ORW     miscFlags
                     STW     miscFlags                       ; set on bottom row flag
                     
@@ -417,12 +417,12 @@ atTC_skip0          LD      cursorXY + 1
 atTC_skip1          LD      cursorXY + 1
                     SUBI    giga_yres - 8
                     BGE     atTC_skip2
-                    LDWI    0x7FFF
+                    LDWI    ON_BOTTOM_ROW_MSK
                     ANDW    miscFlags
                     STW     miscFlags                       ; reset on bottom row flag
                     RET
                     
-atTC_skip2          LDWI    0x8000
+atTC_skip2          LDI     ON_BOTTOM_ROW_BIT
                     ORW     miscFlags
                     STW     miscFlags                       ; set on bottom row flag
                     RET

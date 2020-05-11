@@ -1,9 +1,9 @@
 _runtimePath_ "../runtime"
+_codeRomType_ ROMv1
 
 const NOTELEN=20
 
-' enable audio channels, 2,3,4
-def byte(&h0021) = 0x03
+sound off
 
 set VIDEOTOP, 238  'disable video
 mode 2 : cls

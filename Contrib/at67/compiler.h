@@ -30,10 +30,18 @@
 #define USER_CODE_START   0x0200
 #define USER_VAR_END      0x007F
 
+// Misc flags bits
+#define ENABLE_SCROLL_BIT  0x0001
+#define ON_BOTTOM_ROW_BIT  0x0002
+
+// Misc flags masks
+#define ENABLE_SCROLL_MSK  0xFFFE
+#define ON_BOTTOM_ROW_MSK  0xFFFD
+
 
 namespace Compiler
 {
-    enum VarType {VarInt8=1, VarInt16, VarStr, VarInt32, VarFloat16, VarFloat32, VarArray};
+    enum VarType {VarInt8=1, VarInt16, VarStr, VarInt32, VarFloat16, VarFloat32, VarArray, VarArray2, VarArray3};
     enum IntSize {Int8=1, Int16=2, Int32=4};
     enum ConstType {ConstInt16, ConstStr};
     enum ConstStrType {StrChar, StrHex, StrHexw, StrLeft, StrRight, StrMid};
@@ -59,14 +67,14 @@ namespace Compiler
         int16_t _data;
         int16_t _init;
         uint16_t _address;
-        uint16_t _array;
         std::string _name;
         std::string _output;
         int _codeLineIndex = -1;
         VarType _varType = VarInt16;
         int _intSize = Int16;
-        int _arrSize = 0;
+        std::vector<uint16_t> _arrSizes;
         std::vector<int16_t> _arrInits;
+        std::vector<std::vector<uint16_t>> _arrAddrs;
     };
 
     struct StringVar
@@ -290,6 +298,7 @@ namespace Compiler
     uint16_t getSpriteStripeMinAddress(void);
     Memory::FitType getSpriteStripeFitType(void);
     CodeOptimiseType getCodeOptimiseType(void);
+    Cpu::RomType getCodeRomType(void);
     bool getCompilingError(void);
     bool getArrayIndiciesOne(void);
     int getCurrentLabelIndex(void);
@@ -306,6 +315,7 @@ namespace Compiler
     void setSpriteStripeMinAddress(uint16_t spriteStripeMinAddress);
     void setSpriteStripeFitType(Memory::FitType spriteStripeFitType);
     void setCodeOptimiseType(CodeOptimiseType codeOptimiseType);
+    void setCodeRomType(Cpu::RomType codeRomType);
     void setCreateNumericLabelLut(bool createNumericLabelLut);
     void setCompilingError(bool compilingError);
     void setArrayIndiciesOne(bool arrayIndiciesOne);
@@ -358,8 +368,8 @@ namespace Compiler
     bool createCodeLine(const std::string& code, int codeLineOffset, int labelIndex, int varIndex, Expression::Int16Byte int16Byte, bool vars, CodeLine& codeLine);
     void createLabel(uint16_t address, const std::string& name, int codeLineIndex, Label& label, bool numeric=false, bool addUnderscore=true, bool pageJump=false, bool gosub=false);
     void createIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, int& varIndex);
-    void createIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, int& varIndex, const std::vector<int16_t>& arrInits, 
-                      VarType varType, uint16_t arrayStart, int intSize, int arrSize);
+    void createIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, int& varIndex, VarType varType, int intSize,
+                      uint16_t address, std::vector<uint16_t>& arrSizes, const std::vector<int16_t>& arrInits);
     int getOrCreateString(CodeLine& codeLine, int codeLineIndex, const std::string& str, std::string& name, uint16_t& address, uint8_t maxSize=USER_STR_SIZE, bool constString=true);
     uint16_t getOrCreateConstString(const std::string& input, int& index);
     uint16_t getOrCreateConstString(ConstStrType constStrType, int16_t input, int& index);

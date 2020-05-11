@@ -12,72 +12,53 @@ scanLine            EQU     register11
 digitMult           EQU     register12
 digitIndex          EQU     register13
 clearLoop           EQU     register14
-fontId              EQU     register9
-fontAddrs           EQU     register10
-fontBase            EQU     register11
-fontPosXY           EQU     register15
-
-
+    
+    
 %SUB                clearCursorRow
                     ; clears the top 8 lines of pixels in preparation of text scrolling
 clearCursorRow      PUSH
+                    LDWI    SYS_SetMemory_v2_54
+                    STW     giga_sysFn                      ; setup fill memory SYS routine
                     LD      fgbgColour
-                    ST      giga_sysArg0
-                    ST      giga_sysArg0 + 1
-                    ST      giga_sysArg2
-                    ST      giga_sysArg2 + 1                ; 4 pixels of colour
-    
-                    LDWI    SYS_Draw4_30                    ; setup 4 pixel SYS routine
-                    STW     giga_sysFn
-    
-                    LDWI    giga_videoTable                 ; current cursor position
+                    ST      giga_sysArg1                    ; fill value
+                    LDWI    giga_videoTable
                     PEEK
-                    ST      giga_sysArg4 + 1
+                    ST      giga_sysArg3                    ; row0 high byte address
                     LDI     8
 
-clearCR_loopy       ST      clearLoop
-                    CALLI   realTimeProc
+clearCR_loopy       ST      clearLoop                    
                     LDI     giga_xres
-                    
-clearCR_loopx       SUBI    4                               ; loop is unrolled 4 times
-                    ST      giga_sysArg4
-                    SYS     30
-                    SUBI    4
-                    ST      giga_sysArg4
-                    SYS     30
-                    SUBI    4
-                    ST      giga_sysArg4
-                    SYS     30
-                    SUBI    4
-                    ST      giga_sysArg4
-                    SYS     30
-                    BGT     clearCR_loopx
-                    
-                    INC     giga_sysArg4 + 1                ; next line
+                    ST      giga_sysArg0
+                    LDI     0
+                    ST      giga_sysArg2                    ; low start address
+                    SYS     54                              ; fill memory
+                    INC     giga_sysArg3                    ; next line
                     LD      clearLoop
                     SUBI    1
                     BNE     clearCR_loopy
-
-                    CALLI   printInit                      ; re-initialise the SYS registers
+                    CALLI   realTimeProc
+                    CALLI   printInit                       ; re-initialise the SYS registers
                     POP
                     RET
 %ENDS
 
 %SUB                printInit
-printInit           LDWI    SYS_Sprite6_v3_64
+printInit           LDWI    SYS_VDrawBits_134
                     STW     giga_sysFn
+                    LDW     fgbgColour
+                    STW     giga_sysArg0
                     LD      cursorXY + 1                    ; xy = peek(256+2*y)*256 + x
                     LSLW
                     INC     giga_vAC + 1
                     PEEK
-                    ST      fontPosXY + 1
+                    ST      giga_sysArg4 + 1
                     LD      cursorXY
-                    ST      fontPosXY                       ; xy position
+                    ST      giga_sysArg4                    ; xy position
                     RET
 %ENDS
-
+                    
 %SUB                printText
-                    ; prints text string pointed to by textStr
+                    ; prints text string pointed to by the accumulator
 printText           PUSH
                     STW     textStr
                     CALLI   printInit
@@ -168,7 +149,7 @@ printM_char         ST      textLen
 printM_exit         POP
                     RET
 %ENDS   
-        
+
 %SUB                printDigit
                     ; prints single digit in textNum
 printDigit          PUSH
@@ -280,42 +261,40 @@ printChr            PUSH
                     ; prints char in textChr
 printChar           LD      textChr
                     ANDI    0x7F                            ; char can't be bigger than 127
-                    SUBI    32
-                    BLT     printCF_exit
-                    STW     textChr                         ; char-32                    
-
-                    LDWI    _fontsLut_                      ; fonts table
-                    ADDW    fontLutId
-                    ADDW    fontLutId
-                    DEEK
-                    STW     fontAddrs                       ; get font address table
-                    INC     fontAddrs
-                    INC     fontAddrs
-                    DEEK                                    ; get font mapping table
-                    BEQ     printCF_noMap                   ; no mapping table means font contains all chars 32 -> 127 in the correct order
+                    SUBI    82
+                    BGE     printC_text82
+                    ADDI    50
+                    BLT     printC_exit                     ; char<32 exit
+                    STW     textChr                         ; char-32
+                    LDWI    giga_text32                     ; text font slice base address for chars 32-81
+                    BRA     printC_font
+                    
+printC_text82       STW     textChr                         ; char-82
+                    LDWI    giga_text82                     ; text font slice base address for chars 82+
+                    
+printC_font         STW     textFont
+                    LD      textChr
+                    LSLW    
+                    LSLW    
                     ADDW    textChr
-                    PEEK
-                    STW     textChr                         ; get mapped char
+                    ADDW    textFont
+                    STW     textFont                        ; char*5 + textFont
+                    LDI     0x05
+
+printC_slice        ST      textSlice
+                    LDW     textFont                        ; text font slice base address
+                    LUP     0x00                            ; get ROM slice
+                    ST      giga_sysArg2
+                    SYS     134                             ; draw vertical slice, SYS_VDrawBits_134, 270 - 134/2 = 0xCB
+                    INC     textFont                        ; next vertical slice
+                    INC     giga_sysArg4                    ; next x
+                    LD      textSlice
+                    SUBI    1
+                    BNE     printC_slice
                     
-printCF_noMap       LDW     fontAddrs
-                    DEEK
-                    STW     fontBase                        ; baseline address, shared by all chars in a font
-                    INC     fontAddrs
-                    INC     fontAddrs
-                    LDW     textChr
-                    LSLW
-                    ADDW    fontAddrs
-                    DEEK                                    ; get char address
-                    STW     giga_sysArg0
-                    LDW     fontPosXY                       ; XY pos generated in printInit
-                    SYS     64                              ; draw char
-                    STW     fontPosXY
-                    
-                    LDW     fontBase
-                    STW     giga_sysArg0
-                    LDWI    0x0F00
-                    ADDW    cursorXY
-                    SYS     64                              ; draw baseline for char
+                    ST      giga_sysArg2                    ; result of printC_slice is 0
+                    SYS     134                             ; draw last blank slice
+                    INC     giga_sysArg4                    ; using sysArg4 as a temporary cursor address for multiple char prints
                     
                     PUSH
                     CALLI   realTimeProc
@@ -323,27 +302,27 @@ printCF_noMap       LDW     fontAddrs
                     ADDI    0x06
                     ST      cursorXY
                     SUBI    giga_xres - 5                   ; giga_xres - 6, (154), is last possible char in row
-                    BLT     printCF_pop
+                    BLT     printC_pop
                     CALLI   newLineScroll                   ; next row, scroll at bottom
                     
-printCF_pop         POP
+printC_pop          POP
 
-printCF_exit        RET
-%ENDS
-
+printC_exit         RET
+%ENDS   
+    
 %SUB                newLineScroll
                     ; print from top row to bottom row, then start scrolling 
 newLineScroll       LDI     0x02                            ; x offset slightly
                     ST      cursorXY
-                    ST      fontPosXY
-                    LDI     0x01
+                    ST      giga_sysArg4
+                    LDI     ENABLE_SCROLL_BIT
                     ANDW    miscFlags
-                    BNE     newLS_cont0                     ; scroll on or off
+                    BNE     newLS_cont0                     ; is scroll on or off?
                     RET
                     
 newLS_cont0         PUSH
-                    LDWI    0x8000
-                    ANDW    miscFlags                       ; on bottom row flag
+                    LDI     ON_BOTTOM_ROW_BIT
+                    ANDW    miscFlags                       ; is on bottom row flag?
                     BNE     newLS_cont1
                     LD      cursorXY + 1
                     ADDI    8
@@ -354,9 +333,11 @@ newLS_cont0         PUSH
                     ST      cursorXY + 1
                     
 newLS_cont1         CALLI   clearCursorRow
+                    
                     LDWI    giga_videoTable
                     STW     scanLine
     
+                    ; scroll all scan lines by 8 through 0x08 to 0x7F
 newLS_scroll        CALLI   realTimeProc
                     LDW     scanLine
                     PEEK
@@ -373,8 +354,8 @@ newLS_adjust        ADDI    8
                     LD      scanLine
                     SUBI    0xF0                            ; scanline pointers end at 0x01EE
                     BLT     newLS_scroll
-                    
-                    LDWI    0x8000
+        
+                    LDI     ON_BOTTOM_ROW_BIT
                     ORW     miscFlags
                     STW     miscFlags                       ; set on bottom row flag
                     
@@ -399,12 +380,12 @@ atTC_skip0          LD      cursorXY + 1
 atTC_skip1          LD      cursorXY + 1
                     SUBI    giga_yres - 8
                     BGE     atTC_skip2
-                    LDWI    0x7FFF
+                    LDWI    ON_BOTTOM_ROW_MSK
                     ANDW    miscFlags
                     STW     miscFlags                       ; reset on bottom row flag
                     RET
                     
-atTC_skip2          LDWI    0x8000
+atTC_skip2          LDI     ON_BOTTOM_ROW_BIT
                     ORW     miscFlags
                     STW     miscFlags                       ; set on bottom row flag
                     RET

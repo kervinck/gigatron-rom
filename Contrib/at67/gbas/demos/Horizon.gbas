@@ -74,7 +74,7 @@ loop:   i = x AND 255
         gosub get("BUTTONSTATE")
         
         x = x + v
-goto &loop
+goto loop
 
 254: inc v : if v &&> 32 then v = 32
      return
