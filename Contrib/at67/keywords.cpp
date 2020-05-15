@@ -483,6 +483,8 @@ namespace Keywords
                     (Compiler::getCodeRomType() >= Cpu::ROMv5a) ? Compiler::emitVcpuAsm("CALLI", "convertArr3d", false, codeLineIndex) : Compiler::emitVcpuAsm("CALL", "convertArr3dAddr", false);
                 }
                 break;
+
+                default: break;
             }
 
             Operators::createTmpVar(numeric);

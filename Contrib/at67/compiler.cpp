@@ -1128,6 +1128,8 @@ namespace Compiler
             case VarType::VarArray1: writeArray1d(codeLine, codeLineIndex, lbra, rbra, intSize, arrayPtr); break;
             case VarType::VarArray2: writeArray2d(codeLine, codeLineIndex, lbra, rbra, intSize, arrayPtr); break;
             case VarType::VarArray3: writeArray3d(codeLine, codeLineIndex, lbra, rbra, intSize, arrayPtr); break;
+
+            default: break;
         }
 
         return true;
@@ -3595,7 +3597,7 @@ namespace Compiler
                 //fprintf(stderr, "%d\n", lineLength + COMMENT_PADDING - (lineLength % COMMENT_PADDING));
 
                 // Line spacing for parsed code and non parsed code is different
-                bool dontParse = (i+1 < _codeLines.size()) ? _codeLines[i+1]._dontParse : false;
+                bool dontParse = (i+1 < int(_codeLines.size())) ? _codeLines[i+1]._dontParse : false;
                 std::string newLine = (_codeLines[i]._dontParse  &&  dontParse) ? "\n" : "\n\n";
                 line += "; " + _codeLines[i]._text + newLine;
                 _output.push_back(line);
