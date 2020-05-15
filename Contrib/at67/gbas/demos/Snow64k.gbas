@@ -1,5 +1,6 @@
 _runtimePath_ "../runtime"
 _runtimeStart_ &hFFFF
+_codeRomType_ ROMv1
 
 'Falling snow flakes
 'N must be 6*n+1 or 6*n-1
@@ -11,7 +12,7 @@ const W=159
 
 10 dim X(N)=0 : dim Y(N)=0
 20 I=1 : J=0
-30 set BGCOLOUR,D : mode 1 : cls
+30 set BGCOLOUR,D : cls
 40 set FGCOLOUR,72 : at 32,96
 50 print "Merry Christmas!";
 60 hline 0, 119, W 'at 0,119 : line W,0

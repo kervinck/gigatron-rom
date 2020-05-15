@@ -30,7 +30,9 @@ namespace Linker
         {0x0000, 0x0000, "convertGeOp"      , "", true,  false},
         {0x0000, 0x0000, "convertLtOp"      , "", true,  false},
         {0x0000, 0x0000, "convertGtOp"      , "", true,  false},
-        {0x0000, 0x0000, "absolute"         , "", true,  false},
+        {0x0000, 0x0000, "convertArr2d"     , "", true,  false},
+        {0x0000, 0x0000, "convertArr3d"     , "", true,  false},
+        {0x0000, 0x0000, "absolute"         , "", false, false},
         {0x0000, 0x0000, "power16bit"       , "", false, false},
         {0x0000, 0x0000, "power16bitExt"    , "", false, false},
         {0x0000, 0x0000, "multiply16bit"    , "", false, false},
@@ -669,15 +671,20 @@ RESTART_COLLECTION:
         // Zero page call table is not needed when using ROMv5a and higher
         if(Compiler::getCodeRomType() < Cpu::ROMv5a)
         {
-            if(_internalSubs[0]._inUse) {Compiler::getOutput().push_back("realTimeProcAddr" + std::string(LABEL_TRUNC_SIZE - strlen("realTimeProcAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(REAL_TIME_PROC) + "\n");}
+            // Convert relational operators
+            if(_internalSubs[1]._inUse) {Compiler::getOutput().push_back("convertEqOpAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertEqOpAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(CONVERT_CC_OPS + 0)  + "\n");}
+            if(_internalSubs[2]._inUse) {Compiler::getOutput().push_back("convertNeOpAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertNeOpAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(CONVERT_CC_OPS + 2)  + "\n");}
+            if(_internalSubs[3]._inUse) {Compiler::getOutput().push_back("convertLeOpAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertLeOpAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(CONVERT_CC_OPS + 4)  + "\n");}
+            if(_internalSubs[4]._inUse) {Compiler::getOutput().push_back("convertGeOpAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertGeOpAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(CONVERT_CC_OPS + 6)  + "\n");}
+            if(_internalSubs[5]._inUse) {Compiler::getOutput().push_back("convertLtOpAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertLtOpAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(CONVERT_CC_OPS + 8)  + "\n");}
+            if(_internalSubs[6]._inUse) {Compiler::getOutput().push_back("convertGtOpAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertGtOpAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(CONVERT_CC_OPS + 10) + "\n");}
 
-            uint16_t convertCcOpsAddr = CONVERT_CC_OPS;
-            if(_internalSubs[1]._inUse) {Compiler::getOutput().push_back("convertEqOpAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertEqOpAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(convertCcOpsAddr) + "\n"); convertCcOpsAddr += 2;}
-            if(_internalSubs[2]._inUse) {Compiler::getOutput().push_back("convertNeOpAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertNeOpAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(convertCcOpsAddr) + "\n"); convertCcOpsAddr += 2;}
-            if(_internalSubs[3]._inUse) {Compiler::getOutput().push_back("convertLeOpAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertLeOpAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(convertCcOpsAddr) + "\n"); convertCcOpsAddr += 2;}
-            if(_internalSubs[4]._inUse) {Compiler::getOutput().push_back("convertGeOpAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertGeOpAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(convertCcOpsAddr) + "\n"); convertCcOpsAddr += 2;}
-            if(_internalSubs[5]._inUse) {Compiler::getOutput().push_back("convertLtOpAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertLtOpAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(convertCcOpsAddr) + "\n"); convertCcOpsAddr += 2;}
-            if(_internalSubs[6]._inUse) {Compiler::getOutput().push_back("convertGtOpAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertGtOpAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(convertCcOpsAddr) + "\n"); convertCcOpsAddr += 2;}
+            // Get array address
+            if(_internalSubs[7]._inUse) {Compiler::getOutput().push_back("convertArr2dAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertArr2dAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(CONVERT_ARRAY + 0) + "\n");}
+            if(_internalSubs[8]._inUse) {Compiler::getOutput().push_back("convertArr3dAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertArr3dAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(CONVERT_ARRAY + 2) + "\n");}
+
+            // Real time proc
+            if(_internalSubs[0]._inUse) {Compiler::getOutput().push_back("realTimeProcAddr" + std::string(LABEL_TRUNC_SIZE - strlen("realTimeProcAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(REAL_TIME_PROC) + "\n");}
         }
 
         Compiler::getOutput().push_back("\n");

@@ -1,76 +1,76 @@
-_startAddress_      EQU                     0x0200
+_startAddress_                EQU                               0x0200
 
 ; Internal variables
-serialRawPrev       EQU                     0x0081
-register0           EQU                     0x0082
-register1           EQU                     register0 + 0x02
-register2           EQU                     register0 + 0x04
-register3           EQU                     register0 + 0x06
-register4           EQU                     register0 + 0x08
-register5           EQU                     register0 + 0x0A
-register6           EQU                     register0 + 0x0C
-register7           EQU                     register0 + 0x0E
-register8           EQU                     register0 + 0x10
-register9           EQU                     register0 + 0x12
-register10          EQU                     register0 + 0x14
-register11          EQU                     register0 + 0x16
-register12          EQU                     register0 + 0x18
-register13          EQU                     register0 + 0x1A
-register14          EQU                     register0 + 0x1C
-register15          EQU                     register0 + 0x1E
-fgbgColour          EQU                     register0 + 0x20
-cursorXY            EQU                     register0 + 0x22
-midiStream          EQU                     register0 + 0x24
-midiDelay           EQU                     register0 + 0x26
-miscFlags           EQU                     register0 + 0x28
-fontLutId           EQU                     0x00e0
+serialRawPrev                 EQU                               0x0081
+register0                     EQU                               0x0082
+register1                     EQU                               register0 + 0x02
+register2                     EQU                               register0 + 0x04
+register3                     EQU                               register0 + 0x06
+register4                     EQU                               register0 + 0x08
+register5                     EQU                               register0 + 0x0A
+register6                     EQU                               register0 + 0x0C
+register7                     EQU                               register0 + 0x0E
+register8                     EQU                               register0 + 0x10
+register9                     EQU                               register0 + 0x12
+register10                    EQU                               register0 + 0x14
+register11                    EQU                               register0 + 0x16
+register12                    EQU                               register0 + 0x18
+register13                    EQU                               register0 + 0x1A
+register14                    EQU                               register0 + 0x1C
+register15                    EQU                               register0 + 0x1E
+fgbgColour                    EQU                               register0 + 0x20
+cursorXY                      EQU                               register0 + 0x22
+midiStream                    EQU                               register0 + 0x24
+midiDelay                     EQU                               register0 + 0x26
+miscFlags                     EQU                               register0 + 0x28
+fontLutId                     EQU                               0x00e4
 
 ; Internal Constants
-ENABLE_SCROLL_BIT   EQU                     0x0001
-ON_BOTTOM_ROW_BIT   EQU                     0x0002
-ENABLE_SCROLL_MSK   EQU                     0xfffe
-ON_BOTTOM_ROW_MSK   EQU                     0xfffd
+ENABLE_SCROLL_BIT             EQU                               0x0001
+ON_BOTTOM_ROW_BIT             EQU                               0x0002
+ENABLE_SCROLL_MSK             EQU                               0xfffe
+ON_BOTTOM_ROW_MSK             EQU                               0xfffd
 
 ; Internal buffers
-textWorkArea        EQU                     0x7fa0
+textWorkArea                  EQU                               0x7fa0
 
 ; Includes
-%includePath        "../runtime"
-%include            gigatron.i
-%include            macros.i
+%includePath                  "../runtime"
+%include                      gigatron.i
+%include                      macros.i
 
 ; Labels
-_entryPoint_        EQU                     0x0200
-_10                 EQU                     0x0242
-_11                 EQU                     0x0246
-_12                 EQU                     0x0252
-_13                 EQU                     0x025c
-_14                 EQU                     0x026a
-_20                 EQU                     0x0278
-_21                 EQU                     0x027c
-_22                 EQU                     0x0280
-_23                 EQU                     0x0284
-_24                 EQU                     0x0288
-_25                 EQU                     0x028c
-_26                 EQU                     0x0290
-_30                 EQU                     0x0294
-_31                 EQU                     0x0298
-_32                 EQU                     0x02a6
-_33                 EQU                     0x02ac
-_34                 EQU                     0x02bc
-_35                 EQU                     0x02c2
-_36                 EQU                     0x02ce
-_37                 EQU                     0x02dc
-_38                 EQU                     0x02e0
-_39                 EQU                     0x0302
-_next_0x02ba        EQU                     0x02b0
-_page_0x0300        EQU                     0x0300
-_end_0x0321         EQU                     0x0310
+_entryPoint_                  EQU                               0x0200
+_10                           EQU                               0x024c
+_11                           EQU                               0x0250
+_12                           EQU                               0x025c
+_13                           EQU                               0x0266
+_14                           EQU                               0x0274
+_20                           EQU                               0x0282
+_21                           EQU                               0x0286
+_22                           EQU                               0x028a
+_23                           EQU                               0x028e
+_24                           EQU                               0x0292
+_25                           EQU                               0x0296
+_26                           EQU                               0x029a
+_30                           EQU                               0x029e
+_31                           EQU                               0x02a2
+_32                           EQU                               0x02b0
+_33                           EQU                               0x02b6
+_34                           EQU                               0x02c6
+_35                           EQU                               0x02cc
+_36                           EQU                               0x02d8
+_37                           EQU                               0x02e6
+_38                           EQU                               0x02ea
+_39                           EQU                               0x030f
+_next_0x02c4                  EQU                               0x02ba
+_page_0x0300                  EQU                               0x0300
+_end_0x032b                   EQU                               0x031d
 
 ; Variables
-_c                  EQU                     0x0030
-_p                  EQU                     0x0032
-_n                  EQU                     0x0034
+_c                            EQU                               0x0030
+_p                            EQU                               0x0032
+_n                            EQU                               0x0034
 
 ; Strings
 
@@ -87,114 +87,116 @@ _n                  EQU                     0x0034
 ; Lookup Tables
 
 ; Code
-_entryPoint_        LDI                     0x1c
-                    STW                     romType
-                    RomCheck                
-                    InitRealTimeProc        
-                    InitEqOp                
-                    InitNeOp                
-                    InitLeOp                
-                    InitGeOp                
-                    InitLtOp                
-                    InitGtOp                
-                    Initialise                                              ; INIT
+_entryPoint_                  LDI                               0x1c
+                              STW                               romType
+                              RomCheck                          
+                              InitEqOp                          
+                              InitNeOp                          
+                              InitLeOp                          
+                              InitGeOp                          
+                              InitLtOp                          
+                              InitGtOp                          
+                              InitArray2d                       
+                              InitArray3d                       
+                              InitRealTimeProc                  
+                              Initialise                                                        ; INIT
 
-_10                 LDI                     1
-                    STW                     _c                              ; for c=1 to 4
+_10                           LDI                               1
+                              STW                               _c                              ; for c=1 to 4
 
-_11                 LD                      _c
-                    ST                      giga_vAC + 1
-                    ORI                     0xFF
-                    XORI                    0xFF
-                    ADDI                    252
-                    STW                     _p                              ; p=(c LSL 8)+252
+_11                           LD                                _c
+                              ST                                giga_vAC + 1
+                              ORI                               0xFF
+                              XORI                              0xFF
+                              ADDI                              252
+                              STW                               _p                              ; p=(c LSL 8)+252
 
-_12                 LDW                     _p
-                    SUBI                    1
-                    STW                     0xc0
-                    LDI                     2
-                    POKE                    0xc0                            ; poke p-1,2:'Pulse
+_12                           LDW                               _p
+                              SUBI                              1
+                              STW                               0xc0
+                              LDI                               2
+                              POKE                              0xc0                            ; poke p-1,2:'Pulse
 
-_13                 LDI                     0
-                    POKE                    _p
-                    LDW                     _p
-                    ADDI                    1
-                    STW                     0xc0
-                    LDI                     0
-                    POKE                    0xc0                            ; poke p,0:poke p+1,0
+_13                           LDI                               0
+                              POKE                              _p
+                              LDW                               _p
+                              ADDI                              1
+                              STW                               0xc0
+                              LDI                               0
+                              POKE                              0xc0                            ; poke p,0:poke p+1,0
 
-_14                 ForNextFarInc           _c _11 4                        ; next c
+_14                           ForNextFarInc                     _c _11 4                        ; next c
 
-_20                 LDI                     17
-                    ST                      224                             ; poke &hE0,17:'LDWI $9xx
+_20                           LDI                               17
+                              ST                                230                             ; poke STACK_END+0, 17  : 'LDWI $9xx
 
-_21                 LDI                     9
-                    ST                      226                             ; poke &hE2,9
+_21                           LDI                               9
+                              ST                                232                             ; poke STACK_END+2, 9
 
-_22                 LDI                     127
-                    ST                      227                             ; poke &hE3,127:'LUP 0
+_22                           LDI                               127
+                              ST                                233                             ; poke STACK_END+3, 127 : 'LUP 0
 
-_23                 LDI                     0
-                    ST                      228                             ; poke &hE4,0
+_23                           LDI                               0
+                              ST                                234                             ; poke STACK_END+4, 0
 
-_24                 LDI                     147
-                    ST                      229                             ; poke &hE5,147:'INC &hE1
+_24                           LDI                               147
+                              ST                                235                             ; poke STACK_END+5, 147 : 'INC STACK_END+1
 
-_25                 LDI                     225
-                    ST                      230                             ; poke &hE6,&hE1
+_25                           LDI                               231
+                              ST                                236                             ; poke STACK_END+6, STACK_END+1
 
-_26                 LDI                     255
-                    ST                      231                             ; poke &hE7,255:'RET
+_26                           LDI                               255
+                              ST                                237                             ; poke STACK_END+7,255  : 'RET
 
-_30                 LDI                     1
-                    STW                     _n                              ; for n=1 to 95
+_30                           LDI                               1
+                              STW                               _n                              ; for n=1 to 95
 
-_31                 LDW                     _n
-                    PrintAcInt16            
-                    NewLine                                                 ; print "Playing note",n
+_31                           LDW                               _n
+                              PrintAcInt16                      
+                              NewLine                                                           ; print "Playing note",n
 
-_32                 LDW                     _n
-                    ADDW                    _n
-                    ST                      225                             ; poke &hE1,n+n:'$900+n*2
+_32                           LDW                               _n
+                              ADDW                              _n
+                              ST                                231                             ; poke STACK_END+1,n+n:'$900+n*2
 
-_33                 LDI                     1
-                    STW                     _c
-_next_0x02ba        LD                      _c
-                    ST                      giga_vAC + 1
-                    ORI                     0xFF
-                    XORI                    0xFF
-                    ADDI                    252
-                    STW                     _p                              ; for c=1 to 4 : p=(c LSL 8)+252
+_33                           LDI                               1
+                              STW                               _c
+_next_0x02c4                  LD                                _c
+                              ST                                giga_vAC + 1
+                              ORI                               0xFF
+                              XORI                              0xFF
+                              ADDI                              252
+                              STW                               _p                              ; for c=1 to 4 : p=(c LSL 8)+252
 
-_34                 LDI                     0xe0
-                    CALL                    giga_vAC
-                    POKE                    _p                              ; poke p,  usr(&hE0):'Flo
+_34                           LDI                               0xe6
+                              CALL                              giga_vAC
+                              POKE                              _p                              ; poke p,  usr(STACK_END):'Flo
 
-_35                 LDW                     _p
-                    ADDI                    1
-                    STW                     0xc0
-                    LDI                     0xe0
-                    CALL                    giga_vAC
-                    POKE                    0xc0                            ; poke p+1,usr(&hE0):'Fhi
+_35                           LDW                               _p
+                              ADDI                              1
+                              STW                               0xc0
+                              LDI                               0xe6
+                              CALL                              giga_vAC
+                              POKE                              0xc0                            ; poke p+1,usr(STACK_END):'Fhi
 
-_36                 ForNextFarInc           _c _next_0x02ba 4               ; next c
+_36                           ForNextFarInc                     _c _next_0x02c4 4               ; next c
 
-_37                 LDI                     15
-                    ST                      giga_soundTimer                 ; set SOUNDTIMER,15:'0.25 secs
+_37                           LDI                               15
+                              ST                                giga_soundTimer                 ; set SOUNDTIMER,15:'0.25 secs
 
-_38                 LD                      giga_soundTimer
-                    CALL                    convertGtOpAddr
-                    JumpFalse               _39 0
-                    LDWI                    _38
-                    CALL                    giga_vAC                        ; if get("SOUNDTIMER") >0 then goto 38
+_38                           LD                                giga_soundTimer
+                              CALL                              convertGtOpAddr
+                              STW                               0xe2
+                              LDWI                              _page_0x0300
+                              CALL                              giga_vAC
+_page_0x0300                  LDW                               0xe2
+                              JumpFalse                         _39 0
+                              LDWI                              _38
+                              CALL                              giga_vAC                        ; if get("SOUNDTIMER") >0 then goto 38
 
-                    STW                     0xde
-                    LDWI                    _page_0x0300
-                    CALL                    giga_vAC
-_page_0x0300        LDW                     0xde
-_39                 ForNextFarInc           _n _31 95                       ; next n
+_39                           ForNextFarInc                     _n _31 95                       ; next n
 
-_end_0x0321         BRA                     _end_0x0321                     ; END
+_end_0x032b                   BRA                               _end_0x032b                     ; END
 
 
 
@@ -204,29 +206,33 @@ _end_0x0321         BRA                     _end_0x0321                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-romCheck            EQU     0x7ee8
-realTimeProc        EQU     0x7edf
-convertEqOp         EQU     0x7ed6
-convertNeOp         EQU     0x7ecd
-convertLeOp         EQU     0x7ec4
-convertGeOp         EQU     0x7ebb
-convertLtOp         EQU     0x7eb2
-convertGtOp         EQU     0x7ea9
-resetVideoTable     EQU     0x7dbe
-initClearFuncs      EQU     0x7ddd
-clearCursorRow      EQU     0x7ab6
-printInit           EQU     0x7da8
-printDigit          EQU     0x79dd
-printInt16          EQU     0x7cae
-printChar           EQU     0x78a7
-newLineScroll       EQU     0x7ba4
-realTimeProcAddr    EQU     0x00dc
-convertEqOpAddr     EQU     0x00d0
-convertNeOpAddr     EQU     0x00d2
-convertLeOpAddr     EQU     0x00d4
-convertGeOpAddr     EQU     0x00d6
-convertLtOpAddr     EQU     0x00d8
-convertGtOpAddr     EQU     0x00da
+romCheck                      EQU     0x7ee8
+realTimeProc                  EQU     0x7de5
+convertEqOp                   EQU     0x7edf
+convertNeOp                   EQU     0x7ed6
+convertLeOp                   EQU     0x7ecd
+convertGeOp                   EQU     0x7ec4
+convertLtOp                   EQU     0x7ebb
+convertGtOp                   EQU     0x7eb2
+convertArr2d                  EQU     0x7ea6
+convertArr3d                  EQU     0x7dee
+resetVideoTable               EQU     0x7da4
+initClearFuncs                EQU     0x7dc3
+clearCursorRow                EQU     0x7ab6
+printInit                     EQU     0x7aa0
+printDigit                    EQU     0x79dd
+printInt16                    EQU     0x7cae
+printChar                     EQU     0x78a7
+newLineScroll                 EQU     0x7ba4
+convertEqOpAddr               EQU     0x00d0
+convertNeOpAddr               EQU     0x00d2
+convertLeOpAddr               EQU     0x00d4
+convertGeOpAddr               EQU     0x00d6
+convertLtOpAddr               EQU     0x00d8
+convertGtOpAddr               EQU     0x00da
+convertArr2dAddr              EQU     0x00dc
+convertArr3dAddr              EQU     0x00de
+realTimeProcAddr              EQU     0x00e0
 
 
 ; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
@@ -310,6 +316,34 @@ convertGtOp         BGT     convertGt_1
                     LDI     0
                     RET
 convertGt_1         LDI     1
+                    RET
+
+
+memIndex0           EQU     register0
+memIndex1           EQU     register1
+memIndex2           EQU     register2
+memValue            EQU     register8
+memAddr             EQU     register9
+
+
+convertArr2d        ADDW    memIndex0
+                    ADDW    memIndex0
+                    DEEK
+                    ADDW    memIndex1
+                    ADDW    memIndex1
+                    STW     memAddr
+                    RET
+
+
+convertArr3d        ADDW    memIndex0
+                    ADDW    memIndex0
+                    DEEK
+                    ADDW    memIndex1
+                    ADDW    memIndex1
+                    DEEK
+                    ADDW    memIndex2
+                    ADDW    memIndex2
+                    STW     memAddr
                     RET
 
 

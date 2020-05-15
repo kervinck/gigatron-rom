@@ -65,8 +65,9 @@ namespace Keywords
     Expression::Numeric functionLEFT$(Expression::Numeric& numeric,  int codeLineIndex);
     Expression::Numeric functionRIGHT$(Expression::Numeric& numeric, int codeLineIndex);
     Expression::Numeric functionMID$(Expression::Numeric& numeric,   int codeLineIndex);
-    Expression::Numeric functionSTRCMP(Expression::Numeric& numeric, int codeLineIndex);
+    Expression::Numeric functionCMP(Expression::Numeric& numeric,    int codeLineIndex);
     Expression::Numeric functionPOINT(Expression::Numeric& numeric,  int codeLineIndex);
+    Expression::Numeric functionLUP(Expression::Numeric& numeric,    int codeLineIndex);
 
     bool pragmaCODEROMTYPE(const std::string& input,        int codeLineIndex, size_t foundPos);
     bool pragmaRUNTIMEPATH(const std::string& input,        int codeLineIndex, size_t foundPos);
@@ -123,6 +124,8 @@ namespace Keywords
     bool keywordSPRITE(Compiler::CodeLine& codeLine,   int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordSOUND(Compiler::CodeLine& codeLine,    int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordSET(Compiler::CodeLine& codeLine,      int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
+    bool keywordASM(Compiler::CodeLine& codeLine,      int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
+    bool keywordENDASM(Compiler::CodeLine& codeLine,   int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
 }
 
 #endif

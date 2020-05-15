@@ -5,6 +5,9 @@
 #include <functional>
 
 
+#define MATH_PI 3.1415926535897932384626433832795028
+
+
 namespace Expression
 {
     enum ExpressionType {IsInvalid=0x8000, HasNumbers=0x0000, HasStrings=0x0001, HasStrConsts=0x0002, HasStrVars=0x0004, HasStringKeywords=0x0008, IsStringExpression=0x000F,
@@ -12,7 +15,7 @@ namespace Expression
     enum NumericType {BadBase=-1, Decimal, HexaDecimal, Octal, Binary};
     enum CCType {BooleanCC, NormalCC, FastCC};
     enum Int16Byte {Int16Both, Int16Low, Int16High};
-    enum VarType {Number, String, Constant, TmpVar, IntVar, ArrVar, StrVar, TmpStrVar};
+    enum VarType {Number, String, Constant, TmpVar, IntVar, Arr1Var, Arr2Var, Arr3Var, StrVar, TmpStrVar};
 
     struct Numeric
     {

@@ -1,6 +1,7 @@
 _runtimePath_ "../runtime"
+_codeRomType_ ROMv1
 
-cls : mode 2
+cls
 
 const POLYSIZE = 5
 const POLYADDR = &h0600

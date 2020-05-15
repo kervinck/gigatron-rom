@@ -1,64 +1,64 @@
-_startAddress_      EQU                     0x0200
+_startAddress_                EQU                               0x0200
 
 ; Internal variables
-serialRawPrev       EQU                     0x0081
-register0           EQU                     0x0082
-register1           EQU                     register0 + 0x02
-register2           EQU                     register0 + 0x04
-register3           EQU                     register0 + 0x06
-register4           EQU                     register0 + 0x08
-register5           EQU                     register0 + 0x0A
-register6           EQU                     register0 + 0x0C
-register7           EQU                     register0 + 0x0E
-register8           EQU                     register0 + 0x10
-register9           EQU                     register0 + 0x12
-register10          EQU                     register0 + 0x14
-register11          EQU                     register0 + 0x16
-register12          EQU                     register0 + 0x18
-register13          EQU                     register0 + 0x1A
-register14          EQU                     register0 + 0x1C
-register15          EQU                     register0 + 0x1E
-fgbgColour          EQU                     register0 + 0x20
-cursorXY            EQU                     register0 + 0x22
-midiStream          EQU                     register0 + 0x24
-midiDelay           EQU                     register0 + 0x26
-miscFlags           EQU                     register0 + 0x28
-fontLutId           EQU                     0x00e0
+serialRawPrev                 EQU                               0x0081
+register0                     EQU                               0x0082
+register1                     EQU                               register0 + 0x02
+register2                     EQU                               register0 + 0x04
+register3                     EQU                               register0 + 0x06
+register4                     EQU                               register0 + 0x08
+register5                     EQU                               register0 + 0x0A
+register6                     EQU                               register0 + 0x0C
+register7                     EQU                               register0 + 0x0E
+register8                     EQU                               register0 + 0x10
+register9                     EQU                               register0 + 0x12
+register10                    EQU                               register0 + 0x14
+register11                    EQU                               register0 + 0x16
+register12                    EQU                               register0 + 0x18
+register13                    EQU                               register0 + 0x1A
+register14                    EQU                               register0 + 0x1C
+register15                    EQU                               register0 + 0x1E
+fgbgColour                    EQU                               register0 + 0x20
+cursorXY                      EQU                               register0 + 0x22
+midiStream                    EQU                               register0 + 0x24
+midiDelay                     EQU                               register0 + 0x26
+miscFlags                     EQU                               register0 + 0x28
+fontLutId                     EQU                               0x00e4
 
 ; Internal Constants
-ENABLE_SCROLL_BIT   EQU                     0x0001
-ON_BOTTOM_ROW_BIT   EQU                     0x0002
-ENABLE_SCROLL_MSK   EQU                     0xfffe
-ON_BOTTOM_ROW_MSK   EQU                     0xfffd
+ENABLE_SCROLL_BIT             EQU                               0x0001
+ON_BOTTOM_ROW_BIT             EQU                               0x0002
+ENABLE_SCROLL_MSK             EQU                               0xfffe
+ON_BOTTOM_ROW_MSK             EQU                               0xfffd
 
 ; Internal buffers
-textWorkArea        EQU                     0x7fa0
+textWorkArea                  EQU                               0x7fa0
 
 ; Includes
-%includePath        "../runtime"
-%include            gigatron.i
-%include            macros.i
+%includePath                  "../runtime"
+%include                      gigatron.i
+%include                      macros.i
 
 ; Labels
-_entryPoint_        EQU                     0x0200
-_1                  EQU                     0x0242
-_2                  EQU                     0x0242
-_3                  EQU                     0x0242
-_10                 EQU                     0x0242
-_20                 EQU                     0x024a
-_30                 EQU                     0x0253
-_40                 EQU                     0x025c
-_50                 EQU                     0x02b5
-_60                 EQU                     0x02bf
-_end_0x0311         EQU                     0x02c1
+_entryPoint_                  EQU                               0x0200
+_1                            EQU                               0x024c
+_2                            EQU                               0x024c
+_3                            EQU                               0x024c
+_10                           EQU                               0x024c
+_20                           EQU                               0x0254
+_30                           EQU                               0x025d
+_40                           EQU                               0x0266
+_50                           EQU                               0x02bf
+_60                           EQU                               0x02c9
+_end_0x031b                   EQU                               0x02cb
 
 ; Variables
-_x                  EQU                     0x0030
-_y                  EQU                     0x0032
+_x                            EQU                               0x0030
+_y                            EQU                               0x0032
 
 ; Strings
-_str_0x7ef5         EQU                     0x7ef5
-_str_0x7ef5         DB                      9 'Gigatron!' 0
+_str_0x7ef5                   EQU                               0x7ef5
+_str_0x7ef5                   DB                                9 'Gigatron!' 0
 
 ; Define Bytes
 
@@ -73,68 +73,70 @@ _str_0x7ef5         DB                      9 'Gigatron!' 0
 ; Lookup Tables
 
 ; Code
-_entryPoint_        LDI                     0x1c
-                    STW                     romType
-                    RomCheck                
-                    InitRealTimeProc        
-                    InitEqOp                
-                    InitNeOp                
-                    InitLeOp                
-                    InitGeOp                
-                    InitLtOp                
-                    InitGtOp                
-                    Initialise                                              ; INIT
+_entryPoint_                  LDI                               0x1c
+                              STW                               romType
+                              RomCheck                          
+                              InitEqOp                          
+                              InitNeOp                          
+                              InitLeOp                          
+                              InitGeOp                          
+                              InitLtOp                          
+                              InitGtOp                          
+                              InitArray2d                       
+                              InitArray3d                       
+                              InitRealTimeProc                  
+                              Initialise                                                        ; INIT
 
-_10                 LDI                     107
-                    STW                     _x
-                    LDI                     113
-                    STW                     _y                              ; x=160-6*9+1:y=120-8+1
+_10                           LDI                               107
+                              STW                               _x
+                              LDI                               113
+                              STW                               _y                              ; x=160-6*9+1:y=120-8+1
 
-_20                 Rand                    
-                    ANDI                    63
-                    ST                      fgbgColour                      ; set BGCOLOUR, rnd(0) AND 63
+_20                           Rand                              
+                              ANDI                              63
+                              ST                                fgbgColour                      ; set BGCOLOUR, rnd(0) AND 63
 
-_30                 Rand                    
-                    ANDI                    63
-                    ST                      fgbgColour + 1                  ; set FGCOLOUR, rnd(0) AND 63
+_30                           Rand                              
+                              ANDI                              63
+                              ST                                fgbgColour + 1                  ; set FGCOLOUR, rnd(0) AND 63
 
-_40                 Rand                    
-                    ANDI                    63
-                    STW                     0xc0
-                    Rand                    
-                    ANDI                    31
-                    ADDW                    0xc0
-                    STW                     0xc2
-                    Rand                    
-                    ANDI                    7
-                    ADDW                    0xc2
-                    STW                     0xc4
-                    Rand                    
-                    ANDI                    7
-                    ADDW                    0xc4
-                    ST                      cursorXY
-                    Rand                    
-                    ANDI                    63
-                    STW                     0xc8
-                    Rand                    
-                    ANDI                    31
-                    ADDW                    0xc8
-                    STW                     0xca
-                    Rand                    
-                    ANDI                    15
-                    ADDW                    0xca
-                    STW                     0xcc
-                    Rand                    
-                    ANDI                    3
-                    ADDW                    0xcc
-                    ST                      cursorXY + 1
-                    AtTextCursor                                            ; at (rnd(0) AND &h3F) + (rnd(0) AND &h1F) + (rnd(0) AND &h07) + (rnd(0) AND &h07), (rnd(0) AND &h3F) + (rnd(0) AND &h1F) + (rnd(0) AND &h0F) + (rnd(0) AND &h03)
+_40                           Rand                              
+                              ANDI                              63
+                              STW                               0xc0
+                              Rand                              
+                              ANDI                              31
+                              ADDW                              0xc0
+                              STW                               0xc2
+                              Rand                              
+                              ANDI                              7
+                              ADDW                              0xc2
+                              STW                               0xc4
+                              Rand                              
+                              ANDI                              7
+                              ADDW                              0xc4
+                              ST                                cursorXY
+                              Rand                              
+                              ANDI                              63
+                              STW                               0xc8
+                              Rand                              
+                              ANDI                              31
+                              ADDW                              0xc8
+                              STW                               0xca
+                              Rand                              
+                              ANDI                              15
+                              ADDW                              0xca
+                              STW                               0xcc
+                              Rand                              
+                              ANDI                              3
+                              ADDW                              0xcc
+                              ST                                cursorXY + 1
+                              AtTextCursor                                                      ; at (rnd(0) AND &h3F) + (rnd(0) AND &h1F) + (rnd(0) AND &h07) + (rnd(0) AND &h07), (rnd(0) AND &h3F) + (rnd(0) AND &h1F) + (rnd(0) AND &h0F) + (rnd(0) AND &h03)
 
-_50                 PrintString             _str_0x7ef5                     ; print "Gigatron!";
+_50                           PrintString                       _str_0x7ef5                     ; print "Gigatron!";
 
-_60                 BRA                     _20                             ; goto &20
+_60                           BRA                               _20                             ; goto &20
 
-_end_0x0311         BRA                     _end_0x0311                     ; END
+_end_0x031b                   BRA                               _end_0x031b                     ; END
 
 
 
@@ -144,30 +146,34 @@ _end_0x0311         BRA                     _end_0x0311                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-romCheck            EQU     0x7ede
-realTimeProc        EQU     0x7ed5
-convertEqOp         EQU     0x7ecc
-convertNeOp         EQU     0x7ec3
-convertLeOp         EQU     0x7eba
-convertGeOp         EQU     0x7eb1
-convertLtOp         EQU     0x7ea8
-convertGtOp         EQU     0x7df6
-rand16bit           EQU     0x7ea0
-resetVideoTable     EQU     0x7cc7
-initClearFuncs      EQU     0x7dd4
-clearCursorRow      EQU     0x7bb6
-printInit           EQU     0x7cb1
-printText           EQU     0x7ce6
-printChar           EQU     0x7aa7
-atTextCursor        EQU     0x7da8
-newLineScroll       EQU     0x79a4
-realTimeProcAddr    EQU     0x00dc
-convertEqOpAddr     EQU     0x00d0
-convertNeOpAddr     EQU     0x00d2
-convertLeOpAddr     EQU     0x00d4
-convertGeOpAddr     EQU     0x00d6
-convertLtOpAddr     EQU     0x00d8
-convertGtOpAddr     EQU     0x00da
+romCheck                      EQU     0x7ede
+realTimeProc                  EQU     0x7dd9
+convertEqOp                   EQU     0x7ed5
+convertNeOp                   EQU     0x7ecc
+convertLeOp                   EQU     0x7ec3
+convertGeOp                   EQU     0x7eba
+convertLtOp                   EQU     0x7eb1
+convertGtOp                   EQU     0x7ea8
+convertArr2d                  EQU     0x7df3
+convertArr3d                  EQU     0x7de2
+rand16bit                     EQU     0x7ea0
+resetVideoTable               EQU     0x7be0
+initClearFuncs                EQU     0x7db7
+clearCursorRow                EQU     0x7ab6
+printInit                     EQU     0x7da1
+printText                     EQU     0x7cba
+printChar                     EQU     0x79a7
+atTextCursor                  EQU     0x7cd3
+newLineScroll                 EQU     0x78a4
+convertEqOpAddr               EQU     0x00d0
+convertNeOpAddr               EQU     0x00d2
+convertLeOpAddr               EQU     0x00d4
+convertGeOpAddr               EQU     0x00d6
+convertLtOpAddr               EQU     0x00d8
+convertGtOpAddr               EQU     0x00da
+convertArr2dAddr              EQU     0x00dc
+convertArr3dAddr              EQU     0x00de
+realTimeProcAddr              EQU     0x00e0
 
 
 ; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
@@ -251,6 +257,34 @@ convertGtOp         BGT     convertGt_1
                     LDI     0
                     RET
 convertGt_1         LDI     1
+                    RET
+
+
+memIndex0           EQU     register0
+memIndex1           EQU     register1
+memIndex2           EQU     register2
+memValue            EQU     register8
+memAddr             EQU     register9
+
+
+convertArr2d        ADDW    memIndex0
+                    ADDW    memIndex0
+                    DEEK
+                    ADDW    memIndex1
+                    ADDW    memIndex1
+                    STW     memAddr
+                    RET
+
+
+convertArr3d        ADDW    memIndex0
+                    ADDW    memIndex0
+                    DEEK
+                    ADDW    memIndex1
+                    ADDW    memIndex1
+                    DEEK
+                    ADDW    memIndex2
+                    ADDW    memIndex2
+                    STW     memAddr
                     RET
 
 

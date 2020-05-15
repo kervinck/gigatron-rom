@@ -9,8 +9,6 @@
 #include "compiler.h"
 
 
-#define MATH_PI 3.1415926535897932384626433832795028
-
 namespace Operators
 {
     bool initialise(void);
@@ -25,13 +23,20 @@ namespace Operators
     Expression::Numeric operatorNOT(Expression::Numeric& numeric);
 
     // Unary math operators
+    Expression::Numeric operatorPOWF(Expression::Numeric& numeric);
+    Expression::Numeric operatorSQRT(Expression::Numeric& numeric);
     Expression::Numeric operatorEXP(Expression::Numeric& numeric);
+    Expression::Numeric operatorEXP2(Expression::Numeric& numeric);
+    Expression::Numeric operatorLOG(Expression::Numeric& numeric);
+    Expression::Numeric operatorLOG2(Expression::Numeric& numeric);
+    Expression::Numeric operatorLOG10(Expression::Numeric& numeric);
     Expression::Numeric operatorSIN(Expression::Numeric& numeric);
     Expression::Numeric operatorCOS(Expression::Numeric& numeric);
     Expression::Numeric operatorTAN(Expression::Numeric& numeric);
     Expression::Numeric operatorASIN(Expression::Numeric& numeric);
     Expression::Numeric operatorACOS(Expression::Numeric& numeric);
     Expression::Numeric operatorATAN(Expression::Numeric& numeric);
+    Expression::Numeric operatorATAN2(Expression::Numeric& numeric);
     Expression::Numeric operatorRAND(Expression::Numeric& numeric);
     Expression::Numeric operatorREV16(Expression::Numeric& numeric);
     Expression::Numeric operatorREV8(Expression::Numeric& numeric);

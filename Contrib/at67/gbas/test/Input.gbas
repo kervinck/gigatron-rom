@@ -18,8 +18,8 @@ a.hi = 1 : a.lo = 0
 b = a.hi + 1
 c.hi = 1
 
-poke &h00E0, a.lo
-doke &h00E0, a.lo - b.hi * 3 + 1 - a
+poke &h08E0, a.lo
+doke &h08E0, a.lo - b.hi * 3 + 1 - a
 
 const big$="aioujehfiadsuhgfaissuhfgdiughafpiusfghpdsiufghspi;udf"
 const a=23

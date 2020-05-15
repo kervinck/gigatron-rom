@@ -1,8 +1,9 @@
 _runtimePath_ "../runtime"
+_codeRomType_ ROMv2
 
 ' draw random ellipses, not mathematically correct because of cheat avoiding overflows!
 
-cls : mode 2
+cls
 
 loop: 
     color = rnd(0) AND &h3F

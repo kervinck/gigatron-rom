@@ -1,6 +1,7 @@
 _runtimePath_ "../runtime"
+_codeRomType_ ROMv1
 
-cls : mode 2
+cls
 
 loop: 
     set FGCOLOUR, rnd(0) AND &h3F

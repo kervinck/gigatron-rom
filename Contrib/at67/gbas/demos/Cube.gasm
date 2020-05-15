@@ -1,116 +1,116 @@
-_startAddress_      EQU                     0x0200
+_startAddress_                EQU                               0x0200
 
 ; Internal variables
-serialRawPrev       EQU                     0x0081
-register0           EQU                     0x0082
-register1           EQU                     register0 + 0x02
-register2           EQU                     register0 + 0x04
-register3           EQU                     register0 + 0x06
-register4           EQU                     register0 + 0x08
-register5           EQU                     register0 + 0x0A
-register6           EQU                     register0 + 0x0C
-register7           EQU                     register0 + 0x0E
-register8           EQU                     register0 + 0x10
-register9           EQU                     register0 + 0x12
-register10          EQU                     register0 + 0x14
-register11          EQU                     register0 + 0x16
-register12          EQU                     register0 + 0x18
-register13          EQU                     register0 + 0x1A
-register14          EQU                     register0 + 0x1C
-register15          EQU                     register0 + 0x1E
-fgbgColour          EQU                     register0 + 0x20
-cursorXY            EQU                     register0 + 0x22
-midiStream          EQU                     register0 + 0x24
-midiDelay           EQU                     register0 + 0x26
-miscFlags           EQU                     register0 + 0x28
-fontLutId           EQU                     0x00e0
+serialRawPrev                 EQU                               0x0081
+register0                     EQU                               0x0082
+register1                     EQU                               register0 + 0x02
+register2                     EQU                               register0 + 0x04
+register3                     EQU                               register0 + 0x06
+register4                     EQU                               register0 + 0x08
+register5                     EQU                               register0 + 0x0A
+register6                     EQU                               register0 + 0x0C
+register7                     EQU                               register0 + 0x0E
+register8                     EQU                               register0 + 0x10
+register9                     EQU                               register0 + 0x12
+register10                    EQU                               register0 + 0x14
+register11                    EQU                               register0 + 0x16
+register12                    EQU                               register0 + 0x18
+register13                    EQU                               register0 + 0x1A
+register14                    EQU                               register0 + 0x1C
+register15                    EQU                               register0 + 0x1E
+fgbgColour                    EQU                               register0 + 0x20
+cursorXY                      EQU                               register0 + 0x22
+midiStream                    EQU                               register0 + 0x24
+midiDelay                     EQU                               register0 + 0x26
+miscFlags                     EQU                               register0 + 0x28
+fontLutId                     EQU                               0x00e4
 
 ; Internal Constants
-ENABLE_SCROLL_BIT   EQU                     0x0001
-ON_BOTTOM_ROW_BIT   EQU                     0x0002
-ENABLE_SCROLL_MSK   EQU                     0xfffe
-ON_BOTTOM_ROW_MSK   EQU                     0xfffd
+ENABLE_SCROLL_BIT             EQU                               0x0001
+ON_BOTTOM_ROW_BIT             EQU                               0x0002
+ENABLE_SCROLL_MSK             EQU                               0xfffe
+ON_BOTTOM_ROW_MSK             EQU                               0xfffd
 
 ; Internal buffers
-textWorkArea        EQU                     0x7fa0
+textWorkArea                  EQU                               0x7fa0
 
 ; Includes
-%includePath        "../runtime"
-%include            gigatron.i
-%include            macros.i
+%includePath                  "../runtime"
+%include                      gigatron.i
+%include                      macros.i
 
 ; Labels
-_entryPoint_        EQU                     0x0200
-_10                 EQU                     0x025b
-_20                 EQU                     0x0272
-_25                 EQU                     0x027b
-_30                 EQU                     0x029b
-_35                 EQU                     0x02bd
-_40                 EQU                     0x02d6
-_45                 EQU                     0x02ed
-_50                 EQU                     0x02f1
-_100                EQU                     0x0331
-_110                EQU                     0x03ca
-_120                EQU                     0x03de
-_130                EQU                     0x03f1
-_140                EQU                     0x0418
-_150                EQU                     0x0429
-_160                EQU                     0x043a
-_170                EQU                     0x044b
-_200                EQU                     0x0452
-_205                EQU                     0x0460
-_210                EQU                     0x046d
-_215                EQU                     0x047a
-_220                EQU                     0x0487
-_225                EQU                     0x0494
-_230                EQU                     0x04a1
-_235                EQU                     0x04ae
-_240                EQU                     0x04bb
-_245                EQU                     0x04c8
-_250                EQU                     0x04d5
-_255                EQU                     0x04e2
-_254                EQU                     0x04f1
-_253                EQU                     0x0538
-_page_0x0300        EQU                     0x0300
-_next_0x03a0        EQU                     0x0350
-_else_0x03c6        EQU                     0x0368
-_end_0x0430         EQU                     0x03c8
-_page_0x0400        EQU                     0x0400
-_page_0x0500        EQU                     0x0500
-_else_0x0590        EQU                     0x052d
-_else_0x05cf        EQU                     0x0566
-_end_0x05da         EQU                     0x0571
+_entryPoint_                  EQU                               0x0200
+_10                           EQU                               0x0265
+_20                           EQU                               0x027c
+_25                           EQU                               0x0285
+_30                           EQU                               0x02a5
+_35                           EQU                               0x02c7
+_40                           EQU                               0x02e0
+_45                           EQU                               0x0306
+_50                           EQU                               0x030a
+_100                          EQU                               0x033a
+_110                          EQU                               0x03d3
+_120                          EQU                               0x03e7
+_130                          EQU                               0x0409
+_140                          EQU                               0x0421
+_150                          EQU                               0x0432
+_160                          EQU                               0x0443
+_170                          EQU                               0x0454
+_200                          EQU                               0x045b
+_205                          EQU                               0x0469
+_210                          EQU                               0x0476
+_215                          EQU                               0x0483
+_220                          EQU                               0x0490
+_225                          EQU                               0x049d
+_230                          EQU                               0x04aa
+_235                          EQU                               0x04b7
+_240                          EQU                               0x04c4
+_245                          EQU                               0x04d1
+_250                          EQU                               0x04de
+_255                          EQU                               0x04eb
+_254                          EQU                               0x0509
+_253                          EQU                               0x0540
+_page_0x0300                  EQU                               0x0300
+_next_0x03aa                  EQU                               0x0359
+_else_0x03d0                  EQU                               0x0371
+_end_0x043a                   EQU                               0x03d1
+_page_0x0400                  EQU                               0x0400
+_page_0x0500                  EQU                               0x0500
+_else_0x059a                  EQU                               0x0535
+_else_0x05d9                  EQU                               0x056e
+_end_0x05e4                   EQU                               0x0579
 
 ; Variables
-_K                  EQU                     0x0030
-_X                  EQU                     0x0032
-_M                  EQU                     0x0034
-_N                  EQU                     0x0036
-_I                  EQU                     0x0038
-_A                  EQU                     0x003a
-_B                  EQU                     0x003c
-_L                  EQU                     0x003e
-_F                  EQU                     0x0040
-_P_array            EQU                     0x7ef0
-_P_array            DW                      0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_Q_array            EQU                     0x7ee0
-_Q_array            DW                      0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_U                  EQU                     0x0042
-_R                  EQU                     0x0044
-_pi                 EQU                     0x0046
-_qi                 EQU                     0x0048
-_S                  EQU                     0x004a
-_C                  EQU                     0x004c
-_timer              EQU                     0x004e
-_tick               EQU                     0x0050
-_i                  EQU                     0x0052
-_ticks              EQU                     0x0054
+_K                            EQU                               0x0030
+_X                            EQU                               0x0032
+_M                            EQU                               0x0034
+_N                            EQU                               0x0036
+_I                            EQU                               0x0038
+_A                            EQU                               0x003a
+_B                            EQU                               0x003c
+_L                            EQU                               0x003e
+_F                            EQU                               0x0040
+_P_array                      EQU                               0x7ef0
+_P_array                      DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_Q_array                      EQU                               0x7ee0
+_Q_array                      DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_U                            EQU                               0x0042
+_R                            EQU                               0x0044
+_pi                           EQU                               0x0046
+_qi                           EQU                               0x0048
+_S                            EQU                               0x004a
+_C                            EQU                               0x004c
+_timer                        EQU                               0x004e
+_tick                         EQU                               0x0050
+_i                            EQU                               0x0052
+_ticks                        EQU                               0x0054
 
 ; Strings
-_str_0x7edd         EQU                     0x7edd
-_str_0x7edd         DB                      1 ' ' 0
-_str_0x7ed8         EQU                     0x7ed8
-_str_0x7ed8         DB                      3 '/60' 0
+_str_0x7edd                   EQU                               0x7edd
+_str_0x7edd                   DB                                1 ' ' 0
+_str_0x7ed8                   EQU                               0x7ed8
+_str_0x7ed8                   DB                                3 '/60' 0
 
 ; Define Bytes
 
@@ -125,427 +125,429 @@ _str_0x7ed8         DB                      3 '/60' 0
 ; Lookup Tables
 
 ; Code
-_entryPoint_        LDI                     0x28
-                    STW                     romType
-                    RomCheck                
-                    InitRealTimeProc        
-                    InitEqOp                
-                    InitNeOp                
-                    InitLeOp                
-                    InitGeOp                
-                    InitLtOp                
-                    InitGtOp                
-                    Initialise                                              ; INIT
+_entryPoint_                  LDI                               0x28
+                              STW                               romType
+                              RomCheck                          
+                              InitEqOp                          
+                              InitNeOp                          
+                              InitLeOp                          
+                              InitGeOp                          
+                              InitLtOp                          
+                              InitGtOp                          
+                              InitArray2d                       
+                              InitArray3d                       
+                              InitRealTimeProc                  
+                              Initialise                                                        ; INIT
 
-                    LDI                     0
-                    STW                     _K
-                    STW                     _X
-                    STW                     _M
-                    STW                     _N
-                    STW                     _I
-                    STW                     _A
-                    STW                     _B
-                    STW                     _L
-                    STW                     _F                              ; K=0:X=K:M=X:N=M:I=N:A=I:B=A:L=B:F=L
+                              LDI                               0
+                              STW                               _K
+                              STW                               _X
+                              STW                               _M
+                              STW                               _N
+                              STW                               _I
+                              STW                               _A
+                              STW                               _B
+                              STW                               _L
+                              STW                               _F                              ; K=0:X=K:M=X:N=M:I=N:A=I:B=A:L=B:F=L
 
-                    LDWI                    16128
-                    STW                     fgbgColour                      ; set FGBGCOLOUR, &h3F00
+                              LDWI                              16128
+                              STW                               fgbgColour                      ; set FGBGCOLOUR, &h3F00
 
-_10                 LDI                     3
-                    STW                     graphicsMode
-                    ScanlineMode            
-                    ClearVertBlinds         
-                    LDI                     48
-                    STW                     _U
-                    LDWI                    _100
-                    CALL                    giga_vAC                        ; MODE 3:CLS:U=48:GOTO 100
+_10                           LDI                               3
+                              STW                               graphicsMode
+                              ScanlineMode                      
+                              ClearVertBlinds                   
+                              LDI                               48
+                              STW                               _U
+                              LDWI                              _100
+                              CALL                              giga_vAC                        ; MODE 3:CLS:U=48:GOTO 100
 
-_20                 PUSH                    
-                    LDW                     _K
-                    ADDW                    _L
-                    ADDW                    _F
-                    STW                     _R                              ; R=K+L+F
+_20                           PUSH                              
+                              LDW                               _K
+                              ADDW                              _L
+                              ADDW                              _F
+                              STW                               _R                              ; R=K+L+F
 
-_25                 LDW                     _X
-                    STW                     mathX
-                    LDW                     _R
-                    STW                     mathY
-                    LDWI                    divide16bit
-                    CALL                    giga_vAC
-                    ADDI                    80
-                    STW                     _pi
-                    STW                     register0
-                    LDWI                    0x7ef0
-                    ADDW                    _I
-                    ADDW                    _I
-                    STW                     register1
-                    LDW                     register0
-                    DOKE                    register1                       ; pi=80+X/R : P(I)=pi
+_25                           LDW                               _X
+                              STW                               mathX
+                              LDW                               _R
+                              STW                               mathY
+                              LDWI                              divide16bit
+                              CALL                              giga_vAC
+                              ADDI                              80
+                              STW                               _pi
+                              STW                               memValue
+                              LDWI                              0x7ef0
+                              ADDW                              _I
+                              ADDW                              _I
+                              STW                               memAddr
+                              LDW                               memValue
+                              DOKE                              memAddr                         ; pi=80+X/R : P(I)=pi
 
-_30                 LDW                     _M
-                    SUBW                    _N
-                    STW                     mathX
-                    LDW                     _R
-                    STW                     mathY
-                    LDWI                    divide16bit
-                    CALL                    giga_vAC
-                    ADDI                    60
-                    STW                     _qi
-                    STW                     register0
-                    LDWI                    0x7ee0
-                    ADDW                    _I
-                    ADDW                    _I
-                    STW                     register1
-                    LDW                     register0
-                    DOKE                    register1                       ; qi=60+(M-N)/R : Q(I)=qi
+_30                           LDW                               _M
+                              SUBW                              _N
+                              STW                               mathX
+                              LDW                               _R
+                              STW                               mathY
+                              LDWI                              divide16bit
+                              CALL                              giga_vAC
+                              ADDI                              60
+                              STW                               _qi
+                              STW                               memValue
+                              LDWI                              0x7ee0
+                              ADDW                              _I
+                              ADDW                              _I
+                              STW                               memAddr
+                              LDW                               memValue
+                              DOKE                              memAddr                         ; qi=60+(M-N)/R : Q(I)=qi
 
-_35                 LDI                     160
-                    SUBW                    _pi
-                    STW                     register0
-                    LDW                     _I
-                    ADDI                    4
-                    STW                     register1
-                    LDWI                    0x7ef0
-                    ADDW                    register1
-                    ADDW                    register1
-                    STW                     register1
-                    LDW                     register0
-                    DOKE                    register1                       ; P(I+4)=160-pi
+_35                           LDI                               160
+                              SUBW                              _pi
+                              STW                               memValue
+                              LDW                               _I
+                              ADDI                              4
+                              STW                               memIndex0
+                              LDWI                              0x7ef0
+                              ADDW                              memIndex0
+                              ADDW                              memIndex0
+                              STW                               memAddr
+                              LDW                               memValue
+                              DOKE                              memAddr                         ; P(I+4)=160-pi
 
-_40                 LDW                     _qi
-                    STW                     register0
-                    LDW                     _I
-                    ADDI                    4
-                    STW                     register1
-                    LDWI                    0x7ee0
-                    ADDW                    register1
-                    ADDW                    register1
-                    STW                     register1
-                    LDW                     register0
-                    DOKE                    register1                       ; Q(I+4)=qi
+_40                           LDW                               _qi
+                              STW                               memValue
+                              LDW                               _I
+                              ADDI                              4
+                              STW                               memIndex0
+                              LDWI                              0x7ee0
+                              ADDW                              memIndex0
+                              ADDW                              memIndex0
+                              STW                               memAddr
+                              STW                               0xe2
+                              LDWI                              _page_0x0300
+                              CALL                              giga_vAC
+_page_0x0300                  LDW                               0xe2
+                              LDW                               memValue
+                              DOKE                              memAddr                         ; Q(I+4)=qi
 
-_45                 INC                     _I
-                    Return                                                  ; INC I:RETURN
+_45                           INC                               _I
+                              Return                                                            ; INC I:RETURN
 
-_50                 PUSH                    
-                    STW                     0xde
-                    LDWI                    _page_0x0300
-                    CALL                    giga_vAC
-_page_0x0300        LDW                     0xde
-                    LDWI                    0x7ef0
-                    ADDW                    _A
-                    ADDW                    _A
-                    DEEK                    
-                    STW                     drawLine_x1
-                    LDWI                    0x7ee0
-                    ADDW                    _A
-                    ADDW                    _A
-                    DEEK                    
-                    STW                     drawLine_y1
-                    LDWI                    0x7ef0
-                    ADDW                    _B
-                    ADDW                    _B
-                    DEEK                    
-                    STW                     drawLine_x2
-                    LDWI                    0x7ee0
-                    ADDW                    _B
-                    ADDW                    _B
-                    DEEK                    
-                    STW                     drawLine_y2
-                    DrawLine                
-                    Return                                                  ; LINE P(A), Q(A), P(B), Q(B) : RETURN
+_50                           PUSH                              
+                              LDWI                              0x7ef0
+                              ADDW                              _A
+                              ADDW                              _A
+                              DEEK                              
+                              STW                               drawLine_x1
+                              LDWI                              0x7ee0
+                              ADDW                              _A
+                              ADDW                              _A
+                              DEEK                              
+                              STW                               drawLine_y1
+                              LDWI                              0x7ef0
+                              ADDW                              _B
+                              ADDW                              _B
+                              DEEK                              
+                              STW                               drawLine_x2
+                              LDWI                              0x7ee0
+                              ADDW                              _B
+                              ADDW                              _B
+                              DEEK                              
+                              STW                               drawLine_y2
+                              DrawLine                          
+                              Return                                                            ; LINE P(A), Q(A), P(B), Q(B) : RETURN
 
-_100                LDI                     45
-                    STW                     _S
-                    LDI                     45
-                    STW                     _C
-                    LDW                     _U
-                    LSLW                    
-                    LSLW                    
-                    STW                     _F                              ; S=45:C=45:F=U LSL 2
+_100                          LDI                               45
+                              STW                               _S
+                              LDI                               45
+                              STW                               _C
+                              LDW                               _U
+                              LSLW                              
+                              LSLW                              
+                              STW                               _F                              ; S=45:C=45:F=U LSL 2
 
-                    LDWI                    _110
-                    CALL                    giga_vAC                        ; gosub 110
+                              LDWI                              _110
+                              CALL                              giga_vAC                        ; gosub 110
 
-                    LDI                     0
-                    STW                     _timer
-                    LD                      giga_frameCount
-                    STW                     _tick                           ; timer=0 : tick=get("FRAMECOUNT")
+                              LDI                               0
+                              STW                               _timer
+                              LD                                giga_frameCount
+                              STW                               _tick                           ; timer=0 : tick=get("FRAMECOUNT")
 
-                    LDI                     0
-                    STW                     _i                              ; for i=0 &to 100
+                              LDI                               0
+                              STW                               _i                              ; for i=0 &to 100
 
-_next_0x03a0        LDW                     _tick
-                    STW                     _ticks
-                    LD                      giga_frameCount
-                    STW                     _tick
-                    SUBW                    _ticks
-                    STW                     _ticks                          ; ticks=tick : tick=get("FRAMECOUNT") : ticks=tick-ticks
+_next_0x03aa                  LDW                               _tick
+                              STW                               _ticks
+                              LD                                giga_frameCount
+                              STW                               _tick
+                              SUBW                              _ticks
+                              STW                               _ticks                          ; ticks=tick : tick=get("FRAMECOUNT") : ticks=tick-ticks
 
-                    LDW                     _ticks
-                    BGE                     _else_0x03c6
-                    LDWI                    256
-                    ADDW                    _ticks
-                    STW                     _ticks                          ; if ticks &&< 0 then ticks=ticks+256
+                              LDW                               _ticks
+                              BGE                               _else_0x03d0
+                              LDWI                              256
+                              ADDW                              _ticks
+                              STW                               _ticks                          ; if ticks &&< 0 then ticks=ticks+256
 
-_else_0x03c6        LDW                     _timer
-                    ADDW                    _ticks
-                    STW                     _timer                          ; timer=timer+ticks
+_else_0x03d0                  LDW                               _timer
+                              ADDW                              _ticks
+                              STW                               _timer                          ; timer=timer+ticks
 
-                    LDWI                    _254
-                    CALL                    giga_vAC                        ; gosub 254
+                              LDWI                              _254
+                              CALL                              giga_vAC                        ; gosub 254
 
-                    ForNextInc              _i _next_0x03a0 100             ; next i
+                              ForNextInc                        _i _next_0x03aa 100             ; next i
 
-                    LDWI                    giga_videoTop
-                    STW                     register0
-                    LDI                     0
-                    POKE                    register0                       ; set VIDEOTOP, 0 'enable full video output
+                              LDWI                              giga_videoTop
+                              STW                               register0
+                              LDI                               0
+                              POKE                              register0                       ; set VIDEOTOP, 0 'enable full video output
 
-                    LDW                     _timer
-                    STW                     mathX
-                    LDI                     60
-                    STW                     mathY
-                    LDWI                    divide16bit
-                    CALL                    giga_vAC
-                    PrintAcInt16            
-                    PrintString             _str_0x7edd
-                    LDW                     _timer
-                    STW                     mathX
-                    LDI                     60
-                    STW                     mathY
-                    LDWI                    divide16bit
-                    CALL                    giga_vAC
-                    LDW                     mathRem
-                    PrintAcInt16            
-                    PrintString             _str_0x7ed8
-                    NewLine                                                 ; print timer/60;" ";timer % 60;"/60"
+                              LDW                               _timer
+                              STW                               mathX
+                              LDI                               60
+                              STW                               mathY
+                              LDWI                              divide16bit
+                              CALL                              giga_vAC
+                              PrintAcInt16                      
+                              PrintString                       _str_0x7edd
+                              LDW                               _timer
+                              STW                               mathX
+                              LDI                               60
+                              STW                               mathY
+                              LDWI                              divide16bit
+                              CALL                              giga_vAC
+                              LDW                               mathRem
+                              PrintAcInt16                      
+                              PrintString                       _str_0x7ed8
+                              NewLine                                                           ; print timer/60;" ";timer % 60;"/60"
 
-_end_0x0430         BRA                     _end_0x0430                     ; end
+_end_0x043a                   BRA                               _end_0x043a                     ; end
 
-_110                PUSH                    
-                    LDI                     0
-                    STW                     _I
-                    LDW                     _U
-                    STW                     mathX
-                    LDW                     _U
-                    STW                     mathY
-                    LDWI                    multiply16bit
-                    CALL                    giga_vAC
-                    STW                     _X                              ; I=0:X=U*U
+_110                          PUSH                              
+                              LDI                               0
+                              STW                               _I
+                              LDW                               _U
+                              STW                               mathX
+                              LDW                               _U
+                              STW                               mathY
+                              LDWI                              multiply16bit
+                              CALL                              giga_vAC
+                              STW                               _X                              ; I=0:X=U*U
 
-_120                LDW                     _S
-                    STW                     _K
-                    LDW                     _U
-                    STW                     mathX
-                    LDW                     _C
-                    STW                     mathY
-                    LDWI                    multiply16bit
-                    CALL                    giga_vAC
-                    STW                     _M                              ; K=S:M=U*C
+_120                          LDW                               _S
+                              STW                               _K
+                              LDW                               _U
+                              STW                               mathX
+                              LDW                               _C
+                              STW                               mathY
+                              STW                               0xe2
+                              LDWI                              _page_0x0400
+                              CALL                              giga_vAC
+_page_0x0400                  LDW                               0xe2
+                              LDWI                              multiply16bit
+                              CALL                              giga_vAC
+                              STW                               _M                              ; K=S:M=U*C
 
-_130                LDW                     _C
-                    STW                     0xde
-                    LDWI                    _page_0x0400
-                    CALL                    giga_vAC
-_page_0x0400        LDW                     0xde
-                    STW                     _L
-                    LDW                     _U
-                    STW                     mathX
-                    LDW                     _S
-                    STW                     mathY
-                    LDWI                    multiply16bit
-                    CALL                    giga_vAC
-                    STW                     _N
-                    LDWI                    _20
-                    CALL                    giga_vAC                        ; L=C:N=U*S:GOSUB 20
+_130                          LDW                               _C
+                              STW                               _L
+                              LDW                               _U
+                              STW                               mathX
+                              LDW                               _S
+                              STW                               mathY
+                              LDWI                              multiply16bit
+                              CALL                              giga_vAC
+                              STW                               _N
+                              LDWI                              _20
+                              CALL                              giga_vAC                        ; L=C:N=U*S:GOSUB 20
 
-_140                LDI                     0
-                    SUBW                    _L
-                    STW                     _L
-                    LDI                     0
-                    SUBW                    _N
-                    STW                     _N
-                    LDWI                    _20
-                    CALL                    giga_vAC                        ; L=-L:N=-N:GOSUB 20
+_140                          LDI                               0
+                              SUBW                              _L
+                              STW                               _L
+                              LDI                               0
+                              SUBW                              _N
+                              STW                               _N
+                              LDWI                              _20
+                              CALL                              giga_vAC                        ; L=-L:N=-N:GOSUB 20
 
-_150                LDI                     0
-                    SUBW                    _K
-                    STW                     _K
-                    LDI                     0
-                    SUBW                    _M
-                    STW                     _M
-                    LDWI                    _20
-                    CALL                    giga_vAC                        ; K=-K:M=-M:GOSUB 20
+_150                          LDI                               0
+                              SUBW                              _K
+                              STW                               _K
+                              LDI                               0
+                              SUBW                              _M
+                              STW                               _M
+                              LDWI                              _20
+                              CALL                              giga_vAC                        ; K=-K:M=-M:GOSUB 20
 
-_160                LDI                     0
-                    SUBW                    _L
-                    STW                     _L
-                    LDI                     0
-                    SUBW                    _N
-                    STW                     _N
-                    LDWI                    _20
-                    CALL                    giga_vAC                        ; L=-L:N=-N:GOSUB 20
+_160                          LDI                               0
+                              SUBW                              _L
+                              STW                               _L
+                              LDI                               0
+                              SUBW                              _N
+                              STW                               _N
+                              LDWI                              _20
+                              CALL                              giga_vAC                        ; L=-L:N=-N:GOSUB 20
 
-_170                LDWI                    _200
-                    CALL                    giga_vAC
-                    Return                                                  ; GOSUB 200:RETURN
+_170                          LDWI                              _200
+                              CALL                              giga_vAC
+                              Return                                                            ; GOSUB 200:RETURN
 
-_200                PUSH                    
-                    LDI                     0
-                    STW                     _A
-                    LDI                     1
-                    STW                     _B
-                    LDWI                    _50
-                    CALL                    giga_vAC                        ; A=0:B=1:GOSUB 50
+_200                          PUSH                              
+                              LDI                               0
+                              STW                               _A
+                              LDI                               1
+                              STW                               _B
+                              LDWI                              _50
+                              CALL                              giga_vAC                        ; A=0:B=1:GOSUB 50
 
-_205                LDI                     1
-                    STW                     _A
-                    LDI                     2
-                    STW                     _B
-                    LDWI                    _50
-                    CALL                    giga_vAC                        ; A=1:B=2:GOSUB 50
+_205                          LDI                               1
+                              STW                               _A
+                              LDI                               2
+                              STW                               _B
+                              LDWI                              _50
+                              CALL                              giga_vAC                        ; A=1:B=2:GOSUB 50
 
-_210                LDI                     2
-                    STW                     _A
-                    LDI                     3
-                    STW                     _B
-                    LDWI                    _50
-                    CALL                    giga_vAC                        ; A=2:B=3:GOSUB 50
+_210                          LDI                               2
+                              STW                               _A
+                              LDI                               3
+                              STW                               _B
+                              LDWI                              _50
+                              CALL                              giga_vAC                        ; A=2:B=3:GOSUB 50
 
-_215                LDI                     3
-                    STW                     _A
-                    LDI                     0
-                    STW                     _B
-                    LDWI                    _50
-                    CALL                    giga_vAC                        ; A=3:B=0:GOSUB 50
+_215                          LDI                               3
+                              STW                               _A
+                              LDI                               0
+                              STW                               _B
+                              LDWI                              _50
+                              CALL                              giga_vAC                        ; A=3:B=0:GOSUB 50
 
-_220                LDI                     4
-                    STW                     _A
-                    LDI                     5
-                    STW                     _B
-                    LDWI                    _50
-                    CALL                    giga_vAC                        ; A=4:B=5:GOSUB 50
+_220                          LDI                               4
+                              STW                               _A
+                              LDI                               5
+                              STW                               _B
+                              LDWI                              _50
+                              CALL                              giga_vAC                        ; A=4:B=5:GOSUB 50
 
-_225                LDI                     5
-                    STW                     _A
-                    LDI                     6
-                    STW                     _B
-                    LDWI                    _50
-                    CALL                    giga_vAC                        ; A=5:B=6:GOSUB 50
+_225                          LDI                               5
+                              STW                               _A
+                              LDI                               6
+                              STW                               _B
+                              LDWI                              _50
+                              CALL                              giga_vAC                        ; A=5:B=6:GOSUB 50
 
-_230                LDI                     6
-                    STW                     _A
-                    LDI                     7
-                    STW                     _B
-                    LDWI                    _50
-                    CALL                    giga_vAC                        ; A=6:B=7:GOSUB 50
+_230                          LDI                               6
+                              STW                               _A
+                              LDI                               7
+                              STW                               _B
+                              LDWI                              _50
+                              CALL                              giga_vAC                        ; A=6:B=7:GOSUB 50
 
-_235                LDI                     7
-                    STW                     _A
-                    LDI                     4
-                    STW                     _B
-                    LDWI                    _50
-                    CALL                    giga_vAC                        ; A=7:B=4:GOSUB 50
+_235                          LDI                               7
+                              STW                               _A
+                              LDI                               4
+                              STW                               _B
+                              LDWI                              _50
+                              CALL                              giga_vAC                        ; A=7:B=4:GOSUB 50
 
-_240                LDI                     4
-                    STW                     _A
-                    LDI                     0
-                    STW                     _B
-                    LDWI                    _50
-                    CALL                    giga_vAC                        ; A=4:B=0:GOSUB 50
+_240                          LDI                               4
+                              STW                               _A
+                              LDI                               0
+                              STW                               _B
+                              LDWI                              _50
+                              CALL                              giga_vAC                        ; A=4:B=0:GOSUB 50
 
-_245                LDI                     5
-                    STW                     _A
-                    LDI                     1
-                    STW                     _B
-                    LDWI                    _50
-                    CALL                    giga_vAC                        ; A=5:B=1:GOSUB 50
+_245                          LDI                               5
+                              STW                               _A
+                              LDI                               1
+                              STW                               _B
+                              LDWI                              _50
+                              CALL                              giga_vAC                        ; A=5:B=1:GOSUB 50
 
-_250                LDI                     6
-                    STW                     _A
-                    LDI                     2
-                    STW                     _B
-                    LDWI                    _50
-                    CALL                    giga_vAC                        ; A=6:B=2:GOSUB 50
+_250                          LDI                               6
+                              STW                               _A
+                              LDI                               2
+                              STW                               _B
+                              LDWI                              _50
+                              CALL                              giga_vAC                        ; A=6:B=2:GOSUB 50
 
-_255                LDI                     7
-                    STW                     _A
-                    LDI                     3
-                    STW                     _B
-                    LDWI                    _50
-                    CALL                    giga_vAC                        ; A=7:B=3:GOSUB 50
+_255                          LDI                               7
+                              STW                               _A
+                              LDI                               3
+                              STW                               _B
+                              STW                               0xe2
+                              LDWI                              _page_0x0500
+                              CALL                              giga_vAC
+_page_0x0500                  LDW                               0xe2
+                              LDWI                              _50
+                              CALL                              giga_vAC                        ; A=7:B=3:GOSUB 50
 
-                    Return                                                  ; return
+                              Return                                                            ; return
 
-_254                PUSH                    
-                    STW                     0xde
-                    LDWI                    _page_0x0500
-                    CALL                    giga_vAC
-_page_0x0500        LDW                     0xde
-                    LDWI                    giga_videoTop
-                    STW                     register0
-                    LDI                     238
-                    POKE                    register0                       ; set VIDEOTOP, 238 'disable video output
+_254                          PUSH                              
+                              LDWI                              giga_videoTop
+                              STW                               register0
+                              LDI                               238
+                              POKE                              register0                       ; set VIDEOTOP, 238 'disable video output
 
-                    LDI                     0
-                    ST                      fgbgColour + 1
-                    LDWI                    _200
-                    CALL                    giga_vAC                        ; set FGCOLOUR, &h00 : gosub 200 'erase cube
+                              LDI                               0
+                              ST                                fgbgColour + 1
+                              LDWI                              _200
+                              CALL                              giga_vAC                        ; set FGCOLOUR, &h00 : gosub 200 'erase cube
 
-                    LDWI                    giga_videoTop
-                    STW                     register0
-                    LDI                     40
-                    POKE                    register0                       ; set VIDEOTOP, 40 'enable video output
+                              LDWI                              giga_videoTop
+                              STW                               register0
+                              LDI                               40
+                              POKE                              register0                       ; set VIDEOTOP, 40 'enable video output
 
-                    LDW                     _S
-                    ADDI                    5
-                    STW                     _S
-                    SUBI                    45
-                    BLT                     _else_0x0590
-                    LDWI                    -40
-                    STW                     _S                              ; S = S + 5 : if S &&>= 45 then S = -40
+                              LDW                               _S
+                              ADDI                              5
+                              STW                               _S
+                              SUBI                              45
+                              BLT                               _else_0x059a
+                              LDWI                              -40
+                              STW                               _S                              ; S = S + 5 : if S &&>= 45 then S = -40
 
-_else_0x0590        LDI                     63
-                    ST                      fgbgColour + 1
-                    LDWI                    _110
-                    CALL                    giga_vAC                        ; set FGCOLOUR, &h3F : gosub 110 'draw cube
+_else_0x059a                  LDI                               63
+                              ST                                fgbgColour + 1
+                              LDWI                              _110
+                              CALL                              giga_vAC                        ; set FGCOLOUR, &h3F : gosub 110 'draw cube
 
-                    Return                                                  ; return
+                              Return                                                            ; return
 
-_253                PUSH                    
-                    LDWI                    giga_videoTop
-                    STW                     register0
-                    LDI                     238
-                    POKE                    register0                       ; set VIDEOTOP, 238 'disable video output
+_253                          PUSH                              
+                              LDWI                              giga_videoTop
+                              STW                               register0
+                              LDI                               238
+                              POKE                              register0                       ; set VIDEOTOP, 238 'disable video output
 
-                    LDI                     0
-                    ST                      fgbgColour + 1
-                    LDWI                    _200
-                    CALL                    giga_vAC                        ; set FGCOLOUR, &h00 : gosub 200 'erase cube
+                              LDI                               0
+                              ST                                fgbgColour + 1
+                              LDWI                              _200
+                              CALL                              giga_vAC                        ; set FGCOLOUR, &h00 : gosub 200 'erase cube
 
-                    LDWI                    giga_videoTop
-                    STW                     register0
-                    LDI                     40
-                    POKE                    register0                       ; set VIDEOTOP, 40 'enable video output
+                              LDWI                              giga_videoTop
+                              STW                               register0
+                              LDI                               40
+                              POKE                              register0                       ; set VIDEOTOP, 40 'enable video output
 
-                    LDW                     _S
-                    SUBI                    5
-                    STW                     _S
-                    LDWI                    -45
-                    SUBW                    _S
-                    BLE                     _else_0x05cf
-                    LDI                     40
-                    STW                     _S                              ; S = S - 5 : if S &&<= -45 then S = 40
+                              LDW                               _S
+                              SUBI                              5
+                              STW                               _S
+                              LDWI                              -45
+                              SUBW                              _S
+                              BLE                               _else_0x05d9
+                              LDI                               40
+                              STW                               _S                              ; S = S - 5 : if S &&<= -45 then S = 40
 
-_else_0x05cf        LDI                     63
-                    ST                      fgbgColour + 1
-                    LDWI                    _110
-                    CALL                    giga_vAC                        ; set FGCOLOUR, &h3F : gosub 110 'draw cube
+_else_0x05d9                  LDI                               63
+                              ST                                fgbgColour + 1
+                              LDWI                              _110
+                              CALL                              giga_vAC                        ; set FGCOLOUR, &h3F : gosub 110 'draw cube
 
-                    Return                                                  ; return
+                              Return                                                            ; return
 
-_end_0x05da         BRA                     _end_0x05da                     ; END
+_end_0x05e4                   BRA                               _end_0x05e4                     ; END
 
 
 
@@ -555,38 +557,42 @@ _end_0x05da         BRA                     _end_0x05da                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-romCheck            EQU     0x7ec1
-realTimeProc        EQU     0x7eb8
-convertEqOp         EQU     0x7eaf
-convertNeOp         EQU     0x7ea6
-convertLeOp         EQU     0x7df6
-convertGeOp         EQU     0x7ded
-convertLtOp         EQU     0x7de4
-convertGtOp         EQU     0x7ddb
-multiply16bit       EQU     0x77cd
-divide16bit         EQU     0x7ba8
-scanlineMode        EQU     0x7daf
-resetVideoTable     EQU     0x77ae
-initClearFuncs      EQU     0x7dc3
-clearVertBlinds     EQU     0x7cc5
-clearCursorRow      EQU     0x76cf
-drawLine            EQU     0x7aaa
-drawLineExt         EQU     0x75c6
-drawLineLoop        EQU     0x74c5
-drawLineLoadXY      EQU     0x76a4
-printInit           EQU     0x75b0
-printText           EQU     0x7cac
-printDigit          EQU     0x74a3
-printInt16          EQU     0x79ae
-printChar           EQU     0x73a7
-newLineScroll       EQU     0x78a4
-realTimeProcAddr    EQU     0x00dc
-convertEqOpAddr     EQU     0x00d0
-convertNeOpAddr     EQU     0x00d2
-convertLeOpAddr     EQU     0x00d4
-convertGeOpAddr     EQU     0x00d6
-convertLtOpAddr     EQU     0x00d8
-convertGtOpAddr     EQU     0x00da
+romCheck                      EQU     0x7ec1
+realTimeProc                  EQU     0x7dbe
+convertEqOp                   EQU     0x7eb8
+convertNeOp                   EQU     0x7eaf
+convertLeOp                   EQU     0x7ea6
+convertGeOp                   EQU     0x7df6
+convertLtOp                   EQU     0x7ded
+convertGtOp                   EQU     0x7de4
+convertArr2d                  EQU     0x7dd8
+convertArr3d                  EQU     0x7dc7
+multiply16bit                 EQU     0x77cd
+divide16bit                   EQU     0x7ba8
+scanlineMode                  EQU     0x7cf5
+resetVideoTable               EQU     0x77ae
+initClearFuncs                EQU     0x7da6
+clearVertBlinds               EQU     0x7cbb
+clearCursorRow                EQU     0x76cf
+drawLine                      EQU     0x7aaa
+drawLineExt                   EQU     0x75c6
+drawLineLoop                  EQU     0x74c5
+drawLineLoadXY                EQU     0x76a4
+printInit                     EQU     0x75b0
+printText                     EQU     0x7ca2
+printDigit                    EQU     0x74a3
+printInt16                    EQU     0x79ae
+printChar                     EQU     0x73a7
+newLineScroll                 EQU     0x78a4
+convertEqOpAddr               EQU     0x00d0
+convertNeOpAddr               EQU     0x00d2
+convertLeOpAddr               EQU     0x00d4
+convertGeOpAddr               EQU     0x00d6
+convertLtOpAddr               EQU     0x00d8
+convertGtOpAddr               EQU     0x00da
+convertArr2dAddr              EQU     0x00dc
+convertArr3dAddr              EQU     0x00de
+realTimeProcAddr              EQU     0x00e0
 
 
 ; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
@@ -670,6 +676,34 @@ convertGtOp         BGT     convertGt_1
                     LDI     0
                     RET
 convertGt_1         LDI     1
+                    RET
+
+
+memIndex0           EQU     register0
+memIndex1           EQU     register1
+memIndex2           EQU     register2
+memValue            EQU     register8
+memAddr             EQU     register9
+
+
+convertArr2d        ADDW    memIndex0
+                    ADDW    memIndex0
+                    DEEK
+                    ADDW    memIndex1
+                    ADDW    memIndex1
+                    STW     memAddr
+                    RET
+
+
+convertArr3d        ADDW    memIndex0
+                    ADDW    memIndex0
+                    DEEK
+                    ADDW    memIndex1
+                    ADDW    memIndex1
+                    DEEK
+                    ADDW    memIndex2
+                    ADDW    memIndex2
+                    STW     memAddr
                     RET
 
 
@@ -841,13 +875,7 @@ drawRectF_y2        EQU     register7
 drawPoly_addr       EQU     register15
 
     
-scanlineMode        LDW     giga_romType
-                    ANDI    0xF8
-                    SUBI    romTypeValue_ROMv2
-                    BGE     scanlineM_cont
-                    RET
-    
-scanlineM_cont      LDWI    SYS_SetMode_v2_80
+scanlineMode        LDWI    SYS_SetMode_v2_80
                     STW     giga_sysFn
                     LDW     graphicsMode
                     SYS     80

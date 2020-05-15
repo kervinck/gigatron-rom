@@ -59,27 +59,27 @@ namespace Keywords
         _operators.push_back(">>"   );
 
         // Functions
-        _functions["PEEK"]   = "PEEK";
-        _functions["DEEK"]   = "DEEK";
-        _functions["USR" ]   = "USR";
-        _functions["RND" ]   = "RND";
-        _functions["LEN" ]   = "LEN";
-        _functions["GET" ]   = "GET";
-        _functions["POS" ]   = "POS";
-        _functions["ABS" ]   = "ABS";
-        _functions["ASC" ]   = "ASC";
-        _functions["SIN" ]   = "SIN";
-        _functions["COS" ]   = "COS";
-        _functions["TAN" ]   = "TAN";
-        _functions["ASN" ]   = "ASN";
-        _functions["ACS" ]   = "ACS";
-        _functions["ATN" ]   = "ATN";
-        _functions["EXP" ]   = "EXP";
-        _functions["LOG" ]   = "LOG";
-        _functions["FRE" ]   = "FRE";
-        _functions["TIME"]   = "TIME";
-        _functions["POINT"]  = "POINT";
-        _functions["STRCMP"] = "POINT";
+        _functions["PEEK"]  = "PEEK";
+        _functions["DEEK"]  = "DEEK";
+        _functions["USR" ]  = "USR";
+        _functions["RND" ]  = "RND";
+        _functions["LEN" ]  = "LEN";
+        _functions["GET" ]  = "GET";
+        _functions["POS" ]  = "POS";
+        _functions["ABS" ]  = "ABS";
+        _functions["ASC" ]  = "ASC";
+        _functions["SIN" ]  = "SIN";
+        _functions["COS" ]  = "COS";
+        _functions["TAN" ]  = "TAN";
+        _functions["ASN" ]  = "ASN";
+        _functions["ACS" ]  = "ACS";
+        _functions["ATN" ]  = "ATN";
+        _functions["EXP" ]  = "EXP";
+        _functions["LOG" ]  = "LOG";
+        _functions["FRE" ]  = "FRE";
+        _functions["TIME"]  = "TIME";
+        _functions["POINT"] = "POINT";
+        _functions["CMP"]   = "CMP";
 
         // Pragmas
         _pragmas["_codeRomType_"]        = {"_codeRomType_",        pragmaCODEROMTYPE       };
@@ -138,6 +138,8 @@ namespace Keywords
         _keywords["SPRITE"  ] = {"SPRITE",   keywordSPRITE,   Compiler::SingleStatementParsed};
         _keywords["SOUND"   ] = {"SOUND",    keywordSOUND,    Compiler::SingleStatementParsed};
         _keywords["SET"     ] = {"SET",      keywordSET,      Compiler::SingleStatementParsed};
+        _keywords["ASM"     ] = {"ASM",      keywordASM,      Compiler::SingleStatementParsed};
+        _keywords["ENDASM"  ] = {"ENDASM",   keywordENDASM,   Compiler::SingleStatementParsed};
 
         // String keywords
         _stringKeywords["CHR$"  ] = "CHR$";
@@ -388,6 +390,35 @@ namespace Keywords
     // ********************************************************************************************
     // Functions
     // ********************************************************************************************
+    void helperARR(Expression::Numeric& param)
+    {
+        // Can't call Operators::handleSingleOp() here, so special case it
+        switch(param._varType)
+        {
+            // Temporary variable address
+            case Expression::TmpVar:
+            {
+                Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(std::lround(param._value))), false);
+            }
+            break;
+
+            // User variable
+            case Expression::IntVar:
+            {
+                Compiler::emitVcpuAsmUserVar("LDW", param, false);
+            }
+            break;
+
+            // Literal or constant
+            case Expression::Number:
+            {
+                Compiler::emitVcpuAsm("LDI", std::to_string(uint8_t(std::lround(param._value))), false);
+            }
+            break;
+
+            default: break;
+        }
+    }
     Expression::Numeric functionARR(Expression::Numeric& numeric, int codeLineIndex)
     {
         if(Expression::getOutputNumeric()._staticInit)
@@ -401,10 +432,12 @@ namespace Keywords
         int intSize = Compiler::getIntegerVars()[numeric._index]._intSize;
         uint16_t arrayPtr = Compiler::getIntegerVars()[numeric._index]._address;
 
-        // Literal array index
-        if(numeric._parameters[0]._varType == Expression::Number)
+        // Literal array index, (only optimise for 1d arrays)
+        if(numeric._varType == Expression::Arr1Var  &&  numeric._parameters.size()  &&  numeric._parameters[0]._varType == Expression::Number)
         {
             std::string operand = Expression::wordToHexString(arrayPtr + uint16_t(numeric._parameters[0]._value*intSize));
+
+            // Handle .LO and .HI
             switch(numeric._int16Byte)
             {
                 case Expression::Int16Low:  Compiler::emitVcpuAsm("LDWI", operand,          false); Compiler::emitVcpuAsm("PEEK", "", false); break;
@@ -416,60 +449,52 @@ namespace Keywords
 
             Operators::createTmpVar(numeric);
         }
-        // Variable array index
+        // Variable array index or 2d/3d array
         else
         {
-            // Can't call Operators::handleSingleOp() here, so special case it
-            switch(numeric._parameters[0]._varType)
+            for(int i=0; i<int(numeric._parameters.size()); i++)
             {
-                // Temporary variable address
-                case Expression::TmpVar:
+                Expression::Numeric param = numeric._parameters[i];
+                helperARR(param);
+                Compiler::emitVcpuAsm("STW", "memIndex" + std::to_string(i), false);
+            }
+
+            // Handle 1d/2d/3d arrays
+            switch(numeric._varType)
+            {
+                case Expression::Arr1Var:
                 {
-                    Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(std::lround(numeric._parameters[0]._value))), false);
+                    Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr), false);
+                    Compiler::emitVcpuAsm("ADDW", "memIndex0", false);
+                    Compiler::emitVcpuAsm("ADDW", "memIndex0", false);
                 }
                 break;
 
-                // User variable name
-                case Expression::IntVar:
+                case Expression::Arr2Var:
                 {
-                    Compiler::emitVcpuAsmUserVar("LDW", numeric._parameters[0], false);
+                    Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr), false);
+                    (Compiler::getCodeRomType() >= Cpu::ROMv5a) ? Compiler::emitVcpuAsm("CALLI", "convertArr2d", false) : Compiler::emitVcpuAsm("CALL", "convertArr2dAddr", false);
                 }
                 break;
 
-                default: break;
+                case Expression::Arr3Var:
+                {
+                    Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr), false);
+                    (Compiler::getCodeRomType() >= Cpu::ROMv5a) ? Compiler::emitVcpuAsm("CALLI", "convertArr3d", false, codeLineIndex) : Compiler::emitVcpuAsm("CALL", "convertArr3dAddr", false);
+                }
+                break;
             }
 
             Operators::createTmpVar(numeric);
 
-            // TODO: currently makes code bigger AND slower because of optimiser
-            if(0) //Compiler::getCodeRomType() >= Cpu::ROMv5a  &&  Compiler::getCodeOptimiseType() == Compiler::CodeSize)
+            // Handle .LO and .HI
+            switch(numeric._int16Byte)
             {
-                // Saves 2 bytes per array access but costs an extra 2 instructions in performance
-                Compiler::emitVcpuAsm("STW", "memIndex", false);
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr), false);
-                switch(numeric._int16Byte)
-                {
-                    case Expression::Int16Low:  Compiler::emitVcpuAsm("CALLI", "getArrayInt16Low",  false); break;
-                    case Expression::Int16High: Compiler::emitVcpuAsm("CALLI", "getArrayInt16High", false); break;
-                    case Expression::Int16Both: Compiler::emitVcpuAsm("CALLI", "getArrayInt16",     false); break;
+                case Expression::Int16Low:  Compiler::emitVcpuAsm("PEEK", "",  false);                                           break;
+                case Expression::Int16High: Compiler::emitVcpuAsm("ADDI", "1", false); Compiler::emitVcpuAsm("PEEK", "", false); break;
+                case Expression::Int16Both: Compiler::emitVcpuAsm("DEEK", "",  false);                                           break;
 
-                    default: break;
-                }
-            }
-            //else if(Compiler::getCodeOptimiseType() == Compiler::CodeSpeed)
-            {
-                Compiler::emitVcpuAsm("STW", "register2", false);
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr), false);
-                Compiler::emitVcpuAsm("ADDW", "register2", false);
-                Compiler::emitVcpuAsm("ADDW", "register2", false);
-                switch(numeric._int16Byte)
-                {
-                    case Expression::Int16Low:  Compiler::emitVcpuAsm("PEEK", "",  false);                                           break;
-                    case Expression::Int16High: Compiler::emitVcpuAsm("ADDI", "1", false); Compiler::emitVcpuAsm("PEEK", "", false); break;
-                    case Expression::Int16Both: Compiler::emitVcpuAsm("DEEK", "",  false);                                           break;
-
-                    default: break;
-                }
+                default: break;
             }
         }
 
@@ -669,10 +694,27 @@ namespace Keywords
             int length = 0;
             switch(numeric._varType)
             {
-                case Expression::IntVar:   length = Compiler::getIntegerVars()[numeric._index]._intSize;     break;
-                case Expression::ArrVar:   length = Compiler::getIntegerVars()[numeric._index]._arrSizes[0]; break;
-                case Expression::StrVar:   length = Compiler::getStringVars()[numeric._index]._size;         break;
-                case Expression::Constant: length = Compiler::getConstants()[numeric._index]._size;          break;
+                case Expression::IntVar:   length = Compiler::getIntegerVars()[numeric._index]._intSize; break;
+                case Expression::StrVar:   length = Compiler::getStringVars()[numeric._index]._size;     break;
+                case Expression::Constant: length = Compiler::getConstants()[numeric._index]._size;      break;
+
+                case Expression::Arr1Var:
+                {
+                    length = Compiler::getIntegerVars()[numeric._index]._arrSizes[2] * Compiler::getIntegerVars()[numeric._index]._intSize;
+                }
+                break;
+
+                case Expression::Arr2Var:
+                {
+                    length = Compiler::getIntegerVars()[numeric._index]._arrSizes[1] * Compiler::getIntegerVars()[numeric._index]._arrSizes[2] * Compiler::getIntegerVars()[numeric._index]._intSize;
+                }
+                break;
+
+                case Expression::Arr3Var:
+                {
+                    length = Compiler::getIntegerVars()[numeric._index]._arrSizes[0] * Compiler::getIntegerVars()[numeric._index]._arrSizes[1] * Compiler::getIntegerVars()[numeric._index]._arrSizes[2] * Compiler::getIntegerVars()[numeric._index]._intSize;
+                }
+                break;
 
                 default: break;
             }
@@ -1392,7 +1434,7 @@ namespace Keywords
         return numeric;
     }
 
-    Expression::Numeric functionSTRCMP(Expression::Numeric& numeric, int codeLineIndex)
+    Expression::Numeric functionCMP(Expression::Numeric& numeric, int codeLineIndex)
     {
         UNREFERENCED_PARAM(codeLineIndex);
 
@@ -1482,6 +1524,45 @@ namespace Keywords
             Compiler::emitVcpuAsm("%ReadPixel", "", false);
             Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
         }
+
+        return numeric;
+    }
+
+    Expression::Numeric functionLUP(Expression::Numeric& numeric, int codeLineIndex)
+    {
+        if(Expression::getOutputNumeric()._staticInit)
+        {
+            fprintf(stderr, "Keywords::functionLUP() : LUP(<address>, <offset>) cannot be used in static initialisation : on line %d\n", codeLineIndex);
+            return numeric;
+        }
+
+        if(numeric._parameters.size() != 1) 
+        {
+            fprintf(stderr, "Keywords::functionLUP() : LUP(<address>, <offset>) missing offset : on line %d\n", codeLineIndex);
+            return numeric;
+        }
+
+        if(numeric._parameters[0]._varType != Expression::Number)
+        {
+            fprintf(stderr, "Keywords::functionLUP() : LUP(<address>, <offset>) offset is not a constant literal : on line %d\n", codeLineIndex);
+            return numeric;
+        }
+
+        std::string offset = Expression::byteToHexString(uint8_t(std::lround(numeric._parameters[0]._value)));
+
+        if(numeric._varType == Expression::Number)
+        {
+            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(uint16_t(std::lround(numeric._value))), false);
+        }
+        else
+        {
+            Operators::createSingleOp("LDW", numeric);
+        }
+
+        Compiler::getNextTempVar();
+        Operators::createTmpVar(numeric);
+        Compiler::emitVcpuAsm("LUP", offset, false);
+        Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
 
         return numeric;
     }
@@ -1750,7 +1831,7 @@ namespace Keywords
             return false;
         }
 
-        Compiler::emitVcpuAsm("INC", "_" + Compiler::getIntegerVars()[varIndex]._name, false, codeLineIndex);
+        Compiler::emitVcpuAsm("INC", "_" + Compiler::getIntegerVars()[varIndex]._name, false);
 
         return true;
     }
@@ -1770,9 +1851,9 @@ namespace Keywords
             return false;
         }
 
-        Compiler::emitVcpuAsm("LDW",  "_" + Compiler::getIntegerVars()[varIndex]._name, false, codeLineIndex);
-        Compiler::emitVcpuAsm("SUBI", "1", false, codeLineIndex);
-        Compiler::emitVcpuAsm("STW",  "_" + Compiler::getIntegerVars()[varIndex]._name, false, codeLineIndex);
+        Compiler::emitVcpuAsm("LDW",  "_" + Compiler::getIntegerVars()[varIndex]._name, false);
+        Compiler::emitVcpuAsm("SUBI", "1", false);
+        Compiler::emitVcpuAsm("STW",  "_" + Compiler::getIntegerVars()[varIndex]._name, false);
 
         return true;
     }
@@ -1800,7 +1881,7 @@ namespace Keywords
         std::string onToken = codeLine._code.substr(foundPos, gOffset - (foundPos + 1));
         Expression::stripWhitespace(onToken);
         Compiler::parseExpression(codeLineIndex, onToken, onValue);
-        Compiler::emitVcpuAsm("STW", "register0", false, codeLineIndex);
+        Compiler::emitVcpuAsm("STW", "register0", false);
 
         // Parse labels
         std::vector<size_t> gOffsets;
@@ -1843,16 +1924,16 @@ namespace Keywords
         Compiler::getCodeLines()[codeLineIndex]._onGotoGosubLut._address = address;
         Compiler::getCodeLines()[codeLineIndex]._onGotoGosubLut._name = "lut_" + Expression::wordToHexString(address);
 
-        Compiler::emitVcpuAsm("ADDW", "register0", false, codeLineIndex);
-        Compiler::emitVcpuAsm("STW",  "register0", false, codeLineIndex);
-        Compiler::emitVcpuAsm("LDWI", Compiler::getCodeLines()[codeLineIndex]._onGotoGosubLut._name, false, codeLineIndex);
-        Compiler::emitVcpuAsm("ADDW", "register0", false, codeLineIndex);
+        Compiler::emitVcpuAsm("ADDW", "register0", false);
+        Compiler::emitVcpuAsm("STW",  "register0", false);
+        Compiler::emitVcpuAsm("LDWI", Compiler::getCodeLines()[codeLineIndex]._onGotoGosubLut._name, false);
+        Compiler::emitVcpuAsm("ADDW", "register0", false);
         if(Compiler::getArrayIndiciesOne())
         {
-            Compiler::emitVcpuAsm("SUBI", "2",         false, codeLineIndex);  // enable this to start at 1 instead of 0
+            Compiler::emitVcpuAsm("SUBI", "2", false);  // enable this to start at 1 instead of 0
         }
-        Compiler::emitVcpuAsm("DEEK", "",          false, codeLineIndex);
-        Compiler::emitVcpuAsm("CALL", "giga_vAC",  false, codeLineIndex);
+        Compiler::emitVcpuAsm("DEEK", "", false);
+        Compiler::emitVcpuAsm("CALL", "giga_vAC", false);
 
         return true;
     }
@@ -1889,7 +1970,7 @@ namespace Keywords
             Compiler::setCreateNumericLabelLut(true);
 
             Compiler::parseExpression(codeLineIndex, gotoToken, gotoValue);
-            Compiler::emitVcpuAsm("STW", "numericLabel", false, codeLineIndex);
+            Compiler::emitVcpuAsm("STW", "numericLabel", false);
 
             // Default label exists
             if(gotoTokens.size() == 2)
@@ -1903,17 +1984,17 @@ namespace Keywords
                     return false;
                 }
 
-                Compiler::emitVcpuAsm("LDWI", "_" + Compiler::getLabels()[labelIndex]._name, false, codeLineIndex);
+                Compiler::emitVcpuAsm("LDWI", "_" + Compiler::getLabels()[labelIndex]._name, false);
             }
             // No default label
             else
             {
-                Compiler::emitVcpuAsm("LDI", "0", false, codeLineIndex);
+                Compiler::emitVcpuAsm("LDI", "0", false);
             }
-            Compiler::emitVcpuAsm("STW", "defaultLabel", false, codeLineIndex);
+            Compiler::emitVcpuAsm("STW", "defaultLabel", false);
 
             // Call gotoNumericLabel
-            Compiler::emitVcpuAsm("%GotoNumeric", "", false, codeLineIndex);
+            Compiler::emitVcpuAsm("%GotoNumeric", "", false);
 
             return true;
         }
@@ -1921,19 +2002,19 @@ namespace Keywords
         // Within same page, (validation check on same page branch may fail after outputCode(), user will be warned)
         if(useBRA)
         {
-            Compiler::emitVcpuAsm("BRA", "_" + gotoToken, false, codeLineIndex);
+            Compiler::emitVcpuAsm("BRA", "_" + gotoToken, false);
         }
         // Long jump
         else
         {
             if(Compiler::getCodeRomType() >= Cpu::ROMv5a)
             {
-                Compiler::emitVcpuAsm("CALLI", "_" + gotoToken, false, codeLineIndex);
+                Compiler::emitVcpuAsm("CALLI", "_" + gotoToken, false);
             }
             else
             {
-                Compiler::emitVcpuAsm("LDWI", "_" + gotoToken, false, codeLineIndex);
-                Compiler::emitVcpuAsm("CALL", "giga_vAC",      false, codeLineIndex);
+                Compiler::emitVcpuAsm("LDWI", "_" + gotoToken, false);
+                Compiler::emitVcpuAsm("CALL", "giga_vAC",      false);
             }
         }
 
@@ -1964,7 +2045,7 @@ namespace Keywords
             Compiler::setCreateNumericLabelLut(true);
 
             Compiler::parseExpression(codeLineIndex, gosubToken, gosubValue);
-            Compiler::emitVcpuAsm("STW", "numericLabel", false, codeLineIndex);
+            Compiler::emitVcpuAsm("STW", "numericLabel", false);
 
             // Default label exists
             if(gosubTokens.size() == 2)
@@ -1979,17 +2060,17 @@ namespace Keywords
                 }
 
                 Compiler::getLabels()[labelIndex]._gosub = true;
-                Compiler::emitVcpuAsm("LDWI", "_" + Compiler::getLabels()[labelIndex]._name, false, codeLineIndex);
+                Compiler::emitVcpuAsm("LDWI", "_" + Compiler::getLabels()[labelIndex]._name, false);
             }
             // No default label
             else
             {
-                Compiler::emitVcpuAsm("LDI", "0", false, codeLineIndex);
+                Compiler::emitVcpuAsm("LDI", "0", false);
             }
-            Compiler::emitVcpuAsm("STW", "defaultLabel", false, codeLineIndex);
+            Compiler::emitVcpuAsm("STW", "defaultLabel", false);
 
             // Call gosubNumericLabel
-            Compiler::emitVcpuAsm("%GosubNumeric", "", false, codeLineIndex);
+            Compiler::emitVcpuAsm("%GosubNumeric", "", false);
 
             return true;
         }
@@ -1999,12 +2080,12 @@ namespace Keywords
 
         if(Compiler::getCodeRomType() >= Cpu::ROMv5a)
         {
-            Compiler::emitVcpuAsm("CALLI", "_" + gosubToken, false, codeLineIndex);
+            Compiler::emitVcpuAsm("CALLI", "_" + gosubToken, false);
         }
         else
         {
-            Compiler::emitVcpuAsm("LDWI", "_" + gosubToken, false, codeLineIndex);
-            Compiler::emitVcpuAsm("CALL", "giga_vAC", false, codeLineIndex);
+            Compiler::emitVcpuAsm("LDWI", "_" + gosubToken, false);
+            Compiler::emitVcpuAsm("CALL", "giga_vAC", false);
         }
 
         return true;
@@ -2015,10 +2096,11 @@ namespace Keywords
         UNREFERENCED_PARAM(result);
         UNREFERENCED_PARAM(foundPos);
         UNREFERENCED_PARAM(tokenIndex);
+        UNREFERENCED_PARAM(codeLineIndex);
         UNREFERENCED_PARAM(codeLine);
 
         // Use a macro instead of separate "POP" and "RET", otherwise page jumps could be inserted in between the "POP" and "RET" causing havoc and mayhem
-        Compiler::emitVcpuAsm("%Return", "", false, codeLineIndex);
+        Compiler::emitVcpuAsm("%Return", "", false);
 
         return true;
     }
@@ -2041,19 +2123,19 @@ namespace Keywords
             Expression::strToUpper(token);
             if(token == "INIT")
             {
-                Compiler::emitVcpuAsm("%ResetVideoTable", "", false, codeLineIndex);
+                Compiler::emitVcpuAsm("%ResetVideoTable", "", false);
             }
             else
             {
                 Expression::Numeric param;
                 Compiler::parseExpression(codeLineIndex, codeLine._tokens[1], param);
-                Compiler::emitVcpuAsm("STW", "clsAddress", false, codeLineIndex);
-                Compiler::emitVcpuAsm("%ClearScreen", "", false, codeLineIndex);
+                Compiler::emitVcpuAsm("STW", "clsAddress", false);
+                Compiler::emitVcpuAsm("%ClearScreen", "",  false);
             }
         }
         else
         {
-            Compiler::emitVcpuAsm("%ClearVertBlinds", "", false, codeLineIndex);
+            Compiler::emitVcpuAsm("%ClearVertBlinds", "", false);
         }
 
         return true;
@@ -2086,12 +2168,12 @@ namespace Keywords
                 Expression::parse(tokens[i], codeLineIndex, numeric);
                 if(numeric._varType == Expression::Number)
                 {
-                    Compiler::emitVcpuAsm("%PrintInt16", Expression::wordToHexString(int16_t(std::lround(numeric._value))), false, codeLineIndex);
+                    Compiler::emitVcpuAsm("%PrintInt16", Expression::wordToHexString(int16_t(std::lround(numeric._value))), false);
                 }
                 else
                 {
-                    Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false, codeLineIndex);
-                    Compiler::emitVcpuAsm("%PrintAcInt16", "", false, codeLineIndex);
+                    Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
+                    Compiler::emitVcpuAsm("%PrintAcInt16", "", false);
                 }
             }
             else if((expressionType & Expression::HasIntVars)  &&  (expressionType & Expression::HasOperators))
@@ -2099,12 +2181,12 @@ namespace Keywords
                 Expression::parse(tokens[i], codeLineIndex, numeric);
                 if(numeric._varType == Expression::Number)
                 {
-                    Compiler::emitVcpuAsm("%PrintInt16", Expression::wordToHexString(int16_t(std::lround(numeric._value))), false, codeLineIndex);
+                    Compiler::emitVcpuAsm("%PrintInt16", Expression::wordToHexString(int16_t(std::lround(numeric._value))), false);
                 }
                 else
                 {
-                    Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false, codeLineIndex);
-                    Compiler::emitVcpuAsm("%PrintAcInt16", "", false, codeLineIndex);
+                    Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
+                    Compiler::emitVcpuAsm("%PrintAcInt16", "", false);
                 }
             }
             else if(expressionType & Expression::HasIntVars)
@@ -2112,28 +2194,28 @@ namespace Keywords
                 Expression::parse(tokens[i], codeLineIndex, numeric);
                 if(varIndex >= 0)
                 {
-                    if(Compiler::getIntegerVars()[varIndex]._varType == Compiler::VarArray)
+                    if(Compiler::getIntegerVars()[varIndex]._varType == Compiler::VarArray1)
                     {
-                        Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false, codeLineIndex);
-                        Compiler::emitVcpuAsm("%PrintAcInt16", "", false, codeLineIndex);
+                        Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
+                        Compiler::emitVcpuAsm("%PrintAcInt16", "", false);
                     }
                     else
                     {
                         switch(numeric._int16Byte)
                         {
-                            case Expression::Int16Low:  Compiler::emitVcpuAsm("LD",  "_" + Compiler::getIntegerVars()[varIndex]._name,          false, codeLineIndex); break;
-                            case Expression::Int16High: Compiler::emitVcpuAsm("LD",  "_" + Compiler::getIntegerVars()[varIndex]._name + " + 1", false, codeLineIndex); break;
-                            case Expression::Int16Both: Compiler::emitVcpuAsm("LDW", "_" + Compiler::getIntegerVars()[varIndex]._name,          false, codeLineIndex); break;
+                            case Expression::Int16Low:  Compiler::emitVcpuAsm("LD",  "_" + Compiler::getIntegerVars()[varIndex]._name,          false); break;
+                            case Expression::Int16High: Compiler::emitVcpuAsm("LD",  "_" + Compiler::getIntegerVars()[varIndex]._name + " + 1", false); break;
+                            case Expression::Int16Both: Compiler::emitVcpuAsm("LDW", "_" + Compiler::getIntegerVars()[varIndex]._name,          false); break;
 
                             default: break;
                         }
 
-                        Compiler::emitVcpuAsm("%PrintAcInt16", "", false, codeLineIndex);
+                        Compiler::emitVcpuAsm("%PrintAcInt16", "", false);
                     }
                 }
                 else
                 {
-                    Compiler::emitVcpuAsm("%PrintAcInt16", "", false, codeLineIndex);
+                    Compiler::emitVcpuAsm("%PrintAcInt16", "", false);
                 }
             }
             else if(expressionType & Expression::HasStrVars)
@@ -2141,19 +2223,19 @@ namespace Keywords
                 if(strIndex >= 0)
                 {
                     std::string strName = Compiler::getStringVars()[strIndex]._name;
-                    Compiler::emitVcpuAsm("%PrintString", "_" + strName, false, codeLineIndex);
+                    Compiler::emitVcpuAsm("%PrintString", "_" + strName, false);
                 }
             }
             else if(expressionType & Expression::HasKeywords)
             {
                 Expression::parse(tokens[i], codeLineIndex, numeric);
-                Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false, codeLineIndex);
-                Compiler::emitVcpuAsm("%PrintAcInt16", "", false, codeLineIndex);
+                Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
+                Compiler::emitVcpuAsm("%PrintAcInt16", "", false);
             }
             else if(expressionType & Expression::HasOperators)
             {
                 Expression::parse(tokens[i], codeLineIndex, numeric);
-                Compiler::emitVcpuAsm("%PrintInt16", Expression::wordToHexString(int16_t(std::lround(numeric._value))), false, codeLineIndex);
+                Compiler::emitVcpuAsm("%PrintInt16", Expression::wordToHexString(int16_t(std::lround(numeric._value))), false);
             }
             else if(expressionType & Expression::HasStrings)
             {
@@ -2170,27 +2252,27 @@ namespace Keywords
                     if(Compiler::getOrCreateString(codeLine, codeLineIndex, str, name, address) == -1) return false;
 
                     // Print string
-                    Compiler::emitVcpuAsm("%PrintString", "_" + name, false, codeLineIndex);
+                    Compiler::emitVcpuAsm("%PrintString", "_" + name, false);
                 }
             }
             else if(expressionType == Expression::HasStrConsts  &&  constIndex > -1)
             {
                 // Print constant string
                 std::string internalName = Compiler::getConstants()[constIndex]._internalName;
-                Compiler::emitVcpuAsm("%PrintString", "_" + internalName, false, codeLineIndex);
+                Compiler::emitVcpuAsm("%PrintString", "_" + internalName, false);
             }
             else if(expressionType == Expression::HasIntConsts  &&  constIndex > -1)
             {
                 // Print constant int
                 int16_t data = Compiler::getConstants()[constIndex]._data;
-                Compiler::emitVcpuAsm("%PrintInt16", Expression::wordToHexString(data), false, codeLineIndex);
+                Compiler::emitVcpuAsm("%PrintInt16", Expression::wordToHexString(data), false);
             }
             else if(expressionType == Expression::HasNumbers)
             {
                 // If valid expression
                 if(Expression::parse(tokens[i], codeLineIndex, numeric))
                 {
-                    Compiler::emitVcpuAsm("%PrintInt16", Expression::wordToHexString(int16_t(std::lround(numeric._value))), false, codeLineIndex);
+                    Compiler::emitVcpuAsm("%PrintInt16", Expression::wordToHexString(int16_t(std::lround(numeric._value))), false);
                 }
             }
         }
@@ -2198,7 +2280,7 @@ namespace Keywords
         // New line
         if(codeLine._code[codeLine._code.size() - 1] != ';')
         {
-            Compiler::emitVcpuAsm("%NewLine", "", false, codeLineIndex);
+            Compiler::emitVcpuAsm("%NewLine", "", false);
         }
 
         return true;
@@ -2243,7 +2325,7 @@ namespace Keywords
                     if(Compiler::getOrCreateString(codeLine, codeLineIndex, str, name, address) == -1) return false;
 
                     // Print string
-                    Compiler::emitVcpuAsm("%PrintString", "_" + name, false, codeLineIndex);
+                    Compiler::emitVcpuAsm("%PrintString", "_" + name, false);
                     foundHeadingString = true;
                 }
             }
@@ -2371,8 +2453,8 @@ namespace Keywords
             return false;
         }
         Compiler::getCodeLines()[codeLineIndex]._inputLut = {lutAddr, varsAddr, strsAddr, typesAddr, varsLut, strsLut, typesLut}; // save LUT in global codeLine not local copy
-        Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(lutAddr), false, codeLineIndex);
-        Compiler::emitVcpuAsm("%Input", "", false, codeLineIndex);
+        Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(lutAddr), false);
+        Compiler::emitVcpuAsm("%Input", "", false);
 
         return true;
     }
@@ -2395,31 +2477,36 @@ namespace Keywords
             fprintf(stderr, "Keywords::keywordFOR() : Syntax error, (missing '='), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
-        
-        bool farJump = (code.find("&TO") == std::string::npos);
+
+        // TO uses INC/ADD, DOWNTO uses DEC/SUB; &TO/&DOWNTO are optimised BRA versions
+        bool downTo = (code.find("DOWNTO") != std::string::npos);
+        bool farJump = (code.find("&TO") == std::string::npos)  &&  (code.find("&DOWNTO") == std::string::npos);
         if((to = code.find("TO")) == std::string::npos)
         {
-            fprintf(stderr, "Keywords::keywordFOR() : Syntax error, (missing 'TO'), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordFOR() : Syntax error, (missing 'TO' or 'DOWNTO'), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
         step = code.find("STEP");
 
         // Maximum of 4 nested loops
-        if(Compiler::getForNextDataStack().size() == 4)
+        if(Compiler::getForNextDataStack().size() == MAX_NESTED_LOOPS)
         {
             fprintf(stderr, "Keywords::keywordFOR() : Syntax error, (maximum nested loops is 4), in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
         // Nested loops temporary variables
-        uint16_t offset = uint16_t(Compiler::getForNextDataStack().size()) * 4;
+        uint16_t offset = uint16_t(Compiler::getForNextDataStack().size()) * LOOP_VARS_SIZE;
         uint16_t varEnd = LOOP_VAR_START + offset;
-        uint16_t varStep = LOOP_VAR_START + offset + 2;
+        uint16_t varStep = LOOP_VAR_START + offset + sizeof(uint16_t);
+
+        // Adjust 'to' based on length of TO keyword
+        int16_t loopStart = 0;
+        int toOffset = (farJump) ? 0 : 0 - sizeof('&');
+        toOffset = (!downTo) ? toOffset : toOffset - (sizeof("DOWN")-1);
 
         // Loop start
-        int16_t loopStart = 0;
-        int toOffset = (farJump) ? 0 : -1;
-        std::string startToken = codeLine._code.substr(equals + 1, to - (equals + 1) + toOffset);
+        std::string startToken = codeLine._code.substr(equals + sizeof('='), to - (equals + sizeof('=')) + toOffset);
         Expression::stripWhitespace(startToken);
         expressionType = Compiler::isExpression(startToken, varIndex, constIndex, strIndex);
         if((expressionType & Expression::HasIntVars)  ||  (expressionType & Expression::HasKeywords)  ||  (expressionType & Expression::HasFunctions)) optimise = false;
@@ -2433,7 +2520,7 @@ namespace Keywords
         // Loop end
         int16_t loopEnd = 0;
         size_t end = (step == std::string::npos) ? codeLine._code.size() : step;
-        std::string endToken = codeLine._code.substr(to + 2, end - (to + 2));
+        std::string endToken = codeLine._code.substr(to + sizeof("TO")-1, end - (to + sizeof("TO")-1));
         Expression::stripWhitespace(endToken);
         expressionType = Compiler::isExpression(endToken, varIndex, constIndex, strIndex);
         if((expressionType & Expression::HasIntVars)  ||  (expressionType & Expression::HasKeywords)  ||  (expressionType & Expression::HasFunctions)) optimise = false;
@@ -2444,7 +2531,7 @@ namespace Keywords
         if(step != std::string::npos)
         {
             end = codeLine._code.size();
-            stepToken = codeLine._code.substr(step + 4, end - (step + 4));
+            stepToken = codeLine._code.substr(step + sizeof("STEP")-1, end - (step + sizeof("STEP")-1));
             Expression::stripWhitespace(stepToken);
             expressionType = Compiler::isExpression(stepToken, varIndex, constIndex, strIndex);
             if((expressionType & Expression::HasIntVars)  ||  (expressionType & Expression::HasKeywords)  ||  (expressionType & Expression::HasFunctions)) optimise = false;
@@ -2466,31 +2553,26 @@ namespace Keywords
             {
                 Expression::parse(stepToken, codeLineIndex, stepNumeric);
                 loopStep = int16_t(std::lround(stepNumeric._value));
-                if(abs(loopStep) > 255) optimise = false;
-            }
-            else
-            {
-                // Auto step based on start and end
-                loopStep = (loopEnd >= loopStart) ? 1 : -1;
+                if(loopStep < 1  ||  loopStep > 255) optimise = false;
             }
 
             // 8bit constants
             if(optimise  &&  startNumeric._isValid  &&  loopStart >= 0  &&  loopStart <= 255  &&  endNumeric._isValid  &&  loopEnd >= 0  &&  loopEnd <= 255)
             {
-                Compiler::emitVcpuAsm("LDI", std::to_string(loopStart), false, codeLineIndex);
-                Compiler::emitVcpuAsm("STW", "_" + Compiler::getIntegerVars()[varCounter]._name, false, codeLineIndex);
+                Compiler::emitVcpuAsm("LDI", std::to_string(loopStart), false);
+                Compiler::emitVcpuAsm("STW", "_" + Compiler::getIntegerVars()[varCounter]._name, false);
             }
             // 16bit constants require variables
             else
             {
                 optimise = false;
 
-                Compiler::emitVcpuAsm("LDWI", std::to_string(loopStart), false, codeLineIndex);
-                Compiler::emitVcpuAsm("STW", "_" + Compiler::getIntegerVars()[varCounter]._name, false, codeLineIndex);
-                Compiler::emitVcpuAsm("LDWI", std::to_string(loopEnd), false, codeLineIndex);
-                Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(varEnd)), false, codeLineIndex);
-                Compiler::emitVcpuAsm("LDWI", std::to_string(loopStep), false, codeLineIndex);
-                Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(varStep)), false, codeLineIndex);
+                (loopStart >= 0  &&  loopStart <= 255) ? Compiler::emitVcpuAsm("LDI", std::to_string(loopStart), false) : Compiler::emitVcpuAsm("LDWI", std::to_string(loopStart), false);
+                Compiler::emitVcpuAsm("STW", "_" + Compiler::getIntegerVars()[varCounter]._name, false);
+                (loopEnd >= 0  &&  loopEnd <= 255) ? Compiler::emitVcpuAsm("LDI", std::to_string(loopEnd), false) : Compiler::emitVcpuAsm("LDWI", std::to_string(loopEnd), false);
+                Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(varEnd)), false);
+                (loopStep >= 0  &&  loopStep <= 255) ? Compiler::emitVcpuAsm("LDI", std::to_string(loopStep), false) : Compiler::emitVcpuAsm("LDWI", std::to_string(loopStep), false);
+                Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(varStep)), false);
             }
         }
         else
@@ -2498,12 +2580,12 @@ namespace Keywords
             // Parse start
             Compiler::parseExpression(codeLineIndex, startToken, startNumeric);
             loopStart = int16_t(std::lround(startNumeric._value));
-            Compiler::emitVcpuAsm("STW", "_" + Compiler::getIntegerVars()[varCounter]._name, false, codeLineIndex);
+            Compiler::emitVcpuAsm("STW", "_" + Compiler::getIntegerVars()[varCounter]._name, false);
 
             // Parse end
             Compiler::parseExpression(codeLineIndex, endToken, endNumeric);
             loopEnd = int16_t(std::lround(endNumeric._value));
-            Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(varEnd)), false, codeLineIndex);
+            Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(varEnd)), false);
 
             // Parse step
             if(stepToken.size())
@@ -2514,14 +2596,14 @@ namespace Keywords
             else
             {
                 loopStep = 1;
-                Compiler::emitVcpuAsm("LDI", std::to_string(loopStep), false, codeLineIndex);
+                Compiler::emitVcpuAsm("LDI", std::to_string(loopStep), false);
             }
-            Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(varStep)), false, codeLineIndex);
+            Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(varStep)), false);
         }
 
         // Label and stack
         Compiler::setNextInternalLabel("_next_" + Expression::wordToHexString(Compiler::getVasmPC()));
-        Compiler::getForNextDataStack().push({varCounter, Compiler::getNextInternalLabel(), loopEnd, loopStep, varEnd, varStep, farJump, optimise, codeLineIndex});
+        Compiler::getForNextDataStack().push({varCounter, Compiler::getNextInternalLabel(), loopEnd, loopStep, varEnd, varStep, downTo, farJump, optimise, codeLineIndex});
 
         return true;
     }
@@ -2566,6 +2648,7 @@ namespace Keywords
         int16_t loopStep = forNextData._loopStep;
         uint16_t varEnd = forNextData._varEnd;
         uint16_t varStep = forNextData._varStep;
+        bool downTo = forNextData._downTo;
         bool farJump = forNextData._farJump;
         bool optimise = forNextData._optimise;
 
@@ -2575,23 +2658,30 @@ namespace Keywords
             // INC + BLE in ForNextFarInc will fail when loopEnd = 255
             if(abs(loopStep) == 1  &&  !(loopStep == 1  &&  loopEnd >= 255))
             {
-                // Increment/decrement step
-                forNextCmd = (loopStep > 0) ? (farJump) ? "%ForNextFarInc" : "%ForNextInc" : (farJump) ? "%ForNextFarDec" : "%ForNextDec";
-                Compiler::emitVcpuAsm(forNextCmd, "_" + varName + " " + labName + " " + std::to_string(loopEnd), false, codeLineIndex);
+                // Inc/Dec to 0, (if only we had a DJNZ instruction)
+                if(loopEnd == 0  &&  downTo)
+                {
+                    Compiler::emitVcpuAsm("%ForNextDecZero", "_" + varName + " " + labName, false);
+                }
+                else
+                {
+                    // Increment/decrement step
+                    forNextCmd = (!downTo) ? ((farJump) ? "%ForNextFarInc" : "%ForNextInc") : ((farJump) ? "%ForNextFarDec" : "%ForNextDec");
+                    Compiler::emitVcpuAsm(forNextCmd, "_" + varName + " " + labName + " " + std::to_string(loopEnd), false);
+                }
             }
             else
             {
                 // Additive/subtractive step
-                forNextCmd = (loopStep > 0) ? (farJump) ? "%ForNextFarAdd" : "%ForNextAdd" : (farJump) ? "%ForNextFarSub" : "%ForNextSub";
-                Compiler::emitVcpuAsm(forNextCmd, "_" + varName + " " + labName + " " + std::to_string(loopEnd) + " " + std::to_string(abs(loopStep)), false, codeLineIndex);
+                forNextCmd = (!downTo) ? ((farJump) ? "%ForNextFarAdd" : "%ForNextAdd") : ((farJump) ? "%ForNextFarSub" : "%ForNextSub");
+                Compiler::emitVcpuAsm(forNextCmd, "_" + varName + " " + labName + " " + std::to_string(loopEnd) + " " + std::to_string(abs(loopStep)), false);
             }
         }
         else
         {
-            // TODO: this can fail for corner cases
             // Positive/negative variable step
-            forNextCmd = (loopStep > 0) ? (farJump) ? "%ForNextFarVarPos" : "%ForNextVarPos" : (farJump) ? "%ForNextFarVarNeg" : "%ForNextVarNeg";
-            Compiler::emitVcpuAsm(forNextCmd, "_" + varName + " " + labName + " " + Expression::byteToHexString(uint8_t(varEnd)) + " " + Expression::byteToHexString(uint8_t(varStep)), false, codeLineIndex);
+            forNextCmd = (!downTo) ? ((farJump) ? "%ForNextFarVarAdd" : "%ForNextVarAdd") : ((farJump) ? "%ForNextFarVarSub" : "%ForNextVarSub");
+            Compiler::emitVcpuAsm(forNextCmd, "_" + varName + " " + labName + " " + Expression::byteToHexString(uint8_t(varEnd)) + " " + Expression::byteToHexString(uint8_t(varStep)), false);
         }
 
         return true;
@@ -2619,7 +2709,7 @@ namespace Keywords
         Expression::Numeric condition;
         std::string conditionToken = codeLine._code.substr(foundPos, offsetTHEN - foundPos);
         Compiler::parseExpression(codeLineIndex, conditionToken, condition);
-        if(condition._ccType == Expression::BooleanCC) Compiler::emitVcpuAsm("%JumpFalse", "", false, codeLineIndex); // Boolean condition requires this extra check
+        if(condition._ccType == Expression::BooleanCC) Compiler::emitVcpuAsm("%JumpFalse", "", false); // Boolean condition requires this extra check
         int jmpIndex = int(Compiler::getCodeLines()[codeLineIndex]._vasm.size()) - 1;
 
         // Bail early as we assume this is an IF ELSE ENDIF block
@@ -2727,7 +2817,7 @@ namespace Keywords
         Expression::Numeric condition;
         std::string conditionToken = codeLine._code.substr(foundPos);
         Compiler::parseExpression(codeLineIndex, conditionToken, condition);
-        if(condition._ccType == Expression::BooleanCC) Compiler::emitVcpuAsm("%JumpFalse", "", false, codeLineIndex); // Boolean condition requires this extra check
+        if(condition._ccType == Expression::BooleanCC) Compiler::emitVcpuAsm("%JumpFalse", "", false); // Boolean condition requires this extra check
         jmpIndex = int(Compiler::getCodeLines()[codeLineIndex]._vasm.size()) - 1;
 
         Compiler::getElseIfDataStack().push({jmpIndex, "", codeLineIndex, Compiler::ElseIfBlock, condition._ccType});
@@ -2892,7 +2982,7 @@ namespace Keywords
         Expression::Numeric condition;
         std::string conditionToken = codeLine._code.substr(foundPos);
         Compiler::parseExpression(codeLineIndex, conditionToken, condition);
-        if(condition._ccType == Expression::BooleanCC) Compiler::emitVcpuAsm("%JumpFalse", "", false, codeLineIndex); // Boolean condition requires this extra check
+        if(condition._ccType == Expression::BooleanCC) Compiler::emitVcpuAsm("%JumpFalse", "", false); // Boolean condition requires this extra check
         Compiler::getWhileWendDataStack().top()._jmpIndex = int(Compiler::getCodeLines()[codeLineIndex]._vasm.size()) - 1;
         Compiler::getWhileWendDataStack().top()._ccType = condition._ccType;
 
@@ -2917,19 +3007,19 @@ namespace Keywords
         // Branch to WHILE and check condition again
         if(Compiler::getCodeRomType() >= Cpu::ROMv5a)
         {
-            Compiler::emitVcpuAsm("CALLI", whileWendData._labelName, false, codeLineIndex);
+            Compiler::emitVcpuAsm("CALLI", whileWendData._labelName, false);
         }
         else
         {
             // There are no checks to see if this BRA's destination is in the same page, programmer discretion required when using this feature
             if(whileWendData._ccType == Expression::FastCC)
             {
-                Compiler::emitVcpuAsm("BRA", whileWendData._labelName, false, codeLineIndex);
+                Compiler::emitVcpuAsm("BRA", whileWendData._labelName, false);
             }
             else
             {
-                Compiler::emitVcpuAsm("LDWI", whileWendData._labelName, false, codeLineIndex);
-                Compiler::emitVcpuAsm("CALL", "giga_vAC",      false, codeLineIndex);
+                Compiler::emitVcpuAsm("LDWI", whileWendData._labelName, false);
+                Compiler::emitVcpuAsm("CALL", "giga_vAC",      false);
             }
         }
 
@@ -2997,7 +3087,7 @@ namespace Keywords
         // Branch if condition false to instruction after REPEAT
         switch(condition._ccType)
         {
-            case Expression::BooleanCC: Compiler::emitVcpuAsm("%JumpFalse", repeatUntilData._labelName + " " + std::to_string(Compiler::getNextJumpFalseUniqueId()), false, codeLineIndex);       break;
+            case Expression::BooleanCC: Compiler::emitVcpuAsm("%JumpFalse", repeatUntilData._labelName + " " + std::to_string(Compiler::getNextJumpFalseUniqueId()), false);                      break;
             case Expression::NormalCC:  addLabelToJumpCC(Compiler::getCodeLines()[codeLineIndex]._vasm, repeatUntilData._labelName + " " + std::to_string(Compiler::getNextJumpFalseUniqueId())); break;
             case Expression::FastCC:    addLabelToJumpCC(Compiler::getCodeLines()[codeLineIndex]._vasm, repeatUntilData._labelName);                                                              break;
 
@@ -3128,12 +3218,11 @@ namespace Keywords
         }
 
         // Dimensions
-        const int kMaxArrayDims = 2;
         std::vector<uint16_t> arrSizes;
         std::vector<std::string> sizeTokens = Expression::tokenise(codeLine._code.substr(lbra + 1, rbra - (lbra + 1)), ',', true);
-        if(sizeTokens.size() > kMaxArrayDims)
+        if(sizeTokens.size() > MAX_ARRAY_DIMS)
         {
-            fprintf(stderr, "Keywords::keywordDIM() : Maximum of %d dimensions, found %d in '%s' on line %d\n", kMaxArrayDims, int(sizeTokens.size()), codeLine._code.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordDIM() : Maximum of %d dimensions, found %d in '%s' on line %d\n", MAX_ARRAY_DIMS, int(sizeTokens.size()), codeLine._code.c_str(), codeLineIndex);
             return false;
         }
 
@@ -3209,7 +3298,7 @@ namespace Keywords
                                                                                                                                                               codeLine._code.c_str(), codeLineIndex);
                 return false;
             }
-            // Multiple initialisation values
+            // Multiple initialisation values, (if there are less init values than array size, then array is padded with last init value)
             else
             {
                 std::string operand;
@@ -3220,6 +3309,7 @@ namespace Keywords
                     Compiler::parseExpression(codeLineIndex, varTokens[i], operand, funcParams[i]);
                     arrInits[i] = int16_t(std::lround(funcParams[i]._value));
                 }
+                varInit = arrInits.back();
             }
         }
 
@@ -3229,6 +3319,9 @@ namespace Keywords
             arrSizes.insert(arrSizes.begin(), 1);
         }
 
+        std::vector<uint16_t> arrLut;
+        arrLut.resize(arrSizes[0]);
+
         std::vector<std::vector<uint16_t>> arrAddrs;
         arrAddrs.resize(arrSizes[0]);
         for(int i=0; i<arrSizes[0]; i++)
@@ -3236,14 +3329,16 @@ namespace Keywords
             arrAddrs[i].resize(arrSizes[1]);
         }
 
-        // Allocate memory for k * j * i of 16 bit values
         uint16_t address = 0x0000;
+        Compiler::VarType varType = Compiler::VarArray1;
+
+        // Allocate memory for k * j * i of 16 bit values
         int iSizeBytes = arrSizes[2] * 2;
         for(int k=0; k<arrSizes[0]; k++)
         {
             for(int j=0; j<arrSizes[1]; j++)
             {
-                if(!Memory::getFreeRAM(Memory::FitDescending, iSizeBytes, USER_CODE_START, Compiler::getRuntimeStart(), address, false)) // arrays do not need to be contained within pages
+                if(!Memory::getFreeRAM(Memory::FitDescending, iSizeBytes, USER_CODE_START, Compiler::getRuntimeStart(), arrAddrs[k][j], false)) // arrays do not need to be contained within pages
                 {
                     fprintf(stderr, "Keywords::keywordDIM() : Not enough RAM for int array of size %d in '%s' on line %d\n", iSizeBytes, codeLine._code.c_str(), codeLineIndex);
                     return false;
@@ -3251,8 +3346,50 @@ namespace Keywords
             }
         }
 
-        //uint16_t address = (arrAddrs.size() == 1) ? arrAddrs[0] : 0x0000;
-        Compiler::createIntVar(varName, 0, varInit, codeLine, codeLineIndex, false, varIndex, Compiler::VarArray, Compiler::Int16, address, arrSizes, arrInits, arrAddrs);
+        // 1D array
+        if(arrSizes[0] == 1  &&  arrSizes[1] == 1)
+        {
+            address = arrAddrs[0][0];
+            varType = Compiler::VarArray1;
+        }
+        // 2D array
+        else if(arrSizes[0] == 1)
+        {
+            int jSizeBytes = arrSizes[1] * 2;
+            if(!Memory::getFreeRAM(Memory::FitDescending, jSizeBytes, USER_CODE_START, Compiler::getRuntimeStart(), address, false)) // arrays do not need to be contained within pages
+            {
+                fprintf(stderr, "Keywords::keywordDIM() : Not enough RAM for int array of size %d in '%s' on line %d\n", jSizeBytes, codeLine._code.c_str(), codeLineIndex);
+                return false;
+            }
+
+            address = address;
+            varType = Compiler::VarArray2;
+        }
+        // 3D array
+        else
+        {
+            int jSizeBytes = arrSizes[1] * 2;
+            for(int k=0; k<arrSizes[0]; k++)
+            {
+                if(!Memory::getFreeRAM(Memory::FitDescending, jSizeBytes, USER_CODE_START, Compiler::getRuntimeStart(), arrLut[k], false)) // arrays do not need to be contained within pages
+                {
+                    fprintf(stderr, "Keywords::keywordDIM() : Not enough RAM for int array of size %d in '%s' on line %d\n", jSizeBytes, codeLine._code.c_str(), codeLineIndex);
+                    return false;
+                }
+            }
+
+            int kSizeBytes = arrSizes[2] * 2;
+            if(!Memory::getFreeRAM(Memory::FitDescending, kSizeBytes, USER_CODE_START, Compiler::getRuntimeStart(), address, false)) // arrays do not need to be contained within pages
+            {
+                fprintf(stderr, "Keywords::keywordDIM() : Not enough RAM for int array of size %d in '%s' on line %d\n", kSizeBytes, codeLine._code.c_str(), codeLineIndex);
+                return false;
+            }
+
+            address = address;
+            varType = Compiler::VarArray3;
+        }
+
+        Compiler::createIntVar(varName, 0, varInit, codeLine, codeLineIndex, false, varIndex, varType, Compiler::Int16, address, arrSizes, arrInits, arrAddrs, arrLut);
         return true;
     }
 
@@ -3610,15 +3747,15 @@ namespace Keywords
 
         Expression::Numeric numeric;
         Compiler::parseExpression(codeLineIndex, tokens[0], numeric);
-        Compiler::emitVcpuAsm("ST", "cursorXY", false, codeLineIndex);
+        Compiler::emitVcpuAsm("ST", "cursorXY", false);
 
         if(tokens.size() == 2)
         {
             Compiler::parseExpression(codeLineIndex, tokens[1], numeric);
-            Compiler::emitVcpuAsm("ST", "cursorXY + 1", false, codeLineIndex);
+            Compiler::emitVcpuAsm("ST", "cursorXY + 1", false);
         }
 
-        Compiler::emitVcpuAsm("%AtTextCursor", "", false, codeLineIndex);
+        Compiler::emitVcpuAsm("%AtTextCursor", "", false);
         return true;
     }
 
@@ -3636,7 +3773,7 @@ namespace Keywords
 
         Expression::Numeric numeric;
         Compiler::parseExpression(codeLineIndex, tokens[0], numeric);
-        Compiler::emitVcpuAsm("%PrintAcChar", "", false, codeLineIndex);
+        Compiler::emitVcpuAsm("%PrintAcChar", "", false);
 
         return true;
     }
@@ -3655,8 +3792,8 @@ namespace Keywords
 
         Expression::Numeric numeric;
         Compiler::parseExpression(codeLineIndex, tokens[0], numeric);
-        Compiler::emitVcpuAsm("STW", "graphicsMode", false, codeLineIndex);
-        Compiler::emitVcpuAsm("%ScanlineMode", "",   false, codeLineIndex);
+        Compiler::emitVcpuAsm("STW", "graphicsMode", false);
+        Compiler::emitVcpuAsm("%ScanlineMode", "",   false);
 
         return true;
     }
@@ -3675,14 +3812,14 @@ namespace Keywords
 
         if(tokens.size() == 0)
         {
-            Compiler::emitVcpuAsm("%WaitVBlank", "", false, codeLineIndex);
+            Compiler::emitVcpuAsm("%WaitVBlank", "", false);
             return true;
         }
 
         Expression::Numeric numeric;
         Compiler::parseExpression(codeLineIndex, tokens[0], numeric);
-        Compiler::emitVcpuAsm("STW", "waitVBlankNum", false, codeLineIndex);
-        Compiler::emitVcpuAsm("%WaitVBlanks", "",     false, codeLineIndex);
+        Compiler::emitVcpuAsm("STW", "waitVBlankNum", false);
+        Compiler::emitVcpuAsm("%WaitVBlanks", "",     false);
 
         return true;
     }
@@ -3701,17 +3838,17 @@ namespace Keywords
 
         Expression::Numeric numeric;
         Compiler::parseExpression(codeLineIndex, tokens[0], numeric);
-        Compiler::emitVcpuAsm("ST", "drawPixel_xy", false, codeLineIndex);
+        Compiler::emitVcpuAsm("ST", "drawPixel_xy", false);
         Compiler::parseExpression(codeLineIndex, tokens[1], numeric);
-        Compiler::emitVcpuAsm("ST", "drawPixel_xy + 1", false, codeLineIndex);
+        Compiler::emitVcpuAsm("ST", "drawPixel_xy + 1", false);
 
         if(tokens.size() == 3)
         {
             Compiler::parseExpression(codeLineIndex, tokens[2], numeric);
-            Compiler::emitVcpuAsm("ST", "fgbgColour + 1", false, codeLineIndex);
+            Compiler::emitVcpuAsm("ST", "fgbgColour + 1", false);
         }
 
-        Compiler::emitVcpuAsm("%DrawPixel", "", false, codeLineIndex);
+        Compiler::emitVcpuAsm("%DrawPixel", "", false);
         return true;
     }
 
@@ -3735,15 +3872,15 @@ namespace Keywords
                 Compiler::parseExpression(codeLineIndex, tokens[i], params[i]);
                 switch(i)
                 {
-                    case 0: Compiler::emitVcpuAsm("STW", "drawLine_x2", false, codeLineIndex); break;
-                    case 1: Compiler::emitVcpuAsm("STW", "drawLine_y2", false, codeLineIndex); break;
+                    case 0: Compiler::emitVcpuAsm("STW", "drawLine_x2", false); break;
+                    case 1: Compiler::emitVcpuAsm("STW", "drawLine_y2", false); break;
 
                     default: break;
                 }
             }
 
-            Compiler::emitVcpuAsm("%AtLineCursor", "", false, codeLineIndex);
-            Compiler::emitVcpuAsm("%DrawVTLine", "", false, codeLineIndex);
+            Compiler::emitVcpuAsm("%AtLineCursor", "", false);
+            Compiler::emitVcpuAsm("%DrawVTLine",   "", false);
         }
         else
         {
@@ -3753,16 +3890,16 @@ namespace Keywords
                 Compiler::parseExpression(codeLineIndex, tokens[i], params[i]);
                 switch(i)
                 {
-                    case 0: Compiler::emitVcpuAsm("STW", "drawLine_x1", false, codeLineIndex); break;
-                    case 1: Compiler::emitVcpuAsm("STW", "drawLine_y1", false, codeLineIndex); break;
-                    case 2: Compiler::emitVcpuAsm("STW", "drawLine_x2", false, codeLineIndex); break;
-                    case 3: Compiler::emitVcpuAsm("STW", "drawLine_y2", false, codeLineIndex); break;
+                    case 0: Compiler::emitVcpuAsm("STW", "drawLine_x1", false); break;
+                    case 1: Compiler::emitVcpuAsm("STW", "drawLine_y1", false); break;
+                    case 2: Compiler::emitVcpuAsm("STW", "drawLine_x2", false); break;
+                    case 3: Compiler::emitVcpuAsm("STW", "drawLine_y2", false); break;
 
                     default: break;
                 }
             }
 
-            Compiler::emitVcpuAsm("%DrawLine", "", false, codeLineIndex);
+            Compiler::emitVcpuAsm("%DrawLine", "", false);
         }
 
         return true;
@@ -3786,15 +3923,15 @@ namespace Keywords
             Compiler::parseExpression(codeLineIndex, tokens[i], params[i]);
             switch(i)
             {
-                case 0: Compiler::emitVcpuAsm("STW", "drawHLine_x1", false, codeLineIndex); break;
-                case 1: Compiler::emitVcpuAsm("STW", "drawHLine_y1", false, codeLineIndex); break;
-                case 2: Compiler::emitVcpuAsm("STW", "drawHLine_x2", false, codeLineIndex); break;
+                case 0: Compiler::emitVcpuAsm("STW", "drawHLine_x1", false); break;
+                case 1: Compiler::emitVcpuAsm("STW", "drawHLine_y1", false); break;
+                case 2: Compiler::emitVcpuAsm("STW", "drawHLine_x2", false); break;
 
                 default: break;
             }
         }
 
-        Compiler::emitVcpuAsm("%DrawHLine", "", false, codeLineIndex);
+        Compiler::emitVcpuAsm("%DrawHLine", "", false);
 
         return true;
     }
@@ -3817,15 +3954,15 @@ namespace Keywords
             Compiler::parseExpression(codeLineIndex, tokens[i], params[i]);
             switch(i)
             {
-                case 0: Compiler::emitVcpuAsm("STW", "drawVLine_x1", false, codeLineIndex); break;
-                case 1: Compiler::emitVcpuAsm("STW", "drawVLine_y1", false, codeLineIndex); break;
-                case 2: Compiler::emitVcpuAsm("STW", "drawVLine_y2", false, codeLineIndex); break;
+                case 0: Compiler::emitVcpuAsm("STW", "drawVLine_x1", false); break;
+                case 1: Compiler::emitVcpuAsm("STW", "drawVLine_y1", false); break;
+                case 2: Compiler::emitVcpuAsm("STW", "drawVLine_y2", false); break;
 
                 default: break;
             }
         }
 
-        Compiler::emitVcpuAsm("%DrawVLine", "", false, codeLineIndex);
+        Compiler::emitVcpuAsm("%DrawVLine", "", false);
 
         return true;
     }
@@ -3848,15 +3985,15 @@ namespace Keywords
             Compiler::parseExpression(codeLineIndex, tokens[i], params[i]);
             switch(i)
             {
-                case 0: Compiler::emitVcpuAsm("STW",  "drawCircle_cx", false, codeLineIndex);                                                          break;
-                case 1: Compiler::emitVcpuAsm("ADDI", "8", false, codeLineIndex); Compiler::emitVcpuAsm("STW", "drawCircle_cy", false, codeLineIndex); break;
-                case 2: Compiler::emitVcpuAsm("STW",  "drawCircle_r",  false, codeLineIndex);                                                          break;
+                case 0: Compiler::emitVcpuAsm("STW",  "drawCircle_cx", false);                                           break;
+                case 1: Compiler::emitVcpuAsm("ADDI", "8", false); Compiler::emitVcpuAsm("STW", "drawCircle_cy", false); break;
+                case 2: Compiler::emitVcpuAsm("STW",  "drawCircle_r",  false);                                           break;
 
                 default: break;
             }
         }
 
-        Compiler::emitVcpuAsm("%DrawCircle", "", false, codeLineIndex);
+        Compiler::emitVcpuAsm("%DrawCircle", "", false);
 
         return true;
     }
@@ -3879,15 +4016,15 @@ namespace Keywords
             Compiler::parseExpression(codeLineIndex, tokens[i], params[i]);
             switch(i)
             {
-                case 0: Compiler::emitVcpuAsm("STW", "drawCircleF_cx", false, codeLineIndex); break;
-                case 1: Compiler::emitVcpuAsm("STW", "drawCircleF_cy", false, codeLineIndex); break;
-                case 2: Compiler::emitVcpuAsm("STW", "drawCircleF_r",  false, codeLineIndex); break;
+                case 0: Compiler::emitVcpuAsm("STW", "drawCircleF_cx", false); break;
+                case 1: Compiler::emitVcpuAsm("STW", "drawCircleF_cy", false); break;
+                case 2: Compiler::emitVcpuAsm("STW", "drawCircleF_r",  false); break;
 
                 default: break;
             }
         }
 
-        Compiler::emitVcpuAsm("%DrawCircleF", "", false, codeLineIndex);
+        Compiler::emitVcpuAsm("%DrawCircleF", "", false);
 
         return true;
     }
@@ -3910,16 +4047,16 @@ namespace Keywords
             Compiler::parseExpression(codeLineIndex, tokens[i], params[i]);
             switch(i)
             {
-                case 0: Compiler::emitVcpuAsm("STW", "drawRect_x1", false, codeLineIndex); break;
-                case 1: Compiler::emitVcpuAsm("STW", "drawRect_y1", false, codeLineIndex); break;
-                case 2: Compiler::emitVcpuAsm("STW", "drawRect_x2", false, codeLineIndex); break;
-                case 3: Compiler::emitVcpuAsm("STW", "drawRect_y2", false, codeLineIndex); break;
+                case 0: Compiler::emitVcpuAsm("STW", "drawRect_x1", false); break;
+                case 1: Compiler::emitVcpuAsm("STW", "drawRect_y1", false); break;
+                case 2: Compiler::emitVcpuAsm("STW", "drawRect_x2", false); break;
+                case 3: Compiler::emitVcpuAsm("STW", "drawRect_y2", false); break;
 
                 default: break;
             }
         }
 
-        Compiler::emitVcpuAsm("%DrawRect", "", false, codeLineIndex);
+        Compiler::emitVcpuAsm("%DrawRect", "", false);
 
         return true;
     }
@@ -3942,16 +4079,16 @@ namespace Keywords
             Compiler::parseExpression(codeLineIndex, tokens[i], params[i]);
             switch(i)
             {
-                case 0: Compiler::emitVcpuAsm("STW", "drawRectF_x1", false, codeLineIndex); break;
-                case 1: Compiler::emitVcpuAsm("STW", "drawRectF_y1", false, codeLineIndex); break;
-                case 2: Compiler::emitVcpuAsm("STW", "drawRectF_x2", false, codeLineIndex); break;
-                case 3: Compiler::emitVcpuAsm("STW", "drawRectF_y2", false, codeLineIndex); break;
+                case 0: Compiler::emitVcpuAsm("STW", "drawRectF_x1", false); break;
+                case 1: Compiler::emitVcpuAsm("STW", "drawRectF_y1", false); break;
+                case 2: Compiler::emitVcpuAsm("STW", "drawRectF_x2", false); break;
+                case 3: Compiler::emitVcpuAsm("STW", "drawRectF_y2", false); break;
 
                 default: break;
             }
         }
 
-        Compiler::emitVcpuAsm("%DrawRectF", "", false, codeLineIndex);
+        Compiler::emitVcpuAsm("%DrawRectF", "", false);
 
         return true;
     }
@@ -3970,8 +4107,8 @@ namespace Keywords
 
         Expression::Numeric param;
         Compiler::parseExpression(codeLineIndex, tokens[0], param);
-        Compiler::emitVcpuAsm("STW", "drawPoly_addr", false, codeLineIndex);
-        Compiler::emitVcpuAsm("%DrawPoly", "", false, codeLineIndex);
+        Compiler::emitVcpuAsm("STW", "drawPoly_addr", false);
+        Compiler::emitVcpuAsm("%DrawPoly", "",        false);
 
         return true;
     }
@@ -3998,15 +4135,15 @@ namespace Keywords
 
         if(scrollToken == "ON")
         {
-            Compiler::emitVcpuAsm("LDWI", "0x0001", false, codeLineIndex);
-            Compiler::emitVcpuAsm("ORW", "miscFlags", false, codeLineIndex);
+            Compiler::emitVcpuAsm("LDWI", "0x0001",   false);
+            Compiler::emitVcpuAsm("ORW", "miscFlags", false);
         }
         else
         {
-            Compiler::emitVcpuAsm("LDWI", "0xFFFE", false, codeLineIndex);
-            Compiler::emitVcpuAsm("ANDW", "miscFlags", false, codeLineIndex);
+            Compiler::emitVcpuAsm("LDWI", "0xFFFE",    false);
+            Compiler::emitVcpuAsm("ANDW", "miscFlags", false);
         }
-        Compiler::emitVcpuAsm("STW", "miscFlags", false, codeLineIndex);
+        Compiler::emitVcpuAsm("STW", "miscFlags", false);
 
         return true;
     }
@@ -4044,28 +4181,28 @@ namespace Keywords
 
         if((operandTypes[0] == Compiler::OperandVar  ||  operandTypes[0] == Compiler::OperandTemp)  &&  (operandTypes[1] == Compiler::OperandVar  ||  operandTypes[1] == Compiler::OperandTemp))
         {
-            (operandTypes[1] == Compiler::OperandVar) ? Compiler::emitVcpuAsm(opcode, operand, false, codeLineIndex) : Compiler::emitVcpuAsm("LDW", operands[1], false, codeLineIndex);
-            (operandTypes[0] == Compiler::OperandVar) ? Compiler::emitVcpuAsm("POKE", "_" + operands[0], false, codeLineIndex) : Compiler::emitVcpuAsm("POKE", operands[0], false, codeLineIndex);
+            (operandTypes[1] == Compiler::OperandVar) ? Compiler::emitVcpuAsm(opcode, operand, false, codeLineIndex) : Compiler::emitVcpuAsm("LDW", operands[1], false);
+            (operandTypes[0] == Compiler::OperandVar) ? Compiler::emitVcpuAsm("POKE", "_" + operands[0], false, codeLineIndex) : Compiler::emitVcpuAsm("POKE", operands[0], false);
         }
         else if((operandTypes[0] == Compiler::OperandVar  ||  operandTypes[0] == Compiler::OperandTemp)  &&  operandTypes[1] == Compiler::OperandConst)
         {
-            Compiler::emitVcpuAsm("LDI", operands[1], false, codeLineIndex);
-            (operandTypes[0] == Compiler::OperandVar) ? Compiler::emitVcpuAsm("POKE", "_" + operands[0], false, codeLineIndex) : Compiler::emitVcpuAsm("POKE", operands[0], false, codeLineIndex);
+            Compiler::emitVcpuAsm("LDI", operands[1], false);
+            (operandTypes[0] == Compiler::OperandVar) ? Compiler::emitVcpuAsm("POKE", "_" + operands[0], false, codeLineIndex) : Compiler::emitVcpuAsm("POKE", operands[0], false);
         }
         else if(operandTypes[0] == Compiler::OperandConst  &&  (operandTypes[1] == Compiler::OperandVar  ||  operandTypes[1] == Compiler::OperandTemp))
         {
             uint16_t addr;
             if(Expression::stringToU16(operands[0], addr)  &&  addr < 0x0100)
             {
-                (operandTypes[1] == Compiler::OperandVar) ? Compiler::emitVcpuAsm(opcode, operand, false, codeLineIndex) : Compiler::emitVcpuAsm("LDW", operands[1], false, codeLineIndex);
-                Compiler::emitVcpuAsm("ST", operands[0], false, codeLineIndex);
+                (operandTypes[1] == Compiler::OperandVar) ? Compiler::emitVcpuAsm(opcode, operand, false, codeLineIndex) : Compiler::emitVcpuAsm("LDW", operands[1], false);
+                Compiler::emitVcpuAsm("ST", operands[0], false);
             }
             else
             {
-                Compiler::emitVcpuAsm("LDWI", operands[0], false, codeLineIndex);
-                Compiler::emitVcpuAsm("STW", "register0", false, codeLineIndex);
-                (operandTypes[1] == Compiler::OperandVar) ? Compiler::emitVcpuAsm(opcode, operand, false, codeLineIndex) : Compiler::emitVcpuAsm("LDW", operands[1], false, codeLineIndex);
-                Compiler::emitVcpuAsm("POKE", "register0", false, codeLineIndex);
+                Compiler::emitVcpuAsm("LDWI", operands[0], false);
+                Compiler::emitVcpuAsm("STW", "register0", false);
+                (operandTypes[1] == Compiler::OperandVar) ? Compiler::emitVcpuAsm(opcode, operand, false, codeLineIndex) : Compiler::emitVcpuAsm("LDW", operands[1], false);
+                Compiler::emitVcpuAsm("POKE", "register0", false);
             }
         }
         else
@@ -4074,16 +4211,16 @@ namespace Keywords
             uint16_t addr;
             if(Expression::stringToU16(operands[0], addr)  &&  addr < 0x0100)
             {
-                Compiler::emitVcpuAsm("LDI", operands[1], false, codeLineIndex);
-                Compiler::emitVcpuAsm("ST",  operands[0], false, codeLineIndex);
+                Compiler::emitVcpuAsm("LDI", operands[1], false);
+                Compiler::emitVcpuAsm("ST",  operands[0], false);
             }
             // All other pages
             else
             {
-                Compiler::emitVcpuAsm("LDWI", operands[0], false, codeLineIndex);
-                Compiler::emitVcpuAsm("STW",  "register0", false, codeLineIndex);
-                Compiler::emitVcpuAsm("LDI",  operands[1], false, codeLineIndex);
-                Compiler::emitVcpuAsm("POKE", "register0", false, codeLineIndex);
+                Compiler::emitVcpuAsm("LDWI", operands[0], false);
+                Compiler::emitVcpuAsm("STW",  "register0", false);
+                Compiler::emitVcpuAsm("LDI",  operands[1], false);
+                Compiler::emitVcpuAsm("POKE", "register0", false);
             }
         }
 
@@ -4123,28 +4260,28 @@ namespace Keywords
 
         if((operandTypes[0] == Compiler::OperandVar  ||  operandTypes[0] == Compiler::OperandTemp)  &&  (operandTypes[1] == Compiler::OperandVar  ||  operandTypes[1] == Compiler::OperandTemp))
         {
-            (operandTypes[1] == Compiler::OperandVar) ? Compiler::emitVcpuAsm(opcode, operand, false, codeLineIndex) : Compiler::emitVcpuAsm("LDW", "" + operands[1], false, codeLineIndex);
-            (operandTypes[0] == Compiler::OperandVar) ? Compiler::emitVcpuAsm("DOKE", "_" + operands[0], false, codeLineIndex) : Compiler::emitVcpuAsm("DOKE", "" + operands[0], false, codeLineIndex);
+            (operandTypes[1] == Compiler::OperandVar) ? Compiler::emitVcpuAsm(opcode, operand, false, codeLineIndex) : Compiler::emitVcpuAsm("LDW", "" + operands[1], false);
+            (operandTypes[0] == Compiler::OperandVar) ? Compiler::emitVcpuAsm("DOKE", "_" + operands[0], false, codeLineIndex) : Compiler::emitVcpuAsm("DOKE", "" + operands[0], false);
         }
         else if((operandTypes[0] == Compiler::OperandVar  ||  operandTypes[0] == Compiler::OperandTemp)  &&  operandTypes[1] == Compiler::OperandConst)
         {
-            Compiler::emitVcpuAsm("LDWI", operands[1], false, codeLineIndex);
-            (operandTypes[0] == Compiler::OperandVar) ? Compiler::emitVcpuAsm("DOKE", "_" + operands[0], false, codeLineIndex) : Compiler::emitVcpuAsm("DOKE", "" + operands[0], false, codeLineIndex);
+            Compiler::emitVcpuAsm("LDWI", operands[1], false);
+            (operandTypes[0] == Compiler::OperandVar) ? Compiler::emitVcpuAsm("DOKE", "_" + operands[0], false, codeLineIndex) : Compiler::emitVcpuAsm("DOKE", "" + operands[0], false);
         }
         else if(operandTypes[0] == Compiler::OperandConst  &&  (operandTypes[1] == Compiler::OperandVar  ||  operandTypes[1] == Compiler::OperandTemp))
         {
             uint16_t addr;
             if(Expression::stringToU16(operands[0], addr)  &&  addr < 0x0100)
             {
-                (operandTypes[1] == Compiler::OperandVar) ? Compiler::emitVcpuAsm(opcode, operand, false, codeLineIndex) : Compiler::emitVcpuAsm("LDW", "" + operands[1], false, codeLineIndex);
-                Compiler::emitVcpuAsm("STW", operands[0], false, codeLineIndex);
+                (operandTypes[1] == Compiler::OperandVar) ? Compiler::emitVcpuAsm(opcode, operand, false, codeLineIndex) : Compiler::emitVcpuAsm("LDW", "" + operands[1], false);
+                Compiler::emitVcpuAsm("STW", operands[0], false);
             }
             else
             {
-                Compiler::emitVcpuAsm("LDWI", operands[0], false, codeLineIndex);
-                Compiler::emitVcpuAsm("STW", "register0", false, codeLineIndex);
-                (operandTypes[1] == Compiler::OperandVar) ? Compiler::emitVcpuAsm(opcode, operand, false, codeLineIndex) : Compiler::emitVcpuAsm("LDW", "" + operands[1], false, codeLineIndex);
-                Compiler::emitVcpuAsm("DOKE", "register0", false, codeLineIndex);
+                Compiler::emitVcpuAsm("LDWI", operands[0], false);
+                Compiler::emitVcpuAsm("STW", "register0", false);
+                (operandTypes[1] == Compiler::OperandVar) ? Compiler::emitVcpuAsm(opcode, operand, false, codeLineIndex) : Compiler::emitVcpuAsm("LDW", "" + operands[1], false);
+                Compiler::emitVcpuAsm("DOKE", "register0", false);
             }
         }
         else
@@ -4153,16 +4290,16 @@ namespace Keywords
             uint16_t addr;
             if(Expression::stringToU16(operands[0], addr)  &&  addr < 0x0100)
             {
-                Compiler::emitVcpuAsm("LDWI", operands[1], false, codeLineIndex);
-                Compiler::emitVcpuAsm("STW",  operands[0], false, codeLineIndex);
+                Compiler::emitVcpuAsm("LDWI", operands[1], false);
+                Compiler::emitVcpuAsm("STW",  operands[0], false);
             }
             // All other pages
             else
             {
-                Compiler::emitVcpuAsm("LDWI", operands[0], false, codeLineIndex);
-                Compiler::emitVcpuAsm("STW",  "register0", false, codeLineIndex);
-                Compiler::emitVcpuAsm("LDWI", operands[1], false, codeLineIndex);
-                Compiler::emitVcpuAsm("DOKE", "register0", false, codeLineIndex);
+                Compiler::emitVcpuAsm("LDWI", operands[0], false);
+                Compiler::emitVcpuAsm("STW",  "register0", false);
+                Compiler::emitVcpuAsm("LDWI", operands[1], false);
+                Compiler::emitVcpuAsm("DOKE", "register0", false);
             }
         }
 
@@ -4197,15 +4334,15 @@ namespace Keywords
         // Tick Midi
         if(tokens.size() == 1)
         {
-            (midiToken == "MIDI") ? Compiler::emitVcpuAsm("%TickMidi", "", false, codeLineIndex) : Compiler::emitVcpuAsm("%TickMidiV", "", false, codeLineIndex);
+            (midiToken == "MIDI") ? Compiler::emitVcpuAsm("%TickMidi", "", false, codeLineIndex) : Compiler::emitVcpuAsm("%TickMidiV", "", false);
             return true;
         }
 
         // Default wave type
         if(tokens.size() == 2)
         {
-            Compiler::emitVcpuAsm("LDI", "2",       false, codeLineIndex);
-            Compiler::emitVcpuAsm("ST", "waveType", false, codeLineIndex);
+            Compiler::emitVcpuAsm("LDI", "2",       false);
+            Compiler::emitVcpuAsm("ST", "waveType", false);
         }
         // Midi wave type, (optional)
         else if(tokens.size() == 3)
@@ -4214,7 +4351,7 @@ namespace Keywords
             Expression::stripWhitespace(waveTypeToken);
             Expression::Numeric param;
             Compiler::parseExpression(codeLineIndex, waveTypeToken, param);
-            Compiler::emitVcpuAsm("ST", "waveType", false, codeLineIndex);
+            Compiler::emitVcpuAsm("ST", "waveType", false);
         }
 
         // Midi stream address
@@ -4222,7 +4359,7 @@ namespace Keywords
         Expression::stripWhitespace(addressToken);
         Expression::Numeric param;
         Compiler::parseExpression(codeLineIndex, addressToken, param);
-        (midiToken == "MIDI") ? Compiler::emitVcpuAsm("%PlayMidi", "", false, codeLineIndex) : Compiler::emitVcpuAsm("%PlayMidiV", "", false, codeLineIndex);
+        (midiToken == "MIDI") ? Compiler::emitVcpuAsm("%PlayMidi", "", false, codeLineIndex) : Compiler::emitVcpuAsm("%PlayMidiV", "", false);
 
         return true;
     }
@@ -4725,30 +4862,30 @@ namespace Keywords
         Expression::stripWhitespace(idToken);
         Expression::Numeric idParam;
         Compiler::parseExpression(codeLineIndex, idToken, idParam);
-        Compiler::emitVcpuAsm("STW", "spriteId", false, codeLineIndex);
+        Compiler::emitVcpuAsm("STW", "spriteId", false);
 
         // Sprite X position
         std::string xposToken = tokens[2];
         Expression::stripWhitespace(xposToken);
         Expression::Numeric xposParam;
         Compiler::parseExpression(codeLineIndex, xposToken, xposParam);
-        Compiler::emitVcpuAsm("ST", "spriteXY", false, codeLineIndex);
+        Compiler::emitVcpuAsm("ST", "spriteXY", false);
 
         // Sprite Y position
         std::string yposToken = tokens[3];
         Expression::stripWhitespace(yposToken);
         Expression::Numeric yposParam;
         Compiler::parseExpression(codeLineIndex, yposToken, yposParam);
-        Compiler::emitVcpuAsm("ADDI", "8", false, codeLineIndex);
-        Compiler::emitVcpuAsm("ST", "spriteXY + 1", false, codeLineIndex);
+        Compiler::emitVcpuAsm("ADDI", "8", false);
+        Compiler::emitVcpuAsm("ST", "spriteXY + 1", false);
 
         // Draw sprite
         switch(flipType[flipToken])
         {
-            case Compiler::NoFlip: Compiler::emitVcpuAsm("%DrawSprite",   "", false, codeLineIndex); break;
-            case Compiler::FlipX:  Compiler::emitVcpuAsm("%DrawSpriteX",  "", false, codeLineIndex); break;
-            case Compiler::FlipY:  Compiler::emitVcpuAsm("%DrawSpriteY",  "", false, codeLineIndex); break;
-            case Compiler::FlipXY: Compiler::emitVcpuAsm("%DrawSpriteXY", "", false, codeLineIndex); break;
+            case Compiler::NoFlip: Compiler::emitVcpuAsm("%DrawSprite",   "", false); break;
+            case Compiler::FlipX:  Compiler::emitVcpuAsm("%DrawSpriteX",  "", false); break;
+            case Compiler::FlipY:  Compiler::emitVcpuAsm("%DrawSpriteY",  "", false); break;
+            case Compiler::FlipXY: Compiler::emitVcpuAsm("%DrawSpriteXY", "", false); break;
         }
  
         return true;
@@ -4784,7 +4921,7 @@ namespace Keywords
             Expression::stripWhitespace(chanToken);
             Expression::Numeric chanParam;
             Compiler::parseExpression(codeLineIndex, chanToken, chanParam);
-            Compiler::emitVcpuAsm("ST", "sndChannel + 1", false, codeLineIndex);
+            Compiler::emitVcpuAsm("ST", "sndChannel + 1", false);
         }
         
         // Sound channels off
@@ -4799,13 +4936,13 @@ namespace Keywords
             // All sound channels off
             if(tokens.size() == 1)
             {
-                Compiler::emitVcpuAsm("%SoundAllOff", "", false, codeLineIndex);
+                Compiler::emitVcpuAsm("%SoundAllOff", "", false);
                 return true;
             }
             // Single channel off
             else
             {
-                Compiler::emitVcpuAsm("%SoundOff", "", false, codeLineIndex);
+                Compiler::emitVcpuAsm("%SoundOff", "", false);
                 return true;
             }
         }
@@ -4823,11 +4960,11 @@ namespace Keywords
             Expression::stripWhitespace(freqToken);
             Expression::Numeric freqParam;
             Compiler::parseExpression(codeLineIndex, freqToken, freqParam);
-            Compiler::emitVcpuAsm("STW", "sndFrequency", false, codeLineIndex);
+            Compiler::emitVcpuAsm("STW", "sndFrequency", false);
 
             if(tokens.size() == 3)
             {
-                Compiler::emitVcpuAsm("%SoundOn", "", false, codeLineIndex);
+                Compiler::emitVcpuAsm("%SoundOn", "", false);
                 return true;
             }
 
@@ -4835,13 +4972,13 @@ namespace Keywords
             Expression::stripWhitespace(volToken);
             Expression::Numeric volParam;
             Compiler::parseExpression(codeLineIndex, volToken, volParam);
-            Compiler::emitVcpuAsm("STW", "sndVolume", false, codeLineIndex);
+            Compiler::emitVcpuAsm("STW", "sndVolume", false);
 
             if(tokens.size() == 4)
             {
-                Compiler::emitVcpuAsm("LDI", "2", false, codeLineIndex);
-                Compiler::emitVcpuAsm("STW", "sndWaveType", false, codeLineIndex);
-                Compiler::emitVcpuAsm("%SoundOnV", "", false, codeLineIndex);
+                Compiler::emitVcpuAsm("LDI", "2",           false);
+                Compiler::emitVcpuAsm("STW", "sndWaveType", false);
+                Compiler::emitVcpuAsm("%SoundOnV", "",      false);
                 return true;
             }
 
@@ -4849,8 +4986,8 @@ namespace Keywords
             Expression::stripWhitespace(wavToken);
             Expression::Numeric wavParam;
             Compiler::parseExpression(codeLineIndex, wavToken, wavParam);
-            Compiler::emitVcpuAsm("STW", "sndWaveType", false, codeLineIndex);
-            Compiler::emitVcpuAsm("%SoundOnV", "", false, codeLineIndex);
+            Compiler::emitVcpuAsm("STW", "sndWaveType", false);
+            Compiler::emitVcpuAsm("%SoundOnV", "",      false);
 
             return true;
         }
@@ -4868,7 +5005,7 @@ namespace Keywords
             Expression::stripWhitespace(waveXToken);
             Expression::Numeric waveXParam;
             Compiler::parseExpression(codeLineIndex, waveXToken, waveXParam);
-            Compiler::emitVcpuAsm("ST", "sndWaveType + 1", false, codeLineIndex);
+            Compiler::emitVcpuAsm("ST", "sndWaveType + 1", false);
 
             if(tokens.size() == 4)
             {
@@ -4876,16 +5013,16 @@ namespace Keywords
                 Expression::stripWhitespace(waveAToken);
                 Expression::Numeric waveAParam;
                 Compiler::parseExpression(codeLineIndex, waveAToken, waveAParam);
-                Compiler::emitVcpuAsm("ST", "sndWaveType", false, codeLineIndex);
+                Compiler::emitVcpuAsm("ST", "sndWaveType", false);
             }
             // Reset waveA
             else
             {
-                Compiler::emitVcpuAsm("LDI", "0", false, codeLineIndex);
-                Compiler::emitVcpuAsm("ST", "sndWaveType", false, codeLineIndex);
+                Compiler::emitVcpuAsm("LDI", "0",          false);
+                Compiler::emitVcpuAsm("ST", "sndWaveType", false);
             }
 
-            Compiler::emitVcpuAsm("%SoundMod", "", false, codeLineIndex);
+            Compiler::emitVcpuAsm("%SoundMod", "", false);
             return true;
         }
 
@@ -4936,103 +5073,129 @@ namespace Keywords
         if(sysVarName == "FONTID"  &&  tokens.size() == 2)
         {
             Compiler::parseExpression(codeLineIndex, token1, param1);
-            Compiler::emitVcpuAsm("STW", "fontLutId", false, codeLineIndex);
+            Compiler::emitVcpuAsm("STW", "fontLutId", false);
             return true;
         }
         else if(sysVarName == "CURSORX"  &&  tokens.size() == 2)
         {
             Compiler::parseExpression(codeLineIndex, token1, param1);
-            Compiler::emitVcpuAsm("ST", "cursorXY", false, codeLineIndex);
+            Compiler::emitVcpuAsm("ST", "cursorXY", false);
             return true;
         }
         else if(sysVarName == "CURSORY"  &&  tokens.size() == 2)
         {
             Compiler::parseExpression(codeLineIndex, token1, param1);
-            Compiler::emitVcpuAsm("ST", "cursorXY + 1", false, codeLineIndex);
+            Compiler::emitVcpuAsm("ST", "cursorXY + 1", false);
             return true;
         }
         else if(sysVarName == "CURSORXY"  &&  tokens.size() == 2)
         {
             Compiler::parseExpression(codeLineIndex, token1, param1);
-            Compiler::emitVcpuAsm("STW", "cursorXY", false, codeLineIndex);
+            Compiler::emitVcpuAsm("STW", "cursorXY", false);
             return true;
         }
         else if(sysVarName == "FGCOLOUR"  &&  tokens.size() == 2)
         {
             Compiler::parseExpression(codeLineIndex, token1, param1);
-            Compiler::emitVcpuAsm("ST", "fgbgColour + 1", false, codeLineIndex);
+            Compiler::emitVcpuAsm("ST", "fgbgColour + 1", false);
             return true;
         }
         else if(sysVarName == "BGCOLOUR"  &&  tokens.size() == 2)
         {
             Compiler::parseExpression(codeLineIndex, token1, param1);
-            Compiler::emitVcpuAsm("ST", "fgbgColour", false, codeLineIndex);
+            Compiler::emitVcpuAsm("ST", "fgbgColour", false);
             return true;
         }
         else if(sysVarName == "FGBGCOLOUR"  &&  tokens.size() == 2)
         {
             Compiler::parseExpression(codeLineIndex, token1, param1);
-            Compiler::emitVcpuAsm("STW", "fgbgColour", false, codeLineIndex);
+            Compiler::emitVcpuAsm("STW", "fgbgColour", false);
             return true;
         }
         else if(sysVarName == "MIDISTREAM"  &&  tokens.size() == 2)
         {
             Compiler::parseExpression(codeLineIndex, token1, param1);
-            Compiler::emitVcpuAsm("STW", "midiStream", false, codeLineIndex);
+            Compiler::emitVcpuAsm("STW", "midiStream", false);
             return true;
         }
         else if(sysVarName == "VIDEOTOP"  &&  tokens.size() == 2)
         {
-            Compiler::emitVcpuAsm("LDWI", "giga_videoTop", false, codeLineIndex);
-            Compiler::emitVcpuAsm("STW", "register0", false, codeLineIndex);
+            Compiler::emitVcpuAsm("LDWI", "giga_videoTop", false);
+            Compiler::emitVcpuAsm("STW", "register0", false);
             Compiler::parseExpression(codeLineIndex, token1, param1);
-            Compiler::emitVcpuAsm("POKE", "register0", false, codeLineIndex);
+            Compiler::emitVcpuAsm("POKE", "register0", false);
             return true;
         }
         else if(sysVarName == "LEDTEMPO"  &&  tokens.size() == 2)
         {
             Compiler::parseExpression(codeLineIndex, token1, param1);
-            Compiler::emitVcpuAsm("ST", "giga_ledTempo", false, codeLineIndex);
+            Compiler::emitVcpuAsm("ST", "giga_ledTempo", false);
             return true;
         }
         else if(sysVarName == "LEDSTATE"  &&  tokens.size() == 2)
         {
             Compiler::parseExpression(codeLineIndex, token1, param1);
-            Compiler::emitVcpuAsm("ST", "giga_ledState", false, codeLineIndex);
+            Compiler::emitVcpuAsm("ST", "giga_ledState", false);
             return true;
         }
         else if(sysVarName == "SOUNDTIMER"  &&  tokens.size() == 2)
         {
             Compiler::parseExpression(codeLineIndex, token1, param1);
-            Compiler::emitVcpuAsm("ST", "giga_soundTimer", false, codeLineIndex);
+            Compiler::emitVcpuAsm("ST", "giga_soundTimer", false);
             return true;
         }
         else if(sysVarName == "CHANNELMASK"  &&  tokens.size() == 2)
         {
             Compiler::parseExpression(codeLineIndex, token1, param1);
-            Compiler::emitVcpuAsm("ST", "giga_channelMask", false, codeLineIndex);
+            Compiler::emitVcpuAsm("ST", "giga_channelMask", false);
             return true;
         }
         else if(sysVarName == "XOUTMASK"  &&  tokens.size() == 2)
         {
             Compiler::parseExpression(codeLineIndex, token1, param1);
-            Compiler::emitVcpuAsm("ST", "giga_xoutMask", false, codeLineIndex);
+            Compiler::emitVcpuAsm("ST", "giga_xoutMask", false);
             return true;
         }
         else if(sysVarName == "BUTTONSTATE"  &&  tokens.size() == 2)
         {
             Compiler::parseExpression(codeLineIndex, token1, param1);
-            Compiler::emitVcpuAsm("ST", "giga_buttonState", false, codeLineIndex);
+            Compiler::emitVcpuAsm("ST", "giga_buttonState", false);
             return true;
         }
         else if(sysVarName == "FRAMECOUNT"  &&  tokens.size() == 2)
         {
             Compiler::parseExpression(codeLineIndex, token1, param1);
-            Compiler::emitVcpuAsm("ST", "giga_frameCount", false, codeLineIndex);
+            Compiler::emitVcpuAsm("ST", "giga_frameCount", false);
             return true;
         }
 
         usageSET(codeLine, codeLineIndex);
         return false;
+    }
+
+    bool keywordASM(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(foundPos);
+        UNREFERENCED_PARAM(tokenIndex);
+        UNREFERENCED_PARAM(codeLineIndex);
+        UNREFERENCED_PARAM(codeLine);
+
+        Compiler::setCodeIsAsm(true);
+
+        return true;
+    }
+
+    bool keywordENDASM(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(foundPos);
+        UNREFERENCED_PARAM(tokenIndex);
+        UNREFERENCED_PARAM(codeLineIndex);
+        UNREFERENCED_PARAM(codeLine);
+
+        Compiler::setCodeIsAsm(false);
+
+        return true;
     }
 }

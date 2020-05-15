@@ -1,77 +1,77 @@
-_startAddress_      EQU                     0x0200
+_startAddress_                EQU                               0x0200
 
 ; Internal variables
-serialRawPrev       EQU                     0x0081
-register0           EQU                     0x0082
-register1           EQU                     register0 + 0x02
-register2           EQU                     register0 + 0x04
-register3           EQU                     register0 + 0x06
-register4           EQU                     register0 + 0x08
-register5           EQU                     register0 + 0x0A
-register6           EQU                     register0 + 0x0C
-register7           EQU                     register0 + 0x0E
-register8           EQU                     register0 + 0x10
-register9           EQU                     register0 + 0x12
-register10          EQU                     register0 + 0x14
-register11          EQU                     register0 + 0x16
-register12          EQU                     register0 + 0x18
-register13          EQU                     register0 + 0x1A
-register14          EQU                     register0 + 0x1C
-register15          EQU                     register0 + 0x1E
-fgbgColour          EQU                     register0 + 0x20
-cursorXY            EQU                     register0 + 0x22
-midiStream          EQU                     register0 + 0x24
-midiDelay           EQU                     register0 + 0x26
-miscFlags           EQU                     register0 + 0x28
-fontLutId           EQU                     0x00e0
+serialRawPrev                 EQU                               0x0081
+register0                     EQU                               0x0082
+register1                     EQU                               register0 + 0x02
+register2                     EQU                               register0 + 0x04
+register3                     EQU                               register0 + 0x06
+register4                     EQU                               register0 + 0x08
+register5                     EQU                               register0 + 0x0A
+register6                     EQU                               register0 + 0x0C
+register7                     EQU                               register0 + 0x0E
+register8                     EQU                               register0 + 0x10
+register9                     EQU                               register0 + 0x12
+register10                    EQU                               register0 + 0x14
+register11                    EQU                               register0 + 0x16
+register12                    EQU                               register0 + 0x18
+register13                    EQU                               register0 + 0x1A
+register14                    EQU                               register0 + 0x1C
+register15                    EQU                               register0 + 0x1E
+fgbgColour                    EQU                               register0 + 0x20
+cursorXY                      EQU                               register0 + 0x22
+midiStream                    EQU                               register0 + 0x24
+midiDelay                     EQU                               register0 + 0x26
+miscFlags                     EQU                               register0 + 0x28
+fontLutId                     EQU                               0x00e4
 
 ; Internal Constants
-ENABLE_SCROLL_BIT   EQU                     0x0001
-ON_BOTTOM_ROW_BIT   EQU                     0x0002
-ENABLE_SCROLL_MSK   EQU                     0xfffe
-ON_BOTTOM_ROW_MSK   EQU                     0xfffd
+ENABLE_SCROLL_BIT             EQU                               0x0001
+ON_BOTTOM_ROW_BIT             EQU                               0x0002
+ENABLE_SCROLL_MSK             EQU                               0xfffe
+ON_BOTTOM_ROW_MSK             EQU                               0xfffd
 
 ; Internal buffers
-textWorkArea        EQU                     0x7fa0
+textWorkArea                  EQU                               0x7fa0
 
 ; Includes
-%includePath        "../runtime"
-%include            gigatron.i
-%include            macros.i
+%includePath                  "../runtime"
+%include                      gigatron.i
+%include                      macros.i
 
 ; Labels
-_entryPoint_        EQU                     0x0200
-_loop               EQU                     0x0287
-_50                 EQU                     0x029d
-_51                 EQU                     0x02ad
-_53                 EQU                     0x02bd
-_54                 EQU                     0x02cd
-_55                 EQU                     0x02dd
-_101                EQU                     0x02ed
-_105                EQU                     0x030d
-_113                EQU                     0x031d
-_114                EQU                     0x032d
-_116                EQU                     0x033d
-_117                EQU                     0x034d
-_119                EQU                     0x035d
-_121                EQU                     0x036d
-_note               EQU                     0x037d
-_page_0x0300        EQU                     0x0300
-_next_0x0376        EQU                     0x0382
-_end_0x03aa         EQU                     0x03b0
+_entryPoint_                  EQU                               0x0200
+_loop                         EQU                               0x0288
+_50                           EQU                               0x029e
+_51                           EQU                               0x02ae
+_53                           EQU                               0x02be
+_54                           EQU                               0x02ce
+_55                           EQU                               0x02de
+_101                          EQU                               0x02ee
+_105                          EQU                               0x030d
+_113                          EQU                               0x031d
+_114                          EQU                               0x032d
+_116                          EQU                               0x033d
+_117                          EQU                               0x034d
+_119                          EQU                               0x035d
+_121                          EQU                               0x036d
+_note                         EQU                               0x037d
+_page_0x0300                  EQU                               0x0300
+_next_0x0377                  EQU                               0x0382
+_end_0x03ab                   EQU                               0x03b0
 
 ; Variables
-_a                  EQU                     0x0030
-_b                  EQU                     0x0032
-_p                  EQU                     0x0034
-_k                  EQU                     0x0036
-_c                  EQU                     0x0038
+_a                            EQU                               0x0030
+_b                            EQU                               0x0032
+_p                            EQU                               0x0034
+_k                            EQU                               0x0036
+_c                            EQU                               0x0038
 
 ; Strings
-_str_0x7ef2         EQU                     0x7ef2
-_str_0x7ef2         DB                      12 ' 2 3   5 6 7' 0
-_str_0x7ee1         EQU                     0x7ee1
-_str_0x7ee1         DB                      15 'Q W E R T Y U I' 0
+_str_0x7ef2                   EQU                               0x7ef2
+_str_0x7ef2                   DB                                12 ' 2 3   5 6 7' 0
+_str_0x7ee1                   EQU                               0x7ee1
+_str_0x7ee1                   DB                                15 'Q W E R T Y U I' 0
 
 ; Define Bytes
 
@@ -84,207 +84,206 @@ _str_0x7ee1         DB                      15 'Q W E R T Y U I' 0
 ; Define Fonts
 
 ; Lookup Tables
-_lut_numericLabs    EQU                     0x7ab1
-_lut_numericLabs    DW                      50 51 53 54 55 101 105 113 114 116 117 119 121 0x0000
-_lut_numericAddrs   EQU                     0x79e6
-_lut_numericAddrs   DW                      0x029d 0x02ad 0x02bd 0x02cd 0x02dd 0x02ed 0x030d 0x031d 0x032d 0x033d 0x034d 0x035d 0x036d 
+_lut_numericLabs              EQU                               0x7ab1
+_lut_numericLabs              DW                                50 51 53 54 55 101 105 113 114 116 117 119 121 0x0000
+_lut_numericAddrs             EQU                               0x79e6
+_lut_numericAddrs             DW                                0x029e 0x02ae 0x02be 0x02ce 0x02de 0x02ee 0x030d 0x031d 0x032d 0x033d 0x034d 0x035d 0x036d 
 
 ; Code
-_entryPoint_        LDI                     0x1c
-                    STW                     romType
-                    RomCheck                
-                    InitRealTimeProc        
-                    InitEqOp                
-                    InitNeOp                
-                    InitLeOp                
-                    InitGeOp                
-                    InitLtOp                
-                    InitGtOp                
-                    Initialise                                              ; INIT
+_entryPoint_                  LDI                               0x1c
+                              STW                               romType
+                              RomCheck                          
+                              InitEqOp                          
+                              InitNeOp                          
+                              InitLeOp                          
+                              InitGeOp                          
+                              InitLtOp                          
+                              InitGtOp                          
+                              InitArray2d                       
+                              InitArray3d                       
+                              InitRealTimeProc                  
+                              Initialise                                                ; INIT
 
-                    LDI                     0
-                    STW                     _a
-                    STW                     _b
-                    LDI                     0
-                    STW                     _p                              ; a=0 : b=a : p=0
+                              ClearVertBlinds                                           ; cls
 
-                    LDWI                    _note
-                    CALL                    giga_vAC                        ; gosub note
+                              LDI                               0
+                              STW                               _a
+                              STW                               _b
+                              LDI                               0
+                              STW                               _p                      ; a=0 : b=a : p=0
 
-                    LDI                     2
-                    STW                     graphicsMode
-                    ScanlineMode            
-                    ClearVertBlinds                                         ; mode 2:cls
+                              LDWI                              _note
+                              CALL                              giga_vAC                ; gosub note
 
-                    PrintString             _str_0x7ef2
-                    NewLine                                                 ; print " 2 3   5 6 7"
+                              PrintString                       _str_0x7ef2
+                              NewLine                                                   ; print " 2 3   5 6 7"
 
-                    PrintString             _str_0x7ee1
-                    NewLine                                                 ; print "Q W E R T Y U I"
+                              PrintString                       _str_0x7ee1
+                              NewLine                                                   ; print "Q W E R T Y U I"
 
-                    LDW                     _p
-                    SUBI                    2
-                    STW                     0xc0
-                    LDI                     2
-                    POKE                    0xc0                            ; poke p-2,2
+                              LDW                               _p
+                              SUBI                              2
+                              STW                               0xc0
+                              LDI                               2
+                              POKE                              0xc0                    ; poke p-2,2
 
-_loop               LD                      giga_serialRaw
-                    STW                     _k                              ; k=get("SERIALRAW")
+_loop                         LD                                giga_serialRaw
+                              STW                               _k                      ; k=get("SERIALRAW")
 
-                    LDW                     _k
-                    STW                     numericLabel
-                    LDI                     0
-                    STW                     defaultLabel
-                    GosubNumeric                                            ; gosub k
+                              LDW                               _k
+                              STW                               numericLabel
+                              LDI                               0
+                              STW                               defaultLabel
+                              GosubNumeric                                              ; gosub k
 
-                    LDWI                    _loop
-                    CALL                    giga_vAC                        ; goto loop
+                              LDWI                              _loop
+                              CALL                              giga_vAC                ; goto loop
 
-_50                 PUSH                    
-                    LDI                     11
-                    STW                     _a
-                    LDI                     9
-                    STW                     _b
-                    LDWI                    _note
-                    CALL                    giga_vAC
-                    Return                                                  ; a=11  : b=9  : gosub note : return
+_50                           PUSH                              
+                              LDI                               11
+                              STW                               _a
+                              LDI                               9
+                              STW                               _b
+                              LDWI                              _note
+                              CALL                              giga_vAC
+                              Return                                                    ; a=11  : b=9  : gosub note : return
 
-_51                 PUSH                    
-                    LDI                     25
-                    STW                     _a
-                    LDI                     10
-                    STW                     _b
-                    LDWI                    _note
-                    CALL                    giga_vAC
-                    Return                                                  ; a=25  : b=10 : gosub note : return
+_51                           PUSH                              
+                              LDI                               25
+                              STW                               _a
+                              LDI                               10
+                              STW                               _b
+                              LDWI                              _note
+                              CALL                              giga_vAC
+                              Return                                                    ; a=25  : b=10 : gosub note : return
 
-_53                 PUSH                    
-                    LDI                     16
-                    STW                     _a
-                    LDI                     12
-                    STW                     _b
-                    LDWI                    _note
-                    CALL                    giga_vAC
-                    Return                                                  ; a=16  : b=12 : gosub note : return
+_53                           PUSH                              
+                              LDI                               16
+                              STW                               _a
+                              LDI                               12
+                              STW                               _b
+                              LDWI                              _note
+                              CALL                              giga_vAC
+                              Return                                                    ; a=16  : b=12 : gosub note : return
 
-_54                 PUSH                    
-                    LDI                     78
-                    STW                     _a
-                    LDI                     13
-                    STW                     _b
-                    LDWI                    _note
-                    CALL                    giga_vAC
-                    Return                                                  ; a=78  : b=13 : gosub note : return
+_54                           PUSH                              
+                              LDI                               78
+                              STW                               _a
+                              LDI                               13
+                              STW                               _b
+                              LDWI                              _note
+                              CALL                              giga_vAC
+                              Return                                                    ; a=78  : b=13 : gosub note : return
 
-_55                 PUSH                    
-                    LDI                     35
-                    STW                     _a
-                    LDI                     15
-                    STW                     _b
-                    LDWI                    _note
-                    CALL                    giga_vAC
-                    Return                                                  ; a=35  : b=15 : gosub note : return
+_55                           PUSH                              
+                              LDI                               35
+                              STW                               _a
+                              LDI                               15
+                              STW                               _b
+                              LDWI                              _note
+                              CALL                              giga_vAC
+                              Return                                                    ; a=35  : b=15 : gosub note : return
 
-_101                PUSH                    
-                    LDI                     103
-                    STW                     _a
-                    STW                     0xde
-                    LDWI                    _page_0x0300
-                    CALL                    giga_vAC
-_page_0x0300        LDW                     0xde
-                    LDI                     10
-                    STW                     _b
-                    LDWI                    _note
-                    CALL                    giga_vAC
-                    Return                                                  ; a=103 : b=10 : gosub note : return
+_101                          PUSH                              
+                              LDI                               103
+                              STW                               _a
+                              STW                               0xe2
+                              LDWI                              _page_0x0300
+                              CALL                              giga_vAC
+_page_0x0300                  LDW                               0xe2
+                              LDI                               10
+                              STW                               _b
+                              LDWI                              _note
+                              CALL                              giga_vAC
+                              Return                                                    ; a=103 : b=10 : gosub note : return
 
-_105                PUSH                    
-                    LDI                     19
-                    STW                     _a
-                    LDI                     17
-                    STW                     _b
-                    LDWI                    _note
-                    CALL                    giga_vAC
-                    Return                                                  ; a=19  : b=17 : gosub note : return
+_105                          PUSH                              
+                              LDI                               19
+                              STW                               _a
+                              LDI                               17
+                              STW                               _b
+                              LDWI                              _note
+                              CALL                              giga_vAC
+                              Return                                                    ; a=19  : b=17 : gosub note : return
 
-_113                PUSH                    
-                    LDI                     73
-                    STW                     _a
-                    LDI                     8
-                    STW                     _b
-                    LDWI                    _note
-                    CALL                    giga_vAC
-                    Return                                                  ; a=73  : b=8  : gosub note : return
+_113                          PUSH                              
+                              LDI                               73
+                              STW                               _a
+                              LDI                               8
+                              STW                               _b
+                              LDWI                              _note
+                              CALL                              giga_vAC
+                              Return                                                    ; a=73  : b=8  : gosub note : return
 
-_114                PUSH                    
-                    LDI                     57
-                    STW                     _a
-                    LDI                     11
-                    STW                     _b
-                    LDWI                    _note
-                    CALL                    giga_vAC
-                    Return                                                  ; a=57  : b=11 : gosub note : return
+_114                          PUSH                              
+                              LDI                               57
+                              STW                               _a
+                              LDI                               11
+                              STW                               _b
+                              LDWI                              _note
+                              CALL                              giga_vAC
+                              Return                                                    ; a=57  : b=11 : gosub note : return
 
-_116                PUSH                    
-                    LDI                     108
-                    STW                     _a
-                    LDI                     12
-                    STW                     _b
-                    LDWI                    _note
-                    CALL                    giga_vAC
-                    Return                                                  ; a=108 : b=12 : gosub note : return
+_116                          PUSH                              
+                              LDI                               108
+                              STW                               _a
+                              LDI                               12
+                              STW                               _b
+                              LDWI                              _note
+                              CALL                              giga_vAC
+                              Return                                                    ; a=108 : b=12 : gosub note : return
 
-_117                PUSH                    
-                    LDI                     23
-                    STW                     _a
-                    LDI                     16
-                    STW                     _b
-                    LDWI                    _note
-                    CALL                    giga_vAC
-                    Return                                                  ; a=23  : b=16 : gosub note : return
+_117                          PUSH                              
+                              LDI                               23
+                              STW                               _a
+                              LDI                               16
+                              STW                               _b
+                              LDWI                              _note
+                              CALL                              giga_vAC
+                              Return                                                    ; a=23  : b=16 : gosub note : return
 
-_119                PUSH                    
-                    LDI                     80
-                    STW                     _a
-                    LDI                     9
-                    STW                     _b
-                    LDWI                    _note
-                    CALL                    giga_vAC
-                    Return                                                  ; a=80  : b=9  : gosub note : return
+_119                          PUSH                              
+                              LDI                               80
+                              STW                               _a
+                              LDI                               9
+                              STW                               _b
+                              LDWI                              _note
+                              CALL                              giga_vAC
+                              Return                                                    ; a=80  : b=9  : gosub note : return
 
-_121                PUSH                    
-                    LDI                     53
-                    STW                     _a
-                    LDI                     14
-                    STW                     _b
-                    LDWI                    _note
-                    CALL                    giga_vAC
-                    Return                                                  ; a=53  : b=14 : gosub note : return
+_121                          PUSH                              
+                              LDI                               53
+                              STW                               _a
+                              LDI                               14
+                              STW                               _b
+                              LDWI                              _note
+                              CALL                              giga_vAC
+                              Return                                                    ; a=53  : b=14 : gosub note : return
 
-_note               PUSH                    
-                    LDI                     1
-                    STW                     _c
-_next_0x0376        LD                      _c
-                    ST                      giga_vAC + 1
-                    ORI                     0xFF
-                    XORI                    0xFF
-                    ADDI                    252
-                    STW                     _p
-                    LDW                     _a
-                    POKE                    _p
-                    LDW                     _p
-                    ADDI                    1
-                    STW                     0xc2
-                    LDW                     _b
-                    POKE                    0xc2
-                    ForNextFarInc           _c _next_0x0376 4               ; for c=1 to 4 : p=(c LSL 8)+252 : poke p,a : poke p+1,b : next c
+_note                         PUSH                              
+                              LDI                               1
+                              STW                               _c
+_next_0x0377                  LD                                _c
+                              ST                                giga_vAC + 1
+                              ORI                               0xFF
+                              XORI                              0xFF
+                              ADDI                              252
+                              STW                               _p
+                              LDW                               _a
+                              POKE                              _p
+                              LDW                               _p
+                              ADDI                              1
+                              STW                               0xc2
+                              LDW                               _b
+                              POKE                              0xc2
+                              ForNextFarInc                     _c _next_0x0377 4       ; for c=1 to 4 : p=(c LSL 8)+252 : poke p,a : poke p+1,b : next c
 
-                    LDI                     15
-                    ST                      giga_soundTimer                 ; set SOUNDTIMER,15
+                              LDI                               15
+                              ST                                giga_soundTimer         ; set SOUNDTIMER,15
 
-                    Return                                                  ; return
+                              Return                                                    ; return
 
-_end_0x03aa         BRA                     _end_0x03aa                     ; END
+_end_0x03ab                   BRA                               _end_0x03ab             ; END
 
 
 
@@ -294,31 +293,34 @@ _end_0x03aa         BRA                     _end_0x03aa                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-romCheck            EQU     0x7eca
-realTimeProc        EQU     0x7ec1
-convertEqOp         EQU     0x7eb8
-convertNeOp         EQU     0x7eaf
-convertLeOp         EQU     0x7ea6
-convertGeOp         EQU     0x7df6
-convertLtOp         EQU     0x7ded
-convertGtOp         EQU     0x7de4
-gosubNumericLabel   EQU     0x7acd
-scanlineMode        EQU     0x7dae
-resetVideoTable     EQU     0x79c7
-initClearFuncs      EQU     0x7dc2
-clearVertBlinds     EQU     0x7cc5
-clearCursorRow      EQU     0x78b6
-printInit           EQU     0x79b1
-printText           EQU     0x7cac
-printChar           EQU     0x77a7
-newLineScroll       EQU     0x7ba4
-realTimeProcAddr    EQU     0x00dc
-convertEqOpAddr     EQU     0x00d0
-convertNeOpAddr     EQU     0x00d2
-convertLeOpAddr     EQU     0x00d4
-convertGeOpAddr     EQU     0x00d6
-convertLtOpAddr     EQU     0x00d8
-convertGtOpAddr     EQU     0x00da
+romCheck                      EQU     0x7eca
+realTimeProc                  EQU     0x7dc7
+convertEqOp                   EQU     0x7ec1
+convertNeOp                   EQU     0x7eb8
+convertLeOp                   EQU     0x7eaf
+convertGeOp                   EQU     0x7ea6
+convertLtOp                   EQU     0x7df6
+convertGtOp                   EQU     0x7ded
+convertArr2d                  EQU     0x7de1
+convertArr3d                  EQU     0x7dd0
+gosubNumericLabel             EQU     0x7acd
+resetVideoTable               EQU     0x79c7
+initClearFuncs                EQU     0x7da5
+clearVertBlinds               EQU     0x7cc5
+clearCursorRow                EQU     0x78b6
+printInit                     EQU     0x79b1
+printText                     EQU     0x7cac
+printChar                     EQU     0x77a7
+newLineScroll                 EQU     0x7ba4
+convertEqOpAddr               EQU     0x00d0
+convertNeOpAddr               EQU     0x00d2
+convertLeOpAddr               EQU     0x00d4
+convertGeOpAddr               EQU     0x00d6
+convertLtOpAddr               EQU     0x00d8
+convertGtOpAddr               EQU     0x00da
+convertArr2dAddr              EQU     0x00dc
+convertArr3dAddr              EQU     0x00de
+realTimeProcAddr              EQU     0x00e0
 
 
 ; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
@@ -405,6 +407,34 @@ convertGt_1         LDI     1
                     RET
 
 
+memIndex0           EQU     register0
+memIndex1           EQU     register1
+memIndex2           EQU     register2
+memValue            EQU     register8
+memAddr             EQU     register9
+
+
+convertArr2d        ADDW    memIndex0
+                    ADDW    memIndex0
+                    DEEK
+                    ADDW    memIndex1
+                    ADDW    memIndex1
+                    STW     memAddr
+                    RET
+
+
+convertArr3d        ADDW    memIndex0
+                    ADDW    memIndex0
+                    DEEK
+                    ADDW    memIndex1
+                    ADDW    memIndex1
+                    DEEK
+                    ADDW    memIndex2
+                    ADDW    memIndex2
+                    STW     memAddr
+                    RET
+
+
                     ; find numeric label and call it, (it had better return or welcome to lala land)
 gosubNumericLabel   PUSH
                     LDWI    _lut_numericLabs
@@ -435,89 +465,6 @@ gosubNL_found       LDW     lutIndex
                     DEEK
                     CALL    giga_vAC                        ; fetch label address and call
                     POP
-                    RET
-
-
-; do *NOT* use register4 to register7 during time slicing if you use realTimeProc
-graphicsMode        EQU     register0
-waitVBlankNum       EQU     register0
-
-drawHLine_x1        EQU     register0
-drawHLine_y1        EQU     register1
-drawHLine_x2        EQU     register2
-drawHLine_x4        EQU     register3
-
-drawVLine_x1        EQU     register0
-drawVLine_y1        EQU     register1
-drawVLine_y2        EQU     register2
-drawVLine_y8        EQU     register3
-
-drawLine_x1         EQU     register0
-drawLine_y1         EQU     register1
-drawLine_x2         EQU     register2
-drawLine_y2         EQU     register3
-drawLine_xy1        EQU     register0
-drawLine_xy2        EQU     register1
-drawLine_dxy1       EQU     register2
-drawLine_dxy2       EQU     register3
-drawLine_dx1        EQU     register4                       ; register4 to register7 used for temp values, state will be invalidated during time slicing
-drawLine_dy1        EQU     register5
-drawLine_dx2        EQU     register6
-drawLine_dy2        EQU     register7
-drawLine_sx         EQU     register8
-drawLine_sy         EQU     register9
-drawLine_h          EQU     register10
-drawLine_num        EQU     register11
-drawLine_count      EQU     register12
-drawLine_tmp        EQU     register13
-
-drawPixel_xy        EQU     register15
-readPixel_xy        EQU     register15
-
-drawCircle_cx       EQU     register0
-drawCircle_cy       EQU     register1
-drawCircle_r        EQU     register2
-drawCircle_a        EQU     register3
-drawCircle_d        EQU     register8
-drawCircle_x        EQU     register9
-drawCircle_y        EQU     register10
-drawCircle_ch0      EQU     register11
-drawCircle_ch1      EQU     register12
-drawCircle_ch2      EQU     register13
-drawCircle_ch3      EQU     register14
-
-drawCircleF_x1      EQU     register0
-drawCircleF_y1      EQU     register1
-drawCircleF_x2      EQU     register2
-drawCircleF_cx      EQU     register15
-drawCircleF_cy      EQU     register10
-drawCircleF_r       EQU     register11
-drawCircleF_v       EQU     register8
-drawCircleF_w       EQU     register9
-
-drawRect_x1         EQU     register7
-drawRect_y1         EQU     register10
-drawRect_x2         EQU     register11
-drawRect_y2         EQU     register15
-
-drawRectF_x1        EQU     register0
-drawRectF_y1        EQU     register1
-drawRectF_x2        EQU     register2
-drawRectF_y2        EQU     register7
-
-drawPoly_addr       EQU     register15
-
-    
-scanlineMode        LDW     giga_romType
-                    ANDI    0xF8
-                    SUBI    romTypeValue_ROMv2
-                    BGE     scanlineM_cont
-                    RET
-    
-scanlineM_cont      LDWI    SYS_SetMode_v2_80
-                    STW     giga_sysFn
-                    LDW     graphicsMode
-                    SYS     80
                     RET
 
 

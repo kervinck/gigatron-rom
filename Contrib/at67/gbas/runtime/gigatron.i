@@ -46,10 +46,11 @@ giga_ledState                   EQU     0x2E
 giga_ledTempo                   EQU     0x2F
 
 ; ROM types
-romTypeValue_ROMv1              EQU     0x1c
+romTypeValue_ROMv1              EQU     0x1C
 romTypeValue_ROMv2              EQU     0x20
 romTypeValue_ROMv3              EQU     0x28
 romTypeValue_ROMv4              EQU     0x38
+romTypeValue_ROMv5a             EQU     0x40
 romTypeValue_DEVROM             EQU     0xf8
 
 ; ROMv1 SYS calls

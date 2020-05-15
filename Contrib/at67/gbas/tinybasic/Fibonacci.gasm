@@ -1,76 +1,76 @@
-_startAddress_      EQU                     0x0200
+_startAddress_                EQU                               0x0200
 
 ; Internal variables
-serialRawPrev       EQU                     0x0081
-register0           EQU                     0x0082
-register1           EQU                     register0 + 0x02
-register2           EQU                     register0 + 0x04
-register3           EQU                     register0 + 0x06
-register4           EQU                     register0 + 0x08
-register5           EQU                     register0 + 0x0A
-register6           EQU                     register0 + 0x0C
-register7           EQU                     register0 + 0x0E
-register8           EQU                     register0 + 0x10
-register9           EQU                     register0 + 0x12
-register10          EQU                     register0 + 0x14
-register11          EQU                     register0 + 0x16
-register12          EQU                     register0 + 0x18
-register13          EQU                     register0 + 0x1A
-register14          EQU                     register0 + 0x1C
-register15          EQU                     register0 + 0x1E
-fgbgColour          EQU                     register0 + 0x20
-cursorXY            EQU                     register0 + 0x22
-midiStream          EQU                     register0 + 0x24
-midiDelay           EQU                     register0 + 0x26
-miscFlags           EQU                     register0 + 0x28
-fontLutId           EQU                     0x00e0
+serialRawPrev                 EQU                               0x0081
+register0                     EQU                               0x0082
+register1                     EQU                               register0 + 0x02
+register2                     EQU                               register0 + 0x04
+register3                     EQU                               register0 + 0x06
+register4                     EQU                               register0 + 0x08
+register5                     EQU                               register0 + 0x0A
+register6                     EQU                               register0 + 0x0C
+register7                     EQU                               register0 + 0x0E
+register8                     EQU                               register0 + 0x10
+register9                     EQU                               register0 + 0x12
+register10                    EQU                               register0 + 0x14
+register11                    EQU                               register0 + 0x16
+register12                    EQU                               register0 + 0x18
+register13                    EQU                               register0 + 0x1A
+register14                    EQU                               register0 + 0x1C
+register15                    EQU                               register0 + 0x1E
+fgbgColour                    EQU                               register0 + 0x20
+cursorXY                      EQU                               register0 + 0x22
+midiStream                    EQU                               register0 + 0x24
+midiDelay                     EQU                               register0 + 0x26
+miscFlags                     EQU                               register0 + 0x28
+fontLutId                     EQU                               0x00e4
 
 ; Internal Constants
-ENABLE_SCROLL_BIT   EQU                     0x0001
-ON_BOTTOM_ROW_BIT   EQU                     0x0002
-ENABLE_SCROLL_MSK   EQU                     0xfffe
-ON_BOTTOM_ROW_MSK   EQU                     0xfffd
+ENABLE_SCROLL_BIT             EQU                               0x0001
+ON_BOTTOM_ROW_BIT             EQU                               0x0002
+ENABLE_SCROLL_MSK             EQU                               0xfffe
+ON_BOTTOM_ROW_MSK             EQU                               0xfffd
 
 ; Internal buffers
-textWorkArea        EQU                     0x7fa0
+textWorkArea                  EQU                               0x7fa0
 
 ; Includes
-%includePath        "../runtime"
-%include            gigatron.i
-%include            macros.i
+%includePath                  "../runtime"
+%include                      gigatron.i
+%include                      macros.i
 
 ; Labels
-_entryPoint_        EQU                     0x0200
-_1                  EQU                     0x0242
-_2                  EQU                     0x024f
-_3                  EQU                     0x0258
-_4                  EQU                     0x026f
-_5                  EQU                     0x0292
-_6                  EQU                     0x02b3
-_7                  EQU                     0x02e2
-_8                  EQU                     0x0310
-_9                  EQU                     0x0327
-_10                 EQU                     0x033e
-_11                 EQU                     0x034b
-_12                 EQU                     0x0365
-_next_0x0287        EQU                     0x027b
-_page_0x0300        EQU                     0x0300
-_end_0x038e         EQU                     0x0349
-_end_0x03bf         EQU                     0x036a
+_entryPoint_                  EQU                               0x0200
+_1                            EQU                               0x024c
+_2                            EQU                               0x0259
+_3                            EQU                               0x0262
+_4                            EQU                               0x0279
+_5                            EQU                               0x029c
+_6                            EQU                               0x02bd
+_7                            EQU                               0x02ec
+_8                            EQU                               0x0318
+_9                            EQU                               0x032f
+_10                           EQU                               0x0346
+_11                           EQU                               0x0353
+_12                           EQU                               0x036d
+_next_0x0291                  EQU                               0x0285
+_page_0x0300                  EQU                               0x0300
+_end_0x0398                   EQU                               0x0351
+_end_0x03c9                   EQU                               0x0372
 
 ; Variables
-_n                  EQU                     0x0030
-_j                  EQU                     0x0032
-_c                  EQU                     0x0034
-_a_array            EQU                     0x069a
-_a_array            DW                      0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_b_array            EQU                     0x0634
-_b_array            DW                      0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_i                  EQU                     0x0036
+_n                            EQU                               0x0030
+_j                            EQU                               0x0032
+_c                            EQU                               0x0034
+_a_array                      EQU                               0x069a
+_a_array                      DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_b_array                      EQU                               0x0634
+_b_array                      DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_i                            EQU                               0x0036
 
 ; Strings
-_str_0x7efc         EQU                     0x7efc
-_str_0x7efc         DB                      2 ': ' 0
+_str_0x7efc                   EQU                               0x7efc
+_str_0x7efc                   DB                                2 ': ' 0
 
 ; Define Bytes
 
@@ -85,141 +85,143 @@ _str_0x7efc         DB                      2 ': ' 0
 ; Lookup Tables
 
 ; Code
-_entryPoint_        LDI                     0x1c
-                    STW                     romType
-                    RomCheck                
-                    InitRealTimeProc        
-                    InitEqOp                
-                    InitNeOp                
-                    InitLeOp                
-                    InitGeOp                
-                    InitLtOp                
-                    InitGtOp                
-                    Initialise                                              ; INIT
+_entryPoint_                  LDI                               0x1c
+                              STW                               romType
+                              RomCheck                          
+                              InitEqOp                          
+                              InitNeOp                          
+                              InitLeOp                          
+                              InitGeOp                          
+                              InitLtOp                          
+                              InitGtOp                          
+                              InitArray2d                       
+                              InitArray3d                       
+                              InitRealTimeProc                  
+                              Initialise                                                        ; INIT
 
-                    LDI                     0
-                    STW                     _n
-                    STW                     _j
-                    STW                     _c
-                    ClearVertBlinds                                         ; n=0 : j=n : c=j : cls
+                              LDI                               0
+                              STW                               _n
+                              STW                               _j
+                              STW                               _c
+                              ClearVertBlinds                                                   ; n=0 : j=n : c=j : cls
 
-_2                  LDWI                    0x0634
-                    STW                     register1
-                    LDI                     1
-                    DOKE                    register1                       ; dim a(50)=0 : dim b(50)=0 : b(0)=1
+_2                            LDWI                              0x0634
+                              STW                               memAddr
+                              LDI                               1
+                              DOKE                              memAddr                         ; dim a(50)=0 : dim b(50)=0 : b(0)=1
 
-_3                  LDW                     _n
-                    ADDI                    1
-                    STW                     _n
-                    PrintAcInt16            
-                    PrintString             _str_0x7efc                     ; n=n+1 : print n;": ";
+_3                            LDW                               _n
+                              ADDI                              1
+                              STW                               _n
+                              PrintAcInt16                      
+                              PrintString                       _str_0x7efc                     ; n=n+1 : print n;": ";
 
-_4                  LDI                     0
-                    STW                     _i
-                    LDW                     _j
-                    STW                     0xb0
-                    LDI                     1
-                    STW                     0xb2
-_next_0x0287        LDW                     _j
-                    SUBW                    _i
-                    STW                     register2
-                    LDWI                    0x0634
-                    ADDW                    register2
-                    ADDW                    register2
-                    DEEK                    
-                    ADDI                    48
-                    PrintAcChar                                             ; for i=0 to j : put b(j-i)+48
+_4                            LDI                               0
+                              STW                               _i
+                              LDW                               _j
+                              STW                               0xb0
+                              LDI                               1
+                              STW                               0xb2
+_next_0x0291                  LDW                               _j
+                              SUBW                              _i
+                              STW                               memIndex0
+                              LDWI                              0x0634
+                              ADDW                              memIndex0
+                              ADDW                              memIndex0
+                              DEEK                              
+                              ADDI                              48
+                              PrintAcChar                                                       ; for i=0 to j : put b(j-i)+48
 
-_5                  ForNextFarVarPos        _i _next_0x0287 0xb0 0xb2
-                    NewLine                 
-                    LDI                     0
-                    STW                     _i
-                    LDW                     _j
-                    STW                     0xb0
-                    LDI                     1
-                    STW                     0xb2                            ; next i : print : for i=0 to j
+_5                            ForNextFarVarAdd                  _i _next_0x0291 0xb0 0xb2
+                              NewLine                           
+                              LDI                               0
+                              STW                               _i
+                              LDW                               _j
+                              STW                               0xb0
+                              LDI                               1
+                              STW                               0xb2                            ; next i : print : for i=0 to j
 
-_6                  LDWI                    0x069a
-                    ADDW                    _i
-                    ADDW                    _i
-                    DEEK                    
-                    STW                     0xc0
-                    LDWI                    0x0634
-                    ADDW                    _i
-                    ADDW                    _i
-                    DEEK                    
-                    ADDW                    0xc0
-                    ADDW                    _c
-                    STW                     _c
-                    LDWI                    0x0634
-                    ADDW                    _i
-                    ADDW                    _i
-                    DEEK                    
-                    STW                     register0
-                    LDWI                    0x069a
-                    ADDW                    _i
-                    ADDW                    _i
-                    STW                     register1
-                    LDW                     register0
-                    DOKE                    register1                       ; c=a(i)+b(i)+c : a(i)=b(i)
+_6                            LDWI                              0x069a
+                              ADDW                              _i
+                              ADDW                              _i
+                              DEEK                              
+                              STW                               0xc0
+                              LDWI                              0x0634
+                              ADDW                              _i
+                              ADDW                              _i
+                              DEEK                              
+                              ADDW                              0xc0
+                              ADDW                              _c
+                              STW                               _c
+                              LDWI                              0x0634
+                              ADDW                              _i
+                              ADDW                              _i
+                              DEEK                              
+                              STW                               memValue
+                              LDWI                              0x069a
+                              ADDW                              _i
+                              ADDW                              _i
+                              STW                               memAddr
+                              LDW                               memValue
+                              DOKE                              memAddr                         ; c=a(i)+b(i)+c : a(i)=b(i)
 
-_7                  LDWI                    0x0634
-                    ADDW                    _i
-                    ADDW                    _i
-                    STW                     register1
-                    LDW                     _c
-                    DOKE                    register1
-                    SUBI                    10
-                    STW                     0xde
-                    LDWI                    _page_0x0300
-                    CALL                    giga_vAC
-_page_0x0300        LDW                     0xde
-                    JumpLT                  _8 0
-                    LDI                     0
-                    STW                     _c
-                    BRA                     _9                              ; b(i)=c : if c &< 10 then c=0 : goto &9
+_7                            LDWI                              0x0634
+                              ADDW                              _i
+                              ADDW                              _i
+                              STW                               0xe2
+                              LDWI                              _page_0x0300
+                              CALL                              giga_vAC
+_page_0x0300                  LDW                               0xe2
+                              STW                               memAddr
+                              LDW                               _c
+                              DOKE                              memAddr
+                              SUBI                              10
+                              JumpLT                            _8 0
+                              LDI                               0
+                              STW                               _c
+                              BRA                               _9                              ; b(i)=c : if c &< 10 then c=0 : goto &9
 
-_8                  LDW                     _c
-                    SUBI                    10
-                    STW                     register0
-                    LDWI                    0x0634
-                    ADDW                    _i
-                    ADDW                    _i
-                    STW                     register1
-                    LDW                     register0
-                    DOKE                    register1
-                    LDI                     1
-                    STW                     _c                              ; b(i)=c-10 : c=1
+_8                            LDW                               _c
+                              SUBI                              10
+                              STW                               memValue
+                              LDWI                              0x0634
+                              ADDW                              _i
+                              ADDW                              _i
+                              STW                               memAddr
+                              LDW                               memValue
+                              DOKE                              memAddr
+                              LDI                               1
+                              STW                               _c                              ; b(i)=c-10 : c=1
 
-_9                  ForNextFarVarPos        _i _6 0xb0 0xb2
-                    LDW                     _c
-                    BNE                     _10
-                    BRA                     _12                             ; next i : if c &&= 0 then goto &12
+_9                            ForNextFarVarAdd                  _i _6 0xb0 0xb2
+                              LDW                               _c
+                              BNE                               _10
+                              BRA                               _12                             ; next i : if c &&= 0 then goto &12
 
-_10                 LDW                     _j
-                    ADDI                    1
-                    STW                     _j
-                    SUBI                    50
-                    BNE                     _11
-_end_0x038e         BRA                     _end_0x038e                     ; j=j+1 : if j &&= 50 then END
+_10                           LDW                               _j
+                              ADDI                              1
+                              STW                               _j
+                              SUBI                              50
+                              BNE                               _11
+_end_0x0398                   BRA                               _end_0x0398                     ; j=j+1 : if j &&= 50 then END
 
-_11                 LDWI                    0x069a
-                    ADDW                    _j
-                    ADDW                    _j
-                    STW                     register1
-                    LDI                     0
-                    DOKE                    register1
-                    LDWI                    0x0634
-                    ADDW                    _j
-                    ADDW                    _j
-                    STW                     register1
-                    LDW                     _c
-                    DOKE                    register1                       ; a(j)=0 : b(j)=c
+_11                           LDWI                              0x069a
+                              ADDW                              _j
+                              ADDW                              _j
+                              STW                               memAddr
+                              LDI                               0
+                              DOKE                              memAddr
+                              LDWI                              0x0634
+                              ADDW                              _j
+                              ADDW                              _j
+                              STW                               memAddr
+                              LDW                               _c
+                              DOKE                              memAddr                         ; a(j)=0 : b(j)=c
 
-_12                 LDWI                    _3
-                    CALL                    giga_vAC                        ; goto 3
+_12                           LDWI                              _3
+                              CALL                              giga_vAC                        ; goto 3
 
-_end_0x03bf         BRA                     _end_0x03bf                     ; END
+_end_0x03c9                   BRA                               _end_0x03c9                     ; END
 
 
 
@@ -229,32 +231,36 @@ _end_0x03bf         BRA                     _end_0x03bf                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-romCheck            EQU     0x7ee5
-realTimeProc        EQU     0x7edc
-convertEqOp         EQU     0x7ed3
-convertNeOp         EQU     0x7eca
-convertLeOp         EQU     0x7ec1
-convertGeOp         EQU     0x7eb8
-convertLtOp         EQU     0x7eaf
-convertGtOp         EQU     0x7ea6
-resetVideoTable     EQU     0x7bc7
-initClearFuncs      EQU     0x7ddd
-clearVertBlinds     EQU     0x7da3
-clearCursorRow      EQU     0x79b6
-printInit           EQU     0x7bb1
-printText           EQU     0x7be6
-printDigit          EQU     0x78dd
-printInt16          EQU     0x7cae
-printChr            EQU     0x7ca1
-printChar           EQU     0x77a7
-newLineScroll       EQU     0x7aa4
-realTimeProcAddr    EQU     0x00dc
-convertEqOpAddr     EQU     0x00d0
-convertNeOpAddr     EQU     0x00d2
-convertLeOpAddr     EQU     0x00d4
-convertGeOpAddr     EQU     0x00d6
-convertLtOpAddr     EQU     0x00d8
-convertGtOpAddr     EQU     0x00da
+romCheck                      EQU     0x7ee5
+realTimeProc                  EQU     0x7de5
+convertEqOp                   EQU     0x7edc
+convertNeOp                   EQU     0x7ed3
+convertLeOp                   EQU     0x7eca
+convertGeOp                   EQU     0x7ec1
+convertLtOp                   EQU     0x7eb8
+convertGtOp                   EQU     0x7eaf
+convertArr2d                  EQU     0x7ea3
+convertArr3d                  EQU     0x7dee
+resetVideoTable               EQU     0x79e0
+initClearFuncs                EQU     0x7dc3
+clearVertBlinds               EQU     0x7cc5
+clearCursorRow                EQU     0x78b6
+printInit                     EQU     0x7ca2
+printText                     EQU     0x7daa
+printDigit                    EQU     0x79be
+printInt16                    EQU     0x7bae
+printChr                      EQU     0x7cb8
+printChar                     EQU     0x77a7
+newLineScroll                 EQU     0x7aa4
+convertEqOpAddr               EQU     0x00d0
+convertNeOpAddr               EQU     0x00d2
+convertLeOpAddr               EQU     0x00d4
+convertGeOpAddr               EQU     0x00d6
+convertLtOpAddr               EQU     0x00d8
+convertGtOpAddr               EQU     0x00da
+convertArr2dAddr              EQU     0x00dc
+convertArr3dAddr              EQU     0x00de
+realTimeProcAddr              EQU     0x00e0
 
 
 ; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
@@ -338,6 +344,34 @@ convertGtOp         BGT     convertGt_1
                     LDI     0
                     RET
 convertGt_1         LDI     1
+                    RET
+
+
+memIndex0           EQU     register0
+memIndex1           EQU     register1
+memIndex2           EQU     register2
+memValue            EQU     register8
+memAddr             EQU     register9
+
+
+convertArr2d        ADDW    memIndex0
+                    ADDW    memIndex0
+                    DEEK
+                    ADDW    memIndex1
+                    ADDW    memIndex1
+                    STW     memAddr
+                    RET
+
+
+convertArr3d        ADDW    memIndex0
+                    ADDW    memIndex0
+                    DEEK
+                    ADDW    memIndex1
+                    ADDW    memIndex1
+                    DEEK
+                    ADDW    memIndex2
+                    ADDW    memIndex2
+                    STW     memAddr
                     RET
 
 

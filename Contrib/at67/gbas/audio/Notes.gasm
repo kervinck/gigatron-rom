@@ -41,51 +41,19 @@ textWorkArea                  EQU                               0x7fa0
 
 ; Labels
 _entryPoint_                  EQU                               0x0200
-_100                          EQU                               0x0251
-_101                          EQU                               0x025b
-_102                          EQU                               0x0265
-_103                          EQU                               0x026f
-_104                          EQU                               0x027e
-_105                          EQU                               0x0288
-_110                          EQU                               0x0297
-_120                          EQU                               0x029b
-_130                          EQU                               0x029f
-_140                          EQU                               0x02b0
-_150                          EQU                               0x02bf
-_160                          EQU                               0x02c9
-_170                          EQU                               0x02d5
-_180                          EQU                               0x02df
-_190                          EQU                               0x0302
-_200                          EQU                               0x0310
-_210                          EQU                               0x031e
-_220                          EQU                               0x032c
-_230                          EQU                               0x0331
-_240                          EQU                               0x0336
-_250                          EQU                               0x0345
-_page_0x0300                  EQU                               0x0300
-_end_0x034b                   EQU                               0x0345
+_getRomNote                   EQU                               0x02aa
+_next_0x0262                  EQU                               0x0260
+_end_0x02aa                   EQU                               0x02a8
+_end_0x02c2                   EQU                               0x02c0
 
 ; Variables
-_N                            EQU                               0x0030
-_K                            EQU                               0x0032
-_M                            EQU                               0x0034
-_L                            EQU                               0x0036
+_note                         EQU                               0x0030
+_notes                        EQU                               0x0032
+_index                        EQU                               0x0034
 
 ; Strings
-_str_0x7ef1                   EQU                               0x7ef1
-_str_0x7ef1                   DB                                13 'INTERFACE AGE' 0
-_str_0x7ee2                   EQU                               0x7ee2
-_str_0x7ee2                   DB                                13 ' PRIME-NUMBER' 0
-_str_0x7ed6                   EQU                               0x7ed6
-_str_0x7ed6                   DB                                10 ' BENCHMARK' 0
-_str_0x7ecc                   EQU                               0x7ecc
-_str_0x7ecc                   DB                                8 ' PROGRAM' 0
-_str_0x7ebe                   EQU                               0x7ebe
-_str_0x7ebe                   DB                                12 'For Gigatron' 0
-_str_0x7eb3                   EQU                               0x7eb3
-_str_0x7eb3                   DB                                9 ' gtBASIC ' 0
-_str_0x7ead                   EQU                               0x7ead
-_str_0x7ead                   DB                                4 'DONE' 0
+_str_0x7efd                   EQU                               0x7efd
+_str_0x7efd                   DB                                1 ' ' 0
 
 ; Define Bytes
 
@@ -116,84 +84,57 @@ _entryPoint_                  LDI                               0x1c
 
                               ClearVertBlinds                                                   ; cls
 
-_100                          PrintString                       _str_0x7ef1                     ; PRINT "INTERFACE AGE";
+                              SoundAllOff                                                       ; sound off
 
-_101                          PrintString                       _str_0x7ee2                     ; PRINT " PRIME-NUMBER";
+                              LDI                               0
+                              STW                               _note
+                              STW                               _notes                          ; note = 0 : notes = note
 
-_102                          PrintString                       _str_0x7ed6                     ; PRINT " BENCHMARK";
+                              LDI                               0
+                              STW                               _index                          ; for index=0 &to 95
 
-_103                          PrintString                       _str_0x7ecc
-                              NewLine                                                           ; PRINT " PROGRAM"
+_next_0x0262                  LDI                               10
+                              ST                                giga_soundTimer                 ; set SOUNDTIMER, 10
 
-_104                          PrintString                       _str_0x7ebe                     ; PRINT "For Gigatron";
+                              LDWI                              _getRomNote
+                              CALL                              giga_vAC                        ; gosub getRomNote
 
-_105                          PrintString                       _str_0x7eb3
-                              NewLine                                                           ; PRINT " gtBASIC "
+                              LDI                               1
+                              ST                                sndChannel + 1
+                              LDW                               _note
+                              STW                               sndFrequency
+                              LDI                               40
+                              STW                               sndVolume
+                              LDI                               2
+                              STW                               sndWaveType
+                              SoundOnV                                                          ; sound on, 1, note, 40, 2
 
-_110                          LDI                               1
-                              STW                               _N                              ; FOR N=1 TO 200
-
-_120                          LDI                               2
-                              STW                               _K                              ; FOR K=2 TO 100
-
-_130                          LDW                               _N
-                              STW                               mathX
-                              LDW                               _K
-                              STW                               mathY
-                              LDWI                              divide16bit
-                              CALL                              giga_vAC
-                              LDW                               mathRem
-                              STW                               _M                              ; M=N % K
-
-_140                          LDW                               _N
-                              STW                               mathX
-                              LDW                               _K
-                              STW                               mathY
-                              LDWI                              divide16bit
-                              CALL                              giga_vAC
-                              STW                               _L                              ; L=N / K
-
-_150                          LDW                               _L
-                              BNE                               _160
-                              LDWI                              _200
-                              CALL                              giga_vAC                        ; IF L&&=0 THEN GOTO 200
-
-_160                          LDW                               _L
-                              SUBI                              1
-                              BNE                               _170
-                              LDWI                              _190
-                              CALL                              giga_vAC                        ; IF L&&=1 THEN GOTO 190
-
-_170                          LDW                               _M
-                              BLE                               _180
-                              LDWI                              _190
-                              CALL                              giga_vAC                        ; IF M&&>0 THEN GOTO 190
-
-_180                          LDW                               _M
-                              JumpEQ                            _190 3
-                              LDWI                              _210
-                              CALL                              giga_vAC                        ; IF M&=0 THEN GOTO 210
-
-                              STW                               0xe2
-                              LDWI                              _page_0x0300
-                              CALL                              giga_vAC
-_page_0x0300                  LDW                               0xe2
-_190                          ForNextFarInc                     _K _130 100                     ; NEXT K
-
-_200                          LDW                               _N
+                              LDW                               _index
                               PrintAcInt16                      
-                              NewLine                                                           ; PRINT N
+                              PrintString                       _str_0x7efd
+                              LDW                               _note
+                              PrintAcInt16                      
+                              NewLine                                                           ; print index;" ";note
 
-_210                          ForNextFarInc                     _N _120 200                     ; NEXT N
+                              ForNextInc                        _index _next_0x0262 95          ; next index
 
-_220                          NewLine                                                           ; PRINT
+_end_0x02aa                   BRA                               _end_0x02aa                     ; end
 
-_230                          NewLine                                                           ; PRINT
+_getRomNote                   PUSH                                                              ; asm
 
-_240                          PrintString                       _str_0x7ead
-                              NewLine                                                           ; PRINT "DONE"
+                              LDWI                              0x0900                          ; LDWI    0x0900
+                              ADDW                              _index                          ; ADDW    _index
+                              ADDW                              _index                          ; ADDW    _index
+                              STW                               _notes                          ; STW     _notes
+                              LUP                               0                               ; LUP     0
+                              ST                                _note                           ; ST      _note
+                              LDW                               _notes                          ; LDW     _notes
+                              LUP                               1                               ; LUP     1
+                              ST                                _note+1                         ; ST      _note + 1
 
-_250                          BRA                               _250                            ; END
+                              Return                                                            ; return
+
+_end_0x02c2                   BRA                               _end_0x02c2                     ; END
 
 
 
@@ -203,27 +144,28 @@ _250                          BRA                               _250            
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-romCheck                      EQU     0x7de8
-realTimeProc                  EQU     0x7da6
-convertEqOp                   EQU     0x7ea4
-convertNeOp                   EQU     0x7ddf
-convertLeOp                   EQU     0x7dd6
-convertGeOp                   EQU     0x7dcd
-convertLtOp                   EQU     0x7dc4
-convertGtOp                   EQU     0x7dbb
-convertArr2d                  EQU     0x7daf
-convertArr3d                  EQU     0x7cee
-divide16bit                   EQU     0x79a8
-resetVideoTable               EQU     0x7ba6
-initClearFuncs                EQU     0x7ccc
-clearVertBlinds               EQU     0x7bc5
-clearCursorRow                EQU     0x77b6
-printInit                     EQU     0x77a0
-printText                     EQU     0x7cb3
-printDigit                    EQU     0x76dd
-printInt16                    EQU     0x78ae
-printChar                     EQU     0x75a7
-newLineScroll                 EQU     0x7aa4
+romCheck                      EQU     0x7ee6
+realTimeProc                  EQU     0x7de5
+convertEqOp                   EQU     0x7edd
+convertNeOp                   EQU     0x7ed4
+convertLeOp                   EQU     0x7ecb
+convertGeOp                   EQU     0x7ec2
+convertLtOp                   EQU     0x7eb9
+convertGtOp                   EQU     0x7eb0
+convertArr2d                  EQU     0x7ea4
+convertArr3d                  EQU     0x7dee
+resetVideoTable               EQU     0x7bb8
+initClearFuncs                EQU     0x7dc3
+clearVertBlinds               EQU     0x7cc5
+clearCursorRow                EQU     0x78b6
+soundAllOff                   EQU     0x7dad
+soundOnV                      EQU     0x7bd7
+printInit                     EQU     0x7ba2
+printText                     EQU     0x7cac
+printDigit                    EQU     0x77dd
+printInt16                    EQU     0x7aae
+printChar                     EQU     0x76a7
+newLineScroll                 EQU     0x79a4
 convertEqOpAddr               EQU     0x00d0
 convertNeOpAddr               EQU     0x00d2
 convertLeOpAddr               EQU     0x00d4
@@ -347,73 +289,6 @@ convertArr3d        ADDW    memIndex0
                     RET
 
 
-; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
-mathX               EQU     register8
-mathY               EQU     register9
-mathSum             EQU     register12
-mathRem             EQU     register12
-mathMask            EQU     register13
-mathSign            EQU     register14
-mathQuot            EQU     register15
-mathShift           EQU     register15
-mathBase            EQU     register10
-mathPow             EQU     register11
-mathResult          EQU     register14
-
-
-                    ; accumulator:mathRem = mathX / mathY, (results 16bit)
-divide16bit         LDW     mathX
-                    XORW    mathY
-                    STW     mathSign
-                    LDW     mathX
-                    BGE     divide16_pos0
-                    LDI     0
-                    SUBW    mathX
-                    STW     mathX
-                    
-divide16_pos0       LDW     mathY                     
-                    BGE     divide16_pos1
-                    LDI     0
-                    SUBW    mathY
-                    STW     mathY
-                    
-divide16_pos1       LDI     0
-                    STW     mathRem
-                    LDI     1
-    
-divide16_loop       STW     mathMask
-                    LDW     mathRem
-                    LSLW
-                    STW     mathRem
-                    LDW     mathX
-                    BGE     divide16_incr
-                    INC     mathRem
-                    
-divide16_incr       LDW     mathX
-                    LSLW
-                    STW     mathX
-                    LDW     mathRem
-                    SUBW    mathY
-                    BLT     divide16_incx
-                    STW     mathRem
-                    INC     mathX
-                    
-divide16_incx       LDW     mathMask
-                    LSLW
-                    BNE     divide16_loop
-                    PUSH
-                    CALL    realTimeProcAddr
-                    POP
-                    LDW     mathSign
-                    BGE     divide16_exit
-                    LDI     0
-                    SUBW    mathX
-                    RET
-                    
-divide16_exit       LDW     mathX
-                    RET
-
-
 
 ; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 xreset              EQU     register0
@@ -503,6 +378,52 @@ clearVB_loop        CALL    realTimeProcAddr
                     SUBI    giga_yres / 2 + 8
                     BLT     clearVB_loop
                     POP
+                    RET
+
+
+audioAddr           EQU     register1
+waveType            EQU     register2
+midiNote            EQU     register4                       ; register4 to register7 are the only free registers during time slicing
+midiCommand         EQU     register5
+midiPtr             EQU     register6
+sndChannel          EQU     register8
+sndFrequency        EQU     register9
+sndVolume           EQU     register10
+sndWaveType         EQU     register11
+
+
+soundAllOff         LDWI    0x01FC
+                    STW     sndChannel
+                    LDI     0
+                    DOKE    sndChannel                      ; turn off channel 0
+                    INC     sndChannel + 1      
+                    DOKE    sndChannel                      ; turn off channel 1
+                    INC     sndChannel + 1      
+                    DOKE    sndChannel                      ; turn off channel 2
+                    INC     sndChannel + 1      
+                    DOKE    sndChannel                      ; turn off channel 3
+                    RET
+
+
+soundOnV            LDWI    SYS_LSRW1_48
+                    STW     giga_sysFn
+                    LDI     0xFC
+                    ST      sndChannel
+                    LD      sndFrequency
+                    SYS     48
+                    ST      sndFrequency                    ; right shift low byte of sndFrequency by 1
+                    LDW     sndFrequency                    ; format = high:8 low:07, (bit 7 of low byte = 0)
+                    DOKE    sndChannel                      ; turn on channel
+                    LDI     0xFA
+                    ST      sndChannel                      ; still pointing to the correct channel
+                    LDI     63
+                    SUBW    sndVolume
+                    ADDI    64
+                    POKE    sndChannel                      ; 0 -> 63 maps to 127 -> 64
+                    INC     sndChannel
+                    LD      sndWaveType
+                    ANDI    3
+                    POKE    sndChannel                      ; wave type in wave X
                     RET
 
 

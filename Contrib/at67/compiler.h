@@ -9,39 +9,43 @@
 #include "expression.h"
 
 
-#define LABEL_TRUNC_SIZE   20     // The smaller you make this, the more your BASIC label names will be truncated in the resultant .vasm code
-#define OPCODE_TRUNC_SIZE  24     // The smaller you make this, the more your VASM opcode/macro names will be truncated in the resultant .vasm code
-#define USER_STR_SIZE      94
+#define LABEL_TRUNC_SIZE  30 // The smaller you make this, the more your BASIC label names will be truncated in the resultant .vasm code
+#define OPCODE_TRUNC_SIZE 34 // The smaller you make this, the more your VASM opcode/macro names will be truncated in the resultant .vasm code
+#define USER_STR_SIZE     94
+#define LOOP_VARS_SIZE    4
+#define MAX_NESTED_LOOPS  4
+#define MAX_ARRAY_DIMS    3
 
 #define SPRITE_CHUNK_SIZE        6
 #define SPRITE_STRIPE_CHUNKS_LO 15 // 15 fits in a 96 byte page
 #define SPRITE_STRIPE_CHUNKS_HI 40 // 40 fits in a 256 byte page
 
-// 30 bytes, (0x00E2 <-> 0x00FF), reserved for vCPU stack, allows for 15 nested calls. The amount of nested GOSUBS you can use is dependant on how
+// 30 bytes, (0x00E6 <-> 0x00FF), reserved for vCPU stack, allows for 13 nested calls. The amount of nested GOSUBS you can use is dependant on how
 // much of the stack is being used by nested system calls. *NOTE* there is NO call table for user code for this compiler
-#define USER_VAR_START    0x0030  // 80 bytes, (0x0030 <-> 0x007F), reserved for BASIC user variables
-#define INT_VAR_START     0x0082  // 46 bytes, (0x0082 <-> 0x00AF), internal register variables, used by the BASIC runtime
-#define LOOP_VAR_START    0x00B0  // 16 bytes, (0x00B0 <-> 0x00BF), reserved for FOR loops with vars, maximum of 4 nested FOR loops
-#define TEMP_VAR_START    0x00C0  // 16 bytes, (0x00C0 <-> 0x00CF), reserved for temporary expression variables
-#define CONVERT_CC_OPS    0x00D0  // 12 bytes, (0x00D0 <-> 0x00DB), critical relational operator routines that can't straddle page boundaries
-#define REAL_TIME_PROC    0x00DC  // 2 bytes,  (0x00DC <-> 0x00DD), critical time sliced routine that usually handles AUDIO/MIDI, etc
-#define VAC_SAVE_START    0x00DE  // 2 bytes,  (0x00DE <-> 0x00DF), reserved for saving vAC
-#define FONT_LUT_ID       0x00E0  // 2 bytes,  (0x00E0 <-> 0x00E1), reserved for currently selected font
-#define USER_CODE_START   0x0200
-#define USER_VAR_END      0x007F
+#define USER_VAR_START  0x0030  // 80 bytes, (0x0030 <-> 0x007F), reserved for BASIC user variables
+#define INT_VAR_START   0x0082  // 46 bytes, (0x0082 <-> 0x00AF), internal register variables, used by the BASIC runtime
+#define LOOP_VAR_START  0x00B0  // 16 bytes, (0x00B0 <-> 0x00BF), reserved for FOR loops with vars, maximum of 4 nested FOR loops
+#define TEMP_VAR_START  0x00C0  // 16 bytes, (0x00C0 <-> 0x00CF), reserved for temporary expression variables
+#define CONVERT_CC_OPS  0x00D0  // 12 bytes, (0x00D0 <-> 0x00DB), critical relational operator routines that can't straddle page boundaries
+#define CONVERT_ARRAY   0x00DC  // 2 bytes,  (0x00DC <-> 0x00DF), critical array accessing routines
+#define REAL_TIME_PROC  0x00E0  // 2 bytes,  (0x00E0 <-> 0x00E1), critical time sliced routine that usually handles AUDIO/MIDI, etc
+#define VAC_SAVE_START  0x00E2  // 2 bytes,  (0x00E2 <-> 0x00E3), reserved for saving vAC
+#define FONT_LUT_ID     0x00E4  // 2 bytes,  (0x00E4 <-> 0x00E5), reserved for currently selected font
+#define USER_CODE_START 0x0200
+#define USER_VAR_END    0x007F
 
 // Misc flags bits
-#define ENABLE_SCROLL_BIT  0x0001
-#define ON_BOTTOM_ROW_BIT  0x0002
+#define ENABLE_SCROLL_BIT 0x0001
+#define ON_BOTTOM_ROW_BIT 0x0002
 
 // Misc flags masks
-#define ENABLE_SCROLL_MSK  0xFFFE
-#define ON_BOTTOM_ROW_MSK  0xFFFD
+#define ENABLE_SCROLL_MSK 0xFFFE
+#define ON_BOTTOM_ROW_MSK 0xFFFD
 
 
 namespace Compiler
 {
-    enum VarType {VarInt8=1, VarInt16, VarStr, VarInt32, VarFloat16, VarFloat32, VarArray, VarArray2, VarArray3};
+    enum VarType {VarInt8=1, VarInt16, VarStr, VarInt32, VarFloat16, VarFloat32, VarArray1, VarArray2, VarArray3};
     enum IntSize {Int8=1, Int16=2, Int32=4};
     enum ConstType {ConstInt16, ConstStr};
     enum ConstStrType {StrChar, StrHex, StrHexw, StrLeft, StrRight, StrMid};
@@ -75,6 +79,7 @@ namespace Compiler
         std::vector<uint16_t> _arrSizes;
         std::vector<int16_t> _arrInits;
         std::vector<std::vector<uint16_t>> _arrAddrs;
+        std::vector<uint16_t> _arrLut;
     };
 
     struct StringVar
@@ -176,6 +181,7 @@ namespace Compiler
         Expression::Int16Byte _int16Byte = Expression::Int16Both;
         bool _containsVars = false;
         bool _pushEmitted = false;
+        bool _dontParse = false;
     };
 
     struct InternalSub
@@ -196,6 +202,7 @@ namespace Compiler
         int16_t _loopStep;
         uint16_t _varEnd;
         uint16_t _varStep;
+        bool _downTo = false;
         bool _farJump = true;
         bool _optimise = true;
         int _codeLineIndex;
@@ -306,6 +313,7 @@ namespace Compiler
     const std::string& getTempVarStartStr(void);
     const std::string& getNextInternalLabel(void);
 
+    void setCodeIsAsm(bool codeIsAsm);
     void setRuntimeEnd(uint16_t runtimeEnd);
     void setRuntimePath(const std::string& runtimePath);
     void setRuntimeStart(uint16_t runtimeStart);
@@ -369,7 +377,7 @@ namespace Compiler
     void createLabel(uint16_t address, const std::string& name, int codeLineIndex, Label& label, bool numeric=false, bool addUnderscore=true, bool pageJump=false, bool gosub=false);
     void createIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, int& varIndex);
     void createIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, int& varIndex, VarType varType, int intSize,
-                      uint16_t address, std::vector<uint16_t>& arrSizes, const std::vector<int16_t>& arrInits, std::vector<std::vector<uint16_t>>& arrAddrs);
+                      uint16_t address, std::vector<uint16_t>& arrSizes, const std::vector<int16_t>& arrInits, std::vector<std::vector<uint16_t>>& arrAddrs, std::vector<uint16_t>& arrLut);
     int getOrCreateString(CodeLine& codeLine, int codeLineIndex, const std::string& str, std::string& name, uint16_t& address, uint8_t maxSize=USER_STR_SIZE, bool constString=true);
     uint16_t getOrCreateConstString(const std::string& input, int& index);
     uint16_t getOrCreateConstString(ConstStrType constStrType, int16_t input, int& index);

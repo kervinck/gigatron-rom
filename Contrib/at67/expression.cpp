@@ -61,39 +61,74 @@ namespace Expression
     }
 
     // Unary math operators
+    Numeric& operatorPOWF(Numeric& numeric)
+    {
+        if(numeric._parameters.size() > 0) numeric._value = pow(numeric._value, numeric._parameters[0]._value);
+        return numeric;
+    }
+    Numeric& operatorSQRT(Numeric& numeric)
+    {
+        if(numeric._value > 0.0) numeric._value = sqrt(numeric._value);
+        return numeric;
+    }
     Numeric& operatorEXP(Numeric& numeric)
     {
         numeric._value = exp(numeric._value);
         return numeric;
     }
+    Numeric& operatorEXP2(Numeric& numeric)
+    {
+        numeric._value = exp2(numeric._value);
+        return numeric;
+    }
+    Numeric& operatorLOG(Numeric& numeric)
+    {
+        if(numeric._value > 0.0) numeric._value = log(numeric._value);
+        return numeric;
+    }
+    Numeric& operatorLOG2(Numeric& numeric)
+    {
+        if(numeric._value > 0.0) numeric._value = log2(numeric._value);
+        return numeric;
+    }
+    Numeric& operatorLOG10(Numeric& numeric)
+    {
+        if(numeric._value > 0.0) numeric._value = log10(numeric._value);
+        return numeric;
+    }
     Numeric& operatorSIN(Numeric& numeric)
     {
-        numeric._value = sin(numeric._value);
+        numeric._value = sin(numeric._value*MATH_PI/180.0);
         return numeric;
     }
     Numeric& operatorCOS(Numeric& numeric)
     {
-        numeric._value = cos(numeric._value);
+        numeric._value = cos(numeric._value*MATH_PI/180.0);
         return numeric;
     }
     Numeric& operatorTAN(Numeric& numeric)
     {
-        numeric._value = tan(numeric._value);
+        numeric._value = tan(numeric._value*MATH_PI/180.0);
         return numeric;
     }
     Numeric& operatorASIN(Numeric& numeric)
     {
-        numeric._value = asin(numeric._value);
+        numeric._value = asin(numeric._value)/MATH_PI*180.0;
         return numeric;
     }
     Numeric& operatorACOS(Numeric& numeric)
     {
-        numeric._value = acos(numeric._value);
+        numeric._value = acos(numeric._value)/MATH_PI*180.0;
         return numeric;
     }
     Numeric& operatorATAN(Numeric& numeric)
     {
-        numeric._value = atan(numeric._value);
+        numeric._value = atan(numeric._value)/MATH_PI*180.0;
+        return numeric;
+    }
+    Numeric& operatorATAN2(Numeric& numeric)
+    {
+        if(numeric._parameters.size() > 0  &&  (numeric._value != 0.0  ||  numeric._parameters[0]._value != 0.0)) numeric._value = atan2(numeric._value, numeric._parameters[0]._value)/MATH_PI*180.0;
         return numeric;
     }
     Numeric& operatorRAND(Numeric& numeric)
@@ -1227,9 +1262,33 @@ namespace Expression
             }
         }
         // Functions
+        else if(Expression::find("POW"))
+        {
+            numeric = factor(0); numeric = operatorPOWF(numeric);
+        }
+        else if(Expression::find("SQRT"))
+        {
+            numeric = factor(0); numeric = operatorSQRT(numeric);
+        }
+        else if(Expression::find("EXP2"))
+        {
+            numeric = factor(0); numeric = operatorEXP2(numeric);
+        }
         else if(Expression::find("EXP"))
         {
             numeric = factor(0); numeric = operatorEXP(numeric);
+        }
+        else if(Expression::find("LOG10"))
+        {
+            numeric = factor(0); numeric = operatorLOG10(numeric);
+        }
+        else if(Expression::find("LOG2"))
+        {
+            numeric = factor(0); numeric = operatorLOG2(numeric);
+        }
+        else if(Expression::find("LOG"))
+        {
+            numeric = factor(0); numeric = operatorLOG(numeric);
         }
         else if(Expression::find("SIN"))
         {
@@ -1250,6 +1309,10 @@ namespace Expression
         else if(Expression::find("ACOS"))
         {
             numeric = factor(0); numeric = operatorACOS(numeric);
+        }
+        else if(Expression::find("ATAN2"))
+        {
+            numeric = factor(0); numeric = operatorATAN2(numeric);
         }
         else if(Expression::find("ATAN"))
         {

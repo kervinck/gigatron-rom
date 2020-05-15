@@ -6,9 +6,6 @@ const fgBgColour = &h0008
 set FGBGCOLOUR, fgBgColour
 cls
 
-load font, ../../images/gbas/Fonts/sc3000/sc3000.tga, 0, fgBgColour
-
-
 dim aa(20) = 0
 
 const a = 120

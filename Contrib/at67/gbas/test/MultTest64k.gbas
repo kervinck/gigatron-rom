@@ -4,7 +4,7 @@ _runtimeStart_ &hFFFF
 const ADDR=&h8000
 const SIZE=1000
 
-cls : mode 2
+cls
 
 def word(ADDR + SIZE*0, 0, SIZE, SIZE) = rand(360) - 180
 def word(ADDR + SIZE*2, 0, SIZE, SIZE) = rand(360) - 180

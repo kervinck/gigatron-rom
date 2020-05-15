@@ -1,5 +1,5 @@
 _runtimePath_ "../runtime"
-_codeRomType_ ROMv1
+_codeRomType_ ROMv2
 
 const NOTELEN=20
 

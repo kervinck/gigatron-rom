@@ -1,7 +1,7 @@
 _runtimePath_ "../runtime"
 _codeRomType_ ROMv1
 
-1 a=0 : b=0 : p=256+252 : mode 2 : cls : z=2 : d=0 : gosub 198
+1 a=0 : b=0 : p=256+252 : cls : z=2 : d=0 : gosub 198
 2 k=get("BUTTONSTATE")
 3 if k &> 126 then goto &2
 4 d = 30
