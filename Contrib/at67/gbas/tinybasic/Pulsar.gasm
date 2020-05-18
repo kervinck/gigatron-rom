@@ -90,7 +90,7 @@ _entryPoint_                  LDI                               0x1c
                               InitArray2d                       
                               InitArray3d                       
                               InitRealTimeProc                  
-                              Initialise                                                ; INIT
+                              Initialise                                                        ; INIT
 
 _10                           LDWI                              16128
                               STW                               fgbgColour
@@ -98,14 +98,14 @@ _10                           LDWI                              16128
                               LDI                               0
                               STW                               _w
                               LDI                               0
-                              STW                               _z                      ; set FGBGCOLOUR,&h3F00:cls:w=0:z=0
+                              STW                               _z                              ; set FGBGCOLOUR,&h3F00:cls:w=0:z=0
 
 _20                           LDI                               0
                               ST                                cursorXY
                               LDI                               112
                               ST                                cursorXY + 1
                               AtTextCursor                      
-                              NewLine                                                   ; at 0,112:print
+                              NewLine                                                           ; at 0,112:print
 
 _30                           LDI                               0x1e
                               RandMod                           
@@ -114,17 +114,17 @@ _30                           LDI                               0x1e
                               LDI                               5
                               STW                               _p
                               LDI                               128
-                              STW                               _q                      ; v=rnd(30)-80:p=5:q=128
+                              STW                               _q                              ; v=rnd(30)-80:p=5:q=128
 
 _40                           LDWI                              0x02bc
                               RandMod                           
                               STW                               0xc0
                               LDWI                              2000
                               ADDW                              0xc0
-                              STW                               _y                      ; y=2000+rnd(700)
+                              STW                               _y                              ; y=2000+rnd(700)
 
 _50                           LDI                               0
-                              STW                               _x                      ; for x=0 to 30
+                              STW                               _x                              ; for x=0 to 30
 
 _60                           LDW                               _y
                               STW                               mathX
@@ -136,14 +136,14 @@ _60                           LDW                               _y
                               STW                               _w
                               BLE                               _65
                               LDI                               0
-                              STW                               _w                      ; w=5+y/q:if w &&> 0 then w=0
+                              STW                               _w                              ; w=5+y/q:if w &&> 0 then w=0
 
 _65                           LD                                giga_rand0
                               SUBI                              128
                               BGE                               _70
                               LDW                               _w
                               ADDI                              1
-                              STW                               _w                      ; if get("RAND0") &&< 128 then w=w+1
+                              STW                               _w                              ; if get("RAND0") &&< 128 then w=w+1
 
 _70                           LDI                               5
                               STW                               drawLine_x2
@@ -153,7 +153,7 @@ _70                           LDI                               5
                               AtLineCursor                      
                               DrawVTLine                        
                               LDW                               _w
-                              STW                               _z                      ; line 5,w-z:z=w
+                              STW                               _z                              ; line 5,w-z:z=w
 
 _80                           LDW                               _p
                               STW                               mathX
@@ -175,13 +175,13 @@ _page_0x0300                  LDW                               0xe2
                               STW                               0xc4
                               LDW                               _v
                               SUBW                              0xc4
-                              STW                               _v                      ; y=y+p*v:v=v-y/q
+                              STW                               _v                              ; y=y+p*v:v=v-y/q
 
 _90                           ForNextFarInc                     _x _60 30
                               LDWI                              _20
-                              CALL                              giga_vAC                ; next x:goto 20
+                              CALL                              giga_vAC                        ; next x:goto 20
 
-_end_0x033e                   BRA                               _end_0x033e             ; END
+_end_0x033e                   BRA                               _end_0x033e                     ; END
 
 
 

@@ -170,9 +170,11 @@ namespace Validater
                         // ROMS that don't have CALLI save and restore vAC
                         std::string codeSTW, codeLDWI, codeCALL, codeLDW;
                         int sizeSTW  = Compiler::createVcpuAsm("STW", Expression::byteToHexString(VAC_SAVE_START), codeLineIndex, codeSTW);
+                        //int sizeSTW  = Compiler::createVcpuAsm("STLW", "0xFE", codeLineIndex, codeSTW);
                         int sizeLDWI = Compiler::createVcpuAsm("LDWI", nextPClabel, codeLineIndex, codeLDWI);
                         int sizeCALL = Compiler::createVcpuAsm("CALL", "giga_vAC", codeLineIndex, codeCALL);
                         int sizeLDW  = Compiler::createVcpuAsm("LDW", Expression::byteToHexString(VAC_SAVE_START), codeLineIndex, codeLDW);
+                        //int sizeLDW  = Compiler::createVcpuAsm("LDLW", "0xFE", codeLineIndex, codeLDW);
                         itVasm = insertPageJumpInstruction(itCode, itVasm + 0, "STW",  Expression::byteToHexString(VAC_SAVE_START), codeSTW,  uint16_t(currPC), sizeSTW);
                         itVasm = insertPageJumpInstruction(itCode, itVasm + 1, "LDWI", nextPClabel, codeLDWI, uint16_t(currPC + sizeSTW), sizeLDWI);
                         itVasm = insertPageJumpInstruction(itCode, itVasm + 1, "CALL", "giga_vAC", codeCALL, uint16_t(currPC + sizeSTW + sizeLDWI), sizeCALL);

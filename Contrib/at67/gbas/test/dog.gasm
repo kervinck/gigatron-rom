@@ -87,12 +87,12 @@ _entryPoint_                  LDI                               0x1c
                               InitArray2d                       
                               InitArray3d                       
                               InitRealTimeProc                  
-                              Initialise                                                ; INIT
+                              Initialise                                                        ; INIT
 
                               LDI                               1
                               STW                               _a
                               ADDI                              1
-                              STW                               _b                      ; a = 1 : b = a + 1
+                              STW                               _b                              ; a = 1 : b = a + 1
 
 _1                            LDW                               _b
                               SUBI                              1
@@ -112,7 +112,7 @@ _1                            LDW                               _b
                               SUBI                              32
                               CALL                              convertNeOpAddr
                               ADDW                              0xc4
-                              STW                               _bb                     ; bb = (b <= 1) + (b >= 1) + (b = 33) + (b <> 32)
+                              STW                               _bb                             ; bb = (b <= 1) + (b >= 1) + (b = 33) + (b <> 32)
 
 _8                            LDI                               2
                               ADDW                              _a
@@ -137,24 +137,24 @@ _8                            LDI                               2
                               SUBI                              20
                               CALL                              convertGtOpAddr
                               PrintAcInt16                      
-                              NewLine                                                   ; z = 2 + a + 0 : j = z + 23 -a : print a;" ";b;" ";1 + b;" dog ";bb;" ";(z > 20)
+                              NewLine                                                           ; z = 2 + a + 0 : j = z + 23 -a : print a;" ";b;" ";1 + b;" dog ";bb;" ";(z > 20)
 
 _15                           LDW                               _a
                               ADDI                              1
-                              STW                               _a                      ; a=(a+1)
+                              STW                               _a                              ; a=(a+1)
 
 _16                           LDW                               _b
                               ADDI                              1
-                              STW                               _b                      ; b = b+1
+                              STW                               _b                              ; b = b+1
 
                               STW                               0xe2
                               LDWI                              _page_0x0300
                               CALL                              giga_vAC
 _page_0x0300                  LDW                               0xe2
 _20                           LDWI                              _1
-                              CALL                              giga_vAC                ; goto 1
+                              CALL                              giga_vAC                        ; goto 1
 
-_end_0x0325                   BRA                               _end_0x0325             ; END
+_end_0x0325                   BRA                               _end_0x0325                     ; END
 
 
 

@@ -2,9 +2,9 @@ _runtimePath_ "../runtime"
 _codeRomType_ ROMv1
 
 cls
-10 addr = &h21
-addr = addr AND &hFFFF
-a = NOT addr - peek(addr AND pEeK(&h0000 OR peek(&h0000))) AND &hFC OR peek(addr+1) + 23 XOR &B00001111 - NOT 56 + NOT addr
+10 aaa = &h21
+aaa = aaa AND &hFFFF
+a = NOT aaa - peek(aaa AND pEeK(&h0000 OR peek(&h0000))) AND &hFC OR peek(aaa+1) + 23 XOR &B00001111 - NOT 56 + NOT aaa
 b = 131
 gosub blamo
 

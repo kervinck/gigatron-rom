@@ -1,14 +1,14 @@
 _runtimePath_ "../runtime"
 _runtimeStart_ &hFFFF
 
-const ADDR=&h8000
+const START=&h8000
 const SIZE=1000
 
 cls
 
-def word(ADDR + SIZE*0, 0, SIZE, SIZE) = rand(360) - 180
-def word(ADDR + SIZE*2, 0, SIZE, SIZE) = rand(360) - 180
-def word(ADDR + SIZE*4, 0, SIZE, SIZE) = 0
+def word(START + SIZE*0, 0, SIZE, SIZE) = rand(360) - 180
+def word(START + SIZE*2, 0, SIZE, SIZE) = rand(360) - 180
+def word(START + SIZE*4, 0, SIZE, SIZE) = 0
 
 
 result=0 : timer=result : tick=get("FRAMECOUNT")
@@ -20,7 +20,7 @@ for i=0 to SIZE-1
 next i    
 
 for i=0 to SIZE-1
-    'print deek(ADDR + SIZE*4 + (i LSL 1));" ";
+    'print deek(START + SIZE*4 + (i LSL 1));" ";
 next i
 
 print : print timer/60;" ";timer % 60;"/60"
@@ -36,9 +36,9 @@ end
 
 
 math:
-    a = deek(ADDR + SIZE*0 + (i LSL 1))
-    b = deek(ADDR + SIZE*2 + (i LSL 1))
-    doke ADDR + SIZE*4 + (i LSL 1), a / b
+    a = deek(START + SIZE*0 + (i LSL 1))
+    b = deek(START + SIZE*2 + (i LSL 1))
+    doke START + SIZE*4 + (i LSL 1), a / b
 return
 
 div:

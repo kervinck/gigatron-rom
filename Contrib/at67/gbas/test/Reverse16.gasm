@@ -88,40 +88,40 @@ _entryPoint_                  LDI                               0x1c
                               InitArray2d                       
                               InitArray3d                       
                               InitRealTimeProc                  
-                              Initialise                                                ; INIT
+                              Initialise                                                        ; INIT
 
-                              ClearVertBlinds                                           ; cls
+                              ClearVertBlinds                                                   ; cls
 
 _loop                         LDI                               0
-                              STW                               _out16                  ; out16 = 0
+                              STW                               _out16                          ; out16 = 0
 
                               LDWI                              0x7ef7
-                              Input                                                     ; input in16
+                              Input                                                             ; input in16
 
                               LDWI                              1536
                               STW                               0xc0
                               LD                                _in16
                               ADDW                              0xc0
                               PEEK                              
-                              ST                                _out16 + 1              ; out16.hi = peek(ADDR + in16.lo)
+                              ST                                _out16 + 1                      ; out16.hi = peek(START + in16.lo)
 
                               LDWI                              1536
                               STW                               0xc0
                               LD                                _in16 + 1
                               ADDW                              0xc0
                               PEEK                              
-                              ST                                _out16                  ; out16.lo = peek(ADDR + in16.hi)
+                              ST                                _out16                          ; out16.lo = peek(START + in16.hi)
 
                               LDW                               _out16
                               PrintAcHexWord                    
-                              NewLine                                                   ; print hexw$(out16)
+                              NewLine                                                           ; print hexw$(out16)
 
                               LDWI                              _loop
-                              CALL                              giga_vAC                ; goto loop
+                              CALL                              giga_vAC                        ; goto loop
 
-_end_0x0296                   BRA                               _end_0x0296             ; end
+_end_0x0296                   BRA                               _end_0x0296                     ; end
 
-_end_0x0298                   BRA                               _end_0x0298             ; END
+_end_0x0298                   BRA                               _end_0x0298                     ; END
 
 
 
@@ -962,8 +962,6 @@ intSrcAddr          EQU     register8
 intDigit            EQU     register9
 intResult           EQU     register10
 intNegative         EQU     register11
-intTemp0            EQU     register12
-intTemp1            EQU     register15
 
 
                     ; converts a string to a +/- integer, assumes string pointer is pointing to first char and not the string length, (no overflow or underflow checks)

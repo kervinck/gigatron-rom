@@ -87,6 +87,8 @@ namespace Compiler
     std::map<int, DefDataFont> _defDataFonts;
     FontsAddrLut _fontsAddrLut;
 
+    std::map<std::string, DefFunction> _defFunctions;
+
 
     uint16_t getVasmPC(void) {return _vasmPC;}
     uint16_t getRuntimeEnd(void) {return _runtimeEnd;}
@@ -140,6 +142,8 @@ namespace Compiler
 
     std::map<int, DefDataFont>& getDefDataFonts(void) {return _defDataFonts;}
     FontsAddrLut& getFontsAddrLut(void) {return _fontsAddrLut;}
+
+    std::map<std::string, DefFunction>& getDefFunctions(void) {return _defFunctions;}
 
     std::map<std::string, MacroIndexEntry>& getMacroIndexEntries(void) {return _macroIndexEntries;}
 
@@ -545,12 +549,12 @@ namespace Compiler
             }
         }
 
-        // Check for functions
+        // Check for inbuilt functions and user functions
         for(int i=0; i<int(tokens.size()); i++)
         {
             std::string token = tokens[i];
             Expression::strToUpper(token);
-            if(Keywords::getFunctions().find(token) != Keywords::getFunctions().end())
+            if((Keywords::getFunctions().find(token) != Keywords::getFunctions().end())  ||  (Compiler::getDefFunctions().find(token) != Compiler::getDefFunctions().end()))
             {
                 expressionType |= Expression::HasFunctions;
                 break;
@@ -660,11 +664,15 @@ namespace Compiler
         for(int i=1; i<int(tokens.size()); i++) operandStr += tokens[i];
 
         Expression::stripWhitespace(opcodeStr);
+        Expression::strToUpper(opcodeStr);
         Expression::stripWhitespace(operandStr);
 
         int vasmSize = createVcpuAsm(opcodeStr, operandStr, int(_codeLines.size()), line);
-        if(vasmSize <= 0)
+        if(vasmSize == 0)
         {
+            // This is a bit of a hack, but unfortunately needed as createAsmLine is called before the keyword ENDASM can be processed
+            if(opcodeStr == "ENDASM") return true;
+
             fprintf(stderr, "Compiler::createAsmLine() : vASM syntax error, undefined opcode on line %d\n", _currentCodeLineIndex);
             return false;
         }
@@ -705,9 +713,7 @@ namespace Compiler
         Expression::operatorReduction(codeLine._expression);
 
         // ASM keyword
-        if(_codeIsAsm) createAsmLine(code);
-
-        //if(codeLine._code.size() < 2) return false; // anything too small is ignored
+        if(_codeIsAsm) return createAsmLine(code);
 
         return true;
     }
@@ -1703,6 +1709,17 @@ namespace Compiler
         return Expression::get();
     }
 
+    bool find(char chr)
+    {
+        if(peek(true) == chr)
+        {
+            get(true);
+            return true;
+        }
+
+        return false;
+    }
+
     bool number(double& value)
     {
         char uchr;
@@ -1746,10 +1763,8 @@ namespace Compiler
         return true;
     }
 
-    Expression::Numeric getString(const Expression::Numeric& numeric)
+    Expression::Numeric getString()
     {
-        UNREFERENCED_PARAM(numeric);
-
         // First quote
         get(true);
 
@@ -1864,6 +1879,47 @@ namespace Compiler
         return Expression::Numeric(length, -1, true, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
     }
 
+    bool userFunc(const std::string& name)
+    {
+        size_t lbra, rbra;
+        std::string funcText = Expression::getExpression();
+        if(!Expression::findMatchingBrackets(funcText, 0, lbra, rbra))
+        {
+            fprintf(stderr, "Compiler::userFunc() : Parenthesis error in '%s' on line %d\n", _codeLines[_currentCodeLineIndex]._code.c_str(), Expression::getLineNumber());
+            return false;
+        }
+
+        funcText = funcText.substr(lbra + 1, rbra - (lbra + 1));
+        std::vector<std::string> params = Expression::tokenise(funcText, ',', true);
+        if(params.size() == 0)
+        {
+            fprintf(stderr, "Compiler::userFunc() : Syntax error, need at least one parameter, in '%s' on line %d\n",  _codeLines[_currentCodeLineIndex]._code.c_str(), Expression::getLineNumber());
+            return false;
+        }
+        int paramsSize = int(Compiler::getDefFunctions()[name]._params.size());
+        if(params.size() != paramsSize)
+        {
+            fprintf(stderr, "Compiler::userFunc() : Syntax error, wrong number of parameters, expecting %d, in '%s' on line %d\n", paramsSize,  _codeLines[_currentCodeLineIndex]._code.c_str(), Expression::getLineNumber());
+            return false;
+        }
+        std::string func = Compiler::getDefFunctions()[name]._function;
+        for(int i=0; i<int(params.size()); i++)
+        {
+            Expression::stripWhitespace(params[i]);
+            Expression::replaceText(func, Compiler::getDefFunctions()[name]._params[i], params[i]);
+        }
+
+        // Substitute function and re-create expression, (factor() then parses the new expression string)
+        //int nameSize = int(name.size());
+        intptr_t offset = Expression::getExpression() - (char *)Expression::getExpressionToParseString().c_str();
+        Expression::replaceText(Expression::getExpressionToParseString(), funcText, func, offset);
+        //Expression::getExpressionToParseString().erase(offset - nameSize, nameSize);
+        //Expression::setExpression(Expression::getExpressionToParseString(), offset - nameSize);
+        Expression::setExpression(Expression::getExpressionToParseString(), offset);
+
+        return true;
+    }
+
     Expression::Numeric factor(int16_t defaultValue)
     {
         double value = 0;
@@ -1907,7 +1963,7 @@ namespace Compiler
         // String
         else if(peek(true) == '"')
         {
-            numeric = getString(numeric);
+            numeric = getString();
         }
         // 'Address of' operator
         else if(peek(true) == '@')
@@ -1919,152 +1975,179 @@ namespace Compiler
             numeric = lengthOf();
         }
         // Functions
-        else if(Expression::find("LEN"))
-        {
-            numeric = factor(0); numeric = Keywords::functionLEN(numeric, _currentCodeLineIndex);
-        }
-        else if(Expression::find("GET"))
-        {
-            numeric = factor(0); numeric = Keywords::functionGET(numeric, _currentCodeLineIndex);
-        }
-        else if(Expression::find("ABS"))
-        {
-            numeric = factor(0); numeric = Keywords::functionABS(numeric, _currentCodeLineIndex);
-        }
-        else if(Expression::find("ASC"))
-        {
-            numeric = factor(0); numeric = Keywords::functionASC(numeric, _currentCodeLineIndex);
-        }
-        else if(Expression::find("CHR$"))
-        {
-            numeric = factor(0); numeric = Keywords::functionCHR$(numeric, _currentCodeLineIndex);
-        }
-        else if(Expression::find("HEX$"))
-        {
-            numeric = factor(0); numeric = Keywords::functionHEX$(numeric, _currentCodeLineIndex);
-        }
-        else if(Expression::find("HEXW$"))
-        {
-            numeric = factor(0); numeric = Keywords::functionHEXW$(numeric, _currentCodeLineIndex);
-        }
-        else if(Expression::find("LEFT$"))
-        {
-            numeric = factor(0); numeric = Keywords::functionLEFT$(numeric, _currentCodeLineIndex);
-        }
-        else if(Expression::find("RIGHT$"))
-        {
-            numeric = factor(0); numeric = Keywords::functionRIGHT$(numeric, _currentCodeLineIndex);
-        }
-        else if(Expression::find("MID$"))
-        {
-            numeric = factor(0); numeric = Keywords::functionMID$(numeric, _currentCodeLineIndex);
-        }
-        else if(Expression::find("CMP"))
-        {
-            numeric = factor(0); numeric = Keywords::functionCMP(numeric, _currentCodeLineIndex);
-        }
-        else if(Expression::find("PEEK"))
-        {
-            numeric = factor(0); numeric = Keywords::functionPEEK(numeric, _currentCodeLineIndex);
-        }
-        else if(Expression::find("DEEK"))
-        {
-            numeric = factor(0); numeric = Keywords::functionDEEK(numeric, _currentCodeLineIndex);
-        }
-        else if(Expression::find("USR"))
-        {
-            numeric = factor(0); numeric = Keywords::functionUSR(numeric, _currentCodeLineIndex);
-        }
-        else if(Expression::find("RND"))
-        {
-            numeric = factor(0); numeric = Keywords::functionRND(numeric, _currentCodeLineIndex);
-        }
-        else if(Expression::find("POINT"))
-        {
-            numeric = factor(0); numeric = Keywords::functionPOINT(numeric, _currentCodeLineIndex);
-        }
-        else if(Expression::find("LUP"))
-        {
-            numeric = factor(0); numeric = Keywords::functionLUP(numeric, _currentCodeLineIndex);
-        }
         else if(Expression::find("NOT "))
         {
             numeric = factor(0); numeric = Operators::operatorNOT(numeric);
         }
-        else if(Expression::find("POW"))
+        else if(Expression::findFunc("PEEK"))
+        {
+            numeric = factor(0); numeric = Keywords::functionPEEK(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("DEEK"))
+        {
+            numeric = factor(0); numeric = Keywords::functionDEEK(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("USR"))
+        {
+            numeric = factor(0); numeric = Keywords::functionUSR(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("RND"))
+        {
+            numeric = factor(0); numeric = Keywords::functionRND(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("LEN"))
+        {
+            numeric = factor(0); numeric = Keywords::functionLEN(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("GET"))
+        {
+            numeric = factor(0); numeric = Keywords::functionGET(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("ABS"))
+        {
+            numeric = factor(0); numeric = Keywords::functionABS(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("SGN"))
+        {
+            numeric = factor(0); numeric = Keywords::functionSGN(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("ASC"))
+        {
+            numeric = factor(0); numeric = Keywords::functionASC(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("CMP"))
+        {
+            numeric = factor(0); numeric = Keywords::functionCMP(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("VAL"))
+        {
+            numeric = factor(0); numeric = Keywords::functionVAL(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("LUP"))
+        {
+            numeric = factor(0); numeric = Keywords::functionLUP(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("ADDR"))
+        {
+            numeric = factor(0); numeric = Keywords::functionADDR(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("POINT"))
+        {
+            numeric = factor(0); numeric = Keywords::functionPOINT(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("CHR$"))
+        {
+            numeric = factor(0); numeric = Keywords::functionCHR$(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("STR$"))
+        {
+            numeric = factor(0); numeric = Keywords::functionSTR$(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("HEX$"))
+        {
+            numeric = factor(0); numeric = Keywords::functionHEX$(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("HEXW$"))
+        {
+            numeric = factor(0); numeric = Keywords::functionHEXW$(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("LEFT$"))
+        {
+            numeric = factor(0); numeric = Keywords::functionLEFT$(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("RIGHT$"))
+        {
+            numeric = factor(0); numeric = Keywords::functionRIGHT$(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("MID$"))
+        {
+            numeric = factor(0); numeric = Keywords::functionMID$(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("POW"))
         {
             numeric = factor(0); numeric = Operators::operatorPOWF(numeric);
         }
-        else if(Expression::find("SQRT"))
+        else if(Expression::findFunc("SQRT"))
         {
             numeric = factor(0); numeric = Operators::operatorSQRT(numeric);
         }
-        else if(Expression::find("EXP2"))
+        else if(Expression::findFunc("EXP2"))
         {
             numeric = factor(0); numeric = Operators::operatorEXP2(numeric);
         }
-        else if(Expression::find("EXP"))
+        else if(Expression::findFunc("EXP"))
         {
             numeric = factor(0); numeric = Operators::operatorEXP(numeric);
         }
-        else if(Expression::find("LOG10"))
+        else if(Expression::findFunc("LOG10"))
         {
             numeric = factor(0); numeric = Operators::operatorLOG10(numeric);
         }
-        else if(Expression::find("LOG2"))
+        else if(Expression::findFunc("LOG2"))
         {
             numeric = factor(0); numeric = Operators::operatorLOG2(numeric);
         }
-        else if(Expression::find("LOG"))
+        else if(Expression::findFunc("LOG"))
         {
             numeric = factor(0); numeric = Operators::operatorLOG(numeric);
         }
-        else if(Expression::find("SIN"))
+        else if(Expression::findFunc("SIN"))
         {
             numeric = factor(0); numeric = Operators::operatorSIN(numeric);
         }
-        else if(Expression::find("COS"))
+        else if(Expression::findFunc("COS"))
         {
             numeric = factor(0); numeric = Operators::operatorCOS(numeric);
         }
-        else if(Expression::find("TAN"))
+        else if(Expression::findFunc("TAN"))
         {
             numeric = factor(0); numeric = Operators::operatorTAN(numeric);
         }
-        else if(Expression::find("ASIN"))
+        else if(Expression::findFunc("ASIN"))
         {
             numeric = factor(0); numeric = Operators::operatorASIN(numeric);
         }
-        else if(Expression::find("ACOS"))
+        else if(Expression::findFunc("ACOS"))
         {
             numeric = factor(0); numeric = Operators::operatorACOS(numeric);
         }
-        else if(Expression::find("ATAN2"))
+        else if(Expression::findFunc("ATAN2"))
         {
             numeric = factor(0); numeric = Operators::operatorATAN2(numeric);
         }
-        else if(Expression::find("ATAN"))
+        else if(Expression::findFunc("ATAN"))
         {
             numeric = factor(0); numeric = Operators::operatorATAN(numeric);
         }
-        else if(Expression::find("RAND"))
+        else if(Expression::findFunc("RAND"))
         {
             numeric = factor(0); numeric = Operators::operatorRAND(numeric);
         }
-        else if(Expression::find("REV16"))
+        else if(Expression::findFunc("REV16"))
         {
             numeric = factor(0); numeric = Operators::operatorREV16(numeric);
         }
-        else if(Expression::find("REV8"))
+        else if(Expression::findFunc("REV8"))
         {
             numeric = factor(0); numeric = Operators::operatorREV8(numeric);
         }
-        else if(Expression::find("REV4"))
+        else if(Expression::findFunc("REV4"))
         {
             numeric = factor(0); numeric = Operators::operatorREV4(numeric);
         }
         else
         {
+            // User functions, (DEF FN), like inbuilt functions names are NOT case sensitive
+            for(auto it=Compiler::getDefFunctions().begin(); it!=Compiler::getDefFunctions().end(); ++it)
+            {
+                std::string name = it->first;
+                if(Expression::findFunc(name))
+                {
+                    if(!userFunc(it->first)) return numeric;
+                    return factor(0);
+                }
+            }
+
             switch(peek(true))
             {
                 // Unary operators
@@ -2200,11 +2283,11 @@ namespace Compiler
 
         for(;;)
         {
-            if(Expression::find("**"))       {           numeric = factor(0); result = Operators::operatorPOW(result, numeric);}
-            else if(peek(true) == '*')       {get(true); numeric = factor(0); result = Operators::operatorMUL(result, numeric);}
-            else if(peek(true) == '/')       {get(true); numeric = factor(0); result = Operators::operatorDIV(result, numeric);}
-            else if(peek(true) == '%')       {get(true); numeric = factor(0); result = Operators::operatorMOD(result, numeric);}
-            else if(Expression::find("MOD")) {           numeric = factor(0); result = Operators::operatorMOD(result, numeric);}
+            if(Expression::find("**"))       {numeric = factor(0); result = Operators::operatorPOW(result, numeric);}
+            else if(find('*'))               {numeric = factor(0); result = Operators::operatorMUL(result, numeric);}
+            else if(find('/'))               {numeric = factor(0); result = Operators::operatorDIV(result, numeric);}
+            else if(find('%'))               {numeric = factor(0); result = Operators::operatorMOD(result, numeric);}
+            else if(Expression::find("MOD")) {numeric = factor(0); result = Operators::operatorMOD(result, numeric);}
             else return result;
         }
     }
@@ -2215,8 +2298,8 @@ namespace Compiler
 
         for(;;)
         {
-            if(peek(true) == '+')      {get(true); numeric = term(); result = Operators::operatorADD(result, numeric);}
-            else if(peek(true) == '-') {get(true); numeric = term(); result = Operators::operatorSUB(result, numeric);}
+            if(find('+'))      {numeric = term(); result = Operators::operatorADD(result, numeric);}
+            else if(find('-')) {numeric = term(); result = Operators::operatorSUB(result, numeric);}
 
             else return result;
         }
@@ -2249,13 +2332,13 @@ namespace Compiler
         for(;;)
         {
             // Boolean conditionals
-            if(Expression::find("=="))      {           numeric = logical(); result = Operators::operatorEQ(result, numeric, Expression::BooleanCC);}
-            else if(peek(true) == '=')      {get(true); numeric = logical(); result = Operators::operatorEQ(result, numeric, Expression::BooleanCC);}
-            else if(Expression::find("<>")) {           numeric = logical(); result = Operators::operatorNE(result, numeric, Expression::BooleanCC);}
-            else if(Expression::find("<=")) {           numeric = logical(); result = Operators::operatorLE(result, numeric, Expression::BooleanCC);}
-            else if(Expression::find(">=")) {           numeric = logical(); result = Operators::operatorGE(result, numeric, Expression::BooleanCC);}
-            else if(peek(true) == '<')      {get(true); numeric = logical(); result = Operators::operatorLT(result, numeric, Expression::BooleanCC);}
-            else if(peek(true) == '>')      {get(true); numeric = logical(); result = Operators::operatorGT(result, numeric, Expression::BooleanCC);}
+            if(Expression::find("=="))      {numeric = logical(); result = Operators::operatorEQ(result, numeric, Expression::BooleanCC);}
+            else if(find('='))              {numeric = logical(); result = Operators::operatorEQ(result, numeric, Expression::BooleanCC);}
+            else if(Expression::find("<>")) {numeric = logical(); result = Operators::operatorNE(result, numeric, Expression::BooleanCC);}
+            else if(Expression::find("<=")) {numeric = logical(); result = Operators::operatorLE(result, numeric, Expression::BooleanCC);}
+            else if(Expression::find(">=")) {numeric = logical(); result = Operators::operatorGE(result, numeric, Expression::BooleanCC);}
+            else if(find('<'))              {numeric = logical(); result = Operators::operatorLT(result, numeric, Expression::BooleanCC);}
+            else if(find('>'))              {numeric = logical(); result = Operators::operatorGT(result, numeric, Expression::BooleanCC);}
 
             // Normal conditionals
             else if(Expression::find("&==")) {numeric = logical(); result = Operators::operatorEQ(result, numeric, Expression::NormalCC);}
@@ -2375,7 +2458,6 @@ namespace Compiler
                     emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr), false, codeLineIndex);
                     emitVcpuAsm("STW", "strSrcAddr", false, codeLineIndex);
                     emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false, codeLineIndex);
-                    emitVcpuAsm("STW", "strDstAddr", false, codeLineIndex);
                     emitVcpuAsm("%StringCopy", "", false, codeLineIndex);
                 }
 
@@ -2426,14 +2508,12 @@ namespace Compiler
                 emitVcpuAsm("LDWI", Expression::wordToHexString(lutAddress), false, codeLineIndex);
                 emitVcpuAsm("STW", "strLutAddr", false, codeLineIndex);
                 emitVcpuAsm("LDWI", Expression::wordToHexString(getStrWorkArea()), false, codeLineIndex);
-                emitVcpuAsm("STW", "strDstAddr", false, codeLineIndex);
                 emitVcpuAsm("%StringConcat", "", false, codeLineIndex);
 
                 // Copy work area to dst string
                 emitVcpuAsm("LDWI", Expression::wordToHexString(getStrWorkArea()), false, codeLineIndex);
                 emitVcpuAsm("STW", "strSrcAddr", false, codeLineIndex);
                 emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false, codeLineIndex);
-                emitVcpuAsm("STW", "strDstAddr", false, codeLineIndex);
                 emitVcpuAsm("%StringCopy", "", false, codeLineIndex);
 
                 return true;
@@ -2586,13 +2666,21 @@ namespace Compiler
         std::vector<std::string> tokens = Expression::tokenise(code, ':', false);
         for(int j=0; j<int(tokens.size()); j++)
         {
+REDO:
             createCodeLine(tokens[j], 0, _codeLines[codeLineIndex]._labelIndex, -1, Expression::Int16Both, false, codeline);
             if(_codeLines[codeLineIndex]._dontParse) return StatementSuccess;
 
+            // Create vars and vasm
             createCodeVar(codeline, codeLineIndex, varIndex);
             createCodeStr(codeline, codeLineIndex, strIndex);
             statementResult = createVasmCode(codeline, codeLineIndex);
             if(statementResult == StatementError) break;
+
+            // Some commands, (such as FN), modify the BASIC source and cause a re-evaluation
+            if(statementResult == RedoStatementParse)
+            {
+                goto REDO;
+            }
 
             // Some commands, (such as IF), process multi-statements themselves
             if(statementResult == MultiStatementParsed) break;
@@ -3695,6 +3783,7 @@ namespace Compiler
         _defDataImages.clear();
         _defDataSprites.clear();
         _defDataFonts.clear();
+        _defFunctions.clear();
 
         _spritesAddrLut._address = 0x0000;
         _spritesAddrLut._spriteAddrs.clear();

@@ -50,7 +50,7 @@ _page_0x0400                  EQU                               0x0400
 _end_0x0448                   EQU                               0x0415
 
 ; Variables
-_addr                         EQU                               0x0030
+_aaa                          EQU                               0x0030
 _a                            EQU                               0x0032
 _b                            EQU                               0x0034
 _x                            EQU                               0x0036
@@ -97,47 +97,47 @@ _entryPoint_                  LDI                               0x1c
                               InitArray2d                       
                               InitArray3d                       
                               InitRealTimeProc                  
-                              Initialise                                                ; INIT
+                              Initialise                                                        ; INIT
 
-                              ClearVertBlinds                                           ; cls
+                              ClearVertBlinds                                                   ; cls
 
 _10                           LDI                               33
-                              STW                               _addr                   ; addr = &h21
+                              STW                               _aaa                            ; aaa = &h21
 
                               LDWI                              0xffff
-                              ANDW                              _addr
-                              STW                               _addr                   ; addr = addr AND &hFFFF
+                              ANDW                              _aaa
+                              STW                               _aaa                            ; aaa = aaa AND &hFFFF
 
                               LDWI                              -1
-                              SUBW                              _addr
+                              SUBW                              _aaa
                               STW                               0xc0
                               LD                                0x00
                               ORI                               0x00
                               PEEK                              
-                              ANDW                              _addr
+                              ANDW                              _aaa
                               PEEK                              
                               STW                               0xc6
                               LDW                               0xc0
                               SUBW                              0xc6
                               ANDI                              252
                               STW                               0xc6
-                              LDW                               _addr
+                              LDW                               _aaa
                               ADDI                              1
                               PEEK                              
                               ADDI                              23
                               ORW                               0xc6
                               STW                               0xca
                               LDWI                              -1
-                              SUBW                              _addr
+                              SUBW                              _aaa
                               ADDI                              72
                               XORW                              0xca
-                              STW                               _a                      ; a = NOT addr - peek(addr AND pEeK(&h0000 OR peek(&h0000))) AND &hFC OR peek(addr+1) + 23 XOR &B00001111 - NOT 56 + NOT addr
+                              STW                               _a                              ; a = NOT aaa - peek(aaa AND pEeK(&h0000 OR peek(&h0000))) AND &hFC OR peek(aaa+1) + 23 XOR &B00001111 - NOT 56 + NOT aaa
 
                               LDI                               131
-                              STW                               _b                      ; b = 131
+                              STW                               _b                              ; b = 131
 
                               LDWI                              _blamo
-                              CALL                              giga_vAC                ; gosub blamo
+                              CALL                              giga_vAC                        ; gosub blamo
 
                               LDW                               _a
                               PrintAcHexByte                    
@@ -147,7 +147,7 @@ _10                           LDI                               33
                               PrintString                       _str_0x7efd
                               LDWI                              0x3333
                               PrintAcHexWord                    
-                              NewLine                                                   ; print hex$(a);" ";hexw$(b);" ";hexw$(&h1111 OR &h2222)
+                              NewLine                                                           ; print hex$(a);" ";hexw$(b);" ";hexw$(&h1111 OR &h2222)
 
                               PrintString                       _str_0x7ef7
                               PrintString                       _str_0x7efd
@@ -166,10 +166,10 @@ _page_0x0300                  LDW                               0xe2
                               ANDI                              0xFC
                               ANDI                              252
                               PrintAcHexByte                    
-                              NewLine                                                   ; print "test";" ";"dog";" ";56+44;" ";a;" ";hex$(get("ROMTYPE") AND &hFC)
+                              NewLine                                                           ; print "test";" ";"dog";" ";56+44;" ";a;" ";hex$(get("ROMTYPE") AND &hFC)
 
                               LDI                               128
-                              STW                               _x                      ; x = &h0080
+                              STW                               _x                              ; x = &h0080
 
                               LDW                               _x
                               ANDI                              63
@@ -178,69 +178,68 @@ _page_0x0300                  LDW                               0xe2
                               ST                                giga_vAC + 1
                               ORI                               0xFF
                               XORI                              0xFF
-                              STW                               _z                      ; z = (x AND &h3F) LSL 8
+                              STW                               _z                              ; z = (x AND &h3F) LSL 8
 
                               LDW                               _x
                               ST                                cursorXY
                               LDW                               _z
                               ANDI                              63
                               ST                                cursorXY + 1
-                              AtTextCursor                                              ; at x, (z AND &h3F)
+                              AtTextCursor                                                      ; at x, (z AND &h3F)
 
                               LDW                               _x
                               PrintAcHexWord                    
                               PrintString                       _str_0x7efd
                               LDW                               _z
                               PrintAcHexWord                    
-                              NewLine                                                   ; print hexw$(x);" ";hexw$(z)
+                              NewLine                                                           ; print hexw$(x);" ";hexw$(z)
 
-_end_0x03a8                   BRA                               _end_0x03a8             ; END
+_end_0x03a8                   BRA                               _end_0x03a8                     ; END
 
 _blamo                        PUSH                              
                               LDWI                              23205
-                              STW                               _b                      ; b = &haa55 XOR &hF0F0
+                              STW                               _b                              ; b = &haa55 XOR &hF0F0
 
                               LDW                               _b
                               XORW                              _a
-                              STW                               _b                      ; b = b XOR a
+                              STW                               _b                              ; b = b XOR a
 
                               LDI                               0
-                              STW                               _i                      ; for i = 0 to 10
+                              STW                               _i                              ; for i = 0 to 10
 
 _next_0x03bc                  LDI                               32
                               STW                               strChr
                               LDWI                              0x7da0
-                              STW                               strDstAddr
-                              StringChr                                                 ; c$ = CHR$(32)
+                              StringChr                                                         ; c$ = CHR$(32)
 
                               LDI                               32
-                              STW                               _c                      ; c = 32
+                              STW                               _c                              ; c = 32
 
                               LD                                0x00
-                              STW                               _f                      ; f = peek(0)
+                              STW                               _f                              ; f = peek(0)
 
                               LDWI                              0xaa55
                               ANDW                              _c
                               ANDW                              _a
-                              STW                               _d                      ; d = c AND &hAA55 AND a
+                              STW                               _d                              ; d = c AND &hAA55 AND a
 
                               LDW                               _a
                               ADDI                              5
                               ADDW                              _b
-                              STW                               _z                      ; z = a + 5 + b
+                              STW                               _z                              ; z = a + 5 + b
 
                               LDI                               0
                               SUBW                              _b
-                              STW                               _b                      ; b = -b
+                              STW                               _b                              ; b = -b
 
                               LDW                               _i
                               PrintAcInt16                      
                               PrintString                       _str_0x7efd
                               LDW                               _b
                               PrintAcHexWord                    
-                              NewLine                                                   ; print i; " " ; hexw$(b)
+                              NewLine                                                           ; print i; " " ; hexw$(b)
 
-                              ForNextFarInc                     _i _next_0x03bc 10      ; next i
+                              ForNextFarInc                     _i _next_0x03bc 10              ; next i
 
                               LDWI                              -1
                               SUBW                              _g
@@ -251,16 +250,16 @@ _page_0x0400                  LDW                               0xe2
                               STW                               0xc0
                               LDW                               _z
                               SUBW                              0xc0
-                              STW                               _g                      ; g = z - NOT g
+                              STW                               _g                              ; g = z - NOT g
 
                               LDWI                              -1
                               SUBW                              _a
                               SUBW                              _d
-                              STW                               _h                      ; h = NOT a - d
+                              STW                               _h                              ; h = NOT a - d
 
-                              Return                                                    ; return
+                              Return                                                            ; return
 
-_end_0x0448                   BRA                               _end_0x0448             ; END
+_end_0x0448                   BRA                               _end_0x0448                     ; END
 
 
 
@@ -859,6 +858,9 @@ strSrcAddr2         EQU     register9
 strTmpAddr          EQU     register10
 strLutAddr          EQU     register11
 strBakAddr          EQU     register12
+strInteger          EQU     register0
+strIntDigit         EQU     register1
+strIntMult          EQU     register3
 
 
                     ; create a char string, (parameter in strChr)

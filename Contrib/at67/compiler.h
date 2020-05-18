@@ -51,7 +51,7 @@ namespace Compiler
     enum ConstStrType {StrChar, StrHex, StrHexw, StrLeft, StrRight, StrMid};
     enum IfElseEndType {IfBlock, ElseIfBlock, ElseBlock, EndIfBlock};
     enum OperandType {OperandVar, OperandTemp, OperandConst};
-    enum StatementResult {StatementError, StatementSuccess, StatementExpression, SingleStatementParsed, MultiStatementParsed, StringStatementParsed};
+    enum StatementResult {StatementError, StatementSuccess, StatementExpression, SingleStatementParsed, MultiStatementParsed, StringStatementParsed, RedoStatementParse};
     enum CodeOptimiseType {CodeSpeed, CodeSize};
     enum SpriteFlipType {NoFlip=0, FlipX, FlipY, FlipXY};
 
@@ -295,6 +295,13 @@ namespace Compiler
         std::vector<uint16_t> _fontAddrs;
     };
 
+    struct DefFunction
+    {
+        std::string _name;
+        std::string _function;
+        std::vector<std::string> _params;
+    };
+    
 
     uint16_t getVasmPC(void);
     uint16_t getRuntimeEnd(void);
@@ -348,6 +355,8 @@ namespace Compiler
 
     std::map<int, DefDataFont>& getDefDataFonts(void);
     FontsAddrLut& getFontsAddrLut(void);
+
+    std::map<std::string, DefFunction>& getDefFunctions(void);
 
     std::map<std::string, MacroIndexEntry>& getMacroIndexEntries(void);
 

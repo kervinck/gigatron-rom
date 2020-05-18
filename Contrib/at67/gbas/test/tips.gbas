@@ -6,7 +6,12 @@ set FGBGCOLOUR, fgBgColour
 cls
 'load font, ../../images/gbas/Fonts/sc3000/sc3000.tga, 0, fgBgColour
 
-dim test(5) = 1, 2, 3, 4, 3 '5, 6, '7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18
+dim test1d(5) = 1, 2, 3, 4, 3 '5, 6, '7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18
+
+def fn func(x, y, z) = x + y + z + j
+
+j = 10
+print func(8, 8, 8) + func(1, 1, 1) + func(3, 3, 3)
 
 gosub asmTest
 
@@ -20,7 +25,7 @@ for i=10 &downto 1
 next i
 
 a = 2
-a = test(a)
+a = test1d(a)
 print a
 
 dim test2d(1, 1) = 0, 1
@@ -29,7 +34,7 @@ test2d(0, 1) = &hBEEF
 print test2d(0, 0);" ";hexw$(test2d(0, 1))
 
 dim test3d(2, 2, 4) = 1, 2, 3, 4, 0
-print test3d(1, 2, 3)
+print test3d(1, 2, 3);
 test3d(1, 2, 3) = &hAA55
 print hexw$(test3d(1, 2, 3))
 
@@ -52,8 +57,18 @@ next i
 print
 
 strTest$ = "dogcat"
-print len(test);" ";len(test2d);" ";len(test3d);" ";len(arr3d);" ";len(strTest$)
-print hexw$(@test);" ";hexw$(@test2d);" ";hexw$(@test3d);" ";hexw$(@arr3d)
+print len(test1d);" ";len(test2d);" ";len(test3d);" ";len(arr3d);" ";len(strTest$)
+print hexw$(@test1d);" ";hexw$(@test2d);" ";hexw$(@test3d);" ";hexw$(@arr3d)
+print deek(addr(test1d, 0));" ";deek(addr(test2d, 0, 0));" ";hexw$(deek(addr(test3d, 0, 0, 2)));" ";deek(addr(arr3d, 1, 1, 1));" ";
+index0=0 : print deek(addr(test1d, index0));" ";
+index0=0 : index1=0 : print deek(addr(test2d, index0, index1));" ";
+index0=0 : index1=0 : index2=2 : print deek(addr(test3d, index0, index1, index2));" ";
+index0=1 : index1=1 : index2=1 : print deek(addr(arr3d, index0, index1, index2))
+
+aaa = @arr3d
+aaa = deek(aaa + 2) ' arrays k pointers are always 2 bytes, so multiply your k index by 2
+aaa = deek(aaa + 2) ' arrays j pointers are always 2 bytes, so multiply your j index by 2
+print deek(aaa + 2) ' arrays i values are always 2 bytes,   so multiply your i index by 2
 
 x = 0 : y = x : z = y
 

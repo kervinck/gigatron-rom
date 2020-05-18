@@ -46,7 +46,7 @@ _elseif_0x027b                EQU                               0x0275
 _elseif_0x029f                EQU                               0x0295
 _else_0x02c3                  EQU                               0x02b5
 _endif_0x02da                 EQU                               0x02cc
-_end_0x02df                   EQU                               0x02d1
+_end_0x02dc                   EQU                               0x02ce
 
 ; Variables
 _p                            EQU                               0x0030
@@ -86,16 +86,16 @@ _entryPoint_                  LDI                               0x1c
                               InitArray2d                       
                               InitArray3d                       
                               InitRealTimeProc                  
-                              Initialise                                                ; INIT
+                              Initialise                                                        ; INIT
 
-                              ClearVertBlinds                                           ; cls
+                              ClearVertBlinds                                                   ; cls
 
 _loop                         LD                                0x0f
-                              STW                               _p                      ; p=peek(15)
+                              STW                               _p                              ; p=peek(15)
 
                               LDW                               _p
                               SUBI                              49
-                              BNE                               _elseif_0x027b          ; if p &&= 49
+                              BNE                               _elseif_0x027b                  ; if p &&= 49
 
                               LDI                               2
                               ST                                cursorXY
@@ -103,11 +103,11 @@ _loop                         LD                                0x0f
                               ST                                cursorXY + 1
                               AtTextCursor                      
                               PrintString                       _str_0x7ef9
-                              BRA                               _endif_0x02da           ; at 2,40 : print "one  ";
+                              BRA                               _endif_0x02da                   ; at 2,40 : print "one  ";
 
 _elseif_0x027b                LDW                               _p
                               SUBI                              50
-                              BNE                               _elseif_0x029f          ; elseif p &&= 50
+                              BNE                               _elseif_0x029f                  ; elseif p &&= 50
 
                               LDI                               2
                               ST                                cursorXY
@@ -115,11 +115,11 @@ _elseif_0x027b                LDW                               _p
                               ST                                cursorXY + 1
                               AtTextCursor                      
                               PrintString                       _str_0x7ef2
-                              BRA                               _endif_0x02da           ; at 2,40 : print "two  ";
+                              BRA                               _endif_0x02da                   ; at 2,40 : print "two  ";
 
 _elseif_0x029f                LDW                               _p
                               SUBI                              51
-                              BNE                               _else_0x02c3            ; elseif p &&= 51
+                              BNE                               _else_0x02c3                    ; elseif p &&= 51
 
                               LDI                               2
                               ST                                cursorXY
@@ -127,19 +127,18 @@ _elseif_0x029f                LDW                               _p
                               ST                                cursorXY + 1
                               AtTextCursor                      
                               PrintString                       _str_0x7eeb
-                              BRA                               _endif_0x02da           ; at 2,40 : print "three";
+                              BRA                               _endif_0x02da                   ; at 2,40 : print "three";
 
 _else_0x02c3                  LDI                               2
                               ST                                cursorXY
                               LDI                               40
                               ST                                cursorXY + 1
                               AtTextCursor                      
-                              PrintString                       _str_0x7ee4             ; at 2,40 : print "none ";
+                              PrintString                       _str_0x7ee4                     ; at 2,40 : print "none ";
 
-_endif_0x02da                 LDWI                              _loop
-                              CALL                              giga_vAC                ; goto loop
+_endif_0x02da                 BRA                               _loop                           ; goto &loop
 
-_end_0x02df                   BRA                               _end_0x02df             ; END
+_end_0x02dc                   BRA                               _end_0x02dc                     ; END
 
 
 

@@ -68,9 +68,9 @@ _str_0xff98                   DB                                3 '/60' 0
 
 ; Define Words
 def_words_0x8000              EQU                               0x8000
-def_words_0x8000              DW                                -137 -171 -59 1 53 126 -143 116 -54 97 
+def_words_0x8000              DW                                13 -96 136 43 -158 140 103 142 160 172 
 def_words_0x8014              EQU                               0x8014
-def_words_0x8014              DW                                82 173 -104 85 -50 114 -69 -92 78 -125 
+def_words_0x8014              DW                                157 -11 23 -132 -46 65 83 163 109 -54 
 def_words_0x8028              EQU                               0x8028
 def_words_0x8028              DW                                0 0 0 0 0 0 0 0 0 0 
 
@@ -95,43 +95,43 @@ _entryPoint_                  LDI                               0x1c
                               InitArray2d                       
                               InitArray3d                       
                               InitRealTimeProc                  
-                              Initialise                                                ; INIT
+                              Initialise                                                        ; INIT
 
-                              ClearVertBlinds                                           ; cls
+                              ClearVertBlinds                                                   ; cls
 
                               LDI                               0
                               STW                               _result
                               STW                               _timer
                               LD                                giga_frameCount
-                              STW                               _tick                   ; result=0 : timer=result : tick=get("FRAMECOUNT")
+                              STW                               _tick                           ; result=0 : timer=result : tick=get("FRAMECOUNT")
 
                               LDI                               0
-                              STW                               _i                      ; for i=0 to SIZE-1
+                              STW                               _i                              ; for i=0 to SIZE-1
 
 _next_0x0263                  LDW                               _tick
                               STW                               _ticks
                               LD                                giga_frameCount
                               STW                               _tick
                               SUBW                              _ticks
-                              STW                               _ticks                  ; ticks=tick : tick=get("FRAMECOUNT") : ticks=tick-ticks
+                              STW                               _ticks                          ; ticks=tick : tick=get("FRAMECOUNT") : ticks=tick-ticks
 
                               LDW                               _ticks
                               BGE                               _else_0x0289
                               LDWI                              256
                               ADDW                              _ticks
-                              STW                               _ticks                  ; if ticks &&< 0 then ticks=ticks+256
+                              STW                               _ticks                          ; if ticks &&< 0 then ticks=ticks+256
 
 _else_0x0289                  LDW                               _timer
                               ADDW                              _ticks
-                              STW                               _timer                  ; timer=timer+ticks
+                              STW                               _timer                          ; timer=timer+ticks
 
                               LDWI                              _math
-                              CALL                              giga_vAC                ; gosub math
+                              CALL                              giga_vAC                        ; gosub math
 
-                              ForNextFarInc                     _i _next_0x0263 9       ; next i
+                              ForNextFarInc                     _i _next_0x0263 9               ; next i
 
                               LDI                               0
-                              STW                               _i                      ; for i=0 to SIZE-1
+                              STW                               _i                              ; for i=0 to SIZE-1
 
 _next_0x02a8                  LDW                               _i
                               LSLW                              
@@ -140,9 +140,9 @@ _next_0x02a8                  LDW                               _i
                               ADDW                              0xc2
                               DEEK                              
                               PrintAcInt16                      
-                              PrintString                       _str_0xff9d             ; print deek(ADDR + SIZE*4 + (i LSL 1));" ";
+                              PrintString                       _str_0xff9d                     ; print deek(START + SIZE*4 + (i LSL 1));" ";
 
-                              ForNextFarInc                     _i _next_0x02a8 9       ; next i
+                              ForNextFarInc                     _i _next_0x02a8 9               ; next i
 
                               NewLine                           
                               LDW                               _timer
@@ -166,9 +166,9 @@ _next_0x02a8                  LDW                               _i
 _page_0x0300                  LDW                               0xe2
                               PrintAcInt16                      
                               PrintString                       _str_0xff98
-                              NewLine                                                   ; print : print timer/60;" ";timer % 60;"/60"
+                              NewLine                                                           ; print : print timer/60;" ";timer % 60;"/60"
 
-_end_0x032a                   BRA                               _end_0x032a             ; end
+_end_0x032a                   BRA                               _end_0x032a                     ; end
 
 _math                         PUSH                              
                               LDW                               _i
@@ -177,7 +177,7 @@ _math                         PUSH
                               LDWI                              -32768
                               ADDW                              0xc2
                               DEEK                              
-                              STW                               _a                      ; a = deek(ADDR + SIZE*0 + (i LSL 1))
+                              STW                               _a                              ; a = deek(START + SIZE*0 + (i LSL 1))
 
                               LDW                               _i
                               LSLW                              
@@ -185,7 +185,7 @@ _math                         PUSH
                               LDWI                              -32748
                               ADDW                              0xc2
                               DEEK                              
-                              STW                               _b                      ; b = deek(ADDR + SIZE*2 + (i LSL 1))
+                              STW                               _b                              ; b = deek(START + SIZE*2 + (i LSL 1))
 
                               LDW                               _i
                               LSLW                              
@@ -199,11 +199,11 @@ _math                         PUSH
                               STW                               mathY
                               LDWI                              multiply16bit
                               CALL                              giga_vAC
-                              DOKE                              0xc2                    ; doke ADDR + SIZE*4 + (i LSL 1), a * b
+                              DOKE                              0xc2                            ; doke START + SIZE*4 + (i LSL 1), a * b
 
-                              Return                                                    ; return
+                              Return                                                            ; return
 
-_end_0x0374                   BRA                               _end_0x0374             ; END
+_end_0x0374                   BRA                               _end_0x0374                     ; END
 
 
 

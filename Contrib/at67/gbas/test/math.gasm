@@ -44,9 +44,10 @@ _entryPoint_                  EQU                               0x0200
 _page_0x0300                  EQU                               0x0300
 _page_0x0400                  EQU                               0x0400
 _page_0x0500                  EQU                               0x0500
-_repeat_0x0556                EQU                               0x0556
-_else_0x0578                  EQU                               0x056c
-_end_0x05af                   EQU                               0x0599
+_page_0x0600                  EQU                               0x0600
+_repeat_0x0654                EQU                               0x063c
+_else_0x0676                  EQU                               0x0652
+_end_0x06ad                   EQU                               0x067f
 
 ; Variables
 _a                            EQU                               0x0030
@@ -91,18 +92,18 @@ _entryPoint_                  LDI                               0x1c
                               InitArray2d                       
                               InitArray3d                       
                               InitRealTimeProc                  
-                              Initialise                                                ; INIT
+                              Initialise                                                        ; INIT
 
-                              ClearVertBlinds                                           ; cls
-
-                              LDI                               3
-                              STW                               _a                      ; a = 3
+                              ClearVertBlinds                                                   ; cls
 
                               LDI                               3
-                              STW                               _b                      ; b = 3
+                              STW                               _a                              ; a = 3
 
                               LDI                               3
-                              STW                               _c                      ; c = 3
+                              STW                               _b                              ; b = 3
+
+                              LDI                               3
+                              STW                               _c                              ; c = 3
 
                               LDW                               _a
                               STW                               mathX
@@ -115,13 +116,62 @@ _entryPoint_                  LDI                               0x1c
                               STW                               mathY
                               LDWI                              power16bit
                               CALL                              giga_vAC
-                              STW                               _d                      ; d = a**b**c
+                              STW                               _d                              ; d = a**b**c
 
                               LDI                               2
-                              STW                               _e                      ; e = 2
+                              STW                               _e                              ; e = 2
 
                               LDI                               7
-                              STW                               _f                      ; f = 7
+                              STW                               _f                              ; f = 7
+
+                              LDWI                              -3
+                              STW                               _a                              ; a = -3
+
+                              LDWI                              2000
+                              STW                               _b                              ; b = 2000
+
+                              LDWI                              -19000
+                              STW                               _c                              ; c = -19000
+
+                              LDI                               0
+                              STW                               _d                              ; d = 0
+
+                              LDW                               _a
+                              Absolute                          
+                              PrintAcInt16                      
+                              PrintString                       _str_0x7efd
+                              LDW                               _a
+                              Sign                              
+                              PrintAcInt16                      
+                              PrintString                       _str_0x7efd
+                              LDW                               _b
+                              Absolute                          
+                              PrintAcInt16                      
+                              PrintString                       _str_0x7efd
+                              LDW                               _b
+                              Sign                              
+                              PrintAcInt16                      
+                              STW                               0xe2
+                              LDWI                              _page_0x0300
+                              CALL                              giga_vAC
+_page_0x0300                  LDW                               0xe2
+                              PrintString                       _str_0x7efd
+                              LDW                               _c
+                              Absolute                          
+                              PrintAcInt16                      
+                              PrintString                       _str_0x7efd
+                              LDW                               _c
+                              Sign                              
+                              PrintAcInt16                      
+                              PrintString                       _str_0x7efd
+                              LDW                               _d
+                              Absolute                          
+                              PrintAcInt16                      
+                              PrintString                       _str_0x7efd
+                              LDW                               _d
+                              Sign                              
+                              PrintAcInt16                      
+                              NewLine                                                           ; print abs(a);" ";sgn(a);" ";abs(b);" ";sgn(b);" ";abs(c);" ";sgn(c);" ";abs(d);" ";sgn(d)
 
                               LDW                               _a
                               STW                               mathX
@@ -144,16 +194,16 @@ _entryPoint_                  LDI                               0x1c
                               LDWI                              power16bit
                               CALL                              giga_vAC
                               PrintAcInt16                      
-                              STW                               0xe2
-                              LDWI                              _page_0x0300
-                              CALL                              giga_vAC
-_page_0x0300                  LDW                               0xe2
                               PrintString                       _str_0x7efd
                               LDW                               _a
                               STW                               mathX
                               LDI                               2
                               STW                               mathY
                               LDWI                              power16bit
+                              STW                               0xe2
+                              LDWI                              _page_0x0400
+                              CALL                              giga_vAC
+_page_0x0400                  LDW                               0xe2
                               CALL                              giga_vAC
                               PrintAcInt16                      
                               PrintString                       _str_0x7efd
@@ -167,7 +217,7 @@ _page_0x0300                  LDW                               0xe2
                               PrintString                       _str_0x7efd
                               LDW                               _d
                               PrintAcInt16                      
-                              NewLine                                                   ; print a**b;" ";0**a;" ";1**b;" ";a**0;" ";a**1;" ";a**2;" ";a**c;" ";d
+                              NewLine                                                           ; print a**b;" ";0**a;" ";1**b;" ";a**0;" ";a**1;" ";a**2;" ";a**c;" ";d
 
                               LDW                               _e
                               STW                               mathX
@@ -176,126 +226,54 @@ _page_0x0300                  LDW                               0xe2
                               LDWI                              power16bit
                               CALL                              giga_vAC
                               PrintAcInt16                      
-                              NewLine                                                   ; print e**f
+                              NewLine                                                           ; print e**f
 
                               LDWI                              -6400
-                              STW                               _g                      ; g = -6400
+                              STW                               _g                              ; g = -6400
 
                               LDW                               _g
                               STW                               mathShift
                               ShiftRightSgn1bit                 
-                              STW                               _h                      ; h = g ASR 1
+                              STW                               _h                              ; h = g ASR 1
 
                               LDW                               _g
                               STW                               mathShift
                               ShiftRight1bit                    
-                              STW                               _i                      ; i = g LSR 1
+                              STW                               _i                              ; i = g LSR 1
 
                               LDW                               _h
                               PrintAcInt16                      
                               PrintString                       _str_0x7efd
                               LDW                               _i
                               PrintAcInt16                      
-                              NewLine                                                   ; print h;" ";i
+                              NewLine                                                           ; print h;" ";i
 
                               LDW                               _g
                               STW                               mathShift
                               ShiftRightSgn2bit                 
-                              STW                               _h                      ; h = g ASR 2
+                              STW                               _h                              ; h = g ASR 2
 
                               LDW                               _g
                               STW                               mathShift
                               ShiftRight2bit                    
-                              STW                               _i                      ; i = g LSR 2
+                              STW                               _i                              ; i = g LSR 2
 
                               LDW                               _h
                               PrintAcInt16                      
                               PrintString                       _str_0x7efd
                               LDW                               _i
                               PrintAcInt16                      
-                              NewLine                                                   ; print h;" ";i
+                              NewLine                                                           ; print h;" ";i
 
                               LDW                               _g
                               STW                               mathShift
                               ShiftRightSgn3bit                 
-                              STW                               _h                      ; h = g ASR 3
+                              STW                               _h                              ; h = g ASR 3
 
                               LDW                               _g
                               STW                               mathShift
-                              STW                               0xe2
-                              LDWI                              _page_0x0400
-                              CALL                              giga_vAC
-_page_0x0400                  LDW                               0xe2
                               ShiftRight3bit                    
-                              STW                               _i                      ; i = g LSR 3
-
-                              LDW                               _h
-                              PrintAcInt16                      
-                              PrintString                       _str_0x7efd
-                              LDW                               _i
-                              PrintAcInt16                      
-                              NewLine                                                   ; print h;" ";i
-
-                              LDW                               _g
-                              STW                               mathShift
-                              ShiftRightSgn4bit                 
-                              STW                               _h                      ; h = g ASR 4
-
-                              LDW                               _g
-                              STW                               mathShift
-                              ShiftRight4bit                    
-                              STW                               _i                      ; i = g LSR 4
-
-                              LDW                               _h
-                              PrintAcInt16                      
-                              PrintString                       _str_0x7efd
-                              LDW                               _i
-                              PrintAcInt16                      
-                              NewLine                                                   ; print h;" ";i
-
-                              LDW                               _g
-                              STW                               mathShift
-                              ShiftRightSgn5bit                 
-                              STW                               _h                      ; h = g ASR 5
-
-                              LDW                               _g
-                              STW                               mathShift
-                              ShiftRight5bit                    
-                              STW                               _i                      ; i = g LSR 5
-
-                              LDW                               _h
-                              PrintAcInt16                      
-                              PrintString                       _str_0x7efd
-                              LDW                               _i
-                              PrintAcInt16                      
-                              NewLine                                                   ; print h;" ";i
-
-                              LDW                               _g
-                              STW                               mathShift
-                              ShiftRightSgn6bit                 
-                              STW                               _h                      ; h = g ASR 6
-
-                              LDW                               _g
-                              STW                               mathShift
-                              ShiftRight6bit                    
-                              STW                               _i                      ; i = g LSR 6
-
-                              LDW                               _h
-                              PrintAcInt16                      
-                              PrintString                       _str_0x7efd
-                              LDW                               _i
-                              PrintAcInt16                      
-                              NewLine                                                   ; print h;" ";i
-
-                              LDW                               _g
-                              STW                               mathShift
-                              ShiftRightSgn7bit                 
-                              STW                               _h                      ; h = g ASR 7
-
-                              LDW                               _g
-                              STW                               mathShift
-                              ShiftRight7bit                    
-                              STW                               _i                      ; i = g LSR 7
+                              STW                               _i                              ; i = g LSR 3
 
                               LDW                               _h
                               PrintAcInt16                      
@@ -306,64 +284,136 @@ _page_0x0500                  LDW                               0xe2
                               PrintString                       _str_0x7efd
                               LDW                               _i
                               PrintAcInt16                      
-                              NewLine                                                   ; print h;" ";i
+                              NewLine                                                           ; print h;" ";i
 
                               LDW                               _g
                               STW                               mathShift
-                              ShiftRightSgn8bit                 
-                              STW                               _h                      ; h = g ASR 8
+                              ShiftRightSgn4bit                 
+                              STW                               _h                              ; h = g ASR 4
 
-                              LD                                _g + 1
-                              STW                               _i                      ; i = g LSR 8
+                              LDW                               _g
+                              STW                               mathShift
+                              ShiftRight4bit                    
+                              STW                               _i                              ; i = g LSR 4
 
                               LDW                               _h
                               PrintAcInt16                      
                               PrintString                       _str_0x7efd
                               LDW                               _i
                               PrintAcInt16                      
-                              NewLine                                                   ; print h;" ";i
+                              NewLine                                                           ; print h;" ";i
+
+                              LDW                               _g
+                              STW                               mathShift
+                              ShiftRightSgn5bit                 
+                              STW                               _h                              ; h = g ASR 5
+
+                              LDW                               _g
+                              STW                               mathShift
+                              ShiftRight5bit                    
+                              STW                               _i                              ; i = g LSR 5
+
+                              LDW                               _h
+                              PrintAcInt16                      
+                              PrintString                       _str_0x7efd
+                              LDW                               _i
+                              PrintAcInt16                      
+                              NewLine                                                           ; print h;" ";i
+
+                              LDW                               _g
+                              STW                               mathShift
+                              ShiftRightSgn6bit                 
+                              STW                               _h                              ; h = g ASR 6
+
+                              LDW                               _g
+                              STW                               mathShift
+                              ShiftRight6bit                    
+                              STW                               _i                              ; i = g LSR 6
+
+                              LDW                               _h
+                              PrintAcInt16                      
+                              PrintString                       _str_0x7efd
+                              LDW                               _i
+                              PrintAcInt16                      
+                              NewLine                                                           ; print h;" ";i
+
+                              LDW                               _g
+                              STW                               mathShift
+                              ShiftRightSgn7bit                 
+                              STW                               _h                              ; h = g ASR 7
+
+                              LDW                               _g
+                              STW                               mathShift
+                              ShiftRight7bit                    
+                              STW                               _i                              ; i = g LSR 7
+
+                              LDW                               _h
+                              PrintAcInt16                      
+                              PrintString                       _str_0x7efd
+                              LDW                               _i
+                              PrintAcInt16                      
+                              NewLine                                                           ; print h;" ";i
+
+                              LDW                               _g
+                              STW                               0xe2
+                              LDWI                              _page_0x0600
+                              CALL                              giga_vAC
+_page_0x0600                  LDW                               0xe2
+                              STW                               mathShift
+                              ShiftRightSgn8bit                 
+                              STW                               _h                              ; h = g ASR 8
+
+                              LD                                _g + 1
+                              STW                               _i                              ; i = g LSR 8
+
+                              LDW                               _h
+                              PrintAcInt16                      
+                              PrintString                       _str_0x7efd
+                              LDW                               _i
+                              PrintAcInt16                      
+                              NewLine                                                           ; print h;" ";i
 
                               LDW                               _e
-                              STW                               _x                      ; x = e
+                              STW                               _x                              ; x = e
 
                               LDW                               _f
-                              STW                               _y                      ; y = f
+                              STW                               _y                              ; y = f
 
                               LDI                               1
-                              STW                               _r                      ; r = 1
+                              STW                               _r                              ; r = 1
 
-_repeat_0x0556                LDW                               _y
+_repeat_0x0654                LDW                               _y
                               ANDI                              1
-                              BEQ                               _else_0x0578
+                              BEQ                               _else_0x0676
                               LDW                               _r
                               STW                               mathX
                               LDW                               _x
                               STW                               mathY
                               LDWI                              multiply16bit
                               CALL                              giga_vAC
-                              STW                               _r                      ; if (y AND 1) &&<> 0 then r = r * x
+                              STW                               _r                              ; if (y AND 1) &&<> 0 then r = r * x
 
-_else_0x0578                  LDW                               _x
+_else_0x0676                  LDW                               _x
                               STW                               mathX
                               LDW                               _x
                               STW                               mathY
                               LDWI                              multiply16bit
                               CALL                              giga_vAC
-                              STW                               _x                      ; x = x * x
+                              STW                               _x                              ; x = x * x
 
                               LDW                               _y
                               STW                               mathShift
                               ShiftRight1bit                    
-                              STW                               _y                      ; y = y LSR 1
+                              STW                               _y                              ; y = y LSR 1
 
                               LDW                               _y
-                              BNE                               _repeat_0x0556          ; until y &&= 0
+                              BNE                               _repeat_0x0654                  ; until y &&= 0
 
                               LDW                               _r
                               PrintAcInt16                      
-                              NewLine                                                   ; print r
+                              NewLine                                                           ; print r
 
-_end_0x05af                   BRA                               _end_0x05af             ; end
+_end_0x06ad                   BRA                               _end_0x06ad                     ; end
 
 
 
@@ -383,31 +433,33 @@ convertLtOp                   EQU     0x7eb9
 convertGtOp                   EQU     0x7eb0
 convertArr2d                  EQU     0x7ea4
 convertArr3d                  EQU     0x7dee
+absolute                      EQU     0x7db9
+sign                          EQU     0x7cb3
 power16bit                    EQU     0x7bc6
-power16bitExt                 EQU     0x75ce
-multiply16bit                 EQU     0x76a6
-shiftRight1bit                EQU     0x7da0
-shiftRight2bit                EQU     0x7ca0
+power16bitExt                 EQU     0x74ce
+multiply16bit                 EQU     0x75cd
+shiftRight1bit                EQU     0x7ca9
+shiftRight2bit                EQU     0x7ba1
 shiftRight3bit                EQU     0x7aa4
-shiftRight4bit                EQU     0x78bb
-shiftRight5bit                EQU     0x78b1
-shiftRight6bit                EQU     0x78a7
-shiftRight7bit                EQU     0x76f5
-shiftRightSgn1bit             EQU     0x7caa
-shiftRightSgn2bit             EQU     0x7ba9
-shiftRightSgn3bit             EQU     0x78e2
-shiftRightSgn4bit             EQU     0x78c5
-shiftRightSgn5bit             EQU     0x77e2
-shiftRightSgn6bit             EQU     0x77c5
-shiftRightSgn7bit             EQU     0x77a8
-shiftRightSgn8bit             EQU     0x76d8
-resetVideoTable               EQU     0x75af
+shiftRight4bit                EQU     0x77f5
+shiftRight5bit                EQU     0x77ce
+shiftRight6bit                EQU     0x77a7
+shiftRight7bit                EQU     0x76d8
+shiftRightSgn1bit             EQU     0x7bab
+shiftRightSgn2bit             EQU     0x78e2
+shiftRightSgn3bit             EQU     0x78c5
+shiftRightSgn4bit             EQU     0x78a8
+shiftRightSgn5bit             EQU     0x77d8
+shiftRightSgn6bit             EQU     0x77b1
+shiftRightSgn7bit             EQU     0x76e2
+shiftRightSgn8bit             EQU     0x76bb
+resetVideoTable               EQU     0x75ae
 initClearFuncs                EQU     0x7dc3
 clearVertBlinds               EQU     0x7cc5
-clearCursorRow                EQU     0x74b6
-printInit                     EQU     0x74a0
-printText                     EQU     0x7daa
-printDigit                    EQU     0x73dd
+clearCursorRow                EQU     0x73b6
+printInit                     EQU     0x76a5
+printText                     EQU     0x7da0
+printDigit                    EQU     0x74ac
 printInt16                    EQU     0x7aae
 printChar                     EQU     0x72a7
 newLineScroll                 EQU     0x79a4
@@ -534,7 +586,6 @@ convertArr3d        ADDW    memIndex0
                     RET
 
 
-
 ; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 mathX               EQU     register8
 mathY               EQU     register9
@@ -547,6 +598,27 @@ mathShift           EQU     register15
 mathBase            EQU     register10
 mathPow             EQU     register11
 mathResult          EQU     register14
+
+
+absolute            LDW     mathX
+                    BGE     abs_exit
+                    LDI     0
+                    SUBW    mathX
+abs_exit            RET
+
+
+sign                LDW     mathX
+                    BLE     sign_le
+                    LDI     1
+                    RET
+                    
+sign_le             BLT     sign_lt
+                    LDI     0
+                    RET
+                    
+sign_lt             LDWI    0xFFFF
+                    RET
+
 
 
                     ; accumulator = mathX ** mathY, (result 16bit)

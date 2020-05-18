@@ -92,7 +92,7 @@ _v                            EQU                               0x003c
 _vol                          EQU                               0x003e
 _y                            EQU                               0x0040
 _i4                           EQU                               0x0042
-_addr                         EQU                               0x0044
+_lut                          EQU                               0x0044
 _save                         EQU                               0x0046
 _v_lut                        EQU                               0x0048
 _f_lut                        EQU                               0x004a
@@ -529,18 +529,18 @@ _page_0x04cf                  LDW                               0xe2
                               STW                               spriteId
                               GetSpriteLUT                      
                               ADDW                              0xc4
-                              STW                               _addr                           ; addr = (y LSL 2) + y + y + get("SPRITELUT", 1)
+                              STW                               _lut                            ; lut = (y LSL 2) + y + y + get("SPRITELUT", 1)
 
-                              LDW                               _addr
+                              LDW                               _lut
                               PEEK                              
-                              STW                               _save                           ; save = peek(addr)
+                              STW                               _save                           ; save = peek(lut)
 
                               STW                               0xe2
                               LDWI                              _page_0x08e0
                               CALL                              giga_vAC
 _page_0x08e0                  LDW                               0xe2
                               LDI                               -1
-                              POKE                              _addr                           ; poke addr, -1
+                              POKE                              _lut                            ; poke lut, -1
 
                               LDI                               1
                               STW                               spriteId
@@ -570,7 +570,7 @@ _page_0x4ca0                  LDW                               0xe2
                               DrawSpriteY                                                       ; sprite flipY, 1, i4 + 6, Y_POS
 
                               LDW                               _save
-                              POKE                              _addr                           ; poke addr, save
+                              POKE                              _lut                            ; poke lut, save
 
 _endif_0x0490                 LDWI                              0x7edf
                               ADDW                              _i

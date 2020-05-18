@@ -189,16 +189,12 @@ printInt16          PUSH
                     STW     textNum    
     
 printI16_pos        LDWI    10000
-                    STW     digitMult
                     CALLI   printDigit
                     LDWI    1000
-                    STW     digitMult
                     CALLI   printDigit
                     LDI     100
-                    STW     digitMult
                     CALLI   printDigit
                     LDI     10
-                    STW     digitMult
                     CALLI   printDigit
                     LD      textNum
                     ORI     0x30

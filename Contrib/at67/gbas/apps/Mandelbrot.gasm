@@ -223,6 +223,7 @@ convertLtOp                   EQU     0x7ebb
 convertGtOp                   EQU     0x7eb2
 convertArr2d                  EQU     0x7ea6
 convertArr3d                  EQU     0x7dee
+sign                          EQU     0x7da7
 multiply16bit                 EQU     0x7bcd
 shiftRight5bit                EQU     0x7db9
 shiftRightSgn4bit             EQU     0x7ca8
@@ -402,6 +403,20 @@ shiftRight5bit      LDWI    SYS_LSRW5_50
                     STW     giga_sysFn
                     LDW     mathShift
                     SYS     50
+                    RET
+
+
+
+sign                LDW     mathX
+                    BLE     sign_le
+                    LDI     1
+                    RET
+                    
+sign_le             BLT     sign_lt
+                    LDI     0
+                    RET
+                    
+sign_lt             LDWI    0xFFFF
                     RET
 
 

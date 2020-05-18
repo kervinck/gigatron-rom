@@ -279,16 +279,8 @@ _label_ CALLI   _label
         CALLI   stringCmp
 %ENDM
 
-%MACRO  StringAdd
-        CALLI   stringAdd
-%ENDM
-
 %MACRO  StringConcat
         CALLI   stringConcat
-%ENDM
-
-%MACRO  StringMid
-        CALLI   stringMid
 %ENDM
 
 %MACRO  StringLeft
@@ -299,8 +291,24 @@ _label_ CALLI   _label
         CALLI   stringRight
 %ENDM
 
+%MACRO  StringMid
+        CALLI   stringMid
+%ENDM
+
+%MACRO  StringInt
+        CALLI   stringInt
+%ENDM
+
+%MACRO  IntegerStr
+        CALLI   integerStr
+%ENDM
+
 %MACRO  Absolute
         CALLI   absolute
+%ENDM
+
+%MACRO  Sign
+        CALLI   sign
 %ENDM
 
 %MACRO  Rand

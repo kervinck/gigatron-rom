@@ -271,41 +271,41 @@ _entryPoint_                  LDI                               0x1c
                               InitArray2d                       
                               InitArray3d                       
                               InitRealTimeProc                  
-                              Initialise                                                ; INIT
+                              Initialise                                                        ; INIT
 
-                              ClearVertBlinds                                           ; cls
+                              ClearVertBlinds                                                   ; cls
 
                               LDI                               3
                               ST                                waveType
                               LDWI                              4256
-                              PlayMidi                                                  ; play midi,&h10a0,3
+                              PlayMidi                                                          ; play midi,&h10a0,3
 
 _10                           LDI                               1
-                              STW                               _a                      ; a =1
+                              STW                               _a                              ; a =1
 
                               LDI                               0
-                              STW                               _k                      ; for k = 0 to 1
+                              STW                               _k                              ; for k = 0 to 1
 
 _next_0x0271                  LDI                               0
-                              STW                               _j                      ; for j = 0 to 1
+                              STW                               _j                              ; for j = 0 to 1
 
 _next_0x0275                  LDI                               0
-                              STW                               _i                      ; for i = 0 to 1
+                              STW                               _i                              ; for i = 0 to 1
 
-_next_0x0279                  PrintString                       _str_0x7ee2             ; print "yahooowalllallllalalalwallla";
+_next_0x0279                  PrintString                       _str_0x7ee2                     ; print "yahooowalllallllalalalwallla";
 
                               PrintString                       _str_0x7edd
-                              PrintString                       _str_0x7eda             ; print "yes";" ";
+                              PrintString                       _str_0x7eda                     ; print "yes";" ";
 
                               PrintInt16                        0x003d
-                              PrintString                       _str_0x7eda             ; print 20*3+1;" ";
+                              PrintString                       _str_0x7eda                     ; print 20*3+1;" ";
 
                               LDI                               32
-                              STW                               _char                   ; for char = 32 to 127
+                              STW                               _char                           ; for char = 32 to 127
 
 _next_0x02af                  LDW                               _a
                               ADDI                              1
-                              STW                               _a                      ; a = a + 1
+                              STW                               _a                              ; a = a + 1
 
                               LDW                               _char
                               ADDI                              1
@@ -321,40 +321,40 @@ _next_0x02af                  LDW                               _a
                               LDW                               _k
                               SUBW                              _k
                               ADDW                              0xc0
-                              PrintAcChar                                               ; print chr$(char+1 +a+a+a - 32*0 + 50/0 + a/0 + 3 - a -a -a -4 + j*0 + (k-k));
+                              PrintAcChar                                                       ; print chr$(char+1 +a+a+a - 32*0 + 50/0 + a/0 + 3 - a -a -a -4 + j*0 + (k-k));
 
-                              ForNextFarInc                     _char _next_0x02af 127  ; next char
+                              ForNextFarInc                     _char _next_0x02af 127          ; next char
 
                               STW                               0xe2
                               LDWI                              _page_0x0300
                               CALL                              giga_vAC
 _page_0x0300                  LDW                               0xe2
-                              ForNextFarInc                     _i _next_0x0279 1       ; next i
+                              ForNextFarInc                     _i _next_0x0279 1               ; next i
 
-                              ForNextFarInc                     _j _next_0x0275 1       ; next j
+                              ForNextFarInc                     _j _next_0x0275 1               ; next j
 
-                              ForNextFarInc                     _k _next_0x0271 1       ; next k
+                              ForNextFarInc                     _k _next_0x0271 1               ; next k
 
                               PrintString                       _str_0x7eb6
-                              NewLine                                                   ; print "wooooooooooooooooooooooooooooow!!!"
+                              NewLine                                                           ; print "wooooooooooooooooooooooooooooow!!!"
 
                               LDI                               0
-                              STW                               _i                      ; for i = 0 to 6
+                              STW                               _i                              ; for i = 0 to 6
 
 _next_0x0365                  PrintString                       _str_0x7eb1
                               PrintString                       _str_0x7eda
                               LDW                               _i
                               PrintAcInt16                      
-                              NewLine                                                   ; print "dog";" ";i
+                              NewLine                                                           ; print "dog";" ";i
 
-                              ForNextFarInc                     _i _next_0x0365 6       ; next i
+                              ForNextFarInc                     _i _next_0x0365 6               ; next i
 
-                              ClearVertBlinds                                           ; cls
+                              ClearVertBlinds                                                   ; cls
 
 _20                           LDWI                              _10
-                              CALL                              giga_vAC                ; goto 10
+                              CALL                              giga_vAC                        ; goto 10
 
-_end_0x039f                   BRA                               _end_0x039f             ; END
+_end_0x039f                   BRA                               _end_0x039f                     ; END
 
 
 

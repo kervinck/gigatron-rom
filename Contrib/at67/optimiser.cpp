@@ -337,7 +337,8 @@ RESTART_OPTIMISE:
 /*************************************************************************************************************************************************************/
 
                         // Find operand match, (temporary variables are a minimum of 4 chars, i.e. '0xc0')
-                        if(firstOperand.substr(0, 4) == secondOperand.substr(0, 4))
+                        //if(firstOperand.substr(0, 4) == secondOperand.substr(0, 4))
+                        if(firstOperand == secondOperand)
                         {
                             switch(j)
                             {

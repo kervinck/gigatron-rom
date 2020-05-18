@@ -133,50 +133,48 @@ _entryPoint_                  LDI                               0x1c
                               InitArray2d                       
                               InitArray3d                       
                               InitRealTimeProc                  
-                              Initialise                                                ; INIT
+                              Initialise                                                        ; INIT
 
-                              ClearVertBlinds                                           ; cls
+                              ClearVertBlinds                                                   ; cls
 
                               LDWI                              0x7ecc
                               STW                               strLutAddr
                               LDWI                              0x7fa0
-                              STW                               strDstAddr
                               StringConcat                      
                               LDWI                              0x7fa0
                               STW                               strSrcAddr
                               LDWI                              0x7ba0
-                              STW                               strDstAddr
-                              StringCopy                                                ; test$ = "cat dog furries " + t1$ + t2$ + "whoop " + "1 " + "2 " + cs$
+                              StringCopy                                                        ; test$ = "cat dog furries " + t1$ + t2$ + "whoop " + "1 " + "2 " + cs$
 
                               PrintString                       _test$
                               PrintString                       _str_0x7ec9
                               LDWI                              0x7ba0
                               PEEK                              
                               PrintAcInt16                      
-                              NewLine                                                   ; print test$;" ";len(test$)
+                              NewLine                                                           ; print test$;" ";len(test$)
 
                               LDI                               1
-                              STW                               _a                      ; a = 1
+                              STW                               _a                              ; a = 1
 
                               LDI                               48
-                              STW                               _d                      ; d = @a
+                              STW                               _d                              ; d = @a
 
                               LDI                               1
                               ST                                _a + 1
                               LDI                               0
-                              ST                                _a                      ; a.hi = 1 : a.lo = 0
+                              ST                                _a                              ; a.hi = 1 : a.lo = 0
 
                               LD                                _a + 1
                               ADDI                              1
-                              STW                               _b                      ; b = a.hi + 1
+                              STW                               _b                              ; b = a.hi + 1
 
                               LDI                               1
-                              ST                                _c + 1                  ; c.hi = 1
+                              ST                                _c + 1                          ; c.hi = 1
 
                               LDWI                              2272
                               STW                               register0
                               LD                                _a
-                              POKE                              register0               ; poke &h08E0, a.lo
+                              POKE                              register0                       ; poke &h08E0, a.lo
 
                               LD                                _b + 1
                               STW                               mathX
@@ -193,20 +191,20 @@ _entryPoint_                  LDI                               0x1c
                               LDWI                              2272
                               STW                               register0
                               LDW                               0xc2
-                              DOKE                              register0               ; doke &h08E0, a.lo - b.hi * 3 + 1 - a
+                              DOKE                              register0                       ; doke &h08E0, a.lo - b.hi * 3 + 1 - a
 
                               LDI                               0
-                              STW                               _dog                    ; dog=0
+                              STW                               _dog                            ; dog=0
 
                               PrintString                       _str_0x7eb9
                               LDWI                              0x7abe
-                              Input                                                     ; input "Testing INPUT:", cat$,"Cats Name ?"32;, hours,"H ?"2;, minutes,"M ?"2;, seconds,"S ?"2;
+                              Input                                                             ; input "Testing INPUT:", cat$,"Cats Name ?"32;, hours,"H ?"2;, minutes,"M ?"2;, seconds,"S ?"2;
 
                               STW                               0xe2
                               LDWI                              _page_0x0300
                               CALL                              giga_vAC
 _page_0x0300                  LDW                               0xe2
-                              NewLine                                                   ; print
+                              NewLine                                                           ; print
 
                               PrintString                       _cat$
                               PrintString                       _str_0x7ec9
@@ -218,7 +216,7 @@ _page_0x0300                  LDW                               0xe2
                               PrintString                       _str_0x7ec9
                               LDW                               _seconds
                               PrintAcInt16                      
-                              NewLine                                                   ; print cat$;" ";hours;" ";minutes;" ";seconds
+                              NewLine                                                           ; print cat$;" ";hours;" ";minutes;" ";seconds
 
                               LDI                               2
                               RandMod                           
@@ -230,7 +228,7 @@ _page_0x0300                  LDW                               0xe2
                               PEEK                              
                               ADDW                              0xc4
                               ADDI                              27
-                              STW                               _a                      ; a = rnd(len(dog)) + len(dog) + len(cat$) + 27
+                              STW                               _a                              ; a = rnd(len(dog)) + len(dog) + len(cat$) + 27
 
                               LDI                               53
                               STW                               0xc0
@@ -240,7 +238,6 @@ _page_0x0300                  LDW                               0xe2
                               LDI                               65
                               STW                               strChr
                               LDWI                              0x7fa0
-                              STW                               strDstAddr
                               StringChr                         
                               LDWI                              0x7fa0
                               PEEK                              
@@ -249,7 +246,6 @@ _page_0x0300                  LDW                               0xe2
                               LDI                               0xff
                               STW                               strChr
                               LDWI                              0x7fa0
-                              STW                               strDstAddr
                               StringHex                         
                               LDWI                              0x7fa0
                               PEEK                              
@@ -258,14 +254,13 @@ _page_0x0300                  LDW                               0xe2
                               LDWI                              0xfde8
                               STW                               strHex
                               LDWI                              0x7fa0
-                              STW                               strDstAddr
                               StringHexw                        
                               LDWI                              0x7fa0
                               PEEK                              
                               ADDW                              0xc6
-                              STW                               _b                      ; b = len(big$) + len(a) + len(chr$(65)) + len(hex$(255)) + len(HEXW$(65000))
+                              STW                               _b                              ; b = len(big$) + len(a) + len(chr$(65)) + len(hex$(255)) + len(HEXW$(65000))
 
-                              NewLine                                                   ; print
+                              NewLine                                                           ; print
 
                               LD                                _a
                               PrintAcInt16                      
@@ -275,7 +270,7 @@ _page_0x0300                  LDW                               0xe2
                               PrintString                       _str_0x7ec9
                               LDW                               _b
                               PrintAcInt16                      
-                              NewLine                                                   ; print a.lo;" ";b.hi;" ";b
+                              NewLine                                                           ; print a.lo;" ";b.hi;" ";b
 
                               LDI                               64
                               STW                               0xe2
@@ -284,10 +279,10 @@ _page_0x0300                  LDW                               0xe2
 _page_0x0400                  LDW                               0xe2
                               ADDW                              _d
                               ADDI                              1
-                              STW                               _e                      ; e = @e + d + 1
+                              STW                               _e                              ; e = @e + d + 1
 
                               LDWI                              31433
-                              STW                               _f                      ; f = @big$
+                              STW                               _f                              ; f = @big$
 
                               LDWI                              0x0034
                               PrintAcHexWord                    
@@ -303,7 +298,7 @@ _page_0x0400                  LDW                               0xe2
                               PrintString                       _str_0x7ec9
                               LDW                               _f
                               PrintAcHexWord                    
-                              NewLine                                                   ; print hexw$(@b);" ";hexw$(@c);" ";hexw$(d);" ";hexw$(e);" ";hexw$(f)
+                              NewLine                                                           ; print hexw$(@b);" ";hexw$(@c);" ";hexw$(d);" ";hexw$(e);" ";hexw$(f)
 
                               LDWI                              0x7ef4
                               PrintAcHexWord                    
@@ -319,12 +314,12 @@ _page_0x0400                  LDW                               0xe2
                               PrintString                       _str_0x7ec9
                               LDWI                              0x003e
                               PrintAcHexWord                    
-                              NewLine                                                   ; print hexw$(@arr);" ";hexw$(@cat$);" ";hexw$(@hours);" ";hexw$(@minutes);" ";hexw$(@seconds)
+                              NewLine                                                           ; print hexw$(@arr);" ";hexw$(@cat$);" ";hexw$(@hours);" ";hexw$(@minutes);" ";hexw$(@seconds)
 
                               LDWI                              0x7ef4
                               STW                               memAddr
                               LDI                               52
-                              POKE                              memAddr                 ; arr(0).lo = &h34
+                              POKE                              memAddr                         ; arr(0).lo = &h34
 
                               LDI                               18
                               STW                               memValue
@@ -332,12 +327,12 @@ _page_0x0400                  LDW                               0xe2
                               STW                               memAddr
                               LDW                               memValue
                               INC                               memAddr
-                              POKE                              memAddr                 ; arr(0).hi = &h12
+                              POKE                              memAddr                         ; arr(0).hi = &h12
 
                               LDWI                              0x7ef4
                               DEEK                              
                               PrintAcHexWord                    
-                              NewLine                                                   ; print hexw$(arr(0))
+                              NewLine                                                           ; print hexw$(arr(0))
 
                               LDWI                              0x7ef6
                               STW                               0xe2
@@ -346,7 +341,7 @@ _page_0x0400                  LDW                               0xe2
 _page_0x0500                  LDW                               0xe2
                               STW                               memAddr
                               LD                                _f
-                              POKE                              memAddr                 ; arr(1).lo = f.lo
+                              POKE                              memAddr                         ; arr(1).lo = f.lo
 
                               LD                                _f + 1
                               STW                               memValue
@@ -354,12 +349,12 @@ _page_0x0500                  LDW                               0xe2
                               STW                               memAddr
                               LDW                               memValue
                               INC                               memAddr
-                              POKE                              memAddr                 ; arr(1).hi = f.hi
+                              POKE                              memAddr                         ; arr(1).hi = f.hi
 
                               LDWI                              0x7ef6
                               DEEK                              
                               PrintAcHexWord                    
-                              NewLine                                                   ; print hexw$(arr(1))
+                              NewLine                                                           ; print hexw$(arr(1))
 
                               LDWI                              0x7ef4 + 1
                               PEEK                              
@@ -376,7 +371,7 @@ _page_0x0500                  LDW                               0xe2
                               LDWI                              0x7ef6
                               PEEK                              
                               PrintAcHexByte                    
-                              NewLine                                                   ; print hex$(arr(0).hi);" ";hex$(arr(0).lo);" ";hex$(arr(1).hi);" ";hex$(arr(1).lo)
+                              NewLine                                                           ; print hex$(arr(0).hi);" ";hex$(arr(0).lo);" ";hex$(arr(1).hi);" ";hex$(arr(1).lo)
 
                               LDWI                              0x7ef4
                               DEEK                              
@@ -393,7 +388,7 @@ _page_0x0500                  LDW                               0xe2
                               LDWI                              0x7ef6
                               DEEK                              
                               PrintAcHexWord                    
-                              NewLine                                                   ; print arr(0);" ";arr(1);" ";hexw$(arr(0));" ";hexw$(arr(1))
+                              NewLine                                                           ; print arr(0);" ";arr(1);" ";hexw$(arr(0));" ";hexw$(arr(1))
 
                               Rand                              
                               ANDI                              63
@@ -413,10 +408,10 @@ _page_0x0600                  LDW                               0xe2
                               PrintAcInt16                      
                               PrintString                       _str_0x7ec9
                               PrintInt16                        0x7ac9
-                              NewLine                                                   ; print rnd(0) AND 63;" ";len(big$);" ";peek(0);" ";deek(0);" ";@big$
+                              NewLine                                                           ; print rnd(0) AND 63;" ";len(big$);" ";peek(0);" ";deek(0);" ";@big$
 
                               LDI                               7
-                              STW                               _t                      ; t = len("Testing")
+                              STW                               _t                              ; t = len("Testing")
 
                               LDI                               53
                               PrintAcInt16                      
@@ -430,13 +425,13 @@ _page_0x0600                  LDW                               0xe2
                               PrintString                       _str_0x7ec9
                               LDW                               _t
                               PrintAcInt16                      
-                              NewLine                                                   ; print len(big$);" ";len(cat$);" ";len("Testing");" ";t
+                              NewLine                                                           ; print len(big$);" ";len(cat$);" ";len("Testing");" ";t
 
                               LDWI                              985
-                              STW                               _cs                     ; cs = cos(10)*1000
+                              STW                               _cs                             ; cs = cos(10)*1000
 
                               LDWI                              537
-                              STW                               _db                     ; db = 231.5333333333 * 2.32
+                              STW                               _db                             ; db = 231.5333333333 * 2.32
 
                               PrintInt16                        0x0345
                               PrintString                       _str_0x7ec9
@@ -447,9 +442,9 @@ _page_0x0600                  LDW                               0xe2
                               PrintAcInt16                      
                               PrintString                       _str_0x7ec9
                               PrintInt16                        0x0004
-                              NewLine                                                   ; print sin(56.8333333)*1000;" ";cs;" ";db;" ";1.5333333333 * 2.32
+                              NewLine                                                           ; print sin(56.8333333)*1000;" ";cs;" ";db;" ";1.5333333333 * 2.32
 
-_end_0x0736                   BRA                               _end_0x0736             ; end
+_end_0x0736                   BRA                               _end_0x0736                     ; end
 
 
 
@@ -497,14 +492,14 @@ printChar                     EQU     0x67a7
 printHexByte                  EQU     0x70ca
 printHexWord                  EQU     0x71c7
 newLineScroll                 EQU     0x73a4
+integerStr                    EQU     0x66c0
 stringChr                     EQU     0x72c7
 stringHex                     EQU     0x72b5
 stringHexw                    EQU     0x71e0
 createHex                     EQU     0x68b5
 stringCopy                    EQU     0x77b3
-stringAdd                     EQU     0x66c3
+stringAdd                     EQU     0x65c3
 stringConcat                  EQU     0x75d7
-integerStr                    EQU     0x65c0
 convertEqOpAddr               EQU     0x00d0
 convertNeOpAddr               EQU     0x00d2
 convertLeOpAddr               EQU     0x00d4
@@ -1477,6 +1472,52 @@ newLS_exit          LDWI    printInit
 
 
 ; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+intSrcAddr          EQU     register8
+intDigit            EQU     register9
+intResult           EQU     register10
+intNegative         EQU     register11
+
+
+                    ; converts a string to a +/- integer, assumes string pointer is pointing to first char and not the string length, (no overflow or underflow checks)
+integerStr          LDI     0
+                    ST      intNegative
+                    STW     intResult
+                    LDW     intSrcAddr
+                    PEEK
+                    SUBI    45                  ; -ve
+                    BNE     integerS_loop
+                    LDI     1
+                    ST      intNegative
+                    INC     intSrcAddr          ; skip -ve
+
+integerS_loop       LDW     intSrcAddr
+                    PEEK
+                    SUBI    48                  ; str[i] - '0'
+                    BLT     integerS_neg
+                    STW     intDigit
+                    SUBI    9
+                    BGT     integerS_neg
+                    LDW     intResult
+                    LSLW
+                    LSLW
+                    ADDW    intResult
+                    LSLW
+                    ADDW    intDigit
+                    STW     intResult           ; result = result*10 + digit
+                    INC     intSrcAddr
+                    BRA     integerS_loop
+          
+integerS_neg        LD      intNegative
+                    BEQ     integerS_exit
+                    LDI     0
+                    SUBW    intResult           ; result *= -1
+                    RET
+                    
+integerS_exit       LDW     intResult
+                    RET
+
+
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 strChr              EQU     register0
 strHex              EQU     register1
 strCmpRes           EQU     register2
@@ -1490,6 +1531,9 @@ strSrcAddr2         EQU     register9
 strTmpAddr          EQU     register10
 strLutAddr          EQU     register11
 strBakAddr          EQU     register12
+strInteger          EQU     register0
+strIntDigit         EQU     register1
+strIntMult          EQU     register3
 
 
                     ; create a char string, (parameter in strChr)
@@ -1572,7 +1616,7 @@ stringCopy          LDW     strSrcAddr
 
 
 
-                    ; adds two strings together
+                    ; adds two strings together, (internal sub)
 stringAdd           LDW     strDstAddr
                     STW     strTmpAddr
                     INC     strSrcAddr
@@ -1631,53 +1675,5 @@ stringCC_loop       INC     strLutAddr
                     BRA     stringCC_loop
                     
 stringCC_exit       POP
-                    RET
-
-
-; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
-intSrcAddr          EQU     register8
-intDigit            EQU     register9
-intResult           EQU     register10
-intNegative         EQU     register11
-intTemp0            EQU     register12
-intTemp1            EQU     register15
-
-
-                    ; converts a string to a +/- integer, assumes string pointer is pointing to first char and not the string length, (no overflow or underflow checks)
-integerStr          LDI     0
-                    ST      intNegative
-                    STW     intResult
-                    LDW     intSrcAddr
-                    PEEK
-                    SUBI    45                  ; -ve
-                    BNE     integerS_loop
-                    LDI     1
-                    ST      intNegative
-                    INC     intSrcAddr          ; skip -ve
-
-integerS_loop       LDW     intSrcAddr
-                    PEEK
-                    SUBI    48                  ; str[i] - '0'
-                    BLT     integerS_neg
-                    STW     intDigit
-                    SUBI    9
-                    BGT     integerS_neg
-                    LDW     intResult
-                    LSLW
-                    LSLW
-                    ADDW    intResult
-                    LSLW
-                    ADDW    intDigit
-                    STW     intResult           ; result = result*10 + digit
-                    INC     intSrcAddr
-                    BRA     integerS_loop
-          
-integerS_neg        LD      intNegative
-                    BEQ     integerS_exit
-                    LDI     0
-                    SUBW    intResult           ; result *= -1
-                    RET
-                    
-integerS_exit       LDW     intResult
                     RET
 

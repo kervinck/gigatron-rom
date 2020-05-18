@@ -3,8 +3,6 @@ intSrcAddr          EQU     register8
 intDigit            EQU     register9
 intResult           EQU     register10
 intNegative         EQU     register11
-intTemp0            EQU     register12
-intTemp1            EQU     register15
 
 
 %SUB                integerStr

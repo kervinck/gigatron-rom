@@ -41,16 +41,30 @@ textWorkArea                  EQU                               0x7fa0
 
 ; Labels
 _entryPoint_                  EQU                               0x0200
-_repeat_0x0255                EQU                               0x0255
-_while_0x0270                 EQU                               0x026c
-_else_0x0291                  EQU                               0x0283
-_endif_0x029f                 EQU                               0x0291
-_wend_0x02a9                  EQU                               0x0299
+_page_0x0300                  EQU                               0x0300
+_end_0x02f6                   EQU                               0x0307
 
 ; Variables
-_a                            EQU                               0x0030
+_point                        EQU                               0x0030
+_dokee                        EQU                               0x0032
+_deeke                        EQU                               0x0034
+_a                            EQU                               0x0036
+_b                            EQU                               0x0038
+_c                            EQU                               0x003a
 
 ; Strings
+_yup$                         EQU                               0x7ea0
+_yup$                         DB                                3 'dog' 0
+_str_0x7dee                   EQU                               0x7dee
+_str_0x7dee                   DB                                16 'hello test world' 0
+_b$                           EQU                               0x7ca0
+_b$                           DB                                16 'hello test world' 0
+_a$                           EQU                               0x7ba0
+_a$                           DB                                0 '' 0
+_c$                           EQU                               0x7aa0
+_c$                           DB                                0 '' 0
+_str_0x7deb                   EQU                               0x7deb
+_str_0x7deb                   DB                                1 ' ' 0
 
 ; Define Bytes
 
@@ -81,41 +95,64 @@ _entryPoint_                  LDI                               0x1c
 
                               ClearVertBlinds                                                   ; cls
 
-                              LDI                               1
-                              STW                               _a                              ; a=1
+                              LDI                               0x00
+                              ST                                readPixel_xy
+                              LDI                               0x00
+                              ST                                readPixel_xy + 1
+                              ReadPixel                         
+                              STW                               _point                          ; point = point(0, 0)
 
-_repeat_0x0255                LDW                               _a
-                              PrintAcInt16                      
-                              NewLine                                                           ; print a
+                              LDW                               _point
+                              PrintAcHexByte                    
+                              NewLine                                                           ; print hex$(point)
 
-                              INC                               _a                              ; inc a
+                              LDI                               3
+                              STW                               _dokee                          ; dokee = 3
+
+                              LDI                               3
+                              STW                               _deeke                          ; deeke = 3
+
+                              LDWI                              0x7dee
+                              STW                               strSrcAddr
+                              LDWI                              0x7ca0
+                              StringCopy                                                        ; b$="hello test world"
+
+                              LDWI                              1234
+                              STW                               _a                              ; a = 1234
+
+                              LDWI                              -5678
+                              STW                               _b                              ; b = -5678
+
+                              LDI                               100
+                              STW                               _c                              ; c = 100
 
                               LDW                               _a
-                              SUBI                              8
-                              BNE                               _repeat_0x0255                  ; until a &&= count + 1
+                              STW                               strInteger
+                              LDWI                              0x7ba0
+                              StringInt                                                         ; a$ = str$(a)
 
-_while_0x0270                 LDW                               _a
-                              BLE                               _wend_0x02a9                    ; while a &&> 0
+                              LDW                               _b
+                              STW                               strInteger
+                              LDWI                              0x7ca0
+                              StringInt                                                         ; b$ = str$(b)
 
-                              LDW                               _a
-                              SUBI                              1
-                              BNE                               _else_0x0291                    ; if a &&= 1
+                              LDW                               _c
+                              STW                               strInteger
+                              LDWI                              0x7aa0
+                              StringInt                                                         ; c$ = str$(c)
 
-                              LDW                               _a
-                              PrintAcInt16                      
-                              BRA                               _endif_0x029f                   ; print a;
+                              PrintString                       _a$
+                              PrintString                       _str_0x7deb
+                              PrintString                       _b$
+                              PrintString                       _str_0x7deb
+                              PrintString                       _c$
+                              STW                               0xe2
+                              LDWI                              _page_0x0300
+                              CALL                              giga_vAC
+_page_0x0300                  LDW                               0xe2
+                              NewLine                                                           ; print a$;" ";b$;" ";c$
 
-_else_0x0291                  LDW                               _a
-                              PrintAcInt16                      
-                              NewLine                                                           ; print a
-
-_endif_0x029f                 LDW                               _a
-                              SUBI                              1
-                              STW                               _a                              ; a=a-1
-
-                              BRA                               _while_0x0270                   ; wend
-
-_wend_0x02a9                  BRA                               _wend_0x02a9                    ; END
+_end_0x02f6                   BRA                               _end_0x02f6                     ; end
 
 
 
@@ -125,25 +162,30 @@ _wend_0x02a9                  BRA                               _wend_0x02a9    
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-romCheck                      EQU     0x7ee8
-realTimeProc                  EQU     0x7de5
-convertEqOp                   EQU     0x7edf
-convertNeOp                   EQU     0x7ed6
-convertLeOp                   EQU     0x7ecd
-convertGeOp                   EQU     0x7ec4
-convertLtOp                   EQU     0x7ebb
-convertGtOp                   EQU     0x7eb2
-convertArr2d                  EQU     0x7ea6
-convertArr3d                  EQU     0x7dee
-resetVideoTable               EQU     0x7da4
-initClearFuncs                EQU     0x7dc3
-clearVertBlinds               EQU     0x7cc5
-clearCursorRow                EQU     0x79b6
-printInit                     EQU     0x7caf
-printDigit                    EQU     0x78dd
-printInt16                    EQU     0x7bae
-printChar                     EQU     0x77a7
-newLineScroll                 EQU     0x7aa4
+romCheck                      EQU     0x7dd4
+realTimeProc                  EQU     0x79d0
+convertEqOp                   EQU     0x7dcb
+convertNeOp                   EQU     0x7dc2
+convertLeOp                   EQU     0x7db9
+convertGeOp                   EQU     0x7db0
+convertLtOp                   EQU     0x7da7
+convertGtOp                   EQU     0x79f6
+convertArr2d                  EQU     0x79ea
+convertArr3d                  EQU     0x79d9
+sign                          EQU     0x78a6
+resetVideoTable               EQU     0x74e0
+initClearFuncs                EQU     0x79ae
+clearVertBlinds               EQU     0x78c5
+clearCursorRow                EQU     0x73b6
+readPixel                     EQU     0x79a2
+printInit                     EQU     0x74ca
+printText                     EQU     0x77b1
+printChar                     EQU     0x72a7
+printHexByte                  EQU     0x77ca
+newLineScroll                 EQU     0x76a4
+stringCopy                    EQU     0x78b8
+stringDigit                   EQU     0x74ad
+stringInt                     EQU     0x75a9
 convertEqOpAddr               EQU     0x00d0
 convertNeOpAddr               EQU     0x00d2
 convertLeOpAddr               EQU     0x00d4
@@ -359,6 +401,85 @@ clearVB_loop        CALL    realTimeProcAddr
                     RET
 
 
+; do *NOT* use register4 to register7 during time slicing if you use realTimeProc
+waitVBlankNum       EQU     register0
+
+drawHLine_x1        EQU     register0
+drawHLine_y1        EQU     register1
+drawHLine_x2        EQU     register2
+drawHLine_x4        EQU     register3
+
+drawVLine_x1        EQU     register0
+drawVLine_y1        EQU     register1
+drawVLine_y2        EQU     register2
+drawVLine_y8        EQU     register3
+
+drawLine_x1         EQU     register0
+drawLine_y1         EQU     register1
+drawLine_x2         EQU     register2
+drawLine_y2         EQU     register3
+drawLine_xy1        EQU     register0
+drawLine_xy2        EQU     register1
+drawLine_dxy1       EQU     register2
+drawLine_dxy2       EQU     register3
+drawLine_dx1        EQU     register4                       ; register4 to register7 used for temp values, state will be invalidated during time slicing
+drawLine_dy1        EQU     register5
+drawLine_dx2        EQU     register6
+drawLine_dy2        EQU     register7
+drawLine_sx         EQU     register8
+drawLine_sy         EQU     register9
+drawLine_h          EQU     register10
+drawLine_num        EQU     register11
+drawLine_count      EQU     register12
+drawLine_tmp        EQU     register13
+
+drawPixel_xy        EQU     register15
+readPixel_xy        EQU     register15
+
+drawCircle_cx       EQU     register0
+drawCircle_cy       EQU     register1
+drawCircle_r        EQU     register2
+drawCircle_a        EQU     register3
+drawCircle_d        EQU     register8
+drawCircle_x        EQU     register9
+drawCircle_y        EQU     register10
+drawCircle_ch0      EQU     register11
+drawCircle_ch1      EQU     register12
+drawCircle_ch2      EQU     register13
+drawCircle_ch3      EQU     register14
+
+drawCircleF_x1      EQU     register0
+drawCircleF_y1      EQU     register1
+drawCircleF_x2      EQU     register2
+drawCircleF_cx      EQU     register15
+drawCircleF_cy      EQU     register10
+drawCircleF_r       EQU     register11
+drawCircleF_v       EQU     register8
+drawCircleF_w       EQU     register9
+
+drawRect_x1         EQU     register7
+drawRect_y1         EQU     register10
+drawRect_x2         EQU     register11
+drawRect_y2         EQU     register15
+
+drawRectF_x1        EQU     register0
+drawRectF_y1        EQU     register1
+drawRectF_x2        EQU     register2
+drawRectF_y2        EQU     register7
+
+drawPoly_addr       EQU     register15
+
+
+readPixel           LD      readPixel_xy + 1                ; xy = peek(256+2*y)*256 + x
+                    LSLW
+                    INC     giga_vAC + 1
+                    PEEK
+                    ST      readPixel_xy + 1
+                    LDW     readPixel_xy
+                    PEEK
+                    RET
+
+
 
 ; do *NOT* use register4 to register7 during time slicing if you use realTimeProc
 textStr             EQU     register0
@@ -391,66 +512,22 @@ printInit           LDWI    SYS_VDrawBits_134
 
 
 
-
-                    ; prints single digit in textNum
-printDigit          PUSH
-                    LDW     textNum
-printD_index        SUBW    digitMult
-                    BLT     printD_cont
-                    STW     textNum
-                    INC     digitIndex
-                    BRA     printD_index
-    
-printD_cont         LD      digitIndex
-                    BEQ     printD_exit
-                    ORI     0x30
-                    ST      textChr
-                    LDWI    printChar
-                    CALL    giga_vAC
-                    LDI     0x30
-                    ST      digitIndex
-printD_exit         POP
-                    RET
-
-
-                    ; prints 16bit int in textNum
-printInt16          PUSH
+                    ; prints text string pointed to by textStr
+printText           PUSH
                     LDWI    printInit
                     CALL    giga_vAC
-                    LDI     0
-                    ST      digitIndex
-                    LDW     textNum
-                    BGE     printI16_pos
-                    LDI     0x2D
+
+                    ; first byte is length
+printT_char         INC     textStr                         ; next char
+                    LDW     textStr             
+                    PEEK
+                    BEQ     printT_exit                     ; check for delimiting zero
                     ST      textChr
                     LDWI    printChar
                     CALL    giga_vAC
-                    LDI     0
-                    SUBW    textNum
-                    STW     textNum    
-    
-printI16_pos        LDWI    10000
-                    STW     digitMult
-                    LDWI    printDigit
-                    CALL    giga_vAC
-                    LDWI    1000
-                    STW     digitMult
-                    LDWI    printDigit
-                    CALL    giga_vAC
-                    LDI     100
-                    STW     digitMult
-                    LDWI    printDigit
-                    CALL    giga_vAC
-                    LDI     10
-                    STW     digitMult
-                    LDWI    printDigit
-                    CALL    giga_vAC
-                    LD      textNum
-                    ORI     0x30
-                    ST      textChr
-                    LDWI    printChar
-                    CALL    giga_vAC
-                    POP
+                    BRA     printT_char
+                    
+printT_exit         POP
                     RET
 
 
@@ -505,6 +582,34 @@ printC_slice        ST      textSlice
 printC_pop          POP
 
 printC_exit         RET
+
+
+                    ; print hex byte in textHex
+printHexByte        PUSH
+                    LDWI    SYS_LSRW4_50                    ; shift right by 4 SYS routine
+                    STW     giga_sysFn
+                    LD      textHex
+                    SYS     50
+                    SUBI    10
+                    BLT     printH_skip0
+                    ADDI    7
+printH_skip0        ADDI    0x3A
+                    ST      textChr
+                    LDWI    printInit
+                    CALL    giga_vAC
+                    LDWI    printChar
+                    CALL    giga_vAC
+                    LD      textHex
+                    ANDI    0x0F
+                    SUBI    10
+                    BLT     printH_skip1
+                    ADDI    7
+printH_skip1        ADDI    0x3A
+                    ST      textChr
+                    LDWI    printChar
+                    CALL    giga_vAC
+                    POP
+                    RET
 
 
 
@@ -602,6 +707,128 @@ newLS_adjust        ADDI    8
                     
 newLS_exit          LDWI    printInit
                     CALL    giga_vAC                        ; re-initialise the SYS registers
+                    POP
+                    RET
+
+
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+strChr              EQU     register0
+strHex              EQU     register1
+strCmpRes           EQU     register2
+strLength           EQU     register0
+strFinish           EQU     register0
+strSrcAddr          EQU     register1
+strDstAddr          EQU     register2
+strSrcLen           EQU     register3
+strOffset           EQU     register8
+strSrcAddr2         EQU     register9
+strTmpAddr          EQU     register10
+strLutAddr          EQU     register11
+strBakAddr          EQU     register12
+strInteger          EQU     register0
+strIntDigit         EQU     register1
+strIntMult          EQU     register3
+
+
+                    ; copy one string to another
+stringCopy          LDW     strSrcAddr
+                    PEEK
+                    POKE    strDstAddr
+                    INC     strSrcAddr
+                    INC     strDstAddr
+                    BNE     stringCopy                          ; copy char until terminating char
+                    RET
+
+
+
+; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+mathX               EQU     register8
+mathY               EQU     register9
+mathSum             EQU     register12
+mathRem             EQU     register12
+mathMask            EQU     register13
+mathSign            EQU     register14
+mathQuot            EQU     register15
+mathShift           EQU     register15
+mathBase            EQU     register10
+mathPow             EQU     register11
+mathResult          EQU     register14
+
+
+sign                LDW     mathX
+                    BLE     sign_le
+                    LDI     1
+                    RET
+                    
+sign_le             BLT     sign_lt
+                    LDI     0
+                    RET
+                    
+sign_lt             LDWI    0xFFFF
+                    RET
+
+
+
+stringDigit         LDW     strInteger
+
+stringD_index       SUBW    strIntMult
+                    BLT     stringD_cont
+                    STW     strInteger
+                    INC     strIntDigit
+                    BRA     stringD_index
+    
+stringD_cont        LD      strIntDigit
+                    BEQ     stringD_exit
+                    ORI     0x30
+                    POKE    strTmpAddr
+                    INC     strTmpAddr
+                    LDI     0x30
+                    ST      strIntDigit
+                    
+stringD_exit        RET
+
+
+                    ; create a string from an int
+stringInt           PUSH
+                    LDI     0
+                    STW     strIntDigit
+                    LDW     strDstAddr
+                    STW     strTmpAddr
+                    INC     strTmpAddr
+                    LDW     strInteger
+                    BGE     stringI_pos
+                    LDI     0x2D
+                    POKE    strTmpAddr                          ; -ve sign
+                    INC     strTmpAddr
+                    LDI     0
+                    SUBW    strInteger
+                    STW     strInteger                          ; +ve number
+
+stringI_pos         LDWI    10000
+                    STW     strIntMult
+                    LDWI    stringDigit
+                    CALL    giga_vAC
+                    LDWI    1000
+                    STW     strIntMult
+                    LDWI    stringDigit
+                    CALL    giga_vAC
+                    LDI     100
+                    STW     strIntMult
+                    LDWI    stringDigit
+                    CALL    giga_vAC
+                    LDI     10
+                    STW     strIntMult
+                    LDWI    stringDigit
+                    CALL    giga_vAC
+                    LD      strInteger
+                    ORI     0x30
+                    POKE    strTmpAddr                          ; 1's digit
+                    LDW     strTmpAddr
+                    SUBW    strDstAddr
+                    POKE    strDstAddr                          ; leading size byte
+                    INC     strTmpAddr
+                    LDI     0
+                    POKE    strTmpAddr                          ; terminating 0                    
                     POP
                     RET
 

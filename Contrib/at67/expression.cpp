@@ -829,7 +829,7 @@ namespace Expression
     }
 
     // Tokenise using a list of chars as delimiters, returns all tokens, (i.e. start, end and whole if no delimiters)
-    std::vector<std::string> tokenise(const std::string& text, const std::string& delimiters, bool toUpper)
+    std::vector<std::string> tokenise(const std::string& text, const std::string& delimiterStr, bool toUpper)
     {
         size_t offset0 = 0;
         size_t offset1 = SIZE_MAX;
@@ -838,7 +838,7 @@ namespace Expression
 
         for(;;)
         {
-            offset0 = text.find_first_of(delimiters, offset1 + 1);
+            offset0 = text.find_first_of(delimiterStr, offset1 + 1);
             if(offset0 == std::string::npos)
             {
                 // Entire text is a token
@@ -865,7 +865,7 @@ namespace Expression
                 tokeniseHelper(result, text, offset1 + 1, offset0 - (offset1 + 1), toUpper);
             }
 
-            offset1 = text.find_first_of(delimiters, offset0 + 1);
+            offset1 = text.find_first_of(delimiterStr, offset0 + 1);
             if(offset1 == std::string::npos)
             {
                 // Last token
@@ -937,8 +937,8 @@ namespace Expression
         return result;
     }
 
-    // Tokenise using whitespace and single or double quotes, preserves strings
-    std::vector<std::string> tokeniseLine(const std::string& line, const std::string& delimiters)
+    // Tokenise using delimiters and single or double quotes, preserves strings
+    std::vector<std::string> tokeniseLine(const std::string& line, const std::string& delimiterStr)
     {
         std::string token = "";
         bool delimiterStart = true;
@@ -965,7 +965,7 @@ namespace Expression
             else
             {
                 // White space delimiters
-                if(strchr(delimiters.c_str(), line[i]))
+                if(strchr(delimiterStr.c_str(), line[i]))
                 {
                     if(delimiterState != Quotes)
                     {
@@ -995,7 +995,7 @@ namespace Expression
                     // Don't save delimiters
                     if(delimiterStart)
                     {
-                        if(!strchr(delimiters.c_str(), line[i])) token += line[i];
+                        if(!strchr(delimiterStr.c_str(), line[i])) token += line[i];
                     }
                     else
                     {
@@ -1031,8 +1031,8 @@ namespace Expression
         return tokens;
     }
 
-    // Tokenise using whitespace and double quotes, preserves strings, outputs offsets to tokens
-    std::vector<std::string> tokeniseLine(const std::string& line, const std::string& delimiters, std::vector<size_t>& offsets)
+    // Tokenise using delimiters and double quotes, preserves strings, outputs offsets to tokens
+    std::vector<std::string> tokeniseLine(const std::string& line, const std::string& delimiterStr, std::vector<size_t>& offsets)
     {
         std::string token = "";
         bool delimiterStart = true;
@@ -1059,7 +1059,7 @@ namespace Expression
             else
             {
                 // White space delimiters
-                if(strchr(delimiters.c_str(), line[i]))
+                if(strchr(delimiterStr.c_str(), line[i]))
                 {
                     if(delimiterState != Quotes)
                     {
@@ -1083,7 +1083,7 @@ namespace Expression
                     // Don't save delimiters
                     if(delimiterStart)
                     {
-                        if(!strchr(delimiters.c_str(), line[i])) token += line[i];
+                        if(!strchr(delimiterStr.c_str(), line[i])) token += line[i];
                     }
                     else
                     {
@@ -1124,9 +1124,9 @@ namespace Expression
         return tokens;
     }
 
-    void replaceText(std::string& input, const std::string& text, const std::string& replace)
+    void replaceText(std::string& input, const std::string& text, const std::string& replace, size_t offset)
     {
-        for(size_t foundPos=0; ; foundPos+=replace.size())
+        for(size_t foundPos=offset; ; foundPos+=replace.size())
         {
             foundPos = input.find(text, foundPos);
             if(foundPos == std::string::npos) break;
@@ -1145,11 +1145,11 @@ namespace Expression
     std::string& getExpressionToParseString(void) {return _expressionToParse;}
     int getLineNumber(void) {return _lineNumber;}
 
-    void setExpression(const std::string& expression)
+    void setExpression(const std::string& expression, intptr_t n)
     {
         _advanceError = false;
         _expressionToParse = expression;
-        _expression = (char*)_expressionToParse.c_str();
+        _expression = (char*)_expressionToParse.c_str() + n;
     }
 
     char peek(void)
@@ -1179,7 +1179,7 @@ namespace Expression
         _expression = (char *)_advancePtr;
     }
 
-    bool advance(uintptr_t n)
+    bool advance(intptr_t n)
     {
         if(size_t(_expression + n - _expressionToParse.c_str()) >= _expressionToParse.size())
         {
@@ -1205,6 +1205,26 @@ namespace Expression
         {
             advance(text.size());
             return true;
+        }
+
+        return false;
+    }
+
+    // Searches for a function name in expression and then expects a left bracket before any other non whitespace char
+    bool findFunc(const std::string& text)
+    {
+        size_t pos = size_t(_expression - _expressionToParse.c_str());
+        std::string expr = _expressionToParse.substr(pos, text.size());
+        std::string expression = _expressionToParse.substr(pos);
+        stripNonStringWhitespace(expression);
+        if(strToUpper(expr) == text  &&  expression.size() > text.size())
+        {
+            char lbra = expression[text.size()];
+            if(lbra == '(')
+            {
+                advance(text.size());
+                return true;
+            }
         }
 
         return false;
@@ -1262,75 +1282,75 @@ namespace Expression
             }
         }
         // Functions
-        else if(Expression::find("POW"))
+        else if(find("POW"))
         {
             numeric = factor(0); numeric = operatorPOWF(numeric);
         }
-        else if(Expression::find("SQRT"))
+        else if(find("SQRT"))
         {
             numeric = factor(0); numeric = operatorSQRT(numeric);
         }
-        else if(Expression::find("EXP2"))
+        else if(find("EXP2"))
         {
             numeric = factor(0); numeric = operatorEXP2(numeric);
         }
-        else if(Expression::find("EXP"))
+        else if(find("EXP"))
         {
             numeric = factor(0); numeric = operatorEXP(numeric);
         }
-        else if(Expression::find("LOG10"))
+        else if(find("LOG10"))
         {
             numeric = factor(0); numeric = operatorLOG10(numeric);
         }
-        else if(Expression::find("LOG2"))
+        else if(find("LOG2"))
         {
             numeric = factor(0); numeric = operatorLOG2(numeric);
         }
-        else if(Expression::find("LOG"))
+        else if(find("LOG"))
         {
             numeric = factor(0); numeric = operatorLOG(numeric);
         }
-        else if(Expression::find("SIN"))
+        else if(find("SIN"))
         {
             numeric = factor(0); numeric = operatorSIN(numeric);
         }
-        else if(Expression::find("COS"))
+        else if(find("COS"))
         {
             numeric = factor(0); numeric = operatorCOS(numeric);
         }
-        else if(Expression::find("TAN"))
+        else if(find("TAN"))
         {
             numeric = factor(0); numeric = operatorTAN(numeric);
         }
-        else if(Expression::find("ASIN"))
+        else if(find("ASIN"))
         {
             numeric = factor(0); numeric = operatorASIN(numeric);
         }
-        else if(Expression::find("ACOS"))
+        else if(find("ACOS"))
         {
             numeric = factor(0); numeric = operatorACOS(numeric);
         }
-        else if(Expression::find("ATAN2"))
+        else if(find("ATAN2"))
         {
             numeric = factor(0); numeric = operatorATAN2(numeric);
         }
-        else if(Expression::find("ATAN"))
+        else if(find("ATAN"))
         {
             numeric = factor(0); numeric = operatorATAN(numeric);
         }
-        else if(Expression::find("RAND"))
+        else if(find("RAND"))
         {
             numeric = factor(0); numeric = operatorRAND(numeric);
         }
-        else if(Expression::find("REV16"))
+        else if(find("REV16"))
         {
             numeric = factor(0); numeric = operatorREV16(numeric);
         }
-        else if(Expression::find("REV8"))
+        else if(find("REV8"))
         {
             numeric = factor(0); numeric = operatorREV8(numeric);
         }
-        else if(Expression::find("REV4"))
+        else if(find("REV4"))
         {
             numeric = factor(0); numeric = operatorREV4(numeric);
         }

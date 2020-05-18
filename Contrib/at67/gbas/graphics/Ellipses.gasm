@@ -60,7 +60,7 @@ _b                            EQU                               0x0034
 _t                            EQU                               0x0036
 _mx                           EQU                               0x0038
 _my                           EQU                               0x003a
-_addr                         EQU                               0x003c
+_pixel                        EQU                               0x003c
 _mx1                          EQU                               0x003e
 _my1                          EQU                               0x0040
 _mx2                          EQU                               0x0042
@@ -157,22 +157,22 @@ _end_0x02e1                   BRA                               _end_0x02e1     
 
 _ellipse                      PUSH                              
                               LDW                               _mx
-                              ST                                _addr
+                              ST                                _pixel
                               LDW                               _my
                               ADDI                              8
-                              ST                                _addr + 1                       ; addr.lo = mx : addr.hi = my + 8
+                              ST                                _pixel + 1                      ; pixel.lo = mx : pixel.hi = my + 8
 
-                              LDW                               _addr
+                              LDW                               _pixel
                               ADDW                              _a
                               STW                               0xc0
                               LDW                               _color
-                              POKE                              0xc0                            ; poke addr + a, color
+                              POKE                              0xc0                            ; poke pixel + a, color
 
-                              LDW                               _addr
+                              LDW                               _pixel
                               SUBW                              _a
                               STW                               0xc0
                               LDW                               _color
-                              POKE                              0xc0                            ; poke addr - a, color
+                              POKE                              0xc0                            ; poke pixel - a, color
 
                               LDW                               _mx
                               SUBW                              _a
@@ -251,31 +251,31 @@ _else_0x0382                  LDW                               _x
 
 _endif_0x03a0                 LDW                               _my1
                               ADDI                              8
-                              ST                                _addr + 1                       ; addr.hi = my1 + 8
+                              ST                                _pixel + 1                      ; pixel.hi = my1 + 8
 
                               LDW                               _mx1
-                              ST                                _addr
+                              ST                                _pixel
                               LDW                               _color
-                              POKE                              _addr                           ; addr.lo = mx1 : poke addr, color
+                              POKE                              _pixel                          ; pixel.lo = mx1 : poke pixel, color
 
                               LDW                               _mx2
-                              ST                                _addr
+                              ST                                _pixel
                               LDW                               _color
-                              POKE                              _addr                           ; addr.lo = mx2 : poke addr, color
+                              POKE                              _pixel                          ; pixel.lo = mx2 : poke pixel, color
 
                               LDW                               _my2
                               ADDI                              8
-                              ST                                _addr + 1                       ; addr.hi = my2 + 8
+                              ST                                _pixel + 1                      ; pixel.hi = my2 + 8
 
                               LDW                               _mx1
-                              ST                                _addr
+                              ST                                _pixel
                               LDW                               _color
-                              POKE                              _addr                           ; addr.lo = mx1 : poke addr, color
+                              POKE                              _pixel                          ; pixel.lo = mx1 : poke pixel, color
 
                               LDW                               _mx2
-                              ST                                _addr
+                              ST                                _pixel
                               LDW                               _color
-                              POKE                              _addr                           ; addr.lo = mx2 : poke addr, color
+                              POKE                              _pixel                          ; pixel.lo = mx2 : poke pixel, color
 
                               BRA                               _while_0x0352                   ; wend
 

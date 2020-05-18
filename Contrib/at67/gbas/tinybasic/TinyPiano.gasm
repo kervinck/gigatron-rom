@@ -102,42 +102,42 @@ _entryPoint_                  LDI                               0x1c
                               InitArray2d                       
                               InitArray3d                       
                               InitRealTimeProc                  
-                              Initialise                                                ; INIT
+                              Initialise                                                        ; INIT
 
-                              ClearVertBlinds                                           ; cls
+                              ClearVertBlinds                                                   ; cls
 
                               LDI                               0
                               STW                               _a
                               STW                               _b
                               LDI                               0
-                              STW                               _p                      ; a=0 : b=a : p=0
+                              STW                               _p                              ; a=0 : b=a : p=0
 
                               LDWI                              _note
-                              CALL                              giga_vAC                ; gosub note
+                              CALL                              giga_vAC                        ; gosub note
 
                               PrintString                       _str_0x7ef2
-                              NewLine                                                   ; print " 2 3   5 6 7"
+                              NewLine                                                           ; print " 2 3   5 6 7"
 
                               PrintString                       _str_0x7ee1
-                              NewLine                                                   ; print "Q W E R T Y U I"
+                              NewLine                                                           ; print "Q W E R T Y U I"
 
                               LDW                               _p
                               SUBI                              2
                               STW                               0xc0
                               LDI                               2
-                              POKE                              0xc0                    ; poke p-2,2
+                              POKE                              0xc0                            ; poke p-2,2
 
 _loop                         LD                                giga_serialRaw
-                              STW                               _k                      ; k=get("SERIALRAW")
+                              STW                               _k                              ; k=get("SERIALRAW")
 
                               LDW                               _k
                               STW                               numericLabel
                               LDI                               0
                               STW                               defaultLabel
-                              GosubNumeric                                              ; gosub k
+                              GosubNumeric                                                      ; gosub k
 
                               LDWI                              _loop
-                              CALL                              giga_vAC                ; goto loop
+                              CALL                              giga_vAC                        ; goto loop
 
 _50                           PUSH                              
                               LDI                               11
@@ -146,7 +146,7 @@ _50                           PUSH
                               STW                               _b
                               LDWI                              _note
                               CALL                              giga_vAC
-                              Return                                                    ; a=11  : b=9  : gosub note : return
+                              Return                                                            ; a=11  : b=9  : gosub note : return
 
 _51                           PUSH                              
                               LDI                               25
@@ -155,7 +155,7 @@ _51                           PUSH
                               STW                               _b
                               LDWI                              _note
                               CALL                              giga_vAC
-                              Return                                                    ; a=25  : b=10 : gosub note : return
+                              Return                                                            ; a=25  : b=10 : gosub note : return
 
 _53                           PUSH                              
                               LDI                               16
@@ -164,7 +164,7 @@ _53                           PUSH
                               STW                               _b
                               LDWI                              _note
                               CALL                              giga_vAC
-                              Return                                                    ; a=16  : b=12 : gosub note : return
+                              Return                                                            ; a=16  : b=12 : gosub note : return
 
 _54                           PUSH                              
                               LDI                               78
@@ -173,7 +173,7 @@ _54                           PUSH
                               STW                               _b
                               LDWI                              _note
                               CALL                              giga_vAC
-                              Return                                                    ; a=78  : b=13 : gosub note : return
+                              Return                                                            ; a=78  : b=13 : gosub note : return
 
 _55                           PUSH                              
                               LDI                               35
@@ -182,7 +182,7 @@ _55                           PUSH
                               STW                               _b
                               LDWI                              _note
                               CALL                              giga_vAC
-                              Return                                                    ; a=35  : b=15 : gosub note : return
+                              Return                                                            ; a=35  : b=15 : gosub note : return
 
 _101                          PUSH                              
                               LDI                               103
@@ -195,7 +195,7 @@ _page_0x0300                  LDW                               0xe2
                               STW                               _b
                               LDWI                              _note
                               CALL                              giga_vAC
-                              Return                                                    ; a=103 : b=10 : gosub note : return
+                              Return                                                            ; a=103 : b=10 : gosub note : return
 
 _105                          PUSH                              
                               LDI                               19
@@ -204,7 +204,7 @@ _105                          PUSH
                               STW                               _b
                               LDWI                              _note
                               CALL                              giga_vAC
-                              Return                                                    ; a=19  : b=17 : gosub note : return
+                              Return                                                            ; a=19  : b=17 : gosub note : return
 
 _113                          PUSH                              
                               LDI                               73
@@ -213,7 +213,7 @@ _113                          PUSH
                               STW                               _b
                               LDWI                              _note
                               CALL                              giga_vAC
-                              Return                                                    ; a=73  : b=8  : gosub note : return
+                              Return                                                            ; a=73  : b=8  : gosub note : return
 
 _114                          PUSH                              
                               LDI                               57
@@ -222,7 +222,7 @@ _114                          PUSH
                               STW                               _b
                               LDWI                              _note
                               CALL                              giga_vAC
-                              Return                                                    ; a=57  : b=11 : gosub note : return
+                              Return                                                            ; a=57  : b=11 : gosub note : return
 
 _116                          PUSH                              
                               LDI                               108
@@ -231,7 +231,7 @@ _116                          PUSH
                               STW                               _b
                               LDWI                              _note
                               CALL                              giga_vAC
-                              Return                                                    ; a=108 : b=12 : gosub note : return
+                              Return                                                            ; a=108 : b=12 : gosub note : return
 
 _117                          PUSH                              
                               LDI                               23
@@ -240,7 +240,7 @@ _117                          PUSH
                               STW                               _b
                               LDWI                              _note
                               CALL                              giga_vAC
-                              Return                                                    ; a=23  : b=16 : gosub note : return
+                              Return                                                            ; a=23  : b=16 : gosub note : return
 
 _119                          PUSH                              
                               LDI                               80
@@ -249,7 +249,7 @@ _119                          PUSH
                               STW                               _b
                               LDWI                              _note
                               CALL                              giga_vAC
-                              Return                                                    ; a=80  : b=9  : gosub note : return
+                              Return                                                            ; a=80  : b=9  : gosub note : return
 
 _121                          PUSH                              
                               LDI                               53
@@ -258,7 +258,7 @@ _121                          PUSH
                               STW                               _b
                               LDWI                              _note
                               CALL                              giga_vAC
-                              Return                                                    ; a=53  : b=14 : gosub note : return
+                              Return                                                            ; a=53  : b=14 : gosub note : return
 
 _note                         PUSH                              
                               LDI                               1
@@ -276,14 +276,14 @@ _next_0x0377                  LD                                _c
                               STW                               0xc2
                               LDW                               _b
                               POKE                              0xc2
-                              ForNextFarInc                     _c _next_0x0377 4       ; for c=1 to 4 : p=(c LSL 8)+252 : poke p,a : poke p+1,b : next c
+                              ForNextFarInc                     _c _next_0x0377 4               ; for c=1 to 4 : p=(c LSL 8)+252 : poke p,a : poke p+1,b : next c
 
                               LDI                               15
-                              ST                                giga_soundTimer         ; set SOUNDTIMER,15
+                              ST                                giga_soundTimer                 ; set SOUNDTIMER,15
 
-                              Return                                                    ; return
+                              Return                                                            ; return
 
-_end_0x03ab                   BRA                               _end_0x03ab             ; END
+_end_0x03ab                   BRA                               _end_0x03ab                     ; END
 
 
 

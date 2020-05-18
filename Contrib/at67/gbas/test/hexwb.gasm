@@ -83,20 +83,20 @@ _entryPoint_                  LDI                               0x1c
                               InitArray2d                       
                               InitArray3d                       
                               InitRealTimeProc                  
-                              Initialise                                                ; INIT
+                              Initialise                                                        ; INIT
 
                               LDI                               3
-                              STW                               _z                      ; z = 3
+                              STW                               _z                              ; z = 3
 
                               LDI                               0
-                              STW                               _i                      ; for i=0 to 5
+                              STW                               _i                              ; for i=0 to 5
 
 _next_0x0254                  LDI                               16
-                              STW                               _a                      ; a = &h10
+                              STW                               _a                              ; a = &h10
 
                               LDW                               _a
                               ADDI                              100
-                              STW                               _b                      ; b = a + 100
+                              STW                               _b                              ; b = a + 100
 
                               LDW                               _a
                               SUBW                              _b
@@ -106,7 +106,7 @@ _next_0x0254                  LDI                               16
                               SUBW                              0xc0
                               STW                               _c
                               PEEK                              
-                              STW                               _d                      ; c = NOT (a <> b) : d = peek(c)
+                              STW                               _d                              ; c = NOT (a <> b) : d = peek(c)
 
                               LDWI                              0xaa55
                               XORW                              _a
@@ -114,11 +114,11 @@ _next_0x0254                  LDI                               16
                               STW                               0xc0
                               LDWI                              0xffff
                               ANDW                              0xc0
-                              STW                               _e                      ; e = &hAA55 XOR a OR c AND &hFFFF
+                              STW                               _e                              ; e = &hAA55 XOR a OR c AND &hFFFF
 
                               LDW                               _z
                               ADDI                              1
-                              STW                               _z                      ; z = z + 1
+                              STW                               _z                              ; z = z + 1
 
                               LDW                               _a
                               PrintAcInt16                      
@@ -142,9 +142,9 @@ _next_0x0254                  LDI                               16
                               LDWI                              _page_0x0300
                               CALL                              giga_vAC
 _page_0x0300                  LDW                               0xe2
-                              ForNextFarInc                     _i _next_0x0254 5       ; print a;" ";b;" ";c;" ";hex$(d);" ";hexw$(e);" ";z : next i
+                              ForNextFarInc                     _i _next_0x0254 5               ; print a;" ";b;" ";c;" ";hex$(d);" ";hexw$(e);" ";z : next i
 
-_end_0x0311                   BRA                               _end_0x0311             ; END
+_end_0x0311                   BRA                               _end_0x0311                     ; END
 
 
 

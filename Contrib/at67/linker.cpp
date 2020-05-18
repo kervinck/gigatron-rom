@@ -33,6 +33,7 @@ namespace Linker
         {0x0000, 0x0000, "convertArr2d"     , "", true,  false},
         {0x0000, 0x0000, "convertArr3d"     , "", true,  false},
         {0x0000, 0x0000, "absolute"         , "", false, false},
+        {0x0000, 0x0000, "sign"             , "", false, false},
         {0x0000, 0x0000, "power16bit"       , "", false, false},
         {0x0000, 0x0000, "power16bitExt"    , "", false, false},
         {0x0000, 0x0000, "multiply16bit"    , "", false, false},
@@ -136,6 +137,7 @@ namespace Linker
         {0x0000, 0x0000, "printHexWord"     , "", false, false},
         {0x0000, 0x0000, "atTextCursor"     , "", false, false},
         {0x0000, 0x0000, "newLineScroll"    , "", false, false},
+        {0x0000, 0x0000, "integerStr"       , "", false, false},
         {0x0000, 0x0000, "stringChr"        , "", false, false},
         {0x0000, 0x0000, "stringHex"        , "", false, false},
         {0x0000, 0x0000, "stringHexw"       , "", false, false},
@@ -147,7 +149,8 @@ namespace Linker
         {0x0000, 0x0000, "stringMid"        , "", false, false},
         {0x0000, 0x0000, "stringLeft"       , "", false, false},
         {0x0000, 0x0000, "stringRight"      , "", false, false},
-        {0x0000, 0x0000, "integerStr"       , "", false, false},
+        {0x0000, 0x0000, "stringDigit"      , "", false, false},
+        {0x0000, 0x0000, "stringInt"        , "", false, false},
     };
     std::vector<std::string> _subIncludesROMv1 =
     {
@@ -175,7 +178,7 @@ namespace Linker
         "input.i"             ,
         "print_text_ROMv2.i"  ,
         "string.i"            ,
-        "numeric.i"           ,
+        "numeric.i"     ,
     };
     std::vector<std::string> _subIncludesROMv3 =
     {
@@ -190,7 +193,7 @@ namespace Linker
         "input.i"             ,
         "print_text_ROMv3.i"  ,
         "string.i"            ,
-        "numeric.i"           ,
+        "numeric.i"     ,
     };
     std::vector<std::string> _subIncludesROMv4 =
     {
@@ -205,7 +208,7 @@ namespace Linker
         "input.i"             ,
         "print_text_ROMv3.i"  ,
         "string.i"            ,
-        "numeric.i"           ,
+        "numeric.i"     ,
     };
     std::vector<std::string> _subIncludesROMv5a =
     {

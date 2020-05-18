@@ -22,9 +22,9 @@ end
 
 
 ellipse:
-    addr.lo = mx : addr.hi = my + 8
-    poke addr + a, color
-    poke addr - a, color
+    pixel.lo = mx : pixel.hi = my + 8
+    poke pixel + a, color
+    poke pixel - a, color
 
     mx1 = mx - a : my1 = my
     mx2 = mx + a : my2 = my
@@ -45,12 +45,12 @@ ellipse:
             rx = rx - dy : r = rx + r
         endif
 
-        addr.hi = my1 + 8
-        addr.lo = mx1 : poke addr, color
-        addr.lo = mx2 : poke addr, color
+        pixel.hi = my1 + 8
+        pixel.lo = mx1 : poke pixel, color
+        pixel.lo = mx2 : poke pixel, color
 
-        addr.hi = my2 + 8
-        addr.lo = mx1 : poke addr, color
-        addr.lo = mx2 : poke addr, color
+        pixel.hi = my2 + 8
+        pixel.lo = mx1 : poke pixel, color
+        pixel.lo = mx2 : poke pixel, color
     wend
 return

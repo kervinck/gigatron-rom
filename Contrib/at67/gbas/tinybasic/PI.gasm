@@ -94,11 +94,11 @@ _entryPoint_                  LDI                               0x1c
                               InitArray2d                       
                               InitArray3d                       
                               InitRealTimeProc                  
-                              Initialise                                                ; INIT
+                              Initialise                                                        ; INIT
 
                               ClearVertBlinds                   
                               LDI                               0
-                              STW                               _D                      ; DIM Z(94)=0:CLS:D=0
+                              STW                               _D                              ; DIM Z(94)=0:CLS:D=0
 
 _20                           LDI                               94
                               STW                               _M
@@ -108,7 +108,7 @@ _20                           LDI                               94
                               SUBI                              1
                               STW                               0xb0
                               LDI                               1
-                              STW                               0xb2                    ; M=94:FOR I=0 TO M-1
+                              STW                               0xb2                            ; M=94:FOR I=0 TO M-1
 
 _30                           LDWI                              0x0642
                               ADDW                              _I
@@ -117,7 +117,7 @@ _30                           LDWI                              0x0642
                               LDI                               20
                               DOKE                              memAddr
                               ForNextFarVarAdd                  _I _30 0xb0 0xb2
-                              PrintString                       _str_0x7efb             ; Z(I)=20:NEXT I:PRINT "PI=";
+                              PrintString                       _str_0x7efb                     ; Z(I)=20:NEXT I:PRINT "PI=";
 
 _40                           LDW                               _D
                               STW                               mathX
@@ -134,7 +134,7 @@ _40                           LDW                               _D
                               LDW                               _M
                               STW                               0xb0
                               LDI                               1
-                              STW                               0xb2                    ; E=D%100:D=0:FOR I=1 TO M
+                              STW                               0xb2                            ; E=D%100:D=0:FOR I=1 TO M
 
 _50                           LDW                               _M
                               SUBW                              _I
@@ -157,7 +157,7 @@ _50                           LDW                               _M
                               LDWI                              multiply16bit
                               CALL                              giga_vAC
                               ADDW                              0xc4
-                              STW                               _D                      ; J=M-I:D=D+D*J+Z(J)*100
+                              STW                               _D                              ; J=M-I:D=D+D*J+Z(J)*100
 
 _60                           LDW                               _J
                               ADDW                              _J
@@ -185,7 +185,7 @@ _page_0x0300                  LDW                               0xe2
                               STW                               mathY
                               LDWI                              divide16bit
                               CALL                              giga_vAC
-                              STW                               _D                      ; A=J+J+1:Z(J)=D%A:D=D/A
+                              STW                               _D                              ; A=J+J+1:Z(J)=D%A:D=D/A
 
 _70                           ForNextFarVarAdd                  _I _50 0xb0 0xb2
                               LDW                               _M
@@ -198,7 +198,7 @@ _70                           ForNextFarVarAdd                  _I _50 0xb0 0xb2
                               LDWI                              divide16bit
                               CALL                              giga_vAC
                               ADDW                              _E
-                              STW                               _E                      ; NEXT I:M=M-6:E=E+D/100
+                              STW                               _E                              ; NEXT I:M=M-6:E=E+D/100
 
 _80                           LDW                               _E
                               STW                               mathX
@@ -210,7 +210,7 @@ _80                           LDW                               _E
                               LDW                               _M
                               SUBI                              88
                               BNE                               _90
-                              PrintString                       _str_0x7ef8             ; PRINT E/10;:IF M &&= 88 THEN PRINT ".";
+                              PrintString                       _str_0x7ef8                     ; PRINT E/10;:IF M &&= 88 THEN PRINT ".";
 
 _90                           LDW                               _E
                               STW                               mathX
@@ -224,9 +224,9 @@ _90                           LDW                               _E
                               SUBI                              10
                               BLE                               _else_0x03c8
                               LDWI                              _40
-                              CALL                              giga_vAC                ; PRINT E%10;:IF M &&> 10 THEN GOTO 40
+                              CALL                              giga_vAC                        ; PRINT E%10;:IF M &&> 10 THEN GOTO 40
 
-_else_0x03c8                  BRA                               _else_0x03c8            ; END
+_else_0x03c8                  BRA                               _else_0x03c8                    ; END
 
 
 
