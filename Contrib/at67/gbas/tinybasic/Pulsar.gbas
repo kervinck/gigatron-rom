@@ -3,7 +3,6 @@ _codeRomType_ ROMv1
 
 'Simulate pulsar signal
 'in Joy Division style
-mode 2
 10 set FGBGCOLOUR,&h3F00:cls:w=0:z=0
 20 at 0,112:print
 30 v=rnd(30)-80:p=5:q=128

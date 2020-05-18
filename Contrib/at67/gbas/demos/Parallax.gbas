@@ -1,8 +1,6 @@
 _runtimePath_ "../runtime"
 _runtimeStart_ &h06FF
-
-
-mode 1
+_codeRomType_ ROMv1
 
 load image, ../../images/gbas/Parallax.tga, &h0800
 

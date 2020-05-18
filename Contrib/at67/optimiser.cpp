@@ -129,83 +129,83 @@ namespace Optimiser
 
         // StwPairReg
         {0, 0, {"STW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x",
-                "STW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg"}},
+                "STW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "mem"}},
 
         // ExtraStw
         {0, 0, {"STW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x", 
                 "STW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_"  }},
 
         // PeekArray
-        {0, 0, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg", 
+        {0, 0, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "mem", 
                 "LDWI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x", 
-                "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "reg", 
-                "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "reg", 
+                "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "mem", 
+                "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "mem", 
                 "PEEK" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + ""}},
 
         // DeekArray
-        {0, 0, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg", 
+        {0, 0, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "mem", 
                 "LDWI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x", 
-                "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "reg", 
-                "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "reg", 
+                "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "mem", 
+                "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "mem", 
                 "DEEK" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + ""}},
 
         // PokeArray
-        {0, 0, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg", 
+        {0, 0, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "mem", 
                 "LDWI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x", 
-                "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg", 
-                "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg", 
-                "POKE" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "reg"}},
+                "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "mem", 
+                "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "mem", 
+                "POKE" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "mem"}},
 
         // DokeArray
-        {0, 0, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
+        {0, 0, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "mem",
                 "LDWI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x",
-                "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
-                "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
-                "DOKE" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "reg"}},
+                "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "mem",
+                "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "mem",
+                "DOKE" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "mem"}},
 
         // PokeVarArray
-        {0, 0, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
+        {0, 0, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "mem",
                 "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_",
-                "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
+                "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "mem",
                 "LDWI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x",
-                "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "reg",
-                "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "reg",
-                "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
-                "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
-                "POKE" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "reg"}},
+                "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "mem",
+                "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "mem",
+                "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "mem",
+                "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "mem",
+                "POKE" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "mem"}},
 
         // DokeVarArray
-        {0, 0, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
+        {0, 0, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "mem",
                 "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_",
-                "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
+                "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "mem",
                 "LDWI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x",
-                "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "reg",
-                "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "reg",
-                "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
-                "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
-                "DOKE" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "reg"}},
+                "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "mem",
+                "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "mem",
+                "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "mem",
+                "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "mem",
+                "DOKE" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "mem"}},
 
         // PokeTmpArray
-        {0, 0, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
+        {0, 0, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "mem",
                 "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x",
-                "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
+                "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "mem",
                 "LDWI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x",
-                "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "reg",
-                "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "reg",
-                "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
-                "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
-                "POKE" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "reg"}},
+                "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "mem",
+                "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "mem",
+                "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "mem",
+                "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "mem",
+                "POKE" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "mem"}},
 
         // DokeTmpArray
-        {0, 0, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
+        {0, 0, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "mem",
                 "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x",
-                "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
+                "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "mem",
                 "LDWI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x",
-                "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "reg",
-                "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "reg",
-                "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
-                "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
-                "DOKE" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "reg"}},
+                "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "mem",
+                "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "mem",
+                "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "mem",
+                "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "mem",
+                "DOKE" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "mem"}},
 
         // AddiPair
         {0, 0, {"ADDI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "",
@@ -337,7 +337,8 @@ RESTART_OPTIMISE:
 /*************************************************************************************************************************************************************/
 
                         // Find operand match, (temporary variables are a minimum of 4 chars, i.e. '0xc0')
-                        if(firstOperand.substr(0, 4) == secondOperand.substr(0, 4))
+                        //if(firstOperand.substr(0, 4) == secondOperand.substr(0, 4))
+                        if(firstOperand == secondOperand)
                         {
                             switch(j)
                             {

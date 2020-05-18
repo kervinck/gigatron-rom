@@ -1,59 +1,59 @@
-_startAddress_      EQU                     0x0200
+_startAddress_                EQU                               0x0200
 
 ; Internal variables
-serialRawPrev       EQU                     0x0081
-register0           EQU                     0x0082
-register1           EQU                     register0 + 0x02
-register2           EQU                     register0 + 0x04
-register3           EQU                     register0 + 0x06
-register4           EQU                     register0 + 0x08
-register5           EQU                     register0 + 0x0A
-register6           EQU                     register0 + 0x0C
-register7           EQU                     register0 + 0x0E
-register8           EQU                     register0 + 0x10
-register9           EQU                     register0 + 0x12
-register10          EQU                     register0 + 0x14
-register11          EQU                     register0 + 0x16
-register12          EQU                     register0 + 0x18
-register13          EQU                     register0 + 0x1A
-register14          EQU                     register0 + 0x1C
-register15          EQU                     register0 + 0x1E
-fgbgColour          EQU                     register0 + 0x20
-cursorXY            EQU                     register0 + 0x22
-midiStream          EQU                     register0 + 0x24
-midiDelay           EQU                     register0 + 0x26
-miscFlags           EQU                     register0 + 0x28
-fontLutId           EQU                     0x00e0
+serialRawPrev                 EQU                               0x0081
+register0                     EQU                               0x0082
+register1                     EQU                               register0 + 0x02
+register2                     EQU                               register0 + 0x04
+register3                     EQU                               register0 + 0x06
+register4                     EQU                               register0 + 0x08
+register5                     EQU                               register0 + 0x0A
+register6                     EQU                               register0 + 0x0C
+register7                     EQU                               register0 + 0x0E
+register8                     EQU                               register0 + 0x10
+register9                     EQU                               register0 + 0x12
+register10                    EQU                               register0 + 0x14
+register11                    EQU                               register0 + 0x16
+register12                    EQU                               register0 + 0x18
+register13                    EQU                               register0 + 0x1A
+register14                    EQU                               register0 + 0x1C
+register15                    EQU                               register0 + 0x1E
+fgbgColour                    EQU                               register0 + 0x20
+cursorXY                      EQU                               register0 + 0x22
+midiStream                    EQU                               register0 + 0x24
+midiDelay                     EQU                               register0 + 0x26
+miscFlags                     EQU                               register0 + 0x28
+fontLutId                     EQU                               0x00e4
 
 ; Internal Constants
-ENABLE_SCROLL_BIT   EQU                     0x0001
-ON_BOTTOM_ROW_BIT   EQU                     0x0002
-ENABLE_SCROLL_MSK   EQU                     0xfffe
-ON_BOTTOM_ROW_MSK   EQU                     0xfffd
+ENABLE_SCROLL_BIT             EQU                               0x0001
+ON_BOTTOM_ROW_BIT             EQU                               0x0002
+ENABLE_SCROLL_MSK             EQU                               0xfffe
+ON_BOTTOM_ROW_MSK             EQU                               0xfffd
 
 ; Internal buffers
-textWorkArea        EQU                     0x7fa0
+textWorkArea                  EQU                               0x7fa0
 
 ; Includes
-%includePath        "../runtime"
-%include            gigatron.i
-%include            macros.i
+%includePath                  "../runtime"
+%include                      gigatron.i
+%include                      macros.i
 
 ; Labels
-_entryPoint_        EQU                     0x0200
-_1                  EQU                     0x0242
-_10                 EQU                     0x0242
-_20                 EQU                     0x0246
-_30                 EQU                     0x0259
-_40                 EQU                     0x026e
-_50                 EQU                     0x0287
-_end_0x02a0         EQU                     0x029a
+_entryPoint_                  EQU                               0x0200
+_1                            EQU                               0x024c
+_10                           EQU                               0x024c
+_20                           EQU                               0x0250
+_30                           EQU                               0x025f
+_40                           EQU                               0x0274
+_50                           EQU                               0x0288
+_end_0x029c                   EQU                               0x0296
 
 ; Variables
-_Y                  EQU                     0x0030
-_D                  EQU                     0x0032
-_E                  EQU                     0x0034
-_C                  EQU                     0x0036
+_Y                            EQU                               0x0030
+_D                            EQU                               0x0032
+_E                            EQU                               0x0034
+_C                            EQU                               0x0036
 
 ; Strings
 
@@ -70,49 +70,48 @@ _C                  EQU                     0x0036
 ; Lookup Tables
 
 ; Code
-_entryPoint_        LDI                     0x1c
-                    STW                     romType
-                    RomCheck                
-                    InitRealTimeProc        
-                    InitEqOp                
-                    InitNeOp                
-                    InitLeOp                
-                    InitGeOp                
-                    InitLtOp                
-                    InitGtOp                
-                    Initialise                                              ; INIT
+_entryPoint_                  LDI                               0x1c
+                              STW                               romType
+                              RomCheck                          
+                              InitEqOp                          
+                              InitNeOp                          
+                              InitLeOp                          
+                              InitGeOp                          
+                              InitLtOp                          
+                              InitGtOp                          
+                              InitArray2d                       
+                              InitArray3d                       
+                              InitRealTimeProc                  
+                              Initialise                                                        ; INIT
 
-_10                 LDI                     2
-                    STW                     _Y                              ; FOR Y=2 TO 7
+_10                           LDI                               2
+                              STW                               _Y                              ; FOR Y=2 &TO 7
 
-_20                 LDW                     _Y
-                    STW                     mathX
-                    LDI                     16
-                    STW                     mathY
-                    LDWI                    multiply16bit
-                    CALL                    giga_vAC
-                    STW                     _D
-                    ADDI                    15
-                    STW                     _E                              ; D=Y*16: E=D+15
+_20                           LDW                               _Y
+                              STW                               mathShift
+                              ShiftLeft4bit                     
+                              STW                               _D
+                              ADDI                              15
+                              STW                               _E                              ; D=Y<<4: E=D+15
 
-_30                 LDI                     32
-                    ST                      cursorXY
-                    AtTextCursor            
-                    LDW                     _D
-                    STW                     _C
-                    LDW                     _E
-                    STW                     0xb4
-                    LDI                     1
-                    STW                     0xb6                            ; AT 32: FOR C=D TO E
+_30                           LDI                               32
+                              ST                                cursorXY
+                              AtTextCursor                      
+                              LDW                               _D
+                              STW                               _C
+                              LDW                               _E
+                              STW                               0xb4
+                              LDI                               1
+                              STW                               0xb6                            ; AT 32: FOR C=D &TO E
 
-_40                 LDW                     _C
-                    PrintAcChar             
-                    ForNextFarVarPos        _C _40 0xb4 0xb6                ; PUT C: NEXT C
+_40                           LDW                               _C
+                              PrintAcChar                       
+                              ForNextVarAdd                     _C _40 0xb4 0xb6                ; PUT C: NEXT C
 
-_50                 NewLine                 
-                    ForNextFarInc           _Y _20 7                        ; PRINT: NEXT Y
+_50                           NewLine                           
+                              ForNextInc                        _Y _20 7                        ; PRINT: NEXT Y
 
-_end_0x02a0         BRA                     _end_0x02a0                     ; END
+_end_0x029c                   BRA                               _end_0x029c                     ; END
 
 
 
@@ -122,30 +121,34 @@ _end_0x02a0         BRA                     _end_0x02a0                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-romCheck            EQU     0x7ee8
-realTimeProc        EQU     0x7edf
-convertEqOp         EQU     0x7ed6
-convertNeOp         EQU     0x7ecd
-convertLeOp         EQU     0x7ec4
-convertGeOp         EQU     0x7ebb
-convertLtOp         EQU     0x7eb2
-convertGtOp         EQU     0x7ea9
-multiply16bit       EQU     0x7dab
-resetVideoTable     EQU     0x7ca7
-initClearFuncs      EQU     0x7ddd
-clearCursorRow      EQU     0x7ab6
-printInit           EQU     0x7aa0
-printChr            EQU     0x7cc6
-printChar           EQU     0x79a7
-atTextCursor        EQU     0x7cd3
-newLineScroll       EQU     0x7ba4
-realTimeProcAddr    EQU     0x00dc
-convertEqOpAddr     EQU     0x00d0
-convertNeOpAddr     EQU     0x00d2
-convertLeOpAddr     EQU     0x00d4
-convertGeOpAddr     EQU     0x00d6
-convertLtOpAddr     EQU     0x00d8
-convertGtOpAddr     EQU     0x00da
+romCheck                      EQU     0x7ee8
+realTimeProc                  EQU     0x7de5
+convertEqOp                   EQU     0x7edf
+convertNeOp                   EQU     0x7ed6
+convertLeOp                   EQU     0x7ecd
+convertGeOp                   EQU     0x7ec4
+convertLtOp                   EQU     0x7ebb
+convertGtOp                   EQU     0x7eb2
+convertArr2d                  EQU     0x7ea6
+convertArr3d                  EQU     0x7dee
+shiftLeft4bit                 EQU     0x7db9
+resetVideoTable               EQU     0x7cb4
+initClearFuncs                EQU     0x7dc3
+clearCursorRow                EQU     0x7ab6
+printInit                     EQU     0x7aa0
+printChr                      EQU     0x7dac
+printChar                     EQU     0x79a7
+atTextCursor                  EQU     0x7cd3
+newLineScroll                 EQU     0x7ba4
+convertEqOpAddr               EQU     0x00d0
+convertNeOpAddr               EQU     0x00d2
+convertLeOpAddr               EQU     0x00d4
+convertGeOpAddr               EQU     0x00d6
+convertLtOpAddr               EQU     0x00d8
+convertGtOpAddr               EQU     0x00da
+convertArr2dAddr              EQU     0x00dc
+convertArr3dAddr              EQU     0x00de
+realTimeProcAddr              EQU     0x00e0
 
 
 ; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
@@ -232,6 +235,34 @@ convertGt_1         LDI     1
                     RET
 
 
+memIndex0           EQU     register0
+memIndex1           EQU     register1
+memIndex2           EQU     register2
+memValue            EQU     register8
+memAddr             EQU     register9
+
+
+convertArr2d        ADDW    memIndex0
+                    ADDW    memIndex0
+                    DEEK
+                    ADDW    memIndex1
+                    ADDW    memIndex1
+                    STW     memAddr
+                    RET
+
+
+convertArr3d        ADDW    memIndex0
+                    ADDW    memIndex0
+                    DEEK
+                    ADDW    memIndex1
+                    ADDW    memIndex1
+                    DEEK
+                    ADDW    memIndex2
+                    ADDW    memIndex2
+                    STW     memAddr
+                    RET
+
+
 ; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 mathX               EQU     register8
 mathY               EQU     register9
@@ -246,34 +277,10 @@ mathPow             EQU     register11
 mathResult          EQU     register14
 
 
-                    ; accumulator = mathX * mathY, (result 16bit)
-multiply16bit       LDI     0
-                    STW     mathSum
-                    LDW     mathX
-                    BEQ     multiply16_exit     ; if x=0 then return 0
-                    LDWI    SYS_LSRW1_48
+shiftLeft4bit       LDWI    SYS_LSLW4_46
                     STW     giga_sysFn
-                    LDW     mathY
-                    
-multiply16_loop     BEQ     multiply16_exit     ; if y=0 then return
-                    ANDI    1
-                    BEQ     multiply16_skip
-                    LDW     mathSum
-                    ADDW    mathX
-                    STW     mathSum             ; mathSum += mathX
-                    
-multiply16_skip     LDW     mathX
-                    LSLW
-                    STW     mathX               ; mathX = mathX <<1
-                    LDW     mathY
-                    SYS     48
-                    STW     mathY               ; mathY = mathY >>1
-                    BRA     multiply16_loop
-
-multiply16_exit     PUSH
-                    CALL    realTimeProcAddr
-                    POP
-                    LDW     mathSum
+                    LDW     mathShift
+                    SYS     46
                     RET
 
 

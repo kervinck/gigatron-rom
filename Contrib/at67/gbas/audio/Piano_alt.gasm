@@ -1,112 +1,112 @@
-_startAddress_      EQU                     0x0200
+_startAddress_                EQU                               0x0200
 
 ; Internal variables
-serialRawPrev       EQU                     0x0081
-register0           EQU                     0x0082
-register1           EQU                     register0 + 0x02
-register2           EQU                     register0 + 0x04
-register3           EQU                     register0 + 0x06
-register4           EQU                     register0 + 0x08
-register5           EQU                     register0 + 0x0A
-register6           EQU                     register0 + 0x0C
-register7           EQU                     register0 + 0x0E
-register8           EQU                     register0 + 0x10
-register9           EQU                     register0 + 0x12
-register10          EQU                     register0 + 0x14
-register11          EQU                     register0 + 0x16
-register12          EQU                     register0 + 0x18
-register13          EQU                     register0 + 0x1A
-register14          EQU                     register0 + 0x1C
-register15          EQU                     register0 + 0x1E
-fgbgColour          EQU                     register0 + 0x20
-cursorXY            EQU                     register0 + 0x22
-midiStream          EQU                     register0 + 0x24
-midiDelay           EQU                     register0 + 0x26
-miscFlags           EQU                     register0 + 0x28
-fontLutId           EQU                     0x00e0
+serialRawPrev                 EQU                               0x0081
+register0                     EQU                               0x0082
+register1                     EQU                               register0 + 0x02
+register2                     EQU                               register0 + 0x04
+register3                     EQU                               register0 + 0x06
+register4                     EQU                               register0 + 0x08
+register5                     EQU                               register0 + 0x0A
+register6                     EQU                               register0 + 0x0C
+register7                     EQU                               register0 + 0x0E
+register8                     EQU                               register0 + 0x10
+register9                     EQU                               register0 + 0x12
+register10                    EQU                               register0 + 0x14
+register11                    EQU                               register0 + 0x16
+register12                    EQU                               register0 + 0x18
+register13                    EQU                               register0 + 0x1A
+register14                    EQU                               register0 + 0x1C
+register15                    EQU                               register0 + 0x1E
+fgbgColour                    EQU                               register0 + 0x20
+cursorXY                      EQU                               register0 + 0x22
+midiStream                    EQU                               register0 + 0x24
+midiDelay                     EQU                               register0 + 0x26
+miscFlags                     EQU                               register0 + 0x28
+fontLutId                     EQU                               0x00e4
 
 ; Internal Constants
-ENABLE_SCROLL_BIT   EQU                     0x0001
-ON_BOTTOM_ROW_BIT   EQU                     0x0002
-ENABLE_SCROLL_MSK   EQU                     0xfffe
-ON_BOTTOM_ROW_MSK   EQU                     0xfffd
+ENABLE_SCROLL_BIT             EQU                               0x0001
+ON_BOTTOM_ROW_BIT             EQU                               0x0002
+ENABLE_SCROLL_MSK             EQU                               0xfffe
+ON_BOTTOM_ROW_MSK             EQU                               0xfffd
 
 ; Internal buffers
-textWorkArea        EQU                     0x7fa0
+textWorkArea                  EQU                               0x7fa0
 
 ; Includes
-%includePath        "../runtime"
-%include            gigatron.i
-%include            macros.i
+%includePath                  "../runtime"
+%include                      gigatron.i
+%include                      macros.i
 
 ; Labels
-_entryPoint_        EQU                     0x0200
-_1                  EQU                     0x0242
-_2                  EQU                     0x026a
-_3                  EQU                     0x026e
-_4                  EQU                     0x027c
-_5                  EQU                     0x0280
-_6                  EQU                     0x0285
-_7                  EQU                     0x028a
-_100                EQU                     0x028c
-_198                EQU                     0x02c7
-_199                EQU                     0x02d7
-_200                EQU                     0x02e6
-_204                EQU                     0x02eb
-_205                EQU                     0x0311
-_206                EQU                     0x0321
-_207                EQU                     0x032d
-_208                EQU                     0x0339
-_209                EQU                     0x0345
-_1000               EQU                     0x0351
-_next_0x0297        EQU                     0x0291
-_page_0x0300        EQU                     0x0300
-_else_0x036b        EQU                     0x0368
-_else_0x0385        EQU                     0x037e
-_else_0x039f        EQU                     0x0394
-_else_0x03b9        EQU                     0x03aa
-_else_0x03d3        EQU                     0x03c0
-_else_0x03ed        EQU                     0x03d6
-_else_0x0407        EQU                     0x03ec
-_page_0x0400        EQU                     0x0400
-_else_0x0421        EQU                     0x0414
-_else_0x043b        EQU                     0x042a
-_else_0x0455        EQU                     0x0440
-_else_0x046f        EQU                     0x0456
-_else_0x0489        EQU                     0x046c
-_else_0x04a3        EQU                     0x0482
-_else_0x04bd        EQU                     0x0498
-_else_0x04d7        EQU                     0x04ae
-_else_0x04f1        EQU                     0x04c4
-_else_0x050b        EQU                     0x04da
-_page_0x0500        EQU                     0x0500
-_else_0x053e        EQU                     0x0513
-_end_0x054c         EQU                     0x0521
+_entryPoint_                  EQU                               0x0200
+_1                            EQU                               0x024c
+_2                            EQU                               0x026b
+_3                            EQU                               0x026f
+_4                            EQU                               0x027d
+_5                            EQU                               0x0281
+_6                            EQU                               0x0286
+_7                            EQU                               0x028b
+_100                          EQU                               0x028d
+_198                          EQU                               0x02c8
+_199                          EQU                               0x02d8
+_200                          EQU                               0x02e7
+_204                          EQU                               0x02ec
+_205                          EQU                               0x0313
+_206                          EQU                               0x0323
+_207                          EQU                               0x032f
+_208                          EQU                               0x033b
+_209                          EQU                               0x0347
+_1000                         EQU                               0x0353
+_next_0x0298                  EQU                               0x0292
+_page_0x0300                  EQU                               0x0300
+_else_0x036c                  EQU                               0x036a
+_else_0x0386                  EQU                               0x0380
+_else_0x03a0                  EQU                               0x0396
+_else_0x03ba                  EQU                               0x03ac
+_else_0x03d4                  EQU                               0x03c2
+_else_0x03ee                  EQU                               0x03d8
+_else_0x0408                  EQU                               0x03ee
+_page_0x0400                  EQU                               0x0400
+_else_0x0422                  EQU                               0x0414
+_else_0x043c                  EQU                               0x042a
+_else_0x0456                  EQU                               0x0440
+_else_0x0470                  EQU                               0x0456
+_else_0x048a                  EQU                               0x046c
+_else_0x04a4                  EQU                               0x0482
+_else_0x04be                  EQU                               0x0498
+_else_0x04d8                  EQU                               0x04ae
+_else_0x04f2                  EQU                               0x04c4
+_else_0x050c                  EQU                               0x04da
+_page_0x0500                  EQU                               0x0500
+_else_0x053f                  EQU                               0x0513
+_end_0x054d                   EQU                               0x0521
 
 ; Variables
-_a                  EQU                     0x0030
-_b                  EQU                     0x0032
-_p                  EQU                     0x0034
-_z                  EQU                     0x0036
-_d                  EQU                     0x0038
-_k                  EQU                     0x003a
-_c                  EQU                     0x003c
+_a                            EQU                               0x0030
+_b                            EQU                               0x0032
+_p                            EQU                               0x0034
+_z                            EQU                               0x0036
+_d                            EQU                               0x0038
+_k                            EQU                               0x003a
+_c                            EQU                               0x003c
 
 ; Strings
-_str_0x7eec         EQU                     0x7eec
-_str_0x7eec         DB                      18 ' 2 3   5 6 7   9 0' 0
-_str_0x7ed7         EQU                     0x7ed7
-_str_0x7ed7         DB                      19 'Q W E R T Y U I O P' 0
-_str_0x7ed2         EQU                     0x7ed2
-_str_0x7ed2         DB                      3 'Z: ' 0
-_str_0x7ec0         EQU                     0x7ec0
-_str_0x7ec0         DB                      8 'Metallic' 0
-_str_0x7eb6         EQU                     0x7eb6
-_str_0x7eb6         DB                      8 'Triangle' 0
-_str_0x7eac         EQU                     0x7eac
-_str_0x7eac         DB                      8 'Pulse   ' 0
-_str_0x7ea2         EQU                     0x7ea2
-_str_0x7ea2         DB                      8 'Sawtooth' 0
+_str_0x7eec                   EQU                               0x7eec
+_str_0x7eec                   DB                                18 ' 2 3   5 6 7   9 0' 0
+_str_0x7ed7                   EQU                               0x7ed7
+_str_0x7ed7                   DB                                19 'Q W E R T Y U I O P' 0
+_str_0x7ed2                   EQU                               0x7ed2
+_str_0x7ed2                   DB                                3 'Z: ' 0
+_str_0x7ec0                   EQU                               0x7ec0
+_str_0x7ec0                   DB                                8 'Metallic' 0
+_str_0x7eb6                   EQU                               0x7eb6
+_str_0x7eb6                   DB                                8 'Triangle' 0
+_str_0x7eac                   EQU                               0x7eac
+_str_0x7eac                   DB                                8 'Pulse   ' 0
+_str_0x7ea2                   EQU                               0x7ea2
+_str_0x7ea2                   DB                                8 'Sawtooth' 0
 
 ; Define Bytes
 
@@ -119,316 +119,315 @@ _str_0x7ea2         DB                      8 'Sawtooth' 0
 ; Define Fonts
 
 ; Lookup Tables
-lut_0x7eca          EQU                     0x7eca
-lut_0x7eca          DW                      0x0321 0x032d 0x0339 0x0345 
+lut_0x7eca                    EQU                               0x7eca
+lut_0x7eca                    DW                                0x0323 0x032f 0x033b 0x0347 
 
 ; Code
-_entryPoint_        LDI                     0x1c
-                    STW                     romType
-                    RomCheck                
-                    InitRealTimeProc        
-                    InitEqOp                
-                    InitNeOp                
-                    InitLeOp                
-                    InitGeOp                
-                    InitLtOp                
-                    InitGtOp                
-                    Initialise                                              ; INIT
+_entryPoint_                  LDI                               0x1c
+                              STW                               romType
+                              RomCheck                          
+                              InitEqOp                          
+                              InitNeOp                          
+                              InitLeOp                          
+                              InitGeOp                          
+                              InitLtOp                          
+                              InitGtOp                          
+                              InitArray2d                       
+                              InitArray3d                       
+                              InitRealTimeProc                  
+                              Initialise                                                        ; INIT
 
-_1                  LDI                     0
-                    STW                     _a
-                    LDI                     0
-                    STW                     _b
-                    LDWI                    508
-                    STW                     _p
-                    LDI                     2
-                    STW                     graphicsMode
-                    ScanlineMode            
-                    ClearVertBlinds         
-                    LDI                     2
-                    STW                     _z
-                    LDI                     0
-                    STW                     _d
-                    LDWI                    _198
-                    CALL                    giga_vAC                        ; a=0 : b=0 : p=256+252 : mode 2 : cls : z=2 : d=0 : gosub 198
+_1                            LDI                               0
+                              STW                               _a
+                              LDI                               0
+                              STW                               _b
+                              LDWI                              508
+                              STW                               _p
+                              ClearVertBlinds                   
+                              LDI                               2
+                              STW                               _z
+                              LDI                               0
+                              STW                               _d
+                              LDWI                              _198
+                              CALL                              giga_vAC                        ; a=0 : b=0 : p=256+252 : cls : z=2 : d=0 : gosub 198
 
-_2                  LD                      giga_buttonState
-                    STW                     _k                              ; k=get("BUTTONSTATE")
+_2                            LD                                giga_buttonState
+                              STW                               _k                              ; k=get("BUTTONSTATE")
 
-_3                  LDW                     _k
-                    SUBI                    126
-                    JumpGT                  _4 0
-                    BRA                     _2                              ; if k &> 126 then goto &2
+_3                            LDW                               _k
+                              SUBI                              126
+                              JumpGT                            _4 0
+                              BRA                               _2                              ; if k &> 126 then goto &2
 
-_4                  LDI                     30
-                    STW                     _d                              ; d = 30
+_4                            LDI                               30
+                              STW                               _d                              ; d = 30
 
-_5                  LDWI                    _1000
-                    CALL                    giga_vAC                        ; gosub 1000
+_5                            LDWI                              _1000
+                              CALL                              giga_vAC                        ; gosub 1000
 
-_6                  LDWI                    _100
-                    CALL                    giga_vAC                        ; gosub 100
+_6                            LDWI                              _100
+                              CALL                              giga_vAC                        ; gosub 100
 
-_7                  BRA                     _2                              ; goto &2
+_7                            BRA                               _2                              ; goto &2
 
-_100                PUSH                    
-                    LDI                     1
-                    STW                     _c
-_next_0x0297        LD                      _c
-                    ST                      giga_vAC + 1
-                    ORI                     0xFF
-                    XORI                    0xFF
-                    ADDI                    252
-                    STW                     _p
-                    SUBI                    1
-                    STW                     0xc2
-                    LDW                     _z
-                    POKE                    0xc2
-                    LDW                     _a
-                    POKE                    _p
-                    LDW                     _p
-                    ADDI                    1
-                    STW                     0xc4
-                    LDW                     _b
-                    POKE                    0xc4
-                    ForNextFarInc           _c _next_0x0297 4               ; for c=1 to 4 : p=(c LSL 8)+252 : poke p-1,z : poke p,a : poke p+1,b : next c
+_100                          PUSH                              
+                              LDI                               1
+                              STW                               _c
+_next_0x0298                  LD                                _c
+                              ST                                giga_vAC + 1
+                              ORI                               0xFF
+                              XORI                              0xFF
+                              ADDI                              252
+                              STW                               _p
+                              SUBI                              1
+                              STW                               0xc2
+                              LDW                               _z
+                              POKE                              0xc2
+                              LDW                               _a
+                              POKE                              _p
+                              LDW                               _p
+                              ADDI                              1
+                              STW                               0xc4
+                              LDW                               _b
+                              POKE                              0xc4
+                              ForNextFarInc                     _c _next_0x0298 4               ; for c=1 to 4 : p=(c LSL 8)+252 : poke p-1,z : poke p,a : poke p+1,b : next c
 
-                    LDW                     _d
-                    ST                      giga_soundTimer                 ; set SOUNDTIMER,d
+                              LDW                               _d
+                              ST                                giga_soundTimer                 ; set SOUNDTIMER,d
 
-                    Return                                                  ; return
+                              Return                                                            ; return
 
-_198                PUSH                    
-                    PrintString             _str_0x7eec
-                    NewLine                                                 ; print " 2 3   5 6 7   9 0"
+_198                          PUSH                              
+                              PrintString                       _str_0x7eec
+                              NewLine                                                           ; print " 2 3   5 6 7   9 0"
 
-_199                PrintString             _str_0x7ed7
-                    NewLine                                                 ; print "Q W E R T Y U I O P"
+_199                          PrintString                       _str_0x7ed7
+                              NewLine                                                           ; print "Q W E R T Y U I O P"
 
-_200                LDWI                    _100
-                    CALL                    giga_vAC                        ; gosub 100
+_200                          LDWI                              _100
+                              CALL                              giga_vAC                        ; gosub 100
 
-_204                LDI                     2
-                    ST                      cursorXY
-                    LDI                     24
-                    ST                      cursorXY + 1
-                    STW                     0xde
-                    LDWI                    _page_0x0300
-                    CALL                    giga_vAC
-_page_0x0300        LDW                     0xde
-                    AtTextCursor            
-                    PrintString             _str_0x7ed2                     ; at 2,24:print "Z: ";
+_204                          LDI                               2
+                              ST                                cursorXY
+                              LDI                               24
+                              STW                               0xe2
+                              LDWI                              _page_0x0300
+                              CALL                              giga_vAC
+_page_0x0300                  LDW                               0xe2
+                              ST                                cursorXY + 1
+                              AtTextCursor                      
+                              PrintString                       _str_0x7ed2                     ; at 2,24:print "Z: ";
 
-_205                LDW                     _z
-                    STW                     register0
-                    ADDW                    register0
-                    STW                     register0
-                    LDWI                    lut_0x7eca
-                    ADDW                    register0
-                    DEEK                    
-                    CALL                    giga_vAC                        ; on z goto 206,207,208,209
+_205                          LDW                               _z
+                              STW                               register0
+                              ADDW                              register0
+                              STW                               register0
+                              LDWI                              lut_0x7eca
+                              ADDW                              register0
+                              DEEK                              
+                              CALL                              giga_vAC                        ; on z goto 206,207,208,209
 
-_206                PrintString             _str_0x7ec0
-                    Return                                                  ; print "Metallic";:return
+_206                          PrintString                       _str_0x7ec0
+                              Return                                                            ; print "Metallic";:return
 
-_207                PrintString             _str_0x7eb6
-                    Return                                                  ; print "Triangle";:return
+_207                          PrintString                       _str_0x7eb6
+                              Return                                                            ; print "Triangle";:return
 
-_208                PrintString             _str_0x7eac
-                    Return                                                  ; print "Pulse   ";:return
+_208                          PrintString                       _str_0x7eac
+                              Return                                                            ; print "Pulse   ";:return
 
-_209                PrintString             _str_0x7ea2
-                    Return                                                  ; print "Sawtooth";:return
+_209                          PrintString                       _str_0x7ea2
+                              Return                                                            ; print "Sawtooth";:return
 
-_1000               PUSH                    
-                    LDW                     _k
-                    SUBI                    113
-                    JumpEQ                  _else_0x036b 1
-                    LDI                     73
-                    STW                     _a
-                    LDI                     8
-                    STW                     _b
-                    Return                                                  ; if k &= 113 then a=73 :b=8 :return:'C
+_1000                         PUSH                              
+                              LDW                               _k
+                              SUBI                              113
+                              JumpEQ                            _else_0x036c 1
+                              LDI                               73
+                              STW                               _a
+                              LDI                               8
+                              STW                               _b
+                              Return                                                            ; if k &= 113 then a=73 :b=8 :return:'C
 
-_else_0x036b        LDW                     _k
-                    SUBI                    50
-                    JumpEQ                  _else_0x0385 2
-                    LDI                     11
-                    STW                     _a
-                    LDI                     9
-                    STW                     _b
-                    Return                                                  ; if k &= 50  then a=11 :b=9 :return:'C#
+_else_0x036c                  LDW                               _k
+                              SUBI                              50
+                              JumpEQ                            _else_0x0386 2
+                              LDI                               11
+                              STW                               _a
+                              LDI                               9
+                              STW                               _b
+                              Return                                                            ; if k &= 50  then a=11 :b=9 :return:'C#
 
-_else_0x0385        LDW                     _k
-                    SUBI                    119
-                    JumpEQ                  _else_0x039f 3
-                    LDI                     80
-                    STW                     _a
-                    LDI                     9
-                    STW                     _b
-                    Return                                                  ; if k &= 119 then a=80 :b=9 :return:'D
+_else_0x0386                  LDW                               _k
+                              SUBI                              119
+                              JumpEQ                            _else_0x03a0 3
+                              LDI                               80
+                              STW                               _a
+                              LDI                               9
+                              STW                               _b
+                              Return                                                            ; if k &= 119 then a=80 :b=9 :return:'D
 
-_else_0x039f        LDW                     _k
-                    SUBI                    51
-                    JumpEQ                  _else_0x03b9 4
-                    LDI                     25
-                    STW                     _a
-                    LDI                     10
-                    STW                     _b
-                    Return                                                  ; if k &= 51  then a=25 :b=10:return:'D#
+_else_0x03a0                  LDW                               _k
+                              SUBI                              51
+                              JumpEQ                            _else_0x03ba 4
+                              LDI                               25
+                              STW                               _a
+                              LDI                               10
+                              STW                               _b
+                              Return                                                            ; if k &= 51  then a=25 :b=10:return:'D#
 
-_else_0x03b9        LDW                     _k
-                    SUBI                    101
-                    JumpEQ                  _else_0x03d3 5
-                    LDI                     103
-                    STW                     _a
-                    LDI                     10
-                    STW                     _b
-                    Return                                                  ; if k &= 101 then a=103:b=10:return:'E
+_else_0x03ba                  LDW                               _k
+                              SUBI                              101
+                              JumpEQ                            _else_0x03d4 5
+                              LDI                               103
+                              STW                               _a
+                              LDI                               10
+                              STW                               _b
+                              Return                                                            ; if k &= 101 then a=103:b=10:return:'E
 
-_else_0x03d3        LDW                     _k
-                    SUBI                    114
-                    JumpEQ                  _else_0x03ed 6
-                    LDI                     57
-                    STW                     _a
-                    LDI                     11
-                    STW                     _b
-                    Return                                                  ; if k &= 114 then a=57 :b=11:return:'F
+_else_0x03d4                  LDW                               _k
+                              SUBI                              114
+                              JumpEQ                            _else_0x03ee 6
+                              LDI                               57
+                              STW                               _a
+                              LDI                               11
+                              STW                               _b
+                              Return                                                            ; if k &= 114 then a=57 :b=11:return:'F
 
-_else_0x03ed        LDW                     _k
-                    SUBI                    53
-                    JumpEQ                  _else_0x0407 7
-                    LDI                     16
-                    STW                     _a
-                    LDI                     12
-                    STW                     _b
-                    Return                                                  ; if k &= 53  then a=16 :b=12:return:'F#
+_else_0x03ee                  LDW                               _k
+                              SUBI                              53
+                              JumpEQ                            _else_0x0408 7
+                              LDI                               16
+                              STW                               _a
+                              LDI                               12
+                              STW                               _b
+                              Return                                                            ; if k &= 53  then a=16 :b=12:return:'F#
 
-_else_0x0407        LDW                     _k
-                    SUBI                    116
-                    STW                     0xde
-                    LDWI                    _page_0x0400
-                    CALL                    giga_vAC
-_page_0x0400        LDW                     0xde
-                    JumpEQ                  _else_0x0421 8
-                    LDI                     108
-                    STW                     _a
-                    LDI                     12
-                    STW                     _b
-                    Return                                                  ; if k &= 116 then a=108:b=12:return:'G
+_else_0x0408                  LDW                               _k
+                              SUBI                              116
+                              STW                               0xe2
+                              LDWI                              _page_0x0400
+                              CALL                              giga_vAC
+_page_0x0400                  LDW                               0xe2
+                              JumpEQ                            _else_0x0422 8
+                              LDI                               108
+                              STW                               _a
+                              LDI                               12
+                              STW                               _b
+                              Return                                                            ; if k &= 116 then a=108:b=12:return:'G
 
-_else_0x0421        LDW                     _k
-                    SUBI                    54
-                    JumpEQ                  _else_0x043b 9
-                    LDI                     78
-                    STW                     _a
-                    LDI                     13
-                    STW                     _b
-                    Return                                                  ; if k &= 54  then a=78 :b=13:return:'G#
+_else_0x0422                  LDW                               _k
+                              SUBI                              54
+                              JumpEQ                            _else_0x043c 9
+                              LDI                               78
+                              STW                               _a
+                              LDI                               13
+                              STW                               _b
+                              Return                                                            ; if k &= 54  then a=78 :b=13:return:'G#
 
-_else_0x043b        LDW                     _k
-                    SUBI                    121
-                    JumpEQ                  _else_0x0455 10
-                    LDI                     53
-                    STW                     _a
-                    LDI                     14
-                    STW                     _b
-                    Return                                                  ; if k &= 121 then a=53 :b=14:return:'A
+_else_0x043c                  LDW                               _k
+                              SUBI                              121
+                              JumpEQ                            _else_0x0456 10
+                              LDI                               53
+                              STW                               _a
+                              LDI                               14
+                              STW                               _b
+                              Return                                                            ; if k &= 121 then a=53 :b=14:return:'A
 
-_else_0x0455        LDW                     _k
-                    SUBI                    55
-                    JumpEQ                  _else_0x046f 11
-                    LDI                     35
-                    STW                     _a
-                    LDI                     15
-                    STW                     _b
-                    Return                                                  ; if k &= 55  then a=35 :b=15:return:'A#
+_else_0x0456                  LDW                               _k
+                              SUBI                              55
+                              JumpEQ                            _else_0x0470 11
+                              LDI                               35
+                              STW                               _a
+                              LDI                               15
+                              STW                               _b
+                              Return                                                            ; if k &= 55  then a=35 :b=15:return:'A#
 
-_else_0x046f        LDW                     _k
-                    SUBI                    117
-                    JumpEQ                  _else_0x0489 12
-                    LDI                     23
-                    STW                     _a
-                    LDI                     16
-                    STW                     _b
-                    Return                                                  ; if k &= 117 then a=23 :b=16:return:'B
+_else_0x0470                  LDW                               _k
+                              SUBI                              117
+                              JumpEQ                            _else_0x048a 12
+                              LDI                               23
+                              STW                               _a
+                              LDI                               16
+                              STW                               _b
+                              Return                                                            ; if k &= 117 then a=23 :b=16:return:'B
 
-_else_0x0489        LDW                     _k
-                    SUBI                    105
-                    JumpEQ                  _else_0x04a3 13
-                    LDI                     19
-                    STW                     _a
-                    LDI                     17
-                    STW                     _b
-                    Return                                                  ; if k &= 105 then a=19 :b=17:return:'C
+_else_0x048a                  LDW                               _k
+                              SUBI                              105
+                              JumpEQ                            _else_0x04a4 13
+                              LDI                               19
+                              STW                               _a
+                              LDI                               17
+                              STW                               _b
+                              Return                                                            ; if k &= 105 then a=19 :b=17:return:'C
 
-_else_0x04a3        LDW                     _k
-                    SUBI                    57
-                    JumpEQ                  _else_0x04bd 14
-                    LDI                     21
-                    STW                     _a
-                    LDI                     18
-                    STW                     _b
-                    Return                                                  ; if k &= 57  then a=21 :b=18:return:'C#
+_else_0x04a4                  LDW                               _k
+                              SUBI                              57
+                              JumpEQ                            _else_0x04be 14
+                              LDI                               21
+                              STW                               _a
+                              LDI                               18
+                              STW                               _b
+                              Return                                                            ; if k &= 57  then a=21 :b=18:return:'C#
 
-_else_0x04bd        LDW                     _k
-                    SUBI                    111
-                    JumpEQ                  _else_0x04d7 15
-                    LDI                     31
-                    STW                     _a
-                    LDI                     19
-                    STW                     _b
-                    Return                                                  ; if k &= 111 then a=31 :b=19:return:'D
+_else_0x04be                  LDW                               _k
+                              SUBI                              111
+                              JumpEQ                            _else_0x04d8 15
+                              LDI                               31
+                              STW                               _a
+                              LDI                               19
+                              STW                               _b
+                              Return                                                            ; if k &= 111 then a=31 :b=19:return:'D
 
-_else_0x04d7        LDW                     _k
-                    SUBI                    48
-                    JumpEQ                  _else_0x04f1 16
-                    LDI                     50
-                    STW                     _a
-                    LDI                     20
-                    STW                     _b
-                    Return                                                  ; if k &= 48  then a=50 :b=20:return:'D#
+_else_0x04d8                  LDW                               _k
+                              SUBI                              48
+                              JumpEQ                            _else_0x04f2 16
+                              LDI                               50
+                              STW                               _a
+                              LDI                               20
+                              STW                               _b
+                              Return                                                            ; if k &= 48  then a=50 :b=20:return:'D#
 
-_else_0x04f1        LDW                     _k
-                    SUBI                    112
-                    JumpEQ                  _else_0x050b 17
-                    LDI                     77
-                    STW                     _a
-                    LDI                     21
-                    STW                     _b
-                    Return                                                  ; if k &= 112 then a=77 :b=21:return:'E
+_else_0x04f2                  LDW                               _k
+                              SUBI                              112
+                              JumpEQ                            _else_0x050c 17
+                              LDI                               77
+                              STW                               _a
+                              LDI                               21
+                              STW                               _b
+                              Return                                                            ; if k &= 112 then a=77 :b=21:return:'E
 
-_else_0x050b        LDW                     _k
-                    SUBI                    122
-                    JumpEQ                  _else_0x053e 18
-                    LDI                     255
-                    ST                      giga_buttonState
-                    LDW                     _z
-                    ADDI                    1
-                    ANDI                    3
-                    STW                     _z
-                    STW                     0xde
-                    LDWI                    _page_0x0500
-                    CALL                    giga_vAC
-_page_0x0500        LDW                     0xde
-                    LDI                     0
-                    STW                     _a
-                    LDI                     0
-                    STW                     _b
-                    LDI                     0
-                    STW                     _d
-                    LDWI                    _200
-                    CALL                    giga_vAC                        ; if k &= 122 then set BUTTONSTATE,&hFF : z=(z+1)AND3 : a=0 : b=0 : d=0 : goto 200
+_else_0x050c                  LDW                               _k
+                              SUBI                              122
+                              JumpEQ                            _else_0x053f 18
+                              LDI                               255
+                              ST                                giga_buttonState
+                              LDW                               _z
+                              ADDI                              1
+                              ANDI                              3
+                              STW                               _z
+                              STW                               0xe2
+                              LDWI                              _page_0x0500
+                              CALL                              giga_vAC
+_page_0x0500                  LDW                               0xe2
+                              LDI                               0
+                              STW                               _a
+                              LDI                               0
+                              STW                               _b
+                              LDI                               0
+                              STW                               _d
+                              LDWI                              _200
+                              CALL                              giga_vAC                        ; if k &= 122 then set BUTTONSTATE,&hFF : z=(z+1)AND3 : a=0 : b=0 : d=0 : goto 200
 
-_else_0x053e        LDI                     0
-                    STW                     _a
-                    LDI                     0
-                    STW                     _b
-                    LDI                     0
-                    STW                     _d
-                    Return                                                  ; a=0 : b=0 : d=0 : return
+_else_0x053f                  LDI                               0
+                              STW                               _a
+                              LDI                               0
+                              STW                               _b
+                              LDI                               0
+                              STW                               _d
+                              Return                                                            ; a=0 : b=0 : d=0 : return
 
-_end_0x054c         BRA                     _end_0x054c                     ; END
+_end_0x054d                   BRA                               _end_0x054d                     ; END
 
 
 
@@ -438,31 +437,34 @@ _end_0x054c         BRA                     _end_0x054c                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-romCheck            EQU     0x7de8
-realTimeProc        EQU     0x7ddf
-convertEqOp         EQU     0x7dd6
-convertNeOp         EQU     0x7dcd
-convertLeOp         EQU     0x7dc4
-convertGeOp         EQU     0x7dbb
-convertLtOp         EQU     0x7db2
-convertGtOp         EQU     0x7da9
-scanlineMode        EQU     0x7cc9
-resetVideoTable     EQU     0x7ba6
-initClearFuncs      EQU     0x7cdd
-clearVertBlinds     EQU     0x7bc5
-clearCursorRow      EQU     0x78b6
-printInit           EQU     0x79bd
-printText           EQU     0x7cb0
-printChar           EQU     0x77a7
-atTextCursor        EQU     0x79d3
-newLineScroll       EQU     0x7aa4
-realTimeProcAddr    EQU     0x00dc
-convertEqOpAddr     EQU     0x00d0
-convertNeOpAddr     EQU     0x00d2
-convertLeOpAddr     EQU     0x00d4
-convertGeOpAddr     EQU     0x00d6
-convertLtOpAddr     EQU     0x00d8
-convertGtOpAddr     EQU     0x00da
+romCheck                      EQU     0x7de8
+realTimeProc                  EQU     0x7ce5
+convertEqOp                   EQU     0x7ddf
+convertNeOp                   EQU     0x7dd6
+convertLeOp                   EQU     0x7dcd
+convertGeOp                   EQU     0x7dc4
+convertLtOp                   EQU     0x7dbb
+convertGtOp                   EQU     0x7db2
+convertArr2d                  EQU     0x7da6
+convertArr3d                  EQU     0x7cee
+resetVideoTable               EQU     0x7ba6
+initClearFuncs                EQU     0x7cc3
+clearVertBlinds               EQU     0x7bc5
+clearCursorRow                EQU     0x78b6
+printInit                     EQU     0x79bd
+printText                     EQU     0x7caa
+printChar                     EQU     0x77a7
+atTextCursor                  EQU     0x79d3
+newLineScroll                 EQU     0x7aa4
+convertEqOpAddr               EQU     0x00d0
+convertNeOpAddr               EQU     0x00d2
+convertLeOpAddr               EQU     0x00d4
+convertGeOpAddr               EQU     0x00d6
+convertLtOpAddr               EQU     0x00d8
+convertGtOpAddr               EQU     0x00da
+convertArr2dAddr              EQU     0x00dc
+convertArr3dAddr              EQU     0x00de
+realTimeProcAddr              EQU     0x00e0
 
 
 ; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
@@ -549,86 +551,31 @@ convertGt_1         LDI     1
                     RET
 
 
-; do *NOT* use register4 to register7 during time slicing if you use realTimeProc
-graphicsMode        EQU     register0
-waitVBlankNum       EQU     register0
+memIndex0           EQU     register0
+memIndex1           EQU     register1
+memIndex2           EQU     register2
+memValue            EQU     register8
+memAddr             EQU     register9
 
-drawHLine_x1        EQU     register0
-drawHLine_y1        EQU     register1
-drawHLine_x2        EQU     register2
-drawHLine_x4        EQU     register3
 
-drawVLine_x1        EQU     register0
-drawVLine_y1        EQU     register1
-drawVLine_y2        EQU     register2
-drawVLine_y8        EQU     register3
-
-drawLine_x1         EQU     register0
-drawLine_y1         EQU     register1
-drawLine_x2         EQU     register2
-drawLine_y2         EQU     register3
-drawLine_xy1        EQU     register0
-drawLine_xy2        EQU     register1
-drawLine_dxy1       EQU     register2
-drawLine_dxy2       EQU     register3
-drawLine_dx1        EQU     register4                       ; register4 to register7 used for temp values, state will be invalidated during time slicing
-drawLine_dy1        EQU     register5
-drawLine_dx2        EQU     register6
-drawLine_dy2        EQU     register7
-drawLine_sx         EQU     register8
-drawLine_sy         EQU     register9
-drawLine_h          EQU     register10
-drawLine_num        EQU     register11
-drawLine_count      EQU     register12
-drawLine_tmp        EQU     register13
-
-drawPixel_xy        EQU     register15
-readPixel_xy        EQU     register15
-
-drawCircle_cx       EQU     register0
-drawCircle_cy       EQU     register1
-drawCircle_r        EQU     register2
-drawCircle_a        EQU     register3
-drawCircle_d        EQU     register8
-drawCircle_x        EQU     register9
-drawCircle_y        EQU     register10
-drawCircle_ch0      EQU     register11
-drawCircle_ch1      EQU     register12
-drawCircle_ch2      EQU     register13
-drawCircle_ch3      EQU     register14
-
-drawCircleF_x1      EQU     register0
-drawCircleF_y1      EQU     register1
-drawCircleF_x2      EQU     register2
-drawCircleF_cx      EQU     register15
-drawCircleF_cy      EQU     register10
-drawCircleF_r       EQU     register11
-drawCircleF_v       EQU     register8
-drawCircleF_w       EQU     register9
-
-drawRect_x1         EQU     register7
-drawRect_y1         EQU     register10
-drawRect_x2         EQU     register11
-drawRect_y2         EQU     register15
-
-drawRectF_x1        EQU     register0
-drawRectF_y1        EQU     register1
-drawRectF_x2        EQU     register2
-drawRectF_y2        EQU     register7
-
-drawPoly_addr       EQU     register15
-
-    
-scanlineMode        LDW     giga_romType
-                    ANDI    0xF8
-                    SUBI    romTypeValue_ROMv2
-                    BGE     scanlineM_cont
+convertArr2d        ADDW    memIndex0
+                    ADDW    memIndex0
+                    DEEK
+                    ADDW    memIndex1
+                    ADDW    memIndex1
+                    STW     memAddr
                     RET
-    
-scanlineM_cont      LDWI    SYS_SetMode_v2_80
-                    STW     giga_sysFn
-                    LDW     graphicsMode
-                    SYS     80
+
+
+convertArr3d        ADDW    memIndex0
+                    ADDW    memIndex0
+                    DEEK
+                    ADDW    memIndex1
+                    ADDW    memIndex1
+                    DEEK
+                    ADDW    memIndex2
+                    ADDW    memIndex2
+                    STW     memAddr
                     RET
 
 

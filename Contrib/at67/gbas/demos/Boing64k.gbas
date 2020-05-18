@@ -1,5 +1,6 @@
 _runtimePath_ "../runtime"
 _runtimeStart_ &hFFFF
+_codeRomType_ ROMv3
 _stringWorkArea_ &h69A0 'move string work area for scrolling of text, (defaults to &h7FA0)
 
 'defines the amount of contiguous RAM needed for sprite stripes, (in this case 15*6 + 1)

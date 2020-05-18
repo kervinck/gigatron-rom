@@ -39,6 +39,7 @@ namespace Compiler
     CodeOptimiseType _codeOptimiseType = CodeSpeed;
     Cpu::RomType _codeRomType = Cpu::ROMv1;
 
+    bool _codeIsAsm = false;
     bool _compilingError = false;
     bool _arrayIndiciesOne = false;
     bool _createNumericLabelLut = false;
@@ -86,6 +87,8 @@ namespace Compiler
     std::map<int, DefDataFont> _defDataFonts;
     FontsAddrLut _fontsAddrLut;
 
+    std::map<std::string, DefFunction> _defFunctions;
+
 
     uint16_t getVasmPC(void) {return _vasmPC;}
     uint16_t getRuntimeEnd(void) {return _runtimeEnd;}
@@ -104,6 +107,7 @@ namespace Compiler
     const std::string& getTempVarStartStr(void) {return _tempVarStartStr;}
     const std::string& getNextInternalLabel(void) {return _nextInternalLabel;}
 
+    void setCodeIsAsm(bool codeIsAsm) {_codeIsAsm = codeIsAsm;}
     void setRuntimeEnd(uint16_t runtimeEnd) {_runtimeEnd = runtimeEnd;}
     void setRuntimePath(const std::string& runtimePath) {_runtimePath = runtimePath;}
     void setRuntimeStart(uint16_t runtimeStart) {_runtimeStart = runtimeStart;}
@@ -138,6 +142,8 @@ namespace Compiler
 
     std::map<int, DefDataFont>& getDefDataFonts(void) {return _defDataFonts;}
     FontsAddrLut& getFontsAddrLut(void) {return _fontsAddrLut;}
+
+    std::map<std::string, DefFunction>& getDefFunctions(void) {return _defFunctions;}
 
     std::map<std::string, MacroIndexEntry>& getMacroIndexEntries(void) {return _macroIndexEntries;}
 
@@ -331,7 +337,8 @@ namespace Compiler
         std::vector<uint16_t> arrSizes;
         std::vector<int16_t> arrInits;
         std::vector<std::vector<uint16_t>> arrAddrs;
-        IntegerVar integerVar = {data, init, _userVarStart, varName, varName, codeLineIndex, VarInt16, Int16, arrSizes, arrInits, arrAddrs};
+        std::vector<uint16_t> arrLut;
+        IntegerVar integerVar = {data, init, _userVarStart, varName, varName, codeLineIndex, VarInt16, Int16, arrSizes, arrInits, arrAddrs, arrLut};
         _integerVars.push_back(integerVar);
 
         // Create var output
@@ -349,7 +356,7 @@ namespace Compiler
     }
 
     void createIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, int& varIndex, VarType varType, int intSize,
-                      uint16_t address, std::vector<uint16_t>& arrSizes, const std::vector<int16_t>& arrInits, std::vector<std::vector<uint16_t>>& arrAddrs)
+                      uint16_t address, std::vector<uint16_t>& arrSizes, const std::vector<int16_t>& arrInits, std::vector<std::vector<uint16_t>>& arrAddrs, std::vector<uint16_t>& arrLut)
     {
         // Create var
         varIndex = int(_integerVars.size());
@@ -358,7 +365,7 @@ namespace Compiler
         codeLine._varType = VarInt16;
 
         uint16_t varAddr = (varType == VarInt16) ? _userVarStart : address;
-        IntegerVar integerVar = {data, init, varAddr, varName, varName, codeLineIndex, varType, intSize, arrSizes, arrInits, arrAddrs};
+        IntegerVar integerVar = {data, init, varAddr, varName, varName, codeLineIndex, varType, intSize, arrSizes, arrInits, arrAddrs, arrLut};
         _integerVars.push_back(integerVar);
 
         // Create var output
@@ -542,12 +549,12 @@ namespace Compiler
             }
         }
 
-        // Check for functions
+        // Check for inbuilt functions and user functions
         for(int i=0; i<int(tokens.size()); i++)
         {
             std::string token = tokens[i];
             Expression::strToUpper(token);
-            if(Keywords::getFunctions().find(token) != Keywords::getFunctions().end())
+            if((Keywords::getFunctions().find(token) != Keywords::getFunctions().end())  ||  (Compiler::getDefFunctions().find(token) != Compiler::getDefFunctions().end()))
             {
                 expressionType |= Expression::HasFunctions;
                 break;
@@ -595,7 +602,7 @@ namespace Compiler
             if(varIndex != -1  &&  tokens[i][0] != '@') // 'address of' operator returns numbers
             {
                 // Array variables are treated as a function call
-                if(_integerVars[varIndex]._varType == VarArray)
+                if(_integerVars[varIndex]._varType == VarArray1  ||  _integerVars[varIndex]._varType == VarArray2  ||  _integerVars[varIndex]._varType == VarArray3)
                 {
                     expressionType |= Expression::HasFunctions;
                     break;
@@ -641,6 +648,42 @@ namespace Compiler
         _integerVars[varIndex]._data = data;
     }
 
+    bool createAsmLine(const std::string& code)
+    {
+        std::string line, vasm = code;
+        Expression::trimWhitespace(vasm);
+        std::vector<std::string> tokens = Expression::tokenise(vasm, ' ', false);
+        if(tokens.size() < 1)
+        {
+            fprintf(stderr, "Compiler::createAsmLine() : vASM syntax error, missing opcode on line %d\n", _currentCodeLineIndex);
+            return false;
+        }
+
+        std::string opcodeStr = tokens[0];
+        std::string operandStr = "";
+        for(int i=1; i<int(tokens.size()); i++) operandStr += tokens[i];
+
+        Expression::stripWhitespace(opcodeStr);
+        Expression::strToUpper(opcodeStr);
+        Expression::stripWhitespace(operandStr);
+
+        int vasmSize = createVcpuAsm(opcodeStr, operandStr, int(_codeLines.size()), line);
+        if(vasmSize == 0)
+        {
+            // This is a bit of a hack, but unfortunately needed as createAsmLine is called before the keyword ENDASM can be processed
+            if(opcodeStr == "ENDASM") return true;
+
+            fprintf(stderr, "Compiler::createAsmLine() : vASM syntax error, undefined opcode on line %d\n", _currentCodeLineIndex);
+            return false;
+        }
+
+        _codeLines[_currentCodeLineIndex]._vasm.push_back({uint16_t(_vasmPC - vasmSize), opcodeStr, operandStr, line, "", false, vasmSize});
+        _codeLines[_currentCodeLineIndex]._vasmSize += vasmSize;
+        _codeLines[_currentCodeLineIndex]._dontParse = true;
+
+        return true;
+    }
+
     bool createCodeLine(const std::string& code, int codeLineOffset, int labelIndex, int varIndex, Expression::Int16Byte int16Byte, bool vars, CodeLine& codeLine)
     {
         // Handle variables
@@ -666,10 +709,11 @@ namespace Compiler
         codeText = Expression::removeCommentsNotInStrings(codeText);
         std::vector<size_t> offsets;
         std::vector<std::string> tokens = Expression::tokeniseLine(codeText, " (),=", offsets);
-        codeLine = {text, codeText, tokens, offsets, vasm, expression, onGotoGosubLut, strConcatLut, inputLut, 0, labelIndex, varIndex, VarInt16, int16Byte, vars, false};
+        codeLine = {text, codeText, tokens, offsets, vasm, expression, onGotoGosubLut, strConcatLut, inputLut, 0, labelIndex, varIndex, VarInt16, int16Byte, vars, false, false};
         Expression::operatorReduction(codeLine._expression);
 
-        //if(codeLine._code.size() < 2) return false; // anything too small is ignored
+        // ASM keyword
+        if(_codeIsAsm) return createAsmLine(code);
 
         return true;
     }
@@ -901,11 +945,9 @@ namespace Compiler
         _codeLines[codeLineIdxDst]._vasm[vcpuAsmDst]._internalLabel = label;
     }
 
-    // Generic LDW expression parser
-    uint32_t parseArrayVarExpression(CodeLine& codeLine, int codeLineIndex, std::string& expression, Expression::Numeric& numeric)
+    // Array1d LDW expression parser
+    uint32_t parseArray1dVarExpression(int codeLineIndex, std::string& expression, Expression::Numeric& numeric)
     {
-        UNREFERENCED_PARAM(codeLine);
-
         int varIndex, constIndex, strIndex;
         Expression::parse(expression, codeLineIndex, numeric);
         uint32_t expressionType = isExpression(expression, varIndex, constIndex, strIndex);
@@ -927,6 +969,150 @@ namespace Compiler
 
         return expressionType;
     }
+    bool writeArray1d(CodeLine& codeLine, int codeLineIndex, size_t lbra, size_t rbra, int intSize, uint16_t arrayPtr)
+    {
+        // Array index from expression
+        Expression::Numeric arrIndex;
+        std::string arrText = codeLine._code.substr(lbra + 1, rbra - (lbra + 1));
+        uint32_t expressionType = parseArray1dVarExpression(codeLineIndex, arrText, arrIndex);
+
+        // Constant index
+        if(!(expressionType & Expression::HasIntVars))
+        {
+            emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr + int16_t(std::lround(arrIndex._value))*uint16_t(intSize)), false, codeLineIndex);
+            emitVcpuAsm("STW",  "memAddr", false, codeLineIndex);
+            emitVcpuAsm("LDW",  "memValue", false, codeLineIndex);
+            switch(codeLine._int16Byte)
+            {
+                case Expression::Int16Low:  emitVcpuAsm("POKE", "memAddr", false, codeLineIndex);                                                       break;
+                case Expression::Int16High: emitVcpuAsm("INC",  "memAddr", false, codeLineIndex); emitVcpuAsm("POKE", "memAddr", false, codeLineIndex); break;
+                case Expression::Int16Both: emitVcpuAsm("DOKE", "memAddr", false, codeLineIndex);                                                       break;
+
+                default: break;
+            }
+        }
+        else
+        {
+            emitVcpuAsm("STW",  "memIndex0", false, codeLineIndex);
+            emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr), false, codeLineIndex);
+            emitVcpuAsm("ADDW", "memIndex0", false, codeLineIndex);
+            emitVcpuAsm("ADDW", "memIndex0", false, codeLineIndex);
+            emitVcpuAsm("STW",  "memAddr", false, codeLineIndex);
+            emitVcpuAsm("LDW",  "memValue", false, codeLineIndex);
+            switch(codeLine._int16Byte)
+            {
+                case Expression::Int16Low:  emitVcpuAsm("POKE", "memAddr", false, codeLineIndex);                                                       break;
+                case Expression::Int16High: emitVcpuAsm("INC",  "memAddr", false, codeLineIndex); emitVcpuAsm("POKE", "memAddr", false, codeLineIndex); break;
+                case Expression::Int16Both: emitVcpuAsm("DOKE", "memAddr", false, codeLineIndex);                                                       break;
+
+                default: break;
+            }
+        }
+
+        return true;
+    }
+
+    // ArrayXd LDW expression parser
+    uint32_t parseArrayXdVarExpression(int codeLineIndex, std::string& expression, Expression::Numeric& numeric)
+    {
+        int varIndex, constIndex, strIndex;
+        Expression::parse(expression, codeLineIndex, numeric);
+        uint32_t expressionType = isExpression(expression, varIndex, constIndex, strIndex);
+        if(((expressionType & Expression::HasIntVars)  &&  (expressionType & Expression::HasOperators))  ||  (expressionType & Expression::HasKeywords)  ||  (expressionType & Expression::HasStringKeywords))
+        {
+            emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(_tempVarStart)), false, codeLineIndex);
+        }
+        else if(expressionType & Expression::HasIntVars)
+        {
+            switch(numeric._int16Byte)
+            {
+                case Expression::Int16Low:  emitVcpuAsm("LD",  "_" + _integerVars[varIndex]._name,          false, codeLineIndex); break;
+                case Expression::Int16High: emitVcpuAsm("LD",  "_" + _integerVars[varIndex]._name + " + 1", false, codeLineIndex); break;
+                case Expression::Int16Both: emitVcpuAsm("LDW", "_" + _integerVars[varIndex]._name,          false, codeLineIndex); break;
+
+                default: break;
+            }
+        }
+        else
+        {
+            emitVcpuAsm("LDI", std::to_string(uint8_t(std::lround(numeric._value))), false, codeLineIndex);
+        }
+
+        return expressionType;
+    }
+    bool writeArray2d(CodeLine& codeLine, int codeLineIndex, size_t lbra, size_t rbra, int intSize, uint16_t arrayPtr)
+    {
+        UNREFERENCED_PARAM(intSize);
+
+        // Array index from expression
+        std::string arrText = codeLine._code.substr(lbra + 1, rbra - (lbra + 1));
+        std::vector<std::string> indexTokens = Expression::tokenise(arrText, ',', true);
+        if(indexTokens.size() != 2)
+        {
+            fprintf(stderr, "Compiler::writeArray2d() : Number of dimensions must be equal to 2, found %d in '%s' on line %d\n", int(indexTokens.size()), codeLine._code.c_str(), codeLineIndex);
+            return false;
+        }
+
+        for(int i=0; i<int(indexTokens.size()); i++)
+        {
+            Expression::Numeric arrIndex;
+            std::string indexToken = indexTokens[i];
+            Expression::stripWhitespace(indexToken);
+            parseArrayXdVarExpression(codeLineIndex, indexToken, arrIndex);
+            emitVcpuAsm("STW", "memIndex" + std::to_string(i), false, codeLineIndex);
+        }
+
+        emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr), false, codeLineIndex);
+        (getCodeRomType() >= Cpu::ROMv5a) ? emitVcpuAsm("CALLI", "convertArr2d", false, codeLineIndex) : emitVcpuAsm("CALL", "convertArr2dAddr", false, codeLineIndex);
+        emitVcpuAsm("LDW",  "memValue", false, codeLineIndex);
+        switch(codeLine._int16Byte)
+        {
+            case Expression::Int16Low:  emitVcpuAsm("POKE", "memAddr", false, codeLineIndex);                                                       break;
+            case Expression::Int16High: emitVcpuAsm("INC",  "memAddr", false, codeLineIndex); emitVcpuAsm("POKE", "memAddr", false, codeLineIndex); break;
+            case Expression::Int16Both: emitVcpuAsm("DOKE", "memAddr", false, codeLineIndex);                                                       break;
+
+            default: break;
+        }
+
+        return true;
+    }
+
+    bool writeArray3d(CodeLine& codeLine, int codeLineIndex, size_t lbra, size_t rbra, int intSize, uint16_t arrayPtr)
+    {
+        UNREFERENCED_PARAM(intSize);
+
+        // Array index from expression
+        std::string arrText = codeLine._code.substr(lbra + 1, rbra - (lbra + 1));
+        std::vector<std::string> indexTokens = Expression::tokenise(arrText, ',', true);
+        if(indexTokens.size() != 3)
+        {
+            fprintf(stderr, "Compiler::writeArray3d() : Number of dimensions must be equal to 3, found %d in '%s' on line %d\n", int(indexTokens.size()), codeLine._code.c_str(), codeLineIndex);
+            return false;
+        }
+
+        for(int i=0; i<int(indexTokens.size()); i++)
+        {
+            Expression::Numeric arrIndex;
+            std::string indexToken = indexTokens[i];
+            Expression::stripWhitespace(indexToken);
+            parseArrayXdVarExpression(codeLineIndex, indexToken, arrIndex);
+            emitVcpuAsm("STW",  "memIndex" + std::to_string(i), false, codeLineIndex);
+        }
+
+        emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr), false, codeLineIndex);
+        (getCodeRomType() >= Cpu::ROMv5a) ? emitVcpuAsm("CALLI", "convertArr3d", false, codeLineIndex) : emitVcpuAsm("CALL", "convertArr3dAddr", false, codeLineIndex);
+        emitVcpuAsm("LDW",  "memValue", false, codeLineIndex);
+        switch(codeLine._int16Byte)
+        {
+            case Expression::Int16Low:  emitVcpuAsm("POKE", "memAddr", false, codeLineIndex);                                                       break;
+            case Expression::Int16High: emitVcpuAsm("INC",  "memAddr", false, codeLineIndex); emitVcpuAsm("POKE", "memAddr", false, codeLineIndex); break;
+            case Expression::Int16Both: emitVcpuAsm("DOKE", "memAddr", false, codeLineIndex);                                                       break;
+
+            default: break;
+        }
+
+        return true;
+    }
 
     bool writeArrayVar(CodeLine& codeLine, int codeLineIndex, int varIndex)
     {
@@ -937,47 +1123,19 @@ namespace Compiler
         if(equals == std::string::npos  ||  equals < rbra) return false;
 
         // Previous expression result
-        emitVcpuAsm("STW", "register0", false, codeLineIndex); // register0 = memValue, but can't use memValue here as include file is not guaranteed to be loaded
-
-        // Array index from expression
-        Expression::Numeric arrIndex;
-        std::string arrText = codeLine._code.substr(lbra + 1, rbra - (lbra + 1));
-        uint32_t expressionType = parseArrayVarExpression(codeLine, codeLineIndex, arrText, arrIndex);
+        emitVcpuAsm("STW", "memValue", false, codeLineIndex);
 
         int intSize = _integerVars[varIndex]._intSize;
         uint16_t arrayPtr = _integerVars[varIndex]._address;
+        Compiler::VarType varType = _integerVars[varIndex]._varType;
 
-        // Constant index
-        if(!(expressionType & Expression::HasIntVars))
+        switch(varType)
         {
-            emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr + int16_t(std::lround(arrIndex._value))*uint16_t(intSize)), false, codeLineIndex);
-            emitVcpuAsm("STW",  "register1", false, codeLineIndex);
-            emitVcpuAsm("LDW",  "register0", false, codeLineIndex);
-            switch(codeLine._int16Byte)
-            {
-                case Expression::Int16Low:  emitVcpuAsm("POKE", "register1", false, codeLineIndex);                                                         break;
-                case Expression::Int16High: emitVcpuAsm("INC",  "register1", false, codeLineIndex); emitVcpuAsm("POKE", "register1", false, codeLineIndex); break;
-                case Expression::Int16Both: emitVcpuAsm("DOKE", "register1", false, codeLineIndex);                                                         break;
+            case VarType::VarArray1: writeArray1d(codeLine, codeLineIndex, lbra, rbra, intSize, arrayPtr); break;
+            case VarType::VarArray2: writeArray2d(codeLine, codeLineIndex, lbra, rbra, intSize, arrayPtr); break;
+            case VarType::VarArray3: writeArray3d(codeLine, codeLineIndex, lbra, rbra, intSize, arrayPtr); break;
 
-                default: break;
-            }
-        }
-        else
-        {
-            emitVcpuAsm("STW",  "register1", false, codeLineIndex);
-            emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr), false, codeLineIndex);
-            emitVcpuAsm("ADDW", "register1", false, codeLineIndex);
-            emitVcpuAsm("ADDW", "register1", false, codeLineIndex);
-            emitVcpuAsm("STW",  "register1", false, codeLineIndex);
-            emitVcpuAsm("LDW",  "register0", false, codeLineIndex);
-            switch(codeLine._int16Byte)
-            {
-                case Expression::Int16Low:  emitVcpuAsm("POKE", "register1", false, codeLineIndex);                                                         break;
-                case Expression::Int16High: emitVcpuAsm("INC",  "register1", false, codeLineIndex); emitVcpuAsm("POKE", "register1", false, codeLineIndex); break;
-                case Expression::Int16Both: emitVcpuAsm("DOKE", "register1", false, codeLineIndex);                                                         break;
-
-                default: break;
-            }
+            default: break;
         }
 
         return true;
@@ -1359,16 +1517,20 @@ namespace Compiler
         // Realtime proc and relational operators are CALLS from zero page for efficiency
         if(_codeRomType < Cpu::ROMv5a)
         {
-            // Handles time sliced, (real time), code such as AUDIO and/or MIDI
-            emitVcpuAsm("%InitRealTimeProc", "", false, 0);
-
-            // Handle relational operators
+            // Initialise relational operators
             emitVcpuAsm("%InitEqOp", "", false, 0);
             emitVcpuAsm("%InitNeOp", "", false, 0);
             emitVcpuAsm("%InitLeOp", "", false, 0);
             emitVcpuAsm("%InitGeOp", "", false, 0);
             emitVcpuAsm("%InitLtOp", "", false, 0);
             emitVcpuAsm("%InitGtOp", "", false, 0);
+
+            // Initialise array converters
+            emitVcpuAsm("%InitArray2d", "", false, 0);
+            emitVcpuAsm("%InitArray3d", "", false, 0);
+
+            // Initialise time sliced, (real time), code such as AUDIO and/or MIDI
+            emitVcpuAsm("%InitRealTimeProc", "", false, 0);
         }
 
         // Initialise
@@ -1547,6 +1709,17 @@ namespace Compiler
         return Expression::get();
     }
 
+    bool find(char chr)
+    {
+        if(peek(true) == chr)
+        {
+            get(true);
+            return true;
+        }
+
+        return false;
+    }
+
     bool number(double& value)
     {
         char uchr;
@@ -1590,10 +1763,8 @@ namespace Compiler
         return true;
     }
 
-    Expression::Numeric getString(const Expression::Numeric& numeric)
+    Expression::Numeric getString()
     {
-        UNREFERENCED_PARAM(numeric);
-
         // First quote
         get(true);
 
@@ -1625,38 +1796,128 @@ namespace Compiler
 
         std::string varName = Expression::getExpression();
         if(varName.back() == ')') varName.erase(varName.size()-1);
+
         int varIndex = findVar(varName);
         int strIndex = findStr(varName);
         int constIndex = findConst(varName);
 
+        Expression::advance(varName.size());
+
         // Int and array vars
+        uint16_t address = 0x0000;
         if(varIndex != -1)
         {
-            Expression::advance(varName.size());
-            uint16_t address = _integerVars[varIndex]._address;
-            return Expression::Numeric(address, -1, true, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+            address = _integerVars[varIndex]._address;
         }
-
         // Strings
-        if(strIndex != -1)
+        else if(strIndex != -1)
         {
-            Expression::advance(varName.size());
-            uint16_t address = _stringVars[strIndex]._address;
-            return Expression::Numeric(address, -1, true, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+            address = _stringVars[strIndex]._address;
         }
-        
         // Constants
-        if(constIndex != -1)
+        else if(constIndex != -1)
         {
-            Expression::advance(varName.size());
-            uint16_t address = _constants[constIndex]._address;
-            return Expression::Numeric(address, -1, true, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+            address = _constants[constIndex]._address;
+        }
+        else
+        {
+            fprintf(stderr, "Compiler::addressof() : Syntax error in '%s' on line %d\n", _codeLines[_currentCodeLineIndex]._code.c_str(), Expression::getLineNumber());
+            //_PAUSE_;
+            _compilingError = true;
+            return Expression::Numeric();
         }
 
-        fprintf(stderr, "Compiler::factor() : Syntax error in address of '%s' on line %d\n", _codeLines[_currentCodeLineIndex]._code.c_str(), Expression::getLineNumber());
-        //_PAUSE_;
-        _compilingError = true;
-        return Expression::Numeric();
+        return Expression::Numeric(address, -1, true, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+    }
+
+    Expression::Numeric lengthOf(void)
+    {
+        // # char
+        get(true);
+
+        std::string varName = Expression::getExpression();
+        if(varName.back() == ')') varName.erase(varName.size()-1);
+
+        int varIndex = findVar(varName);
+        int strIndex = findStr(varName);
+        int constIndex = findConst(varName);
+
+        Expression::advance(varName.size());
+
+        // Int and array vars
+        uint16_t length = 0;
+        if(varIndex != -1)
+        {
+            length = uint16_t(_integerVars[varIndex]._intSize);
+            switch(_integerVars[varIndex]._varType)
+            {
+                case VarArray1: length *= _integerVars[varIndex]._arrSizes[2];                                                                             break;
+                case VarArray2: length *= _integerVars[varIndex]._arrSizes[1] * _integerVars[varIndex]._arrSizes[2];                                       break;
+                case VarArray3: length *= _integerVars[varIndex]._arrSizes[0] * _integerVars[varIndex]._arrSizes[1] * _integerVars[varIndex]._arrSizes[2]; break;
+
+                default: break;
+            }
+        }
+        // Strings
+        else if(strIndex != -1)
+        {
+            length = _stringVars[strIndex]._size;
+        }
+        // Constants
+        else if(constIndex != -1)
+        {
+            length = _constants[constIndex]._size;
+        }
+        else
+        {
+            fprintf(stderr, "Compiler::addressof() : Syntax error in '%s' on line %d\n", _codeLines[_currentCodeLineIndex]._code.c_str(), Expression::getLineNumber());
+            //_PAUSE_;
+            _compilingError = true;
+            return Expression::Numeric();
+        }
+
+        return Expression::Numeric(length, -1, true, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+    }
+
+    bool userFunc(const std::string& name)
+    {
+        size_t lbra, rbra;
+        std::string funcText = Expression::getExpression();
+        if(!Expression::findMatchingBrackets(funcText, 0, lbra, rbra))
+        {
+            fprintf(stderr, "Compiler::userFunc() : Parenthesis error in '%s' on line %d\n", _codeLines[_currentCodeLineIndex]._code.c_str(), Expression::getLineNumber());
+            return false;
+        }
+
+        funcText = funcText.substr(lbra + 1, rbra - (lbra + 1));
+        std::vector<std::string> params = Expression::tokenise(funcText, ',', true);
+        if(params.size() == 0)
+        {
+            fprintf(stderr, "Compiler::userFunc() : Syntax error, need at least one parameter, in '%s' on line %d\n",  _codeLines[_currentCodeLineIndex]._code.c_str(), Expression::getLineNumber());
+            return false;
+        }
+        int paramsSize = int(Compiler::getDefFunctions()[name]._params.size());
+        if(paramsSize != int(params.size()))
+        {
+            fprintf(stderr, "Compiler::userFunc() : Syntax error, wrong number of parameters, expecting %d, in '%s' on line %d\n", paramsSize,  _codeLines[_currentCodeLineIndex]._code.c_str(), Expression::getLineNumber());
+            return false;
+        }
+        std::string func = Compiler::getDefFunctions()[name]._function;
+        for(int i=0; i<int(params.size()); i++)
+        {
+            Expression::stripWhitespace(params[i]);
+            Expression::replaceText(func, Compiler::getDefFunctions()[name]._params[i], params[i]);
+        }
+
+        // Substitute function and re-create expression, (factor() then parses the new expression string)
+        //int nameSize = int(name.size());
+        intptr_t offset = Expression::getExpression() - (char *)Expression::getExpressionToParseString().c_str();
+        Expression::replaceText(Expression::getExpressionToParseString(), funcText, func, offset);
+        //Expression::getExpressionToParseString().erase(offset - nameSize, nameSize);
+        //Expression::setExpression(Expression::getExpressionToParseString(), offset - nameSize);
+        Expression::setExpression(Expression::getExpressionToParseString(), offset);
+
+        return true;
     }
 
     Expression::Numeric factor(int16_t defaultValue)
@@ -1702,128 +1963,191 @@ namespace Compiler
         // String
         else if(peek(true) == '"')
         {
-            numeric = getString(numeric);
+            numeric = getString();
         }
         // 'Address of' operator
         else if(peek(true) == '@')
         {
             numeric = addressOf();
         }
+        else if(peek(true) == '#')
+        {
+            numeric = lengthOf();
+        }
         // Functions
-        else if(Expression::find("LEN"))
-        {
-            numeric = factor(0); numeric = Keywords::functionLEN(numeric, _currentCodeLineIndex);
-        }
-        else if(Expression::find("GET"))
-        {
-            numeric = factor(0); numeric = Keywords::functionGET(numeric, _currentCodeLineIndex);
-        }
-        else if(Expression::find("ABS"))
-        {
-            numeric = factor(0); numeric = Keywords::functionABS(numeric, _currentCodeLineIndex);
-        }
-        else if(Expression::find("ASC"))
-        {
-            numeric = factor(0); numeric = Keywords::functionASC(numeric, _currentCodeLineIndex);
-        }
-        else if(Expression::find("CHR$"))
-        {
-            numeric = factor(0); numeric = Keywords::functionCHR$(numeric, _currentCodeLineIndex);
-        }
-        else if(Expression::find("HEX$"))
-        {
-            numeric = factor(0); numeric = Keywords::functionHEX$(numeric, _currentCodeLineIndex);
-        }
-        else if(Expression::find("HEXW$"))
-        {
-            numeric = factor(0); numeric = Keywords::functionHEXW$(numeric, _currentCodeLineIndex);
-        }
-        else if(Expression::find("LEFT$"))
-        {
-            numeric = factor(0); numeric = Keywords::functionLEFT$(numeric, _currentCodeLineIndex);
-        }
-        else if(Expression::find("RIGHT$"))
-        {
-            numeric = factor(0); numeric = Keywords::functionRIGHT$(numeric, _currentCodeLineIndex);
-        }
-        else if(Expression::find("MID$"))
-        {
-            numeric = factor(0); numeric = Keywords::functionMID$(numeric, _currentCodeLineIndex);
-        }
-        else if(Expression::find("STRCMP"))
-        {
-            numeric = factor(0); numeric = Keywords::functionSTRCMP(numeric, _currentCodeLineIndex);
-        }
-        else if(Expression::find("PEEK"))
-        {
-            numeric = factor(0); numeric = Keywords::functionPEEK(numeric, _currentCodeLineIndex);
-        }
-        else if(Expression::find("DEEK"))
-        {
-            numeric = factor(0); numeric = Keywords::functionDEEK(numeric, _currentCodeLineIndex);
-        }
-        else if(Expression::find("USR"))
-        {
-            numeric = factor(0); numeric = Keywords::functionUSR(numeric, _currentCodeLineIndex);
-        }
-        else if(Expression::find("RND"))
-        {
-            numeric = factor(0); numeric = Keywords::functionRND(numeric, _currentCodeLineIndex);
-        }
-        else if(Expression::find("POINT"))
-        {
-            numeric = factor(0); numeric = Keywords::functionPOINT(numeric, _currentCodeLineIndex);
-        }
         else if(Expression::find("NOT "))
         {
             numeric = factor(0); numeric = Operators::operatorNOT(numeric);
         }
-        else if(Expression::find("EXP"))
+        else if(Expression::findFunc("PEEK"))
+        {
+            numeric = factor(0); numeric = Keywords::functionPEEK(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("DEEK"))
+        {
+            numeric = factor(0); numeric = Keywords::functionDEEK(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("USR"))
+        {
+            numeric = factor(0); numeric = Keywords::functionUSR(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("RND"))
+        {
+            numeric = factor(0); numeric = Keywords::functionRND(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("LEN"))
+        {
+            numeric = factor(0); numeric = Keywords::functionLEN(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("GET"))
+        {
+            numeric = factor(0); numeric = Keywords::functionGET(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("ABS"))
+        {
+            numeric = factor(0); numeric = Keywords::functionABS(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("SGN"))
+        {
+            numeric = factor(0); numeric = Keywords::functionSGN(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("ASC"))
+        {
+            numeric = factor(0); numeric = Keywords::functionASC(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("CMP"))
+        {
+            numeric = factor(0); numeric = Keywords::functionCMP(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("VAL"))
+        {
+            numeric = factor(0); numeric = Keywords::functionVAL(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("LUP"))
+        {
+            numeric = factor(0); numeric = Keywords::functionLUP(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("ADDR"))
+        {
+            numeric = factor(0); numeric = Keywords::functionADDR(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("POINT"))
+        {
+            numeric = factor(0); numeric = Keywords::functionPOINT(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("CHR$"))
+        {
+            numeric = factor(0); numeric = Keywords::functionCHR$(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("STR$"))
+        {
+            numeric = factor(0); numeric = Keywords::functionSTR$(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("HEX$"))
+        {
+            numeric = factor(0); numeric = Keywords::functionHEX$(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("HEXW$"))
+        {
+            numeric = factor(0); numeric = Keywords::functionHEXW$(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("LEFT$"))
+        {
+            numeric = factor(0); numeric = Keywords::functionLEFT$(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("RIGHT$"))
+        {
+            numeric = factor(0); numeric = Keywords::functionRIGHT$(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("MID$"))
+        {
+            numeric = factor(0); numeric = Keywords::functionMID$(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("POW"))
+        {
+            numeric = factor(0); numeric = Operators::operatorPOWF(numeric);
+        }
+        else if(Expression::findFunc("SQRT"))
+        {
+            numeric = factor(0); numeric = Operators::operatorSQRT(numeric);
+        }
+        else if(Expression::findFunc("EXP2"))
+        {
+            numeric = factor(0); numeric = Operators::operatorEXP2(numeric);
+        }
+        else if(Expression::findFunc("EXP"))
         {
             numeric = factor(0); numeric = Operators::operatorEXP(numeric);
         }
-        else if(Expression::find("SIN"))
+        else if(Expression::findFunc("LOG10"))
+        {
+            numeric = factor(0); numeric = Operators::operatorLOG10(numeric);
+        }
+        else if(Expression::findFunc("LOG2"))
+        {
+            numeric = factor(0); numeric = Operators::operatorLOG2(numeric);
+        }
+        else if(Expression::findFunc("LOG"))
+        {
+            numeric = factor(0); numeric = Operators::operatorLOG(numeric);
+        }
+        else if(Expression::findFunc("SIN"))
         {
             numeric = factor(0); numeric = Operators::operatorSIN(numeric);
         }
-        else if(Expression::find("COS"))
+        else if(Expression::findFunc("COS"))
         {
             numeric = factor(0); numeric = Operators::operatorCOS(numeric);
         }
-        else if(Expression::find("TAN"))
+        else if(Expression::findFunc("TAN"))
         {
             numeric = factor(0); numeric = Operators::operatorTAN(numeric);
         }
-        else if(Expression::find("ASIN"))
+        else if(Expression::findFunc("ASIN"))
         {
             numeric = factor(0); numeric = Operators::operatorASIN(numeric);
         }
-        else if(Expression::find("ACOS"))
+        else if(Expression::findFunc("ACOS"))
         {
             numeric = factor(0); numeric = Operators::operatorACOS(numeric);
         }
-        else if(Expression::find("ATAN"))
+        else if(Expression::findFunc("ATAN2"))
+        {
+            numeric = factor(0); numeric = Operators::operatorATAN2(numeric);
+        }
+        else if(Expression::findFunc("ATAN"))
         {
             numeric = factor(0); numeric = Operators::operatorATAN(numeric);
         }
-        else if(Expression::find("RAND"))
+        else if(Expression::findFunc("RAND"))
         {
             numeric = factor(0); numeric = Operators::operatorRAND(numeric);
         }
-        else if(Expression::find("REV16"))
+        else if(Expression::findFunc("REV16"))
         {
             numeric = factor(0); numeric = Operators::operatorREV16(numeric);
         }
-        else if(Expression::find("REV8"))
+        else if(Expression::findFunc("REV8"))
         {
             numeric = factor(0); numeric = Operators::operatorREV8(numeric);
         }
-        else if(Expression::find("REV4"))
+        else if(Expression::findFunc("REV4"))
         {
             numeric = factor(0); numeric = Operators::operatorREV4(numeric);
         }
         else
         {
+            // User functions, (DEF FN), like inbuilt functions names are NOT case sensitive
+            for(auto it=Compiler::getDefFunctions().begin(); it!=Compiler::getDefFunctions().end(); ++it)
+            {
+                std::string name = it->first;
+                if(Expression::findFunc(name))
+                {
+                    if(!userFunc(it->first)) return numeric;
+                    return factor(0);
+                }
+            }
+
             switch(peek(true))
             {
                 // Unary operators
@@ -1836,7 +2160,11 @@ namespace Compiler
                 default:
                 {
                     // Variables
+                    bool foundParams = false;
                     std::string varName = Expression::getExpression();
+                    if(varName.back() == ')') varName.erase(varName.size()-1);
+                    if(varName.find('(') != std::string::npos) foundParams = true;
+
                     int varIndex = findVar(varName);
                     int strIndex = findStr(varName);
                     int constIndex = findConst(varName);
@@ -1847,21 +2175,38 @@ namespace Compiler
                         Expression::advance(varName.size());
 
                         // Arrays
-                        if(_integerVars[varIndex]._varType == VarArray)
+                        if(_integerVars[varIndex]._varType == VarArray1  ||  _integerVars[varIndex]._varType == VarArray2  ||  _integerVars[varIndex]._varType == VarArray3)
                         {
+                            Expression::VarType varType = Expression::Arr1Var;
+                            switch(_integerVars[varIndex]._varType)
+                            {
+                                case VarArray1: varType = Expression::Arr1Var; break;
+                                case VarArray2: varType = Expression::Arr2Var; break;
+                                case VarArray3: varType = Expression::Arr3Var; break;
+
+                                default: break;
+                            }
+
                             // Array numeric
-                            numeric = Expression::Numeric(defaultValue, int16_t(varIndex), true, false, Expression::ArrVar, Expression::BooleanCC, Expression::Int16Both, varName, std::string(""));
+                            numeric = Expression::Numeric(defaultValue, int16_t(varIndex), true, false, varType, Expression::BooleanCC, Expression::Int16Both, varName, std::string(""));
 
-                            // Array index numeric
-                            Expression::Numeric param = factor(0); 
-                            numeric._parameters.push_back(param);
+                            // Array index parameters, (commands like LEN expect no array indices)
+                            if(foundParams)
+                            {
+                                Expression::Numeric param = factor(0); 
+                                numeric._parameters.push_back(param);
+                                for(int i=0; i<int(param._parameters.size()); i++)
+                                {
+                                    numeric._parameters.push_back(param._parameters[i]);
+                                }
 
-                            // Read both, low or high bytes, (DEEK <X>, PEEK <X>, PEEK <X+1>)
-                            if(Expression::find(".LO")) int16Byte = Expression::Int16Low;
-                            if(Expression::find(".HI")) int16Byte = Expression::Int16High;
-                            numeric._int16Byte = int16Byte;
+                                // Read both, low or high bytes, (DEEK <X>, PEEK <X>, PEEK <X+1>)
+                                if(Expression::find(".LO")) int16Byte = Expression::Int16Low;
+                                if(Expression::find(".HI")) int16Byte = Expression::Int16High;
+                                numeric._int16Byte = int16Byte;
 
-                            numeric = Keywords::functionARR(numeric, _currentCodeLineIndex);
+                                numeric = Keywords::functionARR(numeric, _currentCodeLineIndex);
+                            }
                         }
                         // Vars
                         else
@@ -1938,11 +2283,11 @@ namespace Compiler
 
         for(;;)
         {
-            if(Expression::find("**"))       {           numeric = factor(0); result = Operators::operatorPOW(result, numeric);}
-            else if(peek(true) == '*')       {get(true); numeric = factor(0); result = Operators::operatorMUL(result, numeric);}
-            else if(peek(true) == '/')       {get(true); numeric = factor(0); result = Operators::operatorDIV(result, numeric);}
-            else if(peek(true) == '%')       {get(true); numeric = factor(0); result = Operators::operatorMOD(result, numeric);}
-            else if(Expression::find("MOD")) {           numeric = factor(0); result = Operators::operatorMOD(result, numeric);}
+            if(Expression::find("**"))       {numeric = factor(0); result = Operators::operatorPOW(result, numeric);}
+            else if(find('*'))               {numeric = factor(0); result = Operators::operatorMUL(result, numeric);}
+            else if(find('/'))               {numeric = factor(0); result = Operators::operatorDIV(result, numeric);}
+            else if(find('%'))               {numeric = factor(0); result = Operators::operatorMOD(result, numeric);}
+            else if(Expression::find("MOD")) {numeric = factor(0); result = Operators::operatorMOD(result, numeric);}
             else return result;
         }
     }
@@ -1953,8 +2298,8 @@ namespace Compiler
 
         for(;;)
         {
-            if(peek(true) == '+')      {get(true); numeric = term(); result = Operators::operatorADD(result, numeric);}
-            else if(peek(true) == '-') {get(true); numeric = term(); result = Operators::operatorSUB(result, numeric);}
+            if(find('+'))      {numeric = term(); result = Operators::operatorADD(result, numeric);}
+            else if(find('-')) {numeric = term(); result = Operators::operatorSUB(result, numeric);}
 
             else return result;
         }
@@ -1987,13 +2332,13 @@ namespace Compiler
         for(;;)
         {
             // Boolean conditionals
-            if(Expression::find("=="))      {           numeric = logical(); result = Operators::operatorEQ(result, numeric, Expression::BooleanCC);}
-            else if(peek(true) == '=')      {get(true); numeric = logical(); result = Operators::operatorEQ(result, numeric, Expression::BooleanCC);}
-            else if(Expression::find("<>")) {           numeric = logical(); result = Operators::operatorNE(result, numeric, Expression::BooleanCC);}
-            else if(Expression::find("<=")) {           numeric = logical(); result = Operators::operatorLE(result, numeric, Expression::BooleanCC);}
-            else if(Expression::find(">=")) {           numeric = logical(); result = Operators::operatorGE(result, numeric, Expression::BooleanCC);}
-            else if(peek(true) == '<')      {get(true); numeric = logical(); result = Operators::operatorLT(result, numeric, Expression::BooleanCC);}
-            else if(peek(true) == '>')      {get(true); numeric = logical(); result = Operators::operatorGT(result, numeric, Expression::BooleanCC);}
+            if(Expression::find("=="))      {numeric = logical(); result = Operators::operatorEQ(result, numeric, Expression::BooleanCC);}
+            else if(find('='))              {numeric = logical(); result = Operators::operatorEQ(result, numeric, Expression::BooleanCC);}
+            else if(Expression::find("<>")) {numeric = logical(); result = Operators::operatorNE(result, numeric, Expression::BooleanCC);}
+            else if(Expression::find("<=")) {numeric = logical(); result = Operators::operatorLE(result, numeric, Expression::BooleanCC);}
+            else if(Expression::find(">=")) {numeric = logical(); result = Operators::operatorGE(result, numeric, Expression::BooleanCC);}
+            else if(find('<'))              {numeric = logical(); result = Operators::operatorLT(result, numeric, Expression::BooleanCC);}
+            else if(find('>'))              {numeric = logical(); result = Operators::operatorGT(result, numeric, Expression::BooleanCC);}
 
             // Normal conditionals
             else if(Expression::find("&==")) {numeric = logical(); result = Operators::operatorEQ(result, numeric, Expression::NormalCC);}
@@ -2113,7 +2458,6 @@ namespace Compiler
                     emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr), false, codeLineIndex);
                     emitVcpuAsm("STW", "strSrcAddr", false, codeLineIndex);
                     emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false, codeLineIndex);
-                    emitVcpuAsm("STW", "strDstAddr", false, codeLineIndex);
                     emitVcpuAsm("%StringCopy", "", false, codeLineIndex);
                 }
 
@@ -2164,14 +2508,12 @@ namespace Compiler
                 emitVcpuAsm("LDWI", Expression::wordToHexString(lutAddress), false, codeLineIndex);
                 emitVcpuAsm("STW", "strLutAddr", false, codeLineIndex);
                 emitVcpuAsm("LDWI", Expression::wordToHexString(getStrWorkArea()), false, codeLineIndex);
-                emitVcpuAsm("STW", "strDstAddr", false, codeLineIndex);
                 emitVcpuAsm("%StringConcat", "", false, codeLineIndex);
 
                 // Copy work area to dst string
                 emitVcpuAsm("LDWI", Expression::wordToHexString(getStrWorkArea()), false, codeLineIndex);
                 emitVcpuAsm("STW", "strSrcAddr", false, codeLineIndex);
                 emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false, codeLineIndex);
-                emitVcpuAsm("STW", "strDstAddr", false, codeLineIndex);
                 emitVcpuAsm("%StringCopy", "", false, codeLineIndex);
 
                 return true;
@@ -2247,7 +2589,7 @@ namespace Compiler
             if(codeLine._containsVars)
             {
                 // Try and optimise LDW away if possible
-                if(varIndexRhs >= 0  &&  _integerVars[varIndexRhs]._varType != VarArray  &&  !(expressionType & Expression::HasOperators)  &&  !(expressionType & Expression::HasFunctions))
+                if(varIndexRhs >= 0  &&  _integerVars[varIndexRhs]._varType != VarArray1  &&  !(expressionType & Expression::HasOperators)  &&  !(expressionType & Expression::HasFunctions))
                 {
                     switch(numeric._int16Byte)
                     {
@@ -2259,7 +2601,7 @@ namespace Compiler
                     }
                 }
 
-                if(_integerVars[codeLine._varIndex]._varType == VarArray)
+                if(_integerVars[codeLine._varIndex]._varType == VarArray1  ||  _integerVars[codeLine._varIndex]._varType == VarArray2  ||  _integerVars[codeLine._varIndex]._varType == VarArray3)
                 {
                     writeArrayVar(codeLine, codeLineIndex, codeLine._varIndex);
                 }
@@ -2293,7 +2635,7 @@ namespace Compiler
                     }
                 }
 
-                if(_integerVars[codeLine._varIndex]._varType == VarArray)
+                if(_integerVars[codeLine._varIndex]._varType == VarArray1  ||  _integerVars[codeLine._varIndex]._varType == VarArray2  ||  _integerVars[codeLine._varIndex]._varType == VarArray3)
                 {
                     writeArrayVar(codeLine, codeLineIndex, codeLine._varIndex);
                 }
@@ -2324,11 +2666,21 @@ namespace Compiler
         std::vector<std::string> tokens = Expression::tokenise(code, ':', false);
         for(int j=0; j<int(tokens.size()); j++)
         {
+REDO:
             createCodeLine(tokens[j], 0, _codeLines[codeLineIndex]._labelIndex, -1, Expression::Int16Both, false, codeline);
+            if(_codeLines[codeLineIndex]._dontParse) return StatementSuccess;
+
+            // Create vars and vasm
             createCodeVar(codeline, codeLineIndex, varIndex);
             createCodeStr(codeline, codeLineIndex, strIndex);
             statementResult = createVasmCode(codeline, codeLineIndex);
             if(statementResult == StatementError) break;
+
+            // Some commands, (such as FN), modify the BASIC source and cause a re-evaluation
+            if(statementResult == RedoStatementParse)
+            {
+                goto REDO;
+            }
 
             // Some commands, (such as IF), process multi-statements themselves
             if(statementResult == MultiStatementParsed) break;
@@ -2541,46 +2893,164 @@ namespace Compiler
     {
         _output.push_back("; Variables\n");
 
-        for(int i=0; i<int(_integerVars.size()); i++)
+        for(int varIndex=0; varIndex<int(_integerVars.size()); varIndex++)
         {
-            switch(_integerVars[i]._varType)
+            switch(_integerVars[varIndex]._varType)
             {
                 case VarInt16:
                 {
-                    std::string address = Expression::wordToHexString(_integerVars[i]._address);
-                    _output.push_back(_integerVars[i]._output + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + address + "\n");
+                    std::string address = Expression::wordToHexString(_integerVars[varIndex]._address);
+                    _output.push_back(_integerVars[varIndex]._output + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + address + "\n");
                 }
                 break;
 
-                case VarArray:
+                case VarArray1:
                 {
-                    std::string arrName = "_" + _integerVars[i]._name + "_array";
-                    _output.push_back(arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(_integerVars[i]._address) + "\n");
-            
-                    std::string dbString = arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
-                    for(int j=0; j<_integerVars[i]._arrSizes[2]; j++)
+                    std::string arrName = "_" + _integerVars[varIndex]._name + "_array";
+                    _output.push_back(arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(_integerVars[varIndex]._arrAddrs[0][0]) + "\n");
+                    std::string dwString = arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+
+                    // I array values
+                    for(int i=0; i<_integerVars[varIndex]._arrSizes[2]; i++)
                     {
                         // Single initialisation value
-                        if(_integerVars[i]._arrInits.size() == 0)
+                        if(_integerVars[varIndex]._arrInits.size() == 0)
                         {
-                            dbString += Expression::wordToHexString(_integerVars[i]._init) + " ";
+                            dwString += Expression::wordToHexString(_integerVars[varIndex]._init) + " ";
                         }
                         // Multiple initialisation values
                         else
                         {
                             // Number of initialisation values may be smaller than array size
-                            if(j < int(_integerVars[i]._arrInits.size()))
+                            if(i < int(_integerVars[varIndex]._arrInits.size()))
                             {
-                                dbString += Expression::wordToHexString(_integerVars[i]._arrInits[j]) + " ";
+                                dwString += Expression::wordToHexString(_integerVars[varIndex]._arrInits[i]) + " ";
                             }
                             // Use default initialisation value for the rest of the array
                             else
                             {
-                                dbString += Expression::wordToHexString(_integerVars[i]._init) + " ";
+                                dwString += Expression::wordToHexString(_integerVars[varIndex]._init) + " ";
                             }
                         }
                     }
-                    _output.push_back(dbString + "\n");
+                    _output.push_back(dwString + "\n");
+                }
+                break;
+
+                case VarArray2:
+                {
+                    std::string arrName = "_" + _integerVars[varIndex]._name + "_array";
+                    _output.push_back(arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(_integerVars[varIndex]._address) + "\n");
+                    std::string dwString = arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+
+                    // J array pointers
+                    for(int j=0; j<_integerVars[varIndex]._arrSizes[1]; j++)
+                    {
+                        dwString += Expression::wordToHexString(_integerVars[varIndex]._arrAddrs[0][j]) + " ";
+                    }
+                    _output.push_back(dwString + "\n");
+
+                    // J arrays
+                    int initIndex = 0;
+                    for(int j=0; j<_integerVars[varIndex]._arrSizes[1]; j++)
+                    {
+                        arrName = "_" + _integerVars[varIndex]._name + "_" + Expression::wordToHexString(_integerVars[varIndex]._arrAddrs[0][j]);
+                        _output.push_back(arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(_integerVars[varIndex]._arrAddrs[0][j]) + "\n");
+                        dwString = arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+
+                        // I array values
+                        for(int i=0; i<_integerVars[varIndex]._arrSizes[2]; i++)
+                        {
+                            // Single initialisation value
+                            if(_integerVars[varIndex]._arrInits.size() == 0)
+                            {
+                                dwString += Expression::wordToHexString(_integerVars[varIndex]._init) + " ";
+                            }
+                            // Multiple initialisation values
+                            else
+                            {
+                                // Number of initialisation values may be smaller than array size
+                                if(initIndex < int(_integerVars[varIndex]._arrInits.size()))
+                                {
+                                    dwString += Expression::wordToHexString(_integerVars[varIndex]._arrInits[initIndex++]) + " ";
+                                }
+                                // Use default initialisation value for the rest of the array
+                                else
+                                {
+                                    dwString += Expression::wordToHexString(_integerVars[varIndex]._init) + " ";
+                                }
+                            }
+                        }
+                        _output.push_back(dwString + "\n");
+                    }
+                }
+                break;
+
+                case VarArray3:
+                {
+                    std::string arrName = "_" + _integerVars[varIndex]._name + "_array";
+                    _output.push_back(arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(_integerVars[varIndex]._address) + "\n");
+                    std::string dwString = arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+
+                    // K array pointers
+                    for(int k=0; k<_integerVars[varIndex]._arrSizes[0]; k++)
+                    {
+                        dwString += Expression::wordToHexString(_integerVars[varIndex]._arrLut[k]) + " ";
+                    }
+                    _output.push_back(dwString + "\n");
+
+                    // K * J array pointers
+                    for(int k=0; k<_integerVars[varIndex]._arrSizes[0]; k++)
+                    {
+                        arrName = "_" + _integerVars[varIndex]._name + "_lut_" + std::to_string(k);
+                        _output.push_back(arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(_integerVars[varIndex]._arrLut[k]) + "\n");
+                        dwString = arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+
+                        // J array pointers
+                        for(int j=0; j<_integerVars[varIndex]._arrSizes[1]; j++)
+                        {
+                            dwString += Expression::wordToHexString(_integerVars[varIndex]._arrAddrs[k][j]) + " ";
+                        }
+                        _output.push_back(dwString + "\n");
+                    }
+
+                    // K * J arrays
+                    int initIndex = 0;
+                    for(int k=0; k<_integerVars[varIndex]._arrSizes[0]; k++)
+                    {
+                        // J arrays
+                        for(int j=0; j<_integerVars[varIndex]._arrSizes[1]; j++)
+                        {
+                            arrName = "_" + _integerVars[varIndex]._name + "_" + Expression::wordToHexString(_integerVars[varIndex]._arrAddrs[k][j]);
+                            _output.push_back(arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(_integerVars[varIndex]._arrAddrs[k][j]) + "\n");
+                            dwString = arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+
+                            // I array values
+                            for(int i=0; i<_integerVars[varIndex]._arrSizes[2]; i++)
+                            {
+                                // Single initialisation value
+                                if(_integerVars[varIndex]._arrInits.size() == 0)
+                                {
+                                    dwString += Expression::wordToHexString(_integerVars[varIndex]._init) + " ";
+                                }
+                                // Multiple initialisation values
+                                else
+                                {
+                                    // Number of initialisation values may be smaller than array size
+                                    if(initIndex < int(_integerVars[varIndex]._arrInits.size()))
+                                    {
+                                        dwString += Expression::wordToHexString(_integerVars[varIndex]._arrInits[initIndex++]) + " ";
+                                    }
+                                    // Use default initialisation value for the rest of the array
+                                    else
+                                    {
+                                        dwString += Expression::wordToHexString(_integerVars[varIndex]._init) + " ";
+                                    }
+                                }
+                            }
+                            _output.push_back(dwString + "\n");
+                        }
+                    }
                 }
                 break;
 
@@ -3209,11 +3679,15 @@ namespace Compiler
 
                 // Commented BASIC code, (assumes any tabs are 4 spaces)
 #define TAB_SPACE_LENGTH 4
-#define COMMENT_PADDING  (TAB_SPACE_LENGTH*19)
+#define COMMENT_PADDING  (TAB_SPACE_LENGTH*24)
                 int lineLength = Expression::tabbedStringLength(line, TAB_SPACE_LENGTH);
                 line.append(COMMENT_PADDING - (lineLength % COMMENT_PADDING), ' ');
                 //fprintf(stderr, "%d\n", lineLength + COMMENT_PADDING - (lineLength % COMMENT_PADDING));
-                line += "; " + _codeLines[i]._text + "\n\n";
+
+                // Line spacing for parsed code and non parsed code is different
+                bool dontParse = (i+1 < int(_codeLines.size())) ? _codeLines[i+1]._dontParse : false;
+                std::string newLine = (_codeLines[i]._dontParse  &&  dontParse) ? "\n" : "\n\n";
+                line += "; " + _codeLines[i]._text + newLine;
                 _output.push_back(line);
             }
         }
@@ -3269,16 +3743,17 @@ namespace Compiler
 
     void clearCompiler(void)
     {
-        _vasmPC         = USER_CODE_START;
-        _tempVarStart   = TEMP_VAR_START;
-        _userVarStart   = USER_VAR_START;
-        _runtimeEnd     = 0x7FFF;
-        _runtimeStart   = 0x7FFF;
-        _strWorkArea    = 0x0000;
+        _vasmPC       = USER_CODE_START;
+        _tempVarStart = TEMP_VAR_START;
+        _userVarStart = USER_VAR_START;
+        _runtimeEnd   = 0x7FFF;
+        _runtimeStart = 0x7FFF;
+        _strWorkArea  = 0x0000;
 
         _codeOptimiseType = CodeSpeed;
         _codeRomType = Cpu::ROMv3;
 
+        _codeIsAsm = false;
         _compilingError = false;
         _arrayIndiciesOne = false;
         _createNumericLabelLut = false;
@@ -3308,6 +3783,7 @@ namespace Compiler
         _defDataImages.clear();
         _defDataSprites.clear();
         _defDataFonts.clear();
+        _defFunctions.clear();
 
         _spritesAddrLut._address = 0x0000;
         _spritesAddrLut._spriteAddrs.clear();

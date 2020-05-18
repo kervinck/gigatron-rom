@@ -11,23 +11,26 @@ cls
 const a$="hello test world"
 b$="hello test world"
 
+num0$ = "-1234"
+num1$ = "1234"
+print val("-4532");" ";val(a$);" ";val(num0$);" &h";hexw$(val("0x1234"));" &h";hexw$(val("&hFFFF"));" &h";hexw$(val("&b0000000011110000"));" &h";hexw$(val("&o777"));" ";val(num1$)
+
 c$=left$(b$, 5)
 d$ = right$ (b$,5)
 e$=mid$(b$, 6, 4)
 
-print a$;" ";b$;" "
-print c$;" ";d$;" ";e$
+print a$;" ";b$;"  ";c$;" ";d$;" ";e$
 
 x$ = "YOUR TEXT BACKWARDS IS"
-for j = len(x$)-1 to 0 step -1
+for j = len(x$)-1 downto 0
     print mid$(x$, j, 1);
 next j
 
-a = strcmp("dog", "dog")
-b = strcmp("dog", "Dog")
-c = strcmp("dog", "dog1")
-d = strcmp("yes", a$)
-e = strcmp(a$, b$)
+a = cmp("dog", "dog")
+b = cmp("dog", "Dog")
+c = cmp("dog", "dog1")
+d = cmp("yes", a$)
+e = cmp(a$, b$)
 print
 f = asc("dog")
 g = abs(-5)
@@ -35,14 +38,12 @@ h = @a
 i = len(a)
 zzz = -4
 print a;" ";b;" ";c;" ";d;" ";e;" "
-print abs(-3);" ";abs(zzz);" ";strcmp("world", d$);" ";asc("dog");" ";f;" ";g
+print abs(-3);" ";abs(zzz);" ";cmp("world", d$);" ";asc("dog");" ";f;" ";g
 print hex$(h);" ";i;" ";hex$(@a);" ";len(a)
 print hexw$(dog(0));" ";dog(1);" ";dog(2);" ";dog(3)
 print deek(&h08A0);" ";deek(&h08A2)
 print a$
 print b$
-print c$
-print d$
-print e$
+print c$;" ";d$;" ";e$
 
 end

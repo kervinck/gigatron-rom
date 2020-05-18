@@ -10,6 +10,12 @@ d = a**b**c
 e = 2
 f = 7
 
+a = -3
+b = 2000
+c = -19000
+d = 0
+print abs(a);" ";sgn(a);" ";abs(b);" ";sgn(b);" ";abs(c);" ";sgn(c);" ";abs(d);" ";sgn(d)
+
 print a**b;" ";0**a;" ";1**b;" ";a**0;" ";a**1;" ";a**2;" ";a**c;" ";d
 print e**f
 

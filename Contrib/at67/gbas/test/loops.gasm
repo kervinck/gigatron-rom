@@ -1,54 +1,54 @@
-_startAddress_      EQU                     0x0200
+_startAddress_                EQU                               0x0200
 
 ; Internal variables
-serialRawPrev       EQU                     0x0081
-register0           EQU                     0x0082
-register1           EQU                     register0 + 0x02
-register2           EQU                     register0 + 0x04
-register3           EQU                     register0 + 0x06
-register4           EQU                     register0 + 0x08
-register5           EQU                     register0 + 0x0A
-register6           EQU                     register0 + 0x0C
-register7           EQU                     register0 + 0x0E
-register8           EQU                     register0 + 0x10
-register9           EQU                     register0 + 0x12
-register10          EQU                     register0 + 0x14
-register11          EQU                     register0 + 0x16
-register12          EQU                     register0 + 0x18
-register13          EQU                     register0 + 0x1A
-register14          EQU                     register0 + 0x1C
-register15          EQU                     register0 + 0x1E
-fgbgColour          EQU                     register0 + 0x20
-cursorXY            EQU                     register0 + 0x22
-midiStream          EQU                     register0 + 0x24
-midiDelay           EQU                     register0 + 0x26
-miscFlags           EQU                     register0 + 0x28
-fontLutId           EQU                     0x00e0
+serialRawPrev                 EQU                               0x0081
+register0                     EQU                               0x0082
+register1                     EQU                               register0 + 0x02
+register2                     EQU                               register0 + 0x04
+register3                     EQU                               register0 + 0x06
+register4                     EQU                               register0 + 0x08
+register5                     EQU                               register0 + 0x0A
+register6                     EQU                               register0 + 0x0C
+register7                     EQU                               register0 + 0x0E
+register8                     EQU                               register0 + 0x10
+register9                     EQU                               register0 + 0x12
+register10                    EQU                               register0 + 0x14
+register11                    EQU                               register0 + 0x16
+register12                    EQU                               register0 + 0x18
+register13                    EQU                               register0 + 0x1A
+register14                    EQU                               register0 + 0x1C
+register15                    EQU                               register0 + 0x1E
+fgbgColour                    EQU                               register0 + 0x20
+cursorXY                      EQU                               register0 + 0x22
+midiStream                    EQU                               register0 + 0x24
+midiDelay                     EQU                               register0 + 0x26
+miscFlags                     EQU                               register0 + 0x28
+fontLutId                     EQU                               0x00e4
 
 ; Internal Constants
-ENABLE_SCROLL_BIT   EQU                     0x0001
-ON_BOTTOM_ROW_BIT   EQU                     0x0002
-ENABLE_SCROLL_MSK   EQU                     0xfffe
-ON_BOTTOM_ROW_MSK   EQU                     0xfffd
+ENABLE_SCROLL_BIT             EQU                               0x0001
+ON_BOTTOM_ROW_BIT             EQU                               0x0002
+ENABLE_SCROLL_MSK             EQU                               0xfffe
+ON_BOTTOM_ROW_MSK             EQU                               0xfffd
 
 ; Internal buffers
-textWorkArea        EQU                     0x7fa0
+textWorkArea                  EQU                               0x7fa0
 
 ; Includes
-%includePath        "../runtime"
-%include            gigatron.i
-%include            macros.i
+%includePath                  "../runtime"
+%include                      gigatron.i
+%include                      macros.i
 
 ; Labels
-_entryPoint_        EQU                     0x0200
-_repeat_0x024b      EQU                     0x024b
-_while_0x0266       EQU                     0x0262
-_else_0x0287        EQU                     0x0279
-_endif_0x0295       EQU                     0x0287
-_wend_0x029f        EQU                     0x028f
+_entryPoint_                  EQU                               0x0200
+_repeat_0x0255                EQU                               0x0255
+_while_0x0270                 EQU                               0x026c
+_else_0x0291                  EQU                               0x0283
+_endif_0x029f                 EQU                               0x0291
+_wend_0x02a9                  EQU                               0x0299
 
 ; Variables
-_a                  EQU                     0x0030
+_a                            EQU                               0x0030
 
 ; Strings
 
@@ -65,55 +65,57 @@ _a                  EQU                     0x0030
 ; Lookup Tables
 
 ; Code
-_entryPoint_        LDI                     0x28
-                    STW                     romType
-                    RomCheck                
-                    InitRealTimeProc        
-                    InitEqOp                
-                    InitNeOp                
-                    InitLeOp                
-                    InitGeOp                
-                    InitLtOp                
-                    InitGtOp                
-                    Initialise                                              ; INIT
+_entryPoint_                  LDI                               0x1c
+                              STW                               romType
+                              RomCheck                          
+                              InitEqOp                          
+                              InitNeOp                          
+                              InitLeOp                          
+                              InitGeOp                          
+                              InitLtOp                          
+                              InitGtOp                          
+                              InitArray2d                       
+                              InitArray3d                       
+                              InitRealTimeProc                  
+                              Initialise                                                        ; INIT
 
-                    ClearVertBlinds                                         ; cls
+                              ClearVertBlinds                                                   ; cls
 
-                    LDI                     1
-                    STW                     _a                              ; a=1
+                              LDI                               1
+                              STW                               _a                              ; a=1
 
-_repeat_0x024b      LDW                     _a
-                    PrintAcInt16            
-                    NewLine                                                 ; print a
+_repeat_0x0255                LDW                               _a
+                              PrintAcInt16                      
+                              NewLine                                                           ; print a
 
-                    INC                     _a                              ; inc a
+                              INC                               _a                              ; inc a
 
-                    LDW                     _a
-                    SUBI                    8
-                    BNE                     _repeat_0x024b                  ; until a &&= count + 1
+                              LDW                               _a
+                              SUBI                              8
+                              BNE                               _repeat_0x0255                  ; until a &&= count + 1
 
-_while_0x0266       LDW                     _a
-                    BLE                     _wend_0x029f                    ; while a &&> 0
+_while_0x0270                 LDW                               _a
+                              BLE                               _wend_0x02a9                    ; while a &&> 0
 
-                    LDW                     _a
-                    SUBI                    1
-                    BNE                     _else_0x0287                    ; if a &&= 1
+                              LDW                               _a
+                              SUBI                              1
+                              BNE                               _else_0x0291                    ; if a &&= 1
 
-                    LDW                     _a
-                    PrintAcInt16            
-                    BRA                     _endif_0x0295                   ; print a;
+                              LDW                               _a
+                              PrintAcInt16                      
+                              BRA                               _endif_0x029f                   ; print a;
 
-_else_0x0287        LDW                     _a
-                    PrintAcInt16            
-                    NewLine                                                 ; print a
+_else_0x0291                  LDW                               _a
+                              PrintAcInt16                      
+                              NewLine                                                           ; print a
 
-_endif_0x0295       LDW                     _a
-                    SUBI                    1
-                    STW                     _a                              ; a=a-1
+_endif_0x029f                 LDW                               _a
+                              SUBI                              1
+                              STW                               _a                              ; a=a-1
 
-                    BRA                     _while_0x0266                   ; wend
+                              BRA                               _while_0x0270                   ; wend
 
-_wend_0x029f        BRA                     _wend_0x029f                    ; END
+_wend_0x02a9                  BRA                               _wend_0x02a9                    ; END
 
 
 
@@ -123,30 +125,34 @@ _wend_0x029f        BRA                     _wend_0x029f                    ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-romCheck            EQU     0x7ee8
-realTimeProc        EQU     0x7edf
-convertEqOp         EQU     0x7ed6
-convertNeOp         EQU     0x7ecd
-convertLeOp         EQU     0x7ec4
-convertGeOp         EQU     0x7ebb
-convertLtOp         EQU     0x7eb2
-convertGtOp         EQU     0x7ea9
-resetVideoTable     EQU     0x7ae0
-initClearFuncs      EQU     0x7de7
-clearVertBlinds     EQU     0x7dad
-clearCursorRow      EQU     0x7ab0
-printInit           EQU     0x79e9
-printDigit          EQU     0x79c7
-printInt16          EQU     0x7cae
-printChar           EQU     0x78a7
-newLineScroll       EQU     0x7ba4
-realTimeProcAddr    EQU     0x00dc
-convertEqOpAddr     EQU     0x00d0
-convertNeOpAddr     EQU     0x00d2
-convertLeOpAddr     EQU     0x00d4
-convertGeOpAddr     EQU     0x00d6
-convertLtOpAddr     EQU     0x00d8
-convertGtOpAddr     EQU     0x00da
+romCheck                      EQU     0x7ee8
+realTimeProc                  EQU     0x7de5
+convertEqOp                   EQU     0x7edf
+convertNeOp                   EQU     0x7ed6
+convertLeOp                   EQU     0x7ecd
+convertGeOp                   EQU     0x7ec4
+convertLtOp                   EQU     0x7ebb
+convertGtOp                   EQU     0x7eb2
+convertArr2d                  EQU     0x7ea6
+convertArr3d                  EQU     0x7dee
+resetVideoTable               EQU     0x7da4
+initClearFuncs                EQU     0x7dc3
+clearVertBlinds               EQU     0x7cc5
+clearCursorRow                EQU     0x79b6
+printInit                     EQU     0x7caf
+printDigit                    EQU     0x78dd
+printInt16                    EQU     0x7bae
+printChar                     EQU     0x77a7
+newLineScroll                 EQU     0x7aa4
+convertEqOpAddr               EQU     0x00d0
+convertNeOpAddr               EQU     0x00d2
+convertLeOpAddr               EQU     0x00d4
+convertGeOpAddr               EQU     0x00d6
+convertLtOpAddr               EQU     0x00d8
+convertGtOpAddr               EQU     0x00da
+convertArr2dAddr              EQU     0x00dc
+convertArr3dAddr              EQU     0x00de
+realTimeProcAddr              EQU     0x00e0
 
 
 ; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
@@ -233,6 +239,34 @@ convertGt_1         LDI     1
                     RET
 
 
+memIndex0           EQU     register0
+memIndex1           EQU     register1
+memIndex2           EQU     register2
+memValue            EQU     register8
+memAddr             EQU     register9
+
+
+convertArr2d        ADDW    memIndex0
+                    ADDW    memIndex0
+                    DEEK
+                    ADDW    memIndex1
+                    ADDW    memIndex1
+                    STW     memAddr
+                    RET
+
+
+convertArr3d        ADDW    memIndex0
+                    ADDW    memIndex0
+                    DEEK
+                    ADDW    memIndex1
+                    ADDW    memIndex1
+                    DEEK
+                    ADDW    memIndex2
+                    ADDW    memIndex2
+                    STW     memAddr
+                    RET
+
+
 
 ; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 xreset              EQU     register0
@@ -276,8 +310,14 @@ initClearFuncs      PUSH
                     LDWI    ON_BOTTOM_ROW_MSK
                     ANDW    miscFlags
                     STW     miscFlags                           ; reset on bottom row flag
+            
+                    LD      fgbgColour
+                    ST      giga_sysArg0
+                    ST      giga_sysArg0 + 1
+                    ST      giga_sysArg2
+                    ST      giga_sysArg2 + 1                    ; 4 pixels of fg colour
     
-                    LDWI    SYS_SetMemory_v2_54                 ; setup fill memory SYS routine
+                    LDWI    SYS_Draw4_30                        ; setup 4 pixel SYS routine
                     STW     giga_sysFn
                     POP
                     RET
@@ -287,33 +327,34 @@ initClearFuncs      PUSH
 clearVertBlinds     PUSH
                     LDWI    initClearFuncs
                     CALL    giga_vAC
-                    LD      fgbgColour
-                    ST      giga_sysArg1                        ; fill value
-                    LDI     giga_vram >> 8
-                    STW     top  
-                    
-clearVB_loopy       LDI     giga_xres
-                    ST      giga_sysArg0
-                    LDI     0
-                    ST      giga_sysArg2                        ; low start address
-                    LD      top
-                    ST      giga_sysArg3                        ; top line
-                    SYS     54                                  ; fill memory
+
+                    LDWI    giga_vram
+                    STW     giga_sysArg4
+                    LD      giga_sysArg4 + 1
+                    ST      top
     
-                    LDI     giga_xres
-                    ST      giga_sysArg0
-                    LDI     0
-                    ST      giga_sysArg2                        ; low start address
+clearVB_loop        CALL    realTimeProcAddr
+                    LD      top
+                    ST      giga_sysArg4 + 1                    ; top line
+                    SYS     30
+    
                     LDWI    giga_yres - 1 + 16
                     SUBW    top
-                    ST      giga_sysArg3                        ; bottom line
-                    SYS     54                                  ; fill memory
+                    ST      giga_sysArg4 + 1                    ; bottom line
+                    SYS     30
+    
+                    LD      giga_sysArg4
+                    ADDI    0x04
+                    ST      giga_sysArg4
+                    SUBI    giga_xres
+                    BLT     clearVB_loop
+    
+                    LDI     0
+                    ST      giga_sysArg4
                     INC     top                                 ; next top line
-                    
-                    CALL    realTimeProcAddr
                     LD      top
                     SUBI    giga_yres / 2 + 8
-                    BLT     clearVB_loopy
+                    BLT     clearVB_loop
                     POP
                     RET
 
@@ -469,26 +510,43 @@ printC_exit         RET
 
                     ; clears the top 8 lines of pixels in preparation of text scrolling
 clearCursorRow      PUSH
-                    LDWI    SYS_SetMemory_v2_54
-                    STW     giga_sysFn                      ; setup fill memory SYS routine
                     LD      fgbgColour
-                    ST      giga_sysArg1                    ; fill value
-                    LDWI    giga_videoTable
+                    ST      giga_sysArg0
+                    ST      giga_sysArg0 + 1
+                    ST      giga_sysArg2
+                    ST      giga_sysArg2 + 1                ; 4 pixels of colour
+    
+                    LDWI    SYS_Draw4_30                    ; setup 4 pixel SYS routine
+                    STW     giga_sysFn
+    
+                    LDWI    giga_videoTable                 ; current cursor high byte address
                     PEEK
-                    ST      giga_sysArg3                    ; row0 high byte address
+                    ST      giga_sysArg4 + 1
                     LDI     8
 
-clearCR_loopy       ST      clearLoop                    
+clearCR_loopy       ST      clearLoop
+                    CALL    realTimeProcAddr
                     LDI     giga_xres
-                    ST      giga_sysArg0
-                    LDI     0
-                    ST      giga_sysArg2                    ; low start address
-                    SYS     54                              ; fill memory
-                    INC     giga_sysArg3                    ; next line
+                    
+clearCR_loopx       SUBI    4                               ; loop is unrolled 4 times
+                    ST      giga_sysArg4
+                    SYS     30
+                    SUBI    4
+                    ST      giga_sysArg4
+                    SYS     30
+                    SUBI    4
+                    ST      giga_sysArg4
+                    SYS     30
+                    SUBI    4
+                    ST      giga_sysArg4
+                    SYS     30
+                    BGT     clearCR_loopx
+                    
+                    INC     giga_sysArg4 + 1                ; next line
                     LD      clearLoop
                     SUBI    1
                     BNE     clearCR_loopy
-                    CALL    realTimeProcAddr
+
                     LDWI    printInit
                     CALL    giga_vAC                        ; re-initialise the SYS registers
                     POP

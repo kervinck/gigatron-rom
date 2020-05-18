@@ -1,5 +1,4 @@
 ; do *NOT* use register4 to register7 during time slicing if you use realTimeProc
-graphicsMode        EQU     register0
 waitVBlankNum       EQU     register0
 
 drawHLine_x1        EQU     register0
@@ -67,21 +66,7 @@ drawRectF_y2        EQU     register7
 
 drawPoly_addr       EQU     register15
 
-    
-%SUB                scanlineMode
-scanlineMode        LDW     giga_romType
-                    ANDI    0xF8
-                    SUBI    romTypeValue_ROMv2
-                    BGE     scanlineM_cont
-                    RET
-    
-scanlineM_cont      LDWI    SYS_SetMode_v2_80
-                    STW     giga_sysFn
-                    LDW     graphicsMode
-                    SYS     80
-                    RET
-%ENDS   
-    
+
 %SUB                waitVBlanks
 waitVBlanks         PUSH
 

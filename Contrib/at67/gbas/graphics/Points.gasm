@@ -1,64 +1,64 @@
-_startAddress_      EQU                     0x0200
+_startAddress_                EQU                               0x0200
 
 ; Internal variables
-serialRawPrev       EQU                     0x0081
-register0           EQU                     0x0082
-register1           EQU                     register0 + 0x02
-register2           EQU                     register0 + 0x04
-register3           EQU                     register0 + 0x06
-register4           EQU                     register0 + 0x08
-register5           EQU                     register0 + 0x0A
-register6           EQU                     register0 + 0x0C
-register7           EQU                     register0 + 0x0E
-register8           EQU                     register0 + 0x10
-register9           EQU                     register0 + 0x12
-register10          EQU                     register0 + 0x14
-register11          EQU                     register0 + 0x16
-register12          EQU                     register0 + 0x18
-register13          EQU                     register0 + 0x1A
-register14          EQU                     register0 + 0x1C
-register15          EQU                     register0 + 0x1E
-fgbgColour          EQU                     register0 + 0x20
-cursorXY            EQU                     register0 + 0x22
-midiStream          EQU                     register0 + 0x24
-midiDelay           EQU                     register0 + 0x26
-miscFlags           EQU                     register0 + 0x28
-fontLutId           EQU                     0x00e0
+serialRawPrev                 EQU                               0x0081
+register0                     EQU                               0x0082
+register1                     EQU                               register0 + 0x02
+register2                     EQU                               register0 + 0x04
+register3                     EQU                               register0 + 0x06
+register4                     EQU                               register0 + 0x08
+register5                     EQU                               register0 + 0x0A
+register6                     EQU                               register0 + 0x0C
+register7                     EQU                               register0 + 0x0E
+register8                     EQU                               register0 + 0x10
+register9                     EQU                               register0 + 0x12
+register10                    EQU                               register0 + 0x14
+register11                    EQU                               register0 + 0x16
+register12                    EQU                               register0 + 0x18
+register13                    EQU                               register0 + 0x1A
+register14                    EQU                               register0 + 0x1C
+register15                    EQU                               register0 + 0x1E
+fgbgColour                    EQU                               register0 + 0x20
+cursorXY                      EQU                               register0 + 0x22
+midiStream                    EQU                               register0 + 0x24
+midiDelay                     EQU                               register0 + 0x26
+miscFlags                     EQU                               register0 + 0x28
+fontLutId                     EQU                               0x00e4
 
 ; Internal Constants
-ENABLE_SCROLL_BIT   EQU                     0x0001
-ON_BOTTOM_ROW_BIT   EQU                     0x0002
-ENABLE_SCROLL_MSK   EQU                     0xfffe
-ON_BOTTOM_ROW_MSK   EQU                     0xfffd
+ENABLE_SCROLL_BIT             EQU                               0x0001
+ON_BOTTOM_ROW_BIT             EQU                               0x0002
+ENABLE_SCROLL_MSK             EQU                               0xfffe
+ON_BOTTOM_ROW_MSK             EQU                               0xfffd
 
 ; Internal buffers
-textWorkArea        EQU                     0x7fa0
+textWorkArea                  EQU                               0x7fa0
 
 ; Includes
-%includePath        "../runtime"
-%include            gigatron.i
-%include            macros.i
+%includePath                  "../runtime"
+%include                      gigatron.i
+%include                      macros.i
 
 ; Labels
-_entryPoint_        EQU                     0x0200
-_loop               EQU                     0x02e7
-_page_0x0300        EQU                     0x0300
-_else_0x039e        EQU                     0x0368
-_end_0x03d1         EQU                     0x0393
-_end_0x03d3         EQU                     0x0395
+_entryPoint_                  EQU                               0x0200
+_loop                         EQU                               0x0302
+_page_0x0300                  EQU                               0x0300
+_else_0x03a8                  EQU                               0x0371
+_end_0x03db                   EQU                               0x039c
+_end_0x03dd                   EQU                               0x039e
 
 ; Variables
-_x                  EQU                     0x0030
-_y                  EQU                     0x0032
-_c                  EQU                     0x0034
+_x                            EQU                               0x0030
+_y                            EQU                               0x0032
+_c                            EQU                               0x0034
 
 ; Strings
-_str_0x7ee5         EQU                     0x7ee5
-_str_0x7ee5         DB                      25 '_________________________' 0
-_str_0x7eca         EQU                     0x7eca
-_str_0x7eca         DB                      25 '  Random Pixel Flipping  ' 0
-_str_0x7eaf         EQU                     0x7eaf
-_str_0x7eaf         DB                      25 '1234567890987654321012345' 0
+_str_0x7ee5                   EQU                               0x7ee5
+_str_0x7ee5                   DB                                25 '_________________________' 0
+_str_0x7eca                   EQU                               0x7eca
+_str_0x7eca                   DB                                25 '  Random Pixel Flipping  ' 0
+_str_0x7eaf                   EQU                               0x7eaf
+_str_0x7eaf                   DB                                25 '1234567890987654321012345' 0
 
 ; Define Bytes
 
@@ -73,154 +73,156 @@ _str_0x7eaf         DB                      25 '1234567890987654321012345' 0
 ; Lookup Tables
 
 ; Code
-_entryPoint_        LDI                     0x28
-                    STW                     romType
-                    RomCheck                
-                    InitRealTimeProc        
-                    InitEqOp                
-                    InitNeOp                
-                    InitLeOp                
-                    InitGeOp                
-                    InitLtOp                
-                    InitGtOp                
-                    Initialise                                              ; INIT
+_entryPoint_                  LDI                               0x20
+                              STW                               romType
+                              RomCheck                          
+                              InitEqOp                          
+                              InitNeOp                          
+                              InitLeOp                          
+                              InitGeOp                          
+                              InitLtOp                          
+                              InitGtOp                          
+                              InitArray2d                       
+                              InitArray3d                       
+                              InitRealTimeProc                  
+                              Initialise                                                        ; INIT
 
-                    LDI                     2
-                    STW                     graphicsMode
-                    ScanlineMode                                            ; mode 2
+                              LDI                               2
+                              STW                               graphicsMode
+                              ScanlineMode                                                      ; mode 2
 
-                    LDWI                    8224
-                    STW                     fgbgColour                      ; set fgbgcolour, &h2020
+                              LDWI                              8224
+                              STW                               fgbgColour                      ; set fgbgcolour, &h2020
 
-                    LDI                     0
-                    STW                     drawRectF_x1
-                    LDI                     0
-                    STW                     drawRectF_y1
-                    LDI                     159
-                    STW                     drawRectF_x2
-                    LDI                     59
-                    STW                     drawRectF_y2
-                    DrawRectF                                               ; rectf 0, 0, 159, 59
+                              LDI                               0
+                              STW                               drawRectF_x1
+                              LDI                               0
+                              STW                               drawRectF_y1
+                              LDI                               159
+                              STW                               drawRectF_x2
+                              LDI                               59
+                              STW                               drawRectF_y2
+                              DrawRectF                                                         ; rectf 0, 0, 159, 59
 
-                    LDI                     0
-                    ST                      fgbgColour + 1                  ; set fgcolour, &h00
+                              LDI                               0
+                              ST                                fgbgColour + 1                  ; set fgcolour, &h00
 
-                    LDI                     0
-                    STW                     drawRectF_x1
-                    LDI                     60
-                    STW                     drawRectF_y1
-                    LDI                     159
-                    STW                     drawRectF_x2
-                    LDI                     119
-                    STW                     drawRectF_y2
-                    DrawRectF                                               ; rectf 0, 60, 159, 119
+                              LDI                               0
+                              STW                               drawRectF_x1
+                              LDI                               60
+                              STW                               drawRectF_y1
+                              LDI                               159
+                              STW                               drawRectF_x2
+                              LDI                               119
+                              STW                               drawRectF_y2
+                              DrawRectF                                                         ; rectf 0, 60, 159, 119
 
-                    LDI                     3
-                    ST                      fgbgColour + 1                  ; set fgcolour, &h03
+                              LDI                               3
+                              ST                                fgbgColour + 1                  ; set fgcolour, &h03
 
-                    PrintString             _str_0x7ee5
-                    NewLine                                                 ; print "_________________________"
+                              PrintString                       _str_0x7ee5
+                              NewLine                                                           ; print "_________________________"
 
-                    NewLine                                                 ; print
+                              NewLine                                                           ; print
 
-                    LDI                     12
-                    ST                      fgbgColour + 1                  ; set fgcolour, &h0C
+                              LDI                               12
+                              ST                                fgbgColour + 1                  ; set fgcolour, &h0C
 
-                    PrintString             _str_0x7eca
-                    NewLine                                                 ; print "  Random Pixel Flipping  "
+                              PrintString                       _str_0x7eca
+                              NewLine                                                           ; print "  Random Pixel Flipping  "
 
-                    LDI                     15
-                    ST                      fgbgColour + 1                  ; set fgcolour, &h0F
+                              LDI                               15
+                              ST                                fgbgColour + 1                  ; set fgcolour, &h0F
 
-                    PrintString             _str_0x7ee5
-                    NewLine                                                 ; print "_________________________"
+                              PrintString                       _str_0x7ee5
+                              NewLine                                                           ; print "_________________________"
 
-                    NewLine                                                 ; print
+                              NewLine                                                           ; print
 
-                    LDI                     51
-                    ST                      fgbgColour + 1                  ; set fgcolour, &h33
+                              LDI                               51
+                              ST                                fgbgColour + 1                  ; set fgcolour, &h33
 
-                    PrintString             _str_0x7eaf
-                    NewLine                                                 ; print "1234567890987654321012345"
+                              PrintString                       _str_0x7eaf
+                              NewLine                                                           ; print "1234567890987654321012345"
 
-                    LDI                     60
-                    ST                      fgbgColour + 1                  ; set fgcolour, &h3C
+                              LDI                               60
+                              ST                                fgbgColour + 1                  ; set fgcolour, &h3C
 
-                    PrintString             _str_0x7ee5
-                    NewLine                                                 ; print "_________________________"
+                              PrintString                       _str_0x7ee5
+                              NewLine                                                           ; print "_________________________"
 
-_loop               Rand                    
-                    ANDI                    127
-                    STW                     0xc0
-                    STW                     0xde
-                    LDWI                    _page_0x0300
-                    CALL                    giga_vAC
-_page_0x0300        LDW                     0xde
-                    Rand                    
-                    ANDI                    31
-                    ADDW                    0xc0
-                    STW                     0xc2
-                    Rand                    
-                    ANDI                    1
-                    ADDW                    0xc2
-                    STW                     _x                              ; x = (rnd(0) AND &h7F) + (rnd(0) AND &h1F) + (rnd(0) AND &h01)
+                              STW                               0xe2
+                              LDWI                              _page_0x0300
+                              CALL                              giga_vAC
+_page_0x0300                  LDW                               0xe2
+_loop                         Rand                              
+                              ANDI                              127
+                              STW                               0xc0
+                              Rand                              
+                              ANDI                              31
+                              ADDW                              0xc0
+                              STW                               0xc2
+                              Rand                              
+                              ANDI                              1
+                              ADDW                              0xc2
+                              STW                               _x                              ; x = (rnd(0) AND &h7F) + (rnd(0) AND &h1F) + (rnd(0) AND &h01)
 
-                    Rand                    
-                    ANDI                    31
-                    STW                     0xc0
-                    Rand                    
-                    ANDI                    7
-                    ADDW                    0xc0
-                    STW                     0xc2
-                    Rand                    
-                    ANDI                    7
-                    ADDW                    0xc2
-                    STW                     0xc4
-                    Rand                    
-                    ANDI                    7
-                    ADDW                    0xc4
-                    STW                     0xc6
-                    Rand                    
-                    ANDI                    7
-                    ADDW                    0xc6
-                    STW                     _y                              ; y = (rnd(0) AND &h1F) + (rnd(0) AND &h07) + (rnd(0) AND &h07) + (rnd(0) AND &h07) + (rnd(0) AND &h07)
+                              Rand                              
+                              ANDI                              31
+                              STW                               0xc0
+                              Rand                              
+                              ANDI                              7
+                              ADDW                              0xc0
+                              STW                               0xc2
+                              Rand                              
+                              ANDI                              7
+                              ADDW                              0xc2
+                              STW                               0xc4
+                              Rand                              
+                              ANDI                              7
+                              ADDW                              0xc4
+                              STW                               0xc6
+                              Rand                              
+                              ANDI                              7
+                              ADDW                              0xc6
+                              STW                               _y                              ; y = (rnd(0) AND &h1F) + (rnd(0) AND &h07) + (rnd(0) AND &h07) + (rnd(0) AND &h07) + (rnd(0) AND &h07)
 
-                    LDW                     _x
-                    ST                      readPixel_xy
-                    LDW                     _y
-                    ST                      readPixel_xy + 1
-                    ReadPixel               
-                    STW                     _c
-                    ANDI                    128
-                    SUBI                    128
-                    BNE                     _else_0x039e
-                    LDWI                    _loop
-                    CALL                    giga_vAC                        ; c = point(x, y) : if(c AND 0x80) &&= 0x80 then goto loop
+                              LDW                               _x
+                              ST                                readPixel_xy
+                              LDW                               _y
+                              ST                                readPixel_xy + 1
+                              ReadPixel                         
+                              STW                               _c
+                              ANDI                              128
+                              SUBI                              128
+                              BNE                               _else_0x03a8
+                              LDWI                              _loop
+                              CALL                              giga_vAC                        ; c = point(x, y) : if(c AND 0x80) &&= 0x80 then goto loop
 
-_else_0x039e        LDI                     159
-                    SUBW                    _x
-                    ST                      drawPixel_xy
-                    LDI                     119
-                    SUBW                    _y
-                    ST                      drawPixel_xy + 1
-                    LDW                     _c
-                    ST                      fgbgColour + 1
-                    DrawPixel                                               ; pset 159-x, 119-y, c
+_else_0x03a8                  LDI                               159
+                              SUBW                              _x
+                              ST                                drawPixel_xy
+                              LDI                               119
+                              SUBW                              _y
+                              ST                                drawPixel_xy + 1
+                              LDW                               _c
+                              ST                                fgbgColour + 1
+                              DrawPixel                                                         ; pset 159-x, 119-y, c
 
-                    LDW                     _x
-                    ST                      drawPixel_xy
-                    LDW                     _y
-                    ST                      drawPixel_xy + 1
-                    LDI                     128
-                    ST                      fgbgColour + 1
-                    DrawPixel                                               ; pset x, y, &h80 'c OR &h80 AND &b10101010
+                              LDW                               _x
+                              ST                                drawPixel_xy
+                              LDW                               _y
+                              ST                                drawPixel_xy + 1
+                              LDI                               128
+                              ST                                fgbgColour + 1
+                              DrawPixel                                                         ; pset x, y, &h80 'c OR &h80 AND &b10101010
 
-                    LDWI                    _loop
-                    CALL                    giga_vAC                        ; goto loop
+                              LDWI                              _loop
+                              CALL                              giga_vAC                        ; goto loop
 
-_end_0x03d1         BRA                     _end_0x03d1                     ; end
+_end_0x03db                   BRA                               _end_0x03db                     ; end
 
-_end_0x03d3         BRA                     _end_0x03d3                     ; END
+_end_0x03dd                   BRA                               _end_0x03dd                     ; END
 
 
 
@@ -230,34 +232,38 @@ _end_0x03d3         BRA                     _end_0x03d3                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-romCheck            EQU     0x7de8
-realTimeProc        EQU     0x7ea6
-convertEqOp         EQU     0x7ddf
-convertNeOp         EQU     0x7dd6
-convertLeOp         EQU     0x7dcd
-convertGeOp         EQU     0x7dc4
-convertLtOp         EQU     0x7dbb
-convertGtOp         EQU     0x7db2
-rand16bit           EQU     0x7daa
-scanlineMode        EQU     0x7cd3
-resetVideoTable     EQU     0x7bae
-initClearFuncs      EQU     0x7ce7
-clearCursorRow      EQU     0x79cf
-readPixel           EQU     0x7bda
-drawPixel           EQU     0x7bcd
-drawHLine           EQU     0x79a2
-drawRectF           EQU     0x7cab
-printInit           EQU     0x78e9
-printText           EQU     0x7be6
-printChar           EQU     0x77a7
-newLineScroll       EQU     0x7aa4
-realTimeProcAddr    EQU     0x00dc
-convertEqOpAddr     EQU     0x00d0
-convertNeOpAddr     EQU     0x00d2
-convertLeOpAddr     EQU     0x00d4
-convertGeOpAddr     EQU     0x00d6
-convertLtOpAddr     EQU     0x00d8
-convertGtOpAddr     EQU     0x00da
+romCheck                      EQU     0x7de8
+realTimeProc                  EQU     0x7da6
+convertEqOp                   EQU     0x7ea6
+convertNeOp                   EQU     0x7ddf
+convertLeOp                   EQU     0x7dd6
+convertGeOp                   EQU     0x7dcd
+convertLtOp                   EQU     0x7dc4
+convertGtOp                   EQU     0x7dbb
+convertArr2d                  EQU     0x7daf
+convertArr3d                  EQU     0x7cee
+rand16bit                     EQU     0x7bde
+scanlineMode                  EQU     0x7ccc
+resetVideoTable               EQU     0x7ba6
+initClearFuncs                EQU     0x7cd6
+clearCursorRow                EQU     0x79cf
+readPixel                     EQU     0x7bd2
+drawPixel                     EQU     0x7bc5
+drawHLine                     EQU     0x79a2
+drawRectF                     EQU     0x7ca4
+printInit                     EQU     0x78e9
+printText                     EQU     0x7be6
+printChar                     EQU     0x77a7
+newLineScroll                 EQU     0x7aa4
+convertEqOpAddr               EQU     0x00d0
+convertNeOpAddr               EQU     0x00d2
+convertLeOpAddr               EQU     0x00d4
+convertGeOpAddr               EQU     0x00d6
+convertLtOpAddr               EQU     0x00d8
+convertGtOpAddr               EQU     0x00da
+convertArr2dAddr              EQU     0x00dc
+convertArr3dAddr              EQU     0x00de
+realTimeProcAddr              EQU     0x00e0
 
 
 ; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
@@ -341,6 +347,34 @@ convertGtOp         BGT     convertGt_1
                     LDI     0
                     RET
 convertGt_1         LDI     1
+                    RET
+
+
+memIndex0           EQU     register0
+memIndex1           EQU     register1
+memIndex2           EQU     register2
+memValue            EQU     register8
+memAddr             EQU     register9
+
+
+convertArr2d        ADDW    memIndex0
+                    ADDW    memIndex0
+                    DEEK
+                    ADDW    memIndex1
+                    ADDW    memIndex1
+                    STW     memAddr
+                    RET
+
+
+convertArr3d        ADDW    memIndex0
+                    ADDW    memIndex0
+                    DEEK
+                    ADDW    memIndex1
+                    ADDW    memIndex1
+                    DEEK
+                    ADDW    memIndex2
+                    ADDW    memIndex2
+                    STW     memAddr
                     RET
 
 
@@ -434,13 +468,7 @@ drawRectF_y2        EQU     register7
 drawPoly_addr       EQU     register15
 
     
-scanlineMode        LDW     giga_romType
-                    ANDI    0xF8
-                    SUBI    romTypeValue_ROMv2
-                    BGE     scanlineM_cont
-                    RET
-    
-scanlineM_cont      LDWI    SYS_SetMode_v2_80
+scanlineMode        LDWI    SYS_SetMode_v2_80
                     STW     giga_sysFn
                     LDW     graphicsMode
                     SYS     80

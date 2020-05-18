@@ -12,6 +12,19 @@ mathPow             EQU     register11
 mathResult          EQU     register14
 
 
+%SUB                sign
+sign                BLE     sign_le
+                    LDI     1
+                    RET
+                    
+sign_le             BLT     sign_lt
+                    LDI     0
+                    RET
+                    
+sign_lt             LDWI    0xFFFF
+                    RET
+%ENDS
+
 %SUB                absolute
 absolute            BGE     abs_exit
                     STW     mathX

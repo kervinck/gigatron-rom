@@ -1,9 +1,10 @@
 _runtimePath_ "../runtime"
 _codeRomType_ ROMv1
 
+cls
 a=0 : b=a : p=0
 gosub note
-mode 2:cls
+
 print " 2 3   5 6 7"
 print "Q W E R T Y U I"
 poke p-2,2

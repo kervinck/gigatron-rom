@@ -1,63 +1,63 @@
-_startAddress_      EQU                     0x0200
+_startAddress_                EQU                               0x0200
 
 ; Internal variables
-serialRawPrev       EQU                     0x0081
-register0           EQU                     0x0082
-register1           EQU                     register0 + 0x02
-register2           EQU                     register0 + 0x04
-register3           EQU                     register0 + 0x06
-register4           EQU                     register0 + 0x08
-register5           EQU                     register0 + 0x0A
-register6           EQU                     register0 + 0x0C
-register7           EQU                     register0 + 0x0E
-register8           EQU                     register0 + 0x10
-register9           EQU                     register0 + 0x12
-register10          EQU                     register0 + 0x14
-register11          EQU                     register0 + 0x16
-register12          EQU                     register0 + 0x18
-register13          EQU                     register0 + 0x1A
-register14          EQU                     register0 + 0x1C
-register15          EQU                     register0 + 0x1E
-fgbgColour          EQU                     register0 + 0x20
-cursorXY            EQU                     register0 + 0x22
-midiStream          EQU                     register0 + 0x24
-midiDelay           EQU                     register0 + 0x26
-miscFlags           EQU                     register0 + 0x28
-fontLutId           EQU                     0x00e0
+serialRawPrev                 EQU                               0x0081
+register0                     EQU                               0x0082
+register1                     EQU                               register0 + 0x02
+register2                     EQU                               register0 + 0x04
+register3                     EQU                               register0 + 0x06
+register4                     EQU                               register0 + 0x08
+register5                     EQU                               register0 + 0x0A
+register6                     EQU                               register0 + 0x0C
+register7                     EQU                               register0 + 0x0E
+register8                     EQU                               register0 + 0x10
+register9                     EQU                               register0 + 0x12
+register10                    EQU                               register0 + 0x14
+register11                    EQU                               register0 + 0x16
+register12                    EQU                               register0 + 0x18
+register13                    EQU                               register0 + 0x1A
+register14                    EQU                               register0 + 0x1C
+register15                    EQU                               register0 + 0x1E
+fgbgColour                    EQU                               register0 + 0x20
+cursorXY                      EQU                               register0 + 0x22
+midiStream                    EQU                               register0 + 0x24
+midiDelay                     EQU                               register0 + 0x26
+miscFlags                     EQU                               register0 + 0x28
+fontLutId                     EQU                               0x00e4
 
 ; Internal Constants
-ENABLE_SCROLL_BIT   EQU                     0x0001
-ON_BOTTOM_ROW_BIT   EQU                     0x0002
-ENABLE_SCROLL_MSK   EQU                     0xfffe
-ON_BOTTOM_ROW_MSK   EQU                     0xfffd
+ENABLE_SCROLL_BIT             EQU                               0x0001
+ON_BOTTOM_ROW_BIT             EQU                               0x0002
+ENABLE_SCROLL_MSK             EQU                               0xfffe
+ON_BOTTOM_ROW_MSK             EQU                               0xfffd
 
 ; Internal buffers
-textWorkArea        EQU                     0x7fa0
+textWorkArea                  EQU                               0x7fa0
 
 ; Includes
-%includePath        "../runtime"
-%include            gigatron.i
-%include            macros.i
+%includePath                  "../runtime"
+%include                      gigatron.i
+%include                      macros.i
 
 ; Labels
-_entryPoint_        EQU                     0x0200
-_10                 EQU                     0x0242
-_20                 EQU                     0x024b
-_30                 EQU                     0x024f
-_40                 EQU                     0x025c
-_50                 EQU                     0x0260
-_60                 EQU                     0x028d
-_70                 EQU                     0x02a6
-_80                 EQU                     0x02b4
-_end_0x02c9         EQU                     0x02bf
+_entryPoint_                  EQU                               0x0200
+_10                           EQU                               0x024c
+_20                           EQU                               0x0255
+_30                           EQU                               0x0259
+_40                           EQU                               0x0266
+_50                           EQU                               0x026a
+_60                           EQU                               0x0297
+_70                           EQU                               0x02b0
+_80                           EQU                               0x02be
+_end_0x02d3                   EQU                               0x02c9
 
 ; Variables
-_p                  EQU                     0x0030
-_u                  EQU                     0x0032
-_v                  EQU                     0x0034
-_c                  EQU                     0x0036
-_x                  EQU                     0x0038
-_y                  EQU                     0x003a
+_p                            EQU                               0x0030
+_u                            EQU                               0x0032
+_v                            EQU                               0x0034
+_c                            EQU                               0x0036
+_x                            EQU                               0x0038
+_y                            EQU                               0x003a
 
 ; Strings
 
@@ -74,80 +74,82 @@ _y                  EQU                     0x003a
 ; Lookup Tables
 
 ; Code
-_entryPoint_        LDI                     0x1c
-                    STW                     romType
-                    RomCheck                
-                    InitRealTimeProc        
-                    InitEqOp                
-                    InitNeOp                
-                    InitLeOp                
-                    InitGeOp                
-                    InitLtOp                
-                    InitGtOp                
-                    Initialise                                              ; INIT
+_entryPoint_                  LDI                               0x1c
+                              STW                               romType
+                              RomCheck                          
+                              InitEqOp                          
+                              InitNeOp                          
+                              InitLeOp                          
+                              InitGeOp                          
+                              InitLtOp                          
+                              InitGtOp                          
+                              InitArray2d                       
+                              InitArray3d                       
+                              InitRealTimeProc                  
+                              Initialise                                                        ; INIT
 
-_10                 LDI                     21
-                    STW                     fgbgColour
-                    ClearVertBlinds                                         ; set FGBGCOLOUR, &h15 : cls
+_10                           LDI                               21
+                              STW                               fgbgColour
+                              ClearVertBlinds                                                   ; set FGBGCOLOUR, &h15 : cls
 
-_20                 LDI                     45
-                    STW                     _p                              ; p=45 'input p:if p<1 goto 20
+_20                           LDI                               45
+                              STW                               _p                              ; p=45 'input p:if p<1 goto 20
 
-_30                 LDWI                    5000
-                    STW                     _u
-                    LDI                     0
-                    STW                     _v
-                    LDI                     0
-                    STW                     _c                              ; u=50*100:v=0:c=0
+_30                           LDWI                              5000
+                              STW                               _u
+                              LDI                               0
+                              STW                               _v
+                              LDI                               0
+                              STW                               _c                              ; u=50*100:v=0:c=0
 
-_40                 LDI                     0
-                    STW                     _x                              ; for x=0 to 159
+_40                           LDI                               0
+                              STW                               _x                              ; for x=0 to 159
 
-_50                 LDW                     _u
-                    STW                     mathX
-                    LDI                     100
-                    STW                     mathY
-                    LDWI                    divide16bit
-                    CALL                    giga_vAC
-                    STW                     0xc0
-                    LDI                     68
-                    SUBW                    0xc0
-                    STW                     0xc0
-                    LD                      0xc0
-                    ST                      giga_vAC + 1
-                    ORI                     0xFF
-                    XORI                    0xFF
-                    STW                     _y
-                    LDI                     0
-                    ST                      _y
-                    LDW                     _y
-                    ADDW                    _x
-                    STW                     0xc4
-                    LDW                     _c
-                    POKE                    0xc4                            ; y=(68-u/100) LSL 8 : y.lo=0 : poke y+x,c
+_50                           LDW                               _u
+                              STW                               mathX
+                              LDI                               100
+                              STW                               mathY
+                              LDWI                              divide16bit
+                              CALL                              giga_vAC
+                              STW                               0xc0
+                              LDI                               68
+                              SUBW                              0xc0
+                              STW                               0xc0
+                              LD                                0xc0
+                              ST                                giga_vAC + 1
+                              ORI                               0xFF
+                              XORI                              0xFF
+                              STW                               _y
+                              LDI                               0
+                              ST                                _y
+                              LDW                               _y
+                              ADDW                              _x
+                              STW                               0xc4
+                              LDW                               _c
+                              POKE                              0xc4                            ; y=(68-u/100) LSL 8 : y.lo=0 : poke y+x,c
 
-_60                 LDW                     _u
-                    ADDW                    _v
-                    STW                     _u
-                    STW                     mathX
-                    LDW                     _p
-                    STW                     mathY
-                    LDWI                    divide16bit
-                    CALL                    giga_vAC
-                    STW                     0xc2
-                    LDW                     _v
-                    SUBW                    0xc2
-                    STW                     _v                              ; u=u+v:v=v-u/p
+_60                           LDW                               _u
+                              ADDW                              _v
+                              STW                               _u
+                              STW                               mathX
+                              LDW                               _p
+                              STW                               mathY
+                              LDWI                              divide16bit
+                              CALL                              giga_vAC
+                              STW                               0xc2
+                              LDW                               _v
+                              SUBW                              0xc2
+                              STW                               _v                              ; u=u+v:v=v-u/p
 
-_70                 ForNextFarInc           _x _50 159                      ; next x
+_70                           ForNextFarInc                     _x _50 159                      ; next x
 
-_80                 LDW                     _c
-                    ADDI                    23
-                    STW                     _c
-                    LDWI                    _40
-                    CALL                    giga_vAC                        ; c=c+23:goto 40
+_80                           LDW                               _c
+                              ADDI                              23
+                              STW                               _c
+                              LDWI                              _40
+                              CALL                              giga_vAC                        ; c=c+23:goto 40
 
-_end_0x02c9         BRA                     _end_0x02c9                     ; END
+_end_0x02d3                   BRA                               _end_0x02d3                     ; END
 
 
 
@@ -157,25 +159,29 @@ _end_0x02c9         BRA                     _end_0x02c9                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-romCheck            EQU     0x7ee8
-realTimeProc        EQU     0x7edf
-convertEqOp         EQU     0x7ed6
-convertNeOp         EQU     0x7ecd
-convertLeOp         EQU     0x7ec4
-convertGeOp         EQU     0x7ebb
-convertLtOp         EQU     0x7eb2
-convertGtOp         EQU     0x7ea9
-divide16bit         EQU     0x7ca8
-resetVideoTable     EQU     0x7be0
-initClearFuncs      EQU     0x7ddd
-clearVertBlinds     EQU     0x7da3
-realTimeProcAddr    EQU     0x00dc
-convertEqOpAddr     EQU     0x00d0
-convertNeOpAddr     EQU     0x00d2
-convertLeOpAddr     EQU     0x00d4
-convertGeOpAddr     EQU     0x00d6
-convertLtOpAddr     EQU     0x00d8
-convertGtOpAddr     EQU     0x00da
+romCheck                      EQU     0x7ee8
+realTimeProc                  EQU     0x7de5
+convertEqOp                   EQU     0x7edf
+convertNeOp                   EQU     0x7ed6
+convertLeOp                   EQU     0x7ecd
+convertGeOp                   EQU     0x7ec4
+convertLtOp                   EQU     0x7ebb
+convertGtOp                   EQU     0x7eb2
+convertArr2d                  EQU     0x7ea6
+convertArr3d                  EQU     0x7dee
+divide16bit                   EQU     0x7ba8
+resetVideoTable               EQU     0x7da4
+initClearFuncs                EQU     0x7dc3
+clearVertBlinds               EQU     0x7cc5
+convertEqOpAddr               EQU     0x00d0
+convertNeOpAddr               EQU     0x00d2
+convertLeOpAddr               EQU     0x00d4
+convertGeOpAddr               EQU     0x00d6
+convertLtOpAddr               EQU     0x00d8
+convertGtOpAddr               EQU     0x00da
+convertArr2dAddr              EQU     0x00dc
+convertArr3dAddr              EQU     0x00de
+realTimeProcAddr              EQU     0x00e0
 
 
 ; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
@@ -259,6 +265,34 @@ convertGtOp         BGT     convertGt_1
                     LDI     0
                     RET
 convertGt_1         LDI     1
+                    RET
+
+
+memIndex0           EQU     register0
+memIndex1           EQU     register1
+memIndex2           EQU     register2
+memValue            EQU     register8
+memAddr             EQU     register9
+
+
+convertArr2d        ADDW    memIndex0
+                    ADDW    memIndex0
+                    DEEK
+                    ADDW    memIndex1
+                    ADDW    memIndex1
+                    STW     memAddr
+                    RET
+
+
+convertArr3d        ADDW    memIndex0
+                    ADDW    memIndex0
+                    DEEK
+                    ADDW    memIndex1
+                    ADDW    memIndex1
+                    DEEK
+                    ADDW    memIndex2
+                    ADDW    memIndex2
+                    STW     memAddr
                     RET
 
 

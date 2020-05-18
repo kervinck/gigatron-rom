@@ -116,12 +116,12 @@ decay:
             sprite noFlip, 0, i4, (Y_POS + 32) - (y + 1)
             
             'adjust height of led bar
-            addr = (y LSL 2) + y + y + get("SPRITELUT", 1)
-            save = peek(addr)
-            poke addr, -1
+            lut = (y LSL 2) + y + y + get("SPRITELUT", 1)
+            save = peek(lut)
+            poke lut, -1
             sprite flipY, 1, i4, Y_POS
             sprite flipY, 1, i4 + 6, Y_POS
-            poke addr, save
+            poke lut, save
         endif
         
         volume(i) = vol

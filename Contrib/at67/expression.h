@@ -5,6 +5,9 @@
 #include <functional>
 
 
+#define MATH_PI 3.1415926535897932384626433832795028
+
+
 namespace Expression
 {
     enum ExpressionType {IsInvalid=0x8000, HasNumbers=0x0000, HasStrings=0x0001, HasStrConsts=0x0002, HasStrVars=0x0004, HasStringKeywords=0x0008, IsStringExpression=0x000F,
@@ -12,7 +15,7 @@ namespace Expression
     enum NumericType {BadBase=-1, Decimal, HexaDecimal, Octal, Binary};
     enum CCType {BooleanCC, NormalCC, FastCC};
     enum Int16Byte {Int16Both, Int16Low, Int16High};
-    enum VarType {Number, String, Constant, TmpVar, IntVar, ArrVar, StrVar, TmpStrVar};
+    enum VarType {Number, String, Constant, TmpVar, IntVar, Arr1Var, Arr2Var, Arr3Var, StrVar, TmpStrVar};
 
     struct Numeric
     {
@@ -44,6 +47,12 @@ namespace Expression
     };
 
     using exprFuncPtr = std::function<Numeric (void)>;
+
+    template <typename T> int sgn(T val)
+    {
+        return (T(0) < val) - (val < T(0));
+    }
+
 
     bool getEnableOptimisedPrint(void);
     Numeric& getOutputNumeric(void);
@@ -91,28 +100,29 @@ namespace Expression
     bool stringToU16(const std::string& token, uint16_t& result);
     void stringToDouble(const std::string& token, double& result);
 
-    std::vector<std::string> tokenise(const std::string& text, const std::string& delimiters, bool toUpper=false);
+    std::vector<std::string> tokenise(const std::string& text, const std::string& delimiterStr, bool toUpper=false);
     std::vector<std::string> tokenise(const std::string& text, char c, bool skipSpaces=true, bool toUpper=false);
     std::vector<std::string> tokenise(const std::string& text, char c, std::vector<size_t>& offsets, bool skipSpaces=true, bool toUpper=false);
-    std::vector<std::string> tokeniseLine(const std::string& line, const std::string& delimiters=" \n\r\f\t\v");
-    std::vector<std::string> tokeniseLine(const std::string& line, const std::string& delimiters, std::vector<size_t>& offsets);
+    std::vector<std::string> tokeniseLine(const std::string& line, const std::string& delimiterStr=" \n\r\f\t\v");
+    std::vector<std::string> tokeniseLine(const std::string& line, const std::string& delimiterStr, std::vector<size_t>& offsets);
 
-    void replaceText(std::string& expression, const std::string& text, const std::string& replace);
+    void replaceText(std::string& expression, const std::string& text, const std::string& replace, size_t offset=0);
 
     char* getExpression(void);
     const char* getExpressionToParse(void);
     std::string& getExpressionToParseString(void);
     int getLineNumber(void);
 
-    void setExpression(const std::string& expression);
+    void setExpression(const std::string& expression, intptr_t n=0);
 
     char peek(void);
     char get(void);
     void save(void);
     void restore(void);
-    bool advance(uintptr_t n);
+    bool advance(intptr_t n);
 
     bool find(const std::string& text);
+    bool findFunc(const std::string& text);
 
     bool number(int16_t& value);
     Numeric expression(void);

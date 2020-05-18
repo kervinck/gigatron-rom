@@ -16,7 +16,7 @@ for i=0 to 4
     print "ABCDEFGHIJKLMNOPQRSTUVWXYZ !?. 0123456789"
 next i
 
-s$ = "Fonts can be used intrinsically just like the default system font!"
+s$ = "External fonts can be usedin exactly the same way   as the internal font!"
 
 for i=0 to 10
     set FONTID, i % 5

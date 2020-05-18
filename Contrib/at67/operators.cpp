@@ -461,11 +461,71 @@ namespace Operators
     // ********************************************************************************************
     // Unary Math Operators
     // ********************************************************************************************
+    Expression::Numeric operatorPOWF(Expression::Numeric& numeric)
+    {
+        if(numeric._varType == Expression::Number  &&  numeric._parameters.size() > 0  &&  numeric._parameters[0]._varType == Expression::Number)
+        {
+            numeric._value = pow(numeric._value, numeric._parameters[0]._value);
+        }
+
+        return numeric;
+    }
+
+    Expression::Numeric operatorSQRT(Expression::Numeric& numeric)
+    {
+        if(numeric._varType == Expression::Number  &&  numeric._value > 0.0)
+        {
+            numeric._value = sqrt(numeric._value);
+        }
+
+        return numeric;
+    }
+
     Expression::Numeric operatorEXP(Expression::Numeric& numeric)
     {
         if(numeric._varType == Expression::Number)
         {
             numeric._value = exp(numeric._value);
+        }
+
+        return numeric;
+    }
+
+    Expression::Numeric operatorEXP2(Expression::Numeric& numeric)
+    {
+        if(numeric._varType == Expression::Number)
+        {
+            numeric._value = exp2(numeric._value);
+        }
+
+        return numeric;
+    }
+
+    Expression::Numeric operatorLOG(Expression::Numeric& numeric)
+    {
+        if(numeric._varType == Expression::Number  &&  numeric._value > 0.0)
+        {
+            numeric._value = log(numeric._value);
+        }
+
+        return numeric;
+    }
+
+    Expression::Numeric operatorLOG2(Expression::Numeric& numeric)
+    {
+        if(numeric._varType == Expression::Number  &&  numeric._value > 0.0)
+        {
+            numeric._value = log2(numeric._value);
+        }
+
+        return numeric;
+    }
+
+    Expression::Numeric operatorLOG10(Expression::Numeric& numeric)
+    {
+        if(numeric._varType == Expression::Number  &&  numeric._value > 0.0)
+        {
+            numeric._value = log10(numeric._value);
         }
 
         return numeric;
@@ -505,7 +565,7 @@ namespace Operators
     {
         if(numeric._varType == Expression::Number)
         {
-            numeric._value = asin(numeric._value);
+            numeric._value = asin(numeric._value)/MATH_PI*180.0;
         }
 
         return numeric;
@@ -515,7 +575,7 @@ namespace Operators
     {
         if(numeric._varType == Expression::Number)
         {
-            numeric._value = acos(numeric._value);
+            numeric._value = acos(numeric._value)/MATH_PI*180.0;;
         }
 
         return numeric;
@@ -525,7 +585,20 @@ namespace Operators
     {
         if(numeric._varType == Expression::Number)
         {
-            numeric._value = atan(numeric._value);
+            numeric._value = atan(numeric._value)/MATH_PI*180.0;
+        }
+
+        return numeric;
+    }
+
+    Expression::Numeric operatorATAN2(Expression::Numeric& numeric)
+    {
+        if(numeric._varType == Expression::Number  &&  numeric._parameters.size() > 0  &&  numeric._parameters[0]._varType == Expression::Number)
+        {
+            if(numeric._value != 0.0  ||  numeric._parameters[0]._value != 0.0)
+            {
+                numeric._value = atan2(numeric._value, numeric._parameters[0]._value)/MATH_PI*180.0;
+            }
         }
 
         return numeric;

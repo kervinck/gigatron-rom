@@ -58,6 +58,13 @@
         BGE     _label
 %ENDM
 
+%MACRO  ForNextDecZero _var _label
+        LD      _var
+        SUBI    1
+        ST      _var
+        BGE     _label
+%ENDM
+
 %MACRO  ForNextAdd _var _label _end _step
         LD      _var
         ADDI    _step
@@ -74,7 +81,7 @@
         BGE     _label
 %ENDM
 
-%MACRO  ForNextVarPos _var _label _vEnd _vStep
+%MACRO  ForNextVarAdd _var _label _vEnd _vStep
         LDW     _var
         ADDW    _vStep
         STW     _var
@@ -82,9 +89,9 @@
         BLE     _label
 %ENDM
 
-%MACRO  ForNextVarNeg _var _label _vEnd _vStep
+%MACRO  ForNextVarSub _var _label _vEnd _vStep
         LDW     _var
-        ADDW    _vStep
+        SUBW    _vStep
         STW     _var
         SUBW    _vEnd
         BGE     _label
@@ -129,7 +136,7 @@ _label_ CALL    giga_vAC
 _label_ CALL    giga_vAC
 %ENDM
 
-%MACRO  ForNextFarVarPos _var _label _vEnd _vStep
+%MACRO  ForNextFarVarAdd _var _label _vEnd _vStep
         LDW     _var
         ADDW    _vStep
         STW     _var
@@ -139,9 +146,9 @@ _label_ CALL    giga_vAC
 _label_ CALL    giga_vAC
 %ENDM
 
-%MACRO  ForNextFarVarNeg _var _label _vEnd _vStep
+%MACRO  ForNextFarVarSub _var _label _vEnd _vStep
         LDW     _var
-        ADDW    _vStep
+        SUBW    _vStep
         STW     _var
         SUBW    _vEnd
         BLT     _label_ + 2
@@ -300,58 +307,80 @@ _label_ CALL    giga_vAC
 %ENDM
 
 %MACRO  StringChr
+        STW     strDstAddr
         LDWI    stringChr
         CALL    giga_vAC
 %ENDM
 
 %MACRO  StringHex
+        STW     strDstAddr
         LDWI    stringHex
         CALL    giga_vAC
 %ENDM
 
 %MACRO  StringHexw
+        STW     strDstAddr
         LDWI    stringHexw
         CALL    giga_vAC
 %ENDM
 
 %MACRO  StringCopy
+        STW     strDstAddr
         LDWI    stringCopy
         CALL    giga_vAC
 %ENDM
 
 %MACRO  StringCmp
+        STW     strSrcAddr2
         LDWI    stringCmp
         CALL    giga_vAC
 %ENDM
 
-%MACRO  StringAdd
-        LDWI    stringAdd
-        CALL    giga_vAC
-%ENDM
-
 %MACRO  StringConcat
+        STW     strDstAddr
         LDWI    stringConcat
         CALL    giga_vAC
 %ENDM
 
-%MACRO  StringMid
-        LDWI    stringMid
-        CALL    giga_vAC
-%ENDM
-
 %MACRO  StringLeft
+        STW     strDstAddr
         LDWI    stringLeft
         CALL    giga_vAC
 %ENDM
 
 %MACRO  StringRight
+        STW     strDstAddr
         LDWI    stringRight
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  StringMid
+        STW     strDstAddr
+        LDWI    stringMid
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  StringInt
+        STW     strDstAddr
+        LDWI    stringInt
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  IntegerStr
+        STW     intSrcAddr
+        LDWI    integerStr
         CALL    giga_vAC
 %ENDM
 
 %MACRO  Absolute
         STW     mathX
         LDWI    absolute
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  Sign
+        STW     mathX
+        LDWI    sign
         CALL    giga_vAC
 %ENDM
 
@@ -686,6 +715,16 @@ _id_    CALL    giga_vAC
 %MACRO  InitGtOp
         LDWI    convertGtOp
         STW     convertGtOpAddr
+%ENDM
+
+%MACRO  InitArray2d
+        LDWI    convertArr2d
+        STW     convertArr2dAddr
+%ENDM
+
+%MACRO  InitArray3d
+        LDWI    convertArr3d
+        STW     convertArr3dAddr
 %ENDM
 
 %MACRO  InitRealTimeProc

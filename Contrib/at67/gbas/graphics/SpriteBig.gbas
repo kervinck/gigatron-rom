@@ -1,5 +1,6 @@
 _runtimePath_ "../runtime"
 _runtimeStart_ &h7FFF
+_codeRomType_ ROMv3
 
 'defines the amount of contiguous RAM needed for sprite stripes, (in this case 40*6 + 1)
 _spriteStripeChunks_ 40, &h0200, descending
@@ -32,7 +33,7 @@ loop:
     x1 = 28
     x0 = 120
 
-    for x=129 to 1
+    for x=129 downto 1
         wait
         sprite flipX, 1, x, 15
         sprite noFlip, 0, 130-x, 65

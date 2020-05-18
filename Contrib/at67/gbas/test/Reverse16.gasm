@@ -1,61 +1,61 @@
-_startAddress_      EQU                     0x0200
+_startAddress_                EQU                               0x0200
 
 ; Internal variables
-serialRawPrev       EQU                     0x0081
-register0           EQU                     0x0082
-register1           EQU                     register0 + 0x02
-register2           EQU                     register0 + 0x04
-register3           EQU                     register0 + 0x06
-register4           EQU                     register0 + 0x08
-register5           EQU                     register0 + 0x0A
-register6           EQU                     register0 + 0x0C
-register7           EQU                     register0 + 0x0E
-register8           EQU                     register0 + 0x10
-register9           EQU                     register0 + 0x12
-register10          EQU                     register0 + 0x14
-register11          EQU                     register0 + 0x16
-register12          EQU                     register0 + 0x18
-register13          EQU                     register0 + 0x1A
-register14          EQU                     register0 + 0x1C
-register15          EQU                     register0 + 0x1E
-fgbgColour          EQU                     register0 + 0x20
-cursorXY            EQU                     register0 + 0x22
-midiStream          EQU                     register0 + 0x24
-midiDelay           EQU                     register0 + 0x26
-miscFlags           EQU                     register0 + 0x28
-fontLutId           EQU                     0x00e0
+serialRawPrev                 EQU                               0x0081
+register0                     EQU                               0x0082
+register1                     EQU                               register0 + 0x02
+register2                     EQU                               register0 + 0x04
+register3                     EQU                               register0 + 0x06
+register4                     EQU                               register0 + 0x08
+register5                     EQU                               register0 + 0x0A
+register6                     EQU                               register0 + 0x0C
+register7                     EQU                               register0 + 0x0E
+register8                     EQU                               register0 + 0x10
+register9                     EQU                               register0 + 0x12
+register10                    EQU                               register0 + 0x14
+register11                    EQU                               register0 + 0x16
+register12                    EQU                               register0 + 0x18
+register13                    EQU                               register0 + 0x1A
+register14                    EQU                               register0 + 0x1C
+register15                    EQU                               register0 + 0x1E
+fgbgColour                    EQU                               register0 + 0x20
+cursorXY                      EQU                               register0 + 0x22
+midiStream                    EQU                               register0 + 0x24
+midiDelay                     EQU                               register0 + 0x26
+miscFlags                     EQU                               register0 + 0x28
+fontLutId                     EQU                               0x00e4
 
 ; Internal Constants
-ENABLE_SCROLL_BIT   EQU                     0x0001
-ON_BOTTOM_ROW_BIT   EQU                     0x0002
-ENABLE_SCROLL_MSK   EQU                     0xfffe
-ON_BOTTOM_ROW_MSK   EQU                     0xfffd
+ENABLE_SCROLL_BIT             EQU                               0x0001
+ON_BOTTOM_ROW_BIT             EQU                               0x0002
+ENABLE_SCROLL_MSK             EQU                               0xfffe
+ON_BOTTOM_ROW_MSK             EQU                               0xfffd
 
 ; Internal buffers
-textWorkArea        EQU                     0x7fa0
+textWorkArea                  EQU                               0x7fa0
 
 ; Includes
-%includePath        "../runtime"
-%include            gigatron.i
-%include            macros.i
+%includePath                  "../runtime"
+%include                      gigatron.i
+%include                      macros.i
 
 ; Labels
-_entryPoint_        EQU                     0x0200
-_loop               EQU                     0x0247
-_end_0x028c         EQU                     0x0280
-_end_0x028e         EQU                     0x0282
+_entryPoint_                  EQU                               0x0200
+_loop                         EQU                               0x0251
+_end_0x0296                   EQU                               0x028a
+_end_0x0298                   EQU                               0x028c
 
 ; Variables
-_out16              EQU                     0x0030
-_in16               EQU                     0x0032
+_out16                        EQU                               0x0030
+_in16                         EQU                               0x0032
 
 ; Strings
-_str_0x7efd         EQU                     0x7efd
-_str_0x7efd         DB                      1 '?' 0
+_str_0x7efd                   EQU                               0x7efd
+_str_0x7efd                   DB                                1 '?' 0
 
 ; Define Bytes
-def_bytes_0x0600    EQU                     0x0600
-def_bytes_0x0600    DB                      0 128 64 192 32 160 96 224 16 144 80 208 48 176 112 240 8 136 72 200 40 168 104 232 24 152 88 216 56 184 120 248 4 132 68 196 36 164 100 228 20 148 84 212 52 180 116 244 12 140 76 204 44 172 108 236 28 156 92 220 60 188 124 252 2 130 66 194 34 162 98 226 18 146 82 210 50 178 114 242 10 138 74 202 42 170 106 234 26 154 90 218 58 186 122 250 6 134 70 198 38 166 102 230 22 150 86 214 54 182 118 246 14 142 78 206 46 174 110 238 30 158 94 222 62 190 126 254 1 129 65 193 33 161 97 225 17 145 81 209 49 177 113 241 9 137 73 201 41 169 105 233 25 153 89 217 57 185 121 249 5 133 69 197 37 165 101 229 21 149 85 213 53 181 117 245 13 141 77 205 45 173 109 237 29 157 93 221 61 189 125 253 3 131 67 195 35 163 99 227 19 147 83 211 51 179 115 243 11 139 75 203 43 171 107 235 27 155 91 219 59 187 123 251 7 135 71 199 39 167 103 231 23 151 87 215 55 183 119 247 15 143 79 207 47 175 111 239 31 159 95 223 63 191 127 255 
+def_bytes_0x0600              EQU                               0x0600
+def_bytes_0x0600              DB                                0 128 64 192 32 160 96 224 16 144 80 208 48 176 112 240 8 136 72 200 40 168 104 232 24 152 88 216 56 184 120 248 4 132 68 196 36 164 100 228 20 148 84 212 52 180 116 244 12 140 76 204 44 172 108 236 28 156 92 220 60 188 124 252 2 130 66 194 34 162 98 226 18 146 82 210 50 178 114 242 10 138 74 202 42 170 106 234 26 154 90 218 58 186 122 250 6 134 70 198 38 166 102 230 22 150 86 214 54 182 118 246 14 142 78 206 46 174 110 238 30 158 94 222 62 190 126 254 1 129 65 193 33 161 97 225 17 145 81 209 49 177 113 241 9 137 73 201 41 169 105 233 25 153 89 217 57 185 121 249 5 133 69 197 37 165 101 229 21 149 85 213 53 181 117 245 13 141 77 205 45 173 109 237 29 157 93 221 61 189 125 253 3 131 67 195 35 163 99 227 19 147 83 211 51 179 115 243 11 139 75 203 43 171 107 235 27 155 91 219 59 187 123 251 7 135 71 199 39 167 103 231 23 151 87 215 55 183 119 247 15 143 79 207 47 175 111 239 31 159 95 223 63 191 127 255 
 
 ; Define Words
 
@@ -66,60 +66,62 @@ def_bytes_0x0600    DB                      0 128 64 192 32 160 96 224 16 144 80
 ; Define Fonts
 
 ; Lookup Tables
-_inputVars_0x7ef5   EQU                     0x7ef5
-_inputVars_0x7ef5   DW                      0x0032 
-_inputStrs_0x7ef3   EQU                     0x7ef3
-_inputStrs_0x7ef3   DW                      0x7efd 
-_inputTypes_0x7eef  EQU                     0x7eef
-_inputTypes_0x7eef  DW                      0x5f02 0x0000 
-_input_0x7ef7       EQU                     0x7ef7
-_input_0x7ef7       DW                      0x7ef5 0x7ef3 0x7eef 
+_inputVars_0x7ef5             EQU                               0x7ef5
+_inputVars_0x7ef5             DW                                0x0032 
+_inputStrs_0x7ef3             EQU                               0x7ef3
+_inputStrs_0x7ef3             DW                                0x7efd 
+_inputTypes_0x7eef            EQU                               0x7eef
+_inputTypes_0x7eef            DW                                0x5f02 0x0000 
+_input_0x7ef7                 EQU                               0x7ef7
+_input_0x7ef7                 DW                                0x7ef5 0x7ef3 0x7eef 
 
 ; Code
-_entryPoint_        LDI                     0x28
-                    STW                     romType
-                    RomCheck                
-                    InitRealTimeProc        
-                    InitEqOp                
-                    InitNeOp                
-                    InitLeOp                
-                    InitGeOp                
-                    InitLtOp                
-                    InitGtOp                
-                    Initialise                                              ; INIT
+_entryPoint_                  LDI                               0x1c
+                              STW                               romType
+                              RomCheck                          
+                              InitEqOp                          
+                              InitNeOp                          
+                              InitLeOp                          
+                              InitGeOp                          
+                              InitLtOp                          
+                              InitGtOp                          
+                              InitArray2d                       
+                              InitArray3d                       
+                              InitRealTimeProc                  
+                              Initialise                                                        ; INIT
 
-                    ClearVertBlinds                                         ; cls
+                              ClearVertBlinds                                                   ; cls
 
-_loop               LDI                     0
-                    STW                     _out16                          ; out16 = 0
+_loop                         LDI                               0
+                              STW                               _out16                          ; out16 = 0
 
-                    LDWI                    0x7ef7
-                    Input                                                   ; input in16
+                              LDWI                              0x7ef7
+                              Input                                                             ; input in16
 
-                    LDWI                    1536
-                    STW                     0xc0
-                    LD                      _in16
-                    ADDW                    0xc0
-                    PEEK                    
-                    ST                      _out16 + 1                      ; out16.hi = peek(ADDR + in16.lo)
+                              LDWI                              1536
+                              STW                               0xc0
+                              LD                                _in16
+                              ADDW                              0xc0
+                              PEEK                              
+                              ST                                _out16 + 1                      ; out16.hi = peek(START + in16.lo)
 
-                    LDWI                    1536
-                    STW                     0xc0
-                    LD                      _in16 + 1
-                    ADDW                    0xc0
-                    PEEK                    
-                    ST                      _out16                          ; out16.lo = peek(ADDR + in16.hi)
+                              LDWI                              1536
+                              STW                               0xc0
+                              LD                                _in16 + 1
+                              ADDW                              0xc0
+                              PEEK                              
+                              ST                                _out16                          ; out16.lo = peek(START + in16.hi)
 
-                    LDW                     _out16
-                    PrintAcHexWord          
-                    NewLine                                                 ; print hexw$(out16)
+                              LDW                               _out16
+                              PrintAcHexWord                    
+                              NewLine                                                           ; print hexw$(out16)
 
-                    LDWI                    _loop
-                    CALL                    giga_vAC                        ; goto loop
+                              LDWI                              _loop
+                              CALL                              giga_vAC                        ; goto loop
 
-_end_0x028c         BRA                     _end_0x028c                     ; end
+_end_0x0296                   BRA                               _end_0x0296                     ; end
 
-_end_0x028e         BRA                     _end_0x028e                     ; END
+_end_0x0298                   BRA                               _end_0x0298                     ; END
 
 
 
@@ -129,44 +131,48 @@ _end_0x028e         BRA                     _end_0x028e                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-romCheck            EQU     0x7ed8
-realTimeProc        EQU     0x7ecf
-convertEqOp         EQU     0x7ec6
-convertNeOp         EQU     0x7ebd
-convertLeOp         EQU     0x7eb4
-convertGeOp         EQU     0x7eab
-convertLtOp         EQU     0x7ea2
-convertGtOp         EQU     0x7df6
-resetVideoTable     EQU     0x7ca0
-initClearFuncs      EQU     0x7dde
-clearVertBlinds     EQU     0x7da4
-clearCursorRow      EQU     0x7acf
-input               EQU     0x7cd8
-inputExt1           EQU     0x79b0
-inputExt2           EQU     0x7ab1
-inputCursor         EQU     0x78dd
-inputKeys           EQU     0x77a4
-inputIntVar         EQU     0x78c9
-inputStrVar         EQU     0x78b2
-inputReturn         EQU     0x76c6
-inputDelete         EQU     0x75b9
-inputPrint          EQU     0x76a7
-inputNewline        EQU     0x75a4
-printInit           EQU     0x74e9
-printText           EQU     0x74d0
-printChr            EQU     0x7aa4
-printChar           EQU     0x73a7
-printHexByte        EQU     0x72ca
-printHexWord        EQU     0x7cbf
-newLineScroll       EQU     0x7ba4
-integerStr          EQU     0x71c0
-realTimeProcAddr    EQU     0x00dc
-convertEqOpAddr     EQU     0x00d0
-convertNeOpAddr     EQU     0x00d2
-convertLeOpAddr     EQU     0x00d4
-convertGeOpAddr     EQU     0x00d6
-convertLtOpAddr     EQU     0x00d8
-convertGtOpAddr     EQU     0x00da
+romCheck                      EQU     0x7ed8
+realTimeProc                  EQU     0x7dd9
+convertEqOp                   EQU     0x7ecf
+convertNeOp                   EQU     0x7ec6
+convertLeOp                   EQU     0x7ebd
+convertGeOp                   EQU     0x7eb4
+convertLtOp                   EQU     0x7eab
+convertGtOp                   EQU     0x7ea2
+convertArr2d                  EQU     0x7df3
+convertArr3d                  EQU     0x7de2
+resetVideoTable               EQU     0x7bb9
+initClearFuncs                EQU     0x7db7
+clearVertBlinds               EQU     0x7cc5
+clearCursorRow                EQU     0x79b6
+input                         EQU     0x7bd8
+inputExt1                     EQU     0x78b0
+inputExt2                     EQU     0x77e1
+inputCursor                   EQU     0x77bf
+inputKeys                     EQU     0x76a4
+inputIntVar                   EQU     0x7da3
+inputStrVar                   EQU     0x7ba2
+inputReturn                   EQU     0x75c6
+inputDelete                   EQU     0x74b9
+inputPrint                    EQU     0x77a0
+inputNewline                  EQU     0x79a1
+printInit                     EQU     0x75b0
+printText                     EQU     0x74a0
+printChr                      EQU     0x78a3
+printChar                     EQU     0x73a7
+printHexByte                  EQU     0x72ca
+printHexWord                  EQU     0x7cac
+newLineScroll                 EQU     0x7aa4
+integerStr                    EQU     0x71c0
+convertEqOpAddr               EQU     0x00d0
+convertNeOpAddr               EQU     0x00d2
+convertLeOpAddr               EQU     0x00d4
+convertGeOpAddr               EQU     0x00d6
+convertLtOpAddr               EQU     0x00d8
+convertGtOpAddr               EQU     0x00da
+convertArr2dAddr              EQU     0x00dc
+convertArr3dAddr              EQU     0x00de
+realTimeProcAddr              EQU     0x00e0
 
 
 ; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
@@ -253,6 +259,34 @@ convertGt_1         LDI     1
                     RET
 
 
+memIndex0           EQU     register0
+memIndex1           EQU     register1
+memIndex2           EQU     register2
+memValue            EQU     register8
+memAddr             EQU     register9
+
+
+convertArr2d        ADDW    memIndex0
+                    ADDW    memIndex0
+                    DEEK
+                    ADDW    memIndex1
+                    ADDW    memIndex1
+                    STW     memAddr
+                    RET
+
+
+convertArr3d        ADDW    memIndex0
+                    ADDW    memIndex0
+                    DEEK
+                    ADDW    memIndex1
+                    ADDW    memIndex1
+                    DEEK
+                    ADDW    memIndex2
+                    ADDW    memIndex2
+                    STW     memAddr
+                    RET
+
+
 
 ; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 xreset              EQU     register0
@@ -296,8 +330,14 @@ initClearFuncs      PUSH
                     LDWI    ON_BOTTOM_ROW_MSK
                     ANDW    miscFlags
                     STW     miscFlags                           ; reset on bottom row flag
+            
+                    LD      fgbgColour
+                    ST      giga_sysArg0
+                    ST      giga_sysArg0 + 1
+                    ST      giga_sysArg2
+                    ST      giga_sysArg2 + 1                    ; 4 pixels of fg colour
     
-                    LDWI    SYS_SetMemory_v2_54                 ; setup fill memory SYS routine
+                    LDWI    SYS_Draw4_30                        ; setup 4 pixel SYS routine
                     STW     giga_sysFn
                     POP
                     RET
@@ -307,33 +347,34 @@ initClearFuncs      PUSH
 clearVertBlinds     PUSH
                     LDWI    initClearFuncs
                     CALL    giga_vAC
-                    LD      fgbgColour
-                    ST      giga_sysArg1                        ; fill value
-                    LDI     giga_vram >> 8
-                    STW     top  
-                    
-clearVB_loopy       LDI     giga_xres
-                    ST      giga_sysArg0
-                    LDI     0
-                    ST      giga_sysArg2                        ; low start address
-                    LD      top
-                    ST      giga_sysArg3                        ; top line
-                    SYS     54                                  ; fill memory
+
+                    LDWI    giga_vram
+                    STW     giga_sysArg4
+                    LD      giga_sysArg4 + 1
+                    ST      top
     
-                    LDI     giga_xres
-                    ST      giga_sysArg0
-                    LDI     0
-                    ST      giga_sysArg2                        ; low start address
+clearVB_loop        CALL    realTimeProcAddr
+                    LD      top
+                    ST      giga_sysArg4 + 1                    ; top line
+                    SYS     30
+    
                     LDWI    giga_yres - 1 + 16
                     SUBW    top
-                    ST      giga_sysArg3                        ; bottom line
-                    SYS     54                                  ; fill memory
+                    ST      giga_sysArg4 + 1                    ; bottom line
+                    SYS     30
+    
+                    LD      giga_sysArg4
+                    ADDI    0x04
+                    ST      giga_sysArg4
+                    SUBI    giga_xres
+                    BLT     clearVB_loop
+    
+                    LDI     0
+                    ST      giga_sysArg4
                     INC     top                                 ; next top line
-                    
-                    CALL    realTimeProcAddr
                     LD      top
                     SUBI    giga_yres / 2 + 8
-                    BLT     clearVB_loopy
+                    BLT     clearVB_loop
                     POP
                     RET
 
@@ -820,26 +861,43 @@ printHexWord        PUSH
 
                     ; clears the top 8 lines of pixels in preparation of text scrolling
 clearCursorRow      PUSH
-                    LDWI    SYS_SetMemory_v2_54
-                    STW     giga_sysFn                      ; setup fill memory SYS routine
                     LD      fgbgColour
-                    ST      giga_sysArg1                    ; fill value
-                    LDWI    giga_videoTable
+                    ST      giga_sysArg0
+                    ST      giga_sysArg0 + 1
+                    ST      giga_sysArg2
+                    ST      giga_sysArg2 + 1                ; 4 pixels of colour
+    
+                    LDWI    SYS_Draw4_30                    ; setup 4 pixel SYS routine
+                    STW     giga_sysFn
+    
+                    LDWI    giga_videoTable                 ; current cursor high byte address
                     PEEK
-                    ST      giga_sysArg3                    ; row0 high byte address
+                    ST      giga_sysArg4 + 1
                     LDI     8
 
-clearCR_loopy       ST      clearLoop                    
+clearCR_loopy       ST      clearLoop
+                    CALL    realTimeProcAddr
                     LDI     giga_xres
-                    ST      giga_sysArg0
-                    LDI     0
-                    ST      giga_sysArg2                    ; low start address
-                    SYS     54                              ; fill memory
-                    INC     giga_sysArg3                    ; next line
+                    
+clearCR_loopx       SUBI    4                               ; loop is unrolled 4 times
+                    ST      giga_sysArg4
+                    SYS     30
+                    SUBI    4
+                    ST      giga_sysArg4
+                    SYS     30
+                    SUBI    4
+                    ST      giga_sysArg4
+                    SYS     30
+                    SUBI    4
+                    ST      giga_sysArg4
+                    SYS     30
+                    BGT     clearCR_loopx
+                    
+                    INC     giga_sysArg4 + 1                ; next line
                     LD      clearLoop
                     SUBI    1
                     BNE     clearCR_loopy
-                    CALL    realTimeProcAddr
+
                     LDWI    printInit
                     CALL    giga_vAC                        ; re-initialise the SYS registers
                     POP
@@ -904,8 +962,6 @@ intSrcAddr          EQU     register8
 intDigit            EQU     register9
 intResult           EQU     register10
 intNegative         EQU     register11
-intTemp0            EQU     register12
-intTemp1            EQU     register15
 
 
                     ; converts a string to a +/- integer, assumes string pointer is pointing to first char and not the string length, (no overflow or underflow checks)

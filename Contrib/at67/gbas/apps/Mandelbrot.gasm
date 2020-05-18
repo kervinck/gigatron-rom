@@ -1,70 +1,70 @@
-_startAddress_      EQU                     0x0200
+_startAddress_                EQU                               0x0200
 
 ; Internal variables
-serialRawPrev       EQU                     0x0081
-register0           EQU                     0x0082
-register1           EQU                     register0 + 0x02
-register2           EQU                     register0 + 0x04
-register3           EQU                     register0 + 0x06
-register4           EQU                     register0 + 0x08
-register5           EQU                     register0 + 0x0A
-register6           EQU                     register0 + 0x0C
-register7           EQU                     register0 + 0x0E
-register8           EQU                     register0 + 0x10
-register9           EQU                     register0 + 0x12
-register10          EQU                     register0 + 0x14
-register11          EQU                     register0 + 0x16
-register12          EQU                     register0 + 0x18
-register13          EQU                     register0 + 0x1A
-register14          EQU                     register0 + 0x1C
-register15          EQU                     register0 + 0x1E
-fgbgColour          EQU                     register0 + 0x20
-cursorXY            EQU                     register0 + 0x22
-midiStream          EQU                     register0 + 0x24
-midiDelay           EQU                     register0 + 0x26
-miscFlags           EQU                     register0 + 0x28
-fontLutId           EQU                     0x00e0
+serialRawPrev                 EQU                               0x0081
+register0                     EQU                               0x0082
+register1                     EQU                               register0 + 0x02
+register2                     EQU                               register0 + 0x04
+register3                     EQU                               register0 + 0x06
+register4                     EQU                               register0 + 0x08
+register5                     EQU                               register0 + 0x0A
+register6                     EQU                               register0 + 0x0C
+register7                     EQU                               register0 + 0x0E
+register8                     EQU                               register0 + 0x10
+register9                     EQU                               register0 + 0x12
+register10                    EQU                               register0 + 0x14
+register11                    EQU                               register0 + 0x16
+register12                    EQU                               register0 + 0x18
+register13                    EQU                               register0 + 0x1A
+register14                    EQU                               register0 + 0x1C
+register15                    EQU                               register0 + 0x1E
+fgbgColour                    EQU                               register0 + 0x20
+cursorXY                      EQU                               register0 + 0x22
+midiStream                    EQU                               register0 + 0x24
+midiDelay                     EQU                               register0 + 0x26
+miscFlags                     EQU                               register0 + 0x28
+fontLutId                     EQU                               0x00e4
 
 ; Internal Constants
-ENABLE_SCROLL_BIT   EQU                     0x0001
-ON_BOTTOM_ROW_BIT   EQU                     0x0002
-ENABLE_SCROLL_MSK   EQU                     0xfffe
-ON_BOTTOM_ROW_MSK   EQU                     0xfffd
+ENABLE_SCROLL_BIT             EQU                               0x0001
+ON_BOTTOM_ROW_BIT             EQU                               0x0002
+ENABLE_SCROLL_MSK             EQU                               0xfffe
+ON_BOTTOM_ROW_MSK             EQU                               0xfffd
 
 ; Internal buffers
-textWorkArea        EQU                     0x7fa0
+textWorkArea                  EQU                               0x7fa0
 
 ; Includes
-%includePath        "../runtime"
-%include            gigatron.i
-%include            macros.i
+%includePath                  "../runtime"
+%include                      gigatron.i
+%include                      macros.i
 
 ; Labels
-_entryPoint_        EQU                     0x0200
-_break              EQU                     0x02d0
-_next_0x0259        EQU                     0x0259
-_next_0x0262        EQU                     0x0262
-_next_0x0276        EQU                     0x0270
-_else_0x02c1        EQU                     0x02a7
-_page_0x0300        EQU                     0x0300
-_end_0x036c         EQU                     0x0336
+_entryPoint_                  EQU                               0x0200
+_break                        EQU                               0x02da
+_next_0x0263                  EQU                               0x0263
+_next_0x026c                  EQU                               0x026c
+_next_0x0280                  EQU                               0x027a
+_else_0x02cb                  EQU                               0x02b1
+_page_0x0300                  EQU                               0x0300
+_end_0x0376                   EQU                               0x0340
 
 ; Variables
-_cy                 EQU                     0x0030
-_py                 EQU                     0x0032
-_cx                 EQU                     0x0034
-_px                 EQU                     0x0036
-_x                  EQU                     0x0038
-_y                  EQU                     0x003a
-_x2                 EQU                     0x003c
-_y2                 EQU                     0x003e
-_c                  EQU                     0x0040
+_cy                           EQU                               0x0030
+_py                           EQU                               0x0032
+_cx                           EQU                               0x0034
+_px                           EQU                               0x0036
+_x                            EQU                               0x0038
+_y                            EQU                               0x003a
+_x2                           EQU                               0x003c
+_y2                           EQU                               0x003e
+_c                            EQU                               0x0040
 
 ; Strings
 
 ; Define Bytes
-def_bytes_0x0600    EQU                     0x0600
-def_bytes_0x0600    DB                      1 2 3 7 11 15 14 13 12 60 56 52 48 32 16 0 
+def_bytes_0x0600              EQU                               0x0600
+def_bytes_0x0600              DB                                1 2 3 7 11 15 14 13 12 60 56 52 48 32 16 0 
 
 ; Define Words
 
@@ -77,131 +77,133 @@ def_bytes_0x0600    DB                      1 2 3 7 11 15 14 13 12 60 56 52 48 3
 ; Lookup Tables
 
 ; Code
-_entryPoint_        LDI                     0x1c
-                    STW                     romType
-                    RomCheck                
-                    InitRealTimeProc        
-                    InitEqOp                
-                    InitNeOp                
-                    InitLeOp                
-                    InitGeOp                
-                    InitLtOp                
-                    InitGtOp                
-                    Initialise                                              ; INIT
+_entryPoint_                  LDI                               0x20
+                              STW                               romType
+                              RomCheck                          
+                              InitEqOp                          
+                              InitNeOp                          
+                              InitLeOp                          
+                              InitGeOp                          
+                              InitLtOp                          
+                              InitGtOp                          
+                              InitArray2d                       
+                              InitArray3d                       
+                              InitRealTimeProc                  
+                              Initialise                                                        ; INIT
 
-                    LDI                     2
-                    STW                     graphicsMode
-                    ScanlineMode                                            ; mode 2
+                              LDI                               2
+                              STW                               graphicsMode
+                              ScanlineMode                                                      ; mode 2
 
-                    ClearVertBlinds                                         ; cls
+                              ClearVertBlinds                                                   ; cls
 
-                    LDWI                    -60
-                    STW                     _cy                             ; cy = ymin
+                              LDWI                              -60
+                              STW                               _cy                             ; cy = ymin
 
-                    LDI                     8
-                    STW                     _py                             ; for py=8 to 67
+                              LDI                               8
+                              STW                               _py                             ; for py=8 to 67
 
-_next_0x0259        LDWI                    -90
-                    STW                     _cx                             ; cx = xmin
+_next_0x0263                  LDWI                              -90
+                              STW                               _cx                             ; cx = xmin
 
-                    LDI                     0
-                    STW                     _px                             ; for px=0 to 159
+                              LDI                               0
+                              STW                               _px                             ; for px=0 to 159
 
-_next_0x0262        LDI                     0
-                    STW                     _x
-                    STW                     _y
-                    STW                     _x2
-                    STW                     _y2                             ; x=0 : y=x : x2=y : y2=x2
+_next_0x026c                  LDI                               0
+                              STW                               _x
+                              STW                               _y
+                              STW                               _x2
+                              STW                               _y2                             ; x=0 : y=x : x2=y : y2=x2
 
-                    LDI                     0
-                    STW                     _c                              ; for c=0 &to 14
+                              LDI                               0
+                              STW                               _c                              ; for c=0 &to 14
 
-_next_0x0276        LDW                     _x
-                    STW                     mathX
-                    LDW                     _x
-                    STW                     mathY
-                    LDWI                    multiply16bit
-                    CALL                    giga_vAC
-                    STW                     mathShift
-                    ShiftRight5bit          
-                    STW                     _x2                             ; x2 = (x*x) LSR fracbits
+_next_0x0280                  LDW                               _x
+                              STW                               mathX
+                              LDW                               _x
+                              STW                               mathY
+                              LDWI                              multiply16bit
+                              CALL                              giga_vAC
+                              STW                               mathShift
+                              ShiftRight5bit                    
+                              STW                               _x2                             ; x2 = (x*x) LSR fracbits
 
-                    LDW                     _y
-                    STW                     mathX
-                    LDW                     _y
-                    STW                     mathY
-                    LDWI                    multiply16bit
-                    CALL                    giga_vAC
-                    STW                     mathShift
-                    ShiftRight5bit          
-                    STW                     _y2                             ; y2 = (y*y) LSR fracbits
+                              LDW                               _y
+                              STW                               mathX
+                              LDW                               _y
+                              STW                               mathY
+                              LDWI                              multiply16bit
+                              CALL                              giga_vAC
+                              STW                               mathShift
+                              ShiftRight5bit                    
+                              STW                               _y2                             ; y2 = (y*y) LSR fracbits
 
-                    LDW                     _x2
-                    ADDW                    _y2
-                    SUBI                    128
-                    BLE                     _else_0x02c1
-                    BRA                     _break                          ; if x2+y2 &&> (2**fracbits * 4) then goto &break
+                              LDW                               _x2
+                              ADDW                              _y2
+                              SUBI                              128
+                              BLE                               _else_0x02cb
+                              BRA                               _break                          ; if x2+y2 &&> (2**fracbits * 4) then goto &break
 
-_else_0x02c1        LDW                     _x
-                    STW                     mathX
-                    LDW                     _y
-                    STW                     mathY
-                    LDWI                    multiply16bit
-                    CALL                    giga_vAC
-                    STW                     mathShift
-                    ShiftRightSgn4bit       
-                    ADDW                    _cy
-                    STW                     _y                              ; y = ((x*y) ASR (fracbits-1)) + cy
+_else_0x02cb                  LDW                               _x
+                              STW                               mathX
+                              LDW                               _y
+                              STW                               mathY
+                              LDWI                              multiply16bit
+                              CALL                              giga_vAC
+                              STW                               mathShift
+                              ShiftRightSgn4bit                 
+                              ADDW                              _cy
+                              STW                               _y                              ; y = ((x*y) ASR (fracbits-1)) + cy
 
-                    LDW                     _x2
-                    SUBW                    _y2
-                    ADDW                    _cx
-                    STW                     _x                              ; x = x2 - y2 + cx
+                              LDW                               _x2
+                              SUBW                              _y2
+                              ADDW                              _cx
+                              STW                               _x                              ; x = x2 - y2 + cx
 
-                    ForNextInc              _c _next_0x0276 14              ; next c
+                              ForNextInc                        _c _next_0x0280 14              ; next c
 
-_break              LD                      _py
-                    ST                      giga_vAC + 1
-                    ORI                     0xFF
-                    XORI                    0xFF
-                    ADDW                    _px
-                    STW                     0xc0
-                    LDWI                    1536
-                    ADDW                    _c
-                    PEEK                    
-                    POKE                    0xc0                            ; poke (py LSL 8) + px, peek(colours + c)
+_break                        LD                                _py
+                              ST                                giga_vAC + 1
+                              ORI                               0xFF
+                              XORI                              0xFF
+                              ADDW                              _px
+                              STW                               0xc0
+                              LDWI                              1536
+                              ADDW                              _c
+                              PEEK                              
+                              POKE                              0xc0                            ; poke (py LSL 8) + px, peek(colours + c)
 
-                    LDI                     135
-                    SUBW                    _py
-                    STW                     0xc0
-                    LD                      0xc0
-                    ST                      giga_vAC + 1
-                    ORI                     0xFF
-                    XORI                    0xFF
-                    STW                     0xde
-                    LDWI                    _page_0x0300
-                    CALL                    giga_vAC
-_page_0x0300        LDW                     0xde
-                    ADDW                    _px
-                    STW                     0xc2
-                    LDWI                    1536
-                    ADDW                    _c
-                    PEEK                    
-                    POKE                    0xc2                            ; poke ((135 - py) LSL 8) + px, peek(colours + c)
+                              LDI                               135
+                              SUBW                              _py
+                              STW                               0xe2
+                              LDWI                              _page_0x0300
+                              CALL                              giga_vAC
+_page_0x0300                  LDW                               0xe2
+                              STW                               0xc0
+                              LD                                0xc0
+                              ST                                giga_vAC + 1
+                              ORI                               0xFF
+                              XORI                              0xFF
+                              ADDW                              _px
+                              STW                               0xc2
+                              LDWI                              1536
+                              ADDW                              _c
+                              PEEK                              
+                              POKE                              0xc2                            ; poke ((135 - py) LSL 8) + px, peek(colours + c)
 
-                    LDW                     _cx
-                    ADDI                    1
-                    STW                     _cx                             ; cx = cx + dx
+                              LDW                               _cx
+                              ADDI                              1
+                              STW                               _cx                             ; cx = cx + dx
 
-                    ForNextFarInc           _px _next_0x0262 159            ; next px
+                              ForNextFarInc                     _px _next_0x026c 159            ; next px
 
-                    LDW                     _cy
-                    ADDI                    1
-                    STW                     _cy                             ; cy = cy + dy
+                              LDW                               _cy
+                              ADDI                              1
+                              STW                               _cy                             ; cy = cy + dy
 
-                    ForNextFarInc           _py _next_0x0259 67             ; next py
+                              ForNextFarInc                     _py _next_0x0263 67             ; next py
 
-_end_0x036c         BRA                     _end_0x036c                     ; END
+_end_0x0376                   BRA                               _end_0x0376                     ; END
 
 
 
@@ -211,28 +213,33 @@ _end_0x036c         BRA                     _end_0x036c                     ; EN
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-romCheck            EQU     0x7ee8
-realTimeProc        EQU     0x7edf
-convertEqOp         EQU     0x7ed6
-convertNeOp         EQU     0x7ecd
-convertLeOp         EQU     0x7ec4
-convertGeOp         EQU     0x7ebb
-convertLtOp         EQU     0x7eb2
-convertGtOp         EQU     0x7ea9
-multiply16bit       EQU     0x7bcd
-shiftRight5bit      EQU     0x7dbf
-shiftRightSgn4bit   EQU     0x7da2
-scanlineMode        EQU     0x7dc9
-resetVideoTable     EQU     0x7ca6
-initClearFuncs      EQU     0x7ddd
-clearVertBlinds     EQU     0x7cc5
-realTimeProcAddr    EQU     0x00dc
-convertEqOpAddr     EQU     0x00d0
-convertNeOpAddr     EQU     0x00d2
-convertLeOpAddr     EQU     0x00d4
-convertGeOpAddr     EQU     0x00d6
-convertLtOpAddr     EQU     0x00d8
-convertGtOpAddr     EQU     0x00da
+romCheck                      EQU     0x7ee8
+realTimeProc                  EQU     0x7de5
+convertEqOp                   EQU     0x7edf
+convertNeOp                   EQU     0x7ed6
+convertLeOp                   EQU     0x7ecd
+convertGeOp                   EQU     0x7ec4
+convertLtOp                   EQU     0x7ebb
+convertGtOp                   EQU     0x7eb2
+convertArr2d                  EQU     0x7ea6
+convertArr3d                  EQU     0x7dee
+sign                          EQU     0x7da7
+multiply16bit                 EQU     0x7bcd
+shiftRight5bit                EQU     0x7db9
+shiftRightSgn4bit             EQU     0x7ca8
+scanlineMode                  EQU     0x7dc3
+resetVideoTable               EQU     0x7bae
+initClearFuncs                EQU     0x7dcd
+clearVertBlinds               EQU     0x7cc5
+convertEqOpAddr               EQU     0x00d0
+convertNeOpAddr               EQU     0x00d2
+convertLeOpAddr               EQU     0x00d4
+convertGeOpAddr               EQU     0x00d6
+convertLtOpAddr               EQU     0x00d8
+convertGtOpAddr               EQU     0x00da
+convertArr2dAddr              EQU     0x00dc
+convertArr3dAddr              EQU     0x00de
+realTimeProcAddr              EQU     0x00e0
 
 
 ; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
@@ -319,6 +326,34 @@ convertGt_1         LDI     1
                     RET
 
 
+memIndex0           EQU     register0
+memIndex1           EQU     register1
+memIndex2           EQU     register2
+memValue            EQU     register8
+memAddr             EQU     register9
+
+
+convertArr2d        ADDW    memIndex0
+                    ADDW    memIndex0
+                    DEEK
+                    ADDW    memIndex1
+                    ADDW    memIndex1
+                    STW     memAddr
+                    RET
+
+
+convertArr3d        ADDW    memIndex0
+                    ADDW    memIndex0
+                    DEEK
+                    ADDW    memIndex1
+                    ADDW    memIndex1
+                    DEEK
+                    ADDW    memIndex2
+                    ADDW    memIndex2
+                    STW     memAddr
+                    RET
+
+
 ; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
 mathX               EQU     register8
 mathY               EQU     register9
@@ -368,6 +403,20 @@ shiftRight5bit      LDWI    SYS_LSRW5_50
                     STW     giga_sysFn
                     LDW     mathShift
                     SYS     50
+                    RET
+
+
+
+sign                LDW     mathX
+                    BLE     sign_le
+                    LDI     1
+                    RET
+                    
+sign_le             BLT     sign_lt
+                    LDI     0
+                    RET
+                    
+sign_lt             LDWI    0xFFFF
                     RET
 
 
@@ -458,13 +507,7 @@ drawRectF_y2        EQU     register7
 drawPoly_addr       EQU     register15
 
     
-scanlineMode        LDW     giga_romType
-                    ANDI    0xF8
-                    SUBI    romTypeValue_ROMv2
-                    BGE     scanlineM_cont
-                    RET
-    
-scanlineM_cont      LDWI    SYS_SetMode_v2_80
+scanlineMode        LDWI    SYS_SetMode_v2_80
                     STW     giga_sysFn
                     LDW     graphicsMode
                     SYS     80
@@ -514,14 +557,8 @@ initClearFuncs      PUSH
                     LDWI    ON_BOTTOM_ROW_MSK
                     ANDW    miscFlags
                     STW     miscFlags                           ; reset on bottom row flag
-            
-                    LD      fgbgColour
-                    ST      giga_sysArg0
-                    ST      giga_sysArg0 + 1
-                    ST      giga_sysArg2
-                    ST      giga_sysArg2 + 1                    ; 4 pixels of fg colour
     
-                    LDWI    SYS_Draw4_30                        ; setup 4 pixel SYS routine
+                    LDWI    SYS_SetMemory_v2_54                 ; setup fill memory SYS routine
                     STW     giga_sysFn
                     POP
                     RET
@@ -531,34 +568,33 @@ initClearFuncs      PUSH
 clearVertBlinds     PUSH
                     LDWI    initClearFuncs
                     CALL    giga_vAC
-
-                    LDWI    giga_vram
-                    STW     giga_sysArg4
-                    LD      giga_sysArg4 + 1
-                    ST      top
-    
-clearVB_loop        CALL    realTimeProcAddr
+                    LD      fgbgColour
+                    ST      giga_sysArg1                        ; fill value
+                    LDI     giga_vram >> 8
+                    STW     top  
+                    
+clearVB_loopy       LDI     giga_xres
+                    ST      giga_sysArg0
+                    LDI     0
+                    ST      giga_sysArg2                        ; low start address
                     LD      top
-                    ST      giga_sysArg4 + 1                    ; top line
-                    SYS     30
+                    ST      giga_sysArg3                        ; top line
+                    SYS     54                                  ; fill memory
     
+                    LDI     giga_xres
+                    ST      giga_sysArg0
+                    LDI     0
+                    ST      giga_sysArg2                        ; low start address
                     LDWI    giga_yres - 1 + 16
                     SUBW    top
-                    ST      giga_sysArg4 + 1                    ; bottom line
-                    SYS     30
-    
-                    LD      giga_sysArg4
-                    ADDI    0x04
-                    ST      giga_sysArg4
-                    SUBI    giga_xres
-                    BLT     clearVB_loop
-    
-                    LDI     0
-                    ST      giga_sysArg4
+                    ST      giga_sysArg3                        ; bottom line
+                    SYS     54                                  ; fill memory
                     INC     top                                 ; next top line
+                    
+                    CALL    realTimeProcAddr
                     LD      top
                     SUBI    giga_yres / 2 + 8
-                    BLT     clearVB_loop
+                    BLT     clearVB_loopy
                     POP
                     RET
 
