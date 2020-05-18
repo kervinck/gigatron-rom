@@ -1897,7 +1897,7 @@ namespace Compiler
             return false;
         }
         int paramsSize = int(Compiler::getDefFunctions()[name]._params.size());
-        if(params.size() != paramsSize)
+        if(paramsSize != int(params.size()))
         {
             fprintf(stderr, "Compiler::userFunc() : Syntax error, wrong number of parameters, expecting %d, in '%s' on line %d\n", paramsSize,  _codeLines[_currentCodeLineIndex]._code.c_str(), Expression::getLineNumber());
             return false;

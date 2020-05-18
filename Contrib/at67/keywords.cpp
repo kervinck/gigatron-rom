@@ -3706,7 +3706,7 @@ namespace Keywords
             return false;
         }
         int paramsSize = int(Compiler::getDefFunctions()[name]._params.size());
-        if(params.size() != paramsSize)
+        if(paramsSize != int(params.size()))
         {
             fprintf(stderr, "Keywords::keywordFUNC() : Syntax error, wrong number of parameters, expecting %d, in '%s' on line %d\n", paramsSize, codeLine._code.c_str(), codeLineIndex);
             return false;
