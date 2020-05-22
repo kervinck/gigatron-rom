@@ -1,4 +1,8 @@
-; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+; do *NOT* use register4 to register7 during time slicing if you call realTimeStub
+realTimeAddr        EQU     register0
+realTimeProc0       EQU     register1
+realTimeProc1       EQU     register2
+realTimeProc2       EQU     register3
 numericLabel        EQU     register0
 defaultLabel        EQU     register1
 lutLabs             EQU     register2
@@ -25,15 +29,64 @@ romC_loop           LD      romErrPixel
 romC_return         RET                    
 %ENDS
 
-%SUB                realTimeProc
+%SUB                realTimeStub
                     ; runs real time, (time sliced), code at regular intervals
-realTimeProc        PUSH
-                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI routine
+                    ; self modifying code allows for timer, midi and user procs
+realTimeStub        RET                                     ; RET gets replaced by PUSH
+                    LDWI    0x0000                          ; 0x0000 gets replaced by realTimeProc0 address
+                    CALL    giga_vAC
+realTimeStub1       POP
+                    RET
+                    RET                                     ; POP + 2xRET gets replaced by LDWI realTimeProc1 address
+                    CALL    giga_vAC
+realTimeStub2       POP
+                    RET
+                    RET                                     ; POP + 2xRET gets replaced by LDWI realTimeProc2 address
                     CALL    giga_vAC
                     POP
                     RET
-                    
-realTimeStub        RET
+%ENDS
+
+%SUB                setRealTimeProc0
+setRealTimeProc0    LDWI    realTimeStub
+                    STW     realTimeAddr
+                    LDI     0x75
+                    POKE    realTimeAddr                    ; replace RET with PUSH
+                    INC     realTimeAddr
+                    INC     realTimeAddr                    ; realTimeStub + 2
+                    LDW     realTimeProc0
+                    DOKE    realTimeAddr                    ; replace 0x0000 with proc
+                    RET
+%ENDS
+
+%SUB                setRealTimeProc1
+setRealTimeProc1    PUSH
+                    LDWI    setRealTimeProc0
+                    CALL    giga_vAC
+                    LDWI    realTimeStub1
+                    STW     realTimeAddr
+                    LDI     0x11
+                    POKE    realTimeAddr                    ; replace POP with LDWI
+                    INC     realTimeAddr                    ; realTimeStub + 1
+                    LDW     realTimeProc1
+                    DOKE    realTimeAddr                    ; replace 2xRET with proc
+                    POP
+                    RET
+%ENDS
+
+%SUB                setRealTimeProc2
+setRealTimeProc2    PUSH
+                    LDWI    setRealTimeProc1
+                    CALL    giga_vAC
+                    LDWI    realTimeStub2
+                    STW     realTimeAddr
+                    LDI     0x11
+                    POKE    realTimeAddr                    ; replace POP with LDWI
+                    INC     realTimeAddr                    ; realTimeStub + 1
+                    LDW     realTimeProc2
+                    DOKE    realTimeAddr                    ; replace 2xRET with proc
+                    POP
+                    RET
 %ENDS
 
 %SUB                gotoNumericLabel

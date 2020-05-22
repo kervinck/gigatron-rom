@@ -61,6 +61,16 @@ namespace Expression
     }
 
     // Unary math operators
+    Numeric& operatorCEIL(Numeric& numeric)
+    {
+        numeric._value = ceil(numeric._value);
+        return numeric;
+    }
+    Numeric& operatorFLOOR(Numeric& numeric)
+    {
+        numeric._value = floor(numeric._value);
+        return numeric;
+    }
     Numeric& operatorPOWF(Numeric& numeric)
     {
         if(numeric._parameters.size() > 0) numeric._value = pow(numeric._value, numeric._parameters[0]._value);
@@ -1278,7 +1288,7 @@ namespace Expression
             }
             else
             {
-                numeric = Numeric(value, -1, true, false, Number, BooleanCC, Int16Both, std::string(""), std::string(""));
+                numeric = Numeric(value, -1, true, false, false, Number, BooleanCC, Int16Both, std::string(""), std::string(""));
             }
         }
         // Functions
@@ -1364,7 +1374,7 @@ namespace Expression
                 case '~': get(); numeric = factor(0); numeric = operatorNOT(numeric); break;
 
                 // Unknown
-                default: numeric = Numeric(defaultValue, -1, true, false, Number, BooleanCC, Int16Both, std::string(_expression), std::string("")); break;
+                default: numeric = Numeric(defaultValue, -1, true, false, false, Number, BooleanCC, Int16Both, std::string(_expression), std::string("")); break;
             }
         }
 

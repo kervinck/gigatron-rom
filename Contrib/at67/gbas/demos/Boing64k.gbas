@@ -1,7 +1,9 @@
 _runtimePath_ "../runtime"
 _runtimeStart_ &hFFFF
 _codeRomType_ ROMv3
-_stringWorkArea_ &h69A0 'move string work area for scrolling of text, (defaults to &h7FA0)
+
+'move string work area for scrolling of text, (defaults to &h7FA0)
+_stringWorkArea_ &h69A0
 
 'defines the amount of contiguous RAM needed for sprite stripes, (in this case 15*6 + 1)
 _spriteStripeChunks_ 15, &h16A0, ascending
@@ -46,10 +48,10 @@ conf20$ = "an oppressive government is more to be feared than a tiger    "
 sound off
 
 mode 2
-set FGBGCOLOUR, &h3F15
+set FGBG_COLOUR, &h3F15
 cls
 
-set FGCOLOUR, 0
+set FG_COLOUR, 0
 rectf 0, 97, 159 + 96, 119 'clear text scrolling onscreen and offscreen area
 
 const fontStart = 0
@@ -110,7 +112,7 @@ f = boingStart : y = &h0100 : text = 160 : fstep = 1 : xstep = 100
 x = 0 : ystep = x : scrl = ystep : char = scrl : stamp = char : width = stamp : quote = width : crash = quote : time = crash
 
 loop:
-    set SOUNDTIMER, 2
+    set SOUND_TIMER, 2
     
     sprite noFlip, f, x.hi, y.hi
     

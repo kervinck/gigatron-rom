@@ -1,4 +1,4 @@
-; do *NOT* use register4 to register7 during time slicing if you use realTimeProc
+; do *NOT* use register4 to register7 during time slicing
 graphicsMode        EQU     register0
 waitVBlankNum       EQU     register0
 
@@ -20,16 +20,16 @@ drawLine_xy1        EQU     register0
 drawLine_xy2        EQU     register1
 drawLine_dxy1       EQU     register2
 drawLine_dxy2       EQU     register3
-drawLine_dx1        EQU     register4           ; register4 to register7 used for temp values, state will be invalidated during time slicing
-drawLine_dy1        EQU     register5
-drawLine_dx2        EQU     register6
-drawLine_dy2        EQU     register7
-drawLine_sx         EQU     register8
-drawLine_sy         EQU     register9
-drawLine_h          EQU     register10
-drawLine_num        EQU     register11
-drawLine_count      EQU     register12
-drawLine_tmp        EQU     register13
+drawLine_dx1        EQU     register8
+drawLine_dy1        EQU     register9
+drawLine_dx2        EQU     register10
+drawLine_dy2        EQU     register11
+drawLine_sx         EQU     register12
+drawLine_sy         EQU     register13
+drawLine_h          EQU     register14
+drawLine_num        EQU     register15
+drawLine_count      EQU     register14
+drawLine_tmp        EQU     register15
 
 drawPixel_xy        EQU     register15
 readPixel_xy        EQU     register15
@@ -94,9 +94,6 @@ waitVB_vblank       CALLI   waitVBlank
 waitVBlank          LD      giga_videoY
                     XORI    179
                     BNE     waitVBlank
-                    PUSH
-                    CALLI   realTimeProc
-                    POP
                     RET
 %ENDS
 
@@ -125,8 +122,7 @@ drawPixel           STW     drawPixel_xy
 %ENDS   
 
 %SUB                drawHLine
-drawHLine           PUSH
-                    LD      drawHLine_x1
+drawHLine           LD      drawHLine_x1
                     ST      giga_sysArg2                    ; low start address
                     LD      drawHLine_x2
                     SUBW    drawHLine_x1
@@ -146,14 +142,11 @@ drawHL_cont         ADDI    1
                     LDWI    SYS_SetMemory_v2_54
                     STW     giga_sysFn
                     SYS     54                              ; fill memory
-                    CALLI    realTimeProc
-                    POP
                     RET
 %ENDS
 
 %SUB                drawVLine
-drawVLine           PUSH
-                    LDW     drawVLine_y2
+drawVLine           LDW     drawVLine_y2
                     SUBW    drawVLine_y1
                     BGE     drawVL_cont
                     LDW     drawVLine_y2
@@ -188,7 +181,6 @@ drawVL_cont         LD      drawVLine_x1
 drawVL_loop0        LDI     0xFF
                     ST      giga_sysArg2        ; 8 pixels of fg and bg colour
                     SYS     134                 ; SYS_VDrawBits_134, 270 - 134/2 = 0xCB
-                    CALLI   realTimeProc
                     LD      giga_sysArg4 + 1
                     ADDI    8
                     ST      giga_sysArg4 + 1
@@ -201,7 +193,6 @@ drawVL_loop1        LD      fgbgColour + 1
                     LD      giga_sysArg4 + 1
                     SUBW    drawVLine_y2
                     BLE     drawVL_loop1        ; remaining pixels
-                    POP
                     RET
 %ENDS
 
@@ -308,8 +299,7 @@ drawL_flip          LDW     drawLine_xy1
                     SUBW    drawLine_dxy2
                     STW     drawLine_xy2        ; xy2 -= dxy2
                     
-drawL_count         CALLI   realTimeProc
-                    LDW     drawLine_count
+drawL_count         LDW     drawLine_count
                     SUBI    0x01
                     STW     drawLine_count
                     BGT     drawLineLoop
@@ -450,8 +440,7 @@ drawVTL_flip        LDW     drawLine_xy1
                     SUBW    drawLine_dxy2
                     STW     drawLine_xy2        ; xy2 -= dxy2
                     
-drawVTL_count       CALLI   realTimeProc
-                    LDW     drawLine_count
+drawVTL_count       LDW     drawLine_count
                     SUBI    0x01
                     STW     drawLine_count
                     BGT     drawVTLineLoop

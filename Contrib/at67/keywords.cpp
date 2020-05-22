@@ -101,6 +101,7 @@ namespace Keywords
         _stringKeywords["RIGHT$"] = "RIGHT$";
         _stringKeywords["MID$"  ] = "MID$";
         _stringKeywords["STR$"  ] = "STR$";
+        _stringKeywords["TIME$" ] = "TIME$";
 
         // Keywords
         _keywords["END"    ] = {"END",     keywordEND,     Compiler::SingleStatementParsed};
@@ -110,6 +111,7 @@ namespace Keywords
         _keywords["GOTO"   ] = {"GOTO",    keywordGOTO,    Compiler::SingleStatementParsed};
         _keywords["GOSUB"  ] = {"GOSUB",   keywordGOSUB,   Compiler::SingleStatementParsed};
         _keywords["RETURN" ] = {"RETURN",  keywordRETURN,  Compiler::SingleStatementParsed};
+        _keywords["RET" ]    = {"RET",     keywordRET,     Compiler::SingleStatementParsed};
         _keywords["CLS"    ] = {"CLS",     keywordCLS,     Compiler::SingleStatementParsed};
         _keywords["?"      ] = {"?",       keywordPRINT,   Compiler::SingleStatementParsed};
         _keywords["PRINT"  ] = {"PRINT",   keywordPRINT,   Compiler::SingleStatementParsed};
@@ -146,6 +148,8 @@ namespace Keywords
         _keywords["SCROLL" ] = {"SCROLL",  keywordSCROLL,  Compiler::SingleStatementParsed};
         _keywords["POKE"   ] = {"POKE",    keywordPOKE,    Compiler::SingleStatementParsed};
         _keywords["DOKE"   ] = {"DOKE",    keywordDOKE,    Compiler::SingleStatementParsed};
+        _keywords["INIT"   ] = {"INIT",    keywordINIT,    Compiler::SingleStatementParsed};
+        _keywords["TICK"   ] = {"TICK",    keywordTICK,    Compiler::SingleStatementParsed};
         _keywords["PLAY"   ] = {"PLAY",    keywordPLAY,    Compiler::SingleStatementParsed};
         _keywords["LOAD"   ] = {"LOAD",    keywordLOAD,    Compiler::SingleStatementParsed};
         _keywords["SPRITE" ] = {"SPRITE",  keywordSPRITE,  Compiler::SingleStatementParsed};
@@ -759,7 +763,7 @@ namespace Keywords
         {
             std::string sysVarName = numeric._text;
             Expression::strToUpper(sysVarName);
-            if(sysVarName == "SPRITELUT"  &&  numeric._parameters.size() == 1)
+            if(sysVarName == "SPRITE_LUT"  &&  numeric._parameters.size() == 1)
             {
                 // Literal constant
                 if(numeric._parameters[0]._varType == Expression::Number)
@@ -780,52 +784,119 @@ namespace Keywords
                 Compiler::getNextTempVar();
                 Operators::createTmpVar(numeric);
 
-                if(sysVarName == "CURSORX")
+                if(sysVarName == "TIME_MODE")
+                {
+                    Compiler::emitVcpuAsm("LDWI", "handleT_mode + 1", false);
+                    Compiler::emitVcpuAsm("PEEK", "", false);
+                }
+                if(sysVarName == "TIME_EPOCH")
+                {
+                    Compiler::emitVcpuAsm("LDWI", "handleT_epoch + 1", false);
+                    Compiler::emitVcpuAsm("PEEK", "", false);
+                }
+                else if(sysVarName == "TIME_S")
+                {
+                    Compiler::emitVcpuAsm("LDWI", "_timeArray_ + 0", false);
+                    Compiler::emitVcpuAsm("PEEK", "", false);
+                }
+                else if(sysVarName == "TIME_M")
+                {
+                    Compiler::emitVcpuAsm("LDWI", "_timeArray_ + 1", false);
+                    Compiler::emitVcpuAsm("PEEK", "", false);
+                }
+                else if(sysVarName == "TIME_H")
+                {
+                    Compiler::emitVcpuAsm("LDWI", "_timeArray_ + 2", false);
+                    Compiler::emitVcpuAsm("PEEK", "", false);
+                }
+                else if(sysVarName == "TIMER")
+                {
+                    Compiler::emitVcpuAsm("LDW", "timerTick", false);
+                }
+                else if(sysVarName == "TIMER_PREV")
+                {
+                    Compiler::emitVcpuAsm("LDW", "timerPrev", false);
+                }
+                else if(sysVarName == "VBLANK_PROC")
+                {
+                    if(Compiler::getCodeRomType() < Cpu::ROMv5a)
+                    {
+                        std::string romTypeStr;
+                        getRomTypeStr(Compiler::getCodeRomType(), romTypeStr);
+                        fprintf(stderr, "Keywords::keywordSET() : Version error, 'SET VBLANK_PROC' requires ROMv5a or higher, you are trying to link against '%s', on line %d\n", romTypeStr.c_str(), 
+                                                                                                                                                                                  codeLineIndex);
+                    }
+                    else
+                    {
+                        Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(VBLANK_PROC), false);
+                        Compiler::emitVcpuAsm("DEEK", "", false);
+                    }
+                }
+                else if(sysVarName == "VBLANK_FREQ")
+                {
+                    if(Compiler::getCodeRomType() < Cpu::ROMv5a)
+                    {
+                        std::string romTypeStr;
+                        getRomTypeStr(Compiler::getCodeRomType(), romTypeStr);
+                        fprintf(stderr, "Keywords::keywordSET() : Version error, 'SET VBLANK_FREQ' requires ROMv5a or higher, you are trying to link against '%s', on line %d\n", romTypeStr.c_str(), 
+                                                                                                                                                                                  codeLineIndex);
+                    }
+                    // (256 - n) = vblank interrupt frequency, where n = 1 to 255
+                    else
+                    {
+                        Compiler::emitVcpuAsm("LDWI", "realTS_rti + 2", false);
+                        Compiler::emitVcpuAsm("PEEK", "", false);
+                        Compiler::emitVcpuAsm("STW", "register0", false);
+                        Compiler::emitVcpuAsm("LDWI", "256", false);
+                        Compiler::emitVcpuAsm("SUBW", "register0", false);
+                    }
+                }
+                else if(sysVarName == "CURSOR_X")
                 {
                     Compiler::emitVcpuAsm("LD", "cursorXY", false);
                 }
-                else if(sysVarName == "CURSORY")
+                else if(sysVarName == "CURSOR_Y")
                 {
                     Compiler::emitVcpuAsm("LD", "cursorXY + 1", false);
                 }
-                else if(sysVarName == "CURSORXY")
+                else if(sysVarName == "CURSOR_XY")
                 {
                     Compiler::emitVcpuAsm("LDW", "cursorXY", false);
                 }
-                else if(sysVarName == "FGCOLOUR")
+                else if(sysVarName == "FG_COLOUR")
                 {
                     Compiler::emitVcpuAsm("LD", "fgbgColour + 1", false);
                 }
-                else if(sysVarName == "BGCOLOUR")
+                else if(sysVarName == "BG_COLOUR")
                 {
                     Compiler::emitVcpuAsm("LD", "fgbgColour", false);
                 }
-                else if(sysVarName == "FGBGCOLOUR")
+                else if(sysVarName == "FGBG_COLOUR")
                 {
                     Compiler::emitVcpuAsm("LDW", "fgbgColour", false);
                 }
-                else if(sysVarName == "MIDISTREAM")
+                else if(sysVarName == "MIDI_STREAM")
                 {
                     Compiler::emitVcpuAsm("LDW", "midiStream", false);
                 }
-                else if(sysVarName == "LEDTEMPO")
+                else if(sysVarName == "LED_TEMPO")
                 {
                     Compiler::emitVcpuAsm("LD", "giga_ledTempo", false);
                 }
-                else if(sysVarName == "LEDSTATE")
+                else if(sysVarName == "LED_STATE")
                 {
                     Compiler::emitVcpuAsm("LD", "giga_ledState", false);
                 }
-                else if(sysVarName == "SOUNDTIMER")
+                else if(sysVarName == "SOUND_TIMER")
                 {
                     Compiler::emitVcpuAsm("LD", "giga_soundTimer", false);
                 }
-                else if(sysVarName == "CHANNELMASK")
+                else if(sysVarName == "CHANNEL_MASK")
                 {
                     Compiler::emitVcpuAsm("LD", "giga_channelMask", false);
                     Compiler::emitVcpuAsm("ANDI", "0x03", false);
                 }
-                else if(sysVarName == "ROMTYPE")
+                else if(sysVarName == "ROM_TYPE")
                 {
                     Compiler::emitVcpuAsm("LD", "giga_romType", false);
                     Compiler::emitVcpuAsm("ANDI", "0xFC", false);
@@ -846,23 +917,23 @@ namespace Keywords
                 {
                     Compiler::emitVcpuAsm("LD", "giga_vPC", false);
                 }
-                else if(sysVarName == "XOUTMASK")
+                else if(sysVarName == "XOUT_MASK")
                 {
                     Compiler::emitVcpuAsm("LD", "giga_xoutMask", false);
                 }
-                else if(sysVarName == "BUTTONSTATE")
+                else if(sysVarName == "BUTTON_STATE")
                 {
                     Compiler::emitVcpuAsm("LD", "giga_buttonState", false);
                 }
-                else if(sysVarName == "SERIALRAW")
+                else if(sysVarName == "SERIAL_RAW")
                 {
                     Compiler::emitVcpuAsm("LD", "giga_serialRaw", false);
                 }
-                else if(sysVarName == "FRAMECOUNT")
+                else if(sysVarName == "FRAME_COUNT")
                 {
                     Compiler::emitVcpuAsm("LD", "giga_frameCount", false);
                 }
-                else if(sysVarName == "VIDEOY")
+                else if(sysVarName == "VIDEO_Y")
                 {
                     Compiler::emitVcpuAsm("LD", "giga_videoY", false);
                 }
@@ -878,55 +949,55 @@ namespace Keywords
                 {
                     Compiler::emitVcpuAsm("LD", "giga_rand0", false);
                 }
-                else if(sysVarName == "MEMSIZE")
+                else if(sysVarName == "MEM_SIZE")
                 {
                     Compiler::emitVcpuAsm("LD", "giga_memSize", false);
                 }
-                else if(sysVarName == "YRES")
+                else if(sysVarName == "Y_RES")
                 {
                     Compiler::emitVcpuAsm("LDI", "giga_yres", false);
                 }
-                else if(sysVarName == "XRES")
+                else if(sysVarName == "X_RES")
                 {
                     Compiler::emitVcpuAsm("LDI", "giga_xres", false);
                 }
-                else if(sysVarName == "SNDCHN4")
+                else if(sysVarName == "SND_CHN4")
                 {
                     Compiler::emitVcpuAsm("LDWI", "giga_soundChan4", false);
                 }
-                else if(sysVarName == "SNDCHN3")
+                else if(sysVarName == "SND_CHN3")
                 {
                     Compiler::emitVcpuAsm("LDWI", "giga_soundChan3", false);
                 }
-                else if(sysVarName == "SNDCHN2")
+                else if(sysVarName == "SND_CHN2")
                 {
                     Compiler::emitVcpuAsm("LDWI", "giga_soundChan2", false);
                 }
-                else if(sysVarName == "SNDCHN1")
+                else if(sysVarName == "SND_CHN1")
                 {
                     Compiler::emitVcpuAsm("LDWI", "giga_soundChan1", false);
                 }
-                else if(sysVarName == "VTOP")
+                else if(sysVarName == "V_TOP")
                 {
                     Compiler::emitVcpuAsm("LDWI", "giga_videoTop", false);
                 }
-                else if(sysVarName == "VTABLE")
+                else if(sysVarName == "V_TABLE")
                 {
                     Compiler::emitVcpuAsm("LDWI", "giga_videoTable", false);
                 }
-                else if(sysVarName == "VRAM")
+                else if(sysVarName == "V_RAM")
                 {
                     Compiler::emitVcpuAsm("LDWI", "giga_vram", false);
                 }
-                else if(sysVarName == "ROMNOTES")
+                else if(sysVarName == "ROM_NOTES")
                 {
                     Compiler::emitVcpuAsm("LDWI", "giga_notesTable", false);
                 }
-                else if(sysVarName == "ROMTEXT82")
+                else if(sysVarName == "ROM_TEXT82")
                 {
                     Compiler::emitVcpuAsm("LDWI", "giga_text82", false);
                 }
-                else if(sysVarName == "ROMTEXT32")
+                else if(sysVarName == "ROM_TEXT32")
                 {
                     Compiler::emitVcpuAsm("LDWI", "giga_text32", false);
                 }
@@ -1440,7 +1511,7 @@ namespace Keywords
             Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
             Compiler::emitVcpuAsm("%StringChr", "", false);
 
-            return Expression::Numeric(0, uint16_t(index), true, false, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+            return Expression::Numeric(0, uint16_t(index), true, false, false, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
         }
 
         Compiler::getNextTempVar();
@@ -1456,7 +1527,7 @@ namespace Keywords
         Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
         Compiler::emitVcpuAsm("%StringChr", "", false);
 
-        return Expression::Numeric(0, uint16_t(index), true, false, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+        return Expression::Numeric(0, uint16_t(index), true, false, false, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
     }
 
     Expression::Numeric functionSTR$(Expression::Numeric& numeric, int codeLineIndex)
@@ -1499,7 +1570,7 @@ namespace Keywords
             Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
             Compiler::emitVcpuAsm("%StringInt", "", false);
 
-            return Expression::Numeric(0, uint16_t(index), true, false, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+            return Expression::Numeric(0, uint16_t(index), true, false, false, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
         }
 
         Compiler::getNextTempVar();
@@ -1515,7 +1586,49 @@ namespace Keywords
         Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
         Compiler::emitVcpuAsm("%StringInt", "", false);
 
-        return Expression::Numeric(0, uint16_t(index), true, false, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+        return Expression::Numeric(0, uint16_t(index), true, false, false, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+    }
+
+    Expression::Numeric functionTIME$(Expression::Numeric& numeric, int codeLineIndex)
+    {
+        if(Expression::getOutputNumeric()._staticInit)
+        {
+            fprintf(stderr, "Keywords::functionTIME$() : TIME$() cannot be used in static initialisation : on line %d\n", codeLineIndex);
+            return numeric;
+        }
+
+        // Generate new time string
+        Compiler::emitVcpuAsm("%TimeString", "", false);
+
+        // Print it directly if able
+        if(Expression::getEnableOptimisedPrint())
+        {
+            Compiler::emitVcpuAsm("%PrintString", "_timeString_", false);
+            return numeric;
+        }
+
+        // Otherwise copy it to var or tmpvar
+        int index;
+        uint16_t dstAddr;
+        Expression::VarType varType;
+        if(Expression::getOutputNumeric()._varType == Expression::StrVar)
+        {
+            index = Expression::getOutputNumeric()._index;
+            dstAddr = Compiler::getStringVars()[index]._address;
+            varType = Expression::StrVar;
+        }
+        else
+        {
+            index = -1;
+            dstAddr = Compiler::getStrWorkArea();
+            varType = Expression::TmpStrVar;
+        }
+        Compiler::emitVcpuAsm("LDWI", "_timeString_", false);
+        Compiler::emitVcpuAsm("STW", "strSrcAddr", false);
+        Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
+        Compiler::emitVcpuAsm("%StringCopy", "", false);
+
+        return Expression::Numeric(0, uint16_t(index), true, false, false, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
     }
 
     Expression::Numeric functionHEX$(Expression::Numeric& numeric, int codeLineIndex)
@@ -1558,7 +1671,7 @@ namespace Keywords
             Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
             Compiler::emitVcpuAsm("%StringHex", "", false);
 
-            return Expression::Numeric(0, uint16_t(index), true, false, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+            return Expression::Numeric(0, uint16_t(index), true, false, false, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
         }
 
         Compiler::getNextTempVar();
@@ -1574,7 +1687,7 @@ namespace Keywords
         Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
         Compiler::emitVcpuAsm("%StringHex", "", false);
 
-        return Expression::Numeric(0, uint16_t(index), true, false, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+        return Expression::Numeric(0, uint16_t(index), true, false, false, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
     }
 
     Expression::Numeric functionHEXW$(Expression::Numeric& numeric, int codeLineIndex)
@@ -1617,7 +1730,7 @@ namespace Keywords
             Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
             Compiler::emitVcpuAsm("%StringHexw", "", false);
 
-            return Expression::Numeric(0, uint16_t(index), true, false, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+            return Expression::Numeric(0, uint16_t(index), true, false, false, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
         }
 
         Compiler::getNextTempVar();
@@ -1633,7 +1746,7 @@ namespace Keywords
         Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
         Compiler::emitVcpuAsm("%StringHexw", "", false);
 
-        return Expression::Numeric(0, uint16_t(index), true, false, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+        return Expression::Numeric(0, uint16_t(index), true, false, false, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
     }
 
     Expression::Numeric functionLEFT$(Expression::Numeric& numeric, int codeLineIndex)
@@ -1651,7 +1764,7 @@ namespace Keywords
             std::string name;
             handleConstantString(numeric, Compiler::StrLeft, name, index);
 
-            return Expression::Numeric(0, uint16_t(index), true, false, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
+            return Expression::Numeric(0, uint16_t(index), true, false, false, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
         }
 
         // Non optimised case
@@ -1693,7 +1806,7 @@ namespace Keywords
                 Compiler::emitVcpuAsm("%StringLeft", "", false);
             }
 
-            return Expression::Numeric(0, uint16_t(index), true, false, varType, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
+            return Expression::Numeric(0, uint16_t(index), true, false, false, varType, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
         }
 
         return numeric;
@@ -1714,7 +1827,7 @@ namespace Keywords
             std::string name;
             handleConstantString(numeric, Compiler::StrRight, name, index);
 
-            return Expression::Numeric(0, uint16_t(index), true, false, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
+            return Expression::Numeric(0, uint16_t(index), true, false, false, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
         }
 
         // Non optimised case
@@ -1756,7 +1869,7 @@ namespace Keywords
                 Compiler::emitVcpuAsm("%StringRight", "", false);
             }
 
-            return Expression::Numeric(0, uint16_t(index), true, false, varType, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
+            return Expression::Numeric(0, uint16_t(index), true, false, false, varType, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
         }
 
         return numeric;
@@ -1778,7 +1891,7 @@ namespace Keywords
             std::string name;
             handleConstantString(numeric, Compiler::StrMid, name, index);
 
-            return Expression::Numeric(0, uint16_t(index), true, false, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
+            return Expression::Numeric(0, uint16_t(index), true, false, false, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
         }
 
         // Non optimised case
@@ -1824,7 +1937,7 @@ namespace Keywords
                 Compiler::emitVcpuAsm("%StringMid", "", false);
             }
 
-            return Expression::Numeric(0, uint16_t(index), true, false, varType, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
+            return Expression::Numeric(0, uint16_t(index), true, false, false, varType, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
         }
 
         return numeric;
@@ -1864,23 +1977,10 @@ namespace Keywords
         // Strip quotes
         std::string runtimePath = pragma.substr(foundPos);
         runtimePath.erase(0, 1);
-        runtimePath.erase(runtimePath.size()-1, 1);
+        runtimePath.erase(runtimePath.size() - 1, 1);
 
-        // Prepend current file path to relative paths
-        if(runtimePath.find(":") == std::string::npos  &&  runtimePath[0] != '/')
-        {
-            std::string filepath = Loader::getFilePath();
-            size_t slash = filepath.find_last_of("\\/");
-            filepath = (slash != std::string::npos) ? filepath.substr(0, slash) : ".";
-            std::string includePath = filepath + "/" + runtimePath;
-            Assembler::setIncludePath(includePath);
-        }
-        else
-        {
-            Assembler::setIncludePath(runtimePath);
-        }
-
-        Compiler::setRuntimePath(runtimePath);
+        // Set build path
+        Compiler::setBuildPath(runtimePath, Loader::getFilePath());
 
         return true;
     }
@@ -1909,6 +2009,13 @@ namespace Keywords
         }
 
         Compiler::setRuntimeStart(address);
+
+        // Re-initialise memory manager for 64K
+        if(address >= RAM_EXPANSION_START)
+        {
+            Memory::setSizeRAM(RAM_SIZE_HI);
+            Memory::initialise();
+        }
 
         // String work area needs to be updated, (return old work area and get a new one)
         uint16_t strWorkArea;
@@ -2371,6 +2478,19 @@ namespace Keywords
 
         // Use a macro instead of separate "POP" and "RET", otherwise page jumps could be inserted in between the "POP" and "RET" causing havoc and mayhem
         Compiler::emitVcpuAsm("%Return", "", false);
+
+        return true;
+    }
+
+    bool keywordRET(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(foundPos);
+        UNREFERENCED_PARAM(tokenIndex);
+        UNREFERENCED_PARAM(codeLineIndex);
+        UNREFERENCED_PARAM(codeLine);
+
+        Compiler::emitVcpuAsm("RET", "", false);
 
         return true;
     }
@@ -4202,6 +4322,16 @@ namespace Keywords
         UNREFERENCED_PARAM(result);
         UNREFERENCED_PARAM(tokenIndex);
 
+        if(Compiler::getCodeRomType() < Cpu::ROMv2)
+        {
+            std::string romTypeStr;
+            getRomTypeStr(Compiler::getCodeRomType(), romTypeStr);
+            fprintf(stderr, "Keywords::keywordMODE() : Version error, 'MODE' requires ROMv2 or higher, you are trying to link against '%s', in '%s' on line %d\n", romTypeStr.c_str(), 
+                                                                                                                                                                   codeLine._text.c_str(),
+                                                                                                                                                                   codeLineIndex);
+            return false;
+        }
+
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() != 1)
         {
@@ -4725,6 +4855,248 @@ namespace Keywords
         return true;
     }
 
+    void timeInit(void)
+    {
+        // Init time proc
+        Compiler::setCreateTimeData(true);
+
+        // ROM's 1 to 4
+        if(Compiler::getCodeRomType() < Cpu::ROMv5a)
+        {
+            Compiler::emitVcpuAsm("LDI",  "0",               false);
+            Compiler::emitVcpuAsm("STW",  "timerTick",       false);
+            Compiler::emitVcpuAsm("LDI",  "giga_frameCount", false);
+            Compiler::emitVcpuAsm("STW",  "timerPrev",       false);
+        }
+        // ROMv5a or higher
+        else
+        {
+            Compiler::emitVcpuAsm("LDI",  "0",               false);
+            Compiler::emitVcpuAsm("STW",  "timerTick",       false);
+            Compiler::emitVcpuAsm("STW",  "timerPrev",       false);
+        }
+    }
+    void midiInit(void)
+    {
+    }
+    void midivInit(void)
+    {
+    }
+    void userInit(void)
+    {
+    }
+    void timeAddr(int index)
+    {
+        Compiler::emitVcpuAsm("LDWI", "tickTime",                             false);
+        Compiler::emitVcpuAsm("STW",  "realTimeProc" + std::to_string(index), false);
+    }
+    void midiAddr(int index)
+    {
+        Compiler::emitVcpuAsm("LDWI", "playMidi",                             false);
+        Compiler::emitVcpuAsm("STW",  "realTimeProc" + std::to_string(index), false);
+    }
+    void midivAddr(int index)
+    {
+        Compiler::emitVcpuAsm("LDWI", "playMidiVol",                            false);
+        Compiler::emitVcpuAsm("STW",  "realTimeProc" + std::to_string(index), false);
+    }
+    void userAddr(const std::string& label, int index)
+    {
+        Compiler::emitVcpuAsm("LDWI", "_" + label,                            false);
+        Compiler::emitVcpuAsm("STW",  "realTimeProc" + std::to_string(index), false);
+    }
+    void usageINIT(Compiler::CodeLine& codeLine, int codeLineIndex)
+    {
+        fprintf(stderr, "Keywords::keywordINIT() : Syntax error, use 'INIT TIME, MIDI, <user proc>, NOUPDATE; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+    }
+    bool keywordINIT(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
+
+        enum InitTypes {InitTime, InitMidi, InitMidiV, InitUser};
+        static std::map<std::string, InitTypes> initTypesMap = {{"TIME", InitTime}, {"MIDI", InitMidi}, {"MIDIV", InitMidiV}};
+
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ",", false);
+        if(tokens.size() < 1  ||  tokens.size() > 4)
+        {
+            usageINIT(codeLine, codeLineIndex);
+            return false;
+        }
+
+        if(tokens.size() == 1  ||  Compiler::getCodeRomType() > Cpu::ROMv4)
+        {
+            Expression::stripWhitespace(tokens[0]);
+            std::string token = tokens[0];
+            Expression::strToUpper(token);
+            if(token == "NOUPDATE")
+            {
+                fprintf(stderr, "Keywords::keywordINIT() : Syntax error, 'NOUPDATE' must be used with 'INIT TIME, MIDI, <user proc>' and only on ROMv4 or lower; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+                fprintf(stderr, "Keywords::keywordINIT() : Syntax error, use 'INIT TIME, MIDI, <user proc>, NOUPDATE; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+                return false;
+            }
+        }
+
+        // Search for init types and labels
+        bool noUpdate = false;
+        bool foundMidi = false;
+        std::vector<InitTypes> initTypes;
+        for(int i=0; i<int(tokens.size()); i++)
+        {
+            Expression::stripWhitespace(tokens[i]);
+            std::string token = tokens[i];
+            Expression::strToUpper(token);
+
+            // Init type not found, so search for label
+            if(initTypesMap.find(token) == initTypesMap.end())
+            {
+                if(token == "NOUPDATE")
+                {
+                    noUpdate = true;
+                    continue;
+                }
+
+                int labIndex = Compiler::findLabel(tokens[i]);
+                if(labIndex == -1)
+                {
+                    usageINIT(codeLine, codeLineIndex);
+                    return false;
+                }
+                else
+                {
+                    initTypes.push_back(InitUser);
+                }
+            }
+            else
+            {
+                if(initTypesMap[token] == InitMidi  ||  initTypesMap[token] == InitMidiV)
+                {
+                    if(foundMidi)
+                    {
+                        fprintf(stderr, "Keywords::keywordINIT() : Syntax error, can only init one instance of MIDI or MIDIV, use 'INIT TIME, MIDI/MIDIV, <user proc>; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+                        return false;
+                    }
+                    foundMidi = true;
+                }
+                initTypes.push_back(initTypesMap[token]);
+            }
+        }
+
+        // Proc init
+        for(int i=0; i<int(initTypes.size()); i++)
+        {
+            switch(initTypes[i])
+            {
+                case InitTime:  timeInit();  break;
+                case InitMidi:  midiInit();  break;
+                case InitMidiV: midivInit(); break;
+                case InitUser:  userInit();  break;
+
+                default: break;
+            }
+        }
+
+        // Addr init
+        for(int i=0; i<int(initTypes.size()); i++)
+        {
+            switch(initTypes[i])
+            {
+                case InitTime:  timeAddr(i);            break;
+                case InitMidi:  midiAddr(i);            break;
+                case InitMidiV: midivAddr(i);           break;
+                case InitUser:  userAddr(tokens[i], i); break;
+
+                default: break;
+            }
+        }
+
+        // ROM's 1 to 4, (time sliced code)
+        if(Compiler::getCodeRomType() < Cpu::ROMv5a)
+        {
+            // If 'NOUPDATE" is specified then user must call tick himself
+            if(noUpdate == false)
+            {
+                Compiler::emitVcpuAsm("LDWI", "setRealTimeProc" + std::to_string(initTypes.size() - 1), false);
+                Compiler::emitVcpuAsm("CALL", "giga_vAC",                                               false);
+            }
+        }
+        // ROMv5a and higher, (vertical blank interrupt)
+        else
+        {
+            // Vertical blank interrupt uses 0x30-0x33 for vPC and vAC save/restore, so we must move any variables found there
+            Compiler::moveVblankVars();
+
+            // Build chain of vertical blank interrupt handlers, (upto 3)
+            Compiler::emitVcpuAsm("CALLI", "setRealTimeProc" + std::to_string(initTypes.size() - 1), false);
+
+            // Start vertical blank interrupt
+            Compiler::emitVcpuAsm("LDWI", "giga_vblankProc", false);
+            Compiler::emitVcpuAsm("STW",  "register0"      , false);
+            Compiler::emitVcpuAsm("LDWI", "realTimeStub"   , false);
+            Compiler::emitVcpuAsm("DOKE", "register0"      , false);
+        }
+
+        return true;
+    }
+
+    void usageTICK(Compiler::CodeLine& codeLine, int codeLineIndex)
+    {
+        fprintf(stderr, "Keywords::keywordINIT() : Syntax error, use 'TICK TIME/MIDI/MIDIV/ALL'; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+    }
+    bool keywordTICK(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
+
+        if(Compiler::getCodeRomType() > Cpu::ROMv4)
+        {
+            std::string romTypeStr;
+            getRomTypeStr(Compiler::getCodeRomType(), romTypeStr);
+            fprintf(stderr, "Keywords::keywordTICK() : Version error, 'TICK' requires ROMv4 or lower, you are trying to link against '%s', in '%s' on line %d\n", romTypeStr.c_str(), 
+                                                                                                                                                                  codeLine._text.c_str(),
+                                                                                                                                                                  codeLineIndex);
+            return false;
+        }
+
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ",", false);
+        if(tokens.size() > 1)
+        {
+            usageTICK(codeLine, codeLineIndex);
+            return false;
+        }
+
+        std::string tickToken = Expression::strToUpper(tokens[0]);
+        Expression::stripWhitespace(tickToken);
+
+        // Tick time
+        if(tickToken == "TIME") 
+        {
+            Compiler::emitVcpuAsm("%TickTime", "", false, codeLineIndex);
+            return true;
+        }
+        // Tick midi
+        else if(tickToken == "MIDI") 
+        {
+            Compiler::emitVcpuAsm("%TickMidi", "", false, codeLineIndex);
+            return true;
+        }
+        // Tick midi with volume
+        else if(tickToken == "MIDIV") 
+        {
+            Compiler::emitVcpuAsm("%TickMidiV", "", false, codeLineIndex);
+            return true;
+        }
+        // Tick everything
+        else if(tickToken == "ALL") 
+        {
+            Compiler::emitVcpuAsm("%Tick", "", false, codeLineIndex);
+            return true;
+        }
+
+        usageTICK(codeLine, codeLineIndex);
+        return false;
+    }
+
     void usagePLAY(Compiler::CodeLine& codeLine, int codeLineIndex)
     {
         fprintf(stderr, "Keywords::keywordPLAY() : Syntax error, use 'PLAY MIDI, <address>, <waveType>', where <address> and <waveType> are optional; in '%s' on line %d\n", codeLine._text.c_str(),
@@ -4738,7 +5110,7 @@ namespace Keywords
         UNREFERENCED_PARAM(tokenIndex);
 
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ",", false);
-        if(tokens.size() < 1  ||  tokens.size() > 3)
+        if(tokens.size() < 2  ||  tokens.size() > 3)
         {
             usagePLAY(codeLine, codeLineIndex);
             return false;
@@ -4750,13 +5122,6 @@ namespace Keywords
         {
             usagePLAY(codeLine, codeLineIndex);
             return false;
-        }
-
-        // Tick Midi
-        if(tokens.size() == 1)
-        {
-            (midiToken == "MIDI") ? Compiler::emitVcpuAsm("%TickMidi", "", false, codeLineIndex) : Compiler::emitVcpuAsm("%TickMidiV", "", false);
-            return true;
         }
 
         // Default wave type
@@ -4904,6 +5269,16 @@ namespace Keywords
                 // Sprite
                 else if(tokens[0] == "SPRITE")
                 {
+                    if(Compiler::getCodeRomType() < Cpu::ROMv3)
+                    {
+                        std::string romTypeStr;
+                        getRomTypeStr(Compiler::getCodeRomType(), romTypeStr);
+                        fprintf(stderr, "Keywords::keywordLOAD() : Version error, 'LOAD SPRITE' requires ROMv3 or higher, you are trying to link against '%s', in '%s' on line %d\n", romTypeStr.c_str(), 
+                                                                                                                                                                                      codeLine._text.c_str(),
+                                                                                                                                                                                      codeLineIndex);
+                        return false;
+                    }
+
                     if(tokens.size() > 4)
                     {
                         fprintf(stderr, "Keywords::keywordLOAD() : Syntax error, use 'LOAD SPRITE, <filename>, <id>, <optional flip>', in '%s' on line %d\n", codeLine._text.c_str(),
@@ -5104,6 +5479,16 @@ namespace Keywords
                 }
                 else if(tokens[0] == "FONT")
                 {
+                    if(Compiler::getCodeRomType() < Cpu::ROMv3)
+                    {
+                        std::string romTypeStr;
+                        getRomTypeStr(Compiler::getCodeRomType(), romTypeStr);
+                        fprintf(stderr, "Keywords::keywordLOAD() : Version error, 'LOAD FONT' requires ROMv3 or higher, you are trying to link against '%s', in '%s' on line %d\n", romTypeStr.c_str(), 
+                                                                                                                                                                                    codeLine._text.c_str(),
+                                                                                                                                                                                    codeLineIndex);
+                        return false;
+                    }
+
                     if(tokens.size() < 3  ||  tokens.size() > 4)
                     {
                         fprintf(stderr, "Keywords::keywordLOAD() : Syntax error, use 'LOAD FONT, <filename>, <id>, <optional 16 bit fg:bg colours>', in '%s' on line %d\n", codeLine._text.c_str(),
@@ -5275,6 +5660,16 @@ namespace Keywords
     {
         UNREFERENCED_PARAM(result);
         UNREFERENCED_PARAM(tokenIndex);
+
+        if(Compiler::getCodeRomType() < Cpu::ROMv3)
+        {
+            std::string romTypeStr;
+            getRomTypeStr(Compiler::getCodeRomType(), romTypeStr);
+            fprintf(stderr, "Keywords::keywordSPRITE() : Version error, 'SPRITE' requires ROMv3 or higher, you are trying to link against '%s', in '%s' on line %d\n", romTypeStr.c_str(), 
+                                                                                                                                                                       codeLine._text.c_str(),
+                                                                                                                                                                       codeLineIndex);
+            return false;
+        }
 
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ",", false);
         if(tokens.size() != 4)
@@ -5473,7 +5868,7 @@ namespace Keywords
 
     void usageSET(Compiler::CodeLine& codeLine, int codeLineIndex)
     {
-        fprintf(stderr, "Keywords::keywordSET() : Syntax error, use 'SET FONTID, <fontId>'; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+        fprintf(stderr, "Keywords::keywordSET() : Syntax error, use 'SET <VAR NAME>, <PARAM>'; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
     }
     bool keywordSET(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
@@ -5511,55 +5906,153 @@ namespace Keywords
         }
 
         // Font id variable
-        if(sysVarName == "FONTID"  &&  tokens.size() == 2)
+        if(sysVarName == "FONT_ID"  &&  tokens.size() == 2)
         {
+            if(Compiler::getCodeRomType() < Cpu::ROMv3)
+            {
+                std::string romTypeStr;
+                getRomTypeStr(Compiler::getCodeRomType(), romTypeStr);
+                fprintf(stderr, "Keywords::keywordSET() : Version error, 'SET FONTID' requires ROMv3 or higher, you are trying to link against '%s', in '%s' on line %d\n", romTypeStr.c_str(), 
+                                                                                                                                                                            codeLine._text.c_str(),
+                                                                                                                                                                            codeLineIndex);
+                return false;
+            }
+
+            Compiler::emitVcpuAsm("LDWI", "_fontId_", false);
+            Compiler::emitVcpuAsm("STW", "register0", false);
             Compiler::parseExpression(codeLineIndex, token1, param1);
-            Compiler::emitVcpuAsm("STW", "fontLutId", false);
+            Compiler::emitVcpuAsm("POKE", "register0", false);
             return true;
         }
-        else if(sysVarName == "CURSORX"  &&  tokens.size() == 2)
+        else if(sysVarName == "TIME_MODE")
+        {
+            Compiler::emitVcpuAsm("LDWI", "handleT_mode + 1", false);
+            Compiler::emitVcpuAsm("STW", "register0", false);
+            Compiler::parseExpression(codeLineIndex, token1, param1);
+            Compiler::emitVcpuAsm("POKE", "register0", false);
+            return true;
+        }
+        else if(sysVarName == "TIME_EPOCH")
+        {
+            Compiler::emitVcpuAsm("LDWI", "handleT_epoch + 1", false);
+            Compiler::emitVcpuAsm("STW", "register0", false);
+            Compiler::parseExpression(codeLineIndex, token1, param1);
+            Compiler::emitVcpuAsm("POKE", "register0", false);
+            return true;
+        }
+        else if(sysVarName == "TIME_S")
+        {
+            Compiler::emitVcpuAsm("LDWI", "_timeArray_ + 0", false);
+            Compiler::emitVcpuAsm("STW", "register0", false);
+            Compiler::parseExpression(codeLineIndex, token1, param1);
+            Compiler::emitVcpuAsm("POKE", "register0", false);
+            return true;
+        }
+        else if(sysVarName == "TIME_M")
+        {
+            Compiler::emitVcpuAsm("LDWI", "_timeArray_ + 1", false);
+            Compiler::emitVcpuAsm("STW", "register0", false);
+            Compiler::parseExpression(codeLineIndex, token1, param1);
+            Compiler::emitVcpuAsm("POKE", "register0", false);
+            return true;
+        }
+        else if(sysVarName == "TIME_H")
+        {
+            Compiler::emitVcpuAsm("LDWI", "_timeArray_ + 2", false);
+            Compiler::emitVcpuAsm("STW", "register0", false);
+            Compiler::parseExpression(codeLineIndex, token1, param1);
+            Compiler::emitVcpuAsm("POKE", "register0", false);
+            return true;
+        }
+        else if(sysVarName == "TIMER")
+        {
+            Compiler::parseExpression(codeLineIndex, token1, param1);
+            Compiler::emitVcpuAsm("STW", "timerTick", false);
+            return true;
+        }
+        else if(sysVarName == "VBLANK_PROC")
+        {
+            if(Compiler::getCodeRomType() < Cpu::ROMv5a)
+            {
+                std::string romTypeStr;
+                getRomTypeStr(Compiler::getCodeRomType(), romTypeStr);
+                fprintf(stderr, "Keywords::keywordSET() : Version error, 'SET VBLANK_PROC' requires ROMv5a or higher, you are trying to link against '%s', in '%s' on line %d\n", romTypeStr.c_str(), 
+                                                                                                                                                                                  codeLine._text.c_str(),
+                                                                                                                                                                                  codeLineIndex);
+                return false;
+            }
+
+            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(VBLANK_PROC), false);
+            Compiler::emitVcpuAsm("STW", "register0", false);
+            Compiler::parseExpression(codeLineIndex, token1, param1);
+            Compiler::emitVcpuAsm("DOKE", "register0", false);
+            return true;
+        }
+        else if(sysVarName == "VBLANK_FREQ")
+        {
+            if(Compiler::getCodeRomType() < Cpu::ROMv5a)
+            {
+                std::string romTypeStr;
+                getRomTypeStr(Compiler::getCodeRomType(), romTypeStr);
+                fprintf(stderr, "Keywords::keywordSET() : Version error, 'SET VBLANK_FREQ' requires ROMv5a or higher, you are trying to link against '%s', in '%s' on line %d\n", romTypeStr.c_str(), 
+                                                                                                                                                                                  codeLine._text.c_str(),
+                                                                                                                                                                                  codeLineIndex);
+                return false;
+            }
+
+            // (256 - n) = vblank interrupt frequency, where n = 1 to 255
+            Compiler::emitVcpuAsm("LDWI", "realTS_rti + 2", false);
+            Compiler::emitVcpuAsm("STW", "register0", false);
+            Compiler::parseExpression(codeLineIndex, token1, param1);
+            Compiler::emitVcpuAsm("STW", "register1", false);
+            Compiler::emitVcpuAsm("LDWI", "256", false);
+            Compiler::emitVcpuAsm("SUBW", "register1", false);
+            Compiler::emitVcpuAsm("POKE", "register0", false);
+            return true;
+        }
+        else if(sysVarName == "CURSOR_X"  &&  tokens.size() == 2)
         {
             Compiler::parseExpression(codeLineIndex, token1, param1);
             Compiler::emitVcpuAsm("ST", "cursorXY", false);
             return true;
         }
-        else if(sysVarName == "CURSORY"  &&  tokens.size() == 2)
+        else if(sysVarName == "CURSOR_Y"  &&  tokens.size() == 2)
         {
             Compiler::parseExpression(codeLineIndex, token1, param1);
             Compiler::emitVcpuAsm("ST", "cursorXY + 1", false);
             return true;
         }
-        else if(sysVarName == "CURSORXY"  &&  tokens.size() == 2)
+        else if(sysVarName == "CURSOR_XY"  &&  tokens.size() == 2)
         {
             Compiler::parseExpression(codeLineIndex, token1, param1);
             Compiler::emitVcpuAsm("STW", "cursorXY", false);
             return true;
         }
-        else if(sysVarName == "FGCOLOUR"  &&  tokens.size() == 2)
+        else if(sysVarName == "FG_COLOUR"  &&  tokens.size() == 2)
         {
             Compiler::parseExpression(codeLineIndex, token1, param1);
             Compiler::emitVcpuAsm("ST", "fgbgColour + 1", false);
             return true;
         }
-        else if(sysVarName == "BGCOLOUR"  &&  tokens.size() == 2)
+        else if(sysVarName == "BG_COLOUR"  &&  tokens.size() == 2)
         {
             Compiler::parseExpression(codeLineIndex, token1, param1);
             Compiler::emitVcpuAsm("ST", "fgbgColour", false);
             return true;
         }
-        else if(sysVarName == "FGBGCOLOUR"  &&  tokens.size() == 2)
+        else if(sysVarName == "FGBG_COLOUR"  &&  tokens.size() == 2)
         {
             Compiler::parseExpression(codeLineIndex, token1, param1);
             Compiler::emitVcpuAsm("STW", "fgbgColour", false);
             return true;
         }
-        else if(sysVarName == "MIDISTREAM"  &&  tokens.size() == 2)
+        else if(sysVarName == "MIDI_STREAM"  &&  tokens.size() == 2)
         {
             Compiler::parseExpression(codeLineIndex, token1, param1);
             Compiler::emitVcpuAsm("STW", "midiStream", false);
             return true;
         }
-        else if(sysVarName == "VIDEOTOP"  &&  tokens.size() == 2)
+        else if(sysVarName == "VIDEO_TOP"  &&  tokens.size() == 2)
         {
             Compiler::emitVcpuAsm("LDWI", "giga_videoTop", false);
             Compiler::emitVcpuAsm("STW", "register0", false);
@@ -5567,43 +6060,43 @@ namespace Keywords
             Compiler::emitVcpuAsm("POKE", "register0", false);
             return true;
         }
-        else if(sysVarName == "LEDTEMPO"  &&  tokens.size() == 2)
+        else if(sysVarName == "LED_TEMPO"  &&  tokens.size() == 2)
         {
             Compiler::parseExpression(codeLineIndex, token1, param1);
             Compiler::emitVcpuAsm("ST", "giga_ledTempo", false);
             return true;
         }
-        else if(sysVarName == "LEDSTATE"  &&  tokens.size() == 2)
+        else if(sysVarName == "LED_STATE"  &&  tokens.size() == 2)
         {
             Compiler::parseExpression(codeLineIndex, token1, param1);
             Compiler::emitVcpuAsm("ST", "giga_ledState", false);
             return true;
         }
-        else if(sysVarName == "SOUNDTIMER"  &&  tokens.size() == 2)
+        else if(sysVarName == "SOUND_TIMER"  &&  tokens.size() == 2)
         {
             Compiler::parseExpression(codeLineIndex, token1, param1);
             Compiler::emitVcpuAsm("ST", "giga_soundTimer", false);
             return true;
         }
-        else if(sysVarName == "CHANNELMASK"  &&  tokens.size() == 2)
+        else if(sysVarName == "CHANNEL_MASK"  &&  tokens.size() == 2)
         {
             Compiler::parseExpression(codeLineIndex, token1, param1);
             Compiler::emitVcpuAsm("ST", "giga_channelMask", false);
             return true;
         }
-        else if(sysVarName == "XOUTMASK"  &&  tokens.size() == 2)
+        else if(sysVarName == "XOUT_MASK"  &&  tokens.size() == 2)
         {
             Compiler::parseExpression(codeLineIndex, token1, param1);
             Compiler::emitVcpuAsm("ST", "giga_xoutMask", false);
             return true;
         }
-        else if(sysVarName == "BUTTONSTATE"  &&  tokens.size() == 2)
+        else if(sysVarName == "BUTTON_STATE"  &&  tokens.size() == 2)
         {
             Compiler::parseExpression(codeLineIndex, token1, param1);
             Compiler::emitVcpuAsm("ST", "giga_buttonState", false);
             return true;
         }
-        else if(sysVarName == "FRAMECOUNT"  &&  tokens.size() == 2)
+        else if(sysVarName == "FRAME_COUNT"  &&  tokens.size() == 2)
         {
             Compiler::parseExpression(codeLineIndex, token1, param1);
             Compiler::emitVcpuAsm("ST", "giga_frameCount", false);

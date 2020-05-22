@@ -23,6 +23,8 @@ namespace Operators
     Expression::Numeric operatorNOT(Expression::Numeric& numeric);
 
     // Unary math operators
+    Expression::Numeric operatorCEIL(Expression::Numeric& numeric);
+    Expression::Numeric operatorFLOOR(Expression::Numeric& numeric);
     Expression::Numeric operatorPOWF(Expression::Numeric& numeric);
     Expression::Numeric operatorSQRT(Expression::Numeric& numeric);
     Expression::Numeric operatorEXP(Expression::Numeric& numeric);

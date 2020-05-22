@@ -1,12 +1,11 @@
-; do *NOT* use register4 to register7 during time slicing if you use realTimeProc
+; do *NOT* use register4 to register7 during time slicing
 spriteId            EQU     register0
 spriteXY            EQU     register1
 spriteAddrs         EQU     register2
 
     
 %SUB                draw_sprite
-draw_sprite         PUSH
-                    LDWI    _spritesLut_
+draw_sprite         LDWI    _spritesLut_
                     ADDW    spriteId
                     ADDW    spriteId
                     DEEK
@@ -24,11 +23,9 @@ draw_s_loop         LDW     spriteAddrs
                     SYS     64
                     INC     spriteAddrs
                     INC     spriteAddrs
-                    CALLI   realTimeProc
                     BRA     draw_s_loop
                     
-draw_s_exit         POP
-                    RET
+draw_s_exit         RET
 %ENDS
 
 %SUB                drawSprite

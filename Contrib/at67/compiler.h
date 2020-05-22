@@ -20,7 +20,7 @@
 #define SPRITE_STRIPE_CHUNKS_LO 15 // 15 fits in a 96 byte page
 #define SPRITE_STRIPE_CHUNKS_HI 40 // 40 fits in a 256 byte page
 
-// 30 bytes, (0x00E6 <-> 0x00FF), reserved for vCPU stack, allows for 13 nested calls. The amount of nested GOSUBS you can use is dependant on how
+// 28 bytes, (0x00E4 <-> 0x00FF), reserved for vCPU stack, allows for 14 nested calls. The amount of nested GOSUBS you can use is dependant on how
 // much of the stack is being used by nested system calls. *NOTE* there is NO call table for user code for this compiler
 #define USER_VAR_START  0x0030  // 80 bytes, (0x0030 <-> 0x007F), reserved for BASIC user variables
 #define INT_VAR_START   0x0082  // 46 bytes, (0x0082 <-> 0x00AF), internal register variables, used by the BASIC runtime
@@ -30,7 +30,6 @@
 #define CONVERT_ARRAY   0x00DC  // 2 bytes,  (0x00DC <-> 0x00DF), critical array accessing routines
 #define REAL_TIME_PROC  0x00E0  // 2 bytes,  (0x00E0 <-> 0x00E1), critical time sliced routine that usually handles AUDIO/MIDI, etc
 #define VAC_SAVE_START  0x00E2  // 2 bytes,  (0x00E2 <-> 0x00E3), reserved for saving vAC
-#define FONT_LUT_ID     0x00E4  // 2 bytes,  (0x00E4 <-> 0x00E5), reserved for currently selected font
 #define USER_CODE_START 0x0200
 #define USER_VAR_END    0x007F
 
@@ -192,6 +191,7 @@ namespace Compiler
         std::string _includeName;
         bool _inUse = false;
         bool _loaded = false;
+        bool _critical = false;
     };
 
     struct ForNextData
@@ -332,6 +332,7 @@ namespace Compiler
     void setCodeOptimiseType(CodeOptimiseType codeOptimiseType);
     void setCodeRomType(Cpu::RomType codeRomType);
     void setCreateNumericLabelLut(bool createNumericLabelLut);
+    void setCreateTimeData(bool createTimeArrays);
     void setCompilingError(bool compilingError);
     void setArrayIndiciesOne(bool arrayIndiciesOne);
 
@@ -366,8 +367,10 @@ namespace Compiler
     std::stack<WhileWendData>& getWhileWendDataStack(void);
     std::stack<RepeatUntilData>& getRepeatUntilDataStack(void);
 
+    bool moveVblankVars(void);
     void setNextInternalLabel(const std::string& label);
     void adjustDiscardedLabels(const std::string name, uint16_t address);
+    bool setBuildPath(const std::string& buildpath, const std::string& filepath);
 
     bool initialise(void);
     bool initialiseMacros(void);

@@ -23,7 +23,8 @@ cursorXY                      EQU                               register0 + 0x22
 midiStream                    EQU                               register0 + 0x24
 midiDelay                     EQU                               register0 + 0x26
 miscFlags                     EQU                               register0 + 0x28
-fontLutId                     EQU                               0x00e4
+timerTick                     EQU                               register0 + 0x2A
+timerPrev                     EQU                               register0 + 0x2C
 
 ; Internal Constants
 ENABLE_SCROLL_BIT             EQU                               0x0001
@@ -41,15 +42,15 @@ textWorkArea                  EQU                               0x06a0
 
 ; Labels
 _entryPoint_                  EQU                               0x0200
-_loop                         EQU                               0x0295
-_254                          EQU                               0x033b
-_253                          EQU                               0x0351
-_191                          EQU                               0x0363
-_127                          EQU                               0x036a
+_loop                         EQU                               0x0291
+_254                          EQU                               0x0337
+_253                          EQU                               0x034d
+_191                          EQU                               0x035f
+_127                          EQU                               0x0366
 _page_0x0300                  EQU                               0x0300
-_else_0x036a                  EQU                               0x034f
-_else_0x0384                  EQU                               0x0361
-_end_0x0394                   EQU                               0x0371
+_else_0x0366                  EQU                               0x034b
+_else_0x0380                  EQU                               0x035d
+_end_0x0390                   EQU                               0x036d
 
 ; Variables
 _x0                           EQU                               0x0030
@@ -64,6 +65,10 @@ _speed4                       EQU                               0x0040
 _speed8                       EQU                               0x0042
 
 ; Strings
+_timeArray_                   EQU                               0x0561
+_timeArray_                   DB                                00 00 00
+_timeString_                  EQU                               0x0557
+_timeString_                  DB                                8 '00:00:00' 0
 
 ; Define Bytes
 
@@ -310,10 +315,10 @@ def_images_0x7f00             DB                                12 8 12 8 12 8 8
 ; Define Fonts
 
 ; Lookup Tables
-_lut_numericLabs              EQU                               0x0601
+_lut_numericLabs              EQU                               0x054d
 _lut_numericLabs              DW                                254 253 191 127 0x0000
-_lut_numericAddrs             EQU                               0x055c
-_lut_numericAddrs             DW                                0x033b 0x0351 0x0363 0x036a 
+_lut_numericAddrs             EQU                               0x0545
+_lut_numericAddrs             DW                                0x0337 0x034d 0x035f 0x0366 
 
 ; Code
 _entryPoint_                  LDI                               0x1c
@@ -327,11 +332,11 @@ _entryPoint_                  LDI                               0x1c
                               InitGtOp                          
                               InitArray2d                       
                               InitArray3d                       
-                              InitRealTimeProc                  
+                              InitRealTimeAddr                  
                               Initialise                                                        ; INIT
 
                               LDI                               48
-                              ST                                fgbgColour + 1                  ; set FGCOLOUR, &h30
+                              ST                                fgbgColour + 1                  ; set FG_COLOUR, &h30
 
                               LDI                               0
                               STW                               drawHLine_x1
@@ -419,12 +424,12 @@ _loop                         WaitVBlank                                        
                               STW                               _x4                             ; poke &h0183, x4.hi : x4 = x4 + speed1
 
                               LDWI                              403
+                              STW                               register0
+                              LD                                _x5 + 1
                               STW                               0xe2
                               LDWI                              _page_0x0300
                               CALL                              giga_vAC
 _page_0x0300                  LDW                               0xe2
-                              STW                               register0
-                              LD                                _x5 + 1
                               POKE                              register0
                               LDW                               _x5
                               ADDW                              _speed2
@@ -449,7 +454,7 @@ _page_0x0300                  LDW                               0xe2
                               STW                               numericLabel
                               LDI                               0
                               STW                               defaultLabel
-                              GosubNumeric                                                      ; gosub get("BUTTONSTATE")
+                              GosubNumeric                                                      ; gosub get("BUTTON_STATE")
 
                               LDWI                              _loop
                               CALL                              giga_vAC                        ; goto loop
@@ -460,22 +465,22 @@ _254                          PUSH
                               STW                               _speed1
                               LDWI                              256
                               SUBW                              _speed1
-                              BGT                               _else_0x036a
+                              BGT                               _else_0x0366
                               LDWI                              256
                               STW                               _speed1                         ; speed1 = speed1 + 2 : if speed1 &&> 256 then speed1 = 256
 
-_else_0x036a                  Return                                                            ; return
+_else_0x0366                  Return                                                            ; return
 
 _253                          PUSH                              
                               LDW                               _speed1
                               SUBI                              2
                               STW                               _speed1
                               SUBI                              64
-                              BGE                               _else_0x0384
+                              BGE                               _else_0x0380
                               LDI                               64
                               STW                               _speed1                         ; speed1 = speed1 - 2 : if speed1 &&< 64 then speed1 = 64
 
-_else_0x0384                  Return                                                            ; return
+_else_0x0380                  Return                                                            ; return
 
 _191                          PUSH                              
                               LDI                               128
@@ -487,7 +492,7 @@ _127                          PUSH
                               STW                               _speed1
                               Return                                                            ; speed1 = 128 : return
 
-_end_0x0394                   BRA                               _end_0x0394                     ; END
+_end_0x0390                   BRA                               _end_0x0390                     ; END
 
 
 
@@ -498,7 +503,6 @@ _end_0x0394                   BRA                               _end_0x0394     
 ;****************************************************************************************************************************************
 
 romCheck                      EQU     0x0689
-realTimeProc                  EQU     0x062d
 convertEqOp                   EQU     0x0680
 convertNeOp                   EQU     0x0677
 convertLeOp                   EQU     0x066e
@@ -507,10 +511,11 @@ convertLtOp                   EQU     0x065c
 convertGtOp                   EQU     0x0653
 convertArr2d                  EQU     0x0647
 convertArr3d                  EQU     0x0636
+realTimeStub                  EQU     0x0624
 gosubNumericLabel             EQU     0x0564
 waitVBlank                    EQU     0x0596
-resetVideoTable               EQU     0x053d
-initClearFuncs                EQU     0x060b
+resetVideoTable               EQU     0x0526
+initClearFuncs                EQU     0x0602
 drawHLine                     EQU     0x05a2
 convertEqOpAddr               EQU     0x00d0
 convertNeOpAddr               EQU     0x00d2
@@ -520,10 +525,14 @@ convertLtOpAddr               EQU     0x00d8
 convertGtOpAddr               EQU     0x00da
 convertArr2dAddr              EQU     0x00dc
 convertArr3dAddr              EQU     0x00de
-realTimeProcAddr              EQU     0x00e0
+realTimeStubAddr              EQU     0x00e0
 
 
-; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+; do *NOT* use register4 to register7 during time slicing if you call realTimeStub
+realTimeAddr        EQU     register0
+realTimeProc0       EQU     register1
+realTimeProc1       EQU     register2
+realTimeProc2       EQU     register3
 numericLabel        EQU     register0
 defaultLabel        EQU     register1
 lutLabs             EQU     register2
@@ -547,16 +556,6 @@ romC_loop           LD      romErrPixel
                     BRA     romC_loop                       ; flash left hand corner pixel indicating rom error
                     
 romC_return         RET                    
-
-
-                    ; runs real time, (time sliced), code at regular intervals
-realTimeProc        PUSH
-                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI routine
-                    CALL    giga_vAC
-                    POP
-                    RET
-                    
-realTimeStub        RET
 
 
                     ; convert equal to into a boolean
@@ -635,6 +634,23 @@ convertArr3d        ADDW    memIndex0
                     RET
 
 
+                    ; runs real time, (time sliced), code at regular intervals
+                    ; self modifying code allows for timer, midi and user procs
+realTimeStub        RET                                     ; RET gets replaced by PUSH
+                    LDWI    0x0000                          ; 0x0000 gets replaced by realTimeProc0 address
+                    CALL    giga_vAC
+realTimeStub1       POP
+                    RET
+                    RET                                     ; POP + 2xRET gets replaced by LDWI realTimeProc1 address
+                    CALL    giga_vAC
+realTimeStub2       POP
+                    RET
+                    RET                                     ; POP + 2xRET gets replaced by LDWI realTimeProc2 address
+                    CALL    giga_vAC
+                    POP
+                    RET
+
+
                     ; find numeric label and call it, (it had better return or welcome to lala land)
 gosubNumericLabel   PUSH
                     LDWI    _lut_numericLabs
@@ -668,7 +684,7 @@ gosubNL_found       LDW     lutIndex
                     RET
 
 
-; do *NOT* use register4 to register7 during time slicing if you use realTimeProc
+; do *NOT* use register4 to register7 during time slicing if you use realTimeStub
 waitVBlankNum       EQU     register0
 
 drawHLine_x1        EQU     register0
@@ -741,13 +757,13 @@ waitVBlank          LD      giga_videoY
                     XORI    179
                     BNE     waitVBlank
                     PUSH
-                    CALL    realTimeProcAddr
+                    CALL    realTimeStubAddr
                     POP
                     RET
 
 
 
-; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+; do *NOT* use register4 to register7 during time slicing if you call realTimeStub
 xreset              EQU     register0
 xcount              EQU     register1
 ycount              EQU     register2
@@ -767,7 +783,7 @@ resetVideoTable     PUSH
                     LDWI    giga_videoTable
                     STW     evenAddr
     
-resetVT_loop        CALL    realTimeProcAddr
+resetVT_loop        CALL    realTimeStubAddr
                     LDW     vramAddr
                     DOKE    evenAddr
                     INC     evenAddr
@@ -784,7 +800,7 @@ initClearFuncs      PUSH
                     LDWI    resetVideoTable
                     CALL    giga_vAC
     
-                    LDI     0x02                                ; starting cursor position
+                    LDI     giga_CursorX                        ; cursor x start
                     STW     cursorXY
                     LDWI    ON_BOTTOM_ROW_MSK
                     ANDW    miscFlags
@@ -836,7 +852,7 @@ drawHL_cont         LD      drawHLine_x1
                     STW     drawHLine_x4                    ; 4 pixel chunks limit
 
 drawHL_loop0        SYS     30
-                    CALL    realTimeProcAddr
+                    CALL    realTimeStubAddr
                     LD      giga_sysArg4
                     ADDI    4
                     ST      giga_sysArg4

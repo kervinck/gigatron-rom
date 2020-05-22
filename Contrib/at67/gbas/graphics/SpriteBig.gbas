@@ -6,7 +6,7 @@ _codeRomType_ ROMv3
 _spriteStripeChunks_ 40, &h0200, descending
 
 mode 2
-set FGBGCOLOUR, &h3F00
+set FGBG_COLOUR, &h3F00
 cls
 
 'first load allocates memory, further loads of the same filename are instanced but have different stripe destination offsets

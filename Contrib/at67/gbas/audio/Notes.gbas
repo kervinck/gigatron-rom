@@ -10,9 +10,9 @@ sound off
 note = 0 : notes = note
 
 for index=0 &to 95
-    set SOUNDTIMER, 10
+    set SOUND_TIMER, 10
     gosub getRomNote
-    sound on, 1, note, 40, 2
+    sound on, 1, note
     print index;" ";note
 next index
 

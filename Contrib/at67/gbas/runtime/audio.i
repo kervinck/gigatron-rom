@@ -17,9 +17,9 @@ resetAudio          LD      giga_frameCount
                     STW     audioAddr
                     LD      waveType
                     ANDI    0x03
-                    ST      waveType + 1
-                    LDI     0x00
-                    ST      waveType                        ; waveform type
+                    ST      waveType + 1                    ; wavX
+                    LDI     0
+                    ST      waveType                        ; wavA
 
 resetA_loop         LDI     giga_soundChan1
                     ST      audioAddr                       ; reset low byte
@@ -43,7 +43,7 @@ resetA_loop         LDI     giga_soundChan1
 %SUB                playMidi
 playMidi            LDW     midiStream
                     BEQ     playM_exit0                     ; 0x0000 = stop
-                    LDI     0x08                            ; keep pumping soundTimer
+                    LDI     5                               ; keep pumping soundTimer
                     ST      giga_soundTimer
                     LD      giga_frameCount
                     SUBW    midiDelay
@@ -91,16 +91,16 @@ playM_exit1         POP
 
 %SUB                playMidiVol
 playMidiVol         LDW     midiStream
-                    BEQ     playM_exit0                     ; 0x0000 = stop
-                    LDI     0x08                            ; keep pumping soundTimer
+                    BEQ     playMV_exit0                    ; 0x0000 = stop
+                    LDI     5                               ; keep pumping soundTimer
                     ST      giga_soundTimer
                     LD      giga_frameCount
                     SUBW    midiDelay
-                    BEQ     playM_start
-playM_exit0         RET
+                    BEQ     playMV_start
+playMV_exit0        RET
 
-playM_start         PUSH
-playM_process       LDW     midiStream
+playMV_start        PUSH
+playMV_process      LDW     midiStream
                     PEEK                                    ; get midi stream byte
                     STW     midiCommand
                     LDW     midiStream
@@ -109,34 +109,34 @@ playM_process       LDW     midiStream
                     LDI     0xF0
                     ANDW    midiCommand
                     XORI    0x90                            ; check for start note
-                    BNE     playM_endnote
+                    BNE     playMV_endnote
     
                     LDWI    midiStartNote
                     CALL    giga_vAC                        ; start note
                     LDWI    midiSetVolume
                     CALL    giga_vAC                        ; set note volume
-                    BRA     playM_process
+                    BRA     playMV_process
                     
-playM_endnote       XORI    0x10                            ; check for end note
-                    BNE     playM_segment
+playMV_endnote      XORI    0x10                            ; check for end note
+                    BNE     playMV_segment
     
                     LDWI    midiEndNote                     ; end note
                     CALL    giga_vAC
-                    BRA     playM_process
+                    BRA     playMV_process
 
-playM_segment       XORI    0x50                            ; check for new segment
-                    BNE     playM_delay
+playMV_segment      XORI    0x50                            ; check for new segment
+                    BNE     playMV_delay
     
                     LDW     midiStream                      ; midi score
                     DEEK
                     STW     midiStream                      ; 0xD0 new midi segment address
-                    BEQ     playM_exit1                     ; 0x0000 = stop
-                    BRA     playM_process
+                    BEQ     playMV_exit1                    ; 0x0000 = stop
+                    BRA     playMV_process
     
-playM_delay         LD      giga_frameCount                 ; midiDelay = (midiCommand + peek(frameCount)) & 0x00FF 
+playMV_delay        LD      giga_frameCount                 ; midiDelay = (midiCommand + peek(frameCount)) & 0x00FF 
                     ADDW    midiCommand
                     ST      midiDelay
-playM_exit1         POP
+playMV_exit1        POP
                     RET
 %ENDS
 

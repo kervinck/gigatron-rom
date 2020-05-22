@@ -1,4 +1,4 @@
-; do *NOT* use register4 to register7 during time slicing if you use realTimeProc
+; do *NOT* use register4 to register7 during time slicing if you use realTimeStub
 spriteId            EQU     register0
 spriteXY            EQU     register1
 spriteAddrs         EQU     register2
@@ -24,7 +24,7 @@ draw_s_loop         LDW     spriteAddrs
                     SYS     64
                     INC     spriteAddrs
                     INC     spriteAddrs
-                    CALL    realTimeProcAddr
+                    CALL    realTimeStubAddr
                     BRA     draw_s_loop
                     
 draw_s_exit         POP

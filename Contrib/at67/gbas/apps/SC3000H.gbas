@@ -5,7 +5,7 @@ const colourBits = &h06F8
 def byte(colourBits) = &h01, &h02, &h04, &h08, &h10, &h20, &h40, &h3F
 
 const fgBgColour = &h0008
-set FGBGCOLOUR, fgBgColour
+set FGBG_COLOUR, fgBgColour
 mode 2
 cls
 sound off
@@ -41,7 +41,7 @@ goto loop
 waitKey:
     for i=1 to 15
         wait
-        k = get("SERIALRAW")
+        k = get("SERIAL_RAW")
         if k <> 255
             done = 1
             goto break
@@ -72,6 +72,7 @@ ohNoes:
     next i
     print
     
+    init midiv
     play midiv, &h08A0, 3
     
     for i=1 to 20
@@ -94,7 +95,7 @@ forever:
     
     if posX AND 1 == 1
         colour = colour XOR peek(colourBits + (rnd(0) AND 7))
-        set FGCOLOUR, colour
+        set FG_COLOUR, colour
     endif
     rect posX-1, posY-1, posX+60, posY+8
 
@@ -114,14 +115,14 @@ forever:
 goto forever
 
 printCursor:
-    cursor = get("CURSORXY")
+    cursor = get("CURSOR_XY")
     print chr$(127);
-    set CURSORXY, cursor
+    set CURSOR_XY, cursor
 return
 
 beep:
     sound on, 1, 8200, 63, 1
-    set SOUNDTIMER, duration
+    set SOUND_TIMER, duration
     wait duration
     sound off
 return

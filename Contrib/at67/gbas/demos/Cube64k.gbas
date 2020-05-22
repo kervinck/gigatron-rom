@@ -1,4 +1,5 @@
 _runtimePath_ "../runtime"
+_codeRomType_ ROMv2
 
 ' two different ways of telling compiler not to use memory above &h87FF
 _runtimeStart_ &h87FF ' maximum runtime address
@@ -25,9 +26,9 @@ DIM Q(7)=0 : DIM QQ(7)=0
 mode 3
 
 ' disable video, (except last line so that we don't lose sync), for fast cls, cls both buffers, enable video
-set VIDEOTOP, 238
+set VIDEO_TOP, 238
 cls : cls &h8800
-set VIDEOTOP, 0
+set VIDEO_TOP, 0
 
 10 U=48:GOTO setup
 
@@ -40,10 +41,10 @@ set VIDEOTOP, 0
 45 INC I:RETURN
 
 50 LINE P(A), Q(A)+pageFlip, P(B), Q(B)+pageFlip
-   return
+   tick time : return
 
 60 LINE PP(A), QQ(A)+pageFlip, PP(B), QQ(B)+pageFlip
-   return
+   tick time : return
 
 ' S=SIN C=COS F=FLEN
 setup: 
@@ -52,25 +53,24 @@ setup:
     gosub draw
     pageFlip = &h80
 
+init time, noupdate
 
-timer=0 : tick=get("FRAMECOUNT")
+timer=0
 for i=0 to 100
-    ticks=tick : tick=get("FRAMECOUNT") : ticks=tick-ticks
-    if ticks &< 0 then ticks=ticks+256
-    timer=timer+ticks
     gosub 254
 next i    
+timer = get("TIMER")
 
-set FGCOLOUR, &h0F
+set FG_COLOUR, &h0F
 print timer/60;" ";timer % 60;"/60"
 end
 
 'loop: 
-'    gosub get("BUTTONSTATE")
+'    gosub get("BUTTON_STATE")
 'goto &loop
 
 process: 
-    for j=0 &to 7 : PP(j)=P(j) : QQ(j)=Q(j) : next j
+    for j=0 to 7 : PP(j)=P(j) : QQ(j)=Q(j) : next j
     I=0:X=U*U
     K=S:M=U*C
     L=C:N=U*S:GOSUB 20
@@ -111,16 +111,16 @@ return
 
 254: S = S + 5 : if S &&>= 45 then S = -40
 
-     set FGCOLOUR, &h0F : gosub process : gosub draw
+     set FG_COLOUR, &h0F : gosub process : gosub draw
      gosub flip
-     set FGCOLOUR, &h20 : gosub erase
+     set FG_COLOUR, &h20 : gosub erase
      return
      
 253: S = S - 5 : if S &&<= -45 then S = 40
     
-     set FGCOLOUR, &h0F : gosub process : gosub draw
+     set FG_COLOUR, &h0F : gosub process : gosub draw
      gosub flip
-     set FGCOLOUR, &h20 : gosub erase
+     set FG_COLOUR, &h20 : gosub erase
      return
      
 flip: 

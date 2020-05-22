@@ -23,7 +23,8 @@ cursorXY                      EQU                               register0 + 0x22
 midiStream                    EQU                               register0 + 0x24
 midiDelay                     EQU                               register0 + 0x26
 miscFlags                     EQU                               register0 + 0x28
-fontLutId                     EQU                               0x00e4
+timerTick                     EQU                               register0 + 0x2A
+timerPrev                     EQU                               register0 + 0x2C
 
 ; Internal Constants
 ENABLE_SCROLL_BIT             EQU                               0x0001
@@ -41,10 +42,10 @@ textWorkArea                  EQU                               0x7fa0
 
 ; Labels
 _entryPoint_                  EQU                               0x0200
-_loop                         EQU                               0x0283
-_next_0x0255                  EQU                               0x0255
-_else_0x031e                  EQU                               0x02e6
-_end_0x0320                   EQU                               0x02e8
+_loop                         EQU                               0x027f
+_next_0x0251                  EQU                               0x0251
+_else_0x031a                  EQU                               0x02e2
+_end_0x031c                   EQU                               0x02e4
 
 ; Variables
 _a_array                      EQU                               0x0600
@@ -53,6 +54,10 @@ _i                            EQU                               0x0030
 _r                            EQU                               0x0032
 
 ; Strings
+_timeArray_                   EQU                               0x7ea3
+_timeArray_                   DB                                00 00 00
+_timeString_                  EQU                               0x7da8
+_timeString_                  DB                                8 '00:00:00' 0
 
 ; Define Bytes
 
@@ -78,7 +83,7 @@ _entryPoint_                  LDI                               0x1c
                               InitGtOp                          
                               InitArray2d                       
                               InitArray3d                       
-                              InitRealTimeProc                  
+                              InitRealTimeAddr                  
                               Initialise                                                        ; INIT
 
                               ClearVertBlinds                                                   ; cls
@@ -86,7 +91,7 @@ _entryPoint_                  LDI                               0x1c
                               LDI                               0
                               STW                               _i                              ; for i=0 to max
 
-_next_0x0255                  LDWI                              0x0600
+_next_0x0251                  LDWI                              0x0600
                               ADDW                              _i
                               ADDW                              _i
                               DEEK                              
@@ -103,7 +108,7 @@ _next_0x0255                  LDWI                              0x0600
                               LDI                               63
                               POKE                              0xc4                            ; poke (127 - a(i) LSL 8) + i, &h3F
 
-                              ForNextFarInc                     _i _next_0x0255 127             ; next i
+                              ForNextFarInc                     _i _next_0x0251 127             ; next i
 
 _loop                         Rand                              
                               ANDI                              127
@@ -144,7 +149,7 @@ _loop                         Rand
                               DEEK                              
                               SUBI                              120
                               CALL                              convertEqOpAddr
-                              JumpFalse                         _else_0x031e 0
+                              JumpFalse                         _else_0x031a 0
                               LDWI                              0x0600
                               ADDW                              _r
                               ADDW                              _r
@@ -152,9 +157,9 @@ _loop                         Rand
                               LDI                               119
                               DOKE                              memAddr                         ; a(r) = a(r) + 1 : if a(r) = 120 then a(r) = 119
 
-_else_0x031e                  BRA                               _loop                           ; goto &loop
+_else_0x031a                  BRA                               _loop                           ; goto &loop
 
-_end_0x0320                   BRA                               _end_0x0320                     ; end
+_end_0x031c                   BRA                               _end_0x031c                     ; end
 
 
 
@@ -165,7 +170,6 @@ _end_0x0320                   BRA                               _end_0x0320     
 ;****************************************************************************************************************************************
 
 romCheck                      EQU     0x7ee8
-realTimeProc                  EQU     0x7de5
 convertEqOp                   EQU     0x7edf
 convertNeOp                   EQU     0x7ed6
 convertLeOp                   EQU     0x7ecd
@@ -174,9 +178,10 @@ convertLtOp                   EQU     0x7ebb
 convertGtOp                   EQU     0x7eb2
 convertArr2d                  EQU     0x7ea6
 convertArr3d                  EQU     0x7dee
-rand16bit                     EQU     0x7dbb
+realTimeStub                  EQU     0x7ddc
+rand16bit                     EQU     0x7db2
 resetVideoTable               EQU     0x7ca6
-initClearFuncs                EQU     0x7dc3
+initClearFuncs                EQU     0x7dba
 clearVertBlinds               EQU     0x7cc5
 convertEqOpAddr               EQU     0x00d0
 convertNeOpAddr               EQU     0x00d2
@@ -186,10 +191,14 @@ convertLtOpAddr               EQU     0x00d8
 convertGtOpAddr               EQU     0x00da
 convertArr2dAddr              EQU     0x00dc
 convertArr3dAddr              EQU     0x00de
-realTimeProcAddr              EQU     0x00e0
+realTimeStubAddr              EQU     0x00e0
 
 
-; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+; do *NOT* use register4 to register7 during time slicing if you call realTimeStub
+realTimeAddr        EQU     register0
+realTimeProc0       EQU     register1
+realTimeProc1       EQU     register2
+realTimeProc2       EQU     register3
 numericLabel        EQU     register0
 defaultLabel        EQU     register1
 lutLabs             EQU     register2
@@ -213,16 +222,6 @@ romC_loop           LD      romErrPixel
                     BRA     romC_loop                       ; flash left hand corner pixel indicating rom error
                     
 romC_return         RET                    
-
-
-                    ; runs real time, (time sliced), code at regular intervals
-realTimeProc        PUSH
-                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI routine
-                    CALL    giga_vAC
-                    POP
-                    RET
-                    
-realTimeStub        RET
 
 
                     ; convert equal to into a boolean
@@ -301,7 +300,24 @@ convertArr3d        ADDW    memIndex0
                     RET
 
 
-; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+                    ; runs real time, (time sliced), code at regular intervals
+                    ; self modifying code allows for timer, midi and user procs
+realTimeStub        RET                                     ; RET gets replaced by PUSH
+                    LDWI    0x0000                          ; 0x0000 gets replaced by realTimeProc0 address
+                    CALL    giga_vAC
+realTimeStub1       POP
+                    RET
+                    RET                                     ; POP + 2xRET gets replaced by LDWI realTimeProc1 address
+                    CALL    giga_vAC
+realTimeStub2       POP
+                    RET
+                    RET                                     ; POP + 2xRET gets replaced by LDWI realTimeProc2 address
+                    CALL    giga_vAC
+                    POP
+                    RET
+
+
+; do *NOT* use register4 to register7 during time slicing if you call realTimeStub
 mathX               EQU     register8
 mathY               EQU     register9
 mathSum             EQU     register12
@@ -322,7 +338,7 @@ rand16bit           LDWI    SYS_Random_34
 
 
 
-; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+; do *NOT* use register4 to register7 during time slicing if you call realTimeStub
 xreset              EQU     register0
 xcount              EQU     register1
 ycount              EQU     register2
@@ -342,7 +358,7 @@ resetVideoTable     PUSH
                     LDWI    giga_videoTable
                     STW     evenAddr
     
-resetVT_loop        CALL    realTimeProcAddr
+resetVT_loop        CALL    realTimeStubAddr
                     LDW     vramAddr
                     DOKE    evenAddr
                     INC     evenAddr
@@ -359,7 +375,7 @@ initClearFuncs      PUSH
                     LDWI    resetVideoTable
                     CALL    giga_vAC
     
-                    LDI     0x02                                ; starting cursor position
+                    LDI     giga_CursorX                        ; cursor x start
                     STW     cursorXY
                     LDWI    ON_BOTTOM_ROW_MSK
                     ANDW    miscFlags
@@ -387,7 +403,7 @@ clearVertBlinds     PUSH
                     LD      giga_sysArg4 + 1
                     ST      top
     
-clearVB_loop        CALL    realTimeProcAddr
+clearVB_loop        CALL    realTimeStubAddr
                     LD      top
                     ST      giga_sysArg4 + 1                    ; top line
                     SYS     30

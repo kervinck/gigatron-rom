@@ -49,9 +49,9 @@ for y=119 downto horizonY
 
         poke a+x,p 
     next x
-    set VIDEOTOP, y+y
+    set VIDEO_TOP, y+y
 next y
-set VIDEOTOP, 0
+set VIDEO_TOP, 0
 
 x=0 : v=8
 loop:   i = x AND 255
@@ -72,7 +72,7 @@ loop:   i = x AND 255
             j = i + (j AND 255)
         p = p + 4 : until p &&>= q
         
-        gosub get("BUTTONSTATE")
+        gosub get("BUTTON_STATE")
         
         x = x + v
 goto loop

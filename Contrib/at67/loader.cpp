@@ -1189,8 +1189,6 @@ namespace Loader
             }
         }
 
-        Audio::initialiseChannels();
-
         // Compile gbas to gasm
         if(filename.find(".gbas") != filename.npos)
         {
@@ -1392,8 +1390,7 @@ namespace Loader
                 loadGtbFile(gtbFilepath);
             }
 
-            // Reset video table and reset single step watch address to video line counter
-            Graphics::resetVTable();
+            // Reset single step watch address to video line counter
             Editor::setSingleStepAddress(VIDEO_Y_ADDRESS);
 
             // Execute code
@@ -1407,8 +1404,23 @@ namespace Loader
                 Cpu::setRAM(0x001a, LO_BYTE(executeAddress-2));
                 Cpu::setRAM(0x001b, HI_BYTE(executeAddress));
 
-                // Reset stack
+                // Reset stack and constants
                 Cpu::setRAM(STACK_POINTER, 0x00);
+                Cpu::setRAM(ZERO_CONST_ADDRESS, 0x00);
+                Cpu::setRAM(ONE_CONST_ADDRESS, 0x01);
+
+                // Reset VBlank and video top
+                Cpu::setRAM16(VBLANK_PROC, 0x0000);
+                Cpu::setRAM(VIDEO_TOP, 0x00);
+
+                // Reset video table and reset single step watch address to video line counter
+                Graphics::resetVTable();
+
+                // Stop audio
+                Cpu::setRAM(GIGA_SOUND_TIMER, 0x00);
+
+                // Rebuild audio wave tables, (including right shift LUT)
+                Audio::initialiseChannels();
             }
 
             //Editor::startDebugger();

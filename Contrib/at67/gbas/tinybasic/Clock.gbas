@@ -1,0 +1,15 @@
+_runtimePath_ "../runtime"
+_codeRomType_ ROMv1
+
+A = 0
+'Keeping time using the
+'59.98 Hz frame counter
+10 input H,M,S:B=peek(14)
+20 T=S*60:V=3599:goto 50
+30 if T>=V then T=T-V: M=M+1
+40 if M>59 then M=M-60:H=H+1
+50 print H;":";M/10;M%10;
+60 S=T/60:? ":";S/10;S%10
+70 A=B:B=peek(14):A=B-A
+80 if A<0 then A=A+256
+90 T=T+A:goto 30

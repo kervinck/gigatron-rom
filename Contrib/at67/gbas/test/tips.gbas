@@ -2,7 +2,7 @@ _runtimePath_ "../runtime"
 _codeRomType_ ROMv1
 
 const fgBgColour = &h0008
-set FGBGCOLOUR, fgBgColour
+set FGBG_COLOUR, fgBgColour
 cls
 'load font, ../../images/gbas/Fonts/sc3000/sc3000.tga, 0, fgBgColour
 
@@ -104,7 +104,7 @@ print hex$(lup(&h0920, 0));" ";hex$(lup(&h0920, 1))
 kk = 255
 
 loop:
-    k = get("SERIALRAW")
+    k = get("SERIAL_RAW")
     if kk &= 255
         if k &<>255 then gosub k
     endif

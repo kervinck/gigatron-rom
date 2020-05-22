@@ -23,7 +23,8 @@ cursorXY                      EQU                               register0 + 0x22
 midiStream                    EQU                               register0 + 0x24
 midiDelay                     EQU                               register0 + 0x26
 miscFlags                     EQU                               register0 + 0x28
-fontLutId                     EQU                               0x00e4
+timerTick                     EQU                               register0 + 0x2A
+timerPrev                     EQU                               register0 + 0x2C
 
 ; Internal Constants
 ENABLE_SCROLL_BIT             EQU                               0x0001
@@ -45,7 +46,7 @@ _page_0x0300                  EQU                               0x0300
 _page_0x0400                  EQU                               0x0400
 _page_0x0500                  EQU                               0x0500
 _page_0x0600                  EQU                               0x0600
-_end_0x0736                   EQU                               0x06d5
+_end_0x0732                   EQU                               0x06ce
 
 ; Variables
 _arr_array                    EQU                               0x7ef4
@@ -65,6 +66,10 @@ _cs                           EQU                               0x0046
 _db                           EQU                               0x0048
 
 ; Strings
+_timeArray_                   EQU                               0x7aa1
+_timeArray_                   DB                                00 00 00
+_timeString_                  EQU                               0x76a2
+_timeString_                  DB                                8 '00:00:00' 0
 _str_0x7eec                   EQU                               0x7eec
 _str_0x7eec                   DB                                6 'const ' 0
 _t1$                          EQU                               0x7da0
@@ -132,7 +137,7 @@ _entryPoint_                  LDI                               0x1c
                               InitGtOp                          
                               InitArray2d                       
                               InitArray3d                       
-                              InitRealTimeProc                  
+                              InitRealTimeAddr                  
                               Initialise                                                        ; INIT
 
                               ClearVertBlinds                                                   ; cls
@@ -200,12 +205,12 @@ _entryPoint_                  LDI                               0x1c
                               LDWI                              0x7abe
                               Input                                                             ; input "Testing INPUT:", cat$,"Cats Name ?"32;, hours,"H ?"2;, minutes,"M ?"2;, seconds,"S ?"2;
 
+                              NewLine                                                           ; print
+
                               STW                               0xe2
                               LDWI                              _page_0x0300
                               CALL                              giga_vAC
 _page_0x0300                  LDW                               0xe2
-                              NewLine                                                           ; print
-
                               PrintString                       _cat$
                               PrintString                       _str_0x7ec9
                               LDW                               _hours
@@ -273,14 +278,14 @@ _page_0x0300                  LDW                               0xe2
                               NewLine                                                           ; print a.lo;" ";b.hi;" ";b
 
                               LDI                               64
-                              STW                               0xe2
-                              LDWI                              _page_0x0400
-                              CALL                              giga_vAC
-_page_0x0400                  LDW                               0xe2
                               ADDW                              _d
                               ADDI                              1
                               STW                               _e                              ; e = @e + d + 1
 
+                              STW                               0xe2
+                              LDWI                              _page_0x0400
+                              CALL                              giga_vAC
+_page_0x0400                  LDW                               0xe2
                               LDWI                              31433
                               STW                               _f                              ; f = @big$
 
@@ -335,14 +340,14 @@ _page_0x0400                  LDW                               0xe2
                               NewLine                                                           ; print hexw$(arr(0))
 
                               LDWI                              0x7ef6
-                              STW                               0xe2
-                              LDWI                              _page_0x0500
-                              CALL                              giga_vAC
-_page_0x0500                  LDW                               0xe2
                               STW                               memAddr
                               LD                                _f
                               POKE                              memAddr                         ; arr(1).lo = f.lo
 
+                              STW                               0xe2
+                              LDWI                              _page_0x0500
+                              CALL                              giga_vAC
+_page_0x0500                  LDW                               0xe2
                               LD                                _f + 1
                               STW                               memValue
                               LDWI                              0x7ef6
@@ -398,11 +403,11 @@ _page_0x0500                  LDW                               0xe2
                               PrintAcInt16                      
                               PrintString                       _str_0x7ec9
                               LD                                0x00
+                              PrintAcInt16                      
                               STW                               0xe2
                               LDWI                              _page_0x0600
                               CALL                              giga_vAC
 _page_0x0600                  LDW                               0xe2
-                              PrintAcInt16                      
                               PrintString                       _str_0x7ec9
                               LDW                               0x00
                               PrintAcInt16                      
@@ -444,7 +449,7 @@ _page_0x0600                  LDW                               0xe2
                               PrintInt16                        0x0004
                               NewLine                                                           ; print sin(56.8333333)*1000;" ";cs;" ";db;" ";1.5333333333 * 2.32
 
-_end_0x0736                   BRA                               _end_0x0736                     ; end
+_end_0x0732                   BRA                               _end_0x0732                     ; end
 
 
 
@@ -455,7 +460,6 @@ _end_0x0736                   BRA                               _end_0x0736     
 ;****************************************************************************************************************************************
 
 romCheck                      EQU     0x78e0
-realTimeProc                  EQU     0x78a1
 convertEqOp                   EQU     0x78d7
 convertNeOp                   EQU     0x78ce
 convertLeOp                   EQU     0x78c5
@@ -464,12 +468,13 @@ convertLtOp                   EQU     0x78b3
 convertGtOp                   EQU     0x78aa
 convertArr2d                  EQU     0x77f3
 convertArr3d                  EQU     0x77e2
+realTimeStub                  EQU     0x77d0
 multiply16bit                 EQU     0x75a5
 divide16bit                   EQU     0x6fa8
-rand16bit                     EQU     0x76a4
-randMod16bit                  EQU     0x77a0
+rand16bit                     EQU     0x78a2
+randMod16bit                  EQU     0x72c5
 resetVideoTable               EQU     0x71a8
-initClearFuncs                EQU     0x77c0
+initClearFuncs                EQU     0x77ae
 clearVertBlinds               EQU     0x76c5
 clearCursorRow                EQU     0x6eb6
 input                         EQU     0x72d8
@@ -477,13 +482,13 @@ inputExt1                     EQU     0x6db0
 inputExt2                     EQU     0x70ac
 inputCursor                   EQU     0x6cdd
 inputKeys                     EQU     0x6ba4
-inputIntVar                   EQU     0x72a1
+inputIntVar                   EQU     0x6ea2
 inputStrVar                   EQU     0x6cc6
 inputReturn                   EQU     0x6ac6
 inputDelete                   EQU     0x69b9
 inputPrint                    EQU     0x6ca7
-inputNewline                  EQU     0x6ea1
-printInit                     EQU     0x6ab0
+inputNewline                  EQU     0x6ab1
+printInit                     EQU     0x69a3
 printText                     EQU     0x76ac
 printDigit                    EQU     0x68dd
 printInt16                    EQU     0x74ae
@@ -493,11 +498,11 @@ printHexByte                  EQU     0x70ca
 printHexWord                  EQU     0x71c7
 newLineScroll                 EQU     0x73a4
 integerStr                    EQU     0x66c0
-stringChr                     EQU     0x72c7
-stringHex                     EQU     0x72b5
+stringChr                     EQU     0x72b4
+stringHex                     EQU     0x72a2
 stringHexw                    EQU     0x71e0
 createHex                     EQU     0x68b5
-stringCopy                    EQU     0x77b3
+stringCopy                    EQU     0x77a1
 stringAdd                     EQU     0x65c3
 stringConcat                  EQU     0x75d7
 convertEqOpAddr               EQU     0x00d0
@@ -508,10 +513,14 @@ convertLtOpAddr               EQU     0x00d8
 convertGtOpAddr               EQU     0x00da
 convertArr2dAddr              EQU     0x00dc
 convertArr3dAddr              EQU     0x00de
-realTimeProcAddr              EQU     0x00e0
+realTimeStubAddr              EQU     0x00e0
 
 
-; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+; do *NOT* use register4 to register7 during time slicing if you call realTimeStub
+realTimeAddr        EQU     register0
+realTimeProc0       EQU     register1
+realTimeProc1       EQU     register2
+realTimeProc2       EQU     register3
 numericLabel        EQU     register0
 defaultLabel        EQU     register1
 lutLabs             EQU     register2
@@ -535,16 +544,6 @@ romC_loop           LD      romErrPixel
                     BRA     romC_loop                       ; flash left hand corner pixel indicating rom error
                     
 romC_return         RET                    
-
-
-                    ; runs real time, (time sliced), code at regular intervals
-realTimeProc        PUSH
-                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI routine
-                    CALL    giga_vAC
-                    POP
-                    RET
-                    
-realTimeStub        RET
 
 
                     ; convert equal to into a boolean
@@ -623,7 +622,24 @@ convertArr3d        ADDW    memIndex0
                     RET
 
 
-; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+                    ; runs real time, (time sliced), code at regular intervals
+                    ; self modifying code allows for timer, midi and user procs
+realTimeStub        RET                                     ; RET gets replaced by PUSH
+                    LDWI    0x0000                          ; 0x0000 gets replaced by realTimeProc0 address
+                    CALL    giga_vAC
+realTimeStub1       POP
+                    RET
+                    RET                                     ; POP + 2xRET gets replaced by LDWI realTimeProc1 address
+                    CALL    giga_vAC
+realTimeStub2       POP
+                    RET
+                    RET                                     ; POP + 2xRET gets replaced by LDWI realTimeProc2 address
+                    CALL    giga_vAC
+                    POP
+                    RET
+
+
+; do *NOT* use register4 to register7 during time slicing if you call realTimeStub
 mathX               EQU     register8
 mathY               EQU     register9
 mathSum             EQU     register12
@@ -662,7 +678,7 @@ multiply16_skip     LDW     mathX
                     BRA     multiply16_loop
 
 multiply16_exit     PUSH
-                    CALL    realTimeProcAddr
+                    CALL    realTimeStubAddr
                     POP
                     LDW     mathSum
                     RET
@@ -716,7 +732,7 @@ divide16_incx       LDW     mathMask
                     LSLW
                     BNE     divide16_loop
                     PUSH
-                    CALL    realTimeProcAddr
+                    CALL    realTimeStubAddr
                     POP
                     LDW     mathSign
                     BGE     divide16_exit
@@ -741,7 +757,7 @@ randMod16bit        PUSH
 
 
 
-; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+; do *NOT* use register4 to register7 during time slicing if you call realTimeStub
 xreset              EQU     register0
 xcount              EQU     register1
 ycount              EQU     register2
@@ -761,7 +777,7 @@ resetVideoTable     PUSH
                     LDWI    giga_videoTable
                     STW     evenAddr
     
-resetVT_loop        CALL    realTimeProcAddr
+resetVT_loop        CALL    realTimeStubAddr
                     LDW     vramAddr
                     DOKE    evenAddr
                     INC     evenAddr
@@ -778,7 +794,7 @@ initClearFuncs      PUSH
                     LDWI    resetVideoTable
                     CALL    giga_vAC
     
-                    LDI     0x02                                ; starting cursor position
+                    LDI     giga_CursorX                        ; cursor x start
                     STW     cursorXY
                     LDWI    ON_BOTTOM_ROW_MSK
                     ANDW    miscFlags
@@ -806,7 +822,7 @@ clearVertBlinds     PUSH
                     LD      giga_sysArg4 + 1
                     ST      top
     
-clearVB_loop        CALL    realTimeProcAddr
+clearVB_loop        CALL    realTimeStubAddr
                     LD      top
                     ST      giga_sysArg4 + 1                    ; top line
                     SYS     30
@@ -833,7 +849,7 @@ clearVB_loop        CALL    realTimeProcAddr
 
 
 
-; do *NOT* use register4 to register7 during time slicing if you use realTimeProc
+; do *NOT* use register4 to register7 during time slicing if you use realTimeStub
 inpLutAddr          EQU     register0
 inpKeyBak           EQU     register0
 inpVarsAddr         EQU     register1
@@ -845,7 +861,7 @@ inpTypeData         EQU     register7
 inpTextEnd          EQU     register8
 printXYBak          EQU     register11
 cursXYBak           EQU     register12
-frmCntBak           EQU     register13
+cursFlash           EQU     register13
 cursorChr           EQU     register14
 cursXYOfs           EQU     register15
 
@@ -870,7 +886,7 @@ input               PUSH
                     ST      serialRawPrev       ; initialise previous keystroke
                     LD      giga_frameCount
                     ADDI    cursorDelay
-                    STW     frmCntBak           ; delay for cursor flash
+                    STW     cursFlash           ; delay for cursor flash
                     LDI     127
                     STW     cursorChr           ; cursor char
                     LDWI    inputExt1
@@ -945,14 +961,14 @@ inputExt2           LDWI    inputCursor
 
                     ; flashes cursor
 inputCursor         LD      giga_frameCount
-                    SUBW    frmCntBak
+                    SUBW    cursFlash
                     BEQ     inputC_toggle
                     RET
                     
 inputC_toggle       PUSH
                     LD      giga_frameCount
                     ADDI    cursorDelay
-                    ST      frmCntBak           ; delay for cursor flash
+                    ST      cursFlash           ; delay for cursor flash
                     LD      cursorChr
                     ST      textChr
                     XORI    0xDF
@@ -1152,7 +1168,7 @@ inputNewline        PUSH
 
 
 
-; do *NOT* use register4 to register7 during time slicing if you use realTimeProc
+; do *NOT* use register4 to register7 during time slicing if you use realTimeStub
 textStr             EQU     register0
 textNum             EQU     register0
 textBak             EQU     register0
@@ -1314,12 +1330,12 @@ printC_slice        ST      textSlice
                     INC     giga_sysArg4                    ; using sysArg4 as a temporary cursor address for multiple char prints
                     
                     PUSH
-                    CALL    realTimeProcAddr
+                    CALL    realTimeStubAddr
                     LD      cursorXY
-                    ADDI    0x06
+                    ADDI    giga_xfont
                     ST      cursorXY
-                    SUBI    giga_xres - 5                   ; giga_xres - 6, (154), is last possible char in row
-                    BLT     printC_pop
+                    SUBI    giga_xres - giga_xfont          ; last possible char on line
+                    BLE     printC_pop
                     LDWI    newLineScroll                   ; next row, scroll at bottom
                     CALL    giga_vAC
                     
@@ -1373,7 +1389,7 @@ printHexWord        PUSH
 
 
 
-                    ; clears the top 8 lines of pixels in preparation of text scrolling
+                    ; clears the top giga_yfont lines of pixels in preparation of text scrolling
 clearCursorRow      PUSH
                     LD      fgbgColour
                     ST      giga_sysArg0
@@ -1387,10 +1403,10 @@ clearCursorRow      PUSH
                     LDWI    giga_videoTable                 ; current cursor high byte address
                     PEEK
                     ST      giga_sysArg4 + 1
-                    LDI     8
+                    LDI     giga_yfont
 
 clearCR_loopy       ST      clearLoop
-                    CALL    realTimeProcAddr
+                    CALL    realTimeStubAddr
                     LDI     giga_xres
                     
 clearCR_loopx       SUBI    4                               ; loop is unrolled 4 times
@@ -1419,7 +1435,7 @@ clearCR_loopx       SUBI    4                               ; loop is unrolled 4
 
 
                     ; print from top row to bottom row, then start scrolling 
-newLineScroll       LDI     0x02                            ; x offset slightly
+newLineScroll       LDI     giga_CursorX                    ; cursor x start
                     ST      cursorXY
                     ST      giga_sysArg4
                     LDI     ENABLE_SCROLL_BIT
@@ -1432,11 +1448,11 @@ newLS_cont0         PUSH
                     ANDW    miscFlags                       ; is on bottom row flag?
                     BNE     newLS_cont1
                     LD      cursorXY + 1
-                    ADDI    8
+                    ADDI    giga_yfont
                     ST      cursorXY + 1
                     SUBI    giga_yres
                     BLT     newLS_exit
-                    LDI     giga_yres - 8
+                    LDI     giga_yres - giga_yfont
                     ST      cursorXY + 1
                     
 newLS_cont1         LDWI    clearCursorRow
@@ -1444,16 +1460,16 @@ newLS_cont1         LDWI    clearCursorRow
                     LDWI    giga_videoTable
                     STW     scanLine
     
-newLS_scroll        CALL    realTimeProcAddr
+newLS_scroll        CALL    realTimeStubAddr
                     LDW     scanLine
                     PEEK
-                    ADDI    8
+                    ADDI    giga_yfont
                     ANDI    0x7F
-                    SUBI    8
+                    SUBI    giga_yfont
                     BGE     newLS_adjust
-                    ADDI    8
+                    ADDI    giga_yfont
                     
-newLS_adjust        ADDI    8
+newLS_adjust        ADDI    giga_yfont
                     POKE    scanLine
                     INC     scanLine                        ; scanline pointers are 16bits
                     INC     scanLine
@@ -1471,7 +1487,7 @@ newLS_exit          LDWI    printInit
                     RET
 
 
-; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+; do *NOT* use register4 to register7 during time slicing if you call realTimeStub
 intSrcAddr          EQU     register8
 intDigit            EQU     register9
 intResult           EQU     register10
@@ -1517,7 +1533,7 @@ integerS_exit       LDW     intResult
                     RET
 
 
-; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+; do *NOT* use register4 to register7 during time slicing if you call realTimeStub
 strChr              EQU     register0
 strHex              EQU     register1
 strCmpRes           EQU     register2
@@ -1532,8 +1548,8 @@ strTmpAddr          EQU     register10
 strLutAddr          EQU     register11
 strBakAddr          EQU     register12
 strInteger          EQU     register0
-strIntDigit         EQU     register1
-strIntMult          EQU     register3
+strDigit            EQU     register1
+strMult             EQU     register3
 
 
                     ; create a char string, (parameter in strChr)

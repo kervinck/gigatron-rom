@@ -3,7 +3,7 @@ _codeRomType_ ROMv1
 
 const fgBgColour = &h0008
 
-set FGBGCOLOUR, fgBgColour
+set FGBG_COLOUR, fgBgColour
 cls
 
 dim aa(20) = 0

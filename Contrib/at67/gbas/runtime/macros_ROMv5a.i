@@ -405,10 +405,12 @@ _label_ CALLI   _label
 %ENDM
 
 %MACRO  ReadPixel
+        LDW     drawPixel_xy
         CALLI   readPixel
 %ENDM
 
 %MACRO  DrawPixel
+        LDW     drawPixel_xy
         CALLI   drawPixel
 %ENDM
 
@@ -455,27 +457,16 @@ _label_ CALLI   _label
 %MACRO  PlayMidi
         STW     midiStream
         CALLI   resetAudio
-        LDWI    realTimeProc + 2
-        STW     register0
-        LDWI    playMidi
-        DOKE    register0                               ; self modifying code, replaces realTimeProc stub with playMidi routine
+
 %ENDM
 
 %MACRO  PlayMidiV
         STW     midiStream
         CALLI   resetAudio
-        LDWI    realTimeProc + 2
-        STW     register0
-        LDWI    playMidiVol
-        DOKE    register0                               ; self modifying code, replaces realTimeProc stub with playMidi routine
 %ENDM
 
-%MACRO  TickMidi
-        CALLI   playMidi
-%ENDM
-
-%MACRO  TickMidiV
-        CALLI   playMidiVol
+%MACRO  TimeString
+        CALLI   timeString
 %ENDM
 
 %MACRO  DrawSprite
@@ -568,26 +559,8 @@ _id_    CALLI   _label
         LDI     ENABLE_SCROLL_BIT
         STW     miscFlags                               ; reset flags
 
-        LDI     0x00
+        LDI     0
         STW     midiStream                              ; reset MIDI
-        STW     fontLutId
-        ST      giga_soundTimer                         ; reset soundTimer, (stops any current Audio)
         
         CALLI   initClearFuncs
-%ENDM
-
-%MACRO  ClearRegion _x _y _w _h
-        LDI     _h / 2
-        ST      ycount
-        LDI     _w / 4
-        ST      xcount
-        ST      xreset
-
-        LDWI    _y*256 + _x + giga_vram                 ; top line
-        STW     treset
-        STW     top
-        LDWI    ((_h - 1) + _y)*256 + _x + giga_vram    ; bottom line
-        STW     breset
-        STW     bot
-        CALLI   clearRegion
 %ENDM

@@ -9,8 +9,8 @@ const POLYADDR = &h0600
 def byte(POLYADDR) = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255
 
 loop: 
-    poke 163, rnd(0) AND &h3F
-    
+    set FG_COLOUR, rnd(0) AND &h3F
+
     ox = rnd(160) : oy = rnd(120)
     at ox, oy
     
@@ -24,8 +24,8 @@ loop:
     poly POLYADDR
     
 'key:    
-'    k = get("BUTTONSTATE") : if k = 255 then goto key
-'    set BUTTONSTATE, 255
+'    k = get("BUTTON_STATE") : if k = 255 then goto key
+'    set BUTTON_STATE, 255
     
     goto &loop
 
