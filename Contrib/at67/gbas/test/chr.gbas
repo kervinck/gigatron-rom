@@ -3,7 +3,8 @@ _codeRomType_ ROMv1
 
 cls
 
-play midi,&h10a0,3
+init midi
+play midi, &h10a0, 3
 
 10 a =1
 for k = 0 to 1

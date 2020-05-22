@@ -23,7 +23,8 @@ cursorXY                      EQU                               register0 + 0x22
 midiStream                    EQU                               register0 + 0x24
 midiDelay                     EQU                               register0 + 0x26
 miscFlags                     EQU                               register0 + 0x28
-fontLutId                     EQU                               0x00e4
+timerTick                     EQU                               register0 + 0x2A
+timerPrev                     EQU                               register0 + 0x2C
 
 ; Internal Constants
 ENABLE_SCROLL_BIT             EQU                               0x0001
@@ -41,25 +42,25 @@ textWorkArea                  EQU                               0x7fa0
 
 ; Labels
 _entryPoint_                  EQU                               0x0200
-_loop                         EQU                               0x08cb
-_bullets0                     EQU                               0x0ac1
-_bullets1                     EQU                               0x0bbd
+_loop                         EQU                               0x08c7
+_bullets0                     EQU                               0x0abc
+_bullets1                     EQU                               0x0bb6
 _page_0x0300                  EQU                               0x0300
 _page_0x0400                  EQU                               0x0400
 _page_0x0500                  EQU                               0x0500
 _page_0x0600                  EQU                               0x0600
 _page_0x08a0                  EQU                               0x08a0
-_next_0x026b                  EQU                               0x08d7
+_next_0x0267                  EQU                               0x08d3
 _page_0x09a0                  EQU                               0x09a0
-_next_0x02bb                  EQU                               0x09ce
+_next_0x02b7                  EQU                               0x09ca
 _page_0x0aa0                  EQU                               0x0aa0
-_else_0x0335                  EQU                               0x0ae8
+_else_0x0331                  EQU                               0x0ae3
 _page_0x0ba0                  EQU                               0x0ba0
-_else_0x0364                  EQU                               0x0bbb
-_else_0x0396                  EQU                               0x0be5
+_else_0x0360                  EQU                               0x0bb4
+_else_0x0392                  EQU                               0x0bde
 _page_0x0ca0                  EQU                               0x0ca0
-_else_0x03c4                  EQU                               0x0cb5
-_end_0x03c6                   EQU                               0x0cb7
+_else_0x03c0                  EQU                               0x0caf
+_end_0x03c2                   EQU                               0x0cb1
 
 ; Variables
 _x0                           EQU                               0x0030
@@ -67,6 +68,10 @@ _x1                           EQU                               0x0032
 _x                            EQU                               0x0034
 
 ; Strings
+_timeArray_                   EQU                               0x7da2
+_timeArray_                   DB                                00 00 00
+_timeString_                  EQU                               0x7ca2
+_timeString_                  DB                                8 '00:00:00' 0
 
 ; Define Bytes
 
@@ -93,20 +98,20 @@ def_sprites_0x7ee6            DB                                7 11 11 31 0 0 7
 ; Define Fonts
 
 ; Lookup Tables
-_spriteLut_0x7bea             EQU                               0x7bea
-_spriteLut_0x7bea             DW                                0x061b 0x0000 0x051b 0x0006 0x0415 0x000c 0x0315 0x0012 0x0215 0x0018 0x0000
-_spriteLut_0x7bd4             EQU                               0x7bd4
-_spriteLut_0x7bd4             DW                                0x061b 0x0018 0x051b 0x0012 0x0415 0x000c 0x0315 0x0006 0x0215 0x0000 0x0000
-_spriteLut_0x7bbe             EQU                               0x7bbe
-_spriteLut_0x7bbe             DW                                0x061b 0x2500 0x051b 0x2506 0x0415 0x250c 0x0315 0x2512 0x0215 0x2518 0x0000
-_spriteLut_0x7ba8             EQU                               0x7ba8
-_spriteLut_0x7ba8             DW                                0x061b 0x2518 0x051b 0x2512 0x0415 0x250c 0x0315 0x2506 0x0215 0x2500 0x0000
-_spriteLut_0x7ca1             EQU                               0x7ca1
-_spriteLut_0x7ca1             DW                                0x7ef3 0x0000 0x7ee6 0x0006 0x0000
-_spriteLut_0x7af6             EQU                               0x7af6
-_spriteLut_0x7af6             DW                                0x7ef3 0x0006 0x7ee6 0x0000 0x0000
-_spritesLut_                  EQU                               0x7aea
-_spritesLut_                  DW                                0x7bea 0x7bd4 0x7bbe 0x7ba8 0x7ca1 0x7af6 
+_spriteLut_0x7bdc             EQU                               0x7bdc
+_spriteLut_0x7bdc             DW                                0x061b 0x0000 0x051b 0x0006 0x0415 0x000c 0x0315 0x0012 0x0215 0x0018 0x0000
+_spriteLut_0x7bc6             EQU                               0x7bc6
+_spriteLut_0x7bc6             DW                                0x061b 0x0018 0x051b 0x0012 0x0415 0x000c 0x0315 0x0006 0x0215 0x0000 0x0000
+_spriteLut_0x7bb0             EQU                               0x7bb0
+_spriteLut_0x7bb0             DW                                0x061b 0x2500 0x051b 0x2506 0x0415 0x250c 0x0315 0x2512 0x0215 0x2518 0x0000
+_spriteLut_0x7aea             EQU                               0x7aea
+_spriteLut_0x7aea             DW                                0x061b 0x2518 0x051b 0x2512 0x0415 0x250c 0x0315 0x2506 0x0215 0x2500 0x0000
+_spriteLut_0x7ba6             EQU                               0x7ba6
+_spriteLut_0x7ba6             DW                                0x7ef3 0x0000 0x7ee6 0x0006 0x0000
+_spriteLut_0x7ae0             EQU                               0x7ae0
+_spriteLut_0x7ae0             DW                                0x7ef3 0x0006 0x7ee6 0x0000 0x0000
+_spritesLut_                  EQU                               0x7ad4
+_spritesLut_                  DW                                0x7bdc 0x7bc6 0x7bb0 0x7aea 0x7ba6 0x7ae0 
 
 ; Code
 _entryPoint_                  LDI                               0x28
@@ -136,7 +141,7 @@ _page_0x0500                  LDW                               0xe2
                               LDWI                              _page_0x0600
                               CALL                              giga_vAC
 _page_0x0600                  LDW                               0xe2
-                              InitRealTimeProc                  
+                              InitRealTimeAddr                  
                               STW                               0xe2
                               LDWI                              _page_0x08a0
                               CALL                              giga_vAC
@@ -148,7 +153,7 @@ _page_0x08a0                  LDW                               0xe2
                               ScanlineMode                                                      ; mode 2
 
                               LDWI                              16128
-                              STW                               fgbgColour                      ; set FGBGCOLOUR, &h3F00
+                              STW                               fgbgColour                      ; set FGBG_COLOUR, &h3F00
 
                               ClearVertBlinds                                                   ; cls
 
@@ -161,7 +166,7 @@ _loop                         LDI                               28
                               LDI                               0
                               STW                               _x                              ; for x=0 to 130
 
-_next_0x026b                  WaitVBlank                                                        ; wait
+_next_0x0267                  WaitVBlank                                                        ; wait
 
                               LDI                               0
                               STW                               spriteId
@@ -176,12 +181,12 @@ _next_0x026b                  WaitVBlank                                        
                               STW                               spriteId
                               LDI                               130
                               SUBW                              _x
+                              ST                                spriteXY
+                              LDI                               65
                               STW                               0xe2
                               LDWI                              _page_0x09a0
                               CALL                              giga_vAC
 _page_0x09a0                  LDW                               0xe2
-                              ST                                spriteXY
-                              LDI                               65
                               ADDI                              8
                               ST                                spriteXY + 1
                               DrawSpriteX                                                       ; sprite flipX, 1, 130-x, 65
@@ -189,7 +194,7 @@ _page_0x09a0                  LDW                               0xe2
                               LDWI                              _bullets0
                               CALL                              giga_vAC                        ; gosub bullets0
 
-                              ForNextFarInc                     _x _next_0x026b 130             ; next x
+                              ForNextFarInc                     _x _next_0x0267 130             ; next x
 
                               LDI                               28
                               STW                               _x1                             ; x1 = 28
@@ -200,7 +205,7 @@ _page_0x09a0                  LDW                               0xe2
                               LDI                               129
                               STW                               _x                              ; for x=129 downto 1
 
-_next_0x02bb                  WaitVBlank                                                        ; wait
+_next_0x02b7                  WaitVBlank                                                        ; wait
 
                               LDI                               1
                               STW                               spriteId
@@ -219,16 +224,16 @@ _next_0x02bb                  WaitVBlank                                        
                               LDI                               65
                               ADDI                              8
                               ST                                spriteXY + 1
+                              DrawSprite                                                        ; sprite noFlip, 0, 130-x, 65
+
                               STW                               0xe2
                               LDWI                              _page_0x0aa0
                               CALL                              giga_vAC
 _page_0x0aa0                  LDW                               0xe2
-                              DrawSprite                                                        ; sprite noFlip, 0, 130-x, 65
-
                               LDWI                              _bullets1
                               CALL                              giga_vAC                        ; gosub bullets1
 
-                              ForNextFarDec                     _x _next_0x02bb 1               ; next x
+                              ForNextFarDec                     _x _next_0x02b7 1               ; next x
 
                               LDWI                              _loop
                               CALL                              giga_vAC                        ; goto loop
@@ -249,36 +254,36 @@ _bullets0                     PUSH
 
                               LDW                               _x0
                               SUBI                              159
-                              BLE                               _else_0x0335
+                              BLE                               _else_0x0331
                               LDW                               _x
                               ADDI                              28
                               STW                               _x0                             ; if x0 &&> 159 then x0 = x + 28
 
-_else_0x0335                  LDI                               4
+_else_0x0331                  LDI                               4
                               STW                               spriteId
                               LDW                               _x1
                               ST                                spriteXY
                               LDI                               74
                               ADDI                              8
                               ST                                spriteXY + 1
+                              DrawSprite                                                        ; sprite noFlip, 4, x1, 74
+
+                              LDW                               _x1
                               STW                               0xe2
                               LDWI                              _page_0x0ba0
                               CALL                              giga_vAC
 _page_0x0ba0                  LDW                               0xe2
-                              DrawSprite                                                        ; sprite noFlip, 4, x1, 74
-
-                              LDW                               _x1
                               SUBI                              2
                               STW                               _x1                             ; x1 = x1 - 2
 
                               LDWI                              -12
                               SUBW                              _x1
-                              BLT                               _else_0x0364
+                              BLT                               _else_0x0360
                               LDI                               120
                               SUBW                              _x
                               STW                               _x1                             ; if x1 &&< -12 then x1 = 120-x
 
-_else_0x0364                  Return                                                            ; return
+_else_0x0360                  Return                                                            ; return
 
 _bullets1                     PUSH                              
                               LDI                               4
@@ -296,12 +301,12 @@ _bullets1                     PUSH
 
                               LDWI                              -12
                               SUBW                              _x0
-                              BLT                               _else_0x0396
+                              BLT                               _else_0x0392
                               LDW                               _x
                               SUBI                              10
                               STW                               _x0                             ; if x0 &&< -12 then x0 = x - 10
 
-_else_0x0396                  LDI                               5
+_else_0x0392                  LDI                               5
                               STW                               spriteId
                               LDW                               _x1
                               ST                                spriteXY
@@ -310,24 +315,24 @@ _else_0x0396                  LDI                               5
                               ST                                spriteXY + 1
                               DrawSpriteX                                                       ; sprite flipX, 5, x1, 74
 
+                              LDW                               _x1
+                              ADDI                              2
+                              STW                               _x1                             ; x1 = x1 + 2
+
                               STW                               0xe2
                               LDWI                              _page_0x0ca0
                               CALL                              giga_vAC
 _page_0x0ca0                  LDW                               0xe2
                               LDW                               _x1
-                              ADDI                              2
-                              STW                               _x1                             ; x1 = x1 + 2
-
-                              LDW                               _x1
                               SUBI                              159
-                              BLE                               _else_0x03c4
+                              BLE                               _else_0x03c0
                               LDI                               158
                               SUBW                              _x
                               STW                               _x1                             ; if x1 &&> 159 then x1 = 158-x
 
-_else_0x03c4                  Return                                                            ; return
+_else_0x03c0                  Return                                                            ; return
 
-_end_0x03c6                   BRA                               _end_0x03c6                     ; END
+_end_0x03c2                   BRA                               _end_0x03c2                     ; END
 
 
 
@@ -338,7 +343,6 @@ _end_0x03c6                   BRA                               _end_0x03c6     
 ;****************************************************************************************************************************************
 
 romCheck                      EQU     0x7ecf
-realTimeProc                  EQU     0x7dd0
 convertEqOp                   EQU     0x7ec6
 convertNeOp                   EQU     0x7ebd
 convertLeOp                   EQU     0x7eb4
@@ -347,14 +351,15 @@ convertLtOp                   EQU     0x7ea2
 convertGtOp                   EQU     0x7df6
 convertArr2d                  EQU     0x7dea
 convertArr3d                  EQU     0x7dd9
-scanlineMode                  EQU     0x7dae
-waitVBlank                    EQU     0x7da2
-resetVideoTable               EQU     0x7acb
-initClearFuncs                EQU     0x7db8
+realTimeStub                  EQU     0x7dc7
+scanlineMode                  EQU     0x7da5
+waitVBlank                    EQU     0x7cb9
+resetVideoTable               EQU     0x7ab5
+initClearFuncs                EQU     0x7daf
 clearVertBlinds               EQU     0x7cc5
-draw_sprite                   EQU     0x7aa3
-drawSprite                    EQU     0x7cb8
-drawSpriteX                   EQU     0x7cab
+draw_sprite                   EQU     0x79d7
+drawSprite                    EQU     0x7cac
+drawSpriteX                   EQU     0x7bf2
 convertEqOpAddr               EQU     0x00d0
 convertNeOpAddr               EQU     0x00d2
 convertLeOpAddr               EQU     0x00d4
@@ -363,10 +368,14 @@ convertLtOpAddr               EQU     0x00d8
 convertGtOpAddr               EQU     0x00da
 convertArr2dAddr              EQU     0x00dc
 convertArr3dAddr              EQU     0x00de
-realTimeProcAddr              EQU     0x00e0
+realTimeStubAddr              EQU     0x00e0
 
 
-; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+; do *NOT* use register4 to register7 during time slicing if you call realTimeStub
+realTimeAddr        EQU     register0
+realTimeProc0       EQU     register1
+realTimeProc1       EQU     register2
+realTimeProc2       EQU     register3
 numericLabel        EQU     register0
 defaultLabel        EQU     register1
 lutLabs             EQU     register2
@@ -390,16 +399,6 @@ romC_loop           LD      romErrPixel
                     BRA     romC_loop                       ; flash left hand corner pixel indicating rom error
                     
 romC_return         RET                    
-
-
-                    ; runs real time, (time sliced), code at regular intervals
-realTimeProc        PUSH
-                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI routine
-                    CALL    giga_vAC
-                    POP
-                    RET
-                    
-realTimeStub        RET
 
 
                     ; convert equal to into a boolean
@@ -478,7 +477,24 @@ convertArr3d        ADDW    memIndex0
                     RET
 
 
-; do *NOT* use register4 to register7 during time slicing if you use realTimeProc
+                    ; runs real time, (time sliced), code at regular intervals
+                    ; self modifying code allows for timer, midi and user procs
+realTimeStub        RET                                     ; RET gets replaced by PUSH
+                    LDWI    0x0000                          ; 0x0000 gets replaced by realTimeProc0 address
+                    CALL    giga_vAC
+realTimeStub1       POP
+                    RET
+                    RET                                     ; POP + 2xRET gets replaced by LDWI realTimeProc1 address
+                    CALL    giga_vAC
+realTimeStub2       POP
+                    RET
+                    RET                                     ; POP + 2xRET gets replaced by LDWI realTimeProc2 address
+                    CALL    giga_vAC
+                    POP
+                    RET
+
+
+; do *NOT* use register4 to register7 during time slicing if you use realTimeStub
 graphicsMode        EQU     register0
 waitVBlankNum       EQU     register0
 
@@ -559,13 +575,13 @@ waitVBlank          LD      giga_videoY
                     XORI    179
                     BNE     waitVBlank
                     PUSH
-                    CALL    realTimeProcAddr
+                    CALL    realTimeStubAddr
                     POP
                     RET
 
 
 
-; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+; do *NOT* use register4 to register7 during time slicing if you call realTimeStub
 xreset              EQU     register0
 xcount              EQU     register1
 ycount              EQU     register2
@@ -585,7 +601,7 @@ resetVideoTable     PUSH
                     LDWI    giga_videoTable
                     STW     evenAddr
     
-resetVT_loop        CALL    realTimeProcAddr
+resetVT_loop        CALL    realTimeStubAddr
                     LDW     vramAddr
                     DOKE    evenAddr
                     INC     evenAddr
@@ -602,7 +618,7 @@ initClearFuncs      PUSH
                     LDWI    resetVideoTable
                     CALL    giga_vAC
     
-                    LDI     0x02                                ; starting cursor position
+                    LDI     giga_CursorX                        ; cursor x start
                     STW     cursorXY
                     LDWI    ON_BOTTOM_ROW_MSK
                     ANDW    miscFlags
@@ -641,7 +657,7 @@ clearVB_loopy       LDI     giga_xres
                     SYS     54                                  ; fill memory
                     INC     top                                 ; next top line
                     
-                    CALL    realTimeProcAddr
+                    CALL    realTimeStubAddr
                     LD      top
                     SUBI    giga_yres / 2 + 8
                     BLT     clearVB_loopy
@@ -650,7 +666,7 @@ clearVB_loopy       LDI     giga_xres
 
 
 
-; do *NOT* use register4 to register7 during time slicing if you use realTimeProc
+; do *NOT* use register4 to register7 during time slicing if you use realTimeStub
 spriteId            EQU     register0
 spriteXY            EQU     register1
 spriteAddrs         EQU     register2
@@ -675,7 +691,7 @@ draw_s_loop         LDW     spriteAddrs
                     SYS     64
                     INC     spriteAddrs
                     INC     spriteAddrs
-                    CALL    realTimeProcAddr
+                    CALL    realTimeStubAddr
                     BRA     draw_s_loop
                     
 draw_s_exit         POP

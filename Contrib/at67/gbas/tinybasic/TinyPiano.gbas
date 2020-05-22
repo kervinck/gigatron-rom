@@ -9,7 +9,7 @@ print " 2 3   5 6 7"
 print "Q W E R T Y U I"
 poke p-2,2
 
-loop: k=get("SERIALRAW")
+loop: k=get("SERIAL_RAW")
       gosub k
       goto loop
       
@@ -29,5 +29,5 @@ loop: k=get("SERIALRAW")
 121:  a=53  : b=14 : gosub note : return
 
 note: for c=1 to 4 : p=(c LSL 8)+252 : poke p,a : poke p+1,b : next c
-      set SOUNDTIMER,15
+      set SOUND_TIMER,15
       return

@@ -20,6 +20,10 @@ const D_LUT=&h09A0
 const D_SIZ=64
 def byte(D_LUT, y, 0.0, 0.5, D_SIZ) = 63.0 - exp(-y)*(1.0-exp(-2.0*y))*2.5*58.0
 
+const T_LUT=&h09E0
+const T_SIZ=8
+def byte(T_LUT, y, 0.0, 3.0, T_SIZ) = 63.0 - 1.398*exp(-y)*(1.0-exp(-10.0*y))*63.0
+
 _spriteStripeChunks_ 32, &h0400, ascending
 load sprite, ../../images/gbas/VUerase.tga, 0
 load sprite, ../../images/gbas/VUdraw.tga, 1, FlipY
@@ -27,12 +31,12 @@ load sprite, ../../images/gbas/VUdraw.tga, 1, FlipY
 t = 0
 
 sound off
-set FGBGCOLOUR, &h3C00
+set FGBG_COLOUR, &h3C00
 cls
 mode 1
 
-at 18,2
-print "Keys: <1> <2> <3> <4>";
+at 2,2
+print "Keys: <1> <2> <3> <4> <5>";
 
 dim volume(4) = 127
 dim ypos(4) = 1
@@ -40,19 +44,21 @@ dim ypos(4) = 1
 kk = 255
 state = 0
 
+init midiv
+
 loop:
-    set SOUNDTIMER, 5
+    set SOUND_TIMER, 5
 
     gosub vuMeter
     
-    k = get("SERIALRAW")
+    k = get("SERIAL_RAW")
     if kk &&= 255 then gosub k
     gosub state
     kk = k
 goto &loop
 
 midiOff:
-    set MIDISTREAM, &h0000
+    set MIDI_STREAM, &h0000
 return
 
 1:  gosub midiOff
@@ -66,11 +72,15 @@ return
 3:  gosub midiOff
     gosub beep
     return
+
+4:  gosub midiOff
+    gosub tictoc
+    return
     
-4:  if get("MIDISTREAM") &= &h0000
+5:  if get("MIDI_STREAM") &= &h0000
         play midiv, &h0AA0, 2
     else
-        play midiv
+        tick midiv
     endif
     return
     
@@ -87,6 +97,9 @@ return
     return
 
 52: state = 4
+    return
+
+53: state = 5
     return
 
 vuMeter:
@@ -116,7 +129,7 @@ decay:
             sprite noFlip, 0, i4, (Y_POS + 32) - (y + 1)
             
             'adjust height of led bar
-            lut = (y LSL 2) + y + y + get("SPRITELUT", 1)
+            lut = (y LSL 2) + y + y + get("SPRITE_LUT", 1)
             save = peek(lut)
             poke lut, -1
             sprite flipY, 1, i4, Y_POS
@@ -163,6 +176,18 @@ beep:
     sound on, 1, 8000, 63, 1
     inc t
     if t &= 3
+        t = 0
+        state = 0
+        sound off
+    endif
+return
+
+tictoc:
+    t_lut = peek(T_LUT + (t AND (T_SIZ - 1)))
+    sound on, 1, t_lut <<4, t_lut, 0
+
+    inc t
+    if t &= T_SIZ-2
         t = 0
         state = 0
         sound off

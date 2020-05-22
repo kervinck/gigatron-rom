@@ -56,6 +56,7 @@ namespace Cpu
     std::vector<uint8_t*> _romFiles;
     RomType _romType = ROMERR;
     std::map<std::string, RomType> _romTypeMap = {{"ROMV1", ROMv1}, {"ROMV2", ROMv2}, {"ROMV3", ROMv3}, {"ROMV4", ROMv4}, {"ROMV5A", ROMv5a}, {"DEVROM", DEVROM}};
+    std::map<RomType, std::string> _romTypeStr = {{ROMv1, "ROMv1"}, {ROMv2, "ROMv2"}, {ROMv3, "ROMv3"}, {ROMv4, "ROMv4"}, {ROMv5a, "ROMv5A"}, {DEVROM, "DEVROM"}};
 
     std::vector<uint8_t> _scanlinesRom0;
     std::vector<uint8_t> _scanlinesRom1;
@@ -69,6 +70,19 @@ namespace Cpu
     uint8_t* getPtrToROM(int& romSize) {romSize = sizeof(_ROM); return (uint8_t*)_ROM;}
     RomType getRomType(void) {return _romType;}
     std::map<std::string, RomType>& getRomTypeMap(void) {return _romTypeMap;}
+
+    bool getRomTypeStr(RomType romType, std::string& romTypeStr)
+    {
+        if(_romTypeStr.find(romType) == _romTypeStr.end())
+        {
+            romTypeStr = "";
+            return false;
+        }
+
+        romTypeStr = _romTypeStr[romType];
+
+        return true;
+    }
 
 
 //#define COLLECT_INST_STATS

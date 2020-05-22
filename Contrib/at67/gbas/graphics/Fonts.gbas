@@ -8,18 +8,18 @@ load font, ../../images/gbas/Fonts/Scifi/Scifi.tga, 2, &h3C00
 load font, ../../images/gbas/Fonts/Prac/Prac.tga, 3, &h0300
 load font, ../../images/gbas/Fonts/Sinc/Sinc.tga, 4, &h0F00
 
-set FGBGCOLOUR, &h3F00
+set FGBG_COLOUR, &h3F00
 cls
 
 for i=0 to 4
-    set FONTID, i
+    set FONT_ID, i
     print "ABCDEFGHIJKLMNOPQRSTUVWXYZ !?. 0123456789"
 next i
 
 s$ = "External fonts can be usedin exactly the same way   as the internal font!"
 
 for i=0 to 10
-    set FONTID, i % 5
+    set FONT_ID, i % 5
     print s$
     wait 60
 next i
@@ -29,9 +29,9 @@ cls init 'initialise video indirection table
 
 forever:
     r = rnd(5)
-    set FONTID, r
-    x = rnd(136) : y = rnd(112)
-    at x,y : print "Text"
+    set FONT_ID, r
+    x = rnd(160) : y = rnd(120)
+    at x, y : print "Text"
 goto forever
 
 end

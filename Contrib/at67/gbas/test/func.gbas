@@ -10,7 +10,7 @@ gosub blamo
 
 rem cls
 print hex$(a);" ";hexw$(b);" ";hexw$(&h1111 OR &h2222)
-print "test";" ";"dog";" ";56+44;" ";a;" ";hex$(get("ROMTYPE") AND &hFC)
+print "test";" ";"dog";" ";56+44;" ";a;" ";hex$(get("ROM_TYPE") AND &hFC)
 x = &h0080
 z = (x AND &h3F) LSL 8
 at x, (z AND &h3F)

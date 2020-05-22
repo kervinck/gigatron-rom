@@ -2,31 +2,33 @@ _runtimePath_ "../runtime"
 
 mode 2
 cls
+
+init midi
 play midi,&h10a0,3
 
 x=0 : y=x
 
 loop: for i=0 to 19
       gosub math
-      set FGCOLOUR, get("FGCOLOUR") + 7
+      set FG_COLOUR, get("FG_COLOUR") + 7
       line x,119, 159,119-y
       next i
       
       for i=19 downto 0
       gosub math
-      set FGCOLOUR, get("FGCOLOUR") + 7
+      set FG_COLOUR, get("FG_COLOUR") + 7
       line 159,y, x,0
       next i
       
       for i=0 to 19
       gosub math
-      set FGCOLOUR, get("FGCOLOUR") + 7
+      set FG_COLOUR, get("FG_COLOUR") + 7
       line 0,y, 159-x,0
       next i
       
       for i=19 downto 0
       gosub math
-      set FGCOLOUR, get("FGCOLOUR") + 7
+      set FG_COLOUR, get("FG_COLOUR") + 7
       line 159-x,119, 0,119-y
       next i
       

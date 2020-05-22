@@ -1,4 +1,4 @@
-; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+; do *NOT* use register4 to register7 during time slicing
 xreset              EQU     register0
 xcount              EQU     register1
 ycount              EQU     register2
@@ -19,8 +19,7 @@ resetVideoTable     PUSH
                     LDWI    giga_videoTable
                     STW     evenAddr
     
-resetVT_loop        CALLI   realTimeProc
-                    LDW     vramAddr
+resetVT_loop        LDW     vramAddr
                     DOKE    evenAddr
                     INC     evenAddr
                     INC     evenAddr
@@ -73,7 +72,6 @@ clearCS_loopy       ST      clearLoop
                     LD      clearLoop
                     SUBI    1
                     BNE     clearCS_loopy
-                    CALLI   realTimeProc
                     POP
                     RET
 %ENDS   
@@ -104,7 +102,6 @@ clearVB_loopy       LDI     giga_xres
                     ST      giga_sysArg3                        ; bottom line
                     SYS     54                                  ; fill memory
                     INC     top                                 ; next top line
-                    CALLI   realTimeProc
                     LD      top
                     SUBI    giga_yres / 2 + 8
                     BLT     clearVB_loopy

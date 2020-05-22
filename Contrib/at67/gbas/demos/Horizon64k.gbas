@@ -3,7 +3,7 @@ _runtimePath_ "../runtime"
 _runtimeStart_ &hFFFF
 _codeRomType_ ROMv1
 
-set VIDEOTOP, 238 'disables video output, cls becomes almost instant
+set VIDEO_TOP, 238 'disables video output, cls becomes almost instant
 cls
 
 const horizonY = 32
@@ -53,7 +53,7 @@ for y=119 downto horizonY
 
         poke a+x, p
     next x
-    set VIDEOTOP, y+y
+    set VIDEO_TOP, y+y
 next y
 
 dim sky(2) = &h10, &h20, &h30
@@ -73,9 +73,10 @@ for y=horizonY-1 &downto 0
         poke a+x, sky(cIndex)
     next x
     
-    set VIDEOTOP, y+y
+    set VIDEO_TOP, y+y
 next y
 
+init midi
 play midi,&h8000,3
 
 x=0 : v=8
@@ -97,7 +98,7 @@ loop:   i = x AND 255
             j = i + (j AND 255)
         p = p + 4 : until p &&>= q
         
-        gosub get("BUTTONSTATE")
+        gosub get("BUTTON_STATE")
         
         x = x + v
 goto loop

@@ -1,4 +1,4 @@
-; do *NOT* use register4 to register7 during time slicing if you use realTimeProc
+; do *NOT* use register4 to register7 during time slicing if you use realTimeStub
 graphicsMode        EQU     register0
 waitVBlankNum       EQU     register0
 
@@ -96,7 +96,7 @@ waitVBlank          LD      giga_videoY
                     XORI    179
                     BNE     waitVBlank
                     PUSH
-                    CALL    realTimeProcAddr
+                    CALL    realTimeStubAddr
                     POP
                     RET
 %ENDS
@@ -145,7 +145,7 @@ drawHL_cont         ADDI    1
                     LDWI    SYS_SetMemory_v2_54
                     STW     giga_sysFn
                     SYS     54                              ; fill memory
-                    CALL    realTimeProcAddr
+                    CALL    realTimeStubAddr
                     POP
                     RET
 %ENDS
@@ -187,7 +187,7 @@ drawVL_cont         LD      drawVLine_x1
 drawVL_loop0        LDI     0xFF
                     ST      giga_sysArg2                    ; 8 pixels of fg and bg colour
                     SYS     134                             ; SYS_VDrawBits_134, 270 - 134/2 = 0xCB
-                    CALL    realTimeProcAddr
+                    CALL    realTimeStubAddr
                     LD      giga_sysArg5
                     ADDI    8
                     ST      giga_sysArg5
@@ -311,7 +311,7 @@ drawL_flip          LDW     drawLine_xy1
                     SUBW    drawLine_dxy2
                     STW     drawLine_xy2                    ; xy2 -= dxy2
                     
-drawL_count         CALL    realTimeProcAddr
+drawL_count         CALL    realTimeStubAddr
                     LDW     drawLine_count
                     SUBI    0x01
                     STW     drawLine_count
@@ -461,7 +461,7 @@ drawVTL_flip        LDW     drawLine_xy1
                     SUBW    drawLine_dxy2
                     STW     drawLine_xy2                    ;xy2 -= dxy2
                     
-drawVTL_count       CALL    realTimeProcAddr
+drawVTL_count       CALL    realTimeStubAddr
                     LDW     drawLine_count
                     SUBI    0x01
                     STW     drawLine_count

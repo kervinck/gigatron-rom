@@ -5,26 +5,26 @@ const NOTELEN=20
 
 sound off
 
-set VIDEOTOP, 238  'disable video
+set VIDEO_TOP, 238  'disable video
 mode 2 : cls
-set VIDEOTOP, 0  'enable video
+set VIDEO_TOP, 0  'enable video
 
 n = 0 : c = n : kk = c : char = kk : posxy = char
-fg = get("FGCOLOUR") : bg = get("BGCOLOUR")
+fg = get("FG_COLOUR") : bg = get("BG_COLOUR")
 ch = 252 : z = 2
 
 dim chan(4)=0
 dim note(4)=0
 
-set VIDEOTOP, 238  'disable video
+set VIDEO_TOP, 238  'disable video
 gosub drawKeys
 gosub waveform
-set VIDEOTOP, 0  'enable video
+set VIDEO_TOP, 0  'enable video
     
 loop:
     wait
-    set SOUNDTIMER, 2
-    k = get("SERIALRAW")
+    set SOUND_TIMER, 2
+    k = get("SERIAL_RAW")
     gosub channels
     if k &&<> kk then gosub normalChar
     gosub k
@@ -81,12 +81,12 @@ playExit:
 return    
 
 inverseChar:
-    set FGCOLOUR, bg : set BGCOLOUR, fg
+    set FG_COLOUR, bg : set BG_COLOUR, fg
     gosub printChar
 return
          
 normalChar:
-    set FGCOLOUR, fg : set BGCOLOUR, bg
+    set FG_COLOUR, fg : set BG_COLOUR, bg
     gosub printChar
 return
          
@@ -103,22 +103,22 @@ return
 drawKeys:
     for i=0 &to 9
         ofs = (i LSL 3) + (i LSL 2) + 20  ' i*12 + 20
-        set FGCOLOUR, &h00 : rect ofs,30, ofs+12,89
-        set FGCOLOUR, &hFF : rectf ofs+1,31, ofs+11,88
+        set FG_COLOUR, &h00 : rect ofs,30, ofs+12,89
+        set FG_COLOUR, &hFF : rectf ofs+1,31, ofs+11,88
     next i
     for i=0 &to 8
         ' two seperate BRA optimised IF's are smaller/faster than 'IF (i=2) OR (i=6)
         if i &&= 2 then goto &cont
         if i &&= 6 then goto &cont
         ofs = (i LSL 3) + (i LSL 2) + 28  ' i*12 + 28
-        set FGCOLOUR, &h00 : rectf ofs,30, ofs+8,70
+        set FG_COLOUR, &h00 : rectf ofs,30, ofs+8,70
 cont:
     next i
     
-    'set FGBGCOLOUR, &h00FF
+    'set FGBG_COLOUR, &h00FF
     'at 24,75 : print "C D E F G A B C D E"
     
-    set FGBGCOLOUR, &h0F20
+    set FGBG_COLOUR, &h0F20
     at 24,22 : print " 2 3   5 6 7   9 0"
     at 24,91 : print "Q W E R T Y U I O P"
 return

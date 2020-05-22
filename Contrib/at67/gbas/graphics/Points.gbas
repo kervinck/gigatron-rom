@@ -3,22 +3,22 @@ _codeRomType_ ROMv2
 
 mode 2
 
-set fgbgcolour, &h2020
+set fgbg_colour, &h2020
 rectf 0, 0, 159, 59
-set fgcolour, &h00
+set fg_colour, &h00
 rectf 0, 60, 159, 119
 
-set fgcolour, &h03
+set fg_colour, &h03
 print "_________________________"
 print
-set fgcolour, &h0C
+set fg_colour, &h0C
 print "  Random Pixel Flipping  "
-set fgcolour, &h0F
+set fg_colour, &h0F
 print "_________________________"
 print
-set fgcolour, &h33
+set fg_colour, &h33
 print "1234567890987654321012345"
-set fgcolour, &h3C
+set fg_colour, &h3C
 print "_________________________"
 
 loop:

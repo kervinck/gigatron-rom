@@ -9,7 +9,7 @@
 
 
 #define MAJOR_VERSION "0.9"
-#define MINOR_VERSION "6B"
+#define MINOR_VERSION "7B"
 #define VERSION_STR "gtemuAT67 v" MAJOR_VERSION "." MINOR_VERSION
  
 #define ROM_INST 0
@@ -28,6 +28,9 @@
 #define VIDEO_MODE_D 0x000D
 #define VIDEO_MODE_B 0x001F
 #define VIDEO_MODE_C 0x0020
+
+#define VBLANK_PROC 0x01F6
+#define VIDEO_TOP   0x01F9
 
 #define ROM_TYPE          0x0021
 #define ROM_TYPE_MASK     0x00FC
@@ -93,6 +96,7 @@ namespace Cpu
     uint8_t* getPtrToROM(int& romSize);
     RomType getRomType(void);
     std::map<std::string, RomType>& getRomTypeMap(void);
+    bool getRomTypeStr(RomType romType, std::string& romTypeStr);
 
 #ifdef _WIN32
     void enableWin32ConsoleSaveFile(bool consoleSaveFile);

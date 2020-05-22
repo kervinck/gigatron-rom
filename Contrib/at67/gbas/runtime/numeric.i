@@ -1,4 +1,4 @@
-; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+; do *NOT* use register4 to register7 during time slicing if you call realTimeStub
 intSrcAddr          EQU     register8
 intDigit            EQU     register9
 intResult           EQU     register10

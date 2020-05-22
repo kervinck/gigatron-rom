@@ -564,20 +564,22 @@ _label_ CALL    giga_vAC
         STW     midiStream
         LDWI    resetAudio
         CALL    giga_vAC
-        LDWI    realTimeProc + 2
-        STW     register0
-        LDWI    playMidi
-        DOKE    register0                               ; self modifying code, replaces realTimeProc stub with playMidi routine
 %ENDM
 
 %MACRO  PlayMidiV
         STW     midiStream
         LDWI    resetAudio
         CALL    giga_vAC
-        LDWI    realTimeProc + 2
-        STW     register0
-        LDWI    playMidiVol
-        DOKE    register0                               ; self modifying code, replaces realTimeProc stub with playMidi routine
+%ENDM
+
+%MACRO  Tick
+        LDWI    realTimeStub
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  TickTime
+        LDWI    tickTime
+        CALL    giga_vAC
 %ENDM
 
 %MACRO  TickMidi
@@ -587,6 +589,11 @@ _label_ CALL    giga_vAC
 
 %MACRO  TickMidiV
         LDWI    playMidiVol
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  TimeString
+        LDWI    timeString
         CALL    giga_vAC
 %ENDM
 
@@ -727,9 +734,9 @@ _id_    CALL    giga_vAC
         STW     convertArr3dAddr
 %ENDM
 
-%MACRO  InitRealTimeProc
-        LDWI    realTimeProc
-        STW     realTimeProcAddr
+%MACRO  InitRealTimeAddr
+        LDWI    realTimeStub
+        STW     realTimeStubAddr
 %ENDM
 
 %MACRO  RomCheck
@@ -744,28 +751,9 @@ _id_    CALL    giga_vAC
         LDI     ENABLE_SCROLL_BIT
         STW     miscFlags                               ; reset flags
         
-        LDI     0x00
+        LDI     0
         STW     midiStream                              ; reset MIDI
-        STW     fontLutId
-        ST      giga_soundTimer                         ; reset soundTimer, (stops any current Audio)
 
         LDWI    initClearFuncs
-        CALL    giga_vAC
-%ENDM
-
-%MACRO  ClearRegion _x _y _w _h
-        LDI     _h / 2
-        ST      ycount
-        LDI     _w / 4
-        ST      xcount
-        ST      xreset
-
-        LDWI    _y*256 + _x + giga_vram                 ; top line
-        STW     treset
-        STW     top
-        LDWI    ((_h - 1) + _y)*256 + _x + giga_vram    ; bottom line
-        STW     breset
-        STW     bot
-        LDWI    clearRegion
         CALL    giga_vAC
 %ENDM

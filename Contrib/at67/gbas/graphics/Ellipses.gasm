@@ -23,7 +23,8 @@ cursorXY                      EQU                               register0 + 0x22
 midiStream                    EQU                               register0 + 0x24
 midiDelay                     EQU                               register0 + 0x26
 miscFlags                     EQU                               register0 + 0x28
-fontLutId                     EQU                               0x00e4
+timerTick                     EQU                               register0 + 0x2A
+timerPrev                     EQU                               register0 + 0x2C
 
 ; Internal Constants
 ENABLE_SCROLL_BIT             EQU                               0x0001
@@ -41,17 +42,17 @@ textWorkArea                  EQU                               0x7fa0
 
 ; Labels
 _entryPoint_                  EQU                               0x0200
-_loop                         EQU                               0x0251
-_ellipse                      EQU                               0x02b9
-_else_0x0297                  EQU                               0x0281
-_endif_0x029b                 EQU                               0x0285
-_end_0x02e1                   EQU                               0x02b7
+_loop                         EQU                               0x024d
+_ellipse                      EQU                               0x02b5
+_else_0x0293                  EQU                               0x027d
+_endif_0x0297                 EQU                               0x0281
+_end_0x02dd                   EQU                               0x02b3
 _page_0x0300                  EQU                               0x0300
-_while_0x0352                 EQU                               0x0323
-_else_0x0382                  EQU                               0x0343
-_endif_0x03a0                 EQU                               0x035b
-_wend_0x03d2                  EQU                               0x0389
-_end_0x03d4                   EQU                               0x038b
+_while_0x034e                 EQU                               0x031f
+_else_0x037e                  EQU                               0x033f
+_endif_0x039c                 EQU                               0x0357
+_wend_0x03ce                  EQU                               0x0385
+_end_0x03d0                   EQU                               0x0387
 
 ; Variables
 _color                        EQU                               0x0030
@@ -75,6 +76,10 @@ _ry                           EQU                               0x0052
 _x                            EQU                               0x0054
 
 ; Strings
+_timeArray_                   EQU                               0x7ea3
+_timeArray_                   DB                                00 00 00
+_timeString_                  EQU                               0x7cbb
+_timeString_                  DB                                8 '00:00:00' 0
 
 ; Define Bytes
 
@@ -100,7 +105,7 @@ _entryPoint_                  LDI                               0x20
                               InitGtOp                          
                               InitArray2d                       
                               InitArray3d                       
-                              InitRealTimeProc                  
+                              InitRealTimeAddr                  
                               Initialise                                                        ; INIT
 
                               ClearVertBlinds                                                   ; cls
@@ -120,16 +125,16 @@ _loop                         Rand
 
                               LDW                               _a
                               SUBW                              _b
-                              BLE                               _else_0x0297                    ; if a &&> b
+                              BLE                               _else_0x0293                    ; if a &&> b
 
                               LDW                               _a
                               STW                               _t
-                              BRA                               _endif_0x029b                   ; t = a
+                              BRA                               _endif_0x0297                   ; t = a
 
-_else_0x0297                  LDW                               _b
+_else_0x0293                  LDW                               _b
                               STW                               _t                              ; t = b
 
-_endif_0x029b                 LDW                               _t
+_endif_0x0297                 LDW                               _t
                               LSLW                              
                               STW                               0xc2
                               LDI                               160
@@ -153,7 +158,7 @@ _endif_0x029b                 LDW                               _t
                               LDWI                              _loop
                               CALL                              giga_vAC                        ; goto loop
 
-_end_0x02e1                   BRA                               _end_0x02e1                     ; end
+_end_0x02dd                   BRA                               _end_0x02dd                     ; end
 
 _ellipse                      PUSH                              
                               LDW                               _mx
@@ -191,12 +196,12 @@ _ellipse                      PUSH
                               LSLW                              
                               STW                               _dx                             ; aa = a      : dx = aa LSL 1
 
+                              LDW                               _b
+                              STW                               _bb
                               STW                               0xe2
                               LDWI                              _page_0x0300
                               CALL                              giga_vAC
 _page_0x0300                  LDW                               0xe2
-                              LDW                               _b
-                              STW                               _bb
                               LSLW                              
                               STW                               _dy                             ; bb = b      : dy = bb LSL 1
 
@@ -216,11 +221,11 @@ _page_0x0300                  LDW                               0xe2
                               LDW                               _a
                               STW                               _x                              ; x  = a
 
-_while_0x0352                 LDW                               _x
-                              BLE                               _wend_0x03d2                    ; while x &&> 0
+_while_0x034e                 LDW                               _x
+                              BLE                               _wend_0x03ce                    ; while x &&> 0
 
                               LDW                               _r
-                              BLE                               _else_0x0382                    ; if r &&> 0
+                              BLE                               _else_0x037e                    ; if r &&> 0
 
                               INC                               _my1
                               LDW                               _my2
@@ -233,9 +238,9 @@ _while_0x0352                 LDW                               _x
                               LDW                               _r
                               SUBW                              _ry
                               STW                               _r
-                              BRA                               _endif_0x03a0                   ; ry = ry + dx : r = r - ry
+                              BRA                               _endif_0x039c                   ; ry = ry + dx : r = r - ry
 
-_else_0x0382                  LDW                               _x
+_else_0x037e                  LDW                               _x
                               SUBI                              1
                               STW                               _x
                               INC                               _mx1
@@ -249,7 +254,7 @@ _else_0x0382                  LDW                               _x
                               ADDW                              _r
                               STW                               _r                              ; rx = rx - dy : r = rx + r
 
-_endif_0x03a0                 LDW                               _my1
+_endif_0x039c                 LDW                               _my1
                               ADDI                              8
                               ST                                _pixel + 1                      ; pixel.hi = my1 + 8
 
@@ -277,11 +282,11 @@ _endif_0x03a0                 LDW                               _my1
                               LDW                               _color
                               POKE                              _pixel                          ; pixel.lo = mx2 : poke pixel, color
 
-                              BRA                               _while_0x0352                   ; wend
+                              BRA                               _while_0x034e                   ; wend
 
-_wend_0x03d2                  Return                                                            ; return
+_wend_0x03ce                  Return                                                            ; return
 
-_end_0x03d4                   BRA                               _end_0x03d4                     ; END
+_end_0x03d0                   BRA                               _end_0x03d0                     ; END
 
 
 
@@ -292,7 +297,6 @@ _end_0x03d4                   BRA                               _end_0x03d4     
 ;****************************************************************************************************************************************
 
 romCheck                      EQU     0x7ee8
-realTimeProc                  EQU     0x7de5
 convertEqOp                   EQU     0x7edf
 convertNeOp                   EQU     0x7ed6
 convertLeOp                   EQU     0x7ecd
@@ -301,12 +305,13 @@ convertLtOp                   EQU     0x7ebb
 convertGtOp                   EQU     0x7eb2
 convertArr2d                  EQU     0x7ea6
 convertArr3d                  EQU     0x7dee
+realTimeStub                  EQU     0x7ddc
 multiply16bit                 EQU     0x7bcd
 divide16bit                   EQU     0x7aa8
-rand16bit                     EQU     0x7dc5
-randMod16bit                  EQU     0x7db2
-resetVideoTable               EQU     0x7ca6
-initClearFuncs                EQU     0x7dcd
+rand16bit                     EQU     0x7dbc
+randMod16bit                  EQU     0x7da9
+resetVideoTable               EQU     0x7bae
+initClearFuncs                EQU     0x7dc4
 clearVertBlinds               EQU     0x7cc5
 convertEqOpAddr               EQU     0x00d0
 convertNeOpAddr               EQU     0x00d2
@@ -316,10 +321,14 @@ convertLtOpAddr               EQU     0x00d8
 convertGtOpAddr               EQU     0x00da
 convertArr2dAddr              EQU     0x00dc
 convertArr3dAddr              EQU     0x00de
-realTimeProcAddr              EQU     0x00e0
+realTimeStubAddr              EQU     0x00e0
 
 
-; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+; do *NOT* use register4 to register7 during time slicing if you call realTimeStub
+realTimeAddr        EQU     register0
+realTimeProc0       EQU     register1
+realTimeProc1       EQU     register2
+realTimeProc2       EQU     register3
 numericLabel        EQU     register0
 defaultLabel        EQU     register1
 lutLabs             EQU     register2
@@ -343,16 +352,6 @@ romC_loop           LD      romErrPixel
                     BRA     romC_loop                       ; flash left hand corner pixel indicating rom error
                     
 romC_return         RET                    
-
-
-                    ; runs real time, (time sliced), code at regular intervals
-realTimeProc        PUSH
-                    LDWI    realTimeStub                    ; realTimeStub gets replaced by MIDI routine
-                    CALL    giga_vAC
-                    POP
-                    RET
-                    
-realTimeStub        RET
 
 
                     ; convert equal to into a boolean
@@ -431,7 +430,24 @@ convertArr3d        ADDW    memIndex0
                     RET
 
 
-; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+                    ; runs real time, (time sliced), code at regular intervals
+                    ; self modifying code allows for timer, midi and user procs
+realTimeStub        RET                                     ; RET gets replaced by PUSH
+                    LDWI    0x0000                          ; 0x0000 gets replaced by realTimeProc0 address
+                    CALL    giga_vAC
+realTimeStub1       POP
+                    RET
+                    RET                                     ; POP + 2xRET gets replaced by LDWI realTimeProc1 address
+                    CALL    giga_vAC
+realTimeStub2       POP
+                    RET
+                    RET                                     ; POP + 2xRET gets replaced by LDWI realTimeProc2 address
+                    CALL    giga_vAC
+                    POP
+                    RET
+
+
+; do *NOT* use register4 to register7 during time slicing if you call realTimeStub
 mathX               EQU     register8
 mathY               EQU     register9
 mathSum             EQU     register12
@@ -470,7 +486,7 @@ multiply16_skip     LDW     mathX
                     BRA     multiply16_loop
 
 multiply16_exit     PUSH
-                    CALL    realTimeProcAddr
+                    CALL    realTimeStubAddr
                     POP
                     LDW     mathSum
                     RET
@@ -524,7 +540,7 @@ divide16_incx       LDW     mathMask
                     LSLW
                     BNE     divide16_loop
                     PUSH
-                    CALL    realTimeProcAddr
+                    CALL    realTimeStubAddr
                     POP
                     LDW     mathSign
                     BGE     divide16_exit
@@ -549,7 +565,7 @@ randMod16bit        PUSH
 
 
 
-; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+; do *NOT* use register4 to register7 during time slicing if you call realTimeStub
 xreset              EQU     register0
 xcount              EQU     register1
 ycount              EQU     register2
@@ -569,7 +585,7 @@ resetVideoTable     PUSH
                     LDWI    giga_videoTable
                     STW     evenAddr
     
-resetVT_loop        CALL    realTimeProcAddr
+resetVT_loop        CALL    realTimeStubAddr
                     LDW     vramAddr
                     DOKE    evenAddr
                     INC     evenAddr
@@ -586,7 +602,7 @@ initClearFuncs      PUSH
                     LDWI    resetVideoTable
                     CALL    giga_vAC
     
-                    LDI     0x02                                ; starting cursor position
+                    LDI     giga_CursorX                        ; cursor x start
                     STW     cursorXY
                     LDWI    ON_BOTTOM_ROW_MSK
                     ANDW    miscFlags
@@ -625,7 +641,7 @@ clearVB_loopy       LDI     giga_xres
                     SYS     54                                  ; fill memory
                     INC     top                                 ; next top line
                     
-                    CALL    realTimeProcAddr
+                    CALL    realTimeStubAddr
                     LD      top
                     SUBI    giga_yres / 2 + 8
                     BLT     clearVB_loopy

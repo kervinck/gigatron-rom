@@ -3,10 +3,11 @@ _codeRomType_ ROMv1
 
 scroll off
 
+init midi
 play midi, &h10a0, 3
 
-10 set BGCOLOUR, &h2A : cls : 'Paper
-20 set FGCOLOUR,rnd(0) AND 63 : 'Pen
+10 set BG_COLOUR, &h2A : cls : 'Paper
+20 set FG_COLOUR,rnd(0) AND 63 : 'Pen
 30 at rnd(155), rnd(113)
 40 put 127 : 'Block
 50 goto &20

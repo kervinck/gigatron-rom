@@ -29,6 +29,7 @@ namespace Compiler
     uint16_t _vasmPC                 = USER_CODE_START;
     uint16_t _tempVarStart           = TEMP_VAR_START;
     uint16_t _userVarStart           = USER_VAR_START;
+    uint16_t _userVarsAddr           = _userVarStart;
     uint16_t _runtimeEnd             = 0x7FFF;
     uint16_t _runtimeStart           = 0x7FFF;
     uint16_t _strWorkArea            = 0x0000;
@@ -37,12 +38,13 @@ namespace Compiler
     
     Memory::FitType _spriteStripeFitType = Memory::FitDescending;
     CodeOptimiseType _codeOptimiseType = CodeSpeed;
-    Cpu::RomType _codeRomType = Cpu::ROMv1;
+    Cpu::RomType _codeRomType = Cpu::ROMv3;
 
     bool _codeIsAsm = false;
     bool _compilingError = false;
     bool _arrayIndiciesOne = false;
     bool _createNumericLabelLut = false;
+    bool _createTimeData = false;
 
     int _currentLabelIndex = -1;
     int _currentCodeLineIndex = 0;
@@ -119,6 +121,7 @@ namespace Compiler
     void setCodeOptimiseType(CodeOptimiseType codeOptimiseType) {_codeOptimiseType = codeOptimiseType;}
     void setCodeRomType(Cpu::RomType codeRomType) {_codeRomType = codeRomType;}
     void setCreateNumericLabelLut(bool createNumericLabelLut) {_createNumericLabelLut = createNumericLabelLut;}
+    void setCreateTimeData(bool createTimeData) {_createTimeData = createTimeData;}
     void setCompilingError(bool compilingError) {_compilingError = compilingError;}
     void setArrayIndiciesOne(bool arrayIndiciesOne) {_arrayIndiciesOne = arrayIndiciesOne;}
 
@@ -154,6 +157,31 @@ namespace Compiler
     std::stack<RepeatUntilData>& getRepeatUntilDataStack(void) {return _repeatUntilDataStack;}
 
 
+    // Vertical blank interrupt uses 0x30-0x33 for context save/restore, (vPC and vAC)
+    bool moveVblankVars(void)
+    {
+        if(_codeRomType < Cpu::ROMv5a) return false;
+
+        if(_userVarsAddr < USER_VAR_START + Int16*2)
+        {
+            _userVarStart = USER_VAR_START + Int16*2;
+            _userVarsAddr = _userVarStart;
+        }
+
+        for(int i=0; i<int(_integerVars.size()); i++)
+        {
+            if(_integerVars[i]._address == USER_VAR_START  ||  _integerVars[i]._address == USER_VAR_START + Int16)
+            {
+                emitVcpuAsm("LDW", Expression::wordToHexString(_integerVars[i]._address), false);
+                emitVcpuAsm("STW", Expression::wordToHexString(_userVarsAddr), false);
+                _integerVars[i]._address = _userVarsAddr;
+                _userVarsAddr += Int16;
+            }
+        }
+
+        return true;
+    }
+
     // If _nextInternalLabel is already queued, add it to discarded labels so that it is fixed later in outputLabels
     void setNextInternalLabel(const std::string& label)
     {
@@ -172,6 +200,28 @@ namespace Compiler
         }
     }
 
+    bool setBuildPath(const std::string& buildpath, const std::string& filepath)
+    {
+        if(buildpath.size() == 0) return false;
+
+        // Prepend current file path to relative paths
+        if(buildpath.find(":") == std::string::npos  &&  buildpath[0] != '/')
+        {
+            std::string path = filepath;
+            size_t slash = path.find_last_of("\\/");
+            path = (slash != std::string::npos) ? path.substr(0, slash) : ".";
+            std::string includePath = path + "/" + buildpath;
+            Assembler::setIncludePath(includePath);
+        }
+        else
+        {
+            Assembler::setIncludePath(buildpath);
+        }
+
+        Compiler::setRuntimePath(buildpath);
+
+        return true;
+    }
 
     bool initialise(void)
     {
@@ -338,7 +388,7 @@ namespace Compiler
         std::vector<int16_t> arrInits;
         std::vector<std::vector<uint16_t>> arrAddrs;
         std::vector<uint16_t> arrLut;
-        IntegerVar integerVar = {data, init, _userVarStart, varName, varName, codeLineIndex, VarInt16, Int16, arrSizes, arrInits, arrAddrs, arrLut};
+        IntegerVar integerVar = {data, init, _userVarsAddr, varName, varName, codeLineIndex, VarInt16, Int16, arrSizes, arrInits, arrAddrs, arrLut};
         _integerVars.push_back(integerVar);
 
         // Create var output
@@ -351,8 +401,12 @@ namespace Compiler
             line[LABEL_TRUNC_SIZE - 1] = ' ';
         }
         _integerVars[varIndex]._output = line;
-        _userVarStart += Int16;
-        if(_userVarStart >= USER_VAR_END) _userVarStart = USER_VAR_START;
+        _userVarsAddr += Int16;
+        if(_userVarsAddr >= USER_VAR_END)
+        {
+            _userVarsAddr = _userVarStart;
+            fprintf(stderr, "Warning: you have exceeded the maximum number of page zero global variables : on line %d\n", codeLineIndex); 
+        }
     }
 
     void createIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, int& varIndex, VarType varType, int intSize,
@@ -364,7 +418,7 @@ namespace Compiler
         codeLine._varIndex = varIndex;
         codeLine._varType = VarInt16;
 
-        uint16_t varAddr = (varType == VarInt16) ? _userVarStart : address;
+        uint16_t varAddr = (varType == VarInt16) ? _userVarsAddr : address;
         IntegerVar integerVar = {data, init, varAddr, varName, varName, codeLineIndex, varType, intSize, arrSizes, arrInits, arrAddrs, arrLut};
         _integerVars.push_back(integerVar);
 
@@ -381,10 +435,10 @@ namespace Compiler
 
         if(varType == VarInt16)
         {
-            _userVarStart += Int16;
-            if(_userVarStart >= USER_VAR_END)
+            _userVarsAddr += Int16;
+            if(_userVarsAddr >= USER_VAR_END)
             {
-                _userVarStart = USER_VAR_START;
+                _userVarsAddr = _userVarStart;
                 fprintf(stderr, "Warning: you have exceeded the maximum number of page zero global variables : on line %d\n", codeLineIndex); 
             }
         }
@@ -1530,7 +1584,7 @@ namespace Compiler
             emitVcpuAsm("%InitArray3d", "", false, 0);
 
             // Initialise time sliced, (real time), code such as AUDIO and/or MIDI
-            emitVcpuAsm("%InitRealTimeProc", "", false, 0);
+            emitVcpuAsm("%InitRealTimeAddr", "", false, 0);
         }
 
         // Initialise
@@ -1786,19 +1840,17 @@ namespace Compiler
         // Last quote
         get(true);
 
-        return Expression::Numeric(0, -1, true, false, Expression::String, Expression::BooleanCC, Expression::Int16Both, std::string(""), text);
+        return Expression::Numeric(0, -1, true, false, false, Expression::String, Expression::BooleanCC, Expression::Int16Both, std::string(""), text);
     }
 
     Expression::Numeric addressOf(void)
     {
-        // @ char
-        get(true);
-
         std::string varName = Expression::getExpression();
         if(varName.back() == ')') varName.erase(varName.size()-1);
 
-        int varIndex = findVar(varName);
-        int strIndex = findStr(varName);
+        int varIndex   = findVar(varName);
+        int strIndex   = findStr(varName);
+        int labIndex   = findLabel(varName);
         int constIndex = findConst(varName);
 
         Expression::advance(varName.size());
@@ -1815,6 +1867,11 @@ namespace Compiler
             address = _stringVars[strIndex]._address;
         }
         // Constants
+        else if(labIndex != -1)
+        {
+            address = _labels[labIndex]._address;
+        }
+        // Constants
         else if(constIndex != -1)
         {
             address = _constants[constIndex]._address;
@@ -1827,14 +1884,12 @@ namespace Compiler
             return Expression::Numeric();
         }
 
-        return Expression::Numeric(address, -1, true, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+        bool relocatable = (labIndex > 0) ? true : false;
+        return Expression::Numeric(address, -1, true, false, relocatable, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
     }
 
     Expression::Numeric lengthOf(void)
     {
-        // # char
-        get(true);
-
         std::string varName = Expression::getExpression();
         if(varName.back() == ')') varName.erase(varName.size()-1);
 
@@ -1876,7 +1931,7 @@ namespace Compiler
             return Expression::Numeric();
         }
 
-        return Expression::Numeric(length, -1, true, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+        return Expression::Numeric(length, -1, true, false, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
     }
 
     bool userFunc(const std::string& name)
@@ -1950,7 +2005,7 @@ namespace Compiler
             // Number
             if(number(value))
             {
-                numeric = Expression::Numeric(value, -1, true, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+                numeric = Expression::Numeric(value, -1, true, false, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
             }
             else
             {
@@ -1960,25 +2015,41 @@ namespace Compiler
                 numeric = Expression::Numeric();
             }
         }
-        // String
+        // Strings
         else if(peek(true) == '"')
         {
+            // Handles quotes internally
             numeric = getString();
         }
         // 'Address of' operator
         else if(peek(true) == '@')
         {
-            numeric = addressOf();
+            get(true); numeric = addressOf();
         }
+        // Length
         else if(peek(true) == '#')
         {
-            numeric = lengthOf();
+            get(true); numeric = lengthOf();
         }
-        // Functions
+        // Unary operators
+        else if(peek(true) == '+')
+        {
+            get(true); numeric = factor(0); numeric = Operators::operatorPOS(numeric);
+        }
+        else if(peek(true) == '-')
+        {
+            get(true); numeric = factor(0); numeric = Operators::operatorNEG(numeric);
+        }
         else if(Expression::find("NOT "))
         {
             numeric = factor(0); numeric = Operators::operatorNOT(numeric);
         }
+        // Functions with no parameters
+        else if(Expression::find("TIME$"))
+        {
+            numeric = Keywords::functionTIME$(numeric, _currentCodeLineIndex);
+        }
+        // Functions
         else if(Expression::findFunc("PEEK"))
         {
             numeric = factor(0); numeric = Keywords::functionPEEK(numeric, _currentCodeLineIndex);
@@ -2063,6 +2134,14 @@ namespace Compiler
         {
             numeric = factor(0); numeric = Keywords::functionMID$(numeric, _currentCodeLineIndex);
         }
+        else if(Expression::findFunc("CEIL"))
+        {
+            numeric = factor(0); numeric = Operators::operatorCEIL(numeric);
+        }
+        else if(Expression::findFunc("FLOOR"))
+        {
+            numeric = factor(0); numeric = Operators::operatorFLOOR(numeric);
+        }
         else if(Expression::findFunc("POW"))
         {
             numeric = factor(0); numeric = Operators::operatorPOWF(numeric);
@@ -2137,7 +2216,7 @@ namespace Compiler
         }
         else
         {
-            // User functions, (DEF FN), like inbuilt functions names are NOT case sensitive
+            // User functions, (DEF FN), names are NOT case sensitive, (like inbuilt functions)
             for(auto it=Compiler::getDefFunctions().begin(); it!=Compiler::getDefFunctions().end(); ++it)
             {
                 std::string name = it->first;
@@ -2150,12 +2229,8 @@ namespace Compiler
 
             switch(peek(true))
             {
-                // Unary operators
-                case '+': get(true); numeric = factor(0); numeric = Operators::operatorPOS(numeric); break;
-                case '-': get(true); numeric = factor(0); numeric = Operators::operatorNEG(numeric); break;
-
                 // Reached end of expression
-                case 0: numeric = Expression::Numeric(defaultValue, -1, false, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string("")); break;
+                case 0: numeric = Expression::Numeric(defaultValue, -1, false, false, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string("")); break;
 
                 default:
                 {
@@ -2188,7 +2263,7 @@ namespace Compiler
                             }
 
                             // Array numeric
-                            numeric = Expression::Numeric(defaultValue, int16_t(varIndex), true, false, varType, Expression::BooleanCC, Expression::Int16Both, varName, std::string(""));
+                            numeric = Expression::Numeric(defaultValue, int16_t(varIndex), true, false, false, varType, Expression::BooleanCC, Expression::Int16Both, varName, std::string(""));
 
                             // Array index parameters, (commands like LEN expect no array indices)
                             if(foundParams)
@@ -2216,7 +2291,7 @@ namespace Compiler
                             if(Expression::find(".HI")) int16Byte = Expression::Int16High;
 
                             // Numeric is now passed back to compiler, (rather than just numeric._value), so make sure all fields are valid
-                            numeric = Expression::Numeric(defaultValue, int16_t(varIndex), true, false, Expression::IntVar, Expression::BooleanCC, int16Byte, varName, std::string(""));
+                            numeric = Expression::Numeric(defaultValue, int16_t(varIndex), true, false, false, Expression::IntVar, Expression::BooleanCC, int16Byte, varName, std::string(""));
                         }
                     }
                     // Strings
@@ -2225,7 +2300,7 @@ namespace Compiler
                         Expression::advance(varName.size());
 
                         // Numeric is now passed back to compiler, (rather than just numeric._value), so make sure all fields are valid
-                        numeric = Expression::Numeric(defaultValue, int16_t(strIndex), true, false, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, varName, _stringVars[strIndex]._text);
+                        numeric = Expression::Numeric(defaultValue, int16_t(strIndex), true, false, false, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, varName, _stringVars[strIndex]._text);
                     }
                     // Constants
                     else if(constIndex != -1)
@@ -2237,13 +2312,13 @@ namespace Compiler
                             // Numeric is now passed back to compiler, (rather than just numeric._value), so make sure all fields are valid
                             case ConstInt16:
                             {
-                                numeric = Expression::Numeric(_constants[constIndex]._data, int16_t(constIndex), true, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, varName, std::string(""));
+                                numeric = Expression::Numeric(_constants[constIndex]._data, int16_t(constIndex), true, false, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, varName, std::string(""));
                             }
                             break;
 
                             case ConstStr:
                             {
-                                numeric = Expression::Numeric(defaultValue, int16_t(constIndex), true, false, Expression::Constant, Expression::BooleanCC, Expression::Int16Both, varName, _constants[constIndex]._text);
+                                numeric = Expression::Numeric(defaultValue, int16_t(constIndex), true, false, false, Expression::Constant, Expression::BooleanCC, Expression::Int16Both, varName, _constants[constIndex]._text);
                             }
                             break;
 
@@ -2253,7 +2328,7 @@ namespace Compiler
                     // Unknown symbol
                     else
                     {
-                        numeric = Expression::Numeric(defaultValue, -1, false, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+                        numeric = Expression::Numeric(defaultValue, -1, false, false, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
 
                         // Pragma parsing happens before any code has been parsed, so _codeLines[] may be empty
                         std::string codeText = (int(_codeLines.size()) > _currentCodeLineIndex) ? _codeLines[_currentCodeLineIndex]._code : "PRAGMA";
@@ -2565,7 +2640,7 @@ namespace Compiler
             }
             
             // Output variable, (functions can access this variable within parse())
-            numeric = Expression::Numeric(0, int16_t(codeLine._varIndex), true, false, varType, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
+            numeric = Expression::Numeric(0, int16_t(codeLine._varIndex), true, false, false, varType, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
         }
         Expression::parse(codeLine._expression, codeLineIndex, numeric);
 
@@ -3061,10 +3136,39 @@ REDO:
         _output.push_back("\n");
     }
 
-    void outputStrs(void)
+    bool outputStrs(void)
     {
         _output.push_back("; Strings\n");
 
+        // Time array and string
+        if(_createTimeData)
+        {
+            int timeArraySize = 3;
+            uint16_t timeArrayAddress;
+            if(!Memory::getFreeRAM(Memory::FitDescending, timeArraySize, USER_CODE_START, _runtimeStart, timeArrayAddress))
+            {
+                fprintf(stderr, "Compiler::outputStrs() : Not enough RAM for time array of size %d\n", timeArraySize);
+                return false;
+            }
+            std::string defName = "_timeArray_";
+            _output.push_back(defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(timeArrayAddress) + "\n");
+            std::string dbString = defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "DB" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+            _output.push_back(dbString + "00 00 00\n");
+
+            int timeStringSize = 10;
+            uint16_t timeStringAddress;
+            if(!Memory::getFreeRAM(Memory::FitDescending, timeStringSize, USER_CODE_START, _runtimeStart, timeStringAddress))
+            {
+                fprintf(stderr, "Compiler::outputStrs() : Not enough RAM for time string of size %d\n", timeStringSize);
+                return false;
+            }
+            defName = "_timeString_";
+            _output.push_back(defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(timeStringAddress) + "\n");
+            dbString = defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "DB" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+            _output.push_back(dbString + std::to_string(timeStringSize - 2) + " '00:00:00' 0\n");
+        }
+
+        // User strings
         for(int i=0; i<int(_stringVars.size()); i++)
         {
             _output.push_back(_stringVars[i]._output + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(_stringVars[i]._address) + "\n");
@@ -3072,6 +3176,8 @@ REDO:
         }
 
         _output.push_back("\n");
+
+        return true;
     }
 
     bool outputSpriteDef(int spriteId, int numStripeChunks, uint16_t address, int& dataIndex)
@@ -3208,6 +3314,20 @@ REDO:
 
         // Create def font data
         _output.push_back("; Define Fonts\n");
+        if(_defDataFonts.size() > 0)
+        {
+            int fontIdSize = 1;
+            uint16_t fontIdAddress;
+            if(!Memory::getFreeRAM(Memory::FitDescending, fontIdSize, USER_CODE_START, _runtimeStart, fontIdAddress))
+            {
+                fprintf(stderr, "Compiler::outputDefs() : Not enough RAM for font id var of size %d\n", fontIdSize);
+                return false;
+            }
+            std::string defName = "_fontId_";
+            _output.push_back(defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(fontIdAddress) + "\n");
+            std::string dbString = defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "DB" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+            _output.push_back(dbString + "0\n");
+        }
         for(auto it=_defDataFonts.begin(); it!=_defDataFonts.end(); ++it)
         {
             int fontId = it->first;
@@ -3607,7 +3727,8 @@ REDO:
         _output.push_back("midiStream"    + std::string(LABEL_TRUNC_SIZE - strlen("midiStream"), ' ')    + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x24\n");
         _output.push_back("midiDelay"     + std::string(LABEL_TRUNC_SIZE - strlen("midiDelay"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x26\n");
         _output.push_back("miscFlags"     + std::string(LABEL_TRUNC_SIZE - strlen("miscFlags"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x28\n");
-        _output.push_back("fontLutId"     + std::string(LABEL_TRUNC_SIZE - strlen("fontLutId"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(FONT_LUT_ID) + "\n");
+        _output.push_back("timerTick"     + std::string(LABEL_TRUNC_SIZE - strlen("timerTick"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x2A\n");
+        _output.push_back("timerPrev"     + std::string(LABEL_TRUNC_SIZE - strlen("timerPrev"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x2C\n");
         _output.push_back("\n");
 
         _output.push_back("; Internal Constants\n");
@@ -3746,6 +3867,7 @@ REDO:
         _vasmPC       = USER_CODE_START;
         _tempVarStart = TEMP_VAR_START;
         _userVarStart = USER_VAR_START;
+        _userVarsAddr = _userVarStart;
         _runtimeEnd   = 0x7FFF;
         _runtimeStart = 0x7FFF;
         _strWorkArea  = 0x0000;

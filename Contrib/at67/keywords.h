@@ -67,6 +67,7 @@ namespace Keywords
     Expression::Numeric functionPOINT(Expression::Numeric& numeric,  int codeLineIndex);
     Expression::Numeric functionCHR$(Expression::Numeric& numeric,   int codeLineIndex);
     Expression::Numeric functionSTR$(Expression::Numeric& numeric,   int codeLineIndex);
+    Expression::Numeric functionTIME$(Expression::Numeric& numeric,  int codeLineIndex);
     Expression::Numeric functionHEX$(Expression::Numeric& numeric,   int codeLineIndex);
     Expression::Numeric functionHEXW$(Expression::Numeric& numeric,  int codeLineIndex);
     Expression::Numeric functionLEFT$(Expression::Numeric& numeric,  int codeLineIndex);
@@ -89,6 +90,7 @@ namespace Keywords
     bool keywordGOTO(Compiler::CodeLine& codeLine,     int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordGOSUB(Compiler::CodeLine& codeLine,    int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordRETURN(Compiler::CodeLine& codeLine,   int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
+    bool keywordRET(Compiler::CodeLine& codeLine,      int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordCLS(Compiler::CodeLine& codeLine,      int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordPRINT(Compiler::CodeLine& codeLine,    int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordINPUT(Compiler::CodeLine& codeLine,    int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
@@ -124,6 +126,8 @@ namespace Keywords
     bool keywordSCROLL(Compiler::CodeLine& codeLine,   int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordPOKE(Compiler::CodeLine& codeLine,     int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordDOKE(Compiler::CodeLine& codeLine,     int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
+    bool keywordINIT(Compiler::CodeLine& codeLine,     int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
+    bool keywordTICK(Compiler::CodeLine& codeLine,     int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordPLAY(Compiler::CodeLine& codeLine,     int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordLOAD(Compiler::CodeLine& codeLine,     int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool keywordSPRITE(Compiler::CodeLine& codeLine,   int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result);

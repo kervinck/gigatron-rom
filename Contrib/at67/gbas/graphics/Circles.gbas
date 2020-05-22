@@ -4,7 +4,7 @@ _codeRomType_ ROMv1
 cls
 
 loop: 
-    set FGCOLOUR, rnd(0) AND &h3F
+    set FG_COLOUR, rnd(0) AND &h3F
     circle rnd(100) + (- 50 + 80), rnd(60) + (- 30 + 60), rnd(30) + 1
     goto &loop
 

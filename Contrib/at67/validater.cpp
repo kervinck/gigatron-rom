@@ -258,19 +258,20 @@ namespace Validater
 
     bool opcodeHasBranch(const std::string& opcode)
     {
-        if(opcode == "BRA")            return true;
-        if(opcode == "BEQ")            return true;
-        if(opcode == "BNE")            return true;
-        if(opcode == "BGE")            return true;
-        if(opcode == "BLE")            return true;
-        if(opcode == "BGT")            return true;
-        if(opcode == "BLT")            return true;
-        if(opcode == "%ForNextInc")    return true;
-        if(opcode == "%ForNextDec")    return true;
-        if(opcode == "%ForNextAdd")    return true;
-        if(opcode == "%ForNextSub")    return true;
-        if(opcode == "%ForNextVarPos") return true;
-        if(opcode == "%ForNextVarNeg") return true;
+        if(opcode == "BRA")                return true;
+        if(opcode == "BEQ")                return true;
+        if(opcode == "BNE")                return true;
+        if(opcode == "BGE")                return true;
+        if(opcode == "BLE")                return true;
+        if(opcode == "BGT")                return true;
+        if(opcode == "BLT")                return true;
+        if(opcode == "%ForNextInc")        return true;
+        if(opcode == "%ForNextDec")        return true;
+        if(opcode == "%ForNextDecZero")    return true;
+        if(opcode == "%ForNextAdd")        return true;
+        if(opcode == "%ForNextSub")        return true;
+        if(opcode == "%ForNextVarAdd")     return true;
+        if(opcode == "%ForNextVarSub")     return true;
 
         return false;
     }

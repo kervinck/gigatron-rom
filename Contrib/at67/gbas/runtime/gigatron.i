@@ -6,6 +6,7 @@ giga_notesTable                 EQU     0x0900
 ; RAM
 giga_vram                       EQU     0x0800
 giga_videoTable                 EQU     0x0100
+giga_vblankProc                 EQU     0x01F6
 giga_videoTop                   EQU     0x01F9
 giga_soundChan1                 EQU     0x01FA
 giga_soundChan2                 EQU     0x02FA
@@ -15,6 +16,8 @@ giga_soundChan4                 EQU     0x04FA
 ; defines
 giga_xres                       EQU     160
 giga_yres                       EQU     120
+giga_xfont                      EQU     6
+giga_yfont                      EQU     8
 
 ; page 0
 giga_memSize                    EQU     0x01
@@ -104,3 +107,6 @@ giga_DarkBlue                   EQU     0x10
 giga_Blue                       EQU     0x20
 giga_LightBlue                  EQU     0x30
 giga_White                      EQU     0x3f
+
+giga_CursorX                    EQU     2
+giga_CursorY                    EQU     0

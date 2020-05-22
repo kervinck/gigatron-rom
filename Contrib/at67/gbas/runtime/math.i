@@ -1,4 +1,4 @@
-; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+; do *NOT* use register4 to register7 during time slicing if you call realTimeStub
 mathX               EQU     register8
 mathY               EQU     register9
 mathSum             EQU     register12
@@ -126,7 +126,7 @@ multiply16_skip     LDW     mathX
                     BRA     multiply16_loop
 
 multiply16_exit     PUSH
-                    CALL    realTimeProcAddr
+                    CALL    realTimeStubAddr
                     POP
                     LDW     mathSum
                     RET
@@ -152,7 +152,7 @@ multiply161_skip    LDW     mathX
                     ADDW    mathMask
                     BNE     multiply161_loop
                     PUSH
-                    CALL    realTimeProcAddr
+                    CALL    realTimeStubAddr
                     POP
                     LDW     mathSum
                     RET
@@ -200,7 +200,7 @@ divide16_incx       LDW     mathMask
                     LSLW
                     BNE     divide16_loop
                     PUSH
-                    CALL    realTimeProcAddr
+                    CALL    realTimeStubAddr
                     POP
                     LDW     mathSign
                     BGE     divide16_exit
@@ -260,7 +260,7 @@ divide161_skip2     LDW     mathMask
                     BRA     divide161_loop
 
 divide161_exit      PUSH
-                    CALL    realTimeProcAddr
+                    CALL    realTimeStubAddr
                     POP
                     LDW     mathSign
                     BLT     divide161_sgn

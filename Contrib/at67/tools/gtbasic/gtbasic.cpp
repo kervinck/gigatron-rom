@@ -46,9 +46,15 @@ int main(int argc, char* argv[])
     Validater::initialise();
     Linker::initialise();
 
+    // Choose memory model
+    if(name.find("64k") != std::string::npos  ||  name.find("64K") != std::string::npos)
+    {
+        Memory::setSizeRAM(RAM_SIZE_HI);
+        Memory::initialise();
+    }
+
     // Optional include path
     std::string includepath = (argc == 3) ? std::string(argv[2]) : ".";
-    Assembler::setIncludePath(includepath);
 
     // Output file
     uint16_t address = DEFAULT_START_ADDRESS;
@@ -62,6 +68,9 @@ int main(int argc, char* argv[])
     name = (slash != std::string::npos) ? name.substr(slash + 1) : name;
     std::string filename = path + "/" + name;
     Loader::setFilePath(filename);
+
+    // Set build path, (set from command line, can be overriden by "_runtimePath_" in source code)
+    Compiler::setBuildPath(includepath, Loader::getFilePath());
 
 #ifdef _WIN32
     Cpu::enableWin32ConsoleSaveFile(false);

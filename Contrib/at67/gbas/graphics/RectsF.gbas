@@ -4,7 +4,7 @@ _codeRomType_ ROMv2
 cls : mode 2
 
 loop: 
-    set FGCOLOUR, rnd(0) AND &h3F
+    set FG_COLOUR, rnd(0) AND &h3F
     rectf rnd(160), rnd(120), rnd(160), rnd(120)
     goto &loop
 

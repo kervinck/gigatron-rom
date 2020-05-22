@@ -2,7 +2,7 @@ _runtimePath_ "../runtime"
 _codeRomType_ ROMv1
 
 1 a=0 : b=0 : p=256+252 : cls : z=2 : d=0 : gosub 198
-2 k=get("BUTTONSTATE")
+2 k=get("BUTTON_STATE")
 3 if k &> 126 then goto &2
 4 d = 30
 5 gosub 1000
@@ -10,7 +10,7 @@ _codeRomType_ ROMv1
 7 goto &2
 
 100 for c=1 to 4 : p=(c LSL 8)+252 : poke p-1,z : poke p,a : poke p+1,b : next c
-    set SOUNDTIMER,d
+    set SOUND_TIMER,d
     return
 
 198 print " 2 3   5 6 7   9 0"
@@ -40,5 +40,5 @@ _codeRomType_ ROMv1
      if k &= 111 then a=31 :b=19:return:'D
      if k &= 48  then a=50 :b=20:return:'D#
      if k &= 112 then a=77 :b=21:return:'E
-     if k &= 122 then set BUTTONSTATE,&hFF : z=(z+1)AND3 : a=0 : b=0 : d=0 : goto 200
+     if k &= 122 then set BUTTON_STATE,&hFF : z=(z+1)AND3 : a=0 : b=0 : d=0 : goto 200
      a=0 : b=0 : d=0 : return

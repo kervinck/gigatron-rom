@@ -1,4 +1,4 @@
-; do *NOT* use register4 to register7 during time slicing if you use realTimeProc
+; do *NOT* use register4 to register7 during time slicing
 inpLutAddr          EQU     register0
 inpKeyBak           EQU     register0
 inpVarsAddr         EQU     register1
@@ -10,7 +10,7 @@ inpTypeData         EQU     register7
 inpTextEnd          EQU     register8
 printXYBak          EQU     register11
 cursXYBak           EQU     register12
-frmCntBak           EQU     register13
+cursFlash           EQU     register13
 cursorChr           EQU     register14
 cursXYOfs           EQU     register15
 
@@ -36,7 +36,7 @@ input               PUSH
                     ST      serialRawPrev       ; initialise previous keystroke
                     LD      giga_frameCount
                     ADDI    cursorDelay
-                    STW     frmCntBak           ; delay for cursor flash
+                    STW     cursFlash           ; delay for cursor flash
                     LDI     127
                     STW     cursorChr           ; cursor char
                     CALLI   inputExt1           ; doesn't return to here
@@ -100,7 +100,7 @@ inputExt2           CALLI   inputCursor
 %SUB                inputCursor
                     ; flashes cursor
 inputCursor         LD      giga_frameCount
-                    SUBW    frmCntBak
+                    SUBW    cursFlash
                     BEQ     inputC_toggle
                     RET
                     
@@ -109,7 +109,7 @@ inputC_toggle       PUSH
                     STW     cursorXY            ; restore cursor position before the printChr
                     LD      giga_frameCount
                     ADDI    cursorDelay
-                    ST      frmCntBak           ; delay for cursor flash
+                    ST      cursFlash           ; delay for cursor flash
                     LD      cursorChr
                     CALLI   printChr            ; display cursor
                     LD      cursorChr

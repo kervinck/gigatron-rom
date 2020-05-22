@@ -1,4 +1,4 @@
-; do *NOT* use register4 to register7 during time slicing if you call realTimeProc
+; do *NOT* use register4 to register7 during time slicing if you call realTimeStub
 strChr              EQU     register0
 strHex              EQU     register1
 strCmpRes           EQU     register2
@@ -13,8 +13,8 @@ strTmpAddr          EQU     register10
 strLutAddr          EQU     register11
 strBakAddr          EQU     register12
 strInteger          EQU     register0
-strIntDigit         EQU     register1
-strIntMult          EQU     register3
+strDigit            EQU     register1
+strMult             EQU     register3
 
 
 %SUB                stringChr
@@ -295,19 +295,19 @@ stringM_exit        INC     strDstAddr
 %SUB                stringDigit
 stringDigit         LDW     strInteger
 
-stringD_index       SUBW    strIntMult
+stringD_index       SUBW    strMult
                     BLT     stringD_cont
                     STW     strInteger
-                    INC     strIntDigit
+                    INC     strDigit                            ; calculate digit
                     BRA     stringD_index
     
-stringD_cont        LD      strIntDigit
-                    BEQ     stringD_exit
+stringD_cont        LD      strDigit
+                    BEQ     stringD_exit                        ; leading zero supressed
                     ORI     0x30
-                    POKE    strTmpAddr
+                    POKE    strTmpAddr                          ; store digit
                     INC     strTmpAddr
                     LDI     0x30
-                    ST      strIntDigit
+                    ST      strDigit                            ; reset digit
                     
 stringD_exit        RET
 %ENDS
@@ -316,10 +316,10 @@ stringD_exit        RET
                     ; create a string from an int
 stringInt           PUSH
                     LDI     0
-                    STW     strIntDigit
+                    STW     strDigit
                     LDW     strDstAddr
                     STW     strTmpAddr
-                    INC     strTmpAddr
+                    INC     strTmpAddr                          ; skip length byte
                     LDW     strInteger
                     BGE     stringI_pos
                     LDI     0x2D
@@ -330,19 +330,19 @@ stringInt           PUSH
                     STW     strInteger                          ; +ve number
 
 stringI_pos         LDWI    10000
-                    STW     strIntMult
+                    STW     strMult
                     LDWI    stringDigit
                     CALL    giga_vAC
                     LDWI    1000
-                    STW     strIntMult
+                    STW     strMult
                     LDWI    stringDigit
                     CALL    giga_vAC
                     LDI     100
-                    STW     strIntMult
+                    STW     strMult
                     LDWI    stringDigit
                     CALL    giga_vAC
                     LDI     10
-                    STW     strIntMult
+                    STW     strMult
                     LDWI    stringDigit
                     CALL    giga_vAC
                     LD      strInteger
@@ -350,7 +350,7 @@ stringI_pos         LDWI    10000
                     POKE    strTmpAddr                          ; 1's digit
                     LDW     strTmpAddr
                     SUBW    strDstAddr
-                    POKE    strDstAddr                          ; leading size byte
+                    POKE    strDstAddr                          ; length byte
                     INC     strTmpAddr
                     LDI     0
                     POKE    strTmpAddr                          ; terminating 0                    

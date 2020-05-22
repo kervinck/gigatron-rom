@@ -461,6 +461,26 @@ namespace Operators
     // ********************************************************************************************
     // Unary Math Operators
     // ********************************************************************************************
+    Expression::Numeric operatorCEIL(Expression::Numeric& numeric)
+    {
+        if(numeric._varType == Expression::Number)
+        {
+            numeric._value = ceil(numeric._value);
+        }
+
+        return numeric;
+    }
+
+    Expression::Numeric operatorFLOOR(Expression::Numeric& numeric)
+    {
+        if(numeric._varType == Expression::Number)
+        {
+            numeric._value = floor(numeric._value);
+        }
+
+        return numeric;
+    }
+
     Expression::Numeric operatorPOWF(Expression::Numeric& numeric)
     {
         if(numeric._varType == Expression::Number  &&  numeric._parameters.size() > 0  &&  numeric._parameters[0]._varType == Expression::Number)
@@ -1030,17 +1050,17 @@ namespace Operators
         // Optimise base = 0
         if(left._varType == Expression::Number  &&  left._value == 0)
         {
-            return Expression::Numeric(0, -1, true, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+            return Expression::Numeric(0, -1, true, false, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
         }
         // Optimise base = 1
         else if(left._varType == Expression::Number  &&  left._value == 1)
         {
-            return Expression::Numeric(1, -1, true, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+            return Expression::Numeric(1, -1, true, false, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
         }
         // Optimise exponent = 0
         else if(right._varType == Expression::Number  &&  right._value == 0)
         {
-            return Expression::Numeric(1, -1, true, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+            return Expression::Numeric(1, -1, true, false, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
         }
 
         left._isValid = (Compiler::getCodeRomType() >= Cpu::ROMv5a) ? handleMathOp("CALLI", "power16bit", left, right) : handleMathOp("CALL", "power16bit", left, right);
@@ -1059,7 +1079,7 @@ namespace Operators
         // Optimise multiply with 0
         if((left._varType == Expression::Number  &&  left._value == 0)  ||  (right._varType == Expression::Number  &&  right._value == 0))
         {
-            return Expression::Numeric(0, -1, true, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+            return Expression::Numeric(0, -1, true, false, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
         }
 
         left._isValid = (Compiler::getCodeRomType() >= Cpu::ROMv5a) ? handleMathOp("CALLI", "multiply16bit", left, right) : handleMathOp("CALL", "multiply16bit", left, right);
@@ -1078,7 +1098,7 @@ namespace Operators
         // Optimise divide with 0, term() never lets denominator = 0
         if((left._varType == Expression::Number  &&  left._value == 0)  ||  (right._varType == Expression::Number  &&  right._value == 0))
         {
-            return Expression::Numeric(0, -1, true, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+            return Expression::Numeric(0, -1, true, false, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
         }
 
         left._isValid = (Compiler::getCodeRomType() >= Cpu::ROMv5a) ? handleMathOp("CALLI", "divide16bit", left, right) : handleMathOp("CALL", "divide16bit", left, right);
@@ -1097,7 +1117,7 @@ namespace Operators
         // Optimise divide with 0, term() never lets denominator = 0
         if((left._varType == Expression::Number  &&  left._value == 0)  ||  (right._varType == Expression::Number  &&  right._value == 0))
         {
-            return Expression::Numeric(0, -1, true, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+            return Expression::Numeric(0, -1, true, false, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
         }
 
         left._isValid = (Compiler::getCodeRomType() >= Cpu::ROMv5a) ? handleMathOp("CALLI", "divide16bit", left, right, true) : handleMathOp("CALL", "divide16bit", left, right, true);

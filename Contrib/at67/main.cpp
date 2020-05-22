@@ -124,8 +124,6 @@ int main(int argc, char* argv[])
 #endif
 #endif
 
-    //Compiler::compile("gbas/test.gbas", "gbas/test.gasm");
-
     while(1)
     {
         switch(Editor::getEditorMode())
