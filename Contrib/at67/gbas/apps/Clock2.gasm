@@ -37,6 +37,7 @@ textWorkArea                  EQU                               0x7fa0
 
 ; Includes
 %includePath                  "../runtime"
+%include                      util.i
 %include                      gigatron.i
 %include                      macros_ROMv5a.i
 
@@ -97,11 +98,11 @@ _cc                           EQU                               0x0058
 _oxx                          EQU                               0x005a
 _oyy                          EQU                               0x005c
 
+; Arrays
+
 ; Strings
-_timeArray_                   EQU                               0x7ea4
-_timeArray_                   DB                                00 00 00
-_timeString_                  EQU                               0x7aa2
-_timeString_                  DB                                8 '00:00:00' 0
+
+; Constant Strings
 _str_0x7ef3                   EQU                               0x7ef3
 _str_0x7ef3                   DB                                11 'Enter Time ' 0
 _str_0x7eef                   EQU                               0x7eef
@@ -112,6 +113,18 @@ _str_0x7ee7                   EQU                               0x7ee7
 _str_0x7ee7                   DB                                2 'S:' 0
 _str_0x7eb1                   EQU                               0x7eb1
 _str_0x7eb1                   DB                                26 '                          ' 0
+
+; Data
+_data_                        EQU                               0x7ea5
+_data_                        DW                                0
+_dataIndex_                   EQU                               0x7ea3
+_dataIndex_                   DW                                0
+
+; Time
+_timeArray_                   EQU                               0x7ea0
+_timeArray_                   DB                                00 00 00
+_timeString_                  EQU                               0x7aa2
+_timeString_                  DB                                8 '00:00:00' 0
 
 ; Define Bytes
 def_bytes_0x60a0              EQU                               0x60a0
@@ -726,55 +739,49 @@ _end_0x06ea                   BRA                               _end_0x06ea     
 ;****************************************************************************************************************************************
 
 romCheck                      EQU     0x7de8
-convertEqOp                   EQU     0x79b8
-convertNeOp                   EQU     0x7bab
-convertLeOp                   EQU     0x79af
-convertGeOp                   EQU     0x79a6
-convertLtOp                   EQU     0x78d1
-convertGtOp                   EQU     0x78c8
-convertArr2d                  EQU     0x78bc
-convertArr3d                  EQU     0x78ab
 realTimeStub                  EQU     0x7bb4
+convertNeOp                   EQU     0x7bab
 setRealTimeProc0              EQU     0x7bc8
 divide16bit                   EQU     0x7aac
 shiftLeft4bit                 EQU     0x7ba1
 scanlineMode                  EQU     0x7ea7
-resetVideoTable               EQU     0x73d9
-initClearFuncs                EQU     0x7dd2
+resetVideoFlags               EQU     0x7dd3
+resetVideoTable               EQU     0x79a1
+initClearFuncs                EQU     0x78cf
 clearVertBlinds               EQU     0x7cc9
-clearCursorRow                EQU     0x73ad
-drawHLine                     EQU     0x72d6
+clearCursorRow                EQU     0x78a3
+drawHLine                     EQU     0x73d6
 drawLine                      EQU     0x75ae
-drawLineExt                   EQU     0x72a1
-drawLineLoop                  EQU     0x71c7
-drawLineLoadXY                EQU     0x70d4
+drawLineExt                   EQU     0x73a1
+drawLineLoop                  EQU     0x72c7
+drawLineLoadXY                EQU     0x71d4
 drawCircle                    EQU     0x74b7
-drawCircleExt1                EQU     0x6fb3
-drawCircleExt2                EQU     0x70a2
+drawCircleExt1                EQU     0x70b3
+drawCircleExt2                EQU     0x71a2
 drawCircleF                   EQU     0x76b4
 soundAllOff                   EQU     0x79c1
 soundOnV                      EQU     0x79d7
 input                         EQU     0x7ca4
-inputExt1                     EQU     0x6eba
-inputExt2                     EQU     0x71af
-inputCursor                   EQU     0x6ddf
-inputKeys                     EQU     0x6caa
+inputExt1                     EQU     0x6fba
+inputExt2                     EQU     0x72af
+inputCursor                   EQU     0x6edf
+inputKeys                     EQU     0x6daa
 inputIntVar                   EQU     0x76a2
 inputStrVar                   EQU     0x74a0
-inputReturn                   EQU     0x6da8
-inputDelete                   EQU     0x6bbb
-inputPrint                    EQU     0x6ea1
-inputNewline                  EQU     0x6fa0
-printInit                     EQU     0x6ba5
-printText                     EQU     0x7dbb
-printChr                      EQU     0x78a0
-printChar                     EQU     0x6aab
+inputReturn                   EQU     0x6ea8
+inputDelete                   EQU     0x6cbb
+inputPrint                    EQU     0x6fa1
+inputNewline                  EQU     0x70a0
+printInit                     EQU     0x6ca5
+printText                     EQU     0x7dbc
+printChr                      EQU     0x75a3
+printChar                     EQU     0x6bab
 atTextCursor                  EQU     0x7bda
 newLineScroll                 EQU     0x77aa
-integerStr                    EQU     0x69c0
-tickTime                      EQU     0x7da2
-handleTime                    EQU     0x68c7
-timeDigits                    EQU     0x68a3
+integerStr                    EQU     0x6ac0
+tickTime                      EQU     0x7da3
+handleTime                    EQU     0x69c7
+timeDigits                    EQU     0x69a3
 timeString                    EQU     0x78da
 
 
@@ -808,82 +815,6 @@ romC_loop           LD      romErrPixel
 romC_return         RET                    
 
 
-                    ; convert equal to into a boolean
-convertEqOp         BEQ     convertEq_1
-                    LDI     0
-                    RET
-convertEq_1         LDI     1
-                    RET
-
-
-                    ; convert not equal to into a boolean
-convertNeOp         BNE     convertNe_1
-                    LDI     0
-                    RET
-convertNe_1         LDI     1
-                    RET
-
-
-                    ; convert less than or equal to into a boolean
-convertLeOp         BLE     convertLe_1
-                    LDI     0
-                    RET
-convertLe_1         LDI     1
-                    RET
-
-
-                    ; convert greater than or equal to into a boolean
-convertGeOp         BGE     convertGe_1
-                    LDI     0
-                    RET
-convertGe_1         LDI     1
-                    RET
-
-
-                    ; convert less than into a boolean
-convertLtOp         BLT     convertLt_1
-                    LDI     0
-                    RET
-convertLt_1         LDI     1
-                    RET
-
-
-                    ; convert greater than into boolean
-convertGtOp         BGT     convertGt_1
-                    LDI     0
-                    RET
-convertGt_1         LDI     1
-                    RET
-
-
-memIndex0           EQU     register0
-memIndex1           EQU     register1
-memIndex2           EQU     register2
-memValue            EQU     register8
-memAddr             EQU     register9
-
-
-convertArr2d        ADDW    memIndex0
-                    ADDW    memIndex0
-                    DEEK
-                    ADDW    memIndex1
-                    ADDW    memIndex1
-                    STW     memAddr
-                    RET
-
-
-convertArr3d        ADDW    memIndex0
-                    ADDW    memIndex0
-                    DEEK
-                    ADDW    memIndex1
-                    ADDW    memIndex1
-                    DEEK
-                    ADDW    memIndex2
-                    ADDW    memIndex2
-                    STW     memAddr
-                    RET
-
-
                     ; runs real time, (vblank interrupt), code at regular intervals
                     ; self modifying code allows for timer, midi and user procs
 realTimeStub        RET                                     ; RET gets replaced by PUSH
@@ -898,6 +829,14 @@ realTS_rti          POP
                     ST      giga_frameCount
                     LDWI    &h0400
                     LUP 0                                   ; RTI
+
+
+                    ; convert not equal to into a boolean
+convertNeOp         BNE     convertNe_1
+                    LDI     0
+                    RET
+convertNe_1         LDI     1
+                    RET
 
 
 setRealTimeProc0    LDWI    realTimeStub
@@ -1059,7 +998,6 @@ scanlineMode        LDWI    SYS_SetMode_v2_80
                     RET
 
 
-
 ; do *NOT* use register4 to register7 during time slicing
 xreset              EQU     register0
 xcount              EQU     register1
@@ -1072,7 +1010,22 @@ vramAddr            EQU     register11
 evenAddr            EQU     register12
 clsAddress          EQU     register13
     
-    
+
+resetVideoFlags     LDWI    giga_videoTop                       ; reset videoTop
+                    STW     register0
+                    LDI     0
+                    POKE    register0
+                    
+                    LDI     0x02                                ; starting cursor position
+                    STW     cursorXY
+                    LDWI    ON_BOTTOM_ROW_MSK
+                    ANDW    miscFlags
+                    STW     miscFlags                           ; reset on bottom row flag
+                    RET
+
+
+
+
                     ; resets video table pointers
 resetVideoTable     PUSH
                     LDI     8
@@ -1089,23 +1042,14 @@ resetVT_loop        LDW     vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
 
-                    LDWI    giga_videoTop                       ; reset videoTop
-                    STW     register0
-                    LDI     0
-                    POKE    register0
+                    CALLI   resetVideoFlags
                     POP
                     RET
 
 
 initClearFuncs      PUSH
                     CALLI   resetVideoTable
-    
-                    LDI     0x02                                ; starting cursor position
-                    STW     cursorXY
-                    LDWI    ON_BOTTOM_ROW_MSK
-                    ANDW    miscFlags
-                    STW     miscFlags                           ; reset on bottom row flag
-    
+                    
                     LDWI    SYS_SetMemory_v2_54                 ; setup fill memory SYS routine
                     STW     giga_sysFn
                     POP

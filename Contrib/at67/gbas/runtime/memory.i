@@ -1,10 +1,3 @@
-memIndex0           EQU     register0
-memIndex1           EQU     register1
-memIndex2           EQU     register2
-memValue            EQU     register8
-memAddr             EQU     register9
-
-
 %SUB                getArrayByte
                     ; get 8bit value from array
 getArrayByte        LDW     memAddr
@@ -105,5 +98,32 @@ convertArr3d        ADDW    memIndex0
                     ADDW    memIndex2
                     ADDW    memIndex2
                     STW     memAddr
+                    RET
+%ENDS
+
+%SUB                readIntVar
+readIntVar          LDWI    _dataIndex_
+                    STW     memAddr
+                    DEEK
+                    
+readIV_loop         STW     memIndex0
+                    ADDI    1
+                    DOKE    memAddr
+                    LDWI    _data_
+                    ADDW    memIndex0
+                    ADDW    memIndex0
+                    DEEK
+                    BEQ     readIV_loop                     ; reached end of list, so restore
+                    RET
+%ENDS
+
+%SUB                readStrVar
+readStrVar          PUSH
+                    LDWI    readIntVar
+                    CALL    giga_vAC
+                    STW     strSrcAddr
+                    LDWI    stringCopy
+                    CALL    giga_vAC
+                    POP
                     RET
 %ENDS

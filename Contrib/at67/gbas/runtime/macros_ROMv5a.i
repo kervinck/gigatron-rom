@@ -65,6 +65,14 @@
         BGE     _label
 %ENDM
 
+%MACRO  ForNextFarDecZero _var _label
+        LD      _var
+        SUBI    1
+        ST      _var
+        BLT     _label_ + 3
+_label_ CALLI   _label
+%ENDM
+
 %MACRO  ForNextAdd _var _label _end _step
         LD      _var
         ADDI    _step
@@ -167,6 +175,10 @@ _label_ CALLI   _label
         CALLI   resetVideoTable
 %ENDM
 
+%MACRO  ResetVideoFlags
+        CALLI   resetVideoFlags
+%ENDM
+
 %MACRO  ClearScreen
         CALLI   clearScreen
 %ENDM
@@ -257,6 +269,14 @@ _label_ CALLI   _label
 %MACRO  PrintVarInt16 _var
         LDW     _var
         CALLI   printInt16
+%ENDM
+
+%MACRO  ReadIntVar
+        CALLI   readIntVar
+%ENDM
+
+%MACRO  ReadStrVar
+        CALLI   readStrVar
 %ENDM
 
 %MACRO  StringChr
@@ -562,5 +582,5 @@ _id_    CALLI   _label
         LDI     0
         STW     midiStream                              ; reset MIDI
         
-        CALLI   initClearFuncs
+        CALLI   resetVideoFlags
 %ENDM

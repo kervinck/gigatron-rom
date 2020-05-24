@@ -1,4 +1,4 @@
-; do *NOT* use register4 to register7 during time slicing if you call realTimeStub
+; do *NOT* use register4 to register7 during time slicing
 strChr              EQU     register0
 strHex              EQU     register1
 strCmpRes           EQU     register2

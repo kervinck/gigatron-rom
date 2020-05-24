@@ -53,6 +53,7 @@ namespace Memory
 {
     enum FitType {FitAscending, FitDescending, NumFitTypes};
     enum SortType {NoSort, AddressDescending, AddressAscending, SizeAscending, SizeDescending, NumSortTypes};
+    enum ParityType {ParityNone=0, ParityEven=1, ParityOdd=2};
 
     struct RamEntry
     {
@@ -78,7 +79,7 @@ namespace Memory
     bool giveFreeRAM(uint16_t address, int size);
     bool takeFreeRAM(uint16_t address, int size, bool printError=true);
     bool getFreeRAMLargest(uint16_t& address, int& size);
-    bool getFreeRAM(FitType fitType, int size, uint16_t min, uint16_t max, uint16_t& address, bool withinPage=true);
+    bool getFreeRAM(FitType fitType, int size, uint16_t min, uint16_t max, uint16_t& address, bool withinPage=true, ParityType oddEven=ParityNone);
 
     void printFreeRamList(SortType sortType=AddressAscending);
 }

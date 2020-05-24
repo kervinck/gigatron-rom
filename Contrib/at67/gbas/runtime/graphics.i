@@ -1,4 +1,4 @@
-; do *NOT* use register4 to register7 during time slicing if you use realTimeStub
+; do *NOT* use register4 to register7 during time slicing
 waitVBlankNum       EQU     register0
 
 drawHLine_x1        EQU     register0

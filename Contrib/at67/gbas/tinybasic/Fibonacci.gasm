@@ -37,27 +37,28 @@ textWorkArea                  EQU                               0x7fa0
 
 ; Includes
 %includePath                  "../runtime"
+%include                      util.i
 %include                      gigatron.i
 %include                      macros.i
 
 ; Labels
 _entryPoint_                  EQU                               0x0200
-_1                            EQU                               0x0248
-_2                            EQU                               0x0255
-_3                            EQU                               0x025e
-_4                            EQU                               0x0275
-_5                            EQU                               0x0298
-_6                            EQU                               0x02b9
-_7                            EQU                               0x02e8
-_8                            EQU                               0x0314
-_9                            EQU                               0x032b
-_10                           EQU                               0x0342
-_11                           EQU                               0x034f
-_12                           EQU                               0x0369
-_next_0x028d                  EQU                               0x0281
+_1                            EQU                               0x0217
+_2                            EQU                               0x0224
+_3                            EQU                               0x022d
+_4                            EQU                               0x0244
+_5                            EQU                               0x0267
+_6                            EQU                               0x0288
+_7                            EQU                               0x02b7
+_8                            EQU                               0x02d2
+_9                            EQU                               0x0302
+_10                           EQU                               0x0319
+_11                           EQU                               0x0326
+_12                           EQU                               0x0340
+_next_0x025c                  EQU                               0x0250
 _page_0x0300                  EQU                               0x0300
-_end_0x0394                   EQU                               0x034d
-_end_0x03c5                   EQU                               0x036e
+_end_0x0361                   EQU                               0x0324
+_end_0x0392                   EQU                               0x0345
 
 ; Variables
 _n                            EQU                               0x0030
@@ -70,10 +71,6 @@ _b_array                      DW                                0x0000 0x0000 0x
 _i                            EQU                               0x0036
 
 ; Strings
-_timeArray_                   EQU                               0x7ea0
-_timeArray_                   DB                                00 00 00
-_timeString_                  EQU                               0x7cae
-_timeString_                  DB                                8 '00:00:00' 0
 _str_0x7efc                   EQU                               0x7efc
 _str_0x7efc                   DB                                2 ': ' 0
 
@@ -90,19 +87,8 @@ _str_0x7efc                   DB                                2 ': ' 0
 ; Lookup Tables
 
 ; Code
-_entryPoint_                  LDI                               0x1c
-                              STW                               romType
-                              RomCheck                          
-                              InitEqOp                          
-                              InitNeOp                          
-                              InitLeOp                          
-                              InitGeOp                          
-                              InitLtOp                          
-                              InitGtOp                          
-                              InitArray2d                       
-                              InitArray3d                       
-                              InitRealTimeAddr                  
-                              Initialise                                                        ; INIT
+_entryPoint_                  Initialise                        
+                              InitRealTimeStub                                                  ; INIT
 
                               LDI                               0
                               STW                               _n
@@ -127,7 +113,7 @@ _4                            LDI                               0
                               STW                               0xb0
                               LDI                               1
                               STW                               0xb2
-_next_0x028d                  LDW                               _j
+_next_0x025c                  LDW                               _j
                               SUBW                              _i
                               STW                               memIndex0
                               LDWI                              0x0634
@@ -137,7 +123,7 @@ _next_0x028d                  LDW                               _j
                               ADDI                              48
                               PrintAcChar                                                       ; for i=0 to j : put b(j-i)+48
 
-_5                            ForNextFarVarAdd                  _i _next_0x028d 0xb0 0xb2
+_5                            ForNextFarVarAdd                  _i _next_0x025c 0xb0 0xb2
                               NewLine                           
                               LDI                               0
                               STW                               _i
@@ -175,16 +161,13 @@ _7                            LDWI                              0x0634
                               ADDW                              _i
                               STW                               memAddr
                               LDW                               _c
-                              STW                               0xe2
-                              LDWI                              _page_0x0300
-                              CALL                              giga_vAC
-_page_0x0300                  LDW                               0xe2
                               DOKE                              memAddr
                               SUBI                              10
-                              JumpLT                            _8 0
+                              BGE                               _8
                               LDI                               0
                               STW                               _c
-                              BRA                               _9                              ; b(i)=c : if c &< 10 then c=0 : goto &9
+                              LDWI                              _9
+                              CALL                              giga_vAC                        ; b(i)=c : if c &&< 10 then c=0 : goto 9
 
 _8                            LDW                               _c
                               SUBI                              10
@@ -198,6 +181,10 @@ _8                            LDW                               _c
                               LDI                               1
                               STW                               _c                              ; b(i)=c-10 : c=1
 
+                              STW                               0xe2
+                              LDWI                              _page_0x0300
+                              CALL                              giga_vAC
+_page_0x0300                  LDW                               0xe2
 _9                            ForNextFarVarAdd                  _i _6 0xb0 0xb2
                               LDW                               _c
                               BNE                               _10
@@ -208,7 +195,7 @@ _10                           LDW                               _j
                               STW                               _j
                               SUBI                              50
                               BNE                               _11
-_end_0x0394                   BRA                               _end_0x0394                     ; j=j+1 : if j &&= 50 then END
+_end_0x0361                   BRA                               _end_0x0361                     ; j=j+1 : if j &&= 50 then END
 
 _11                           LDWI                              0x069a
                               ADDW                              _j
@@ -226,7 +213,7 @@ _11                           LDWI                              0x069a
 _12                           LDWI                              _3
                               CALL                              giga_vAC                        ; goto 3
 
-_end_0x03c5                   BRA                               _end_0x03c5                     ; END
+_end_0x0392                   BRA                               _end_0x0392                     ; END
 
 
 
@@ -236,27 +223,19 @@ _end_0x03c5                   BRA                               _end_0x03c5     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-romCheck                      EQU     0x7ee5
-convertEqOp                   EQU     0x7edc
-convertNeOp                   EQU     0x7ed3
-convertLeOp                   EQU     0x7eca
-convertGeOp                   EQU     0x7ec1
-convertLtOp                   EQU     0x7eb8
-convertGtOp                   EQU     0x7eaf
-convertArr2d                  EQU     0x7ea3
-convertArr3d                  EQU     0x7dee
-realTimeStub                  EQU     0x7ddc
-resetVideoTable               EQU     0x79e0
-initClearFuncs                EQU     0x7dba
-clearVertBlinds               EQU     0x7cc5
-clearCursorRow                EQU     0x78b6
-printInit                     EQU     0x79ca
-printText                     EQU     0x7da1
-printDigit                    EQU     0x79a8
-printInt16                    EQU     0x7bae
-printChr                      EQU     0x7cb8
-printChar                     EQU     0x77a7
-newLineScroll                 EQU     0x7aa4
+realTimeStub                  EQU     0x7ede
+resetVideoFlags               EQU     0x7ef0
+resetVideoTable               EQU     0x7cc2
+initClearFuncs                EQU     0x7cab
+clearVertBlinds               EQU     0x7ea4
+clearCursorRow                EQU     0x7ab6
+printInit                     EQU     0x7aa0
+printText                     EQU     0x7ce6
+printDigit                    EQU     0x79dd
+printInt16                    EQU     0x7dae
+printChr                      EQU     0x7da1
+printChar                     EQU     0x78a7
+newLineScroll                 EQU     0x7ba4
 convertEqOpAddr               EQU     0x00d0
 convertNeOpAddr               EQU     0x00d2
 convertLeOpAddr               EQU     0x00d4
@@ -268,7 +247,7 @@ convertArr3dAddr              EQU     0x00de
 realTimeStubAddr              EQU     0x00e0
 
 
-; do *NOT* use register4 to register7 during time slicing if you call realTimeStub
+; do *NOT* use register4 to register7 during time slicing
 realTimeAddr        EQU     register0
 realTimeProc0       EQU     register1
 realTimeProc1       EQU     register2
@@ -281,97 +260,6 @@ lutIndex            EQU     register8
 romType             EQU     register0
 romErrAddr          EQU     register1
 romErrPixel         EQU     register2
-
-
-romCheck            LD      giga_romType
-                    ANDI    0xFC
-                    SUBW    romType
-                    BGE     romC_return
-                    LDWI    giga_vram
-                    STW     romErrAddr
-                    
-romC_loop           LD      romErrPixel
-                    POKE    romErrAddr
-                    INC     romErrPixel
-                    BRA     romC_loop                       ; flash left hand corner pixel indicating rom error
-                    
-romC_return         RET                    
-
-
-                    ; convert equal to into a boolean
-convertEqOp         BEQ     convertEq_1
-                    LDI     0
-                    RET
-convertEq_1         LDI     1
-                    RET
-
-
-                    ; convert not equal to into a boolean
-convertNeOp         BNE     convertNe_1
-                    LDI     0
-                    RET
-convertNe_1         LDI     1
-                    RET
-
-
-                    ; convert less than or equal to into a boolean
-convertLeOp         BLE     convertLe_1
-                    LDI     0
-                    RET
-convertLe_1         LDI     1
-                    RET
-
-
-                    ; convert greater than or equal to into a boolean
-convertGeOp         BGE     convertGe_1
-                    LDI     0
-                    RET
-convertGe_1         LDI     1
-                    RET
-
-
-                    ; convert less than into a boolean
-convertLtOp         BLT     convertLt_1
-                    LDI     0
-                    RET
-convertLt_1         LDI     1
-                    RET
-
-
-                    ; convert greater than into boolean
-convertGtOp         BGT     convertGt_1
-                    LDI     0
-                    RET
-convertGt_1         LDI     1
-                    RET
-
-
-memIndex0           EQU     register0
-memIndex1           EQU     register1
-memIndex2           EQU     register2
-memValue            EQU     register8
-memAddr             EQU     register9
-
-
-convertArr2d        ADDW    memIndex0
-                    ADDW    memIndex0
-                    DEEK
-                    ADDW    memIndex1
-                    ADDW    memIndex1
-                    STW     memAddr
-                    RET
-
-
-convertArr3d        ADDW    memIndex0
-                    ADDW    memIndex0
-                    DEEK
-                    ADDW    memIndex1
-                    ADDW    memIndex1
-                    DEEK
-                    ADDW    memIndex2
-                    ADDW    memIndex2
-                    STW     memAddr
-                    RET
 
 
                     ; runs real time, (time sliced), code at regular intervals
@@ -391,8 +279,7 @@ realTimeStub2       POP
                     RET
 
 
-
-; do *NOT* use register4 to register7 during time slicing if you call realTimeStub
+; do *NOT* use register4 to register7 during time slicing
 xreset              EQU     register0
 xcount              EQU     register1
 ycount              EQU     register2
@@ -404,7 +291,17 @@ vramAddr            EQU     register11
 evenAddr            EQU     register12
 clsAddress          EQU     register13
     
-    
+
+resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
+                    STW     cursorXY
+                    LDWI    ON_BOTTOM_ROW_MSK
+                    ANDW    miscFlags
+                    STW     miscFlags                           ; reset on bottom row flag
+                    RET
+
+
+
+
                     ; resets video table pointers
 resetVideoTable     PUSH
                     LDI     8
@@ -421,6 +318,9 @@ resetVT_loop        CALL    realTimeStubAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
+                    
+                    LDWI    resetVideoFlags
+                    CALL    giga_vAC                    
                     POP
                     RET
 
@@ -428,12 +328,6 @@ resetVT_loop        CALL    realTimeStubAddr
 initClearFuncs      PUSH
                     LDWI    resetVideoTable
                     CALL    giga_vAC
-    
-                    LDI     giga_CursorX                        ; cursor x start
-                    STW     cursorXY
-                    LDWI    ON_BOTTOM_ROW_MSK
-                    ANDW    miscFlags
-                    STW     miscFlags                           ; reset on bottom row flag
             
                     LD      fgbgColour
                     ST      giga_sysArg0
@@ -484,7 +378,7 @@ clearVB_loop        CALL    realTimeStubAddr
 
 
 
-; do *NOT* use register4 to register7 during time slicing if you use realTimeStub
+; do *NOT* use register4 to register7 during time slicing
 textStr             EQU     register0
 textNum             EQU     register0
 textBak             EQU     register0

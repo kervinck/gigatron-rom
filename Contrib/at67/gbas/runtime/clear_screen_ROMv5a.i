@@ -10,7 +10,21 @@ vramAddr            EQU     register11
 evenAddr            EQU     register12
 clsAddress          EQU     register13
     
-    
+
+%SUB                resetVideoFlags
+resetVideoFlags     LDWI    giga_videoTop                       ; reset videoTop
+                    STW     register0
+                    LDI     0
+                    POKE    register0
+                    
+                    LDI     0x02                                ; starting cursor position
+                    STW     cursorXY
+                    LDWI    ON_BOTTOM_ROW_MSK
+                    ANDW    miscFlags
+                    STW     miscFlags                           ; reset on bottom row flag
+                    RET
+%ENDS
+                    
 %SUB                resetVideoTable
                     ; resets video table pointers
 resetVideoTable     PUSH
@@ -28,10 +42,7 @@ resetVT_loop        LDW     vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
 
-                    LDWI    giga_videoTop                       ; reset videoTop
-                    STW     register0
-                    LDI     0
-                    POKE    register0
+                    CALLI   resetVideoFlags
                     POP
                     RET
 %ENDS   
@@ -39,13 +50,7 @@ resetVT_loop        LDW     vramAddr
 %SUB                initClearFuncs
 initClearFuncs      PUSH
                     CALLI   resetVideoTable
-    
-                    LDI     0x02                                ; starting cursor position
-                    STW     cursorXY
-                    LDWI    ON_BOTTOM_ROW_MSK
-                    ANDW    miscFlags
-                    STW     miscFlags                           ; reset on bottom row flag
-    
+                    
                     LDWI    SYS_SetMemory_v2_54                 ; setup fill memory SYS routine
                     STW     giga_sysFn
                     POP

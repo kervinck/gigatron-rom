@@ -22,29 +22,8 @@ const F_SIZ=16
 def word(F_LUT, y, 0.0, 360.0, F_SIZ) = sin(y)*200.0 + 1000.0
 
 'maximum string length is 94
-conf0$  = "greetings    welcome to gtbasic    this demo shows some of the advanced features that the "
-conf1$  = "compiler is capable of    thank you to marcel and walter for making this possible    "
-conf2$  = "and now it is time for some quotes whilst you are being mesmerised by boing    "
-conf3$  = "if i have seen further than others it is by standing upon the shoulders of giants    "
-conf4$  = "what you do not want done to yourself do not do to others    "
-conf5$  = "i hear and i forget i see and i remember i do and i understand    "
-conf6$  = "he who learns but does not think is lost he who thinks but does not learn is in great danger  "
-conf7$  = "to see what is right and not to do it is want of courage or of principle    "
-conf8$  = "the superior man is modest in his speech but exceeds in his actions    "
-conf9$  = "humility is the solid foundation of all virtues    "
-conf10$ = "to see the right and not to do it is cowardice    "
-conf11$ = "when you are laboring for others let it be with the same zeal as if it were for yourself    "
-conf12$ = "the strength of a nation derives from the integrity of the home    "
-conf13$ = "to see and listen to the wicked is already the beginning of wickedness    "
-conf14$ = "our greatest glory is not in never falling but in rising every time we fall    "
-conf15$ = "everything has beauty but not everyone sees it    "
-conf16$ = "the superior man acts before he speaks and afterwards speaks according to his action    "
-conf17$ = "learning without thought is labor lost thought without learning is perilous    "
-conf18$ = "without feelings of respect what is there to distinguish men from beasts    "
-conf19$ = "it is more shameful to distrust our friends than to be deceived by them    "
-conf20$ = "an oppressive government is more to be feared than a tiger    "
+dim quotes$(20) = "greetings    welcome to gtbasic    this demo shows some of the advanced features that the ","compiler is capable of    thank you to marcel and walter for making this possible    ", "and now it is time for some quotes whilst you are being mesmerised by boing    ", "if i have seen further than others it is by standing upon the shoulders of giants    ", "what you do not want done to yourself do not do to others    ", "i hear and i forget i see and i remember i do and i understand    ", "he who learns but does not think is lost he who thinks but does not learn is in great danger  ", "to see what is right and not to do it is want of courage or of principle    ", "the superior man is modest in his speech but exceeds in his actions    ", "humility is the solid foundation of all virtues    ", "to see the right and not to do it is cowardice    ", "when you are laboring for others let it be with the same zeal as if it were for yourself    ", "the strength of a nation derives from the integrity of the home    ", "to see and listen to the wicked is already the beginning of wickedness    ", "our greatest glory is not in never falling but in rising every time we fall    ", "everything has beauty but not everyone sees it    ", "the superior man acts before he speaks and afterwards speaks according to his action    ", "learning without thought is labor lost thought without learning is perilous    ", "without feelings of respect what is there to distinguish men from beasts    ", "it is more shameful to distrust our friends than to be deceived by them    ", "an oppressive government is more to be feared than a tiger    "
 
-'poke &h21, peek(&h21) OR 3
 sound off
 
 mode 2
@@ -103,10 +82,6 @@ load sprite, ../../images/gbas/Boing/Boing13.tga, boingStart + 13
 'static initialisation of the array produces no code, always attempt this first
 dim fontWidths(26) = 12, 12, 12, 12, 12, 12, 12, 12, 6, 12, 12, 6, 18, 12, 12, 12, 12, 12, 12, 12, 12, 12, 18, 12, 12, 12, 6
 
-'can't have an array of strings yet, so manually construct one, (+ 1 skips past the length byte)
-'static initialisation of the array produces no code, always attempt this first
-dim quoteAddrs(20) = @conf0$+1, @conf1$+1, @conf2$+1, @conf3$+1, @conf4$+1, @conf5$+1, @conf6$+1, @conf7$+1, @conf8$+1, @conf9$+1, @conf10$+1, @conf11$+1, @conf12$+1, @conf13$+1, @conf14$+1, @conf15$+1, @conf16$+1, @conf17$+1, @conf18$+1, @conf19$+1, @conf20$+1
-
 const g = 4
 f = boingStart : y = &h0100 : text = 160 : fstep = 1 : xstep = 100
 x = 0 : ystep = x : scrl = ystep : char = scrl : stamp = char : width = stamp : quote = width : crash = quote : time = crash
@@ -156,8 +131,9 @@ goto loop
 
 printText:
     if stamp &&= 0
-getChar:    
-        c = peek(quoteAddrs(quote) + char)
+getChar:
+        '+1 to get past the length byte
+        c = peek(addr(quotes$, quote) + 1 + char)
         inc char
         
         if c &&= 0

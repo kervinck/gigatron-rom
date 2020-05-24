@@ -184,7 +184,7 @@ return
 
 jitterCircle:
     for oxx=ox-1 to ox+1
-        for oyy=oy-1 &to oy+1
+        for oyy=oy-1 to oy+1
                 set FG_COLOUR, cc
             circle oxx, oyy, cr
         next oyy

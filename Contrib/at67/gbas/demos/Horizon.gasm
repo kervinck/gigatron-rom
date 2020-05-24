@@ -37,33 +37,34 @@ textWorkArea                  EQU                               0x26a0
 
 ; Includes
 %includePath                  "../runtime"
+%include                      util.i
 %include                      gigatron.i
 %include                      macros.i
 
 ; Labels
 _entryPoint_                  EQU                               0x0200
-_loop                         EQU                               0x0387
-_254                          EQU                               0x0412
-_253                          EQU                               0x0422
-_191                          EQU                               0x0438
-_127                          EQU                               0x043f
-_calcPitch                    EQU                               0x0446
-_next_0x028d                  EQU                               0x027f
-_endif_0x02cd                 EQU                               0x02ad
-_else_0x030d                  EQU                               0x02d9
-_endif_0x0311                 EQU                               0x02dd
+_loop                         EQU                               0x035b
+_254                          EQU                               0x03d3
+_253                          EQU                               0x03e5
+_191                          EQU                               0x040c
+_127                          EQU                               0x0413
+_calcPitch                    EQU                               0x041a
+_next_0x025c                  EQU                               0x024e
+_endif_0x029c                 EQU                               0x027c
+_else_0x02dc                  EQU                               0x02a8
+_endif_0x02e0                 EQU                               0x02ac
+_next_0x0317                  EQU                               0x02db
+_else_0x032c                  EQU                               0x02e8
+_endif_0x0334                 EQU                               0x02ee
 _page_0x0300                  EQU                               0x0300
-_next_0x0348                  EQU                               0x031c
-_else_0x035d                  EQU                               0x0329
-_endif_0x0365                 EQU                               0x032f
-_else_0x0380                  EQU                               0x0340
-_endif_0x0388                 EQU                               0x0346
-_next_0x03f3                  EQU                               0x03ab
-_repeat_0x0422                EQU                               0x03d0
+_else_0x034f                  EQU                               0x030f
+_endif_0x0357                 EQU                               0x0315
+_next_0x03c7                  EQU                               0x037f
+_repeat_0x03f6                EQU                               0x03a4
+_else_0x0455                  EQU                               0x03e3
 _page_0x0400                  EQU                               0x0400
-_else_0x047b                  EQU                               0x0420
-_else_0x0497                  EQU                               0x0436
-_end_0x04c2                   EQU                               0x045d
+_else_0x0471                  EQU                               0x040a
+_end_0x049c                   EQU                               0x0431
 
 ; Variables
 _y                            EQU                               0x0030
@@ -76,10 +77,6 @@ _yy                           EQU                               0x003c
 _color1                       EQU                               0x003e
 _color2                       EQU                               0x0040
 _horizonY                     EQU                               0x0042
-_c1_array                     EQU                               0x25f8
-_c1_array                     DW                                0x003f 0x002a 0x0015 0x0000 
-_c2_array                     EQU                               0x25f0
-_c2_array                     DW                                0x0003 0x0002 0x0001 0x0000 
 _fade                         EQU                               0x0044
 _cIndex                       EQU                               0x0046
 _decay                        EQU                               0x0048
@@ -87,11 +84,23 @@ _p                            EQU                               0x004a
 _v                            EQU                               0x004c
 _q                            EQU                               0x004e
 
+; Arrays
+_c1_array                     EQU                               0x25f8
+_c1_array                     DW                                0x003f 0x002a 0x0015 0x0000 
+_c2_array                     EQU                               0x25f0
+_c2_array                     DW                                0x0003 0x0002 0x0001 0x0000 
+
 ; Strings
-_timeArray_                   EQU                               0x25a0
-_timeArray_                   DB                                00 00 00
-_timeString_                  EQU                               0x23af
-_timeString_                  DB                                8 '00:00:00' 0
+
+; Constant Strings
+
+; Data
+_data_                        EQU                               0x25ba
+_data_                        DW                                0
+_dataIndex_                   EQU                               0x25b8
+_dataIndex_                   DW                                0
+
+; Time
 
 ; Define Bytes
 
@@ -104,25 +113,14 @@ _timeString_                  DB                                8 '00:00:00' 0
 ; Define Fonts
 
 ; Lookup Tables
-_lut_numericLabs              EQU                               0x23a5
+_lut_numericLabs              EQU                               0x25ae
 _lut_numericLabs              DW                                254 253 191 127 0x0000
-_lut_numericAddrs             EQU                               0x22a0
-_lut_numericAddrs             DW                                0x0412 0x0422 0x0438 0x043f 
+_lut_numericAddrs             EQU                               0x25a6
+_lut_numericAddrs             DW                                0x03d3 0x03e5 0x040c 0x0413 
 
 ; Code
-_entryPoint_                  LDI                               0x1c
-                              STW                               romType
-                              RomCheck                          
-                              InitEqOp                          
-                              InitNeOp                          
-                              InitLeOp                          
-                              InitGeOp                          
-                              InitLtOp                          
-                              InitGtOp                          
-                              InitArray2d                       
-                              InitArray3d                       
-                              InitRealTimeAddr                  
-                              Initialise                                                        ; INIT
+_entryPoint_                  Initialise                        
+                              InitRealTimeStub                                                  ; INIT
 
                               ClearVertBlinds                                                   ; cls
 
@@ -155,7 +153,7 @@ _entryPoint_                  LDI                               0x1c
                               LDI                               1
                               STW                               0xb2                            ; for y=119 downto horizonY
 
-_next_0x028d                  LDWI                              0x25f8
+_next_0x025c                  LDWI                              0x25f8
                               ADDW                              _cIndex
                               ADDW                              _cIndex
                               DEEK                              
@@ -170,7 +168,7 @@ _next_0x028d                  LDWI                              0x25f8
 
                               LDW                               _fade
                               SUBW                              _decay
-                              BNE                               _endif_0x02cd                   ; if fade &&= decay
+                              BNE                               _endif_0x029c                   ; if fade &&= decay
 
                               INC                               _cIndex                         ; inc cIndex
 
@@ -182,7 +180,7 @@ _next_0x028d                  LDWI                              0x25f8
                               ShiftRight1bit                    
                               STW                               _decay                          ; decay = decay LSR 1
 
-_endif_0x02cd                 LDW                               _y
+_endif_0x029c                 LDW                               _y
                               STW                               _yy                             ; yy = y
 
                               LDWI                              _calcPitch
@@ -199,17 +197,17 @@ _endif_0x02cd                 LDW                               _y
                               LDWI                              divide16bit
                               CALL                              giga_vAC
                               ANDI                              1
-                              BNE                               _else_0x030d                    ; if((400 / (y-horizonY+40)) AND 1) &&= 0
+                              BNE                               _else_0x02dc                    ; if((400 / (y-horizonY+40)) AND 1) &&= 0
 
                               LDW                               _color1
                               XORW                              _color2
                               STW                               _j
-                              BRA                               _endif_0x0311                   ; j = color1 XOR color2
+                              BRA                               _endif_0x02e0                   ; j = color1 XOR color2
 
-_else_0x030d                  LDI                               0
+_else_0x02dc                  LDI                               0
                               STW                               _j                              ; j = 0
 
-_endif_0x0311                 LDI                               80
+_endif_0x02e0                 LDI                               80
                               STW                               mathX
                               LDW                               _pitch
                               STW                               mathY
@@ -220,10 +218,6 @@ _endif_0x0311                 LDI                               80
 
                               LDW                               _y
                               ADDI                              8
-                              STW                               0xe2
-                              LDWI                              _page_0x0300
-                              CALL                              giga_vAC
-_page_0x0300                  LDW                               0xe2
                               STW                               0xc0
                               LD                                0xc0
                               ST                                giga_vAC + 1
@@ -237,41 +231,45 @@ _page_0x0300                  LDW                               0xe2
                               ADDI                              159
                               STW                               0xb4
                               LDI                               1
-                              STW                               0xb6                            ; for x=0 &to pitch + 159
+                              STW                               0xb6                            ; for x=0 to pitch + 159
 
-_next_0x0348                  LDW                               _i
-                              BNE                               _else_0x035d                    ; if i &&= 0
+_next_0x0317                  LDW                               _i
+                              BNE                               _else_0x032c                    ; if i &&= 0
 
                               LDW                               _pitch
                               SUBI                              1
                               STW                               _i
-                              BRA                               _endif_0x0365                   ; i = pitch - 1
+                              BRA                               _endif_0x0334                   ; i = pitch - 1
 
-_else_0x035d                  LDW                               _i
+_else_0x032c                  LDW                               _i
                               SUBI                              1
                               STW                               _i                              ; i = i - 1
 
-_endif_0x0365                 LDW                               _i
+_endif_0x0334                 LDW                               _i
                               ADDW                              _i
+                              STW                               0xe2
+                              LDWI                              _page_0x0300
+                              CALL                              giga_vAC
+_page_0x0300                  LDW                               0xe2
                               SUBW                              _pitch
-                              BLT                               _else_0x0380                    ; if i+i &&>= pitch
+                              BLT                               _else_0x034f                    ; if i+i &&>= pitch
 
                               LDW                               _color1
                               XORW                              _j
                               STW                               _p
-                              BRA                               _endif_0x0388                   ; p = color1 XOR j
+                              BRA                               _endif_0x0357                   ; p = color1 XOR j
 
-_else_0x0380                  LDW                               _color2
+_else_0x034f                  LDW                               _color2
                               XORW                              _j
                               STW                               _p                              ; p = color2 XOR j
 
-_endif_0x0388                 LDW                               _a
+_endif_0x0357                 LDW                               _a
                               ADDW                              _x
                               STW                               0xc0
                               LDW                               _p
                               POKE                              0xc0                            ; poke a+x,p
 
-                              ForNextVarAdd                     _x _next_0x0348 0xb4 0xb6       ; next x
+                              ForNextFarVarAdd                  _x _next_0x0317 0xb4 0xb6       ; next x
 
                               LDWI                              giga_videoTop
                               STW                               register0
@@ -279,7 +277,7 @@ _endif_0x0388                 LDW                               _a
                               ADDW                              _y
                               POKE                              register0                       ; set VIDEO_TOP, y+y
 
-                              ForNextFarVarSub                  _y _next_0x028d 0xb0 0xb2       ; next y
+                              ForNextFarVarSub                  _y _next_0x025c 0xb0 0xb2       ; next y
 
                               LDWI                              giga_videoTop
                               STW                               register0
@@ -314,11 +312,11 @@ _loop                         LDW                               _x
                               LDI                               1
                               STW                               0xb2                            ; for y=0 &to pitch
 
-_next_0x03f3                  LDW                               _j
+_next_0x03c7                  LDW                               _j
                               ADDW                              _i
                               STW                               _j                              ; j = j + i
 
-                              ForNextVarAdd                     _y _next_0x03f3 0xb0 0xb2       ; next y
+                              ForNextVarAdd                     _y _next_0x03c7 0xb0 0xb2       ; next y
 
                               LDW                               _i
                               ADDW                              _i
@@ -331,7 +329,7 @@ _next_0x03f3                  LDW                               _j
 
                               WaitVBlank                                                        ; wait
 
-_repeat_0x0422                LD                                _j + 1
+_repeat_0x03f6                LD                                _j + 1
                               POKE                              _p                              ; poke p, j LSR 8
 
                               LDW                               _j
@@ -343,16 +341,12 @@ _repeat_0x0422                LD                                _j + 1
                               ADDI                              4
                               STW                               _p
                               SUBW                              _q
-                              BLT                               _repeat_0x0422                  ; p = p + 4 : until p &&>= q
+                              BLT                               _repeat_0x03f6                  ; p = p + 4 : until p &&>= q
 
                               LD                                giga_buttonState
                               STW                               numericLabel
                               LDI                               0
                               STW                               defaultLabel
-                              STW                               0xe2
-                              LDWI                              _page_0x0400
-                              CALL                              giga_vAC
-_page_0x0400                  LDW                               0xe2
                               GosubNumeric                                                      ; gosub get("BUTTON_STATE")
 
                               LDW                               _x
@@ -363,14 +357,15 @@ _page_0x0400                  LDW                               0xe2
                               CALL                              giga_vAC                        ; goto loop
 
 _254                          PUSH                              
-                              INC                               _v
                               LDW                               _v
+                              ADDI                              1
+                              STW                               _v
                               SUBI                              32
-                              BLE                               _else_0x047b
+                              BLE                               _else_0x0455
                               LDI                               32
-                              STW                               _v                              ; inc v : if v &&> 32 then v = 32
+                              STW                               _v                              ; v = v + 1 : if v &&> 32 then v = 32
 
-_else_0x047b                  Return                                                            ; return
+_else_0x0455                  Return                                                            ; return
 
 _253                          PUSH                              
                               LDW                               _v
@@ -378,11 +373,15 @@ _253                          PUSH
                               STW                               _v
                               LDWI                              -32
                               SUBW                              _v
-                              BLT                               _else_0x0497
+                              STW                               0xe2
+                              LDWI                              _page_0x0400
+                              CALL                              giga_vAC
+_page_0x0400                  LDW                               0xe2
+                              BLT                               _else_0x0471
                               LDWI                              -32
                               STW                               _v                              ; v = v - 1 : if v &&< -32 then v = -32
 
-_else_0x0497                  Return                                                            ; return
+_else_0x0471                  Return                                                            ; return
 
 _191                          PUSH                              
                               LDI                               0
@@ -408,7 +407,7 @@ _calcPitch                    PUSH
 
                               Return                                                            ; return
 
-_end_0x04c2                   BRA                               _end_0x04c2                     ; END
+_end_0x049c                   BRA                               _end_0x049c                     ; END
 
 
 
@@ -418,23 +417,15 @@ _end_0x04c2                   BRA                               _end_0x04c2     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-romCheck                      EQU     0x25d9
-convertEqOp                   EQU     0x25d0
-convertNeOp                   EQU     0x25c7
-convertLeOp                   EQU     0x25be
-convertGeOp                   EQU     0x25b5
-convertLtOp                   EQU     0x25ac
-convertGtOp                   EQU     0x25a3
-convertArr2d                  EQU     0x24f3
-convertArr3d                  EQU     0x24e2
-realTimeStub                  EQU     0x24d0
-divide16bit                   EQU     0x22a8
-shiftRight1bit                EQU     0x24a4
-gosubNumericLabel             EQU     0x21cd
-waitVBlank                    EQU     0x23b9
-resetVideoTable               EQU     0x21ae
-initClearFuncs                EQU     0x24ae
-clearVertBlinds               EQU     0x23c5
+realTimeStub                  EQU     0x25d2
+divide16bit                   EQU     0x23a8
+shiftRight1bit                EQU     0x25c8
+gosubNumericLabel             EQU     0x22cd
+waitVBlank                    EQU     0x25bc
+resetVideoFlags               EQU     0x25e4
+resetVideoTable               EQU     0x24a1
+initClearFuncs                EQU     0x22b6
+clearVertBlinds               EQU     0x24c5
 convertEqOpAddr               EQU     0x00d0
 convertNeOpAddr               EQU     0x00d2
 convertLeOpAddr               EQU     0x00d4
@@ -446,7 +437,7 @@ convertArr3dAddr              EQU     0x00de
 realTimeStubAddr              EQU     0x00e0
 
 
-; do *NOT* use register4 to register7 during time slicing if you call realTimeStub
+; do *NOT* use register4 to register7 during time slicing
 realTimeAddr        EQU     register0
 realTimeProc0       EQU     register1
 realTimeProc1       EQU     register2
@@ -459,97 +450,6 @@ lutIndex            EQU     register8
 romType             EQU     register0
 romErrAddr          EQU     register1
 romErrPixel         EQU     register2
-
-
-romCheck            LD      giga_romType
-                    ANDI    0xFC
-                    SUBW    romType
-                    BGE     romC_return
-                    LDWI    giga_vram
-                    STW     romErrAddr
-                    
-romC_loop           LD      romErrPixel
-                    POKE    romErrAddr
-                    INC     romErrPixel
-                    BRA     romC_loop                       ; flash left hand corner pixel indicating rom error
-                    
-romC_return         RET                    
-
-
-                    ; convert equal to into a boolean
-convertEqOp         BEQ     convertEq_1
-                    LDI     0
-                    RET
-convertEq_1         LDI     1
-                    RET
-
-
-                    ; convert not equal to into a boolean
-convertNeOp         BNE     convertNe_1
-                    LDI     0
-                    RET
-convertNe_1         LDI     1
-                    RET
-
-
-                    ; convert less than or equal to into a boolean
-convertLeOp         BLE     convertLe_1
-                    LDI     0
-                    RET
-convertLe_1         LDI     1
-                    RET
-
-
-                    ; convert greater than or equal to into a boolean
-convertGeOp         BGE     convertGe_1
-                    LDI     0
-                    RET
-convertGe_1         LDI     1
-                    RET
-
-
-                    ; convert less than into a boolean
-convertLtOp         BLT     convertLt_1
-                    LDI     0
-                    RET
-convertLt_1         LDI     1
-                    RET
-
-
-                    ; convert greater than into boolean
-convertGtOp         BGT     convertGt_1
-                    LDI     0
-                    RET
-convertGt_1         LDI     1
-                    RET
-
-
-memIndex0           EQU     register0
-memIndex1           EQU     register1
-memIndex2           EQU     register2
-memValue            EQU     register8
-memAddr             EQU     register9
-
-
-convertArr2d        ADDW    memIndex0
-                    ADDW    memIndex0
-                    DEEK
-                    ADDW    memIndex1
-                    ADDW    memIndex1
-                    STW     memAddr
-                    RET
-
-
-convertArr3d        ADDW    memIndex0
-                    ADDW    memIndex0
-                    DEEK
-                    ADDW    memIndex1
-                    ADDW    memIndex1
-                    DEEK
-                    ADDW    memIndex2
-                    ADDW    memIndex2
-                    STW     memAddr
-                    RET
 
 
                     ; runs real time, (time sliced), code at regular intervals
@@ -569,7 +469,7 @@ realTimeStub2       POP
                     RET
 
 
-; do *NOT* use register4 to register7 during time slicing if you call realTimeStub
+; do *NOT* use register4 to register7 during time slicing
 mathX               EQU     register8
 mathY               EQU     register9
 mathSum             EQU     register12
@@ -676,7 +576,7 @@ gosubNL_found       LDW     lutIndex
                     RET
 
 
-; do *NOT* use register4 to register7 during time slicing if you use realTimeStub
+; do *NOT* use register4 to register7 during time slicing
 waitVBlankNum       EQU     register0
 
 drawHLine_x1        EQU     register0
@@ -754,8 +654,7 @@ waitVBlank          LD      giga_videoY
                     RET
 
 
-
-; do *NOT* use register4 to register7 during time slicing if you call realTimeStub
+; do *NOT* use register4 to register7 during time slicing
 xreset              EQU     register0
 xcount              EQU     register1
 ycount              EQU     register2
@@ -767,7 +666,17 @@ vramAddr            EQU     register11
 evenAddr            EQU     register12
 clsAddress          EQU     register13
     
-    
+
+resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
+                    STW     cursorXY
+                    LDWI    ON_BOTTOM_ROW_MSK
+                    ANDW    miscFlags
+                    STW     miscFlags                           ; reset on bottom row flag
+                    RET
+
+
+
+
                     ; resets video table pointers
 resetVideoTable     PUSH
                     LDI     8
@@ -784,6 +693,9 @@ resetVT_loop        CALL    realTimeStubAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
+                    
+                    LDWI    resetVideoFlags
+                    CALL    giga_vAC                    
                     POP
                     RET
 
@@ -791,12 +703,6 @@ resetVT_loop        CALL    realTimeStubAddr
 initClearFuncs      PUSH
                     LDWI    resetVideoTable
                     CALL    giga_vAC
-    
-                    LDI     giga_CursorX                        ; cursor x start
-                    STW     cursorXY
-                    LDWI    ON_BOTTOM_ROW_MSK
-                    ANDW    miscFlags
-                    STW     miscFlags                           ; reset on bottom row flag
             
                     LD      fgbgColour
                     ST      giga_sysArg0

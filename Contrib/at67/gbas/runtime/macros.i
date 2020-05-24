@@ -65,6 +65,15 @@
         BGE     _label
 %ENDM
 
+%MACRO  ForNextFarDecZero _var _label
+        LD      _var
+        SUBI    1
+        ST      _var
+        BLT     _label_ + 2
+        LDWI    _label
+_label_ CALL    giga_vAC        
+%ENDM
+
 %MACRO  ForNextAdd _var _label _end _step
         LD      _var
         ADDI    _step
@@ -173,6 +182,11 @@ _label_ CALL    giga_vAC
 
 %MACRO  ResetVideoTable
         LDWI    resetVideoTable
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  ResetVideoFlags
+        LDWI    resetVideoFlags
         CALL    giga_vAC
 %ENDM
 
@@ -303,6 +317,16 @@ _label_ CALL    giga_vAC
         LDW     _var
         STW     textNum    
         LDWI    printInt16
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  ReadIntVar
+        LDWI    readIntVar
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  ReadStrVar
+        LDWI    readStrVar
         CALL    giga_vAC
 %ENDM
 
@@ -734,7 +758,7 @@ _id_    CALL    giga_vAC
         STW     convertArr3dAddr
 %ENDM
 
-%MACRO  InitRealTimeAddr
+%MACRO  InitRealTimeStub
         LDWI    realTimeStub
         STW     realTimeStubAddr
 %ENDM
@@ -754,6 +778,6 @@ _id_    CALL    giga_vAC
         LDI     0
         STW     midiStream                              ; reset MIDI
 
-        LDWI    initClearFuncs
+        LDWI    resetVideoFlags
         CALL    giga_vAC
 %ENDM

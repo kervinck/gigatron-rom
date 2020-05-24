@@ -37,22 +37,23 @@ textWorkArea                  EQU                               0x7fa0
 
 ; Includes
 %includePath                  "../runtime"
+%include                      util.i
 %include                      gigatron.i
 %include                      macros.i
 
 ; Labels
 _entryPoint_                  EQU                               0x0200
-_loop                         EQU                               0x024d
-_ellipse                      EQU                               0x02b5
-_else_0x0293                  EQU                               0x027d
-_endif_0x0297                 EQU                               0x0281
-_end_0x02dd                   EQU                               0x02b3
+_loop                         EQU                               0x021c
+_ellipse                      EQU                               0x0284
+_else_0x0262                  EQU                               0x024c
+_endif_0x0266                 EQU                               0x0250
+_end_0x02ac                   EQU                               0x0282
+_while_0x031d                 EQU                               0x02df
 _page_0x0300                  EQU                               0x0300
-_while_0x034e                 EQU                               0x031f
-_else_0x037e                  EQU                               0x033f
-_endif_0x039c                 EQU                               0x0357
-_wend_0x03ce                  EQU                               0x0385
-_end_0x03d0                   EQU                               0x0387
+_else_0x035a                  EQU                               0x031b
+_endif_0x0378                 EQU                               0x0333
+_wend_0x03ad                  EQU                               0x0364
+_end_0x03af                   EQU                               0x0366
 
 ; Variables
 _color                        EQU                               0x0030
@@ -75,11 +76,19 @@ _rx                           EQU                               0x0050
 _ry                           EQU                               0x0052
 _x                            EQU                               0x0054
 
+; Arrays
+
 ; Strings
-_timeArray_                   EQU                               0x7ea3
-_timeArray_                   DB                                00 00 00
-_timeString_                  EQU                               0x7cbb
-_timeString_                  DB                                8 '00:00:00' 0
+
+; Constant Strings
+
+; Data
+_data_                        EQU                               0x7ea5
+_data_                        DW                                0
+_dataIndex_                   EQU                               0x7ea3
+_dataIndex_                   DW                                0
+
+; Time
 
 ; Define Bytes
 
@@ -94,19 +103,8 @@ _timeString_                  DB                                8 '00:00:00' 0
 ; Lookup Tables
 
 ; Code
-_entryPoint_                  LDI                               0x20
-                              STW                               romType
-                              RomCheck                          
-                              InitEqOp                          
-                              InitNeOp                          
-                              InitLeOp                          
-                              InitGeOp                          
-                              InitLtOp                          
-                              InitGtOp                          
-                              InitArray2d                       
-                              InitArray3d                       
-                              InitRealTimeAddr                  
-                              Initialise                                                        ; INIT
+_entryPoint_                  Initialise                        
+                              InitRealTimeStub                                                  ; INIT
 
                               ClearVertBlinds                                                   ; cls
 
@@ -125,16 +123,16 @@ _loop                         Rand
 
                               LDW                               _a
                               SUBW                              _b
-                              BLE                               _else_0x0293                    ; if a &&> b
+                              BLE                               _else_0x0262                    ; if a &&> b
 
                               LDW                               _a
                               STW                               _t
-                              BRA                               _endif_0x0297                   ; t = a
+                              BRA                               _endif_0x0266                   ; t = a
 
-_else_0x0293                  LDW                               _b
+_else_0x0262                  LDW                               _b
                               STW                               _t                              ; t = b
 
-_endif_0x0297                 LDW                               _t
+_endif_0x0266                 LDW                               _t
                               LSLW                              
                               STW                               0xc2
                               LDI                               160
@@ -158,7 +156,7 @@ _endif_0x0297                 LDW                               _t
                               LDWI                              _loop
                               CALL                              giga_vAC                        ; goto loop
 
-_end_0x02dd                   BRA                               _end_0x02dd                     ; end
+_end_0x02ac                   BRA                               _end_0x02ac                     ; end
 
 _ellipse                      PUSH                              
                               LDW                               _mx
@@ -198,10 +196,6 @@ _ellipse                      PUSH
 
                               LDW                               _b
                               STW                               _bb
-                              STW                               0xe2
-                              LDWI                              _page_0x0300
-                              CALL                              giga_vAC
-_page_0x0300                  LDW                               0xe2
                               LSLW                              
                               STW                               _dy                             ; bb = b      : dy = bb LSL 1
 
@@ -221,12 +215,16 @@ _page_0x0300                  LDW                               0xe2
                               LDW                               _a
                               STW                               _x                              ; x  = a
 
-_while_0x034e                 LDW                               _x
-                              BLE                               _wend_0x03ce                    ; while x &&> 0
+_while_0x031d                 LDW                               _x
+                              JumpGT                            _wend_0x03ad 4                  ; while x &> 0
 
                               LDW                               _r
-                              BLE                               _else_0x037e                    ; if r &&> 0
+                              JumpGT                            _else_0x035a 2                  ; if r &> 0
 
+                              STW                               0xe2
+                              LDWI                              _page_0x0300
+                              CALL                              giga_vAC
+_page_0x0300                  LDW                               0xe2
                               INC                               _my1
                               LDW                               _my2
                               SUBI                              1
@@ -238,9 +236,10 @@ _while_0x034e                 LDW                               _x
                               LDW                               _r
                               SUBW                              _ry
                               STW                               _r
-                              BRA                               _endif_0x039c                   ; ry = ry + dx : r = r - ry
+                              LDWI                              _endif_0x0378
+                              CALL                              giga_vAC                        ; ry = ry + dx : r = r - ry
 
-_else_0x037e                  LDW                               _x
+_else_0x035a                  LDW                               _x
                               SUBI                              1
                               STW                               _x
                               INC                               _mx1
@@ -254,7 +253,7 @@ _else_0x037e                  LDW                               _x
                               ADDW                              _r
                               STW                               _r                              ; rx = rx - dy : r = rx + r
 
-_endif_0x039c                 LDW                               _my1
+_endif_0x0378                 LDW                               _my1
                               ADDI                              8
                               ST                                _pixel + 1                      ; pixel.hi = my1 + 8
 
@@ -282,11 +281,12 @@ _endif_0x039c                 LDW                               _my1
                               LDW                               _color
                               POKE                              _pixel                          ; pixel.lo = mx2 : poke pixel, color
 
-                              BRA                               _while_0x034e                   ; wend
+                              LDWI                              _while_0x031d
+                              CALL                              giga_vAC                        ; wend
 
-_wend_0x03ce                  Return                                                            ; return
+_wend_0x03ad                  Return                                                            ; return
 
-_end_0x03d0                   BRA                               _end_0x03d0                     ; END
+_end_0x03af                   BRA                               _end_0x03af                     ; END
 
 
 
@@ -296,23 +296,15 @@ _end_0x03d0                   BRA                               _end_0x03d0     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-romCheck                      EQU     0x7ee8
-convertEqOp                   EQU     0x7edf
-convertNeOp                   EQU     0x7ed6
-convertLeOp                   EQU     0x7ecd
-convertGeOp                   EQU     0x7ec4
-convertLtOp                   EQU     0x7ebb
-convertGtOp                   EQU     0x7eb2
-convertArr2d                  EQU     0x7ea6
-convertArr3d                  EQU     0x7dee
-realTimeStub                  EQU     0x7ddc
-multiply16bit                 EQU     0x7bcd
-divide16bit                   EQU     0x7aa8
-rand16bit                     EQU     0x7dbc
-randMod16bit                  EQU     0x7da9
-resetVideoTable               EQU     0x7bae
-initClearFuncs                EQU     0x7dc4
-clearVertBlinds               EQU     0x7cc5
+realTimeStub                  EQU     0x7ee1
+multiply16bit                 EQU     0x7db2
+divide16bit                   EQU     0x7ca8
+rand16bit                     EQU     0x7df7
+randMod16bit                  EQU     0x7de4
+resetVideoFlags               EQU     0x7ef3
+resetVideoTable               EQU     0x7bdb
+initClearFuncs                EQU     0x7bc4
+clearVertBlinds               EQU     0x7ea7
 convertEqOpAddr               EQU     0x00d0
 convertNeOpAddr               EQU     0x00d2
 convertLeOpAddr               EQU     0x00d4
@@ -324,7 +316,7 @@ convertArr3dAddr              EQU     0x00de
 realTimeStubAddr              EQU     0x00e0
 
 
-; do *NOT* use register4 to register7 during time slicing if you call realTimeStub
+; do *NOT* use register4 to register7 during time slicing
 realTimeAddr        EQU     register0
 realTimeProc0       EQU     register1
 realTimeProc1       EQU     register2
@@ -337,97 +329,6 @@ lutIndex            EQU     register8
 romType             EQU     register0
 romErrAddr          EQU     register1
 romErrPixel         EQU     register2
-
-
-romCheck            LD      giga_romType
-                    ANDI    0xFC
-                    SUBW    romType
-                    BGE     romC_return
-                    LDWI    giga_vram
-                    STW     romErrAddr
-                    
-romC_loop           LD      romErrPixel
-                    POKE    romErrAddr
-                    INC     romErrPixel
-                    BRA     romC_loop                       ; flash left hand corner pixel indicating rom error
-                    
-romC_return         RET                    
-
-
-                    ; convert equal to into a boolean
-convertEqOp         BEQ     convertEq_1
-                    LDI     0
-                    RET
-convertEq_1         LDI     1
-                    RET
-
-
-                    ; convert not equal to into a boolean
-convertNeOp         BNE     convertNe_1
-                    LDI     0
-                    RET
-convertNe_1         LDI     1
-                    RET
-
-
-                    ; convert less than or equal to into a boolean
-convertLeOp         BLE     convertLe_1
-                    LDI     0
-                    RET
-convertLe_1         LDI     1
-                    RET
-
-
-                    ; convert greater than or equal to into a boolean
-convertGeOp         BGE     convertGe_1
-                    LDI     0
-                    RET
-convertGe_1         LDI     1
-                    RET
-
-
-                    ; convert less than into a boolean
-convertLtOp         BLT     convertLt_1
-                    LDI     0
-                    RET
-convertLt_1         LDI     1
-                    RET
-
-
-                    ; convert greater than into boolean
-convertGtOp         BGT     convertGt_1
-                    LDI     0
-                    RET
-convertGt_1         LDI     1
-                    RET
-
-
-memIndex0           EQU     register0
-memIndex1           EQU     register1
-memIndex2           EQU     register2
-memValue            EQU     register8
-memAddr             EQU     register9
-
-
-convertArr2d        ADDW    memIndex0
-                    ADDW    memIndex0
-                    DEEK
-                    ADDW    memIndex1
-                    ADDW    memIndex1
-                    STW     memAddr
-                    RET
-
-
-convertArr3d        ADDW    memIndex0
-                    ADDW    memIndex0
-                    DEEK
-                    ADDW    memIndex1
-                    ADDW    memIndex1
-                    DEEK
-                    ADDW    memIndex2
-                    ADDW    memIndex2
-                    STW     memAddr
-                    RET
 
 
                     ; runs real time, (time sliced), code at regular intervals
@@ -447,7 +348,7 @@ realTimeStub2       POP
                     RET
 
 
-; do *NOT* use register4 to register7 during time slicing if you call realTimeStub
+; do *NOT* use register4 to register7 during time slicing
 mathX               EQU     register8
 mathY               EQU     register9
 mathSum             EQU     register12
@@ -564,8 +465,7 @@ randMod16bit        PUSH
                     RET
 
 
-
-; do *NOT* use register4 to register7 during time slicing if you call realTimeStub
+; do *NOT* use register4 to register7 during time slicing
 xreset              EQU     register0
 xcount              EQU     register1
 ycount              EQU     register2
@@ -577,7 +477,17 @@ vramAddr            EQU     register11
 evenAddr            EQU     register12
 clsAddress          EQU     register13
     
-    
+
+resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
+                    STW     cursorXY
+                    LDWI    ON_BOTTOM_ROW_MSK
+                    ANDW    miscFlags
+                    STW     miscFlags                           ; reset on bottom row flag
+                    RET
+
+
+
+
                     ; resets video table pointers
 resetVideoTable     PUSH
                     LDI     8
@@ -594,6 +504,9 @@ resetVT_loop        CALL    realTimeStubAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
+                    
+                    LDWI    resetVideoFlags
+                    CALL    giga_vAC                    
                     POP
                     RET
 
@@ -601,14 +514,14 @@ resetVT_loop        CALL    realTimeStubAddr
 initClearFuncs      PUSH
                     LDWI    resetVideoTable
                     CALL    giga_vAC
+            
+                    LD      fgbgColour
+                    ST      giga_sysArg0
+                    ST      giga_sysArg0 + 1
+                    ST      giga_sysArg2
+                    ST      giga_sysArg2 + 1                    ; 4 pixels of fg colour
     
-                    LDI     giga_CursorX                        ; cursor x start
-                    STW     cursorXY
-                    LDWI    ON_BOTTOM_ROW_MSK
-                    ANDW    miscFlags
-                    STW     miscFlags                           ; reset on bottom row flag
-    
-                    LDWI    SYS_SetMemory_v2_54                 ; setup fill memory SYS routine
+                    LDWI    SYS_Draw4_30                        ; setup 4 pixel SYS routine
                     STW     giga_sysFn
                     POP
                     RET
@@ -618,33 +531,34 @@ initClearFuncs      PUSH
 clearVertBlinds     PUSH
                     LDWI    initClearFuncs
                     CALL    giga_vAC
-                    LD      fgbgColour
-                    ST      giga_sysArg1                        ; fill value
-                    LDI     giga_vram >> 8
-                    STW     top  
-                    
-clearVB_loopy       LDI     giga_xres
-                    ST      giga_sysArg0
-                    LDI     0
-                    ST      giga_sysArg2                        ; low start address
-                    LD      top
-                    ST      giga_sysArg3                        ; top line
-                    SYS     54                                  ; fill memory
+
+                    LDWI    giga_vram
+                    STW     giga_sysArg4
+                    LD      giga_sysArg4 + 1
+                    ST      top
     
-                    LDI     giga_xres
-                    ST      giga_sysArg0
-                    LDI     0
-                    ST      giga_sysArg2                        ; low start address
+clearVB_loop        CALL    realTimeStubAddr
+                    LD      top
+                    ST      giga_sysArg4 + 1                    ; top line
+                    SYS     30
+    
                     LDWI    giga_yres - 1 + 16
                     SUBW    top
-                    ST      giga_sysArg3                        ; bottom line
-                    SYS     54                                  ; fill memory
+                    ST      giga_sysArg4 + 1                    ; bottom line
+                    SYS     30
+    
+                    LD      giga_sysArg4
+                    ADDI    0x04
+                    ST      giga_sysArg4
+                    SUBI    giga_xres
+                    BLT     clearVB_loop
+    
+                    LDI     0
+                    ST      giga_sysArg4
                     INC     top                                 ; next top line
-                    
-                    CALL    realTimeStubAddr
                     LD      top
                     SUBI    giga_yres / 2 + 8
-                    BLT     clearVB_loopy
+                    BLT     clearVB_loop
                     POP
                     RET
 

@@ -37,33 +37,30 @@ textWorkArea                  EQU                               0x7fa0
 
 ; Includes
 %includePath                  "../runtime"
+%include                      util.i
 %include                      gigatron.i
 %include                      macros.i
 
 ; Labels
 _entryPoint_                  EQU                               0x0200
-_10                           EQU                               0x0248
-_20                           EQU                               0x0248
-_30                           EQU                               0x024c
-_39                           EQU                               0x0248
-_40                           EQU                               0x0250
-_49                           EQU                               0x0248
-_50                           EQU                               0x0254
-_59                           EQU                               0x0248
-_60                           EQU                               0x0258
-_70                           EQU                               0x026b
-_80                           EQU                               0x0248
-_90                           EQU                               0x0279
-_end_0x0285                   EQU                               0x027d
+_10                           EQU                               0x0225
+_20                           EQU                               0x0225
+_30                           EQU                               0x0229
+_39                           EQU                               0x0225
+_40                           EQU                               0x022d
+_49                           EQU                               0x0225
+_50                           EQU                               0x0231
+_59                           EQU                               0x0225
+_60                           EQU                               0x0235
+_70                           EQU                               0x0248
+_80                           EQU                               0x0225
+_90                           EQU                               0x0256
+_end_0x025d                   EQU                               0x025a
 
 ; Variables
 _N                            EQU                               0x0030
 
 ; Strings
-_timeArray_                   EQU                               0x7ea3
-_timeArray_                   DB                                00 00 00
-_timeString_                  EQU                               0x7dba
-_timeString_                  DB                                8 '00:00:00' 0
 
 ; Define Bytes
 
@@ -81,16 +78,9 @@ _timeString_                  DB                                8 '00:00:00' 0
 _entryPoint_                  LDI                               0x20
                               STW                               romType
                               RomCheck                          
-                              InitEqOp                          
-                              InitNeOp                          
-                              InitLeOp                          
-                              InitGeOp                          
-                              InitLtOp                          
-                              InitGtOp                          
-                              InitArray2d                       
-                              InitArray3d                       
-                              InitRealTimeAddr                  
-                              Initialise                                                        ; INIT
+                              Initialise                        
+                              InitLtOp                        
+                              InitRealTimeStub                                                  ; INIT
 
 _20                           LDI                               1
                               ST                                giga_ledState                   ; set LED_STATE,1
@@ -116,7 +106,7 @@ _70                           ForNextFarInc                     _N _40 15       
 _90                           LDI                               0
                               ST                                giga_ledState                   ; set LED_STATE,0
 
-_end_0x0285                   BRA                               _end_0x0285                     ; END
+_end_0x025d                   BRA                               _end_0x025d                     ; END
 
 
 
@@ -127,17 +117,9 @@ _end_0x0285                   BRA                               _end_0x0285     
 ;****************************************************************************************************************************************
 
 romCheck                      EQU     0x7ee8
-convertEqOp                   EQU     0x7edf
-convertNeOp                   EQU     0x7ed6
-convertLeOp                   EQU     0x7ecd
-convertGeOp                   EQU     0x7ec4
-convertLtOp                   EQU     0x7ebb
-convertGtOp                   EQU     0x7eb2
-convertArr2d                  EQU     0x7ea6
-convertArr3d                  EQU     0x7dee
-realTimeStub                  EQU     0x7ddc
-resetVideoTable               EQU     0x7ce0
-initClearFuncs                EQU     0x7dc4
+realTimeStub                  EQU     0x7eca
+convertLtOp                   EQU     0x7ec1
+resetVideoFlags               EQU     0x7edc
 convertEqOpAddr               EQU     0x00d0
 convertNeOpAddr               EQU     0x00d2
 convertLeOpAddr               EQU     0x00d4
@@ -149,7 +131,7 @@ convertArr3dAddr              EQU     0x00de
 realTimeStubAddr              EQU     0x00e0
 
 
-; do *NOT* use register4 to register7 during time slicing if you call realTimeStub
+; do *NOT* use register4 to register7 during time slicing
 realTimeAddr        EQU     register0
 realTimeProc0       EQU     register1
 realTimeProc1       EQU     register2
@@ -179,82 +161,6 @@ romC_loop           LD      romErrPixel
 romC_return         RET                    
 
 
-                    ; convert equal to into a boolean
-convertEqOp         BEQ     convertEq_1
-                    LDI     0
-                    RET
-convertEq_1         LDI     1
-                    RET
-
-
-                    ; convert not equal to into a boolean
-convertNeOp         BNE     convertNe_1
-                    LDI     0
-                    RET
-convertNe_1         LDI     1
-                    RET
-
-
-                    ; convert less than or equal to into a boolean
-convertLeOp         BLE     convertLe_1
-                    LDI     0
-                    RET
-convertLe_1         LDI     1
-                    RET
-
-
-                    ; convert greater than or equal to into a boolean
-convertGeOp         BGE     convertGe_1
-                    LDI     0
-                    RET
-convertGe_1         LDI     1
-                    RET
-
-
-                    ; convert less than into a boolean
-convertLtOp         BLT     convertLt_1
-                    LDI     0
-                    RET
-convertLt_1         LDI     1
-                    RET
-
-
-                    ; convert greater than into boolean
-convertGtOp         BGT     convertGt_1
-                    LDI     0
-                    RET
-convertGt_1         LDI     1
-                    RET
-
-
-memIndex0           EQU     register0
-memIndex1           EQU     register1
-memIndex2           EQU     register2
-memValue            EQU     register8
-memAddr             EQU     register9
-
-
-convertArr2d        ADDW    memIndex0
-                    ADDW    memIndex0
-                    DEEK
-                    ADDW    memIndex1
-                    ADDW    memIndex1
-                    STW     memAddr
-                    RET
-
-
-convertArr3d        ADDW    memIndex0
-                    ADDW    memIndex0
-                    DEEK
-                    ADDW    memIndex1
-                    ADDW    memIndex1
-                    DEEK
-                    ADDW    memIndex2
-                    ADDW    memIndex2
-                    STW     memAddr
-                    RET
-
-
                     ; runs real time, (time sliced), code at regular intervals
                     ; self modifying code allows for timer, midi and user procs
 realTimeStub        RET                                     ; RET gets replaced by PUSH
@@ -272,8 +178,15 @@ realTimeStub2       POP
                     RET
 
 
+                    ; convert less than into a boolean
+convertLtOp         BLT     convertLt_1
+                    LDI     0
+                    RET
+convertLt_1         LDI     1
+                    RET
 
-; do *NOT* use register4 to register7 during time slicing if you call realTimeStub
+
+; do *NOT* use register4 to register7 during time slicing
 xreset              EQU     register0
 xcount              EQU     register1
 ycount              EQU     register2
@@ -285,39 +198,11 @@ vramAddr            EQU     register11
 evenAddr            EQU     register12
 clsAddress          EQU     register13
     
-    
-                    ; resets video table pointers
-resetVideoTable     PUSH
-                    LDI     8
-                    STW     vramAddr
-                    LDWI    giga_videoTable
-                    STW     evenAddr
-    
-resetVT_loop        CALL    realTimeStubAddr
-                    LDW     vramAddr
-                    DOKE    evenAddr
-                    INC     evenAddr
-                    INC     evenAddr
-                    INC     vramAddr
-                    LD      vramAddr
-                    SUBI    giga_yres + 8
-                    BLT     resetVT_loop
-                    POP
-                    RET
 
-
-initClearFuncs      PUSH
-                    LDWI    resetVideoTable
-                    CALL    giga_vAC
-    
-                    LDI     giga_CursorX                        ; cursor x start
+resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
                     STW     cursorXY
                     LDWI    ON_BOTTOM_ROW_MSK
                     ANDW    miscFlags
                     STW     miscFlags                           ; reset on bottom row flag
-    
-                    LDWI    SYS_SetMemory_v2_54                 ; setup fill memory SYS routine
-                    STW     giga_sysFn
-                    POP
                     RET
 

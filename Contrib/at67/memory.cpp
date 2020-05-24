@@ -306,7 +306,8 @@ namespace Memory
         return true;
     }
 
-    bool getFreeRAM(FitType fitType, int size, uint16_t min, uint16_t max, uint16_t& address, bool withinPage)
+    // Oddeven specifies type of address returned, (0=don't care, 1=even, 2=odd)
+    bool getFreeRAM(FitType fitType, int size, uint16_t min, uint16_t max, uint16_t& address, bool withinPage, ParityType oddEven)
     {
         switch(fitType)
         {
@@ -323,6 +324,12 @@ namespace Memory
                         {
                             // Skip if request must be within a page and it isn't
                             if(withinPage  &&  HI_BYTE(addr) != HI_BYTE(addr + size - 1)) continue;
+
+                            // Skip if address doesn't meet odd/even requirements
+                            if(oddEven)
+                            {
+                                if((addr & 1) != oddEven - ParityEven) continue;
+                            }
 
                             address = addr;
                             return takeFreeRAM(addr, size);
@@ -345,6 +352,12 @@ namespace Memory
                         {
                             // Skip if request must be within a page and it isn't
                             if(withinPage  &&  HI_BYTE(addr) != HI_BYTE(addr + size - 1)) continue;
+
+                            // Skip if address doesn't meet odd/even requirements
+                            if(oddEven)
+                            {
+                                if((addr & 1) != oddEven - ParityEven) continue;
+                            }
 
                             address = addr;
                             return takeFreeRAM(addr, size);

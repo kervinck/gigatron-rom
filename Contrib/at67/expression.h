@@ -15,7 +15,8 @@ namespace Expression
     enum NumericType {BadBase=-1, Decimal, HexaDecimal, Octal, Binary};
     enum CCType {BooleanCC, NormalCC, FastCC};
     enum Int16Byte {Int16Both, Int16Low, Int16High};
-    enum VarType {Number, String, Constant, TmpVar, IntVar, Arr1Var, Arr2Var, Arr3Var, StrVar, TmpStrVar};
+    enum VarType {Number, String, Constant, TmpVar, IntVar, Arr1Var, Arr2Var, Arr3Var, StrVar, Str2Var, TmpStrVar};
+    enum SysMacro {SysNone, SysInitEqOp, SysInitNeOp, SysInitLeOp, SysInitGeOp, SysInitLtOp, SysInitGtOp, SysInitArray2d, SysInitArray3d, SysInitRealTimeStub};
 
     struct Numeric
     {

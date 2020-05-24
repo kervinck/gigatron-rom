@@ -37,48 +37,48 @@ textWorkArea                  EQU                               0x7fa0
 
 ; Includes
 %includePath                  "../runtime"
+%include                      util.i
 %include                      gigatron.i
 %include                      macros.i
 
 ; Labels
 _entryPoint_                  EQU                               0x0200
-_restart                      EQU                               0x0248
-_20                           EQU                               0x032d
-_30                           EQU                               0x0343
-_40                           EQU                               0x0352
-_50                           EQU                               0x0361
-_60                           EQU                               0x036e
-_70                           EQU                               0x038b
-_80                           EQU                               0x0397
-_90                           EQU                               0x03a3
-_drawDigits                   EQU                               0x03be
-_drawClock                    EQU                               0x0479
-_drawSeconds                  EQU                               0x0490
-_drawMinutes                  EQU                               0x04a6
-_drawHours                    EQU                               0x04dd
-_drawTicks                    EQU                               0x051e
-_drawDial                     EQU                               0x0543
-_eraseSecondHand              EQU                               0x05b6
-_drawSecondHand               EQU                               0x05da
-_eraseMinuteHand              EQU                               0x0609
-_drawMinuteHand               EQU                               0x062d
-_eraseHourHand                EQU                               0x0651
-_drawHourHand                 EQU                               0x0679
-_jitterCircle                 EQU                               0x06a1
-_else_0x02a9                  EQU                               0x02a1
-_endif_0x02bc                 EQU                               0x02b2
+_restart                      EQU                               0x021c
+_20                           EQU                               0x0302
+_30                           EQU                               0x0318
+_40                           EQU                               0x0327
+_50                           EQU                               0x0336
+_60                           EQU                               0x0343
+_70                           EQU                               0x0360
+_80                           EQU                               0x036c
+_90                           EQU                               0x0378
+_drawDigits                   EQU                               0x0393
+_drawClock                    EQU                               0x044e
+_drawSeconds                  EQU                               0x0465
+_drawMinutes                  EQU                               0x047b
+_drawHours                    EQU                               0x04b2
+_drawTicks                    EQU                               0x04e3
+_drawDial                     EQU                               0x0518
+_eraseSecondHand              EQU                               0x058b
+_drawSecondHand               EQU                               0x05af
+_eraseMinuteHand              EQU                               0x05d3
+_drawMinuteHand               EQU                               0x05f7
+_eraseHourHand                EQU                               0x0625
+_drawHourHand                 EQU                               0x064d
+_jitterCircle                 EQU                               0x0675
+_else_0x0278                  EQU                               0x0275
+_endif_0x028b                 EQU                               0x0286
 _page_0x0300                  EQU                               0x0300
-_endif_0x03f5                 EQU                               0x03bc
+_endif_0x03c4                 EQU                               0x0391
 _page_0x0400                  EQU                               0x0400
-_endif_0x0521                 EQU                               0x04d6
+_endif_0x04f0                 EQU                               0x04ab
+_endif_0x051f                 EQU                               0x04d4
 _page_0x0500                  EQU                               0x0500
-_endif_0x0550                 EQU                               0x050f
-_next_0x0601                  EQU                               0x05a6
+_next_0x05d0                  EQU                               0x057b
 _page_0x0600                  EQU                               0x0600
-_next_0x077a                  EQU                               0x06b2
-_next_0x0792                  EQU                               0x06c2
-_page_0x08a0                  EQU                               0x08a0
-_end_0x07cb                   EQU                               0x08b4
+_next_0x0749                  EQU                               0x0686
+_next_0x0761                  EQU                               0x0696
+_end_0x079a                   EQU                               0x06cf
 
 ; Variables
 _H                            EQU                               0x0030
@@ -105,11 +105,11 @@ _cc                           EQU                               0x0058
 _oxx                          EQU                               0x005a
 _oyy                          EQU                               0x005c
 
+; Arrays
+
 ; Strings
-_timeArray_                   EQU                               0x7ea2
-_timeArray_                   DB                                00 00 00
-_timeString_                  EQU                               0x7da5
-_timeString_                  DB                                8 '00:00:00' 0
+
+; Constant Strings
 _str_0x7ef3                   EQU                               0x7ef3
 _str_0x7ef3                   DB                                11 'Enter Time ' 0
 _str_0x7eef                   EQU                               0x7eef
@@ -122,6 +122,14 @@ _str_0x7eb1                   EQU                               0x7eb1
 _str_0x7eb1                   DB                                26 '                          ' 0
 _str_0x7eae                   EQU                               0x7eae
 _str_0x7eae                   DB                                1 ':' 0
+
+; Data
+_data_                        EQU                               0x7ea0
+_data_                        DW                                0
+_dataIndex_                   EQU                               0x7db1
+_dataIndex_                   DW                                0
+
+; Time
 
 ; Define Bytes
 def_bytes_0x60a0              EQU                               0x60a0
@@ -156,19 +164,9 @@ _input_0x7ee1                 EQU                               0x7ee1
 _input_0x7ee1                 DW                                0x7edb 0x7ed5 0x7ecd 
 
 ; Code
-_entryPoint_                  LDI                               0x1c
-                              STW                               romType
-                              RomCheck                          
-                              InitEqOp                          
-                              InitNeOp                          
-                              InitLeOp                          
-                              InitGeOp                          
-                              InitLtOp                          
-                              InitGtOp                          
-                              InitArray2d                       
-                              InitArray3d                       
-                              InitRealTimeAddr                  
-                              Initialise                                                        ; INIT
+_entryPoint_                  Initialise                        
+                              InitNeOp                        
+                              InitRealTimeStub                                                  ; INIT
 
 _restart                      LDWI                              giga_videoTop
                               STW                               register0
@@ -203,13 +201,13 @@ _restart                      LDWI                              giga_videoTop
                               PrintString                       _str_0x7eb1                     ; at 2,0 : print "                          ";
 
                               LDW                               _H
-                              BNE                               _else_0x02a9                    ; if H &&= 0
+                              BNE                               _else_0x0278                    ; if H &&= 0
 
                               LDI                               12
                               STW                               _H
-                              BRA                               _endif_0x02bc                   ; H=12
+                              BRA                               _endif_0x028b                   ; H=12
 
-_else_0x02a9                  LDW                               _H
+_else_0x0278                  LDW                               _H
                               STW                               mathX
                               LDI                               13
                               STW                               mathY
@@ -218,7 +216,7 @@ _else_0x02a9                  LDW                               _H
                               LDW                               mathRem
                               STW                               _H                              ; H=H%13
 
-_endif_0x02bc                 LDW                               _M
+_endif_0x028b                 LDW                               _M
                               STW                               mathX
                               LDI                               60
                               STW                               mathY
@@ -253,10 +251,6 @@ _endif_0x02bc                 LDW                               _M
                               STW                               _Hm12                           ; Hm12=H%12
 
                               LDW                               _M
-                              STW                               0xe2
-                              LDWI                              _page_0x0300
-                              CALL                              giga_vAC
-_page_0x0300                  LDW                               0xe2
                               STW                               mathX
                               LDI                               12
                               STW                               mathY
@@ -281,6 +275,10 @@ _page_0x0300                  LDW                               0xe2
                               LDI                               0
                               POKE                              register0                       ; set VIDEO_TOP, 0  'enable video
 
+                              STW                               0xe2
+                              LDWI                              _page_0x0300
+                              CALL                              giga_vAC
+_page_0x0300                  LDW                               0xe2
 _20                           LDW                               _S
                               STW                               mathX
                               LDI                               60
@@ -349,12 +347,12 @@ _90                           LDW                               _T
                               LD                                giga_serialRaw
                               SUBI                              255
                               CALL                              convertNeOpAddr
-                              JumpFalse                         _endif_0x03f5 7                 ; if get("SERIAL_RAW") <> 255
+                              JumpFalse                         _endif_0x03c4 7                 ; if get("SERIAL_RAW") <> 255
 
                               LDWI                              _restart
                               CALL                              giga_vAC                        ; goto restart
 
-_endif_0x03f5                 BRA                               _30                             ; goto &30 'use T=T+2500 for debugging
+_endif_0x03c4                 BRA                               _30                             ; goto &30 'use T=T+2500 for debugging
 
 _drawDigits                   PUSH                              
                               LDWI                              3072
@@ -378,10 +376,6 @@ _drawDigits                   PUSH
                               STW                               mathY
                               LDWI                              divide16bit
                               CALL                              giga_vAC
-                              STW                               0xe2
-                              LDWI                              _page_0x0400
-                              CALL                              giga_vAC
-_page_0x0400                  LDW                               0xe2
                               LDW                               mathRem
                               PrintAcInt16                      
                               PrintString                       _str_0x7eae
@@ -394,6 +388,10 @@ _page_0x0400                  LDW                               0xe2
                               PrintAcInt16                      
                               LDW                               _M
                               STW                               mathX
+                              STW                               0xe2
+                              LDWI                              _page_0x0400
+                              CALL                              giga_vAC
+_page_0x0400                  LDW                               0xe2
                               LDI                               10
                               STW                               mathY
                               LDWI                              divide16bit
@@ -454,7 +452,7 @@ _drawSeconds                  PUSH
 _drawMinutes                  PUSH                              
                               LDW                               _M
                               SUBW                              _MM
-                              BEQ                               _endif_0x0521                   ; if M &&<> MM
+                              BEQ                               _endif_0x04f0                   ; if M &&<> MM
 
                               LDWI                              _eraseMinuteHand
                               CALL                              giga_vAC                        ; gosub eraseMinuteHand
@@ -471,7 +469,7 @@ _drawMinutes                  PUSH
 
                               LDW                               _Md12
                               SUBW                              _MMd12
-                              BEQ                               _endif_0x0521                   ; if Md12 &&<> MMd12
+                              BEQ                               _endif_0x04f0                   ; if Md12 &&<> MMd12
 
                               LDWI                              _eraseHourHand
                               CALL                              giga_vAC                        ; gosub eraseHourHand
@@ -479,7 +477,7 @@ _drawMinutes                  PUSH
                               LDW                               _Md12
                               STW                               _MMd12                          ; MMd12=Md12
 
-_endif_0x0521                 LDWI                              _drawMinuteHand
+_endif_0x04f0                 LDWI                              _drawMinuteHand
                               CALL                              giga_vAC                        ; gosub drawMinuteHand
 
                               Return                                                            ; return
@@ -487,16 +485,12 @@ _endif_0x0521                 LDWI                              _drawMinuteHand
 _drawHours                    PUSH                              
                               LDW                               _H
                               SUBW                              _HH
-                              JumpNE                            _endif_0x0550 10                ; if H &<> HH
+                              JumpNE                            _endif_0x051f 10                ; if H &<> HH
 
                               LDW                               _H
                               STW                               _HH
                               LDW                               _H
                               STW                               mathX
-                              STW                               0xe2
-                              LDWI                              _page_0x0500
-                              CALL                              giga_vAC
-_page_0x0500                  LDW                               0xe2
                               LDI                               12
                               STW                               mathY
                               LDWI                              divide16bit
@@ -504,7 +498,7 @@ _page_0x0500                  LDW                               0xe2
                               LDW                               mathRem
                               STW                               _Hm12                           ; HH=H : Hm12=H%12
 
-_endif_0x0550                 LDW                               _Hm12
+_endif_0x051f                 LDW                               _Hm12
                               LSLW                              
                               LSLW                              
                               ADDW                              _Hm12
@@ -524,6 +518,10 @@ _drawTicks                    PUSH
                               LDWI                              24992
                               ADDW                              _i
                               PEEK                              
+                              STW                               0xe2
+                              LDWI                              _page_0x0500
+                              CALL                              giga_vAC
+_page_0x0500                  LDW                               0xe2
                               ADDI                              8
                               STW                               _y                              ; y = peek(SECSY + i) + 8
 
@@ -593,10 +591,10 @@ _drawDial                     PUSH
                               LDI                               0
                               STW                               _i                              ; for i=0 &to TICKS-1
 
-_next_0x0601                  LDWI                              _drawTicks
+_next_0x05d0                  LDWI                              _drawTicks
                               CALL                              giga_vAC                        ; gosub drawTicks
 
-                              ForNextInc                        _i _next_0x0601 59              ; next i
+                              ForNextInc                        _i _next_0x05d0 59              ; next i
 
                               Return                                                            ; return
 
@@ -636,10 +634,6 @@ _drawSecondHand               PUSH
                               ADDW                              _S
                               PEEK                              
                               STW                               drawLine_y2
-                              STW                               0xe2
-                              LDWI                              _page_0x0600
-                              CALL                              giga_vAC
-_page_0x0600                  LDW                               0xe2
                               DrawLine                                                          ; line CENTERX,CENTERY, peek(SECSX + S),peek(SECSY + S)
 
                               Return                                                            ; return
@@ -665,6 +659,10 @@ _eraseMinuteHand              PUSH
                               Return                                                            ; return
 
 _drawMinuteHand               PUSH                              
+                              STW                               0xe2
+                              LDWI                              _page_0x0600
+                              CALL                              giga_vAC
+_page_0x0600                  LDW                               0xe2
                               LDI                               42
                               ST                                fgbgColour + 1                  ; set FG_COLOUR, &h2A
 
@@ -738,7 +736,7 @@ _jitterCircle                 PUSH
                               LDI                               1
                               STW                               0xb2                            ; for oxx=ox-1 to ox+1
 
-_next_0x077a                  LDW                               _oy
+_next_0x0749                  LDW                               _oy
                               SUBI                              1
                               STW                               _oyy
                               LDW                               _oy
@@ -747,7 +745,7 @@ _next_0x077a                  LDW                               _oy
                               LDI                               1
                               STW                               0xb6                            ; for oyy=oy-1 to oy+1
 
-_next_0x0792                  LDW                               _cc
+_next_0x0761                  LDW                               _cc
                               ST                                fgbgColour + 1                  ; set FG_COLOUR, cc
 
                               LDW                               _oxx
@@ -759,17 +757,13 @@ _next_0x0792                  LDW                               _cc
                               STW                               drawCircle_r
                               DrawCircle                                                        ; circle oxx, oyy, cr
 
-                              ForNextFarVarAdd                  _oyy _next_0x0792 0xb4 0xb6     ; next oyy
+                              ForNextFarVarAdd                  _oyy _next_0x0761 0xb4 0xb6     ; next oyy
 
-                              STW                               0xe2
-                              LDWI                              _page_0x08a0
-                              CALL                              giga_vAC
-_page_0x08a0                  LDW                               0xe2
-                              ForNextFarVarAdd                  _oxx _next_0x077a 0xb0 0xb2     ; next oxx
+                              ForNextFarVarAdd                  _oxx _next_0x0749 0xb0 0xb2     ; next oxx
 
                               Return                                                            ; return
 
-_end_0x07cb                   BRA                               _end_0x07cb                     ; END
+_end_0x079a                   BRA                               _end_0x079a                     ; END
 
 
 
@@ -779,51 +773,44 @@ _end_0x07cb                   BRA                               _end_0x07cb     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-romCheck                      EQU     0x7de8
-convertEqOp                   EQU     0x7ea5
-convertNeOp                   EQU     0x7ddf
-convertLeOp                   EQU     0x7dd6
-convertGeOp                   EQU     0x7dcd
-convertLtOp                   EQU     0x7dc4
-convertGtOp                   EQU     0x7dbb
-convertArr2d                  EQU     0x7daf
-convertArr3d                  EQU     0x7cee
-realTimeStub                  EQU     0x7cdc
-multiply16bit                 EQU     0x7aa6
-divide16bit                   EQU     0x79a8
-resetVideoTable               EQU     0x74e0
-initClearFuncs                EQU     0x7cba
-clearVertBlinds               EQU     0x7bc5
-clearCursorRow                EQU     0x73b6
-drawHLine                     EQU     0x72a2
-drawLine                      EQU     0x76aa
-drawLineExt                   EQU     0x74a7
-drawLineLoop                  EQU     0x71c5
-drawLineLoadXY                EQU     0x70d4
-drawCircle                    EQU     0x75b5
-drawCircleExt1                EQU     0x6fb1
-drawCircleExt2                EQU     0x70a2
-drawCircleF                   EQU     0x77b0
-input                         EQU     0x7ad8
-inputExt1                     EQU     0x6eb0
-inputExt2                     EQU     0x71a7
-inputCursor                   EQU     0x6ddd
-inputKeys                     EQU     0x6ca4
-inputIntVar                   EQU     0x75a1
-inputStrVar                   EQU     0x6dc6
-inputReturn                   EQU     0x6bc6
-inputDelete                   EQU     0x6ab9
-inputPrint                    EQU     0x6da7
-inputNewline                  EQU     0x73a1
-printInit                     EQU     0x6bb0
-printText                     EQU     0x7ca1
-printDigit                    EQU     0x69dd
-printInt16                    EQU     0x78ae
-printChr                      EQU     0x78a1
-printChar                     EQU     0x68a7
-atTextCursor                  EQU     0x7ba0
-newLineScroll                 EQU     0x67a4
-integerStr                    EQU     0x66c0
+realTimeStub                  EQU     0x7ded
+convertNeOp                   EQU     0x7da8
+multiply16bit                 EQU     0x7ba8
+divide16bit                   EQU     0x7aa8
+resetVideoFlags               EQU     0x7ea2
+resetVideoTable               EQU     0x75db
+initClearFuncs                EQU     0x7ca8
+clearVertBlinds               EQU     0x7db3
+clearCursorRow                EQU     0x74b6
+drawHLine                     EQU     0x73a2
+drawLine                      EQU     0x77aa
+drawLineExt                   EQU     0x75a2
+drawLineLoop                  EQU     0x72c5
+drawLineLoadXY                EQU     0x71d4
+drawCircle                    EQU     0x76b5
+drawCircleExt1                EQU     0x70b1
+drawCircleExt2                EQU     0x71a2
+drawCircleF                   EQU     0x78b0
+input                         EQU     0x7cbf
+inputExt1                     EQU     0x6fb0
+inputExt2                     EQU     0x72a7
+inputCursor                   EQU     0x6edd
+inputKeys                     EQU     0x6da4
+inputIntVar                   EQU     0x76a1
+inputStrVar                   EQU     0x6ec6
+inputReturn                   EQU     0x6cc6
+inputDelete                   EQU     0x6bb9
+inputPrint                    EQU     0x6ea7
+inputNewline                  EQU     0x74a1
+printInit                     EQU     0x6cb0
+printText                     EQU     0x7ce6
+printDigit                    EQU     0x6add
+printInt16                    EQU     0x79ae
+printChr                      EQU     0x79a1
+printChar                     EQU     0x69a7
+atTextCursor                  EQU     0x7bda
+newLineScroll                 EQU     0x68a4
+integerStr                    EQU     0x67c0
 convertEqOpAddr               EQU     0x00d0
 convertNeOpAddr               EQU     0x00d2
 convertLeOpAddr               EQU     0x00d4
@@ -835,7 +822,7 @@ convertArr3dAddr              EQU     0x00de
 realTimeStubAddr              EQU     0x00e0
 
 
-; do *NOT* use register4 to register7 during time slicing if you call realTimeStub
+; do *NOT* use register4 to register7 during time slicing
 realTimeAddr        EQU     register0
 realTimeProc0       EQU     register1
 realTimeProc1       EQU     register2
@@ -848,97 +835,6 @@ lutIndex            EQU     register8
 romType             EQU     register0
 romErrAddr          EQU     register1
 romErrPixel         EQU     register2
-
-
-romCheck            LD      giga_romType
-                    ANDI    0xFC
-                    SUBW    romType
-                    BGE     romC_return
-                    LDWI    giga_vram
-                    STW     romErrAddr
-                    
-romC_loop           LD      romErrPixel
-                    POKE    romErrAddr
-                    INC     romErrPixel
-                    BRA     romC_loop                       ; flash left hand corner pixel indicating rom error
-                    
-romC_return         RET                    
-
-
-                    ; convert equal to into a boolean
-convertEqOp         BEQ     convertEq_1
-                    LDI     0
-                    RET
-convertEq_1         LDI     1
-                    RET
-
-
-                    ; convert not equal to into a boolean
-convertNeOp         BNE     convertNe_1
-                    LDI     0
-                    RET
-convertNe_1         LDI     1
-                    RET
-
-
-                    ; convert less than or equal to into a boolean
-convertLeOp         BLE     convertLe_1
-                    LDI     0
-                    RET
-convertLe_1         LDI     1
-                    RET
-
-
-                    ; convert greater than or equal to into a boolean
-convertGeOp         BGE     convertGe_1
-                    LDI     0
-                    RET
-convertGe_1         LDI     1
-                    RET
-
-
-                    ; convert less than into a boolean
-convertLtOp         BLT     convertLt_1
-                    LDI     0
-                    RET
-convertLt_1         LDI     1
-                    RET
-
-
-                    ; convert greater than into boolean
-convertGtOp         BGT     convertGt_1
-                    LDI     0
-                    RET
-convertGt_1         LDI     1
-                    RET
-
-
-memIndex0           EQU     register0
-memIndex1           EQU     register1
-memIndex2           EQU     register2
-memValue            EQU     register8
-memAddr             EQU     register9
-
-
-convertArr2d        ADDW    memIndex0
-                    ADDW    memIndex0
-                    DEEK
-                    ADDW    memIndex1
-                    ADDW    memIndex1
-                    STW     memAddr
-                    RET
-
-
-convertArr3d        ADDW    memIndex0
-                    ADDW    memIndex0
-                    DEEK
-                    ADDW    memIndex1
-                    ADDW    memIndex1
-                    DEEK
-                    ADDW    memIndex2
-                    ADDW    memIndex2
-                    STW     memAddr
-                    RET
 
 
                     ; runs real time, (time sliced), code at regular intervals
@@ -958,7 +854,15 @@ realTimeStub2       POP
                     RET
 
 
-; do *NOT* use register4 to register7 during time slicing if you call realTimeStub
+                    ; convert not equal to into a boolean
+convertNeOp         BNE     convertNe_1
+                    LDI     0
+                    RET
+convertNe_1         LDI     1
+                    RET
+
+
+; do *NOT* use register4 to register7 during time slicing
 mathX               EQU     register8
 mathY               EQU     register9
 mathSum             EQU     register12
@@ -1056,8 +960,7 @@ divide16_exit       LDW     mathX
                     RET
 
 
-
-; do *NOT* use register4 to register7 during time slicing if you call realTimeStub
+; do *NOT* use register4 to register7 during time slicing
 xreset              EQU     register0
 xcount              EQU     register1
 ycount              EQU     register2
@@ -1069,7 +972,17 @@ vramAddr            EQU     register11
 evenAddr            EQU     register12
 clsAddress          EQU     register13
     
-    
+
+resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
+                    STW     cursorXY
+                    LDWI    ON_BOTTOM_ROW_MSK
+                    ANDW    miscFlags
+                    STW     miscFlags                           ; reset on bottom row flag
+                    RET
+
+
+
+
                     ; resets video table pointers
 resetVideoTable     PUSH
                     LDI     8
@@ -1086,6 +999,9 @@ resetVT_loop        CALL    realTimeStubAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
+                    
+                    LDWI    resetVideoFlags
+                    CALL    giga_vAC                    
                     POP
                     RET
 
@@ -1093,12 +1009,6 @@ resetVT_loop        CALL    realTimeStubAddr
 initClearFuncs      PUSH
                     LDWI    resetVideoTable
                     CALL    giga_vAC
-    
-                    LDI     giga_CursorX                        ; cursor x start
-                    STW     cursorXY
-                    LDWI    ON_BOTTOM_ROW_MSK
-                    ANDW    miscFlags
-                    STW     miscFlags                           ; reset on bottom row flag
             
                     LD      fgbgColour
                     ST      giga_sysArg0
@@ -1150,7 +1060,7 @@ clearVB_loop        CALL    realTimeStubAddr
 
 
 
-; do *NOT* use register4 to register7 during time slicing if you use realTimeStub
+; do *NOT* use register4 to register7 during time slicing
 waitVBlankNum       EQU     register0
 
 drawHLine_x1        EQU     register0
@@ -1585,7 +1495,7 @@ drawCF_rloop        LDW     drawCircleF_w
 
 
 
-; do *NOT* use register4 to register7 during time slicing if you use realTimeStub
+; do *NOT* use register4 to register7 during time slicing
 inpLutAddr          EQU     register0
 inpKeyBak           EQU     register0
 inpVarsAddr         EQU     register1
@@ -1905,7 +1815,7 @@ inputNewline        PUSH
 
 
 
-; do *NOT* use register4 to register7 during time slicing if you use realTimeStub
+; do *NOT* use register4 to register7 during time slicing
 textStr             EQU     register0
 textNum             EQU     register0
 textBak             EQU     register0
@@ -2202,7 +2112,7 @@ newLS_exit          LDWI    printInit
                     RET
 
 
-; do *NOT* use register4 to register7 during time slicing if you call realTimeStub
+; do *NOT* use register4 to register7 during time slicing
 intSrcAddr          EQU     register8
 intDigit            EQU     register9
 intResult           EQU     register10

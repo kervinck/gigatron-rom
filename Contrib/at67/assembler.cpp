@@ -140,6 +140,8 @@ namespace Assembler
 
     int getAsmOpcodeSize(const std::string& opcodeStr)
     {
+        if(opcodeStr[0] == ';') return 0;
+
         if(_asmOpcodes.find(opcodeStr) != _asmOpcodes.end())
         {
             return _asmOpcodes[opcodeStr]._byteSize;
