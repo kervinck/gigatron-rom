@@ -34,7 +34,7 @@ for y=119 downto horizonY
     i = 80 % pitch
     a = ((y + 8) LSL 8)
 
-    for x=0 &to pitch + 159
+    for x=0 to pitch + 159
         if i &&= 0
             i = pitch - 1
         else
@@ -77,7 +77,7 @@ loop:   i = x AND 255
         x = x + v
 goto loop
 
-254: inc v : if v &&> 32 then v = 32
+254: v = v + 1 : if v &&> 32 then v = 32
      return
 253: v = v - 1 : if v &&< -32 then v = -32
      return

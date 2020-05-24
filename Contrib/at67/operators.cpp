@@ -11,6 +11,7 @@
 #include "assembler.h"
 #include "compiler.h"
 #include "operators.h"
+#include "linker.h"
 
 
 namespace Operators
@@ -202,7 +203,23 @@ namespace Operators
     {
         switch(ccType)
         {
-            case Expression::BooleanCC: (Compiler::getCodeRomType() >= Cpu::ROMv5a) ? Compiler::emitVcpuAsm("CALLI", "convert" + cc + "Op", false) : Compiler::emitVcpuAsm("CALL", "convert" + cc + "OpAddr", false); break;
+            case Expression::BooleanCC:
+            {
+                if(Compiler::getCodeRomType() >= Cpu::ROMv5a)
+                {
+                    Compiler::emitVcpuAsm("CALLI", "convert" + cc + "Op", false);
+                }
+                else
+                {
+                    Compiler::emitVcpuAsm("CALL", "convert" + cc + "OpAddr", false);
+
+                    // Enable system internal sub intialiser and mark system internal sub to be loaded, (init functions are not needed for ROMv5a and higher as CALLI is able to directly CALL them)
+                    if(Compiler::getCodeRomType() < Cpu::ROMv5a) Compiler::enableSysInitFunc("Init" + cc + "Op");
+                    Linker::setInternalSubToLoad("convert" + cc + "Op");
+                }
+            }
+            break;
+
             case Expression::NormalCC: Compiler::emitVcpuAsm("%Jump" + Expression::strToUpper(cc), "", false); break;
             case Expression::FastCC: Compiler::emitVcpuAsm("B" + Expression::strToUpper(cc), "", false); break;
 

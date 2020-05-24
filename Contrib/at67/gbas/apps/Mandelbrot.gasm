@@ -37,18 +37,19 @@ textWorkArea                  EQU                               0x7fa0
 
 ; Includes
 %includePath                  "../runtime"
+%include                      util.i
 %include                      gigatron.i
 %include                      macros.i
 
 ; Labels
 _entryPoint_                  EQU                               0x0200
-_break                        EQU                               0x02d6
-_next_0x025f                  EQU                               0x025f
-_next_0x0268                  EQU                               0x0268
-_next_0x027c                  EQU                               0x0276
-_else_0x02c7                  EQU                               0x02ad
+_break                        EQU                               0x02ae
+_next_0x0237                  EQU                               0x0237
+_next_0x0240                  EQU                               0x0240
+_next_0x0254                  EQU                               0x024e
+_else_0x029f                  EQU                               0x0285
 _page_0x0300                  EQU                               0x0300
-_end_0x0372                   EQU                               0x033c
+_end_0x034a                   EQU                               0x0314
 
 ; Variables
 _cy                           EQU                               0x0030
@@ -61,11 +62,19 @@ _x2                           EQU                               0x003c
 _y2                           EQU                               0x003e
 _c                            EQU                               0x0040
 
+; Arrays
+
 ; Strings
-_timeArray_                   EQU                               0x7ea3
-_timeArray_                   DB                                00 00 00
-_timeString_                  EQU                               0x7da6
-_timeString_                  DB                                8 '00:00:00' 0
+
+; Constant Strings
+
+; Data
+_data_                        EQU                               0x7eb4
+_data_                        DW                                0
+_dataIndex_                   EQU                               0x7eb2
+_dataIndex_                   DW                                0
+
+; Time
 
 ; Define Bytes
 def_bytes_0x0600              EQU                               0x0600
@@ -85,16 +94,8 @@ def_bytes_0x0600              DB                                1 2 3 7 11 15 14
 _entryPoint_                  LDI                               0x20
                               STW                               romType
                               RomCheck                          
-                              InitEqOp                          
-                              InitNeOp                          
-                              InitLeOp                          
-                              InitGeOp                          
-                              InitLtOp                          
-                              InitGtOp                          
-                              InitArray2d                       
-                              InitArray3d                       
-                              InitRealTimeAddr                  
-                              Initialise                                                        ; INIT
+                              Initialise                        
+                              InitRealTimeStub                                                  ; INIT
 
                               LDI                               2
                               STW                               graphicsMode
@@ -108,13 +109,13 @@ _entryPoint_                  LDI                               0x20
                               LDI                               8
                               STW                               _py                             ; for py=8 to 67
 
-_next_0x025f                  LDWI                              -90
+_next_0x0237                  LDWI                              -90
                               STW                               _cx                             ; cx = xmin
 
                               LDI                               0
                               STW                               _px                             ; for px=0 to 159
 
-_next_0x0268                  LDI                               0
+_next_0x0240                  LDI                               0
                               STW                               _x
                               STW                               _y
                               STW                               _x2
@@ -123,7 +124,7 @@ _next_0x0268                  LDI                               0
                               LDI                               0
                               STW                               _c                              ; for c=0 &to 14
 
-_next_0x027c                  LDW                               _x
+_next_0x0254                  LDW                               _x
                               STW                               mathX
                               LDW                               _x
                               STW                               mathY
@@ -146,10 +147,10 @@ _next_0x027c                  LDW                               _x
                               LDW                               _x2
                               ADDW                              _y2
                               SUBI                              128
-                              BLE                               _else_0x02c7
+                              BLE                               _else_0x029f
                               BRA                               _break                          ; if x2+y2 &&> (2**fracbits * 4) then goto &break
 
-_else_0x02c7                  LDW                               _x
+_else_0x029f                  LDW                               _x
                               STW                               mathX
                               LDW                               _y
                               STW                               mathY
@@ -165,7 +166,7 @@ _else_0x02c7                  LDW                               _x
                               ADDW                              _cx
                               STW                               _x                              ; x = x2 - y2 + cx
 
-                              ForNextInc                        _c _next_0x027c 14              ; next c
+                              ForNextInc                        _c _next_0x0254 14              ; next c
 
 _break                        LD                                _py
                               ST                                giga_vAC + 1
@@ -182,10 +183,6 @@ _break                        LD                                _py
                               SUBW                              _py
                               STW                               0xc0
                               LD                                0xc0
-                              STW                               0xe2
-                              LDWI                              _page_0x0300
-                              CALL                              giga_vAC
-_page_0x0300                  LDW                               0xe2
                               ST                                giga_vAC + 1
                               ORI                               0xFF
                               XORI                              0xFF
@@ -200,15 +197,19 @@ _page_0x0300                  LDW                               0xe2
                               ADDI                              1
                               STW                               _cx                             ; cx = cx + dx
 
-                              ForNextFarInc                     _px _next_0x0268 159            ; next px
+                              ForNextFarInc                     _px _next_0x0240 159            ; next px
 
                               LDW                               _cy
+                              STW                               0xe2
+                              LDWI                              _page_0x0300
+                              CALL                              giga_vAC
+_page_0x0300                  LDW                               0xe2
                               ADDI                              1
                               STW                               _cy                             ; cy = cy + dy
 
-                              ForNextFarInc                     _py _next_0x025f 67             ; next py
+                              ForNextFarInc                     _py _next_0x0237 67             ; next py
 
-_end_0x0372                   BRA                               _end_0x0372                     ; END
+_end_0x034a                   BRA                               _end_0x034a                     ; END
 
 
 
@@ -219,23 +220,16 @@ _end_0x0372                   BRA                               _end_0x0372     
 ;****************************************************************************************************************************************
 
 romCheck                      EQU     0x7ee8
-convertEqOp                   EQU     0x7edf
-convertNeOp                   EQU     0x7ed6
-convertLeOp                   EQU     0x7ecd
-convertGeOp                   EQU     0x7ec4
-convertLtOp                   EQU     0x7ebb
-convertGtOp                   EQU     0x7eb2
-convertArr2d                  EQU     0x7ea6
-convertArr3d                  EQU     0x7dee
-realTimeStub                  EQU     0x7ddc
-sign                          EQU     0x7bbb
-multiply16bit                 EQU     0x7bcd
-shiftRight5bit                EQU     0x7db0
-shiftRightSgn4bit             EQU     0x7ca8
-scanlineMode                  EQU     0x7dba
-resetVideoTable               EQU     0x7ae0
-initClearFuncs                EQU     0x7dc4
-clearVertBlinds               EQU     0x7cc5
+realTimeStub                  EQU     0x7eca
+sign                          EQU     0x7ea0
+multiply16bit                 EQU     0x7ccd
+shiftRight5bit                EQU     0x7eb6
+shiftRightSgn4bit             EQU     0x7da8
+scanlineMode                  EQU     0x7ec0
+resetVideoFlags               EQU     0x7edc
+resetVideoTable               EQU     0x7ca9
+initClearFuncs                EQU     0x7bf2
+clearVertBlinds               EQU     0x7dc5
 convertEqOpAddr               EQU     0x00d0
 convertNeOpAddr               EQU     0x00d2
 convertLeOpAddr               EQU     0x00d4
@@ -247,7 +241,7 @@ convertArr3dAddr              EQU     0x00de
 realTimeStubAddr              EQU     0x00e0
 
 
-; do *NOT* use register4 to register7 during time slicing if you call realTimeStub
+; do *NOT* use register4 to register7 during time slicing
 realTimeAddr        EQU     register0
 realTimeProc0       EQU     register1
 realTimeProc1       EQU     register2
@@ -277,82 +271,6 @@ romC_loop           LD      romErrPixel
 romC_return         RET                    
 
 
-                    ; convert equal to into a boolean
-convertEqOp         BEQ     convertEq_1
-                    LDI     0
-                    RET
-convertEq_1         LDI     1
-                    RET
-
-
-                    ; convert not equal to into a boolean
-convertNeOp         BNE     convertNe_1
-                    LDI     0
-                    RET
-convertNe_1         LDI     1
-                    RET
-
-
-                    ; convert less than or equal to into a boolean
-convertLeOp         BLE     convertLe_1
-                    LDI     0
-                    RET
-convertLe_1         LDI     1
-                    RET
-
-
-                    ; convert greater than or equal to into a boolean
-convertGeOp         BGE     convertGe_1
-                    LDI     0
-                    RET
-convertGe_1         LDI     1
-                    RET
-
-
-                    ; convert less than into a boolean
-convertLtOp         BLT     convertLt_1
-                    LDI     0
-                    RET
-convertLt_1         LDI     1
-                    RET
-
-
-                    ; convert greater than into boolean
-convertGtOp         BGT     convertGt_1
-                    LDI     0
-                    RET
-convertGt_1         LDI     1
-                    RET
-
-
-memIndex0           EQU     register0
-memIndex1           EQU     register1
-memIndex2           EQU     register2
-memValue            EQU     register8
-memAddr             EQU     register9
-
-
-convertArr2d        ADDW    memIndex0
-                    ADDW    memIndex0
-                    DEEK
-                    ADDW    memIndex1
-                    ADDW    memIndex1
-                    STW     memAddr
-                    RET
-
-
-convertArr3d        ADDW    memIndex0
-                    ADDW    memIndex0
-                    DEEK
-                    ADDW    memIndex1
-                    ADDW    memIndex1
-                    DEEK
-                    ADDW    memIndex2
-                    ADDW    memIndex2
-                    STW     memAddr
-                    RET
-
-
                     ; runs real time, (time sliced), code at regular intervals
                     ; self modifying code allows for timer, midi and user procs
 realTimeStub        RET                                     ; RET gets replaced by PUSH
@@ -370,7 +288,7 @@ realTimeStub2       POP
                     RET
 
 
-; do *NOT* use register4 to register7 during time slicing if you call realTimeStub
+; do *NOT* use register4 to register7 during time slicing
 mathX               EQU     register8
 mathY               EQU     register9
 mathSum             EQU     register12
@@ -453,7 +371,7 @@ shiftRS4_pos        LDW     mathShift           ; positive number
                     RET
 
 
-; do *NOT* use register4 to register7 during time slicing if you use realTimeStub
+; do *NOT* use register4 to register7 during time slicing
 graphicsMode        EQU     register0
 waitVBlankNum       EQU     register0
 
@@ -530,8 +448,7 @@ scanlineMode        LDWI    SYS_SetMode_v2_80
                     RET
 
 
-
-; do *NOT* use register4 to register7 during time slicing if you call realTimeStub
+; do *NOT* use register4 to register7 during time slicing
 xreset              EQU     register0
 xcount              EQU     register1
 ycount              EQU     register2
@@ -543,7 +460,17 @@ vramAddr            EQU     register11
 evenAddr            EQU     register12
 clsAddress          EQU     register13
     
-    
+
+resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
+                    STW     cursorXY
+                    LDWI    ON_BOTTOM_ROW_MSK
+                    ANDW    miscFlags
+                    STW     miscFlags                           ; reset on bottom row flag
+                    RET
+
+
+
+
                     ; resets video table pointers
 resetVideoTable     PUSH
                     LDI     8
@@ -560,6 +487,9 @@ resetVT_loop        CALL    realTimeStubAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
+                    
+                    LDWI    resetVideoFlags
+                    CALL    giga_vAC
                     POP
                     RET
 
@@ -567,12 +497,6 @@ resetVT_loop        CALL    realTimeStubAddr
 initClearFuncs      PUSH
                     LDWI    resetVideoTable
                     CALL    giga_vAC
-    
-                    LDI     giga_CursorX                        ; cursor x start
-                    STW     cursorXY
-                    LDWI    ON_BOTTOM_ROW_MSK
-                    ANDW    miscFlags
-                    STW     miscFlags                           ; reset on bottom row flag
     
                     LDWI    SYS_SetMemory_v2_54                 ; setup fill memory SYS routine
                     STW     giga_sysFn

@@ -38,7 +38,7 @@ for y=119 downto horizonY
     i = 80 % pitch
     a = ((y + 8) LSL 8)
 
-    for x=0 &to pitch + 159
+    for x=0 to pitch + 159
         if i &&= 0
             i = pitch - 1
         else
@@ -85,7 +85,7 @@ loop:   i = x AND 255
         q = &h0100 + 240
         yy = horizonY
         gosub calcPitch
-        for y=0 &to pitch
+        for y=0 to pitch
             j = j + i
         next y
         

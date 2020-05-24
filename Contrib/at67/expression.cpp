@@ -688,8 +688,8 @@ namespace Expression
 
     bool subAlphaHelper(int i)
     {
-        // Valid chars are alpha and 'address of'
-        return (isalpha((unsigned char)i) || (i=='@'));
+        // Valid chars are alpha, 'address of' and 'length of'
+        return (isalpha((unsigned char)i) || (i=='@') || (i=='#'));
     }
     std::string getSubAlpha(const std::string& s)
     {

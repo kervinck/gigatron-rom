@@ -1,5 +1,5 @@
 _runtimePath_ "../runtime"
-_codeRomType_ ROMv2
+_codeRomType_ ROMv1
 
 ' draw random ellipses, not mathematically correct because of cheat avoiding overflows!
 
@@ -36,8 +36,8 @@ ellipse:
     ry = 0
     x  = a
 
-    while x &&> 0
-        if r &&> 0 
+    while x &> 0
+        if r &> 0 
             inc my1 : dec my2
             ry = ry + dx : r = r - ry
         else

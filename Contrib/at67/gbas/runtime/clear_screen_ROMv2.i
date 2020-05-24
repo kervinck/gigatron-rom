@@ -1,4 +1,4 @@
-; do *NOT* use register4 to register7 during time slicing if you call realTimeStub
+; do *NOT* use register4 to register7 during time slicing
 xreset              EQU     register0
 xcount              EQU     register1
 ycount              EQU     register2
@@ -10,6 +10,15 @@ vramAddr            EQU     register11
 evenAddr            EQU     register12
 clsAddress          EQU     register13
     
+
+%SUB                resetVideoFlags
+resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
+                    STW     cursorXY
+                    LDWI    ON_BOTTOM_ROW_MSK
+                    ANDW    miscFlags
+                    STW     miscFlags                           ; reset on bottom row flag
+                    RET
+%ENDS
     
 %SUB                resetVideoTable
                     ; resets video table pointers
@@ -28,6 +37,9 @@ resetVT_loop        CALL    realTimeStubAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
+                    
+                    LDWI    resetVideoFlags
+                    CALL    giga_vAC
                     POP
                     RET
 %ENDS   
@@ -36,12 +48,6 @@ resetVT_loop        CALL    realTimeStubAddr
 initClearFuncs      PUSH
                     LDWI    resetVideoTable
                     CALL    giga_vAC
-    
-                    LDI     giga_CursorX                        ; cursor x start
-                    STW     cursorXY
-                    LDWI    ON_BOTTOM_ROW_MSK
-                    ANDW    miscFlags
-                    STW     miscFlags                           ; reset on bottom row flag
     
                     LDWI    SYS_SetMemory_v2_54                 ; setup fill memory SYS routine
                     STW     giga_sysFn

@@ -4,6 +4,7 @@
 #include <vector>
 #include <stack>
 #include <map>
+#include <memory>
 #include <algorithm>
 
 #include "expression.h"
@@ -41,10 +42,12 @@
 #define ENABLE_SCROLL_MSK 0xFFFE
 #define ON_BOTTOM_ROW_MSK 0xFFFD
 
+#define SYS_INIT_FUNC_LEN 5
+
 
 namespace Compiler
 {
-    enum VarType {VarInt8=1, VarInt16, VarStr, VarInt32, VarFloat16, VarFloat32, VarArray1, VarArray2, VarArray3};
+    enum VarType {VarInt8=1, VarInt16, VarStr, VarStr2, VarInt32, VarFloat16, VarFloat32, VarArray1, VarArray2, VarArray3};
     enum IntSize {Int8=1, Int16=2, Int32=4};
     enum ConstType {ConstInt16, ConstStr};
     enum ConstStrType {StrChar, StrHex, StrHexw, StrLeft, StrRight, StrMid};
@@ -53,6 +56,8 @@ namespace Compiler
     enum StatementResult {StatementError, StatementSuccess, StatementExpression, SingleStatementParsed, MultiStatementParsed, StringStatementParsed, RedoStatementParse};
     enum CodeOptimiseType {CodeSpeed, CodeSize};
     enum SpriteFlipType {NoFlip=0, FlipX, FlipY, FlipXY};
+    enum DataType {DataInteger, DataString};
+
 
     struct Constant
     {
@@ -86,13 +91,14 @@ namespace Compiler
         uint8_t _size;
         uint8_t _maxSize;
         uint16_t _address;
-        uint16_t _array;
         std::string _text;
         std::string _name;
         std::string _output;
+        VarType _varType = VarStr;
         int _codeLineIndex = -1;
         bool _constant = true;
-        int _arrSize = 0;
+        std::vector<std::string> _arrInits;
+        std::vector<uint16_t> _arrAddrs;
     };
 
     struct InternalLabel
@@ -191,7 +197,6 @@ namespace Compiler
         std::string _includeName;
         bool _inUse = false;
         bool _loaded = false;
-        bool _critical = false;
     };
 
     struct ForNextData
@@ -216,7 +221,6 @@ namespace Compiler
         IfElseEndType _ifElseEndType;
         Expression::CCType _ccType;
     };
-
     struct EndIfData
     {
         int _jmpIndex;
@@ -243,7 +247,6 @@ namespace Compiler
         uint16_t _address;
         std::vector<uint8_t> _data;
     };
-
     struct DefDataWord
     {
         uint16_t _address;
@@ -269,7 +272,6 @@ namespace Compiler
         SpriteFlipType _flipType = NoFlip;
         bool _isInstanced = false;
     };
-
     struct SpritesAddrLut
     {
         uint16_t _address;
@@ -288,7 +290,6 @@ namespace Compiler
         uint16_t _baseAddr;
         uint16_t _fgbgColour;
     };
-
     struct FontsAddrLut
     {
         uint16_t _address;
@@ -301,7 +302,25 @@ namespace Compiler
         std::string _function;
         std::vector<std::string> _params;
     };
-    
+
+    struct DataObject
+    {
+        DataType _dataType;
+        uint16_t _address = 0x0000;
+    };
+    struct DataInt : DataObject
+    {
+        DataInt(int16_t data) {_dataType = DataInteger; _data = data;}
+
+        int16_t _data = 0;
+    };
+    struct DataStr : DataObject
+    {
+        DataStr(const std::string& data) {_dataType = DataString; _data = data;}
+
+        std::string _data;
+    };
+
 
     uint16_t getVasmPC(void);
     uint16_t getRuntimeEnd(void);
@@ -358,7 +377,7 @@ namespace Compiler
     FontsAddrLut& getFontsAddrLut(void);
 
     std::map<std::string, DefFunction>& getDefFunctions(void);
-
+    std::vector<std::unique_ptr<DataObject>>& getDataObjects(void);
     std::map<std::string, MacroIndexEntry>& getMacroIndexEntries(void);
 
     std::stack<ForNextData>& getForNextDataStack(void);
@@ -371,6 +390,7 @@ namespace Compiler
     void setNextInternalLabel(const std::string& label);
     void adjustDiscardedLabels(const std::string name, uint16_t address);
     bool setBuildPath(const std::string& buildpath, const std::string& filepath);
+    void enableSysInitFunc(const std::string& sysInitFunc);
 
     bool initialise(void);
     bool initialiseMacros(void);
@@ -390,10 +410,11 @@ namespace Compiler
     void createIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, int& varIndex);
     void createIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, int& varIndex, VarType varType, int intSize,
                       uint16_t address, std::vector<uint16_t>& arrSizes, const std::vector<int16_t>& arrInits, std::vector<std::vector<uint16_t>>& arrAddrs, std::vector<uint16_t>& arrLut);
-    int getOrCreateString(CodeLine& codeLine, int codeLineIndex, const std::string& str, std::string& name, uint16_t& address, uint8_t maxSize=USER_STR_SIZE, bool constString=true);
+    int getOrCreateString(CodeLine& codeLine, int codeLineIndex, const std::string& str, std::string& name, uint16_t& address, uint8_t maxSize=USER_STR_SIZE, bool constString=true, VarType varType=VarStr);
     uint16_t getOrCreateConstString(const std::string& input, int& index);
     uint16_t getOrCreateConstString(ConstStrType constStrType, int16_t input, int& index);
     uint16_t getOrCreateConstString(ConstStrType constStrType, const std::string& input, int8_t length, uint8_t offset, int& index);
+    int createStringArray(CodeLine& codeLine, int codeLineIndex, std::string& name, uint8_t size, std::vector<std::string>& arrInits, std::vector<uint16_t>& arrAddrs);
 
     void updateVar(int16_t data, CodeLine& codeLine, int varIndex, bool containsVars);
 

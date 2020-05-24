@@ -26,6 +26,9 @@ namespace Compiler
     enum LabelResult {LabelError=-1, LabelNotFound, LabelFound};
 
 
+    const std::vector<std::string> _sysInitNames = {"InitEqOp", "InitNeOp", "InitLeOp", "InitGeOp", "InitLtOp", "InitGtOp", "InitArray2d", "InitArray3d"};
+
+
     uint16_t _vasmPC                 = USER_CODE_START;
     uint16_t _tempVarStart           = TEMP_VAR_START;
     uint16_t _userVarStart           = USER_VAR_START;
@@ -91,6 +94,8 @@ namespace Compiler
 
     std::map<std::string, DefFunction> _defFunctions;
 
+    std::vector<std::unique_ptr<DataObject>> _dataObjects;
+
 
     uint16_t getVasmPC(void) {return _vasmPC;}
     uint16_t getRuntimeEnd(void) {return _runtimeEnd;}
@@ -147,7 +152,7 @@ namespace Compiler
     FontsAddrLut& getFontsAddrLut(void) {return _fontsAddrLut;}
 
     std::map<std::string, DefFunction>& getDefFunctions(void) {return _defFunctions;}
-
+    std::vector<std::unique_ptr<DataObject>>& getDataObjects(void) {return _dataObjects;}
     std::map<std::string, MacroIndexEntry>& getMacroIndexEntries(void) {return _macroIndexEntries;}
 
     std::stack<ForNextData>& getForNextDataStack(void) {return _forNextDataStack;}
@@ -1549,6 +1554,21 @@ namespace Compiler
         return true;
     }
 
+    // Uncomments sys init funcs as they are used, (effectively inserting them into the code)
+    // vASM and label addresses need to be fixed, this is done at the end of parseCode()
+    void enableSysInitFunc(const std::string& sysInitFunc)
+    {
+        for(int i=0; i<int(_codeLines[0]._vasm.size()); i++)
+        {
+            if(_codeLines[0]._vasm[i]._opcode == std::string(";%" + sysInitFunc))
+            {
+                Expression::replaceText(_codeLines[0]._vasm[i]._opcode, ";%", "");
+                Expression::replaceText(_codeLines[0]._vasm[i]._code, ";%", "");
+                break;
+            }
+        }
+    }
+
 
     bool initialiseCode(void)
     {
@@ -1563,32 +1583,35 @@ namespace Compiler
         CodeLine codeLine;
         if(createCodeLine("INIT", 0, 0, -1, Expression::Int16Both, false, codeLine)) _codeLines.push_back(codeLine);
 
-        // Rom check
-        emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(_codeRomType)), false, 0);
-        emitVcpuAsm("STW", "romType", false, 0);
-        emitVcpuAsm("%RomCheck", "", false, 0);
-
-        // Realtime proc and relational operators are CALLS from zero page for efficiency
-        if(_codeRomType < Cpu::ROMv5a)
+        // Rom check, (always used for versions greater than ROMv1)
+        if(_codeRomType > Cpu::ROMv1)
         {
-            // Initialise relational operators
-            emitVcpuAsm("%InitEqOp", "", false, 0);
-            emitVcpuAsm("%InitNeOp", "", false, 0);
-            emitVcpuAsm("%InitLeOp", "", false, 0);
-            emitVcpuAsm("%InitGeOp", "", false, 0);
-            emitVcpuAsm("%InitLtOp", "", false, 0);
-            emitVcpuAsm("%InitGtOp", "", false, 0);
-
-            // Initialise array converters
-            emitVcpuAsm("%InitArray2d", "", false, 0);
-            emitVcpuAsm("%InitArray3d", "", false, 0);
-
-            // Initialise time sliced, (real time), code such as AUDIO and/or MIDI
-            emitVcpuAsm("%InitRealTimeAddr", "", false, 0);
+            emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(_codeRomType)), false, 0);
+            emitVcpuAsm("STW", "romType", false, 0);
+            emitVcpuAsm("%RomCheck", "", false, 0);
         }
 
         // Initialise
         emitVcpuAsm("%Initialise", "", false, 0);
+
+        // Realtime proc and relational operators are CALLS from zero page for efficiency
+        if(_codeRomType < Cpu::ROMv5a)
+        {
+            // Initialise relational operators, (only when actually used, the semi-colon can be removed later by enableSysInitFunc())
+            emitVcpuAsm(";%InitEqOp", "", false, 0);
+            emitVcpuAsm(";%InitNeOp", "", false, 0);
+            emitVcpuAsm(";%InitLeOp", "", false, 0);
+            emitVcpuAsm(";%InitGeOp", "", false, 0);
+            emitVcpuAsm(";%InitLtOp", "", false, 0);
+            emitVcpuAsm(";%InitGtOp", "", false, 0);
+
+            // Initialise array converters, (only when actually used, the semi-colon can be removed later by enableSysInitFunc())
+            emitVcpuAsm(";%InitArray2d", "", false, 0);
+            emitVcpuAsm(";%InitArray3d", "", false, 0);
+
+            // Initialise real time stub, (always used for versions lower than ROMv5a)
+            emitVcpuAsm("%InitRealTimeStub", "", false, 0);
+        }
 
         return true;
     }
@@ -1617,12 +1640,9 @@ namespace Compiler
         return true;
     }
 
-    // Create string and advance string pointer
-    int getOrCreateString(CodeLine& codeLine, int codeLineIndex, const std::string& str, std::string& name, uint16_t& address, uint8_t maxSize, bool constString)
+    // Get or create string
+    int getOrCreateString(CodeLine& codeLine, int codeLineIndex, const std::string& str, std::string& name, uint16_t& address, uint8_t maxSize, bool constString, VarType varType)
     {
-        UNREFERENCED_PARAM(codeLine);
-        UNREFERENCED_PARAM(codeLineIndex);
-
         int index = -1, strLength = int(str.size());
 
         // Don't count escape char '\'
@@ -1654,15 +1674,15 @@ namespace Compiler
                 // Allocate RAM for string + length and delimiter bytes
                 if(!Memory::getFreeRAM(Memory::FitDescending, strLength + 2, USER_CODE_START, _runtimeStart, address))
                 {
-                    fprintf(stderr, "Compiler::getOrCreateString() : Not enough RAM for string %s='%s' of size %d\n", name.c_str(), str.c_str(), strLength + 2);
+                    fprintf(stderr, "Compiler::getOrCreateString() : Not enough RAM for string %s='%s' of size %d, in '%s' on line %d\n", name.c_str(), str.c_str(), strLength + 2, 
+                                                                                                                                          codeLine._code.c_str(), codeLineIndex);
                     return -1;
                 }
 
-                // Save end of runtime/strings
-                if(address < _runtimeEnd) _runtimeEnd = address;
-
+                std::vector<uint16_t> arrAddrs;
+                std::vector<std::string> arrInits;
                 name = "str_" + Expression::wordToHexString(address);
-                StringVar stringVar = {uint8_t(strLength), uint8_t(strLength), address, 0x0000, str, name, "_" + name + std::string(LABEL_TRUNC_SIZE - name.size() - 1, ' '), -1, true, 0};
+                StringVar stringVar = {uint8_t(strLength), uint8_t(strLength), address, str, name, "_" + name + std::string(LABEL_TRUNC_SIZE - name.size() - 1, ' '), varType, -1, true, arrInits, arrAddrs};
                 _stringVars.push_back(stringVar);
                 index = int(_stringVars.size()) - 1;
             }
@@ -1673,14 +1693,14 @@ namespace Compiler
             // Allocate RAM for string + length and delimiter bytes
             if(!Memory::getFreeRAM(Memory::FitDescending, maxSize + 2, USER_CODE_START, _runtimeStart, address))
             {
-                fprintf(stderr, "Compiler::getOrCreateString() : Not enough RAM for string %s='%s' of size %d\n", name.c_str(), str.c_str(), maxSize + 2);
+                fprintf(stderr, "Compiler::getOrCreateString() : Not enough RAM for string %s='%s' of size %d, in '%s' on line %d\n", name.c_str(), str.c_str(), maxSize + 2,
+                                                                                                                                      codeLine._code.c_str(), codeLineIndex);
                 return -1;
             }
 
-            // Save end of runtime/strings
-            if(address < _runtimeEnd) _runtimeEnd = address;
-
-            StringVar stringVar = {uint8_t(strLength), maxSize, address, 0x0000, str, name, "_" + name + std::string(LABEL_TRUNC_SIZE - name.size() - 1, ' '), -1, false, 0};
+            std::vector<uint16_t> arrAddrs;
+            std::vector<std::string> arrInits;
+            StringVar stringVar = {uint8_t(strLength), maxSize, address, str, name, "_" + name + std::string(LABEL_TRUNC_SIZE - name.size() - 1, ' '), varType, -1, false, arrInits, arrAddrs};
             _stringVars.push_back(stringVar);
             index = int(_stringVars.size()) - 1;
         }
@@ -1688,7 +1708,7 @@ namespace Compiler
         return index;
     }
 
-    // Create constant string
+    // Get or create constant string
     uint16_t getOrCreateConstString(const std::string& input, int& index)
     {
         std::string output = input;
@@ -1699,7 +1719,7 @@ namespace Compiler
         return address;
     }
 
-    // Create constant string from int
+    // Get or create constant string from int
     uint16_t getOrCreateConstString(ConstStrType constStrType, int16_t input, int& index)
     {
         char output[16] = "";
@@ -1718,7 +1738,7 @@ namespace Compiler
         return address;
     }
 
-    // Create constant sub-string
+    // Get or create constant sub-string
     uint16_t getOrCreateConstString(ConstStrType constStrType, const std::string& input, int8_t length, uint8_t offset, int& index)
     {
         std::string output;
@@ -1735,6 +1755,46 @@ namespace Compiler
         uint16_t address;
         index = getOrCreateString(_codeLines[_currentCodeLineIndex], _currentCodeLineIndex, output, name, address);
         return address;
+    }
+
+    // Create an array of strings
+    int createStringArray(CodeLine& codeLine, int codeLineIndex, std::string& name, uint8_t size, std::vector<std::string>& arrInits, std::vector<uint16_t>& arrAddrs)
+    {
+        int index = -1;
+
+        if(size > USER_STR_SIZE)
+        {
+            fprintf(stderr, "Compiler::getOrCreateString() : Length %d of string is larger than maximum of %d, in '%s' on line %d\n", size, USER_STR_SIZE,
+                                                                                                                                      codeLine._code.c_str(), codeLineIndex);
+            return -1;
+        }
+
+        // Allocate RAM for array of strings
+        for(int i=0; i<int(arrAddrs.size()); i++)
+        {
+            if(!Memory::getFreeRAM(Memory::FitDescending, size + 2, USER_CODE_START, _runtimeStart, arrAddrs[i]))
+            {
+                fprintf(stderr, "Compiler::getOrCreateString() : Not enough RAM for string %s of size %d, in '%s' on line %d\n", name.c_str(), size + 2,
+                                                                                                                                 codeLine._code.c_str(), codeLineIndex);
+                return -1;
+            }
+        }
+
+        // Array of pointers to strings
+        uint16_t address = 0x0000;
+        int arraySize = int(arrAddrs.size())*2;
+        if(!Memory::getFreeRAM(Memory::FitDescending, arraySize, USER_CODE_START, _runtimeStart, address, false)) // arrays do not need to be contained within pages
+        {
+            fprintf(stderr, "Keywords::getOrCreateString() : Not enough RAM for int array of size %d in '%s' on line %d\n", arraySize, codeLine._code.c_str(), codeLineIndex);
+            return -1;
+        }
+
+        const std::string text(94, ' ');
+        StringVar stringVar = {size, USER_STR_SIZE, address, text, name, "_" + name + std::string(LABEL_TRUNC_SIZE - name.size() - 1, ' '), VarStr2, -1, false, arrInits, arrAddrs};
+        _stringVars.push_back(stringVar);
+        index = int(_stringVars.size()) - 1;
+
+        return index;
     }
 
 
@@ -1795,7 +1855,7 @@ namespace Compiler
                 if(uchr == '.')
                 {
                     // Check for multiple periods
-                    if(isDouble == true) return false;
+                    if(isDouble) return false;
                     isDouble = true;
                 }
 
@@ -1855,18 +1915,18 @@ namespace Compiler
 
         Expression::advance(varName.size());
 
-        // Int and array vars
+        // Int and int arrays
         uint16_t address = 0x0000;
         if(varIndex != -1)
         {
             address = _integerVars[varIndex]._address;
         }
-        // Strings
+        // String and string arrays
         else if(strIndex != -1)
         {
             address = _stringVars[strIndex]._address;
         }
-        // Constants
+        // labels
         else if(labIndex != -1)
         {
             address = _labels[labIndex]._address;
@@ -1878,7 +1938,7 @@ namespace Compiler
         }
         else
         {
-            fprintf(stderr, "Compiler::addressof() : Syntax error in '%s' on line %d\n", _codeLines[_currentCodeLineIndex]._code.c_str(), Expression::getLineNumber());
+            fprintf(stderr, "Compiler::addressOf() : Syntax error in '%s' on line %d\n", _codeLines[_currentCodeLineIndex]._code.c_str(), Expression::getLineNumber());
             //_PAUSE_;
             _compilingError = true;
             return Expression::Numeric();
@@ -1899,7 +1959,7 @@ namespace Compiler
 
         Expression::advance(varName.size());
 
-        // Int and array vars
+        // Int and int arrays
         uint16_t length = 0;
         if(varIndex != -1)
         {
@@ -1913,10 +1973,16 @@ namespace Compiler
                 default: break;
             }
         }
-        // Strings
+        // String and string arrays
         else if(strIndex != -1)
         {
-            length = _stringVars[strIndex]._size;
+            switch(_stringVars[strIndex]._varType)
+            {
+                case VarStr:  length = USER_STR_SIZE;                                                              break;
+                case VarStr2: length = uint16_t(_stringVars[strIndex]._arrAddrs.size()) * (USER_STR_SIZE + 2 + 2); break;
+
+                default: break;
+            }
         }
         // Constants
         else if(constIndex != -1)
@@ -1925,7 +1991,7 @@ namespace Compiler
         }
         else
         {
-            fprintf(stderr, "Compiler::addressof() : Syntax error in '%s' on line %d\n", _codeLines[_currentCodeLineIndex]._code.c_str(), Expression::getLineNumber());
+            fprintf(stderr, "Compiler::lengthOf() : Syntax error in '%s' on line %d\n", _codeLines[_currentCodeLineIndex]._code.c_str(), Expression::getLineNumber());
             //_PAUSE_;
             _compilingError = true;
             return Expression::Numeric();
@@ -2280,7 +2346,7 @@ namespace Compiler
                                 if(Expression::find(".HI")) int16Byte = Expression::Int16High;
                                 numeric._int16Byte = int16Byte;
 
-                                numeric = Keywords::functionARR(numeric, _currentCodeLineIndex);
+                                numeric = Keywords::functionIARR(numeric, _currentCodeLineIndex);
                             }
                         }
                         // Vars
@@ -2299,8 +2365,31 @@ namespace Compiler
                     {
                         Expression::advance(varName.size());
 
-                        // Numeric is now passed back to compiler, (rather than just numeric._value), so make sure all fields are valid
-                        numeric = Expression::Numeric(defaultValue, int16_t(strIndex), true, false, false, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, varName, _stringVars[strIndex]._text);
+                        // Arrays
+                        if(_stringVars[strIndex]._varType == VarStr2)
+                        {
+                            // String array numeric
+                            numeric = Expression::Numeric(defaultValue, int16_t(strIndex), true, false, false, Expression::Str2Var, Expression::BooleanCC, Expression::Int16Both, varName, _stringVars[strIndex]._text);
+
+                            // Array index parameters, (commands like LEN expect no array indices)
+                            if(foundParams)
+                            {
+                                Expression::Numeric param = factor(0); 
+                                numeric._parameters.push_back(param);
+                                for(int i=0; i<int(param._parameters.size()); i++)
+                                {
+                                    numeric._parameters.push_back(param._parameters[i]);
+                                }
+
+                                numeric = Keywords::functionSARR(numeric, _currentCodeLineIndex);
+                            }
+                        }
+                        // Vars
+                        else
+                        {
+                            // Numeric is now passed back to compiler, (rather than just numeric._value), so make sure all fields are valid
+                            numeric = Expression::Numeric(defaultValue, int16_t(strIndex), true, false, false, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, varName, _stringVars[strIndex]._text);
+                        }
                     }
                     // Constants
                     else if(constIndex != -1)
@@ -2511,14 +2600,14 @@ namespace Compiler
         }
 
         bool isStrExpression = ((expressionType >= Expression::HasStrings)  &&  (expressionType <= Expression::IsStringExpression));
-        if(isStrExpression)
+        if(isStrExpression  ||  numeric._varType == Expression::Str2Var)
         {
             std::vector<std::string> tokens = Expression::tokenise(codeLine._expression, "+", false);
             if(tokens.size() == 1)
             {
                 // String assignment, from var or const or literal
                 uint16_t srcAddr = getStringSrcAddr(numeric);
-                if(srcAddr == 0x0000)
+                if(srcAddr == 0x0000  &&  numeric._varType != Expression::Str2Var)
                 {
                     fprintf(stderr, "Compiler::handleStrings() : Syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
                     //_PAUSE_;
@@ -2530,7 +2619,15 @@ namespace Compiler
                 uint16_t dstAddr = _stringVars[dstIndex]._address;
                 if(srcAddr != dstAddr)
                 {
-                    emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr), false, codeLineIndex);
+                    if(numeric._varType == Expression::Str2Var)
+                    {
+                        emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false, codeLineIndex);
+                    }
+                    else
+                    {
+                        emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr), false, codeLineIndex);
+                    }
+                    
                     emitVcpuAsm("STW", "strSrcAddr", false, codeLineIndex);
                     emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false, codeLineIndex);
                     emitVcpuAsm("%StringCopy", "", false, codeLineIndex);
@@ -2538,6 +2635,7 @@ namespace Compiler
 
                 return true;
             }
+            // TODO: doesn't work with string arrays
             // String concatenation
             else
             {
@@ -2851,6 +2949,22 @@ REDO:
             }
         }
 
+        // Check for inserted sys init funcs and adjust vASM and label addresses
+        for(int i=0; i<int(_codeLines[0]._vasm.size()); i++)
+        {
+            for(int j=0; j<int(_sysInitNames.size()); j++)
+            {
+                if(_codeLines[0]._vasm[i]._opcode == _sysInitNames[j])
+                {
+                    uint16_t address = _codeLines[0]._vasm[i]._address;
+                    Validater::adjustLabelAddresses(address, SYS_INIT_FUNC_LEN);
+                    Validater::adjustVasmAddresses(0, address, SYS_INIT_FUNC_LEN);
+                    _codeLines[0]._vasm[i]._address = address;
+                    break;
+                }
+            }
+        }
+
         return true;
     }
 
@@ -2979,6 +3093,21 @@ REDO:
                 }
                 break;
 
+                default: break;
+            }
+        }
+
+        _output.push_back("\n");
+    }
+
+    void outputArrs(void)
+    {
+        _output.push_back("; Arrays\n");
+
+        for(int varIndex=0; varIndex<int(_integerVars.size()); varIndex++)
+        {
+            switch(_integerVars[varIndex]._varType)
+            {
                 case VarArray1:
                 {
                     std::string arrName = "_" + _integerVars[varIndex]._name + "_array";
@@ -3140,6 +3269,144 @@ REDO:
     {
         _output.push_back("; Strings\n");
 
+        // User strings
+        for(int i=0; i<int(_stringVars.size()); i++)
+        {
+            // Normal strings
+            if(_stringVars[i]._varType == VarStr  &&  !_stringVars[i]._constant)
+            {
+                _output.push_back(_stringVars[i]._output + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(_stringVars[i]._address) + "\n");
+                _output.push_back(_stringVars[i]._output + "DB" + std::string(OPCODE_TRUNC_SIZE - 2, ' ') + std::to_string(_stringVars[i]._size) + " '" + _stringVars[i]._text + "' 0\n");
+            }
+            // Array of strings
+            else if(_stringVars[i]._varType == VarStr2)
+            {
+                std::string arrName = "_" + _stringVars[i]._name;
+                _output.push_back(arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(_stringVars[i]._address) + "\n");
+                std::string dwString = arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+
+                // J array pointers
+                for(int j=0; j<int(_stringVars[i]._arrAddrs.size()); j++)
+                {
+                    dwString += Expression::wordToHexString(_stringVars[i]._arrAddrs[j]) + " ";
+                }
+                _output.push_back(dwString + "\n");
+
+                // J strings
+                std::string defaultStr = (_stringVars[i]._arrInits.size()) ? _stringVars[i]._arrInits.back() : _stringVars[i]._text;
+                for(int j=0; j<int(_stringVars[i]._arrAddrs.size()); j++)
+                {
+                    std::string strName = "_" + _stringVars[i]._name + "_" + Expression::wordToHexString(_stringVars[i]._arrAddrs[j]);
+                    _output.push_back(strName + std::string(LABEL_TRUNC_SIZE - strName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(_stringVars[i]._arrAddrs[j]) + "\n");
+
+                    std::string initStr = (j < int(_stringVars[i]._arrInits.size())) ? _stringVars[i]._arrInits[j] : defaultStr;
+                    _output.push_back(strName + std::string(LABEL_TRUNC_SIZE - strName.size(), ' ') + "DB" + std::string(OPCODE_TRUNC_SIZE - 2, ' ') + std::to_string(initStr.size()) + " '" + initStr + "' 0\n");
+                }
+            }
+        }
+        _output.push_back("\n");
+
+        _output.push_back("; Constant Strings\n");
+
+        // Constant strings
+        for(int i=0; i<int(_stringVars.size()); i++)
+        {
+            // Normal strings
+            if(_stringVars[i]._varType == VarStr  &&  _stringVars[i]._constant)
+            {
+                _output.push_back(_stringVars[i]._output + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(_stringVars[i]._address) + "\n");
+                _output.push_back(_stringVars[i]._output + "DB" + std::string(OPCODE_TRUNC_SIZE - 2, ' ') + std::to_string(_stringVars[i]._size) + " '" + _stringVars[i]._text + "' 0\n");
+            }
+        }
+        _output.push_back("\n");
+
+        return true;
+    }
+
+    bool outputDATA(void)
+    {
+        _output.push_back("; Data\n");
+
+        // Output DATA fields
+        for(int i=0; i<int(_dataObjects.size()); i++)
+        {
+            DataObject* pObject = _dataObjects[i].get();
+            switch(pObject->_dataType)
+            {
+                case DataInteger:
+                {
+                    DataInt* pData = (DataInt*)pObject;
+                    int16_t var = pData->_data;
+                    int size = 2;
+                    if(!Memory::getFreeRAM(Memory::FitDescending, size, USER_CODE_START, _runtimeStart, pData->_address, true))
+                    {
+                        fprintf(stderr, "Compiler::outputDATA() : Not enough RAM for data of size %d\n", size);
+                        return false;
+                    }
+                    std::string defName = "_data_" + Expression::wordToHexString(pData->_address);
+                    _output.push_back(defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(pData->_address) + "\n");
+                    _output.push_back(defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ') + std::to_string(var) + "\n");
+                }
+                break;
+
+                case DataString:
+                {
+                    DataStr* pData = (DataStr*)pObject;
+                    std::string str = pData->_data;
+                    int size = int(str.size()) + 2;
+                    if(!Memory::getFreeRAM(Memory::FitDescending, size, USER_CODE_START, _runtimeStart, pData->_address, true))
+                    {
+                        fprintf(stderr, "Compiler::outputDATA() : Not enough RAM for data of size %d\n", size);
+                        return false;
+                    }
+                    std::string defName = "_data_" + Expression::wordToHexString(pData->_address);
+                    _output.push_back(defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(pData->_address) + "\n");
+                    _output.push_back(defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "DB" + std::string(OPCODE_TRUNC_SIZE - 2, ' ') + std::to_string(size-2) + " '" + str + "' 0\n");
+                }
+                break;
+
+                default: break;
+            }
+        }
+
+        // Output DATA address LUT
+        uint16_t address = 0x0000;
+        int size = int(_dataObjects.size() + 1)*2; // +1 for the terminating zero
+        if(!Memory::getFreeRAM(Memory::FitDescending, size, USER_CODE_START, _runtimeStart, address, false))
+        {
+            fprintf(stderr, "Compiler::outputDATA() : Not enough RAM for data LUT of size %d\n", size);
+            return false;
+        }
+        std::string defName = "_data_";
+        _output.push_back(defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(address) + "\n");
+        std::string dwString = defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+        for(int i=0; i<int(_dataObjects.size()); i++)
+        {
+            DataObject* pObject = _dataObjects[i].get();
+            dwString += Expression::wordToHexString(pObject->_address) + " ";
+        }
+        _output.push_back(dwString + "0\n"); // terminating 0
+
+        // Output DATA index
+        address = 0x0000;
+        size = 2;
+        if(!Memory::getFreeRAM(Memory::FitDescending, size, USER_CODE_START, _runtimeStart, address, false))
+        {
+            fprintf(stderr, "Compiler::outputDATA() : Not enough RAM for data LUT of size %d\n", size);
+            return false;
+        }
+        defName = "_dataIndex_";
+        _output.push_back(defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(address) + "\n");
+        _output.push_back(defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ') + "0\n");
+        _output.push_back("\n");
+
+        return true;
+    }
+
+    bool outputTIME(void)
+    {
+        _output.push_back("; Time\n");
+
         // Time array and string
         if(_createTimeData)
         {
@@ -3147,7 +3414,7 @@ REDO:
             uint16_t timeArrayAddress;
             if(!Memory::getFreeRAM(Memory::FitDescending, timeArraySize, USER_CODE_START, _runtimeStart, timeArrayAddress))
             {
-                fprintf(stderr, "Compiler::outputStrs() : Not enough RAM for time array of size %d\n", timeArraySize);
+                fprintf(stderr, "Compiler::outputTIME() : Not enough RAM for time array of size %d\n", timeArraySize);
                 return false;
             }
             std::string defName = "_timeArray_";
@@ -3159,7 +3426,7 @@ REDO:
             uint16_t timeStringAddress;
             if(!Memory::getFreeRAM(Memory::FitDescending, timeStringSize, USER_CODE_START, _runtimeStart, timeStringAddress))
             {
-                fprintf(stderr, "Compiler::outputStrs() : Not enough RAM for time string of size %d\n", timeStringSize);
+                fprintf(stderr, "Compiler::outputTIME() : Not enough RAM for time string of size %d\n", timeStringSize);
                 return false;
             }
             defName = "_timeString_";
@@ -3167,14 +3434,6 @@ REDO:
             dbString = defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "DB" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
             _output.push_back(dbString + std::to_string(timeStringSize - 2) + " '00:00:00' 0\n");
         }
-
-        // User strings
-        for(int i=0; i<int(_stringVars.size()); i++)
-        {
-            _output.push_back(_stringVars[i]._output + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(_stringVars[i]._address) + "\n");
-            _output.push_back(_stringVars[i]._output + "DB" + std::string(OPCODE_TRUNC_SIZE - 2, ' ') + std::to_string(_stringVars[i]._size) + " '" + _stringVars[i]._text + "' 0\n");
-        }
-
         _output.push_back("\n");
 
         return true;
@@ -3747,6 +4006,7 @@ REDO:
     {
         _output.push_back("; Includes\n");
         _output.push_back("%includePath" + std::string(LABEL_TRUNC_SIZE - strlen("%includePath"), ' ') + "\"" + getRuntimePath() + "\"\n");
+        _output.push_back("%include" + std::string(LABEL_TRUNC_SIZE - strlen("%include"), ' ') + "util.i\n");
         _output.push_back("%include" + std::string(LABEL_TRUNC_SIZE - strlen("%include"), ' ') + "gigatron.i\n");
 
         if(_codeRomType < Cpu::ROMv5a)
@@ -3780,6 +4040,9 @@ REDO:
                 // Vasm code
                 for(int j=0; j<int(_codeLines[i]._vasm.size()); j++)
                 {
+                    // Skip sys init funcs that are commented out, (when not used)
+                    if(_codeLines[i]._vasm[j]._opcode[0] == ';') continue;
+
                     uint16_t vasmAddress = _codeLines[i]._vasm[j]._address;
                     std::string vasmCode = _codeLines[i]._vasm[j]._code;
                     std::string vasmLabel = _codeLines[i]._vasm[j]._internalLabel;
@@ -3879,12 +4142,15 @@ REDO:
         _compilingError = false;
         _arrayIndiciesOne = false;
         _createNumericLabelLut = false;
+        _createTimeData = false;
 
         _currentLabelIndex = -1;
         _currentCodeLineIndex = 0;
         _jumpFalseUniqueId = 0;
 
+        _runtimePath = ".";
         _tempVarStartStr = "";
+        _nextInternalLabel = "";
 
         _input.clear();
         _output.clear();
@@ -3906,6 +4172,7 @@ REDO:
         _defDataSprites.clear();
         _defDataFonts.clear();
         _defFunctions.clear();
+        _dataObjects.clear();
 
         _spritesAddrLut._address = 0x0000;
         _spritesAddrLut._spriteAddrs.clear();
@@ -3986,7 +4253,10 @@ REDO:
         outputIncludes();
         outputLabels();
         outputVars();
+        outputArrs();
         outputStrs();
+        outputDATA();
+        outputTIME();
         outputDefs();
         outputLuts();
         outputCode();

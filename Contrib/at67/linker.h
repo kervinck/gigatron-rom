@@ -4,6 +4,10 @@
 
 namespace Linker
 {
+    bool getInternalSub(const std::string& name, Compiler::InternalSub& internalSub);
+    bool setInternalSub(const std::string& name, const Compiler::InternalSub& internalSub);
+    bool setInternalSubToLoad(const std::string& name);
+
     bool initialise(void);
 
     bool enableFontLinking(void);

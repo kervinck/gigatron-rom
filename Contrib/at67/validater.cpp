@@ -110,7 +110,11 @@ namespace Validater
                 }
 
                 // Get next free code address after page jump prologue and relocate code, (return true)
-                if(!Memory::getNextCodeAddress(Memory::FitAscending, vPC, opSize, nextPC)) return false;
+                if(!Memory::getNextCodeAddress(Memory::FitAscending, vPC, opSize, nextPC))
+                {
+                    fprintf(stderr, "Validater::checkForRelocation(): Memory alloc at 0x%0x4 of size %d failed\n", vPC, opSize);
+                    return false;
+                }
 
                 if(!print)
                 {

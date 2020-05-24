@@ -20,144 +20,148 @@ namespace Linker
 {
     std::map<std::string, std::vector<std::string>> _subIncludeFiles;
 
+    // TODO: use std::map
     std::vector<Compiler::InternalSub> _internalSubs =
     {
-        {0x0000, 0x0000, "romCheck"         , "", true,  false, true },
-        {0x0000, 0x0000, "convertEqOp"      , "", true,  false, true },
-        {0x0000, 0x0000, "convertNeOp"      , "", true,  false, true },
-        {0x0000, 0x0000, "convertLeOp"      , "", true,  false, true },
-        {0x0000, 0x0000, "convertGeOp"      , "", true,  false, true },
-        {0x0000, 0x0000, "convertLtOp"      , "", true,  false, true },
-        {0x0000, 0x0000, "convertGtOp"      , "", true,  false, true },
-        {0x0000, 0x0000, "convertArr2d"     , "", true,  false, true },
-        {0x0000, 0x0000, "convertArr3d"     , "", true,  false, true },
-        {0x0000, 0x0000, "realTimeStub"     , "", false, false, false},
-        {0x0000, 0x0000, "setRealTimeProc0" , "", false, false, false},
-        {0x0000, 0x0000, "setRealTimeProc1" , "", false, false, false},
-        {0x0000, 0x0000, "setRealTimeProc2" , "", false, false, false},
-        {0x0000, 0x0000, "absolute"         , "", false, false, false},
-        {0x0000, 0x0000, "sign"             , "", false, false, false},
-        {0x0000, 0x0000, "power16bit"       , "", false, false, false},
-        {0x0000, 0x0000, "power16bitExt"    , "", false, false, false},
-        {0x0000, 0x0000, "multiply16bit"    , "", false, false, false},
-        {0x0000, 0x0000, "multiply16bit_1"  , "", false, false, false},
-        {0x0000, 0x0000, "divide16bit"      , "", false, false, false},
-        {0x0000, 0x0000, "divide16bit_1"    , "", false, false, false},
-        {0x0000, 0x0000, "rand16bit"        , "", false, false, false},
-        {0x0000, 0x0000, "randMod16bit"     , "", false, false, false},
-        {0x0000, 0x0000, "shiftLeft4bit"    , "", false, false, false},
-        {0x0000, 0x0000, "shiftLeft8bit"    , "", false, false, false},
-        {0x0000, 0x0000, "shiftRight1bit"   , "", false, false, false},
-        {0x0000, 0x0000, "shiftRight2bit"   , "", false, false, false},
-        {0x0000, 0x0000, "shiftRight3bit"   , "", false, false, false},
-        {0x0000, 0x0000, "shiftRight4bit"   , "", false, false, false},
-        {0x0000, 0x0000, "shiftRight5bit"   , "", false, false, false},
-        {0x0000, 0x0000, "shiftRight6bit"   , "", false, false, false},
-        {0x0000, 0x0000, "shiftRight7bit"   , "", false, false, false},
-        {0x0000, 0x0000, "shiftRight8bit"   , "", false, false, false},
-        {0x0000, 0x0000, "shiftRightSgn1bit", "", false, false, false},
-        {0x0000, 0x0000, "shiftRightSgn2bit", "", false, false, false},
-        {0x0000, 0x0000, "shiftRightSgn3bit", "", false, false, false},
-        {0x0000, 0x0000, "shiftRightSgn4bit", "", false, false, false},
-        {0x0000, 0x0000, "shiftRightSgn5bit", "", false, false, false},
-        {0x0000, 0x0000, "shiftRightSgn6bit", "", false, false, false},
-        {0x0000, 0x0000, "shiftRightSgn7bit", "", false, false, false},
-        {0x0000, 0x0000, "shiftRightSgn8bit", "", false, false, false},
-        {0x0000, 0x0000, "getArrayByte"     , "", false, false, false},
-        {0x0000, 0x0000, "setArrayByte"     , "", false, false, false},
-        {0x0000, 0x0000, "getArrayInt16"    , "", false, false, false},
-        {0x0000, 0x0000, "setArrayInt16"    , "", false, false, false},
-        {0x0000, 0x0000, "getArrayInt16Low" , "", false, false, false},
-        {0x0000, 0x0000, "setArrayInt16Low" , "", false, false, false},
-        {0x0000, 0x0000, "getArrayInt16High", "", false, false, false},
-        {0x0000, 0x0000, "setArrayInt16High", "", false, false, false},
-        {0x0000, 0x0000, "gotoNumericLabel" , "", false, false, false},
-        {0x0000, 0x0000, "gosubNumericLabel", "", false, false, false},
-        {0x0000, 0x0000, "scanlineMode"     , "", false, false, false},
-        {0x0000, 0x0000, "waitVBlank"       , "", false, false, false},
-        {0x0000, 0x0000, "waitVBlanks"      , "", false, false, false},
-        {0x0000, 0x0000, "resetVideoTable"  , "", false, false, false},
-        {0x0000, 0x0000, "initClearFuncs"   , "", false, false, false},
-        {0x0000, 0x0000, "clearScreen"      , "", false, false, false},
-        {0x0000, 0x0000, "clearVertBlinds"  , "", false, false, false},
-        {0x0000, 0x0000, "clearCursorRow"   , "", false, false, false},
-        {0x0000, 0x0000, "readPixel"        , "", false, false, false},
-        {0x0000, 0x0000, "drawPixel"        , "", false, false, false},
-        {0x0000, 0x0000, "drawHLine"        , "", false, false, false},
-        {0x0000, 0x0000, "drawVLine"        , "", false, false, false},
-        {0x0000, 0x0000, "drawLine"         , "", false, false, false},
-        {0x0000, 0x0000, "drawLineExt"      , "", false, false, false},
-        {0x0000, 0x0000, "drawLineLoop"     , "", false, false, false},
-        {0x0000, 0x0000, "drawLineLoadXY"   , "", false, false, false},
-        {0x0000, 0x0000, "drawVTLine"       , "", false, false, false},
-        {0x0000, 0x0000, "drawVTLineExt"    , "", false, false, false},
-        {0x0000, 0x0000, "drawVTLineLoop"   , "", false, false, false},
-        {0x0000, 0x0000, "drawVTLineLoadXY" , "", false, false, false},
-        {0x0000, 0x0000, "drawCircle"       , "", false, false, false},
-        {0x0000, 0x0000, "drawCircleExt1"   , "", false, false, false},
-        {0x0000, 0x0000, "drawCircleExt2"   , "", false, false, false},
-        {0x0000, 0x0000, "drawCircleF"      , "", false, false, false},
-        {0x0000, 0x0000, "drawRect"         , "", false, false, false},
-        {0x0000, 0x0000, "drawRectF"        , "", false, false, false},
-        {0x0000, 0x0000, "drawPoly"         , "", false, false, false},
-        {0x0000, 0x0000, "atLineCursor"     , "", false, false, false},
-        {0x0000, 0x0000, "draw_sprite"      , "", false, false, false},
-        {0x0000, 0x0000, "drawSprite"       , "", false, false, false},
-        {0x0000, 0x0000, "drawSpriteX"      , "", false, false, false},
-        {0x0000, 0x0000, "drawSpriteY"      , "", false, false, false},
-        {0x0000, 0x0000, "drawSpriteXY"     , "", false, false, false},
-        {0x0000, 0x0000, "getSpriteLUT"     , "", false, false, false},
-        {0x0000, 0x0000, "resetAudio"       , "", false, false, false},
-        {0x0000, 0x0000, "playMidi"         , "", false, false, false},
-        {0x0000, 0x0000, "playMidiVol"      , "", false, false, false},
-        {0x0000, 0x0000, "midiStartNote"    , "", false, false, false},
-        {0x0000, 0x0000, "soundAllOff"      , "", false, false, false},
-        {0x0000, 0x0000, "soundOff"         , "", false, false, false},
-        {0x0000, 0x0000, "soundOn"          , "", false, false, false},
-        {0x0000, 0x0000, "soundOnV"         , "", false, false, false},
-        {0x0000, 0x0000, "soundMod"         , "", false, false, false},
-        {0x0000, 0x0000, "input"            , "", false, false, false},
-        {0x0000, 0x0000, "inputExt1"        , "", false, false, false},
-        {0x0000, 0x0000, "inputExt2"        , "", false, false, false},
-        {0x0000, 0x0000, "inputCursor"      , "", false, false, false},
-        {0x0000, 0x0000, "inputKeys"        , "", false, false, false},
-        {0x0000, 0x0000, "inputIntVar"      , "", false, false, false},
-        {0x0000, 0x0000, "inputStrVar"      , "", false, false, false},
-        {0x0000, 0x0000, "inputReturn"      , "", false, false, false},
-        {0x0000, 0x0000, "inputDelete"      , "", false, false, false},
-        {0x0000, 0x0000, "inputPrint"       , "", false, false, false},
-        {0x0000, 0x0000, "inputNewline"     , "", false, false, false},
-        {0x0000, 0x0000, "printInit"        , "", false, false, false},
-        {0x0000, 0x0000, "printText"        , "", false, false, false},
-        {0x0000, 0x0000, "printLeft"        , "", false, false, false},
-        {0x0000, 0x0000, "printRight"       , "", false, false, false},
-        {0x0000, 0x0000, "printMid"         , "", false, false, false},
-        {0x0000, 0x0000, "printDigit"       , "", false, false, false},
-        {0x0000, 0x0000, "printInt16"       , "", false, false, false},
-        {0x0000, 0x0000, "printChr"         , "", false, false, false},
-        {0x0000, 0x0000, "printChar"        , "", false, false, false},
-        {0x0000, 0x0000, "printHexByte"     , "", false, false, false},
-        {0x0000, 0x0000, "printHexWord"     , "", false, false, false},
-        {0x0000, 0x0000, "atTextCursor"     , "", false, false, false},
-        {0x0000, 0x0000, "newLineScroll"    , "", false, false, false},
-        {0x0000, 0x0000, "integerStr"       , "", false, false, false},
-        {0x0000, 0x0000, "stringChr"        , "", false, false, false},
-        {0x0000, 0x0000, "stringHex"        , "", false, false, false},
-        {0x0000, 0x0000, "stringHexw"       , "", false, false, false},
-        {0x0000, 0x0000, "createHex"        , "", false, false, false},
-        {0x0000, 0x0000, "stringCopy"       , "", false, false, false},
-        {0x0000, 0x0000, "stringCmp"        , "", false, false, false},
-        {0x0000, 0x0000, "stringAdd"        , "", false, false, false},
-        {0x0000, 0x0000, "stringConcat"     , "", false, false, false},
-        {0x0000, 0x0000, "stringMid"        , "", false, false, false},
-        {0x0000, 0x0000, "stringLeft"       , "", false, false, false},
-        {0x0000, 0x0000, "stringRight"      , "", false, false, false},
-        {0x0000, 0x0000, "stringDigit"      , "", false, false, false},
-        {0x0000, 0x0000, "stringInt"        , "", false, false, false},
-        {0x0000, 0x0000, "tickTime"         , "", false, false, false},
-        {0x0000, 0x0000, "handleTime"       , "", false, false, false},
-        {0x0000, 0x0000, "timeDigits"       , "", false, false, false},
-        {0x0000, 0x0000, "timeString"       , "", false, false, false},
+        {0x0000, 0x0000, "romCheck"         , "", false, false},
+        {0x0000, 0x0000, "realTimeStub"     , "", false, false},
+        {0x0000, 0x0000, "convertEqOp"      , "", false, false},
+        {0x0000, 0x0000, "convertNeOp"      , "", false, false},
+        {0x0000, 0x0000, "convertLeOp"      , "", false, false},
+        {0x0000, 0x0000, "convertGeOp"      , "", false, false},
+        {0x0000, 0x0000, "convertLtOp"      , "", false, false},
+        {0x0000, 0x0000, "convertGtOp"      , "", false, false},
+        {0x0000, 0x0000, "convertArr2d"     , "", false, false},
+        {0x0000, 0x0000, "convertArr3d"     , "", false, false},
+        {0x0000, 0x0000, "setRealTimeProc0" , "", false, false},
+        {0x0000, 0x0000, "setRealTimeProc1" , "", false, false},
+        {0x0000, 0x0000, "setRealTimeProc2" , "", false, false},
+        {0x0000, 0x0000, "absolute"         , "", false, false},
+        {0x0000, 0x0000, "sign"             , "", false, false},
+        {0x0000, 0x0000, "power16bit"       , "", false, false},
+        {0x0000, 0x0000, "power16bitExt"    , "", false, false},
+        {0x0000, 0x0000, "multiply16bit"    , "", false, false},
+        {0x0000, 0x0000, "multiply16bit_1"  , "", false, false},
+        {0x0000, 0x0000, "divide16bit"      , "", false, false},
+        {0x0000, 0x0000, "divide16bit_1"    , "", false, false},
+        {0x0000, 0x0000, "rand16bit"        , "", false, false},
+        {0x0000, 0x0000, "randMod16bit"     , "", false, false},
+        {0x0000, 0x0000, "shiftLeft4bit"    , "", false, false},
+        {0x0000, 0x0000, "shiftLeft8bit"    , "", false, false},
+        {0x0000, 0x0000, "shiftRight1bit"   , "", false, false},
+        {0x0000, 0x0000, "shiftRight2bit"   , "", false, false},
+        {0x0000, 0x0000, "shiftRight3bit"   , "", false, false},
+        {0x0000, 0x0000, "shiftRight4bit"   , "", false, false},
+        {0x0000, 0x0000, "shiftRight5bit"   , "", false, false},
+        {0x0000, 0x0000, "shiftRight6bit"   , "", false, false},
+        {0x0000, 0x0000, "shiftRight7bit"   , "", false, false},
+        {0x0000, 0x0000, "shiftRight8bit"   , "", false, false},
+        {0x0000, 0x0000, "shiftRightSgn1bit", "", false, false},
+        {0x0000, 0x0000, "shiftRightSgn2bit", "", false, false},
+        {0x0000, 0x0000, "shiftRightSgn3bit", "", false, false},
+        {0x0000, 0x0000, "shiftRightSgn4bit", "", false, false},
+        {0x0000, 0x0000, "shiftRightSgn5bit", "", false, false},
+        {0x0000, 0x0000, "shiftRightSgn6bit", "", false, false},
+        {0x0000, 0x0000, "shiftRightSgn7bit", "", false, false},
+        {0x0000, 0x0000, "shiftRightSgn8bit", "", false, false},
+        {0x0000, 0x0000, "getArrayByte"     , "", false, false},
+        {0x0000, 0x0000, "setArrayByte"     , "", false, false},
+        {0x0000, 0x0000, "getArrayInt16"    , "", false, false},
+        {0x0000, 0x0000, "setArrayInt16"    , "", false, false},
+        {0x0000, 0x0000, "getArrayInt16Low" , "", false, false},
+        {0x0000, 0x0000, "setArrayInt16Low" , "", false, false},
+        {0x0000, 0x0000, "getArrayInt16High", "", false, false},
+        {0x0000, 0x0000, "setArrayInt16High", "", false, false},
+        {0x0000, 0x0000, "readIntVar",        "", false, false},
+        {0x0000, 0x0000, "readStrVar",        "", false, false},
+        {0x0000, 0x0000, "gotoNumericLabel" , "", false, false},
+        {0x0000, 0x0000, "gosubNumericLabel", "", false, false},
+        {0x0000, 0x0000, "scanlineMode"     , "", false, false},
+        {0x0000, 0x0000, "waitVBlank"       , "", false, false},
+        {0x0000, 0x0000, "waitVBlanks"      , "", false, false},
+        {0x0000, 0x0000, "resetVideoFlags"  , "", false, false},
+        {0x0000, 0x0000, "resetVideoTable"  , "", false, false},
+        {0x0000, 0x0000, "initClearFuncs"   , "", false, false},
+        {0x0000, 0x0000, "clearScreen"      , "", false, false},
+        {0x0000, 0x0000, "clearVertBlinds"  , "", false, false},
+        {0x0000, 0x0000, "clearCursorRow"   , "", false, false},
+        {0x0000, 0x0000, "readPixel"        , "", false, false},
+        {0x0000, 0x0000, "drawPixel"        , "", false, false},
+        {0x0000, 0x0000, "drawHLine"        , "", false, false},
+        {0x0000, 0x0000, "drawVLine"        , "", false, false},
+        {0x0000, 0x0000, "drawLine"         , "", false, false},
+        {0x0000, 0x0000, "drawLineExt"      , "", false, false},
+        {0x0000, 0x0000, "drawLineLoop"     , "", false, false},
+        {0x0000, 0x0000, "drawLineLoadXY"   , "", false, false},
+        {0x0000, 0x0000, "drawVTLine"       , "", false, false},
+        {0x0000, 0x0000, "drawVTLineExt"    , "", false, false},
+        {0x0000, 0x0000, "drawVTLineLoop"   , "", false, false},
+        {0x0000, 0x0000, "drawVTLineLoadXY" , "", false, false},
+        {0x0000, 0x0000, "drawCircle"       , "", false, false},
+        {0x0000, 0x0000, "drawCircleExt1"   , "", false, false},
+        {0x0000, 0x0000, "drawCircleExt2"   , "", false, false},
+        {0x0000, 0x0000, "drawCircleF"      , "", false, false},
+        {0x0000, 0x0000, "drawRect"         , "", false, false},
+        {0x0000, 0x0000, "drawRectF"        , "", false, false},
+        {0x0000, 0x0000, "drawPoly"         , "", false, false},
+        {0x0000, 0x0000, "atLineCursor"     , "", false, false},
+        {0x0000, 0x0000, "draw_sprite"      , "", false, false},
+        {0x0000, 0x0000, "drawSprite"       , "", false, false},
+        {0x0000, 0x0000, "drawSpriteX"      , "", false, false},
+        {0x0000, 0x0000, "drawSpriteY"      , "", false, false},
+        {0x0000, 0x0000, "drawSpriteXY"     , "", false, false},
+        {0x0000, 0x0000, "getSpriteLUT"     , "", false, false},
+        {0x0000, 0x0000, "resetAudio"       , "", false, false},
+        {0x0000, 0x0000, "playMidi"         , "", false, false},
+        {0x0000, 0x0000, "playMidiVol"      , "", false, false},
+        {0x0000, 0x0000, "midiStartNote"    , "", false, false},
+        {0x0000, 0x0000, "soundAllOff"      , "", false, false},
+        {0x0000, 0x0000, "soundOff"         , "", false, false},
+        {0x0000, 0x0000, "soundOn"          , "", false, false},
+        {0x0000, 0x0000, "soundOnV"         , "", false, false},
+        {0x0000, 0x0000, "soundMod"         , "", false, false},
+        {0x0000, 0x0000, "input"            , "", false, false},
+        {0x0000, 0x0000, "inputExt1"        , "", false, false},
+        {0x0000, 0x0000, "inputExt2"        , "", false, false},
+        {0x0000, 0x0000, "inputCursor"      , "", false, false},
+        {0x0000, 0x0000, "inputKeys"        , "", false, false},
+        {0x0000, 0x0000, "inputIntVar"      , "", false, false},
+        {0x0000, 0x0000, "inputStrVar"      , "", false, false},
+        {0x0000, 0x0000, "inputReturn"      , "", false, false},
+        {0x0000, 0x0000, "inputDelete"      , "", false, false},
+        {0x0000, 0x0000, "inputPrint"       , "", false, false},
+        {0x0000, 0x0000, "inputNewline"     , "", false, false},
+        {0x0000, 0x0000, "printInit"        , "", false, false},
+        {0x0000, 0x0000, "printText"        , "", false, false},
+        {0x0000, 0x0000, "printLeft"        , "", false, false},
+        {0x0000, 0x0000, "printRight"       , "", false, false},
+        {0x0000, 0x0000, "printMid"         , "", false, false},
+        {0x0000, 0x0000, "printDigit"       , "", false, false},
+        {0x0000, 0x0000, "printInt16"       , "", false, false},
+        {0x0000, 0x0000, "printChr"         , "", false, false},
+        {0x0000, 0x0000, "printChar"        , "", false, false},
+        {0x0000, 0x0000, "printHexByte"     , "", false, false},
+        {0x0000, 0x0000, "printHexWord"     , "", false, false},
+        {0x0000, 0x0000, "atTextCursor"     , "", false, false},
+        {0x0000, 0x0000, "newLineScroll"    , "", false, false},
+        {0x0000, 0x0000, "integerStr"       , "", false, false},
+        {0x0000, 0x0000, "stringChr"        , "", false, false},
+        {0x0000, 0x0000, "stringHex"        , "", false, false},
+        {0x0000, 0x0000, "stringHexw"       , "", false, false},
+        {0x0000, 0x0000, "createHex"        , "", false, false},
+        {0x0000, 0x0000, "stringCopy"       , "", false, false},
+        {0x0000, 0x0000, "stringCmp"        , "", false, false},
+        {0x0000, 0x0000, "stringAdd"        , "", false, false},
+        {0x0000, 0x0000, "stringConcat"     , "", false, false},
+        {0x0000, 0x0000, "stringMid"        , "", false, false},
+        {0x0000, 0x0000, "stringLeft"       , "", false, false},
+        {0x0000, 0x0000, "stringRight"      , "", false, false},
+        {0x0000, 0x0000, "stringDigit"      , "", false, false},
+        {0x0000, 0x0000, "stringInt"        , "", false, false},
+        {0x0000, 0x0000, "tickTime"         , "", false, false},
+        {0x0000, 0x0000, "handleTime"       , "", false, false},
+        {0x0000, 0x0000, "timeDigits"       , "", false, false},
+        {0x0000, 0x0000, "timeString"       , "", false, false},
     };
     std::vector<std::string> _subIncludesROMv1 =
     {
@@ -237,6 +241,48 @@ namespace Linker
         "time_ROMv5a.i"        ,
     };
 
+
+    bool getInternalSub(const std::string& name, Compiler::InternalSub& internalSub)
+    {
+        for(int i=0; i<int(_internalSubs.size()); i++)
+        {
+            if(_internalSubs[i]._name == name)
+            {
+                internalSub = _internalSubs[i];
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    bool setInternalSub(const std::string& name, const Compiler::InternalSub& internalSub)
+    {
+        for(int i=0; i<int(_internalSubs.size()); i++)
+        {
+            if(_internalSubs[i]._name == name)
+            {
+                _internalSubs[i] = internalSub;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    bool setInternalSubToLoad(const std::string& name)
+    {
+        for(int i=0; i<int(_internalSubs.size()); i++)
+        {
+            if(_internalSubs[i]._name == name)
+            {
+                _internalSubs[i]._inUse = true;
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     bool initialise(void)
     {
@@ -331,10 +377,9 @@ namespace Linker
             {
                 for(int j=0; j<int(tokens.size()); j++)
                 {
-                    std::string token = tokens[j];
                     if(tokens[j].find_first_of(";#") != std::string::npos) break;
-                    int size = Assembler::getAsmOpcodeSize(token);
-                    vasmSize += (size == 0) ? Compiler::getMacroSize(token) : size;
+                    int size = Assembler::getAsmOpcodeSize(tokens[j]);
+                    vasmSize += (size == 0) ? Compiler::getMacroSize(tokens[j]) : size;
                 }
             }
 
@@ -443,7 +488,7 @@ namespace Linker
             // Save end of runtime/strings
             if(address < Compiler::getRuntimeEnd()) Compiler::setRuntimeEnd(address);
 
-            fprintf(stderr, "* %-20s : 0x%04x  :    %2d bytes\n", _internalSubs[subIndex]._name.c_str(), address, _internalSubs[subIndex]._size);
+            //fprintf(stderr, "* %-20s : 0x%04x  :    %2d bytes\n", _internalSubs[subIndex]._name.c_str(), address, _internalSubs[subIndex]._size);
 
             _internalSubs[subIndex]._address = address;
             _internalSubs[subIndex]._inUse = true;
@@ -572,11 +617,11 @@ namespace Linker
 
     bool linkInternalSubs(void)
     {
-        fprintf(stderr, "\n**********************************************\n");
-        fprintf(stderr, "*                   Linking                   \n");
-        fprintf(stderr, "**********************************************\n");
-        fprintf(stderr, "*        Name          : Address :    Size    \n");
-        fprintf(stderr, "**********************************************\n");
+        //fprintf(stderr, "\n**********************************************\n");
+        //fprintf(stderr, "*                   Linking                   \n");
+        //fprintf(stderr, "**********************************************\n");
+        //fprintf(stderr, "*        Name          : Address :    Size    \n");
+        //fprintf(stderr, "**********************************************\n");
         
         for(int i=0; i<int(Compiler::getCodeLines().size()); i++)
         {
@@ -720,9 +765,7 @@ RESTART_COLLECTION:
             _internalSubs[i]._address = 0;
             _internalSubs[i]._includeName = "";
             _internalSubs[i]._loaded = false;
-
-            // Critical zero page subs are always loaded
-            _internalSubs[i]._inUse = (_internalSubs[i]._critical) ?  true : false;
+            _internalSubs[i]._inUse = false;
         }
     }
 }

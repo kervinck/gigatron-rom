@@ -217,7 +217,7 @@ namespace Audio
         if(!Editor::getStartMusic()) return;
 
         static bool firstTime = true;
-        if(firstTime == true)
+        if(firstTime)
         {
             firstTime = false;
             initialiseChannels();            

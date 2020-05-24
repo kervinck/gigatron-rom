@@ -37,6 +37,7 @@ textWorkArea                  EQU                               0x7fa0
 
 ; Includes
 %includePath                  "../runtime"
+%include                      util.i
 %include                      gigatron.i
 %include                      macros.i
 
@@ -46,11 +47,9 @@ _page_0x0300                  EQU                               0x0300
 _page_0x0400                  EQU                               0x0400
 _page_0x0500                  EQU                               0x0500
 _page_0x0600                  EQU                               0x0600
-_end_0x0732                   EQU                               0x06ce
+_end_0x0701                   EQU                               0x06a0
 
 ; Variables
-_arr_array                    EQU                               0x7ef4
-_arr_array                    DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
 _a                            EQU                               0x0030
 _d                            EQU                               0x0032
 _b                            EQU                               0x0034
@@ -65,19 +64,23 @@ _t                            EQU                               0x0044
 _cs                           EQU                               0x0046
 _db                           EQU                               0x0048
 
+; Arrays
+_arr_array                    EQU                               0x7ef4
+_arr_array                    DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+
 ; Strings
-_timeArray_                   EQU                               0x7aa1
-_timeArray_                   DB                                00 00 00
-_timeString_                  EQU                               0x76a2
-_timeString_                  DB                                8 '00:00:00' 0
-_str_0x7eec                   EQU                               0x7eec
-_str_0x7eec                   DB                                6 'const ' 0
 _t1$                          EQU                               0x7da0
 _t1$                          DB                                4 'yes ' 0
 _t2$                          EQU                               0x7ca0
 _t2$                          DB                                3 'no ' 0
 _test$                        EQU                               0x7ba0
 _test$                        DB                                16 'cat dog furries ' 0
+_cat$                         EQU                               0x79a0
+_cat$                         DB                                3 'cat' 0
+
+; Constant Strings
+_str_0x7eec                   EQU                               0x7eec
+_str_0x7eec                   DB                                6 'const ' 0
 _str_0x7ee4                   EQU                               0x7ee4
 _str_0x7ee4                   DB                                6 'whoop ' 0
 _str_0x7ee0                   EQU                               0x7ee0
@@ -88,8 +91,6 @@ _str_0x7ec9                   EQU                               0x7ec9
 _str_0x7ec9                   DB                                1 ' ' 0
 _str_0x7ac9                   EQU                               0x7ac9
 _str_0x7ac9                   DB                                53 'aioujehfiadsuhgfaissuhfgdiughafpiusfghpdsiufghspi;udf' 0
-_cat$                         EQU                               0x79a0
-_cat$                         DB                                3 'cat' 0
 _str_0x7eb9                   EQU                               0x7eb9
 _str_0x7eb9                   DB                                14 'Testing INPUT:' 0
 _str_0x7eac                   EQU                               0x7eac
@@ -102,6 +103,14 @@ _str_0x7ac4                   EQU                               0x7ac4
 _str_0x7ac4                   DB                                3 'S ?' 0
 _str_0x78f7                   EQU                               0x78f7
 _str_0x78f7                   DB                                7 'Testing' 0
+
+; Data
+_data_                        EQU                               0x7ea0
+_data_                        DW                                0
+_dataIndex_                   EQU                               0x7aa2
+_dataIndex_                   DW                                0
+
+; Time
 
 ; Define Bytes
 
@@ -126,19 +135,8 @@ _input_0x7abe                 EQU                               0x7abe
 _input_0x7abe                 DW                                0x7ab6 0x7aae 0x7aa4 
 
 ; Code
-_entryPoint_                  LDI                               0x1c
-                              STW                               romType
-                              RomCheck                          
-                              InitEqOp                          
-                              InitNeOp                          
-                              InitLeOp                          
-                              InitGeOp                          
-                              InitLtOp                          
-                              InitGtOp                          
-                              InitArray2d                       
-                              InitArray3d                       
-                              InitRealTimeAddr                  
-                              Initialise                                                        ; INIT
+_entryPoint_                  Initialise                        
+                              InitRealTimeStub                                                  ; INIT
 
                               ClearVertBlinds                                                   ; cls
 
@@ -207,10 +205,6 @@ _entryPoint_                  LDI                               0x1c
 
                               NewLine                                                           ; print
 
-                              STW                               0xe2
-                              LDWI                              _page_0x0300
-                              CALL                              giga_vAC
-_page_0x0300                  LDW                               0xe2
                               PrintString                       _cat$
                               PrintString                       _str_0x7ec9
                               LDW                               _hours
@@ -218,6 +212,10 @@ _page_0x0300                  LDW                               0xe2
                               PrintString                       _str_0x7ec9
                               LDW                               _minutes
                               PrintAcInt16                      
+                              STW                               0xe2
+                              LDWI                              _page_0x0300
+                              CALL                              giga_vAC
+_page_0x0300                  LDW                               0xe2
                               PrintString                       _str_0x7ec9
                               LDW                               _seconds
                               PrintAcInt16                      
@@ -282,10 +280,6 @@ _page_0x0300                  LDW                               0xe2
                               ADDI                              1
                               STW                               _e                              ; e = @e + d + 1
 
-                              STW                               0xe2
-                              LDWI                              _page_0x0400
-                              CALL                              giga_vAC
-_page_0x0400                  LDW                               0xe2
                               LDWI                              31433
                               STW                               _f                              ; f = @big$
 
@@ -296,6 +290,10 @@ _page_0x0400                  LDW                               0xe2
                               PrintAcHexWord                    
                               PrintString                       _str_0x7ec9
                               LDW                               _d
+                              STW                               0xe2
+                              LDWI                              _page_0x0400
+                              CALL                              giga_vAC
+_page_0x0400                  LDW                               0xe2
                               PrintAcHexWord                    
                               PrintString                       _str_0x7ec9
                               LDW                               _e
@@ -344,10 +342,6 @@ _page_0x0400                  LDW                               0xe2
                               LD                                _f
                               POKE                              memAddr                         ; arr(1).lo = f.lo
 
-                              STW                               0xe2
-                              LDWI                              _page_0x0500
-                              CALL                              giga_vAC
-_page_0x0500                  LDW                               0xe2
                               LD                                _f + 1
                               STW                               memValue
                               LDWI                              0x7ef6
@@ -364,6 +358,10 @@ _page_0x0500                  LDW                               0xe2
                               LDWI                              0x7ef4 + 1
                               PEEK                              
                               PrintAcHexByte                    
+                              STW                               0xe2
+                              LDWI                              _page_0x0500
+                              CALL                              giga_vAC
+_page_0x0500                  LDW                               0xe2
                               PrintString                       _str_0x7ec9
                               LDWI                              0x7ef4
                               PEEK                              
@@ -404,10 +402,6 @@ _page_0x0500                  LDW                               0xe2
                               PrintString                       _str_0x7ec9
                               LD                                0x00
                               PrintAcInt16                      
-                              STW                               0xe2
-                              LDWI                              _page_0x0600
-                              CALL                              giga_vAC
-_page_0x0600                  LDW                               0xe2
                               PrintString                       _str_0x7ec9
                               LDW                               0x00
                               PrintAcInt16                      
@@ -416,6 +410,10 @@ _page_0x0600                  LDW                               0xe2
                               NewLine                                                           ; print rnd(0) AND 63;" ";len(big$);" ";peek(0);" ";deek(0);" ";@big$
 
                               LDI                               7
+                              STW                               0xe2
+                              LDWI                              _page_0x0600
+                              CALL                              giga_vAC
+_page_0x0600                  LDW                               0xe2
                               STW                               _t                              ; t = len("Testing")
 
                               LDI                               53
@@ -449,7 +447,7 @@ _page_0x0600                  LDW                               0xe2
                               PrintInt16                        0x0004
                               NewLine                                                           ; print sin(56.8333333)*1000;" ";cs;" ";db;" ";1.5333333333 * 2.32
 
-_end_0x0732                   BRA                               _end_0x0732                     ; end
+_end_0x0701                   BRA                               _end_0x0701                     ; end
 
 
 
@@ -459,52 +457,44 @@ _end_0x0732                   BRA                               _end_0x0732     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-romCheck                      EQU     0x78e0
-convertEqOp                   EQU     0x78d7
-convertNeOp                   EQU     0x78ce
-convertLeOp                   EQU     0x78c5
-convertGeOp                   EQU     0x78bc
-convertLtOp                   EQU     0x78b3
-convertGtOp                   EQU     0x78aa
-convertArr2d                  EQU     0x77f3
-convertArr3d                  EQU     0x77e2
-realTimeStub                  EQU     0x77d0
-multiply16bit                 EQU     0x75a5
-divide16bit                   EQU     0x6fa8
-rand16bit                     EQU     0x78a2
-randMod16bit                  EQU     0x72c5
-resetVideoTable               EQU     0x71a8
-initClearFuncs                EQU     0x77ae
-clearVertBlinds               EQU     0x76c5
-clearCursorRow                EQU     0x6eb6
-input                         EQU     0x72d8
-inputExt1                     EQU     0x6db0
-inputExt2                     EQU     0x70ac
-inputCursor                   EQU     0x6cdd
-inputKeys                     EQU     0x6ba4
-inputIntVar                   EQU     0x6ea2
-inputStrVar                   EQU     0x6cc6
-inputReturn                   EQU     0x6ac6
-inputDelete                   EQU     0x69b9
-inputPrint                    EQU     0x6ca7
-inputNewline                  EQU     0x6ab1
-printInit                     EQU     0x69a3
-printText                     EQU     0x76ac
-printDigit                    EQU     0x68dd
-printInt16                    EQU     0x74ae
-printChr                      EQU     0x74a1
-printChar                     EQU     0x67a7
-printHexByte                  EQU     0x70ca
-printHexWord                  EQU     0x71c7
-newLineScroll                 EQU     0x73a4
-integerStr                    EQU     0x66c0
-stringChr                     EQU     0x72b4
-stringHex                     EQU     0x72a2
-stringHexw                    EQU     0x71e0
-createHex                     EQU     0x68b5
-stringCopy                    EQU     0x77a1
-stringAdd                     EQU     0x65c3
-stringConcat                  EQU     0x75d7
+realTimeStub                  EQU     0x78d9
+multiply16bit                 EQU     0x74cd
+divide16bit                   EQU     0x71a8
+rand16bit                     EQU     0x77a4
+randMod16bit                  EQU     0x73ec
+resetVideoFlags               EQU     0x78eb
+resetVideoTable               EQU     0x70db
+initClearFuncs                EQU     0x70c4
+clearVertBlinds               EQU     0x77c5
+clearCursorRow                EQU     0x6fb6
+input                         EQU     0x74a6
+inputExt1                     EQU     0x6eb0
+inputExt2                     EQU     0x70a6
+inputCursor                   EQU     0x6ddd
+inputKeys                     EQU     0x6ca4
+inputIntVar                   EQU     0x6fa2
+inputStrVar                   EQU     0x6dc6
+inputReturn                   EQU     0x6bc6
+inputDelete                   EQU     0x6ab9
+inputPrint                    EQU     0x6da7
+inputNewline                  EQU     0x6bb1
+printInit                     EQU     0x6aa3
+printText                     EQU     0x77ac
+printDigit                    EQU     0x69dd
+printInt16                    EQU     0x76ae
+printChr                      EQU     0x76a1
+printChar                     EQU     0x68a7
+printHexByte                  EQU     0x72b1
+printHexWord                  EQU     0x72e6
+newLineScroll                 EQU     0x75a4
+integerStr                    EQU     0x67c0
+stringChr                     EQU     0x73db
+stringHex                     EQU     0x73c9
+stringHexw                    EQU     0x73aa
+createHex                     EQU     0x69b5
+stringCopy                    EQU     0x78a4
+stringAdd                     EQU     0x66c3
+stringConcat                  EQU     0x78b1
 convertEqOpAddr               EQU     0x00d0
 convertNeOpAddr               EQU     0x00d2
 convertLeOpAddr               EQU     0x00d4
@@ -516,7 +506,7 @@ convertArr3dAddr              EQU     0x00de
 realTimeStubAddr              EQU     0x00e0
 
 
-; do *NOT* use register4 to register7 during time slicing if you call realTimeStub
+; do *NOT* use register4 to register7 during time slicing
 realTimeAddr        EQU     register0
 realTimeProc0       EQU     register1
 realTimeProc1       EQU     register2
@@ -529,97 +519,6 @@ lutIndex            EQU     register8
 romType             EQU     register0
 romErrAddr          EQU     register1
 romErrPixel         EQU     register2
-
-
-romCheck            LD      giga_romType
-                    ANDI    0xFC
-                    SUBW    romType
-                    BGE     romC_return
-                    LDWI    giga_vram
-                    STW     romErrAddr
-                    
-romC_loop           LD      romErrPixel
-                    POKE    romErrAddr
-                    INC     romErrPixel
-                    BRA     romC_loop                       ; flash left hand corner pixel indicating rom error
-                    
-romC_return         RET                    
-
-
-                    ; convert equal to into a boolean
-convertEqOp         BEQ     convertEq_1
-                    LDI     0
-                    RET
-convertEq_1         LDI     1
-                    RET
-
-
-                    ; convert not equal to into a boolean
-convertNeOp         BNE     convertNe_1
-                    LDI     0
-                    RET
-convertNe_1         LDI     1
-                    RET
-
-
-                    ; convert less than or equal to into a boolean
-convertLeOp         BLE     convertLe_1
-                    LDI     0
-                    RET
-convertLe_1         LDI     1
-                    RET
-
-
-                    ; convert greater than or equal to into a boolean
-convertGeOp         BGE     convertGe_1
-                    LDI     0
-                    RET
-convertGe_1         LDI     1
-                    RET
-
-
-                    ; convert less than into a boolean
-convertLtOp         BLT     convertLt_1
-                    LDI     0
-                    RET
-convertLt_1         LDI     1
-                    RET
-
-
-                    ; convert greater than into boolean
-convertGtOp         BGT     convertGt_1
-                    LDI     0
-                    RET
-convertGt_1         LDI     1
-                    RET
-
-
-memIndex0           EQU     register0
-memIndex1           EQU     register1
-memIndex2           EQU     register2
-memValue            EQU     register8
-memAddr             EQU     register9
-
-
-convertArr2d        ADDW    memIndex0
-                    ADDW    memIndex0
-                    DEEK
-                    ADDW    memIndex1
-                    ADDW    memIndex1
-                    STW     memAddr
-                    RET
-
-
-convertArr3d        ADDW    memIndex0
-                    ADDW    memIndex0
-                    DEEK
-                    ADDW    memIndex1
-                    ADDW    memIndex1
-                    DEEK
-                    ADDW    memIndex2
-                    ADDW    memIndex2
-                    STW     memAddr
-                    RET
 
 
                     ; runs real time, (time sliced), code at regular intervals
@@ -639,7 +538,7 @@ realTimeStub2       POP
                     RET
 
 
-; do *NOT* use register4 to register7 during time slicing if you call realTimeStub
+; do *NOT* use register4 to register7 during time slicing
 mathX               EQU     register8
 mathY               EQU     register9
 mathSum             EQU     register12
@@ -756,8 +655,7 @@ randMod16bit        PUSH
                     RET
 
 
-
-; do *NOT* use register4 to register7 during time slicing if you call realTimeStub
+; do *NOT* use register4 to register7 during time slicing
 xreset              EQU     register0
 xcount              EQU     register1
 ycount              EQU     register2
@@ -769,7 +667,17 @@ vramAddr            EQU     register11
 evenAddr            EQU     register12
 clsAddress          EQU     register13
     
-    
+
+resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
+                    STW     cursorXY
+                    LDWI    ON_BOTTOM_ROW_MSK
+                    ANDW    miscFlags
+                    STW     miscFlags                           ; reset on bottom row flag
+                    RET
+
+
+
+
                     ; resets video table pointers
 resetVideoTable     PUSH
                     LDI     8
@@ -786,6 +694,9 @@ resetVT_loop        CALL    realTimeStubAddr
                     LD      vramAddr
                     SUBI    giga_yres + 8
                     BLT     resetVT_loop
+                    
+                    LDWI    resetVideoFlags
+                    CALL    giga_vAC                    
                     POP
                     RET
 
@@ -793,12 +704,6 @@ resetVT_loop        CALL    realTimeStubAddr
 initClearFuncs      PUSH
                     LDWI    resetVideoTable
                     CALL    giga_vAC
-    
-                    LDI     giga_CursorX                        ; cursor x start
-                    STW     cursorXY
-                    LDWI    ON_BOTTOM_ROW_MSK
-                    ANDW    miscFlags
-                    STW     miscFlags                           ; reset on bottom row flag
             
                     LD      fgbgColour
                     ST      giga_sysArg0
@@ -849,7 +754,7 @@ clearVB_loop        CALL    realTimeStubAddr
 
 
 
-; do *NOT* use register4 to register7 during time slicing if you use realTimeStub
+; do *NOT* use register4 to register7 during time slicing
 inpLutAddr          EQU     register0
 inpKeyBak           EQU     register0
 inpVarsAddr         EQU     register1
@@ -1168,7 +1073,7 @@ inputNewline        PUSH
 
 
 
-; do *NOT* use register4 to register7 during time slicing if you use realTimeStub
+; do *NOT* use register4 to register7 during time slicing
 textStr             EQU     register0
 textNum             EQU     register0
 textBak             EQU     register0
@@ -1487,7 +1392,7 @@ newLS_exit          LDWI    printInit
                     RET
 
 
-; do *NOT* use register4 to register7 during time slicing if you call realTimeStub
+; do *NOT* use register4 to register7 during time slicing
 intSrcAddr          EQU     register8
 intDigit            EQU     register9
 intResult           EQU     register10
@@ -1533,7 +1438,7 @@ integerS_exit       LDW     intResult
                     RET
 
 
-; do *NOT* use register4 to register7 during time slicing if you call realTimeStub
+; do *NOT* use register4 to register7 during time slicing
 strChr              EQU     register0
 strHex              EQU     register1
 strCmpRes           EQU     register2
