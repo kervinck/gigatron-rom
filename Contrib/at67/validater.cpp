@@ -378,17 +378,6 @@ namespace Validater
             Compiler::getElseIfDataStack().pop();
         }
 
-        // Check ENDIF blocks
-        while(!Compiler::getEndIfDataStack().empty())
-        {
-            success = false;
-            Compiler::EndIfData endIfData = Compiler::getEndIfDataStack().top();
-            int codeLineIndex = endIfData._codeLineIndex;
-            std::string code = Compiler::getCodeLines()[codeLineIndex]._code;
-            fprintf(stderr, "Validater::checkStatementBlocks() : Syntax error, missing ENDIF statement, for '%s' on line %d\n", code.c_str(), codeLineIndex);
-            Compiler::getEndIfDataStack().pop();
-        }
-        
         // Check WHILE WEND blocks
         while(!Compiler::getWhileWendDataStack().empty())
         {

@@ -63,37 +63,37 @@ _48                           EQU                               0x0418
 _112                          EQU                               0x042e
 _122                          EQU                               0x0444
 _channels                     EQU                               0x045d
-_audio                        EQU                               0x04b2
-_waveform                     EQU                               0x04bd
-_playNote                     EQU                               0x0516
-_playExit                     EQU                               0x056c
-_inverseChar                  EQU                               0x0573
-_normalChar                   EQU                               0x0583
-_printChar                    EQU                               0x0593
-_206                          EQU                               0x05b1
-_207                          EQU                               0x05c3
-_208                          EQU                               0x05d5
-_209                          EQU                               0x05e7
-_drawKeys                     EQU                               0x0604
-_cont                         EQU                               0x069d
+_audio                        EQU                               0x04b4
+_waveform                     EQU                               0x04bf
+_playNote                     EQU                               0x0518
+_playExit                     EQU                               0x0570
+_inverseChar                  EQU                               0x0577
+_normalChar                   EQU                               0x0587
+_printChar                    EQU                               0x0597
+_206                          EQU                               0x05b5
+_207                          EQU                               0x05c7
+_208                          EQU                               0x05d9
+_209                          EQU                               0x05eb
+_drawKeys                     EQU                               0x0609
+_cont                         EQU                               0x06a2
 _else_0x02ad                  EQU                               0x029b
 _page_0x0300                  EQU                               0x0300
 _page_0x0400                  EQU                               0x0400
 _else_0x0457                  EQU                               0x045b
 _next_0x045e                  EQU                               0x0462
 _else_0x049e                  EQU                               0x0486
-_else_0x04d5                  EQU                               0x04a7
-_next_0x051a                  EQU                               0x04e8
+_else_0x04d5                  EQU                               0x04a9
+_next_0x051a                  EQU                               0x04ea
 _page_0x0500                  EQU                               0x0500
-_next_0x053d                  EQU                               0x051b
-_else_0x056d                  EQU                               0x0537
-_else_0x05b7                  EQU                               0x0563
+_next_0x053d                  EQU                               0x051d
+_else_0x056d                  EQU                               0x0539
+_else_0x05b7                  EQU                               0x0567
 _page_0x0600                  EQU                               0x0600
-_next_0x0652                  EQU                               0x0609
-_next_0x06be                  EQU                               0x065f
-_else_0x06cb                  EQU                               0x0668
-_else_0x06d8                  EQU                               0x0671
-_end_0x075a                   EQU                               0x06e5
+_next_0x0652                  EQU                               0x060e
+_next_0x06be                  EQU                               0x0664
+_else_0x06cb                  EQU                               0x066d
+_else_0x06d8                  EQU                               0x0676
+_end_0x075a                   EQU                               0x06ea
 
 ; Variables
 _n                            EQU                               0x0030
@@ -134,10 +134,6 @@ _str_0x7deb                   EQU                               0x7deb
 _str_0x7deb                   DB                                19 'Q W E R T Y U I O P' 0
 
 ; Data
-_data_                        EQU                               0x7ba6
-_data_                        DW                                0
-_dataIndex_                   EQU                               0x7ba4
-_dataIndex_                   DW                                0
 
 ; Time
 
@@ -155,7 +151,7 @@ _dataIndex_                   DW                                0
 _lut_numericLabs              EQU                               0x78a9
 _lut_numericLabs              DW                                113 50 119 51 101 114 53 116 54 121 55 117 105 57 111 48 112 122 206 207 208 209 0x0000
 _lut_numericAddrs             EQU                               0x77d4
-_lut_numericAddrs             DW                                0x02ae 0x02c4 0x02da 0x02f0 0x0317 0x032d 0x0343 0x0359 0x036f 0x0385 0x039b 0x03b1 0x03c7 0x03dd 0x0402 0x0418 0x042e 0x0444 0x05b1 0x05c3 0x05d5 0x05e7 
+_lut_numericAddrs             DW                                0x02ae 0x02c4 0x02da 0x02f0 0x0317 0x032d 0x0343 0x0359 0x036f 0x0385 0x039b 0x03b1 0x03c7 0x03dd 0x0402 0x0418 0x042e 0x0444 0x05b5 0x05c7 0x05d9 0x05eb 
 
 ; Code
 _entryPoint_                  LDI                               0x20
@@ -226,7 +222,7 @@ _loop                         WaitVBlank                                        
                               CALL                              giga_vAC                        ; gosub channels
 
                               LDW                               _k
-                              SUBW                              _kk
+                              XORW                              _kk
                               BEQ                               _else_0x02ad
                               LDWI                              _normalChar
                               CALL                              giga_vAC                        ; if k &&<> kk then gosub normalChar
@@ -276,10 +272,10 @@ _119                          PUSH
                               Return                                                            ; n =  80 +  9*256 : char = 87 : posxy =  36 + 91*256 : gosub playNote : return : 'D
 
 _51                           PUSH                              
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0300
                               CALL                              giga_vAC
-_page_0x0300                  LDW                               0xe2
+_page_0x0300                  LDW                               0xde
                               LDWI                              2585
                               STW                               _n
                               LDI                               51
@@ -400,10 +396,10 @@ _57                           PUSH
                               CALL                              giga_vAC
                               Return                                                            ; n =  21 + 18*256 : char = 57 : posxy = 114 + 22*256 : gosub playNote : return : 'C#
 
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0400
                               CALL                              giga_vAC
-_page_0x0400                  LDW                               0xe2
+_page_0x0400                  LDW                               0xde
 _111                          PUSH                              
                               LDWI                              4895
                               STW                               _n
@@ -439,7 +435,7 @@ _112                          PUSH
 
 _122                          PUSH                              
                               LDW                               _kk
-                              SUBW                              _k
+                              XORW                              _k
                               BEQ                               _else_0x0457
                               LDW                               _z
                               ADDI                              1
@@ -477,6 +473,7 @@ _else_0x049e                  LDWI                              0x7ef6
                               ADDW                              _c
                               ADDW                              _c
                               DEEK                              
+                              XORI                              0
                               BNE                               _else_0x04d5
                               LDWI                              0x7eec
                               ADDW                              _c
@@ -523,11 +520,11 @@ _next_0x051a                  LDW                               _c
                               ST                                _ch + 1
                               LDW                               _ch
                               SUBI                              1
-                              STW                               0xc0
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0500
                               CALL                              giga_vAC
-_page_0x0500                  LDW                               0xe2
+_page_0x0500                  LDW                               0xde
+                              STW                               0xc0
                               LDW                               _z
                               POKE                              0xc0                            ; ch.hi = c : poke ch-1,z
 
@@ -543,7 +540,7 @@ _next_0x053d                  LDWI                              0x7eec
                               ADDW                              _c
                               ADDW                              _c
                               DEEK                              
-                              SUBW                              _k
+                              XORW                              _k
                               BNE                               _else_0x056d
                               LDWI                              0x7ef6
                               ADDW                              _c
@@ -557,6 +554,7 @@ _else_0x056d                  LDWI                              0x7ef6
                               ADDW                              _c
                               ADDW                              _c
                               DEEK                              
+                              XORI                              0
                               BNE                               _else_0x05b7
                               LDWI                              0x7ef6
                               ADDW                              _c
@@ -633,11 +631,11 @@ _208                          PUSH
 
 _209                          PUSH                              
                               PrintString                       _str_0x7ebf
-                              NewLine                           
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0600
                               CALL                              giga_vAC
-_page_0x0600                  LDW                               0xe2
+_page_0x0600                  LDW                               0xde
+                              NewLine                           
                               Return                                                            ; print "Sawtooth" : return
 
 _drawKeys                     PUSH                              
@@ -689,12 +687,12 @@ _next_0x0652                  LDW                               _i
                               STW                               _i                              ; for i=0 &to 8
 
 _next_0x06be                  LDW                               _i
-                              SUBI                              2
+                              XORI                              2
                               BNE                               _else_0x06cb
                               BRA                               _cont                           ; if i &&= 2 then goto &cont
 
 _else_0x06cb                  LDW                               _i
-                              SUBI                              6
+                              XORI                              6
                               BNE                               _else_0x06d8
                               BRA                               _cont                           ; if i &&= 6 then goto &cont
 
@@ -783,9 +781,11 @@ convertLeOpAddr               EQU     0x00d4
 convertGeOpAddr               EQU     0x00d6
 convertLtOpAddr               EQU     0x00d8
 convertGtOpAddr               EQU     0x00da
-convertArr2dAddr              EQU     0x00dc
-convertArr3dAddr              EQU     0x00de
-realTimeStubAddr              EQU     0x00e0
+convert8Arr2dAddr             EQU     0x00e0
+convert8Arr3dAddr             EQU     0x00e2
+convert16Arr2dAddr            EQU     0x00e4
+convert16Arr3dAddr            EQU     0x00e6
+realTimeStubAddr              EQU     0x00dc
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -935,6 +935,7 @@ drawRectF_y1        EQU     register1
 drawRectF_x2        EQU     register2
 drawRectF_y2        EQU     register7
 
+drawPoly_mode       EQU     register14
 drawPoly_addr       EQU     register15
 
     

@@ -20,6 +20,7 @@ giga_xfont                      EQU     6
 giga_yfont                      EQU     8
 
 ; page 0
+giga_Zero                       EQU     0x00
 giga_memSize                    EQU     0x01
 giga_rand0                      EQU     0x06
 giga_rand1                      EQU     0x07
@@ -47,6 +48,7 @@ giga_sysArg7                    EQU     0x2B
 giga_soundTimer                 EQU     0x2C
 giga_ledState                   EQU     0x2E
 giga_ledTempo                   EQU     0x2F
+giga_One                        EQU     0x80
 
 ; ROM types
 romTypeValue_ROMv1              EQU     0x1C

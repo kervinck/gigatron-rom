@@ -45,24 +45,24 @@ textWorkArea                  EQU                               0x69a0
 _entryPoint_                  EQU                               0x0200
 _loop                         EQU                               0x027a
 _printText                    EQU                               0x0336
-_getChar                      EQU                               0x033c
-_crashSound                   EQU                               0x03b1
+_getChar                      EQU                               0x033e
+_crashSound                   EQU                               0x03b5
 _else_0x02b8                  EQU                               0x02a2
 _else_0x02c7                  EQU                               0x02ad
 _endif_0x02ff                 EQU                               0x02d7
 _page_0x0300                  EQU                               0x0300
 _endif_0x0333                 EQU                               0x0310
 _endif_0x0348                 EQU                               0x0321
-_endif_0x03a8                 EQU                               0x0363
-_elseif_0x03af                EQU                               0x036a
-_else_0x03c0                  EQU                               0x0377
-_endif_0x03c8                 EQU                               0x037d
-_endif_0x03f9                 EQU                               0x03a2
-_endif_0x040a                 EQU                               0x03af
-_next_0x0442                  EQU                               0x03d7
+_endif_0x03a8                 EQU                               0x0367
+_elseif_0x03af                EQU                               0x036e
+_else_0x03c0                  EQU                               0x037b
+_endif_0x03c8                 EQU                               0x0381
+_endif_0x03f9                 EQU                               0x03a6
+_endif_0x040a                 EQU                               0x03b3
+_next_0x0442                  EQU                               0x03db
 _page_0x0400                  EQU                               0x0400
-_endif_0x048d                 EQU                               0x0428
-_end_0x048f                   EQU                               0x042a
+_endif_0x048d                 EQU                               0x042c
+_end_0x048f                   EQU                               0x042e
 
 ; Variables
 _f                            EQU                               0x0030
@@ -138,10 +138,6 @@ _quotes$_0xf5a0               DB                                62 'an oppressiv
 ; Constant Strings
 
 ; Data
-_data_                        EQU                               0xfe08
-_data_                        DW                                0
-_dataIndex_                   EQU                               0xfe06
-_dataIndex_                   DW                                0
 
 ; Time
 
@@ -1060,14 +1056,14 @@ _spriteLut_0xf80a             EQU                               0xf80a
 _spriteLut_0xf80a             DW                                0x28a0 0x0000 0x29a0 0x0f00 0x2aa0 0x0006 0x29c5 0x0f06 0x0000
 _spriteLut_0xf72e             EQU                               0xf72e
 _spriteLut_0xf72e             DW                                0x2ba0 0x0000 0x2ca0 0x0f00 0x2da0 0x0006 0x2cc5 0x0f06 0x0000
-_spriteLut_0xfb01             EQU                               0xfb01
-_spriteLut_0xfb01             DW                                0x2ea0 0x0000 0x2fa0 0x0f00 0x0000
+_spriteLut_0xfe00             EQU                               0xfe00
+_spriteLut_0xfe00             DW                                0x2ea0 0x0000 0x2fa0 0x0f00 0x0000
 _spriteLut_0xf71c             EQU                               0xf71c
 _spriteLut_0xf71c             DW                                0x30a0 0x0000 0x2fc5 0x0f00 0x31a0 0x0006 0x32a0 0x0f06 0x0000
 _spriteLut_0xf70a             EQU                               0xf70a
 _spriteLut_0xf70a             DW                                0x33a0 0x0000 0x32c5 0x0f00 0x34a0 0x0006 0x35a0 0x0f06 0x0000
-_spriteLut_0xf900             EQU                               0xf900
-_spriteLut_0xf900             DW                                0x36a0 0x0000 0x35c5 0x0f00 0x0000
+_spriteLut_0xfb01             EQU                               0xfb01
+_spriteLut_0xfb01             DW                                0x36a0 0x0000 0x35c5 0x0f00 0x0000
 _spriteLut_0xf626             EQU                               0xf626
 _spriteLut_0xf626             DW                                0x37a0 0x0000 0x38a0 0x0f00 0x39a0 0x0006 0x38c5 0x0f06 0x3aa0 0x000c 0x3ba0 0x0f0c 0x0000
 _spriteLut_0xf614             EQU                               0xf614
@@ -1096,8 +1092,8 @@ _spriteLut_0xf4dc             EQU                               0xf4dc
 _spriteLut_0xf4dc             DW                                0x5ea0 0x0000 0x5fa0 0x0f00 0x60a0 0x0006 0x5fc5 0x0f06 0x0000
 _spriteLut_0xf4ca             EQU                               0xf4ca
 _spriteLut_0xf4ca             DW                                0x61a0 0x0000 0x62a0 0x0f00 0x63a0 0x0006 0x62c5 0x0f06 0x0000
-_spriteLut_0xf800             EQU                               0xf800
-_spriteLut_0xf800             DW                                0x64a0 0x0000 0x65a0 0x0f00 0x0000
+_spriteLut_0xf900             EQU                               0xf900
+_spriteLut_0xf900             DW                                0x64a0 0x0000 0x65a0 0x0f00 0x0000
 _spriteLut_0xf468             EQU                               0xf468
 _spriteLut_0xf468             DW                                0x66a0 0x0000 0x67a0 0x0f00 0x68a0 0x1e00 0x8000 0x0006 0x805b 0x0f06 0x80b6 0x1e06 0x8100 0x000c 0x815b 0x0f0c 0x81b6 0x1e0c 0x8200 0x0012 0x825b 0x0f12 0x82b6 0x1e12 0x8300 0x0018 0x835b 0x0f18 0x83b6 0x1e18 0x8400 0x001e 0x845b 0x0f1e 0x84b6 0x1e1e 0x8500 0x0024 0x855b 0x0f24 0x85b6 0x1e24 0x8600 0x002a 0x865b 0x0f2a 0x86b6 0x1e2a 0x0000
 _spriteLut_0xf406             EQU                               0xf406
@@ -1127,7 +1123,7 @@ _spriteLut_0x069e             DW                                0xdf00 0x0000 0x
 _spriteLut_0x063c             EQU                               0x063c
 _spriteLut_0x063c             DW                                0xe700 0x0000 0xe75b 0x0f00 0xe7b6 0x1e00 0xe800 0x0006 0xe85b 0x0f06 0xe8b6 0x1e06 0xe900 0x000c 0xe95b 0x0f0c 0xe9b6 0x1e0c 0xea00 0x0012 0xea5b 0x0f12 0xeab6 0x1e12 0xeb00 0x0018 0xeb5b 0x0f18 0xebb6 0x1e18 0xec00 0x001e 0xec5b 0x0f1e 0xecb6 0x1e1e 0xed00 0x0024 0xed5b 0x0f24 0xedb6 0x1e24 0xee00 0x002a 0xee5b 0x0f2a 0xeeb6 0x1e2a 0x0000
 _spritesLut_                  EQU                               0x15ae
-_spritesLut_                  DW                                0xfa06 0xf92e 0xf91c 0xf90a 0xf82e 0xf81c 0xf80a 0xf72e 0xfb01 0xf71c 0xf70a 0xf900 0xf626 0xf614 0xf602 0xf58e 0xf57c 0xf56a 0xf558 0xf546 0xf534 0xf522 0xf508 0xf4ee 0xf4dc 0xf4ca 0xf800 0xf468 0xf406 0xf39e 0xf33c 0xf29e 0xf23c 0xf19e 0xf13c 0xf09e 0xf03c 0xef9e 0xef3c 0x069e 0x063c 
+_spritesLut_                  DW                                0xfa06 0xf92e 0xf91c 0xf90a 0xf82e 0xf81c 0xf80a 0xf72e 0xfe00 0xf71c 0xf70a 0xfb01 0xf626 0xf614 0xf602 0xf58e 0xf57c 0xf56a 0xf558 0xf546 0xf534 0xf522 0xf508 0xf4ee 0xf4dc 0xf4ca 0xf900 0xf468 0xf406 0xf39e 0xf33c 0xf29e 0xf23c 0xf19e 0xf13c 0xf09e 0xf03c 0xef9e 0xef3c 0x069e 0x063c 
 
 ; Code
 _entryPoint_                  LDI                               0x28
@@ -1249,10 +1245,10 @@ _endif_0x02ff                 LDW                               _ystep
                               LDI                               56
                               ST                                _y + 1                          ; y.hi = 56
 
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0300
                               CALL                              giga_vAC
-_page_0x0300                  LDW                               0xe2
+_page_0x0300                  LDW                               0xde
                               LDI                               0
                               SUBW                              _ystep
                               STW                               _ystep                          ; ystep = -ystep
@@ -1264,7 +1260,7 @@ _page_0x0300                  LDW                               0xe2
                               STW                               _time                           ; time = 0
 
 _endif_0x0333                 LDW                               _crash
-                              SUBI                              1
+                              XORI                              1
                               JumpEQ                            _endif_0x0348 4                 ; if crash &= 1
 
                               LDWI                              _crashSound
@@ -1285,6 +1281,7 @@ _endif_0x0348                 LDWI                              _printText
 
 _printText                    PUSH                              
                               LDW                               _stamp
+                              XORI                              0
                               BNE                               _endif_0x03f9                   ; if stamp &&= 0
 
 _getChar                      LDWI                              0xff16
@@ -1299,6 +1296,7 @@ _getChar                      LDWI                              0xff16
                               INC                               _char                           ; inc char
 
                               LDW                               _c
+                              XORI                              0
                               BNE                               _elseif_0x03af                  ; if c &&= 0
 
                               LDI                               0
@@ -1307,7 +1305,7 @@ _getChar                      LDWI                              0xff16
                               INC                               _quote                          ; inc quote
 
                               LDW                               _quote
-                              SUBI                              21
+                              XORI                              21
                               BNE                               _endif_0x03a8                   ; if quote &&= 21
 
                               LDI                               0
@@ -1318,7 +1316,7 @@ _endif_0x03a8                 LDWI                              _getChar
                               BRA                               _endif_0x03c8                   ; goto getChar
 
 _elseif_0x03af                LDW                               _c
-                              SUBI                              32
+                              XORI                              32
                               BNE                               _else_0x03c0                    ; elseif c &&= 32
 
                               LDI                               26
@@ -1352,7 +1350,7 @@ _endif_0x03c8                 LDI                               0
 _endif_0x03f9                 INC                               _stamp                          ; inc stamp
 
                               LDW                               _stamp
-                              SUBW                              _width
+                              XORW                              _width
                               BNE                               _endif_0x040a                   ; if stamp &&= width
 
                               LDI                               0
@@ -1395,12 +1393,12 @@ _next_0x0442                  LDW                               _i
                               STW                               sndWaveType
                               SoundOnV                                                          ; sound on, i, freq + foffs, volume, 0
 
-                              LDW                               _foffs
-                              ADDI                              100
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0400
                               CALL                              giga_vAC
-_page_0x0400                  LDW                               0xe2
+_page_0x0400                  LDW                               0xde
+                              LDW                               _foffs
+                              ADDI                              100
                               STW                               _foffs                          ; foffs = foffs + 100
 
                               ForNextFarInc                     _i _next_0x0442 4               ; next i
@@ -1408,7 +1406,7 @@ _page_0x0400                  LDW                               0xe2
                               INC                               _time                           ; inc time
 
                               LDW                               _time
-                              SUBI                              64
+                              XORI                              64
                               JumpEQ                            _endif_0x048d 11                ; if time &= 64
 
                               LDI                               0
@@ -1447,9 +1445,11 @@ convertLeOpAddr               EQU     0x00d4
 convertGeOpAddr               EQU     0x00d6
 convertLtOpAddr               EQU     0x00d8
 convertGtOpAddr               EQU     0x00da
-convertArr2dAddr              EQU     0x00dc
-convertArr3dAddr              EQU     0x00de
-realTimeStubAddr              EQU     0x00e0
+convert8Arr2dAddr             EQU     0x00e0
+convert8Arr3dAddr             EQU     0x00e2
+convert16Arr2dAddr            EQU     0x00e4
+convert16Arr3dAddr            EQU     0x00e6
+realTimeStubAddr              EQU     0x00dc
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -1566,6 +1566,7 @@ drawRectF_y1        EQU     register1
 drawRectF_x2        EQU     register2
 drawRectF_y2        EQU     register7
 
+drawPoly_mode       EQU     register14
 drawPoly_addr       EQU     register15
 
     

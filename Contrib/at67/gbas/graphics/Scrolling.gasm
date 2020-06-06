@@ -60,10 +60,6 @@ _nx2                          EQU                               0x0036
 ; Constant Strings
 
 ; Data
-_data_                        EQU                               0x066d
-_data_                        DW                                0
-_dataIndex_                   EQU                               0x066b
-_dataIndex_                   DW                                0
 
 ; Time
 
@@ -138,7 +134,7 @@ _end_0x0268                   BRA                               _end_0x0268     
 ;****************************************************************************************************************************************
 
 realTimeStub                  EQU     0x0682
-waitVBlank                    EQU     0x065f
+waitVBlank                    EQU     0x0663
 waitVBlanks                   EQU     0x066f
 resetVideoFlags               EQU     0x0694
 convertEqOpAddr               EQU     0x00d0
@@ -147,9 +143,11 @@ convertLeOpAddr               EQU     0x00d4
 convertGeOpAddr               EQU     0x00d6
 convertLtOpAddr               EQU     0x00d8
 convertGtOpAddr               EQU     0x00da
-convertArr2dAddr              EQU     0x00dc
-convertArr3dAddr              EQU     0x00de
-realTimeStubAddr              EQU     0x00e0
+convert8Arr2dAddr             EQU     0x00e0
+convert8Arr3dAddr             EQU     0x00e2
+convert16Arr2dAddr            EQU     0x00e4
+convert16Arr3dAddr            EQU     0x00e6
+realTimeStubAddr              EQU     0x00dc
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -251,6 +249,7 @@ drawRectF_y1        EQU     register1
 drawRectF_x2        EQU     register2
 drawRectF_y2        EQU     register7
 
+drawPoly_mode       EQU     register14
 drawPoly_addr       EQU     register15
 
 

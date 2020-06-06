@@ -172,8 +172,16 @@ namespace Memory
         return false;
     }
 
-    bool getNextCodeAddress(FitType fitType, uint16_t start, int size, uint16_t& address)
+    bool getNextCodeAddress(FitType fitType, uint16_t start, int size, uint16_t& address, bool lowMemDescend)
     {
+        int numEmptySegments = 0;
+        for(int j=0; j<int(_freeRam.size()); j++)
+        {
+            if(_freeRam[j]._size == RAM_SEGMENTS_SIZE) numEmptySegments++;
+        }
+
+RESTART_CODE_ADDRESS_SEARCH:
+
         switch(fitType)
         {
             case FitAscending:
@@ -186,6 +194,14 @@ namespace Memory
                         uint16_t addr = uint16_t(_freeRam[j]._address + i);
                         if(addr >= start  &&  size <= left  &&  HI_BYTE(addr) == HI_BYTE(addr + size))
                         {
+                            // For 32K RAM systems once there are no full sized segments left, switch to descending,
+                            // (this gives the runtime a fighting to chance to be loaded in low RAM situations)
+                            if(lowMemDescend  &&  _sizeRAM == RAM_SIZE_LO  &&  numEmptySegments < 8)
+                            {
+                                start = RAM_SIZE_LO - 1;
+                                fitType = FitDescending;
+                                goto RESTART_CODE_ADDRESS_SEARCH;
+                            }
                             address = addr;
                             return true;
                         }

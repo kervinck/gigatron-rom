@@ -65,6 +65,7 @@ drawRectF_y1        EQU     register1
 drawRectF_x2        EQU     register2
 drawRectF_y2        EQU     register7
 
+drawPoly_mode       EQU     register14
 drawPoly_addr       EQU     register15
 
     
@@ -722,6 +723,47 @@ drawP_loop          LD      cursorXY
                     BRA     drawP_loop
                     
 drawP_exit          POP
+                    RET
+%ENDS
+
+%SUB                drawPolyRel
+drawPolyRel         PUSH
+
+drawPR_loop         LD      cursorXY
+                    STW     drawLine_x1
+                    LD      cursorXY + 1
+                    STW     drawLine_y1
+                    LDW     drawPoly_addr
+                    PEEK
+drawPR_x2           ADDW    drawLine_x1
+                    STW     drawLine_x2
+                    SUBI    255
+                    BEQ     drawPR_exit
+                    LDW     drawLine_x2
+                    ST      cursorXY
+                    INC     drawPoly_addr
+                    LDW     drawPoly_addr
+                    PEEK
+drawPR_y2           ADDW    drawLine_y1
+                    STW     drawLine_y2
+                    ST      cursorXY + 1
+                    CALLI   drawLine
+                    INC     drawPoly_addr
+                    BRA     drawPR_loop
+                    
+drawPR_exit         POP
+                    RET
+                    
+setPolyRelFlipX     LDWI    drawPR_x2
+                    STW     drawPoly_addr
+                    LDW     drawPoly_mode
+                    POKE    drawPoly_addr
+                    RET
+
+setPolyRelFlipY     LDWI    drawPR_y2
+                    STW     drawPoly_addr
+                    LDW     drawPoly_mode
+                    POKE    drawPoly_addr
                     RET
 %ENDS
 

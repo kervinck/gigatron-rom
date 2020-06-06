@@ -66,10 +66,6 @@ _i6                           EQU                               0x0038
 ; Constant Strings
 
 ; Data
-_data_                        EQU                               0x7eac
-_data_                        DW                                0
-_dataIndex_                   EQU                               0x7eaa
-_dataIndex_                   DW                                0
 
 ; Time
 
@@ -290,10 +286,10 @@ _next_0x02fd                  LDWI                              _math
                               LDI                               119
                               STW                               drawLine_y1
                               LDI                               0
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0300
                               CALL                              giga_vAC
-_page_0x0300                  LDW                               0xe2
+_page_0x0300                  LDW                               0xde
                               STW                               drawLine_x2
                               LDI                               119
                               SUBW                              _y
@@ -340,7 +336,7 @@ setRealTimeProc0              EQU     0x7eae
 scanlineMode                  EQU     0x7ec0
 resetVideoFlags               EQU     0x7edc
 resetVideoTable               EQU     0x7da1
-initClearFuncs                EQU     0x7ca2
+initClearFuncs                EQU     0x7ea1
 clearVertBlinds               EQU     0x7dc5
 drawLine                      EQU     0x7aaa
 drawLineExt                   EQU     0x79c6
@@ -355,9 +351,11 @@ convertLeOpAddr               EQU     0x00d4
 convertGeOpAddr               EQU     0x00d6
 convertLtOpAddr               EQU     0x00d8
 convertGtOpAddr               EQU     0x00da
-convertArr2dAddr              EQU     0x00dc
-convertArr3dAddr              EQU     0x00de
-realTimeStubAddr              EQU     0x00e0
+convert8Arr2dAddr             EQU     0x00e0
+convert8Arr3dAddr             EQU     0x00e2
+convert16Arr2dAddr            EQU     0x00e4
+convert16Arr3dAddr            EQU     0x00e6
+realTimeStubAddr              EQU     0x00dc
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -485,6 +483,7 @@ drawRectF_y1        EQU     register1
 drawRectF_x2        EQU     register2
 drawRectF_y2        EQU     register7
 
+drawPoly_mode       EQU     register14
 drawPoly_addr       EQU     register15
 
     

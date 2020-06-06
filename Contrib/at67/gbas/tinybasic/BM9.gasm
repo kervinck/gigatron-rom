@@ -73,7 +73,11 @@ _K                            EQU                               0x0032
 _M                            EQU                               0x0034
 _L                            EQU                               0x0036
 
+; Arrays
+
 ; Strings
+
+; Constant Strings
 _str_0x7ef1                   EQU                               0x7ef1
 _str_0x7ef1                   DB                                13 'INTERFACE AGE' 0
 _str_0x7ee2                   EQU                               0x7ee2
@@ -88,6 +92,10 @@ _str_0x7eb3                   EQU                               0x7eb3
 _str_0x7eb3                   DB                                9 ' gtBASIC ' 0
 _str_0x7ead                   EQU                               0x7ead
 _str_0x7ead                   DB                                4 'DONE' 0
+
+; Data
+
+; Time
 
 ; Define Bytes
 
@@ -177,10 +185,10 @@ _220                          NewLine                                           
 
 _230                          NewLine                                                           ; PRINT
 
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0300
                               CALL                              giga_vAC
-_page_0x0300                  LDW                               0xe2
+_page_0x0300                  LDW                               0xde
 _240                          PrintString                       _str_0x7ead
                               NewLine                                                           ; PRINT "DONE"
 
@@ -213,9 +221,11 @@ convertLeOpAddr               EQU     0x00d4
 convertGeOpAddr               EQU     0x00d6
 convertLtOpAddr               EQU     0x00d8
 convertGtOpAddr               EQU     0x00da
-convertArr2dAddr              EQU     0x00dc
-convertArr3dAddr              EQU     0x00de
-realTimeStubAddr              EQU     0x00e0
+convert8Arr2dAddr             EQU     0x00e0
+convert8Arr3dAddr             EQU     0x00e2
+convert16Arr2dAddr            EQU     0x00e4
+convert16Arr3dAddr            EQU     0x00e6
+realTimeStubAddr              EQU     0x00dc
 
 
 ; do *NOT* use register4 to register7 during time slicing

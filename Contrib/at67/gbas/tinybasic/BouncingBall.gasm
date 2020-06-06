@@ -60,7 +60,15 @@ _X                            EQU                               0x0030
 _V                            EQU                               0x0032
 _I                            EQU                               0x0034
 
+; Arrays
+
 ; Strings
+
+; Constant Strings
+
+; Data
+
+; Time
 
 ; Define Bytes
 
@@ -152,9 +160,11 @@ convertLeOpAddr               EQU     0x00d4
 convertGeOpAddr               EQU     0x00d6
 convertLtOpAddr               EQU     0x00d8
 convertGtOpAddr               EQU     0x00da
-convertArr2dAddr              EQU     0x00dc
-convertArr3dAddr              EQU     0x00de
-realTimeStubAddr              EQU     0x00e0
+convert8Arr2dAddr             EQU     0x00e0
+convert8Arr3dAddr             EQU     0x00e2
+convert16Arr2dAddr            EQU     0x00e4
+convert16Arr3dAddr            EQU     0x00e6
+realTimeStubAddr              EQU     0x00dc
 
 
 ; do *NOT* use register4 to register7 during time slicing

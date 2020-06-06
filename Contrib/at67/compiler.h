@@ -17,20 +17,22 @@
 #define MAX_NESTED_LOOPS  4
 #define MAX_ARRAY_DIMS    3
 
-#define SPRITE_CHUNK_SIZE        6
-#define SPRITE_STRIPE_CHUNKS_LO 15 // 15 fits in a 96 byte page
-#define SPRITE_STRIPE_CHUNKS_HI 40 // 40 fits in a 256 byte page
+#define SPRITE_CHUNK_SIZE         6
+#define SPRITE_STRIPE_CHUNKS_LO  15 // 15 fits in a 96 byte page
+#define SPRITE_STRIPE_CHUNKS_HI  40 // 40 fits in a 256 byte page
+#define MAX_NUM_SPRITES_LO      128 // maximum number of sprites for 32K RAM
+#define MAX_NUM_SPRITES_HI      512 // maximum number of sprites for 64K RAM
 
-// 28 bytes, (0x00E4 <-> 0x00FF), reserved for vCPU stack, allows for 14 nested calls. The amount of nested GOSUBS you can use is dependant on how
+// 24 bytes, (0x00E8 <-> 0x00FF), reserved for vCPU stack, allows for 12 nested calls. The amount of nested GOSUBS you can use is dependant on how
 // much of the stack is being used by nested system calls. *NOTE* there is NO call table for user code for this compiler
 #define USER_VAR_START  0x0030  // 80 bytes, (0x0030 <-> 0x007F), reserved for BASIC user variables
 #define INT_VAR_START   0x0082  // 46 bytes, (0x0082 <-> 0x00AF), internal register variables, used by the BASIC runtime
 #define LOOP_VAR_START  0x00B0  // 16 bytes, (0x00B0 <-> 0x00BF), reserved for FOR loops with vars, maximum of 4 nested FOR loops
 #define TEMP_VAR_START  0x00C0  // 16 bytes, (0x00C0 <-> 0x00CF), reserved for temporary expression variables
 #define CONVERT_CC_OPS  0x00D0  // 12 bytes, (0x00D0 <-> 0x00DB), critical relational operator routines that can't straddle page boundaries
-#define CONVERT_ARRAY   0x00DC  // 2 bytes,  (0x00DC <-> 0x00DF), critical array accessing routines
-#define REAL_TIME_PROC  0x00E0  // 2 bytes,  (0x00E0 <-> 0x00E1), critical time sliced routine that usually handles AUDIO/MIDI, etc
-#define VAC_SAVE_START  0x00E2  // 2 bytes,  (0x00E2 <-> 0x00E3), reserved for saving vAC
+#define REAL_TIME_PROC  0x00DC  // 2 bytes,  (0x00DC <-> 0x00DD), critical time sliced routine that usually handles AUDIO/MIDI, etc
+#define VAC_SAVE_START  0x00DE  // 2 bytes,  (0x00DE <-> 0x00DF), reserved for saving vAC
+#define CONVERT_ARRAY   0x00E0  // 8 bytes,  (0x00E0 <-> 0x00E7), critical array accessing routines
 #define USER_CODE_START 0x0200
 #define USER_VAR_END    0x007F
 
@@ -47,7 +49,7 @@
 
 namespace Compiler
 {
-    enum VarType {VarInt8=1, VarInt16, VarStr, VarStr2, VarInt32, VarFloat16, VarFloat32, VarArray1, VarArray2, VarArray3};
+    enum VarType {VarInt8=1, VarInt16, VarStr, VarStr2, VarInt32, VarFloat16, VarFloat32, Var1Arr8, Var2Arr8, Var3Arr8, Var1Arr16, Var2Arr16, Var3Arr16};
     enum IntSize {Int8=1, Int16=2, Int32=4};
     enum ConstType {ConstInt16, ConstStr};
     enum ConstStrType {StrChar, StrHex, StrHexw, StrLeft, StrRight, StrMid};
@@ -213,6 +215,12 @@ namespace Compiler
         int _codeLineIndex;
     };
 
+    struct EndIfData
+    {
+        int _jmpIndex;
+        int _codeLineIndex;
+        Expression::CCType _ccType;
+    };
     struct ElseIfData
     {
         int _jmpIndex;
@@ -220,12 +228,7 @@ namespace Compiler
         int _codeLineIndex;
         IfElseEndType _ifElseEndType;
         Expression::CCType _ccType;
-    };
-    struct EndIfData
-    {
-        int _jmpIndex;
-        int _codeLineIndex;
-        Expression::CCType _ccType;
+        std::stack<EndIfData> _endIfData;
     };
 
     struct WhileWendData
@@ -327,6 +330,7 @@ namespace Compiler
     uint16_t getRuntimeStart(void);
     uint16_t getTempVarStart(void);
     uint16_t getStrWorkArea(void);
+    uint16_t getSpritesAddrLutAddress(void);
     uint16_t getSpriteStripeChunks(void);
     uint16_t getSpriteStripeMinAddress(void);
     Memory::FitType getSpriteStripeFitType(void);
@@ -345,6 +349,7 @@ namespace Compiler
     void setRuntimeStart(uint16_t runtimeStart);
     void setTempVarStart(uint16_t tempVarStart);
     void setStrWorkArea(uint16_t strWorkArea);
+    void setSpritesAddrLutAddress(uint16_t spritesAddrLutAddress);
     void setSpriteStripeChunks(uint16_t spriteStripeChunks);
     void setSpriteStripeMinAddress(uint16_t spriteStripeMinAddress);
     void setSpriteStripeFitType(Memory::FitType spriteStripeFitType);
@@ -382,7 +387,6 @@ namespace Compiler
 
     std::stack<ForNextData>& getForNextDataStack(void);
     std::stack<ElseIfData>& getElseIfDataStack(void);
-    std::stack<EndIfData>& getEndIfDataStack(void);
     std::stack<WhileWendData>& getWhileWendDataStack(void);
     std::stack<RepeatUntilData>& getRepeatUntilDataStack(void);
 

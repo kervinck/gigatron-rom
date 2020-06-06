@@ -470,6 +470,18 @@ _label_ CALLI   _label
         CALLI   drawPoly
 %ENDM
 
+%MACRO  DrawPolyRel
+        CALLI   drawPolyRel
+%ENDM
+
+%MACRO  SetPolyRelFlipX
+        CALLI   setPolyRelFlipX
+%ENDM
+
+%MACRO  SetPolyRelFlipY
+        CALLI   setPolyRelFlipY
+%ENDM
+
 %MACRO  AtLineCursor
         CALLI   atLineCursor
 %ENDM
@@ -531,6 +543,18 @@ _label_ CALLI   _label
 
 %MACRO  SoundMod
         CALLI   soundMod
+%ENDM
+
+%MACRO  BcdAdd
+        CALLI   bcdAdd
+%ENDM
+
+%MACRO  BcdSub
+        CALLI   bcdSub
+%ENDM
+
+%MACRO  BcdInt
+        CALLI   bcdInt
 %ENDM
 
 %MACRO  JumpFalse _label id

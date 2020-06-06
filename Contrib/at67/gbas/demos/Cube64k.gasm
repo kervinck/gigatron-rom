@@ -111,15 +111,11 @@ _str_0x87b8                   EQU                               0x87b8
 _str_0x87b8                   DB                                3 '/60' 0
 
 ; Data
-_data_                        EQU                               0x8714
-_data_                        DW                                0
-_dataIndex_                   EQU                               0x8712
-_dataIndex_                   DW                                0
 
 ; Time
-_timeArray_                   EQU                               0x870f
+_timeArray_                   EQU                               0x8713
 _timeArray_                   DB                                00 00 00
-_timeString_                  EQU                               0x8705
+_timeString_                  EQU                               0x8709
 _timeString_                  DB                                8 '00:00:00' 0
 
 ; Define Bytes
@@ -250,10 +246,10 @@ _40                           LDWI                              0x87d0
                               STW                               memIndex0
                               LDWI                              0x87d0
                               ADDW                              memIndex0
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0300
                               CALL                              giga_vAC
-_page_0x0300                  LDW                               0xe2
+_page_0x0300                  LDW                               0xde
                               ADDW                              memIndex0
                               STW                               memAddr
                               LDW                               memValue
@@ -371,10 +367,10 @@ _next_0x043f                  LDWI                              _254
                               CALL                              giga_vAC
                               PrintAcInt16                      
                               PrintString                       _str_0x87bd
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0400
                               CALL                              giga_vAC
-_page_0x0400                  LDW                               0xe2
+_page_0x0400                  LDW                               0xde
                               LDW                               _timer
                               STW                               mathX
                               LDI                               60
@@ -488,10 +484,10 @@ _draw                         PUSH
                               STW                               _A
                               LDI                               2
                               STW                               _B
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0500
                               CALL                              giga_vAC
-_page_0x0500                  LDW                               0xe2
+_page_0x0500                  LDW                               0xde
                               LDWI                              _50
                               CALL                              giga_vAC                        ; A=1:B=2:GOSUB 50
 
@@ -626,10 +622,10 @@ _erase                        PUSH
 
                               LDI                               4
                               STW                               _A
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0600
                               CALL                              giga_vAC
-_page_0x0600                  LDW                               0xe2
+_page_0x0600                  LDW                               0xde
                               LDI                               0
                               STW                               _B
                               LDWI                              _60
@@ -729,7 +725,7 @@ _repeat_0x073d                LDW                               _scanLine
                               INC                               _videoTable                     ; inc videoTable
 
                               LDWI                              432
-                              SUBW                              _videoTable
+                              XORW                              _videoTable
                               BNE                               _repeat_0x073d                  ; until videoTable &&= VideoTableEnd
 
                               LDW                               _pageFlip
@@ -777,9 +773,11 @@ convertLeOpAddr               EQU     0x00d4
 convertGeOpAddr               EQU     0x00d6
 convertLtOpAddr               EQU     0x00d8
 convertGtOpAddr               EQU     0x00da
-convertArr2dAddr              EQU     0x00dc
-convertArr3dAddr              EQU     0x00de
-realTimeStubAddr              EQU     0x00e0
+convert8Arr2dAddr             EQU     0x00e0
+convert8Arr3dAddr             EQU     0x00e2
+convert16Arr2dAddr            EQU     0x00e4
+convert16Arr3dAddr            EQU     0x00e6
+realTimeStubAddr              EQU     0x00dc
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -994,6 +992,7 @@ drawRectF_y1        EQU     register1
 drawRectF_x2        EQU     register2
 drawRectF_y2        EQU     register7
 
+drawPoly_mode       EQU     register14
 drawPoly_addr       EQU     register15
 
     

@@ -78,8 +78,29 @@ setArrayInt16High   LDW     memAddr
                     RET
 %ENDS
 
-%SUB                convertArr2d
-convertArr2d        ADDW    memIndex0
+%SUB                convert8Arr2d
+convert8Arr2d       ADDW    memIndex0
+                    ADDW    memIndex0
+                    DEEK
+                    ADDW    memIndex1
+                    STW     memAddr
+                    RET
+%ENDS
+
+%SUB                convert8Arr3d
+convert8Arr3d       ADDW    memIndex0
+                    ADDW    memIndex0
+                    DEEK
+                    ADDW    memIndex1
+                    ADDW    memIndex1
+                    DEEK
+                    ADDW    memIndex2
+                    STW     memAddr
+                    RET
+%ENDS
+
+%SUB                convert16Arr2d
+convert16Arr2d      ADDW    memIndex0
                     ADDW    memIndex0
                     DEEK
                     ADDW    memIndex1
@@ -88,8 +109,8 @@ convertArr2d        ADDW    memIndex0
                     RET
 %ENDS
 
-%SUB                convertArr3d
-convertArr3d        ADDW    memIndex0
+%SUB                convert16Arr3d
+convert16Arr3d      ADDW    memIndex0
                     ADDW    memIndex0
                     DEEK
                     ADDW    memIndex1
@@ -105,15 +126,13 @@ convertArr3d        ADDW    memIndex0
 readIntVar          LDWI    _dataIndex_
                     STW     memAddr
                     DEEK
-                    
-readIV_loop         STW     memIndex0
+                    STW     memIndex0
                     ADDI    1
                     DOKE    memAddr
                     LDWI    _data_
                     ADDW    memIndex0
                     ADDW    memIndex0
                     DEEK
-                    BEQ     readIV_loop                     ; reached end of list, so restore
                     RET
 %ENDS
 

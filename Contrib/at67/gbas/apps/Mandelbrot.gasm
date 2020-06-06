@@ -69,10 +69,6 @@ _c                            EQU                               0x0040
 ; Constant Strings
 
 ; Data
-_data_                        EQU                               0x7eb4
-_data_                        DW                                0
-_dataIndex_                   EQU                               0x7eb2
-_dataIndex_                   DW                                0
 
 ; Time
 
@@ -200,10 +196,10 @@ _break                        LD                                _py
                               ForNextFarInc                     _px _next_0x0240 159            ; next px
 
                               LDW                               _cy
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0300
                               CALL                              giga_vAC
-_page_0x0300                  LDW                               0xe2
+_page_0x0300                  LDW                               0xde
                               ADDI                              1
                               STW                               _cy                             ; cy = cy + dy
 
@@ -221,7 +217,7 @@ _end_0x034a                   BRA                               _end_0x034a     
 
 romCheck                      EQU     0x7ee8
 realTimeStub                  EQU     0x7eca
-sign                          EQU     0x7ea0
+sign                          EQU     0x7ea4
 multiply16bit                 EQU     0x7ccd
 shiftRight5bit                EQU     0x7eb6
 shiftRightSgn4bit             EQU     0x7da8
@@ -236,9 +232,11 @@ convertLeOpAddr               EQU     0x00d4
 convertGeOpAddr               EQU     0x00d6
 convertLtOpAddr               EQU     0x00d8
 convertGtOpAddr               EQU     0x00da
-convertArr2dAddr              EQU     0x00dc
-convertArr3dAddr              EQU     0x00de
-realTimeStubAddr              EQU     0x00e0
+convert8Arr2dAddr             EQU     0x00e0
+convert8Arr3dAddr             EQU     0x00e2
+convert16Arr2dAddr            EQU     0x00e4
+convert16Arr3dAddr            EQU     0x00e6
+realTimeStubAddr              EQU     0x00dc
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -438,6 +436,7 @@ drawRectF_y1        EQU     register1
 drawRectF_x2        EQU     register2
 drawRectF_y2        EQU     register7
 
+drawPoly_mode       EQU     register14
 drawPoly_addr       EQU     register15
 
     

@@ -68,10 +68,6 @@ _str_0x7ee4                   EQU                               0x7ee4
 _str_0x7ee4                   DB                                5 'none ' 0
 
 ; Data
-_data_                        EQU                               0x7daa
-_data_                        DW                                0
-_dataIndex_                   EQU                               0x7da8
-_dataIndex_                   DW                                0
 
 ; Time
 
@@ -168,9 +164,11 @@ convertLeOpAddr               EQU     0x00d4
 convertGeOpAddr               EQU     0x00d6
 convertLtOpAddr               EQU     0x00d8
 convertGtOpAddr               EQU     0x00da
-convertArr2dAddr              EQU     0x00dc
-convertArr3dAddr              EQU     0x00de
-realTimeStubAddr              EQU     0x00e0
+convert8Arr2dAddr             EQU     0x00e0
+convert8Arr3dAddr             EQU     0x00e2
+convert16Arr2dAddr            EQU     0x00e4
+convert16Arr3dAddr            EQU     0x00e6
+realTimeStubAddr              EQU     0x00dc
 
 
 ; do *NOT* use register4 to register7 during time slicing

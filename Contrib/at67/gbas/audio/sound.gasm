@@ -50,39 +50,39 @@ _2                            EQU                               0x02ad
 _3                            EQU                               0x02ba
 _4                            EQU                               0x02c7
 _5                            EQU                               0x02d4
-_49                           EQU                               0x0309
-_50                           EQU                               0x0314
-_51                           EQU                               0x031f
-_52                           EQU                               0x032a
-_53                           EQU                               0x0331
-_vuMeter                      EQU                               0x0338
-_decay                        EQU                               0x03a8
-_siren                        EQU                               0x4cba
-_crash                        EQU                               0x4ea4
-_beep                         EQU                               0x4fe4
-_tictoc                       EQU                               0x50c4
+_49                           EQU                               0x030b
+_50                           EQU                               0x0316
+_51                           EQU                               0x0321
+_52                           EQU                               0x032c
+_53                           EQU                               0x0333
+_vuMeter                      EQU                               0x033a
+_decay                        EQU                               0x03ac
+_siren                        EQU                               0x4cbf
+_crash                        EQU                               0x4ea9
+_beep                         EQU                               0x4fea
+_tictoc                       EQU                               0x50c8
 _else_0x028c                  EQU                               0x0286
 _page_0x0300                  EQU                               0x0300
-_else_0x0302                  EQU                               0x0302
-_endif_0x0307                 EQU                               0x0307
-_next_0x033d                  EQU                               0x033d
-_else_0x03b4                  EQU                               0x0388
-_endif_0x03f9                 EQU                               0x03bf
+_else_0x0302                  EQU                               0x0304
+_endif_0x0307                 EQU                               0x0309
+_next_0x033d                  EQU                               0x033f
+_else_0x03b4                  EQU                               0x038c
+_endif_0x03f9                 EQU                               0x03c3
 _page_0x04cf                  EQU                               0x04cf
 _page_0x08e0                  EQU                               0x08e0
-_endif_0x0478                 EQU                               0x08f3
 _page_0x09e8                  EQU                               0x09e8
+_endif_0x0478                 EQU                               0x09ea
 _page_0x4ca0                  EQU                               0x4ca0
 _page_0x4da0                  EQU                               0x4da0
 _page_0x4ea0                  EQU                               0x4ea0
-_endif_0x0560                 EQU                               0x4ea2
+_endif_0x0560                 EQU                               0x4ea7
 _page_0x4fa0                  EQU                               0x4fa0
-_endif_0x0616                 EQU                               0x4fe2
+_endif_0x0616                 EQU                               0x4fe8
 _page_0x50a0                  EQU                               0x50a0
-_endif_0x064e                 EQU                               0x50c2
+_endif_0x064e                 EQU                               0x50c6
 _page_0x51a0                  EQU                               0x51a0
-_endif_0x06a4                 EQU                               0x51b7
-_end_0x06a6                   EQU                               0x51b9
+_endif_0x06a4                 EQU                               0x51b9
+_end_0x06a6                   EQU                               0x51bb
 
 ; Variables
 _t                            EQU                               0x0030
@@ -115,10 +115,6 @@ _str_0x7ee5                   EQU                               0x7ee5
 _str_0x7ee5                   DB                                25 'Keys: <1> <2> <3> <4> <5>' 0
 
 ; Data
-_data_                        EQU                               0x7ea2
-_data_                        DW                                0
-_dataIndex_                   EQU                               0x7ea0
-_dataIndex_                   DW                                0
 
 ; Time
 
@@ -282,12 +278,12 @@ def_sprites_0x040e            DB                                4 4 4 4 4 4 4 4 
 _lut_numericLabs              EQU                               0x78ea
 _lut_numericLabs              DW                                1 2 3 4 5 49 50 51 52 53 0x0000
 _lut_numericAddrs             EQU                               0x78d6
-_lut_numericAddrs             DW                                0x02a0 0x02ad 0x02ba 0x02c7 0x02d4 0x0309 0x0314 0x031f 0x032a 0x0331 
+_lut_numericAddrs             DW                                0x02a0 0x02ad 0x02ba 0x02c7 0x02d4 0x030b 0x0316 0x0321 0x032c 0x0333 
 _spriteLut_0x78cc             EQU                               0x78cc
 _spriteLut_0x78cc             DW                                0x0400 0x0000 0x0407 0x0006 0x0000
 _spriteLut_0x7aa3             EQU                               0x7aa3
 _spriteLut_0x7aa3             DW                                0x040e 0x1f00 0x0000
-_spritesLut_                  EQU                               0x78c8
+_spritesLut_                  EQU                               0x7ea0
 _spritesLut_                  DW                                0x78cc 0x7aa3 
 
 ; Code
@@ -340,7 +336,7 @@ _loop                         LDI                               5
                               STW                               _k                              ; k = get("SERIAL_RAW")
 
                               LDW                               _kk
-                              SUBI                              255
+                              XORI                              255
                               BNE                               _else_0x028c
                               LDW                               _k
                               STW                               numericLabel
@@ -403,6 +399,7 @@ _4                            PUSH
 
 _5                            PUSH                              
                               LDW                               midiStream
+                              XORI                              0
                               JumpEQ                            _else_0x0302 1                  ; if get("MIDI_STREAM") &= &h0000
 
                               LDI                               2
@@ -410,12 +407,12 @@ _5                            PUSH
                               LDWI                              2720
                               PlayMidiV                         
                               LDWI                              _endif_0x0307
-                              CALL                              giga_vAC                        ; play midiv, &h0AA0, 2
-
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0300
                               CALL                              giga_vAC
-_page_0x0300                  LDW                               0xe2
+_page_0x0300                  LDW                               0xde
+                              CALL                              giga_vAC                        ; play midiv, &h0AA0, 2
+
 _else_0x0302                  TickMidiV                                                         ; tick midiv
 
 _endif_0x0307                 Return                                                            ; return
@@ -487,7 +484,7 @@ _next_0x033d                  LD                                _i
                               STW                               _y                              ; y = ypos(i)
 
                               LDW                               _v
-                              SUBI                              64
+                              XORI                              64
                               JumpGE                            _endif_0x0478 7                 ; if v &>= VU_LEVELS
 
                               LDW                               _i
@@ -499,12 +496,13 @@ _next_0x033d                  LD                                _i
                               LDW                               _i8
                               ADDI                              252
                               DEEK                              
+                              XORI                              0
                               BNE                               _else_0x03b4
                               LDWI                              _decay
                               CALL                              giga_vAC                        ; if deek(i8 + &h00FC) &&= 0 then goto decay 'if frequency is 0, (i.e. note off), then decay
 
 _else_0x03b4                  LDW                               _v
-                              SUBW                              _vol
+                              XORW                              _vol
                               BGE                               _decay                          ; if v &&< vol
 
                               LDW                               _v
@@ -527,7 +525,7 @@ _decay                        LDW                               _y
                               INC                               _vol                            ; inc vol
 
                               LDW                               _y
-                              SUBI                              1
+                              XORI                              1
                               BGE                               _endif_0x03f9                   ; if y &&< 1
 
                               INC                               _y                              ; inc y
@@ -559,13 +557,13 @@ _endif_0x03f9                 LDI                               0
                               STW                               spriteId
                               GetSpriteLUT                      
                               ADDW                              0xc4
+                              STW                               0xde
+                              LDWI                              _page_0x04cf
+                              CALL                              giga_vAC
+_page_0x04cf                  LDW                               0xde
                               STW                               _lut                            ; lut = (y LSL 2) + y + y + get("SPRITE_LUT", 1)
 
                               LDW                               _lut
-                              STW                               0xe2
-                              LDWI                              _page_0x04cf
-                              CALL                              giga_vAC
-_page_0x04cf                  LDW                               0xe2
                               PEEK                              
                               STW                               _save                           ; save = peek(lut)
 
@@ -583,12 +581,12 @@ _page_0x04cf                  LDW                               0xe2
 
                               LDI                               1
                               STW                               spriteId
-                              LDW                               _i4
-                              ADDI                              6
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x08e0
                               CALL                              giga_vAC
-_page_0x08e0                  LDW                               0xe2
+_page_0x08e0                  LDW                               0xde
+                              LDW                               _i4
+                              ADDI                              6
                               ST                                spriteXY
                               LDI                               46
                               ADDI                              8
@@ -598,23 +596,23 @@ _page_0x08e0                  LDW                               0xe2
                               LDW                               _save
                               POKE                              _lut                            ; poke lut, save
 
-_endif_0x0478                 LDWI                              0x7edb
-                              ADDW                              _i
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x09e8
                               CALL                              giga_vAC
-_page_0x09e8                  LDW                               0xe2
+_page_0x09e8                  LDW                               0xde
+_endif_0x0478                 LDWI                              0x7edb
+                              ADDW                              _i
                               ADDW                              _i
                               STW                               memAddr
                               LDW                               _vol
                               DOKE                              memAddr                         ; volume(i) = vol
 
-                              LDWI                              0x7ed1
-                              ADDW                              _i
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x4ca0
                               CALL                              giga_vAC
-_page_0x4ca0                  LDW                               0xe2
+_page_0x4ca0                  LDW                               0xde
+                              LDWI                              0x7ed1
+                              ADDW                              _i
                               ADDW                              _i
                               STW                               memAddr
                               LDW                               _y
@@ -655,12 +653,12 @@ _siren                        PUSH
                               ST                                sndChannel + 1
                               LDW                               _f_lut
                               ADDI                              100
-                              STW                               sndFrequency
-                              LDW                               _v_lut
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x4da0
                               CALL                              giga_vAC
-_page_0x4da0                  LDW                               0xe2
+_page_0x4da0                  LDW                               0xde
+                              STW                               sndFrequency
+                              LDW                               _v_lut
                               STW                               sndVolume
                               LDI                               2
                               STW                               sndWaveType
@@ -691,7 +689,7 @@ _page_0x4da0                  LDW                               0xe2
                               INC                               _t                              ; inc t
 
                               LDW                               _t
-                              SUBI                              64
+                              XORI                              64
                               JumpEQ                            _endif_0x0560 8                 ; if t &= 64
 
                               LDI                               0
@@ -700,12 +698,12 @@ _page_0x4da0                  LDW                               0xe2
                               LDI                               0
                               STW                               _state                          ; state = 0
 
-                              SoundAllOff                                                       ; sound off
-
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x4ea0
                               CALL                              giga_vAC
-_page_0x4ea0                  LDW                               0xe2
+_page_0x4ea0                  LDW                               0xde
+                              SoundAllOff                                                       ; sound off
+
 _endif_0x0560                 Return                                                            ; return
 
 _crash                        PUSH                              
@@ -749,13 +747,13 @@ _crash                        PUSH
 
                               LDI                               3
                               ST                                sndChannel + 1
+                              STW                               0xde
+                              LDWI                              _page_0x4fa0
+                              CALL                              giga_vAC
+_page_0x4fa0                  LDW                               0xde
                               LDW                               _f_lut
                               ADDI                              200
                               STW                               sndFrequency
-                              STW                               0xe2
-                              LDWI                              _page_0x4fa0
-                              CALL                              giga_vAC
-_page_0x4fa0                  LDW                               0xe2
                               LDW                               _d_lut
                               STW                               sndVolume
                               LDI                               0
@@ -776,7 +774,7 @@ _page_0x4fa0                  LDW                               0xe2
                               INC                               _t                              ; inc t
 
                               LDW                               _t
-                              SUBI                              64
+                              XORI                              64
                               JumpEQ                            _endif_0x0616 9                 ; if t &= 64
 
                               LDI                               0
@@ -796,18 +794,18 @@ _beep                         PUSH
                               STW                               sndFrequency
                               LDI                               63
                               STW                               sndVolume
-                              LDI                               1
-                              STW                               sndWaveType
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x50a0
                               CALL                              giga_vAC
-_page_0x50a0                  LDW                               0xe2
+_page_0x50a0                  LDW                               0xde
+                              LDI                               1
+                              STW                               sndWaveType
                               SoundOnV                                                          ; sound on, 1, 8000, 63, 1
 
                               INC                               _t                              ; inc t
 
                               LDW                               _t
-                              SUBI                              3
+                              XORI                              3
                               JumpEQ                            _endif_0x064e 10                ; if t &= 3
 
                               LDI                               0
@@ -844,11 +842,11 @@ _tictoc                       PUSH
                               INC                               _t                              ; inc t
 
                               LDW                               _t
-                              SUBI                              6
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x51a0
                               CALL                              giga_vAC
-_page_0x51a0                  LDW                               0xe2
+_page_0x51a0                  LDW                               0xde
+                              XORI                              6
                               JumpEQ                            _endif_0x06a4 11                ; if t &= T_SIZ-2
 
                               LDI                               0
@@ -879,7 +877,7 @@ shiftRight1bit                EQU     0x7ba0
 gosubNumericLabel             EQU     0x7acd
 scanlineMode                  EQU     0x7ea4
 resetVideoFlags               EQU     0x7eae
-resetVideoTable               EQU     0x78a4
+resetVideoTable               EQU     0x78a8
 initClearFuncs                EQU     0x77f2
 clearVertBlinds               EQU     0x7cc5
 clearCursorRow                EQU     0x77c2
@@ -903,9 +901,11 @@ convertLeOpAddr               EQU     0x00d4
 convertGeOpAddr               EQU     0x00d6
 convertLtOpAddr               EQU     0x00d8
 convertGtOpAddr               EQU     0x00da
-convertArr2dAddr              EQU     0x00dc
-convertArr3dAddr              EQU     0x00de
-realTimeStubAddr              EQU     0x00e0
+convert8Arr2dAddr             EQU     0x00e0
+convert8Arr3dAddr             EQU     0x00e2
+convert16Arr2dAddr            EQU     0x00e4
+convert16Arr3dAddr            EQU     0x00e6
+realTimeStubAddr              EQU     0x00dc
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -1094,6 +1094,7 @@ drawRectF_y1        EQU     register1
 drawRectF_x2        EQU     register2
 drawRectF_y2        EQU     register7
 
+drawPoly_mode       EQU     register14
 drawPoly_addr       EQU     register15
 
     

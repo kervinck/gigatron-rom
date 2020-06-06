@@ -272,10 +272,6 @@ _str_0xff22                   EQU                               0xff22
 _str_0xff22                   DB                                25 'lalalalala23d455345634650' 0
 
 ; Data
-_data_                        EQU                               0xff02
-_data_                        DW                                0
-_dataIndex_                   EQU                               0xff00
-_dataIndex_                   DW                                0
 
 ; Time
 
@@ -366,10 +362,10 @@ _entryPoint_                  Initialise
                               PrintString                       _str_0xff3d
                               LDW                               _bb
                               SUBI                              3
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0300
                               CALL                              giga_vAC
-_page_0x0300                  LDW                               0xe2
+_page_0x0300                  LDW                               0xde
                               CALL                              convertLeOpAddr
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
@@ -450,10 +446,10 @@ _next_0x0385                  LDW                               _i
                               PrintString                       _str_0xff3d
                               LDW                               _j
                               ADDI                              23
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0400
                               CALL                              giga_vAC
-_page_0x0400                  LDW                               0xe2
+_page_0x0400                  LDW                               0xde
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
                               LDW                               _i
@@ -494,10 +490,10 @@ _page_0x0400                  LDW                               0xe2
                               PrintString                       _str_0xff3d
                               LDW                               _bb
                               ADDI                              60
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0500
                               CALL                              giga_vAC
-_page_0x0500                  LDW                               0xe2
+_page_0x0500                  LDW                               0xde
                               PrintAcChar                       
                               PrintString                       _str_0xff3d
                               LDI                               48
@@ -552,10 +548,10 @@ _test                         PUSH
                               NewLine                                                           ; print hex$(i+30);" ";hex$(j+40);" "
 
                               PrintInt16                        0x003d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0600
                               CALL                              giga_vAC
-_page_0x0600                  LDW                               0xe2
+_page_0x0600                  LDW                               0xde
                               PrintString                       _str_0xff3d
                               LDW                               _i
                               PrintAcInt16                      
@@ -619,10 +615,10 @@ _Big                          PUSH
 
                               LDW                               _h
                               PrintAcHexWord                    
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x08a0
                               CALL                              giga_vAC
-_page_0x08a0                  LDW                               0xe2
+_page_0x08a0                  LDW                               0xde
                               PrintString                       _str_0xff3d
                               PrintInt16                        0x0038
                               NewLine                                                           ; print hexw$(h);" ";56
@@ -640,10 +636,10 @@ _page_0x08a0                  LDW                               0xe2
                               LDWI                              multiply16bit
                               CALL                              giga_vAC
                               PrintAcInt16                      
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x09a0
                               CALL                              giga_vAC
-_page_0x09a0                  LDW                               0xe2
+_page_0x09a0                  LDW                               0xde
                               PrintString                       _str_0xff3d
                               LDI                               0
                               SUBW                              _z
@@ -668,10 +664,10 @@ _page_0x09a0                  LDW                               0xe2
                               PrintAcHexWord                    
                               NewLine                                                           ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0aa0
                               CALL                              giga_vAC
-_page_0x0aa0                  LDW                               0xe2
+_page_0x0aa0                  LDW                               0xde
                               PrintString                       _str_0xff22                     ; print "lalalalala23d455345634650";
 
                               LDW                               _a
@@ -696,10 +692,10 @@ _page_0x0aa0                  LDW                               0xe2
                               LDW                               _h
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0ba0
                               CALL                              giga_vAC
-_page_0x0ba0                  LDW                               0xe2
+_page_0x0ba0                  LDW                               0xde
                               PrintInt16                        0x0038
                               NewLine                                                           ; print hexw$(h);" ";56
 
@@ -717,10 +713,10 @@ _page_0x0ba0                  LDW                               0xe2
                               CALL                              giga_vAC
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0ca0
                               CALL                              giga_vAC
-_page_0x0ca0                  LDW                               0xe2
+_page_0x0ca0                  LDW                               0xde
                               LDI                               0
                               SUBW                              _z
                               STW                               mathX
@@ -747,10 +743,10 @@ _page_0x0ca0                  LDW                               0xe2
                               PrintString                       _str_0xff22                     ; print "lalalalala23d455345634650";
 
                               LDW                               _a
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0da0
                               CALL                              giga_vAC
-_page_0x0da0                  LDW                               0xe2
+_page_0x0da0                  LDW                               0xde
                               PrintAcHexByte                    
                               NewLine                                                           ; print hex$(a)
 
@@ -776,10 +772,10 @@ _page_0x0da0                  LDW                               0xe2
                               NewLine                                                           ; print hexw$(h);" ";56
 
                               LDWI                              0xdead
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0ea0
                               CALL                              giga_vAC
-_page_0x0ea0                  LDW                               0xe2
+_page_0x0ea0                  LDW                               0xde
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
                               LDW                               _z
@@ -800,10 +796,10 @@ _page_0x0ea0                  LDW                               0xe2
                               STW                               mathY
                               LDWI                              divide16bit
                               CALL                              giga_vAC
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0fa0
                               CALL                              giga_vAC
-_page_0x0fa0                  LDW                               0xe2
+_page_0x0fa0                  LDW                               0xde
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
                               LDW                               _z
@@ -827,10 +823,10 @@ _page_0x0fa0                  LDW                               0xe2
                               NewLine                                                           ; print hex$(a)
 
                               LDWI                              0xffff
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x10a0
                               CALL                              giga_vAC
-_page_0x10a0                  LDW                               0xe2
+_page_0x10a0                  LDW                               0xde
                               PrintAcHexWord                    
                               NewLine                                                           ; print hexw$(&hFFFF OR &h1111)
 
@@ -854,10 +850,10 @@ _page_0x10a0                  LDW                               0xe2
                               LDWI                              0xdead
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x11a0
                               CALL                              giga_vAC
-_page_0x11a0                  LDW                               0xe2
+_page_0x11a0                  LDW                               0xde
                               LDW                               _z
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
@@ -880,10 +876,10 @@ _page_0x11a0                  LDW                               0xe2
                               PrintString                       _str_0xff3d
                               LDW                               _z
                               STW                               mathX
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x12a0
                               CALL                              giga_vAC
-_page_0x12a0                  LDW                               0xe2
+_page_0x12a0                  LDW                               0xde
                               LDI                               21
                               STW                               mathY
                               LDWI                              divide16bit
@@ -910,10 +906,10 @@ _page_0x12a0                  LDW                               0xe2
                               STW                               _f                              ; f = &h1111
 
                               LDWI                              -21846
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x13a0
                               CALL                              giga_vAC
-_page_0x13a0                  LDW                               0xe2
+_page_0x13a0                  LDW                               0xde
                               STW                               _g                              ; g = &hAAAA
 
                               LDWI                              -1
@@ -933,10 +929,10 @@ _page_0x13a0                  LDW                               0xe2
                               LDW                               _z
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x14a0
                               CALL                              giga_vAC
-_page_0x14a0                  LDW                               0xe2
+_page_0x14a0                  LDW                               0xde
                               LDWI                              -6
                               STW                               mathX
                               LDW                               _z
@@ -962,10 +958,10 @@ _page_0x14a0                  LDW                               0xe2
                               CALL                              giga_vAC
                               LDW                               mathRem
                               PrintAcInt16                      
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x15a0
                               CALL                              giga_vAC
-_page_0x15a0                  LDW                               0xe2
+_page_0x15a0                  LDW                               0xde
                               NewLine                                                           ; print hexw$(&hdead);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
 
                               LDWI                              0x8f8f
@@ -994,10 +990,10 @@ _page_0x15a0                  LDW                               0xe2
                               STW                               _h                              ; h = NOT g XOR f
 
                               LDW                               _h
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x16a0
                               CALL                              giga_vAC
-_page_0x16a0                  LDW                               0xe2
+_page_0x16a0                  LDW                               0xde
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
                               PrintInt16                        0x0038
@@ -1015,10 +1011,10 @@ _page_0x16a0                  LDW                               0xe2
                               STW                               mathY
                               LDWI                              multiply16bit
                               CALL                              giga_vAC
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x17a0
                               CALL                              giga_vAC
-_page_0x17a0                  LDW                               0xe2
+_page_0x17a0                  LDW                               0xde
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
                               LDI                               0
@@ -1042,10 +1038,10 @@ _page_0x17a0                  LDW                               0xe2
 
                               LDWI                              0x8f8f
                               PrintAcHexWord                    
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x18a0
                               CALL                              giga_vAC
-_page_0x18a0                  LDW                               0xe2
+_page_0x18a0                  LDW                               0xde
                               NewLine                                                           ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
                               PrintString                       _str_0xff22                     ; print "lalalalala23d455345634650";
@@ -1072,10 +1068,10 @@ _page_0x18a0                  LDW                               0xe2
                               LDW                               _h
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x19a0
                               CALL                              giga_vAC
-_page_0x19a0                  LDW                               0xe2
+_page_0x19a0                  LDW                               0xde
                               PrintInt16                        0x0038
                               NewLine                                                           ; print hexw$(h);" ";56
 
@@ -1093,10 +1089,10 @@ _page_0x19a0                  LDW                               0xe2
                               CALL                              giga_vAC
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x1aa0
                               CALL                              giga_vAC
-_page_0x1aa0                  LDW                               0xe2
+_page_0x1aa0                  LDW                               0xde
                               LDI                               0
                               SUBW                              _z
                               STW                               mathX
@@ -1123,10 +1119,10 @@ _page_0x1aa0                  LDW                               0xe2
                               PrintString                       _str_0xff22                     ; print "lalalalala23d455345634650";
 
                               LDW                               _a
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x1ba0
                               CALL                              giga_vAC
-_page_0x1ba0                  LDW                               0xe2
+_page_0x1ba0                  LDW                               0xde
                               PrintAcHexByte                    
                               NewLine                                                           ; print hex$(a)
 
@@ -1152,10 +1148,10 @@ _page_0x1ba0                  LDW                               0xe2
                               NewLine                                                           ; print hexw$(h);" ";56
 
                               LDWI                              0xdead
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x1ca0
                               CALL                              giga_vAC
-_page_0x1ca0                  LDW                               0xe2
+_page_0x1ca0                  LDW                               0xde
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
                               LDW                               _z
@@ -1176,10 +1172,10 @@ _page_0x1ca0                  LDW                               0xe2
                               STW                               mathY
                               LDWI                              divide16bit
                               CALL                              giga_vAC
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x1da0
                               CALL                              giga_vAC
-_page_0x1da0                  LDW                               0xe2
+_page_0x1da0                  LDW                               0xde
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
                               LDW                               _z
@@ -1203,10 +1199,10 @@ _page_0x1da0                  LDW                               0xe2
                               NewLine                                                           ; print hex$(a)
 
                               LDWI                              0xffff
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x1ea0
                               CALL                              giga_vAC
-_page_0x1ea0                  LDW                               0xe2
+_page_0x1ea0                  LDW                               0xde
                               PrintAcHexWord                    
                               NewLine                                                           ; print hexw$(&hFFFF OR &h1111)
 
@@ -1230,10 +1226,10 @@ _page_0x1ea0                  LDW                               0xe2
                               LDWI                              0xdead
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x1fa0
                               CALL                              giga_vAC
-_page_0x1fa0                  LDW                               0xe2
+_page_0x1fa0                  LDW                               0xde
                               LDW                               _z
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
@@ -1256,10 +1252,10 @@ _page_0x1fa0                  LDW                               0xe2
                               PrintString                       _str_0xff3d
                               LDW                               _z
                               STW                               mathX
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x20a0
                               CALL                              giga_vAC
-_page_0x20a0                  LDW                               0xe2
+_page_0x20a0                  LDW                               0xde
                               LDI                               21
                               STW                               mathY
                               LDWI                              divide16bit
@@ -1286,10 +1282,10 @@ _page_0x20a0                  LDW                               0xe2
                               STW                               _f                              ; f = &h1111
 
                               LDWI                              -21846
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x21a0
                               CALL                              giga_vAC
-_page_0x21a0                  LDW                               0xe2
+_page_0x21a0                  LDW                               0xde
                               STW                               _g                              ; g = &hAAAA
 
                               LDWI                              -1
@@ -1309,10 +1305,10 @@ _page_0x21a0                  LDW                               0xe2
                               LDW                               _z
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x22a0
                               CALL                              giga_vAC
-_page_0x22a0                  LDW                               0xe2
+_page_0x22a0                  LDW                               0xde
                               LDWI                              -6
                               STW                               mathX
                               LDW                               _z
@@ -1338,10 +1334,10 @@ _page_0x22a0                  LDW                               0xe2
                               CALL                              giga_vAC
                               LDW                               mathRem
                               PrintAcInt16                      
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x23a0
                               CALL                              giga_vAC
-_page_0x23a0                  LDW                               0xe2
+_page_0x23a0                  LDW                               0xde
                               NewLine                                                           ; print hexw$(&hdead);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
 
                               LDWI                              0x8f8f
@@ -1370,10 +1366,10 @@ _page_0x23a0                  LDW                               0xe2
                               STW                               _h                              ; h = NOT g XOR f
 
                               LDW                               _h
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x24a0
                               CALL                              giga_vAC
-_page_0x24a0                  LDW                               0xe2
+_page_0x24a0                  LDW                               0xde
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
                               PrintInt16                        0x0038
@@ -1391,10 +1387,10 @@ _page_0x24a0                  LDW                               0xe2
                               STW                               mathY
                               LDWI                              multiply16bit
                               CALL                              giga_vAC
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x25a0
                               CALL                              giga_vAC
-_page_0x25a0                  LDW                               0xe2
+_page_0x25a0                  LDW                               0xde
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
                               LDI                               0
@@ -1418,10 +1414,10 @@ _page_0x25a0                  LDW                               0xe2
 
                               LDWI                              0x8f8f
                               PrintAcHexWord                    
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x26a0
                               CALL                              giga_vAC
-_page_0x26a0                  LDW                               0xe2
+_page_0x26a0                  LDW                               0xde
                               NewLine                                                           ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
                               PrintString                       _str_0xff22                     ; print "lalalalala23d455345634650";
@@ -1448,10 +1444,10 @@ _page_0x26a0                  LDW                               0xe2
                               LDW                               _h
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x27a0
                               CALL                              giga_vAC
-_page_0x27a0                  LDW                               0xe2
+_page_0x27a0                  LDW                               0xde
                               PrintInt16                        0x0038
                               NewLine                                                           ; print hexw$(h);" ";56
 
@@ -1469,10 +1465,10 @@ _page_0x27a0                  LDW                               0xe2
                               CALL                              giga_vAC
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x28a0
                               CALL                              giga_vAC
-_page_0x28a0                  LDW                               0xe2
+_page_0x28a0                  LDW                               0xde
                               LDI                               0
                               SUBW                              _z
                               STW                               mathX
@@ -1499,10 +1495,10 @@ _page_0x28a0                  LDW                               0xe2
                               PrintString                       _str_0xff22                     ; print "lalalalala23d455345634650";
 
                               LDW                               _a
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x29a0
                               CALL                              giga_vAC
-_page_0x29a0                  LDW                               0xe2
+_page_0x29a0                  LDW                               0xde
                               PrintAcHexByte                    
                               NewLine                                                           ; print hex$(a)
 
@@ -1528,10 +1524,10 @@ _page_0x29a0                  LDW                               0xe2
                               NewLine                                                           ; print hexw$(h);" ";56
 
                               LDWI                              0xdead
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x2aa0
                               CALL                              giga_vAC
-_page_0x2aa0                  LDW                               0xe2
+_page_0x2aa0                  LDW                               0xde
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
                               LDW                               _z
@@ -1552,10 +1548,10 @@ _page_0x2aa0                  LDW                               0xe2
                               STW                               mathY
                               LDWI                              divide16bit
                               CALL                              giga_vAC
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x2ba0
                               CALL                              giga_vAC
-_page_0x2ba0                  LDW                               0xe2
+_page_0x2ba0                  LDW                               0xde
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
                               LDW                               _z
@@ -1579,10 +1575,10 @@ _page_0x2ba0                  LDW                               0xe2
                               NewLine                                                           ; print hex$(a)
 
                               LDWI                              0xffff
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x2ca0
                               CALL                              giga_vAC
-_page_0x2ca0                  LDW                               0xe2
+_page_0x2ca0                  LDW                               0xde
                               PrintAcHexWord                    
                               NewLine                                                           ; print hexw$(&hFFFF OR &h1111)
 
@@ -1606,10 +1602,10 @@ _page_0x2ca0                  LDW                               0xe2
                               LDWI                              0xdead
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x2da0
                               CALL                              giga_vAC
-_page_0x2da0                  LDW                               0xe2
+_page_0x2da0                  LDW                               0xde
                               LDW                               _z
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
@@ -1632,10 +1628,10 @@ _page_0x2da0                  LDW                               0xe2
                               PrintString                       _str_0xff3d
                               LDW                               _z
                               STW                               mathX
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x2ea0
                               CALL                              giga_vAC
-_page_0x2ea0                  LDW                               0xe2
+_page_0x2ea0                  LDW                               0xde
                               LDI                               21
                               STW                               mathY
                               LDWI                              divide16bit
@@ -1662,10 +1658,10 @@ _page_0x2ea0                  LDW                               0xe2
                               STW                               _f                              ; f = &h1111
 
                               LDWI                              -21846
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x2fa0
                               CALL                              giga_vAC
-_page_0x2fa0                  LDW                               0xe2
+_page_0x2fa0                  LDW                               0xde
                               STW                               _g                              ; g = &hAAAA
 
                               LDWI                              -1
@@ -1685,10 +1681,10 @@ _page_0x2fa0                  LDW                               0xe2
                               LDW                               _z
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x30a0
                               CALL                              giga_vAC
-_page_0x30a0                  LDW                               0xe2
+_page_0x30a0                  LDW                               0xde
                               LDWI                              -6
                               STW                               mathX
                               LDW                               _z
@@ -1714,10 +1710,10 @@ _page_0x30a0                  LDW                               0xe2
                               CALL                              giga_vAC
                               LDW                               mathRem
                               PrintAcInt16                      
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x31a0
                               CALL                              giga_vAC
-_page_0x31a0                  LDW                               0xe2
+_page_0x31a0                  LDW                               0xde
                               NewLine                                                           ; print hexw$(&hdead);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
 
                               LDWI                              0x8f8f
@@ -1746,10 +1742,10 @@ _page_0x31a0                  LDW                               0xe2
                               STW                               _h                              ; h = NOT g XOR f
 
                               LDW                               _h
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x32a0
                               CALL                              giga_vAC
-_page_0x32a0                  LDW                               0xe2
+_page_0x32a0                  LDW                               0xde
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
                               PrintInt16                        0x0038
@@ -1767,10 +1763,10 @@ _page_0x32a0                  LDW                               0xe2
                               STW                               mathY
                               LDWI                              multiply16bit
                               CALL                              giga_vAC
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x33a0
                               CALL                              giga_vAC
-_page_0x33a0                  LDW                               0xe2
+_page_0x33a0                  LDW                               0xde
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
                               LDI                               0
@@ -1794,10 +1790,10 @@ _page_0x33a0                  LDW                               0xe2
 
                               LDWI                              0x8f8f
                               PrintAcHexWord                    
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x34a0
                               CALL                              giga_vAC
-_page_0x34a0                  LDW                               0xe2
+_page_0x34a0                  LDW                               0xde
                               NewLine                                                           ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
                               PrintString                       _str_0xff22                     ; print "lalalalala23d455345634650";
@@ -1824,10 +1820,10 @@ _page_0x34a0                  LDW                               0xe2
                               LDW                               _h
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x35a0
                               CALL                              giga_vAC
-_page_0x35a0                  LDW                               0xe2
+_page_0x35a0                  LDW                               0xde
                               PrintInt16                        0x0038
                               NewLine                                                           ; print hexw$(h);" ";56
 
@@ -1845,10 +1841,10 @@ _page_0x35a0                  LDW                               0xe2
                               CALL                              giga_vAC
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x36a0
                               CALL                              giga_vAC
-_page_0x36a0                  LDW                               0xe2
+_page_0x36a0                  LDW                               0xde
                               LDI                               0
                               SUBW                              _z
                               STW                               mathX
@@ -1875,10 +1871,10 @@ _page_0x36a0                  LDW                               0xe2
                               PrintString                       _str_0xff22                     ; print "lalalalala23d455345634650";
 
                               LDW                               _a
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x37a0
                               CALL                              giga_vAC
-_page_0x37a0                  LDW                               0xe2
+_page_0x37a0                  LDW                               0xde
                               PrintAcHexByte                    
                               NewLine                                                           ; print hex$(a)
 
@@ -1904,10 +1900,10 @@ _page_0x37a0                  LDW                               0xe2
                               NewLine                                                           ; print hexw$(h);" ";56
 
                               LDWI                              0xdead
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x38a0
                               CALL                              giga_vAC
-_page_0x38a0                  LDW                               0xe2
+_page_0x38a0                  LDW                               0xde
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
                               LDW                               _z
@@ -1928,10 +1924,10 @@ _page_0x38a0                  LDW                               0xe2
                               STW                               mathY
                               LDWI                              divide16bit
                               CALL                              giga_vAC
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x39a0
                               CALL                              giga_vAC
-_page_0x39a0                  LDW                               0xe2
+_page_0x39a0                  LDW                               0xde
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
                               LDW                               _z
@@ -1955,10 +1951,10 @@ _page_0x39a0                  LDW                               0xe2
                               NewLine                                                           ; print hex$(a)
 
                               LDWI                              0xffff
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x3aa0
                               CALL                              giga_vAC
-_page_0x3aa0                  LDW                               0xe2
+_page_0x3aa0                  LDW                               0xde
                               PrintAcHexWord                    
                               NewLine                                                           ; print hexw$(&hFFFF OR &h1111)
 
@@ -1982,10 +1978,10 @@ _page_0x3aa0                  LDW                               0xe2
                               LDWI                              0xdead
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x3ba0
                               CALL                              giga_vAC
-_page_0x3ba0                  LDW                               0xe2
+_page_0x3ba0                  LDW                               0xde
                               LDW                               _z
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
@@ -2008,10 +2004,10 @@ _page_0x3ba0                  LDW                               0xe2
                               PrintString                       _str_0xff3d
                               LDW                               _z
                               STW                               mathX
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x3ca0
                               CALL                              giga_vAC
-_page_0x3ca0                  LDW                               0xe2
+_page_0x3ca0                  LDW                               0xde
                               LDI                               21
                               STW                               mathY
                               LDWI                              divide16bit
@@ -2038,10 +2034,10 @@ _page_0x3ca0                  LDW                               0xe2
                               STW                               _f                              ; f = &h1111
 
                               LDWI                              -21846
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x3da0
                               CALL                              giga_vAC
-_page_0x3da0                  LDW                               0xe2
+_page_0x3da0                  LDW                               0xde
                               STW                               _g                              ; g = &hAAAA
 
                               LDWI                              -1
@@ -2061,10 +2057,10 @@ _page_0x3da0                  LDW                               0xe2
                               LDW                               _z
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x3ea0
                               CALL                              giga_vAC
-_page_0x3ea0                  LDW                               0xe2
+_page_0x3ea0                  LDW                               0xde
                               LDWI                              -6
                               STW                               mathX
                               LDW                               _z
@@ -2090,10 +2086,10 @@ _page_0x3ea0                  LDW                               0xe2
                               CALL                              giga_vAC
                               LDW                               mathRem
                               PrintAcInt16                      
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x3fa0
                               CALL                              giga_vAC
-_page_0x3fa0                  LDW                               0xe2
+_page_0x3fa0                  LDW                               0xde
                               NewLine                                                           ; print hexw$(&hdead);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
 
                               LDWI                              0x8f8f
@@ -2122,10 +2118,10 @@ _page_0x3fa0                  LDW                               0xe2
                               STW                               _h                              ; h = NOT g XOR f
 
                               LDW                               _h
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x40a0
                               CALL                              giga_vAC
-_page_0x40a0                  LDW                               0xe2
+_page_0x40a0                  LDW                               0xde
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
                               PrintInt16                        0x0038
@@ -2143,10 +2139,10 @@ _page_0x40a0                  LDW                               0xe2
                               STW                               mathY
                               LDWI                              multiply16bit
                               CALL                              giga_vAC
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x41a0
                               CALL                              giga_vAC
-_page_0x41a0                  LDW                               0xe2
+_page_0x41a0                  LDW                               0xde
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
                               LDI                               0
@@ -2170,10 +2166,10 @@ _page_0x41a0                  LDW                               0xe2
 
                               LDWI                              0x8f8f
                               PrintAcHexWord                    
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x42a0
                               CALL                              giga_vAC
-_page_0x42a0                  LDW                               0xe2
+_page_0x42a0                  LDW                               0xde
                               NewLine                                                           ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
                               PrintString                       _str_0xff22                     ; print "lalalalala23d455345634650";
@@ -2200,10 +2196,10 @@ _page_0x42a0                  LDW                               0xe2
                               LDW                               _h
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x43a0
                               CALL                              giga_vAC
-_page_0x43a0                  LDW                               0xe2
+_page_0x43a0                  LDW                               0xde
                               PrintInt16                        0x0038
                               NewLine                                                           ; print hexw$(h);" ";56
 
@@ -2221,10 +2217,10 @@ _page_0x43a0                  LDW                               0xe2
                               CALL                              giga_vAC
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x44a0
                               CALL                              giga_vAC
-_page_0x44a0                  LDW                               0xe2
+_page_0x44a0                  LDW                               0xde
                               LDI                               0
                               SUBW                              _z
                               STW                               mathX
@@ -2251,10 +2247,10 @@ _page_0x44a0                  LDW                               0xe2
                               PrintString                       _str_0xff22                     ; print "lalalalala23d455345634650";
 
                               LDW                               _a
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x45a0
                               CALL                              giga_vAC
-_page_0x45a0                  LDW                               0xe2
+_page_0x45a0                  LDW                               0xde
                               PrintAcHexByte                    
                               NewLine                                                           ; print hex$(a)
 
@@ -2280,10 +2276,10 @@ _page_0x45a0                  LDW                               0xe2
                               NewLine                                                           ; print hexw$(h);" ";56
 
                               LDWI                              0xdead
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x46a0
                               CALL                              giga_vAC
-_page_0x46a0                  LDW                               0xe2
+_page_0x46a0                  LDW                               0xde
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
                               LDW                               _z
@@ -2304,10 +2300,10 @@ _page_0x46a0                  LDW                               0xe2
                               STW                               mathY
                               LDWI                              divide16bit
                               CALL                              giga_vAC
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x47a0
                               CALL                              giga_vAC
-_page_0x47a0                  LDW                               0xe2
+_page_0x47a0                  LDW                               0xde
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
                               LDW                               _z
@@ -2331,10 +2327,10 @@ _page_0x47a0                  LDW                               0xe2
                               NewLine                                                           ; print hex$(a)
 
                               LDWI                              0xffff
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x48a0
                               CALL                              giga_vAC
-_page_0x48a0                  LDW                               0xe2
+_page_0x48a0                  LDW                               0xde
                               PrintAcHexWord                    
                               NewLine                                                           ; print hexw$(&hFFFF OR &h1111)
 
@@ -2358,10 +2354,10 @@ _page_0x48a0                  LDW                               0xe2
                               LDWI                              0xdead
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x49a0
                               CALL                              giga_vAC
-_page_0x49a0                  LDW                               0xe2
+_page_0x49a0                  LDW                               0xde
                               LDW                               _z
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
@@ -2384,10 +2380,10 @@ _page_0x49a0                  LDW                               0xe2
                               PrintString                       _str_0xff3d
                               LDW                               _z
                               STW                               mathX
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x4aa0
                               CALL                              giga_vAC
-_page_0x4aa0                  LDW                               0xe2
+_page_0x4aa0                  LDW                               0xde
                               LDI                               21
                               STW                               mathY
                               LDWI                              divide16bit
@@ -2414,10 +2410,10 @@ _page_0x4aa0                  LDW                               0xe2
                               STW                               _f                              ; f = &h1111
 
                               LDWI                              -21846
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x4ba0
                               CALL                              giga_vAC
-_page_0x4ba0                  LDW                               0xe2
+_page_0x4ba0                  LDW                               0xde
                               STW                               _g                              ; g = &hAAAA
 
                               LDWI                              -1
@@ -2437,10 +2433,10 @@ _page_0x4ba0                  LDW                               0xe2
                               LDW                               _z
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x4ca0
                               CALL                              giga_vAC
-_page_0x4ca0                  LDW                               0xe2
+_page_0x4ca0                  LDW                               0xde
                               LDWI                              -6
                               STW                               mathX
                               LDW                               _z
@@ -2466,10 +2462,10 @@ _page_0x4ca0                  LDW                               0xe2
                               CALL                              giga_vAC
                               LDW                               mathRem
                               PrintAcInt16                      
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x4da0
                               CALL                              giga_vAC
-_page_0x4da0                  LDW                               0xe2
+_page_0x4da0                  LDW                               0xde
                               NewLine                                                           ; print hexw$(&hdead);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
 
                               LDWI                              0x8f8f
@@ -2498,10 +2494,10 @@ _page_0x4da0                  LDW                               0xe2
                               STW                               _h                              ; h = NOT g XOR f
 
                               LDW                               _h
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x4ea0
                               CALL                              giga_vAC
-_page_0x4ea0                  LDW                               0xe2
+_page_0x4ea0                  LDW                               0xde
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
                               PrintInt16                        0x0038
@@ -2519,10 +2515,10 @@ _page_0x4ea0                  LDW                               0xe2
                               STW                               mathY
                               LDWI                              multiply16bit
                               CALL                              giga_vAC
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x4fa0
                               CALL                              giga_vAC
-_page_0x4fa0                  LDW                               0xe2
+_page_0x4fa0                  LDW                               0xde
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
                               LDI                               0
@@ -2546,10 +2542,10 @@ _page_0x4fa0                  LDW                               0xe2
 
                               LDWI                              0x8f8f
                               PrintAcHexWord                    
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x50a0
                               CALL                              giga_vAC
-_page_0x50a0                  LDW                               0xe2
+_page_0x50a0                  LDW                               0xde
                               NewLine                                                           ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
                               PrintString                       _str_0xff22                     ; print "lalalalala23d455345634650";
@@ -2576,10 +2572,10 @@ _page_0x50a0                  LDW                               0xe2
                               LDW                               _h
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x51a0
                               CALL                              giga_vAC
-_page_0x51a0                  LDW                               0xe2
+_page_0x51a0                  LDW                               0xde
                               PrintInt16                        0x0038
                               NewLine                                                           ; print hexw$(h);" ";56
 
@@ -2597,10 +2593,10 @@ _page_0x51a0                  LDW                               0xe2
                               CALL                              giga_vAC
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x52a0
                               CALL                              giga_vAC
-_page_0x52a0                  LDW                               0xe2
+_page_0x52a0                  LDW                               0xde
                               LDI                               0
                               SUBW                              _z
                               STW                               mathX
@@ -2627,10 +2623,10 @@ _page_0x52a0                  LDW                               0xe2
                               PrintString                       _str_0xff22                     ; print "lalalalala23d455345634650";
 
                               LDW                               _a
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x53a0
                               CALL                              giga_vAC
-_page_0x53a0                  LDW                               0xe2
+_page_0x53a0                  LDW                               0xde
                               PrintAcHexByte                    
                               NewLine                                                           ; print hex$(a)
 
@@ -2656,10 +2652,10 @@ _page_0x53a0                  LDW                               0xe2
                               NewLine                                                           ; print hexw$(h);" ";56
 
                               LDWI                              0xdead
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x54a0
                               CALL                              giga_vAC
-_page_0x54a0                  LDW                               0xe2
+_page_0x54a0                  LDW                               0xde
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
                               LDW                               _z
@@ -2680,10 +2676,10 @@ _page_0x54a0                  LDW                               0xe2
                               STW                               mathY
                               LDWI                              divide16bit
                               CALL                              giga_vAC
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x55a0
                               CALL                              giga_vAC
-_page_0x55a0                  LDW                               0xe2
+_page_0x55a0                  LDW                               0xde
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
                               LDW                               _z
@@ -2707,10 +2703,10 @@ _page_0x55a0                  LDW                               0xe2
                               NewLine                                                           ; print hex$(a)
 
                               LDWI                              0xffff
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x56a0
                               CALL                              giga_vAC
-_page_0x56a0                  LDW                               0xe2
+_page_0x56a0                  LDW                               0xde
                               PrintAcHexWord                    
                               NewLine                                                           ; print hexw$(&hFFFF OR &h1111)
 
@@ -2734,10 +2730,10 @@ _page_0x56a0                  LDW                               0xe2
                               LDWI                              0xdead
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x57a0
                               CALL                              giga_vAC
-_page_0x57a0                  LDW                               0xe2
+_page_0x57a0                  LDW                               0xde
                               LDW                               _z
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
@@ -2760,10 +2756,10 @@ _page_0x57a0                  LDW                               0xe2
                               PrintString                       _str_0xff3d
                               LDW                               _z
                               STW                               mathX
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x58a0
                               CALL                              giga_vAC
-_page_0x58a0                  LDW                               0xe2
+_page_0x58a0                  LDW                               0xde
                               LDI                               21
                               STW                               mathY
                               LDWI                              divide16bit
@@ -2790,10 +2786,10 @@ _page_0x58a0                  LDW                               0xe2
                               STW                               _f                              ; f = &h1111
 
                               LDWI                              -21846
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x59a0
                               CALL                              giga_vAC
-_page_0x59a0                  LDW                               0xe2
+_page_0x59a0                  LDW                               0xde
                               STW                               _g                              ; g = &hAAAA
 
                               LDWI                              -1
@@ -2813,10 +2809,10 @@ _page_0x59a0                  LDW                               0xe2
                               LDW                               _z
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x5aa0
                               CALL                              giga_vAC
-_page_0x5aa0                  LDW                               0xe2
+_page_0x5aa0                  LDW                               0xde
                               LDWI                              -6
                               STW                               mathX
                               LDW                               _z
@@ -2842,10 +2838,10 @@ _page_0x5aa0                  LDW                               0xe2
                               CALL                              giga_vAC
                               LDW                               mathRem
                               PrintAcInt16                      
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x5ba0
                               CALL                              giga_vAC
-_page_0x5ba0                  LDW                               0xe2
+_page_0x5ba0                  LDW                               0xde
                               NewLine                                                           ; print hexw$(&hdead);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
 
                               LDWI                              0x8f8f
@@ -2874,10 +2870,10 @@ _page_0x5ba0                  LDW                               0xe2
                               STW                               _h                              ; h = NOT g XOR f
 
                               LDW                               _h
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x5ca0
                               CALL                              giga_vAC
-_page_0x5ca0                  LDW                               0xe2
+_page_0x5ca0                  LDW                               0xde
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
                               PrintInt16                        0x0038
@@ -2895,10 +2891,10 @@ _page_0x5ca0                  LDW                               0xe2
                               STW                               mathY
                               LDWI                              multiply16bit
                               CALL                              giga_vAC
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x5da0
                               CALL                              giga_vAC
-_page_0x5da0                  LDW                               0xe2
+_page_0x5da0                  LDW                               0xde
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
                               LDI                               0
@@ -2922,10 +2918,10 @@ _page_0x5da0                  LDW                               0xe2
 
                               LDWI                              0x8f8f
                               PrintAcHexWord                    
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x5ea0
                               CALL                              giga_vAC
-_page_0x5ea0                  LDW                               0xe2
+_page_0x5ea0                  LDW                               0xde
                               NewLine                                                           ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
                               PrintString                       _str_0xff22                     ; print "lalalalala23d455345634650";
@@ -2952,10 +2948,10 @@ _page_0x5ea0                  LDW                               0xe2
                               LDW                               _h
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x5fa0
                               CALL                              giga_vAC
-_page_0x5fa0                  LDW                               0xe2
+_page_0x5fa0                  LDW                               0xde
                               PrintInt16                        0x0038
                               NewLine                                                           ; print hexw$(h);" ";56
 
@@ -2973,10 +2969,10 @@ _page_0x5fa0                  LDW                               0xe2
                               CALL                              giga_vAC
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x60a0
                               CALL                              giga_vAC
-_page_0x60a0                  LDW                               0xe2
+_page_0x60a0                  LDW                               0xde
                               LDI                               0
                               SUBW                              _z
                               STW                               mathX
@@ -3003,10 +2999,10 @@ _page_0x60a0                  LDW                               0xe2
                               PrintString                       _str_0xff22                     ; print "lalalalala23d455345634650";
 
                               LDW                               _a
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x61a0
                               CALL                              giga_vAC
-_page_0x61a0                  LDW                               0xe2
+_page_0x61a0                  LDW                               0xde
                               PrintAcHexByte                    
                               NewLine                                                           ; print hex$(a)
 
@@ -3032,10 +3028,10 @@ _page_0x61a0                  LDW                               0xe2
                               NewLine                                                           ; print hexw$(h);" ";56
 
                               LDWI                              0xdead
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x62a0
                               CALL                              giga_vAC
-_page_0x62a0                  LDW                               0xe2
+_page_0x62a0                  LDW                               0xde
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
                               LDW                               _z
@@ -3056,10 +3052,10 @@ _page_0x62a0                  LDW                               0xe2
                               STW                               mathY
                               LDWI                              divide16bit
                               CALL                              giga_vAC
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x63a0
                               CALL                              giga_vAC
-_page_0x63a0                  LDW                               0xe2
+_page_0x63a0                  LDW                               0xde
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
                               LDW                               _z
@@ -3083,10 +3079,10 @@ _page_0x63a0                  LDW                               0xe2
                               NewLine                                                           ; print hex$(a)
 
                               LDWI                              0xffff
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x64a0
                               CALL                              giga_vAC
-_page_0x64a0                  LDW                               0xe2
+_page_0x64a0                  LDW                               0xde
                               PrintAcHexWord                    
                               NewLine                                                           ; print hexw$(&hFFFF OR &h1111)
 
@@ -3110,10 +3106,10 @@ _page_0x64a0                  LDW                               0xe2
                               LDWI                              0xdead
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x65a0
                               CALL                              giga_vAC
-_page_0x65a0                  LDW                               0xe2
+_page_0x65a0                  LDW                               0xde
                               LDW                               _z
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
@@ -3136,10 +3132,10 @@ _page_0x65a0                  LDW                               0xe2
                               PrintString                       _str_0xff3d
                               LDW                               _z
                               STW                               mathX
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x66a0
                               CALL                              giga_vAC
-_page_0x66a0                  LDW                               0xe2
+_page_0x66a0                  LDW                               0xde
                               LDI                               21
                               STW                               mathY
                               LDWI                              divide16bit
@@ -3166,10 +3162,10 @@ _page_0x66a0                  LDW                               0xe2
                               STW                               _f                              ; f = &h1111
 
                               LDWI                              -21846
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x67a0
                               CALL                              giga_vAC
-_page_0x67a0                  LDW                               0xe2
+_page_0x67a0                  LDW                               0xde
                               STW                               _g                              ; g = &hAAAA
 
                               LDWI                              -1
@@ -3189,10 +3185,10 @@ _page_0x67a0                  LDW                               0xe2
                               LDW                               _z
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x68a0
                               CALL                              giga_vAC
-_page_0x68a0                  LDW                               0xe2
+_page_0x68a0                  LDW                               0xde
                               LDWI                              -6
                               STW                               mathX
                               LDW                               _z
@@ -3218,10 +3214,10 @@ _page_0x68a0                  LDW                               0xe2
                               CALL                              giga_vAC
                               LDW                               mathRem
                               PrintAcInt16                      
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x69a0
                               CALL                              giga_vAC
-_page_0x69a0                  LDW                               0xe2
+_page_0x69a0                  LDW                               0xde
                               NewLine                                                           ; print hexw$(&hdead);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
 
                               LDWI                              0x8f8f
@@ -3250,10 +3246,10 @@ _page_0x69a0                  LDW                               0xe2
                               STW                               _h                              ; h = NOT g XOR f
 
                               LDW                               _h
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x6aa0
                               CALL                              giga_vAC
-_page_0x6aa0                  LDW                               0xe2
+_page_0x6aa0                  LDW                               0xde
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
                               PrintInt16                        0x0038
@@ -3271,10 +3267,10 @@ _page_0x6aa0                  LDW                               0xe2
                               STW                               mathY
                               LDWI                              multiply16bit
                               CALL                              giga_vAC
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x6ba0
                               CALL                              giga_vAC
-_page_0x6ba0                  LDW                               0xe2
+_page_0x6ba0                  LDW                               0xde
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
                               LDI                               0
@@ -3298,10 +3294,10 @@ _page_0x6ba0                  LDW                               0xe2
 
                               LDWI                              0x8f8f
                               PrintAcHexWord                    
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x6ca0
                               CALL                              giga_vAC
-_page_0x6ca0                  LDW                               0xe2
+_page_0x6ca0                  LDW                               0xde
                               NewLine                                                           ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
                               PrintString                       _str_0xff22                     ; print "lalalalala23d455345634650";
@@ -3328,10 +3324,10 @@ _page_0x6ca0                  LDW                               0xe2
                               LDW                               _h
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x6da0
                               CALL                              giga_vAC
-_page_0x6da0                  LDW                               0xe2
+_page_0x6da0                  LDW                               0xde
                               PrintInt16                        0x0038
                               NewLine                                                           ; print hexw$(h);" ";56
 
@@ -3349,10 +3345,10 @@ _page_0x6da0                  LDW                               0xe2
                               CALL                              giga_vAC
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x6ea0
                               CALL                              giga_vAC
-_page_0x6ea0                  LDW                               0xe2
+_page_0x6ea0                  LDW                               0xde
                               LDI                               0
                               SUBW                              _z
                               STW                               mathX
@@ -3379,10 +3375,10 @@ _page_0x6ea0                  LDW                               0xe2
                               PrintString                       _str_0xff22                     ; print "lalalalala23d455345634650";
 
                               LDW                               _a
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x6fa0
                               CALL                              giga_vAC
-_page_0x6fa0                  LDW                               0xe2
+_page_0x6fa0                  LDW                               0xde
                               PrintAcHexByte                    
                               NewLine                                                           ; print hex$(a)
 
@@ -3408,10 +3404,10 @@ _page_0x6fa0                  LDW                               0xe2
                               NewLine                                                           ; print hexw$(h);" ";56
 
                               LDWI                              0xdead
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x70a0
                               CALL                              giga_vAC
-_page_0x70a0                  LDW                               0xe2
+_page_0x70a0                  LDW                               0xde
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
                               LDW                               _z
@@ -3432,10 +3428,10 @@ _page_0x70a0                  LDW                               0xe2
                               STW                               mathY
                               LDWI                              divide16bit
                               CALL                              giga_vAC
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x71a0
                               CALL                              giga_vAC
-_page_0x71a0                  LDW                               0xe2
+_page_0x71a0                  LDW                               0xde
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
                               LDW                               _z
@@ -3459,10 +3455,10 @@ _page_0x71a0                  LDW                               0xe2
                               NewLine                                                           ; print hex$(a)
 
                               LDWI                              0xffff
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x72a0
                               CALL                              giga_vAC
-_page_0x72a0                  LDW                               0xe2
+_page_0x72a0                  LDW                               0xde
                               PrintAcHexWord                    
                               NewLine                                                           ; print hexw$(&hFFFF OR &h1111)
 
@@ -3486,10 +3482,10 @@ _page_0x72a0                  LDW                               0xe2
                               LDWI                              0xdead
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x73a0
                               CALL                              giga_vAC
-_page_0x73a0                  LDW                               0xe2
+_page_0x73a0                  LDW                               0xde
                               LDW                               _z
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
@@ -3512,10 +3508,10 @@ _page_0x73a0                  LDW                               0xe2
                               PrintString                       _str_0xff3d
                               LDW                               _z
                               STW                               mathX
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x74a0
                               CALL                              giga_vAC
-_page_0x74a0                  LDW                               0xe2
+_page_0x74a0                  LDW                               0xde
                               LDI                               21
                               STW                               mathY
                               LDWI                              divide16bit
@@ -3542,10 +3538,10 @@ _page_0x74a0                  LDW                               0xe2
                               STW                               _f                              ; f = &h1111
 
                               LDWI                              -21846
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x75a0
                               CALL                              giga_vAC
-_page_0x75a0                  LDW                               0xe2
+_page_0x75a0                  LDW                               0xde
                               STW                               _g                              ; g = &hAAAA
 
                               LDWI                              -1
@@ -3565,10 +3561,10 @@ _page_0x75a0                  LDW                               0xe2
                               LDW                               _z
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x76a0
                               CALL                              giga_vAC
-_page_0x76a0                  LDW                               0xe2
+_page_0x76a0                  LDW                               0xde
                               LDWI                              -6
                               STW                               mathX
                               LDW                               _z
@@ -3594,10 +3590,10 @@ _page_0x76a0                  LDW                               0xe2
                               CALL                              giga_vAC
                               LDW                               mathRem
                               PrintAcInt16                      
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x77a0
                               CALL                              giga_vAC
-_page_0x77a0                  LDW                               0xe2
+_page_0x77a0                  LDW                               0xde
                               NewLine                                                           ; print hexw$(&hdead);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
 
                               LDWI                              0x8f8f
@@ -3626,10 +3622,10 @@ _page_0x77a0                  LDW                               0xe2
                               STW                               _h                              ; h = NOT g XOR f
 
                               LDW                               _h
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x78a0
                               CALL                              giga_vAC
-_page_0x78a0                  LDW                               0xe2
+_page_0x78a0                  LDW                               0xde
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
                               PrintInt16                        0x0038
@@ -3647,10 +3643,10 @@ _page_0x78a0                  LDW                               0xe2
                               STW                               mathY
                               LDWI                              multiply16bit
                               CALL                              giga_vAC
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x79a0
                               CALL                              giga_vAC
-_page_0x79a0                  LDW                               0xe2
+_page_0x79a0                  LDW                               0xde
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
                               LDI                               0
@@ -3674,10 +3670,10 @@ _page_0x79a0                  LDW                               0xe2
 
                               LDWI                              0x8f8f
                               PrintAcHexWord                    
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x7aa0
                               CALL                              giga_vAC
-_page_0x7aa0                  LDW                               0xe2
+_page_0x7aa0                  LDW                               0xde
                               NewLine                                                           ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
                               PrintString                       _str_0xff22                     ; print "lalalalala23d455345634650";
@@ -3704,10 +3700,10 @@ _page_0x7aa0                  LDW                               0xe2
                               LDW                               _h
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x7ba0
                               CALL                              giga_vAC
-_page_0x7ba0                  LDW                               0xe2
+_page_0x7ba0                  LDW                               0xde
                               PrintInt16                        0x0038
                               NewLine                                                           ; print hexw$(h);" ";56
 
@@ -3725,10 +3721,10 @@ _page_0x7ba0                  LDW                               0xe2
                               CALL                              giga_vAC
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x7ca0
                               CALL                              giga_vAC
-_page_0x7ca0                  LDW                               0xe2
+_page_0x7ca0                  LDW                               0xde
                               LDI                               0
                               SUBW                              _z
                               STW                               mathX
@@ -3755,10 +3751,10 @@ _page_0x7ca0                  LDW                               0xe2
                               PrintString                       _str_0xff22                     ; print "lalalalala23d455345634650";
 
                               LDW                               _a
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x7da0
                               CALL                              giga_vAC
-_page_0x7da0                  LDW                               0xe2
+_page_0x7da0                  LDW                               0xde
                               PrintAcHexByte                    
                               NewLine                                                           ; print hex$(a)
 
@@ -3784,10 +3780,10 @@ _page_0x7da0                  LDW                               0xe2
                               NewLine                                                           ; print hexw$(h);" ";56
 
                               LDWI                              0xdead
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x7ea0
                               CALL                              giga_vAC
-_page_0x7ea0                  LDW                               0xe2
+_page_0x7ea0                  LDW                               0xde
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
                               LDW                               _z
@@ -3808,10 +3804,10 @@ _page_0x7ea0                  LDW                               0xe2
                               STW                               mathY
                               LDWI                              divide16bit
                               CALL                              giga_vAC
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x7fa0
                               CALL                              giga_vAC
-_page_0x7fa0                  LDW                               0xe2
+_page_0x7fa0                  LDW                               0xde
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
                               LDW                               _z
@@ -3835,10 +3831,10 @@ _page_0x7fa0                  LDW                               0xe2
                               NewLine                                                           ; print hex$(a)
 
                               LDWI                              0xffff
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x8000
                               CALL                              giga_vAC
-_page_0x8000                  LDW                               0xe2
+_page_0x8000                  LDW                               0xde
                               PrintAcHexWord                    
                               NewLine                                                           ; print hexw$(&hFFFF OR &h1111)
 
@@ -3904,10 +3900,10 @@ _page_0x8000                  LDW                               0xe2
 
                               LDWI                              0xffff
                               PrintAcHexWord                    
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x8100
                               CALL                              giga_vAC
-_page_0x8100                  LDW                               0xe2
+_page_0x8100                  LDW                               0xde
                               NewLine                                                           ; print hexw$(&hFFFF OR &h1111)
 
                               LDWI                              4369
@@ -3977,10 +3973,10 @@ _page_0x8100                  LDW                               0xe2
                               LDWI                              4369
                               STW                               _f                              ; f = &h1111
 
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x8200
                               CALL                              giga_vAC
-_page_0x8200                  LDW                               0xe2
+_page_0x8200                  LDW                               0xde
                               LDWI                              -21846
                               STW                               _g                              ; g = &hAAAA
 
@@ -4050,10 +4046,10 @@ _page_0x8200                  LDW                               0xe2
 
                               LDWI                              -1
                               SUBW                              _g
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x8300
                               CALL                              giga_vAC
-_page_0x8300                  LDW                               0xe2
+_page_0x8300                  LDW                               0xde
                               XORW                              _f
                               STW                               _h                              ; h = NOT g XOR f
 
@@ -4122,10 +4118,10 @@ _page_0x8300                  LDW                               0xe2
                               STW                               _h                              ; h = NOT g XOR f
 
                               LDW                               _h
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x8400
                               CALL                              giga_vAC
-_page_0x8400                  LDW                               0xe2
+_page_0x8400                  LDW                               0xde
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
                               PrintInt16                        0x0038
@@ -4191,10 +4187,10 @@ _page_0x8400                  LDW                               0xe2
 
                               LDW                               _h
                               PrintAcHexWord                    
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x8500
                               CALL                              giga_vAC
-_page_0x8500                  LDW                               0xe2
+_page_0x8500                  LDW                               0xde
                               PrintString                       _str_0xff3d
                               PrintInt16                        0x0038
                               NewLine                                                           ; print hexw$(h);" ";56
@@ -4260,10 +4256,10 @@ _page_0x8500                  LDW                               0xe2
                               LDW                               _h
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x8600
                               CALL                              giga_vAC
-_page_0x8600                  LDW                               0xe2
+_page_0x8600                  LDW                               0xde
                               PrintInt16                        0x0038
                               NewLine                                                           ; print hexw$(h);" ";56
 
@@ -4329,10 +4325,10 @@ _page_0x8600                  LDW                               0xe2
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
                               PrintInt16                        0x0038
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x8700
                               CALL                              giga_vAC
-_page_0x8700                  LDW                               0xe2
+_page_0x8700                  LDW                               0xde
                               NewLine                                                           ; print hexw$(h);" ";56
 
                               LDWI                              0xdead
@@ -4400,10 +4396,10 @@ _page_0x8700                  LDW                               0xe2
                               NewLine                                                           ; print hexw$(h);" ";56
 
                               LDWI                              0xdead
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x8800
                               CALL                              giga_vAC
-_page_0x8800                  LDW                               0xe2
+_page_0x8800                  LDW                               0xde
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
                               LDW                               _z
@@ -4469,10 +4465,10 @@ _page_0x8800                  LDW                               0xe2
 
                               LDWI                              0xdead
                               PrintAcHexWord                    
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x8900
                               CALL                              giga_vAC
-_page_0x8900                  LDW                               0xe2
+_page_0x8900                  LDW                               0xde
                               PrintString                       _str_0xff3d
                               LDW                               _z
                               PrintAcInt16                      
@@ -4538,10 +4534,10 @@ _page_0x8900                  LDW                               0xe2
                               LDWI                              0xdead
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x8a00
                               CALL                              giga_vAC
-_page_0x8a00                  LDW                               0xe2
+_page_0x8a00                  LDW                               0xde
                               LDW                               _z
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
@@ -4608,10 +4604,10 @@ _page_0x8a00                  LDW                               0xe2
                               PrintString                       _str_0xff3d
                               LDW                               _z
                               PrintAcInt16                      
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x8b00
                               CALL                              giga_vAC
-_page_0x8b00                  LDW                               0xe2
+_page_0x8b00                  LDW                               0xde
                               PrintString                       _str_0xff3d
                               LDWI                              -6
                               STW                               mathX
@@ -4677,10 +4673,10 @@ _page_0x8b00                  LDW                               0xe2
                               LDW                               _z
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x8c00
                               CALL                              giga_vAC
-_page_0x8c00                  LDW                               0xe2
+_page_0x8c00                  LDW                               0xde
                               LDWI                              -6
                               STW                               mathX
                               LDW                               _z
@@ -4749,10 +4745,10 @@ _page_0x8c00                  LDW                               0xe2
                               STW                               mathX
                               LDW                               _z
                               STW                               mathY
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x8d00
                               CALL                              giga_vAC
-_page_0x8d00                  LDW                               0xe2
+_page_0x8d00                  LDW                               0xde
                               LDWI                              multiply16bit
                               CALL                              giga_vAC
                               PrintAcInt16                      
@@ -4819,10 +4815,10 @@ _page_0x8d00                  LDW                               0xe2
                               STW                               mathY
                               LDWI                              multiply16bit
                               CALL                              giga_vAC
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x8e00
                               CALL                              giga_vAC
-_page_0x8e00                  LDW                               0xe2
+_page_0x8e00                  LDW                               0xde
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
                               LDI                               0
@@ -4888,10 +4884,10 @@ _page_0x8e00                  LDW                               0xe2
                               LDWI                              multiply16bit
                               CALL                              giga_vAC
                               PrintAcInt16                      
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x8f00
                               CALL                              giga_vAC
-_page_0x8f00                  LDW                               0xe2
+_page_0x8f00                  LDW                               0xde
                               PrintString                       _str_0xff3d
                               LDI                               0
                               SUBW                              _z
@@ -4957,10 +4953,10 @@ _page_0x8f00                  LDW                               0xe2
                               CALL                              giga_vAC
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x9000
                               CALL                              giga_vAC
-_page_0x9000                  LDW                               0xe2
+_page_0x9000                  LDW                               0xde
                               LDI                               0
                               SUBW                              _z
                               STW                               mathX
@@ -5030,10 +5026,10 @@ _page_0x9000                  LDW                               0xe2
                               STW                               mathX
                               LDI                               21
                               STW                               mathY
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x9100
                               CALL                              giga_vAC
-_page_0x9100                  LDW                               0xe2
+_page_0x9100                  LDW                               0xde
                               LDWI                              divide16bit
                               CALL                              giga_vAC
                               PrintAcInt16                      
@@ -5100,10 +5096,10 @@ _page_0x9100                  LDW                               0xe2
                               STW                               mathY
                               LDWI                              divide16bit
                               CALL                              giga_vAC
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x9200
                               CALL                              giga_vAC
-_page_0x9200                  LDW                               0xe2
+_page_0x9200                  LDW                               0xde
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
                               LDW                               _z
@@ -5169,10 +5165,10 @@ _page_0x9200                  LDW                               0xe2
                               LDWI                              divide16bit
                               CALL                              giga_vAC
                               PrintAcInt16                      
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x9300
                               CALL                              giga_vAC
-_page_0x9300                  LDW                               0xe2
+_page_0x9300                  LDW                               0xde
                               PrintString                       _str_0xff3d
                               LDW                               _z
                               STW                               mathX
@@ -5238,10 +5234,10 @@ _page_0x9300                  LDW                               0xe2
                               CALL                              giga_vAC
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x9400
                               CALL                              giga_vAC
-_page_0x9400                  LDW                               0xe2
+_page_0x9400                  LDW                               0xde
                               LDW                               _z
                               STW                               mathX
                               LDI                               21
@@ -5310,10 +5306,10 @@ _page_0x9400                  LDW                               0xe2
                               STW                               mathX
                               LDI                               21
                               STW                               mathY
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x9500
                               CALL                              giga_vAC
-_page_0x9500                  LDW                               0xe2
+_page_0x9500                  LDW                               0xde
                               LDWI                              divide16bit
                               CALL                              giga_vAC
                               LDW                               mathRem
@@ -5381,10 +5377,10 @@ _page_0x9500                  LDW                               0xe2
                               LDWI                              divide16bit
                               CALL                              giga_vAC
                               LDW                               mathRem
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x9600
                               CALL                              giga_vAC
-_page_0x9600                  LDW                               0xe2
+_page_0x9600                  LDW                               0xde
                               PrintAcInt16                      
                               NewLine                                                           ; print hexw$(&hdead);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
 
@@ -5450,10 +5446,10 @@ _page_0x9600                  LDW                               0xe2
                               CALL                              giga_vAC
                               LDW                               mathRem
                               PrintAcInt16                      
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x9700
                               CALL                              giga_vAC
-_page_0x9700                  LDW                               0xe2
+_page_0x9700                  LDW                               0xde
                               NewLine                                                           ; print hexw$(&hdead);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
 
                               LDWI                              0x8f8f
@@ -5521,10 +5517,10 @@ _page_0x9700                  LDW                               0xe2
                               NewLine                                                           ; print hexw$(&hdead);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
 
                               LDWI                              0x8f8f
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x9800
                               CALL                              giga_vAC
-_page_0x9800                  LDW                               0xe2
+_page_0x9800                  LDW                               0xde
                               PrintAcHexWord                    
                               NewLine                                                           ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
@@ -5590,10 +5586,10 @@ _page_0x9800                  LDW                               0xe2
 
                               LDWI                              0x8f8f
                               PrintAcHexWord                    
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x9900
                               CALL                              giga_vAC
-_page_0x9900                  LDW                               0xe2
+_page_0x9900                  LDW                               0xde
                               NewLine                                                           ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
                               PrintString                       _str_0xff22                     ; print "lalalalala23d455345634650";
@@ -5660,10 +5656,10 @@ _page_0x9900                  LDW                               0xe2
                               PrintAcHexWord                    
                               NewLine                                                           ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x9a00
                               CALL                              giga_vAC
-_page_0x9a00                  LDW                               0xe2
+_page_0x9a00                  LDW                               0xde
                               PrintString                       _str_0xff22                     ; print "lalalalala23d455345634650";
 
                               LDW                               _a
@@ -5730,10 +5726,10 @@ _page_0x9a00                  LDW                               0xe2
 
                               PrintString                       _str_0xff22                     ; print "lalalalala23d455345634650";
 
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x9b00
                               CALL                              giga_vAC
-_page_0x9b00                  LDW                               0xe2
+_page_0x9b00                  LDW                               0xde
                               LDW                               _a
                               PrintAcHexByte                    
                               NewLine                                                           ; print hex$(a)
@@ -5800,10 +5796,10 @@ _page_0x9b00                  LDW                               0xe2
 
                               LDW                               _a
                               PrintAcHexByte                    
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x9c00
                               CALL                              giga_vAC
-_page_0x9c00                  LDW                               0xe2
+_page_0x9c00                  LDW                               0xde
                               NewLine                                                           ; print hex$(a)
 
                               LDWI                              0xffff
@@ -5871,10 +5867,10 @@ _page_0x9c00                  LDW                               0xe2
                               NewLine                                                           ; print hex$(a)
 
                               LDWI                              0xffff
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x9d00
                               CALL                              giga_vAC
-_page_0x9d00                  LDW                               0xe2
+_page_0x9d00                  LDW                               0xde
                               PrintAcHexWord                    
                               NewLine                                                           ; print hexw$(&hFFFF OR &h1111)
 
@@ -5940,10 +5936,10 @@ _page_0x9d00                  LDW                               0xe2
 
                               LDWI                              0xffff
                               PrintAcHexWord                    
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x9e00
                               CALL                              giga_vAC
-_page_0x9e00                  LDW                               0xe2
+_page_0x9e00                  LDW                               0xde
                               NewLine                                                           ; print hexw$(&hFFFF OR &h1111)
 
                               LDWI                              4369
@@ -6013,10 +6009,10 @@ _page_0x9e00                  LDW                               0xe2
                               LDWI                              4369
                               STW                               _f                              ; f = &h1111
 
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x9f00
                               CALL                              giga_vAC
-_page_0x9f00                  LDW                               0xe2
+_page_0x9f00                  LDW                               0xde
                               LDWI                              -21846
                               STW                               _g                              ; g = &hAAAA
 
@@ -6086,10 +6082,10 @@ _page_0x9f00                  LDW                               0xe2
 
                               LDWI                              -1
                               SUBW                              _g
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0xa000
                               CALL                              giga_vAC
-_page_0xa000                  LDW                               0xe2
+_page_0xa000                  LDW                               0xde
                               XORW                              _f
                               STW                               _h                              ; h = NOT g XOR f
 
@@ -6158,10 +6154,10 @@ _page_0xa000                  LDW                               0xe2
                               STW                               _h                              ; h = NOT g XOR f
 
                               LDW                               _h
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0xa100
                               CALL                              giga_vAC
-_page_0xa100                  LDW                               0xe2
+_page_0xa100                  LDW                               0xde
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
                               PrintInt16                        0x0038
@@ -6227,10 +6223,10 @@ _page_0xa100                  LDW                               0xe2
 
                               LDW                               _h
                               PrintAcHexWord                    
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0xa200
                               CALL                              giga_vAC
-_page_0xa200                  LDW                               0xe2
+_page_0xa200                  LDW                               0xde
                               PrintString                       _str_0xff3d
                               PrintInt16                        0x0038
                               NewLine                                                           ; print hexw$(h);" ";56
@@ -6296,10 +6292,10 @@ _page_0xa200                  LDW                               0xe2
                               LDW                               _h
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0xa300
                               CALL                              giga_vAC
-_page_0xa300                  LDW                               0xe2
+_page_0xa300                  LDW                               0xde
                               PrintInt16                        0x0038
                               NewLine                                                           ; print hexw$(h);" ";56
 
@@ -6365,10 +6361,10 @@ _page_0xa300                  LDW                               0xe2
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
                               PrintInt16                        0x0038
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0xa400
                               CALL                              giga_vAC
-_page_0xa400                  LDW                               0xe2
+_page_0xa400                  LDW                               0xde
                               NewLine                                                           ; print hexw$(h);" ";56
 
                               LDWI                              0xdead
@@ -6436,10 +6432,10 @@ _page_0xa400                  LDW                               0xe2
                               NewLine                                                           ; print hexw$(h);" ";56
 
                               LDWI                              0xdead
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0xa500
                               CALL                              giga_vAC
-_page_0xa500                  LDW                               0xe2
+_page_0xa500                  LDW                               0xde
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
                               LDW                               _z
@@ -6505,10 +6501,10 @@ _page_0xa500                  LDW                               0xe2
 
                               LDWI                              0xdead
                               PrintAcHexWord                    
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0xa600
                               CALL                              giga_vAC
-_page_0xa600                  LDW                               0xe2
+_page_0xa600                  LDW                               0xde
                               PrintString                       _str_0xff3d
                               LDW                               _z
                               PrintAcInt16                      
@@ -6574,10 +6570,10 @@ _page_0xa600                  LDW                               0xe2
                               LDWI                              0xdead
                               PrintAcHexWord                    
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0xa700
                               CALL                              giga_vAC
-_page_0xa700                  LDW                               0xe2
+_page_0xa700                  LDW                               0xde
                               LDW                               _z
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
@@ -6644,10 +6640,10 @@ _page_0xa700                  LDW                               0xe2
                               PrintString                       _str_0xff3d
                               LDW                               _z
                               PrintAcInt16                      
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0xa800
                               CALL                              giga_vAC
-_page_0xa800                  LDW                               0xe2
+_page_0xa800                  LDW                               0xde
                               PrintString                       _str_0xff3d
                               LDWI                              -6
                               STW                               mathX
@@ -6713,10 +6709,10 @@ _page_0xa800                  LDW                               0xe2
                               LDW                               _z
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0xa900
                               CALL                              giga_vAC
-_page_0xa900                  LDW                               0xe2
+_page_0xa900                  LDW                               0xde
                               LDWI                              -6
                               STW                               mathX
                               LDW                               _z
@@ -6785,10 +6781,10 @@ _page_0xa900                  LDW                               0xe2
                               STW                               mathX
                               LDW                               _z
                               STW                               mathY
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0xaa00
                               CALL                              giga_vAC
-_page_0xaa00                  LDW                               0xe2
+_page_0xaa00                  LDW                               0xde
                               LDWI                              multiply16bit
                               CALL                              giga_vAC
                               PrintAcInt16                      
@@ -6855,10 +6851,10 @@ _page_0xaa00                  LDW                               0xe2
                               STW                               mathY
                               LDWI                              multiply16bit
                               CALL                              giga_vAC
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0xab00
                               CALL                              giga_vAC
-_page_0xab00                  LDW                               0xe2
+_page_0xab00                  LDW                               0xde
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
                               LDI                               0
@@ -6924,10 +6920,10 @@ _page_0xab00                  LDW                               0xe2
                               LDWI                              multiply16bit
                               CALL                              giga_vAC
                               PrintAcInt16                      
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0xac00
                               CALL                              giga_vAC
-_page_0xac00                  LDW                               0xe2
+_page_0xac00                  LDW                               0xde
                               PrintString                       _str_0xff3d
                               LDI                               0
                               SUBW                              _z
@@ -6993,10 +6989,10 @@ _page_0xac00                  LDW                               0xe2
                               CALL                              giga_vAC
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0xad00
                               CALL                              giga_vAC
-_page_0xad00                  LDW                               0xe2
+_page_0xad00                  LDW                               0xde
                               LDI                               0
                               SUBW                              _z
                               STW                               mathX
@@ -7066,10 +7062,10 @@ _page_0xad00                  LDW                               0xe2
                               STW                               mathX
                               LDI                               21
                               STW                               mathY
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0xae00
                               CALL                              giga_vAC
-_page_0xae00                  LDW                               0xe2
+_page_0xae00                  LDW                               0xde
                               LDWI                              divide16bit
                               CALL                              giga_vAC
                               PrintAcInt16                      
@@ -7136,10 +7132,10 @@ _page_0xae00                  LDW                               0xe2
                               STW                               mathY
                               LDWI                              divide16bit
                               CALL                              giga_vAC
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0xaf00
                               CALL                              giga_vAC
-_page_0xaf00                  LDW                               0xe2
+_page_0xaf00                  LDW                               0xde
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
                               LDW                               _z
@@ -7205,10 +7201,10 @@ _page_0xaf00                  LDW                               0xe2
                               LDWI                              divide16bit
                               CALL                              giga_vAC
                               PrintAcInt16                      
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0xb000
                               CALL                              giga_vAC
-_page_0xb000                  LDW                               0xe2
+_page_0xb000                  LDW                               0xde
                               PrintString                       _str_0xff3d
                               LDW                               _z
                               STW                               mathX
@@ -7274,10 +7270,10 @@ _page_0xb000                  LDW                               0xe2
                               CALL                              giga_vAC
                               PrintAcInt16                      
                               PrintString                       _str_0xff3d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0xb100
                               CALL                              giga_vAC
-_page_0xb100                  LDW                               0xe2
+_page_0xb100                  LDW                               0xde
                               LDW                               _z
                               STW                               mathX
                               LDI                               21
@@ -7346,10 +7342,10 @@ _page_0xb100                  LDW                               0xe2
                               STW                               mathX
                               LDI                               21
                               STW                               mathY
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0xb200
                               CALL                              giga_vAC
-_page_0xb200                  LDW                               0xe2
+_page_0xb200                  LDW                               0xde
                               LDWI                              divide16bit
                               CALL                              giga_vAC
                               LDW                               mathRem
@@ -7417,10 +7413,10 @@ _page_0xb200                  LDW                               0xe2
                               LDWI                              divide16bit
                               CALL                              giga_vAC
                               LDW                               mathRem
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0xb300
                               CALL                              giga_vAC
-_page_0xb300                  LDW                               0xe2
+_page_0xb300                  LDW                               0xde
                               PrintAcInt16                      
                               NewLine                                                           ; print hexw$(&hdead);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
 
@@ -7486,10 +7482,10 @@ _page_0xb300                  LDW                               0xe2
                               CALL                              giga_vAC
                               LDW                               mathRem
                               PrintAcInt16                      
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0xb400
                               CALL                              giga_vAC
-_page_0xb400                  LDW                               0xe2
+_page_0xb400                  LDW                               0xde
                               NewLine                                                           ; print hexw$(&hdead);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
 
                               LDWI                              0x8f8f
@@ -7557,10 +7553,10 @@ _page_0xb400                  LDW                               0xe2
                               NewLine                                                           ; print hexw$(&hdead);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
 
                               LDWI                              0x8f8f
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0xb500
                               CALL                              giga_vAC
-_page_0xb500                  LDW                               0xe2
+_page_0xb500                  LDW                               0xde
                               PrintAcHexWord                    
                               NewLine                                                           ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
@@ -7626,10 +7622,10 @@ _page_0xb500                  LDW                               0xe2
 
                               LDWI                              0x8f8f
                               PrintAcHexWord                    
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0xb600
                               CALL                              giga_vAC
-_page_0xb600                  LDW                               0xe2
+_page_0xb600                  LDW                               0xde
                               NewLine                                                           ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
                               PrintString                       _str_0xff22                     ; print "lalalalala23d455345634650";
@@ -7696,10 +7692,10 @@ _page_0xb600                  LDW                               0xe2
                               PrintAcHexWord                    
                               NewLine                                                           ; print hexw$(&b0000111100001111 OR &b1000000010000000)
 
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0xb700
                               CALL                              giga_vAC
-_page_0xb700                  LDW                               0xe2
+_page_0xb700                  LDW                               0xde
                               PrintString                       _str_0xff22                     ; print "lalalalala23d455345634650";
 
                               LDW                               _a
@@ -7766,10 +7762,10 @@ _page_0xb700                  LDW                               0xe2
 
                               PrintString                       _str_0xff22                     ; print "lalalalala23d455345634650";
 
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0xb800
                               CALL                              giga_vAC
-_page_0xb800                  LDW                               0xe2
+_page_0xb800                  LDW                               0xde
                               LDW                               _a
                               PrintAcHexByte                    
                               NewLine                                                           ; print hex$(a)
@@ -7875,9 +7871,11 @@ convertLeOpAddr               EQU     0x00d4
 convertGeOpAddr               EQU     0x00d6
 convertLtOpAddr               EQU     0x00d8
 convertGtOpAddr               EQU     0x00da
-convertArr2dAddr              EQU     0x00dc
-convertArr3dAddr              EQU     0x00de
-realTimeStubAddr              EQU     0x00e0
+convert8Arr2dAddr             EQU     0x00e0
+convert8Arr3dAddr             EQU     0x00e2
+convert16Arr2dAddr            EQU     0x00e4
+convert16Arr3dAddr            EQU     0x00e6
+realTimeStubAddr              EQU     0x00dc
 
 
 ; do *NOT* use register4 to register7 during time slicing

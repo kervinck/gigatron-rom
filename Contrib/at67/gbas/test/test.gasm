@@ -79,10 +79,6 @@ _str_0x7efd                   EQU                               0x7efd
 _str_0x7efd                   DB                                1 ' ' 0
 
 ; Data
-_data_                        EQU                               0x7ea3
-_data_                        DW                                0
-_dataIndex_                   EQU                               0x7ea1
-_dataIndex_                   DW                                0
 
 ; Time
 
@@ -220,10 +216,10 @@ _34                           LDI                               0
                               LDI                               24
                               SUBW                              _g
                               STW                               0xc2
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0300
                               CALL                              giga_vAC
-_page_0x0300                  LDW                               0xe2
+_page_0x0300                  LDW                               0xde
                               LDW                               0xc0
                               SUBW                              0xc2
                               ADDW                              _f
@@ -343,10 +339,10 @@ _37                           LDI                               0
                               STW                               0xc2
                               LDWI                              -900
                               ADDW                              _f
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0400
                               CALL                              giga_vAC
-_page_0x0400                  LDW                               0xe2
+_page_0x0400                  LDW                               0xde
                               STW                               0xc4
                               LDW                               0xc2
                               SUBW                              0xc4
@@ -464,10 +460,10 @@ _page_0x0400                  LDW                               0xe2
                               SUBW                              0xc4
                               STW                               0xc4
                               LDW                               0xc0
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0500
                               CALL                              giga_vAC
-_page_0x0500                  LDW                               0xe2
+_page_0x0500                  LDW                               0xde
                               SUBW                              0xc4
                               STW                               _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
@@ -585,10 +581,10 @@ _page_0x0500                  LDW                               0xe2
 
                               LDW                               _a
                               PrintAcInt16                      
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0600
                               CALL                              giga_vAC
-_page_0x0600                  LDW                               0xe2
+_page_0x0600                  LDW                               0xde
                               PrintString                       _str_0x7efd
                               LDW                               _b
                               PrintAcInt16                      
@@ -643,9 +639,11 @@ convertLeOpAddr               EQU     0x00d4
 convertGeOpAddr               EQU     0x00d6
 convertLtOpAddr               EQU     0x00d8
 convertGtOpAddr               EQU     0x00da
-convertArr2dAddr              EQU     0x00dc
-convertArr3dAddr              EQU     0x00de
-realTimeStubAddr              EQU     0x00e0
+convert8Arr2dAddr             EQU     0x00e0
+convert8Arr3dAddr             EQU     0x00e2
+convert16Arr2dAddr            EQU     0x00e4
+convert16Arr3dAddr            EQU     0x00e6
+realTimeStubAddr              EQU     0x00dc
 
 
 ; do *NOT* use register4 to register7 during time slicing

@@ -74,7 +74,7 @@ namespace Memory
 
     bool isFreeRAM(uint16_t address, int size);
     bool isVideoRAM(uint16_t address);
-    bool getNextCodeAddress(FitType fitType, uint16_t start, int size, uint16_t& address);
+    bool getNextCodeAddress(FitType fitType, uint16_t start, int size, uint16_t& address, bool lowMemDescend=false);
 
     bool giveFreeRAM(uint16_t address, int size);
     bool takeFreeRAM(uint16_t address, int size, bool printError=true);

@@ -5,8 +5,8 @@ _codeRomType_ ROMv3
 'move string work area for scrolling of text, (defaults to &h7FA0)
 _stringWorkArea_ &h69A0
 
-'defines the amount of contiguous RAM needed for sprite stripes, (in this case 15*6 + 1)
-_spriteStripeChunks_ 15, &h16A0, ascending
+'defines the amount of contiguous RAM needed for sprite stripes, (in this case 15*6 + 1), min address and search direction
+_spriteStripeChunks_ 15, &h16A0, ascending 'allocates from &h16A0 to _runtimeStart_
 
 'alloc offscreen scrolling area, (<address>, <optional size>, <optional count>, <optional offset>), so that compiler does not try and use it
 alloc &h6AA0, 96, 22, &h0100

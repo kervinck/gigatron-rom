@@ -31,8 +31,10 @@ namespace Linker
         {0x0000, 0x0000, "convertGeOp"      , "", false, false},
         {0x0000, 0x0000, "convertLtOp"      , "", false, false},
         {0x0000, 0x0000, "convertGtOp"      , "", false, false},
-        {0x0000, 0x0000, "convertArr2d"     , "", false, false},
-        {0x0000, 0x0000, "convertArr3d"     , "", false, false},
+        {0x0000, 0x0000, "convert8Arr2d"    , "", false, false},
+        {0x0000, 0x0000, "convert8Arr3d"    , "", false, false},
+        {0x0000, 0x0000, "convert16Arr2d"   , "", false, false},
+        {0x0000, 0x0000, "convert16Arr3d"   , "", false, false},
         {0x0000, 0x0000, "setRealTimeProc0" , "", false, false},
         {0x0000, 0x0000, "setRealTimeProc1" , "", false, false},
         {0x0000, 0x0000, "setRealTimeProc2" , "", false, false},
@@ -104,6 +106,7 @@ namespace Linker
         {0x0000, 0x0000, "drawRect"         , "", false, false},
         {0x0000, 0x0000, "drawRectF"        , "", false, false},
         {0x0000, 0x0000, "drawPoly"         , "", false, false},
+        {0x0000, 0x0000, "drawPolyRel"      , "", false, false},
         {0x0000, 0x0000, "atLineCursor"     , "", false, false},
         {0x0000, 0x0000, "draw_sprite"      , "", false, false},
         {0x0000, 0x0000, "drawSprite"       , "", false, false},
@@ -162,6 +165,10 @@ namespace Linker
         {0x0000, 0x0000, "handleTime"       , "", false, false},
         {0x0000, 0x0000, "timeDigits"       , "", false, false},
         {0x0000, 0x0000, "timeString"       , "", false, false},
+        {0x0000, 0x0000, "bcdAdd"           , "", false, false},
+        {0x0000, 0x0000, "bcdSub"           , "", false, false},
+        {0x0000, 0x0000, "bcdInt"           , "", false, false},
+        {0x0000, 0x0000, "bcdDigits"        , "", false, false},
     };
     std::vector<std::string> _subIncludesROMv1 =
     {
@@ -488,7 +495,7 @@ namespace Linker
             // Save end of runtime/strings
             if(address < Compiler::getRuntimeEnd()) Compiler::setRuntimeEnd(address);
 
-            //fprintf(stderr, "* %-20s : 0x%04x  :    %2d bytes\n", _internalSubs[subIndex]._name.c_str(), address, _internalSubs[subIndex]._size);
+            fprintf(stderr, "* %-20s : 0x%04x  :    %2d bytes\n", _internalSubs[subIndex]._name.c_str(), address, _internalSubs[subIndex]._size);
 
             _internalSubs[subIndex]._address = address;
             _internalSubs[subIndex]._inUse = true;
@@ -617,11 +624,11 @@ namespace Linker
 
     bool linkInternalSubs(void)
     {
-        //fprintf(stderr, "\n**********************************************\n");
-        //fprintf(stderr, "*                   Linking                   \n");
-        //fprintf(stderr, "**********************************************\n");
-        //fprintf(stderr, "*        Name          : Address :    Size    \n");
-        //fprintf(stderr, "**********************************************\n");
+        fprintf(stderr, "\n**********************************************\n");
+        fprintf(stderr, "*                   Linking                   \n");
+        fprintf(stderr, "**********************************************\n");
+        fprintf(stderr, "*        Name          : Address :    Size    \n");
+        fprintf(stderr, "**********************************************\n");
         
         for(int i=0; i<int(Compiler::getCodeLines().size()); i++)
         {
@@ -739,8 +746,10 @@ RESTART_COLLECTION:
             {Compiler::getOutput().push_back("convertGtOpAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertGtOpAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(CONVERT_CC_OPS + 10) + "\n");}
 
             // Get array address
-            {Compiler::getOutput().push_back("convertArr2dAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertArr2dAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(CONVERT_ARRAY + 0) + "\n");}
-            {Compiler::getOutput().push_back("convertArr3dAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertArr3dAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(CONVERT_ARRAY + 2) + "\n");}
+            {Compiler::getOutput().push_back("convert8Arr2dAddr"  + std::string(LABEL_TRUNC_SIZE - strlen("convert8Arr2dAddr"), ' ')  + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(CONVERT_ARRAY + 0) + "\n");}
+            {Compiler::getOutput().push_back("convert8Arr3dAddr"  + std::string(LABEL_TRUNC_SIZE - strlen("convert8Arr3dAddr"), ' ')  + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(CONVERT_ARRAY + 2) + "\n");}
+            {Compiler::getOutput().push_back("convert16Arr2dAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convert16Arr2dAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(CONVERT_ARRAY + 4) + "\n");}
+            {Compiler::getOutput().push_back("convert16Arr3dAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convert16Arr3dAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(CONVERT_ARRAY + 6) + "\n");}
 
             // Real time proc
             {Compiler::getOutput().push_back("realTimeStubAddr" + std::string(LABEL_TRUNC_SIZE - strlen("realTimeStubAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(REAL_TIME_PROC) + "\n");}
