@@ -88,10 +88,6 @@ _str_0xf626                   EQU                               0xf626
 _str_0xf626                   DB                                16 'Merry Christmas!' 0
 
 ; Data
-_data_                        EQU                               0xf523
-_data_                        DW                                0
-_dataIndex_                   EQU                               0xf521
-_dataIndex_                   DW                                0
 
 ; Time
 
@@ -233,10 +229,10 @@ _110                          Rand
                               STW                               memValue
                               LDWI                              0xf638
                               ADDW                              _S
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0300
                               CALL                              giga_vAC
-_page_0x0300                  LDW                               0xe2
+_page_0x0300                  LDW                               0xde
                               ADDW                              _S
                               STW                               memAddr
                               LDW                               memValue
@@ -319,7 +315,7 @@ _190                          LDWI                              0xfaec
 _200                          LDW                               _x
                               ADDW                              _y
                               PEEK                              
-                              SUBI                              16
+                              XORI                              16
                               CALL                              convertEqOpAddr
                               JumpFalse                         _210 2
                               LDWI                              _150
@@ -359,8 +355,8 @@ _end_0x0472                   BRA                               _end_0x0472     
 ;****************************************************************************************************************************************
 
 realTimeStub                  EQU     0xf608
-convertEqOp                   EQU     0xf518
-convertGtOp                   EQU     0xf50f
+convertEqOp                   EQU     0xf51c
+convertGtOp                   EQU     0xf513
 setRealTimeProc0              EQU     0xf59d
 rand16bit                     EQU     0xf600
 resetVideoFlags               EQU     0xf61a
@@ -383,9 +379,11 @@ convertLeOpAddr               EQU     0x00d4
 convertGeOpAddr               EQU     0x00d6
 convertLtOpAddr               EQU     0x00d8
 convertGtOpAddr               EQU     0x00da
-convertArr2dAddr              EQU     0x00dc
-convertArr3dAddr              EQU     0x00de
-realTimeStubAddr              EQU     0x00e0
+convert8Arr2dAddr             EQU     0x00e0
+convert8Arr3dAddr             EQU     0x00e2
+convert16Arr2dAddr            EQU     0x00e4
+convert16Arr3dAddr            EQU     0x00e6
+realTimeStubAddr              EQU     0x00dc
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -631,6 +629,7 @@ drawRectF_y1        EQU     register1
 drawRectF_x2        EQU     register2
 drawRectF_y2        EQU     register7
 
+drawPoly_mode       EQU     register14
 drawPoly_addr       EQU     register15
 
 

@@ -2,7 +2,7 @@
 strChr              EQU     register0
 strHex              EQU     register1
 strCmpRes           EQU     register2
-strLength           EQU     register0
+strDstLen           EQU     register0
 strFinish           EQU     register0
 strSrcAddr          EQU     register1
 strDstAddr          EQU     register2
@@ -130,7 +130,7 @@ stringAdd           LDW     strDstAddr
                     INC     strSrcAddr
                     INC     strDstAddr                          ; skip lengths
                     LDI     0
-                    STW     strLength
+                    STW     strDstLen
                     
 stringA_copy0       LDW     strSrcAddr
                     PEEK
@@ -138,10 +138,10 @@ stringA_copy0       LDW     strSrcAddr
                     POKE    strDstAddr
                     INC     strSrcAddr
                     INC     strDstAddr
-                    INC     strLength
+                    INC     strDstLen
                     BRA     stringA_copy0
                     
-stringA_copy1       LDW     strLength
+stringA_copy1       LDW     strDstLen
                     SUBI    94
                     BGE     stringA_exit                        ; maximum destination length reached
                     INC     strSrcAddr2                         ; skips length first time
@@ -150,10 +150,10 @@ stringA_copy1       LDW     strLength
                     BEQ     stringA_exit                        ; copy char until terminating char
                     POKE    strDstAddr                          ; copy char
                     INC     strDstAddr
-                    INC     strLength
+                    INC     strDstLen
                     BRA     stringA_copy1
 
-stringA_exit        LDW     strLength
+stringA_exit        LDW     strDstLen
                     POKE    strTmpAddr                          ; save concatenated string length
                     LDI     0
                     POKE    strDstAddr                          ; terminating zero
@@ -189,20 +189,20 @@ stringCC_exit       POP
 
 %SUB                stringLeft
                     ; copies sub string from left hand side of source string to destination string
-stringLeft          LD      strLength
+stringLeft          LD      strDstLen
                     POKE    strDstAddr                          ; destination length
                     BEQ     stringL_exit                        ; exit if left length = 0
                     LDW     strSrcAddr
                     PEEK                                        ; get source length
                     STW     strSrcLen
-                    SUBW    strLength
+                    SUBW    strDstLen
                     BGE     stringL_skip                        ; is left length <= source length
                     LD      strSrcLen
-                    STW     strLength
+                    STW     strDstLen
                     POKE    strDstAddr                          ; new destination length
                     
 stringL_skip        LDW     strSrcAddr
-                    ADDW    strLength
+                    ADDW    strDstLen
                     STW     strFinish                           ; end source address
                     
 stringL_loop        INC     strSrcAddr                          ; skip lengths the first time in
@@ -222,22 +222,22 @@ stringL_exit        INC     strDstAddr
 
 %SUB                stringRight
                     ; copies sub string from right hand side of source string to destination string
-stringRight         LD      strLength
+stringRight         LD      strDstLen
                     POKE    strDstAddr                          ; destination length
                     BEQ     stringR_exit                        ; exit if right length = 0
                     LDW     strSrcAddr
                     PEEK                                        ; get source length
                     STW     strSrcLen
-                    SUBW    strLength
+                    SUBW    strDstLen
                     BGE     stringR_skip                        ; length <= srcLength
                     LD      strSrcLen
-                    STW     strLength
+                    STW     strDstLen
                     POKE    strDstAddr                          ; new destination length
                     LDI     0
                     
 stringR_skip        ADDW    strSrcAddr
                     STW     strSrcAddr                          ; copy from (source address + (source length - right length)) to destination address
-                    ADDW    strLength
+                    ADDW    strDstLen
                     STW     strFinish                           ; end source address
 
 stringR_loop        INC     strSrcAddr                          ; skip lengths the first time in
@@ -257,24 +257,24 @@ stringR_exit        INC     strDstAddr
 
 %SUB                stringMid
                     ; copies length sub string from source offset to destination string
-stringMid           LD      strLength
+stringMid           LD      strDstLen
                     POKE    strDstAddr                          ; destination length
                     BEQ     stringM_exit                        ; exit if right length = 0
                     LDW     strSrcAddr
                     PEEK                                        ; get source length
                     STW     strSrcLen
                     SUBW    strOffset                           
-                    SUBW    strLength
+                    SUBW    strDstLen
                     BGE     stringM_skip                        ; length + offset <= srcLength
                     LD      strSrcLen
                     SUBW    strOffset
-                    STW     strLength
+                    STW     strDstLen
                     POKE    strDstAddr                          ; new destination length
                     
 stringM_skip        LDW     strSrcAddr
                     ADDW    strOffset
                     STW     strSrcAddr                          ; copy from (source address + (source length - right length)) to destination address
-                    ADDW    strLength
+                    ADDW    strDstLen
                     STW     strFinish                           ; end source address
 
 stringM_loop        INC     strSrcAddr                          ; skip lengths the first time in

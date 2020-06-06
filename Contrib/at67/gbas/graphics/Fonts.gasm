@@ -68,10 +68,6 @@ _str_0x78a4                   EQU                               0x78a4
 _str_0x78a4                   DB                                4 'Text' 0
 
 ; Data
-_data_                        EQU                               0x7da1
-_data_                        DW                                0
-_dataIndex_                   EQU                               0x7ca1
-_dataIndex_                   DW                                0
 
 ; Time
 
@@ -84,7 +80,7 @@ _dataIndex_                   DW                                0
 ; Define Sprites
 
 ; Define Fonts
-_fontId_                      EQU                               0x7da0
+_fontId_                      EQU                               0x7da2
 _fontId_                      DB                                0
 def_map_0x7ea0                EQU                               0x7ea0
 def_map_0x7ea0                DB                                39 37 39 39 39 39 39 39 39 39 39 39 38 39 38 39 26 27 28 29 30 31 32 33 34 35 39 39 39 39 39 36 39 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 39 39 39 39 39 39 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 39 39 39 39 39 
@@ -636,9 +632,11 @@ convertLeOpAddr               EQU     0x00d4
 convertGeOpAddr               EQU     0x00d6
 convertLtOpAddr               EQU     0x00d8
 convertGtOpAddr               EQU     0x00da
-convertArr2dAddr              EQU     0x00dc
-convertArr3dAddr              EQU     0x00de
-realTimeStubAddr              EQU     0x00e0
+convert8Arr2dAddr             EQU     0x00e0
+convert8Arr3dAddr             EQU     0x00e2
+convert16Arr2dAddr            EQU     0x00e4
+convert16Arr3dAddr            EQU     0x00e6
+realTimeStubAddr              EQU     0x00dc
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -835,6 +833,7 @@ drawRectF_y1        EQU     register1
 drawRectF_x2        EQU     register2
 drawRectF_y2        EQU     register7
 
+drawPoly_mode       EQU     register14
 drawPoly_addr       EQU     register15
 
     

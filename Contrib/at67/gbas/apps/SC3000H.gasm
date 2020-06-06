@@ -119,10 +119,6 @@ _str_0x4ccf                   EQU                               0x4ccf
 _str_0x4ccf                   DB                                10 'RickRolled' 0
 
 ; Data
-_data_                        EQU                               0x7da0
-_data_                        DW                                0
-_dataIndex_                   EQU                               0x7ca3
-_dataIndex_                   DW                                0
 
 ; Time
 
@@ -243,7 +239,7 @@ def_bytes_0x3ca0              DB                                146 58 66 7 128 
 ; Define Sprites
 
 ; Define Fonts
-_fontId_                      EQU                               0x7ca2
+_fontId_                      EQU                               0x7da1
 _fontId_                      DB                                0
 def_char_0x7ed5               EQU                               0x7ed5
 def_char_0x7ed5               DB                                8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 8 249 
@@ -443,7 +439,7 @@ def_baseline_0x7ea3           DB                                0x08 0x08 0x08 0
 ; Lookup Tables
 _fontLut_0x0634               EQU                               0x0634
 _fontLut_0x0634               DW                                0x0000 0x7ea3 0x7ed5 0x7eaa 0x7dd5 0x7daa 0x7cd5 0x7caa 0x7bd5 0x7baa 0x7ad5 0x7aaa 0x79d5 0x79aa 0x78d5 0x78aa 0x77d5 0x77aa 0x76d5 0x76aa 0x75d5 0x75aa 0x74d5 0x74aa 0x73d5 0x73aa 0x72d5 0x72aa 0x71d5 0x71aa 0x70d5 0x70aa 0x6fd5 0x6faa 0x6ed5 0x6eaa 0x6dd5 0x6daa 0x6cd5 0x6caa 0x6bd5 0x6baa 0x6ad5 0x6aaa 0x69d5 0x69aa 0x68d5 0x68aa 0x67d5 0x67aa 0x66d5 0x66aa 0x65d5 0x65aa 0x64d5 0x64aa 0x63d5 0x63aa 0x62d5 0x62aa 0x61d5 0x61aa 0x60d5 0x60aa 0x5fd5 0x5faa 0x5ed5 0x5eaa 0x5dd5 0x5daa 0x5cd5 0x5caa 0x5bd5 0x5baa 0x5ad5 0x5aaa 0x59d5 0x59aa 0x58d5 0x58aa 0x57d5 0x57aa 0x56d5 0x56aa 0x55d5 0x55aa 0x54d5 0x54aa 0x53d5 0x53aa 0x52d5 0x52aa 0x51d5 0x51aa 0x50d5 0x50aa 0x4fd5 0x4faa 
-_fontsLut_                    EQU                               0x7ca0
+_fontsLut_                    EQU                               0x7ca3
 _fontsLut_                    DW                                0x0634 
 
 ; Code
@@ -507,10 +503,10 @@ _entryPoint_                  LDI                               0x28
 
                               LDI                               8
                               STW                               _duration
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0300
                               CALL                              giga_vAC
-_page_0x0300                  LDW                               0xe2
+_page_0x0300                  LDW                               0xde
                               LDWI                              _beep
                               CALL                              giga_vAC                        ; duration = 8 : gosub beep
 
@@ -527,7 +523,7 @@ _loop                         LDI                               8
                               CALL                              giga_vAC                        ; gosub waitKey
 
                               LDW                               _done
-                              SUBI                              1
+                              XORI                              1
                               CALL                              convertEqOpAddr
                               JumpFalse                         _else_0x031b 0
                               LDWI                              _ohNoes
@@ -545,7 +541,7 @@ _else_0x031b                  LDI                               8
                               CALL                              giga_vAC                        ; gosub waitKey
 
                               LDW                               _done
-                              SUBI                              1
+                              XORI                              1
                               CALL                              convertEqOpAddr
                               JumpFalse                         _else_0x0353 1
                               LDWI                              _ohNoes
@@ -564,7 +560,7 @@ _next_0x035d                  WaitVBlank                                        
                               STW                               _k                              ; k = get("SERIAL_RAW")
 
                               LDW                               _k
-                              SUBI                              255
+                              XORI                              255
                               CALL                              convertNeOpAddr
                               JumpFalse                         _endif_0x0383 2                 ; if k <> 255
 
@@ -615,10 +611,10 @@ _next_0x03c7                  LDWI                              0x7ba4
                               LDI                               3
                               STW                               _duration
                               LDWI                              _beep
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0400
                               CALL                              giga_vAC
-_page_0x0400                  LDW                               0xe2
+_page_0x0400                  LDW                               0xde
                               CALL                              giga_vAC                        ; duration = 3 : gosub beep
 
                               Rand                              
@@ -694,16 +690,16 @@ _forever                      LDW                               _posX
 
                               LDW                               _posX
                               ANDI                              1
-                              SUBI                              1
+                              XORI                              1
                               CALL                              convertEqOpAddr
                               JumpFalse                         _endif_0x052b 3                 ; if posX AND 1 == 1
 
                               Rand                              
                               ANDI                              7
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0500
                               CALL                              giga_vAC
-_page_0x0500                  LDW                               0xe2
+_page_0x0500                  LDW                               0xde
                               STW                               0xc0
                               LDWI                              1784
                               ADDW                              0xc0
@@ -857,9 +853,11 @@ convertLeOpAddr               EQU     0x00d4
 convertGeOpAddr               EQU     0x00d6
 convertLtOpAddr               EQU     0x00d8
 convertGtOpAddr               EQU     0x00da
-convertArr2dAddr              EQU     0x00dc
-convertArr3dAddr              EQU     0x00de
-realTimeStubAddr              EQU     0x00e0
+convert8Arr2dAddr             EQU     0x00e0
+convert8Arr3dAddr             EQU     0x00e2
+convert16Arr2dAddr            EQU     0x00e4
+convert16Arr3dAddr            EQU     0x00e6
+realTimeStubAddr              EQU     0x00dc
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -1105,6 +1103,7 @@ drawRectF_y1        EQU     register1
 drawRectF_x2        EQU     register2
 drawRectF_y2        EQU     register7
 
+drawPoly_mode       EQU     register14
 drawPoly_addr       EQU     register15
 
     

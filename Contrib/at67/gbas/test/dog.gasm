@@ -68,10 +68,6 @@ _str_0x7ef6                   EQU                               0x7ef6
 _str_0x7ef6                   DB                                5 ' dog ' 0
 
 ; Data
-_data_                        EQU                               0x7ebd
-_data_                        DW                                0
-_dataIndex_                   EQU                               0x7ebb
-_dataIndex_                   DW                                0
 
 ; Time
 
@@ -168,9 +164,9 @@ _end_0x02f0                   BRA                               _end_0x02f0     
 ;****************************************************************************************************************************************
 
 realTimeStub                  EQU     0x7ed8
-convertEqOp                   EQU     0x7eb2
-convertNeOp                   EQU     0x7ea9
-convertLeOp                   EQU     0x7ea0
+convertEqOp                   EQU     0x7eb6
+convertNeOp                   EQU     0x7ead
+convertLeOp                   EQU     0x7ea4
 convertGeOp                   EQU     0x7da5
 convertGtOp                   EQU     0x7bf6
 resetVideoFlags               EQU     0x7eea
@@ -187,9 +183,11 @@ convertLeOpAddr               EQU     0x00d4
 convertGeOpAddr               EQU     0x00d6
 convertLtOpAddr               EQU     0x00d8
 convertGtOpAddr               EQU     0x00da
-convertArr2dAddr              EQU     0x00dc
-convertArr3dAddr              EQU     0x00de
-realTimeStubAddr              EQU     0x00e0
+convert8Arr2dAddr             EQU     0x00e0
+convert8Arr3dAddr             EQU     0x00e2
+convert16Arr2dAddr            EQU     0x00e4
+convert16Arr3dAddr            EQU     0x00e6
+realTimeStubAddr              EQU     0x00dc
 
 
 ; do *NOT* use register4 to register7 during time slicing

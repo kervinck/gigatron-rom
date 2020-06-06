@@ -58,7 +58,7 @@ namespace Editor
     uint32_t _singleStepTicks = 0;
     uint16_t _singleStepNtv = 0x0000;
     uint16_t _singleStepVpc = 0x0000;
-    uint16_t _singleStepAddress = VIDEO_Y_ADDRESS;
+    uint16_t _singleStepAddress = FRAME_COUNT_ADDRESS;
 
     std::string _browserPath = "./";
 

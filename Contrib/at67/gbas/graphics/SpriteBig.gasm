@@ -72,10 +72,6 @@ _x                            EQU                               0x0034
 ; Constant Strings
 
 ; Data
-_data_                        EQU                               0x7ea5
-_data_                        DW                                0
-_dataIndex_                   EQU                               0x7ea3
-_dataIndex_                   DW                                0
 
 ; Time
 
@@ -123,15 +119,15 @@ _spritesLut_                  DW                                0x7cdc 0x7cc6 0x
 _entryPoint_                  LDI                               0x28
                               STW                               romType
                               RomCheck                          
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0500
                               CALL                              giga_vAC
-_page_0x0500                  LDW                               0xe2
+_page_0x0500                  LDW                               0xde
                               Initialise                        
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0600
                               CALL                              giga_vAC
-_page_0x0600                  LDW                               0xe2
+_page_0x0600                  LDW                               0xde
                               InitRealTimeStub                                                  ; INIT
 
                               LDI                               2
@@ -139,10 +135,10 @@ _page_0x0600                  LDW                               0xe2
                               ScanlineMode                                                      ; mode 2
 
                               LDWI                              16128
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x08a0
                               CALL                              giga_vAC
-_page_0x08a0                  LDW                               0xe2
+_page_0x08a0                  LDW                               0xde
                               STW                               fgbgColour                      ; set FGBG_COLOUR, &h3F00
 
                               ClearVertBlinds                                                   ; cls
@@ -183,10 +179,10 @@ _next_0x023f                  WaitVBlank                                        
                               ForNextFarInc                     _x _next_0x023f 130             ; next x
 
                               LDI                               28
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x09a0
                               CALL                              giga_vAC
-_page_0x09a0                  LDW                               0xe2
+_page_0x09a0                  LDW                               0xde
                               STW                               _x1                             ; x1 = 28
 
                               LDI                               120
@@ -227,10 +223,10 @@ _next_0x028f                  WaitVBlank                                        
 _bullets0                     PUSH                              
                               LDI                               5
                               STW                               spriteId
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0aa0
                               CALL                              giga_vAC
-_page_0x0aa0                  LDW                               0xe2
+_page_0x0aa0                  LDW                               0xde
                               LDW                               _x0
                               ST                                spriteXY
                               LDI                               24
@@ -277,10 +273,10 @@ _bullets1                     PUSH
                               LDW                               _x0
                               ST                                spriteXY
                               LDI                               24
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0ba0
                               CALL                              giga_vAC
-_page_0x0ba0                  LDW                               0xe2
+_page_0x0ba0                  LDW                               0xde
                               ADDI                              8
                               ST                                spriteXY + 1
                               DrawSprite                                                        ; sprite noFlip, 4, x0, 24
@@ -345,9 +341,11 @@ convertLeOpAddr               EQU     0x00d4
 convertGeOpAddr               EQU     0x00d6
 convertLtOpAddr               EQU     0x00d8
 convertGtOpAddr               EQU     0x00da
-convertArr2dAddr              EQU     0x00dc
-convertArr3dAddr              EQU     0x00de
-realTimeStubAddr              EQU     0x00e0
+convert8Arr2dAddr             EQU     0x00e0
+convert8Arr3dAddr             EQU     0x00e2
+convert16Arr2dAddr            EQU     0x00e4
+convert16Arr3dAddr            EQU     0x00e6
+realTimeStubAddr              EQU     0x00dc
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -464,6 +462,7 @@ drawRectF_y1        EQU     register1
 drawRectF_x2        EQU     register2
 drawRectF_y2        EQU     register7
 
+drawPoly_mode       EQU     register14
 drawPoly_addr       EQU     register15
 
     

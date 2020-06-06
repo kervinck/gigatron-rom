@@ -44,34 +44,34 @@ textWorkArea                  EQU                               0x7fa0
 ; Labels
 _entryPoint_                  EQU                               0x0200
 _restart                      EQU                               0x021c
-_loop                         EQU                               0x033a
-_drawClock                    EQU                               0x0376
-_drawDigits                   EQU                               0x038d
-_drawSeconds                  EQU                               0x03ba
-_drawMinutes                  EQU                               0x03d0
-_drawHours                    EQU                               0x041b
-_drawTicks                    EQU                               0x0447
-_drawDial                     EQU                               0x046c
-_eraseSecondHand              EQU                               0x04df
-_drawSecondHand               EQU                               0x0513
-_eraseMinuteHand              EQU                               0x0537
-_drawMinuteHand               EQU                               0x055b
-_eraseHourHand                EQU                               0x057f
-_drawHourHand                 EQU                               0x05a7
-_jitterCircle                 EQU                               0x05cf
-_else_0x0294                  EQU                               0x0293
+_loop                         EQU                               0x033c
+_drawClock                    EQU                               0x0378
+_drawDigits                   EQU                               0x038f
+_drawSeconds                  EQU                               0x03bc
+_drawMinutes                  EQU                               0x03d2
+_drawHours                    EQU                               0x041d
+_drawTicks                    EQU                               0x0449
+_drawDial                     EQU                               0x046e
+_eraseSecondHand              EQU                               0x04e1
+_drawSecondHand               EQU                               0x0514
+_eraseMinuteHand              EQU                               0x0538
+_drawMinuteHand               EQU                               0x055c
+_eraseHourHand                EQU                               0x0580
+_drawHourHand                 EQU                               0x05a8
+_jitterCircle                 EQU                               0x05d0
+_else_0x0294                  EQU                               0x0295
 _page_0x0300                  EQU                               0x0300
-_endif_0x0369                 EQU                               0x0361
-_endif_0x0384                 EQU                               0x0374
+_endif_0x0369                 EQU                               0x0363
+_endif_0x0384                 EQU                               0x0376
 _page_0x0400                  EQU                               0x0400
-_endif_0x041f                 EQU                               0x0414
-_endif_0x0449                 EQU                               0x0438
-_next_0x04fa                  EQU                               0x04cf
+_endif_0x041f                 EQU                               0x0416
+_endif_0x0449                 EQU                               0x043a
+_next_0x04fa                  EQU                               0x04d1
 _page_0x0500                  EQU                               0x0500
-_next_0x0673                  EQU                               0x05e0
-_next_0x068b                  EQU                               0x05f0
+_next_0x0673                  EQU                               0x05e1
+_next_0x068b                  EQU                               0x05f1
 _page_0x0600                  EQU                               0x0600
-_end_0x06c4                   EQU                               0x0633
+_end_0x06c4                   EQU                               0x0635
 
 ; Variables
 _H                            EQU                               0x0030
@@ -111,15 +111,11 @@ _str_0x7eb1                   EQU                               0x7eb1
 _str_0x7eb1                   DB                                26 '                          ' 0
 
 ; Data
-_data_                        EQU                               0x7ea3
-_data_                        DW                                0
-_dataIndex_                   EQU                               0x7ea1
-_dataIndex_                   DW                                0
 
 ; Time
-_timeArray_                   EQU                               0x7cbc
+_timeArray_                   EQU                               0x7ea2
 _timeArray_                   DB                                00 00 00
-_timeString_                  EQU                               0x7cb2
+_timeString_                  EQU                               0x7cb5
 _timeString_                  DB                                8 '00:00:00' 0
 
 ; Define Bytes
@@ -208,6 +204,7 @@ _restart                      LDWI                              giga_videoTop
                               POKE                              register0                       ; set TIME_EPOCH, 1
 
                               LDW                               _H
+                              XORI                              0
                               BNE                               _else_0x0294
                               LDI                               12
                               STW                               _H                              ; if H &&= 0 then H = 12
@@ -261,11 +258,11 @@ _else_0x0294                  LDW                               _H
 
                               LDW                               _H
                               STW                               mathX
-                              LDI                               12
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0300
                               CALL                              giga_vAC
-_page_0x0300                  LDW                               0xe2
+_page_0x0300                  LDW                               0xde
+                              LDI                               12
                               STW                               mathY
                               LDWI                              divide16bit
                               CALL                              giga_vAC
@@ -304,7 +301,7 @@ _loop                         TickTime                                          
                               STW                               _S                              ; S = get("TIME_S")
 
                               LDW                               _S
-                              SUBW                              _SS
+                              XORW                              _SS
                               BEQ                               _endif_0x0369                   ; if S &&<> SS
 
                               LDWI                              _timeArray_ + 2
@@ -321,7 +318,7 @@ _loop                         TickTime                                          
                               STW                               _SS                             ; SS = S
 
 _endif_0x0369                 LD                                giga_serialRaw
-                              SUBI                              255
+                              XORI                              255
                               CALL                              convertNeOpAddr
                               JumpFalse                         _endif_0x0384 2                 ; if get("SERIAL_RAW") <> 255
 
@@ -379,7 +376,7 @@ _drawSeconds                  PUSH
 
 _drawMinutes                  PUSH                              
                               LDW                               _M
-                              SUBW                              _MM
+                              XORW                              _MM
                               JumpNE                            _endif_0x041f 4                 ; if M &<> MM
 
                               LDWI                              _eraseMinuteHand
@@ -392,15 +389,15 @@ _drawMinutes                  PUSH
                               LDI                               12
                               STW                               mathY
                               LDWI                              divide16bit
-                              CALL                              giga_vAC
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0400
                               CALL                              giga_vAC
-_page_0x0400                  LDW                               0xe2
+_page_0x0400                  LDW                               0xde
+                              CALL                              giga_vAC
                               STW                               _Md12                           ; MM = M : Md12 = M/12
 
                               LDW                               _Md12
-                              SUBW                              _MMd12
+                              XORW                              _MMd12
                               BEQ                               _endif_0x041f                   ; if Md12 &&<> MMd12
 
                               LDWI                              _eraseHourHand
@@ -416,7 +413,7 @@ _endif_0x041f                 LDWI                              _drawMinuteHand
 
 _drawHours                    PUSH                              
                               LDW                               _H
-                              SUBW                              _HH
+                              XORW                              _HH
                               BEQ                               _endif_0x0449                   ; if H &&<> HH
 
                               LDW                               _H
@@ -536,11 +533,11 @@ _eraseSecondHand              PUSH
                               STW                               drawLine_y1
                               LDWI                              24736
                               ADDW                              _SS
-                              PEEK                              
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0500
                               CALL                              giga_vAC
-_page_0x0500                  LDW                               0xe2
+_page_0x0500                  LDW                               0xde
+                              PEEK                              
                               STW                               drawLine_x2
                               LDWI                              24992
                               ADDW                              _SS
@@ -677,11 +674,11 @@ _next_0x068b                  LDW                               _cc
                               ST                                fgbgColour + 1                  ; set FG_COLOUR, cc
 
                               LDW                               _oxx
-                              STW                               drawCircle_cx
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0600
                               CALL                              giga_vAC
-_page_0x0600                  LDW                               0xe2
+_page_0x0600                  LDW                               0xde
+                              STW                               drawCircle_cx
                               LDW                               _oyy
                               ADDI                              8
                               STW                               drawCircle_cy
@@ -706,7 +703,7 @@ _end_0x06c4                   BRA                               _end_0x06c4     
 ;****************************************************************************************************************************************
 
 realTimeStub                  EQU     0x7ded
-convertNeOp                   EQU     0x7ca9
+convertNeOp                   EQU     0x7cac
 setRealTimeProc0              EQU     0x7da1
 divide16bit                   EQU     0x7aa8
 resetVideoFlags               EQU     0x7ea5
@@ -751,9 +748,11 @@ convertLeOpAddr               EQU     0x00d4
 convertGeOpAddr               EQU     0x00d6
 convertLtOpAddr               EQU     0x00d8
 convertGtOpAddr               EQU     0x00da
-convertArr2dAddr              EQU     0x00dc
-convertArr3dAddr              EQU     0x00de
-realTimeStubAddr              EQU     0x00e0
+convert8Arr2dAddr             EQU     0x00e0
+convert8Arr3dAddr             EQU     0x00e2
+convert16Arr2dAddr            EQU     0x00e4
+convert16Arr3dAddr            EQU     0x00e6
+realTimeStubAddr              EQU     0x00dc
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -1040,6 +1039,7 @@ drawRectF_y1        EQU     register1
 drawRectF_x2        EQU     register2
 drawRectF_y2        EQU     register7
 
+drawPoly_mode       EQU     register14
 drawPoly_addr       EQU     register15
 
 
@@ -1967,6 +1967,16 @@ intSrcAddr          EQU     register8
 intDigit            EQU     register9
 intResult           EQU     register10
 intNegative         EQU     register11
+bcdLength           EQU     register8
+bcdSrcAddr          EQU     register9
+bcdDstAddr          EQU     register10
+bcdSrcData          EQU     register11
+bcdDstData          EQU     register11          ; alias to make code less confusing
+bcdCarry            EQU     register12
+bcdBorrow           EQU     register12          ; alias to make code less confusing
+bcdValue            EQU     register0
+bcdDigit            EQU     register1
+bcdMult             EQU     register2
 
 
                     ; converts a string to a +/- integer, assumes string pointer is pointing to first char and not the string length, (no overflow or underflow checks)

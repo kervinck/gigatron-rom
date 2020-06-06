@@ -67,10 +67,6 @@ _str_0x7eaf                   EQU                               0x7eaf
 _str_0x7eaf                   DB                                25 '1234567890987654321012345' 0
 
 ; Data
-_data_                        EQU                               0x7ea1
-_data_                        DW                                0
-_dataIndex_                   EQU                               0x7da2
-_dataIndex_                   DW                                0
 
 ; Time
 
@@ -173,10 +169,10 @@ _loop                         Rand
                               ANDI                              31
                               STW                               0xc0
                               Rand                              
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0300
                               CALL                              giga_vAC
-_page_0x0300                  LDW                               0xe2
+_page_0x0300                  LDW                               0xde
                               ANDI                              7
                               ADDW                              0xc0
                               STW                               0xc2
@@ -258,9 +254,11 @@ convertLeOpAddr               EQU     0x00d4
 convertGeOpAddr               EQU     0x00d6
 convertLtOpAddr               EQU     0x00d8
 convertGtOpAddr               EQU     0x00da
-convertArr2dAddr              EQU     0x00dc
-convertArr3dAddr              EQU     0x00de
-realTimeStubAddr              EQU     0x00e0
+convert8Arr2dAddr             EQU     0x00e0
+convert8Arr3dAddr             EQU     0x00e2
+convert16Arr2dAddr            EQU     0x00e4
+convert16Arr3dAddr            EQU     0x00e6
+realTimeStubAddr              EQU     0x00dc
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -397,6 +395,7 @@ drawRectF_y1        EQU     register1
 drawRectF_x2        EQU     register2
 drawRectF_y2        EQU     register7
 
+drawPoly_mode       EQU     register14
 drawPoly_addr       EQU     register15
 
     

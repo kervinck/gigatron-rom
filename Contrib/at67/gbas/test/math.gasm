@@ -74,10 +74,6 @@ _str_0x7efd                   EQU                               0x7efd
 _str_0x7efd                   DB                                1 ' ' 0
 
 ; Data
-_data_                        EQU                               0x7ea3
-_data_                        DW                                0
-_dataIndex_                   EQU                               0x7ea1
-_dataIndex_                   DW                                0
 
 ; Time
 
@@ -162,10 +158,10 @@ _entryPoint_                  Initialise
                               LDW                               _c
                               Sign                              
                               PrintAcInt16                      
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0300
                               CALL                              giga_vAC
-_page_0x0300                  LDW                               0xe2
+_page_0x0300                  LDW                               0xde
                               PrintString                       _str_0x7efd
                               LDW                               _d
                               Absolute                          
@@ -215,10 +211,10 @@ _page_0x0300                  LDW                               0xe2
                               PrintAcInt16                      
                               PrintString                       _str_0x7efd
                               LDW                               _d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0400
                               CALL                              giga_vAC
-_page_0x0400                  LDW                               0xe2
+_page_0x0400                  LDW                               0xde
                               PrintAcInt16                      
                               NewLine                                                           ; print a**b;" ";0**a;" ";1**b;" ";a**0;" ";a**1;" ";a**2;" ";a**c;" ";d
 
@@ -297,10 +293,10 @@ _page_0x0400                  LDW                               0xe2
 
                               LDW                               _h
                               PrintAcInt16                      
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0500
                               CALL                              giga_vAC
-_page_0x0500                  LDW                               0xe2
+_page_0x0500                  LDW                               0xde
                               PrintString                       _str_0x7efd
                               LDW                               _i
                               PrintAcInt16                      
@@ -378,10 +374,10 @@ _page_0x0500                  LDW                               0xe2
                               LDW                               _f
                               STW                               _y                              ; y = f
 
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0600
                               CALL                              giga_vAC
-_page_0x0600                  LDW                               0xe2
+_page_0x0600                  LDW                               0xde
                               LDI                               1
                               STW                               _r                              ; r = 1
 
@@ -464,9 +460,11 @@ convertLeOpAddr               EQU     0x00d4
 convertGeOpAddr               EQU     0x00d6
 convertLtOpAddr               EQU     0x00d8
 convertGtOpAddr               EQU     0x00da
-convertArr2dAddr              EQU     0x00dc
-convertArr3dAddr              EQU     0x00de
-realTimeStubAddr              EQU     0x00e0
+convert8Arr2dAddr             EQU     0x00e0
+convert8Arr3dAddr             EQU     0x00e2
+convert16Arr2dAddr            EQU     0x00e4
+convert16Arr3dAddr            EQU     0x00e6
+realTimeStubAddr              EQU     0x00dc
 
 
 ; do *NOT* use register4 to register7 during time slicing

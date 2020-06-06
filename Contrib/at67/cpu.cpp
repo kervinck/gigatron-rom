@@ -911,7 +911,7 @@ namespace Cpu
 
         Memory::initialise();
         Graphics::resetVTable();
-        Editor::setSingleStepAddress(VIDEO_Y_ADDRESS);
+        Editor::setSingleStepAddress(FRAME_COUNT_ADDRESS);
     }
 
     void softReset(void)

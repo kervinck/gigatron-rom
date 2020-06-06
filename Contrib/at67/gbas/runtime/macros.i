@@ -579,6 +579,21 @@ _label_ CALL    giga_vAC
         CALL    giga_vAC
 %ENDM
 
+%MACRO  DrawPolyRel
+        LDWI    drawPolyRel
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  SetPolyRelFlipX
+        LDWI    setPolyRelFlipX
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  SetPolyRelFlipY
+        LDWI    setPolyRelFlipY
+        CALL    giga_vAC
+%ENDM
+
 %MACRO  AtLineCursor
         LDWI    atLineCursor
         CALL    giga_vAC
@@ -676,6 +691,21 @@ _label_ CALL    giga_vAC
         CALL    giga_vAC
 %ENDM
 
+%MACRO  BcdAdd
+        LDWI    bcdAdd
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  BcdSub
+        LDWI    bcdSub
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  BcdInt
+        LDWI    bcdInt
+        CALL    giga_vAC
+%ENDM
+
 %MACRO  JumpFalse _label id
         BNE     _id_ + 2                                ; unique id is used as an internal macro label
         LDWI    _label
@@ -748,14 +778,24 @@ _id_    CALL    giga_vAC
         STW     convertGtOpAddr
 %ENDM
 
-%MACRO  InitArray2d
-        LDWI    convertArr2d
-        STW     convertArr2dAddr
+%MACRO  Init8Array2d
+        LDWI    convert8Arr2d
+        STW     convert8Arr2dAddr
 %ENDM
 
-%MACRO  InitArray3d
-        LDWI    convertArr3d
-        STW     convertArr3dAddr
+%MACRO  Init8Array3d
+        LDWI    convert8Arr3d
+        STW     convert8Arr3dAddr
+%ENDM
+
+%MACRO  Init16Array2d
+        LDWI    convert16Arr2d
+        STW     convert16Arr2dAddr
+%ENDM
+
+%MACRO  Init16Array3d
+        LDWI    convert16Arr3d
+        STW     convert16Arr3dAddr
 %ENDM
 
 %MACRO  InitRealTimeStub

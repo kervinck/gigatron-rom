@@ -65,7 +65,7 @@ _zzz                          EQU                               0x0044
 
 ; Arrays
 _dog_array                    EQU                               0x7df8
-_dog_array                    DW                                0x7ea0 0x0003 0x30d1 0xd901 
+_dog_array                    DW                                0x7ea0 0x0003 0xe57f 0xd904 
 
 ; Strings
 _yup$                         EQU                               0x7ea0
@@ -100,10 +100,6 @@ _str_0x7dce                   EQU                               0x7dce
 _str_0x7dce                   DB                                5 'world' 0
 
 ; Data
-_data_                        EQU                               0x7da1
-_data_                        DW                                0
-_dataIndex_                   EQU                               0x75a0
-_dataIndex_                   DW                                0
 
 ; Time
 
@@ -111,7 +107,7 @@ _dataIndex_                   DW                                0
 
 ; Define Words
 def_words_0x08a0              EQU                               0x08a0
-def_words_0x08a0              DW                                1011 2166 
+def_words_0x08a0              DW                                1011 3465 
 
 ; Define Images
 
@@ -161,18 +157,18 @@ _entryPoint_                  Initialise
                               NewLine                                                           ; print val("-4532");" ";val(a$);" ";val(num0$);" &h";hexw$(val("0x1234"));" &h";hexw$(val("&hFFFF"));" &h";hexw$(val("&b0000000011110000"));" &h";hexw$(val("&o777"));" ";val(num1$)
 
                               LDI                               5
-                              STW                               strLength
+                              STW                               strDstLen
                               LDWI                              0x7ca0
                               STW                               strSrcAddr
                               LDWI                              0x79a0
                               StringLeft                                                        ; c$=left$(b$, 5)
 
                               LDI                               5
-                              STW                               strLength
-                              STW                               0xe2
+                              STW                               strDstLen
+                              STW                               0xde
                               LDWI                              _page_0x0300
                               CALL                              giga_vAC
-_page_0x0300                  LDW                               0xe2
+_page_0x0300                  LDW                               0xde
                               LDWI                              0x7ca0
                               STW                               strSrcAddr
                               LDWI                              0x78a0
@@ -181,7 +177,7 @@ _page_0x0300                  LDW                               0xe2
                               LDI                               6
                               STW                               strOffset
                               LDI                               4
-                              STW                               strLength
+                              STW                               strDstLen
                               LDWI                              0x7ca0
                               STW                               strSrcAddr
                               LDWI                              0x77a0
@@ -243,10 +239,10 @@ _next_0x03ae                  LDW                               _j
                               PEEK                              
                               STW                               _f                              ; f = asc("dog")
 
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0400
                               CALL                              giga_vAC
-_page_0x0400                  LDW                               0xe2
+_page_0x0400                  LDW                               0xde
                               LDI                               0x05
                               STW                               _g                              ; g = abs(-5)
 
@@ -297,10 +293,10 @@ _page_0x0400                  LDW                               0xe2
                               PrintAcInt16                      
                               PrintString                       _str_0x7de3
                               LDW                               _g
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0500
                               CALL                              giga_vAC
-_page_0x0500                  LDW                               0xe2
+_page_0x0500                  LDW                               0xde
                               PrintAcInt16                      
                               NewLine                                                           ; print abs(-3);" ";abs(zzz);" ";cmp("world", d$);" ";asc("dog");" ";f;" ";g
 
@@ -350,10 +346,10 @@ _page_0x0500                  LDW                               0xe2
                               NewLine                                                           ; print b$
 
                               PrintString                       _c$
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0600
                               CALL                              giga_vAC
-_page_0x0600                  LDW                               0xe2
+_page_0x0600                  LDW                               0xde
                               PrintString                       _str_0x7de3
                               PrintString                       _d$
                               PrintString                       _str_0x7de3
@@ -398,9 +394,11 @@ convertLeOpAddr               EQU     0x00d4
 convertGeOpAddr               EQU     0x00d6
 convertLtOpAddr               EQU     0x00d8
 convertGtOpAddr               EQU     0x00da
-convertArr2dAddr              EQU     0x00dc
-convertArr3dAddr              EQU     0x00de
-realTimeStubAddr              EQU     0x00e0
+convert8Arr2dAddr             EQU     0x00e0
+convert8Arr3dAddr             EQU     0x00e2
+convert16Arr2dAddr            EQU     0x00e4
+convert16Arr3dAddr            EQU     0x00e6
+realTimeStubAddr              EQU     0x00dc
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -894,6 +892,16 @@ intSrcAddr          EQU     register8
 intDigit            EQU     register9
 intResult           EQU     register10
 intNegative         EQU     register11
+bcdLength           EQU     register8
+bcdSrcAddr          EQU     register9
+bcdDstAddr          EQU     register10
+bcdSrcData          EQU     register11
+bcdDstData          EQU     register11          ; alias to make code less confusing
+bcdCarry            EQU     register12
+bcdBorrow           EQU     register12          ; alias to make code less confusing
+bcdValue            EQU     register0
+bcdDigit            EQU     register1
+bcdMult             EQU     register2
 
 
                     ; converts a string to a +/- integer, assumes string pointer is pointing to first char and not the string length, (no overflow or underflow checks)
@@ -939,7 +947,7 @@ integerS_exit       LDW     intResult
 strChr              EQU     register0
 strHex              EQU     register1
 strCmpRes           EQU     register2
-strLength           EQU     register0
+strDstLen           EQU     register0
 strFinish           EQU     register0
 strSrcAddr          EQU     register1
 strDstAddr          EQU     register2
@@ -987,24 +995,24 @@ stringC_zero        LDW     strCmpRes
 
 
                     ; copies length sub string from source offset to destination string
-stringMid           LD      strLength
+stringMid           LD      strDstLen
                     POKE    strDstAddr                          ; destination length
                     BEQ     stringM_exit                        ; exit if right length = 0
                     LDW     strSrcAddr
                     PEEK                                        ; get source length
                     STW     strSrcLen
                     SUBW    strOffset                           
-                    SUBW    strLength
+                    SUBW    strDstLen
                     BGE     stringM_skip                        ; length + offset <= srcLength
                     LD      strSrcLen
                     SUBW    strOffset
-                    STW     strLength
+                    STW     strDstLen
                     POKE    strDstAddr                          ; new destination length
                     
 stringM_skip        LDW     strSrcAddr
                     ADDW    strOffset
                     STW     strSrcAddr                          ; copy from (source address + (source length - right length)) to destination address
-                    ADDW    strLength
+                    ADDW    strDstLen
                     STW     strFinish                           ; end source address
 
 stringM_loop        INC     strSrcAddr                          ; skip lengths the first time in
@@ -1023,20 +1031,20 @@ stringM_exit        INC     strDstAddr
 
 
                     ; copies sub string from left hand side of source string to destination string
-stringLeft          LD      strLength
+stringLeft          LD      strDstLen
                     POKE    strDstAddr                          ; destination length
                     BEQ     stringL_exit                        ; exit if left length = 0
                     LDW     strSrcAddr
                     PEEK                                        ; get source length
                     STW     strSrcLen
-                    SUBW    strLength
+                    SUBW    strDstLen
                     BGE     stringL_skip                        ; is left length <= source length
                     LD      strSrcLen
-                    STW     strLength
+                    STW     strDstLen
                     POKE    strDstAddr                          ; new destination length
                     
 stringL_skip        LDW     strSrcAddr
-                    ADDW    strLength
+                    ADDW    strDstLen
                     STW     strFinish                           ; end source address
                     
 stringL_loop        INC     strSrcAddr                          ; skip lengths the first time in
@@ -1055,22 +1063,22 @@ stringL_exit        INC     strDstAddr
 
 
                     ; copies sub string from right hand side of source string to destination string
-stringRight         LD      strLength
+stringRight         LD      strDstLen
                     POKE    strDstAddr                          ; destination length
                     BEQ     stringR_exit                        ; exit if right length = 0
                     LDW     strSrcAddr
                     PEEK                                        ; get source length
                     STW     strSrcLen
-                    SUBW    strLength
+                    SUBW    strDstLen
                     BGE     stringR_skip                        ; length <= srcLength
                     LD      strSrcLen
-                    STW     strLength
+                    STW     strDstLen
                     POKE    strDstAddr                          ; new destination length
                     LDI     0
                     
 stringR_skip        ADDW    strSrcAddr
                     STW     strSrcAddr                          ; copy from (source address + (source length - right length)) to destination address
-                    ADDW    strLength
+                    ADDW    strDstLen
                     STW     strFinish                           ; end source address
 
 stringR_loop        INC     strSrcAddr                          ; skip lengths the first time in

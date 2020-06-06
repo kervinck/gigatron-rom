@@ -78,10 +78,6 @@ _str_0x7ef2                   EQU                               0x7ef2
 _str_0x7ef2                   DB                                3 'dog' 0
 
 ; Data
-_data_                        EQU                               0x7ea0
-_data_                        DW                                0
-_dataIndex_                   EQU                               0x7bb7
-_dataIndex_                   DW                                0
 
 ; Time
 
@@ -164,10 +160,10 @@ _10                           LDI                               33
                               ANDI                              0xFC
                               ANDI                              252
                               PrintAcHexByte                    
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0300
                               CALL                              giga_vAC
-_page_0x0300                  LDW                               0xe2
+_page_0x0300                  LDW                               0xde
                               NewLine                                                           ; print "test";" ";"dog";" ";56+44;" ";a;" ";hex$(get("ROM_TYPE") AND &hFC)
 
                               LDI                               128
@@ -270,7 +266,7 @@ _end_0x0413                   BRA                               _end_0x0413     
 realTimeStub                  EQU     0x7ed4
 resetVideoFlags               EQU     0x7ee6
 resetVideoTable               EQU     0x78db
-initClearFuncs                EQU     0x7ba0
+initClearFuncs                EQU     0x7ba2
 clearVertBlinds               EQU     0x7cc5
 clearCursorRow                EQU     0x77b6
 printInit                     EQU     0x78c5
@@ -289,9 +285,11 @@ convertLeOpAddr               EQU     0x00d4
 convertGeOpAddr               EQU     0x00d6
 convertLtOpAddr               EQU     0x00d8
 convertGtOpAddr               EQU     0x00da
-convertArr2dAddr              EQU     0x00dc
-convertArr3dAddr              EQU     0x00de
-realTimeStubAddr              EQU     0x00e0
+convert8Arr2dAddr             EQU     0x00e0
+convert8Arr3dAddr             EQU     0x00e2
+convert16Arr2dAddr            EQU     0x00e4
+convert16Arr3dAddr            EQU     0x00e6
+realTimeStubAddr              EQU     0x00dc
 
 
 ; do *NOT* use register4 to register7 during time slicing

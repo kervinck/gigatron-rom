@@ -92,10 +92,6 @@ _str_0x7ea0                   EQU                               0x7ea0
 _str_0x7ea0                   DB                                2 'gc' 0
 
 ; Data
-_data_                        EQU                               0x75a1
-_data_                        DW                                0
-_dataIndex_                   EQU                               0x74a1
-_dataIndex_                   DW                                0
 
 ; Time
 
@@ -141,14 +137,14 @@ _entryPoint_                  Initialise
                               STW                               _cc                             ; cc = 5
 
                               LDW                               _cc
-                              STW                               strLength
+                              STW                               strDstLen
                               LDWI                              0x7eba
                               STW                               strSrcAddr
                               LDWI                              0x7aa0
                               StringLeft                                                        ; c$=left$(b$, cc)
 
                               LDI                               5
-                              STW                               strLength
+                              STW                               strDstLen
                               LDWI                              0x7eba
                               STW                               strSrcAddr
                               LDWI                              0x79a0
@@ -163,7 +159,7 @@ _entryPoint_                  Initialise
                               LDW                               0xc0
                               STW                               strOffset
                               LDW                               0xc2
-                              STW                               strLength
+                              STW                               strDstLen
                               LDWI                              0x7eba
                               STW                               strSrcAddr
                               LDWI                              0x78a0
@@ -189,10 +185,10 @@ _entryPoint_                  Initialise
                               PrintString                       _str_0x7ea9
                               LDWI                              0x7ed6
                               DEEK                              
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0300
                               CALL                              giga_vAC
-_page_0x0300                  LDW                               0xe2
+_page_0x0300                  LDW                               0xde
                               PrintAcInt16                      
                               NewLine                                                           ; print a$;" ";b$;" ";aa(0)
 
@@ -242,10 +238,10 @@ _page_0x0300                  LDW                               0xe2
                               PrintString                       _str_0x7ea9
                               PrintString                       _d$
                               PrintString                       _str_0x7ea9
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0400
                               CALL                              giga_vAC
-_page_0x0400                  LDW                               0xe2
+_page_0x0400                  LDW                               0xde
                               PrintString                       _e$
                               NewLine                                                           ; print c$;" ";d$;" ";e$
 
@@ -290,10 +286,10 @@ _page_0x0400                  LDW                               0xe2
 _next_0x04db                  LDW                               _i
                               PrintAcChar                                                       ; print chr$(i);
 
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0500
                               CALL                              giga_vAC
-_page_0x0500                  LDW                               0xe2
+_page_0x0500                  LDW                               0xde
                               ForNextFarInc                     _i _next_0x04db 127             ; next i
 
 _end_0x04f2                   BRA                               _end_0x04f2                     ; end
@@ -340,9 +336,11 @@ convertLeOpAddr               EQU     0x00d4
 convertGeOpAddr               EQU     0x00d6
 convertLtOpAddr               EQU     0x00d8
 convertGtOpAddr               EQU     0x00da
-convertArr2dAddr              EQU     0x00dc
-convertArr3dAddr              EQU     0x00de
-realTimeStubAddr              EQU     0x00e0
+convert8Arr2dAddr             EQU     0x00e0
+convert8Arr3dAddr             EQU     0x00e2
+convert16Arr2dAddr            EQU     0x00e4
+convert16Arr3dAddr            EQU     0x00e6
+realTimeStubAddr              EQU     0x00dc
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -873,7 +871,7 @@ newLS_exit          LDWI    printInit
 strChr              EQU     register0
 strHex              EQU     register1
 strCmpRes           EQU     register2
-strLength           EQU     register0
+strDstLen           EQU     register0
 strFinish           EQU     register0
 strSrcAddr          EQU     register1
 strDstAddr          EQU     register2
@@ -974,7 +972,7 @@ stringAdd           LDW     strDstAddr
                     INC     strSrcAddr
                     INC     strDstAddr                          ; skip lengths
                     LDI     0
-                    STW     strLength
+                    STW     strDstLen
                     
 stringA_copy0       LDW     strSrcAddr
                     PEEK
@@ -982,10 +980,10 @@ stringA_copy0       LDW     strSrcAddr
                     POKE    strDstAddr
                     INC     strSrcAddr
                     INC     strDstAddr
-                    INC     strLength
+                    INC     strDstLen
                     BRA     stringA_copy0
                     
-stringA_copy1       LDW     strLength
+stringA_copy1       LDW     strDstLen
                     SUBI    94
                     BGE     stringA_exit                        ; maximum destination length reached
                     INC     strSrcAddr2                         ; skips length first time
@@ -994,10 +992,10 @@ stringA_copy1       LDW     strLength
                     BEQ     stringA_exit                        ; copy char until terminating char
                     POKE    strDstAddr                          ; copy char
                     INC     strDstAddr
-                    INC     strLength
+                    INC     strDstLen
                     BRA     stringA_copy1
 
-stringA_exit        LDW     strLength
+stringA_exit        LDW     strDstLen
                     POKE    strTmpAddr                          ; save concatenated string length
                     LDI     0
                     POKE    strDstAddr                          ; terminating zero
@@ -1031,24 +1029,24 @@ stringCC_exit       POP
 
 
                     ; copies length sub string from source offset to destination string
-stringMid           LD      strLength
+stringMid           LD      strDstLen
                     POKE    strDstAddr                          ; destination length
                     BEQ     stringM_exit                        ; exit if right length = 0
                     LDW     strSrcAddr
                     PEEK                                        ; get source length
                     STW     strSrcLen
                     SUBW    strOffset                           
-                    SUBW    strLength
+                    SUBW    strDstLen
                     BGE     stringM_skip                        ; length + offset <= srcLength
                     LD      strSrcLen
                     SUBW    strOffset
-                    STW     strLength
+                    STW     strDstLen
                     POKE    strDstAddr                          ; new destination length
                     
 stringM_skip        LDW     strSrcAddr
                     ADDW    strOffset
                     STW     strSrcAddr                          ; copy from (source address + (source length - right length)) to destination address
-                    ADDW    strLength
+                    ADDW    strDstLen
                     STW     strFinish                           ; end source address
 
 stringM_loop        INC     strSrcAddr                          ; skip lengths the first time in
@@ -1067,20 +1065,20 @@ stringM_exit        INC     strDstAddr
 
 
                     ; copies sub string from left hand side of source string to destination string
-stringLeft          LD      strLength
+stringLeft          LD      strDstLen
                     POKE    strDstAddr                          ; destination length
                     BEQ     stringL_exit                        ; exit if left length = 0
                     LDW     strSrcAddr
                     PEEK                                        ; get source length
                     STW     strSrcLen
-                    SUBW    strLength
+                    SUBW    strDstLen
                     BGE     stringL_skip                        ; is left length <= source length
                     LD      strSrcLen
-                    STW     strLength
+                    STW     strDstLen
                     POKE    strDstAddr                          ; new destination length
                     
 stringL_skip        LDW     strSrcAddr
-                    ADDW    strLength
+                    ADDW    strDstLen
                     STW     strFinish                           ; end source address
                     
 stringL_loop        INC     strSrcAddr                          ; skip lengths the first time in
@@ -1099,22 +1097,22 @@ stringL_exit        INC     strDstAddr
 
 
                     ; copies sub string from right hand side of source string to destination string
-stringRight         LD      strLength
+stringRight         LD      strDstLen
                     POKE    strDstAddr                          ; destination length
                     BEQ     stringR_exit                        ; exit if right length = 0
                     LDW     strSrcAddr
                     PEEK                                        ; get source length
                     STW     strSrcLen
-                    SUBW    strLength
+                    SUBW    strDstLen
                     BGE     stringR_skip                        ; length <= srcLength
                     LD      strSrcLen
-                    STW     strLength
+                    STW     strDstLen
                     POKE    strDstAddr                          ; new destination length
                     LDI     0
                     
 stringR_skip        ADDW    strSrcAddr
                     STW     strSrcAddr                          ; copy from (source address + (source length - right length)) to destination address
-                    ADDW    strLength
+                    ADDW    strDstLen
                     STW     strFinish                           ; end source address
 
 stringR_loop        INC     strSrcAddr                          ; skip lengths the first time in

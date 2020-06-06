@@ -1,0 +1,1737 @@
+_startAddress_                EQU                               0x0200
+
+; Internal variables
+serialRawPrev                 EQU                               0x0081
+register0                     EQU                               0x0082
+register1                     EQU                               register0 + 0x02
+register2                     EQU                               register0 + 0x04
+register3                     EQU                               register0 + 0x06
+register4                     EQU                               register0 + 0x08
+register5                     EQU                               register0 + 0x0A
+register6                     EQU                               register0 + 0x0C
+register7                     EQU                               register0 + 0x0E
+register8                     EQU                               register0 + 0x10
+register9                     EQU                               register0 + 0x12
+register10                    EQU                               register0 + 0x14
+register11                    EQU                               register0 + 0x16
+register12                    EQU                               register0 + 0x18
+register13                    EQU                               register0 + 0x1A
+register14                    EQU                               register0 + 0x1C
+register15                    EQU                               register0 + 0x1E
+fgbgColour                    EQU                               register0 + 0x20
+cursorXY                      EQU                               register0 + 0x22
+midiStream                    EQU                               register0 + 0x24
+midiDelay                     EQU                               register0 + 0x26
+miscFlags                     EQU                               register0 + 0x28
+timerTick                     EQU                               register0 + 0x2A
+timerPrev                     EQU                               register0 + 0x2C
+
+; Internal Constants
+ENABLE_SCROLL_BIT             EQU                               0x0001
+ON_BOTTOM_ROW_BIT             EQU                               0x0002
+ENABLE_SCROLL_MSK             EQU                               0xfffe
+ON_BOTTOM_ROW_MSK             EQU                               0xfffd
+
+; Internal buffers
+textWorkArea                  EQU                               0x7fa0
+
+; Includes
+%includePath                  "../runtime"
+%include                      util.i
+%include                      gigatron.i
+%include                      macros.i
+
+; Labels
+_entryPoint_                  EQU                               0x0200
+_10                           EQU                               0x0233
+_20                           EQU                               0x0242
+_30                           EQU                               0x025b
+_40                           EQU                               0x0279
+_50                           EQU                               0x0288
+_55                           EQU                               0x029b
+_60                           EQU                               0x02ae
+_65                           EQU                               0x02db
+_70                           EQU                               0x0302
+_75                           EQU                               0x032a
+_80                           EQU                               0x032f
+_85                           EQU                               0x0352
+_100                          EQU                               0x0361
+_105                          EQU                               0x0366
+_110                          EQU                               0x0389
+_120                          EQU                               0x0398
+_125                          EQU                               0x03a2
+_126                          EQU                               0x03ac
+_130                          EQU                               0x03b1
+_132                          EQU                               0x03d1
+_134                          EQU                               0x0402
+_136                          EQU                               0x0422
+_138                          EQU                               0x0442
+_140                          EQU                               0x0479
+_145                          EQU                               0x047e
+_148                          EQU                               0x04a1
+_150                          EQU                               0x04a6
+_153                          EQU                               0x04c9
+_155                          EQU                               0x04d8
+_160                          EQU                               0x04dd
+_162                          EQU                               0x0511
+_164                          EQU                               0x0520
+_170                          EQU                               0x052f
+_180                          EQU                               0x0534
+_185                          EQU                               0x0557
+_188                          EQU                               0x0566
+_190                          EQU                               0x0575
+_195                          EQU                               0x0584
+_200                          EQU                               0x0589
+_210                          EQU                               0x0598
+_212                          EQU                               0x05ab
+_215                          EQU                               0x05be
+_217                          EQU                               0x05e1
+_220                          EQU                               0x0602
+_225                          EQU                               0x0611
+_228                          EQU                               0x0634
+_230                          EQU                               0x0639
+_235                          EQU                               0x065c
+_240                          EQU                               0x066b
+_250                          EQU                               0x067a
+_255                          EQU                               0x067f
+_260                          EQU                               0x0693
+_270                          EQU                               0x06a2
+_273                          EQU                               0x06b5
+_275                          EQU                               0x06c8
+_277                          EQU                               0x06eb
+_280                          EQU                               0x08a2
+_282                          EQU                               0x08ac
+_300                          EQU                               0x08b1
+_302                          EQU                               0x08b6
+_305                          EQU                               0x08d9
+_307                          EQU                               0x08e8
+_310                          EQU                               0x09b2
+_315                          EQU                               0x09c1
+_320                          EQU                               0x09cb
+_325                          EQU                               0x09da
+_330                          EQU                               0x09ed
+_335                          EQU                               0x0aaf
+_340                          EQU                               0x0ae6
+_350                          EQU                               0x0ba4
+_355                          EQU                               0x0bc6
+_360                          EQU                               0x0bd5
+_365                          EQU                               0x0cac
+_370                          EQU                               0x0cb1
+_375                          EQU                               0x0cd4
+_380                          EQU                               0x0ce3
+_385                          EQU                               0x0cf2
+_390                          EQU                               0x0dd4
+_400                          EQU                               0x0225
+_999                          EQU                               0x0ea2
+_page_0x0300                  EQU                               0x0300
+_page_0x0400                  EQU                               0x0400
+_page_0x0500                  EQU                               0x0500
+_page_0x0600                  EQU                               0x0600
+_page_0x08a0                  EQU                               0x08a0
+_page_0x09a0                  EQU                               0x09a0
+_next_0x0712                  EQU                               0x09a2
+_page_0x0aa0                  EQU                               0x0aa0
+_page_0x0ba0                  EQU                               0x0ba0
+_page_0x0ca0                  EQU                               0x0ca0
+_page_0x0da0                  EQU                               0x0da0
+_page_0x0ea0                  EQU                               0x0ea0
+_end_0x08b9                   EQU                               0x0ea2
+_end_0x08bb                   EQU                               0x0ea4
+
+; Variables
+_I                            EQU                               0x0030
+
+; Arrays
+
+; Strings
+_N$                           EQU                               0x7da0
+_N$                           DB                                0 '' 0
+_B$                           EQU                               0x7ba0
+_B$                           DB                                0 '' 0
+_C$                           EQU                               0x76a0
+_C$                           DB                                0 '' 0
+_D$                           EQU                               0x70a0
+_D$                           DB                                0 '' 0
+_E$                           EQU                               0x6aa0
+_E$                           DB                                0 '' 0
+_G$                           EQU                               0x67a0
+_G$                           DB                                0 '' 0
+
+; Constant Strings
+_str_0x7ed9                   EQU                               0x7ed9
+_str_0x7ed9                   DB                                37 'HELLO.  MY NAME IS CREATIVE COMPUTER.' 0
+_str_0x7ec6                   EQU                               0x7ec6
+_str_0x7ec6                   DB                                17 'WHAT IS YOUR NAME' 0
+_str_0x7eac                   EQU                               0x7eac
+_str_0x7eac                   DB                                10 'HI THERE, ' 0
+_str_0x7cde                   EQU                               0x7cde
+_str_0x7cde                   DB                                32 ', ARE YOU ENJOYING YOURSELF HERE' 0
+_str_0x7ea9                   EQU                               0x7ea9
+_str_0x7ea9                   DB                                1 '?' 0
+_str_0x7cb1                   EQU                               0x7cb1
+_str_0x7cb1                   DB                                37 ', I DO NOT UNDERSTAND YOUR ANSWER OF ' 0
+_str_0x7cae                   EQU                               0x7cae
+_str_0x7cae                   DB                                1 '.' 0
+_str_0x7ad1                   EQU                               0x7ad1
+_str_0x7ad1                   DB                                45 'PLEASE ANSWER YES OR NO.  DO YOU LIKE IT HERE' 0
+_str_0x7ab7                   EQU                               0x7ab7
+_str_0x7ab7                   DB                                24 'I AM GLAD TO HEAR THAT, ' 0
+_str_0x79e1                   EQU                               0x79e1
+_str_0x79e1                   DB                                29 'OH, I AM SORRY TO HEAR THAT, ' 0
+_str_0x7aa7                   EQU                               0x7aa7
+_str_0x7aa7                   DB                                14 '. MAYBE WE CAN' 0
+_str_0x79c2                   EQU                               0x79c2
+_str_0x79c2                   DB                                29 'BRIGHTEN UP YOUR VISIT A BIT.' 0
+_str_0x7ca7                   EQU                               0x7ca7
+_str_0x7ca7                   DB                                5 'SAY, ' 0
+_str_0x78d4                   EQU                               0x78d4
+_str_0x78d4                   DB                                42 ', I CAN SOLVE ALL KINDS OF PROBLEMS EXCEPT' 0
+_str_0x77ca                   EQU                               0x77ca
+_str_0x77ca                   DB                                52 'THOSE DEALING WITH GREECE.  WHAT KIND OF PROBLEMS DO' 0
+_str_0x78a6                   EQU                               0x78a6
+_str_0x78a6                   DB                                44 'YOU HAVE (ANSWER SEX, HEALTH, MONEY, OR JOB)' 0
+_str_0x79b9                   EQU                               0x79b9
+_str_0x79b9                   DB                                3 'SEX' 0
+_str_0x79b1                   EQU                               0x79b1
+_str_0x79b1                   DB                                6 'HEALTH' 0
+_str_0x79aa                   EQU                               0x79aa
+_str_0x79aa                   DB                                5 'MONEY' 0
+_str_0x79a5                   EQU                               0x79a5
+_str_0x79a5                   DB                                3 'JOB' 0
+_str_0x78a0                   EQU                               0x78a0
+_str_0x78a0                   DB                                4 'OH, ' 0
+_str_0x77b7                   EQU                               0x77b7
+_str_0x77b7                   DB                                17 ', YOUR ANSWER OF ' 0
+_str_0x77a5                   EQU                               0x77a5
+_str_0x77a5                   DB                                16 ' IS GREEK TO ME.' 0
+_str_0x75e4                   EQU                               0x75e4
+_str_0x75e4                   DB                                26 'I CAN SYMPATHIZE WITH YOU ' 0
+_str_0x75d1                   EQU                               0x75d1
+_str_0x75d1                   DB                                17 '.  I HAVE TO WORK' 0
+_str_0x75a0                   EQU                               0x75a0
+_str_0x75a0                   DB                                47 'REALLY BEAT ON MY KEYBOARD.  MY ADVICE TO YOU, ' 0
+_str_0x7aa0                   EQU                               0x7aa0
+_str_0x7aa0                   DB                                1 ',' 0
+_str_0x74c9                   EQU                               0x74c9
+_str_0x74c9                   DB                                53 'IS TO OPEN A RETAIL COMPUTER STORE.  IT IS GREAT FUN.' 0
+_str_0x74c0                   EQU                               0x74c0
+_str_0x74c0                   DB                                7 'SORRY, ' 0
+_str_0x73d8                   EQU                               0x73d8
+_str_0x73d8                   DB                                38 ', I AM BROKE TOO.  WHY DO NOT YOU SELL' 0
+_str_0x73a3                   EQU                               0x73a3
+_str_0x73a3                   DB                                51 'ENCYCLOPEADIAS OR MARRY SOMEONE RICH OR STOP EATING' 0
+_str_0x72db                   EQU                               0x72db
+_str_0x72db                   DB                                35 'SO YOU WILL NOT NEED SO MUCH MONEY?' 0
+_str_0x74ad                   EQU                               0x74ad
+_str_0x74ad                   DB                                17 'MY ADVICE TO YOU ' 0
+_str_0x74a7                   EQU                               0x74a7
+_str_0x74a7                   DB                                4 ' IS:' 0
+_str_0x72c1                   EQU                               0x72c1
+_str_0x72c1                   DB                                24 '     1.  TAKE TWO ASPRIN' 0
+_str_0x71c5                   EQU                               0x71c5
+_str_0x71c5                   DB                                57 '     2.  DRINK PLENTY OF FLUIDS (ORANGE JUICE, NOT BEER!)' 0
+_str_0x72a5                   EQU                               0x72a5
+_str_0x72a5                   DB                                26 '     3.  GO TO BED (ALONE)' 0
+_str_0x6fd8                   EQU                               0x6fd8
+_str_0x6fd8                   DB                                38 'IS YOUR PROBLEM TOO MUCH OR TOO LITTLE' 0
+_str_0x71ad                   EQU                               0x71ad
+_str_0x71ad                   DB                                22 'DO NOT GET ALL SHOOK, ' 0
+_str_0x6fbc                   EQU                               0x6fbc
+_str_0x6fbc                   DB                                26 ', JUST ANSWER THE QUESTION' 0
+_str_0x6ed5                   EQU                               0x6ed5
+_str_0x6ed5                   DB                                41 'WITH TOO MUCH OR TOO LITTLE.  WHICH IS IT' 0
+_str_0x6dc6                   EQU                               0x6dc6
+_str_0x6dc6                   DB                                56 'YOU CALL THAT A PROBLEM?!!  I SHOULD HAVE SUCH PROBLEMS!' 0
+_str_0x6fa7                   EQU                               0x6fa7
+_str_0x6fa7                   DB                                19 'IF IT BOTHERS YOU, ' 0
+_str_0x6ebe                   EQU                               0x6ebe
+_str_0x6ebe                   DB                                21 ', TAKE A COLD SHOWER.' 0
+_str_0x6da7                   EQU                               0x6da7
+_str_0x6da7                   DB                                29 'WHY ARE YOU HERE IN SUFFERN, ' 0
+_str_0x6eac                   EQU                               0x6eac
+_str_0x6eac                   DB                                16 '?  YOU SHOULD BE' 0
+_str_0x6cc6                   EQU                               0x6cc6
+_str_0x6cc6                   DB                                56 'IN TOKYO OR NEW YORK OR AMSTERDAM OR SOMEPLACE WITH SOME' 0
+_str_0x6cb8                   EQU                               0x6cb8
+_str_0x6cb8                   DB                                12 'REAL ACTION.' 0
+_str_0x6bdb                   EQU                               0x6bdb
+_str_0x6bdb                   DB                                35 'ANY MORE PROBLEMS YOU WANT SOLVED, ' 0
+_str_0x6bb9                   EQU                               0x6bb9
+_str_0x6bb9                   DB                                32 'JUST A SIMPLE YES OR NO PLEASE, ' 0
+_str_0x69db                   EQU                               0x69db
+_str_0x69db                   DB                                35 'WHAT KIND (SEX, MONEY, HEALTH, JOB)' 0
+_str_0x69b6                   EQU                               0x69b6
+_str_0x69b6                   DB                                35 'THAT WILL BE $5.00 FOR THE ADVICE, ' 0
+_str_0x68d7                   EQU                               0x68d7
+_str_0x68d7                   DB                                39 'PLEASE LEAVE THE MONEY ON THE TERMINAL.' 0
+_str_0x6ba0                   EQU                               0x6ba0
+_str_0x6ba0                   DB                                23 'DID YOU LEAVE THE MONEY' 0
+_str_0x6ca7                   EQU                               0x6ca7
+_str_0x6ca7                   DB                                15 'YOUR ANSWER OF ' 0
+_str_0x69a6                   EQU                               0x69a6
+_str_0x69a6                   DB                                14 ' CONFUSES ME, ' 0
+_str_0x68b7                   EQU                               0x68b7
+_str_0x68b7                   DB                                30 'PLEASE RESPOND WITH YES OR NO.' 0
+_str_0x6ca0                   EQU                               0x6ca0
+_str_0x6ca0                   DB                                5 'HEY, ' 0
+_str_0x66cd                   EQU                               0x66cd
+_str_0x66cd                   DB                                49 'YOU ARE CHEATING ME OUT OF MY HARD-EARNED LIVING.' 0
+_str_0x68a5                   EQU                               0x68a5
+_str_0x68a5                   DB                                16 'WHAT A RIP OFF, ' 0
+_str_0x69a1                   EQU                               0x69a1
+_str_0x69a1                   DB                                3 '!!!' 0
+_str_0x66bb                   EQU                               0x66bb
+_str_0x66bb                   DB                                16 'THAT IS HONEST, ' 0
+_str_0x66a2                   EQU                               0x66a2
+_str_0x66a2                   DB                                23 ', BUT HOW DO YOU EXPECT' 0
+_str_0x65c9                   EQU                               0x65c9
+_str_0x65c9                   DB                                53 'ME TO GO ON WITH MY PSYCHOLOGY STUDIES IF MY PATIENTS' 0
+_str_0x65b1                   EQU                               0x65b1
+_str_0x65b1                   DB                                22 'DO NT PAY THEIR BILLS?' 0
+_str_0x65a2                   EQU                               0x65a2
+_str_0x65a2                   DB                                13 'TAKE A WALK, ' 0
+_str_0x64ec                   EQU                               0x64ec
+_str_0x64ec                   DB                                18 'NICE MEETING YOU, ' 0
+_str_0x64d8                   EQU                               0x64d8
+_str_0x64d8                   DB                                18 ', HAVE A NICE DAY.' 0
+
+; Data
+
+; Time
+
+; Define Bytes
+
+; Define Words
+
+; Define Images
+
+; Define Sprites
+
+; Define Fonts
+
+; Lookup Tables
+_inputVars_0x7ebe             EQU                               0x7ebe
+_inputVars_0x7ebe             DW                                0x7da0 
+_inputStrs_0x7ebc             EQU                               0x7ebc
+_inputStrs_0x7ebc             DW                                0x7ec6 
+_inputTypes_0x7eb8            EQU                               0x7eb8
+_inputTypes_0x7eb8            DW                                0x5f83 0x0000 
+_input_0x7ec0                 EQU                               0x7ec0
+_input_0x7ec0                 DW                                0x7ebe 0x7ebc 0x7eb8 
+_inputVars_0x7ea1             EQU                               0x7ea1
+_inputVars_0x7ea1             DW                                0x7ba0 
+_inputStrs_0x7cdc             EQU                               0x7cdc
+_inputStrs_0x7cdc             DW                                0x7ea9 
+_inputTypes_0x7cd8            EQU                               0x7cd8
+_inputTypes_0x7cd8            DW                                0x5f03 0x0000 
+_input_0x7ea3                 EQU                               0x7ea3
+_input_0x7ea3                 DW                                0x7ea1 0x7cdc 0x7cd8 
+_inputVars_0x7aa5             EQU                               0x7aa5
+_inputVars_0x7aa5             DW                                0x76a0 
+_inputStrs_0x7aa3             EQU                               0x7aa3
+_inputStrs_0x7aa3             DW                                0x7ea9 
+_inputTypes_0x79be            EQU                               0x79be
+_inputTypes_0x79be            DW                                0x5f03 0x0000 
+_input_0x7ca1                 EQU                               0x7ca1
+_input_0x7ca1                 DW                                0x7aa5 0x7aa3 0x79be 
+_inputVars_0x79a3             EQU                               0x79a3
+_inputVars_0x79a3             DW                                0x70a0 
+_inputStrs_0x79a1             EQU                               0x79a1
+_inputStrs_0x79a1             DW                                0x6fd8 
+_inputTypes_0x77a1            EQU                               0x77a1
+_inputTypes_0x77a1            DW                                0x5f83 0x0000 
+_input_0x74a1                 EQU                               0x74a1
+_input_0x74a1                 DW                                0x79a3 0x79a1 0x77a1 
+_inputVars_0x73a1             EQU                               0x73a1
+_inputVars_0x73a1             DW                                0x70a0 
+_inputStrs_0x72a3             EQU                               0x72a3
+_inputStrs_0x72a3             DW                                0x6ed5 
+_inputTypes_0x71a3            EQU                               0x71a3
+_inputTypes_0x71a3            DW                                0x5f83 0x0000 
+_input_0x71a7                 EQU                               0x71a7
+_input_0x71a7                 DW                                0x73a1 0x72a3 0x71a3 
+_inputVars_0x72a1             EQU                               0x72a1
+_inputVars_0x72a1             DW                                0x6aa0 
+_inputStrs_0x71a1             EQU                               0x71a1
+_inputStrs_0x71a1             DW                                0x7ea9 
+_inputTypes_0x6ea8            EQU                               0x6ea8
+_inputTypes_0x6ea8            DW                                0x5f03 0x0000 
+_input_0x6fa1                 EQU                               0x6fa1
+_input_0x6fa1                 DW                                0x72a1 0x71a1 0x6ea8 
+_inputVars_0x6ea0             EQU                               0x6ea0
+_inputVars_0x6ea0             DW                                0x67a0 
+_inputStrs_0x6da5             EQU                               0x6da5
+_inputStrs_0x6da5             DW                                0x7ea9 
+_inputTypes_0x6da1            EQU                               0x6da1
+_inputTypes_0x6da1            DW                                0x5f03 0x0000 
+_input_0x6ea2                 EQU                               0x6ea2
+_input_0x6ea2                 DW                                0x6ea0 0x6da5 0x6da1 
+
+; Code
+_entryPoint_                  LDI                               0x20
+                              STW                               romType
+                              RomCheck                          
+                              Initialise                        
+                              InitEqOp                        
+                              InitRealTimeStub                                                  ; INIT
+
+                              LDI                               2
+                              STW                               graphicsMode
+                              ScanlineMode                      
+                              ClearVertBlinds                                                   ; mode 2 : cls
+
+_10                           PrintString                       _str_0x7ed9
+                              NewLine                                                           ; PRINT "HELLO.  MY NAME IS CREATIVE COMPUTER."
+
+_20                           NewLine                           
+                              NewLine                           
+                              LDWI                              0x7ec0
+                              Input                             
+                              NewLine                                                           ; PRINT: PRINT: INPUT "WHAT IS YOUR NAME";N$: PRINT
+
+_30                           PrintString                       _str_0x7eac
+                              PrintString                       _N$
+                              PrintString                       _str_0x7cde                     ; PRINT "HI THERE, ";N$;", ARE YOU ENJOYING YOURSELF HERE";
+
+_40                           LDWI                              0x7ea3
+                              Input                             
+                              NewLine                                                           ; INPUT B$: PRINT
+
+_50                           CALL                              convertEqOpAddr
+                              STW                               0xc0
+                              LDI                               192
+                              JumpFalse                         _55 0
+                              LDWI                              _70
+                              CALL                              giga_vAC                        ; IF B$="YES" THEN 70
+
+_55                           CALL                              convertEqOpAddr
+                              STW                               0xc0
+                              LDI                               192
+                              JumpFalse                         _60 1
+                              LDWI                              _80
+                              CALL                              giga_vAC                        ; IF B$="NO" THEN 80
+
+_60                           PrintString                       _N$
+                              PrintString                       _str_0x7cb1
+                              PrintString                       _B$
+                              PrintString                       _str_0x7cae
+                              NewLine                                                           ; PRINT N$;", I DO NOT UNDERSTAND YOUR ANSWER OF ";B$;"."
+
+_65                           PrintString                       _str_0x7ad1
+                              LDWI                              _40
+                              CALL                              giga_vAC                        ; PRINT "PLEASE ANSWER YES OR NO.  DO YOU LIKE IT HERE";: GOTO 40
+
+                              STW                               0xde
+                              LDWI                              _page_0x0300
+                              CALL                              giga_vAC
+_page_0x0300                  LDW                               0xde
+_70                           PrintString                       _str_0x7ab7
+                              PrintString                       _N$
+                              PrintString                       _str_0x7cae
+                              NewLine                           
+                              NewLine                                                           ; PRINT "I AM GLAD TO HEAR THAT, ";N$;".": PRINT
+
+_75                           LDWI                              _100
+                              CALL                              giga_vAC                        ; GOTO 100
+
+_80                           PrintString                       _str_0x79e1
+                              PrintString                       _N$
+                              PrintString                       _str_0x7aa7
+                              NewLine                                                           ; PRINT "OH, I AM SORRY TO HEAR THAT, ";N$;". MAYBE WE CAN"
+
+_85                           PrintString                       _str_0x79c2
+                              NewLine                                                           ; PRINT "BRIGHTEN UP YOUR VISIT A BIT."
+
+_100                          NewLine                                                           ; PRINT
+
+_105                          PrintString                       _str_0x7ca7
+                              PrintString                       _N$
+                              PrintString                       _str_0x78d4
+                              NewLine                                                           ; PRINT "SAY, ";N$;", I CAN SOLVE ALL KINDS OF PROBLEMS EXCEPT"
+
+_110                          PrintString                       _str_0x77ca
+                              NewLine                                                           ; PRINT "THOSE DEALING WITH GREECE.  WHAT KIND OF PROBLEMS DO"
+
+_120                          PrintString                       _str_0x78a6                     ; PRINT "YOU HAVE (ANSWER SEX, HEALTH, MONEY, OR JOB)";
+
+_125                          LDWI                              0x7ca1
+                              Input                                                             ; INPUT C$
+
+_126                          NewLine                                                           ; PRINT
+
+_130                          LDWI                              0x76a0
+                              STW                               strSrcAddr
+                              LDWI                              0x79b9
+                              StringCmp                         
+                              XORI                              1
+                              CALL                              convertEqOpAddr
+                              JumpFalse                         _132 2
+                              LDWI                              _200
+                              CALL                              giga_vAC                        ; IF cmp(C$, "SEX") = 1 THEN 200
+
+_132                          LDWI                              0x76a0
+                              STW                               strSrcAddr
+                              LDWI                              0x79b1
+                              StringCmp                         
+                              XORI                              1
+                              CALL                              convertEqOpAddr
+                              JumpFalse                         _134 3
+                              LDWI                              _180
+                              CALL                              giga_vAC                        ; IF cmp(C$, "HEALTH") = 1 THEN 180
+
+                              STW                               0xde
+                              LDWI                              _page_0x0400
+                              CALL                              giga_vAC
+_page_0x0400                  LDW                               0xde
+_134                          LDWI                              0x76a0
+                              STW                               strSrcAddr
+                              LDWI                              0x79aa
+                              StringCmp                         
+                              XORI                              1
+                              CALL                              convertEqOpAddr
+                              JumpFalse                         _136 4
+                              LDWI                              _160
+                              CALL                              giga_vAC                        ; IF cmp(C$, "MONEY") = 1 THEN 160
+
+_136                          LDWI                              0x76a0
+                              STW                               strSrcAddr
+                              LDWI                              0x79a5
+                              StringCmp                         
+                              XORI                              1
+                              CALL                              convertEqOpAddr
+                              JumpFalse                         _138 5
+                              LDWI                              _145
+                              CALL                              giga_vAC                        ; IF cmp(C$, "JOB") = 1 THEN 145
+
+_138                          PrintString                       _str_0x78a0
+                              PrintString                       _N$
+                              PrintString                       _str_0x77b7
+                              PrintString                       _C$
+                              PrintString                       _str_0x77a5
+                              NewLine                                                           ; PRINT "OH, ";N$;", YOUR ANSWER OF ";C$;" IS GREEK TO ME."
+
+_140                          LDWI                              _250
+                              CALL                              giga_vAC                        ; GOTO 250
+
+_145                          PrintString                       _str_0x75e4
+                              PrintString                       _N$
+                              PrintString                       _str_0x75d1
+                              NewLine                                                           ; PRINT "I CAN SYMPATHIZE WITH YOU ";N$;".  I HAVE TO WORK"
+
+_148                          NewLine                                                           ; PRINT "VERY LONG HOURS FOR NO PAY -- AND SOME OF MY BOSSES"
+
+_150                          PrintString                       _str_0x75a0
+                              PrintString                       _N$
+                              PrintString                       _str_0x7aa0
+                              NewLine                                                           ; PRINT "REALLY BEAT ON MY KEYBOARD.  MY ADVICE TO YOU, ";N$;","
+
+_153                          PrintString                       _str_0x74c9
+                              NewLine                                                           ; PRINT "IS TO OPEN A RETAIL COMPUTER STORE.  IT IS GREAT FUN."
+
+_155                          LDWI                              _250
+                              CALL                              giga_vAC                        ; GOTO 250
+
+_160                          PrintString                       _str_0x74c0
+                              PrintString                       _N$
+                              STW                               0xde
+                              LDWI                              _page_0x0500
+                              CALL                              giga_vAC
+_page_0x0500                  LDW                               0xde
+                              PrintString                       _str_0x73d8
+                              NewLine                                                           ; PRINT "SORRY, ";N$;", I AM BROKE TOO.  WHY DO NOT YOU SELL"
+
+_162                          PrintString                       _str_0x73a3
+                              NewLine                                                           ; PRINT "ENCYCLOPEADIAS OR MARRY SOMEONE RICH OR STOP EATING"
+
+_164                          PrintString                       _str_0x72db
+                              NewLine                                                           ; PRINT "SO YOU WILL NOT NEED SO MUCH MONEY?"
+
+_170                          LDWI                              _250
+                              CALL                              giga_vAC                        ; GOTO 250
+
+_180                          PrintString                       _str_0x74ad
+                              PrintString                       _N$
+                              PrintString                       _str_0x74a7
+                              NewLine                                                           ; PRINT "MY ADVICE TO YOU ";N$;" IS:"
+
+_185                          PrintString                       _str_0x72c1
+                              NewLine                                                           ; PRINT "     1.  TAKE TWO ASPRIN"
+
+_188                          PrintString                       _str_0x71c5
+                              NewLine                                                           ; PRINT "     2.  DRINK PLENTY OF FLUIDS (ORANGE JUICE, NOT BEER!)"
+
+_190                          PrintString                       _str_0x72a5
+                              NewLine                                                           ; PRINT "     3.  GO TO BED (ALONE)"
+
+_195                          LDWI                              _250
+                              CALL                              giga_vAC                        ; GOTO 250
+
+_200                          LDWI                              0x74a1
+                              Input                             
+                              NewLine                                                           ; INPUT "IS YOUR PROBLEM TOO MUCH OR TOO LITTLE";D$: PRINT
+
+_210                          CALL                              convertEqOpAddr
+                              STW                               0xc0
+                              LDI                               192
+                              JumpFalse                         _212 6
+                              LDWI                              _220
+                              CALL                              giga_vAC                        ; IF D$="TOO MUCH" THEN 220
+
+_212                          CALL                              convertEqOpAddr
+                              STW                               0xc0
+                              LDI                               192
+                              JumpFalse                         _215 7
+                              LDWI                              _230
+                              CALL                              giga_vAC                        ; IF D$="TOO LITTLE" THEN 230
+
+_215                          PrintString                       _str_0x71ad
+                              PrintString                       _N$
+                              PrintString                       _str_0x6fbc
+                              NewLine                                                           ; PRINT "DO NOT GET ALL SHOOK, ";N$;", JUST ANSWER THE QUESTION"
+
+_217                          LDWI                              0x71a7
+                              Input                             
+                              LDWI                              _210
+                              CALL                              giga_vAC                        ; INPUT "WITH TOO MUCH OR TOO LITTLE.  WHICH IS IT";D$:GOTO 210
+
+                              STW                               0xde
+                              LDWI                              _page_0x0600
+                              CALL                              giga_vAC
+_page_0x0600                  LDW                               0xde
+_220                          PrintString                       _str_0x6dc6
+                              NewLine                                                           ; PRINT "YOU CALL THAT A PROBLEM?!!  I SHOULD HAVE SUCH PROBLEMS!"
+
+_225                          PrintString                       _str_0x6fa7
+                              PrintString                       _N$
+                              PrintString                       _str_0x6ebe
+                              NewLine                                                           ; PRINT "IF IT BOTHERS YOU, ";N$;", TAKE A COLD SHOWER."
+
+_228                          LDWI                              _250
+                              CALL                              giga_vAC                        ; GOTO 250
+
+_230                          PrintString                       _str_0x6da7
+                              PrintString                       _N$
+                              PrintString                       _str_0x6eac
+                              NewLine                                                           ; PRINT "WHY ARE YOU HERE IN SUFFERN, ";N$;"?  YOU SHOULD BE"
+
+_235                          PrintString                       _str_0x6cc6
+                              NewLine                                                           ; PRINT "IN TOKYO OR NEW YORK OR AMSTERDAM OR SOMEPLACE WITH SOME"
+
+_240                          PrintString                       _str_0x6cb8
+                              NewLine                                                           ; PRINT "REAL ACTION."
+
+_250                          NewLine                                                           ; PRINT
+
+_255                          PrintString                       _str_0x6bdb
+                              PrintString                       _N$                             ; PRINT "ANY MORE PROBLEMS YOU WANT SOLVED, ";N$;
+
+_260                          LDWI                              0x6fa1
+                              Input                             
+                              NewLine                                                           ; INPUT E$: PRINT
+
+_270                          CALL                              convertEqOpAddr
+                              STW                               0xc0
+                              LDI                               192
+                              JumpFalse                         _273 8
+                              LDWI                              _280
+                              CALL                              giga_vAC                        ; IF E$="YES" THEN 280
+
+_273                          CALL                              convertEqOpAddr
+                              STW                               0xc0
+                              LDI                               192
+                              JumpFalse                         _275 9
+                              LDWI                              _300
+                              CALL                              giga_vAC                        ; IF E$="NO" THEN 300
+
+_275                          PrintString                       _str_0x6bb9
+                              PrintString                       _N$
+                              PrintString                       _str_0x7cae
+                              NewLine                                                           ; PRINT "JUST A SIMPLE YES OR NO PLEASE, ";N$;"."
+
+_277                          LDWI                              _255
+                              CALL                              giga_vAC                        ; GOTO 255
+
+                              STW                               0xde
+                              LDWI                              _page_0x08a0
+                              CALL                              giga_vAC
+_page_0x08a0                  LDW                               0xde
+_280                          PrintString                       _str_0x69db                     ; PRINT "WHAT KIND (SEX, MONEY, HEALTH, JOB)";
+
+_282                          LDWI                              _125
+                              CALL                              giga_vAC                        ; GOTO 125
+
+_300                          NewLine                                                           ; PRINT
+
+_302                          PrintString                       _str_0x69b6
+                              PrintString                       _N$
+                              PrintString                       _str_0x7cae
+                              NewLine                                                           ; PRINT "THAT WILL BE $5.00 FOR THE ADVICE, ";N$;"."
+
+_305                          PrintString                       _str_0x68d7
+                              NewLine                                                           ; PRINT "PLEASE LEAVE THE MONEY ON THE TERMINAL."
+
+_307                          LDI                               1
+                              STW                               _I
+                              LDWI                              2000
+                              STW                               0xb0
+                              LDI                               1
+                              STW                               0xb2
+                              STW                               0xde
+                              LDWI                              _page_0x09a0
+                              CALL                              giga_vAC
+_page_0x09a0                  LDW                               0xde
+_next_0x0712                  ForNextFarVarAdd                  _I _next_0x0712 0xb0 0xb2       ; FOR I=1 TO 2000: NEXT I
+
+_310                          NewLine                           
+                              NewLine                           
+                              NewLine                                                           ; PRINT: PRINT: PRINT
+
+_315                          PrintString                       _str_0x6ba0                     ; PRINT "DID YOU LEAVE THE MONEY";
+
+_320                          LDWI                              0x6ea2
+                              Input                             
+                              NewLine                                                           ; INPUT G$: PRINT
+
+_325                          CALL                              convertEqOpAddr
+                              STW                               0xc0
+                              LDI                               192
+                              JumpFalse                         _330 10
+                              LDWI                              _350
+                              CALL                              giga_vAC                        ; IF G$="YES" THEN 350
+
+_330                          CALL                              convertEqOpAddr
+                              STW                               0xc0
+                              LDI                               192
+                              STW                               0xde
+                              LDWI                              _page_0x0aa0
+                              CALL                              giga_vAC
+_page_0x0aa0                  LDW                               0xde
+                              JumpFalse                         _335 11
+                              LDWI                              _370
+                              CALL                              giga_vAC                        ; IF G$="NO" THEN 370
+
+_335                          PrintString                       _str_0x6ca7
+                              PrintString                       _G$
+                              PrintString                       _str_0x69a6
+                              PrintString                       _N$
+                              PrintString                       _str_0x7cae
+                              NewLine                                                           ; PRINT "YOUR ANSWER OF ";G$;" CONFUSES ME, ";N$;"."
+
+_340                          PrintString                       _str_0x68b7
+                              NewLine                           
+                              LDWI                              _315
+                              STW                               0xde
+                              LDWI                              _page_0x0ba0
+                              CALL                              giga_vAC
+_page_0x0ba0                  LDW                               0xde
+                              CALL                              giga_vAC                        ; PRINT "PLEASE RESPOND WITH YES OR NO.": GOTO 315
+
+_350                          PrintString                       _str_0x6ca0
+                              PrintString                       _N$
+                              LDW                               0xc0
+                              PrintAcInt16                      
+                              NewLine                                                           ; PRINT "HEY, ";N$;"??? YOU LEFT NO MONEY AT ALL!"
+
+_355                          PrintString                       _str_0x66cd
+                              NewLine                                                           ; PRINT "YOU ARE CHEATING ME OUT OF MY HARD-EARNED LIVING."
+
+_360                          NewLine                           
+                              PrintString                       _str_0x68a5
+                              PrintString                       _N$
+                              PrintString                       _str_0x69a1
+                              STW                               0xde
+                              LDWI                              _page_0x0ca0
+                              CALL                              giga_vAC
+_page_0x0ca0                  LDW                               0xde
+                              NewLine                           
+                              NewLine                                                           ; PRINT:PRINT "WHAT A RIP OFF, ";N$;"!!!":PRINT
+
+_365                          LDWI                              _385
+                              CALL                              giga_vAC                        ; GOTO 385
+
+_370                          PrintString                       _str_0x66bb
+                              PrintString                       _N$
+                              PrintString                       _str_0x66a2
+                              NewLine                                                           ; PRINT "THAT IS HONEST, ";N$;", BUT HOW DO YOU EXPECT"
+
+_375                          PrintString                       _str_0x65c9
+                              NewLine                                                           ; PRINT "ME TO GO ON WITH MY PSYCHOLOGY STUDIES IF MY PATIENTS"
+
+_380                          PrintString                       _str_0x65b1
+                              NewLine                                                           ; PRINT "DO NT PAY THEIR BILLS?"
+
+_385                          NewLine                           
+                              STW                               0xde
+                              LDWI                              _page_0x0da0
+                              CALL                              giga_vAC
+_page_0x0da0                  LDW                               0xde
+                              PrintString                       _str_0x65a2
+                              PrintString                       _N$
+                              PrintString                       _str_0x7cae
+                              NewLine                           
+                              NewLine                           
+                              NewLine                           
+                              LDWI                              _999
+                              CALL                              giga_vAC                        ; PRINT:PRINT "TAKE A WALK, ";N$;".":PRINT:PRINT:GOTO 999
+
+_390                          PrintString                       _str_0x64ec
+                              PrintString                       _N$
+                              PrintString                       _str_0x64d8
+                              NewLine                                                           ; PRINT "NICE MEETING YOU, ";N$;", HAVE A NICE DAY."
+
+                              STW                               0xde
+                              LDWI                              _page_0x0ea0
+                              CALL                              giga_vAC
+_page_0x0ea0                  LDW                               0xde
+_999                          BRA                               _999                            ; END
+
+_end_0x08bb                   BRA                               _end_0x08bb                     ; END
+
+
+
+;****************************************************************************************************************************************
+;****************************************************************************************************************************************
+;* Internal runtime, DO NOT MODIFY PAST THIS POINT, modifications must be made in the original include files                            *
+;****************************************************************************************************************************************
+;****************************************************************************************************************************************
+
+romCheck                      EQU     0x64c1
+realTimeStub                  EQU     0x64a3
+convertEqOp                   EQU     0x61b0
+scanlineMode                  EQU     0x63f5
+resetVideoFlags               EQU     0x64b5
+resetVideoTable               EQU     0x5fdb
+initClearFuncs                EQU     0x61a3
+clearVertBlinds               EQU     0x63bb
+clearCursorRow                EQU     0x5fab
+input                         EQU     0x61d8
+inputExt1                     EQU     0x5eb0
+inputExt2                     EQU     0x5de1
+inputCursor                   EQU     0x5dbf
+inputKeys                     EQU     0x5ca4
+inputIntVar                   EQU     0x5dab
+inputStrVar                   EQU     0x5be8
+inputReturn                   EQU     0x5baf
+inputDelete                   EQU     0x5ab9
+inputPrint                    EQU     0x59e0
+inputNewline                  EQU     0x5aa4
+printInit                     EQU     0x59ca
+printText                     EQU     0x63a2
+printDigit                    EQU     0x59a8
+printInt16                    EQU     0x60ae
+printChr                      EQU     0x60a1
+printChar                     EQU     0x58a7
+newLineScroll                 EQU     0x62a4
+integerStr                    EQU     0x57c0
+stringCmp                     EQU     0x61b9
+convertEqOpAddr               EQU     0x00d0
+convertNeOpAddr               EQU     0x00d2
+convertLeOpAddr               EQU     0x00d4
+convertGeOpAddr               EQU     0x00d6
+convertLtOpAddr               EQU     0x00d8
+convertGtOpAddr               EQU     0x00da
+convert8Arr2dAddr             EQU     0x00e0
+convert8Arr3dAddr             EQU     0x00e2
+convert16Arr2dAddr            EQU     0x00e4
+convert16Arr3dAddr            EQU     0x00e6
+realTimeStubAddr              EQU     0x00dc
+
+
+; do *NOT* use register4 to register7 during time slicing
+realTimeAddr        EQU     register0
+realTimeProc0       EQU     register1
+realTimeProc1       EQU     register2
+realTimeProc2       EQU     register3
+numericLabel        EQU     register0
+defaultLabel        EQU     register1
+lutLabs             EQU     register2
+lutAddrs            EQU     register3
+lutIndex            EQU     register8
+romType             EQU     register0
+romErrAddr          EQU     register1
+romErrPixel         EQU     register2
+
+
+romCheck            LD      giga_romType
+                    ANDI    0xFC
+                    SUBW    romType
+                    BGE     romC_return
+                    LDWI    giga_vram
+                    STW     romErrAddr
+                    
+romC_loop           LD      romErrPixel
+                    POKE    romErrAddr
+                    INC     romErrPixel
+                    BRA     romC_loop                       ; flash left hand corner pixel indicating rom error
+                    
+romC_return         RET                    
+
+
+                    ; runs real time, (time sliced), code at regular intervals
+                    ; self modifying code allows for timer, midi and user procs
+realTimeStub        RET                                     ; RET gets replaced by PUSH
+                    LDWI    0x0000                          ; 0x0000 gets replaced by realTimeProc0 address
+                    CALL    giga_vAC
+realTimeStub1       POP
+                    RET
+                    RET                                     ; POP + 2xRET gets replaced by LDWI realTimeProc1 address
+                    CALL    giga_vAC
+realTimeStub2       POP
+                    RET
+                    RET                                     ; POP + 2xRET gets replaced by LDWI realTimeProc2 address
+                    CALL    giga_vAC
+                    POP
+                    RET
+
+
+                    ; convert equal to into a boolean
+convertEqOp         BEQ     convertEq_1
+                    LDI     0
+                    RET
+convertEq_1         LDI     1
+                    RET
+
+
+; do *NOT* use register4 to register7 during time slicing
+graphicsMode        EQU     register0
+waitVBlankNum       EQU     register0
+
+drawHLine_x1        EQU     register0
+drawHLine_y1        EQU     register1
+drawHLine_x2        EQU     register2
+drawHLine_x4        EQU     register3
+
+drawVLine_x1        EQU     register0
+drawVLine_y1        EQU     register1
+drawVLine_y2        EQU     register2
+drawVLine_y8        EQU     register3
+
+drawLine_x1         EQU     register0
+drawLine_y1         EQU     register1
+drawLine_x2         EQU     register2
+drawLine_y2         EQU     register3
+drawLine_xy1        EQU     register0
+drawLine_xy2        EQU     register1
+drawLine_dxy1       EQU     register2
+drawLine_dxy2       EQU     register3
+drawLine_dx1        EQU     register4                       ; register4 to register7 used for temp values, state will be invalidated during time slicing
+drawLine_dy1        EQU     register5
+drawLine_dx2        EQU     register6
+drawLine_dy2        EQU     register7
+drawLine_sx         EQU     register8
+drawLine_sy         EQU     register9
+drawLine_h          EQU     register10
+drawLine_num        EQU     register11
+drawLine_count      EQU     register12
+drawLine_tmp        EQU     register13
+
+drawPixel_xy        EQU     register15
+readPixel_xy        EQU     register15
+
+drawCircle_cx       EQU     register0
+drawCircle_cy       EQU     register1
+drawCircle_r        EQU     register2
+drawCircle_a        EQU     register3
+drawCircle_d        EQU     register8
+drawCircle_x        EQU     register9
+drawCircle_y        EQU     register10
+drawCircle_ch0      EQU     register11
+drawCircle_ch1      EQU     register12
+drawCircle_ch2      EQU     register13
+drawCircle_ch3      EQU     register14
+
+drawCircleF_x1      EQU     register0
+drawCircleF_y1      EQU     register1
+drawCircleF_x2      EQU     register2
+drawCircleF_cx      EQU     register15
+drawCircleF_cy      EQU     register10
+drawCircleF_r       EQU     register11
+drawCircleF_v       EQU     register8
+drawCircleF_w       EQU     register9
+
+drawRect_x1         EQU     register7
+drawRect_y1         EQU     register10
+drawRect_x2         EQU     register11
+drawRect_y2         EQU     register15
+
+drawRectF_x1        EQU     register0
+drawRectF_y1        EQU     register1
+drawRectF_x2        EQU     register2
+drawRectF_y2        EQU     register7
+
+drawPoly_mode       EQU     register14
+drawPoly_addr       EQU     register15
+
+    
+scanlineMode        LDWI    SYS_SetMode_v2_80
+                    STW     giga_sysFn
+                    LDW     graphicsMode
+                    SYS     80
+                    RET
+
+
+; do *NOT* use register4 to register7 during time slicing
+xreset              EQU     register0
+xcount              EQU     register1
+ycount              EQU     register2
+treset              EQU     register3
+breset              EQU     register8
+top                 EQU     register9
+bot                 EQU     register10
+vramAddr            EQU     register11
+evenAddr            EQU     register12
+clsAddress          EQU     register13
+    
+
+resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
+                    STW     cursorXY
+                    LDWI    ON_BOTTOM_ROW_MSK
+                    ANDW    miscFlags
+                    STW     miscFlags                           ; reset on bottom row flag
+                    RET
+
+
+
+
+                    ; resets video table pointers
+resetVideoTable     PUSH
+                    LDI     8
+                    STW     vramAddr
+                    LDWI    giga_videoTable
+                    STW     evenAddr
+    
+resetVT_loop        CALL    realTimeStubAddr
+                    LDW     vramAddr
+                    DOKE    evenAddr
+                    INC     evenAddr
+                    INC     evenAddr
+                    INC     vramAddr
+                    LD      vramAddr
+                    SUBI    giga_yres + 8
+                    BLT     resetVT_loop
+                    
+                    LDWI    resetVideoFlags
+                    CALL    giga_vAC
+                    POP
+                    RET
+
+
+initClearFuncs      PUSH
+                    LDWI    resetVideoTable
+                    CALL    giga_vAC
+    
+                    LDWI    SYS_SetMemory_v2_54                 ; setup fill memory SYS routine
+                    STW     giga_sysFn
+                    POP
+                    RET
+
+
+                    ; clears the viewable screen using a vertical blinds effect
+clearVertBlinds     PUSH
+                    LDWI    initClearFuncs
+                    CALL    giga_vAC
+                    LD      fgbgColour
+                    ST      giga_sysArg1                        ; fill value
+                    LDI     giga_vram >> 8
+                    STW     top  
+                    
+clearVB_loopy       LDI     giga_xres
+                    ST      giga_sysArg0
+                    LDI     0
+                    ST      giga_sysArg2                        ; low start address
+                    LD      top
+                    ST      giga_sysArg3                        ; top line
+                    SYS     54                                  ; fill memory
+    
+                    LDI     giga_xres
+                    ST      giga_sysArg0
+                    LDI     0
+                    ST      giga_sysArg2                        ; low start address
+                    LDWI    giga_yres - 1 + 16
+                    SUBW    top
+                    ST      giga_sysArg3                        ; bottom line
+                    SYS     54                                  ; fill memory
+                    INC     top                                 ; next top line
+                    
+                    CALL    realTimeStubAddr
+                    LD      top
+                    SUBI    giga_yres / 2 + 8
+                    BLT     clearVB_loopy
+                    POP
+                    RET
+
+
+
+; do *NOT* use register4 to register7 during time slicing
+inpLutAddr          EQU     register0
+inpKeyBak           EQU     register0
+inpVarsAddr         EQU     register1
+inpStrsAddr         EQU     register2
+inpTypesAddr        EQU     register4
+inpTextAddr         EQU     register5
+inpTextOfs          EQU     register6
+inpTypeData         EQU     register7
+inpTextEnd          EQU     register8
+printXYBak          EQU     register11
+cursXYBak           EQU     register12
+cursFlash           EQU     register13
+cursorChr           EQU     register14
+cursXYOfs           EQU     register15
+
+cursorDelay         EQU     30
+
+    
+                    ; inputs numerics and text into vars
+input               PUSH
+                    LDW     inpLutAddr
+                    DEEK
+                    STW     inpVarsAddr         ; vars LUT address
+                    LDW     inpLutAddr
+                    ADDI    2
+                    DEEK
+                    STW     inpStrsAddr         ; strings LUT address
+                    LDW     inpLutAddr
+                    ADDI    4
+                    DEEK
+                    STW     inpTypesAddr        ; types LUT address
+
+                    LD      giga_serialRaw
+                    ST      serialRawPrev       ; initialise previous keystroke
+                    LD      giga_frameCount
+                    ADDI    cursorDelay
+                    STW     cursFlash           ; delay for cursor flash
+                    LDI     127
+                    STW     cursorChr           ; cursor char
+                    LDWI    inputExt1
+                    CALL    giga_vAC            ; doesn't return to here
+
+
+
+
+                    ; input extended 1
+inputExt1           LDW     inpTypesAddr
+                    DEEK
+                    BEQ     inputE1_exit        ; exit on LUT delimiter
+                    STW     inpTypeData         ; high byte is max string length, 8th and 7th bits of low byte are newlines, last 6 bits of low byte is type
+                    ANDI    0x40
+                    BEQ     inputE1_print       ; check for prefix newline
+                    LDWI    inputNewline
+                    CALL    giga_vAC
+                    
+inputE1_print       LDW     inpStrsAddr
+                    DEEK
+                    STW     textStr
+                    LDWI    printText           ; print strings LUT
+                    CALL    giga_vAC
+                    LD      inpTypeData
+                    ANDI    0x80
+                    BEQ     inputE1_skip        ; check for suffix newline
+                    LDWI    inputNewline
+                    CALL    giga_vAC
+                    
+inputE1_skip        LDWI    textWorkArea + 1
+                    STW     inpTextAddr         ; text work area, treated as a string so skip length
+                    LDI     0
+                    STW     inpTextOfs          ; print text offset
+                    LDWI    textWorkArea
+                    STW     inpTextEnd          ; print text end
+                    LD      inpTypeData + 1
+                    ADDW    inpTextEnd
+                    STW     inpTextEnd          ; text max = textWorkArea + (highByte(inpTypeData) >> 8)
+                    
+                    LDW     cursorXY
+                    STW     cursXYBak
+                    STW     printXYBak
+                    LDWI    inputExt2
+                    CALL    giga_vAC            ; doesn't return to here
+                    
+inputE1_exit        LDI     ENABLE_SCROLL_BIT
+                    ORW     miscFlags
+                    STW     miscFlags           ; enable text scrolling
+                    POP
+                    RET
+
+
+
+
+                    ; input extended 2
+inputExt2           LDWI    inputCursor
+                    CALL    giga_vAC
+                    LDWI    inputKeys
+                    CALL    giga_vAC
+                    BEQ     inputExt2           ; loop until return key pressed
+
+                    INC     inpVarsAddr
+                    INC     inpVarsAddr
+                    INC     inpStrsAddr
+                    INC     inpStrsAddr
+                    INC     inpTypesAddr
+                    INC     inpTypesAddr
+                    LDWI    inputExt1
+                    CALL    giga_vAC            ; doesn't return to here
+
+
+
+                    ; flashes cursor
+inputCursor         LD      giga_frameCount
+                    SUBW    cursFlash
+                    BEQ     inputC_toggle
+                    RET
+                    
+inputC_toggle       PUSH
+                    LD      giga_frameCount
+                    ADDI    cursorDelay
+                    ST      cursFlash           ; delay for cursor flash
+                    LD      cursorChr
+                    ST      textChr
+                    XORI    0xDF
+                    ST      cursorChr           ; toggle between 127 and 32 for cursor char
+                    LDW     cursXYBak
+                    STW     cursorXY            ; restore cursor position after the printChr
+                    LDWI    printChr
+                    CALL    giga_vAC
+                    POP
+                    RET
+
+
+
+
+
+                    ; saves key press into string work area buffer
+inputKeys           PUSH
+                    LD      giga_serialRaw
+                    STW     inpKeyBak           ; save keystroke
+                    LD      serialRawPrev
+                    SUBW    inpKeyBak
+                    BEQ     inputK_exit         ; if keystroke hasn't changed exit
+                    LD      inpKeyBak
+                    ST      serialRawPrev       ; save as previous keystroke
+                    SUBI    127
+                    BGT     inputK_exit
+                    BNE     inputK_ret
+                    LDWI    inputDelete         ; delete key
+                    CALL    giga_vAC            ; doesn't return to here
+                    
+inputK_ret          LD      inpKeyBak
+                    SUBI    10
+                    BNE     inputK_char
+                    LDWI    inputReturn         ; return key
+                    CALL    giga_vAC            ; doesn't return to here
+                    
+inputK_char         LDW     inpTextEnd
+                    SUBW    inpTextAddr
+                    BEQ     inputK_exit         ; text string bounds, (check after delete and return keys)
+                    LD      inpKeyBak
+                    SUBI    32
+                    BLT     inputK_exit
+                    LD      inpKeyBak
+                    POKE    inpTextAddr         ; set char
+                    INC     inpTextAddr
+                    LDI     0
+                    POKE    inpTextAddr         ; set new end of text string
+                    LD      cursXYBak
+                    SUBI    giga_xres - 11
+                    BLT     inputK_advance      ; cursor max bounds
+                    INC     inpTextOfs
+                    LDI     0
+                    BRA     inputK_print
+                    
+inputK_advance      LDI     6
+                    
+inputK_print        STW     cursXYOfs           ; advance cursor
+                    LDWI    inputPrint
+                    CALL    giga_vAC            ; doesn't return to here
+                    
+inputK_exit         LDI     0                   ; keep looping on current var
+                    POP
+                    RET                    
+
+
+
+inputStrVar         LDWI    textWorkArea
+                    STW     register11          ; src str address
+                    LDW     inpVarsAddr
+                    DEEK
+                    STW     register12          ; dst var address
+
+inputS_copy         LDW     register11
+                    PEEK
+                    POKE    register12
+                    INC     register11
+                    INC     register12
+                    BNE     inputS_copy         ; copy char until terminating char
+                    RET
+
+
+
+
+inputIntVar         PUSH
+                    LDWI    textWorkArea + 1
+                    STW     intSrcAddr          ; src str address, (skip length)
+                    LDW     inpVarsAddr
+                    DEEK
+                    STW     register12          ; dst int address
+                    LDWI    integerStr
+                    CALL    giga_vAC
+                    DOKE    register12          ; convert string to integer
+                    POP
+                    RET
+
+
+inputReturn         LDI     32
+                    STW     cursorChr
+                    LDWI    inputC_toggle
+                    CALL    giga_vAC            ; erase cursor
+                    
+                    LDWI    textWorkArea
+                    STW     register0
+                    LDW     inpTextAddr
+                    SUBW    register0
+                    SUBI    1
+                    POKE    register0           ; text length
+                    ADDW    register0
+                    ADDI    1
+                    STW     register0
+                    LDI     0
+                    POKE    register0           ; text delimiter
+                    
+                    LD      inpTypeData         ; check var tye
+                    ANDI    0x3F                ; var type is bottom 6 bits
+                    SUBI    3                   ; var is string or integer?
+                    BNE     inputR_int
+                    LDWI    inputStrVar
+                    CALL    giga_vAC            ; copy string
+                    BRA     inputR_exit
+                    
+inputR_int          LDWI    inputIntVar
+                    CALL    giga_vAC            ; convert numeric
+
+inputR_exit         LDI     1                   ; return key pressed, next var
+                    POP
+                    RET
+
+
+inputDelete         LD      inpTextOfs
+                    BEQ     inputD_bounds
+                    SUBI    1
+                    STW     inpTextOfs          ; decrement print text offset
+                    LDI     0
+                    STW     cursXYOfs           ; stationary cursor
+                    LDI     0
+                    POKE    inpTextAddr         ; delimiter
+                    LDW     inpTextAddr
+                    SUBI    1
+                    STW     inpTextAddr         ; decrement text pointer
+                    LDI     32                  
+                    POKE    inpTextAddr         ; delete char
+                    BRA     inputD_print
+
+inputD_bounds       LDW     printXYBak
+                    SUBW    cursXYBak
+                    BGE     inputD_exit         ; cursor min bounds
+                    LDWI    -6
+                    STW     cursXYOfs           ; retreat cursor
+                    LDI     32                  
+                    POKE    inpTextAddr         ; delete cursor
+                    INC     inpTextAddr
+                    LDI     0
+                    POKE    inpTextAddr         ; delimiter
+                    LDW     inpTextAddr
+                    SUBI    2
+                    STW     inpTextAddr         ; decrement text pointer
+                    LDI     32                  
+                    POKE    inpTextAddr         ; delete char
+                    
+inputD_print        LDWI    inputPrint
+                    CALL    giga_vAC            ; doesn't return to here
+                    
+inputD_exit         LDI     0                   ; keep looping on current var
+                    POP
+                    RET
+
+
+inputPrint          LDWI    inputCursor
+                    CALL    giga_vAC            ; call cursor flash frequently
+                    LDWI    textWorkArea
+                    ADDW    inpTextOfs
+                    STW     textStr
+                    LDW     printXYBak
+                    STW     cursorXY            ; restore cursor position after the printText
+                    LDWI    printText
+                    CALL    giga_vAC
+                    LDW     cursXYBak           ; new cursor position
+                    ADDW    cursXYOfs
+                    STW     cursXYBak
+                    LDI     0                   ; keep looping on current var
+                    POP
+                    RET
+
+
+inputNewline        PUSH
+                    LDI     ENABLE_SCROLL_BIT
+                    ORW     miscFlags
+                    STW     miscFlags           ; enable text scrolling
+                    LDWI    newLineScroll
+                    CALL    giga_vAC            ; new line
+                    LDWI    ENABLE_SCROLL_MSK
+                    ANDW    miscFlags
+                    STW     miscFlags           ; disable text scrolling
+                    POP
+                    RET
+
+
+
+; do *NOT* use register4 to register7 during time slicing
+textStr             EQU     register0
+textNum             EQU     register0
+textBak             EQU     register0
+textLen             EQU     register1
+textOfs             EQU     register2
+textChr             EQU     register3
+textHex             EQU     register8
+textFont            EQU     register9
+textSlice           EQU     register10
+scanLine            EQU     register11
+digitMult           EQU     register12
+digitIndex          EQU     register13
+clearLoop           EQU     register14
+    
+    
+printInit           LDWI    SYS_VDrawBits_134
+                    STW     giga_sysFn
+                    LDW     fgbgColour
+                    STW     giga_sysArg0
+                    LD      cursorXY + 1                    ; xy = peek(256+2*y)*256 + x
+                    LSLW
+                    INC     giga_vAC + 1
+                    PEEK
+                    ST      giga_sysArg4 + 1
+                    LD      cursorXY
+                    ST      giga_sysArg4                    ; xy position
+                    RET
+
+
+
+                    ; prints text string pointed to by textStr
+printText           PUSH
+                    LDWI    printInit
+                    CALL    giga_vAC
+
+                    ; first byte is length
+printT_char         INC     textStr                         ; next char
+                    LDW     textStr             
+                    PEEK
+                    BEQ     printT_exit                     ; check for delimiting zero
+                    ST      textChr
+                    LDWI    printChar
+                    CALL    giga_vAC
+                    BRA     printT_char
+                    
+printT_exit         POP
+                    RET
+
+
+
+                    ; prints single digit in textNum
+printDigit          PUSH
+                    LDW     textNum
+printD_index        SUBW    digitMult
+                    BLT     printD_cont
+                    STW     textNum
+                    INC     digitIndex
+                    BRA     printD_index
+    
+printD_cont         LD      digitIndex
+                    BEQ     printD_exit
+                    ORI     0x30
+                    ST      textChr
+                    LDWI    printChar
+                    CALL    giga_vAC
+                    LDI     0x30
+                    ST      digitIndex
+printD_exit         POP
+                    RET
+
+
+                    ; prints 16bit int in textNum
+printInt16          PUSH
+                    LDWI    printInit
+                    CALL    giga_vAC
+                    LDI     0
+                    ST      digitIndex
+                    LDW     textNum
+                    BGE     printI16_pos
+                    LDI     0x2D
+                    ST      textChr
+                    LDWI    printChar
+                    CALL    giga_vAC
+                    LDI     0
+                    SUBW    textNum
+                    STW     textNum    
+    
+printI16_pos        LDWI    10000
+                    STW     digitMult
+                    LDWI    printDigit
+                    CALL    giga_vAC
+                    LDWI    1000
+                    STW     digitMult
+                    LDWI    printDigit
+                    CALL    giga_vAC
+                    LDI     100
+                    STW     digitMult
+                    LDWI    printDigit
+                    CALL    giga_vAC
+                    LDI     10
+                    STW     digitMult
+                    LDWI    printDigit
+                    CALL    giga_vAC
+                    LD      textNum
+                    ORI     0x30
+                    ST      textChr
+                    LDWI    printChar
+                    CALL    giga_vAC
+                    POP
+                    RET
+
+
+                    ; prints char in textChr for standalone calls
+printChr            PUSH
+                    LDWI    printInit
+                    CALL    giga_vAC
+                    LDWI    printChar
+                    CALL    giga_vAC
+                    POP
+                    RET
+
+
+                    ; prints char in textChr
+printChar           LD      textChr
+                    ANDI    0x7F                            ; char can't be bigger than 127
+                    SUBI    82
+                    BGE     printC_text82
+                    ADDI    50
+                    BLT     printC_exit                     ; char<32 exit
+                    STW     textChr                         ; char-32
+                    LDWI    giga_text32                     ; text font slice base address for chars 32-81
+                    BRA     printC_font
+                    
+printC_text82       STW     textChr                         ; char-82
+                    LDWI    giga_text82                     ; text font slice base address for chars 82+
+                    
+printC_font         STW     textFont
+                    LD      textChr
+                    LSLW    
+                    LSLW    
+                    ADDW    textChr
+                    ADDW    textFont
+                    STW     textFont                        ; char*5 + textFont
+                    LDI     0x05
+
+printC_slice        ST      textSlice
+                    LDW     textFont                        ; text font slice base address
+                    LUP     0x00                            ; get ROM slice
+                    ST      giga_sysArg2
+                    SYS     134                             ; draw vertical slice, SYS_VDrawBits_134, 270 - 134/2 = 0xCB
+                    INC     textFont                        ; next vertical slice
+                    INC     giga_sysArg4                    ; next x
+                    LD      textSlice
+                    SUBI    1
+                    BNE     printC_slice
+                    
+                    ST      giga_sysArg2                    ; result of printC_slice is 0
+                    SYS     134                             ; draw last blank slice
+                    INC     giga_sysArg4                    ; using sysArg4 as a temporary cursor address for multiple char prints
+                    
+                    PUSH
+                    CALL    realTimeStubAddr
+                    LD      cursorXY
+                    ADDI    giga_xfont
+                    ST      cursorXY
+                    SUBI    giga_xres - giga_xfont          ; last possible char on line
+                    BLE     printC_pop
+                    LDWI    newLineScroll                   ; next row, scroll at bottom
+                    CALL    giga_vAC
+                    
+printC_pop          POP
+
+printC_exit         RET
+
+
+
+                    ; clears the top giga_yfont lines of pixels in preparation of text scrolling
+clearCursorRow      PUSH
+                    LDWI    SYS_SetMemory_v2_54
+                    STW     giga_sysFn                      ; setup fill memory SYS routine
+                    LD      fgbgColour
+                    ST      giga_sysArg1                    ; fill value
+                    LDWI    giga_videoTable
+                    PEEK
+                    ST      giga_sysArg3                    ; row0 high byte address
+                    LDI     giga_yfont
+
+clearCR_loopy       ST      clearLoop                    
+                    LDI     giga_xres
+                    ST      giga_sysArg0
+                    LDI     0
+                    ST      giga_sysArg2                    ; low start address
+                    SYS     54                              ; fill memory
+                    INC     giga_sysArg3                    ; next line
+                    LD      clearLoop
+                    SUBI    1
+                    BNE     clearCR_loopy
+                    CALL    realTimeStubAddr
+                    LDWI    printInit
+                    CALL    giga_vAC                        ; re-initialise the SYS registers
+                    POP
+                    RET
+
+
+                    ; print from top row to bottom row, then start scrolling 
+newLineScroll       LDI     giga_CursorX                    ; cursor x start
+                    ST      cursorXY
+                    ST      giga_sysArg4
+                    LDI     ENABLE_SCROLL_BIT
+                    ANDW    miscFlags
+                    BNE     newLS_cont0                     ; is scroll on or off?
+                    RET
+                    
+newLS_cont0         PUSH
+                    LDI     ON_BOTTOM_ROW_BIT
+                    ANDW    miscFlags                       ; is on bottom row flag?
+                    BNE     newLS_cont1
+                    LD      cursorXY + 1
+                    ADDI    giga_yfont
+                    ST      cursorXY + 1
+                    SUBI    giga_yres
+                    BLT     newLS_exit
+                    LDI     giga_yres - giga_yfont
+                    ST      cursorXY + 1
+                    
+newLS_cont1         LDWI    clearCursorRow
+                    CALL    giga_vAC
+                    LDWI    giga_videoTable
+                    STW     scanLine
+    
+newLS_scroll        CALL    realTimeStubAddr
+                    LDW     scanLine
+                    PEEK
+                    ADDI    giga_yfont
+                    ANDI    0x7F
+                    SUBI    giga_yfont
+                    BGE     newLS_adjust
+                    ADDI    giga_yfont
+                    
+newLS_adjust        ADDI    giga_yfont
+                    POKE    scanLine
+                    INC     scanLine                        ; scanline pointers are 16bits
+                    INC     scanLine
+                    LD      scanLine
+                    SUBI    0xF0                            ; scanline pointers end at 0x01EE
+                    BLT     newLS_scroll
+                    
+                    LDI     ON_BOTTOM_ROW_BIT
+                    ORW     miscFlags
+                    STW     miscFlags                       ; set on bottom row flag
+                    
+newLS_exit          LDWI    printInit
+                    CALL    giga_vAC                        ; re-initialise the SYS registers
+                    POP
+                    RET
+
+
+; do *NOT* use register4 to register7 during time slicing
+intSrcAddr          EQU     register8
+intDigit            EQU     register9
+intResult           EQU     register10
+intNegative         EQU     register11
+bcdLength           EQU     register8
+bcdSrcAddr          EQU     register9
+bcdDstAddr          EQU     register10
+bcdSrcData          EQU     register11
+bcdDstData          EQU     register11          ; alias to make code less confusing
+bcdCarry            EQU     register12
+bcdBorrow           EQU     register12          ; alias to make code less confusing
+bcdValue            EQU     register0
+bcdDigit            EQU     register1
+bcdMult             EQU     register2
+
+
+                    ; converts a string to a +/- integer, assumes string pointer is pointing to first char and not the string length, (no overflow or underflow checks)
+integerStr          LDI     0
+                    ST      intNegative
+                    STW     intResult
+                    LDW     intSrcAddr
+                    PEEK
+                    SUBI    45                  ; -ve
+                    BNE     integerS_loop
+                    LDI     1
+                    ST      intNegative
+                    INC     intSrcAddr          ; skip -ve
+
+integerS_loop       LDW     intSrcAddr
+                    PEEK
+                    SUBI    48                  ; str[i] - '0'
+                    BLT     integerS_neg
+                    STW     intDigit
+                    SUBI    9
+                    BGT     integerS_neg
+                    LDW     intResult
+                    LSLW
+                    LSLW
+                    ADDW    intResult
+                    LSLW
+                    ADDW    intDigit
+                    STW     intResult           ; result = result*10 + digit
+                    INC     intSrcAddr
+                    BRA     integerS_loop
+          
+integerS_neg        LD      intNegative
+                    BEQ     integerS_exit
+                    LDI     0
+                    SUBW    intResult           ; result *= -1
+                    RET
+                    
+integerS_exit       LDW     intResult
+                    RET
+
+
+; do *NOT* use register4 to register7 during time slicing
+strChr              EQU     register0
+strHex              EQU     register1
+strCmpRes           EQU     register2
+strDstLen           EQU     register0
+strFinish           EQU     register0
+strSrcAddr          EQU     register1
+strDstAddr          EQU     register2
+strSrcLen           EQU     register3
+strOffset           EQU     register8
+strSrcAddr2         EQU     register9
+strTmpAddr          EQU     register10
+strLutAddr          EQU     register11
+strBakAddr          EQU     register12
+strInteger          EQU     register0
+strDigit            EQU     register1
+strMult             EQU     register3
+
+
+                    ; compares two strings
+stringCmp           LDI     0
+                    STW     strCmpRes
+
+stringC_cmp         LDW     strSrcAddr
+                    PEEK
+                    BEQ     stringC_one                         ; this assumes your strings are valid, (i.e. valid length and terminating bytes)
+                    STW     strChr
+                    LDW     strSrcAddr2
+                    PEEK
+                    SUBW    strChr
+                    BNE     stringC_zero
+                    INC     strSrcAddr
+                    INC     strSrcAddr2
+                    BRA     stringC_cmp
+                    
+stringC_one         INC     strCmpRes                           ; return 1
+
+stringC_zero        LDW     strCmpRes
+                    RET
+

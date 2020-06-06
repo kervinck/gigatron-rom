@@ -338,57 +338,59 @@ namespace Expression
         return false;
     }
 
+    int _chrPrev = -1;
+    bool _containsQuotes = false;
+    void initHasHelpers(void)
+    {
+        _chrPrev = -1;
+        _containsQuotes = false;
+    }
     bool hasNonStringWhiteSpace(int chr)
     {
-        static bool containsQuotes = false;
-        static int chrPrev = -1;
         bool result = true;
 
-        if(chr == '"'  &&  chrPrev != '\\') containsQuotes = !containsQuotes;
-        if(!isspace((unsigned char)chr) || containsQuotes) result = false;
+        if(chr == '"'  &&  _chrPrev != '\\') _containsQuotes = !_containsQuotes;
+        if(!isspace((unsigned char)chr) || _containsQuotes) result = false;
 
-        chrPrev = chr;
+        _chrPrev = chr;
         return result;
     }
-
     bool hasNonStringEquals(int chr)
     {
-        static bool containsQuotes = false;
-        static int chrPrev = -1;
         bool result = true;
 
-        if(chr == '"'  &&  chrPrev != '\\') containsQuotes = !containsQuotes;
-        if(chr != '='  ||  containsQuotes) result = false;
+        if(chr == '"'  &&  _chrPrev != '\\') _containsQuotes = !_containsQuotes;
+        if(chr != '='  ||  _containsQuotes) result = false;
 
-        chrPrev = chr;
+        _chrPrev = chr;
         return result;
     }
-
     bool hasNonStringColon(int chr)
     {
-        static bool containsQuotes = false;
-        static int chrPrev = -1;
         bool result = true;
 
-        if(chr == '"'  &&  chrPrev != '\\') containsQuotes = !containsQuotes;
-        if(chr != ':'  ||  containsQuotes) result = false;
+        if(chr == '"'  &&  _chrPrev != '\\') _containsQuotes = !_containsQuotes;
+        if(chr != ':'  ||  _containsQuotes) result = false;
 
-        chrPrev = chr;
+        _chrPrev = chr;
         return result;
     }
 
     std::string::const_iterator findNonStringEquals(const std::string& input)
     {
+        initHasHelpers();
         return std::find_if(input.begin(), input.end(), hasNonStringEquals);
     }
 
     std::string::const_iterator findNonStringColon(const std::string& input)
     {
+        initHasHelpers();
         return std::find_if(input.begin(), input.end(), hasNonStringColon);
     }
 
     void stripNonStringWhitespace(std::string& input)
     {
+        initHasHelpers();
         input.erase(remove_if(input.begin(), input.end(), hasNonStringWhiteSpace), input.end());
     }
 

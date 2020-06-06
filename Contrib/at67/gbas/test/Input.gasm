@@ -105,10 +105,6 @@ _str_0x78f7                   EQU                               0x78f7
 _str_0x78f7                   DB                                7 'Testing' 0
 
 ; Data
-_data_                        EQU                               0x7ea0
-_data_                        DW                                0
-_dataIndex_                   EQU                               0x7aa2
-_dataIndex_                   DW                                0
 
 ; Time
 
@@ -212,10 +208,10 @@ _entryPoint_                  Initialise
                               PrintString                       _str_0x7ec9
                               LDW                               _minutes
                               PrintAcInt16                      
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0300
                               CALL                              giga_vAC
-_page_0x0300                  LDW                               0xe2
+_page_0x0300                  LDW                               0xde
                               PrintString                       _str_0x7ec9
                               LDW                               _seconds
                               PrintAcInt16                      
@@ -290,10 +286,10 @@ _page_0x0300                  LDW                               0xe2
                               PrintAcHexWord                    
                               PrintString                       _str_0x7ec9
                               LDW                               _d
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0400
                               CALL                              giga_vAC
-_page_0x0400                  LDW                               0xe2
+_page_0x0400                  LDW                               0xde
                               PrintAcHexWord                    
                               PrintString                       _str_0x7ec9
                               LDW                               _e
@@ -358,10 +354,10 @@ _page_0x0400                  LDW                               0xe2
                               LDWI                              0x7ef4 + 1
                               PEEK                              
                               PrintAcHexByte                    
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0500
                               CALL                              giga_vAC
-_page_0x0500                  LDW                               0xe2
+_page_0x0500                  LDW                               0xde
                               PrintString                       _str_0x7ec9
                               LDWI                              0x7ef4
                               PEEK                              
@@ -410,10 +406,10 @@ _page_0x0500                  LDW                               0xe2
                               NewLine                                                           ; print rnd(0) AND 63;" ";len(big$);" ";peek(0);" ";deek(0);" ";@big$
 
                               LDI                               7
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0600
                               CALL                              giga_vAC
-_page_0x0600                  LDW                               0xe2
+_page_0x0600                  LDW                               0xde
                               STW                               _t                              ; t = len("Testing")
 
                               LDI                               53
@@ -501,9 +497,11 @@ convertLeOpAddr               EQU     0x00d4
 convertGeOpAddr               EQU     0x00d6
 convertLtOpAddr               EQU     0x00d8
 convertGtOpAddr               EQU     0x00da
-convertArr2dAddr              EQU     0x00dc
-convertArr3dAddr              EQU     0x00de
-realTimeStubAddr              EQU     0x00e0
+convert8Arr2dAddr             EQU     0x00e0
+convert8Arr3dAddr             EQU     0x00e2
+convert16Arr2dAddr            EQU     0x00e4
+convert16Arr3dAddr            EQU     0x00e6
+realTimeStubAddr              EQU     0x00dc
 
 
 ; do *NOT* use register4 to register7 during time slicing

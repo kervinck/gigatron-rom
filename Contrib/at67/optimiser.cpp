@@ -15,8 +15,8 @@
 namespace Optimiser
 {
     enum OptimiseTypes {StwLdwPair=0, StwLdPair, StwStHigh, ExtraLdw, LdwPair, StwLdiAddw, StwLdwAddw, StwLdwAddwVar, StwLdiAndw, StwLdwAndw, StwLdwAndwVar, StwLdiXorw, StwLdwXorw,
-                        StwLdwXorwVar, StwLdiOrw, StwLdwOrw, StwLdwOrwVar, PokeVar, DokeVar, Lsl8Var, StwPair, StwPairReg, ExtraStw, PeekArray, DeekArray, 
-                        PokeArray, DokeArray, PokeVarArray, DokeVarArray, PokeTmpArray, DokeTmpArray, AddiPair, AddiZero, SubiZero, NumOptimiseTypes};
+                        StwLdwXorwVar, StwLdiOrw, StwLdwOrw, StwLdwOrwVar, PokeVar, DokeVar, Lsl8Var, StwPair, StwPairReg, ExtraStw, PeekArrayB, PeekArray, DeekArray, 
+                        PokeArray, DokeArray, PokeVarArrayB, PokeVarArray, DokeVarArray, PokeTmpArrayB, PokeTmpArray, DokeTmpArray, AddiPair, AddiZero, SubiZero, NumOptimiseTypes};
 
     struct MatchSequence
     {
@@ -135,6 +135,12 @@ namespace Optimiser
         {0, 0, {"STW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x", 
                 "STW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_"  }},
 
+        // PeekArrayB
+        {0, 0, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "mem", 
+                "LDWI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x", 
+                "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "mem", 
+                "PEEK" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + ""}},
+
         // PeekArray
         {0, 0, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "mem", 
                 "LDWI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x", 
@@ -163,6 +169,16 @@ namespace Optimiser
                 "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "mem",
                 "DOKE" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "mem"}},
 
+        // PokeVarArrayB
+        {0, 0, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "mem",
+                "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_",
+                "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "mem",
+                "LDWI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x",
+                "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "mem",
+                "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "mem",
+                "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "mem",
+                "POKE" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "mem"}},
+
         // PokeVarArray
         {0, 0, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "mem",
                 "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_",
@@ -184,6 +200,16 @@ namespace Optimiser
                 "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "mem",
                 "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "mem",
                 "DOKE" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "mem"}},
+
+        // PokeTmpArrayB
+        {0, 0, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "mem",
+                "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x",
+                "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "mem",
+                "LDWI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "0x",
+                "ADDW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "mem",
+                "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "mem",
+                "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "mem",
+                "POKE" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "mem"}},
 
         // PokeTmpArray
         {0, 0, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "mem",
@@ -699,9 +725,10 @@ RESTART_OPTIMISE:
                             break;
 
                             // Match LDW STW LDWI ADDW PEEK end up with LDWI ADDW PEEK
-                            case PeekArray:
+                            case PeekArrayB:
                             {
                                 // Save previous line LDW, if opcode is not LDW then can't optimise
+                                if(firstLine - 1 < 0) break;
                                 Compiler::VasmLine savedLDW = Compiler::getCodeLines()[i]._vasm[firstLine - 1];
                                 if(savedLDW._opcode != "LDW") break;
 
@@ -720,10 +747,12 @@ RESTART_OPTIMISE:
                             }
                             break;
 
-                            // Match LDW STW LDWI ADDW ADDW DEEK end up with LDWI ADDW ADDW DEEK
+                            // Match LDW STW LDWI ADDW ADDW PEEK/DEEK end up with LDWI ADDW ADDW PEEK/DEEK
+                            case PeekArray:
                             case DeekArray:
                             {
                                 // Save previous line LDW, if opcode is not LDW then can't optimise
+                                if(firstLine - 1 < 0) break;
                                 Compiler::VasmLine savedLDW = Compiler::getCodeLines()[i]._vasm[firstLine - 1];
                                 if(savedLDW._opcode != "LDW") break;
 
@@ -750,6 +779,7 @@ RESTART_OPTIMISE:
                                 uint16_t offset = 9;
 
                                 // Save previous line LD<X>, if opcode is not some sort of LD then can't optimise
+                                if(firstLine - 1 < 0) break;
                                 Compiler::VasmLine savedLD = Compiler::getCodeLines()[i]._vasm[firstLine - 1];
                                 if(savedLD._opcode.find("LD") == std::string::npos) break;
                                 if(savedLD._opcode.find("LDWI") != std::string::npos) offset += 1;
@@ -785,10 +815,11 @@ RESTART_OPTIMISE:
                             break;
 
                             // Match LD<X> STW LDW STW LDWI ADDW STW LDW POKE
-                            case PokeVarArray:
-                            case PokeTmpArray:
+                            case PokeVarArrayB:
+                            case PokeTmpArrayB:
                             {
                                 // Save previous line LD<X>, if opcode is not some sort of LD then can't optimise first phase
+                                if(firstLine - 1 < 0) break;
                                 Compiler::VasmLine savedLD = Compiler::getCodeLines()[i]._vasm[firstLine - 1];
                                 if(savedLD._opcode.find("LD") != std::string::npos)
                                 {
@@ -829,11 +860,14 @@ RESTART_OPTIMISE:
                             }
                             break;
 
-                            // Match STW LDW STW LDWI ADDW ADDW STW LDW DOKE
+                            // Match STW LDW STW LDWI ADDW ADDW STW LDW POKE/DOKE
+                            case PokeVarArray:
+                            case PokeTmpArray:
                             case DokeVarArray:
                             case DokeTmpArray:
                             {
                                 // Save previous line LD<X>, if opcode is not some sort of LD then can't optimise first phase
+                                if(firstLine - 1 < 0) break;
                                 Compiler::VasmLine savedLD = Compiler::getCodeLines()[i]._vasm[firstLine - 1];
                                 if(savedLD._opcode.find("LD") != std::string::npos)
                                 {

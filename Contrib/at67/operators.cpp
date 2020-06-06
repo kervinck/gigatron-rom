@@ -226,7 +226,7 @@ namespace Operators
             default: break;
         }
     }
-    bool handleConditionOp(Expression::Numeric& lhs, Expression::Numeric& rhs, Expression::CCType ccType, bool& invertedLogic)
+    bool handleConditionOp(Expression::Numeric& lhs, Expression::Numeric& rhs, Expression::CCType ccType, bool& invertedLogic, const std::string& opcode="SUB")
     {
         // Swap left and right to take advantage of LDWI for 16bit numbers
         invertedLogic = false;
@@ -282,7 +282,7 @@ namespace Operators
         // RHS
         if(rhs._varType == Expression::Number)
         {
-            Compiler::emitVcpuAsm("SUBI", std::to_string(int16_t(std::lround(rhs._value))), false);
+            Compiler::emitVcpuAsm(opcode + "I", std::to_string(int16_t(std::lround(rhs._value))), false);
         }
         else        
         {
@@ -291,14 +291,14 @@ namespace Operators
                 // Temporary variable address
                 case Expression::TmpVar:
                 {
-                    Compiler::emitVcpuAsm("SUBW", Expression::byteToHexString(uint8_t(std::lround(rhs._value))), false);
+                    Compiler::emitVcpuAsm(opcode + "W", Expression::byteToHexString(uint8_t(std::lround(rhs._value))), false);
                 }
                 break;
 
                 // User variable name
                 case Expression::IntVar:
                 {
-                    if(!Compiler::emitVcpuAsmUserVar("SUBW", rhs, _nextTempVar)) return false;
+                    if(!Compiler::emitVcpuAsmUserVar(opcode + "W", rhs, _nextTempVar)) return false;
                     _nextTempVar = false;
                 }
                 break;
@@ -796,12 +796,12 @@ namespace Operators
                 {
                     case 1:
                     case 2:
-                    case 3: opcode = "LSLW"; break;
+                    case 3:
+                    case 4: opcode = "LSLW"; break;
 
-                    case 4:
                     case 5:
                     case 6:
-                    case 7: opcode = "%ShiftLeft4bit"; break;
+                    case 7: Compiler::emitVcpuAsm("LSLW", "", false); Compiler::emitVcpuAsm("LSLW", "", false); Compiler::emitVcpuAsm("LSLW", "", false); Compiler::emitVcpuAsm("LSLW", "", false); break;
 
                     default: break;
                 }
@@ -814,6 +814,7 @@ namespace Operators
                 {
                     case 2: Compiler::emitVcpuAsm("LSLW", "", false);                                                                                     break;
                     case 3: Compiler::emitVcpuAsm("LSLW", "", false); Compiler::emitVcpuAsm("LSLW", "", false);                                           break;
+                    case 4: Compiler::emitVcpuAsm("LSLW", "", false); Compiler::emitVcpuAsm("LSLW", "", false); Compiler::emitVcpuAsm("LSLW", "", false); break;
                     case 5: Compiler::emitVcpuAsm("LSLW", "", false);                                                                                     break;
                     case 6: Compiler::emitVcpuAsm("LSLW", "", false); Compiler::emitVcpuAsm("LSLW", "", false);                                           break;
                     case 7: Compiler::emitVcpuAsm("LSLW", "", false); Compiler::emitVcpuAsm("LSLW", "", false); Compiler::emitVcpuAsm("LSLW", "", false); break;
@@ -941,7 +942,7 @@ namespace Operators
         }
 
         bool invertedLogic = false;
-        left._isValid = handleConditionOp(left, right, ccType, invertedLogic);
+        left._isValid = handleConditionOp(left, right, ccType, invertedLogic, "XOR");
 
         // Convert EQ into one of the condition types of branch instruction
         std::string cc = (ccType == Expression::FastCC) ? "Ne" : "Eq"; //(!invertedLogic) ? "Eq" : "Ne";
@@ -961,7 +962,7 @@ namespace Operators
         }
 
         bool invertedLogic = false;
-        left._isValid = handleConditionOp(left, right, ccType, invertedLogic);
+        left._isValid = handleConditionOp(left, right, ccType, invertedLogic, "XOR");
 
         // Convert NE into one of the condition types of branch instruction
         std::string cc = (ccType == Expression::FastCC) ? "Eq" : "Ne"; //(!invertedLogic) ? "Ne" : "Eq";

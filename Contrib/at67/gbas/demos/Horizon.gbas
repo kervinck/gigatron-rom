@@ -35,7 +35,7 @@ for y=119 downto horizonY
     a = ((y + 8) LSL 8)
 
     for x=0 to pitch + 159
-        if i &&= 0
+        if i &= 0
             i = pitch - 1
         else
             i = i - 1

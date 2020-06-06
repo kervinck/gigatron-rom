@@ -53,6 +53,7 @@ namespace Keywords
         _pragmas["_stringWorkArea_"]     = {"_stringWorkArea_",     pragmaSTRINGWORKAREA    };
         _pragmas["_codeOptimiseType_"]   = {"_codeOptimiseType_",   pragmaCODEOPTIMISETYPE  };
         _pragmas["_arrayIndiciesOne_"]   = {"_arrayIndiciesOne_",   pragmaARRAYINDICIESONE  };
+        _pragmas["_maxNumSprites_"]      = {"_maxNumSprites_",      pragmaMAXNUMSPRITES     };
         _pragmas["_spriteStripeChunks_"] = {"_spriteStripeChunks_", pragmaSPRITESTRIPECHUNKS};
 
         // Operators
@@ -104,62 +105,67 @@ namespace Keywords
         _stringKeywords["TIME$" ] = "TIME$";
 
         // Keywords
-        _keywords["END"    ] = {"END",     keywordEND,     Compiler::SingleStatementParsed};
-        _keywords["INC"    ] = {"INC",     keywordINC,     Compiler::SingleStatementParsed};
-        _keywords["DEC"    ] = {"DEC",     keywordDEC,     Compiler::SingleStatementParsed};
-        _keywords["ON"     ] = {"ON",      keywordON,      Compiler::SingleStatementParsed};
-        _keywords["GOTO"   ] = {"GOTO",    keywordGOTO,    Compiler::SingleStatementParsed};
-        _keywords["GOSUB"  ] = {"GOSUB",   keywordGOSUB,   Compiler::SingleStatementParsed};
-        _keywords["RETURN" ] = {"RETURN",  keywordRETURN,  Compiler::SingleStatementParsed};
-        _keywords["RET"    ] = {"RET",     keywordRET,     Compiler::SingleStatementParsed};
-        _keywords["CLS"    ] = {"CLS",     keywordCLS,     Compiler::SingleStatementParsed};
-        _keywords["?"      ] = {"?",       keywordPRINT,   Compiler::SingleStatementParsed};
-        _keywords["PRINT"  ] = {"PRINT",   keywordPRINT,   Compiler::SingleStatementParsed};
-        _keywords["INPUT"  ] = {"INPUT",   keywordINPUT,   Compiler::SingleStatementParsed};
-        _keywords["FOR"    ] = {"FOR",     keywordFOR,     Compiler::SingleStatementParsed};
-        _keywords["NEXT"   ] = {"NEXT",    keywordNEXT,    Compiler::SingleStatementParsed};
-        _keywords["IF"     ] = {"IF",      keywordIF,      Compiler::MultiStatementParsed };
-        _keywords["ELSEIF" ] = {"ELSEIF",  keywordELSEIF,  Compiler::SingleStatementParsed};
-        _keywords["ELSE"   ] = {"ELSE",    keywordELSE,    Compiler::SingleStatementParsed};
-        _keywords["ENDIF"  ] = {"ENDIF",   keywordENDIF,   Compiler::SingleStatementParsed};
-        _keywords["WHILE"  ] = {"WHILE",   keywordWHILE,   Compiler::SingleStatementParsed};
-        _keywords["WEND"   ] = {"WEND",    keywordWEND,    Compiler::SingleStatementParsed};
-        _keywords["REPEAT" ] = {"REPEAT",  keywordREPEAT,  Compiler::SingleStatementParsed};
-        _keywords["UNTIL"  ] = {"UNTIL",   keywordUNTIL,   Compiler::SingleStatementParsed};
-        _keywords["CONST"  ] = {"CONST",   keywordCONST,   Compiler::SingleStatementParsed};
-        _keywords["DIM"    ] = {"DIM",     keywordDIM,     Compiler::SingleStatementParsed};
-        //_keywords["FUNC"   ] = {"FUNC",    keywordFUNC,    Compiler::RedoStatementParse   }; // Compiler::userFunc() does this properly now
-        _keywords["DEF"    ] = {"DEF",     keywordDEF,     Compiler::SingleStatementParsed};
-        _keywords["DATA"   ] = {"DATA",    keywordDATA,    Compiler::SingleStatementParsed};
-        _keywords["READ"   ] = {"READ",    keywordREAD,    Compiler::SingleStatementParsed};
-        _keywords["RESTORE"] = {"RESTORE", keywordRESTORE, Compiler::SingleStatementParsed};
-        _keywords["ALLOC"  ] = {"ALLOC",   keywordALLOC,   Compiler::SingleStatementParsed};
-        _keywords["FREE"   ] = {"FREE",    keywordFREE,    Compiler::SingleStatementParsed};
-        _keywords["AT"     ] = {"AT",      keywordAT,      Compiler::SingleStatementParsed};
-        _keywords["PUT"    ] = {"PUT",     keywordPUT,     Compiler::SingleStatementParsed};
-        _keywords["MODE"   ] = {"MODE",    keywordMODE,    Compiler::SingleStatementParsed};
-        _keywords["WAIT"   ] = {"WAIT",    keywordWAIT,    Compiler::SingleStatementParsed};
-        _keywords["PSET"   ] = {"PSET",    keywordPSET,    Compiler::SingleStatementParsed};
-        _keywords["LINE"   ] = {"LINE",    keywordLINE,    Compiler::SingleStatementParsed};
-        _keywords["HLINE"  ] = {"HLINE",   keywordHLINE,   Compiler::SingleStatementParsed};
-        _keywords["VLINE"  ] = {"VLINE",   keywordVLINE,   Compiler::SingleStatementParsed};
-        _keywords["CIRCLE" ] = {"CIRCLE",  keywordCIRCLE,  Compiler::SingleStatementParsed};
-        _keywords["CIRCLEF"] = {"CIRCLEF", keywordCIRCLEF, Compiler::SingleStatementParsed};
-        _keywords["RECT"   ] = {"RECT",    keywordRECT,    Compiler::SingleStatementParsed};
-        _keywords["RECTF"  ] = {"RECTF",   keywordRECTF,   Compiler::SingleStatementParsed};
-        _keywords["POLY"   ] = {"POLY",    keywordPOLY,    Compiler::SingleStatementParsed};
-        _keywords["SCROLL" ] = {"SCROLL",  keywordSCROLL,  Compiler::SingleStatementParsed};
-        _keywords["POKE"   ] = {"POKE",    keywordPOKE,    Compiler::SingleStatementParsed};
-        _keywords["DOKE"   ] = {"DOKE",    keywordDOKE,    Compiler::SingleStatementParsed};
-        _keywords["INIT"   ] = {"INIT",    keywordINIT,    Compiler::SingleStatementParsed};
-        _keywords["TICK"   ] = {"TICK",    keywordTICK,    Compiler::SingleStatementParsed};
-        _keywords["PLAY"   ] = {"PLAY",    keywordPLAY,    Compiler::SingleStatementParsed};
-        _keywords["LOAD"   ] = {"LOAD",    keywordLOAD,    Compiler::SingleStatementParsed};
-        _keywords["SPRITE" ] = {"SPRITE",  keywordSPRITE,  Compiler::SingleStatementParsed};
-        _keywords["SOUND"  ] = {"SOUND",   keywordSOUND,   Compiler::SingleStatementParsed};
-        _keywords["SET"    ] = {"SET",     keywordSET,     Compiler::SingleStatementParsed};
-        _keywords["ASM"    ] = {"ASM",     keywordASM,     Compiler::SingleStatementParsed};
-        _keywords["ENDASM" ] = {"ENDASM",  keywordENDASM,  Compiler::SingleStatementParsed};
+        _keywords["END"     ] = {"END",      keywordEND,     Compiler::SingleStatementParsed};
+        _keywords["INC"     ] = {"INC",      keywordINC,     Compiler::SingleStatementParsed};
+        _keywords["DEC"     ] = {"DEC",      keywordDEC,     Compiler::SingleStatementParsed};
+        _keywords["ON"      ] = {"ON",       keywordON,      Compiler::SingleStatementParsed};
+        _keywords["GOTO"    ] = {"GOTO",     keywordGOTO,    Compiler::SingleStatementParsed};
+        _keywords["GOSUB"   ] = {"GOSUB",    keywordGOSUB,   Compiler::SingleStatementParsed};
+        _keywords["RETURN"  ] = {"RETURN",   keywordRETURN,  Compiler::SingleStatementParsed};
+        _keywords["RET"     ] = {"RET",      keywordRET,     Compiler::SingleStatementParsed};
+        _keywords["CLS"     ] = {"CLS",      keywordCLS,     Compiler::SingleStatementParsed};
+        _keywords["?"       ] = {"?",        keywordPRINT,   Compiler::SingleStatementParsed};
+        _keywords["PRINT"   ] = {"PRINT",    keywordPRINT,   Compiler::SingleStatementParsed};
+        _keywords["INPUT"   ] = {"INPUT",    keywordINPUT,   Compiler::SingleStatementParsed};
+        _keywords["FOR"     ] = {"FOR",      keywordFOR,     Compiler::SingleStatementParsed};
+        _keywords["NEXT"    ] = {"NEXT",     keywordNEXT,    Compiler::SingleStatementParsed};
+        _keywords["IF"      ] = {"IF",       keywordIF,      Compiler::MultiStatementParsed };
+        _keywords["ELSEIF"  ] = {"ELSEIF",   keywordELSEIF,  Compiler::SingleStatementParsed};
+        _keywords["ELSE"    ] = {"ELSE",     keywordELSE,    Compiler::SingleStatementParsed};
+        _keywords["ENDIF"   ] = {"ENDIF",    keywordENDIF,   Compiler::SingleStatementParsed};
+        _keywords["WHILE"   ] = {"WHILE",    keywordWHILE,   Compiler::SingleStatementParsed};
+        _keywords["WEND"    ] = {"WEND",     keywordWEND,    Compiler::SingleStatementParsed};
+        _keywords["REPEAT"  ] = {"REPEAT",   keywordREPEAT,  Compiler::SingleStatementParsed};
+        _keywords["UNTIL"   ] = {"UNTIL",    keywordUNTIL,   Compiler::SingleStatementParsed};
+        _keywords["FOREVER" ] = {"FOREVER",  keywordFOREVER, Compiler::SingleStatementParsed};
+        _keywords["&FOREVER"] = {"&FOREVER", keywordFOREVER, Compiler::SingleStatementParsed};
+        _keywords["CONST"   ] = {"CONST",    keywordCONST,   Compiler::SingleStatementParsed};
+        _keywords["DIM"     ] = {"DIM",      keywordDIM,     Compiler::SingleStatementParsed};
+        _keywords["DEF"     ] = {"DEF",      keywordDEF,     Compiler::SingleStatementParsed};
+        _keywords["DATA"    ] = {"DATA",     keywordDATA,    Compiler::SingleStatementParsed};
+        _keywords["READ"    ] = {"READ",     keywordREAD,    Compiler::SingleStatementParsed};
+        _keywords["RESTORE" ] = {"RESTORE",  keywordRESTORE, Compiler::SingleStatementParsed};
+        _keywords["ALLOC"   ] = {"ALLOC",    keywordALLOC,   Compiler::SingleStatementParsed};
+        _keywords["FREE"    ] = {"FREE",     keywordFREE,    Compiler::SingleStatementParsed};
+        _keywords["AT"      ] = {"AT",       keywordAT,      Compiler::SingleStatementParsed};
+        _keywords["PUT"     ] = {"PUT",      keywordPUT,     Compiler::SingleStatementParsed};
+        _keywords["MODE"    ] = {"MODE",     keywordMODE,    Compiler::SingleStatementParsed};
+        _keywords["WAIT"    ] = {"WAIT",     keywordWAIT,    Compiler::SingleStatementParsed};
+        _keywords["PSET"    ] = {"PSET",     keywordPSET,    Compiler::SingleStatementParsed};
+        _keywords["LINE"    ] = {"LINE",     keywordLINE,    Compiler::SingleStatementParsed};
+        _keywords["HLINE"   ] = {"HLINE",    keywordHLINE,   Compiler::SingleStatementParsed};
+        _keywords["VLINE"   ] = {"VLINE",    keywordVLINE,   Compiler::SingleStatementParsed};
+        _keywords["CIRCLE"  ] = {"CIRCLE",   keywordCIRCLE,  Compiler::SingleStatementParsed};
+        _keywords["CIRCLEF" ] = {"CIRCLEF",  keywordCIRCLEF, Compiler::SingleStatementParsed};
+        _keywords["RECT"    ] = {"RECT",     keywordRECT,    Compiler::SingleStatementParsed};
+        _keywords["RECTF"   ] = {"RECTF",    keywordRECTF,   Compiler::SingleStatementParsed};
+        _keywords["POLY"    ] = {"POLY",     keywordPOLY,    Compiler::SingleStatementParsed};
+        _keywords["POLYR"   ] = {"POLYR",    keywordPOLYR,   Compiler::SingleStatementParsed};
+        _keywords["SCROLL"  ] = {"SCROLL",   keywordSCROLL,  Compiler::SingleStatementParsed};
+        _keywords["POKE"    ] = {"POKE",     keywordPOKE,    Compiler::SingleStatementParsed};
+        _keywords["DOKE"    ] = {"DOKE",     keywordDOKE,    Compiler::SingleStatementParsed};
+        _keywords["INIT"    ] = {"INIT",     keywordINIT,    Compiler::SingleStatementParsed};
+        _keywords["TICK"    ] = {"TICK",     keywordTICK,    Compiler::SingleStatementParsed};
+        _keywords["PLAY"    ] = {"PLAY",     keywordPLAY,    Compiler::SingleStatementParsed};
+        _keywords["LOAD"    ] = {"LOAD",     keywordLOAD,    Compiler::SingleStatementParsed};
+        _keywords["SPRITE"  ] = {"SPRITE",   keywordSPRITE,  Compiler::SingleStatementParsed};
+        _keywords["SOUND"   ] = {"SOUND",    keywordSOUND,   Compiler::SingleStatementParsed};
+        _keywords["SET"     ] = {"SET",      keywordSET,     Compiler::SingleStatementParsed};
+        _keywords["ASM"     ] = {"ASM",      keywordASM,     Compiler::SingleStatementParsed};
+        _keywords["ENDASM"  ] = {"ENDASM",   keywordENDASM,  Compiler::SingleStatementParsed};
+        _keywords["BCDADD"  ] = {"BCDADD",   keywordBCDADD,  Compiler::SingleStatementParsed};
+        _keywords["BCDSUB"  ] = {"BCDSUB",   keywordBCDSUB,  Compiler::SingleStatementParsed};
+        _keywords["BCDINT"  ] = {"BCDINT",   keywordBCDINT,  Compiler::SingleStatementParsed};
 
         uint64_t timeSeed = time(NULL);
         std::seed_seq seedSequence{uint32_t(timeSeed & 0xffffffff), uint32_t(timeSeed>>32)};
@@ -431,7 +437,16 @@ namespace Keywords
         uint16_t arrayPtr = Compiler::getIntegerVars()[numeric._index]._address;
 
         // Literal array index, (only optimise for 1d arrays)
-        if(numeric._varType == Expression::Arr1Var  &&  numeric._parameters.size()  &&  numeric._parameters[0]._varType == Expression::Number)
+        if(numeric._varType == Expression::Arr1Var8  &&  numeric._parameters.size()  &&  numeric._parameters[0]._varType == Expression::Number)
+        {
+            std::string operand = Expression::wordToHexString(arrayPtr + uint16_t(numeric._parameters[0]._value*intSize));
+
+            Compiler::emitVcpuAsm("LDWI", operand, false); 
+            Compiler::emitVcpuAsm("PEEK", "",      false);
+
+            Operators::createTmpVar(numeric);
+        }
+        else if(numeric._varType == Expression::Arr1Var16  &&  numeric._parameters.size()  &&  numeric._parameters[0]._varType == Expression::Number)
         {
             std::string operand = Expression::wordToHexString(arrayPtr + uint16_t(numeric._parameters[0]._value*intSize));
 
@@ -460,7 +475,28 @@ namespace Keywords
             // Handle 1d/2d/3d arrays
             switch(numeric._varType)
             {
-                case Expression::Arr1Var:
+                case Expression::Arr1Var8:
+                {
+                    Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr), false);
+                    Compiler::emitVcpuAsm("ADDW", "memIndex0", false);
+                }
+                break;
+
+                case Expression::Arr2Var8:
+                {
+                    Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr), false);
+                    (Compiler::getCodeRomType() >= Cpu::ROMv5a) ? Compiler::emitVcpuAsm("CALLI", "convert8Arr2d", false) : Compiler::emitVcpuAsm("CALL", "convert8Arr2dAddr", false);
+                }
+                break;
+
+                case Expression::Arr3Var8:
+                {
+                    Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr), false);
+                    (Compiler::getCodeRomType() >= Cpu::ROMv5a) ? Compiler::emitVcpuAsm("CALLI", "convert8Arr3d", false, codeLineIndex) : Compiler::emitVcpuAsm("CALL", "convert8Arr3dAddr", false);
+                }
+                break;
+
+                case Expression::Arr1Var16:
                 {
                     Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr), false);
                     Compiler::emitVcpuAsm("ADDW", "memIndex0", false);
@@ -468,36 +504,43 @@ namespace Keywords
                 }
                 break;
 
-                case Expression::Arr2Var:
+                case Expression::Arr2Var16:
                 {
                     Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr), false);
-                    (Compiler::getCodeRomType() >= Cpu::ROMv5a) ? Compiler::emitVcpuAsm("CALLI", "convertArr2d", false) : Compiler::emitVcpuAsm("CALL", "convertArr2dAddr", false);
+                    (Compiler::getCodeRomType() >= Cpu::ROMv5a) ? Compiler::emitVcpuAsm("CALLI", "convert16Arr2d", false) : Compiler::emitVcpuAsm("CALL", "convert16Arr2dAddr", false);
                 }
                 break;
 
-                case Expression::Arr3Var:
+                case Expression::Arr3Var16:
                 {
                     Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr), false);
-                    (Compiler::getCodeRomType() >= Cpu::ROMv5a) ? Compiler::emitVcpuAsm("CALLI", "convertArr3d", false, codeLineIndex) : Compiler::emitVcpuAsm("CALL", "convertArr3dAddr", false);
+                    (Compiler::getCodeRomType() >= Cpu::ROMv5a) ? Compiler::emitVcpuAsm("CALLI", "convert16Arr3d", false, codeLineIndex) : Compiler::emitVcpuAsm("CALL", "convert16Arr3dAddr", false);
                 }
                 break;
 
                 default: break;
             }
 
-            Operators::createTmpVar(numeric);
-
-            // Handle .LO and .HI
-            switch(numeric._int16Byte)
+            // Bytes
+            if(numeric._varType >= Expression::Arr1Var8  &&  numeric._varType <= Expression::Arr3Var8)
             {
-                case Expression::Int16Low:  Compiler::emitVcpuAsm("PEEK", "",  false);                                           break;
-                case Expression::Int16High: Compiler::emitVcpuAsm("ADDI", "1", false); Compiler::emitVcpuAsm("PEEK", "", false); break;
-                case Expression::Int16Both: Compiler::emitVcpuAsm("DEEK", "",  false);                                           break;
+                Compiler::emitVcpuAsm("PEEK", "", false);
+            }
+            // Words, handle .LO and .HI
+            else
+            {
+                switch(numeric._int16Byte)
+                {
+                    case Expression::Int16Low:  Compiler::emitVcpuAsm("PEEK", "",  false);                                           break;
+                    case Expression::Int16High: Compiler::emitVcpuAsm("ADDI", "1", false); Compiler::emitVcpuAsm("PEEK", "", false); break;
+                    case Expression::Int16Both: Compiler::emitVcpuAsm("DEEK", "",  false);                                           break;
 
-                default: break;
+                    default: break;
+                }
             }
         }
 
+        Operators::createTmpVar(numeric);
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
 
         return numeric;
@@ -742,20 +785,23 @@ namespace Keywords
                 case Expression::StrVar:   length = Compiler::getStringVars()[numeric._index]._size;     break;
                 case Expression::Constant: length = Compiler::getConstants()[numeric._index]._size;      break;
 
-                case Expression::Arr1Var:
+                case Expression::Arr1Var8:
+                case Expression::Arr1Var16:
                 {
                     length = Compiler::getIntegerVars()[numeric._index]._arrSizes[2] * Compiler::getIntegerVars()[numeric._index]._intSize;
                 }
                 break;
 
-                case Expression::Arr2Var:
+                case Expression::Arr2Var8:
+                case Expression::Arr2Var16:
                 {
                     length = Compiler::getIntegerVars()[numeric._index]._arrSizes[1] * Compiler::getIntegerVars()[numeric._index]._arrSizes[2] *
                              Compiler::getIntegerVars()[numeric._index]._intSize;
                 }
                 break;
 
-                case Expression::Arr3Var:
+                case Expression::Arr3Var8:
+                case Expression::Arr3Var16:
                 {
                     length = Compiler::getIntegerVars()[numeric._index]._arrSizes[0] * Compiler::getIntegerVars()[numeric._index]._arrSizes[1] *
                              Compiler::getIntegerVars()[numeric._index]._arrSizes[2] * Compiler::getIntegerVars()[numeric._index]._intSize;
@@ -1342,7 +1388,9 @@ namespace Keywords
 
     Expression::Numeric functionADDR(Expression::Numeric& numeric, int codeLineIndex)
     {
-        if(numeric._varType != Expression::Arr1Var  &&  numeric._varType != Expression::Arr2Var  &&  numeric._varType != Expression::Arr3Var  &&  numeric._varType != Expression::Str2Var)
+        if(numeric._varType != Expression::Arr1Var8   &&  numeric._varType != Expression::Arr2Var8   &&  numeric._varType != Expression::Arr3Var8   &&
+           numeric._varType != Expression::Arr1Var16  &&  numeric._varType != Expression::Arr2Var16  &&  numeric._varType != Expression::Arr3Var16  &&
+           numeric._varType != Expression::Str2Var)
         {
             fprintf(stderr, "Keywords::functionADDR() : ADDR() can only be used on array variables : on line %d\n", codeLineIndex);
             return numeric;
@@ -1354,8 +1402,10 @@ namespace Keywords
             return numeric;
         }
 
-        if((numeric._varType == Expression::Arr1Var  &&  numeric._parameters.size() != 1)  ||  (numeric._varType == Expression::Arr2Var  &&  numeric._parameters.size() != 2)  ||
-           (numeric._varType == Expression::Arr3Var  &&  numeric._parameters.size() != 3)  ||  (numeric._varType == Expression::Str2Var  &&  numeric._parameters.size() != 1))
+        if((numeric._varType == Expression::Arr1Var8   &&  numeric._parameters.size() != 1)  ||  (numeric._varType == Expression::Arr2Var8   &&  numeric._parameters.size() != 2)  ||
+           (numeric._varType == Expression::Arr3Var8   &&  numeric._parameters.size() != 3)  ||  (numeric._varType == Expression::Arr1Var16  &&  numeric._parameters.size() != 1)  ||
+           (numeric._varType == Expression::Arr2Var16  &&  numeric._parameters.size() != 2)  ||  (numeric._varType == Expression::Arr3Var16  &&  numeric._parameters.size() != 3)  ||
+           (numeric._varType == Expression::Str2Var    &&  numeric._parameters.size() != 1))
         {
             fprintf(stderr, "Keywords::functionADDR() : Wrong number of parameters in ADDR() : on line %d\n", codeLineIndex);
             return numeric;
@@ -1371,8 +1421,9 @@ namespace Keywords
                 uint16_t indexI = uint16_t(numeric._parameters[0]._value);
                 switch(numeric._varType)
                 {
-                    case Expression::Arr1Var: address = Compiler::getIntegerVars()[numeric._index]._address  +  indexI * 2; break;
-                    case Expression::Str2Var: address = Compiler::getStringVars()[numeric._index]._arrAddrs[indexI];        break;
+                    case Expression::Arr1Var8:  address = Compiler::getIntegerVars()[numeric._index]._address  +  indexI * 1; break;
+                    case Expression::Arr1Var16: address = Compiler::getIntegerVars()[numeric._index]._address  +  indexI * 2; break;
+                    case Expression::Str2Var:   address = Compiler::getStringVars()[numeric._index]._arrAddrs[indexI];        break;
 
                     default: break;
                 }
@@ -1395,7 +1446,14 @@ namespace Keywords
             {
                 switch(numeric._varType)
                 {
-                    case Expression::Arr1Var:
+                    case Expression::Arr1Var8:
+                    {
+                        Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getIntegerVars()[numeric._index]._address), false);
+                        Operators::createSingleOp("ADDW", numeric._parameters[0]);
+                    }
+                    break;
+
+                    case Expression::Arr1Var16:
                     {
                         Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getIntegerVars()[numeric._index]._address), false);
                         Operators::createSingleOp("ADDW", numeric._parameters[0]);
@@ -1426,7 +1484,7 @@ namespace Keywords
                 uint16_t indexI = uint16_t(numeric._parameters[1]._value);
 
                 uint16_t address = Compiler::getIntegerVars()[numeric._index]._arrAddrs[0][indexJ];
-                address += indexI * 2;
+                address += (Compiler::getIntegerVars()[numeric._index]._intSize == Compiler::Int8) ? indexI : indexI * 2;
 
                 // No code needed for static initialisation
                 if(Expression::getOutputNumeric()._staticInit)
@@ -1450,7 +1508,23 @@ namespace Keywords
                 Operators::createSingleOp("LDW", numeric._parameters[1]);
                 Compiler::emitVcpuAsm("STW", "memIndex1", false);
                 Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(address), false);
-                (Compiler::getCodeRomType() >= Cpu::ROMv5a) ? Compiler::emitVcpuAsm("CALLI", "convertArr2d", false) : Compiler::emitVcpuAsm("CALL", "convertArr2dAddr", false);
+
+                switch(Compiler::getIntegerVars()[numeric._index]._intSize)
+                {
+                    case Compiler::Int8:
+                    {
+                        (Compiler::getCodeRomType() >= Cpu::ROMv5a) ? Compiler::emitVcpuAsm("CALLI", "convert8Arr2d", false) : Compiler::emitVcpuAsm("CALL", "convert8Arr2dAddr", false);
+                    }
+                    break;
+                    
+                    case Compiler::Int16:
+                    {
+                        (Compiler::getCodeRomType() >= Cpu::ROMv5a) ? Compiler::emitVcpuAsm("CALLI", "convert16Arr2d", false) : Compiler::emitVcpuAsm("CALL", "convert16Arr2dAddr", false);
+                    }
+                    break;
+
+                    default: break;
+                }
             }
         }
         // 3d indices
@@ -1464,7 +1538,7 @@ namespace Keywords
                 uint16_t indexI = uint16_t(numeric._parameters[2]._value);
 
                 uint16_t address = Compiler::getIntegerVars()[numeric._index]._arrAddrs[indexK][indexJ];
-                address += indexI * 2;
+                address += (Compiler::getIntegerVars()[numeric._index]._intSize == Compiler::Int8) ? indexI : indexI * 2;
 
                 // No code needed for static initialisation
                 if(Expression::getOutputNumeric()._staticInit)
@@ -1490,7 +1564,23 @@ namespace Keywords
                 Operators::createSingleOp("LDW", numeric._parameters[2]);
                 Compiler::emitVcpuAsm("STW", "memIndex2", false);
                 Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(address), false);
-                (Compiler::getCodeRomType() >= Cpu::ROMv5a) ? Compiler::emitVcpuAsm("CALLI", "convertArr3d", false) : Compiler::emitVcpuAsm("CALL", "convertArr3dAddr", false);
+
+                switch(Compiler::getIntegerVars()[numeric._index]._intSize)
+                {
+                    case Compiler::Int8:
+                    {
+                        (Compiler::getCodeRomType() >= Cpu::ROMv5a) ? Compiler::emitVcpuAsm("CALLI", "convert8Arr3d", false) : Compiler::emitVcpuAsm("CALL", "convert8Arr3dAddr", false);
+                    }
+                    break;
+                    
+                    case Compiler::Int16:
+                    {
+                        (Compiler::getCodeRomType() >= Cpu::ROMv5a) ? Compiler::emitVcpuAsm("CALLI", "convert16Arr3d", false) : Compiler::emitVcpuAsm("CALL", "convert16Arr3dAddr", false);
+                    }
+                    break;
+
+                    default: break;
+                }
             }
         }
 
@@ -1870,7 +1960,7 @@ namespace Keywords
                 }
 
                 handleStringParameter(numeric._parameters[0]);
-                Compiler::emitVcpuAsm("STW", "strLength", false);
+                Compiler::emitVcpuAsm("STW", "strDstLen", false);
                 Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr), false);
                 Compiler::emitVcpuAsm("STW", "strSrcAddr", false);
                 Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
@@ -1933,7 +2023,7 @@ namespace Keywords
                 }
 
                 handleStringParameter(numeric._parameters[0]);
-                Compiler::emitVcpuAsm("STW", "strLength", false);
+                Compiler::emitVcpuAsm("STW", "strDstLen", false);
                 Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr), false);
                 Compiler::emitVcpuAsm("STW", "strSrcAddr", false);
                 Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
@@ -2001,7 +2091,7 @@ namespace Keywords
                 handleStringParameter(numeric._parameters[0]);
                 Compiler::emitVcpuAsm("STW", "strOffset", false);
                 handleStringParameter(numeric._parameters[1]);
-                Compiler::emitVcpuAsm("STW", "strLength", false);
+                Compiler::emitVcpuAsm("STW", "strDstLen", false);
                 Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr), false);
                 Compiler::emitVcpuAsm("STW", "strSrcAddr", false);
                 Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
@@ -2037,16 +2127,16 @@ namespace Keywords
 
     bool pragmaRUNTIMEPATH(const std::string& input, int codeLineIndex, size_t foundPos)
     {
-        std::string pragma = input;
+        std::string pragma = input.substr(foundPos);
         Expression::stripNonStringWhitespace(pragma);
-        if(foundPos > pragma.size()-3  ||  !Expression::isStringValid(pragma.substr(foundPos)))
+        if(pragma.size() < 3  ||  !Expression::isStringValid(pragma))
         {
             fprintf(stderr, "Keywords::pragmaRUNTIMEPATH() : Syntax error, _runtimePath_ <\"Path to runtime\">, in '%s' on line %d\n", input.c_str(), codeLineIndex + 1);
             return false;
         }
 
         // Strip quotes
-        std::string runtimePath = pragma.substr(foundPos);
+        std::string runtimePath = pragma;
         runtimePath.erase(0, 1);
         runtimePath.erase(runtimePath.size() - 1, 1);
 
@@ -2058,9 +2148,9 @@ namespace Keywords
 
     bool pragmaRUNTIMESTART(const std::string& input, int codeLineIndex, size_t foundPos)
     {
-        std::string pragma = input;
-        Expression::stripWhitespace(pragma);
-        std::vector<std::string> tokens = Expression::tokenise(pragma.substr(foundPos), ',', false);
+        std::string pragma = input.substr(foundPos);
+        Expression::stripNonStringWhitespace(pragma);
+        std::vector<std::string> tokens = Expression::tokenise(pragma, ',', false);
         if(tokens.size() != 1)
         {
             fprintf(stderr, "Keywords::pragmaRUNTIMESTART() : Syntax error, _runtimeStart_ <address>, in '%s' on line %d\n", input.c_str(), codeLineIndex);
@@ -2103,9 +2193,9 @@ namespace Keywords
 
     bool pragmaSTRINGWORKAREA(const std::string& input, int codeLineIndex, size_t foundPos)
     {
-        std::string pragma = input;
-        Expression::stripWhitespace(pragma);
-        std::vector<std::string> tokens = Expression::tokenise(pragma.substr(foundPos), ',', false);
+        std::string pragma = input.substr(foundPos);
+        Expression::stripNonStringWhitespace(pragma);
+        std::vector<std::string> tokens = Expression::tokenise(pragma, ',', false);
         if(tokens.size() != 1)
         {
             fprintf(stderr, "Keywords::pragmaSTRINGWORKAREA() : Syntax error, _stringWorkArea_ <address>, in '%s' on line %d\n", input.c_str(), codeLineIndex);
@@ -2137,9 +2227,9 @@ namespace Keywords
 
     bool pragmaCODEOPTIMISETYPE(const std::string& input, int codeLineIndex, size_t foundPos)
     {
-        std::string pragma = input;
-        Expression::stripWhitespace(pragma);
-        std::vector<std::string> tokens = Expression::tokenise(pragma.substr(foundPos), ',', false);
+        std::string pragma = input.substr(foundPos);
+        Expression::stripNonStringWhitespace(pragma);
+        std::vector<std::string> tokens = Expression::tokenise(pragma, ',', false);
         if(tokens.size() != 1)
         {
             fprintf(stderr, "Keywords::pragmaCODEOPTIMISETYPE() : Syntax error, _codeOptimiseType_ <size/speed>, in '%s' on line %d\n", input.c_str(), codeLineIndex);
@@ -2173,14 +2263,59 @@ namespace Keywords
         return true;
     }
 
+    bool pragmaMAXNUMSPRITES(const std::string& input, int codeLineIndex, size_t foundPos)
+    {
+        std::string pragma = input.substr(foundPos);
+        Expression::stripNonStringWhitespace(pragma);
+        std::vector<std::string> tokens = Expression::tokenise(pragma, ',', false, true);
+        if(tokens.size() != 1)
+        {
+            fprintf(stderr, "Keywords::pragmaMAXNUMSPRITES() : Syntax error, _maxNumSprites_ <max num sprites>, in '%s' on line %d\n", input.c_str(), codeLineIndex);
+            return false;
+        }
+
+        // Max num sprites
+        Expression::Numeric maxNumNumeric;
+        std::string maxNumOperand;
+        Compiler::parseExpression(codeLineIndex, tokens[0], maxNumOperand, maxNumNumeric);
+        uint16_t maxNumSprites = uint16_t(std::lround(maxNumNumeric._value));
+        if(Compiler::getRuntimeStart() < RAM_EXPANSION_START  &&  maxNumSprites > MAX_NUM_SPRITES_LO)
+        {
+            fprintf(stderr, "Keywords::pragmaMAXNUMSPRITES() : Maximum number of sprites for 32K RAM is limited to %d, found %s in '%s' on line %d\n", MAX_NUM_SPRITES_LO, tokens[0].c_str(),
+                                                                                                                                                                           input.c_str(),
+                                                                                                                                                                           codeLineIndex);
+            return false;
+        }
+
+        if(Compiler::getRuntimeStart() >= RAM_EXPANSION_START  &&  maxNumSprites > MAX_NUM_SPRITES_HI)
+        {
+            fprintf(stderr, "Keywords::pragmaMAXNUMSPRITES() : Maximum number of sprites for 64K RAM is limited to %d, found %s in '%s' on line %d\n", MAX_NUM_SPRITES_HI, tokens[0].c_str(),
+                                                                                                                                                                           input.c_str(),
+                                                                                                                                                                           codeLineIndex);
+            return false;
+        }
+
+        // Allocate RAM for sprite's LUT now, otherwise more than 48 sprites in a 32K RAM system can fail
+        uint16_t lutAddress;
+        int lutSize = int(maxNumSprites) * 2;
+        if(!Memory::getFreeRAM(Memory::FitDescending, lutSize, USER_CODE_START, Compiler::getRuntimeStart(), lutAddress))
+        {
+            fprintf(stderr, "Keywords::pragmaMAXNUMSPRITES() : Not enough RAM for sprites LUT of size %d\n", lutSize);
+            return false;
+        }
+        Compiler::setSpritesAddrLutAddress(lutAddress);
+
+        return true;
+    }
+
     bool pragmaSPRITESTRIPECHUNKS(const std::string& input, int codeLineIndex, size_t foundPos)
     {
-        std::string pragma = input;
-        Expression::stripWhitespace(pragma);
-        std::vector<std::string> tokens = Expression::tokenise(pragma.substr(foundPos), ',', false, true);
+        std::string pragma = input.substr(foundPos);
+        Expression::stripNonStringWhitespace(pragma);
+        std::vector<std::string> tokens = Expression::tokenise(pragma, ',', false, true);
         if(tokens.size() < 1  ||  tokens.size() > 3)
         {
-            fprintf(stderr, "Keywords::pragmaSPRITESTRIPECHUNKS() : Syntax error, _spriteStripeChunks_ <num chunks>, <optional minimum address>, <optional ascending/descending> in '%s' on line %d\n",
+            fprintf(stderr, "Keywords::pragmaSPRITESTRIPECHUNKS() : Syntax error, _spriteStripeChunks_ <num chunks>, <optional minimum address>, <optional ascending/descending>, in '%s' on line %d\n",
                     input.c_str(), codeLineIndex);
             return false;
         }
@@ -2342,18 +2477,27 @@ namespace Keywords
         Compiler::getCodeLines()[codeLineIndex]._onGotoGosubLut._lut.clear();
         for(int i=0; i<int(gTokens.size()); i++)
         {
-            std::string gotoLabel = gTokens[i];
-            Expression::stripWhitespace(gotoLabel);
-            int labelIndex = Compiler::findLabel(gotoLabel);
+            std::string gLabel = gTokens[i];
+            Expression::stripWhitespace(gLabel);
+
+            // Optimised gosub has no PUSH, (i.e. leaf function, VBI handlers, ASM code, etc)
+            bool usePush = true;
+            if(gLabel[0] == '&')
+            {
+                usePush = false;
+                gLabel.erase(0, 1);
+            }
+
+            int labelIndex = Compiler::findLabel(gLabel);
             if(labelIndex == -1)
             {
-                fprintf(stderr, "Keywords::keywordON() : invalid label %s in slot %d in '%s' on line %d\n", gotoLabel.c_str(), i, codeLine._text.c_str(), codeLineIndex);
+                fprintf(stderr, "Keywords::keywordON() : invalid label %s in slot %d in '%s' on line %d\n", gLabel.c_str(), i, codeLine._text.c_str(), codeLineIndex);
                 Compiler::getCodeLines()[codeLineIndex]._onGotoGosubLut._lut.clear();
                 return false;
             }
                 
             // Only ON GOSUB needs a PUSH, (emitted in createVasmCode())
-            if(gosubOffset != std::string::npos) Compiler::getLabels()[labelIndex]._gosub = true;
+            if(gosubOffset != std::string::npos) Compiler::getLabels()[labelIndex]._gosub = usePush;
 
             // Create lookup table out of label addresses
             Compiler::getCodeLines()[codeLineIndex]._onGotoGosubLut._lut.push_back(labelIndex);
@@ -2478,8 +2622,13 @@ namespace Keywords
         std::vector<std::string> gosubTokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', gosubOffsets, false);
         if(gosubTokens.size() < 1  ||  gosubTokens.size() > 2)
         {
-            fprintf(stderr, "Keywords::keywordGOSUB() : Syntax error, must have one or two parameters, e.g. 'GOSUB 200' or 'GOSUB k+1,default' : in '%s' on line %d\n", codeLine._text.c_str(),
-                                                                                                                                                                        codeLineIndex);
+            fprintf(stderr, "Keywords::keywordGOSUB() : Syntax error, must have one or two parameters, e.g. 'GOSUB <label>' or 'GOSUB <expression>, <default label>' : in '%s' on line %d\n",
+                            codeLine._text.c_str(), codeLineIndex);
+            return false;
+        }
+        if(gosubTokens[0].size() == 0)
+        {
+            fprintf(stderr, "Keywords::keywordGOSUB() : Syntax error, invalid label : in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             return false;
         }
 
@@ -2487,9 +2636,24 @@ namespace Keywords
         Expression::Numeric gosubValue;
         std::string gosubToken = gosubTokens[0];
         Expression::stripWhitespace(gosubToken);
+
+        // Optimised gosub has no PUSH, (i.e. leaf function, VBI handlers, ASM code, etc)
+        bool usePush = true;
+        if(gosubToken[0] == '&')
+        {
+            usePush = false;
+            gosubToken.erase(0, 1);
+        }
+
         int labelIndex = Compiler::findLabel(gosubToken);
         if(labelIndex == -1)
         {
+            if(!usePush)
+            {
+                fprintf(stderr, "Keywords::keywordGOSUB() : Can't use optimised GOSUB with numeric labels : in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+                return false;
+            }
+
             Compiler::setCreateNumericLabelLut(true);
 
             Compiler::parseExpression(codeLineIndex, gosubToken, gosubValue);
@@ -2524,7 +2688,7 @@ namespace Keywords
         }
 
         // CALL label
-        Compiler::getLabels()[labelIndex]._gosub = true;
+        Compiler::getLabels()[labelIndex]._gosub = usePush;
 
         if(Compiler::getCodeRomType() >= Cpu::ROMv5a)
         {
@@ -2662,7 +2826,7 @@ namespace Keywords
                 Expression::parse(tokens[i], codeLineIndex, numeric);
                 if(varIndex >= 0)
                 {
-                    if(Compiler::getIntegerVars()[varIndex]._varType == Compiler::VarArray1)
+                    if(Compiler::getIntegerVars()[varIndex]._varType == Compiler::Var1Arr16)
                     {
                         Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
                         Compiler::emitVcpuAsm("%PrintAcInt16", "", false);
@@ -3213,7 +3377,8 @@ namespace Keywords
         // Bail early as we assume this is an IF ELSE ENDIF block
         if(ifElseEndif)
         {
-            Compiler::getElseIfDataStack().push({jmpIndex, "", codeLineIndex, Compiler::IfBlock, condition._ccType});
+            std::stack<Compiler::EndIfData> endIfData; // stores endif label jumps per if/endif pair
+            Compiler::getElseIfDataStack().push({jmpIndex, "", codeLineIndex, Compiler::IfBlock, condition._ccType, endIfData});
             return true;
         }
 
@@ -3227,9 +3392,9 @@ namespace Keywords
         Expression::trimWhitespace(actionToken);
         std::string actionText = Expression::collapseWhitespaceNotStrings(actionToken);
 
-        // Short circuit GOTO if action is a literal constant
+        // Short circuit GOTO if action is a literal constant or a label
         uint16_t res = 0;
-        if(Expression::stringToU16(actionText, res))
+        if(Expression::stringToU16(actionText, res)  ||  Compiler::findLabel(actionText) != -1)
         {
             actionText = "GOTO " + actionText;
         }
@@ -3272,6 +3437,7 @@ namespace Keywords
         int jmpIndex = elseIfData._jmpIndex;
         int codeIndex = elseIfData._codeLineIndex;
         Expression::CCType ccType = elseIfData._ccType;
+        std::stack<Compiler::EndIfData> endIfData = elseIfData._endIfData; // add to the list of endif label jumps per if/endif pair
         Compiler::getElseIfDataStack().pop();
 
         if(elseIfData._ifElseEndType != Compiler::IfBlock  &&  elseIfData._ifElseEndType != Compiler::ElseIfBlock)
@@ -3284,21 +3450,21 @@ namespace Keywords
         if(Compiler::getCodeRomType() >= Cpu::ROMv5a)
         {
             Compiler::emitVcpuAsm("CALLI", "CALLI_JUMP", false, codeLineIndex - 1);
-            Compiler::getEndIfDataStack().push({int(Compiler::getCodeLines()[codeLineIndex - 1]._vasm.size()) - 1, codeLineIndex - 1, ccType});
+            endIfData.push({int(Compiler::getCodeLines()[codeLineIndex - 1]._vasm.size()) - 1, codeLineIndex - 1, ccType});
         }
         else
         {
-            // There are no checks to see if this BRA's destination is in the same page, programmer discretion required when using this feature
+            // Validator checks for invalid page jumps
             if(ccType == Expression::FastCC)
             {
                 Compiler::emitVcpuAsm("BRA", "BRA_JUMP", false, codeLineIndex - 1);
-                Compiler::getEndIfDataStack().push({int(Compiler::getCodeLines()[codeLineIndex - 1]._vasm.size()) - 1, codeLineIndex - 1, ccType});
+                endIfData.push({int(Compiler::getCodeLines()[codeLineIndex - 1]._vasm.size()) - 1, codeLineIndex - 1, ccType});
             }
             else
             {
                 Compiler::emitVcpuAsm("LDWI", "LDWI_JUMP", false, codeLineIndex - 1);
                 Compiler::emitVcpuAsm("CALL", "giga_vAC", false, codeLineIndex - 1);
-                Compiler::getEndIfDataStack().push({int(Compiler::getCodeLines()[codeLineIndex - 1]._vasm.size()) - 2, codeLineIndex - 1, ccType});
+                endIfData.push({int(Compiler::getCodeLines()[codeLineIndex - 1]._vasm.size()) - 2, codeLineIndex - 1, ccType});
             }
         }
 
@@ -3324,7 +3490,7 @@ namespace Keywords
         if(condition._ccType == Expression::BooleanCC) Compiler::emitVcpuAsm("%JumpFalse", "", false); // Boolean condition requires this extra check
         jmpIndex = int(Compiler::getCodeLines()[codeLineIndex]._vasm.size()) - 1;
 
-        Compiler::getElseIfDataStack().push({jmpIndex, "", codeLineIndex, Compiler::ElseIfBlock, condition._ccType});
+        Compiler::getElseIfDataStack().push({jmpIndex, "", codeLineIndex, Compiler::ElseIfBlock, condition._ccType, endIfData});
 
         return true;
     }
@@ -3352,27 +3518,28 @@ namespace Keywords
         int jmpIndex = elseIfData._jmpIndex;
         int codeIndex = elseIfData._codeLineIndex;
         Expression::CCType ccType = elseIfData._ccType;
+        std::stack<Compiler::EndIfData> endIfData = elseIfData._endIfData; // add to the list of endif label jumps per if/endif pair
         Compiler::getElseIfDataStack().pop();
 
         // Jump to endif for previous BASIC line
         if(Compiler::getCodeRomType() >= Cpu::ROMv5a)
         {
             Compiler::emitVcpuAsm("CALLI", "CALLI_JUMP", false, codeLineIndex - 1);
-            Compiler::getEndIfDataStack().push({int(Compiler::getCodeLines()[codeLineIndex - 1]._vasm.size()) - 1, codeLineIndex - 1, ccType});
+            endIfData.push({int(Compiler::getCodeLines()[codeLineIndex - 1]._vasm.size()) - 1, codeLineIndex - 1, ccType});
         }
         else
         {
-            // There are no checks to see if this BRA's destination is in the same page, programmer discretion required when using this feature
+            // Validator checks for invalid page jumps
             if(ccType == Expression::FastCC)
             {
                 Compiler::emitVcpuAsm("BRA", "BRA_JUMP", false, codeLineIndex - 1);
-                Compiler::getEndIfDataStack().push({int(Compiler::getCodeLines()[codeLineIndex - 1]._vasm.size()) - 1, codeLineIndex - 1, ccType});
+                endIfData.push({int(Compiler::getCodeLines()[codeLineIndex - 1]._vasm.size()) - 1, codeLineIndex - 1, ccType});
             }
             else
             {
                 Compiler::emitVcpuAsm("LDWI", "LDWI_JUMP", false, codeLineIndex - 1);
                 Compiler::emitVcpuAsm("CALL", "giga_vAC", false, codeLineIndex - 1);
-                Compiler::getEndIfDataStack().push({int(Compiler::getCodeLines()[codeLineIndex - 1]._vasm.size()) - 2, codeLineIndex - 1, ccType});
+                endIfData.push({int(Compiler::getCodeLines()[codeLineIndex - 1]._vasm.size()) - 2, codeLineIndex - 1, ccType});
             }
         }
 
@@ -3391,7 +3558,7 @@ namespace Keywords
             default: break;
         }
 
-        Compiler::getElseIfDataStack().push({jmpIndex, nextInternalLabel, codeIndex, Compiler::ElseBlock, ccType});
+        Compiler::getElseIfDataStack().push({jmpIndex, nextInternalLabel, codeIndex, Compiler::ElseBlock, ccType, endIfData});
 
         return true;
     }
@@ -3420,6 +3587,7 @@ namespace Keywords
         int codeIndex = elseIfData._codeLineIndex;
         Compiler::IfElseEndType ifElseEndType = elseIfData._ifElseEndType;
         Expression::CCType ccType = elseIfData._ccType;
+        std::stack<Compiler::EndIfData>& endIfData = elseIfData._endIfData; // get the list of complete endif label jumps per if/endif pair
         Compiler::getElseIfDataStack().pop();
 
         // Create label on next line of vasm code
@@ -3440,12 +3608,12 @@ namespace Keywords
             }
         }
 
-        // Update elseif's and/or else's jump to endif label
-        while(!Compiler::getEndIfDataStack().empty())
+        // Traverse entire list of endif label jumps per if/endif pair and update elseif's and/or else's jumps to endif label
+        while(!endIfData.empty())
         {
-            codeIndex = Compiler::getEndIfDataStack().top()._codeLineIndex;
-            jmpIndex = Compiler::getEndIfDataStack().top()._jmpIndex;
-            ccType = Compiler::getEndIfDataStack().top()._ccType;
+            codeIndex = endIfData.top()._codeLineIndex;
+            jmpIndex = endIfData.top()._jmpIndex;
+            ccType = endIfData.top()._ccType;
             Compiler::VasmLine* vasm = &Compiler::getCodeLines()[codeIndex]._vasm[jmpIndex];
             switch(ccType)
             {
@@ -3468,7 +3636,7 @@ namespace Keywords
                 default: break;
             }
 
-            Compiler::getEndIfDataStack().pop();
+            endIfData.pop();
         }
 
         return true;
@@ -3601,6 +3769,46 @@ namespace Keywords
         return true;
     }
 
+    bool keywordFOREVER(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(foundPos);
+
+        // Pop stack for this REPEAT loop
+        if(Compiler::getRepeatUntilDataStack().empty())
+        {
+            fprintf(stderr, "Keywords::keywordFOREVER() : Syntax error, missing REPEAT statement, for '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            return false;
+        }
+        Compiler::RepeatUntilData repeatUntilData = Compiler::getRepeatUntilDataStack().top();
+        Compiler::getRepeatUntilDataStack().pop();
+        std::string gotoLabel = repeatUntilData._labelName;
+
+        // Check for optimised branch
+        bool useBRA = (codeLine._tokens[tokenIndex][0] == '&') ? true : false;
+
+        // Within same page, (validation check on same page branch may fail after outputCode(), user will be warned)
+        if(useBRA)
+        {
+            Compiler::emitVcpuAsm("BRA", repeatUntilData._labelName, false);
+        }
+        // Long jump
+        else
+        {
+            if(Compiler::getCodeRomType() >= Cpu::ROMv5a)
+            {
+                Compiler::emitVcpuAsm("CALLI", repeatUntilData._labelName, false);
+            }
+            else
+            {
+                Compiler::emitVcpuAsm("LDWI", repeatUntilData._labelName, false);
+                Compiler::emitVcpuAsm("CALL", "giga_vAC",      false);
+            }
+        }
+
+        return true;
+    }
+
     bool keywordCONST(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         UNREFERENCED_PARAM(result);
@@ -3708,6 +3916,151 @@ namespace Keywords
         return true;
     }
 
+    bool initDIM(Compiler::CodeLine& codeLine, int codeLineIndex, std::string& varName, int intIndex, int arrSizeTotal, int16_t& intInit, std::vector<int16_t>& intInits)
+    {
+        intIndex = Compiler::findVar(varName);
+        if(intIndex >= 0)
+        {
+            fprintf(stderr, "Keywords::initDIM() : Var '%s' already exists in '%s' on line %d\n", varName.c_str(), codeLine._code.c_str(), codeLineIndex);
+            return false;
+        }
+
+        // Optional array int init values
+        size_t equalsPos = codeLine._code.find("=");
+        if(equalsPos != std::string::npos)
+        {
+            std::string initText = codeLine._code.substr(equalsPos + 1);
+            Expression::stripWhitespace(initText);
+            std::vector<std::string> initTokens = Expression::tokenise(initText, ',', true);
+            if(initTokens.size() == 0)
+            {
+                fprintf(stderr, "Keywords::initDIM() : Initial value must be a constant, found %s in '%s' on line %d\n", initText.c_str(), codeLine._code.c_str(), codeLineIndex);
+                return false;
+            }
+            else if(initTokens.size() == 1)
+            {
+                std::string operand;
+                Expression::Numeric numeric(true); // true = allow static init
+                Compiler::parseExpression(codeLineIndex, initTokens[0], operand, numeric);
+                intInit = int16_t(std::lround(numeric._value));
+            }
+            else if(int(initTokens.size()) > arrSizeTotal)
+            {
+                fprintf(stderr, "Keywords::initDIM() : Too many initialisation values for size of array, found %d for a size of %d, in '%s' on line %d\n", int(initTokens.size()), arrSizeTotal,
+                                                                                                                                                                codeLine._code.c_str(), codeLineIndex);
+                return false;
+            }
+
+            // Multiple initialisation values, (if there are less init values than array size, then array is padded with last init value)
+            std::string operand;
+            intInits.resize(initTokens.size());
+            std::vector<Expression::Numeric> funcParams(initTokens.size(), Expression::Numeric(true)); // true = allow static init
+            for(int i=0; i<int(initTokens.size()); i++)
+            {
+                Compiler::parseExpression(codeLineIndex, initTokens[i], operand, funcParams[i]);
+                intInits[i] = int16_t(std::lround(funcParams[i]._value));
+            }
+            intInit = intInits.back();
+        }
+
+        return true;
+    }
+    bool allocDIM(Compiler::CodeLine& codeLine, int codeLineIndex, uint16_t& address, Compiler::VarType& varType, std::vector<uint16_t>& arrLut, std::vector<uint16_t>& arrSizes,
+                                                                                                                                                 std::vector<std::vector<uint16_t>>& arrAddrs)
+    {
+        int intSize = 0;
+        switch(varType)
+        {
+            case Compiler::Var1Arr8:  intSize = 1; break;
+            case Compiler::Var1Arr16: intSize = 2; break;
+
+            default: fprintf(stderr, "Keywords::allocDIM() : Unknown var type in '%s' on line %d\n", codeLine._code.c_str(), codeLineIndex);
+                     break;
+        }
+
+        // Allocate memory for k * j * i of intSize byte values
+        int iSizeBytes = arrSizes[2] * intSize;
+        for(int k=0; k<arrSizes[0]; k++)
+        {
+            for(int j=0; j<arrSizes[1]; j++)
+            {
+                if(!Memory::getFreeRAM(Memory::FitDescending, iSizeBytes, USER_CODE_START, Compiler::getRuntimeStart(), arrAddrs[k][j], false)) // arrays do not need to be contained within pages
+                {
+                    fprintf(stderr, "Keywords::allocDIM() : Not enough RAM for int array of size %d in '%s' on line %d\n", iSizeBytes, codeLine._code.c_str(), codeLineIndex);
+                    return false;
+                }
+            }
+        }
+
+        // 1D array
+        if(arrSizes[0] == 1  &&  arrSizes[1] == 1)
+        {
+            address = arrAddrs[0][0];
+            varType = (varType == Compiler::Var1Arr8) ? Compiler::Var1Arr8 : Compiler::Var1Arr16;
+        }
+        // 2D array
+        else if(arrSizes[0] == 1)
+        {
+            int jSizeBytes = arrSizes[1] * 2;
+            if(!Memory::getFreeRAM(Memory::FitDescending, jSizeBytes, USER_CODE_START, Compiler::getRuntimeStart(), address, false)) // arrays do not need to be contained within pages
+            {
+                fprintf(stderr, "Keywords::allocDIM() : Not enough RAM for int array of size %d in '%s' on line %d\n", jSizeBytes, codeLine._code.c_str(), codeLineIndex);
+                return false;
+            }
+
+            address = address;
+            varType = (varType == Compiler::Var1Arr8) ? Compiler::Var2Arr8 : Compiler::Var2Arr16;
+
+            // Enable system internal sub intialiser and mark system internal sub to be loaded, (init functions are not needed for ROMv5a and higher as CALLI is able to directly CALL them)
+            if(intSize == 1)
+            {
+                if(Compiler::getCodeRomType() < Cpu::ROMv5a) Compiler::enableSysInitFunc("Init8Array2d");
+                Linker::setInternalSubToLoad("convert8Arr2d");
+            }
+            else if(intSize == 2)
+            {
+                if(Compiler::getCodeRomType() < Cpu::ROMv5a) Compiler::enableSysInitFunc("Init16Array2d");
+                Linker::setInternalSubToLoad("convert16Arr2d");
+            }
+        }
+        // 3D array
+        else
+        {
+            int jSizeBytes = arrSizes[1] * 2;
+            for(int k=0; k<arrSizes[0]; k++)
+            {
+                if(!Memory::getFreeRAM(Memory::FitDescending, jSizeBytes, USER_CODE_START, Compiler::getRuntimeStart(), arrLut[k], false)) // arrays do not need to be contained within pages
+                {
+                    fprintf(stderr, "Keywords::allocDIM() : Not enough RAM for int array of size %d in '%s' on line %d\n", jSizeBytes, codeLine._code.c_str(), codeLineIndex);
+                    return false;
+                }
+            }
+
+            int kSizeBytes = arrSizes[2] * 2;
+            if(!Memory::getFreeRAM(Memory::FitDescending, kSizeBytes, USER_CODE_START, Compiler::getRuntimeStart(), address, false)) // arrays do not need to be contained within pages
+            {
+                fprintf(stderr, "Keywords::allocDIM() : Not enough RAM for int array of size %d in '%s' on line %d\n", kSizeBytes, codeLine._code.c_str(), codeLineIndex);
+                return false;
+            }
+
+            address = address;
+            varType = (varType == Compiler::Var1Arr8) ? Compiler::Var3Arr8 : Compiler::Var3Arr16;
+
+            // Enable system internal sub intialiser and mark system internal sub to be loaded, (init functions are not needed for ROMv5a and higher as CALLI is able to directly CALL them)
+            if(intSize == 1)
+            {
+                if(Compiler::getCodeRomType() < Cpu::ROMv5a) Compiler::enableSysInitFunc("Init8Array3d");
+                Linker::setInternalSubToLoad("convert8Arr3d");
+            }
+            else if(intSize == 2)
+            {
+                if(Compiler::getCodeRomType() < Cpu::ROMv5a) Compiler::enableSysInitFunc("Init16Array3d");
+                Linker::setInternalSubToLoad("convert16Arr3d");
+            }
+        }
+
+        return true;
+    }
     bool keywordDIM(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         UNREFERENCED_PARAM(result);
@@ -3738,9 +4091,13 @@ namespace Keywords
             uint32_t expressionType = Compiler::isExpression(sizeToken, varIndex, constIndex, strIndex);
 
             // Constant dimension
-            if(expressionType == Expression::HasIntConsts  &&  constIndex > -1)
+            if((expressionType & Expression::HasIntConsts)  &&  constIndex > -1)
             {
-                arrSizes.push_back(Compiler::getConstants()[constIndex]._data);
+                std::string operand;
+                Expression::Numeric numeric(true); // true = allow static init
+                Compiler::parseExpression(codeLineIndex, sizeToken, operand, numeric);
+                int16_t data = int16_t(std::lround(numeric._value));
+                arrSizes.push_back(data);
             }
             // Literal dimension
             else
@@ -3768,12 +4125,12 @@ namespace Keywords
 
         int intIndex = -1;
         int strIndex = -1;
-        uint16_t intInit = 0;
+        int16_t intInit = 0;
         std::vector<int16_t> intInits;
         std::vector<std::string> strInits;
+        Compiler::VarType varType = Compiler::Var1Arr16;
 
         // Str array
-        bool foundStr = false;
         if(varName.back() == '$')
         {
             strIndex = Compiler::findStr(varName);
@@ -3789,13 +4146,14 @@ namespace Keywords
             }
 
 #if 1
-            // Second string array dimension is always USER_STR_SIZE, (actual arrSizes data structure looks like this, [n][USER_STR_SIZE])
+            // String array 2nd dimension is always USER_STR_SIZE, (actual arrSizes data structure looks like this, [n][USER_STR_SIZE])
             arrSizes.push_back(USER_STR_SIZE);
 #else
             // TODO: add const dim str$(j, i)
             if(arrSizes[1] <= 0  ||  arrSizes[1] > USER_STR_SIZE)
             {
-                fprintf(stderr, "Keywords::keywordDIM() : Maximum first string dimension is limited to %d, found %d in '%s' on line %d\n", USER_STR_SIZE - 1, arrSizes[1] - 1, codeLine._code.c_str(), codeLineIndex);
+                fprintf(stderr, "Keywords::keywordDIM() : Maximum first string dimension is limited to %d, found %d in '%s' on line %d\n", USER_STR_SIZE - 1, arrSizes[1] - 1, 
+                                                                                                                                           codeLine._code.c_str(), codeLineIndex);
                 return false;
             }
 #endif
@@ -3841,55 +4199,21 @@ namespace Keywords
                 }
             }
 
-            foundStr = true;
+            varType = Compiler::VarStr2;
         }
-        // Int array
+        // Int8 array
+        else if(varName.back() == '%')
+        {
+            // % is only used within DIM keyword
+            varName.erase(varName.size()-1, 1);
+            if(!initDIM(codeLine, codeLineIndex, varName, intIndex, arrSizeTotal, intInit, intInits)) return false;
+            varType = Compiler::Var1Arr8;
+        }
+        // Int16 array
         else
         {
-            intIndex = Compiler::findVar(varName);
-            if(intIndex >= 0)
-            {
-                fprintf(stderr, "Keywords::keywordDIM() : Var %s already exists in '%s' on line %d\n", varName.c_str(), codeLine._code.c_str(), codeLineIndex);
-                return false;
-            }
-
-            // Optional array int init values
-            size_t equalsPos = codeLine._code.find("=");
-            if(equalsPos != std::string::npos)
-            {
-                std::string initText = codeLine._code.substr(equalsPos + 1);
-                Expression::stripWhitespace(initText);
-                std::vector<std::string> initTokens = Expression::tokenise(initText, ',', true);
-                if(initTokens.size() == 0)
-                {
-                    fprintf(stderr, "Keywords::keywordDIM() : Initial value must be a constant, found %s in '%s' on line %d\n", initText.c_str(), codeLine._code.c_str(), codeLineIndex);
-                    return false;
-                }
-                else if(initTokens.size() == 1)
-                {
-                    std::string operand;
-                    Expression::Numeric numeric(true); // true = allow static init
-                    Compiler::parseExpression(codeLineIndex, initTokens[0], operand, numeric);
-                    intInit = int16_t(std::lround(numeric._value));
-                }
-                else if(int(initTokens.size()) > arrSizeTotal)
-                {
-                    fprintf(stderr, "Keywords::keywordDIM() : Too many initialisation values for size of array, found %d for a size of %d, in '%s' on line %d\n", int(initTokens.size()), arrSizeTotal,
-                                                                                                                                                                  codeLine._code.c_str(), codeLineIndex);
-                    return false;
-                }
-
-                // Multiple initialisation values, (if there are less init values than array size, then array is padded with last init value)
-                std::string operand;
-                intInits.resize(initTokens.size());
-                std::vector<Expression::Numeric> funcParams(initTokens.size(), Expression::Numeric(true)); // true = allow static init
-                for(int i=0; i<int(initTokens.size()); i++)
-                {
-                    Compiler::parseExpression(codeLineIndex, initTokens[i], operand, funcParams[i]);
-                    intInits[i] = int16_t(std::lround(funcParams[i]._value));
-                }
-                intInit = intInits.back();
-            }
+            if(!initDIM(codeLine, codeLineIndex, varName, intIndex, arrSizeTotal, intInit, intInits)) return false;
+            varType = Compiler::Var1Arr16;
         }
 
         // Represent 1 or 2 dimensional arrays as a 3 dimensional array with dimensions of 1 for the missing dimensions
@@ -3898,9 +4222,11 @@ namespace Keywords
             arrSizes.insert(arrSizes.begin(), 1);
         }
 
+        // Array lut
         std::vector<uint16_t> arrLut;
         arrLut.resize(arrSizes[0]);
 
+        // Array addresses
         std::vector<std::vector<uint16_t>> arrAddrs;
         arrAddrs.resize(arrSizes[0]);
         for(int i=0; i<arrSizes[0]; i++)
@@ -3910,84 +4236,35 @@ namespace Keywords
 
         uint16_t address = 0x0000;
 
-        // Str arrays
-        if(foundStr)
+        switch(varType)
         {
-            std::vector<uint16_t> strAddrs;
-            strAddrs.resize(arrSizes[1]);
-            if(Compiler::createStringArray(codeLine, codeLineIndex, varName, USER_STR_SIZE, strInits, strAddrs) == -1) return false;
-        }
-        // Int arrays
-        else
-        {
-            Compiler::VarType varType = Compiler::VarArray1;
-
-            // Allocate memory for k * j * i of 16 bit values
-            int iSizeBytes = arrSizes[2] * 2;
-            for(int k=0; k<arrSizes[0]; k++)
+            // Str arrays
+            case Compiler::VarStr2:
             {
-                for(int j=0; j<arrSizes[1]; j++)
-                {
-                    if(!Memory::getFreeRAM(Memory::FitDescending, iSizeBytes, USER_CODE_START, Compiler::getRuntimeStart(), arrAddrs[k][j], false)) // arrays do not need to be contained within pages
-                    {
-                        fprintf(stderr, "Keywords::keywordDIM() : Not enough RAM for int array of size %d in '%s' on line %d\n", iSizeBytes, codeLine._code.c_str(), codeLineIndex);
-                        return false;
-                    }
-                }
+                std::vector<uint16_t> strAddrs;
+                strAddrs.resize(arrSizes[1]);
+                if(Compiler::createStringArray(codeLine, codeLineIndex, varName, USER_STR_SIZE, strInits, strAddrs) == -1) return false;
             }
+            break;
 
-            // 1D array
-            if(arrSizes[0] == 1  &&  arrSizes[1] == 1)
+            // Int8 arrays, (allocDIM returns var type based on arrSizes)
+            case Compiler::Var1Arr8:
             {
-                address = arrAddrs[0][0];
-                varType = Compiler::VarArray1;
+                if(!allocDIM(codeLine, codeLineIndex, address, varType, arrLut, arrSizes, arrAddrs)) return false;
+                Compiler::createIntVar(varName, 0, intInit, codeLine, codeLineIndex, false, intIndex, varType, Compiler::Int8, address, arrSizes, intInits, arrAddrs, arrLut);
             }
-            // 2D array
-            else if(arrSizes[0] == 1)
+            break;
+
+            // Int16 arrays, (allocDIM returns var type based on arrSizes)
+            case Compiler::Var1Arr16:
             {
-                int jSizeBytes = arrSizes[1] * 2;
-                if(!Memory::getFreeRAM(Memory::FitDescending, jSizeBytes, USER_CODE_START, Compiler::getRuntimeStart(), address, false)) // arrays do not need to be contained within pages
-                {
-                    fprintf(stderr, "Keywords::keywordDIM() : Not enough RAM for int array of size %d in '%s' on line %d\n", jSizeBytes, codeLine._code.c_str(), codeLineIndex);
-                    return false;
-                }
-
-                address = address;
-                varType = Compiler::VarArray2;
-
-                // Enable system internal sub intialiser and mark system internal sub to be loaded, (init functions are not needed for ROMv5a and higher as CALLI is able to directly CALL them)
-                if(Compiler::getCodeRomType() < Cpu::ROMv5a) Compiler::enableSysInitFunc("InitArray2d");
-                Linker::setInternalSubToLoad("convertArr2d");
+                if(!allocDIM(codeLine, codeLineIndex, address, varType, arrLut, arrSizes, arrAddrs)) return false;
+                Compiler::createIntVar(varName, 0, intInit, codeLine, codeLineIndex, false, intIndex, varType, Compiler::Int16, address, arrSizes, intInits, arrAddrs, arrLut);
             }
-            // 3D array
-            else
-            {
-                int jSizeBytes = arrSizes[1] * 2;
-                for(int k=0; k<arrSizes[0]; k++)
-                {
-                    if(!Memory::getFreeRAM(Memory::FitDescending, jSizeBytes, USER_CODE_START, Compiler::getRuntimeStart(), arrLut[k], false)) // arrays do not need to be contained within pages
-                    {
-                        fprintf(stderr, "Keywords::keywordDIM() : Not enough RAM for int array of size %d in '%s' on line %d\n", jSizeBytes, codeLine._code.c_str(), codeLineIndex);
-                        return false;
-                    }
-                }
+            break;
 
-                int kSizeBytes = arrSizes[2] * 2;
-                if(!Memory::getFreeRAM(Memory::FitDescending, kSizeBytes, USER_CODE_START, Compiler::getRuntimeStart(), address, false)) // arrays do not need to be contained within pages
-                {
-                    fprintf(stderr, "Keywords::keywordDIM() : Not enough RAM for int array of size %d in '%s' on line %d\n", kSizeBytes, codeLine._code.c_str(), codeLineIndex);
-                    return false;
-                }
-
-                address = address;
-                varType = Compiler::VarArray3;
-
-                // Enable system internal sub intialiser and mark system internal sub to be loaded, (init functions are not needed for ROMv5a and higher as CALLI is able to directly CALL them)
-                if(Compiler::getCodeRomType() < Cpu::ROMv5a) Compiler::enableSysInitFunc("InitArray3d");
-                Linker::setInternalSubToLoad("convertArr3d");
-            }
-
-            Compiler::createIntVar(varName, 0, intInit, codeLine, codeLineIndex, false, intIndex, varType, Compiler::Int16, address, arrSizes, intInits, arrAddrs, arrLut);
+            default: fprintf(stderr, "Keywords::keywordDIM() : Unknown array type %d in '%s' on line %d\n", varType, codeLine._code.c_str(), codeLineIndex);
+                     return false;
         }
 
         return true;
@@ -4450,10 +4727,11 @@ namespace Keywords
             int varIndex = Compiler::findVar(varToken);
             int strIndex = Compiler::findStr(varToken);
 
-            bool isStrVar = (varToken.find("$") != std::string::npos) ? true : false;
+            Compiler::VarType varType = Compiler::VarInt16;
+            if(varToken.find("$") != std::string::npos) varType = Compiler::VarStr;
 
             // Create int var
-            if(varIndex == -1  &&  !isStrVar)
+            if(varIndex == -1  &&  varType != Compiler::VarStr)
             {
                 Compiler::createIntVar(varToken, 0, 0, codeLine, codeLineIndex, false, varIndex);
                 if(varIndex == -1)
@@ -4463,7 +4741,7 @@ namespace Keywords
                 }
             }
             // Create str var
-            else if(strIndex == -1  &&  isStrVar)
+            else if(strIndex == -1  &&  varType == Compiler::VarStr)
             {
                 uint16_t address;
                 strIndex = getOrCreateString(codeLine, codeLineIndex, "", varToken, address, USER_STR_SIZE, false);
@@ -5008,6 +5286,62 @@ namespace Keywords
         return true;
     }
 
+    bool keywordPOLYR(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
+
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
+        if(tokens.size() < 1  ||  tokens.size() > 2)
+        {
+            fprintf(stderr, "Keywords::keywordPOLYR() : Syntax error, 'POLYR <coords address> <optional FLIPX/FLIPY/FLIPXY>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            return false;
+        }
+
+        // Flip type
+        if(tokens.size() == 2)
+        {
+            std::string flipToken = tokens[1];
+            Expression::stripWhitespace(flipToken);
+            Expression::strToUpper(flipToken);
+        
+            if(flipToken != "FLIPX"  &&  flipToken != "FLIPY"  &&  flipToken != "FLIPXY")
+            {
+                fprintf(stderr, "Keywords::keywordPOLYR() : Syntax error, use one of the correct flip types, 'POLY <coords address> <optional FLIPX/FLIPY/FLIPXY>'; in '%s' on line %d\n",
+                                codeLine._text.c_str(), codeLineIndex);
+                return false;
+            }
+
+             // SUBW mode
+            Compiler::emitVcpuAsm("LDI", "0xB8", false);
+            Compiler::emitVcpuAsm("ST", "drawPoly_mode", false);
+
+            // FlipX
+            if(flipToken == "FLIPX")
+            {
+                Compiler::emitVcpuAsm("%SetPolyRelFlipX", "", false);
+            }
+            // FlipY
+            else if(flipToken == "FLIPY")
+            {
+                Compiler::emitVcpuAsm("%SetPolyRelFlipY", "", false);
+            }
+            // FlipXY
+            else
+            {
+                Compiler::emitVcpuAsm("%SetPolyRelFlipX", "", false);
+                Compiler::emitVcpuAsm("%SetPolyRelFlipY", "", false);
+            }
+        }
+
+        Expression::Numeric param;
+        Compiler::parseExpression(codeLineIndex, tokens[0], param);
+        Compiler::emitVcpuAsm("STW", "drawPoly_addr", false);
+        Compiler::emitVcpuAsm("%DrawPolyRel", "", false);
+
+        return true;
+    }
+
     bool keywordSCROLL(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         UNREFERENCED_PARAM(result);
@@ -5277,7 +5611,8 @@ namespace Keywords
             Expression::strToUpper(token);
             if(token == "NOUPDATE")
             {
-                fprintf(stderr, "Keywords::keywordINIT() : Syntax error, 'NOUPDATE' must be used with 'INIT TIME, MIDI, <user proc>' and only on ROMv4 or lower; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+                fprintf(stderr, "Keywords::keywordINIT() : Syntax error, 'NOUPDATE' must be used with 'INIT TIME, MIDI, <user proc>' and only on ROMv4 or lower; in '%s' on line %d\n",
+                                 codeLine._text.c_str(), codeLineIndex);
                 fprintf(stderr, "Keywords::keywordINIT() : Syntax error, use 'INIT TIME, MIDI, <user proc>, NOUPDATE; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
                 return false;
             }
@@ -5319,7 +5654,8 @@ namespace Keywords
                 {
                     if(foundMidi)
                     {
-                        fprintf(stderr, "Keywords::keywordINIT() : Syntax error, can only init one instance of MIDI or MIDIV, use 'INIT TIME, MIDI/MIDIV, <user proc>; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+                        fprintf(stderr, "Keywords::keywordINIT() : Syntax error, can only init one instance of MIDI or MIDIV, use 'INIT TIME, MIDI/MIDIV, <user proc>; in '%s' on line %d\n",
+                                        codeLine._text.c_str(), codeLineIndex);
                         return false;
                     }
                     foundMidi = true;
@@ -5372,7 +5708,7 @@ namespace Keywords
             // Vertical blank interrupt uses 0x30-0x33 for vPC and vAC save/restore, so we must move any variables found there
             Compiler::moveVblankVars();
 
-            // Build chain of vertical blank interrupt handlers, (upto 3)
+            // Build chain of vertical blank interrupt handlers, (up to 3)
             Compiler::emitVcpuAsm("CALLI", "setRealTimeProc" + std::to_string(initTypes.size() - 1), false);
 
             // Start vertical blank interrupt
@@ -5499,7 +5835,7 @@ namespace Keywords
     void usageLOAD(Compiler::CodeLine& codeLine, int codeLineIndex)
     {
             fprintf(stderr, "Keywords::keywordLOAD() : Syntax error, use 'LOAD IMAGE, <filename>, <optional address>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
-            fprintf(stderr, "Keywords::keywordLOAD() : Syntax error, use 'LOAD SPRITE, <filename>, <id>, <optional flip>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::keywordLOAD() : Syntax error, use 'LOAD SPRITE, <filename>, <id>, <optional flip>, <optional overlap>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
             fprintf(stderr, "Keywords::keywordLOAD() : Syntax error, use 'LOAD FONT, <filename>, <id>, <optional 16 bit bg:fg colours>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
     }
     bool keywordLOAD(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
@@ -5508,7 +5844,7 @@ namespace Keywords
         UNREFERENCED_PARAM(tokenIndex);
 
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ",", false);
-        if(tokens.size() < 2  ||  tokens.size() > 4)
+        if(tokens.size() < 2  ||  tokens.size() > 5)
         {
             usageLOAD(codeLine, codeLineIndex);
             return false;
@@ -5625,10 +5961,10 @@ namespace Keywords
                         return false;
                     }
 
-                    if(tokens.size() > 4)
+                    if(tokens.size() > 5)
                     {
-                        fprintf(stderr, "Keywords::keywordLOAD() : Syntax error, use 'LOAD SPRITE, <filename>, <id>, <optional flip>', in '%s' on line %d\n", codeLine._text.c_str(),
-                                                                                                                                                              codeLineIndex);
+                        fprintf(stderr, "Keywords::keywordLOAD() : Syntax error, use 'LOAD SPRITE, <filename>, <id>, <optional flip>, <optional overlap>', in '%s' on line %d\n", codeLine._text.c_str(),
+                                                                                                                                                                                  codeLineIndex);
                         return false;
                     }
 
@@ -5644,8 +5980,8 @@ namespace Keywords
 
                     if(tokens.size() < 3)
                     {
-                        fprintf(stderr, "Keywords::keywordLOAD() : Syntax error, use 'LOAD SPRITE, <filename>, <id>, <optional flip>', in '%s' on line %d\n", codeLine._text.c_str(),
-                                                                                                                                                              codeLineIndex);
+                        fprintf(stderr, "Keywords::keywordLOAD() : Syntax error, use 'LOAD SPRITE, <filename>, <id>, <optional flip>, <optional overlap>', in '%s' on line %d\n", codeLine._text.c_str(),
+                                                                                                                                                                                  codeLineIndex);
                         return false;
                     }
 
@@ -5664,14 +6000,33 @@ namespace Keywords
 
                     // Parse optional sprite flip
                     Compiler::SpriteFlipType flipType = Compiler::NoFlip;
-                    if(tokens.size() == 4)
+                    if(tokens.size() >= 4)
                     {
                         std::string flipToken = tokens[3];
                         Expression::stripWhitespace(flipToken);
                         Expression::strToUpper(flipToken);
-                        if(flipToken == "FLIPX")       flipType = Compiler::FlipX;
+                        if(flipToken == "NOFLIP")      flipType = Compiler::NoFlip;
+                        else if(flipToken == "FLIPX")  flipType = Compiler::FlipX;
                         else if(flipToken == "FLIPY")  flipType = Compiler::FlipY;
                         else if(flipToken == "FLIPXY") flipType = Compiler::FlipXY;
+                        else
+                        {
+                            fprintf(stderr, "Keywords::keywordLOAD() : Unknown sprite flip type, %s; in '%s' on line %d\n", flipToken.c_str(), codeLine._text.c_str(), codeLineIndex);
+                            fprintf(stderr, "Keywords::keywordLOAD() : Must use one of 'NOFLIP', 'FLIPX', 'FLIPY', 'FLIPXY'; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+                            return false;
+                        }
+                    }
+
+                    // Parse optional sprite overlap, (for last column)
+                    uint16_t overlap = 0;
+                    if(tokens.size() == 5)
+                    {
+                        std::string overlapToken = tokens[4];
+                        Expression::stripWhitespace(overlapToken);
+                        Expression::Numeric overlapNumeric;
+                        std::string overlapOperand;
+                        Compiler::parseExpression(codeLineIndex, overlapToken, overlapOperand, overlapNumeric);
+                        overlap = uint16_t(std::lround(overlapNumeric._value));
                     }
 
                     // Build sprite data from image data
@@ -5681,6 +6036,12 @@ namespace Keywords
                     uint16_t numStripeChunks = (numStripesPerCol == 1) ? gtRgbFile._header._height : Compiler::getSpriteStripeChunks();
                     std::vector<uint16_t> stripeAddrs;
                     std::vector<uint8_t> spriteData;
+
+                    if(numColumns == 1  &&  overlap)
+                    {
+                        fprintf(stderr, "Keywords::keywordLOAD() : Can't have a non zero overlap with a single column sprite; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+                        return false;
+                    }
 
                     // Search sprite image for instancing
                     int parentInstance = 0;
@@ -5719,14 +6080,27 @@ namespace Keywords
                                 }
                             }
                             stripeAddrs.push_back(address);
+
+                            // Destination offsets
                             switch(flipType)
                             {
-                                // destination offsets
-                                case Compiler::NoFlip: stripeAddrs.push_back(uint16_t(0 + i*6));                                      break;
-                                case Compiler::FlipX:  stripeAddrs.push_back(uint16_t(0 + (numColumns-1-i)*6));                       break;
-                                case Compiler::FlipY:  stripeAddrs.push_back(uint16_t((numStripeChunks-1)*256 + i*6));                break;
-                                case Compiler::FlipXY: stripeAddrs.push_back(uint16_t((numStripeChunks-1)*256 + (numColumns-1-i)*6)); break;
+                                case Compiler::NoFlip: stripeAddrs.push_back(uint16_t(0 + i*6));
+                                                       if(i == numColumns - 1) stripeAddrs.back() -= overlap;  // push last column closer to all other columns
                                 break;
+
+                                case Compiler::FlipX: stripeAddrs.push_back(uint16_t(0 + (numColumns-1-i)*6));
+                                                      if(i != numColumns - 1) stripeAddrs.back() -= overlap;  // push all other columns closer to last column
+                                break;
+
+                                case Compiler::FlipY: stripeAddrs.push_back(uint16_t((numStripeChunks-1)*256 + i*6));
+                                                      if(i == numColumns - 1) stripeAddrs.back() -= overlap;  // push last column closer to all other columns
+                                break;
+
+                                case Compiler::FlipXY: stripeAddrs.push_back(uint16_t((numStripeChunks-1)*256 + (numColumns-1-i)*6));
+                                                       if(i != numColumns - 1) stripeAddrs.back() -= overlap;  // push all other columns closer to last column
+                                break;
+
+                                default: break;
                             }
 
                             // Copy sprite data and delimiter
@@ -5760,14 +6134,27 @@ namespace Keywords
                                     }
                                 }
                                 stripeAddrs.push_back(address);
+
+                                // Destination offsets
                                 switch(flipType)
                                 {
-                                    // destination offsets
-                                    case Compiler::NoFlip: stripeAddrs.push_back(uint16_t(j*numStripeChunks*256 + i*6));                                                         break;
-                                    case Compiler::FlipX:  stripeAddrs.push_back(uint16_t(j*numStripeChunks*256 + (numColumns-1-i)*6));                                          break;
-                                    case Compiler::FlipY:  stripeAddrs.push_back(uint16_t(((numStripesPerCol-1-j)*numStripeChunks+remStripeChunks-1)*256 + i*6));                break;
-                                    case Compiler::FlipXY: stripeAddrs.push_back(uint16_t(((numStripesPerCol-1-j)*numStripeChunks+remStripeChunks-1)*256 + (numColumns-1-i)*6)); break;
+                                    case Compiler::NoFlip: stripeAddrs.push_back(uint16_t(j*numStripeChunks*256 + i*6));
+                                                           if(i == numColumns - 1) stripeAddrs.back() -= overlap;  // push last column closer to all other columns
                                     break;
+
+                                    case Compiler::FlipX: stripeAddrs.push_back(uint16_t(j*numStripeChunks*256 + (numColumns-1-i)*6));
+                                                          if(i != numColumns - 1) stripeAddrs.back() -= overlap;  // push all other columns closer to last column
+                                    break;
+
+                                    case Compiler::FlipY: stripeAddrs.push_back(uint16_t(((numStripesPerCol-1-j)*numStripeChunks+remStripeChunks-1)*256 + i*6));
+                                                          if(i == numColumns - 1) stripeAddrs.back() -= overlap;  // push last column closer to all other columns
+                                    break;
+
+                                    case Compiler::FlipXY: stripeAddrs.push_back(uint16_t(((numStripesPerCol-1-j)*numStripeChunks+remStripeChunks-1)*256 + (numColumns-1-i)*6));
+                                                           if(i != numColumns - 1) stripeAddrs.back() -= overlap;  // push all other columns closer to last column
+                                    break;
+
+                                    default: break;
                                 }
 
                                 // Copy sprite data and delimiter
@@ -5797,14 +6184,27 @@ namespace Keywords
                                 }
                             }
                             stripeAddrs.push_back(address);
+
+                            // Destination offsets
                             switch(flipType)
                             {
-                                // Destination offsets
-                                case Compiler::NoFlip: stripeAddrs.push_back(uint16_t((numStripesPerCol-1)*numStripeChunks*256 + i*6));                break;
-                                case Compiler::FlipX:  stripeAddrs.push_back(uint16_t((numStripesPerCol-1)*numStripeChunks*256 + (numColumns-1-i)*6)); break;
-                                case Compiler::FlipY:  stripeAddrs.push_back(uint16_t((remStripeChunks-1)*256 + i*6));                                 break;
-                                case Compiler::FlipXY: stripeAddrs.push_back(uint16_t((remStripeChunks-1)*256 + (numColumns-1-i)*6));                  break;
+                                case Compiler::NoFlip: stripeAddrs.push_back(uint16_t((numStripesPerCol-1)*numStripeChunks*256 + i*6));
+                                                       if(i == numColumns - 1) stripeAddrs.back() -= overlap;  // push last column closer to all other columns
                                 break;
+
+                                case Compiler::FlipX: stripeAddrs.push_back(uint16_t((numStripesPerCol-1)*numStripeChunks*256 + (numColumns-1-i)*6));
+                                                      if(i != numColumns - 1) stripeAddrs.back() -= overlap;  // push all other columns closer to last column
+                                break;
+
+                                case Compiler::FlipY: stripeAddrs.push_back(uint16_t((remStripeChunks-1)*256 + i*6));
+                                                      if(i == numColumns - 1) stripeAddrs.back() -= overlap;  // push last column closer to all other columns
+                                break;
+
+                                case Compiler::FlipXY: stripeAddrs.push_back(uint16_t((remStripeChunks-1)*256 + (numColumns-1-i)*6));
+                                                       if(i != numColumns - 1) stripeAddrs.back() -= overlap;  // push all other columns closer to last column
+                                break;
+
+                                default: break;
                             }
 
                             // Copy sprite data and delimiter
@@ -6039,21 +6439,18 @@ namespace Keywords
 
         // Sprite identifier
         std::string idToken = tokens[1];
-        Expression::stripWhitespace(idToken);
         Expression::Numeric idParam;
         Compiler::parseExpression(codeLineIndex, idToken, idParam);
         Compiler::emitVcpuAsm("STW", "spriteId", false);
 
         // Sprite X position
         std::string xposToken = tokens[2];
-        Expression::stripWhitespace(xposToken);
         Expression::Numeric xposParam;
         Compiler::parseExpression(codeLineIndex, xposToken, xposParam);
         Compiler::emitVcpuAsm("ST", "spriteXY", false);
 
         // Sprite Y position
         std::string yposToken = tokens[3];
-        Expression::stripWhitespace(yposToken);
         Expression::Numeric yposParam;
         Compiler::parseExpression(codeLineIndex, yposToken, yposParam);
         Compiler::emitVcpuAsm("ADDI", "8", false);
@@ -6475,6 +6872,106 @@ namespace Keywords
         UNREFERENCED_PARAM(codeLine);
 
         Compiler::setCodeIsAsm(false);
+
+        return true;
+    }
+
+    bool keywordBCDADD(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
+
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ",", false);
+        if(tokens.size() != 3)
+        {
+            fprintf(stderr, "Keywords::keywordBCDADD() : Syntax error, use 'BCDADD <src bcd address>, <dst bcd address>, <length>'; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            return false;
+        }
+
+        // BCD src address
+        std::string srcToken = tokens[0];
+        Expression::Numeric srcParam(true); // true = allow static init
+        Compiler::parseExpression(codeLineIndex, srcToken, srcParam);
+        Compiler::emitVcpuAsm("STW", "bcdSrcAddr", false);
+
+        // BCD dst address
+        std::string dstToken = tokens[1];
+        Expression::Numeric dstParam(true); // true = allow static init
+        Compiler::parseExpression(codeLineIndex, dstToken, dstParam);
+        Compiler::emitVcpuAsm("STW", "bcdDstAddr", false);
+
+        // BCD length
+        std::string lenToken = tokens[2];
+        Expression::Numeric lenParam;
+        Compiler::parseExpression(codeLineIndex, lenToken, lenParam);
+        Compiler::emitVcpuAsm("ST", "bcdLength", false);
+
+        Compiler::emitVcpuAsm("%BcdAdd", "", false);
+
+        return true;
+    }
+
+    bool keywordBCDSUB(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
+
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ",", false);
+        if(tokens.size() != 3)
+        {
+            fprintf(stderr, "Keywords::keywordBCDSUB() : Syntax error, use 'BCDSUB <src bcd address>, <dst bcd address>, <length>'; in '%s' on line %d\n", codeLine._text.c_str(), codeLineIndex);
+            return false;
+        }
+
+        // BCD src address
+        std::string srcToken = tokens[0];
+        Expression::Numeric srcParam(true); // true = allow static init
+        Compiler::parseExpression(codeLineIndex, srcToken, srcParam);
+        Compiler::emitVcpuAsm("STW", "bcdSrcAddr", false);
+
+        // BCD dst address
+        std::string dstToken = tokens[1];
+        Expression::Numeric dstParam(true); // true = allow static init
+        Compiler::parseExpression(codeLineIndex, dstToken, dstParam);
+        Compiler::emitVcpuAsm("STW", "bcdDstAddr", false);
+
+        // BCD length
+        std::string lenToken = tokens[2];
+        Expression::Numeric lenParam;
+        Compiler::parseExpression(codeLineIndex, lenToken, lenParam);
+        Compiler::emitVcpuAsm("ST", "bcdLength", false);
+
+        Compiler::emitVcpuAsm("%BcdSub", "", false);
+
+        return true;
+    }
+
+    bool keywordBCDINT(Compiler::CodeLine& codeLine, int codeLineIndex, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
+
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ",", false);
+        if(tokens.size() != 2)
+        {
+            fprintf(stderr, "Keywords::keywordBCDINT() : Syntax error, use 'BCDINT <dst bcd address>, <int>' bcd value MUST contain at least 5 digits; in '%s' on line %d\n", codeLine._text.c_str(),
+                                                                                                                                                                              codeLineIndex);
+            return false;
+        }
+
+        // BCD dst address
+        std::string srcToken = tokens[0];
+        Expression::Numeric srcParam(true); // true = allow static init
+        Compiler::parseExpression(codeLineIndex, srcToken, srcParam);
+        Compiler::emitVcpuAsm("STW", "bcdDstAddr", false);
+
+        // Integer value, must be +ve, max value 42767, (32767 + 10000 because of how vASM sub Numeric::bcdInt works)
+        std::string intToken = tokens[1];
+        Expression::Numeric intParam;
+        Compiler::parseExpression(codeLineIndex, intToken, intParam);
+        Compiler::emitVcpuAsm("STW", "bcdValue", false);
+
+        Compiler::emitVcpuAsm("%BcdInt", "", false);
 
         return true;
     }

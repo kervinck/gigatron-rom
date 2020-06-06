@@ -18,24 +18,25 @@
 #define INPUT_B       0x40
 #define INPUT_A       0x80
 
-#define HW_PS2_LEFT    1
-#define HW_PS2_RIGHT   2
-#define HW_PS2_UP      3
-#define HW_PS2_DOWN    4
-#define HW_PS2_START   7
-#define HW_PS2_SELECT  8
-#define HW_PS2_INPUT_A 9
-#define HW_PS2_INPUT_B 27
-#define HW_PS2_CTLR_C  3
-#define HW_PS2_CR      13
-#define HW_PS2_DEL     127
-#define HW_PS2_ENABLE  5
-#define HW_PS2_DISABLE 6
+#define HW_PS2_LEFT     1
+#define HW_PS2_RIGHT    2
+#define HW_PS2_UP       3
+#define HW_PS2_DOWN     4
+#define HW_PS2_START    7
+#define HW_PS2_SELECT   8
+#define HW_PS2_INPUT_A  9
+#define HW_PS2_INPUT_B  27
+#define HW_PS2_CTLR_C   3
+#define HW_PS2_CR       13
+#define HW_PS2_DEL      127
+#define HW_PS2_ENABLE   5
+#define HW_PS2_DISABLE  6
 
-#define HEX_BASE_ADDRESS   0x0200
-#define LOAD_BASE_ADDRESS  0x0200
-#define VARS_BASE_ADDRESS  0x0030
-#define VIDEO_Y_ADDRESS    0x0009
+#define HEX_BASE_ADDRESS     0x0200
+#define LOAD_BASE_ADDRESS    0x0200
+#define VARS_BASE_ADDRESS    0x0030
+#define VIDEO_Y_ADDRESS      0x0009
+#define FRAME_COUNT_ADDRESS  0x000E
 
 #define INPUT_CONFIG_INI  "input_config.ini"
 

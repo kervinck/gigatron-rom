@@ -68,13 +68,9 @@ _str_0xff98                   EQU                               0xff98
 _str_0xff98                   DB                                3 '/60' 0
 
 ; Data
-_data_                        EQU                               0xff02
-_data_                        DW                                0
-_dataIndex_                   EQU                               0xff00
-_dataIndex_                   DW                                0
 
 ; Time
-_timeArray_                   EQU                               0xfe05
+_timeArray_                   EQU                               0xff01
 _timeArray_                   DB                                00 00 00
 _timeString_                  EQU                               0xfd9e
 _timeString_                  DB                                8 '00:00:00' 0
@@ -83,9 +79,9 @@ _timeString_                  DB                                8 '00:00:00' 0
 
 ; Define Words
 def_words_0x8000              EQU                               0x8000
-def_words_0x8000              DW                                109 130 59 -64 78 84 40 102 81 44 
+def_words_0x8000              DW                                71 14 -23 -153 -7 -39 -4 88 -121 84 
 def_words_0x8014              EQU                               0x8014
-def_words_0x8014              DW                                112 113 137 -27 104 104 166 -79 32 86 
+def_words_0x8014              DW                                77 -8 -140 60 -132 104 -151 -45 89 -108 
 def_words_0x8028              EQU                               0x8028
 def_words_0x8028              DW                                0 0 0 0 0 0 0 0 0 0 
 
@@ -188,10 +184,10 @@ _math                         PUSH
                               LDW                               _a
                               STW                               mathX
                               LDW                               _b
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0300
                               CALL                              giga_vAC
-_page_0x0300                  LDW                               0xe2
+_page_0x0300                  LDW                               0xde
                               STW                               mathY
                               LDWI                              multiply16bit
                               CALL                              giga_vAC
@@ -232,9 +228,11 @@ convertLeOpAddr               EQU     0x00d4
 convertGeOpAddr               EQU     0x00d6
 convertLtOpAddr               EQU     0x00d8
 convertGtOpAddr               EQU     0x00da
-convertArr2dAddr              EQU     0x00dc
-convertArr3dAddr              EQU     0x00de
-realTimeStubAddr              EQU     0x00e0
+convert8Arr2dAddr             EQU     0x00e0
+convert8Arr3dAddr             EQU     0x00e2
+convert16Arr2dAddr            EQU     0x00e4
+convert16Arr3dAddr            EQU     0x00e6
+realTimeStubAddr              EQU     0x00dc
 
 
 ; do *NOT* use register4 to register7 during time slicing

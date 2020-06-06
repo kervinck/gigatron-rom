@@ -72,10 +72,6 @@ _str_0x7deb                   EQU                               0x7deb
 _str_0x7deb                   DB                                1 ' ' 0
 
 ; Data
-_data_                        EQU                               0x7db2
-_data_                        DW                                0
-_dataIndex_                   EQU                               0x7db0
-_dataIndex_                   DW                                0
 
 ; Time
 
@@ -161,20 +157,20 @@ _end_0x02c1                   BRA                               _end_0x02c1     
 ;****************************************************************************************************************************************
 
 realTimeStub                  EQU     0x7dcd
-sign                          EQU     0x78b8
+sign                          EQU     0x7da2
 resetVideoFlags               EQU     0x7ddf
-resetVideoTable               EQU     0x75db
-initClearFuncs                EQU     0x78a1
+resetVideoTable               EQU     0x78a6
+initClearFuncs                EQU     0x75e8
 clearVertBlinds               EQU     0x79c5
 clearCursorRow                EQU     0x74b6
 readPixel                     EQU     0x7dc1
-printInit                     EQU     0x75c5
+printInit                     EQU     0x75d2
 printText                     EQU     0x79ac
 printChar                     EQU     0x73a7
 printHexByte                  EQU     0x78ca
 newLineScroll                 EQU     0x77a4
 stringCopy                    EQU     0x7db4
-stringDigit                   EQU     0x75a8
+stringDigit                   EQU     0x75b5
 stringInt                     EQU     0x76a9
 convertEqOpAddr               EQU     0x00d0
 convertNeOpAddr               EQU     0x00d2
@@ -182,9 +178,11 @@ convertLeOpAddr               EQU     0x00d4
 convertGeOpAddr               EQU     0x00d6
 convertLtOpAddr               EQU     0x00d8
 convertGtOpAddr               EQU     0x00da
-convertArr2dAddr              EQU     0x00dc
-convertArr3dAddr              EQU     0x00de
-realTimeStubAddr              EQU     0x00e0
+convert8Arr2dAddr             EQU     0x00e0
+convert8Arr3dAddr             EQU     0x00e2
+convert16Arr2dAddr            EQU     0x00e4
+convert16Arr3dAddr            EQU     0x00e6
+realTimeStubAddr              EQU     0x00dc
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -383,6 +381,7 @@ drawRectF_y1        EQU     register1
 drawRectF_x2        EQU     register2
 drawRectF_y2        EQU     register7
 
+drawPoly_mode       EQU     register14
 drawPoly_addr       EQU     register15
 
 

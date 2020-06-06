@@ -62,13 +62,9 @@ _str_0x7ba5                   EQU                               0x7ba5
 _str_0x7ba5                   DB                                3 '   ' 0
 
 ; Data
-_data_                        EQU                               0x7ca1
-_data_                        DW                                0
-_dataIndex_                   EQU                               0x7ba3
-_dataIndex_                   DW                                0
 
 ; Time
-_timeArray_                   EQU                               0x7ba0
+_timeArray_                   EQU                               0x7ca0
 _timeArray_                   DB                                00 00 00
 _timeString_                  EQU                               0x7aa0
 _timeString_                  DB                                8 '00:00:00' 0
@@ -214,7 +210,7 @@ def_bytes_0x4ba0              DB                                128 3 144 66 109
 ; Define Sprites
 
 ; Define Fonts
-_fontId_                      EQU                               0x7ca0
+_fontId_                      EQU                               0x7ba4
 _fontId_                      DB                                0
 def_map_0x7ea0                EQU                               0x7ea0
 def_map_0x7ea0                DB                                39 37 39 39 39 39 39 39 39 39 39 39 38 39 38 39 26 27 28 29 30 31 32 33 34 35 39 39 39 39 39 36 39 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 39 39 39 39 39 39 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 39 39 39 39 39 
@@ -390,7 +386,7 @@ _fontLut_0x4dac               EQU                               0x4dac
 _fontLut_0x4dac               DW                                0x7ea0 0x7da3 0x7dd5 0x7daa 0x7cd5 0x7caa 0x7bd5 0x7baa 0x7ad5 0x7aaa 0x79d5 0x79aa 0x78d5 0x78aa 0x77d5 0x77aa 0x76d5 0x76aa 0x75d5 0x75aa 0x74d5 0x74aa 0x73d5 0x73aa 0x72d5 0x72aa 0x71d5 0x71aa 0x70d5 0x70aa 0x6fd5 0x6faa 0x6ed5 0x6eaa 0x6dd5 0x6daa 0x6cd5 0x6caa 0x6bd5 0x6baa 0x6ad5 0x6aaa 
 _fontLut_0x4cac               EQU                               0x4cac
 _fontLut_0x4cac               DW                                0x69a0 0x7ca3 0x68d5 0x68aa 0x67d5 0x67aa 0x66d5 0x66aa 0x65d5 0x65aa 0x64d5 0x64aa 0x63d5 0x63aa 0x62d5 0x62aa 0x61d5 0x61aa 0x60d5 0x60aa 0x5fd5 0x5faa 0x5ed5 0x5eaa 0x5dd5 0x5daa 0x5cd5 0x5caa 0x5bd5 0x5baa 0x5ad5 0x5aaa 0x59d5 0x59aa 0x58d5 0x58aa 0x57d5 0x57aa 0x56d5 0x56aa 0x55d5 0x55aa 
-_fontsLut_                    EQU                               0x79a6
+_fontsLut_                    EQU                               0x7ba0
 _fontsLut_                    DW                                0x4dac 0x4cac 
 
 ; Code
@@ -479,10 +475,10 @@ _loop                         LDI                               60
                               LDI                               60
                               ST                                cursorXY
                               LDI                               64
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0300
                               CALL                              giga_vAC
-_page_0x0300                  LDW                               0xe2
+_page_0x0300                  LDW                               0xde
                               ST                                cursorXY + 1
                               AtTextCursor                                                      ; at 60, 64
 
@@ -545,9 +541,11 @@ convertLeOpAddr               EQU     0x00d4
 convertGeOpAddr               EQU     0x00d6
 convertLtOpAddr               EQU     0x00d8
 convertGtOpAddr               EQU     0x00da
-convertArr2dAddr              EQU     0x00dc
-convertArr3dAddr              EQU     0x00de
-realTimeStubAddr              EQU     0x00e0
+convert8Arr2dAddr             EQU     0x00e0
+convert8Arr3dAddr             EQU     0x00e2
+convert16Arr2dAddr            EQU     0x00e4
+convert16Arr3dAddr            EQU     0x00e6
+realTimeStubAddr              EQU     0x00dc
 
 
 ; do *NOT* use register4 to register7 during time slicing

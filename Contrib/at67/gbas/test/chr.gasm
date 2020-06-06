@@ -77,10 +77,6 @@ _str_0x7eb1                   EQU                               0x7eb1
 _str_0x7eb1                   DB                                3 'dog' 0
 
 ; Data
-_data_                        EQU                               0x7ea3
-_data_                        DW                                0
-_dataIndex_                   EQU                               0x7ea1
-_dataIndex_                   DW                                0
 
 ; Time
 
@@ -345,10 +341,10 @@ _next_0x027a                  LDW                               _a
                               LDI                               0
                               STW                               _i                              ; for i = 0 to 6
 
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0300
                               CALL                              giga_vAC
-_page_0x0300                  LDW                               0xe2
+_page_0x0300                  LDW                               0xde
 _next_0x0330                  PrintString                       _str_0x7eb1
                               PrintString                       _str_0x7eda
                               LDW                               _i
@@ -395,9 +391,11 @@ convertLeOpAddr               EQU     0x00d4
 convertGeOpAddr               EQU     0x00d6
 convertLtOpAddr               EQU     0x00d8
 convertGtOpAddr               EQU     0x00da
-convertArr2dAddr              EQU     0x00dc
-convertArr3dAddr              EQU     0x00de
-realTimeStubAddr              EQU     0x00e0
+convert8Arr2dAddr             EQU     0x00e0
+convert8Arr3dAddr             EQU     0x00e2
+convert16Arr2dAddr            EQU     0x00e4
+convert16Arr3dAddr            EQU     0x00e6
+realTimeStubAddr              EQU     0x00dc
 
 
 ; do *NOT* use register4 to register7 during time slicing

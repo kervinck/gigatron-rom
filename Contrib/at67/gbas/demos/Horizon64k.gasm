@@ -43,31 +43,31 @@ textWorkArea                  EQU                               0xffa0
 
 ; Labels
 _entryPoint_                  EQU                               0x0200
-_loop                         EQU                               0x03cb
-_254                          EQU                               0x0453
-_253                          EQU                               0x0465
-_191                          EQU                               0x047b
-_127                          EQU                               0x0482
-_calcPitch                    EQU                               0x0489
+_loop                         EQU                               0x03cd
+_254                          EQU                               0x0455
+_253                          EQU                               0x0467
+_191                          EQU                               0x047d
+_127                          EQU                               0x0484
+_calcPitch                    EQU                               0x048b
 _next_0x0259                  EQU                               0x024b
 _endif_0x0299                 EQU                               0x0279
-_else_0x02d9                  EQU                               0x02a5
-_endif_0x02dd                 EQU                               0x02a9
-_next_0x0314                  EQU                               0x02d8
-_else_0x0329                  EQU                               0x02e5
-_endif_0x0331                 EQU                               0x02eb
+_else_0x02d9                  EQU                               0x02a7
+_endif_0x02dd                 EQU                               0x02ab
+_next_0x0314                  EQU                               0x02da
+_else_0x0329                  EQU                               0x02e9
+_endif_0x0331                 EQU                               0x02ef
 _page_0x0300                  EQU                               0x0300
-_else_0x034c                  EQU                               0x030d
-_endif_0x0354                 EQU                               0x0313
-_next_0x039d                  EQU                               0x0356
-_endif_0x03b7                 EQU                               0x036a
-_next_0x03bb                  EQU                               0x036e
-_next_0x044c                  EQU                               0x03ef
+_else_0x034c                  EQU                               0x030f
+_endif_0x0354                 EQU                               0x0315
+_next_0x039d                  EQU                               0x0358
+_endif_0x03b7                 EQU                               0x036c
+_next_0x03bb                  EQU                               0x0370
+_next_0x044c                  EQU                               0x03f1
 _page_0x0400                  EQU                               0x0400
-_repeat_0x0476                EQU                               0x0424
-_else_0x04d5                  EQU                               0x0463
-_else_0x04f1                  EQU                               0x0479
-_end_0x051c                   EQU                               0x04a0
+_repeat_0x0476                EQU                               0x0426
+_else_0x04d5                  EQU                               0x0465
+_else_0x04f1                  EQU                               0x047b
+_end_0x051c                   EQU                               0x04a2
 
 ; Variables
 _y                            EQU                               0x0030
@@ -99,10 +99,6 @@ _sky_array                    DW                                0x0010 0x0020 0x
 ; Constant Strings
 
 ; Data
-_data_                        EQU                               0xff0c
-_data_                        DW                                0
-_dataIndex_                   EQU                               0xff0a
-_dataIndex_                   DW                                0
 
 ; Time
 
@@ -119,10 +115,10 @@ def_bytes_0x8000              DB                                144 57 145 33 14
 ; Define Fonts
 
 ; Lookup Tables
-_lut_numericLabs              EQU                               0xff00
+_lut_numericLabs              EQU                               0xff04
 _lut_numericLabs              DW                                254 253 191 127 0x0000
 _lut_numericAddrs             EQU                               0xfe1b
-_lut_numericAddrs             DW                                0x0453 0x0465 0x047b 0x0482 
+_lut_numericAddrs             DW                                0x0455 0x0467 0x047d 0x0484 
 
 ; Code
 _entryPoint_                  Initialise                        
@@ -172,7 +168,7 @@ _next_0x0259                  LDWI                              0xff9a
                               INC                               _fade                           ; inc fade
 
                               LDW                               _fade
-                              SUBW                              _decay
+                              XORW                              _decay
                               BNE                               _endif_0x0299                   ; if fade &&= decay
 
                               INC                               _cIndex                         ; inc cIndex
@@ -202,6 +198,7 @@ _endif_0x0299                 LDW                               _y
                               LDWI                              divide16bit
                               CALL                              giga_vAC
                               ANDI                              1
+                              XORI                              0
                               BNE                               _else_0x02d9                    ; if((400 / (y-horizonY+40)) AND 1) &&= 0
 
                               LDW                               _color1
@@ -239,6 +236,7 @@ _endif_0x02dd                 LDI                               80
                               STW                               0xb6                            ; for x=0 to pitch + 159
 
 _next_0x0314                  LDW                               _i
+                              XORI                              0
                               BNE                               _else_0x0329                    ; if i &&= 0
 
                               LDW                               _pitch
@@ -252,11 +250,11 @@ _else_0x0329                  LDW                               _i
 
 _endif_0x0331                 LDW                               _i
                               ADDW                              _i
-                              SUBW                              _pitch
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0300
                               CALL                              giga_vAC
-_page_0x0300                  LDW                               0xe2
+_page_0x0300                  LDW                               0xde
+                              SUBW                              _pitch
                               BLT                               _else_0x034c                    ; if i+i &&>= pitch
 
                               LDW                               _color1
@@ -296,7 +294,7 @@ _endif_0x0354                 LDW                               _a
 _next_0x039d                  INC                               _fade                           ; inc fade
 
                               LDW                               _fade
-                              SUBW                              _decay
+                              XORW                              _decay
                               BNE                               _endif_0x03b7                   ; if fade &&= decay
 
                               INC                               _cIndex                         ; inc cIndex
@@ -378,11 +376,11 @@ _loop                         LDW                               _x
                               STW                               0xb2                            ; for y=0 to pitch
 
 _next_0x044c                  LDW                               _j
-                              ADDW                              _i
-                              STW                               0xe2
+                              STW                               0xde
                               LDWI                              _page_0x0400
                               CALL                              giga_vAC
-_page_0x0400                  LDW                               0xe2
+_page_0x0400                  LDW                               0xde
+                              ADDW                              _i
                               STW                               _j                              ; j = j + i
 
                               ForNextFarVarAdd                  _y _next_0x044c 0xb0 0xb2       ; next y
@@ -499,9 +497,11 @@ convertLeOpAddr               EQU     0x00d4
 convertGeOpAddr               EQU     0x00d6
 convertLtOpAddr               EQU     0x00d8
 convertGtOpAddr               EQU     0x00da
-convertArr2dAddr              EQU     0x00dc
-convertArr3dAddr              EQU     0x00de
-realTimeStubAddr              EQU     0x00e0
+convert8Arr2dAddr             EQU     0x00e0
+convert8Arr3dAddr             EQU     0x00e2
+convert16Arr2dAddr            EQU     0x00e4
+convert16Arr3dAddr            EQU     0x00e6
+realTimeStubAddr              EQU     0x00dc
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -720,6 +720,7 @@ drawRectF_y1        EQU     register1
 drawRectF_x2        EQU     register2
 drawRectF_y2        EQU     register7
 
+drawPoly_mode       EQU     register14
 drawPoly_addr       EQU     register15
 
 

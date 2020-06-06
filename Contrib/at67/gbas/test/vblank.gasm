@@ -67,13 +67,9 @@ _str_0x7ee8                   EQU                               0x7ee8
 _str_0x7ee8                   DB                                1 ' ' 0
 
 ; Data
-_data_                        EQU                               0x7ea8
-_data_                        DW                                0
-_dataIndex_                   EQU                               0x7ea6
-_dataIndex_                   DW                                0
 
 ; Time
-_timeArray_                   EQU                               0x7ea3
+_timeArray_                   EQU                               0x7ea7
 _timeArray_                   DB                                00 00 00
 _timeString_                  EQU                               0x7ca6
 _timeString_                  DB                                8 '00:00:00' 0
@@ -388,7 +384,7 @@ _page_0x0300                  RandMod
 
                               LDWI                              _timeArray_ + 0
                               PEEK                              
-                              SUBW                              _seconds
+                              XORW                              _seconds
                               JumpNE                            _endif_0x0446 0                 ; if get("TIME_S") &<> seconds
 
                               LDWI                              _timeArray_ + 0
@@ -725,6 +721,7 @@ drawRectF_y1        EQU     register1
 drawRectF_x2        EQU     register2
 drawRectF_y2        EQU     register7
 
+drawPoly_mode       EQU     register14
 drawPoly_addr       EQU     register15
 
     

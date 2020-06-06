@@ -1193,7 +1193,11 @@ namespace Loader
         if(filename.find(".gbas") != filename.npos)
         {
             std::string output = filepath.substr(0, pathSuffix) + ".gasm";
-            if(!Compiler::compile(filepath, output)) return;
+            if(!Compiler::compile(filepath, output))
+            {
+                //Memory::printFreeRamList(Memory::SizeDescending);
+                return;
+            }
 
             // Create gasm name and path
             filename = filename.substr(0, nameSuffix) + ".gasm";
@@ -1391,7 +1395,7 @@ namespace Loader
             }
 
             // Reset single step watch address to video line counter
-            Editor::setSingleStepAddress(VIDEO_Y_ADDRESS);
+            Editor::setSingleStepAddress(FRAME_COUNT_ADDRESS);
 
             // Execute code
             if(!_disableUploads  &&  hasRamCode)
