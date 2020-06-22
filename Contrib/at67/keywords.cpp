@@ -3977,7 +3977,7 @@ namespace Keywords
                 {
                     // Check for starting var address
                     size_t addrPos = varsPos + sizeof("VARS")-1;
-                    if(addrPos < int(tokens[i].size()))
+                    if(addrPos < tokens[i].size())
                     {
                         varsAddr = tokens[i].substr(addrPos);
                     }

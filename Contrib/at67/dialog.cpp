@@ -84,7 +84,7 @@ namespace Dialog
 
     bool Dialog::getDialogItem(int index, Item& item)
     {
-        if(index >=0  &&  index < _items.size())
+        if(index >=0  &&  index < int(_items.size()))
         {
             item = _items[index]; 
             return true;
@@ -117,7 +117,7 @@ namespace Dialog
 
     bool Dialog::setDialogItem(int index, Item& item)
     {
-        if(index >=0  &&  index < _items.size())
+        if(index >=0  &&  index < int(_items.size()))
         {
             _items[index] = item;
             return true;
@@ -308,4 +308,4 @@ namespace Dialog
 
         return true;
     }
-};
+}

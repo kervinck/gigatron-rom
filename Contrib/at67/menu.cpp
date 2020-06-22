@@ -152,4 +152,4 @@ namespace Menu
 
         return true;
     }
-};
+}

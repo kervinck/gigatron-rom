@@ -1,3 +1,5 @@
+#include <cmath>
+
 #include "memory.h"
 #include "cpu.h"
 #include "loader.h"
