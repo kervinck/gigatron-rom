@@ -1,4 +1,8 @@
 ; do *NOT* use register4 to register7 during time slicing
+intSrcA             EQU     register0
+intSrcB             EQU     register1
+intSrcX             EQU     register2
+intSwap             EQU     register3
 intSrcAddr          EQU     register8
 intDigit            EQU     register9
 intResult           EQU     register10
@@ -14,6 +18,50 @@ bcdValue            EQU     register0
 bcdDigit            EQU     register1
 bcdMult             EQU     register2
 
+
+%SUB                integerMin
+integerMin          STW     intSrcB
+                    LDW     intSrcA
+                    SUBW    intSrcB
+                    BLE     integerMi_A
+                    LDW     intSrcB
+                    RET
+
+integerMi_A         LDW     intSrcA
+                    RET
+%ENDS
+
+%SUB                integerMax
+integerMax          STW     intSrcB
+                    LDW     intSrcA
+                    SUBW    intSrcB
+                    BGE     integerMa_A
+                    LDW     intSrcB
+                    RET
+
+integerMa_A         LDW     intSrcA
+                    RET
+%ENDS
+
+%SUB                integerClamp
+integerClamp        STW     intSrcB
+                    LDW     intSrcX
+                    SUBW    intSrcA
+                    BGE     integerCl_X
+                    BRA     integerCl_A0
+
+integerCl_X         LDW     intSrcX
+                    STW     intSrcA
+
+integerCl_A0        LDW     intSrcA
+                    SUBW    intSrcB
+                    BLE     integerCl_A1
+                    LDW     intSrcB
+                    RET
+
+integerCl_A1        LDW     intSrcA
+                    RET
+%ENDS
 
 %SUB                integerStr
                     ; converts a string to a +/- integer, assumes string pointer is pointing to first char and not the string length, (no overflow or underflow checks)
@@ -57,7 +105,8 @@ integerS_exit       LDW     intResult
 
                     ; bcd values are stored unpacked lsd to msd
 %SUB                bcdAdd
-bcdAdd              LDI     0
+bcdAdd              ST      bcdLength
+                    LDI     0
                     STW     bcdCarry
                     
 bcdA_loop           LDW     bcdDstAddr
@@ -91,7 +140,8 @@ bcdA_cont           STW     bcdCarry
 
                     ; bcd values are stored unpacked lsd to msd
 %SUB                bcdSub
-bcdSub              LDI     0
+bcdSub              ST      bcdLength
+                    LDI     0
                     STW     bcdBorrow
                     
 bcdS_loop           LDW     bcdSrcAddr
@@ -146,7 +196,8 @@ bcdD_exit           RET
 
 %SUB                bcdInt
                     ; create a bcd value from a +ve int, (max 42767)
-bcdInt              PUSH
+bcdInt              STW     bcdValue
+                    PUSH
                     LDW     bcdDstAddr
                     ADDI    4
                     STW     bcdDstAddr                          ; bcdDstAddr must point to >= 5 digit bcd value
@@ -163,5 +214,60 @@ bcdInt              PUSH
                     LD      bcdValue
                     POKE    bcdDstAddr
                     POP
+                    RET
+%ENDS
+
+                    ; bcd values are stored unpacked lsd to msd
+                    ; cmp expects addrs to be pointing to msd!
+%SUB                bcdCmp
+bcdCmp              ST      bcdLength
+
+bcdCmp_loop         LDW     bcdDstAddr
+                    PEEK                        ; expects unpacked byte values 0 to 9
+                    STW     bcdDstData
+                    LDW     bcdSrcAddr
+                    PEEK                        ; expects unpacked byte values 0 to 9
+                    SUBW    bcdDstData
+                    BGT     bcdC_gt
+                    BLT     bcdC_lt
+                    PUSH
+                    CALLI   bcdCmpExt
+                    POP
+                    BGT     bcdCmp_loop
+                    LDI     0
+                    RET
+
+bcdC_gt             LDI     1
+                    RET
+                    
+bcdC_lt             LDWI    -1
+                    RET                    
+%ENDS
+
+%SUB                bcdCmpExt
+bcdCmpExt           LDW     bcdDstAddr
+                    SUBI    1
+                    STW     bcdDstAddr
+                    LDW     bcdSrcAddr
+                    SUBI    1
+                    STW     bcdSrcAddr
+                    LD      bcdLength
+                    SUBI    1
+                    ST      bcdLength           ; expects src and dst lengths to be equal
+                    RET
+%ENDS
+
+%SUB                bcdCpy
+bcdCpy              ST      bcdLength
+
+bcdCpy_loop         LDW     bcdSrcAddr
+                    PEEK
+                    POKE    bcdDstAddr
+                    INC     bcdSrcAddr
+                    INC     bcdDstAddr
+                    LD      bcdLength
+                    SUBI    1
+                    ST      bcdLength           ; expects src and dst lengths to be equal
+                    BGT     bcdCpy_loop
                     RET
 %ENDS

@@ -16,6 +16,7 @@ std::vector<std::string> _defaultKeys =
     "Disassembler = CTRL+D    ; disassembler, (vCPU or Native based on MemoryMode)   ",
     "Terminal     = CTRL+T    ; basic serial terminal for talking to hardware        ",
     "ImageEditor  = CTRL+I    ; basic image editor for editing graphic images        ",
+    "AudioEditor  = CTRL+A    ; basic audio editor for editing sample waveforms      ",
     "ScanlineMode = CTRL+S    ; toggles scanline modes, Normal, VideoB and VideoBC   ",
     "Reset        = CTRL+F1   ; emulator reset                                       ",
     "Help         = CTRL+H    ; toggles help screen on and off                       ",

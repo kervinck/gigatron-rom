@@ -38,12 +38,12 @@ namespace Editor
         std::string _name;
     };
 
+    uint8_t _vSP = 0xFF;
 
     int _cursorX = 0;
     int _cursorY = 0;
 
     bool _hexEdit = false;
-    bool _startMusic = false;
 
     SDL_Keycode _sdlKeyScanCode = 0;
     uint16_t _sdlKeyModifier = 0;
@@ -104,7 +104,6 @@ namespace Editor
     int getCursorY(void) {return _cursorY;}
     bool getHexEdit(void) {return _hexEdit;}
     bool getSingleStepEnabled(void) {return _singleStepEnabled;}
-    bool getStartMusic(void) {return _startMusic;}
 
     bool getPageUpButton(void) {return _pageUpButton;}
     bool getPageDnButton(void) {return _pageDnButton;}
@@ -112,6 +111,7 @@ namespace Editor
  
     MemoryMode getMemoryMode(void) {return _memoryMode;}
     EditorMode getEditorMode(void) {return _editorMode;}
+    EditorMode getEditorModePrev(void) {return _editorModePrev;}
     KeyboardMode getKeyboardMode(void) {return _keyboardMode;}
     OnVarType getOnVarType(void) {return _onVarType;}
 
@@ -153,54 +153,54 @@ namespace Editor
     void addRomEntry(uint8_t type, std::string& name) {Editor::RomEntry romEntry = {type, name}; _romEntries.push_back(romEntry); return;}
 
     void resetEditor(void) {_memoryDigit = 0; _addressDigit = 0;}
-    void setEditorToPrevMode(void) {_editorMode = _editorModePrev;}
+    void setEditorToPrevMode(void) {_editorMode = _editorModePrev; if(_editorMode == Load) browseDirectory();}
     void setEditorMode(EditorMode editorMode) {_editorModePrev = _editorMode; _editorMode = editorMode;}
 
     void setCursorX(int x) {_cursorX = x;}
     void setCursorY(int y) {_cursorY = y;}
     void setHexEdit(bool hexEdit) {_hexEdit = hexEdit; if(!hexEdit) resetEditor();}
-    void setStartMusic(bool startMusic) {_startMusic = startMusic;}
     void setSingleStepAddress(uint16_t address) {_singleStepAddress = address;}
     void setLoadBaseAddress(uint16_t address) {_loadBaseAddress = address;}
     void setCpuUsageAddressA(uint16_t address) {_cpuUsageAddressA = address;}
     void setCpuUsageAddressB(uint16_t address) {_cpuUsageAddressB = address;}
 
     void getMouseState(MouseState& mouseState) {mouseState = _mouseState;}
+    void setMouseState(MouseState& mouseState) {_mouseState = mouseState;}
 
-    void getMouseMenuCursor(int& x, int& y, int& cy)
+    void getMouseUiCursor(int& x, int& y, int& cy)
     {
         // Normalised mouse position
         float mx = float(_mouseState._x) / float(Graphics::getWidth());
         float my = float(_mouseState._y) / float(Graphics::getHeight());
 
         // PageUp, PageDn and DelAll buttons
-        float pux0 = float(MENU_START_X+PAGEUP_START_X) / float(SCREEN_WIDTH);
-        float puy0 = float(MENU_START_Y+PAGEUP_START_Y) / float(SCREEN_HEIGHT);
-        float pux1 = float(MENU_START_X+PAGEUP_START_X+FONT_WIDTH) / float(SCREEN_WIDTH);
-        float puy1 = float(MENU_START_Y+PAGEUP_START_Y+FONT_HEIGHT) / float(SCREEN_HEIGHT);
-        float pdx0 = float(MENU_START_X+PAGEDN_START_X) / float(SCREEN_WIDTH);
-        float pdy0 = float(MENU_START_Y+PAGEDN_START_Y) / float(SCREEN_HEIGHT);
-        float pdx1 = float(MENU_START_X+PAGEDN_START_X+FONT_WIDTH) / float(SCREEN_WIDTH);
-        float pdy1 = float(MENU_START_Y+PAGEDN_START_Y+FONT_HEIGHT) / float(SCREEN_HEIGHT);
-        float dax0 = float(MENU_START_X+DELALL_START_X) / float(SCREEN_WIDTH);
-        float day0 = float(MENU_START_Y+DELALL_START_Y) / float(SCREEN_HEIGHT);
-        float dax1 = float(MENU_START_X+DELALL_START_X+FONT_WIDTH) / float(SCREEN_WIDTH);
-        float day1 = float(MENU_START_Y+DELALL_START_Y+FONT_HEIGHT) / float(SCREEN_HEIGHT);
+        float pux0 = float(UI_START_X+PAGEUP_START_X) / float(SCREEN_WIDTH);
+        float puy0 = float(UI_START_Y+PAGEUP_START_Y) / float(SCREEN_HEIGHT);
+        float pux1 = float(UI_START_X+PAGEUP_START_X+FONT_WIDTH) / float(SCREEN_WIDTH);
+        float puy1 = float(UI_START_Y+PAGEUP_START_Y+FONT_HEIGHT) / float(SCREEN_HEIGHT);
+        float pdx0 = float(UI_START_X+PAGEDN_START_X) / float(SCREEN_WIDTH);
+        float pdy0 = float(UI_START_Y+PAGEDN_START_Y) / float(SCREEN_HEIGHT);
+        float pdx1 = float(UI_START_X+PAGEDN_START_X+FONT_WIDTH) / float(SCREEN_WIDTH);
+        float pdy1 = float(UI_START_Y+PAGEDN_START_Y+FONT_HEIGHT) / float(SCREEN_HEIGHT);
+        float dax0 = float(UI_START_X+DELALL_START_X) / float(SCREEN_WIDTH);
+        float day0 = float(UI_START_Y+DELALL_START_Y) / float(SCREEN_HEIGHT);
+        float dax1 = float(UI_START_X+DELALL_START_X+FONT_WIDTH) / float(SCREEN_WIDTH);
+        float day1 = float(UI_START_Y+DELALL_START_Y+FONT_HEIGHT) / float(SCREEN_HEIGHT);
 
         _pageUpButton = (mx >= pux0  &&  mx < pux1  &&  my >= puy0  &&  my < puy1);
         _pageDnButton = (mx >= pdx0  &&  mx < pdx1  &&  my >= pdy0  &&  my < pdy1);
         _delAllButton = (mx >= dax0  &&  mx < dax1  &&  my >= day0  &&  my < day1);
 
         // Normalised cursor origin
-        float ox = float(MENU_START_X) / float(SCREEN_WIDTH);
-        float oy = float(MENU_START_Y) / float(SCREEN_HEIGHT);
+        float ox = float(UI_START_X) / float(SCREEN_WIDTH);
+        float oy = float(UI_START_Y) / float(SCREEN_HEIGHT);
 
-        // Menu text cursor positions
+        // Ui text cursor positions
         x = -1, y = -1, cy = -5;
         if(mx >= ox  &&  mx < 0.98f  &&  my >= oy  &&  my < 1.0f)
         {
-            x = int((mx - ox) * 1.0f / (1.0f - ox) * (MENU_CHARS_X+0.65f));
-            y = int((my - oy) * 1.0f / (1.0f - oy) * MENU_CHARS_Y);
+            x = int((mx - ox) * 1.0f / (1.0f - ox) * (UI_CHARS_X+0.65f));
+            y = int((my - oy) * 1.0f / (1.0f - oy) * UI_CHARS_Y);
             cy = y - 4;
         }
 
@@ -398,18 +398,19 @@ namespace Editor
 
 
         // Emulator INI key to SDL key mapping
-        _emulator["MemoryMode"]   = {SDLK_m, KMOD_LCTRL};
-        _emulator["MemorySize"]   = {SDLK_z, KMOD_LCTRL};
-        _emulator["Browse"]       = {SDLK_b, KMOD_LCTRL};
-        _emulator["RomType"]      = {SDLK_r, KMOD_LCTRL};
-        _emulator["HexMonitor"]   = {SDLK_x, KMOD_LCTRL};
-        _emulator["Disassembler"] = {SDLK_d, KMOD_LCTRL};
-        _emulator["Terminal"]     = {SDLK_t, KMOD_LCTRL};
-        _emulator["ImageEditor"]  = {SDLK_i, KMOD_LCTRL};
-        _emulator["ScanlineMode"] = {SDLK_s, KMOD_LCTRL};
+        _emulator["MemoryMode"]   = {SDLK_m,  KMOD_LCTRL};
+        _emulator["MemorySize"]   = {SDLK_z,  KMOD_LCTRL};
+        _emulator["Browse"]       = {SDLK_b,  KMOD_LCTRL};
+        _emulator["RomType"]      = {SDLK_r,  KMOD_LCTRL};
+        _emulator["HexMonitor"]   = {SDLK_x,  KMOD_LCTRL};
+        _emulator["Disassembler"] = {SDLK_d,  KMOD_LCTRL};
+        _emulator["Terminal"]     = {SDLK_t,  KMOD_LCTRL};
+        _emulator["ImageEditor"]  = {SDLK_i,  KMOD_LCTRL};
+        _emulator["AudioEditor"]  = {SDLK_a,  KMOD_LCTRL};
+        _emulator["ScanlineMode"] = {SDLK_s,  KMOD_LCTRL};
         _emulator["Reset"]        = {SDLK_F1, KMOD_LCTRL};
-        _emulator["Help"]         = {SDLK_h, KMOD_LCTRL};
-        _emulator["Quit"]         = {SDLK_q, KMOD_LCTRL};
+        _emulator["Help"]         = {SDLK_h,  KMOD_LCTRL};
+        _emulator["Quit"]         = {SDLK_q,  KMOD_LCTRL};
 
         // Keyboard INI key to SDL key mapping
         _keyboard["Mode"]   = {SDLK_k, KMOD_LCTRL};
@@ -467,6 +468,7 @@ namespace Editor
                     scanCodeFromIniKey(sectionString, "Disassembler", "CTRL+D",   _emulator["Disassembler"]);
                     scanCodeFromIniKey(sectionString, "Terminal",     "CTRL+T",   _emulator["Terminal"]);
                     scanCodeFromIniKey(sectionString, "ImageEditor",  "CTRL+I",   _emulator["ImageEditor"]);
+                    scanCodeFromIniKey(sectionString, "AudioEditor",  "CTRL+A",   _emulator["AudioEditor"]);
                     scanCodeFromIniKey(sectionString, "ScanlineMode", "CTRL+S",   _emulator["ScanlineMode"]);
                     scanCodeFromIniKey(sectionString, "Reset",        "CTRL+F1",  _emulator["Reset"]);
                     scanCodeFromIniKey(sectionString, "Help",         "CTRL+H",   _emulator["Help"]);
@@ -519,6 +521,13 @@ namespace Editor
 
     void browseDirectory(void)
     {
+        const std::vector<std::string> suffixes = {".gbas", ".gtb", ".gcl", ".gasm", ".vasm", ".gt1"};
+
+        browseDirectory(suffixes);
+    }
+
+    void browseDirectory(const std::vector<std::string>& suffixes)
+    {
         std::string path = _browserPath  + ".";
         Assembler::setIncludePath(_browserPath);
 
@@ -539,10 +548,15 @@ namespace Editor
                 {
                     dirnames.push_back(name);
                 }
-                else if(ent->d_type == DT_REG  &&  (name.find(".gbas") != std::string::npos  ||  name.find(".gtb") != std::string::npos  ||  name.find(".gcl") != std::string::npos  ||
-                                                    name.find(".gasm") != std::string::npos  ||  name.find(".vasm") != std::string::npos  ||  name.find(".gt1") != std::string::npos))
+                else if(ent->d_type == DT_REG)
                 {
-                    filenames.push_back(name);
+                    for(int i=0; i<int(suffixes.size()); i++)
+                    {
+                        if(name.find(suffixes[i]) != std::string::npos)
+                        {
+                            filenames.push_back(name);
+                        }
+                    }
                 }
             }
             closedir (dir);
@@ -586,6 +600,21 @@ namespace Editor
         }
 
         browseDirectory();
+    }
+
+    void handleBrowsePageUp(uint16_t numRows)
+    {
+        if((_fileEntriesIndex -= numRows) < 0) _fileEntriesIndex = 0;
+    }
+
+    void handleBrowsePageDown(uint16_t numRows)
+    {
+        if(_fileEntries.size() > HEX_CHARS_Y)
+        {
+            _fileEntriesIndex += numRows;
+            int fileEntriesDelta = int(_fileEntries.size()) - _fileEntriesIndex;
+            if(fileEntriesDelta < HEX_CHARS_Y) _fileEntriesIndex -= HEX_CHARS_Y - std::max(fileEntriesDelta, 0);
+        }
     }
 
     void handlePageUp(uint16_t numRows)
@@ -708,7 +737,7 @@ namespace Editor
             switch(fileType)
             {
                 case File: Loader::setUploadTarget(Loader::Emulator); break;
-                case Dir: changeBrowseDirectory(); break;
+                case Dir:  changeBrowseDirectory();                   break;
 
                 default: break;
             }
@@ -1115,9 +1144,19 @@ namespace Editor
         // Terminal mode
         else if(_sdlKeyScanCode == _emulator["Terminal"]._scanCode  &&  _sdlKeyModifier == _emulator["Terminal"]._keyMod)
         {
-            setEditorMode(Term);
-            Loader::openComPort(); 
-            Terminal::scrollToEnd();
+            Terminal::switchToTerminal();
+        }
+
+        // Image editor
+        else if(_sdlKeyScanCode == _emulator["ImageEditor"]._scanCode  &&  _sdlKeyModifier == _emulator["ImageEditor"]._keyMod)
+        {
+            setEditorMode(Image);
+        }
+
+        // Audio editor
+        else if(_sdlKeyScanCode == _emulator["AudioEditor"]._scanCode  &&  _sdlKeyModifier == _emulator["AudioEditor"]._keyMod)
+        {
+            setEditorMode(Audio);
         }
 
         // Emulator reset
@@ -1219,7 +1258,6 @@ namespace Editor
             helpScreen = !helpScreen;
             Graphics::setDisplayHelpScreen(helpScreen);
         }
-
         // Disassembler
         else if(_sdlKeyScanCode == _emulator["Disassembler"]._scanCode  &&  _sdlKeyModifier == _emulator["Disassembler"]._keyMod)
         {
@@ -1234,13 +1272,11 @@ namespace Editor
                 _editorMode = Dasm;
             }
         }
-
         // ROMS after v1 have their own inbuilt scanline handlers
         else if(_sdlKeyScanCode == _emulator["ScanlineMode"]._scanCode  &&  _sdlKeyModifier == _emulator["ScanlineMode"]._keyMod)
         {
             (Cpu::getRomType() != Cpu::ROMv1) ? Cpu::setIN(Cpu::getIN() | INPUT_SELECT) : Cpu::swapScanlineMode();
         }
-
         // Browse vCPU directory
         else if(_sdlKeyScanCode == _emulator["Browse"]._scanCode  &&  _sdlKeyModifier == _emulator["Browse"]._keyMod)
         {
@@ -1256,7 +1292,6 @@ namespace Editor
                 browseDirectory();
             }
         }
-
         // ROM type
         else if(_sdlKeyScanCode == _emulator["RomType"]._scanCode  &&  _sdlKeyModifier == _emulator["RomType"]._keyMod)
         {
@@ -1273,8 +1308,7 @@ namespace Editor
                 resetEditor();
             }
         }
-
-        // ROM type
+        // Hex monitor
         else if(_sdlKeyScanCode == _emulator["HexMonitor"]._scanCode  &&  _sdlKeyModifier == _emulator["HexMonitor"]._keyMod)
         {
             if(_editorMode == Hex)
@@ -1288,13 +1322,11 @@ namespace Editor
                 _editorMode = Hex;
             }
         }
-
         // Debug mode
         else if(_sdlKeyScanCode == _debugger["Debug"]._scanCode  &&  _sdlKeyModifier == _debugger["Debug"]._keyMod)
         {
             startDebugger();
         }
-
         // Keyboard mode
         else if(_sdlKeyScanCode ==  _keyboard["Mode"]._scanCode  &&  _sdlKeyModifier == _keyboard["Mode"]._keyMod)
         {
@@ -1307,7 +1339,6 @@ namespace Editor
 
             _keyboardMode = (KeyboardMode)keyboardMode;
         }
-
         // RAM/ROM mode
         else if(_sdlKeyScanCode ==  _emulator["MemoryMode"]._scanCode  &&  _sdlKeyModifier == _emulator["MemoryMode"]._keyMod)
         {
@@ -1322,7 +1353,6 @@ namespace Editor
                 _vpcBaseAddress = Cpu::getVPC();
             }
         }
-
         // RAM Size
         else if(_sdlKeyScanCode ==  _emulator["MemorySize"]._scanCode  &&  _sdlKeyModifier == _emulator["MemorySize"]._keyMod)
         {
@@ -1384,6 +1414,20 @@ namespace Editor
         // Gprintfs
         Assembler::printGprintfStrings();
 
+#if 0
+        static uint16_t vPC = 0x0000;
+        if(Cpu::getVPC() >= 0x0200  &&  vPC != Cpu::getVPC())
+        {
+            vPC = Cpu::getVPC();
+            if(vPC == 0x0200) _vSP = 0xFF;
+
+            if(Cpu::getRAM(0x001C)  &&  Cpu::getRAM(0x001C) < _vSP)
+            {
+                _vSP = Cpu::getRAM(0x001C);
+                fprintf(stderr, "Editor::handleDebugger() : Stack pointer = 0x%02x\n", _vSP);
+            }
+        }
+#endif
         // Debug
         static uint16_t vPC = Cpu::getVPC();
         if(_singleStep)

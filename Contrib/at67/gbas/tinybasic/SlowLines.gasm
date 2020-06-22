@@ -1,6 +1,6 @@
 _startAddress_                EQU                               0x0200
 
-; Internal variables
+; Internal Variables
 serialRawPrev                 EQU                               0x0081
 register0                     EQU                               0x0082
 register1                     EQU                               register0 + 0x02
@@ -32,7 +32,7 @@ ON_BOTTOM_ROW_BIT             EQU                               0x0002
 ENABLE_SCROLL_MSK             EQU                               0xfffe
 ON_BOTTOM_ROW_MSK             EQU                               0xfffd
 
-; Internal buffers
+; Internal Buffers
 textWorkArea                  EQU                               0x7fa0
 
 ; Includes
@@ -59,7 +59,7 @@ _page_0x0300                  EQU                               0x0300
 _next_0x0371                  EQU                               0x0312
 _end_0x03b0                   EQU                               0x0341
 
-; Variables
+; Global Variables
 _a                            EQU                               0x0030
 _b                            EQU                               0x0032
 _c                            EQU                               0x0034
@@ -71,6 +71,8 @@ _u                            EQU                               0x003e
 _v                            EQU                               0x0040
 _p                            EQU                               0x0042
 _t                            EQU                               0x0044
+
+; Local Variables
 
 ; Arrays
 
@@ -102,33 +104,33 @@ _1                            ClearVertBlinds                                   
 
 _2                            Rand                              
                               ANDI                              127
-                              STW                               0xc0
+                              STW                               0xe8
                               Rand                              
                               ANDI                              31
-                              ADDW                              0xc0
+                              ADDW                              0xe8
                               STW                               _a
                               Rand                              
                               ANDI                              63
-                              STW                               0xc4
+                              STW                               0xec
                               Rand                              
                               ANDI                              63
-                              ADDW                              0xc4
+                              ADDW                              0xec
                               ORI                               8
                               STW                               _b                              ; a=(rnd(0) AND &h7F) + (rnd(0) AND &h1F) : b=(rnd(0) AND &h3F) + (rnd(0) AND &h3F) OR 8
 
 _3                            Rand                              
                               ANDI                              127
-                              STW                               0xc0
+                              STW                               0xe8
                               Rand                              
                               ANDI                              31
-                              ADDW                              0xc0
+                              ADDW                              0xe8
                               STW                               _c
                               Rand                              
                               ANDI                              63
-                              STW                               0xc4
+                              STW                               0xec
                               Rand                              
                               ANDI                              63
-                              ADDW                              0xc4
+                              ADDW                              0xec
                               ORI                               8
                               STW                               _d                              ; c=(rnd(0) AND &h7F) + (rnd(0) AND &h1F) : d=(rnd(0) AND &h3F) + (rnd(0) AND &h3F) OR 8
 
@@ -196,10 +198,10 @@ _9                            LDI                               0
                               ADDW                              _x
                               STW                               _x
                               LDW                               _y
-                              STW                               0xde
+                              STW                               0xc0
                               LDWI                              _page_0x0300
                               CALL                              giga_vAC
-_page_0x0300                  LDW                               0xde
+_page_0x0300                  LDW                               0xc0
                               ADDW                              _y
                               STW                               _y                              ; d=-x : x=x+x : y=y+y
 
@@ -240,23 +242,22 @@ _end_0x03b0                   BRA                               _end_0x03b0     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeStub                  EQU     0x7ee1
-rand16bit                     EQU     0x7df7
-resetVideoFlags               EQU     0x7ef3
-resetVideoTable               EQU     0x7dd3
-initClearFuncs                EQU     0x7dbc
-clearVertBlinds               EQU     0x7ea7
-convertEqOpAddr               EQU     0x00d0
-convertNeOpAddr               EQU     0x00d2
-convertLeOpAddr               EQU     0x00d4
-convertGeOpAddr               EQU     0x00d6
-convertLtOpAddr               EQU     0x00d8
-convertGtOpAddr               EQU     0x00da
-convert8Arr2dAddr             EQU     0x00e0
-convert8Arr3dAddr             EQU     0x00e2
-convert16Arr2dAddr            EQU     0x00e4
-convert16Arr3dAddr            EQU     0x00e6
-realTimeStubAddr              EQU     0x00dc
+realTimeStub                  EQU     0x7ded
+rand16bit                     EQU     0x7de5
+resetVideoFlags               EQU     0x7ea2
+initClearFuncs                EQU     0x7eae
+clearVertBlinds               EQU     0x7ec5
+convertEqOpAddr               EQU     0x00c2
+convertNeOpAddr               EQU     0x00c4
+convertLeOpAddr               EQU     0x00c6
+convertGeOpAddr               EQU     0x00c8
+convertLtOpAddr               EQU     0x00ca
+convertGtOpAddr               EQU     0x00cc
+convert8Arr2dAddr             EQU     0x00ce
+convert8Arr3dAddr             EQU     0x00d0
+convert16Arr2dAddr            EQU     0x00d2
+convert16Arr3dAddr            EQU     0x00d4
+realTimeStubAddr              EQU     0x00d6
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -322,6 +323,7 @@ bot                 EQU     register10
 vramAddr            EQU     register11
 evenAddr            EQU     register12
 clsAddress          EQU     register13
+varAddress          EQU     register13
     
 
 resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
@@ -333,32 +335,8 @@ resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
 
 
 
-
-                    ; resets video table pointers
-resetVideoTable     PUSH
-                    LDI     8
-                    STW     vramAddr
-                    LDWI    giga_videoTable
-                    STW     evenAddr
-    
-resetVT_loop        CALL    realTimeStubAddr
-                    LDW     vramAddr
-                    DOKE    evenAddr
-                    INC     evenAddr
-                    INC     evenAddr
-                    INC     vramAddr
-                    LD      vramAddr
-                    SUBI    giga_yres + 8
-                    BLT     resetVT_loop
-                    
-                    LDWI    resetVideoFlags
-                    CALL    giga_vAC                    
-                    POP
-                    RET
-
-
 initClearFuncs      PUSH
-                    LDWI    resetVideoTable
+                    LDWI    resetVideoFlags
                     CALL    giga_vAC
             
                     LD      fgbgColour

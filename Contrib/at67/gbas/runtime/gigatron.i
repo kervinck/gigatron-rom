@@ -48,6 +48,7 @@ giga_sysArg7                    EQU     0x2B
 giga_soundTimer                 EQU     0x2C
 giga_ledState                   EQU     0x2E
 giga_ledTempo                   EQU     0x2F
+giga_User                       EQU     0x30
 giga_One                        EQU     0x80
 
 ; ROM types

@@ -1,6 +1,6 @@
 _startAddress_                EQU                               0x0200
 
-; Internal variables
+; Internal Variables
 serialRawPrev                 EQU                               0x0081
 register0                     EQU                               0x0082
 register1                     EQU                               register0 + 0x02
@@ -32,7 +32,7 @@ ON_BOTTOM_ROW_BIT             EQU                               0x0002
 ENABLE_SCROLL_MSK             EQU                               0xfffe
 ON_BOTTOM_ROW_MSK             EQU                               0xfffd
 
-; Internal buffers
+; Internal Buffers
 textWorkArea                  EQU                               0x7fa0
 
 ; Includes
@@ -50,8 +50,10 @@ _else_0x028e                  EQU                               0x0280
 _endif_0x02a5                 EQU                               0x0297
 _end_0x02a7                   EQU                               0x0299
 
-; Variables
+; Global Variables
 _p                            EQU                               0x0030
+
+; Local Variables
 
 ; Arrays
 
@@ -93,7 +95,7 @@ _loop                         LD                                0x0f
                               STW                               _p                              ; p=peek(15)
 
                               LDW                               _p
-                              SUBI                              49
+                              XORI                              49
                               BNE                               _elseif_0x0246                  ; if p &&= 49
 
                               LDI                               2
@@ -105,7 +107,7 @@ _loop                         LD                                0x0f
                               BRA                               _endif_0x02a5                   ; at 2,40 : print "one  ";
 
 _elseif_0x0246                LDW                               _p
-                              SUBI                              50
+                              XORI                              50
                               BNE                               _elseif_0x026a                  ; elseif p &&= 50
 
                               LDI                               2
@@ -117,7 +119,7 @@ _elseif_0x0246                LDW                               _p
                               BRA                               _endif_0x02a5                   ; at 2,40 : print "two  ";
 
 _elseif_0x026a                LDW                               _p
-                              SUBI                              51
+                              XORI                              51
                               BNE                               _else_0x028e                    ; elseif p &&= 51
 
                               LDI                               2
@@ -147,28 +149,27 @@ _end_0x02a7                   BRA                               _end_0x02a7     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeStub                  EQU     0x7ec6
-resetVideoFlags               EQU     0x7ed8
-resetVideoTable               EQU     0x7cdb
-initClearFuncs                EQU     0x7cc4
-clearVertBlinds               EQU     0x7dc5
+realTimeStub                  EQU     0x79ed
+resetVideoFlags               EQU     0x79e1
+initClearFuncs                EQU     0x7aaa
+clearVertBlinds               EQU     0x7eaa
 clearCursorRow                EQU     0x7bb6
-printInit                     EQU     0x7cae
-printText                     EQU     0x7dac
-printChar                     EQU     0x7aa7
-atTextCursor                  EQU     0x7ea1
-newLineScroll                 EQU     0x79a4
-convertEqOpAddr               EQU     0x00d0
-convertNeOpAddr               EQU     0x00d2
-convertLeOpAddr               EQU     0x00d4
-convertGeOpAddr               EQU     0x00d6
-convertLtOpAddr               EQU     0x00d8
-convertGtOpAddr               EQU     0x00da
-convert8Arr2dAddr             EQU     0x00e0
-convert8Arr3dAddr             EQU     0x00e2
-convert16Arr2dAddr            EQU     0x00e4
-convert16Arr3dAddr            EQU     0x00e6
-realTimeStubAddr              EQU     0x00dc
+printInit                     EQU     0x7ba0
+printText                     EQU     0x7ac1
+printChar                     EQU     0x7ca7
+atTextCursor                  EQU     0x7ada
+newLineScroll                 EQU     0x7da4
+convertEqOpAddr               EQU     0x00c2
+convertNeOpAddr               EQU     0x00c4
+convertLeOpAddr               EQU     0x00c6
+convertGeOpAddr               EQU     0x00c8
+convertLtOpAddr               EQU     0x00ca
+convertGtOpAddr               EQU     0x00cc
+convert8Arr2dAddr             EQU     0x00ce
+convert8Arr3dAddr             EQU     0x00d0
+convert16Arr2dAddr            EQU     0x00d2
+convert16Arr3dAddr            EQU     0x00d4
+realTimeStubAddr              EQU     0x00d6
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -214,6 +215,7 @@ bot                 EQU     register10
 vramAddr            EQU     register11
 evenAddr            EQU     register12
 clsAddress          EQU     register13
+varAddress          EQU     register13
     
 
 resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
@@ -225,32 +227,8 @@ resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
 
 
 
-
-                    ; resets video table pointers
-resetVideoTable     PUSH
-                    LDI     8
-                    STW     vramAddr
-                    LDWI    giga_videoTable
-                    STW     evenAddr
-    
-resetVT_loop        CALL    realTimeStubAddr
-                    LDW     vramAddr
-                    DOKE    evenAddr
-                    INC     evenAddr
-                    INC     evenAddr
-                    INC     vramAddr
-                    LD      vramAddr
-                    SUBI    giga_yres + 8
-                    BLT     resetVT_loop
-                    
-                    LDWI    resetVideoFlags
-                    CALL    giga_vAC                    
-                    POP
-                    RET
-
-
 initClearFuncs      PUSH
-                    LDWI    resetVideoTable
+                    LDWI    resetVideoFlags
                     CALL    giga_vAC
             
                     LD      fgbgColour

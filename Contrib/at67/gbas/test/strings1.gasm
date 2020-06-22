@@ -1,6 +1,6 @@
 _startAddress_                EQU                               0x0200
 
-; Internal variables
+; Internal Variables
 serialRawPrev                 EQU                               0x0081
 register0                     EQU                               0x0082
 register1                     EQU                               register0 + 0x02
@@ -32,7 +32,7 @@ ON_BOTTOM_ROW_BIT             EQU                               0x0002
 ENABLE_SCROLL_MSK             EQU                               0xfffe
 ON_BOTTOM_ROW_MSK             EQU                               0xfffd
 
-; Internal buffers
+; Internal Buffers
 textWorkArea                  EQU                               0x7fa0
 
 ; Includes
@@ -49,9 +49,11 @@ _next_0x04db                  EQU                               0x04e0
 _page_0x0500                  EQU                               0x0500
 _end_0x04f2                   EQU                               0x0510
 
-; Variables
+; Global Variables
 _cc                           EQU                               0x0030
 _i                            EQU                               0x0032
+
+; Local Variables
 
 ; Arrays
 _aa_array                     EQU                               0x7ed6
@@ -152,13 +154,13 @@ _entryPoint_                  Initialise
 
                               LDW                               _cc
                               ADDI                              1
-                              STW                               0xc0
+                              STW                               0xe8
                               LDW                               _cc
                               SUBI                              1
-                              STW                               0xc2
-                              LDW                               0xc0
+                              STW                               0xea
+                              LDW                               0xe8
                               STW                               strOffset
-                              LDW                               0xc2
+                              LDW                               0xea
                               STW                               strDstLen
                               LDWI                              0x7eba
                               STW                               strSrcAddr
@@ -185,10 +187,10 @@ _entryPoint_                  Initialise
                               PrintString                       _str_0x7ea9
                               LDWI                              0x7ed6
                               DEEK                              
-                              STW                               0xde
+                              STW                               0xc0
                               LDWI                              _page_0x0300
                               CALL                              giga_vAC
-_page_0x0300                  LDW                               0xde
+_page_0x0300                  LDW                               0xc0
                               PrintAcInt16                      
                               NewLine                                                           ; print a$;" ";b$;" ";aa(0)
 
@@ -222,13 +224,13 @@ _page_0x0300                  LDW                               0xde
                               PrintString                       _str_0x7ea9
                               LDW                               _cc
                               ADDI                              1
-                              STW                               0xc0
+                              STW                               0xe8
                               LDW                               _cc
                               SUBI                              1
-                              STW                               0xc2
-                              LDW                               0xc0
+                              STW                               0xea
+                              LDW                               0xe8
                               STW                               textOfs
-                              LDW                               0xc2
+                              LDW                               0xea
                               STW                               textLen
                               LDWI                              0x7eba
                               PrintAcMid                        
@@ -238,10 +240,10 @@ _page_0x0300                  LDW                               0xde
                               PrintString                       _str_0x7ea9
                               PrintString                       _d$
                               PrintString                       _str_0x7ea9
-                              STW                               0xde
+                              STW                               0xc0
                               LDWI                              _page_0x0400
                               CALL                              giga_vAC
-_page_0x0400                  LDW                               0xde
+_page_0x0400                  LDW                               0xc0
                               PrintString                       _e$
                               NewLine                                                           ; print c$;" ";d$;" ";e$
 
@@ -286,10 +288,10 @@ _page_0x0400                  LDW                               0xde
 _next_0x04db                  LDW                               _i
                               PrintAcChar                                                       ; print chr$(i);
 
-                              STW                               0xde
+                              STW                               0xc0
                               LDWI                              _page_0x0500
                               CALL                              giga_vAC
-_page_0x0500                  LDW                               0xde
+_page_0x0500                  LDW                               0xc0
                               ForNextFarInc                     _i _next_0x04db 127             ; next i
 
 _end_0x04f2                   BRA                               _end_0x04f2                     ; end
@@ -302,45 +304,44 @@ _end_0x04f2                   BRA                               _end_0x04f2     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeStub                  EQU     0x75dd
-resetVideoFlags               EQU     0x75ef
-resetVideoTable               EQU     0x6cdb
-initClearFuncs                EQU     0x6cc4
-clearVertBlinds               EQU     0x75a3
-clearCursorRow                EQU     0x6bb6
-printInit                     EQU     0x6cae
-printText                     EQU     0x72ae
+realTimeStub                  EQU     0x6abd
+resetVideoFlags               EQU     0x6ba3
+initClearFuncs                EQU     0x6acf
+clearVertBlinds               EQU     0x6fc5
+clearCursorRow                EQU     0x72b6
+printInit                     EQU     0x72a0
+printText                     EQU     0x6eae
 printLeft                     EQU     0x71a1
-printRight                    EQU     0x6ed4
-printMid                      EQU     0x6eac
-printDigit                    EQU     0x6add
-printInt16                    EQU     0x70ae
-printChr                      EQU     0x74a3
-printChar                     EQU     0x69a7
+printRight                    EQU     0x6ca0
+printMid                      EQU     0x6da2
+printDigit                    EQU     0x70a1
+printInt16                    EQU     0x73ae
+printChr                      EQU     0x73a1
+printChar                     EQU     0x74a7
 printHexByte                  EQU     0x6dca
-printHexWord                  EQU     0x6db1
-newLineScroll                 EQU     0x6fa4
-stringChr                     EQU     0x74ee
-stringHex                     EQU     0x74dc
-stringHexw                    EQU     0x74bd
-createHex                     EQU     0x6ab5
-stringCopy                    EQU     0x74b0
-stringAdd                     EQU     0x68c3
-stringConcat                  EQU     0x73a3
-stringMid                     EQU     0x71c3
-stringLeft                    EQU     0x73cb
-stringRight                   EQU     0x72c7
-convertEqOpAddr               EQU     0x00d0
-convertNeOpAddr               EQU     0x00d2
-convertLeOpAddr               EQU     0x00d4
-convertGeOpAddr               EQU     0x00d6
-convertLtOpAddr               EQU     0x00d8
-convertGtOpAddr               EQU     0x00da
-convert8Arr2dAddr             EQU     0x00e0
-convert8Arr3dAddr             EQU     0x00e2
-convert16Arr2dAddr            EQU     0x00e4
-convert16Arr3dAddr            EQU     0x00e6
-realTimeStubAddr              EQU     0x00dc
+printHexWord                  EQU     0x6ae6
+newLineScroll                 EQU     0x75a0
+stringChr                     EQU     0x69ee
+stringHex                     EQU     0x6aab
+stringHexw                    EQU     0x6fa6
+createHex                     EQU     0x6bd7
+stringCopy                    EQU     0x6ea1
+stringAdd                     EQU     0x71c3
+stringConcat                  EQU     0x6baf
+stringMid                     EQU     0x70c3
+stringLeft                    EQU     0x6ccb
+stringRight                   EQU     0x6ec7
+convertEqOpAddr               EQU     0x00c2
+convertNeOpAddr               EQU     0x00c4
+convertLeOpAddr               EQU     0x00c6
+convertGeOpAddr               EQU     0x00c8
+convertLtOpAddr               EQU     0x00ca
+convertGtOpAddr               EQU     0x00cc
+convert8Arr2dAddr             EQU     0x00ce
+convert8Arr3dAddr             EQU     0x00d0
+convert16Arr2dAddr            EQU     0x00d2
+convert16Arr3dAddr            EQU     0x00d4
+realTimeStubAddr              EQU     0x00d6
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -386,6 +387,7 @@ bot                 EQU     register10
 vramAddr            EQU     register11
 evenAddr            EQU     register12
 clsAddress          EQU     register13
+varAddress          EQU     register13
     
 
 resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
@@ -397,32 +399,8 @@ resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
 
 
 
-
-                    ; resets video table pointers
-resetVideoTable     PUSH
-                    LDI     8
-                    STW     vramAddr
-                    LDWI    giga_videoTable
-                    STW     evenAddr
-    
-resetVT_loop        CALL    realTimeStubAddr
-                    LDW     vramAddr
-                    DOKE    evenAddr
-                    INC     evenAddr
-                    INC     evenAddr
-                    INC     vramAddr
-                    LD      vramAddr
-                    SUBI    giga_yres + 8
-                    BLT     resetVT_loop
-                    
-                    LDWI    resetVideoFlags
-                    CALL    giga_vAC                    
-                    POP
-                    RET
-
-
 initClearFuncs      PUSH
-                    LDWI    resetVideoTable
+                    LDWI    resetVideoFlags
                     CALL    giga_vAC
             
                     LD      fgbgColour

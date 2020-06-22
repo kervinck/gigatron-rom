@@ -154,7 +154,7 @@ namespace Assembler
     {
         for(auto it=_asmOpcodes.begin(); it!=_asmOpcodes.end(); ++it)
         {
-            if(textStr.find(it->first) != std::string::npos)
+            if(textStr.find(it->first) != std::string::npos  &&  _asmOpcodes.find(it->first) != _asmOpcodes.end())
             {
                 return _asmOpcodes[it->first]._byteSize;
             }
@@ -654,13 +654,42 @@ namespace Assembler
         return false;
     }    
 
-    InstructionType getOpcode(const std::string& opcodeStr)
+    bool parseDefineOffset(const std::string& token, uint16_t& offset, size_t& lbra)
     {
+        size_t rbra;
+        if(Expression::findMatchingBrackets(token, 0, lbra, rbra))
+        {
+            Expression::Numeric value;
+            if(Expression::parse(token.substr(lbra + 1, rbra - (lbra + 1)), _lineNumber, value))
+            {
+                offset = uint16_t(std::lround(value._value));
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    InstructionType getOpcode(const std::string& opcodeStr, uint16_t& offset)
+    {
+        offset = 0;
         std::string opcode = opcodeStr;
         Expression::strToUpper(opcode); 
-        if(_asmOpcodes.find(opcode) == _asmOpcodes.end()) return {0x00, 0x00, BadSize, vCpu};
+        if(_asmOpcodes.find(opcode) != _asmOpcodes.end())
+        {
+            return _asmOpcodes[opcode];
+        }
 
-        return _asmOpcodes[opcode];
+        size_t lbra;
+        if(parseDefineOffset(opcode, offset, lbra))
+        {
+            if(_asmOpcodes.find(opcode.substr(0, lbra)) != _asmOpcodes.end())
+            {
+                return _asmOpcodes[opcode.substr(0, lbra)];
+            }
+        }
+
+        return {0x00, 0x00, BadSize, vCpu};
     }
 
     void preProcessExpression(const std::vector<std::string>& tokens, int tokenIndex, std::string& input, bool stripWhiteSpace)
@@ -975,7 +1004,7 @@ namespace Assembler
         return Success;
     }
 
-    bool handleDefineByte(const std::vector<std::string>& tokens, int tokenIndex, const Instruction& instruction, bool createInstruction, int& dbSize)
+    bool handleDefineByte(const std::vector<std::string>& tokens, int tokenIndex, const Instruction& instruction, bool createInstruction, uint16_t defineOffset, int& dbSize)
     {
         bool success = false;
 
@@ -1065,7 +1094,10 @@ namespace Assembler
 
                 if(createInstruction)
                 {
-                    Instruction inst = {instruction._isRomAddress, false, OneByte, operand, 0x00, 0x00, 0x0000, instruction._opcodeType};
+                    bool hasDefineOffset = (defineOffset != 0);
+                    uint16_t address = (hasDefineOffset) ? _currentAddress : 0x0000;
+                    Instruction inst = {instruction._isRomAddress, hasDefineOffset, OneByte, operand, 0x00, 0x00, address, instruction._opcodeType};
+                    _currentAddress += defineOffset;
                     _instructions.push_back(inst);
                 }
                 dbSize++;
@@ -1076,7 +1108,7 @@ namespace Assembler
     }
 
 
-    bool handleDefineWord(const std::vector<std::string>& tokens, int tokenIndex, const Instruction& instruction, bool createInstruction, int& dwSize)
+    bool handleDefineWord(const std::vector<std::string>& tokens, int tokenIndex, const Instruction& instruction, bool createInstruction, uint16_t defineOffset, int& dwSize)
     {
         bool success = false;
 
@@ -1126,7 +1158,10 @@ namespace Assembler
 
             if(createInstruction)
             {
-                Instruction inst = {instruction._isRomAddress, false, TwoBytes, uint8_t(LO_BYTE(operand)), uint8_t(HI_BYTE(operand)), 0x00, 0x0000,  instruction._opcodeType};
+                bool hasDefineOffset = (defineOffset != 0);
+                uint16_t address = (hasDefineOffset) ? _currentAddress : 0x0000;
+                Instruction inst = {instruction._isRomAddress, hasDefineOffset, TwoBytes, uint8_t(LO_BYTE(operand)), uint8_t(HI_BYTE(operand)), 0x00, address, instruction._opcodeType};
+                _currentAddress += defineOffset * 2;
                 _instructions.push_back(inst);
             }
             dwSize += 2;
@@ -2290,8 +2325,9 @@ namespace Assembler
 
                 // Opcode
                 bool operandValid = false;
+                uint16_t defineOffset;
                 std::string opcodeStr = tokens[tokenIndex++];
-                InstructionType instructionType = getOpcode(opcodeStr);
+                InstructionType instructionType = getOpcode(opcodeStr, defineOffset);
                 uint8_t opcode = instructionType._opcode;
                 uint8_t branch = instructionType._branch;
                 int outputSize = instructionType._byteSize;
@@ -2314,7 +2350,7 @@ namespace Assembler
                         outputSize = OneByte; // first instruction has already been parsed
                         if(tokenIndex + 1 < int(tokens.size()))
                         {
-                            if(!handleDefineByte(tokens, tokenIndex, instruction, false, outputSize))
+                            if(!handleDefineByte(tokens, tokenIndex, instruction, false, defineOffset, outputSize))
                             {
                                 fprintf(stderr, "Assembler::assemble() : Bad DB data : '%s' : in '%s' on line %d\n", lineToken._text.c_str(), filename.c_str(), _lineNumber+1);
                                 return false;
@@ -2330,7 +2366,7 @@ namespace Assembler
                         outputSize = TwoBytes; // first instruction has already been parsed
                         if(tokenIndex + 1 < int(tokens.size()))
                         {
-                            if(!handleDefineWord(tokens, tokenIndex, instruction, false, outputSize))
+                            if(!handleDefineWord(tokens, tokenIndex, instruction, false, defineOffset, outputSize))
                             {
                                 fprintf(stderr, "Assembler::assemble() : Bad DW data : '%s' : in '%s' on line %d\n", lineToken._text.c_str(), filename.c_str(), _lineNumber+1);
                                 return false;
@@ -2558,12 +2594,18 @@ namespace Assembler
                                 instruction._isRomAddress = (opcodeType == ReservedDBR) ? true : false;
                                 instruction._byteSize = ByteSize(outputSize);
                                 instruction._opcode = uint8_t(LO_BYTE(operand));
+                                if(defineOffset != 0)
+                                {
+                                    instruction._address = _currentAddress;
+                                    instruction._isCustomAddress = true;
+                                    _currentAddress += defineOffset;
+                                }
                                 _instructions.push_back(instruction);
     
                                 // Push any remaining operands
                                 if(tokenIndex + 1 < int(tokens.size()))
                                 {
-                                    if(!handleDefineByte(tokens, tokenIndex, instruction, true, outputSize))
+                                    if(!handleDefineByte(tokens, tokenIndex, instruction, true, defineOffset, outputSize))
                                     {
                                         fprintf(stderr, "Assembler::assemble() : Bad DB data : '%s' : in '%s' on line %d\n", lineToken._text.c_str(), filename.c_str(), _lineNumber+1);
                                         return false;
@@ -2650,10 +2692,16 @@ namespace Assembler
                                     instruction._byteSize = ByteSize(outputSize);
                                     instruction._opcode   = uint8_t(LO_BYTE(operand));
                                     instruction._operand0 = uint8_t(HI_BYTE(operand));
+                                    if(defineOffset != 0)
+                                    {
+                                        instruction._address = _currentAddress;
+                                        instruction._isCustomAddress = true;
+                                        _currentAddress += defineOffset * 2;
+                                    }
                                     _instructions.push_back(instruction);
 
                                     // Push any remaining operands
-                                    if(tokenIndex + 1 < int(tokens.size())) handleDefineWord(tokens, tokenIndex, instruction, true, outputSize);
+                                    if(tokenIndex + 1 < int(tokens.size())) handleDefineWord(tokens, tokenIndex, instruction, true, defineOffset, outputSize);
                                     if(!checkInvalidAddress(ParseType(parse), _currentAddress, uint16_t(outputSize), instruction, lineToken, filename, _lineNumber)) return false;
                                 }
                                 // Normal instructions

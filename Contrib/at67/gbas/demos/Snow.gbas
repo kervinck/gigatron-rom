@@ -9,6 +9,9 @@ const C=63
 const D=16
 const W=159
 
+'audio fix for ROMv5a
+poke &h21, peek(&h21) OR 3
+
 init midi
 
 10 dim X(N)=0 : dim Y(N)=0

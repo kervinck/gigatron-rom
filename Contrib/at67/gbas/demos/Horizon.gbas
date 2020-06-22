@@ -1,5 +1,6 @@
 _runtimePath_ "../runtime"
 _runtimeStart_ &h26FF
+_arraysStart_ &h26FF
 _codeRomType_ ROMv1
 
 cls

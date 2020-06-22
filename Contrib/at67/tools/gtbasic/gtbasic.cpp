@@ -8,7 +8,9 @@
 #include "../../assembler.h"
 #include "../../compiler.h"
 #include "../../operators.h"
+#include "../../functions.h"
 #include "../../keywords.h"
+#include "../../pragmas.h"
 #include "../../optimiser.h"
 #include "../../validater.h"
 #include "../../linker.h"
@@ -41,7 +43,9 @@ int main(int argc, char* argv[])
     Assembler::initialise();
     Compiler::initialise();
     Operators::initialise();
+    Functions::initialise();
     Keywords::initialise();
+    Pragmas::initialise();
     Optimiser::initialise();
     Validater::initialise();
     Linker::initialise();

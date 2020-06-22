@@ -216,7 +216,7 @@ inputReturn         LDI     32
                     
                     LD      inpTypeData         ; check var tye
                     ANDI    0x3F                ; var type is bottom 6 bits
-                    SUBI    3                   ; var is string or integer?
+                    SUBI    5                   ; var is string or integer?
                     BNE     inputR_int
                     CALLI   inputStrVar         ; copy string
                     BRA     inputR_exit

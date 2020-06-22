@@ -7,9 +7,13 @@ def byte(colourBits) = &h01, &h02, &h04, &h08, &h10, &h20, &h40, &h3F
 const fgBgColour = &h0008
 set FGBG_COLOUR, fgBgColour
 mode 2
+
+'audio fix for ROMv5a
+poke &h21, peek(&h21) OR 3
 cls
+
 sound off
-load font, ../../images/gbas/Fonts/sc3000/sc3000.tga, 0, fgBgColour
+load font, ../../res/font/sc3000/sc3000.tga, 0, fgBgColour
 
 print " ________________________"
 print

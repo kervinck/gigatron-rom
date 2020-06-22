@@ -4,6 +4,9 @@
 _runtimePath_ "../runtime"
 _codeRomType_ ROMv5a
 
+'audio fix for ROMv5a
+poke &h21, peek(&h21) OR 3
+
 mode 2
 cls
 scroll off

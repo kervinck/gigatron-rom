@@ -1,6 +1,6 @@
 _startAddress_                EQU                               0x0200
 
-; Internal variables
+; Internal Variables
 serialRawPrev                 EQU                               0x0081
 register0                     EQU                               0x0082
 register1                     EQU                               register0 + 0x02
@@ -32,7 +32,7 @@ ON_BOTTOM_ROW_BIT             EQU                               0x0002
 ENABLE_SCROLL_MSK             EQU                               0xfffe
 ON_BOTTOM_ROW_MSK             EQU                               0xfffd
 
-; Internal buffers
+; Internal Buffers
 textWorkArea                  EQU                               0x7fa0
 
 ; Includes
@@ -82,7 +82,7 @@ _page_0x0500                  EQU                               0x0500
 _else_0x0588                  EQU                               0x052f
 _end_0x0593                   EQU                               0x053a
 
-; Variables
+; Global Variables
 _K                            EQU                               0x0030
 _X                            EQU                               0x0032
 _M                            EQU                               0x0034
@@ -101,6 +101,8 @@ _C                            EQU                               0x004c
 _timer                        EQU                               0x004e
 _i                            EQU                               0x0050
 
+; Local Variables
+
 ; Arrays
 _P_array                      EQU                               0x7ef0
 _P_array                      DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
@@ -118,9 +120,9 @@ _str_0x7ed8                   DB                                3 '/60' 0
 ; Data
 
 ; Time
-_timeArray_                   EQU                               0x7ea0
+_timeArray_                   EQU                               0x7ed5
 _timeArray_                   DB                                00 00 00
-_timeString_                  EQU                               0x7ba0
+_timeString_                  EQU                               0x7ecb
 _timeString_                  DB                                8 '00:00:00' 0
 
 ; Define Bytes
@@ -250,10 +252,10 @@ _50                           PUSH
                               STW                               drawLine_x2
                               LDWI                              0x7ee0
                               ADDW                              _B
-                              STW                               0xde
+                              STW                               0xc0
                               LDWI                              _page_0x0300
                               CALL                              giga_vAC
-_page_0x0300                  LDW                               0xde
+_page_0x0300                  LDW                               0xc0
                               ADDW                              _B
                               DEEK                              
                               STW                               drawLine_y2
@@ -366,10 +368,10 @@ _150                          LDI                               0
                               LDWI                              _20
                               CALL                              giga_vAC                        ; K=-K:M=-M:GOSUB 20
 
-                              STW                               0xde
+                              STW                               0xc0
                               LDWI                              _page_0x0400
                               CALL                              giga_vAC
-_page_0x0400                  LDW                               0xde
+_page_0x0400                  LDW                               0xc0
 _160                          LDI                               0
                               SUBW                              _L
                               STW                               _L
@@ -502,10 +504,10 @@ _else_0x0549                  LDI                               63
                               Return                                                            ; return
 
 _253                          PUSH                              
-                              STW                               0xde
+                              STW                               0xc0
                               LDWI                              _page_0x0500
                               CALL                              giga_vAC
-_page_0x0500                  LDW                               0xde
+_page_0x0500                  LDW                               0xc0
                               LDWI                              giga_videoTop
                               STW                               register0
                               LDI                               238
@@ -547,39 +549,38 @@ _end_0x0593                   BRA                               _end_0x0593     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-romCheck                      EQU     0x7ec1
-realTimeStub                  EQU     0x7ea3
-multiply16bit                 EQU     0x7aa3
-divide16bit                   EQU     0x7ca8
-scanlineMode                  EQU     0x7df5
-resetVideoFlags               EQU     0x7eb5
-resetVideoTable               EQU     0x77db
+romCheck                      EQU     0x76af
+realTimeStub                  EQU     0x73bd
+multiply16bit                 EQU     0x74cd
+divide16bit                   EQU     0x7ba8
+scanlineMode                  EQU     0x7aa0
+resetVideoFlags               EQU     0x77a0
 initClearFuncs                EQU     0x79a1
-clearVertBlinds               EQU     0x7dbb
-clearCursorRow                EQU     0x77ab
-drawLine                      EQU     0x7baa
+clearVertBlinds               EQU     0x78c5
+clearCursorRow                EQU     0x73cf
+drawLine                      EQU     0x7aaa
 drawLineExt                   EQU     0x76c6
-drawLineLoop                  EQU     0x75c5
-drawLineLoadXY                EQU     0x74d4
-printInit                     EQU     0x76b0
-printText                     EQU     0x7da2
-printDigit                    EQU     0x75a3
+drawLineLoop                  EQU     0x77c5
+drawLineLoadXY                EQU     0x7ea0
+printInit                     EQU     0x75b1
+printText                     EQU     0x77ac
+printDigit                    EQU     0x78a3
 printInt16                    EQU     0x79ae
-printChar                     EQU     0x73a7
-newLineScroll                 EQU     0x78a4
-tickTime                      EQU     0x7ad5
-handleTime                    EQU     0x72c7
-convertEqOpAddr               EQU     0x00d0
-convertNeOpAddr               EQU     0x00d2
-convertLeOpAddr               EQU     0x00d4
-convertGeOpAddr               EQU     0x00d6
-convertLtOpAddr               EQU     0x00d8
-convertGtOpAddr               EQU     0x00da
-convert8Arr2dAddr             EQU     0x00e0
-convert8Arr3dAddr             EQU     0x00e2
-convert16Arr2dAddr            EQU     0x00e4
-convert16Arr3dAddr            EQU     0x00e6
-realTimeStubAddr              EQU     0x00dc
+printChar                     EQU     0x7ca7
+newLineScroll                 EQU     0x7da4
+tickTime                      EQU     0x74a3
+handleTime                    EQU     0x75c7
+convertEqOpAddr               EQU     0x00c2
+convertNeOpAddr               EQU     0x00c4
+convertLeOpAddr               EQU     0x00c6
+convertGeOpAddr               EQU     0x00c8
+convertLtOpAddr               EQU     0x00ca
+convertGtOpAddr               EQU     0x00cc
+convert8Arr2dAddr             EQU     0x00ce
+convert8Arr3dAddr             EQU     0x00d0
+convert16Arr2dAddr            EQU     0x00d2
+convert16Arr3dAddr            EQU     0x00d4
+realTimeStubAddr              EQU     0x00d6
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -759,6 +760,11 @@ drawLine_h          EQU     register10
 drawLine_num        EQU     register11
 drawLine_count      EQU     register12
 drawLine_tmp        EQU     register13
+drawLine_dx         EQU     register2
+drawLine_dy         EQU     register3
+drawLine_u          EQU     register8
+drawLine_v          EQU     register9
+drawLine_addr       EQU     register10
 
 drawPixel_xy        EQU     register15
 readPixel_xy        EQU     register15
@@ -816,6 +822,11 @@ bot                 EQU     register10
 vramAddr            EQU     register11
 evenAddr            EQU     register12
 clsAddress          EQU     register13
+clsLines            EQU     register14
+varAddress          EQU     register13
+clrAddress          EQU     register13
+clrLines            EQU     register14
+clrWidth            EQU     register15
     
 
 resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
@@ -827,32 +838,8 @@ resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
 
 
 
-
-                    ; resets video table pointers
-resetVideoTable     PUSH
-                    LDI     8
-                    STW     vramAddr
-                    LDWI    giga_videoTable
-                    STW     evenAddr
-    
-resetVT_loop        CALL    realTimeStubAddr
-                    LDW     vramAddr
-                    DOKE    evenAddr
-                    INC     evenAddr
-                    INC     evenAddr
-                    INC     vramAddr
-                    LD      vramAddr
-                    SUBI    giga_yres + 8
-                    BLT     resetVT_loop
-                    
-                    LDWI    resetVideoFlags
-                    CALL    giga_vAC
-                    POP
-                    RET
-
-
 initClearFuncs      PUSH
-                    LDWI    resetVideoTable
+                    LDWI    resetVideoFlags
                     CALL    giga_vAC
     
                     LDWI    SYS_SetMemory_v2_54                 ; setup fill memory SYS routine
@@ -887,7 +874,6 @@ clearVB_loopy       LDI     giga_xres
                     ST      giga_sysArg3                        ; bottom line
                     SYS     54                                  ; fill memory
                     INC     top                                 ; next top line
-                    
                     CALL    realTimeStubAddr
                     LD      top
                     SUBI    giga_yres / 2 + 8

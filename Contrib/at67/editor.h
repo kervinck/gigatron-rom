@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <string>
+#include <vector>
 
 #ifndef STAND_ALONE
 #include <SDL.h>
@@ -44,7 +45,7 @@
 namespace Editor
 {
     enum MemoryMode {RAM=0, ROM0, ROM1, NumMemoryModes};
-    enum EditorMode {Hex=0, Rom, Load, Dasm, Term, Image, NumEditorModes};
+    enum EditorMode {Hex=0, Rom, Load, Dasm, Term, Image, Audio, NumEditorModes};
     enum KeyboardMode {Giga=0, PS2, HwGiga, HwPS2, NumKeyboardModes};
     enum FileType {File=0, Dir, Fifo, Link, NumFileTypes};
     enum OnVarType {OnNone=0, OnCpuA, OnCpuB, OnHex, OnVars, OnWatch, NumOnVarTypes};
@@ -74,7 +75,6 @@ namespace Editor
     int getCursorY(void);
     bool getHexEdit(void);
     bool getSingleStepEnabled(void);
-    bool getStartMusic(void);
 
     bool getPageUpButton(void);
     bool getPageDnButton(void);
@@ -82,6 +82,7 @@ namespace Editor
 
     MemoryMode getMemoryMode(void);
     EditorMode getEditorMode(void);
+    EditorMode getEditorModePrev(void);
     KeyboardMode getKeyboardMode(void);
     OnVarType getOnVarType(void);
 
@@ -129,14 +130,15 @@ namespace Editor
     void setCursorX(int x);
     void setCursorY(int y);
     void setHexEdit(bool hexEdit);
-    void setStartMusic(bool startMusic);
     void setSingleStepAddress(uint16_t address);
     void setLoadBaseAddress(uint16_t address);
     void setCpuUsageAddressA(uint16_t address);
     void setCpuUsageAddressB(uint16_t address);
 
     void getMouseState(MouseState& mouseState);
-    void getMouseMenuCursor(int& x, int& y, int& cy);
+    void setMouseState(MouseState& mouseState);
+
+    void getMouseUiCursor(int& x, int& y, int& cy);
 
     int getEmulatorScanCode(const std::string& keyWord);
 
@@ -150,14 +152,17 @@ namespace Editor
     void initialise(void);
 
     void browseDirectory(void);
+    void browseDirectory(const std::vector<std::string>& suffixes);
+    void changeBrowseDirectory(void);
 
 #ifndef STAND_ALONE
+    void handleBrowsePageUp(uint16_t numRows);
+    void handleBrowsePageDown(uint16_t numRows);
     void handleGuiEvents(SDL_Event& event);
 #endif
 
     bool handleDebugger(void);
     void handleInput(void);
-    void handleTerminalInput(void);
 
     void startDebugger(void);
     void resetDebugger(void);

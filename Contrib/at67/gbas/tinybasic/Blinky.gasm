@@ -117,8 +117,8 @@ _end_0x024f                   BRA                               _end_0x024f     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeStub                  EQU     0x7ee1
-resetVideoFlags               EQU     0x7ef3
+realTimeStub                  EQU     0x7eed
+resetVideoFlags               EQU     0x7ee1
 convertEqOpAddr               EQU     0x00d0
 convertNeOpAddr               EQU     0x00d2
 convertLeOpAddr               EQU     0x00d4
@@ -175,6 +175,7 @@ bot                 EQU     register10
 vramAddr            EQU     register11
 evenAddr            EQU     register12
 clsAddress          EQU     register13
+varAddress          EQU     register13
     
 
 resetVideoFlags     LDI     giga_CursorX                        ; cursor x start

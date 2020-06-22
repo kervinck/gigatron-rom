@@ -36,3 +36,5 @@ else()
 endif()
 
 target_link_libraries(gtemuAT67 ${SDL2_LIBRARY} ${SDL2MAIN_LIBRARY})
+
+set_target_properties(gtemuAT67 PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE .)

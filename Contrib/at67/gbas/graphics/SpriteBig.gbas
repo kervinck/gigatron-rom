@@ -10,14 +10,14 @@ set FGBG_COLOUR, &h3F00
 cls
 
 'first load allocates memory, further loads of the same filename are instanced but have different stripe destination offsets
-load sprite, ../../images/gbas/Turrican.tga, 0         'normal orientation
-load sprite, ../../images/gbas/Turrican.tga, 1, FlipX  'x flipped orientation
-load sprite, ../../images/gbas/Turrican.tga, 2, FlipY  'y flipped orientation
-load sprite, ../../images/gbas/Turrican.tga, 3, FlipXY 'xy flipped orientation
+load sprite, ../../res/image/Turrican.tga, 0          'normal orientation
+load sprite, ../../res/image/Turrican.tga, 1, FlipX   'x flipped orientation
+load sprite, ../../res/image/Turrican.tga, 2, FlipY   'y flipped orientation
+load sprite, ../../res/image/Turrican.tga, 3, FlipXY  'xy flipped orientation
 
 'first load allocates memory, second is instanced but has different stripe destination offsets
-load sprite, ../../images/gbas/Bullet.tga, 4        'normal orientation
-load sprite, ../../images/gbas/Bullet.tga, 5, FlipX 'x flipped orientation
+load sprite, ../../res/image/Bullet.tga, 4         'normal orientation
+load sprite, ../../res/image/Bullet.tga, 5, FlipX  'x flipped orientation
 
 loop:
     x0 = 28

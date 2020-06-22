@@ -1,6 +1,6 @@
 _startAddress_                EQU                               0x0200
 
-; Internal variables
+; Internal Variables
 serialRawPrev                 EQU                               0x0081
 register0                     EQU                               0x0082
 register1                     EQU                               register0 + 0x02
@@ -32,7 +32,7 @@ ON_BOTTOM_ROW_BIT             EQU                               0x0002
 ENABLE_SCROLL_MSK             EQU                               0xfffe
 ON_BOTTOM_ROW_MSK             EQU                               0xfffd
 
-; Internal buffers
+; Internal Buffers
 textWorkArea                  EQU                               0x7fa0
 
 ; Includes
@@ -60,10 +60,12 @@ _else_0x036a                  EQU                               0x0bbf
 _else_0x0398                  EQU                               0x0be5
 _end_0x039a                   EQU                               0x0be7
 
-; Variables
+; Global Variables
 _x0                           EQU                               0x0030
 _x1                           EQU                               0x0032
 _x                            EQU                               0x0034
+
+; Local Variables
 
 ; Arrays
 
@@ -100,34 +102,34 @@ def_sprites_0x7ee6            DB                                7 11 11 31 0 0 7
 ; Define Fonts
 
 ; Lookup Tables
-_spriteLut_0x7cdc             EQU                               0x7cdc
-_spriteLut_0x7cdc             DW                                0x061b 0x0000 0x051b 0x0006 0x0415 0x000c 0x0315 0x0012 0x0215 0x0018 0x0000
-_spriteLut_0x7cc6             EQU                               0x7cc6
-_spriteLut_0x7cc6             DW                                0x061b 0x0018 0x051b 0x0012 0x0415 0x000c 0x0315 0x0006 0x0215 0x0000 0x0000
-_spriteLut_0x7cb0             EQU                               0x7cb0
-_spriteLut_0x7cb0             DW                                0x061b 0x2500 0x051b 0x2506 0x0415 0x250c 0x0315 0x2512 0x0215 0x2518 0x0000
-_spriteLut_0x7bea             EQU                               0x7bea
-_spriteLut_0x7bea             DW                                0x061b 0x2518 0x051b 0x2512 0x0415 0x250c 0x0315 0x2506 0x0215 0x2500 0x0000
-_spriteLut_0x7da2             EQU                               0x7da2
-_spriteLut_0x7da2             DW                                0x7ef3 0x0000 0x7ee6 0x0006 0x0000
-_spriteLut_0x7ca6             EQU                               0x7ca6
-_spriteLut_0x7ca6             DW                                0x7ef3 0x0006 0x7ee6 0x0000 0x0000
-_spritesLut_                  EQU                               0x7bde
-_spritesLut_                  DW                                0x7cdc 0x7cc6 0x7cb0 0x7bea 0x7da2 0x7ca6 
+_spriteLut_0x7ed0             EQU                               0x7ed0
+_spriteLut_0x7ed0             DW                                0x061b 0x0000 0x051b 0x0006 0x0415 0x000c 0x0315 0x0012 0x0215 0x0018 0x0000
+_spriteLut_0x7eba             EQU                               0x7eba
+_spriteLut_0x7eba             DW                                0x061b 0x0018 0x051b 0x0012 0x0415 0x000c 0x0315 0x0006 0x0215 0x0000 0x0000
+_spriteLut_0x7ea4             EQU                               0x7ea4
+_spriteLut_0x7ea4             DW                                0x061b 0x2500 0x051b 0x2506 0x0415 0x250c 0x0315 0x2512 0x0215 0x2518 0x0000
+_spriteLut_0x7dea             EQU                               0x7dea
+_spriteLut_0x7dea             DW                                0x061b 0x2518 0x051b 0x2512 0x0415 0x250c 0x0315 0x2506 0x0215 0x2500 0x0000
+_spriteLut_0x7de0             EQU                               0x7de0
+_spriteLut_0x7de0             DW                                0x7ef3 0x0000 0x7ee6 0x0006 0x0000
+_spriteLut_0x7dd6             EQU                               0x7dd6
+_spriteLut_0x7dd6             DW                                0x7ef3 0x0006 0x7ee6 0x0000 0x0000
+_spritesLut_                  EQU                               0x7dca
+_spritesLut_                  DW                                0x7ed0 0x7eba 0x7ea4 0x7dea 0x7de0 0x7dd6 
 
 ; Code
 _entryPoint_                  LDI                               0x28
                               STW                               romType
                               RomCheck                          
-                              STW                               0xde
+                              STW                               0xc0
                               LDWI                              _page_0x0500
                               CALL                              giga_vAC
-_page_0x0500                  LDW                               0xde
+_page_0x0500                  LDW                               0xc0
                               Initialise                        
-                              STW                               0xde
+                              STW                               0xc0
                               LDWI                              _page_0x0600
                               CALL                              giga_vAC
-_page_0x0600                  LDW                               0xde
+_page_0x0600                  LDW                               0xc0
                               InitRealTimeStub                                                  ; INIT
 
                               LDI                               2
@@ -135,10 +137,10 @@ _page_0x0600                  LDW                               0xde
                               ScanlineMode                                                      ; mode 2
 
                               LDWI                              16128
-                              STW                               0xde
+                              STW                               0xc0
                               LDWI                              _page_0x08a0
                               CALL                              giga_vAC
-_page_0x08a0                  LDW                               0xde
+_page_0x08a0                  LDW                               0xc0
                               STW                               fgbgColour                      ; set FGBG_COLOUR, &h3F00
 
                               ClearVertBlinds                                                   ; cls
@@ -179,10 +181,10 @@ _next_0x023f                  WaitVBlank                                        
                               ForNextFarInc                     _x _next_0x023f 130             ; next x
 
                               LDI                               28
-                              STW                               0xde
+                              STW                               0xc0
                               LDWI                              _page_0x09a0
                               CALL                              giga_vAC
-_page_0x09a0                  LDW                               0xde
+_page_0x09a0                  LDW                               0xc0
                               STW                               _x1                             ; x1 = 28
 
                               LDI                               120
@@ -223,10 +225,10 @@ _next_0x028f                  WaitVBlank                                        
 _bullets0                     PUSH                              
                               LDI                               5
                               STW                               spriteId
-                              STW                               0xde
+                              STW                               0xc0
                               LDWI                              _page_0x0aa0
                               CALL                              giga_vAC
-_page_0x0aa0                  LDW                               0xde
+_page_0x0aa0                  LDW                               0xc0
                               LDW                               _x0
                               ST                                spriteXY
                               LDI                               24
@@ -273,10 +275,10 @@ _bullets1                     PUSH
                               LDW                               _x0
                               ST                                spriteXY
                               LDI                               24
-                              STW                               0xde
+                              STW                               0xc0
                               LDWI                              _page_0x0ba0
                               CALL                              giga_vAC
-_page_0x0ba0                  LDW                               0xde
+_page_0x0ba0                  LDW                               0xc0
                               ADDI                              8
                               ST                                spriteXY + 1
                               DrawSprite                                                        ; sprite noFlip, 4, x0, 24
@@ -324,28 +326,27 @@ _end_0x039a                   BRA                               _end_0x039a     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-romCheck                      EQU     0x7ecf
-realTimeStub                  EQU     0x7eb1
-scanlineMode                  EQU     0x7ea7
-waitVBlank                    EQU     0x7db9
-resetVideoFlags               EQU     0x7ec3
-resetVideoTable               EQU     0x7bba
-initClearFuncs                EQU     0x7bad
-clearVertBlinds               EQU     0x7dc5
-draw_sprite                   EQU     0x7ad7
-drawSprite                    EQU     0x7dac
-drawSpriteX                   EQU     0x7cf2
-convertEqOpAddr               EQU     0x00d0
-convertNeOpAddr               EQU     0x00d2
-convertLeOpAddr               EQU     0x00d4
-convertGeOpAddr               EQU     0x00d6
-convertLtOpAddr               EQU     0x00d8
-convertGtOpAddr               EQU     0x00da
-convert8Arr2dAddr             EQU     0x00e0
-convert8Arr3dAddr             EQU     0x00e2
-convert16Arr2dAddr            EQU     0x00e4
-convert16Arr3dAddr            EQU     0x00e6
-realTimeStubAddr              EQU     0x00dc
+romCheck                      EQU     0x7cae
+realTimeStub                  EQU     0x7bed
+scanlineMode                  EQU     0x7bb1
+waitVBlank                    EQU     0x7bc7
+resetVideoFlags               EQU     0x7bbb
+initClearFuncs                EQU     0x7ca1
+clearVertBlinds               EQU     0x7cc5
+draw_sprite                   EQU     0x7da2
+drawSprite                    EQU     0x7be0
+drawSpriteX                   EQU     0x7bd3
+convertEqOpAddr               EQU     0x00c2
+convertNeOpAddr               EQU     0x00c4
+convertLeOpAddr               EQU     0x00c6
+convertGeOpAddr               EQU     0x00c8
+convertLtOpAddr               EQU     0x00ca
+convertGtOpAddr               EQU     0x00cc
+convert8Arr2dAddr             EQU     0x00ce
+convert8Arr3dAddr             EQU     0x00d0
+convert16Arr2dAddr            EQU     0x00d2
+convert16Arr3dAddr            EQU     0x00d4
+realTimeStubAddr              EQU     0x00d6
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -427,6 +428,11 @@ drawLine_h          EQU     register10
 drawLine_num        EQU     register11
 drawLine_count      EQU     register12
 drawLine_tmp        EQU     register13
+drawLine_dx         EQU     register2
+drawLine_dy         EQU     register3
+drawLine_u          EQU     register8
+drawLine_v          EQU     register9
+drawLine_addr       EQU     register10
 
 drawPixel_xy        EQU     register15
 readPixel_xy        EQU     register15
@@ -493,6 +499,11 @@ bot                 EQU     register10
 vramAddr            EQU     register11
 evenAddr            EQU     register12
 clsAddress          EQU     register13
+clsLines            EQU     register14
+varAddress          EQU     register13
+clrAddress          EQU     register13
+clrLines            EQU     register14
+clrWidth            EQU     register15
     
 
 resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
@@ -504,32 +515,8 @@ resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
 
 
 
-
-                    ; resets video table pointers
-resetVideoTable     PUSH
-                    LDI     8
-                    STW     vramAddr
-                    LDWI    giga_videoTable
-                    STW     evenAddr
-    
-resetVT_loop        CALL    realTimeStubAddr
-                    LDW     vramAddr
-                    DOKE    evenAddr
-                    INC     evenAddr
-                    INC     evenAddr
-                    INC     vramAddr
-                    LD      vramAddr
-                    SUBI    giga_yres + 8
-                    BLT     resetVT_loop
-                    
-                    LDWI    resetVideoFlags
-                    CALL    giga_vAC
-                    POP
-                    RET
-
-
 initClearFuncs      PUSH
-                    LDWI    resetVideoTable
+                    LDWI    resetVideoFlags
                     CALL    giga_vAC
     
                     LDWI    SYS_SetMemory_v2_54                 ; setup fill memory SYS routine
@@ -564,7 +551,6 @@ clearVB_loopy       LDI     giga_xres
                     ST      giga_sysArg3                        ; bottom line
                     SYS     54                                  ; fill memory
                     INC     top                                 ; next top line
-                    
                     CALL    realTimeStubAddr
                     LD      top
                     SUBI    giga_yres / 2 + 8

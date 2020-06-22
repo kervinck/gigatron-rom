@@ -201,15 +201,15 @@ _end_0x02f6                   BRA                               _end_0x02f6     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeStub                  EQU     0x7ee1
-convertGtOp                   EQU     0x7ed8
-resetVideoFlags               EQU     0x7ef3
+realTimeStub                  EQU     0x7acb
+convertGtOp                   EQU     0x7ac2
+resetVideoFlags               EQU     0x7ca2
 clearCursorRow                EQU     0x7bb6
-printInit                     EQU     0x7ec2
-printDigit                    EQU     0x7ea0
-printInt16                    EQU     0x7dae
-printChar                     EQU     0x7aa7
-newLineScroll                 EQU     0x7ca4
+printInit                     EQU     0x7ba0
+printDigit                    EQU     0x7add
+printInt16                    EQU     0x7cae
+printChar                     EQU     0x7da7
+newLineScroll                 EQU     0x7ea4
 convertEqOpAddr               EQU     0x00d0
 convertNeOpAddr               EQU     0x00d2
 convertLeOpAddr               EQU     0x00d4
@@ -274,6 +274,7 @@ bot                 EQU     register10
 vramAddr            EQU     register11
 evenAddr            EQU     register12
 clsAddress          EQU     register13
+varAddress          EQU     register13
     
 
 resetVideoFlags     LDI     giga_CursorX                        ; cursor x start

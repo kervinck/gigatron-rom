@@ -1,6 +1,6 @@
 _startAddress_                EQU                               0x0200
 
-; Internal variables
+; Internal Variables
 serialRawPrev                 EQU                               0x0081
 register0                     EQU                               0x0082
 register1                     EQU                               register0 + 0x02
@@ -32,7 +32,7 @@ ON_BOTTOM_ROW_BIT             EQU                               0x0002
 ENABLE_SCROLL_MSK             EQU                               0xfffe
 ON_BOTTOM_ROW_MSK             EQU                               0xfffd
 
-; Internal buffers
+; Internal Buffers
 textWorkArea                  EQU                               0x7fa0
 
 ; Includes
@@ -49,10 +49,12 @@ _endif_0x02c0                 EQU                               0x029a
 _endif_0x02f3                 EQU                               0x02c1
 _end_0x02f5                   EQU                               0x02c3
 
-; Variables
+; Global Variables
 _xy                           EQU                               0x0030
 _colour                       EQU                               0x0032
 _r                            EQU                               0x0034
+
+; Local Variables
 
 ; Arrays
 
@@ -99,9 +101,9 @@ _entryPoint_                  LDI                               0x20
 
 _loop                         Rand                              
                               ANDI                              7
-                              STW                               0xc0
+                              STW                               0xe8
                               LDWI                              1784
-                              ADDW                              0xc0
+                              ADDW                              0xe8
                               PEEK                              
                               XORW                              _colour
                               STW                               _colour                         ; colour = colour XOR peek(colourBits + (rnd(0) AND 7))
@@ -179,34 +181,33 @@ _end_0x02f5                   BRA                               _end_0x02f5     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-romCheck                      EQU     0x7ee8
-realTimeStub                  EQU     0x7eca
-rand16bit                     EQU     0x7eb8
-scanlineMode                  EQU     0x7ec0
-resetVideoFlags               EQU     0x7edc
-resetVideoTable               EQU     0x7da1
-initClearFuncs                EQU     0x7eab
-clearVertBlinds               EQU     0x7dc5
-clearCursorRow                EQU     0x79cf
-drawPixel                     EQU     0x7cb3
-drawVTLine                    EQU     0x7baa
-drawVTLineExt                 EQU     0x78c6
-drawVTLineLoop                EQU     0x77b9
-drawVTLineLoadXY              EQU     0x79a8
-atLineCursor                  EQU     0x7cc0
-printInit                     EQU     0x78b0
-newLineScroll                 EQU     0x7aa4
-convertEqOpAddr               EQU     0x00d0
-convertNeOpAddr               EQU     0x00d2
-convertLeOpAddr               EQU     0x00d4
-convertGeOpAddr               EQU     0x00d6
-convertLtOpAddr               EQU     0x00d8
-convertGtOpAddr               EQU     0x00da
-convert8Arr2dAddr             EQU     0x00e0
-convert8Arr3dAddr             EQU     0x00e2
-convert16Arr2dAddr            EQU     0x00e4
-convert16Arr3dAddr            EQU     0x00e6
-realTimeStubAddr              EQU     0x00dc
+romCheck                      EQU     0x7ca2
+realTimeStub                  EQU     0x7ab3
+rand16bit                     EQU     0x7ba2
+scanlineMode                  EQU     0x7da0
+resetVideoFlags               EQU     0x79ad
+initClearFuncs                EQU     0x7aa6
+clearVertBlinds               EQU     0x7ac5
+clearCursorRow                EQU     0x78cf
+drawPixel                     EQU     0x79b9
+drawVTLine                    EQU     0x7daa
+drawVTLineExt                 EQU     0x79c6
+drawVTLineLoop                EQU     0x7cb9
+drawVTLineLoadXY              EQU     0x78a8
+atLineCursor                  EQU     0x7bc0
+printInit                     EQU     0x7baa
+newLineScroll                 EQU     0x7ea4
+convertEqOpAddr               EQU     0x00c2
+convertNeOpAddr               EQU     0x00c4
+convertLeOpAddr               EQU     0x00c6
+convertGeOpAddr               EQU     0x00c8
+convertLtOpAddr               EQU     0x00ca
+convertGtOpAddr               EQU     0x00cc
+convert8Arr2dAddr             EQU     0x00ce
+convert8Arr3dAddr             EQU     0x00d0
+convert16Arr2dAddr            EQU     0x00d2
+convert16Arr3dAddr            EQU     0x00d4
+realTimeStubAddr              EQU     0x00d6
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -308,6 +309,11 @@ drawLine_h          EQU     register10
 drawLine_num        EQU     register11
 drawLine_count      EQU     register12
 drawLine_tmp        EQU     register13
+drawLine_dx         EQU     register2
+drawLine_dy         EQU     register3
+drawLine_u          EQU     register8
+drawLine_v          EQU     register9
+drawLine_addr       EQU     register10
 
 drawPixel_xy        EQU     register15
 readPixel_xy        EQU     register15
@@ -365,6 +371,11 @@ bot                 EQU     register10
 vramAddr            EQU     register11
 evenAddr            EQU     register12
 clsAddress          EQU     register13
+clsLines            EQU     register14
+varAddress          EQU     register13
+clrAddress          EQU     register13
+clrLines            EQU     register14
+clrWidth            EQU     register15
     
 
 resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
@@ -376,32 +387,8 @@ resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
 
 
 
-
-                    ; resets video table pointers
-resetVideoTable     PUSH
-                    LDI     8
-                    STW     vramAddr
-                    LDWI    giga_videoTable
-                    STW     evenAddr
-    
-resetVT_loop        CALL    realTimeStubAddr
-                    LDW     vramAddr
-                    DOKE    evenAddr
-                    INC     evenAddr
-                    INC     evenAddr
-                    INC     vramAddr
-                    LD      vramAddr
-                    SUBI    giga_yres + 8
-                    BLT     resetVT_loop
-                    
-                    LDWI    resetVideoFlags
-                    CALL    giga_vAC
-                    POP
-                    RET
-
-
 initClearFuncs      PUSH
-                    LDWI    resetVideoTable
+                    LDWI    resetVideoFlags
                     CALL    giga_vAC
     
                     LDWI    SYS_SetMemory_v2_54                 ; setup fill memory SYS routine
@@ -436,7 +423,6 @@ clearVB_loopy       LDI     giga_xres
                     ST      giga_sysArg3                        ; bottom line
                     SYS     54                                  ; fill memory
                     INC     top                                 ; next top line
-                    
                     CALL    realTimeStubAddr
                     LD      top
                     SUBI    giga_yres / 2 + 8

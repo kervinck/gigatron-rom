@@ -4,7 +4,6 @@
 #include <algorithm>
 #include <sys/stat.h>
 
-
 #include <SDL.h>
 #include "memory.h"
 #include "cpu.h"
@@ -14,44 +13,42 @@
 #include "timing.h"
 #include "image.h"
 #include "graphics.h"
+#include "menu.h"
 
 
-#define MAX_TERM_COLS   80
-#define MAX_TERM_ROWS   47
-#define CMD_LINE_ROW    48
-#define MAX_MENU_COLS   6
-#define MAX_MENU_ROWS   5
-#define NUM_MENU_FIELDS (MAX_MENU_ROWS-1)
-#define MAX_HISTORY_CMD 50
+#define MAX_TERM_COLS     80
+#define MAX_TERM_ROWS     47
+#define CMD_LINE_ROW      48
+#define MAX_HISTORY_CMD   50
+#define MAX_COMMAND_CHARS 79
 
 
 namespace Terminal
 {
-    const int _terminalScreenMaxIndex = (SCREEN_HEIGHT - (FONT_HEIGHT+2)*1)/(FONT_HEIGHT+2);
+    const int _screenMaxIndex = (SCREEN_HEIGHT - (FONT_HEIGHT+2)*1)/(FONT_HEIGHT+2);
 
-    enum MenuField {MenuCopy, MenuAll, MenuCut, MenuDel};
+    enum MenuItem {MenuCopy=0, MenuAll, MenuCut, MenuDel};
 
     bool _terminalModeGiga = false;
     bool _waitForPromptGiga = false;
 
-    int _terminalMenuX;
-    int _terminalMenuY;
-    int _terminalMenuIdx = -1;
-    int _terminalScrollOffset = 0;
-    int _terminalScrollDelta = 0;
-    int _terminalScrollIndex = 0;
-    int _historyCommandIndex = 0;
-    int _terminalCommandCharIndex = 0;
+    int _scrollOffset = 0;
+    int _scrollDelta = 0;
+    int _scrollIndex = 0;
+    int _commandHistoryIndex = 0;
+    int _commandCharIndex = 0;
 
-    std::string _terminalCommandLine;
-    std::vector<std::string> _historyCommandLine;
+    std::string _commandLine;
+    std::vector<std::string> _commandLineHistory;
 
-    std::vector<int> _terminalTextSelected;
+    std::vector<int> _selectedText;
     std::vector<std::string> _terminalText;
 
 
     void initialise(void)
     {
+        std::vector<std::string> items = {"TERM  ", "Copy  ", "All   ", "Cut   ", "Delete"};
+        Menu::createMenu("Terminal", items, 6, 5);
     }
 
     void sendCommandToGiga(const std::string& cmd)
@@ -68,19 +65,19 @@ namespace Terminal
 
     void scrollToEnd(void)
     {
-        _terminalScrollOffset = _terminalScrollIndex;
+        _scrollOffset = _scrollIndex;
     }
 
     void clearCommandLine(void)
     {
-        _terminalCommandCharIndex = 0;
-        _terminalCommandLine.clear();
+        _commandCharIndex = 0;
+        _commandLine.clear();
     }
 
     void clearHistoryCommandLine(void)
     {
-        _historyCommandIndex = 0;
-        _historyCommandLine.clear();
+        _commandHistoryIndex = 0;
+        _commandLineHistory.clear();
     }
 
     void exitTerminalModeGiga(void)
@@ -96,61 +93,68 @@ namespace Terminal
         }
     }
 
+    void switchToTerminal(void)
+    {
+        Editor::setEditorMode(Editor::Term);
+        Loader::openComPort(); 
+        scrollToEnd();
+    }
+
     void prevCommandLineHistory(void)
     {
-        if(_historyCommandLine.size() == 0) return;
-        if(--_historyCommandIndex < 0) _historyCommandIndex = 0;
-        _terminalCommandLine = _historyCommandLine[_historyCommandIndex];
-        _terminalCommandCharIndex = int(_terminalCommandLine.size());
+        if(_commandLineHistory.size() == 0) return;
+        if(--_commandHistoryIndex < 0) _commandHistoryIndex = 0;
+        _commandLine = _commandLineHistory[_commandHistoryIndex];
+        _commandCharIndex = int(_commandLine.size());
     }
 
     void nextCommandLineHistory(void)
     {
-        if(_historyCommandLine.size() == 0) return;
-        if(++_historyCommandIndex >= int(_historyCommandLine.size())) _historyCommandIndex = int(_historyCommandLine.size()) - 1;
-        _terminalCommandLine = _historyCommandLine[_historyCommandIndex];
-        _terminalCommandCharIndex = int(_terminalCommandLine.size());
+        if(_commandLineHistory.size() == 0) return;
+        if(++_commandHistoryIndex >= int(_commandLineHistory.size())) _commandHistoryIndex = int(_commandLineHistory.size()) - 1;
+        _commandLine = _commandLineHistory[_commandHistoryIndex];
+        _commandCharIndex = int(_commandLine.size());
     }
 
     void prevCommandLineChar(void)
     {
-        if(--_terminalCommandCharIndex < 0) _terminalCommandCharIndex = 0;
+        if(--_commandCharIndex < 0) _commandCharIndex = 0;
     }
 
     void nextCommandLineChar(void)
     {
-        if(++_terminalCommandCharIndex > int(_terminalCommandLine.size())) _terminalCommandCharIndex = int(_terminalCommandLine.size());
+        if(++_commandCharIndex > int(_commandLine.size())) _commandCharIndex = int(_commandLine.size());
     }
 
     void backspaceCommandLineChar(void)
     {
-        if(_terminalCommandLine.size()  &&  _terminalCommandCharIndex > 0  &&  _terminalCommandCharIndex <= int(_terminalCommandLine.size()))
+        if(_commandLine.size()  &&  _commandCharIndex > 0  &&  _commandCharIndex <= int(_commandLine.size()))
         {
-            _terminalCommandLine.erase(--_terminalCommandCharIndex, 1);
+            _commandLine.erase(--_commandCharIndex, 1);
         }
     }
 
     void deleteCommandLineChar(void)
     {
-        if(_terminalCommandLine.size()  &&  _terminalCommandCharIndex >= 0  &&  _terminalCommandCharIndex < int(_terminalCommandLine.size()))
+        if(_commandLine.size()  &&  _commandCharIndex >= 0  &&  _commandCharIndex < int(_commandLine.size()))
         {
-            _terminalCommandLine.erase(_terminalCommandCharIndex, 1);
-            if(_terminalCommandCharIndex > int(_terminalCommandLine.size())) _terminalCommandCharIndex = int(_terminalCommandLine.size());
+            _commandLine.erase(_commandCharIndex, 1);
+            if(_commandCharIndex > int(_commandLine.size())) _commandCharIndex = int(_commandLine.size());
         }
     }
 
     void copyCommandLineToHistory(void)
     {
-        if(_historyCommandLine.size() < MAX_HISTORY_CMD)
+        if(_commandLineHistory.size() < MAX_HISTORY_CMD)
         {
-            _historyCommandLine.push_back(_terminalCommandLine);
-            _historyCommandIndex = int(_historyCommandLine.size());
+            _commandLineHistory.push_back(_commandLine);
+            _commandHistoryIndex = int(_commandLineHistory.size());
         }
         else
         {
-            _historyCommandLine.push_back(_terminalCommandLine);
-            _historyCommandLine.erase(_historyCommandLine.begin());
-            _historyCommandIndex = int(_historyCommandLine.size()) - 1;
+            _commandLineHistory.push_back(_commandLine);
+            _commandLineHistory.erase(_commandLineHistory.begin());
+            _commandHistoryIndex = int(_commandLineHistory.size()) - 1;
         }
 
         clearCommandLine();
@@ -166,16 +170,16 @@ namespace Terminal
 
         // Copy text line by line, char by char, replace trailing zero's with newlines
         int clipboardTextIndex = 0;
-        for(int i=0; i<int(_terminalTextSelected.size()); i++)
+        for(int i=0; i<int(_selectedText.size()); i++)
         {
-            int index = _terminalTextSelected[i];
+            int index = _selectedText[i];
             for(int j=0; j<int(_terminalText[index].size())-1; j++)
             {
                 clipboardText[clipboardTextIndex++] = _terminalText[index][j];
             }
 
             // trailing zero's get replaced with newlines, except for last one
-            clipboardText[clipboardTextIndex++] = (i < int(_terminalTextSelected.size()) - 1) ? '\n' :  0;
+            clipboardText[clipboardTextIndex++] = (i < int(_selectedText.size()) - 1) ? '\n' :  0;
         }
 
         // Save to system clipboard
@@ -186,41 +190,41 @@ namespace Terminal
 
     void printTerminal(void)
     {
-        _terminalScrollIndex = std::max(0, int(_terminalText.size()) - _terminalScreenMaxIndex);
-        if(_terminalScrollOffset >= _terminalScrollIndex) _terminalScrollOffset = _terminalScrollIndex;
-        if(_terminalScrollOffset < 0) _terminalScrollOffset = 0;
+        _scrollIndex = std::max(0, int(_terminalText.size()) - _screenMaxIndex);
+        if(_scrollOffset >= _scrollIndex) _scrollOffset = _scrollIndex;
+        if(_scrollOffset < 0) _scrollOffset = 0;
 
         Graphics::clearScreen(0x22222222, 0x00000000);
 
         // Terminal text
-        for(int i=_terminalScrollOffset; i<int(_terminalText.size()); i++)
+        for(int i=_scrollOffset; i<int(_terminalText.size()); i++)
         {
-            if(i - _terminalScrollOffset >= _terminalScreenMaxIndex) break;
+            if(i - _scrollOffset >= _screenMaxIndex) break;
 
             bool invert = false;
-            for(int j=0; j<int(_terminalTextSelected.size()); j++)
+            for(int j=0; j<int(_selectedText.size()); j++)
             {
-                if(i == _terminalTextSelected[j])
+                if(i == _selectedText[j])
                 {
                     invert = true;
                     break;
                 }
             }
-            Graphics::drawText(_terminalText[i], FONT_WIDTH, (i-_terminalScrollOffset)*(FONT_HEIGHT+2), 0xAAAAAAAA, invert, 80);
+            Graphics::drawText(_terminalText[i], FONT_WIDTH, (i-_scrollOffset)*(FONT_HEIGHT+2), 0xAAAAAAAA, invert, MAX_TERM_COLS);
         }
 
         // Command line
-        std::string commandLine = _terminalCommandLine;
-        if(_terminalCommandCharIndex >= int(commandLine.size()))
+        std::string commandLine = _commandLine;
+        if(_commandCharIndex >= int(commandLine.size()))
         {
-            _terminalCommandCharIndex = int(commandLine.size());
+            _commandCharIndex = int(commandLine.size());
             commandLine += char(32);
         }
         else
         {
-            commandLine[_terminalCommandCharIndex] = char(32);
+            commandLine[_commandCharIndex] = char(32);
         } 
-        Graphics::drawText(commandLine, FONT_WIDTH, _terminalScreenMaxIndex*(FONT_HEIGHT+2)+1, 0xFFFFFFFF, true, 1, _terminalCommandCharIndex);
+        Graphics::drawText(commandLine, FONT_WIDTH, _screenMaxIndex*(FONT_HEIGHT+2)+1, 0xFFFFFFFF, true, 1, _commandCharIndex);
     }
 
 
@@ -257,7 +261,7 @@ namespace Terminal
         }
     }
 
-    void handleTerminalMouseLeftButtonDown(int mouseX, int mouseY)
+    void handleMouseLeftButtonDown(int mouseX, int mouseY)
     {
         // Normalised mouse position
         float mx = float(mouseX) / float(Graphics::getWidth());
@@ -266,101 +270,80 @@ namespace Terminal
         mouseY = int(my * float(SCREEN_HEIGHT));
         //fprintf(stderr, "%d %d %f %f\n", mouseX, mouseY, mx, my);
 
-        int terminalTextSelected = (mouseY + 2) / (FONT_HEIGHT+2) + _terminalScrollOffset;
+        int terminalTextSelected = (mouseY + 2) / (FONT_HEIGHT+2) + _scrollOffset;
 
         // Save selected text line as long as it doesn't already exist
         bool saveText = true;
-        for(int i=0; i<int(_terminalTextSelected.size()); i++)
+        for(int i=0; i<int(_selectedText.size()); i++)
         {
-            if(_terminalTextSelected[i] == terminalTextSelected)
+            if(_selectedText[i] == terminalTextSelected)
             {
                 saveText = false;
                 break;
             }
         }
-        if(saveText  &&  terminalTextSelected < int(_terminalText.size())) _terminalTextSelected.push_back(terminalTextSelected);
+        if(saveText  &&  terminalTextSelected < int(_terminalText.size())) _selectedText.push_back(terminalTextSelected);
 
         // Select everything between min and max as long as it doesn't already exist
         int selectedMin = INT_MAX;
         int selectedMax = INT_MIN;
-        for(int i=0; i<int(_terminalTextSelected.size()); i++)
+        for(int i=0; i<int(_selectedText.size()); i++)
         {
-            if(_terminalTextSelected[i] > selectedMax) selectedMax = _terminalTextSelected[i];
-            if(_terminalTextSelected[i] < selectedMin) selectedMin = _terminalTextSelected[i];
+            if(_selectedText[i] > selectedMax) selectedMax = _selectedText[i];
+            if(_selectedText[i] < selectedMin) selectedMin = _selectedText[i];
         }
         for(int i=selectedMin+1; i<selectedMax; i++)
         {
             saveText = true;
-            for(int j=0; j<int(_terminalTextSelected.size()); j++)
+            for(int j=0; j<int(_selectedText.size()); j++)
             {
-                if(_terminalTextSelected[j] == i)
+                if(_selectedText[j] == i)
                 {
                     saveText = false;
                     break;
                 }
             }
-            if(saveText  &&  i < int(_terminalText.size())) _terminalTextSelected.push_back(i);
+            if(saveText  &&  i < int(_terminalText.size())) _selectedText.push_back(i);
         }
 
-        if(mouseY == 0) _terminalScrollOffset--;
+        if(mouseY == 0) _scrollOffset--;
     }
 
-    void handleTerminalMouseRightButtonDown(int mouseX, int mouseY)
+    void handleMouseRightButtonDown(int mouseX, int mouseY)
     {
-        // Normalised mouse position
-        float mx = float(mouseX) / float(Graphics::getWidth());
-        float my = float(mouseY) / float(Graphics::getHeight());
-        int textX = int(mx * float(SCREEN_WIDTH)) / FONT_WIDTH;
-        int textY = int(my * float(SCREEN_HEIGHT)) / (FONT_HEIGHT+2);
-
-        int menuIdx = std::min(std::max(0, (textY - _terminalMenuY)), NUM_MENU_FIELDS) - 1;
-        bool onMenuX = ((textX - _terminalMenuX) >= 0)  &&  ((textX - _terminalMenuX) < MAX_MENU_COLS);
-        bool onMenuY = ((textY - _terminalMenuY) >= 0)  &&  ((textY - _terminalMenuY) < MAX_MENU_ROWS);
-        bool onCopy = (onMenuX && onMenuY && menuIdx==MenuCopy);
-        bool onAll  = (onMenuX && onMenuY && menuIdx==MenuAll);
-        bool onCut  = (onMenuX && onMenuY && menuIdx==MenuCut);
-        bool onDel  = (onMenuX && onMenuY && menuIdx==MenuDel);
-
-        _terminalMenuIdx = (onMenuX  &&  onMenuY  &&  menuIdx >= 0  &&  menuIdx < NUM_MENU_FIELDS) ? menuIdx : -1;
-
-        Graphics::drawMenu("MENU  ", _terminalMenuX * FONT_WIDTH, (_terminalMenuY+0) * (FONT_HEIGHT+2), 0xFFFFFFFF, true,    80, 0x55555555);
-        Graphics::drawMenu("Copy  ", _terminalMenuX * FONT_WIDTH, (_terminalMenuY+1) * (FONT_HEIGHT+2), 0x55555555, !onCopy, 80, 0xFFFFFFFF);
-        Graphics::drawMenu("All   ", _terminalMenuX * FONT_WIDTH, (_terminalMenuY+2) * (FONT_HEIGHT+2), 0x55555555, !onAll,  80, 0xFFFFFFFF);
-        Graphics::drawMenu("Cut   ", _terminalMenuX * FONT_WIDTH, (_terminalMenuY+3) * (FONT_HEIGHT+2), 0x55555555, !onCut,  80, 0xFFFFFFFF);
-        Graphics::drawMenu("Delete", _terminalMenuX * FONT_WIDTH, (_terminalMenuY+4) * (FONT_HEIGHT+2), 0x55555555, !onDel,  80, 0xFFFFFFFF);
+        Menu::captureItem("Terminal", mouseX, mouseY);
+        Menu::renderMenu("Terminal");
     }
 
-    void handleTerminalMouseButtonDown(const SDL_Event& event, const Editor::MouseState& mouseState)
+    void handleMouseButtonDown(const SDL_Event& event, const Editor::MouseState& mouseState)
     {
         UNREFERENCED_PARAM(event);
 
-        if(mouseState._state == SDL_BUTTON_LEFT) _terminalTextSelected.clear();
+        if(mouseState._state == SDL_BUTTON_LEFT) _selectedText.clear();
 
         if(mouseState._state == SDL_BUTTON_X1)
         {
-            float mx = float(mouseState._x) / float(Graphics::getWidth());
-            float my = float(mouseState._y) / float(Graphics::getHeight());
-            _terminalMenuX = int(mx * float(SCREEN_WIDTH)) / FONT_WIDTH;
-            _terminalMenuY = int(my * float(SCREEN_HEIGHT)) / (FONT_HEIGHT+2);
-            if(_terminalMenuX > (MAX_TERM_COLS-MAX_MENU_COLS)) _terminalMenuX = (MAX_TERM_COLS-MAX_MENU_COLS);
-            if(_terminalMenuY > (MAX_TERM_ROWS-MAX_MENU_ROWS)) _terminalMenuY = (MAX_TERM_ROWS-MAX_MENU_ROWS);
+            Menu::captureMenu("Terminal", mouseState._x, mouseState._y);
         }
     }
 
-    void handleTerminalMouseButtonUp(const SDL_Event& event, const Editor::MouseState& mouseState)
+    void handleMouseButtonUp(const SDL_Event& event, const Editor::MouseState& mouseState)
     {
         UNREFERENCED_PARAM(event);
         UNREFERENCED_PARAM(mouseState);
 
-        switch(_terminalMenuIdx)
+        int menuItemIndex;
+        Menu::getMenuItemIndex("Terminal", menuItemIndex);
+
+        switch(menuItemIndex)
         {
             // Copy selected text
             case MenuCopy:
             {
-                if(_terminalText.size()  &&  _terminalTextSelected.size())
+                if(_terminalText.size()  &&  _selectedText.size())
                 {
                     // Sort selected text
-                    std::sort(_terminalTextSelected.begin(), _terminalTextSelected.end());
+                    std::sort(_selectedText.begin(), _selectedText.end());
 
                     copyTextToClipboard();
                 }
@@ -370,16 +353,16 @@ namespace Terminal
             // Toggle between select all and select none
             case MenuAll:
             {
-                if(_terminalTextSelected.size() == _terminalText.size())
+                if(_selectedText.size() == _terminalText.size())
                 {
-                    _terminalTextSelected.clear();
+                    _selectedText.clear();
                 }
                 else
                 {
-                    _terminalTextSelected.clear();
+                    _selectedText.clear();
                     for(int i=0; i<int(_terminalText.size()); i++)
                     {
-                        _terminalTextSelected.push_back(i);
+                        _selectedText.push_back(i);
                     }
                 }
             }
@@ -387,72 +370,70 @@ namespace Terminal
 
             case MenuCut:
             {
-                if(_terminalText.size()  &&  _terminalTextSelected.size())
+                if(_terminalText.size()  &&  _selectedText.size())
                 {
                     // Sort selected text
-                    std::sort(_terminalTextSelected.begin(), _terminalTextSelected.end());
+                    std::sort(_selectedText.begin(), _selectedText.end());
 
                     copyTextToClipboard();
 
                     // Delete selected
-                    int selectedMin = _terminalTextSelected[0];
-                    int selectedMax = _terminalTextSelected.back();
+                    int selectedMin = _selectedText[0];
+                    int selectedMax = _selectedText.back();
                     if(int(_terminalText.size()) > selectedMax)
                     {
                         _terminalText.erase(_terminalText.begin() + selectedMin, _terminalText.begin() + selectedMax + 1);
                     }
                 }
 
-                _terminalTextSelected.clear();
+                _selectedText.clear();
             }
             break;
 
             case MenuDel:
             {
-                if(_terminalText.size()  &&  _terminalTextSelected.size())
+                if(_terminalText.size()  &&  _selectedText.size())
                 {
                     // Sort selected text
-                    std::sort(_terminalTextSelected.begin(), _terminalTextSelected.end());
+                    std::sort(_selectedText.begin(), _selectedText.end());
 
                     // Delete selected
-                    int selectedMin = _terminalTextSelected[0];
-                    int selectedMax = _terminalTextSelected.back();
+                    int selectedMin = _selectedText[0];
+                    int selectedMax = _selectedText.back();
                     if(int(_terminalText.size()) > selectedMax)
                     {
                         _terminalText.erase(_terminalText.begin() + selectedMin, _terminalText.begin() + selectedMax + 1);
                     }
                 }
 
-                _terminalTextSelected.clear();
+                _selectedText.clear();
             }
             break;
 
             default: break;
         }
-
-        _terminalMenuIdx = -1;
     }
 
-    void handleTerminalMouseWheel(const SDL_Event& event)
+    void handleMouseWheel(const SDL_Event& event)
     {
-        if(event.wheel.y > 0) _terminalScrollOffset -= 1;
-        if(event.wheel.y < 0) _terminalScrollOffset += 1;
+        if(event.wheel.y > 0) _scrollOffset -= 1;
+        if(event.wheel.y < 0) _scrollOffset += 1;
     }
 
-    void handleTerminalKey(const SDL_Event& event)
+    void handleKey(const SDL_Event& event)
     {
         char keyCode = event.text.text[0];
 
         if(_terminalModeGiga) Loader::sendCharGiga(keyCode);
         if(keyCode >= 32  &&  keyCode <= 126)
         {
-            _terminalCommandLine.insert(_terminalCommandLine.begin() + _terminalCommandCharIndex, char(keyCode));
-            _terminalCommandCharIndex++;
-            if(_terminalCommandLine.size() >= 79) copyCommandLineToHistory();
+            _commandLine.insert(_commandLine.begin() + _commandCharIndex, char(keyCode));
+            _commandCharIndex++;
+            if(_commandLine.size() >= MAX_COMMAND_CHARS) copyCommandLineToHistory();
         }
     }
 
-    void handleTerminalKeyDown(SDL_Keycode keyCode, Uint16 keyMod)
+    void handleKeyDown(SDL_Keycode keyCode, Uint16 keyMod)
     {
         // Leave terminal mode
         if(keyCode == Editor::getEmulatorScanCode("Terminal")  &&  keyMod == Editor::getEmulatorKeyMod("Terminal"))
@@ -470,6 +451,16 @@ namespace Terminal
             Cpu::shutdown();
             exit(0);
         }
+        // Image editor
+        else if(keyCode == Editor::getEmulatorScanCode("ImageEditor")  &&  keyMod == Editor::getEmulatorKeyMod("ImageEditor"))
+        {
+            Editor::setEditorMode(Editor::Image);
+        }
+        // Audio editor
+        else if(keyCode == Editor::getEmulatorScanCode("AudioEditor")  &&  keyMod == Editor::getEmulatorKeyMod("AudioEditor"))
+        {
+            Editor::setEditorMode(Editor::Audio);
+        }
 
         // No modifier keys
         static bool useTerminalHistory = false;
@@ -478,10 +469,10 @@ namespace Terminal
             // Both modes
             switch(keyCode)
             {
-                case SDLK_PAGEUP:   _terminalScrollOffset -= _terminalScreenMaxIndex; break;
-                case SDLK_PAGEDOWN: _terminalScrollOffset += _terminalScreenMaxIndex; break;
-                case SDLK_HOME:     _terminalScrollOffset = 0;                        break;
-                case SDLK_END:      _terminalScrollOffset = _terminalScrollIndex;     break;
+                case SDLK_PAGEUP:   _scrollOffset -= _screenMaxIndex; break;
+                case SDLK_PAGEDOWN: _scrollOffset += _screenMaxIndex; break;
+                case SDLK_HOME:     _scrollOffset = 0;                break;
+                case SDLK_END:      _scrollOffset = _scrollIndex;     break;
 
                 default: break;
             }
@@ -501,16 +492,16 @@ namespace Terminal
                     case '\r':
                     case '\n':
                     {
-                        if(!_terminalModeGiga  &&  _terminalCommandLine.size() == 1  &&  (_terminalCommandLine[0] == 't'  ||  _terminalCommandLine[0] == 'T'))
+                        if(!_terminalModeGiga  &&  _commandLine.size() == 1  &&  (_commandLine[0] == 't'  ||  _commandLine[0] == 'T'))
                         {
                             _terminalModeGiga = true;
-                            sendCommandToGiga(_terminalCommandLine + "\n");
+                            sendCommandToGiga(_commandLine + "\n");
                             clearCommandLine();
                             clearHistoryCommandLine();
                         }
                         else
                         {
-                            sendCommandToGiga(_terminalCommandLine + "\n");
+                            sendCommandToGiga(_commandLine + "\n");
                             copyCommandLineToHistory();
                         }
                     }
@@ -537,7 +528,7 @@ namespace Terminal
                         if(useTerminalHistory)
                         {
                             useTerminalHistory = false;
-                            for(int i=0; i<int(_terminalCommandLine.size()); i++) Loader::sendCharGiga(_terminalCommandLine[i]);
+                            for(int i=0; i<int(_commandLine.size()); i++) Loader::sendCharGiga(_commandLine[i]);
                             Loader::sendCharGiga('\n');
                             clearCommandLine();
                         }
@@ -572,7 +563,7 @@ namespace Terminal
         }
     }
 
-    void handleTerminalKeyUp(SDL_Keycode keyCode, Uint16 keyMod)
+    void handleKeyUp(SDL_Keycode keyCode, Uint16 keyMod)
     {
         // Help screen
         if(keyCode == Editor::getEmulatorScanCode("Help")  &&  keyMod == Editor::getEmulatorKeyMod("Help"))
@@ -581,9 +572,24 @@ namespace Terminal
             helpScreen = !helpScreen;
             Graphics::setDisplayHelpScreen(helpScreen);
         }
+        // Disassembler
+        else if(keyCode == Editor::getEmulatorScanCode("Disassembler")  &&  keyMod == Editor::getEmulatorKeyMod("Disassembler"))
+        {
+            Editor::setEditorMode(Editor::Dasm);
+        }
+        // Browser
+        else if(keyCode == Editor::getEmulatorScanCode("Browse")  &&  keyMod == Editor::getEmulatorKeyMod("Browse"))
+        {
+            Editor::setEditorMode(Editor::Load);
+        }
+        // Hex monitor
+        else if(keyCode == Editor::getEmulatorScanCode("HexMonitor")  &&  keyMod == Editor::getEmulatorKeyMod("HexMonitor"))
+        {
+            Editor::setEditorMode(Editor::Hex);
+        }
     }
 
-    void handleTerminalInput(void)
+    void handleInput(void)
     {
         static bool firstTime = true;
         if(firstTime)
@@ -609,12 +615,12 @@ namespace Terminal
 
             switch(event.type)
             {
-                case SDL_MOUSEBUTTONDOWN: handleTerminalMouseButtonDown(event, mouseState); break;
-                case SDL_MOUSEBUTTONUP:   handleTerminalMouseButtonUp(event, mouseState);   break;
-                case SDL_MOUSEWHEEL:      handleTerminalMouseWheel(event);                  break;
-                case SDL_TEXTINPUT:       handleTerminalKey(event);                         break;
-                case SDL_KEYDOWN:         handleTerminalKeyDown(keyCode, keyMod);           break;
-                case SDL_KEYUP:           handleTerminalKeyUp(keyCode, keyMod);             break;
+                case SDL_MOUSEBUTTONDOWN: handleMouseButtonDown(event, mouseState); break;
+                case SDL_MOUSEBUTTONUP:   handleMouseButtonUp(event, mouseState);   break;
+                case SDL_MOUSEWHEEL:      handleMouseWheel(event);                  break;
+                case SDL_TEXTINPUT:       handleKey(event);                         break;
+                case SDL_KEYDOWN:         handleKeyDown(keyCode, keyMod);           break;
+                case SDL_KEYUP:           handleKeyUp(keyCode, keyMod);             break;
 
                 default: break;
             }
@@ -626,17 +632,17 @@ namespace Terminal
             if(!Loader::readLineGiga(line))
             {
                 _waitForPromptGiga = false;
-                fprintf(stderr, "Terminal::handleTerminalInput() : timed out on serial port\n");
+                fprintf(stderr, "Terminal::handleInput() : timed out on serial port\n");
             }
             else
             {
                 _terminalText.push_back(line);
-                _terminalScrollDelta = 1;
+                _scrollDelta = 1;
 
                 if(line.find("?") != std::string::npos  ||  line.find("Ctrl-D") != std::string::npos)
                 {
                     _waitForPromptGiga = false;
-                    _terminalScrollDelta = 2;
+                    _scrollDelta = 2;
                 }
             }
         }
@@ -654,7 +660,7 @@ namespace Terminal
                     if(line.size())
                     {
                         _terminalText.push_back(line);
-                        _terminalScrollDelta = 1;
+                        _scrollDelta = 1;
                     }
                     line.clear();
                 }
@@ -662,27 +668,26 @@ namespace Terminal
         }
 
         // Scroll text one line at a time until end is reached, (jump to end - delta if scroll index is not at end)
-        if(_terminalScrollDelta)
+        if(_scrollDelta)
         {
-            _terminalScrollOffset = _terminalScrollIndex - _terminalScrollDelta + 2;
-            _terminalScrollDelta--;
+            _scrollOffset = _scrollIndex - _scrollDelta + 2;
+            _scrollDelta--;
         }
 
         printTerminal();
 
         switch(mouseState._state)
         {
-            case SDL_BUTTON_LEFT: handleTerminalMouseLeftButtonDown(mouseState._x, mouseState._y);  break;
-            case SDL_BUTTON_X1:   handleTerminalMouseRightButtonDown(mouseState._x, mouseState._y); break;
+            case SDL_BUTTON_LEFT: handleMouseLeftButtonDown(mouseState._x, mouseState._y);  break;
+            case SDL_BUTTON_X1:   handleMouseRightButtonDown(mouseState._x, mouseState._y); break;
 
             default: break;
         }
     }
 
-
     void process(void)
     {
-        handleTerminalInput();
+        handleInput();
         Graphics::render(true);
     }
 }

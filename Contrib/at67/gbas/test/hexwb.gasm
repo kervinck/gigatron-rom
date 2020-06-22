@@ -1,6 +1,6 @@
 _startAddress_                EQU                               0x0200
 
-; Internal variables
+; Internal Variables
 serialRawPrev                 EQU                               0x0081
 register0                     EQU                               0x0082
 register1                     EQU                               register0 + 0x02
@@ -32,7 +32,7 @@ ON_BOTTOM_ROW_BIT             EQU                               0x0002
 ENABLE_SCROLL_MSK             EQU                               0xfffe
 ON_BOTTOM_ROW_MSK             EQU                               0xfffd
 
-; Internal buffers
+; Internal Buffers
 textWorkArea                  EQU                               0x7fa0
 
 ; Includes
@@ -46,7 +46,7 @@ _entryPoint_                  EQU                               0x0200
 _next_0x021f                  EQU                               0x0224
 _end_0x02dc                   EQU                               0x02d1
 
-; Variables
+; Global Variables
 _z                            EQU                               0x0030
 _i                            EQU                               0x0032
 _a                            EQU                               0x0034
@@ -54,6 +54,8 @@ _b                            EQU                               0x0036
 _c                            EQU                               0x0038
 _d                            EQU                               0x003a
 _e                            EQU                               0x003c
+
+; Local Variables
 
 ; Arrays
 
@@ -98,11 +100,11 @@ _next_0x021f                  LDI                               16
                               STW                               _b                              ; b = a + 100
 
                               LDW                               _a
-                              SUBW                              _b
+                              XORW                              _b
                               CALL                              convertNeOpAddr
-                              STW                               0xc0
+                              STW                               0xe8
                               LDWI                              -1
-                              SUBW                              0xc0
+                              SUBW                              0xe8
                               STW                               _c
                               PEEK                              
                               STW                               _d                              ; c = NOT (a <> b) : d = peek(c)
@@ -110,9 +112,9 @@ _next_0x021f                  LDI                               16
                               LDWI                              0xaa55
                               XORW                              _a
                               ORW                               _c
-                              STW                               0xc0
+                              STW                               0xe8
                               LDWI                              0xffff
-                              ANDW                              0xc0
+                              ANDW                              0xe8
                               STW                               _e                              ; e = &hAA55 XOR a OR c AND &hFFFF
 
                               LDW                               _z
@@ -149,29 +151,29 @@ _end_0x02dc                   BRA                               _end_0x02dc     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeStub                  EQU     0x7edf
-convertNeOp                   EQU     0x7ea4
-resetVideoFlags               EQU     0x7ef1
-clearCursorRow                EQU     0x7ab6
-printInit                     EQU     0x7cb4
-printText                     EQU     0x7ec6
-printDigit                    EQU     0x79dd
-printInt16                    EQU     0x7dae
-printChar                     EQU     0x78a7
-printHexByte                  EQU     0x7cca
-printHexWord                  EQU     0x7ead
-newLineScroll                 EQU     0x7ba4
-convertEqOpAddr               EQU     0x00d0
-convertNeOpAddr               EQU     0x00d2
-convertLeOpAddr               EQU     0x00d4
-convertGeOpAddr               EQU     0x00d6
-convertLtOpAddr               EQU     0x00d8
-convertGtOpAddr               EQU     0x00da
-convert8Arr2dAddr             EQU     0x00e0
-convert8Arr3dAddr             EQU     0x00e2
-convert16Arr2dAddr            EQU     0x00e4
-convert16Arr3dAddr            EQU     0x00e6
-realTimeStubAddr              EQU     0x00dc
+realTimeStub                  EQU     0x79bb
+convertNeOp                   EQU     0x79b2
+resetVideoFlags               EQU     0x7ca2
+clearCursorRow                EQU     0x7bb6
+printInit                     EQU     0x7ba0
+printText                     EQU     0x79e6
+printDigit                    EQU     0x7aa8
+printInt16                    EQU     0x7cae
+printChar                     EQU     0x7da7
+printHexByte                  EQU     0x7aca
+printHexWord                  EQU     0x79cd
+newLineScroll                 EQU     0x7ea2
+convertEqOpAddr               EQU     0x00c2
+convertNeOpAddr               EQU     0x00c4
+convertLeOpAddr               EQU     0x00c6
+convertGeOpAddr               EQU     0x00c8
+convertLtOpAddr               EQU     0x00ca
+convertGtOpAddr               EQU     0x00cc
+convert8Arr2dAddr             EQU     0x00ce
+convert8Arr3dAddr             EQU     0x00d0
+convert16Arr2dAddr            EQU     0x00d2
+convert16Arr3dAddr            EQU     0x00d4
+realTimeStubAddr              EQU     0x00d6
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -225,6 +227,7 @@ bot                 EQU     register10
 vramAddr            EQU     register11
 evenAddr            EQU     register12
 clsAddress          EQU     register13
+varAddress          EQU     register13
     
 
 resetVideoFlags     LDI     giga_CursorX                        ; cursor x start

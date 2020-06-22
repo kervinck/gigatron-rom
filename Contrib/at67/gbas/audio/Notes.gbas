@@ -4,8 +4,10 @@
 _runtimePath_ "../runtime"
 _codeRomType_ ROMv1
 
-cls
+'audio fix for ROMv5a
+poke &h21, peek(&h21) OR 3
 sound off
+cls
 
 note = 0 : notes = note
 

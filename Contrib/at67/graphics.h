@@ -27,12 +27,14 @@
 #define HEX_CHARS_X      8
 #define HEX_CHARS_Y      32
 #define HEX_CHAR_WIDE    18
+#define MAX_SCREEN_COLS  80
+#define MAX_SCREEN_ROWS  48
 #define COLOUR_PALETTE   64
 #define NUM_LEDS         4
-#define MENU_START_X     488
-#define MENU_START_Y     0
-#define MENU_CHARS_X     8
-#define MENU_CHARS_Y     (SCREEN_HEIGHT/FONT_CELL_Y)
+#define UI_START_X       488
+#define UI_START_Y       0
+#define UI_CHARS_X       8
+#define UI_CHARS_Y       (SCREEN_HEIGHT/FONT_CELL_Y)
 #define HEX_START        30
 #define HEX_START_X      0
 #define VAR_START        96
@@ -40,7 +42,7 @@
 #define CPUA_START       78
 #define CPUB_START       120
 #define WATCH_START      66
-#define MENU_TEXT_SIZE   23
+#define UI_TEXT_SIZE     23
 #define PAGEUP_START_X   140
 #define PAGEUP_START_Y   48
 #define PAGEDN_START_X   140
@@ -85,10 +87,15 @@ namespace Graphics
     void clearScreen(uint32_t colour, uint32_t commandLineColour=0x22222222);
 
     void pixelReticle(const Cpu::State& S, int vgaX, int vgaY);
+    
+    void drawPixel(uint8_t x, uint8_t y, uint32_t colour);
+    void drawLine(int x0, int y0, int x1, int y1, uint32_t colour);
 
     void drawLeds(void);
     bool drawText(const std::string& text, int x, int y, uint32_t fgColour, bool invert, int invertSize, int invertPos=0);
-    bool drawMenu(const std::string& text, int x, int y, uint32_t fgColour, bool invert, int invertSize, uint32_t bgColour);
+    bool drawMenuItem(const std::string& text, int x, int y, uint32_t fgColour, bool invert, int invertSize, uint32_t bgColour);
+    bool drawDialog(int x, int y, int w, int h, uint32_t bgColour, uint32_t bdColour);
+    bool drawDialogItem(const std::string& text, int x, int y, uint32_t fgColour, uint32_t bdColour);
     bool drawText(const std::string& text, uint32_t* pixels, int x, int y, uint32_t fgColour, bool invert, int invertSize, int invertPos=0,
                   uint32_t bgColour=0x00000000, bool colourKey=false, int numChars=-1, bool fullscreen=false, uint32_t commentColour=0x00000000, uint32_t sectionColour=0x00000000);
     void drawDigitBox(uint8_t digit, int x, int y, uint32_t colour);
@@ -96,13 +103,6 @@ namespace Graphics
     void renderText(void);
     void renderTextWindow(void);
     void render(bool synchronise=true);
-
-    void drawLineGiga(int x0, int y0, int x1, int y1);
-    void drawLineGiga(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint8_t colour);
-    void mandelbrot(void);
-    void life(bool initialise);
-    void life1(bool initialise);
-    void tetris(void);
 }
 
 #endif

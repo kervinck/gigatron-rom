@@ -183,6 +183,10 @@ _label_ CALLI   _label
         CALLI   clearScreen
 %ENDM
 
+%MACRO  ClearRect
+        CALLI   clearRect
+%ENDM
+
 %MACRO  ClearVertBlinds
         CALLI   clearVertBlinds
 %ENDM
@@ -329,6 +333,18 @@ _label_ CALLI   _label
 
 %MACRO  Sign
         CALLI   sign
+%ENDM
+
+%MACRO  IntMin
+        CALLI   integerMin
+%ENDM
+
+%MACRO  IntMax
+        CALLI   integerMax
+%ENDM
+
+%MACRO  IntClamp
+        CALLI   integerClamp
 %ENDM
 
 %MACRO  Rand
@@ -488,13 +504,22 @@ _label_ CALLI   _label
 
 %MACRO  PlayMidi
         STW     midiStream
-        CALLI   resetAudio
-
+        CALLI   resetMidi
 %ENDM
 
 %MACRO  PlayMidiV
         STW     midiStream
-        CALLI   resetAudio
+        CALLI   resetMidi
+%ENDM
+
+%MACRO  PlayMusic
+        STW     musicStream
+        CALLI   resetMusic
+        CALLI   playMusic
+%ENDM
+
+%MACRO  GetMusicNote
+        CALLI   musicGetNote
 %ENDM
 
 %MACRO  TimeString
@@ -557,6 +582,14 @@ _label_ CALLI   _label
         CALLI   bcdInt
 %ENDM
 
+%MACRO  BcdCmp
+        CALLI   bcdCmp
+%ENDM
+
+%MACRO  BcdCpy
+        CALLI   bcdCpy
+%ENDM
+
 %MACRO  JumpFalse _label id
         BNE     _id_ + 3                                ; unique id is used as an internal macro label
 _id_    CALLI   _label
@@ -590,6 +623,10 @@ _id_    CALLI   _label
 %MACRO  JumpGT _label id
         BGT     _id_ + 3
 _id_    CALLI   _label
+%ENDM
+
+%MACRO  ResetVars
+        CALLI   resetVars
 %ENDM
 
 %MACRO  RomCheck

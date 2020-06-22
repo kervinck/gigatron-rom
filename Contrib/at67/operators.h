@@ -11,6 +11,8 @@
 
 namespace Operators
 {
+    std::vector<std::string>& getOperators(void);
+
     bool initialise(void);
 
     void createTmpVar(Expression::Numeric& numeric);
@@ -18,55 +20,55 @@ namespace Operators
     void handleSingleOp(const std::string& opcodeStr, Expression::Numeric& numeric);
 
     // Unary logic operators
-    Expression::Numeric operatorPOS(Expression::Numeric& numeric);
-    Expression::Numeric operatorNEG(Expression::Numeric& numeric);
-    Expression::Numeric operatorNOT(Expression::Numeric& numeric);
+    Expression::Numeric POS(Expression::Numeric& numeric);
+    Expression::Numeric NEG(Expression::Numeric& numeric);
+    Expression::Numeric NOT(Expression::Numeric& numeric);
 
     // Unary math operators
-    Expression::Numeric operatorCEIL(Expression::Numeric& numeric);
-    Expression::Numeric operatorFLOOR(Expression::Numeric& numeric);
-    Expression::Numeric operatorPOWF(Expression::Numeric& numeric);
-    Expression::Numeric operatorSQRT(Expression::Numeric& numeric);
-    Expression::Numeric operatorEXP(Expression::Numeric& numeric);
-    Expression::Numeric operatorEXP2(Expression::Numeric& numeric);
-    Expression::Numeric operatorLOG(Expression::Numeric& numeric);
-    Expression::Numeric operatorLOG2(Expression::Numeric& numeric);
-    Expression::Numeric operatorLOG10(Expression::Numeric& numeric);
-    Expression::Numeric operatorSIN(Expression::Numeric& numeric);
-    Expression::Numeric operatorCOS(Expression::Numeric& numeric);
-    Expression::Numeric operatorTAN(Expression::Numeric& numeric);
-    Expression::Numeric operatorASIN(Expression::Numeric& numeric);
-    Expression::Numeric operatorACOS(Expression::Numeric& numeric);
-    Expression::Numeric operatorATAN(Expression::Numeric& numeric);
-    Expression::Numeric operatorATAN2(Expression::Numeric& numeric);
-    Expression::Numeric operatorRAND(Expression::Numeric& numeric);
-    Expression::Numeric operatorREV16(Expression::Numeric& numeric);
-    Expression::Numeric operatorREV8(Expression::Numeric& numeric);
-    Expression::Numeric operatorREV4(Expression::Numeric& numeric);
+    Expression::Numeric CEIL(Expression::Numeric& numeric);
+    Expression::Numeric FLOOR(Expression::Numeric& numeric);
+    Expression::Numeric POWF(Expression::Numeric& numeric);
+    Expression::Numeric SQRT(Expression::Numeric& numeric);
+    Expression::Numeric EXP(Expression::Numeric& numeric);
+    Expression::Numeric EXP2(Expression::Numeric& numeric);
+    Expression::Numeric LOG(Expression::Numeric& numeric);
+    Expression::Numeric LOG2(Expression::Numeric& numeric);
+    Expression::Numeric LOG10(Expression::Numeric& numeric);
+    Expression::Numeric SIN(Expression::Numeric& numeric);
+    Expression::Numeric COS(Expression::Numeric& numeric);
+    Expression::Numeric TAN(Expression::Numeric& numeric);
+    Expression::Numeric ASIN(Expression::Numeric& numeric);
+    Expression::Numeric ACOS(Expression::Numeric& numeric);
+    Expression::Numeric ATAN(Expression::Numeric& numeric);
+    Expression::Numeric ATAN2(Expression::Numeric& numeric);
+    Expression::Numeric RAND(Expression::Numeric& numeric);
+    Expression::Numeric REV16(Expression::Numeric& numeric);
+    Expression::Numeric REV8(Expression::Numeric& numeric);
+    Expression::Numeric REV4(Expression::Numeric& numeric);
 
     // Binary logic operators
-    Expression::Numeric operatorAND(Expression::Numeric& left, Expression::Numeric& right);
-    Expression::Numeric operatorXOR(Expression::Numeric& left, Expression::Numeric& right);
-    Expression::Numeric operatorOR(Expression::Numeric&  left, Expression::Numeric& right);
-    Expression::Numeric operatorLSL(Expression::Numeric& left, Expression::Numeric& right);
-    Expression::Numeric operatorLSR(Expression::Numeric& left, Expression::Numeric& right);
-    Expression::Numeric operatorASR(Expression::Numeric& left, Expression::Numeric& right);
+    Expression::Numeric AND(Expression::Numeric& left, Expression::Numeric& right);
+    Expression::Numeric XOR(Expression::Numeric& left, Expression::Numeric& right);
+    Expression::Numeric OR(Expression::Numeric&  left, Expression::Numeric& right);
+    Expression::Numeric LSL(Expression::Numeric& left, Expression::Numeric& right);
+    Expression::Numeric LSR(Expression::Numeric& left, Expression::Numeric& right);
+    Expression::Numeric ASR(Expression::Numeric& left, Expression::Numeric& right);
 
     // Binary math operators
-    Expression::Numeric operatorADD(Expression::Numeric& left, Expression::Numeric& right);
-    Expression::Numeric operatorSUB(Expression::Numeric& left, Expression::Numeric& right);
-    Expression::Numeric operatorMUL(Expression::Numeric& left, Expression::Numeric& right);
-    Expression::Numeric operatorDIV(Expression::Numeric& left, Expression::Numeric& right);
-    Expression::Numeric operatorMOD(Expression::Numeric& left, Expression::Numeric& right);
-    Expression::Numeric operatorPOW(Expression::Numeric& left, Expression::Numeric& right);
+    Expression::Numeric ADD(Expression::Numeric& left, Expression::Numeric& right);
+    Expression::Numeric SUB(Expression::Numeric& left, Expression::Numeric& right);
+    Expression::Numeric MUL(Expression::Numeric& left, Expression::Numeric& right);
+    Expression::Numeric DIV(Expression::Numeric& left, Expression::Numeric& right);
+    Expression::Numeric MOD(Expression::Numeric& left, Expression::Numeric& right);
+    Expression::Numeric POW(Expression::Numeric& left, Expression::Numeric& right);
 
     // Relational operators
-    Expression::Numeric operatorEQ(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType);
-    Expression::Numeric operatorNE(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType);
-    Expression::Numeric operatorLE(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType);
-    Expression::Numeric operatorGE(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType);
-    Expression::Numeric operatorLT(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType);
-    Expression::Numeric operatorGT(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType);
+    Expression::Numeric EQ(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType);
+    Expression::Numeric NE(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType);
+    Expression::Numeric LE(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType);
+    Expression::Numeric GE(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType);
+    Expression::Numeric LT(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType);
+    Expression::Numeric GT(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType);
 }
 
 #endif

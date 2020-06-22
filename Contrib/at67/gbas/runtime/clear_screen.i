@@ -9,7 +9,19 @@ bot                 EQU     register10
 vramAddr            EQU     register11
 evenAddr            EQU     register12
 clsAddress          EQU     register13
+varAddress          EQU     register13
     
+
+%SUB                resetVars
+resetVars           LDI     0
+                    DOKE    varAddress
+                    INC     varAddress
+                    INC     varAddress
+                    LD      varAddress
+                    XORI    giga_One                            ; end of user vars
+                    BNE     resetVars
+                    RET
+%ENDS
 
 %SUB                resetVideoFlags
 resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
@@ -46,7 +58,7 @@ resetVT_loop        CALL    realTimeStubAddr
     
 %SUB                initClearFuncs
 initClearFuncs      PUSH
-                    LDWI    resetVideoTable
+                    LDWI    resetVideoFlags
                     CALL    giga_vAC
             
                     LD      fgbgColour

@@ -145,7 +145,7 @@ _50                           LDW                               _M
                               LDWI                              multiply16bit
                               CALL                              giga_vAC
                               ADDW                              _D
-                              STW                               0xc4
+                              STW                               0xc0
                               LDWI                              0x0642
                               ADDW                              _J
                               ADDW                              _J
@@ -155,7 +155,7 @@ _50                           LDW                               _M
                               STW                               mathY
                               LDWI                              multiply16bit
                               CALL                              giga_vAC
-                              ADDW                              0xc4
+                              ADDW                              0xc0
                               STW                               _D                              ; J=M-I:D=D+D*J+Z(J)*100
 
 _60                           LDW                               _J
@@ -207,7 +207,7 @@ _80                           LDW                               _E
                               CALL                              giga_vAC
                               PrintAcInt16                      
                               LDW                               _M
-                              SUBI                              88
+                              XORI                              88
                               BNE                               _90
                               PrintString                       _str_0x7ef8                     ; PRINT E/10;:IF M &&= 88 THEN PRINT ".";
 
@@ -235,20 +235,20 @@ _else_0x0393                  BRA                               _else_0x0393    
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeStub                  EQU     0x7eda
-multiply16bit                 EQU     0x7db4
+realTimeStub                  EQU     0x77bd
+multiply16bit                 EQU     0x78cd
 divide16bit                   EQU     0x7ca8
-resetVideoFlags               EQU     0x7eec
-resetVideoTable               EQU     0x7adb
-initClearFuncs                EQU     0x7ac4
-clearVertBlinds               EQU     0x7ea0
-clearCursorRow                EQU     0x79b6
-printInit                     EQU     0x7aae
-printText                     EQU     0x7de6
-printDigit                    EQU     0x78dd
+resetVideoFlags               EQU     0x7ba2
+resetVideoTable               EQU     0x79a1
+initClearFuncs                EQU     0x77cf
+clearVertBlinds               EQU     0x79c5
+clearCursorRow                EQU     0x7ab6
+printInit                     EQU     0x7aa0
+printText                     EQU     0x77e6
+printDigit                    EQU     0x78ab
 printInt16                    EQU     0x7bae
-printChar                     EQU     0x77a7
-newLineScroll                 EQU     0x76a4
+printChar                     EQU     0x7ea0
+newLineScroll                 EQU     0x7da4
 convertEqOpAddr               EQU     0x00d0
 convertNeOpAddr               EQU     0x00d2
 convertLeOpAddr               EQU     0x00d4
@@ -403,6 +403,7 @@ bot                 EQU     register10
 vramAddr            EQU     register11
 evenAddr            EQU     register12
 clsAddress          EQU     register13
+varAddress          EQU     register13
     
 
 resetVideoFlags     LDI     giga_CursorX                        ; cursor x start

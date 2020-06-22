@@ -94,9 +94,9 @@ _str_0x7ee1                   DB                                15 'Q W E R T Y 
 ; Define Fonts
 
 ; Lookup Tables
-_lut_numericLabs              EQU                               0x7da9
+_lut_numericLabs              EQU                               0x7ec5
 _lut_numericLabs              DW                                50 51 53 54 55 101 105 113 114 116 117 119 121 0x0000
-_lut_numericAddrs             EQU                               0x7bb3
+_lut_numericAddrs             EQU                               0x7eab
 _lut_numericAddrs             DW                                0x0269 0x0279 0x0289 0x0299 0x02a9 0x02b9 0x02c9 0x02d9 0x02e9 0x0309 0x0319 0x0329 0x0339 
 
 ; Code
@@ -292,17 +292,17 @@ _end_0x0376                   BRA                               _end_0x0376     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeStub                  EQU     0x7ec3
-gosubNumericLabel             EQU     0x7bcd
-resetVideoFlags               EQU     0x7ed5
-resetVideoTable               EQU     0x7adb
-initClearFuncs                EQU     0x7ac4
-clearVertBlinds               EQU     0x7dc5
-clearCursorRow                EQU     0x79b6
-printInit                     EQU     0x7aae
-printText                     EQU     0x7eaa
-printChar                     EQU     0x78a7
-newLineScroll                 EQU     0x7ca4
+realTimeStub                  EQU     0x79a2
+gosubNumericLabel             EQU     0x79cd
+resetVideoFlags               EQU     0x78dc
+resetVideoTable               EQU     0x7aa1
+initClearFuncs                EQU     0x78e8
+clearVertBlinds               EQU     0x7ac5
+clearCursorRow                EQU     0x7bb6
+printInit                     EQU     0x7ba0
+printText                     EQU     0x79b4
+printChar                     EQU     0x7ca7
+newLineScroll                 EQU     0x7da4
 convertEqOpAddr               EQU     0x00d0
 convertNeOpAddr               EQU     0x00d2
 convertLeOpAddr               EQU     0x00d4
@@ -392,6 +392,7 @@ bot                 EQU     register10
 vramAddr            EQU     register11
 evenAddr            EQU     register12
 clsAddress          EQU     register13
+varAddress          EQU     register13
     
 
 resetVideoFlags     LDI     giga_CursorX                        ; cursor x start

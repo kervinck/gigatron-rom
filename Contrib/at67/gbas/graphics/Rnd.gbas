@@ -3,9 +3,9 @@ _codeRomType_ ROMv1
 
 const max = 127
 
-dim a(max)=0
+dim a%(max)=0
 
-cls
+cls init
 
 for i=0 to max
     poke (127 - a(i) LSL 8) + i, &h3F

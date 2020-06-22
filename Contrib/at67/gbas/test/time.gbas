@@ -1,11 +1,15 @@
 _runtimePath_ "../runtime"
+_runtimeStart_ &h7FFF
 _codeRomType_ ROMv3
 
 set FGBG_COLOUR, &h0000 : cls
-load font, ../../images/gbas/Fonts/Scifi/Scifi.tga, 0, &h3400
-load font, ../../images/gbas/Fonts/Sinc/Sinc.tga, 1, &h3300
+load font, ../../res/font/Scifi/Scifi.tga, 0, &h3400
+load font, ../../res/font/Sinc/Sinc.tga, 1, &h3300
 
 vram = 0x0800
+
+'audio fix for ROMv5a
+poke &h21, peek(&h21) OR 3
 
 init time, midiv, userProc
 

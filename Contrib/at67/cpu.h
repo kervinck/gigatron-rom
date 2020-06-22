@@ -8,8 +8,8 @@
 #include <algorithm>
 
 
-#define MAJOR_VERSION "0.9"
-#define MINOR_VERSION "9B"
+#define MAJOR_VERSION "1.0"
+#define MINOR_VERSION "0B"
 #define VERSION_STR "gtemuAT67 v" MAJOR_VERSION "." MINOR_VERSION
  
 #define ROM_INST 0
@@ -156,7 +156,7 @@ namespace Cpu
     void softReset(void);
     void swapMemoryModel(void);
     void vCpuUsage(const State& S, const State& T);
-    void process(void);
+    void process(bool disableOutput=false);
 
 #ifdef _WIN32
     void restoreWin32Console(void);

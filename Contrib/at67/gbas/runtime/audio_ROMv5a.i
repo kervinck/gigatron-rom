@@ -7,20 +7,22 @@ sndChannel          EQU     register8
 sndFrequency        EQU     register9
 sndVolume           EQU     register10
 sndWaveType         EQU     register11
+musicStream         EQU     register8
+musicNote           EQU     register9
+musicCommand        EQU     register10
+musicPtr            EQU     register11
 
 
-%SUB                resetAudio
-resetAudio          LDI     1
+%SUB                resetMidi
+resetMidi           LD      giga_frameCount
+                    ADDI    1
                     STW     midiDelay                       ; instant MIDI startup
-                    LDWI    giga_soundChan1
-                    STW     audioAddr
-                    LD      waveType
-                    ANDI    0x03
-                    ST      waveType + 1                    ; wavX
+                    LDI     giga_soundChan1 >>8
+                    ST      audioAddr + 1
                     LDI     0
-                    ST      waveType                        ; wavA
+                    ST      waveType                        ; wavA, (wavX is initialised by Macros)
 
-resetA_loop         LDI     giga_soundChan1
+resetMi_loop        LDI     giga_soundChan1
                     ST      audioAddr                       ; reset low byte
                     LDW     waveType
                     DOKE    audioAddr                       ; wavA and wavX
@@ -28,16 +30,12 @@ resetA_loop         LDI     giga_soundChan1
                     INC     audioAddr    
                     LDI     0
                     DOKE    audioAddr                       ; keyL and keyH
-                    INC     audioAddr
-                    INC     audioAddr
-                    DOKE    audioAddr                       ; oscL and oscH
                     INC     audioAddr + 1                   ; increment high byte
-                    
                     LD      audioAddr + 1
                     SUBI    4
-                    BLE     resetA_loop
+                    BLE     resetMi_loop
                     RET
-%ENDS   
+%ENDS
 
 %SUB                playMidi
 playMidi            LDW     midiStream
@@ -183,6 +181,97 @@ midiEndNote         LDW     midiCommand
                     ST      midiPtr                         ; channels address 0x01FC <-> 0x04FC
                     LDI     0
                     DOKE    midiPtr                         ; end note
+                    RET
+%ENDS
+
+%SUB                resetMusic
+resetMusic          LDI     giga_soundChan1 >>8
+                    ST      audioAddr + 1
+                    LDI     0
+                    ST      waveType                        ; wavA, (wavX is initialised by Macros)
+
+resetMu_loop        LDI     giga_soundChan1
+                    ST      audioAddr                       ; reset low byte
+                    LDW     waveType
+                    DOKE    audioAddr                       ; wavA and wavX
+                    INC     audioAddr
+                    INC     audioAddr
+                    LDI     0
+                    DOKE    audioAddr                       ; keyL and keyH
+                    INC     audioAddr + 1                   ; increment high byte
+                    LD      audioAddr + 1
+                    SUBI    4
+                    BLE     resetMu_loop
+                    RET
+%ENDS   
+
+%SUB                playMusic
+playMusic           PUSH
+                    
+playN_process       LDW     musicStream
+                    INC     musicStream
+                    PEEK                                    ; get music stream byte
+                    STW     musicCommand
+                    ANDI    0xF0
+                    XORI    0x90                            ; check for start note
+                    BNE     playN_endnote
+                    LDW     musicStream
+                    INC     musicStream
+                    PEEK                                    ; get music note
+                    ST      musicNote
+                    CALLI   musicGetNote                    ; get note from ROM
+                    CALLI   musicPlayNote
+                    BRA     playN_process
+                    
+playN_endnote       XORI    0x10                            ; check for end note
+                    BNE     playN_segment
+                    LDI     0
+                    STW     musicNote
+                    CALLI   musicPlayNote         			; end note
+                    BRA     playN_process
+
+playN_segment       XORI    0x50                            ; check for new segment
+                    BNE     playN_delay
+                    LDW     musicStream                     ; music stream
+                    DEEK
+                    STW     musicStream                     ; 0xD0 new music segment address
+                    BNE     playN_process                   ; 0x0000 = stop
+                    POP
+                    RET
+
+playN_delay         LDW     musicCommand
+                    ST      giga_soundTimer                 ; keep pumping soundTimer
+                    STW     waitVBlankNum
+                    CALLI   waitVBlanks
+                    BRA     playN_process
+%ENDS
+
+%SUB                musicGetNote
+musicGetNote        LDWI    giga_notesTable                 ; note table in ROM
+                    STW     musicPtr
+                    LD      musicNote
+                    SUBI    11
+                    LSLW
+                    ADDW    musicPtr
+                    STW     musicPtr
+                    LUP     0x00                            ; get ROM note low byte
+                    ST      musicNote
+                    LDW     musicPtr
+                    LUP     0x01                            ; get ROM note high byte
+                    ST      musicNote + 1
+                    LDW     musicNote                       ; this is needed for GET("MUSIC_NOTE")
+                    RET
+%ENDS
+
+%SUB                musicPlayNote
+musicPlayNote       LDW     musicCommand
+                    ANDI    0x03                            ; get channel
+                    ADDI    0x01
+                    ST      musicPtr + 1
+                    LDI     0xFC
+                    ST      musicPtr                        ; note address 0x01FC <-> 0x04FC
+                    LDW     musicNote
+                    DOKE    musicPtr                        ; set note
                     RET
 %ENDS
 

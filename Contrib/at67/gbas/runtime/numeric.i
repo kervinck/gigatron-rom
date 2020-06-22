@@ -1,4 +1,8 @@
 ; do *NOT* use register4 to register7 during time slicing
+intSrcA             EQU     register0
+intSrcB             EQU     register1
+intSrcX             EQU     register2
+intSwap             EQU     register3
 intSrcAddr          EQU     register8
 intDigit            EQU     register9
 intResult           EQU     register10
@@ -14,6 +18,47 @@ bcdValue            EQU     register0
 bcdDigit            EQU     register1
 bcdMult             EQU     register2
 
+
+%SUB                integerMin
+integerMin          LDW     intSrcA
+                    SUBW    intSrcB
+                    BLE     integerMi_A
+                    LDW     intSrcB
+                    RET
+
+integerMi_A         LDW     intSrcA
+                    RET
+%ENDS
+
+%SUB                integerMax
+integerMax          LDW     intSrcA
+                    SUBW    intSrcB
+                    BGE     integerMa_A
+                    LDW     intSrcB
+                    RET
+
+integerMa_A         LDW     intSrcA
+                    RET
+%ENDS
+
+%SUB                integerClamp
+integerClamp        LDW     intSrcX
+                    SUBW    intSrcA
+                    BGE     integerCl_X
+                    BRA     integerCl_A0
+
+integerCl_X         LDW     intSrcX
+                    STW     intSrcA
+
+integerCl_A0        LDW     intSrcA
+                    SUBW    intSrcB
+                    BLE     integerCl_A1
+                    LDW     intSrcB
+                    RET
+
+integerCl_A1        LDW     intSrcA
+                    RET
+%ENDS
 
 %SUB                integerStr
                     ; converts a string to a +/- integer, assumes string pointer is pointing to first char and not the string length, (no overflow or underflow checks)
@@ -170,5 +215,57 @@ bcdInt              PUSH
                     LD      bcdValue
                     POKE    bcdDstAddr
                     POP
+                    RET
+%ENDS
+
+                    ; bcd values are stored unpacked lsd to msd
+                    ; cmp expects addrs to be pointing to msd!
+%SUB                bcdCmp
+bcdCmp              LDW     bcdDstAddr
+                    PEEK                        ; expects unpacked byte values 0 to 9
+                    STW     bcdDstData
+                    LDW     bcdSrcAddr
+                    PEEK                        ; expects unpacked byte values 0 to 9
+                    SUBW    bcdDstData
+                    BGT     bcdC_gt
+                    BLT     bcdC_lt
+                    PUSH
+                    LDWI    bcdCmpExt
+                    CALL    giga_vAC
+                    POP
+                    BGT     bcdCmp
+                    LDI     0
+                    RET
+
+bcdC_gt             LDI     1
+                    RET
+                    
+bcdC_lt             LDWI    -1
+                    RET                    
+%ENDS
+
+%SUB                bcdCmpExt
+bcdCmpExt           LDW     bcdDstAddr
+                    SUBI    1
+                    STW     bcdDstAddr
+                    LDW     bcdSrcAddr
+                    SUBI    1
+                    STW     bcdSrcAddr
+                    LD      bcdLength
+                    SUBI    1
+                    ST      bcdLength           ; expects src and dst lengths to be equal
+                    RET
+%ENDS
+
+%SUB                bcdCpy
+bcdCpy              LDW     bcdSrcAddr
+                    PEEK
+                    POKE    bcdDstAddr
+                    INC     bcdSrcAddr
+                    INC     bcdDstAddr
+                    LD      bcdLength
+                    SUBI    1
+                    ST      bcdLength           ; expects src and dst lengths to be equal
+                    BGT     bcdCpy
                     RET
 %ENDS
