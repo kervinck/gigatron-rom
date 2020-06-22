@@ -2684,7 +2684,7 @@ namespace Keywords
             // Check for LUT generator
             addrText = codeLine._code.substr(lbra + 1, rbra - (lbra + 1));
             addrTokens = Expression::tokenise(addrText, ',', true);
-            if(addrTokens.size() >= 5)
+            if(addrTokens.size() >= 4)
             {
                 foundLutGenerator = true;
             }
@@ -2730,7 +2730,7 @@ namespace Keywords
         {
             if(addrTokens.size() < 4  ||  addrTokens.size() > 6)
             {
-                fprintf(stderr, "Keywords::DEF() : LUT generator must have 4, 5 or parameters, '(ADDR, <VAR>, START, STOP, SIZE, <OFFSET>)', (<VAR> and <OFFSET> are optional), found %d in '%s' on line %d\n",
+                fprintf(stderr, "Keywords::DEF() : LUT generator must have 4 to 6 parameters, '(ADDR, <VAR>, START, STOP, SIZE, <OFFSET>)', (<VAR> and <OFFSET> are optional), found %d in '%s' on line %d\n",
                         int(addrTokens.size()), codeLine._code.c_str(), codeLineIndex);
                 return false;
             }
