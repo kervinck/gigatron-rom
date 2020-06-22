@@ -1,6 +1,6 @@
 _startAddress_                EQU                               0x0200
 
-; Internal variables
+; Internal Variables
 serialRawPrev                 EQU                               0x0081
 register0                     EQU                               0x0082
 register1                     EQU                               register0 + 0x02
@@ -32,7 +32,7 @@ ON_BOTTOM_ROW_BIT             EQU                               0x0002
 ENABLE_SCROLL_MSK             EQU                               0xfffe
 ON_BOTTOM_ROW_MSK             EQU                               0xfffd
 
-; Internal buffers
+; Internal Buffers
 textWorkArea                  EQU                               0xffa0
 
 ; Includes
@@ -189,7 +189,7 @@ _end_0x092b                   EQU                               0x0dd8
 _end_0x092d                   EQU                               0x0dda
 _end_0x092f                   EQU                               0x0ddc
 
-; Variables
+; Global Variables
 _M                            EQU                               0x0030
 _P                            EQU                               0x0032
 _X                            EQU                               0x0034
@@ -198,71 +198,73 @@ _Z                            EQU                               0x0038
 _Q4                           EQU                               0x003a
 _T8                           EQU                               0x003c
 
+; Local Variables
+
 ; Arrays
 
 ; Strings
-_A$                           EQU                               0xfe7c
+_A$                           EQU                               0x7da0
 _A$                           DB                                0 '' 0
 
 ; Constant Strings
-_str_0xff6e                   EQU                               0xff6e
-_str_0xff6e                   DB                                48 'YOU ARE IN THE H&M CASINO,IN FRONT OF ONE OF OUR' 0
-_str_0xff47                   EQU                               0xff47
-_str_0xff47                   DB                                37 'ONE-ARM BANDITS. BET FROM $1 TO $100.' 0
-_str_0xff09                   EQU                               0xff09
-_str_0xff09                   DB                                60 'TO PULL THE ARM, PUNCH THE RETURN KEY AFTER MAKING YOUR BET.' 0
-_str_0xfef6                   EQU                               0xfef6
-_str_0xfef6                   DB                                8 'YOUR BET' 0
-_str_0xff06                   EQU                               0xff06
-_str_0xff06                   DB                                1 '?' 0
-_str_0xfee3                   EQU                               0xfee3
-_str_0xfee3                   DB                                9 'YOU LOST.' 0
-_str_0xfedc                   EQU                               0xfedc
-_str_0xfedc                   DB                                5 'AGAIN' 0
-_str_0xfe3b                   EQU                               0xfe3b
-_str_0xfe3b                   DB                                49 'PAY UP!  PLEASE LEAVE YOUR MONEY ON THE TERMINAL.' 0
-_str_0xfe25                   EQU                               0xfe25
-_str_0xfe25                   DB                                20 'HEY, YOU BROKE EVEN.' 0
-_str_0xfdd3                   EQU                               0xfdd3
-_str_0xfdd3                   DB                                43 'COLLECT YOUR WINNINGS FROM THE H&M CASHIER.' 0
-_str_0xfe15                   EQU                               0xfe15
-_str_0xfe15                   DB                                14 '**TOP DOLLAR**' 0
-_str_0xfe0b                   EQU                               0xfe0b
-_str_0xfe0b                   DB                                8 'YOU WON!' 0
-_str_0xfdc4                   EQU                               0xfdc4
-_str_0xfdc4                   DB                                13 '***JACKPOT***' 0
-_str_0xfdb6                   EQU                               0xfdb6
-_str_0xfdb6                   DB                                12 '*DOUBLE BAR*' 0
-_str_0xfd9f                   EQU                               0xfd9f
-_str_0xfd9f                   DB                                21 'HOUSE LIMITS ARE $100' 0
-_str_0xfd8c                   EQU                               0xfd8c
-_str_0xfd8c                   DB                                17 'MINIMUM BET IS $1' 0
-_str_0xfe06                   EQU                               0xfe06
-_str_0xfe06                   DB                                3 'BAR' 0
-_str_0xfe00                   EQU                               0xfe00
-_str_0xfe00                   DB                                4 'BELL' 0
-_str_0xfd84                   EQU                               0xfd84
-_str_0xfd84                   DB                                6 'ORANGE' 0
-_str_0xfd7d                   EQU                               0xfd7d
-_str_0xfd7d                   DB                                5 'LEMON' 0
-_str_0xfd77                   EQU                               0xfd77
-_str_0xfd77                   DB                                4 'PLUM' 0
-_str_0xfd6f                   EQU                               0xfd6f
-_str_0xfd6f                   DB                                6 'CHERRY' 0
-_str_0xfd69                   EQU                               0xfd69
-_str_0xfd69                   DB                                4 ' BAR' 0
-_str_0xfd62                   EQU                               0xfd62
-_str_0xfd62                   DB                                5 ' BELL' 0
-_str_0xfd59                   EQU                               0xfd59
-_str_0xfd59                   DB                                7 ' ORANGE' 0
-_str_0xfd51                   EQU                               0xfd51
-_str_0xfd51                   DB                                6 ' LEMON' 0
-_str_0xfd4a                   EQU                               0xfd4a
-_str_0xfd4a                   DB                                5 ' PLUM' 0
-_str_0xfd41                   EQU                               0xfd41
-_str_0xfd41                   DB                                7 ' CHERRY' 0
-_str_0xfd37                   EQU                               0xfd37
-_str_0xfd37                   DB                                8 'DOUBLE!!' 0
+_str_0x7fce                   EQU                               0x7fce
+_str_0x7fce                   DB                                48 'YOU ARE IN THE H&M CASINO,IN FRONT OF ONE OF OUR' 0
+_str_0x7fa7                   EQU                               0x7fa7
+_str_0x7fa7                   DB                                37 'ONE-ARM BANDITS. BET FROM $1 TO $100.' 0
+_str_0x7ec2                   EQU                               0x7ec2
+_str_0x7ec2                   DB                                60 'TO PULL THE ARM, PUNCH THE RETURN KEY AFTER MAKING YOUR BET.' 0
+_str_0x7eb8                   EQU                               0x7eb8
+_str_0x7eb8                   DB                                8 'YOUR BET' 0
+_str_0x7fa4                   EQU                               0x7fa4
+_str_0x7fa4                   DB                                1 '?' 0
+_str_0x7ead                   EQU                               0x7ead
+_str_0x7ead                   DB                                9 'YOU LOST.' 0
+_str_0x7ea6                   EQU                               0x7ea6
+_str_0x7ea6                   DB                                5 'AGAIN' 0
+_str_0x7ccd                   EQU                               0x7ccd
+_str_0x7ccd                   DB                                49 'PAY UP!  PLEASE LEAVE YOUR MONEY ON THE TERMINAL.' 0
+_str_0x7cb7                   EQU                               0x7cb7
+_str_0x7cb7                   DB                                20 'HEY, YOU BROKE EVEN.' 0
+_str_0x7bd3                   EQU                               0x7bd3
+_str_0x7bd3                   DB                                43 'COLLECT YOUR WINNINGS FROM THE H&M CASHIER.' 0
+_str_0x7ca7                   EQU                               0x7ca7
+_str_0x7ca7                   DB                                14 '**TOP DOLLAR**' 0
+_str_0x7bc9                   EQU                               0x7bc9
+_str_0x7bc9                   DB                                8 'YOU WON!' 0
+_str_0x7bba                   EQU                               0x7bba
+_str_0x7bba                   DB                                13 '***JACKPOT***' 0
+_str_0x7bac                   EQU                               0x7bac
+_str_0x7bac                   DB                                12 '*DOUBLE BAR*' 0
+_str_0x7ae9                   EQU                               0x7ae9
+_str_0x7ae9                   DB                                21 'HOUSE LIMITS ARE $100' 0
+_str_0x7ad6                   EQU                               0x7ad6
+_str_0x7ad6                   DB                                17 'MINIMUM BET IS $1' 0
+_str_0x7ea1                   EQU                               0x7ea1
+_str_0x7ea1                   DB                                3 'BAR' 0
+_str_0x7ca1                   EQU                               0x7ca1
+_str_0x7ca1                   DB                                4 'BELL' 0
+_str_0x7ba4                   EQU                               0x7ba4
+_str_0x7ba4                   DB                                6 'ORANGE' 0
+_str_0x7acf                   EQU                               0x7acf
+_str_0x7acf                   DB                                5 'LEMON' 0
+_str_0x7ac9                   EQU                               0x7ac9
+_str_0x7ac9                   DB                                4 'PLUM' 0
+_str_0x7ac1                   EQU                               0x7ac1
+_str_0x7ac1                   DB                                6 'CHERRY' 0
+_str_0x7abb                   EQU                               0x7abb
+_str_0x7abb                   DB                                4 ' BAR' 0
+_str_0x7ab4                   EQU                               0x7ab4
+_str_0x7ab4                   DB                                5 ' BELL' 0
+_str_0x7aab                   EQU                               0x7aab
+_str_0x7aab                   DB                                7 ' ORANGE' 0
+_str_0x7aa3                   EQU                               0x7aa3
+_str_0x7aa3                   DB                                6 ' LEMON' 0
+_str_0x79f9                   EQU                               0x79f9
+_str_0x79f9                   DB                                5 ' PLUM' 0
+_str_0x79f0                   EQU                               0x79f0
+_str_0x79f0                   DB                                7 ' CHERRY' 0
+_str_0x79e6                   EQU                               0x79e6
+_str_0x79e6                   DB                                8 'DOUBLE!!' 0
 
 ; Data
 
@@ -279,22 +281,22 @@ _str_0xfd37                   DB                                8 'DOUBLE!!' 0
 ; Define Fonts
 
 ; Lookup Tables
-_inputVars_0xfef4             EQU                               0xfef4
-_inputVars_0xfef4             DW                                0x0030 
-_inputStrs_0xfef2             EQU                               0xfef2
-_inputStrs_0xfef2             DW                                0xff06 
-_inputTypes_0xfeee            EQU                               0xfeee
-_inputTypes_0xfeee            DW                                0x5f02 0x0000 
-_input_0xff00                 EQU                               0xff00
-_input_0xff00                 DW                                0xfef4 0xfef2 0xfeee 
-_inputVars_0xfe74             EQU                               0xfe74
-_inputVars_0xfe74             DW                                0xfe7c 
-_inputStrs_0xfe72             EQU                               0xfe72
-_inputStrs_0xfe72             DW                                0xff06 
-_inputTypes_0xfe6e            EQU                               0xfe6e
-_inputTypes_0xfe6e            DW                                0x5f03 0x0000 
-_input_0xfe76                 EQU                               0xfe76
-_input_0xfe76                 DW                                0xfe74 0xfe72 0xfe6e 
+_inputVars_0xff98             EQU                               0xff98
+_inputVars_0xff98             DW                                0x0030 
+_inputStrs_0xff96             EQU                               0xff96
+_inputStrs_0xff96             DW                                0x7fa4 
+_inputTypes_0xff92            EQU                               0xff92
+_inputTypes_0xff92            DW                                0x5f03 0x0000 
+_input_0xff9a                 EQU                               0xff9a
+_input_0xff9a                 DW                                0xff98 0xff96 0xff92 
+_inputVars_0xff8a             EQU                               0xff8a
+_inputVars_0xff8a             DW                                0x7da0 
+_inputStrs_0xff88             EQU                               0xff88
+_inputStrs_0xff88             DW                                0x7fa4 
+_inputTypes_0xff84            EQU                               0xff84
+_inputTypes_0xff84            DW                                0x5f05 0x0000 
+_input_0xff8c                 EQU                               0xff8c
+_input_0xff8c                 DW                                0xff8a 0xff88 0xff84 
 
 ; Code
 _entryPoint_                  LDI                               0x28
@@ -319,22 +321,22 @@ _30                           NewLine
                               NewLine                           
                               NewLine                                                           ; PRINT: PRINT: PRINT
 
-_120                          PrintString                       _str_0xff6e
+_120                          PrintString                       _str_0x7fce
                               NewLine                                                           ; PRINT "YOU ARE IN THE H&M CASINO,IN FRONT OF ONE OF OUR"
 
-_130                          PrintString                       _str_0xff47
+_130                          PrintString                       _str_0x7fa7
                               NewLine                                                           ; PRINT "ONE-ARM BANDITS. BET FROM $1 TO $100."
 
-_140                          PrintString                       _str_0xff09
+_140                          PrintString                       _str_0x7ec2
                               NewLine                                                           ; PRINT "TO PULL THE ARM, PUNCH THE RETURN KEY AFTER MAKING YOUR BET."
 
 _150                          LDI                               0
                               STW                               _P                              ; P=0
 
 _160                          NewLine                           
-                              PrintString                       _str_0xfef6                     ; PRINT: PRINT "YOUR BET";
+                              PrintString                       _str_0x7eb8                     ; PRINT: PRINT "YOUR BET";
 
-_170                          LDWI                              0xff00
+_170                          LDWI                              0xff9a
                               Input                                                             ; INPUT M
 
 _180                          LDW                               _M
@@ -372,10 +374,10 @@ _240                          LDI                               0x06
 _250                          LDI                               0x06
                               RandMod                           
                               ADDI                              1
-                              STW                               0xde
+                              STW                               0xc0
                               LDWI                              _page_0x0300
                               CALL                              giga_vAC
-_page_0x0300                  LDW                               0xde
+_page_0x0300                  LDW                               0xc0
                               STW                               _Z                              ; Z=(RND(6)+1)
 
 _260                          NewLine                                                           ; PRINT
@@ -467,10 +469,10 @@ _380                          LDW                               _Y
 _390                          LDW                               _Z
                               XORI                              1
                               CALL                              convertEqOpAddr
-                              STW                               0xde
+                              STW                               0xc0
                               LDWI                              _page_0x0400
                               CALL                              giga_vAC
-_page_0x0400                  LDW                               0xde
+_page_0x0400                  LDW                               0xc0
                               JumpFalse                         _400 14
                               LDWI                              _1150
                               CALL                              giga_vAC                        ; IF Z=1 THEN 1150
@@ -533,7 +535,7 @@ _470                          LDW                               _Y
 
 _480                          NewLine                                                           ; PRINT
 
-_490                          PrintString                       _str_0xfee3
+_490                          PrintString                       _str_0x7ead
                               NewLine                                                           ; PRINT "YOU LOST."
 
 _500                          LDW                               _P
@@ -544,19 +546,19 @@ _510                          LDW                               _P
                               PrintAcInt16                      
                               NewLine                                                           ; PRINT "YOUR STANDINGS ARE $"P
 
-_520                          PrintString                       _str_0xfedc                     ; PRINT "AGAIN";
+_520                          PrintString                       _str_0x7ea6                     ; PRINT "AGAIN";
 
-_530                          LDWI                              0xfe76
+_530                          LDWI                              0xff8c
                               Input                                                             ; INPUT A$
 
 _540                          CALL                              convertEqOpAddr
-                              STW                               0xc0
-                              LDI                               192
+                              STW                               0xe8
+                              LDI                               232
                               JumpFalse                         _550 23
-                              STW                               0xde
+                              STW                               0xc0
                               LDWI                              _page_0x0500
                               CALL                              giga_vAC
-_page_0x0500                  LDW                               0xde
+_page_0x0500                  LDW                               0xc0
                               LDWI                              _160
                               CALL                              giga_vAC                        ; IF A$="Y" THEN 160
 
@@ -621,19 +623,19 @@ _650                          LDW                               _Z
 _660                          LDWI                              _1341
                               CALL                              giga_vAC                        ; GOTO 1341
 
-_670                          PrintString                       _str_0xfe3b
+_670                          PrintString                       _str_0x7ccd
                               NewLine                                                           ; PRINT "PAY UP!  PLEASE LEAVE YOUR MONEY ON THE TERMINAL."
 
 _680                          LDWI                              _1350
                               CALL                              giga_vAC                        ; GOTO 1350
 
-_690                          PrintString                       _str_0xfe25
+_690                          PrintString                       _str_0x7cb7
                               NewLine                                                           ; PRINT "HEY, YOU BROKE EVEN."
 
 _700                          LDWI                              _1350
                               CALL                              giga_vAC                        ; GOTO 1350
 
-_710                          PrintString                       _str_0xfdd3
+_710                          PrintString                       _str_0x7bd3
                               NewLine                                                           ; PRINT "COLLECT YOUR WINNINGS FROM THE H&M CASHIER."
 
 _720                          LDWI                              _1350
@@ -647,14 +649,14 @@ _730                          LDW                               _Z
                               CALL                              giga_vAC                        ; IF Z=1 THEN 780
 
 _740                          NewLine                           
-                              STW                               0xde
+                              STW                               0xc0
                               LDWI                              _page_0x0600
                               CALL                              giga_vAC
-_page_0x0600                  LDW                               0xde
-                              PrintString                       _str_0xfe15
+_page_0x0600                  LDW                               0xc0
+                              PrintString                       _str_0x7ca7
                               NewLine                                                           ; PRINT: PRINT "**TOP DOLLAR**"
 
-_750                          PrintString                       _str_0xfe0b
+_750                          PrintString                       _str_0x7bc9
                               NewLine                                                           ; PRINT "YOU WON!"
 
 _760                          LDI                               10
@@ -671,10 +673,10 @@ _770                          LDWI                              _510
                               CALL                              giga_vAC                        ; GOTO 510
 
 _780                          NewLine                           
-                              PrintString                       _str_0xfdc4
+                              PrintString                       _str_0x7bba
                               NewLine                                                           ; PRINT:PRINT "***JACKPOT***"
 
-_790                          PrintString                       _str_0xfe0b
+_790                          PrintString                       _str_0x7bc9
                               NewLine                                                           ; PRINT "YOU WON!"
 
 _800                          LDI                               100
@@ -691,10 +693,10 @@ _810                          LDWI                              _510
                               CALL                              giga_vAC                        ; GOTO 510
 
 _820                          NewLine                           
-                              PrintString                       _str_0xfdb6
+                              PrintString                       _str_0x7bac
                               NewLine                                                           ; PRINT:PRINT "*DOUBLE BAR*"
 
-_830                          PrintString                       _str_0xfe0b
+_830                          PrintString                       _str_0x7bc9
                               NewLine                                                           ; PRINT "YOU WON!"
 
 _840                          LDI                               5
@@ -710,13 +712,13 @@ _840                          LDI                               5
 _850                          LDWI                              _510
                               CALL                              giga_vAC                        ; GOTO 510
 
-_860                          PrintString                       _str_0xfd9f
+_860                          PrintString                       _str_0x7ae9
                               NewLine                                                           ; PRINT "HOUSE LIMITS ARE $100"
 
 _870                          LDWI                              _160
                               CALL                              giga_vAC                        ; GOTO 160
 
-_880                          PrintString                       _str_0xfd8c
+_880                          PrintString                       _str_0x7ad6
                               NewLine                                                           ; PRINT "MINIMUM BET IS $1"
 
 _890                          LDWI                              _160
@@ -725,141 +727,141 @@ _890                          LDWI                              _160
 _900                          LDWI                              _220
                               CALL                              giga_vAC                        ; GOTO 220
 
-_910                          PrintString                       _str_0xfe06
+_910                          PrintString                       _str_0x7ea1
                               LDWI                              _1310
                               CALL                              giga_vAC                        ; PRINT "BAR";:GOSUB 1310
 
 _920                          LDWI                              _330
                               CALL                              giga_vAC                        ; GOTO 330
 
-                              STW                               0xde
+                              STW                               0xc0
                               LDWI                              _page_0x08a0
                               CALL                              giga_vAC
-_page_0x08a0                  LDW                               0xde
-_930                          PrintString                       _str_0xfe00
+_page_0x08a0                  LDW                               0xc0
+_930                          PrintString                       _str_0x7ca1
                               LDWI                              _1310
                               CALL                              giga_vAC                        ; PRINT "BELL";:GOSUB 1310
 
 _940                          LDWI                              _330
                               CALL                              giga_vAC                        ; GOTO 330
 
-_950                          PrintString                       _str_0xfd84
+_950                          PrintString                       _str_0x7ba4
                               LDWI                              _1310
                               CALL                              giga_vAC                        ; PRINT "ORANGE";:GOSUB 1310
 
 _960                          LDWI                              _330
                               CALL                              giga_vAC                        ; GOTO 330
 
-_970                          PrintString                       _str_0xfd7d
+_970                          PrintString                       _str_0x7acf
                               LDWI                              _1310
                               CALL                              giga_vAC                        ; PRINT "LEMON";:GOSUB 1310
 
 _980                          LDWI                              _330
                               CALL                              giga_vAC                        ; GOTO 330
 
-_990                          PrintString                       _str_0xfd77
+_990                          PrintString                       _str_0x7ac9
                               LDWI                              _1310
                               CALL                              giga_vAC                        ; PRINT "PLUM";:GOSUB 1310
 
 _1000                         LDWI                              _330
                               CALL                              giga_vAC                        ; GOTO 330
 
-                              STW                               0xde
+                              STW                               0xc0
                               LDWI                              _page_0x09a0
                               CALL                              giga_vAC
-_page_0x09a0                  LDW                               0xde
-_1010                         PrintString                       _str_0xfd6f
+_page_0x09a0                  LDW                               0xc0
+_1010                         PrintString                       _str_0x7ac1
                               LDWI                              _1310
                               CALL                              giga_vAC                        ; PRINT "CHERRY";:GOSUB 1310
 
 _1020                         LDWI                              _330
                               CALL                              giga_vAC                        ; GOTO 330
 
-_1030                         PrintString                       _str_0xfd69
+_1030                         PrintString                       _str_0x7abb
                               LDWI                              _1310
                               CALL                              giga_vAC                        ; PRINT " BAR";:GOSUB 1310
 
 _1040                         LDWI                              _390
                               CALL                              giga_vAC                        ; GOTO 390
 
-_1050                         PrintString                       _str_0xfd62
+_1050                         PrintString                       _str_0x7ab4
                               LDWI                              _1310
                               CALL                              giga_vAC                        ; PRINT " BELL";:GOSUB 1310
 
 _1060                         LDWI                              _390
                               CALL                              giga_vAC                        ; GOTO 390
 
-_1070                         PrintString                       _str_0xfd59
+_1070                         PrintString                       _str_0x7aab
                               LDWI                              _1310
                               CALL                              giga_vAC                        ; PRINT " ORANGE";:GOSUB 1310
 
 _1080                         LDWI                              _390
                               CALL                              giga_vAC                        ; GOTO 390
 
-                              STW                               0xde
+                              STW                               0xc0
                               LDWI                              _page_0x0aa0
                               CALL                              giga_vAC
-_page_0x0aa0                  LDW                               0xde
-_1090                         PrintString                       _str_0xfd51
+_page_0x0aa0                  LDW                               0xc0
+_1090                         PrintString                       _str_0x7aa3
                               LDWI                              _1310
                               CALL                              giga_vAC                        ; PRINT " LEMON";:GOSUB 1310
 
 _1100                         LDWI                              _390
                               CALL                              giga_vAC                        ; GOTO 390
 
-_1110                         PrintString                       _str_0xfd4a
+_1110                         PrintString                       _str_0x79f9
                               LDWI                              _1310
                               CALL                              giga_vAC                        ; PRINT " PLUM";:GOSUB 1310
 
 _1120                         LDWI                              _390
                               CALL                              giga_vAC                        ; GOTO 390
 
-_1130                         PrintString                       _str_0xfd41
+_1130                         PrintString                       _str_0x79f0
                               LDWI                              _1310
                               CALL                              giga_vAC                        ; PRINT " CHERRY";:GOSUB 1310
 
 _1140                         LDWI                              _390
                               CALL                              giga_vAC                        ; GOTO 390
 
-_1150                         PrintString                       _str_0xfd69
+_1150                         PrintString                       _str_0x7abb
                               NewLine                                                           ; PRINT " BAR"
 
 _1160                         LDWI                              _450
                               CALL                              giga_vAC                        ; GOTO 450
 
-                              STW                               0xde
+                              STW                               0xc0
                               LDWI                              _page_0x0ba0
                               CALL                              giga_vAC
-_page_0x0ba0                  LDW                               0xde
-_1170                         PrintString                       _str_0xfd62
+_page_0x0ba0                  LDW                               0xc0
+_1170                         PrintString                       _str_0x7ab4
                               NewLine                                                           ; PRINT " BELL"
 
 _1180                         LDWI                              _450
                               CALL                              giga_vAC                        ; GOTO 450
 
-_1190                         PrintString                       _str_0xfd59
+_1190                         PrintString                       _str_0x7aab
                               NewLine                                                           ; PRINT " ORANGE"
 
 _1200                         LDWI                              _450
                               CALL                              giga_vAC                        ; GOTO 450
 
-_1210                         PrintString                       _str_0xfd51
+_1210                         PrintString                       _str_0x7aa3
                               NewLine                                                           ; PRINT " LEMON"
 
 _1220                         LDWI                              _450
                               CALL                              giga_vAC                        ; GOTO 450
 
-_1230                         PrintString                       _str_0xfd4a
+_1230                         PrintString                       _str_0x79f9
                               NewLine                                                           ; PRINT " PLUM"
 
 _1240                         LDWI                              _450
                               CALL                              giga_vAC                        ; GOTO 450
 
-                              STW                               0xde
+                              STW                               0xc0
                               LDWI                              _page_0x0ca0
                               CALL                              giga_vAC
-_page_0x0ca0                  LDW                               0xde
-_1250                         PrintString                       _str_0xfd41
+_page_0x0ca0                  LDW                               0xc0
+_1250                         PrintString                       _str_0x79f0
                               NewLine                                                           ; PRINT " CHERRY"
 
 _1260                         LDWI                              _450
@@ -888,14 +890,14 @@ _1330                         ForNextFarInc                     _T8 _1320 5     
 _1340                         Return                                                            ; RETURN
 
 _1341                         NewLine                           
-                              STW                               0xde
+                              STW                               0xc0
                               LDWI                              _page_0x0da0
                               CALL                              giga_vAC
-_page_0x0da0                  LDW                               0xde
-                              PrintString                       _str_0xfd37
+_page_0x0da0                  LDW                               0xc0
+                              PrintString                       _str_0x79e6
                               NewLine                                                           ; PRINT: PRINT "DOUBLE!!"
 
-_1342                         PrintString                       _str_0xfe0b
+_1342                         PrintString                       _str_0x7bc9
                               NewLine                                                           ; PRINT "YOU WON!"
 
 _1343                         LDI                               2
@@ -925,50 +927,49 @@ _end_0x092f                   BRA                               _end_0x092f     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-romCheck                      EQU     0xfd20
-realTimeStub                  EQU     0xfd02
-convertEqOp                   EQU     0xfb73
-convertLtOp                   EQU     0xfb6a
-convertGtOp                   EQU     0xfb61
-multiply16bit                 EQU     0xfb7c
-divide16bit                   EQU     0xfb0a
-randMod16bit                  EQU     0xfc0d
-scanlineMode                  EQU     0xfcf5
-resetVideoFlags               EQU     0xfd14
-resetVideoTable               EQU     0xfadb
-initClearFuncs                EQU     0xface
-clearVertBlinds               EQU     0xfcbb
-clearCursorRow                EQU     0xfa9e
-input                         EQU     0xfc20
-inputExt1                     EQU     0xfa4f
-inputExt2                     EQU     0xfa31
-inputCursor                   EQU     0xfa0f
-inputKeys                     EQU     0xf9a4
-inputIntVar                   EQU     0xf990
-inputStrVar                   EQU     0xf979
-inputReturn                   EQU     0xf940
-inputDelete                   EQU     0xf8b9
-inputPrint                    EQU     0xf921
-inputNewline                  EQU     0xf90c
-printInit                     EQU     0xf8a3
-printText                     EQU     0xfc47
-printDigit                    EQU     0xf881
-printInt16                    EQU     0xfbae
-printChr                      EQU     0xfc00
-printChar                     EQU     0xf829
-newLineScroll                 EQU     0xfc60
-integerStr                    EQU     0xf7c0
-convertEqOpAddr               EQU     0x00d0
-convertNeOpAddr               EQU     0x00d2
-convertLeOpAddr               EQU     0x00d4
-convertGeOpAddr               EQU     0x00d6
-convertLtOpAddr               EQU     0x00d8
-convertGtOpAddr               EQU     0x00da
-convert8Arr2dAddr             EQU     0x00e0
-convert8Arr3dAddr             EQU     0x00e2
-convert16Arr2dAddr            EQU     0x00e4
-convert16Arr3dAddr            EQU     0x00e6
-realTimeStubAddr              EQU     0x00dc
+romCheck                      EQU     0xfb37
+realTimeStub                  EQU     0xfab1
+convertEqOp                   EQU     0xfa82
+convertLtOp                   EQU     0xfa79
+convertGtOp                   EQU     0xfa70
+multiply16bit                 EQU     0xfc1b
+divide16bit                   EQU     0xfda8
+randMod16bit                  EQU     0xfac3
+scanlineMode                  EQU     0xfb00
+resetVideoFlags               EQU     0xfa8b
+initClearFuncs                EQU     0xfaa4
+clearVertBlinds               EQU     0xfc86
+clearCursorRow                EQU     0xfbcf
+input                         EQU     0xff02
+inputExt1                     EQU     0xfd08
+inputExt2                     EQU     0xfb4e
+inputCursor                   EQU     0xfbad
+inputKeys                     EQU     0xff29
+inputIntVar                   EQU     0xfad6
+inputStrVar                   EQU     0xfb20
+inputReturn                   EQU     0xfc4d
+inputDelete                   EQU     0xfe06
+inputPrint                    EQU     0xfb6c
+inputNewline                  EQU     0xfaea
+printInit                     EQU     0xfb0a
+printText                     EQU     0xfc02
+printDigit                    EQU     0xfb8b
+printInt16                    EQU     0xfd57
+printChr                      EQU     0xfa97
+printChar                     EQU     0xfe4c
+newLineScroll                 EQU     0xfea4
+integerStr                    EQU     0xfcc0
+convertEqOpAddr               EQU     0x00c2
+convertNeOpAddr               EQU     0x00c4
+convertLeOpAddr               EQU     0x00c6
+convertGeOpAddr               EQU     0x00c8
+convertLtOpAddr               EQU     0x00ca
+convertGtOpAddr               EQU     0x00cc
+convert8Arr2dAddr             EQU     0x00ce
+convert8Arr3dAddr             EQU     0x00d0
+convert16Arr2dAddr            EQU     0x00d2
+convert16Arr3dAddr            EQU     0x00d4
+realTimeStubAddr              EQU     0x00d6
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -1185,6 +1186,11 @@ drawLine_h          EQU     register10
 drawLine_num        EQU     register11
 drawLine_count      EQU     register12
 drawLine_tmp        EQU     register13
+drawLine_dx         EQU     register2
+drawLine_dy         EQU     register3
+drawLine_u          EQU     register8
+drawLine_v          EQU     register9
+drawLine_addr       EQU     register10
 
 drawPixel_xy        EQU     register15
 readPixel_xy        EQU     register15
@@ -1242,6 +1248,11 @@ bot                 EQU     register10
 vramAddr            EQU     register11
 evenAddr            EQU     register12
 clsAddress          EQU     register13
+clsLines            EQU     register14
+varAddress          EQU     register13
+clrAddress          EQU     register13
+clrLines            EQU     register14
+clrWidth            EQU     register15
     
 
 resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
@@ -1253,32 +1264,8 @@ resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
 
 
 
-
-                    ; resets video table pointers
-resetVideoTable     PUSH
-                    LDI     8
-                    STW     vramAddr
-                    LDWI    giga_videoTable
-                    STW     evenAddr
-    
-resetVT_loop        CALL    realTimeStubAddr
-                    LDW     vramAddr
-                    DOKE    evenAddr
-                    INC     evenAddr
-                    INC     evenAddr
-                    INC     vramAddr
-                    LD      vramAddr
-                    SUBI    giga_yres + 8
-                    BLT     resetVT_loop
-                    
-                    LDWI    resetVideoFlags
-                    CALL    giga_vAC
-                    POP
-                    RET
-
-
 initClearFuncs      PUSH
-                    LDWI    resetVideoTable
+                    LDWI    resetVideoFlags
                     CALL    giga_vAC
     
                     LDWI    SYS_SetMemory_v2_54                 ; setup fill memory SYS routine
@@ -1313,7 +1300,6 @@ clearVB_loopy       LDI     giga_xres
                     ST      giga_sysArg3                        ; bottom line
                     SYS     54                                  ; fill memory
                     INC     top                                 ; next top line
-                    
                     CALL    realTimeStubAddr
                     LD      top
                     SUBI    giga_yres / 2 + 8
@@ -1554,10 +1540,9 @@ inputReturn         LDI     32
                     STW     register0
                     LDI     0
                     POKE    register0           ; text delimiter
-                    
                     LD      inpTypeData         ; check var tye
                     ANDI    0x3F                ; var type is bottom 6 bits
-                    SUBI    3                   ; var is string or integer?
+                    SUBI    5                   ; var is string or integer?
                     BNE     inputR_int
                     LDWI    inputStrVar
                     CALL    giga_vAC            ; copy string
@@ -1900,6 +1885,10 @@ newLS_exit          LDWI    printInit
 
 
 ; do *NOT* use register4 to register7 during time slicing
+intSrcA             EQU     register0
+intSrcB             EQU     register1
+intSrcX             EQU     register2
+intSwap             EQU     register3
 intSrcAddr          EQU     register8
 intDigit            EQU     register9
 intResult           EQU     register10

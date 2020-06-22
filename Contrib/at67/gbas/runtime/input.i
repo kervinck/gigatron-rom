@@ -227,10 +227,9 @@ inputReturn         LDI     32
                     STW     register0
                     LDI     0
                     POKE    register0           ; text delimiter
-                    
                     LD      inpTypeData         ; check var tye
                     ANDI    0x3F                ; var type is bottom 6 bits
-                    SUBI    3                   ; var is string or integer?
+                    SUBI    5                   ; var is string or integer?
                     BNE     inputR_int
                     LDWI    inputStrVar
                     CALL    giga_vAC            ; copy string

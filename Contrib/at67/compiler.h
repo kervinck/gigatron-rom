@@ -18,21 +18,23 @@
 #define MAX_ARRAY_DIMS    3
 
 #define SPRITE_CHUNK_SIZE         6
-#define SPRITE_STRIPE_CHUNKS_LO  15 // 15 fits in a 96 byte page
-#define SPRITE_STRIPE_CHUNKS_HI  40 // 40 fits in a 256 byte page
+#define SPRITE_STRIPE_CHUNKS_LO  15 // 15 fits into a 96 byte page
+#define SPRITE_STRIPE_CHUNKS_HI  40 // 40 fits into a 256 byte page
 #define MAX_NUM_SPRITES_LO      128 // maximum number of sprites for 32K RAM
-#define MAX_NUM_SPRITES_HI      512 // maximum number of sprites for 64K RAM
+#define MAX_NUM_SPRITES_HI      1024 // maximum number of sprites for 64K RAM
 
-// 24 bytes, (0x00E8 <-> 0x00FF), reserved for vCPU stack, allows for 12 nested calls. The amount of nested GOSUBS you can use is dependant on how
+// 16 bytes, (0x00F0 <-> 0x00FF), reserved for vCPU stack, allows for 8 nested calls. The amount of nested GOSUBS you can use is dependant on how
 // much of the stack is being used by nested system calls. *NOTE* there is NO call table for user code for this compiler
 #define USER_VAR_START  0x0030  // 80 bytes, (0x0030 <-> 0x007F), reserved for BASIC user variables
 #define INT_VAR_START   0x0082  // 46 bytes, (0x0082 <-> 0x00AF), internal register variables, used by the BASIC runtime
 #define LOOP_VAR_START  0x00B0  // 16 bytes, (0x00B0 <-> 0x00BF), reserved for FOR loops with vars, maximum of 4 nested FOR loops
-#define TEMP_VAR_START  0x00C0  // 16 bytes, (0x00C0 <-> 0x00CF), reserved for temporary expression variables
-#define CONVERT_CC_OPS  0x00D0  // 12 bytes, (0x00D0 <-> 0x00DB), critical relational operator routines that can't straddle page boundaries
-#define REAL_TIME_PROC  0x00DC  // 2 bytes,  (0x00DC <-> 0x00DD), critical time sliced routine that usually handles AUDIO/MIDI, etc
-#define VAC_SAVE_START  0x00DE  // 2 bytes,  (0x00DE <-> 0x00DF), reserved for saving vAC
-#define CONVERT_ARRAY   0x00E0  // 8 bytes,  (0x00E0 <-> 0x00E7), critical array accessing routines
+#define VAC_SAVE_START  0x00C0  // 2 bytes,  (0x00C0 <-> 0x00C1), reserved for saving vAC
+#define CONVERT_CC_OPS  0x00C2  // 12 bytes, (0x00C2 <-> 0x00CD), critical relational operator routines that can't straddle page boundaries
+#define CONVERT_ARRAY   0x00CE  // 8 bytes,  (0x00CE <-> 0x00D5), critical array accessing routines
+#define REAL_TIME_PROC  0x00D6  // 2 bytes,  (0x00D6 <-> 0x00D7), critical time sliced routine that usually handles TIME/MIDI, etc
+#define LOCAL_VAR_START 0x00D8  // 16 bytes, (0x00D8 <-> 0x00E7), reserved for function/procedure params and local vars
+#define TEMP_VAR_START  0x00E8  // 8 bytes,  (0x00E8 <-> 0x00EF), reserved for temporary expression variables
+#define TEMP_VAR_SIZE   8
 #define USER_CODE_START 0x0200
 #define USER_VAR_END    0x007F
 
@@ -49,9 +51,8 @@
 
 namespace Compiler
 {
-    enum VarType {VarInt8=1, VarInt16, VarStr, VarStr2, VarInt32, VarFloat16, VarFloat32, Var1Arr8, Var2Arr8, Var3Arr8, Var1Arr16, Var2Arr16, Var3Arr16};
+    enum VarType {ConstInt16, ConstStr, VarInt8, VarInt16, VarInt32, VarStr, VarStr2, VarFloat16, VarFloat32, Var1Arr8, Var2Arr8, Var3Arr8, Var1Arr16, Var2Arr16, Var3Arr16};
     enum IntSize {Int8=1, Int16=2, Int32=4};
-    enum ConstType {ConstInt16, ConstStr};
     enum ConstStrType {StrChar, StrHex, StrHexw, StrLeft, StrRight, StrMid};
     enum IfElseEndType {IfBlock, ElseIfBlock, ElseBlock, EndIfBlock};
     enum OperandType {OperandVar, OperandTemp, OperandConst};
@@ -69,7 +70,7 @@ namespace Compiler
         std::string _text;
         std::string _name;
         std::string _internalName;
-        ConstType _constType;
+        VarType _varType = ConstInt16;
     };
 
     struct IntegerVar
@@ -245,14 +246,32 @@ namespace Compiler
         int _codeLineIndex;
     };
 
+    struct CallData
+    {
+        int _numParams = 0;
+        int _codeLineIndex;
+        std::string _name;
+    };
+
+    struct ProcData
+    {
+        int _numParams = 0;
+        int _numLocals = 0;
+        int _codeLineIndex;
+        std::string _name;
+        std::map<std::string, std::string> _localVarNameMap;
+    };
+
     struct DefDataByte
     {
         uint16_t _address;
+        uint16_t _offset;
         std::vector<uint8_t> _data;
     };
     struct DefDataWord
     {
         uint16_t _address;
+        uint16_t _offset;
         std::vector<int16_t> _data;
     };
 
@@ -328,7 +347,10 @@ namespace Compiler
     uint16_t getVasmPC(void);
     uint16_t getRuntimeEnd(void);
     uint16_t getRuntimeStart(void);
+    uint16_t getArraysStart(void);
+    uint16_t getStringsStart(void);
     uint16_t getTempVarStart(void);
+    uint16_t getTempVarSize(void);
     uint16_t getStrWorkArea(void);
     uint16_t getSpritesAddrLutAddress(void);
     uint16_t getSpriteStripeChunks(void);
@@ -336,6 +358,7 @@ namespace Compiler
     Memory::FitType getSpriteStripeFitType(void);
     CodeOptimiseType getCodeOptimiseType(void);
     Cpu::RomType getCodeRomType(void);
+    const std::map<std::string, int>& getBranchTypes(void);
     bool getCompilingError(void);
     bool getArrayIndiciesOne(void);
     int getCurrentLabelIndex(void);
@@ -347,7 +370,10 @@ namespace Compiler
     void setRuntimeEnd(uint16_t runtimeEnd);
     void setRuntimePath(const std::string& runtimePath);
     void setRuntimeStart(uint16_t runtimeStart);
+    void setArraysStart(uint16_t arraysStart);
+    void setStringsStart(uint16_t stringsStart);
     void setTempVarStart(uint16_t tempVarStart);
+    void setTempVarSize(uint16_t tempVarSize);
     void setStrWorkArea(uint16_t strWorkArea);
     void setSpritesAddrLutAddress(uint16_t spritesAddrLutAddress);
     void setSpriteStripeChunks(uint16_t spriteStripeChunks);
@@ -383,12 +409,18 @@ namespace Compiler
 
     std::map<std::string, DefFunction>& getDefFunctions(void);
     std::vector<std::unique_ptr<DataObject>>& getDataObjects(void);
+    
     std::map<std::string, MacroIndexEntry>& getMacroIndexEntries(void);
-
+    
     std::stack<ForNextData>& getForNextDataStack(void);
     std::stack<ElseIfData>& getElseIfDataStack(void);
     std::stack<WhileWendData>& getWhileWendDataStack(void);
     std::stack<RepeatUntilData>& getRepeatUntilDataStack(void);
+
+    std::map<std::string, CallData>& getCallDataMap(void);
+
+    std::stack<ProcData>& getProcDataStack(void);
+    std::map<std::string, ProcData>& getProcDataMap(void);
 
     bool moveVblankVars(void);
     void setNextInternalLabel(const std::string& label);
@@ -407,11 +439,13 @@ namespace Compiler
     int findInternalLabel(uint16_t address);
     int findConst(std::string& constName);
     int findVar(std::string& varName, bool subAlpha=true);
+    int findVar(std::string& varName, std::string& oldName, bool subAlpha=true);
     int findStr(std::string& strName);
 
     bool createCodeLine(const std::string& code, int codeLineOffset, int labelIndex, int varIndex, Expression::Int16Byte int16Byte, bool vars, CodeLine& codeLine);
     void createLabel(uint16_t address, const std::string& name, int codeLineIndex, Label& label, bool numeric=false, bool addUnderscore=true, bool pageJump=false, bool gosub=false);
     void createIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, int& varIndex);
+    void createIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, uint16_t address, int& varIndex);
     void createIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, int& varIndex, VarType varType, int intSize,
                       uint16_t address, std::vector<uint16_t>& arrSizes, const std::vector<int16_t>& arrInits, std::vector<std::vector<uint16_t>>& arrAddrs, std::vector<uint16_t>& arrLut);
     int getOrCreateString(CodeLine& codeLine, int codeLineIndex, const std::string& str, std::string& name, uint16_t& address, uint8_t maxSize=USER_STR_SIZE, bool constString=true, VarType varType=VarStr);

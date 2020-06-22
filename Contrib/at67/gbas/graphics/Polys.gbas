@@ -3,10 +3,8 @@ _codeRomType_ ROMv1
 
 cls
 
-const POLYSIZE = 5
-const POLYADDR = &h0600
-
-def byte(POLYADDR) = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255
+const POLYSIZE = 10
+dim poly%(POLYSIZE) = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255
 
 loop: 
     set FG_COLOUR, rnd(0) AND &h3F
@@ -14,14 +12,14 @@ loop:
     ox = rnd(160) : oy = rnd(120)
     at ox, oy
     
-    for i=0 &to POLYSIZE*2 - 4 step 2
-        poke POLYADDR + 0 + i, rnd(160)
-        poke POLYADDR + 1 + i, rnd(120)
+    for i=0 &to POLYSIZE - 4 step 2
+        poke @poly + 0 + i, rnd(160)
+        poke @poly + 1 + i, rnd(120)
     next i
-    poke POLYADDR + 8, ox
-    poke POLYADDR + 9, oy
+    poke @poly + 8, ox
+    poke @poly + 9, oy
     
-    poly POLYADDR
+    poly @poly
     
 'key:    
 '    k = get("BUTTON_STATE") : if k = 255 then goto key

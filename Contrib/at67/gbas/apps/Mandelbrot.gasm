@@ -1,6 +1,6 @@
 _startAddress_                EQU                               0x0200
 
-; Internal variables
+; Internal Variables
 serialRawPrev                 EQU                               0x0081
 register0                     EQU                               0x0082
 register1                     EQU                               register0 + 0x02
@@ -32,7 +32,7 @@ ON_BOTTOM_ROW_BIT             EQU                               0x0002
 ENABLE_SCROLL_MSK             EQU                               0xfffe
 ON_BOTTOM_ROW_MSK             EQU                               0xfffd
 
-; Internal buffers
+; Internal Buffers
 textWorkArea                  EQU                               0x7fa0
 
 ; Includes
@@ -51,7 +51,7 @@ _else_0x029f                  EQU                               0x0285
 _page_0x0300                  EQU                               0x0300
 _end_0x034a                   EQU                               0x0314
 
-; Variables
+; Global Variables
 _cy                           EQU                               0x0030
 _py                           EQU                               0x0032
 _cx                           EQU                               0x0034
@@ -61,6 +61,8 @@ _y                            EQU                               0x003a
 _x2                           EQU                               0x003c
 _y2                           EQU                               0x003e
 _c                            EQU                               0x0040
+
+; Local Variables
 
 ; Arrays
 
@@ -169,25 +171,25 @@ _break                        LD                                _py
                               ORI                               0xFF
                               XORI                              0xFF
                               ADDW                              _px
-                              STW                               0xc0
+                              STW                               0xe8
                               LDWI                              1536
                               ADDW                              _c
                               PEEK                              
-                              POKE                              0xc0                            ; poke (py LSL 8) + px, peek(colours + c)
+                              POKE                              0xe8                            ; poke (py LSL 8) + px, peek(colours + c)
 
                               LDI                               135
                               SUBW                              _py
-                              STW                               0xc0
-                              LD                                0xc0
+                              STW                               0xe8
+                              LD                                0xe8
                               ST                                giga_vAC + 1
                               ORI                               0xFF
                               XORI                              0xFF
                               ADDW                              _px
-                              STW                               0xc2
+                              STW                               0xea
                               LDWI                              1536
                               ADDW                              _c
                               PEEK                              
-                              POKE                              0xc2                            ; poke ((135 - py) LSL 8) + px, peek(colours + c)
+                              POKE                              0xea                            ; poke ((135 - py) LSL 8) + px, peek(colours + c)
 
                               LDW                               _cx
                               ADDI                              1
@@ -196,10 +198,10 @@ _break                        LD                                _py
                               ForNextFarInc                     _px _next_0x0240 159            ; next px
 
                               LDW                               _cy
-                              STW                               0xde
+                              STW                               0xc0
                               LDWI                              _page_0x0300
                               CALL                              giga_vAC
-_page_0x0300                  LDW                               0xde
+_page_0x0300                  LDW                               0xc0
                               ADDI                              1
                               STW                               _cy                             ; cy = cy + dy
 
@@ -215,28 +217,27 @@ _end_0x034a                   BRA                               _end_0x034a     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-romCheck                      EQU     0x7ee8
-realTimeStub                  EQU     0x7eca
-sign                          EQU     0x7ea4
-multiply16bit                 EQU     0x7ccd
-shiftRight5bit                EQU     0x7eb6
-shiftRightSgn4bit             EQU     0x7da8
-scanlineMode                  EQU     0x7ec0
-resetVideoFlags               EQU     0x7edc
-resetVideoTable               EQU     0x7ca9
-initClearFuncs                EQU     0x7bf2
-clearVertBlinds               EQU     0x7dc5
-convertEqOpAddr               EQU     0x00d0
-convertNeOpAddr               EQU     0x00d2
-convertLeOpAddr               EQU     0x00d4
-convertGeOpAddr               EQU     0x00d6
-convertLtOpAddr               EQU     0x00d8
-convertGtOpAddr               EQU     0x00da
-convert8Arr2dAddr             EQU     0x00e0
-convert8Arr3dAddr             EQU     0x00e2
-convert16Arr2dAddr            EQU     0x00e4
-convert16Arr3dAddr            EQU     0x00e6
-realTimeStubAddr              EQU     0x00dc
+romCheck                      EQU     0x7db6
+realTimeStub                  EQU     0x7da4
+sign                          EQU     0x7ced
+multiply16bit                 EQU     0x7dcd
+shiftRight5bit                EQU     0x7cca
+shiftRightSgn4bit             EQU     0x7ea8
+scanlineMode                  EQU     0x7cc0
+resetVideoFlags               EQU     0x7cd4
+initClearFuncs                EQU     0x7ce0
+clearVertBlinds               EQU     0x7ec5
+convertEqOpAddr               EQU     0x00c2
+convertNeOpAddr               EQU     0x00c4
+convertLeOpAddr               EQU     0x00c6
+convertGeOpAddr               EQU     0x00c8
+convertLtOpAddr               EQU     0x00ca
+convertGtOpAddr               EQU     0x00cc
+convert8Arr2dAddr             EQU     0x00ce
+convert8Arr3dAddr             EQU     0x00d0
+convert16Arr2dAddr            EQU     0x00d2
+convert16Arr3dAddr            EQU     0x00d4
+realTimeStubAddr              EQU     0x00d6
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -401,6 +402,11 @@ drawLine_h          EQU     register10
 drawLine_num        EQU     register11
 drawLine_count      EQU     register12
 drawLine_tmp        EQU     register13
+drawLine_dx         EQU     register2
+drawLine_dy         EQU     register3
+drawLine_u          EQU     register8
+drawLine_v          EQU     register9
+drawLine_addr       EQU     register10
 
 drawPixel_xy        EQU     register15
 readPixel_xy        EQU     register15
@@ -458,6 +464,11 @@ bot                 EQU     register10
 vramAddr            EQU     register11
 evenAddr            EQU     register12
 clsAddress          EQU     register13
+clsLines            EQU     register14
+varAddress          EQU     register13
+clrAddress          EQU     register13
+clrLines            EQU     register14
+clrWidth            EQU     register15
     
 
 resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
@@ -469,32 +480,8 @@ resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
 
 
 
-
-                    ; resets video table pointers
-resetVideoTable     PUSH
-                    LDI     8
-                    STW     vramAddr
-                    LDWI    giga_videoTable
-                    STW     evenAddr
-    
-resetVT_loop        CALL    realTimeStubAddr
-                    LDW     vramAddr
-                    DOKE    evenAddr
-                    INC     evenAddr
-                    INC     evenAddr
-                    INC     vramAddr
-                    LD      vramAddr
-                    SUBI    giga_yres + 8
-                    BLT     resetVT_loop
-                    
-                    LDWI    resetVideoFlags
-                    CALL    giga_vAC
-                    POP
-                    RET
-
-
 initClearFuncs      PUSH
-                    LDWI    resetVideoTable
+                    LDWI    resetVideoFlags
                     CALL    giga_vAC
     
                     LDWI    SYS_SetMemory_v2_54                 ; setup fill memory SYS routine
@@ -529,7 +516,6 @@ clearVB_loopy       LDI     giga_xres
                     ST      giga_sysArg3                        ; bottom line
                     SYS     54                                  ; fill memory
                     INC     top                                 ; next top line
-                    
                     CALL    realTimeStubAddr
                     LD      top
                     SUBI    giga_yres / 2 + 8

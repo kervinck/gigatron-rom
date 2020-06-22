@@ -1,6 +1,6 @@
 _startAddress_                EQU                               0x0200
 
-; Internal variables
+; Internal Variables
 serialRawPrev                 EQU                               0x0081
 register0                     EQU                               0x0082
 register1                     EQU                               register0 + 0x02
@@ -32,7 +32,7 @@ ON_BOTTOM_ROW_BIT             EQU                               0x0002
 ENABLE_SCROLL_MSK             EQU                               0xfffe
 ON_BOTTOM_ROW_MSK             EQU                               0xfffd
 
-; Internal buffers
+; Internal Buffers
 textWorkArea                  EQU                               0xffa0
 
 ; Includes
@@ -48,14 +48,14 @@ _div                          EQU                               0x035b
 _next_0x0248                  EQU                               0x0257
 _page_0x0300                  EQU                               0x0300
 _end_0x030e                   EQU                               0x0321
-_else_0x0374                  EQU                               0x036f
-_while_0x0379                 EQU                               0x0374
-_else_0x03ac                  EQU                               0x0395
-_else_0x03ce                  EQU                               0x03af
-_wend_0x03e0                  EQU                               0x03bf
-_end_0x03e2                   EQU                               0x03c1
+_else_0x0374                  EQU                               0x0371
+_while_0x0379                 EQU                               0x0376
+_else_0x03ac                  EQU                               0x039b
+_else_0x03ce                  EQU                               0x03b5
+_wend_0x03e0                  EQU                               0x03c5
+_end_0x03e2                   EQU                               0x03c7
 
-; Variables
+; Global Variables
 _result                       EQU                               0x0030
 _i                            EQU                               0x0032
 _timer                        EQU                               0x0034
@@ -67,33 +67,35 @@ _a                            EQU                               0x003e
 _b                            EQU                               0x0040
 _mask                         EQU                               0x0042
 
+; Local Variables
+
 ; Arrays
 
 ; Strings
 
 ; Constant Strings
-_str_0xff9d                   EQU                               0xff9d
-_str_0xff9d                   DB                                1 ' ' 0
-_str_0xff98                   EQU                               0xff98
-_str_0xff98                   DB                                3 '/60' 0
+_str_0x7ffd                   EQU                               0x7ffd
+_str_0x7ffd                   DB                                1 ' ' 0
+_str_0x7ff8                   EQU                               0x7ff8
+_str_0x7ff8                   DB                                3 '/60' 0
 
 ; Data
 
 ; Time
-_timeArray_                   EQU                               0xff0a
+_timeArray_                   EQU                               0xff9d
 _timeArray_                   DB                                00 00 00
-_timeString_                  EQU                               0xff00
+_timeString_                  EQU                               0xff93
 _timeString_                  DB                                8 '00:00:00' 0
 
 ; Define Bytes
 
 ; Define Words
 def_words_0x8000              EQU                               0x8000
-def_words_0x8000              DW                                77 -97 57 85 103 -105 93 -7 135 36 141 80 -150 24 -36 -148 -171 78 151 134 34 -40 79 174 34 114 76 5 34 -28 71 -128 152 84 -106 -40 -88 -86 -66 176 -142 -56 -117 -145 -170 146 4 -129 -69 98 -3 -43 84 80 84 -46 -59 16 48 -23 84 67 31 -134 59 42 72 166 85 -72 -144 -116 95 -88 112 -116 89 -56 -122 178 133 108 59 68 39 54 -26 -169 -115 -92 103 -120 81 58 54 135 -115 138 141 176 -81 121 -61 -35 61 20 99 70 90 -166 52 3 154 -180 2 -21 170 82 -171 -138 -37 144 -168 -168 -79 153 85 46 23 -173 -145 -98 -82 -44 -113 50 5 170 68 46 154 -135 -43 -77 -14 -152 40 2 142 -35 113 5 -161 155 75 42 -21 -127 106 -79 96 157 -100 80 9 -39 -163 53 111 68 74 -132 -7 60 113 26 -57 -94 -105 -167 115 -122 -127 116 -127 -74 128 70 32 129 110 14 25 -159 110 54 -136 -64 -61 148 154 -55 55 40 -178 83 16 -25 -82 -134 -146 -72 0 -18 15 -43 -25 -56 -178 -76 0 34 170 94 26 -74 155 -9 5 26 11 24 -146 -158 146 58 -46 -58 -102 36 98 126 68 142 -147 36 19 -106 12 161 -49 35 -102 138 -19 -167 -86 164 -75 116 -10 14 -69 25 -67 -10 -37 -127 132 -2 47 -1 -88 176 171 12 -165 -176 123 -160 150 -15 75 -156 -114 -101 22 -122 154 140 -109 29 -125 20 -51 -10 12 37 82 -138 -163 -118 47 -63 171 31 10 -94 -134 -174 -128 -21 157 57 -48 -40 -123 -172 87 71 81 -52 5 122 -171 156 -8 65 -10 175 -169 113 140 -85 -118 162 161 -108 17 -112 17 147 -54 7 91 104 -57 -35 -89 78 -9 138 64 -121 91 147 148 167 20 -112 73 45 -149 82 58 79 -71 177 -134 102 120 109 97 162 -39 -100 -67 39 -128 -101 147 64 -59 72 38 -6 165 -73 175 141 40 108 53 174 -92 33 175 -48 -126 112 -80 117 71 83 41 -40 -74 -111 14 -68 155 -116 162 -78 -165 113 -108 -169 115 104 86 164 70 -171 43 -174 -29 -59 122 -154 166 -35 -176 -95 -122 120 -70 -29 -113 95 -149 33 -23 102 3 125 -56 53 177 165 29 -68 -166 -66 -171 -174 67 -142 -119 -152 19 47 -162 25 100 -29 93 -123 -60 -99 -66 -178 -1 14 -176 114 -153 63 -124 -61 -58 148 -141 -156 -149 -126 133 101 124 -131 36 -112 83 117 128 100 124 -94 52 -174 30 158 -175 78 -128 105 26 -96 -11 179 -33 68 -5 173 126 -9 -39 41 22 148 135 -21 -10 -82 -22 -32 142 -98 -40 -169 28 150 -88 68 58 -25 -82 -28 45 -96 134 -162 -119 -71 -9 95 124 -137 139 89 32 104 -29 125 -163 -143 175 -154 95 134 -49 32 131 35 148 17 95 -64 154 175 -77 -102 106 -166 43 -24 -109 -85 86 130 97 52 4 9 169 50 -77 75 -157 1 -118 -58 33 -105 -14 175 -9 28 162 -37 -164 0 -77 117 -144 -130 179 -143 -26 175 85 97 36 -62 160 143 136 18 63 -62 78 -47 145 164 103 44 146 -77 -124 94 146 -82 -53 -31 140 147 177 -6 50 -170 89 157 71 -140 -60 122 61 -31 -63 102 -72 -17 -73 -84 131 129 -31 -171 -79 127 17 -138 -33 -62 -8 73 -176 10 -164 -121 177 53 35 13 -170 -37 -104 -148 -4 -48 -76 -163 128 74 22 108 -168 108 126 -148 -55 -69 38 28 -55 78 122 113 -130 163 -142 -84 22 -145 -91 69 72 -66 112 -152 -53 69 64 -1 46 179 20 8 0 -73 -73 177 -39 -2 28 -143 72 -108 90 32 -50 77 -22 113 178 -76 111 111 -41 108 -138 63 -76 -155 -106 93 10 -6 65 169 -37 40 107 -54 -72 -31 -149 19 20 -46 -65 -34 -56 10 37 119 -178 100 -80 74 -94 -162 -32 96 -43 139 -43 149 172 -26 76 45 -167 65 -93 -103 32 -52 -134 108 -171 -15 10 -148 -52 -56 19 -67 -23 151 -23 87 -159 -44 -66 -109 136 -74 46 9 -156 -23 70 167 90 -112 -58 -123 -48 111 161 68 -29 -23 -117 160 -94 -72 11 -117 -134 76 169 69 -92 -26 113 105 -148 -147 -112 41 -22 -79 -130 -36 -178 5 77 -105 -80 -14 -86 -174 -154 -174 169 84 2 106 -123 -54 -133 148 -55 100 91 164 -96 -64 -48 129 -132 76 -41 142 93 -58 -58 98 88 126 40 -99 -174 6 -25 36 -43 64 -124 -26 -37 81 11 176 144 93 -114 -163 -99 19 -98 130 -39 90 81 18 83 -116 -32 110 78 -166 -96 -97 28 168 -172 -58 94 -5 121 -180 10 -128 2 -123 127 118 77 147 109 -105 -83 -144 88 -117 145 44 7 -106 149 -136 80 -101 48 129 38 -159 -2 -159 -75 -59 119 27 -99 -17 -64 -82 -99 49 -160 -180 -54 166 -123 -85 113 152 160 107 145 101 78 -167 77 -86 128 67 -136 -16 22 -51 -159 126 152 -44 -30 -33 -43 -174 131 -58 39 -159 12 -9 62 114 
+def_words_0x8000              DW                                125 
 def_words_0x87d0              EQU                               0x87d0
-def_words_0x87d0              DW                                -165 -64 4 144 -157 -128 81 1 -2 22 17 -11 11 109 -166 2 139 -121 18 135 -7 111 -127 72 1 4 -70 153 -37 -37 64 143 79 -101 103 -165 10 23 160 -96 74 151 161 -81 7 89 132 8 11 111 87 108 -149 -56 -116 -39 78 -101 66 86 -67 -72 -133 -56 -172 170 39 12 -143 -93 2 53 114 62 145 -80 -133 115 -173 -138 24 134 -139 -165 -88 89 -138 133 139 -173 141 134 -163 89 -153 102 155 -68 -42 130 173 -53 30 137 -123 34 130 169 104 35 46 94 -46 132 126 75 -65 66 87 60 -89 141 60 122 49 -69 69 -8 -77 1 -141 103 73 -161 6 117 148 140 122 179 -99 34 135 46 -101 90 105 -115 177 91 136 165 155 -56 -64 -14 2 -24 -109 0 85 -86 -35 -87 -125 -9 57 -177 -153 -78 -21 -85 19 -66 -171 23 -96 -176 -75 -174 -59 37 -17 74 126 -68 87 70 -25 47 154 28 121 102 -26 -15 19 68 -1 103 5 174 147 124 -118 -118 0 -119 -68 12 -52 -177 84 95 6 17 105 -110 3 110 0 -56 -61 -123 150 77 173 103 -13 93 40 -137 151 31 -172 -139 129 51 96 115 -75 80 21 -129 157 113 -117 139 -44 137 59 -119 -121 164 148 -29 -99 -113 -14 130 104 83 68 101 124 -90 -99 21 88 -157 -43 -2 91 -29 -152 49 177 -84 64 104 -162 81 159 -8 -102 130 -73 -82 109 101 109 -4 100 29 -5 -101 61 18 -11 -179 -72 121 -177 179 -113 174 69 172 -49 23 -69 -145 -121 10 46 27 97 -30 -117 -59 7 22 30 83 -169 -85 133 31 50 3 -50 -43 -71 -75 -26 96 161 -113 100 97 105 -118 -10 -62 121 45 34 34 -59 149 -41 154 -134 -157 173 136 -7 77 98 113 122 74 -145 141 154 80 -13 -171 -128 -71 -90 152 -36 6 72 87 -159 73 -54 109 77 49 109 -125 -97 -78 83 -37 -32 124 -85 -13 -131 -154 -24 172 60 -39 -148 68 108 -159 65 17 50 170 16 -81 82 -161 158 91 -149 129 -28 81 -91 69 -106 179 -17 15 -10 139 -52 -137 89 -76 -50 9 -70 -45 103 57 -98 155 -69 150 80 58 -14 -58 -162 -122 156 106 -52 -116 -27 -100 -65 42 36 38 44 -133 -153 85 -174 51 -119 -58 -82 -20 103 96 38 48 15 42 -177 -81 121 78 154 -164 -126 38 85 67 151 -82 39 -42 -136 130 -154 169 93 -55 108 -134 53 -166 -106 165 -68 14 -121 -34 124 -25 -83 -88 -104 111 -21 14 149 -4 135 -96 58 83 -100 72 74 -150 -110 134 71 106 -99 -159 49 77 -20 78 95 28 114 -106 -171 28 -14 -13 103 90 -169 -157 93 29 -142 -31 -17 155 128 -144 -61 -170 18 -159 -180 -24 -162 151 -51 5 -50 -95 -49 169 -152 -96 -88 -70 70 -31 53 -146 87 -83 16 152 150 47 157 63 129 -34 -46 -33 85 -20 69 -164 39 -10 -45 4 6 85 -107 -99 -144 139 -155 111 -150 -22 67 139 -108 162 25 45 131 162 53 -83 -143 57 0 140 -22 53 26 157 129 44 24 90 -13 -119 -127 -39 9 121 -58 -90 132 6 48 42 60 -108 -58 76 26 -110 126 -24 -138 -157 92 -139 -5 -155 -62 108 -70 26 -105 -91 157 -114 178 156 77 136 -96 92 -27 -51 -139 -86 161 -88 112 -114 105 142 97 -35 178 -150 -1 91 87 100 -19 143 -156 72 134 175 75 -124 -71 110 11 -135 -58 -21 -114 -26 17 -85 -23 57 -98 -174 -39 -88 -26 134 -20 -25 -7 -59 -114 18 -59 136 133 46 -3 159 55 -101 21 -17 -13 124 5 -46 61 130 -99 22 -114 -138 -120 -128 -93 -82 52 170 76 162 81 -21 152 151 -137 142 -169 -125 -51 -170 88 -118 -177 80 37 9 -176 41 4 17 -95 2 102 14 48 -15 -35 41 -116 -62 66 106 63 37 -139 -134 150 18 -31 -64 -162 -134 -154 27 119 -176 41 151 -35 -127 -31 -157 28 167 -29 -142 132 132 -175 73 29 -163 134 -79 -155 -60 -179 -148 31 163 27 -26 23 -138 105 60 164 -136 95 160 44 169 -106 80 -162 -82 140 -117 12 -103 -99 37 -104 67 -72 165 -176 -161 168 13 125 49 12 154 -112 119 -126 -26 -106 -49 159 98 158 -167 105 31 -64 -114 33 -58 41 -71 -45 -106 -60 -76 48 31 155 -97 -10 109 -74 53 -170 7 27 -161 7 16 -82 5 33 102 171 -103 -124 -47 130 167 2 -34 -38 147 138 -171 -174 -63 -122 -113 36 -94 -160 -164 -62 -19 -72 -132 85 21 -63 -12 52 90 85 28 50 -14 -34 30 -172 -63 -113 -39 25 111 -110 -48 -102 105 67 165 -125 -14 -60 -159 -93 -172 -86 144 177 -151 -135 -72 55 119 -156 171 -84 28 79 -50 -180 5 120 33 -133 69 155 -105 59 -147 61 -72 -151 -89 -157 -26 -146 103 -59 -124 -171 -60 5 142 8 147 100 173 0 -35 -41 57 117 -134 -115 -36 -22 -74 93 -76 -179 -117 -131 137 -114 143 -146 -47 
+def_words_0x87d0              DW                                90 
 def_words_0x8fa0              EQU                               0x8fa0
-def_words_0x8fa0              DW                                0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+def_words_0x8fa0              DW                                0 
 
 ; Define Images
 
@@ -150,7 +152,7 @@ _next_0x0248                  LDWI                              _math
                               LDWI                              divide16bit
                               CALL                              giga_vAC
                               PrintAcInt16                      
-                              PrintString                       _str_0xff9d
+                              PrintString                       _str_0x7ffd
                               LDW                               _timer
                               STW                               mathX
                               LDI                               60
@@ -159,7 +161,7 @@ _next_0x0248                  LDWI                              _math
                               CALL                              giga_vAC
                               LDW                               mathRem
                               PrintAcInt16                      
-                              PrintString                       _str_0xff98
+                              PrintString                       _str_0x7ff8
                               NewLine                                                           ; print : print timer/60;" ";timer % 60;"/60"
 
                               LDI                               0
@@ -190,12 +192,12 @@ _next_0x0248                  LDWI                              _math
 
                               NewLine                           
                               LDW                               _q
-                              STW                               0xde
+                              STW                               0xc0
                               LDWI                              _page_0x0300
                               CALL                              giga_vAC
-_page_0x0300                  LDW                               0xde
+_page_0x0300                  LDW                               0xc0
                               PrintAcInt16                      
-                              PrintString                       _str_0xff9d
+                              PrintString                       _str_0x7ffd
                               LDW                               _r
                               PrintAcInt16                      
                               NewLine                                                           ; print : print q;" ";r
@@ -205,33 +207,33 @@ _end_0x030e                   BRA                               _end_0x030e     
 _math                         PUSH                              
                               LDW                               _i
                               LSLW                              
-                              STW                               0xc2
+                              STW                               0xea
                               LDWI                              -32768
-                              ADDW                              0xc2
+                              ADDW                              0xea
                               DEEK                              
                               STW                               _a                              ; a = deek(START + SIZE*0 + (i LSL 1))
 
                               LDW                               _i
                               LSLW                              
-                              STW                               0xc2
+                              STW                               0xea
                               LDWI                              -30768
-                              ADDW                              0xc2
+                              ADDW                              0xea
                               DEEK                              
                               STW                               _b                              ; b = deek(START + SIZE*2 + (i LSL 1))
 
                               LDW                               _i
                               LSLW                              
-                              STW                               0xc2
+                              STW                               0xea
                               LDWI                              -28768
-                              ADDW                              0xc2
-                              STW                               0xc2
+                              ADDW                              0xea
+                              STW                               0xea
                               LDW                               _a
                               STW                               mathX
                               LDW                               _b
                               STW                               mathY
                               LDWI                              divide16bit
                               CALL                              giga_vAC
-                              DOKE                              0xc2                            ; doke START + SIZE*4 + (i LSL 1), a / b
+                              DOKE                              0xea                            ; doke START + SIZE*4 + (i LSL 1), a / b
 
                               Return                                                            ; return
 
@@ -240,6 +242,7 @@ _div                          LDI                               0
                               STW                               _r                              ; q=0 : r=q
 
                               LDW                               _d
+                              XORI                              0
                               CALL                              convertEqOpAddr
                               JumpFalse                         _else_0x0374 0
                               Return                                                            ; if d = 0 then return
@@ -248,6 +251,7 @@ _else_0x0374                  LDWI                              -32768
                               STW                               _mask                           ; mask = &h8000
 
 _while_0x0379                 LDW                               _mask
+                              XORI                              0
                               CALL                              convertNeOpAddr
                               JumpFalse                         _wend_0x03e0 3                  ; while mask <> 0
 
@@ -257,6 +261,7 @@ _while_0x0379                 LDW                               _mask
 
                               LDW                               _n
                               ANDW                              _mask
+                              XORI                              0
                               CALL                              convertNeOpAddr
                               JumpFalse                         _else_0x03ac 1
                               INC                               _r                              ; if n AND mask <> 0 then inc r
@@ -292,38 +297,37 @@ _end_0x03e2                   BRA                               _end_0x03e2     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-romCheck                      EQU     0xff81
-realTimeStub                  EQU     0xff63
-convertEqOp                   EQU     0xfe01
-convertNeOp                   EQU     0xfda5
-convertGeOp                   EQU     0xfd9c
-setRealTimeProc0              EQU     0xff17
-divide16bit                   EQU     0xfe23
-shiftRight1bit                EQU     0xff0d
-resetVideoFlags               EQU     0xff75
-resetVideoTable               EQU     0xfd78
-initClearFuncs                EQU     0xfd6b
-clearVertBlinds               EQU     0xff29
-clearCursorRow                EQU     0xfd3b
-printInit                     EQU     0xfd25
-printText                     EQU     0xfe0a
-printDigit                    EQU     0xfd03
+romCheck                      EQU     0xfd02
+realTimeStub                  EQU     0xfced
+convertEqOp                   EQU     0xfcaf
+convertNeOp                   EQU     0xfca6
+convertGeOp                   EQU     0xfc9d
+setRealTimeProc0              EQU     0xfcdb
+divide16bit                   EQU     0xfe50
+shiftRight1bit                EQU     0xfcb8
+resetVideoFlags               EQU     0xfcc2
+initClearFuncs                EQU     0xfcce
+clearVertBlinds               EQU     0xfe16
+clearCursorRow                EQU     0xfd7e
+printInit                     EQU     0xfe00
+printText                     EQU     0xfd19
+printDigit                    EQU     0xfd32
 printInt16                    EQU     0xfdae
-printChar                     EQU     0xfca7
-newLineScroll                 EQU     0xfe7a
-tickTime                      EQU     0xfed5
-handleTime                    EQU     0xfc6f
-convertEqOpAddr               EQU     0x00d0
-convertNeOpAddr               EQU     0x00d2
-convertLeOpAddr               EQU     0x00d4
-convertGeOpAddr               EQU     0x00d6
-convertLtOpAddr               EQU     0x00d8
-convertGtOpAddr               EQU     0x00da
-convert8Arr2dAddr             EQU     0x00e0
-convert8Arr3dAddr             EQU     0x00e2
-convert16Arr2dAddr            EQU     0x00e4
-convert16Arr3dAddr            EQU     0x00e6
-realTimeStubAddr              EQU     0x00dc
+printChar                     EQU     0xfea7
+newLineScroll                 EQU     0xff38
+tickTime                      EQU     0xfd54
+handleTime                    EQU     0xff00
+convertEqOpAddr               EQU     0x00c2
+convertNeOpAddr               EQU     0x00c4
+convertLeOpAddr               EQU     0x00c6
+convertGeOpAddr               EQU     0x00c8
+convertLtOpAddr               EQU     0x00ca
+convertGtOpAddr               EQU     0x00cc
+convert8Arr2dAddr             EQU     0x00ce
+convert8Arr3dAddr             EQU     0x00d0
+convert16Arr2dAddr            EQU     0x00d2
+convert16Arr3dAddr            EQU     0x00d4
+realTimeStubAddr              EQU     0x00d6
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -493,6 +497,11 @@ bot                 EQU     register10
 vramAddr            EQU     register11
 evenAddr            EQU     register12
 clsAddress          EQU     register13
+clsLines            EQU     register14
+varAddress          EQU     register13
+clrAddress          EQU     register13
+clrLines            EQU     register14
+clrWidth            EQU     register15
     
 
 resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
@@ -504,32 +513,8 @@ resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
 
 
 
-
-                    ; resets video table pointers
-resetVideoTable     PUSH
-                    LDI     8
-                    STW     vramAddr
-                    LDWI    giga_videoTable
-                    STW     evenAddr
-    
-resetVT_loop        CALL    realTimeStubAddr
-                    LDW     vramAddr
-                    DOKE    evenAddr
-                    INC     evenAddr
-                    INC     evenAddr
-                    INC     vramAddr
-                    LD      vramAddr
-                    SUBI    giga_yres + 8
-                    BLT     resetVT_loop
-                    
-                    LDWI    resetVideoFlags
-                    CALL    giga_vAC
-                    POP
-                    RET
-
-
 initClearFuncs      PUSH
-                    LDWI    resetVideoTable
+                    LDWI    resetVideoFlags
                     CALL    giga_vAC
     
                     LDWI    SYS_SetMemory_v2_54                 ; setup fill memory SYS routine
@@ -564,7 +549,6 @@ clearVB_loopy       LDI     giga_xres
                     ST      giga_sysArg3                        ; bottom line
                     SYS     54                                  ; fill memory
                     INC     top                                 ; next top line
-                    
                     CALL    realTimeStubAddr
                     LD      top
                     SUBI    giga_yres / 2 + 8

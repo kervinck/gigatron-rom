@@ -25,6 +25,9 @@
 #define RAM_STACK_START  0x0600
 #define RAM_STACK_SIZE   256
 
+#define RAM_AUDIO_START  0x0700
+#define RAM_AUDIO_END    0x07FF
+
 #define RAM_VIDEO_START   0x0800
 #define RAM_VIDEO_END     0x7F00
 #define RAM_VIDEO_OFS     0x0100
@@ -74,7 +77,7 @@ namespace Memory
 
     bool isFreeRAM(uint16_t address, int size);
     bool isVideoRAM(uint16_t address);
-    bool getNextCodeAddress(FitType fitType, uint16_t start, int size, uint16_t& address, bool lowMemDescend=false);
+    bool getNextCodeAddress(FitType fitType, uint16_t start, int size, uint16_t& address);
 
     bool giveFreeRAM(uint16_t address, int size);
     bool takeFreeRAM(uint16_t address, int size, bool printError=true);

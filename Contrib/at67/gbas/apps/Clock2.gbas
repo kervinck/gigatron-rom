@@ -44,6 +44,9 @@ def byte(T_LUT, y, 0.0, 3.0, T_SIZ) = 63.0 - 1.398*exp(-y)*(1.0-exp(-10.0*y))*63
 
 restart:
 
+'audio fix for ROMv5a
+poke &h21, peek(&h21) OR 3
+
 ' disable video, (except last line so that we don't lose sync), for fast cls
 set VIDEO_TOP, 238
 set BG_COLOUR, BACK_COLOUR
@@ -87,13 +90,16 @@ loop:
         SS = S
     endif
 
-    gosub tictoc
-    
-    'disable vertical blank interrupt and restart
-    if get("SERIAL_RAW") <> 255
-        set VBLANK_PROC, 0
-        goto restart
+    if timer &&> 0
+        gosub tictoc
     endif
+    
+    '*TODO* INIT messes with INPUT, needs to be fixed
+    'disable vertical blank interrupt and restart
+    'if get("SERIAL_RAW") <> 255
+    '    set VBLANK_PROC, 0
+    '    goto restart
+    'endif
 goto &loop:
 
 'this sound generation is 'main loop' frequency dependant, that is why it messes up
@@ -102,16 +108,14 @@ goto &loop:
 'within the vertical blank, (except for the time and midi modules), thus coding it directly
 'in vASM would be the wisest choice
 tictoc:
-    if timer &&<> 0
-        t = get("TIMER")
-        t_lut = peek(T_LUT + (t AND (T_SIZ - 1)))
-        sound on, 1, t_lut <<4, t_lut, 0
-        set SOUND_TIMER, 1
-    
-        if t &&>= timer + T_SIZ-3
-            timer = 0
-            sound off
-        endif
+    t = get("TIMER")
+    t_lut = peek(T_LUT + (t AND (T_SIZ - 1)))
+    sound on, 1, t_lut <<4, t_lut, 0
+    set SOUND_TIMER, 1
+
+    if t &&>= timer + T_SIZ-2
+        timer = 0
+        sound off
     endif
 return
 

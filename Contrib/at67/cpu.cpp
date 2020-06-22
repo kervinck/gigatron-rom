@@ -606,8 +606,8 @@ namespace Cpu
 
         _RAM.resize(Memory::getSizeRAM());
 
-        // Memory
-        srand((unsigned int)time(NULL)); // Initialize with randomized data
+        // Memory, initialize with randomized data
+        srand((unsigned int)time(NULL));
         garble((uint8_t*)_ROM, sizeof(_ROM));
         garble(&_RAM[0], Memory::getSizeRAM());
         garble((uint8_t*)&_stateS, sizeof(_stateS));
@@ -966,7 +966,7 @@ namespace Cpu
         }
     }
 
-    void process(void)
+    void process(bool disableOutput)
     {
         // MCP100 Power-On Reset
         if(_clock < 0)
@@ -994,14 +994,21 @@ namespace Cpu
 
             if(!_debugging)
             {
+                if(disableOutput)
+                {
+                    Timing::synchronise();
+                }
                 // Input and graphics 60 times per second
-                Editor::handleInput();
-                Graphics::render(true);
+                else
+                {
+                    Editor::handleInput();
+                    Graphics::render(true);
+                }
             }
         }
 
         // Pixel
-        if(_vgaX++ < HLINE_END)
+        if(_vgaX++ < HLINE_END  &&  !disableOutput)
         {
             if(_vgaY >= 0  &&  _vgaY < SCREEN_HEIGHT)
             {

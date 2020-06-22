@@ -1,8 +1,11 @@
 ' 64K RAM example
 _runtimePath_ "../runtime"
 _runtimeStart_ &hFFFF
+_arraysStart_ &hFFFF
 _codeRomType_ ROMv1
 
+'audio fix for ROMv5a
+poke &h21, peek(&h21) OR 3
 set VIDEO_TOP, 238 'disables video output, cls becomes almost instant
 cls
 
@@ -39,7 +42,7 @@ for y=119 downto horizonY
     a = ((y + 8) LSL 8)
 
     for x=0 to pitch + 159
-        if i &&= 0
+        if i &= 0
             i = pitch - 1
         else
             i = i - 1

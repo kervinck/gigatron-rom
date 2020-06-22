@@ -195,6 +195,11 @@ _label_ CALL    giga_vAC
         CALL    giga_vAC
 %ENDM
 
+%MACRO  ClearRect
+        LDWI    clearRect
+        CALL    giga_vAC
+%ENDM
+
 %MACRO  ClearVertBlinds
         LDWI    clearVertBlinds
         CALL    giga_vAC
@@ -408,6 +413,24 @@ _label_ CALL    giga_vAC
         CALL    giga_vAC
 %ENDM
 
+%MACRO  IntMin
+        STW     intSrcB
+        LDWI    integerMin
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  IntMax
+        STW     intSrcB
+        LDWI    integerMax
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  IntClamp
+        STW     intSrcB
+        LDWI    integerClamp
+        CALL    giga_vAC
+%ENDM
+
 %MACRO  Rand
         LDWI    rand16bit
         CALL    giga_vAC
@@ -601,13 +624,26 @@ _label_ CALL    giga_vAC
 
 %MACRO  PlayMidi
         STW     midiStream
-        LDWI    resetAudio
+        LDWI    resetMidi
         CALL    giga_vAC
 %ENDM
 
 %MACRO  PlayMidiV
         STW     midiStream
-        LDWI    resetAudio
+        LDWI    resetMidi
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  PlayMusic
+        STW     musicStream
+        LDWI    resetMusic
+        CALL    giga_vAC
+        LDWI    playMusic
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  GetMusicNote
+        LDWI    musicGetNote
         CALL    giga_vAC
 %ENDM
 
@@ -692,17 +728,32 @@ _label_ CALL    giga_vAC
 %ENDM
 
 %MACRO  BcdAdd
+        ST      bcdLength
         LDWI    bcdAdd
         CALL    giga_vAC
 %ENDM
 
 %MACRO  BcdSub
+        ST      bcdLength
         LDWI    bcdSub
         CALL    giga_vAC
 %ENDM
 
 %MACRO  BcdInt
+        STW     bcdValue
         LDWI    bcdInt
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  BcdCmp
+        ST      bcdLength
+        LDWI    bcdCmp
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  BcdCpy
+        ST      bcdLength
+        LDWI    bcdCpy
         CALL    giga_vAC
 %ENDM
 
@@ -801,6 +852,11 @@ _id_    CALL    giga_vAC
 %MACRO  InitRealTimeStub
         LDWI    realTimeStub
         STW     realTimeStubAddr
+%ENDM
+
+%MACRO  ResetVars
+        LDWI    resetVars
+        CALL    giga_vAC
 %ENDM
 
 %MACRO  RomCheck

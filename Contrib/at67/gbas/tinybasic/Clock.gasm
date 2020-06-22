@@ -225,33 +225,33 @@ _end_0x035b                   BRA                               _end_0x035b     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeStub                  EQU     0x7ec2
-convertGeOp                   EQU     0x7ea0
-convertLtOp                   EQU     0x7ca5
-convertGtOp                   EQU     0x79f6
-multiply16bit                 EQU     0x7da6
-divide16bit                   EQU     0x7ba8
-resetVideoFlags               EQU     0x7ed4
-clearCursorRow                EQU     0x79ad
-input                         EQU     0x7dd8
+realTimeStub                  EQU     0x72ad
+convertGeOp                   EQU     0x72a4
+convertLtOp                   EQU     0x71f6
+convertGtOp                   EQU     0x71ed
+multiply16bit                 EQU     0x74cd
+divide16bit                   EQU     0x7aa8
+resetVideoFlags               EQU     0x78a4
+clearCursorRow                EQU     0x77b6
+input                         EQU     0x74a6
 inputExt1                     EQU     0x78b0
-inputExt2                     EQU     0x77e1
-inputCursor                   EQU     0x77bf
-inputKeys                     EQU     0x76a4
-inputIntVar                   EQU     0x77ab
-inputStrVar                   EQU     0x75e8
-inputReturn                   EQU     0x75af
-inputDelete                   EQU     0x74b9
-inputPrint                    EQU     0x73e0
-inputNewline                  EQU     0x74a4
-printInit                     EQU     0x73ca
-printText                     EQU     0x7ea9
-printDigit                    EQU     0x73a8
-printInt16                    EQU     0x7cae
-printChr                      EQU     0x79a0
-printChar                     EQU     0x72a7
-newLineScroll                 EQU     0x7aa4
-integerStr                    EQU     0x71c0
+inputExt2                     EQU     0x73a0
+inputCursor                   EQU     0x75a4
+inputKeys                     EQU     0x7da4
+inputIntVar                   EQU     0x72bf
+inputStrVar                   EQU     0x72e8
+inputReturn                   EQU     0x75c6
+inputDelete                   EQU     0x76b9
+inputPrint                    EQU     0x73be
+inputNewline                  EQU     0x72d3
+printInit                     EQU     0x77a0
+printText                     EQU     0x76a0
+printDigit                    EQU     0x73dd
+printInt16                    EQU     0x79ae
+printChr                      EQU     0x79a1
+printChar                     EQU     0x7ba7
+newLineScroll                 EQU     0x7ca4
+integerStr                    EQU     0x7ea1
 convertEqOpAddr               EQU     0x00d0
 convertNeOpAddr               EQU     0x00d2
 convertLeOpAddr               EQU     0x00d4
@@ -430,6 +430,7 @@ bot                 EQU     register10
 vramAddr            EQU     register11
 evenAddr            EQU     register12
 clsAddress          EQU     register13
+varAddress          EQU     register13
     
 
 resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
@@ -1040,6 +1041,16 @@ intSrcAddr          EQU     register8
 intDigit            EQU     register9
 intResult           EQU     register10
 intNegative         EQU     register11
+bcdLength           EQU     register8
+bcdSrcAddr          EQU     register9
+bcdDstAddr          EQU     register10
+bcdSrcData          EQU     register11
+bcdDstData          EQU     register11          ; alias to make code less confusing
+bcdCarry            EQU     register12
+bcdBorrow           EQU     register12          ; alias to make code less confusing
+bcdValue            EQU     register0
+bcdDigit            EQU     register1
+bcdMult             EQU     register2
 
 
                     ; converts a string to a +/- integer, assumes string pointer is pointing to first char and not the string length, (no overflow or underflow checks)

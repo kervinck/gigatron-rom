@@ -44,6 +44,7 @@ namespace Audio
 
     void initialise(void);
     void initialiseChannels(bool coldBoot=false);
+    void initialiseEditor(void);
 
     void fillCallbackBuffer(void);
     void fillBuffer(void);
@@ -51,8 +52,7 @@ namespace Audio
     void playSample(void);
     void clearQueue(void);
 
-    void playMusic(void);
-    void nextScore(void);
+    void process(void);
 #endif
 }
 

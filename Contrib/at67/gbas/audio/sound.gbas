@@ -1,9 +1,13 @@
 _runtimePath_ "../runtime"
 _runtimeStart_ &h7FFF
+_arraysStart_ &h7FFF
 
 const X_POS = 34
 const Y_POS = 46
 const VU_LEVELS = 64
+
+def byte(&h0400, 2) = 1, 2, 3, 4
+def byte            = 9, 8, 7, 6
 
 'frequency sweep
 const F_LUT=&h0500
@@ -25,18 +29,20 @@ const T_SIZ=8
 def byte(T_LUT, y, 0.0, 3.0, T_SIZ) = 63.0 - 1.398*exp(-y)*(1.0-exp(-10.0*y))*63.0
 
 _spriteStripeChunks_ 32, &h0400, ascending
-load sprite, ../../images/gbas/VUerase.tga, 0
-load sprite, ../../images/gbas/VUdraw.tga, 1, FlipY
+load sprite, ../../res/image/VUerase.tga, 0
+load sprite, ../../res/image/VUdraw.tga, 1, FlipY
 
-t = 0
+t = 0 : f = 0
 
+'audio fix for ROMv5a
+poke &h21, peek(&h21) OR 3
 sound off
 set FGBG_COLOUR, &h3C00
 cls
-mode 1
+mode 2
 
-at 2,2
-print "Keys: <1> <2> <3> <4> <5>";
+at 33,2
+print "Keys: <1> to <7>";
 
 dim volume(4) = 127
 dim ypos(4) = 1
@@ -59,6 +65,7 @@ goto &loop
 
 midiOff:
     set MIDI_STREAM, &h0000
+    sound off
 return
 
 1:  gosub midiOff
@@ -76,8 +83,16 @@ return
 4:  gosub midiOff
     gosub tictoc
     return
+
+5:  gosub midiOff
+    gosub pucDeath
+    return
+
+6:  gosub midiOff
+    gosub ghostMove
+    return
     
-5:  if get("MIDI_STREAM") &= &h0000
+7:  if get("MIDI_STREAM") &= &h0000
         play midiv, &h0AA0, 2
     else
         tick midiv
@@ -101,7 +116,13 @@ return
 
 53: state = 5
     return
+    
+54: state = 6
+    return
 
+55: state = 7
+    return
+    
 vuMeter:
     for i=1 to 4
         i8 = i LSL 8
@@ -111,15 +132,15 @@ vuMeter:
         
         if v &>= VU_LEVELS
             i4 = (i LSL 4) + X_POS
-            if deek(i8 + &h00FC) &&= 0 then goto decay 'if frequency is 0, (i.e. note off), then decay
-            if v &&< vol
+            if deek(i8 + &h00FC) &= 0 then goto decay 'if frequency is 0, (i.e. note off), then decay
+            if v &< vol
                 y = ((VU_LEVELS-1) - (v - VU_LEVELS)) LSR 1 'transform 127->64 to 0->63
                 vol = v
             else
 decay:
                 dec y
                 inc vol
-                if y &&< 1
+                if y &< 1
                     inc y
                     dec vol
                 endif
@@ -188,6 +209,41 @@ tictoc:
 
     inc t
     if t &= T_SIZ-2
+        t = 0
+        state = 0
+        sound off
+    endif
+return
+
+
+dim pnotes%(15) = 74, 72, 71, 69, 67, 65, 64, 62, 60, 62, 64, 65, 67, 69, 71, 72
+def byte(&h0701, x, 0.0, 1.0, 64, 4) = sin(pow(x + 1.8, 3.13)*57.2957795)*31.0 + 32.0
+'def byte(&h0701, y, 0.0, 1.0, 64, 4) = (sin(pow(y + 1.8, 3.13)*57.2957795)*exp(-1.5*y)*1.2)*31.0 + 32.0
+'def byte(&h0701, y, 0.0, 1.0, 64, 4) = sin(pow(y + 1.8, 3.13)*57.2957795)*(1-y)*31.0 + 32.0
+pucDeath:
+    n = get("MUSIC_NOTE", peek(@pnotes + (t AND 15)))
+    sound on, 1, n - f, 63 - (t >>2), 1
+    inc t
+    wait 1
+    if (t AND 7) &= 0
+        f = f + 200
+    endif
+    if t&= 128
+        t = 0
+        f = 0
+        state = 0
+        sound off
+    endif
+return
+
+dim gnotes%(15) = 60, 62, 64, 65, 67, 69, 71, 72, 74, 72, 71, 69, 67, 65, 64, 62
+ghostMove:
+    n = get("MUSIC_NOTE", peek(@gnotes + (t AND 15)) + 10)
+    sound on, 1, n, 63, 2
+    inc t
+    'inc t
+    wait 1
+    if t&= 128
         t = 0
         state = 0
         sound off

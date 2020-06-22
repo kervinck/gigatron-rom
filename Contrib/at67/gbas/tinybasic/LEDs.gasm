@@ -125,9 +125,9 @@ _end_0x025d                   BRA                               _end_0x025d     
 ;****************************************************************************************************************************************
 
 romCheck                      EQU     0x7ee8
-realTimeStub                  EQU     0x7eca
+realTimeStub                  EQU     0x7ed6
 convertLtOp                   EQU     0x7ec1
-resetVideoFlags               EQU     0x7edc
+resetVideoFlags               EQU     0x7eca
 convertEqOpAddr               EQU     0x00d0
 convertNeOpAddr               EQU     0x00d2
 convertLeOpAddr               EQU     0x00d4
@@ -207,6 +207,8 @@ bot                 EQU     register10
 vramAddr            EQU     register11
 evenAddr            EQU     register12
 clsAddress          EQU     register13
+clsLines            EQU     register14
+varAddress          EQU     register13
     
 
 resetVideoFlags     LDI     giga_CursorX                        ; cursor x start

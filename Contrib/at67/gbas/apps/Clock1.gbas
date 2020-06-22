@@ -83,10 +83,10 @@ loop:
         SS = S
     endif
     
-    'restart
-    if get("SERIAL_RAW") <> 255
-        goto restart
-    endif
+    'restart *TODO* INIT messes with INPUT, needs to be fixed
+    'if get("SERIAL_RAW") <> 255
+    '    goto restart
+    'endif
 goto &loop:
 
 

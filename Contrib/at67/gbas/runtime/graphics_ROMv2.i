@@ -30,6 +30,11 @@ drawLine_h          EQU     register10
 drawLine_num        EQU     register11
 drawLine_count      EQU     register12
 drawLine_tmp        EQU     register13
+drawLine_dx         EQU     register2
+drawLine_dy         EQU     register3
+drawLine_u          EQU     register8
+drawLine_v          EQU     register9
+drawLine_addr       EQU     register10
 
 drawPixel_xy        EQU     register15
 readPixel_xy        EQU     register15
@@ -348,6 +353,102 @@ drawLineLoadDXY     LDWI    SYS_LSLW8_24
                     STW     drawLine_dxy2                   ;dxy2 = dx2 + (dy2<<8)
                     RET
 %ENDS   
+
+%SUB                drawLineSlow
+drawLineSlow        PUSH
+                    LDI     1
+                    STW     drawLine_u
+                    LDW     drawLine_x2
+                    SUBW    drawLine_x1                     ; dx = x2 - x1
+                    BGE     drawLS_dxp
+                    LDWI    -1
+                    STW     drawLine_u
+                    LDW     drawLine_x1
+                    SUBW    drawLine_x2                     ; dx = x1 - x2
+                    
+drawLS_dxp          STW     drawLine_dx
+                    LDWI    256
+                    STW     drawLine_v
+                    LDW     drawLine_y2
+                    SUBW    drawLine_y1                     ; dy = y2 - y1
+                    BGE     drawLS_dyp
+                    LDWI    -256
+                    STW     drawLine_v
+                    LDW     drawLine_y1
+                    SUBW    drawLine_y2                     ; sy = y1 - y2
+                    
+drawLS_dyp          STW     drawLine_dy
+                    LDWI    drawLineSlowExt
+                    CALL    giga_vAC
+%ENDS
+
+%SUB                drawLineSlowExt
+drawLineSlowExt     LD      drawLine_x1
+                    ST      drawLine_addr
+                    LD      drawLine_y1
+                    ADDI    8
+                    ST      drawLine_addr + 1
+                    LDW     drawLine_dx
+                    SUBW    drawLine_dy
+                    BGE     drawLS_noswap
+                    LDWI    drawLineSlowSwap
+                    CALL    giga_vAC
+                    
+drawLS_noswap       LDI     0
+                    SUBW    drawLine_dx
+                    STW     drawLine_count
+                    STW     drawLine_num
+                    LDW     drawLine_dx
+                    ADDW    drawLine_dx
+                    STW     drawLine_dx
+                    LDW     drawLine_dy
+                    ADDW    drawLine_dy
+                    STW     drawLine_dy
+                    LDWI    drawLineSlowLoop
+                    CALL    giga_vAC
+%ENDS
+
+%SUB                drawLineSlowLoop
+drawLineSlowLoop    LD      fgbgColour + 1
+                    POKE    drawLine_addr
+                    LDW     drawLine_count
+                    ADDW    drawLine_dy
+                    STW     drawLine_count
+                    BLE     drawLLS_xy
+                    SUBW    drawLine_dx
+                    STW     drawLine_count
+                    LDW     drawLine_addr
+                    ADDW    drawLine_v
+                    STW     drawLine_addr
+
+drawLLS_xy          LDW     drawLine_addr
+                    ADDW    drawLine_u
+                    STW     drawLine_addr
+                    CALL    realTimeStubAddr
+                    LDW     drawLine_num
+                    ADDI    1
+                    STW     drawLine_num
+                    BLE     drawLineSlowLoop
+
+                    POP
+                    RET
+%ENDS
+
+%SUB                drawLineSlowSwap
+drawLineSlowSwap    LDW     drawLine_dx
+                    STW     drawLine_tmp
+                    LDW     drawLine_dy
+                    STW     drawLine_dx
+                    LDW     drawLine_tmp
+                    STW     drawLine_dy
+                    LDW     drawLine_u
+                    STW     drawLine_tmp
+                    LDW     drawLine_v
+                    STW     drawLine_u
+                    LDW     drawLine_tmp
+                    STW     drawLine_v
+                    RET
+%ENDS
 
 %SUB                drawVTLine
 drawVTLine          PUSH                                    ;matches drawVTLineLoop's POP
@@ -783,7 +884,7 @@ drawPR_x2           ADDW    drawLine_x2                     ;relative X mode
 drawPR_y2           ADDW    drawLine_y2                     ;relative Y mode
                     STW     drawLine_y2
                     ST      cursorXY + 1
-                    LDWI    drawLine
+                    LDWI    drawLineSlow
                     CALL    giga_vAC
                     INC     drawPoly_addr
                     INC     drawPoly_addr
@@ -794,16 +895,20 @@ drawPR_exit         LDI     0x99                            ;ADDW
                     LDWI    setPolyRelFlipX
                     CALL    giga_vAC
                     LDWI    setPolyRelFlipY
-                    CALL    giga_vAC                        ;reset X and Y modes             
+                    CALL    giga_vAC                        ;reset X and Y modes
                     POP
                     RET
-                    
+%ENDS
+
+%SUB                setPolyRelFlipX
 setPolyRelFlipX     LDWI    drawPR_x2
                     STW     drawPoly_addr
                     LD      drawPoly_mode
                     POKE    drawPoly_addr
                     RET
+%ENDS
 
+%SUB                setPolyRelFlipY
 setPolyRelFlipY     LDWI    drawPR_y2
                     STW     drawPoly_addr
                     LD      drawPoly_mode

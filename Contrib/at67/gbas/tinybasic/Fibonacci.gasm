@@ -52,13 +52,13 @@ _6                            EQU                               0x0288
 _7                            EQU                               0x02b7
 _8                            EQU                               0x02d2
 _9                            EQU                               0x0302
-_10                           EQU                               0x0319
-_11                           EQU                               0x0326
-_12                           EQU                               0x0340
+_10                           EQU                               0x031b
+_11                           EQU                               0x0328
+_12                           EQU                               0x0342
 _next_0x025c                  EQU                               0x0250
 _page_0x0300                  EQU                               0x0300
-_end_0x0361                   EQU                               0x0324
-_end_0x0392                   EQU                               0x0345
+_end_0x0361                   EQU                               0x0326
+_end_0x0392                   EQU                               0x0347
 
 ; Variables
 _n                            EQU                               0x0030
@@ -195,13 +195,14 @@ _8                            LDW                               _c
 _page_0x0300                  LDW                               0xde
 _9                            ForNextFarVarAdd                  _i _6 0xb0 0xb2
                               LDW                               _c
+                              XORI                              0
                               BNE                               _10
                               BRA                               _12                             ; next i : if c &&= 0 then goto &12
 
 _10                           LDW                               _j
                               ADDI                              1
                               STW                               _j
-                              SUBI                              50
+                              XORI                              50
                               BNE                               _11
 _end_0x0361                   BRA                               _end_0x0361                     ; j=j+1 : if j &&= 50 then END
 
@@ -231,19 +232,19 @@ _end_0x0392                   BRA                               _end_0x0392     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeStub                  EQU     0x7ede
-resetVideoFlags               EQU     0x7ef0
-resetVideoTable               EQU     0x7cc2
-initClearFuncs                EQU     0x7cab
-clearVertBlinds               EQU     0x7ea4
-clearCursorRow                EQU     0x7ab6
-printInit                     EQU     0x7aa0
-printText                     EQU     0x7ce6
+realTimeStub                  EQU     0x78ed
+resetVideoFlags               EQU     0x79a1
+resetVideoTable               EQU     0x7aa1
+initClearFuncs                EQU     0x79ad
+clearVertBlinds               EQU     0x7ac5
+clearCursorRow                EQU     0x7bb6
+printInit                     EQU     0x7ba0
+printText                     EQU     0x79c4
 printDigit                    EQU     0x79dd
-printInt16                    EQU     0x7dae
-printChr                      EQU     0x7da1
-printChar                     EQU     0x78a7
-newLineScroll                 EQU     0x7ba4
+printInt16                    EQU     0x7cae
+printChr                      EQU     0x7ca1
+printChar                     EQU     0x7da7
+newLineScroll                 EQU     0x7ea1
 convertEqOpAddr               EQU     0x00d0
 convertNeOpAddr               EQU     0x00d2
 convertLeOpAddr               EQU     0x00d4
@@ -300,6 +301,7 @@ bot                 EQU     register10
 vramAddr            EQU     register11
 evenAddr            EQU     register12
 clsAddress          EQU     register13
+varAddress          EQU     register13
     
 
 resetVideoFlags     LDI     giga_CursorX                        ; cursor x start

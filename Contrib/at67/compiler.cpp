@@ -12,7 +12,9 @@
 #include "cpu.h"
 #include "assembler.h"
 #include "compiler.h"
+#include "pragmas.h"
 #include "keywords.h"
+#include "functions.h"
 #include "operators.h"
 #include "optimiser.h"
 #include "validater.h"
@@ -40,13 +42,16 @@ namespace Compiler
     const std::vector<std::string> _sysInitNames = {"InitEqOp", "InitNeOp", "InitLeOp", "InitGeOp", "InitLtOp", "InitGtOp", "Init8Array2d", "Init8Array3d", "Init16Array2d", "Init16Array3d"};
 
 
-    uint16_t _vasmPC                 = USER_CODE_START;
-    uint16_t _tempVarStart           = TEMP_VAR_START;
-    uint16_t _userVarStart           = USER_VAR_START;
-    uint16_t _userVarsAddr           = _userVarStart;
-    uint16_t _runtimeEnd             = 0x7FFF;
-    uint16_t _runtimeStart           = 0x7FFF;
-    uint16_t _strWorkArea            = 0x0000;
+    uint16_t _vasmPC       = USER_CODE_START;
+    uint16_t _tempVarStart = TEMP_VAR_START;
+    uint16_t _tempVarSize  = TEMP_VAR_SIZE;
+    uint16_t _userVarStart = USER_VAR_START;
+    uint16_t _userVarsAddr = _userVarStart;
+    uint16_t _runtimeEnd   = 0x7FFF;
+    uint16_t _runtimeStart = 0x7FFF;
+    uint16_t _arraysStart  = 0x7FFF;
+    uint16_t _stringsStart = 0x7FFF;
+    uint16_t _strWorkArea  = 0x0000;
 
     uint16_t _spritesAddrLutAddress  = 0x0000;
     uint16_t _spriteStripeChunks     = 15;
@@ -55,6 +60,9 @@ namespace Compiler
     Memory::FitType _spriteStripeFitType = Memory::FitDescending;
     CodeOptimiseType _codeOptimiseType = CodeSpeed;
     Cpu::RomType _codeRomType = Cpu::ROMv3;
+
+    std::map<std::string, int> _branchTypes = {{"BRA", 0}, {"BEQ", 1}, {"BNE", 2}, {"BLE", 3}, {"BGE", 4}, {"BLT", 5}, {"BGT", 6}};
+
 
     bool _codeIsAsm = false;
     bool _compilingError = false;
@@ -74,29 +82,34 @@ namespace Compiler
     std::vector<std::string> _output;
     std::vector<std::string> _runtime;
 
-    std::vector<Label>         _labels;
-    std::vector<std::string>   _gosubLabels;
-    std::vector<std::string>   _equateLabels;
+    std::vector<Label> _labels;
+    std::vector<std::string> _gosubLabels;
+    std::vector<std::string> _equateLabels;
     std::vector<InternalLabel> _internalLabels;
     std::vector<InternalLabel> _discardedLabels;
 
-    std::vector<CodeLine>   _codeLines;
-    std::vector<Constant>   _constants;
+    std::vector<CodeLine> _codeLines;
+    std::vector<Constant> _constants;
     std::vector<IntegerVar> _integerVars;
-    std::vector<StringVar>  _stringVars;
+    std::vector<StringVar> _stringVars;
 
-    std::stack<ForNextData>     _forNextDataStack;
-    std::stack<ElseIfData>      _elseIfDataStack;
-    std::stack<WhileWendData>   _whileWendDataStack;
+    std::stack<ForNextData> _forNextDataStack;
+    std::stack<ElseIfData> _elseIfDataStack;
+    std::stack<WhileWendData> _whileWendDataStack;
     std::stack<RepeatUntilData> _repeatUntilDataStack;
+
+    std::map<std::string, CallData> _callDataMap;
+
+    std::stack<ProcData> _procDataStack;
+    std::map<std::string, ProcData> _procDataMap;
 
     std::vector<std::string> _macroLines;
     std::map<int, MacroNameEntry> _macroNameEntries;
     std::map<std::string, MacroIndexEntry> _macroIndexEntries;
 
-    std::vector<DefDataByte>   _defDataBytes;
-    std::vector<DefDataWord>   _defDataWords;
-    std::vector<DefDataImage>  _defDataImages;
+    std::vector<DefDataByte> _defDataBytes;
+    std::vector<DefDataWord> _defDataWords;
+    std::vector<DefDataImage> _defDataImages;
     
     std::map<int, DefDataSprite> _defDataSprites;
     SpritesAddrLut _spritesAddrLut;
@@ -112,7 +125,10 @@ namespace Compiler
     uint16_t getVasmPC(void) {return _vasmPC;}
     uint16_t getRuntimeEnd(void) {return _runtimeEnd;}
     uint16_t getRuntimeStart(void) {return _runtimeStart;}
+    uint16_t getArraysStart(void) {return _arraysStart;}
+    uint16_t getStringsStart(void) {return _stringsStart;}
     uint16_t getTempVarStart(void) {return _tempVarStart;}
+    uint16_t getTempVarSize(void) {return _tempVarSize;}
     uint16_t getStrWorkArea(void) {return _strWorkArea;}
     uint16_t getSpritesAddrLutAddress(void) {return _spritesAddrLutAddress;}
     uint16_t getSpriteStripeChunks(void) {return _spriteStripeChunks;}
@@ -120,6 +136,7 @@ namespace Compiler
     Memory::FitType getSpriteStripeFitType(void) {return _spriteStripeFitType;}
     CodeOptimiseType getCodeOptimiseType(void) {return _codeOptimiseType;}
     Cpu::RomType getCodeRomType(void) {return _codeRomType;}
+    const std::map<std::string, int>& getBranchTypes(void) {return _branchTypes;}
     bool getCompilingError(void) {return _compilingError;}
     bool getArrayIndiciesOne(void) {return _arrayIndiciesOne;}
     int getCurrentLabelIndex(void) {return _currentLabelIndex;}
@@ -131,7 +148,10 @@ namespace Compiler
     void setRuntimeEnd(uint16_t runtimeEnd) {_runtimeEnd = runtimeEnd;}
     void setRuntimePath(const std::string& runtimePath) {_runtimePath = runtimePath;}
     void setRuntimeStart(uint16_t runtimeStart) {_runtimeStart = runtimeStart;}
+    void setArraysStart(uint16_t arraysStart) {_arraysStart = arraysStart;}
+    void setStringsStart(uint16_t stringsStart) {_stringsStart = stringsStart;}
     void setTempVarStart(uint16_t tempVarStart) {_tempVarStart = tempVarStart;}
+    void setTempVarSize(uint16_t tempVarSize) {_tempVarSize = tempVarSize;}
     void setStrWorkArea(uint16_t strWorkArea) {_strWorkArea = strWorkArea;}
     void setSpritesAddrLutAddress(uint16_t spritesAddrLutAddress) {_spritesAddrLutAddress = spritesAddrLutAddress;}
     void setSpriteStripeChunks(uint16_t spriteStripeChunks) {_spriteStripeChunks = spriteStripeChunks;}
@@ -167,6 +187,7 @@ namespace Compiler
 
     std::map<std::string, DefFunction>& getDefFunctions(void) {return _defFunctions;}
     std::vector<std::unique_ptr<DataObject>>& getDataObjects(void) {return _dataObjects;}
+
     std::map<std::string, MacroIndexEntry>& getMacroIndexEntries(void) {return _macroIndexEntries;}
 
     std::stack<ForNextData>& getForNextDataStack(void) {return _forNextDataStack;}
@@ -174,6 +195,10 @@ namespace Compiler
     std::stack<WhileWendData>& getWhileWendDataStack(void) {return _whileWendDataStack;}
     std::stack<RepeatUntilData>& getRepeatUntilDataStack(void) {return _repeatUntilDataStack;}
 
+    std::map<std::string, CallData>& getCallDataMap(void) {return _callDataMap;}
+
+    std::stack<ProcData>& getProcDataStack(void) {return _procDataStack;}
+    std::map<std::string, ProcData>& getProcDataMap(void) {return _procDataMap;}
 
     // Vertical blank interrupt uses 0x30-0x33 for context save/restore, (vPC and vAC)
     bool moveVblankVars(void)
@@ -354,6 +379,49 @@ namespace Compiler
     {
         // Valid chars are alpha and 'address of'
         if(subAlpha) varName = Expression::getSubAlpha(varName);
+
+        // Within a PROC/ENDPROC pair
+        if(getProcDataStack().size() == 1)
+        {
+            // Top of stack for current PROC
+            ProcData procData = getProcDataStack().top();
+
+            // Translate to local var names
+            if(procData._localVarNameMap.find(varName) != procData._localVarNameMap.end())
+            {
+                varName = procData._localVarNameMap[varName];
+            }
+        }
+
+        // Search for var name
+        for(int i=0; i<int(_integerVars.size()); i++)
+        {
+            if(_integerVars[i]._name == varName) return i;
+        }
+
+        return -1;
+    }
+
+    int findVar(std::string& varName, std::string& oldName, bool subAlpha)
+    {
+        // Valid chars are alpha and 'address of'
+        if(subAlpha) varName = Expression::getSubAlpha(varName);
+        oldName = varName;
+
+        // Within a PROC/ENDPROC pair
+        if(getProcDataStack().size() == 1)
+        {
+            // Top of stack for current PROC
+            ProcData procData = getProcDataStack().top();
+
+            // Translate to local var names
+            if(procData._localVarNameMap.find(varName) != procData._localVarNameMap.end())
+            {
+                varName = procData._localVarNameMap[varName];
+            }
+        }
+
+        // Search for var name
         for(int i=0; i<int(_integerVars.size()); i++)
         {
             if(_integerVars[i]._name == varName) return i;
@@ -394,6 +462,7 @@ namespace Compiler
         _currentLabelIndex = int(_labels.size() - 1);
     }
 
+    // Global int vars
     void createIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, int& varIndex)
     {
         // Create var
@@ -423,10 +492,39 @@ namespace Compiler
         if(_userVarsAddr >= USER_VAR_END)
         {
             _userVarsAddr = _userVarStart;
-            fprintf(stderr, "Warning: you have exceeded the maximum number of page zero global variables : on line %d\n", codeLineIndex); 
+            fprintf(stderr, "Warning: you have used the maximum number of page zero global variables : on line %d\n", codeLineIndex); 
         }
     }
 
+    // Proc/Func local and param int vars
+    void createIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, uint16_t address, int& varIndex)
+    {
+        // Create var
+        varIndex = int(_integerVars.size());
+        codeLine._containsVars = containsVars;
+        codeLine._varIndex = varIndex;
+        codeLine._varType = VarInt16;
+
+        std::vector<uint16_t> arrSizes;
+        std::vector<int16_t> arrInits;
+        std::vector<std::vector<uint16_t>> arrAddrs;
+        std::vector<uint16_t> arrLut;
+        IntegerVar integerVar = {data, init, address, varName, varName, codeLineIndex, VarInt16, Int16, arrSizes, arrInits, arrAddrs, arrLut};
+        _integerVars.push_back(integerVar);
+
+        // Create var output
+        std::string line = "_" + _integerVars[varIndex]._name;
+        Expression::addString(line, LABEL_TRUNC_SIZE - int(line.size()));
+        size_t space = line.find_first_of(" ");
+        if(space == std::string::npos  ||  space >= LABEL_TRUNC_SIZE - 1)
+        {
+            line = line.substr(0, LABEL_TRUNC_SIZE);
+            line[LABEL_TRUNC_SIZE - 1] = ' ';
+        }
+        _integerVars[varIndex]._output = line;
+    }
+
+    // Global int array vars
     void createIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, int& varIndex, VarType varType, int intSize,
                       uint16_t address, std::vector<uint16_t>& arrSizes, const std::vector<int16_t>& arrInits, std::vector<std::vector<uint16_t>>& arrAddrs, std::vector<uint16_t>& arrLut)
     {
@@ -552,7 +650,7 @@ namespace Compiler
         std::string strKeyword = strData;
 
         // Check for string keywords
-        if(Keywords::getStringKeywords().find(Expression::strToUpper(strKeyword)) != Keywords::getStringKeywords().end())
+        if(Functions::getStringFunctions().find(Expression::strToUpper(strKeyword)) != Functions::getStringFunctions().end())
         {
             strData = "";
         }
@@ -602,7 +700,7 @@ namespace Compiler
         {
             std::string token = tokens[i];
             Expression::strToUpper(token);
-            if(Keywords::getPragmas().find(token) != Keywords::getPragmas().end())
+            if(Pragmas::getPragmas().find(token) != Pragmas::getPragmas().end())
             {
                 expressionType |= Expression::HasPragmas;
                 break;
@@ -626,7 +724,7 @@ namespace Compiler
         {
             std::string token = tokens[i];
             Expression::strToUpper(token);
-            if((Keywords::getFunctions().find(token) != Keywords::getFunctions().end())  ||  (Compiler::getDefFunctions().find(token) != Compiler::getDefFunctions().end()))
+            if((Functions::getFunctions().find(token) != Functions::getFunctions().end())  ||  (Compiler::getDefFunctions().find(token) != Compiler::getDefFunctions().end()))
             {
                 expressionType |= Expression::HasFunctions;
                 break;
@@ -638,7 +736,7 @@ namespace Compiler
         {
             std::string token = tokens[i];
             Expression::strToUpper(token);
-            if(Keywords::getStringKeywords().find(token) != Keywords::getStringKeywords().end())
+            if(Functions::getStringFunctions().find(token) != Functions::getStringFunctions().end())
             {
                 // If first token is a string keyword then don't create strings
                 if(i == 0) expressionType |= Expression::HasOptimisedPrint;
@@ -654,12 +752,12 @@ namespace Compiler
             constIndex = findConst(tokens[i]);
             if(constIndex != -1  &&  tokens[i][0] != '@') // 'address of' operator returns numbers
             {
-                if(_constants[constIndex]._constType == ConstInt16)
+                if(_constants[constIndex]._varType == ConstInt16)
                 {
                     expressionType |= Expression::HasIntConsts;
                     break;
                 }
-                if(_constants[constIndex]._constType == ConstStr)
+                if(_constants[constIndex]._varType == ConstStr)
                 {
                     expressionType |= Expression::HasStrConsts;
                     break;
@@ -704,9 +802,9 @@ namespace Compiler
             if(stripped.find_first_of("-+/*%&<>=") != std::string::npos) expressionType |= Expression::HasOperators;
             std::string mod = stripped;
             Expression::strToUpper(mod);
-            for(int i=0; i<int(Keywords::getOperators().size()); i++)
+            for(int i=0; i<int(Operators::getOperators().size()); i++)
             {
-                if(mod.find(Keywords::getOperators()[i]) != std::string::npos) expressionType |= Expression::HasOperators;
+                if(mod.find(Operators::getOperators()[i]) != std::string::npos) expressionType |= Expression::HasOperators;
             }
         }
 
@@ -802,8 +900,9 @@ namespace Compiler
         }
         else
         {
+             // _tempVarSize bytes of temporary expression variables, defaults to 8 bytes, (4 temporary expression variables) 
             _tempVarStart += 2;
-            if(_tempVarStart >= TEMP_VAR_START + 0x10) _tempVarStart = TEMP_VAR_START; // 16 bytes of temporary expression variables allows for 8 expression depths
+            if(_tempVarStart >= TEMP_VAR_START + _tempVarSize) _tempVarStart = TEMP_VAR_START;
         }
 
         _tempVarStartStr = Expression::wordToHexString(_tempVarStart);
@@ -1618,16 +1717,16 @@ namespace Compiler
             std::vector<size_t> offsets;
             std::string input = _input[j];
             input = Expression::removeCommentsNotInStrings(input);
-            Keywords::KeywordResult keywordResult = Keywords::handlePragmas(input, j);
-            switch(keywordResult)
+            Pragmas::PragmaResult pragmaResult = Pragmas::handlePragmas(input, j);
+            switch(pragmaResult)
             {
-                case Keywords::KeywordFound:
+                case Pragmas::PragmaFound:
                 {
                     _input[j].erase(0);
                 }
                 break;
 
-                case Keywords::KeywordError:
+                case Pragmas::PragmaError:
                 {
                     fprintf(stderr, "Compiler::parsePragmas() : Syntax error in Pragma, in %s on line %d\n", _input[j].c_str(), j + 1);
                     return false;
@@ -1792,7 +1891,7 @@ namespace Compiler
             else
             {
                 // Allocate RAM for string + length and delimiter bytes
-                if(!Memory::getFreeRAM(Memory::FitDescending, strLength + 2, USER_CODE_START, _runtimeStart, address))
+                if(!Memory::getFreeRAM(Memory::FitDescending, strLength + 2, USER_CODE_START, _stringsStart, address))
                 {
                     fprintf(stderr, "Compiler::getOrCreateString() : Not enough RAM for string %s='%s' of size %d, in '%s' on line %d\n", name.c_str(), str.c_str(), strLength + 2, 
                                                                                                                                           codeLine._code.c_str(), codeLineIndex);
@@ -1811,7 +1910,7 @@ namespace Compiler
         else
         {
             // Allocate RAM for string + length and delimiter bytes
-            if(!Memory::getFreeRAM(Memory::FitDescending, maxSize + 2, USER_CODE_START, _runtimeStart, address))
+            if(!Memory::getFreeRAM(Memory::FitDescending, maxSize + 2, USER_CODE_START, _stringsStart, address))
             {
                 fprintf(stderr, "Compiler::getOrCreateString() : Not enough RAM for string %s='%s' of size %d, in '%s' on line %d\n", name.c_str(), str.c_str(), maxSize + 2,
                                                                                                                                       codeLine._code.c_str(), codeLineIndex);
@@ -1892,7 +1991,7 @@ namespace Compiler
         // Allocate RAM for array of strings
         for(int i=0; i<int(arrAddrs.size()); i++)
         {
-            if(!Memory::getFreeRAM(Memory::FitDescending, size + 2, USER_CODE_START, _runtimeStart, arrAddrs[i]))
+            if(!Memory::getFreeRAM(Memory::FitDescending, size + 2, USER_CODE_START, _arraysStart, arrAddrs[i]))
             {
                 fprintf(stderr, "Compiler::getOrCreateString() : Not enough RAM for string %s of size %d, in '%s' on line %d\n", name.c_str(), size + 2,
                                                                                                                                  codeLine._code.c_str(), codeLineIndex);
@@ -1903,7 +2002,7 @@ namespace Compiler
         // Array of pointers to strings
         uint16_t address = 0x0000;
         int arraySize = int(arrAddrs.size())*2;
-        if(!Memory::getFreeRAM(Memory::FitDescending, arraySize, USER_CODE_START, _runtimeStart, address, false)) // arrays do not need to be contained within pages
+        if(!Memory::getFreeRAM(Memory::FitDescending, arraySize, USER_CODE_START, _arraysStart, address, false)) // arrays do not need to be contained within pages
         {
             fprintf(stderr, "Keywords::getOrCreateString() : Not enough RAM for int array of size %d in '%s' on line %d\n", arraySize, codeLine._code.c_str(), codeLineIndex);
             return -1;
@@ -2028,12 +2127,14 @@ namespace Compiler
         std::string varName = Expression::getExpression();
         if(varName.back() == ')') varName.erase(varName.size()-1);
 
-        int varIndex   = findVar(varName);
+        std::string oldName;
+        int varIndex   = findVar(varName, oldName);
         int strIndex   = findStr(varName);
         int labIndex   = findLabel(varName);
         int constIndex = findConst(varName);
 
-        Expression::advance(varName.size());
+        // Use oldName instead of varName for advancing, as varName gets name mangled by findVar() for local variables
+        Expression::advance(oldName.size());
 
         // Int and int arrays
         uint16_t address = 0x0000;
@@ -2073,11 +2174,13 @@ namespace Compiler
         std::string varName = Expression::getExpression();
         if(varName.back() == ')') varName.erase(varName.size()-1);
 
-        int varIndex = findVar(varName);
+        std::string oldName;
+        int varIndex = findVar(varName, oldName);
         int strIndex = findStr(varName);
         int constIndex = findConst(varName);
 
-        Expression::advance(varName.size());
+        // Use oldName instead of varName for advancing, as varName gets name mangled by findVar() for local variables
+        Expression::advance(oldName.size());
 
         // Int and int arrays
         uint16_t length = 0;
@@ -2248,185 +2351,201 @@ namespace Compiler
         // Unary operators
         else if(peek(true) == '+')
         {
-            get(true); numeric = factor(0); numeric = Operators::operatorPOS(numeric);
+            get(true); numeric = factor(0); numeric = Operators::POS(numeric);
         }
         else if(peek(true) == '-')
         {
-            get(true); numeric = factor(0); numeric = Operators::operatorNEG(numeric);
+            get(true); numeric = factor(0); numeric = Operators::NEG(numeric);
         }
         else if(Expression::find("NOT "))
         {
-            numeric = factor(0); numeric = Operators::operatorNOT(numeric);
+            numeric = factor(0); numeric = Operators::NOT(numeric);
         }
         // Functions with no parameters
         else if(Expression::find("TIME$"))
         {
-            numeric = Keywords::functionTIME$(numeric, _currentCodeLineIndex);
+            numeric = Functions::TIME$(numeric, _currentCodeLineIndex);
         }
         // Functions
         else if(Expression::findFunc("PEEK"))
         {
-            numeric = factor(0); numeric = Keywords::functionPEEK(numeric, _currentCodeLineIndex);
+            numeric = factor(0); numeric = Functions::PEEK(numeric, _currentCodeLineIndex);
         }
         else if(Expression::findFunc("DEEK"))
         {
-            numeric = factor(0); numeric = Keywords::functionDEEK(numeric, _currentCodeLineIndex);
+            numeric = factor(0); numeric = Functions::DEEK(numeric, _currentCodeLineIndex);
         }
         else if(Expression::findFunc("USR"))
         {
-            numeric = factor(0); numeric = Keywords::functionUSR(numeric, _currentCodeLineIndex);
+            numeric = factor(0); numeric = Functions::USR(numeric, _currentCodeLineIndex);
         }
         else if(Expression::findFunc("RND"))
         {
-            numeric = factor(0); numeric = Keywords::functionRND(numeric, _currentCodeLineIndex);
+            numeric = factor(0); numeric = Functions::RND(numeric, _currentCodeLineIndex);
         }
         else if(Expression::findFunc("LEN"))
         {
-            numeric = factor(0); numeric = Keywords::functionLEN(numeric, _currentCodeLineIndex);
+            numeric = factor(0); numeric = Functions::LEN(numeric, _currentCodeLineIndex);
         }
         else if(Expression::findFunc("GET"))
         {
-            numeric = factor(0); numeric = Keywords::functionGET(numeric, _currentCodeLineIndex);
+            numeric = factor(0); numeric = Functions::GET(numeric, _currentCodeLineIndex);
         }
         else if(Expression::findFunc("ABS"))
         {
-            numeric = factor(0); numeric = Keywords::functionABS(numeric, _currentCodeLineIndex);
+            numeric = factor(0); numeric = Functions::ABS(numeric, _currentCodeLineIndex);
         }
         else if(Expression::findFunc("SGN"))
         {
-            numeric = factor(0); numeric = Keywords::functionSGN(numeric, _currentCodeLineIndex);
+            numeric = factor(0); numeric = Functions::SGN(numeric, _currentCodeLineIndex);
         }
         else if(Expression::findFunc("ASC"))
         {
-            numeric = factor(0); numeric = Keywords::functionASC(numeric, _currentCodeLineIndex);
+            numeric = factor(0); numeric = Functions::ASC(numeric, _currentCodeLineIndex);
         }
-        else if(Expression::findFunc("CMP"))
+        else if(Expression::findFunc("STRCMP"))
         {
-            numeric = factor(0); numeric = Keywords::functionCMP(numeric, _currentCodeLineIndex);
+            numeric = factor(0); numeric = Functions::STRCMP(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("BCDCMP"))
+        {
+            numeric = factor(0); numeric = Functions::BCDCMP(numeric, _currentCodeLineIndex);
         }
         else if(Expression::findFunc("VAL"))
         {
-            numeric = factor(0); numeric = Keywords::functionVAL(numeric, _currentCodeLineIndex);
+            numeric = factor(0); numeric = Functions::VAL(numeric, _currentCodeLineIndex);
         }
         else if(Expression::findFunc("LUP"))
         {
-            numeric = factor(0); numeric = Keywords::functionLUP(numeric, _currentCodeLineIndex);
+            numeric = factor(0); numeric = Functions::LUP(numeric, _currentCodeLineIndex);
         }
         else if(Expression::findFunc("ADDR"))
         {
-            numeric = factor(0); numeric = Keywords::functionADDR(numeric, _currentCodeLineIndex);
+            numeric = factor(0); numeric = Functions::ADDR(numeric, _currentCodeLineIndex);
         }
         else if(Expression::findFunc("POINT"))
         {
-            numeric = factor(0); numeric = Keywords::functionPOINT(numeric, _currentCodeLineIndex);
+            numeric = factor(0); numeric = Functions::POINT(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("MIN"))
+        {
+            numeric = factor(0); numeric = Functions::MIN(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("MAX"))
+        {
+            numeric = factor(0); numeric = Functions::MAX(numeric, _currentCodeLineIndex);
+        }
+        else if(Expression::findFunc("CLAMP"))
+        {
+            numeric = factor(0); numeric = Functions::CLAMP(numeric, _currentCodeLineIndex);
         }
         else if(Expression::findFunc("CHR$"))
         {
-            numeric = factor(0); numeric = Keywords::functionCHR$(numeric, _currentCodeLineIndex);
+            numeric = factor(0); numeric = Functions::CHR$(numeric, _currentCodeLineIndex);
         }
         else if(Expression::findFunc("STR$"))
         {
-            numeric = factor(0); numeric = Keywords::functionSTR$(numeric, _currentCodeLineIndex);
+            numeric = factor(0); numeric = Functions::STR$(numeric, _currentCodeLineIndex);
         }
         else if(Expression::findFunc("HEX$"))
         {
-            numeric = factor(0); numeric = Keywords::functionHEX$(numeric, _currentCodeLineIndex);
+            numeric = factor(0); numeric = Functions::HEX$(numeric, _currentCodeLineIndex);
         }
         else if(Expression::findFunc("HEXW$"))
         {
-            numeric = factor(0); numeric = Keywords::functionHEXW$(numeric, _currentCodeLineIndex);
+            numeric = factor(0); numeric = Functions::HEXW$(numeric, _currentCodeLineIndex);
         }
         else if(Expression::findFunc("LEFT$"))
         {
-            numeric = factor(0); numeric = Keywords::functionLEFT$(numeric, _currentCodeLineIndex);
+            numeric = factor(0); numeric = Functions::LEFT$(numeric, _currentCodeLineIndex);
         }
         else if(Expression::findFunc("RIGHT$"))
         {
-            numeric = factor(0); numeric = Keywords::functionRIGHT$(numeric, _currentCodeLineIndex);
+            numeric = factor(0); numeric = Functions::RIGHT$(numeric, _currentCodeLineIndex);
         }
         else if(Expression::findFunc("MID$"))
         {
-            numeric = factor(0); numeric = Keywords::functionMID$(numeric, _currentCodeLineIndex);
+            numeric = factor(0); numeric = Functions::MID$(numeric, _currentCodeLineIndex);
         }
         else if(Expression::findFunc("CEIL"))
         {
-            numeric = factor(0); numeric = Operators::operatorCEIL(numeric);
+            numeric = factor(0); numeric = Operators::CEIL(numeric);
         }
         else if(Expression::findFunc("FLOOR"))
         {
-            numeric = factor(0); numeric = Operators::operatorFLOOR(numeric);
+            numeric = factor(0); numeric = Operators::FLOOR(numeric);
         }
         else if(Expression::findFunc("POW"))
         {
-            numeric = factor(0); numeric = Operators::operatorPOWF(numeric);
+            numeric = factor(0); numeric = Operators::POWF(numeric);
         }
         else if(Expression::findFunc("SQRT"))
         {
-            numeric = factor(0); numeric = Operators::operatorSQRT(numeric);
+            numeric = factor(0); numeric = Operators::SQRT(numeric);
         }
         else if(Expression::findFunc("EXP2"))
         {
-            numeric = factor(0); numeric = Operators::operatorEXP2(numeric);
+            numeric = factor(0); numeric = Operators::EXP2(numeric);
         }
         else if(Expression::findFunc("EXP"))
         {
-            numeric = factor(0); numeric = Operators::operatorEXP(numeric);
+            numeric = factor(0); numeric = Operators::EXP(numeric);
         }
         else if(Expression::findFunc("LOG10"))
         {
-            numeric = factor(0); numeric = Operators::operatorLOG10(numeric);
+            numeric = factor(0); numeric = Operators::LOG10(numeric);
         }
         else if(Expression::findFunc("LOG2"))
         {
-            numeric = factor(0); numeric = Operators::operatorLOG2(numeric);
+            numeric = factor(0); numeric = Operators::LOG2(numeric);
         }
         else if(Expression::findFunc("LOG"))
         {
-            numeric = factor(0); numeric = Operators::operatorLOG(numeric);
+            numeric = factor(0); numeric = Operators::LOG(numeric);
         }
         else if(Expression::findFunc("SIN"))
         {
-            numeric = factor(0); numeric = Operators::operatorSIN(numeric);
+            numeric = factor(0); numeric = Operators::SIN(numeric);
         }
         else if(Expression::findFunc("COS"))
         {
-            numeric = factor(0); numeric = Operators::operatorCOS(numeric);
+            numeric = factor(0); numeric = Operators::COS(numeric);
         }
         else if(Expression::findFunc("TAN"))
         {
-            numeric = factor(0); numeric = Operators::operatorTAN(numeric);
+            numeric = factor(0); numeric = Operators::TAN(numeric);
         }
         else if(Expression::findFunc("ASIN"))
         {
-            numeric = factor(0); numeric = Operators::operatorASIN(numeric);
+            numeric = factor(0); numeric = Operators::ASIN(numeric);
         }
         else if(Expression::findFunc("ACOS"))
         {
-            numeric = factor(0); numeric = Operators::operatorACOS(numeric);
+            numeric = factor(0); numeric = Operators::ACOS(numeric);
         }
         else if(Expression::findFunc("ATAN2"))
         {
-            numeric = factor(0); numeric = Operators::operatorATAN2(numeric);
+            numeric = factor(0); numeric = Operators::ATAN2(numeric);
         }
         else if(Expression::findFunc("ATAN"))
         {
-            numeric = factor(0); numeric = Operators::operatorATAN(numeric);
+            numeric = factor(0); numeric = Operators::ATAN(numeric);
         }
         else if(Expression::findFunc("RAND"))
         {
-            numeric = factor(0); numeric = Operators::operatorRAND(numeric);
+            numeric = factor(0); numeric = Operators::RAND(numeric);
         }
         else if(Expression::findFunc("REV16"))
         {
-            numeric = factor(0); numeric = Operators::operatorREV16(numeric);
+            numeric = factor(0); numeric = Operators::REV16(numeric);
         }
         else if(Expression::findFunc("REV8"))
         {
-            numeric = factor(0); numeric = Operators::operatorREV8(numeric);
+            numeric = factor(0); numeric = Operators::REV8(numeric);
         }
         else if(Expression::findFunc("REV4"))
         {
-            numeric = factor(0); numeric = Operators::operatorREV4(numeric);
+            numeric = factor(0); numeric = Operators::REV4(numeric);
         }
         else
         {
@@ -2436,7 +2555,7 @@ namespace Compiler
                 std::string name = it->first;
                 if(Expression::findFunc(name))
                 {
-                    if(!userFunc(it->first)) return numeric;
+                    if(!userFunc(name)) return numeric;
                     return factor(0);
                 }
             }
@@ -2454,14 +2573,16 @@ namespace Compiler
                     if(varName.back() == ')') varName.erase(varName.size()-1);
                     if(varName.find('(') != std::string::npos) foundParams = true;
 
-                    int varIndex = findVar(varName);
+                    std::string oldName;
+                    int varIndex = findVar(varName, oldName);
                     int strIndex = findStr(varName);
                     int constIndex = findConst(varName);
                     if(varIndex != -1)
                     {
                         Expression::Int16Byte int16Byte = Expression::Int16Both;
 
-                        Expression::advance(varName.size());
+                        // Use oldName instead of varName for advancing, as varName gets name mangled by findVar() for local variables
+                        Expression::advance(oldName.size());
 
                         // Arrays
                         if(_integerVars[varIndex]._varType == Var1Arr8   ||  _integerVars[varIndex]._varType == Var2Arr8   ||  _integerVars[varIndex]._varType == Var3Arr8  ||
@@ -2499,7 +2620,7 @@ namespace Compiler
                                 if(Expression::find(".HI")) int16Byte = Expression::Int16High;
                                 numeric._int16Byte = int16Byte;
 
-                                numeric = Keywords::functionIARR(numeric, _currentCodeLineIndex);
+                                numeric = Functions::IARR(numeric, _currentCodeLineIndex);
                             }
                         }
                         // Vars
@@ -2534,7 +2655,7 @@ namespace Compiler
                                     numeric._parameters.push_back(param._parameters[i]);
                                 }
 
-                                numeric = Keywords::functionSARR(numeric, _currentCodeLineIndex);
+                                numeric = Functions::SARR(numeric, _currentCodeLineIndex);
                             }
                         }
                         // Vars
@@ -2549,7 +2670,7 @@ namespace Compiler
                     {
                         Expression::advance(varName.size());
                         
-                        switch(_constants[constIndex]._constType)
+                        switch(_constants[constIndex]._varType)
                         {
                             // Numeric is now passed back to compiler, (rather than just numeric._value), so make sure all fields are valid
                             case ConstInt16:
@@ -2600,11 +2721,11 @@ namespace Compiler
 
         for(;;)
         {
-            if(Expression::find("**"))       {numeric = factor(0); result = Operators::operatorPOW(result, numeric);}
-            else if(find('*'))               {numeric = factor(0); result = Operators::operatorMUL(result, numeric);}
-            else if(find('/'))               {numeric = factor(0); result = Operators::operatorDIV(result, numeric);}
-            else if(find('%'))               {numeric = factor(0); result = Operators::operatorMOD(result, numeric);}
-            else if(Expression::find("MOD")) {numeric = factor(0); result = Operators::operatorMOD(result, numeric);}
+            if(Expression::find("**"))       {numeric = factor(0); result = Operators::POW(result, numeric);}
+            else if(find('*'))               {numeric = factor(0); result = Operators::MUL(result, numeric);}
+            else if(find('/'))               {numeric = factor(0); result = Operators::DIV(result, numeric);}
+            else if(find('%'))               {numeric = factor(0); result = Operators::MOD(result, numeric);}
+            else if(Expression::find("MOD")) {numeric = factor(0); result = Operators::MOD(result, numeric);}
             else return result;
         }
     }
@@ -2615,8 +2736,8 @@ namespace Compiler
 
         for(;;)
         {
-            if(find('+'))      {numeric = term(); result = Operators::operatorADD(result, numeric);}
-            else if(find('-')) {numeric = term(); result = Operators::operatorSUB(result, numeric);}
+            if(find('+'))      {numeric = term(); result = Operators::ADD(result, numeric);}
+            else if(find('-')) {numeric = term(); result = Operators::SUB(result, numeric);}
 
             else return result;
         }
@@ -2628,15 +2749,15 @@ namespace Compiler
 
         for(;;)
         {
-            if(Expression::find("AND"))      {numeric = expr(); result = Operators::operatorAND(result, numeric);}
-            else if(Expression::find("XOR")) {numeric = expr(); result = Operators::operatorXOR(result, numeric);}
-            else if(Expression::find("OR"))  {numeric = expr(); result = Operators::operatorOR(result,  numeric);}
-            else if(Expression::find("LSL")) {numeric = expr(); result = Operators::operatorLSL(result, numeric);}
-            else if(Expression::find("LSR")) {numeric = expr(); result = Operators::operatorLSR(result, numeric);}
-            else if(Expression::find("ASR")) {numeric = expr(); result = Operators::operatorASR(result, numeric);}
-            else if(Expression::find("<<"))  {numeric = expr(); result = Operators::operatorLSL(result, numeric);}
-            else if(Expression::find(">>"))  {numeric = expr(); result = Operators::operatorLSR(result, numeric);}
-            else if(Expression::find("&>>")) {numeric = expr(); result = Operators::operatorASR(result, numeric);}
+            if(Expression::find("AND"))      {numeric = expr(); result = Operators::AND(result, numeric);}
+            else if(Expression::find("XOR")) {numeric = expr(); result = Operators::XOR(result, numeric);}
+            else if(Expression::find("OR"))  {numeric = expr(); result = Operators::OR(result,  numeric);}
+            else if(Expression::find("LSL")) {numeric = expr(); result = Operators::LSL(result, numeric);}
+            else if(Expression::find("LSR")) {numeric = expr(); result = Operators::LSR(result, numeric);}
+            else if(Expression::find("ASR")) {numeric = expr(); result = Operators::ASR(result, numeric);}
+            else if(Expression::find("<<"))  {numeric = expr(); result = Operators::LSL(result, numeric);}
+            else if(Expression::find(">>"))  {numeric = expr(); result = Operators::LSR(result, numeric);}
+            else if(Expression::find("&>>")) {numeric = expr(); result = Operators::ASR(result, numeric);}
 
             else return result;
         }
@@ -2649,31 +2770,31 @@ namespace Compiler
         for(;;)
         {
             // Boolean conditionals
-            if(Expression::find("=="))      {numeric = logical(); result = Operators::operatorEQ(result, numeric, Expression::BooleanCC);}
-            else if(find('='))              {numeric = logical(); result = Operators::operatorEQ(result, numeric, Expression::BooleanCC);}
-            else if(Expression::find("<>")) {numeric = logical(); result = Operators::operatorNE(result, numeric, Expression::BooleanCC);}
-            else if(Expression::find("<=")) {numeric = logical(); result = Operators::operatorLE(result, numeric, Expression::BooleanCC);}
-            else if(Expression::find(">=")) {numeric = logical(); result = Operators::operatorGE(result, numeric, Expression::BooleanCC);}
-            else if(find('<'))              {numeric = logical(); result = Operators::operatorLT(result, numeric, Expression::BooleanCC);}
-            else if(find('>'))              {numeric = logical(); result = Operators::operatorGT(result, numeric, Expression::BooleanCC);}
+            if(Expression::find("=="))      {numeric = logical(); result = Operators::EQ(result, numeric, Expression::BooleanCC);}
+            else if(find('='))              {numeric = logical(); result = Operators::EQ(result, numeric, Expression::BooleanCC);}
+            else if(Expression::find("<>")) {numeric = logical(); result = Operators::NE(result, numeric, Expression::BooleanCC);}
+            else if(Expression::find("<=")) {numeric = logical(); result = Operators::LE(result, numeric, Expression::BooleanCC);}
+            else if(Expression::find(">=")) {numeric = logical(); result = Operators::GE(result, numeric, Expression::BooleanCC);}
+            else if(find('<'))              {numeric = logical(); result = Operators::LT(result, numeric, Expression::BooleanCC);}
+            else if(find('>'))              {numeric = logical(); result = Operators::GT(result, numeric, Expression::BooleanCC);}
 
             // Normal conditionals
-            else if(Expression::find("&==")) {numeric = logical(); result = Operators::operatorEQ(result, numeric, Expression::NormalCC);}
-            else if(Expression::find("&="))  {numeric = logical(); result = Operators::operatorEQ(result, numeric, Expression::NormalCC);}
-            else if(Expression::find("&<>")) {numeric = logical(); result = Operators::operatorNE(result, numeric, Expression::NormalCC);}
-            else if(Expression::find("&<=")) {numeric = logical(); result = Operators::operatorLE(result, numeric, Expression::NormalCC);}
-            else if(Expression::find("&>=")) {numeric = logical(); result = Operators::operatorGE(result, numeric, Expression::NormalCC);}
-            else if(Expression::find("&<"))  {numeric = logical(); result = Operators::operatorLT(result, numeric, Expression::NormalCC);}
-            else if(Expression::find("&>"))  {numeric = logical(); result = Operators::operatorGT(result, numeric, Expression::NormalCC);}
+            else if(Expression::find("&==")) {numeric = logical(); result = Operators::EQ(result, numeric, Expression::NormalCC);}
+            else if(Expression::find("&="))  {numeric = logical(); result = Operators::EQ(result, numeric, Expression::NormalCC);}
+            else if(Expression::find("&<>")) {numeric = logical(); result = Operators::NE(result, numeric, Expression::NormalCC);}
+            else if(Expression::find("&<=")) {numeric = logical(); result = Operators::LE(result, numeric, Expression::NormalCC);}
+            else if(Expression::find("&>=")) {numeric = logical(); result = Operators::GE(result, numeric, Expression::NormalCC);}
+            else if(Expression::find("&<"))  {numeric = logical(); result = Operators::LT(result, numeric, Expression::NormalCC);}
+            else if(Expression::find("&>"))  {numeric = logical(); result = Operators::GT(result, numeric, Expression::NormalCC);}
 
             // Fast conditionals
-            else if(Expression::find("&&==")) {numeric = logical(); result = Operators::operatorEQ(result, numeric, Expression::FastCC);}
-            else if(Expression::find("&&="))  {numeric = logical(); result = Operators::operatorEQ(result, numeric, Expression::FastCC);}
-            else if(Expression::find("&&<>")) {numeric = logical(); result = Operators::operatorNE(result, numeric, Expression::FastCC);}
-            else if(Expression::find("&&<=")) {numeric = logical(); result = Operators::operatorLE(result, numeric, Expression::FastCC);}
-            else if(Expression::find("&&>=")) {numeric = logical(); result = Operators::operatorGE(result, numeric, Expression::FastCC);}
-            else if(Expression::find("&&<"))  {numeric = logical(); result = Operators::operatorLT(result, numeric, Expression::FastCC);}
-            else if(Expression::find("&&>"))  {numeric = logical(); result = Operators::operatorGT(result, numeric, Expression::FastCC);}
+            else if(Expression::find("&&==")) {numeric = logical(); result = Operators::EQ(result, numeric, Expression::FastCC);}
+            else if(Expression::find("&&="))  {numeric = logical(); result = Operators::EQ(result, numeric, Expression::FastCC);}
+            else if(Expression::find("&&<>")) {numeric = logical(); result = Operators::NE(result, numeric, Expression::FastCC);}
+            else if(Expression::find("&&<=")) {numeric = logical(); result = Operators::LE(result, numeric, Expression::FastCC);}
+            else if(Expression::find("&&>=")) {numeric = logical(); result = Operators::GE(result, numeric, Expression::FastCC);}
+            else if(Expression::find("&&<"))  {numeric = logical(); result = Operators::LT(result, numeric, Expression::FastCC);}
+            else if(Expression::find("&&>"))  {numeric = logical(); result = Operators::GT(result, numeric, Expression::FastCC);}
 
             else return result;
         }
@@ -2817,7 +2938,7 @@ namespace Compiler
 
                 // Source string addresses LUT
                 uint16_t lutAddress;
-                if(!Memory::getFreeRAM(Memory::FitDescending, int(strAddrs.size()*2), USER_CODE_START, _runtimeStart, lutAddress))
+                if(!Memory::getFreeRAM(Memory::FitDescending, int(strAddrs.size()*2), USER_CODE_START, _stringsStart, lutAddress))
                 {
                     fprintf(stderr, "Compiler::handleStrings() : Not enough RAM for string concatenation LUT of size %d\n", int(strAddrs.size()));
                     return false;
@@ -2998,9 +3119,11 @@ REDO:
             createCodeLine(tokens[j], 0, _codeLines[codeLineIndex]._labelIndex, -1, Expression::Int16Both, false, codeline);
             if(_codeLines[codeLineIndex]._dontParse) return StatementSuccess;
 
-            // Create vasm
+            // Create vars
             createCodeVar(codeline, codeLineIndex, varIndex);
             createCodeStr(codeline, codeLineIndex, strIndex);
+
+            // Create vasm
             statementResult = createVasmCode(codeline, codeLineIndex);
             if(statementResult == StatementError) break;
 
@@ -3019,9 +3142,10 @@ REDO:
 
     void addLabelToJumpCC(std::vector<VasmLine>& vasm, const std::string& label)
     {
+
         for(int i=0; i<int(vasm.size()); i++)
         {
-            if(vasm[i]._code.substr(0, sizeof("Jump")-1) == "Jump"  ||  vasm[i]._code.substr(0, sizeof("B")-1) == "B")
+            if(vasm[i]._code.substr(0, sizeof("Jump")-1) == "Jump"  ||  _branchTypes.find(vasm[i]._code.substr(0, 3)) != _branchTypes.end())
             {
                 vasm[i]._code += label;
                 return;
@@ -3193,6 +3317,20 @@ REDO:
                         if(internalName == discardedName  ||  _internalLabels[k]._address == _discardedLabels[l]._address)
                         {
                             Expression::replaceText(_codeLines[i]._vasm[j]._code, _discardedLabels[l]._name, _internalLabels[k]._name);
+
+                            // Check local var names for matches with discarded labels from procs and update if necessary
+                            for(int m=0; m<int(_integerVars.size()); m++)
+                            {
+                                std::string replacedText = _discardedLabels[l]._name.substr(1); // ignore leading '_'
+                                std::string replaceText = _internalLabels[k]._name.substr(1);   // ignore leading '_'
+                                if(_integerVars[m]._name.find(replacedText) != std::string::npos)
+                                {
+                                    // Regenerate local var name and local var output
+                                    Expression::replaceText(_integerVars[m]._name, replacedText, replaceText);
+                                    _integerVars[m]._output = "_" + _integerVars[m]._name;
+                                    Expression::addString(_integerVars[m]._output, LABEL_TRUNC_SIZE - int(_integerVars[m]._output.size()));
+                                }
+                            }
                         }
                     }
                 }
@@ -3211,7 +3349,7 @@ REDO:
             int16_t data = _constants[i]._data;
             std::string name = _constants[i]._name;
             std::string internalName = _constants[i]._internalName;
-            ConstType constType = _constants[i]._constType;
+            VarType constType = _constants[i]._varType;
 
             switch(constType)
             {
@@ -3235,10 +3373,11 @@ REDO:
 
     void outputVars(void)
     {
-        _output.push_back("; Variables\n");
-
+        _output.push_back("; Global Variables\n");
         for(int varIndex=0; varIndex<int(_integerVars.size()); varIndex++)
         {
+            if(_integerVars[varIndex]._address >= INT_VAR_START) continue;
+
             switch(_integerVars[varIndex]._varType)
             {
                 case VarInt16:
@@ -3251,7 +3390,25 @@ REDO:
                 default: break;
             }
         }
+        _output.push_back("\n");
 
+        _output.push_back("; Local Variables\n");
+        for(int varIndex=0; varIndex<int(_integerVars.size()); varIndex++)
+        {
+            if(_integerVars[varIndex]._address < INT_VAR_START) continue;
+
+            switch(_integerVars[varIndex]._varType)
+            {
+                case VarInt16:
+                {
+                    std::string address = Expression::wordToHexString(_integerVars[varIndex]._address);
+                    _output.push_back(_integerVars[varIndex]._output + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + address + "\n");
+                }
+                break;
+
+                default: break;
+            }
+        }
         _output.push_back("\n");
     }
 
@@ -3778,7 +3935,8 @@ REDO:
             std::string defName = "def_bytes_" + Expression::wordToHexString(_defDataBytes[i]._address);
             _output.push_back(defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(_defDataBytes[i]._address) + "\n");
             
-            std::string dbString = defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "DB" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+            std::string db = (_defDataBytes[i]._offset != 0) ? "DB(" + std::to_string(_defDataBytes[i]._offset) + ")" : "DB";
+            std::string dbString = defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + db + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
             for(int j=0; j<int(_defDataBytes[i]._data.size()); j++)
             {
                 dbString += std::to_string(_defDataBytes[i]._data[j]) + " ";
@@ -3794,7 +3952,8 @@ REDO:
             std::string defName = "def_words_" + Expression::wordToHexString(_defDataWords[i]._address);
             _output.push_back(defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(_defDataWords[i]._address) + "\n");
             
-            std::string dwString = defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+            std::string dw = (_defDataWords[i]._offset != 0) ? "DW(" + std::to_string(_defDataWords[i]._offset) + ")" : "DW";
+            std::string dwString = defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + dw + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
             for(int j=0; j<int(_defDataWords[i]._data.size()); j++)
             {
                 dwString += std::to_string(_defDataWords[i]._data[j]) + " ";
@@ -4274,7 +4433,7 @@ REDO:
     void outputInternalEquates(void)
     {
         _output.push_back("\n");
-        _output.push_back("; Internal variables\n");
+        _output.push_back("; Internal Variables\n");
         _output.push_back("serialRawPrev" + std::string(LABEL_TRUNC_SIZE - strlen("serialRawPrev"), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(0x0081) + "\n");
         _output.push_back("register0"     + std::string(LABEL_TRUNC_SIZE - strlen("register0"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(INT_VAR_START) + "\n");
         _output.push_back("register1"     + std::string(LABEL_TRUNC_SIZE - strlen("register1"), ' ')     + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "register0 + 0x02\n");
@@ -4308,7 +4467,7 @@ REDO:
         _output.push_back("ON_BOTTOM_ROW_MSK" + std::string(LABEL_TRUNC_SIZE - strlen("ON_BOTTOM_ROW_MSK"), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(ON_BOTTOM_ROW_MSK) + "\n");
         _output.push_back("\n");
 
-        _output.push_back("; Internal buffers\n");
+        _output.push_back("; Internal Buffers\n");
         _output.push_back("textWorkArea" + std::string(LABEL_TRUNC_SIZE - strlen("textWorkArea"), ' ')  + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(getStrWorkArea()) + "\n");
         _output.push_back("\n");
     }
@@ -4443,10 +4602,13 @@ REDO:
 
         _vasmPC       = USER_CODE_START;
         _tempVarStart = TEMP_VAR_START;
+        _tempVarSize  = TEMP_VAR_SIZE;
         _userVarStart = USER_VAR_START;
         _userVarsAddr = _userVarStart;
         _runtimeEnd   = 0x7FFF;
         _runtimeStart = 0x7FFF;
+        _arraysStart  = 0x7FFF;
+        _stringsStart = 0x7FFF;
         _strWorkArea  = 0x0000;
 
         _spritesAddrLutAddress  = 0x0000;
@@ -4517,8 +4679,12 @@ REDO:
         while(!_whileWendDataStack.empty())   _whileWendDataStack.pop();
         while(!_repeatUntilDataStack.empty()) _repeatUntilDataStack.pop();
 
+        _callDataMap.clear();
+        _procDataMap.clear();
+        while(!_procDataStack.empty()) _procDataStack.pop();
+
         // Allocate default string work area, (for string functions like LEFT$, MID$, etc), the +2 is for the length and delimiter bytes
-        Memory::getFreeRAM(Memory::FitDescending, USER_STR_SIZE + 2, USER_CODE_START, _runtimeStart, _strWorkArea);
+        Memory::getFreeRAM(Memory::FitDescending, USER_STR_SIZE + 2, USER_CODE_START, _stringsStart, _strWorkArea);
     }
 
     bool compile(const std::string& inputFilename, const std::string& outputFilename)
@@ -4544,7 +4710,7 @@ REDO:
         // Labels
         if(!parseLabels(numLines)) return false;
 
-        // Vars, (do not enable until TODO: @ parseVars() is satisified)
+        // Vars, (do NOT enable until TODO: @ parseVars() is satisified)
         //if(!parseVars()) return false;
 
         // Includes
@@ -4568,6 +4734,9 @@ REDO:
 
         // Check keywords that form statement blocks
         if(!Validater::checkStatementBlocks()) return false;
+
+        // Check PROC's, FUNC's and CALL's
+        if(!Validater::checkCallProcFuncData()) return false;
 
         // Only link runtime subroutines that are referenced
         if(!Linker::linkInternalSubs()) return false;
@@ -4610,31 +4779,6 @@ REDO:
         if(!writeOutputFile(outfile, outputFilename)) return false;
 
         //fprintf(stderr, "\nHeap allocations %llu, total heap usage %llu\n", _heapAllocations, _heapTotalUsage);
-
-#if 0
-        for(int i=0; i<32768; i++)
-        {
-#if 1
-            // Mod5
-            int16_t j = int16_t(i); //int16_t(rand() % 32767);
-            int16_t a = (j >> 8) + (j & 0xFF);   /* sum base 2**8 digits */
-            a = (a >>  4) + (a & 0xF);    /* sum base 2**4 digits */
-            if (a > 14) a = a - 15;
-            if (a > 9) a = a - 10;
-            if (a > 4) a = a - 5;
-            //(a == j%5) ? fprintf(stderr, "%d : %d %d\n", j, a, j%5) : fprintf(stderr, "%d : %d %d ***\n", j, a, j%5);
-            if(a != j%5) fprintf(stderr, "%d : %d %d ***\n", j, a, j%5);
-#else
-            // Div5
-            int16_t j = int16_t(i); //int16_t(rand() % 255);
-            int16_t a = j - j/64;
-            a = (a<<5) + (a<<4) + (a<<2);
-            a = (a>>8);
-            (a == j/5) ? fprintf(stderr, "%d : %d %d\n", j, a, j/5) : fprintf(stderr, "%d : %d %d ***\n", j, a, j/5);
-#endif
-
-        }
-#endif
 
         return true;
     }

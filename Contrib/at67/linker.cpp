@@ -20,6 +20,8 @@ namespace Linker
 {
     std::map<std::string, std::vector<std::string>> _subIncludeFiles;
 
+    std::map<int, uint16_t> _internalSubMap;
+
     // TODO: use std::map
     std::vector<Compiler::InternalSub> _internalSubs =
     {
@@ -38,8 +40,12 @@ namespace Linker
         {0x0000, 0x0000, "setRealTimeProc0" , "", false, false},
         {0x0000, 0x0000, "setRealTimeProc1" , "", false, false},
         {0x0000, 0x0000, "setRealTimeProc2" , "", false, false},
+        {0x0000, 0x0000, "resetVars"        , "", false, false},
         {0x0000, 0x0000, "absolute"         , "", false, false},
         {0x0000, 0x0000, "sign"             , "", false, false},
+        {0x0000, 0x0000, "integerMin"       , "", false, false},
+        {0x0000, 0x0000, "integerMax"       , "", false, false},
+        {0x0000, 0x0000, "integerClamp"     , "", false, false},
         {0x0000, 0x0000, "power16bit"       , "", false, false},
         {0x0000, 0x0000, "power16bitExt"    , "", false, false},
         {0x0000, 0x0000, "multiply16bit"    , "", false, false},
@@ -74,8 +80,8 @@ namespace Linker
         {0x0000, 0x0000, "setArrayInt16Low" , "", false, false},
         {0x0000, 0x0000, "getArrayInt16High", "", false, false},
         {0x0000, 0x0000, "setArrayInt16High", "", false, false},
-        {0x0000, 0x0000, "readIntVar",        "", false, false},
-        {0x0000, 0x0000, "readStrVar",        "", false, false},
+        {0x0000, 0x0000, "readIntVar"       , "", false, false},
+        {0x0000, 0x0000, "readStrVar"       , "", false, false},
         {0x0000, 0x0000, "gotoNumericLabel" , "", false, false},
         {0x0000, 0x0000, "gosubNumericLabel", "", false, false},
         {0x0000, 0x0000, "scanlineMode"     , "", false, false},
@@ -85,6 +91,7 @@ namespace Linker
         {0x0000, 0x0000, "resetVideoTable"  , "", false, false},
         {0x0000, 0x0000, "initClearFuncs"   , "", false, false},
         {0x0000, 0x0000, "clearScreen"      , "", false, false},
+        {0x0000, 0x0000, "clearRect"        , "", false, false},
         {0x0000, 0x0000, "clearVertBlinds"  , "", false, false},
         {0x0000, 0x0000, "clearCursorRow"   , "", false, false},
         {0x0000, 0x0000, "readPixel"        , "", false, false},
@@ -95,6 +102,10 @@ namespace Linker
         {0x0000, 0x0000, "drawLineExt"      , "", false, false},
         {0x0000, 0x0000, "drawLineLoop"     , "", false, false},
         {0x0000, 0x0000, "drawLineLoadXY"   , "", false, false},
+        {0x0000, 0x0000, "drawLineSlow"     , "", false, false},
+        {0x0000, 0x0000, "drawLineSlowExt"  , "", false, false},
+        {0x0000, 0x0000, "drawLineSlowLoop" , "", false, false},
+        {0x0000, 0x0000, "drawLineSlowSwap" , "", false, false},
         {0x0000, 0x0000, "drawVTLine"       , "", false, false},
         {0x0000, 0x0000, "drawVTLineExt"    , "", false, false},
         {0x0000, 0x0000, "drawVTLineLoop"   , "", false, false},
@@ -107,6 +118,8 @@ namespace Linker
         {0x0000, 0x0000, "drawRectF"        , "", false, false},
         {0x0000, 0x0000, "drawPoly"         , "", false, false},
         {0x0000, 0x0000, "drawPolyRel"      , "", false, false},
+        {0x0000, 0x0000, "setPolyRelFlipX"  , "", false, false},
+        {0x0000, 0x0000, "setPolyRelFlipY"  , "", false, false},
         {0x0000, 0x0000, "atLineCursor"     , "", false, false},
         {0x0000, 0x0000, "draw_sprite"      , "", false, false},
         {0x0000, 0x0000, "drawSprite"       , "", false, false},
@@ -114,10 +127,14 @@ namespace Linker
         {0x0000, 0x0000, "drawSpriteY"      , "", false, false},
         {0x0000, 0x0000, "drawSpriteXY"     , "", false, false},
         {0x0000, 0x0000, "getSpriteLUT"     , "", false, false},
-        {0x0000, 0x0000, "resetAudio"       , "", false, false},
+        {0x0000, 0x0000, "resetMidi"        , "", false, false},
         {0x0000, 0x0000, "playMidi"         , "", false, false},
         {0x0000, 0x0000, "playMidiVol"      , "", false, false},
         {0x0000, 0x0000, "midiStartNote"    , "", false, false},
+        {0x0000, 0x0000, "resetMusic"       , "", false, false},
+        {0x0000, 0x0000, "playMusic"        , "", false, false},
+        {0x0000, 0x0000, "musicGetNote"     , "", false, false},
+        {0x0000, 0x0000, "musicPlayNote"    , "", false, false},
         {0x0000, 0x0000, "soundAllOff"      , "", false, false},
         {0x0000, 0x0000, "soundOff"         , "", false, false},
         {0x0000, 0x0000, "soundOn"          , "", false, false},
@@ -169,6 +186,9 @@ namespace Linker
         {0x0000, 0x0000, "bcdSub"           , "", false, false},
         {0x0000, 0x0000, "bcdInt"           , "", false, false},
         {0x0000, 0x0000, "bcdDigits"        , "", false, false},
+        {0x0000, 0x0000, "bcdCmp"           , "", false, false},
+        {0x0000, 0x0000, "bcdCmpExt"        , "", false, false},
+        {0x0000, 0x0000, "bcdCpy"           , "", false, false},
     };
     std::vector<std::string> _subIncludesROMv1 =
     {
@@ -483,27 +503,15 @@ namespace Linker
         return false;
     }
 
+    // Marks internal sub to be loaded later
     bool loadInternalSub(int subIndex, bool overwrite=false)
     {
         if(!overwrite  &&  _internalSubs[subIndex]._address) return false;
+        _internalSubMap[subIndex] = _internalSubs[subIndex]._size;
 
-        uint16_t address;
-        if(Memory::getNextCodeAddress(Memory::FitDescending, Compiler::getRuntimeStart(),  _internalSubs[subIndex]._size, address))
-        {
-            Memory::takeFreeRAM(address, _internalSubs[subIndex]._size, true);
-
-            // Save end of runtime/strings
-            if(address < Compiler::getRuntimeEnd()) Compiler::setRuntimeEnd(address);
-
-            fprintf(stderr, "* %-20s : 0x%04x  :    %2d bytes\n", _internalSubs[subIndex]._name.c_str(), address, _internalSubs[subIndex]._size);
-
-            _internalSubs[subIndex]._address = address;
-            _internalSubs[subIndex]._inUse = true;
-            return true;
-        }
-
-        fprintf(stderr, "Linker::loadInternalSub() : Not enough RAM for %s of size %d\n", _internalSubs[subIndex]._name.c_str(), _internalSubs[subIndex]._size);
-        return false;
+        _internalSubs[subIndex]._address = 0xFFFF;
+        _internalSubs[subIndex]._inUse = true;
+        return true;
     }
 
     bool loadInclude(const std::string& filename)
@@ -707,6 +715,34 @@ RESTART_COLLECTION:
             if(_internalSubs[i]._inUse  &&  _internalSubs[i]._loaded  &&  _internalSubs[i]._address) runtimeSize += _internalSubs[i]._size;
         }
 
+        // Copy map to vector
+        std::vector<SubIndexSize> internalSubs;
+        std::copy(_internalSubMap.begin(), _internalSubMap.end(), std::back_inserter<std::vector<SubIndexSize>>(internalSubs));
+        
+        // Sort vector, (prioritise by sub size)
+        std::sort(internalSubs.begin(), internalSubs.end(), [](const SubIndexSize& a, const SubIndexSize& b)
+        {
+            if(a.second != b.second) return (a.second > b.second);
+            return (a.first < b.first);
+        });
+
+        // Allocate memory for runtime
+        for(auto it=internalSubs.begin(); it!=internalSubs.end(); ++it)
+        {
+            uint16_t address;
+            if(Memory::getNextCodeAddress(Memory::FitDescending, Compiler::getRuntimeStart(),  _internalSubs[it->first]._size, address))
+            {
+                Memory::takeFreeRAM(address, _internalSubs[it->first]._size, true);
+
+                // Save end of runtime/strings
+                if(address < Compiler::getRuntimeEnd()) Compiler::setRuntimeEnd(address);
+
+                fprintf(stderr, "* %-20s : 0x%04x  :    %2d bytes\n", _internalSubs[it->first]._name.c_str(), address, _internalSubs[it->first]._size);
+
+                _internalSubs[it->first]._address = address;
+            }
+        }
+
         fprintf(stderr, "**********************************************\n");
         fprintf(stderr, "*                 Re-Linking                  \n");
         fprintf(stderr, "**********************************************\n");
@@ -768,6 +804,8 @@ RESTART_COLLECTION:
 
     void resetInternalSubs(void)
     {
+        _internalSubMap.clear();
+
         for(int i=0; i<int(_internalSubs.size()); i++)
         {
             _internalSubs[i]._size = 0;

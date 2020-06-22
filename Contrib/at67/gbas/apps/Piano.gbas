@@ -3,6 +3,8 @@ _codeRomType_ ROMv2
 
 const NOTELEN=20
 
+'audio fix for ROMv5a
+poke &h21, peek(&h21) OR 3
 sound off
 
 set VIDEO_TOP, 238  'disable video

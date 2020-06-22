@@ -1,6 +1,6 @@
 _startAddress_                EQU                               0x0200
 
-; Internal variables
+; Internal Variables
 serialRawPrev                 EQU                               0x0081
 register0                     EQU                               0x0082
 register1                     EQU                               register0 + 0x02
@@ -32,7 +32,7 @@ ON_BOTTOM_ROW_BIT             EQU                               0x0002
 ENABLE_SCROLL_MSK             EQU                               0xfffe
 ON_BOTTOM_ROW_MSK             EQU                               0xfffd
 
-; Internal buffers
+; Internal Buffers
 textWorkArea                  EQU                               0x7fa0
 
 ; Includes
@@ -45,13 +45,15 @@ textWorkArea                  EQU                               0x7fa0
 _entryPoint_                  EQU                               0x0200
 _end_0x02c1                   EQU                               0x02bf
 
-; Variables
+; Global Variables
 _point                        EQU                               0x0030
 _dokee                        EQU                               0x0032
 _deeke                        EQU                               0x0034
 _a                            EQU                               0x0036
 _b                            EQU                               0x0038
 _c                            EQU                               0x003a
+
+; Local Variables
 
 ; Arrays
 
@@ -156,33 +158,32 @@ _end_0x02c1                   BRA                               _end_0x02c1     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeStub                  EQU     0x7dcd
-sign                          EQU     0x7da2
-resetVideoFlags               EQU     0x7ddf
-resetVideoTable               EQU     0x78a6
-initClearFuncs                EQU     0x75e8
-clearVertBlinds               EQU     0x79c5
-clearCursorRow                EQU     0x74b6
-readPixel                     EQU     0x7dc1
-printInit                     EQU     0x75d2
-printText                     EQU     0x79ac
-printChar                     EQU     0x73a7
-printHexByte                  EQU     0x78ca
-newLineScroll                 EQU     0x77a4
-stringCopy                    EQU     0x7db4
-stringDigit                   EQU     0x75b5
-stringInt                     EQU     0x76a9
-convertEqOpAddr               EQU     0x00d0
-convertNeOpAddr               EQU     0x00d2
-convertLeOpAddr               EQU     0x00d4
-convertGeOpAddr               EQU     0x00d6
-convertLtOpAddr               EQU     0x00d8
-convertGtOpAddr               EQU     0x00da
-convert8Arr2dAddr             EQU     0x00e0
-convert8Arr3dAddr             EQU     0x00e2
-convert16Arr2dAddr            EQU     0x00e4
-convert16Arr3dAddr            EQU     0x00e6
-realTimeStubAddr              EQU     0x00dc
+realTimeStub                  EQU     0x74c0
+sign                          EQU     0x74ae
+resetVideoFlags               EQU     0x74a2
+initClearFuncs                EQU     0x74e8
+clearVertBlinds               EQU     0x76c5
+clearCursorRow                EQU     0x7da2
+readPixel                     EQU     0x73f3
+printInit                     EQU     0x74d2
+printText                     EQU     0x75b1
+printChar                     EQU     0x78a7
+printHexByte                  EQU     0x75ca
+newLineScroll                 EQU     0x79a4
+stringCopy                    EQU     0x75a4
+stringDigit                   EQU     0x76a8
+stringInt                     EQU     0x77a9
+convertEqOpAddr               EQU     0x00c2
+convertNeOpAddr               EQU     0x00c4
+convertLeOpAddr               EQU     0x00c6
+convertGeOpAddr               EQU     0x00c8
+convertLtOpAddr               EQU     0x00ca
+convertGtOpAddr               EQU     0x00cc
+convert8Arr2dAddr             EQU     0x00ce
+convert8Arr3dAddr             EQU     0x00d0
+convert16Arr2dAddr            EQU     0x00d2
+convert16Arr3dAddr            EQU     0x00d4
+realTimeStubAddr              EQU     0x00d6
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -228,6 +229,7 @@ bot                 EQU     register10
 vramAddr            EQU     register11
 evenAddr            EQU     register12
 clsAddress          EQU     register13
+varAddress          EQU     register13
     
 
 resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
@@ -239,32 +241,8 @@ resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
 
 
 
-
-                    ; resets video table pointers
-resetVideoTable     PUSH
-                    LDI     8
-                    STW     vramAddr
-                    LDWI    giga_videoTable
-                    STW     evenAddr
-    
-resetVT_loop        CALL    realTimeStubAddr
-                    LDW     vramAddr
-                    DOKE    evenAddr
-                    INC     evenAddr
-                    INC     evenAddr
-                    INC     vramAddr
-                    LD      vramAddr
-                    SUBI    giga_yres + 8
-                    BLT     resetVT_loop
-                    
-                    LDWI    resetVideoFlags
-                    CALL    giga_vAC                    
-                    POP
-                    RET
-
-
 initClearFuncs      PUSH
-                    LDWI    resetVideoTable
+                    LDWI    resetVideoFlags
                     CALL    giga_vAC
             
                     LD      fgbgColour
@@ -325,8 +303,8 @@ drawHLine_x4        EQU     register3
 
 drawVLine_x1        EQU     register0
 drawVLine_y1        EQU     register1
-drawVLine_y2        EQU     register2
-drawVLine_y8        EQU     register3
+drawVLine_y8        EQU     register2
+drawVLine_y2        EQU     register3
 
 drawLine_x1         EQU     register0
 drawLine_y1         EQU     register1
@@ -346,6 +324,11 @@ drawLine_h          EQU     register10
 drawLine_num        EQU     register11
 drawLine_count      EQU     register12
 drawLine_tmp        EQU     register13
+drawLine_dx         EQU     register2
+drawLine_dy         EQU     register3
+drawLine_u          EQU     register8
+drawLine_v          EQU     register9
+drawLine_addr       EQU     register10
 
 drawPixel_xy        EQU     register15
 readPixel_xy        EQU     register15
@@ -630,7 +613,7 @@ newLS_exit          LDWI    printInit
 strChr              EQU     register0
 strHex              EQU     register1
 strCmpRes           EQU     register2
-strLength           EQU     register0
+strDstLen           EQU     register0
 strFinish           EQU     register0
 strSrcAddr          EQU     register1
 strDstAddr          EQU     register2

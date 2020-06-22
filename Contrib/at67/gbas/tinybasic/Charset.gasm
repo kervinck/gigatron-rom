@@ -46,10 +46,10 @@ _entryPoint_                  EQU                               0x0200
 _1                            EQU                               0x0217
 _10                           EQU                               0x0217
 _20                           EQU                               0x021b
-_30                           EQU                               0x022a
-_40                           EQU                               0x023f
-_50                           EQU                               0x0253
-_end_0x0267                   EQU                               0x0261
+_30                           EQU                               0x0227
+_40                           EQU                               0x023c
+_50                           EQU                               0x0250
+_end_0x0264                   EQU                               0x025e
 
 ; Variables
 _Y                            EQU                               0x0030
@@ -87,8 +87,10 @@ _10                           LDI                               2
                               STW                               _Y                              ; FOR Y=2 &TO 7
 
 _20                           LDW                               _Y
-                              STW                               mathShift
-                              ShiftLeft4bit                     
+                              LSLW                              
+                              LSLW                              
+                              LSLW                              
+                              LSLW                              
                               STW                               _D
                               ADDI                              15
                               STW                               _E                              ; D=Y<<4: E=D+15
@@ -110,7 +112,7 @@ _40                           LDW                               _C
 _50                           NewLine                           
                               ForNextInc                        _Y _20 7                        ; PRINT: NEXT Y
 
-_end_0x0267                   BRA                               _end_0x0267                     ; END
+_end_0x0264                   BRA                               _end_0x0264                     ; END
 
 
 
@@ -120,15 +122,14 @@ _end_0x0267                   BRA                               _end_0x0267     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeStub                  EQU     0x7ee1
-shiftLeft4bit                 EQU     0x7ed7
-resetVideoFlags               EQU     0x7ef3
+realTimeStub                  EQU     0x7bc8
+resetVideoFlags               EQU     0x7baf
 clearCursorRow                EQU     0x7cb6
 printInit                     EQU     0x7ca0
-printChr                      EQU     0x7ea5
-printChar                     EQU     0x7ba7
-atTextCursor                  EQU     0x7eb2
-newLineScroll                 EQU     0x7da4
+printChr                      EQU     0x7bbb
+printChar                     EQU     0x7da7
+atTextCursor                  EQU     0x7bda
+newLineScroll                 EQU     0x7ea4
 convertEqOpAddr               EQU     0x00d0
 convertNeOpAddr               EQU     0x00d2
 convertLeOpAddr               EQU     0x00d4
@@ -175,27 +176,6 @@ realTimeStub2       POP
 
 
 ; do *NOT* use register4 to register7 during time slicing
-mathX               EQU     register8
-mathY               EQU     register9
-mathSum             EQU     register12
-mathRem             EQU     register12
-mathMask            EQU     register13
-mathSign            EQU     register14
-mathQuot            EQU     register15
-mathShift           EQU     register15
-mathBase            EQU     register10
-mathPow             EQU     register11
-mathResult          EQU     register14
-
-
-shiftLeft4bit       LDWI    SYS_LSLW4_46
-                    STW     giga_sysFn
-                    LDW     mathShift
-                    SYS     46
-                    RET
-
-
-; do *NOT* use register4 to register7 during time slicing
 xreset              EQU     register0
 xcount              EQU     register1
 ycount              EQU     register2
@@ -206,6 +186,7 @@ bot                 EQU     register10
 vramAddr            EQU     register11
 evenAddr            EQU     register12
 clsAddress          EQU     register13
+varAddress          EQU     register13
     
 
 resetVideoFlags     LDI     giga_CursorX                        ; cursor x start

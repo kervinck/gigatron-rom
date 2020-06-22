@@ -1,6 +1,6 @@
 _startAddress_                EQU                               0x0200
 
-; Internal variables
+; Internal Variables
 serialRawPrev                 EQU                               0x0081
 register0                     EQU                               0x0082
 register1                     EQU                               register0 + 0x02
@@ -32,7 +32,7 @@ ON_BOTTOM_ROW_BIT             EQU                               0x0002
 ENABLE_SCROLL_MSK             EQU                               0xfffe
 ON_BOTTOM_ROW_MSK             EQU                               0xfffd
 
-; Internal buffers
+; Internal Buffers
 textWorkArea                  EQU                               0x06a0
 
 ; Includes
@@ -47,11 +47,13 @@ _loop                         EQU                               0x021b
 _repeat_0x0242                EQU                               0x023e
 _end_0x0268                   EQU                               0x025e
 
-; Variables
+; Global Variables
 _x                            EQU                               0x0030
 _p                            EQU                               0x0032
 _x2                           EQU                               0x0034
 _nx2                          EQU                               0x0036
+
+; Local Variables
 
 ; Arrays
 
@@ -107,9 +109,9 @@ _repeat_0x0242                LDW                               _nx2
 
                               LDW                               _p
                               ADDI                              16
-                              STW                               0xc0
+                              STW                               0xe8
                               LDW                               _x2
-                              POKE                              0xc0                            ; poke p + 16, x2
+                              POKE                              0xe8                            ; poke p + 16, x2
 
                               LDW                               _p
                               ADDI                              32
@@ -133,21 +135,21 @@ _end_0x0268                   BRA                               _end_0x0268     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeStub                  EQU     0x0682
-waitVBlank                    EQU     0x0663
-waitVBlanks                   EQU     0x066f
-resetVideoFlags               EQU     0x0694
-convertEqOpAddr               EQU     0x00d0
-convertNeOpAddr               EQU     0x00d2
-convertLeOpAddr               EQU     0x00d4
-convertGeOpAddr               EQU     0x00d6
-convertLtOpAddr               EQU     0x00d8
-convertGtOpAddr               EQU     0x00da
-convert8Arr2dAddr             EQU     0x00e0
-convert8Arr3dAddr             EQU     0x00e2
-convert16Arr2dAddr            EQU     0x00e4
-convert16Arr3dAddr            EQU     0x00e6
-realTimeStubAddr              EQU     0x00dc
+realTimeStub                  EQU     0x067b
+waitVBlank                    EQU     0x066f
+waitVBlanks                   EQU     0x068d
+resetVideoFlags               EQU     0x0663
+convertEqOpAddr               EQU     0x00c2
+convertNeOpAddr               EQU     0x00c4
+convertLeOpAddr               EQU     0x00c6
+convertGeOpAddr               EQU     0x00c8
+convertLtOpAddr               EQU     0x00ca
+convertGtOpAddr               EQU     0x00cc
+convert8Arr2dAddr             EQU     0x00ce
+convert8Arr3dAddr             EQU     0x00d0
+convert16Arr2dAddr            EQU     0x00d2
+convert16Arr3dAddr            EQU     0x00d4
+realTimeStubAddr              EQU     0x00d6
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -193,8 +195,8 @@ drawHLine_x4        EQU     register3
 
 drawVLine_x1        EQU     register0
 drawVLine_y1        EQU     register1
-drawVLine_y2        EQU     register2
-drawVLine_y8        EQU     register3
+drawVLine_y8        EQU     register2
+drawVLine_y2        EQU     register3
 
 drawLine_x1         EQU     register0
 drawLine_y1         EQU     register1
@@ -214,6 +216,11 @@ drawLine_h          EQU     register10
 drawLine_num        EQU     register11
 drawLine_count      EQU     register12
 drawLine_tmp        EQU     register13
+drawLine_dx         EQU     register2
+drawLine_dy         EQU     register3
+drawLine_u          EQU     register8
+drawLine_v          EQU     register9
+drawLine_addr       EQU     register10
 
 drawPixel_xy        EQU     register15
 readPixel_xy        EQU     register15
@@ -287,6 +294,7 @@ bot                 EQU     register10
 vramAddr            EQU     register11
 evenAddr            EQU     register12
 clsAddress          EQU     register13
+varAddress          EQU     register13
     
 
 resetVideoFlags     LDI     giga_CursorX                        ; cursor x start

@@ -1,6 +1,6 @@
 _startAddress_                EQU                               0x0200
 
-; Internal variables
+; Internal Variables
 serialRawPrev                 EQU                               0x0081
 register0                     EQU                               0x0082
 register1                     EQU                               register0 + 0x02
@@ -32,7 +32,7 @@ ON_BOTTOM_ROW_BIT             EQU                               0x0002
 ENABLE_SCROLL_MSK             EQU                               0xfffe
 ON_BOTTOM_ROW_MSK             EQU                               0xfffd
 
-; Internal buffers
+; Internal Buffers
 textWorkArea                  EQU                               0x7fa0
 
 ; Includes
@@ -43,15 +43,17 @@ textWorkArea                  EQU                               0x7fa0
 
 ; Labels
 _entryPoint_                  EQU                               0x0200
-_getRomNote                   EQU                               0x026d
-_next_0x022d                  EQU                               0x022b
-_end_0x026d                   EQU                               0x026b
-_end_0x0285                   EQU                               0x0283
+_getRomNote                   EQU                               0x0273
+_next_0x023b                  EQU                               0x0231
+_end_0x027b                   EQU                               0x0271
+_end_0x0293                   EQU                               0x0289
 
-; Variables
+; Global Variables
 _note                         EQU                               0x0030
 _notes                        EQU                               0x0032
 _index                        EQU                               0x0034
+
+; Local Variables
 
 ; Arrays
 
@@ -81,9 +83,13 @@ _str_0x7efd                   DB                                1 ' ' 0
 _entryPoint_                  Initialise                        
                               InitRealTimeStub                                                  ; INIT
 
-                              ClearVertBlinds                                                   ; cls
+                              LD                                0x21
+                              ORI                               3
+                              ST                                33                              ; poke &h21, peek(&h21) OR 3
 
                               SoundAllOff                                                       ; sound off
+
+                              ClearVertBlinds                                                   ; cls
 
                               LDI                               0
                               STW                               _note
@@ -92,7 +98,7 @@ _entryPoint_                  Initialise
                               LDI                               0
                               STW                               _index                          ; for index=0 &to 95
 
-_next_0x022d                  LDI                               10
+_next_0x023b                  LDI                               10
                               ST                                giga_soundTimer                 ; set SOUND_TIMER, 10
 
                               LDWI                              _getRomNote
@@ -111,9 +117,9 @@ _next_0x022d                  LDI                               10
                               PrintAcInt16                      
                               NewLine                                                           ; print index;" ";note
 
-                              ForNextInc                        _index _next_0x022d 95          ; next index
+                              ForNextInc                        _index _next_0x023b 95          ; next index
 
-_end_0x026d                   BRA                               _end_0x026d                     ; end
+_end_0x027b                   BRA                               _end_0x027b                     ; end
 
 _getRomNote                   PUSH                                                              ; asm
 
@@ -129,7 +135,7 @@ _getRomNote                   PUSH                                              
 
                               Return                                                            ; return
 
-_end_0x0285                   BRA                               _end_0x0285                     ; END
+_end_0x0293                   BRA                               _end_0x0293                     ; END
 
 
 
@@ -139,31 +145,30 @@ _end_0x0285                   BRA                               _end_0x0285     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeStub                  EQU     0x7edf
-resetVideoFlags               EQU     0x7ef1
-resetVideoTable               EQU     0x7adb
-initClearFuncs                EQU     0x7da5
-clearVertBlinds               EQU     0x7ea5
-clearCursorRow                EQU     0x79b6
-soundAllOff                   EQU     0x7de9
-soundOn                       EQU     0x7dd5
-printInit                     EQU     0x7ac5
-printText                     EQU     0x7dbc
+realTimeStub                  EQU     0x78ed
+resetVideoFlags               EQU     0x7ca2
+initClearFuncs                EQU     0x79cf
+clearVertBlinds               EQU     0x7ac5
+clearCursorRow                EQU     0x7bb6
+soundAllOff                   EQU     0x7ba0
+soundOn                       EQU     0x79a5
+printInit                     EQU     0x79b9
+printText                     EQU     0x79e6
 printDigit                    EQU     0x7aa3
 printInt16                    EQU     0x7cae
-printChar                     EQU     0x78a7
-newLineScroll                 EQU     0x7ba4
-convertEqOpAddr               EQU     0x00d0
-convertNeOpAddr               EQU     0x00d2
-convertLeOpAddr               EQU     0x00d4
-convertGeOpAddr               EQU     0x00d6
-convertLtOpAddr               EQU     0x00d8
-convertGtOpAddr               EQU     0x00da
-convert8Arr2dAddr             EQU     0x00e0
-convert8Arr3dAddr             EQU     0x00e2
-convert16Arr2dAddr            EQU     0x00e4
-convert16Arr3dAddr            EQU     0x00e6
-realTimeStubAddr              EQU     0x00dc
+printChar                     EQU     0x7da7
+newLineScroll                 EQU     0x7ea2
+convertEqOpAddr               EQU     0x00c2
+convertNeOpAddr               EQU     0x00c4
+convertLeOpAddr               EQU     0x00c6
+convertGeOpAddr               EQU     0x00c8
+convertLtOpAddr               EQU     0x00ca
+convertGtOpAddr               EQU     0x00cc
+convert8Arr2dAddr             EQU     0x00ce
+convert8Arr3dAddr             EQU     0x00d0
+convert16Arr2dAddr            EQU     0x00d2
+convert16Arr3dAddr            EQU     0x00d4
+realTimeStubAddr              EQU     0x00d6
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -209,6 +214,7 @@ bot                 EQU     register10
 vramAddr            EQU     register11
 evenAddr            EQU     register12
 clsAddress          EQU     register13
+varAddress          EQU     register13
     
 
 resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
@@ -220,32 +226,8 @@ resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
 
 
 
-
-                    ; resets video table pointers
-resetVideoTable     PUSH
-                    LDI     8
-                    STW     vramAddr
-                    LDWI    giga_videoTable
-                    STW     evenAddr
-    
-resetVT_loop        CALL    realTimeStubAddr
-                    LDW     vramAddr
-                    DOKE    evenAddr
-                    INC     evenAddr
-                    INC     evenAddr
-                    INC     vramAddr
-                    LD      vramAddr
-                    SUBI    giga_yres + 8
-                    BLT     resetVT_loop
-                    
-                    LDWI    resetVideoFlags
-                    CALL    giga_vAC                    
-                    POP
-                    RET
-
-
 initClearFuncs      PUSH
-                    LDWI    resetVideoTable
+                    LDWI    resetVideoFlags
                     CALL    giga_vAC
             
                     LD      fgbgColour
@@ -305,6 +287,10 @@ sndChannel          EQU     register8
 sndFrequency        EQU     register9
 sndVolume           EQU     register10
 sndWaveType         EQU     register11
+musicStream         EQU     register8
+musicNote           EQU     register9
+musicCommand        EQU     register10
+musicPtr            EQU     register11
 
 
 soundAllOff         LDWI    0x01FC

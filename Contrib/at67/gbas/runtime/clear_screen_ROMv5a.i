@@ -9,15 +9,26 @@ bot                 EQU     register10
 vramAddr            EQU     register11
 evenAddr            EQU     register12
 clsAddress          EQU     register13
-    
+clsLines            EQU     register14
+varAddress          EQU     register13
+clrAddress          EQU     register13
+clrLines            EQU     register14
+clrWidth            EQU     register15
+
+
+%SUB                resetVars
+resetVars           LDI     0
+                    DOKE    varAddress
+                    INC     varAddress
+                    INC     varAddress
+                    LD      varAddress
+                    XORI    giga_One                            ; end of user vars
+                    BNE     resetVars
+                    RET
+%ENDS
 
 %SUB                resetVideoFlags
-resetVideoFlags     LDWI    giga_videoTop                       ; reset videoTop
-                    STW     register0
-                    LDI     0
-                    POKE    register0
-                    
-                    LDI     0x02                                ; starting cursor position
+resetVideoFlags     LDI     giga_CursorX                        ; starting cursor position
                     STW     cursorXY
                     LDWI    ON_BOTTOM_ROW_MSK
                     ANDW    miscFlags
@@ -33,7 +44,8 @@ resetVideoTable     PUSH
                     LDWI    giga_videoTable
                     STW     evenAddr
     
-resetVT_loop        LDW     vramAddr
+resetVT_loop        CALLI   realTimeStub
+                    LDW     vramAddr
                     DOKE    evenAddr
                     INC     evenAddr
                     INC     evenAddr
@@ -49,7 +61,7 @@ resetVT_loop        LDW     vramAddr
     
 %SUB                initClearFuncs
 initClearFuncs      PUSH
-                    CALLI   resetVideoTable
+                    CALLI   resetVideoFlags
                     
                     LDWI    SYS_SetMemory_v2_54                 ; setup fill memory SYS routine
                     STW     giga_sysFn
@@ -67,16 +79,41 @@ clearScreen         PUSH
                     ST      giga_sysArg3
                     LDI     120
                     
-clearCS_loopy       ST      clearLoop
+clearCS_loopy       ST      clsLines
                     LDI     giga_xres
                     ST      giga_sysArg0
                     LD      clsAddress
                     ST      giga_sysArg2
                     SYS     54                              ; fill memory
                     INC     giga_sysArg3                    ; next line
-                    LD      clearLoop
+                    LD      clsLines
                     SUBI    1
                     BNE     clearCS_loopy
+                    POP
+                    RET
+%ENDS   
+
+%SUB                clearRect
+                    ; clears a rectangle on the viewable screen
+clearRect           PUSH
+                    CALLI   initClearFuncs
+                    LD      fgbgColour
+                    ST      giga_sysArg1                    ; fill value
+                    LD      clrAddress + 1
+                    ST      giga_sysArg3
+                    LD      clrLines
+                    
+clearCR_loopy       ST      clrLines
+                    LD      clrWidth
+                    ST      giga_sysArg0
+                    LD      clrAddress
+                    ST      giga_sysArg2
+                    SYS     54                              ; fill memory
+                    INC     giga_sysArg3                    ; next line
+                    LD      clrLines
+                    SUBI    1
+                    BNE     clearCR_loopy
+                    CALLI   realTimeStub
                     POP
                     RET
 %ENDS   
@@ -107,6 +144,7 @@ clearVB_loopy       LDI     giga_xres
                     ST      giga_sysArg3                        ; bottom line
                     SYS     54                                  ; fill memory
                     INC     top                                 ; next top line
+                    CALLI   realTimeStub
                     LD      top
                     SUBI    giga_yres / 2 + 8
                     BLT     clearVB_loopy

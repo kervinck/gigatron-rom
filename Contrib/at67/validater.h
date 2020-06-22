@@ -12,6 +12,7 @@ namespace Validater
     bool checkForRelocations(void);
     bool checkBranchLabels(void);
     bool checkStatementBlocks(void);
+    bool checkCallProcFuncData(void);
 }
 
 #endif

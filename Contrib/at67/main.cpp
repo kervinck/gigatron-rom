@@ -1,5 +1,5 @@
 /*******************************************************************************/
-/* gtemuAT67 ver0.8.15                                                         */
+/* gtemuAT67 Ver 1.0.0B, (Beta)                                                */
 /*                                                                             */ 
 /* gtemuAT67 is an emulator, controller, assembler, (vCPU and Native code),    */
 /* disassembler, debugger and  BASIC compiler for the Gigatron TTL             */
@@ -17,12 +17,15 @@
 #include "timing.h"
 #include "image.h"
 #include "graphics.h"
+#include "menu.h"
 #include "terminal.h"
 #include "expression.h"
 #include "assembler.h"
 #include "compiler.h"
 #include "operators.h"
 #include "keywords.h"
+#include "pragmas.h"
+#include "functions.h"
 #include "optimiser.h"
 #include "validater.h"
 #include "linker.h"
@@ -44,12 +47,15 @@ int main(int argc, char* argv[])
     Image::initialise();
     Editor::initialise();
     Graphics::initialise();
+    Menu::initialise();
     Terminal::initialise();
     Expression::initialise();
     Assembler::initialise();
     Compiler::initialise();
     Operators::initialise();
+    Functions::initialise();
     Keywords::initialise();
+    Pragmas::initialise();
     Optimiser::initialise();
     Validater::initialise();
     Linker::initialise();
@@ -137,6 +143,12 @@ int main(int argc, char* argv[])
             case Editor::Image:
             {
                 Image::process();
+            }
+            break;
+
+            case Editor::Audio:
+            {
+                Audio::process();
             }
             break;
 

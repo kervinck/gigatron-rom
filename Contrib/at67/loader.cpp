@@ -1009,9 +1009,11 @@ namespace Loader
 
         if(Loader::saveDataFile(_saveData[_currentGame]))
         {
-            fprintf(stderr, "Loader::saveHighScore() : saved high score data successfully for '%s'\n", _currentGame.c_str());
+            //fprintf(stderr, "Loader::saveHighScore() : saved high score data successfully for '%s'\n", _currentGame.c_str());
             return true;
         }
+
+        fprintf(stderr, "Loader::saveHighScore() : saving high score data failed, for '%s'\n", _currentGame.c_str());
 
         return false;
     }
@@ -1269,6 +1271,9 @@ namespace Loader
 
             if(uploadTarget == Emulator)
             {
+                // Rebuild audio wave tables, (including right shift LUT)
+                Audio::initialiseChannels();
+
                 for(int j=0; j<int(gt1File._segments.size()); j++)
                 {
                     // Ignore if address will not fit in current RAM
@@ -1292,6 +1297,12 @@ namespace Loader
         else if(filename.find(".gasm") != filename.npos  ||  filename.find(".vasm") != filename.npos  ||  filename.find(".s") != filename.npos  ||  filename.find(".asm") != filename.npos)
         {
             if(!Assembler::assemble(filepath, DEFAULT_START_ADDRESS)) return;
+
+            if(uploadTarget == Emulator)
+            {
+                // Rebuild audio wave tables, (including right shift LUT)
+                Audio::initialiseChannels();
+            }
 
             // Found a breakpoint in source code
             if(Editor::getVpcBreakPointsSize())
@@ -1419,12 +1430,6 @@ namespace Loader
 
                 // Reset video table and reset single step watch address to video line counter
                 Graphics::resetVTable();
-
-                // Stop audio
-                Cpu::setRAM(GIGA_SOUND_TIMER, 0x00);
-
-                // Rebuild audio wave tables, (including right shift LUT)
-                Audio::initialiseChannels();
             }
 
             //Editor::startDebugger();

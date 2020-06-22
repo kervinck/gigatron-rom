@@ -69,7 +69,7 @@ namespace Validater
     }
 
     // TODO: make this more flexible, (e.g. sound channels off etc)
-    bool checkForRelocation(const std::string& opcode, uint16_t vPC, uint16_t& nextPC, bool& print)
+    bool checkForRelocation(const std::string& opcode, uint16_t vPC, uint16_t& nextPC, uint16_t& numThunks, uint16_t& totalThunkSize, bool& print)
     {
 #define CALL_PAGE_JUMP_SIZE    7
 #define CALLI_PAGE_JUMP_SIZE   3
@@ -99,7 +99,7 @@ namespace Validater
             if(opcodeSize)
             {
                 // Increase opcodeSize by size of page jump prologue
-                int opSize = ((Compiler::getCodeRomType() >= Cpu::ROMv5a) ? CALLI_PAGE_JUMP_SIZE : CALL_PAGE_JUMP_SIZE) + opcodeSize;
+                int opSize = (Compiler::getCodeRomType() >= Cpu::ROMv5a) ? opcodeSize + CALLI_PAGE_JUMP_SIZE : opcodeSize + CALL_PAGE_JUMP_SIZE;
 
                 // Code can't straddle page boundaries
                 if(HI_BYTE(vPC) == HI_BYTE(vPC + opSize)  &&  Memory::isFreeRAM(vPC, opSize))
@@ -126,7 +126,19 @@ namespace Validater
                     fprintf(stderr, "*******************************************************\n");
                 }
 
-                uint16_t newPC = ((Compiler::getCodeRomType() >= Cpu::ROMv5a) ? CALLI_PAGE_JUMP_OFFSET : CALL_PAGE_JUMP_OFFSET) + nextPC;
+                numThunks++;
+
+                uint16_t newPC = nextPC;
+                if(Compiler::getCodeRomType() >= Cpu::ROMv5a)
+                {
+                    newPC += CALLI_PAGE_JUMP_OFFSET;
+                    totalThunkSize += CALLI_PAGE_JUMP_SIZE + CALLI_PAGE_JUMP_OFFSET;
+                }
+                else
+                {
+                    newPC += CALL_PAGE_JUMP_OFFSET;
+                    totalThunkSize += CALL_PAGE_JUMP_SIZE + CALL_PAGE_JUMP_OFFSET;
+                }
                 fprintf(stderr, "* %-20s : 0x%04x  :    %2d bytes : 0x%04x\n", opcode.c_str(), vPC, opcodeSize, newPC);
                 return true;
             }
@@ -139,6 +151,7 @@ namespace Validater
     {
         std::string line;
         bool print = false;
+        uint16_t numThunks = 0, totalThunkSize = 0;
         for(auto itCode=Compiler::getCodeLines().begin(); itCode!=Compiler::getCodeLines().end();)
         {
             if(itCode->_vasm.size() == 0)
@@ -152,7 +165,7 @@ namespace Validater
             for(auto itVasm=itCode->_vasm.begin(); itVasm!=itCode->_vasm.end();)
             {
                 uint16_t nextPC;
-                bool excluded = checkForRelocation(itVasm->_opcode, itVasm->_address, nextPC, print);
+                bool excluded = checkForRelocation(itVasm->_opcode, itVasm->_address, nextPC, numThunks, totalThunkSize, print);
 
                 if(!itVasm->_pageJump  &&  excluded)
                 {
@@ -255,7 +268,12 @@ namespace Validater
             itCode++;
         }
 
-        if(print) fprintf(stderr, "*******************************************************\n");
+        if(print)
+        {
+            fprintf(stderr, "*******************************************************\n");
+            fprintf(stderr, "* Number of page jumps = %4d, RAM used = %5d bytes *\n", numThunks, totalThunkSize);
+            fprintf(stderr, "*******************************************************\n");
+        }
 
         return true;
     }
@@ -288,9 +306,8 @@ namespace Validater
             {
                 uint16_t opcAddr = Compiler::getCodeLines()[i]._vasm[j]._address;
                 std::string opcode = Compiler::getCodeLines()[i]._vasm[j]._opcode;
-                std::string code = Compiler::getCodeLines()[i]._vasm[j]._code;
-                std::string label = Compiler::getCodeLines()[i]._vasm[j]._internalLabel;
-                std::string basic = Compiler::getCodeLines()[i]._code;
+                const std::string& code = Compiler::getCodeLines()[i]._vasm[j]._code;
+                const std::string& basic = Compiler::getCodeLines()[i]._code;
 
                 Expression::stripWhitespace(opcode);
                 if(opcodeHasBranch(opcode))
@@ -362,7 +379,7 @@ namespace Validater
             success = false;
             Compiler::ForNextData forNextData = Compiler::getForNextDataStack().top();
             int codeLineIndex = forNextData._codeLineIndex;
-            std::string code = Compiler::getCodeLines()[codeLineIndex]._code;
+            const std::string& code = Compiler::getCodeLines()[codeLineIndex]._code;
             fprintf(stderr, "Validater::checkStatementBlocks() : Syntax error, missing NEXT statement, for '%s' on line %d\n", code.c_str(), codeLineIndex);
             Compiler::getForNextDataStack().pop();
         }
@@ -373,7 +390,7 @@ namespace Validater
             success = false;
             Compiler::ElseIfData elseIfData = Compiler::getElseIfDataStack().top();
             int codeLineIndex = elseIfData._codeLineIndex;
-            std::string code = Compiler::getCodeLines()[codeLineIndex]._code;
+            const std::string& code = Compiler::getCodeLines()[codeLineIndex]._code;
             fprintf(stderr, "Validater::checkStatementBlocks() : Syntax error, missing ELSE or ELSEIF statement, for '%s' on line %d\n", code.c_str(), codeLineIndex);
             Compiler::getElseIfDataStack().pop();
         }
@@ -384,7 +401,7 @@ namespace Validater
             success = false;
             Compiler::WhileWendData whileWendData = Compiler::getWhileWendDataStack().top();
             int codeLineIndex = whileWendData._codeLineIndex;
-            std::string code = Compiler::getCodeLines()[codeLineIndex]._code;
+            const std::string& code = Compiler::getCodeLines()[codeLineIndex]._code;
             fprintf(stderr, "Validater::checkStatementBlocks() : Syntax error, missing WEND statement, for '%s' on line %d\n", code.c_str(), codeLineIndex);
             Compiler::getWhileWendDataStack().pop();
         }
@@ -395,9 +412,39 @@ namespace Validater
             success = false;
             Compiler::RepeatUntilData repeatUntilData = Compiler::getRepeatUntilDataStack().top();
             int codeLineIndex = repeatUntilData._codeLineIndex;
-            std::string code = Compiler::getCodeLines()[codeLineIndex]._code;
+            const std::string& code = Compiler::getCodeLines()[codeLineIndex]._code;
             fprintf(stderr, "Validater::checkStatementBlocks() : Syntax error, missing UNTIL statement, for '%s' on line %d\n", code.c_str(), codeLineIndex);
             Compiler::getRepeatUntilDataStack().pop();
+        }
+
+        return success;
+    }
+
+    bool checkCallProcFuncData(void)
+    {
+        bool success = true;
+
+        // Check PROC's corresponding CALL's
+        for(auto it=Compiler::getCallDataMap().begin(); it!=Compiler::getCallDataMap().end(); ++it)
+        {
+            int numParams = it->second._numParams;
+            int codeLineIndex = it->second._codeLineIndex;
+            const std::string& procName = it->second._name;
+            const std::string& code = Compiler::getCodeLines()[codeLineIndex]._code;
+
+            if(Compiler::getProcDataMap().find(procName) == Compiler::getProcDataMap().end())
+            {
+                fprintf(stderr, "Validator::checkCallProcFuncData() : Syntax error, 'CALL <NAME>' cannot find a corresponding 'PROC <NAME>', in '%s' on line %d\n", code.c_str(), codeLineIndex);
+                success = false;
+                continue;
+            }
+
+            if(Compiler::getProcDataMap()[procName]._numParams != numParams)
+            {
+                fprintf(stderr, "Validator::checkCallProcFuncData() : Syntax error, 'CALL <NAME>' has incorrect number of parameters compared to 'PROC <NAME>', in '%s' on line %d\n", code.c_str(), codeLineIndex);
+                success = false;
+                continue;
+            }
         }
 
         return success;

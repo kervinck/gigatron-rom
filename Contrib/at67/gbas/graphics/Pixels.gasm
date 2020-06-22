@@ -1,6 +1,6 @@
 _startAddress_                EQU                               0x0200
 
-; Internal variables
+; Internal Variables
 serialRawPrev                 EQU                               0x0081
 register0                     EQU                               0x0082
 register1                     EQU                               register0 + 0x02
@@ -32,7 +32,7 @@ ON_BOTTOM_ROW_BIT             EQU                               0x0002
 ENABLE_SCROLL_MSK             EQU                               0xfffe
 ON_BOTTOM_ROW_MSK             EQU                               0xfffd
 
-; Internal buffers
+; Internal Buffers
 textWorkArea                  EQU                               0x7fa0
 
 ; Includes
@@ -47,9 +47,11 @@ _loop                         EQU                               0x022e
 _end_0x02de                   EQU                               0x029a
 _end_0x02e0                   EQU                               0x029c
 
-; Variables
+; Global Variables
 _x                            EQU                               0x0030
 _y                            EQU                               0x0032
+
+; Local Variables
 
 ; Arrays
 
@@ -87,34 +89,34 @@ _entryPoint_                  LDI                               0x20
 
 _loop                         Rand                              
                               ANDI                              127
-                              STW                               0xc0
+                              STW                               0xe8
                               Rand                              
                               ANDI                              31
-                              ADDW                              0xc0
-                              STW                               0xc2
+                              ADDW                              0xe8
+                              STW                               0xea
                               Rand                              
                               ANDI                              1
-                              ADDW                              0xc2
+                              ADDW                              0xea
                               STW                               _x                              ; x = (rnd(0) AND &h7F) + (rnd(0) AND &h1F) + (rnd(0) AND &h01)
 
                               Rand                              
                               ANDI                              63
-                              STW                               0xc0
+                              STW                               0xe8
                               Rand                              
                               ANDI                              31
-                              ADDW                              0xc0
-                              STW                               0xc2
+                              ADDW                              0xe8
+                              STW                               0xea
                               Rand                              
                               ANDI                              15
-                              ADDW                              0xc2
-                              STW                               0xc4
+                              ADDW                              0xea
+                              STW                               0xec
                               Rand                              
                               ANDI                              7
-                              ADDW                              0xc4
-                              STW                               0xc6
+                              ADDW                              0xec
+                              STW                               0xee
                               Rand                              
                               ANDI                              3
-                              ADDW                              0xc6
+                              ADDW                              0xee
                               STW                               _y                              ; y = (rnd(0) AND &h3F) + (rnd(0) AND &h1F) + (rnd(0) AND &h0F) + (rnd(0) AND &h07) + (rnd(0) AND &h03)
 
                               LDW                               _x
@@ -140,26 +142,25 @@ _end_0x02e0                   BRA                               _end_0x02e0     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-romCheck                      EQU     0x7ee8
-realTimeStub                  EQU     0x7eca
-rand16bit                     EQU     0x7eb8
-scanlineMode                  EQU     0x7ec0
-resetVideoFlags               EQU     0x7edc
-resetVideoTable               EQU     0x7da1
-initClearFuncs                EQU     0x7cf2
-clearVertBlinds               EQU     0x7dc5
-drawPixel                     EQU     0x7eab
-convertEqOpAddr               EQU     0x00d0
-convertNeOpAddr               EQU     0x00d2
-convertLeOpAddr               EQU     0x00d4
-convertGeOpAddr               EQU     0x00d6
-convertLtOpAddr               EQU     0x00d8
-convertGtOpAddr               EQU     0x00da
-convert8Arr2dAddr             EQU     0x00e0
-convert8Arr3dAddr             EQU     0x00e2
-convert16Arr2dAddr            EQU     0x00e4
-convert16Arr3dAddr            EQU     0x00e6
-realTimeStubAddr              EQU     0x00dc
+romCheck                      EQU     0x7eae
+realTimeStub                  EQU     0x7ded
+rand16bit                     EQU     0x7dc2
+scanlineMode                  EQU     0x7dca
+resetVideoFlags               EQU     0x7dd4
+initClearFuncs                EQU     0x7ea1
+clearVertBlinds               EQU     0x7ec5
+drawPixel                     EQU     0x7de0
+convertEqOpAddr               EQU     0x00c2
+convertNeOpAddr               EQU     0x00c4
+convertLeOpAddr               EQU     0x00c6
+convertGeOpAddr               EQU     0x00c8
+convertLtOpAddr               EQU     0x00ca
+convertGtOpAddr               EQU     0x00cc
+convert8Arr2dAddr             EQU     0x00ce
+convert8Arr3dAddr             EQU     0x00d0
+convert16Arr2dAddr            EQU     0x00d2
+convert16Arr3dAddr            EQU     0x00d4
+realTimeStubAddr              EQU     0x00d6
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -261,6 +262,11 @@ drawLine_h          EQU     register10
 drawLine_num        EQU     register11
 drawLine_count      EQU     register12
 drawLine_tmp        EQU     register13
+drawLine_dx         EQU     register2
+drawLine_dy         EQU     register3
+drawLine_u          EQU     register8
+drawLine_v          EQU     register9
+drawLine_addr       EQU     register10
 
 drawPixel_xy        EQU     register15
 readPixel_xy        EQU     register15
@@ -318,6 +324,11 @@ bot                 EQU     register10
 vramAddr            EQU     register11
 evenAddr            EQU     register12
 clsAddress          EQU     register13
+clsLines            EQU     register14
+varAddress          EQU     register13
+clrAddress          EQU     register13
+clrLines            EQU     register14
+clrWidth            EQU     register15
     
 
 resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
@@ -329,32 +340,8 @@ resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
 
 
 
-
-                    ; resets video table pointers
-resetVideoTable     PUSH
-                    LDI     8
-                    STW     vramAddr
-                    LDWI    giga_videoTable
-                    STW     evenAddr
-    
-resetVT_loop        CALL    realTimeStubAddr
-                    LDW     vramAddr
-                    DOKE    evenAddr
-                    INC     evenAddr
-                    INC     evenAddr
-                    INC     vramAddr
-                    LD      vramAddr
-                    SUBI    giga_yres + 8
-                    BLT     resetVT_loop
-                    
-                    LDWI    resetVideoFlags
-                    CALL    giga_vAC
-                    POP
-                    RET
-
-
 initClearFuncs      PUSH
-                    LDWI    resetVideoTable
+                    LDWI    resetVideoFlags
                     CALL    giga_vAC
     
                     LDWI    SYS_SetMemory_v2_54                 ; setup fill memory SYS routine
@@ -389,7 +376,6 @@ clearVB_loopy       LDI     giga_xres
                     ST      giga_sysArg3                        ; bottom line
                     SYS     54                                  ; fill memory
                     INC     top                                 ; next top line
-                    
                     CALL    realTimeStubAddr
                     LD      top
                     SUBI    giga_yres / 2 + 8

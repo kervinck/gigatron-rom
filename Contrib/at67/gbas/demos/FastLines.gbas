@@ -1,6 +1,8 @@
 _runtimePath_ "../runtime"
+_codeRomType_ ROMv1
 
-mode 2
+'audio fix for ROMv5a
+poke &h21, peek(&h21) OR 3
 cls
 
 init midi

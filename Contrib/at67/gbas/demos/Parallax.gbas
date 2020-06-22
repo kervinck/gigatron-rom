@@ -1,8 +1,9 @@
 _runtimePath_ "../runtime"
 _runtimeStart_ &h06FF
+_arraysStart_ &h06FF
 _codeRomType_ ROMv1
 
-load image, ../../images/gbas/Parallax.tga, &h0800
+load image, ../../res/image/Parallax.tga, &h0800
 
 ' hack to get around 'Loader.gcl' being resident in video memory
 ' to solve this issue you need to cut your image into horizontal strips

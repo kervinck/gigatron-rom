@@ -32,7 +32,7 @@ print oops$;" ";string$(a);" ";string$(0);" ";string$(a + 1);" ";hexw$(@string$)
 print #oops$;" ";#string$;" ";hexw$(addr(string$, 1));" ";hexw$(addr(string$, a + 1))
 
 'elements 4 to 5 are initialised to -1
-dim test1d%(5) = 1, 2, 3, -1
+dim test1d%(5) = 1, 2, 3, 0xAA55, 23
 
 def fn func(x, y, z) = x + y + z + j
 
@@ -52,7 +52,7 @@ next i
 
 a = 2
 a = test1d(a)
-print a;" ";
+print a;" ";hexw$(test1d(3));" ";hexw$(test1d(3).lo);" ";hexw$(test1d(3).hi);" ";
 
 dim test2d%(1, 1) = 0, 1
 print test2d(0, 0);" ";test2d(0, 1)
@@ -129,6 +129,8 @@ print hex$(lup(&h0920, 0));" ";hex$(lup(&h0920, 1))
 
 kk = 255
 
+call doStuff, a + 1 * sgn(a), x, y, fgBgColour
+
 loop:
     k = get("SERIAL_RAW")
     if kk &= 255
@@ -147,3 +149,16 @@ asmTest:
         STW _i
     endasm
 return
+
+proc doStuff, a, b, c, d
+    local e, f, g, h
+    
+    e = 3
+    f = a + e
+    g = a + b + c + d
+    h = e*f
+        
+    print a;" ";b;" ";c;" ";d;" ";e;" ";f;" ";g;" ";h;" ";hex$(@a);" ";#b
+    
+    print min(1, 2);" ";max(3, -1);" ";clamp(8, c, f);" ";
+endproc
