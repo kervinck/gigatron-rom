@@ -1036,26 +1036,26 @@ _end_0x0833                   BRA                               _end_0x0833     
 romCheck                      EQU     0x58b1
 realTimeStub                  EQU     0x56da
 convertEqOp                   EQU     0x6ea3
-convertNeOp                   EQU     0x5aa2
-convertGeOp                   EQU     0x59a7
-convertLtOp                   EQU     0x58a8
+convertNeOp                   EQU     0x5fa7
+convertGeOp                   EQU     0x5ba0
+convertLtOp                   EQU     0x5aa2
 convert16Arr2d                EQU     0x71a0
 multiply16bit                 EQU     0x5acd
 divide16bit                   EQU     0x61a8
 randMod16bit                  EQU     0x56ec
 scanlineMode                  EQU     0x6fa2
 resetVideoFlags               EQU     0x70a0
-initClearFuncs                EQU     0x60a1
-clearVertBlinds               EQU     0x5dc5
+initClearFuncs                EQU     0x58a0
+clearVertBlinds               EQU     0x5cc9
 clearCursorRow                EQU     0x59cf
-input                         EQU     0x5ba4
+input                         EQU     0x5ca2
 inputExt1                     EQU     0x5fb0
 inputExt2                     EQU     0x58e1
-inputCursor                   EQU     0x5ca4
+inputCursor                   EQU     0x5ba9
 inputKeys                     EQU     0x64a4
 inputIntVar                   EQU     0x57a9
 inputStrVar                   EQU     0x57e8
-inputReturn                   EQU     0x5cc6
+inputReturn                   EQU     0x5dc6
 inputDelete                   EQU     0x66a0
 inputPrint                    EQU     0x5ea1
 inputNewline                  EQU     0x57bd
@@ -1063,9 +1063,9 @@ printInit                     EQU     0x57d2
 printText                     EQU     0x58c8
 printDigit                    EQU     0x5aab
 printInt16                    EQU     0x60ae
-printChr                      EQU     0x5fa3
+printChr                      EQU     0x60a1
 printChar                     EQU     0x62a7
-atTextCursor                  EQU     0x5da0
+atTextCursor                  EQU     0x5da1
 newLineScroll                 EQU     0x63a4
 integerStr                    EQU     0x5ec0
 stringCmp                     EQU     0x59b0
@@ -1383,11 +1383,11 @@ clrLines            EQU     register14
 clrWidth            EQU     register15
     
 
-resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
+resetVideoFlags     LDI     giga_CursorX                    ; cursor x start
                     STW     cursorXY
                     LDWI    ON_BOTTOM_ROW_MSK
                     ANDW    miscFlags
-                    STW     miscFlags                           ; reset on bottom row flag
+                    STW     miscFlags                       ; reset on bottom row flag
                     RET
 
 
@@ -1395,9 +1395,10 @@ resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
 initClearFuncs      PUSH
                     LDWI    resetVideoFlags
                     CALL    giga_vAC
-    
-                    LDWI    SYS_SetMemory_v2_54                 ; setup fill memory SYS routine
+                    LDWI    SYS_SetMemory_v2_54             ; setup fill memory SYS routine
                     STW     giga_sysFn
+                    LD      fgbgColour
+                    ST      giga_sysArg1                    ; fill value
                     POP
                     RET
 
@@ -1406,28 +1407,26 @@ initClearFuncs      PUSH
 clearVertBlinds     PUSH
                     LDWI    initClearFuncs
                     CALL    giga_vAC
-                    LD      fgbgColour
-                    ST      giga_sysArg1                        ; fill value
                     LDI     giga_vram >> 8
                     STW     top  
                     
 clearVB_loopy       LDI     giga_xres
                     ST      giga_sysArg0
                     LDI     0
-                    ST      giga_sysArg2                        ; low start address
+                    ST      giga_sysArg2                    ; low start address
                     LD      top
-                    ST      giga_sysArg3                        ; top line
-                    SYS     54                                  ; fill memory
+                    ST      giga_sysArg3                    ; top line
+                    SYS     54                              ; fill memory
     
                     LDI     giga_xres
                     ST      giga_sysArg0
                     LDI     0
-                    ST      giga_sysArg2                        ; low start address
+                    ST      giga_sysArg2                    ; low start address
                     LDWI    giga_yres - 1 + 16
                     SUBW    top
-                    ST      giga_sysArg3                        ; bottom line
-                    SYS     54                                  ; fill memory
-                    INC     top                                 ; next top line
+                    ST      giga_sysArg3                    ; bottom line
+                    SYS     54                              ; fill memory
+                    INC     top                             ; next top line
                     CALL    realTimeStubAddr
                     LD      top
                     SUBI    giga_yres / 2 + 8

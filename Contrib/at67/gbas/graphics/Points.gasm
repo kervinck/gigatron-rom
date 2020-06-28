@@ -431,11 +431,11 @@ clrLines            EQU     register14
 clrWidth            EQU     register15
     
 
-resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
+resetVideoFlags     LDI     giga_CursorX                    ; cursor x start
                     STW     cursorXY
                     LDWI    ON_BOTTOM_ROW_MSK
                     ANDW    miscFlags
-                    STW     miscFlags                           ; reset on bottom row flag
+                    STW     miscFlags                       ; reset on bottom row flag
                     RET
 
 

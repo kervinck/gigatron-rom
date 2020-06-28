@@ -10,7 +10,13 @@ vramAddr            EQU     register11
 evenAddr            EQU     register12
 clsAddress          EQU     register13
 varAddress          EQU     register13
-    
+clrAddress          EQU     register10
+clrLines            EQU     register11
+clrWidth            EQU     register12
+clrStart            EQU     register13
+clrEnd              EQU     register14
+clrRem              EQU     register15
+
 
 %SUB                resetVars
 resetVars           LDI     0
@@ -65,7 +71,7 @@ initClearFuncs      PUSH
                     ST      giga_sysArg0
                     ST      giga_sysArg0 + 1
                     ST      giga_sysArg2
-                    ST      giga_sysArg2 + 1                    ; 4 pixels of fg colour
+                    ST      giga_sysArg2 + 1                    ; 4 pixels of bg colour
     
                     LDWI    SYS_Draw4_30                        ; setup 4 pixel SYS routine
                     STW     giga_sysFn
@@ -111,6 +117,64 @@ clearS_loop         CALL    realTimeStubAddr
                     POP
                     RET
 %ENDS   
+
+%SUB                clearRect
+                    ; clears a rectangle on the viewable screen
+clearRect           PUSH
+                    LDWI    initClearFuncs
+                    CALL    giga_vAC
+                    LDW     clrAddress
+                    STW     giga_sysArg4
+                    LD      giga_sysArg4 + 1
+                    ADDW    clrLines
+                    STW     clrLines
+                    LD      giga_sysArg4                    ; clr start
+                    STW     clrStart
+                    ADDW    clrWidth
+                    STW     clrEnd
+                    
+clearR_loop         LDWI    clearLine
+                    CALL    giga_vAC
+                    INC     giga_sysArg4 + 1                ; next line
+                    LD      giga_sysArg4 + 1
+                    SUBW    clrLines
+                    BLT     clearR_loop 
+                    POP
+                    RET
+%ENDS   
+
+%SUB                clearLine
+clearLine           PUSH
+                    LD      clrStart
+                    ST      giga_sysArg4
+                    LD      clrWidth
+                    ANDI    0xFC
+                    BEQ     clearL_remloop
+                    STW     clrRem
+                    
+clearL_modloop      SYS     30
+                    CALL    realTimeStubAddr
+                    LD      giga_sysArg4
+                    ADDI    4
+                    ST      giga_sysArg4
+                    SUBW    clrEnd
+                    ADDW    clrRem
+                    BLT     clearL_modloop                  ; all 4 pixel chunks
+                    BEQ     clearL_exit
+                    LD      giga_sysArg4
+                    SUBI    4
+                    ST      giga_sysArg4
+                    
+clearL_remloop      LD      fgbgColour
+                    POKE    giga_sysArg4
+                    INC     giga_sysArg4
+                    LD      giga_sysArg4
+                    SUBW    clrEnd
+                    BLT     clearL_remloop                  ; remaining pixels
+                    
+clearL_exit         POP
+                    RET
+%ENDS
 
 %SUB                clearVertBlinds
                     ; clears the viewable screen using a vertical blinds effect

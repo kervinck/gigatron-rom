@@ -571,7 +571,7 @@ _next_0x0258                  LDWI                              _fontId_
                               ANDW                              miscFlags
                               STW                               miscFlags                       ; scroll off 'stop text scrolling
 
-                              ResetVideoTable                                                   ; cls init 'initialise video indirection table
+                              ClearVertBlinds                                                   ; cls init 'initialise video indirection table
 
 _forever                      LDI                               0x05
                               RandMod                           
@@ -612,21 +612,20 @@ _end_0x02f7                   BRA                               _end_0x02f7     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-romCheck                      EQU     0x0aab
-realTimeStub                  EQU     0x09c7
+romCheck                      EQU     0x0acf
+realTimeStub                  EQU     0x09ed
 divide16bit                   EQU     0x0ca8
-randMod16bit                  EQU     0x09ec
+randMod16bit                  EQU     0x0abc
 waitVBlank                    EQU     0x13a0
-waitVBlanks                   EQU     0x09d9
+waitVBlanks                   EQU     0x0aa9
 resetVideoFlags               EQU     0x12a0
-resetVideoTable               EQU     0x0adb
-initClearFuncs                EQU     0x09a8
-clearVertBlinds               EQU     0x0bc5
+initClearFuncs                EQU     0x09ca
+clearVertBlinds               EQU     0x0bc9
 clearCursorRow                EQU     0x15a5
-printInit                     EQU     0x09b5
-printText                     EQU     0x0ac2
+printInit                     EQU     0x09db
+printText                     EQU     0x0ae6
 printChar                     EQU     0x0ea0
-atTextCursor                  EQU     0x0ba0
+atTextCursor                  EQU     0x0ba4
 newLineScroll                 EQU     0x0da4
 convertEqOpAddr               EQU     0x00c2
 convertNeOpAddr               EQU     0x00c4
@@ -885,34 +884,11 @@ clrLines            EQU     register14
 clrWidth            EQU     register15
     
 
-resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
+resetVideoFlags     LDI     giga_CursorX                    ; cursor x start
                     STW     cursorXY
                     LDWI    ON_BOTTOM_ROW_MSK
                     ANDW    miscFlags
-                    STW     miscFlags                           ; reset on bottom row flag
-                    RET
-
-
-                    ; resets video table pointers
-resetVideoTable     PUSH
-                    LDI     8
-                    STW     vramAddr
-                    LDWI    giga_videoTable
-                    STW     evenAddr
-    
-resetVT_loop        CALL    realTimeStubAddr
-                    LDW     vramAddr
-                    DOKE    evenAddr
-                    INC     evenAddr
-                    INC     evenAddr
-                    INC     vramAddr
-                    LD      vramAddr
-                    SUBI    giga_yres + 8
-                    BLT     resetVT_loop
-                    
-                    LDWI    resetVideoFlags
-                    CALL    giga_vAC
-                    POP
+                    STW     miscFlags                       ; reset on bottom row flag
                     RET
 
 
@@ -920,9 +896,10 @@ resetVT_loop        CALL    realTimeStubAddr
 initClearFuncs      PUSH
                     LDWI    resetVideoFlags
                     CALL    giga_vAC
-    
-                    LDWI    SYS_SetMemory_v2_54                 ; setup fill memory SYS routine
+                    LDWI    SYS_SetMemory_v2_54             ; setup fill memory SYS routine
                     STW     giga_sysFn
+                    LD      fgbgColour
+                    ST      giga_sysArg1                    ; fill value
                     POP
                     RET
 
@@ -931,28 +908,26 @@ initClearFuncs      PUSH
 clearVertBlinds     PUSH
                     LDWI    initClearFuncs
                     CALL    giga_vAC
-                    LD      fgbgColour
-                    ST      giga_sysArg1                        ; fill value
                     LDI     giga_vram >> 8
                     STW     top  
                     
 clearVB_loopy       LDI     giga_xres
                     ST      giga_sysArg0
                     LDI     0
-                    ST      giga_sysArg2                        ; low start address
+                    ST      giga_sysArg2                    ; low start address
                     LD      top
-                    ST      giga_sysArg3                        ; top line
-                    SYS     54                                  ; fill memory
+                    ST      giga_sysArg3                    ; top line
+                    SYS     54                              ; fill memory
     
                     LDI     giga_xres
                     ST      giga_sysArg0
                     LDI     0
-                    ST      giga_sysArg2                        ; low start address
+                    ST      giga_sysArg2                    ; low start address
                     LDWI    giga_yres - 1 + 16
                     SUBW    top
-                    ST      giga_sysArg3                        ; bottom line
-                    SYS     54                                  ; fill memory
-                    INC     top                                 ; next top line
+                    ST      giga_sysArg3                    ; bottom line
+                    SYS     54                              ; fill memory
+                    INC     top                             ; next top line
                     CALL    realTimeStubAddr
                     LD      top
                     SUBI    giga_yres / 2 + 8

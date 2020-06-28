@@ -92,6 +92,7 @@ namespace Linker
         {0x0000, 0x0000, "initClearFuncs"   , "", false, false},
         {0x0000, 0x0000, "clearScreen"      , "", false, false},
         {0x0000, 0x0000, "clearRect"        , "", false, false},
+        {0x0000, 0x0000, "clearLine"        , "", false, false},
         {0x0000, 0x0000, "clearVertBlinds"  , "", false, false},
         {0x0000, 0x0000, "clearCursorRow"   , "", false, false},
         {0x0000, 0x0000, "readPixel"        , "", false, false},

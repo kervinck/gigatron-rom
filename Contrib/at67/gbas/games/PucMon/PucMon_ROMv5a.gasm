@@ -1728,15 +1728,15 @@ _endif_0x0a4e                 LDW                               _gx
                               LDW                               _gx
                               SUBW                              _px
                               Absolute                          
-                              SUBI                              3
-                              JumpLE                            _endif_0x0b12 54                ; if abs(gx - px) &<= 3
+                              SUBI                              2
+                              JumpLE                            _endif_0x0b12 54                ; if abs(gx - px) &<= 2
 
                               LDW                               _gy
                               SUBW                              _py
                               Absolute                          
-                              SUBI                              3
+                              SUBI                              2
                               CALLI                             _page_0x0ba0
-_page_0x0ba0                  JumpLE                            _endif_0x0b12 53                ; if abs(gy - py) &<= 3
+_page_0x0ba0                  JumpLE                            _endif_0x0b12 53                ; if abs(gy - py) &<= 2
 
                               LDI                               63
                               STW                               spriteId
@@ -3350,9 +3350,9 @@ _page_0x2ca0                  LDWI                              258
                               LDWI                              2560
                               STW                               clrAddress
                               LDI                               160
-                              ST                                clrWidth
+                              STW                               clrWidth
                               LDI                               116
-                              ST                                clrLines
+                              STW                               clrLines
                               ClearRect                                                         ; cls &h0A00, 160, 116
 
                               Return                                                            ; return
@@ -3369,41 +3369,41 @@ _end_0x1a30                   BRA                               _end_0x1a30     
 
 romCheck                      EQU     0x3aa1
 realTimeStub                  EQU     0x36b6
-convertEqOp                   EQU     0x30b0
-convert8Arr2d                 EQU     0x33b5
+convertEqOp                   EQU     0x30a6
+convert8Arr2d                 EQU     0x33b1
 resetVars                     EQU     0x33ef
-absolute                      EQU     0x33ab
-rand16bit                     EQU     0x2ff7
-shiftRight1bit                EQU     0x33a1
-shiftRight2bit                EQU     0x30f5
-shiftRight3bit                EQU     0x30eb
-shiftRight4bit                EQU     0x30e1
-shiftRight6bit                EQU     0x30d7
+absolute                      EQU     0x33a7
+rand16bit                     EQU     0x2fee
+shiftRight1bit                EQU     0x30f5
+shiftRight2bit                EQU     0x30eb
+shiftRight3bit                EQU     0x30e1
+shiftRight4bit                EQU     0x30d7
+shiftRight6bit                EQU     0x30cd
 gosubNumericLabel             EQU     0x35cd
-scanlineMode                  EQU     0x30cd
-waitVBlank                    EQU     0x2fef
+scanlineMode                  EQU     0x30c3
+waitVBlank                    EQU     0x2fe6
 waitVBlanks                   EQU     0x34bd
 resetVideoFlags               EQU     0x34a0
-initClearFuncs                EQU     0x3ca0
-clearRect                     EQU     0x41a1
-drawPixel                     EQU     0x33e0
+initClearFuncs                EQU     0x33e0
+clearRect                     EQU     0x40a5
+drawPixel                     EQU     0x33d1
 drawLineSlow                  EQU     0x34ce
 drawLineSlowExt               EQU     0x3ba5
 drawLineSlowLoop              EQU     0x35a2
 drawLineSlowSwap              EQU     0x38a0
 drawPolyRel                   EQU     0x37be
-setPolyRelFlipX               EQU     0x30c3
-setPolyRelFlipY               EQU     0x30b9
+setPolyRelFlipX               EQU     0x30b9
+setPolyRelFlipY               EQU     0x30af
 draw_sprite                   EQU     0x3fa5
-drawSprite                    EQU     0x33d5
-drawSpriteX                   EQU     0x33ca
-drawSpriteY                   EQU     0x33bf
+drawSprite                    EQU     0x3ca0
+drawSpriteX                   EQU     0x33c6
+drawSpriteY                   EQU     0x33bb
 resetMusic                    EQU     0x3da7
 playMusic                     EQU     0x38b9
 musicGetNote                  EQU     0x37a3
 musicPlayNote                 EQU     0x34ac
-soundOff                      EQU     0x30a7
-soundOnV                      EQU     0x40a1
+soundOff                      EQU     0x2ff6
+soundOnV                      EQU     0x41a1
 bcdAdd                        EQU     0x36ca
 bcdInt                        EQU     0x42a0
 bcdDigits                     EQU     0x3cab
@@ -3481,7 +3481,7 @@ resetVars           LDI     0
                     INC     varAddress
                     INC     varAddress
                     LD      varAddress
-                    XORI    giga_One                            ; end of user vars
+                    XORI    giga_One                        ; end of user vars
                     BNE     resetVars
                     RET
 
@@ -3686,20 +3686,21 @@ waitVB_vblank       CALLI   waitVBlank
                     BRA     waitVB_loop
 
 
-resetVideoFlags     LDI     giga_CursorX                        ; starting cursor position
+resetVideoFlags     LDI     giga_CursorX                    ; starting cursor position
                     STW     cursorXY
                     LDWI    ON_BOTTOM_ROW_MSK
                     ANDW    miscFlags
-                    STW     miscFlags                           ; reset on bottom row flag
+                    STW     miscFlags                       ; reset on bottom row flag
                     RET
 
 
 
 initClearFuncs      PUSH
                     CALLI   resetVideoFlags
-                    
-                    LDWI    SYS_SetMemory_v2_54                 ; setup fill memory SYS routine
+                    LDWI    SYS_SetMemory_v2_54             ; setup fill memory SYS routine
                     STW     giga_sysFn
+                    LD      fgbgColour
+                    ST      giga_sysArg1                    ; fill value                    
                     POP
                     RET
 
@@ -3724,13 +3725,11 @@ realTS_rti          POP
                     ; clears a rectangle on the viewable screen
 clearRect           PUSH
                     CALLI   initClearFuncs
-                    LD      fgbgColour
-                    ST      giga_sysArg1                    ; fill value
                     LD      clrAddress + 1
                     ST      giga_sysArg3
                     LD      clrLines
                     
-clearCR_loopy       ST      clrLines
+clearR_loop         ST      clrLines
                     LD      clrWidth
                     ST      giga_sysArg0
                     LD      clrAddress
@@ -3739,7 +3738,7 @@ clearCR_loopy       ST      clrLines
                     INC     giga_sysArg3                    ; next line
                     LD      clrLines
                     SUBI    1
-                    BNE     clearCR_loopy
+                    BNE     clearR_loop
                     CALLI   realTimeStub
                     POP
                     RET

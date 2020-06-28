@@ -57,7 +57,7 @@ namespace Terminal
 
         for(int i=0; i<int(cmd.size()); i++)
         {
-            Loader::sendCharGiga(cmd.c_str()[i]);
+            if(!Loader::sendCharGiga(cmd.c_str()[i])) return;
         }
 
         _waitForPromptGiga = true;
@@ -89,14 +89,12 @@ namespace Terminal
         {
             Loader::sendCharGiga(4);
             _terminalModeGiga = false;
-            _waitForPromptGiga = true;
         }
     }
 
     void switchToTerminal(void)
     {
         Editor::setEditorMode(Editor::Term);
-        Loader::openComPort(); 
         scrollToEnd();
     }
 
@@ -251,7 +249,6 @@ namespace Terminal
             case SDL_QUIT: 
             {
                 exitTerminalModeGiga();
-                Loader::closeComPort();
 
                 Cpu::shutdown();
                 exit(0);
@@ -439,14 +436,12 @@ namespace Terminal
         if(keyCode == Editor::getEmulatorScanCode("Terminal")  &&  keyMod == Editor::getEmulatorKeyMod("Terminal"))
         {
             exitTerminalModeGiga();
-            Loader::closeComPort();
             Editor::setEditorToPrevMode();
         }        
         // Quit
         else if(keyCode == Editor::getEmulatorScanCode("Quit")  &&  keyMod == Editor::getEmulatorKeyMod("Quit"))
         {
             exitTerminalModeGiga();
-            Loader::closeComPort();
 
             Cpu::shutdown();
             exit(0);
@@ -580,6 +575,7 @@ namespace Terminal
         // Browser
         else if(keyCode == Editor::getEmulatorScanCode("Browse")  &&  keyMod == Editor::getEmulatorKeyMod("Browse"))
         {
+            Editor::browseDirectory();
             Editor::setEditorMode(Editor::Load);
         }
         // Hex monitor
@@ -591,14 +587,6 @@ namespace Terminal
 
     void handleInput(void)
     {
-        static bool firstTime = true;
-        if(firstTime)
-        {
-            firstTime = false;
-            std::string cmd = "V\n";
-            sendCommandToGiga(cmd);
-        }
-
         // Mouse button state
         Editor::MouseState mouseState;
         mouseState._state = SDL_GetMouseState(&mouseState._x, &mouseState._y);
@@ -632,7 +620,7 @@ namespace Terminal
             if(!Loader::readLineGiga(line))
             {
                 _waitForPromptGiga = false;
-                fprintf(stderr, "Terminal::handleInput() : timed out on serial port\n");
+                fprintf(stderr, "Terminal::handleInput() : timed out on COM port '%s'\n", Loader::getConfigComPort().c_str());
             }
             else
             {

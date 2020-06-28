@@ -1436,12 +1436,12 @@ romCheck                      EQU     0xfe09
 realTimeStub                  EQU     0xfb02
 scanlineMode                  EQU     0xf81c
 resetVideoFlags               EQU     0xf908
-initClearFuncs                EQU     0xfc02
-clearVertBlinds               EQU     0xfd02
+initClearFuncs                EQU     0xfa03
+clearVertBlinds               EQU     0xfd06
 drawHLine                     EQU     0xfc0f
 drawRectF                     EQU     0xfb14
 draw_sprite                   EQU     0xfa14
-drawSprite                    EQU     0xfa07
+drawSprite                    EQU     0xfc02
 soundAllOff                   EQU     0xf826
 soundOnV                      EQU     0xf914
 convertEqOpAddr               EQU     0x00c2
@@ -1605,11 +1605,11 @@ clrLines            EQU     register14
 clrWidth            EQU     register15
     
 
-resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
+resetVideoFlags     LDI     giga_CursorX                    ; cursor x start
                     STW     cursorXY
                     LDWI    ON_BOTTOM_ROW_MSK
                     ANDW    miscFlags
-                    STW     miscFlags                           ; reset on bottom row flag
+                    STW     miscFlags                       ; reset on bottom row flag
                     RET
 
 
@@ -1617,9 +1617,10 @@ resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
 initClearFuncs      PUSH
                     LDWI    resetVideoFlags
                     CALL    giga_vAC
-    
-                    LDWI    SYS_SetMemory_v2_54                 ; setup fill memory SYS routine
+                    LDWI    SYS_SetMemory_v2_54             ; setup fill memory SYS routine
                     STW     giga_sysFn
+                    LD      fgbgColour
+                    ST      giga_sysArg1                    ; fill value
                     POP
                     RET
 
@@ -1628,28 +1629,26 @@ initClearFuncs      PUSH
 clearVertBlinds     PUSH
                     LDWI    initClearFuncs
                     CALL    giga_vAC
-                    LD      fgbgColour
-                    ST      giga_sysArg1                        ; fill value
                     LDI     giga_vram >> 8
                     STW     top  
                     
 clearVB_loopy       LDI     giga_xres
                     ST      giga_sysArg0
                     LDI     0
-                    ST      giga_sysArg2                        ; low start address
+                    ST      giga_sysArg2                    ; low start address
                     LD      top
-                    ST      giga_sysArg3                        ; top line
-                    SYS     54                                  ; fill memory
+                    ST      giga_sysArg3                    ; top line
+                    SYS     54                              ; fill memory
     
                     LDI     giga_xres
                     ST      giga_sysArg0
                     LDI     0
-                    ST      giga_sysArg2                        ; low start address
+                    ST      giga_sysArg2                    ; low start address
                     LDWI    giga_yres - 1 + 16
                     SUBW    top
-                    ST      giga_sysArg3                        ; bottom line
-                    SYS     54                                  ; fill memory
-                    INC     top                                 ; next top line
+                    ST      giga_sysArg3                    ; bottom line
+                    SYS     54                              ; fill memory
+                    INC     top                             ; next top line
                     CALL    realTimeStubAddr
                     LD      top
                     SUBI    giga_yres / 2 + 8

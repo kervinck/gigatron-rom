@@ -558,8 +558,8 @@ proc moveGhosts
         
         'ghost colliding with puc
         if (flags.lo AND 1) &= 0
-            if abs(gx - px) &<= 3
-                if abs(gy - py) &<= 3
+            if abs(gx - px) &<= 2
+                if abs(gy - py) &<= 2
                     sprite NoFlip, Erase12x9, gx, gy
                     if gmode &= SCARED_MODE
                         sprite NoFlip, PucLt + 2, px, py

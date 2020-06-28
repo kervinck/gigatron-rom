@@ -746,28 +746,28 @@ _end_0x075d                   BRA                               _end_0x075d     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-romCheck                      EQU     0x8421
-realTimeStub                  EQU     0x83ed
-multiply16bit                 EQU     0x8522
+romCheck                      EQU     0x8428
+realTimeStub                  EQU     0x8400
+multiply16bit                 EQU     0x8526
 divide16bit                   EQU     0x86a8
-scanlineMode                  EQU     0x8401
-resetVideoFlags               EQU     0x83d4
-initClearFuncs                EQU     0x83e0
-clearScreen                   EQU     0x8451
-clearVertBlinds               EQU     0x8706
+scanlineMode                  EQU     0x83d8
+resetVideoFlags               EQU     0x83e2
+initClearFuncs                EQU     0x83ee
+clearScreen                   EQU     0x8501
+clearVertBlinds               EQU     0x8558
 clearCursorRow                EQU     0x84cf
 drawLine                      EQU     0x8653
-drawLineExt                   EQU     0x858c
-drawLineLoop                  EQU     0x85c5
+drawLineExt                   EQU     0x85c6
+drawLineLoop                  EQU     0x8706
 drawLineLoadXY                EQU     0x84a4
-printInit                     EQU     0x840b
-printText                     EQU     0x8438
-printDigit                    EQU     0x8500
+printInit                     EQU     0x8412
+printText                     EQU     0x843f
+printDigit                    EQU     0x8458
 printInt16                    EQU     0x8602
 printChar                     EQU     0x8740
 newLineScroll                 EQU     0x8798
 tickTime                      EQU     0x847a
-handleTime                    EQU     0x8554
+handleTime                    EQU     0x858e
 convertEqOpAddr               EQU     0x00c2
 convertNeOpAddr               EQU     0x00c4
 convertLeOpAddr               EQU     0x00c6
@@ -1027,11 +1027,11 @@ clrLines            EQU     register14
 clrWidth            EQU     register15
     
 
-resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
+resetVideoFlags     LDI     giga_CursorX                    ; cursor x start
                     STW     cursorXY
                     LDWI    ON_BOTTOM_ROW_MSK
                     ANDW    miscFlags
-                    STW     miscFlags                           ; reset on bottom row flag
+                    STW     miscFlags                       ; reset on bottom row flag
                     RET
 
 
@@ -1039,9 +1039,10 @@ resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
 initClearFuncs      PUSH
                     LDWI    resetVideoFlags
                     CALL    giga_vAC
-    
-                    LDWI    SYS_SetMemory_v2_54                 ; setup fill memory SYS routine
+                    LDWI    SYS_SetMemory_v2_54             ; setup fill memory SYS routine
                     STW     giga_sysFn
+                    LD      fgbgColour
+                    ST      giga_sysArg1                    ; fill value
                     POP
                     RET
 
@@ -1050,8 +1051,6 @@ initClearFuncs      PUSH
 clearScreen         PUSH
                     LDWI    initClearFuncs
                     CALL    giga_vAC
-                    LD      fgbgColour
-                    ST      giga_sysArg1                    ; fill value
                     LD      clsAddress + 1
                     ST      giga_sysArg3
                     LDI     120
@@ -1075,28 +1074,26 @@ clearCS_loopy       ST      clsLines
 clearVertBlinds     PUSH
                     LDWI    initClearFuncs
                     CALL    giga_vAC
-                    LD      fgbgColour
-                    ST      giga_sysArg1                        ; fill value
                     LDI     giga_vram >> 8
                     STW     top  
                     
 clearVB_loopy       LDI     giga_xres
                     ST      giga_sysArg0
                     LDI     0
-                    ST      giga_sysArg2                        ; low start address
+                    ST      giga_sysArg2                    ; low start address
                     LD      top
-                    ST      giga_sysArg3                        ; top line
-                    SYS     54                                  ; fill memory
+                    ST      giga_sysArg3                    ; top line
+                    SYS     54                              ; fill memory
     
                     LDI     giga_xres
                     ST      giga_sysArg0
                     LDI     0
-                    ST      giga_sysArg2                        ; low start address
+                    ST      giga_sysArg2                    ; low start address
                     LDWI    giga_yres - 1 + 16
                     SUBW    top
-                    ST      giga_sysArg3                        ; bottom line
-                    SYS     54                                  ; fill memory
-                    INC     top                                 ; next top line
+                    ST      giga_sysArg3                    ; bottom line
+                    SYS     54                              ; fill memory
+                    INC     top                             ; next top line
                     CALL    realTimeStubAddr
                     LD      top
                     SUBI    giga_yres / 2 + 8

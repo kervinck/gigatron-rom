@@ -43,32 +43,35 @@ textWorkArea                  EQU                               0x7fa0
 
 ; Labels
 _entryPoint_                  EQU                               0x0200
-_init                         EQU                               0x021c
-_32453245324543543543453553   EQU                               0x0228
-_10                           EQU                               0x022d
-_31                           EQU                               0x0295
-_32                           EQU                               0x02b0
-_33                           EQU                               0x02cb
-_34                           EQU                               0x02e6
-_35                           EQU                               0x0310
-_36                           EQU                               0x032b
-_37                           EQU                               0x0346
-_40                           EQU                               0x0693
+_init                         EQU                               0x024f
+_32453245324543543543453553   EQU                               0x025b
+_10                           EQU                               0x0260
+_31                           EQU                               0x02c8
+_32                           EQU                               0x02e3
+_33                           EQU                               0x030e
+_34                           EQU                               0x0329
+_35                           EQU                               0x0344
+_36                           EQU                               0x035f
+_37                           EQU                               0x037a
+_40                           EQU                               0x06c6
+_next_0x022d                  EQU                               0x022d
+_end_0x024d                   EQU                               0x024d
 _page_0x0300                  EQU                               0x0300
 _page_0x0400                  EQU                               0x0400
 _page_0x0500                  EQU                               0x0500
 _page_0x0600                  EQU                               0x0600
-_end_0x06d7                   EQU                               0x0698
+_end_0x070a                   EQU                               0x06cb
 
 ; Global Variables
-_a                            EQU                               0x0030
-_b                            EQU                               0x0032
-_d                            EQU                               0x0034
-_cat                          EQU                               0x0036
-_e                            EQU                               0x0038
-_f                            EQU                               0x003a
-_g                            EQU                               0x003c
-_z                            EQU                               0x003e
+_i                            EQU                               0x0030
+_a                            EQU                               0x0032
+_b                            EQU                               0x0034
+_d                            EQU                               0x0036
+_cat                          EQU                               0x0038
+_e                            EQU                               0x003a
+_f                            EQU                               0x003c
+_g                            EQU                               0x003e
+_z                            EQU                               0x0040
 
 ; Local Variables
 
@@ -97,10 +100,31 @@ _str_0x7efd                   DB                                1 ' ' 0
 ; Lookup Tables
 
 ; Code
-_entryPoint_                  Initialise                        
+_entryPoint_                  LDI                               0x28
+                              STW                               romType
+                              RomCheck                          
+                              Initialise                        
                               InitRealTimeStub                                                  ; INIT
 
                               ClearVertBlinds                                                   ; cls
+
+                              LDI                               0
+                              ST                                fgbgColour                      ; set BG_COLOUR, 0
+
+                              LDI                               1
+                              STW                               _i                              ; for i=1 to 158
+
+_next_0x022d                  LDWI                              2049
+                              STW                               clrAddress
+                              LDW                               _i
+                              STW                               clrWidth
+                              LDI                               4
+                              STW                               clrLines
+                              ClearRect                                                         ; cls &h0801, i, 4
+
+                              ForNextFarInc                     _i _next_0x022d 158             ; next i
+
+_end_0x024d                   BRA                               _end_0x024d                     ; end
 
 _init                         LDI                               1
                               STW                               _a                              ; a = 1
@@ -192,6 +216,10 @@ _32                           LDI                               0
                               ADDW                              0xe8
                               STW                               0xe8
                               LDI                               24
+                              STW                               0xc0
+                              LDWI                              _page_0x0300
+                              CALL                              giga_vAC
+_page_0x0300                  LDW                               0xc0
                               SUBW                              _g
                               STW                               0xea
                               LDW                               0xe8
@@ -219,10 +247,6 @@ _34                           LDI                               0
                               LDWI                              1000
                               ADDW                              0xe8
                               STW                               0xe8
-                              STW                               0xc0
-                              LDWI                              _page_0x0300
-                              CALL                              giga_vAC
-_page_0x0300                  LDW                               0xc0
                               LDI                               24
                               SUBW                              _g
                               STW                               0xea
@@ -317,42 +341,10 @@ _37                           LDI                               0
                               LDW                               0xea
                               SUBW                              0xec
                               STW                               0xec
-                              LDW                               0xe8
-                              SUBW                              0xec
-                              STW                               _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
-
-                              LDWI                              -2949
-                              ADDW                              _b
-                              STW                               0xe8
-                              LDWI                              300
-                              ADDW                              _e
-                              STW                               0xea
-                              LDWI                              -900
-                              ADDW                              _f
-                              STW                               0xec
-                              LDW                               0xea
-                              SUBW                              0xec
-                              STW                               0xec
-                              LDW                               0xe8
-                              SUBW                              0xec
-                              STW                               _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
-
-                              LDWI                              -2949
-                              ADDW                              _b
-                              STW                               0xe8
-                              LDWI                              300
-                              ADDW                              _e
-                              STW                               0xea
                               STW                               0xc0
                               LDWI                              _page_0x0400
                               CALL                              giga_vAC
 _page_0x0400                  LDW                               0xc0
-                              LDWI                              -900
-                              ADDW                              _f
-                              STW                               0xec
-                              LDW                               0xea
-                              SUBW                              0xec
-                              STW                               0xec
                               LDW                               0xe8
                               SUBW                              0xec
                               STW                               _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
@@ -463,17 +455,17 @@ _page_0x0400                  LDW                               0xc0
                               ADDW                              _f
                               STW                               0xec
                               LDW                               0xea
+                              SUBW                              0xec
+                              STW                               0xec
+                              LDW                               0xe8
+                              SUBW                              0xec
+                              STW                               _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
+
+                              LDWI                              -2949
                               STW                               0xc0
                               LDWI                              _page_0x0500
                               CALL                              giga_vAC
 _page_0x0500                  LDW                               0xc0
-                              SUBW                              0xec
-                              STW                               0xec
-                              LDW                               0xe8
-                              SUBW                              0xec
-                              STW                               _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
-
-                              LDWI                              -2949
                               ADDW                              _b
                               STW                               0xe8
                               LDWI                              300
@@ -560,6 +552,42 @@ _page_0x0500                  LDW                               0xc0
                               ADDW                              _e
                               STW                               0xea
                               LDWI                              -900
+                              ADDW                              _f
+                              STW                               0xec
+                              LDW                               0xea
+                              SUBW                              0xec
+                              STW                               0xec
+                              LDW                               0xe8
+                              SUBW                              0xec
+                              STW                               _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
+
+                              LDWI                              -2949
+                              ADDW                              _b
+                              STW                               0xe8
+                              LDWI                              300
+                              ADDW                              _e
+                              STW                               0xea
+                              LDWI                              -900
+                              ADDW                              _f
+                              STW                               0xec
+                              LDW                               0xea
+                              SUBW                              0xec
+                              STW                               0xec
+                              LDW                               0xe8
+                              SUBW                              0xec
+                              STW                               _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
+
+                              LDWI                              -2949
+                              ADDW                              _b
+                              STW                               0xe8
+                              LDWI                              300
+                              ADDW                              _e
+                              STW                               0xea
+                              LDWI                              -900
+                              STW                               0xc0
+                              LDWI                              _page_0x0600
+                              CALL                              giga_vAC
+_page_0x0600                  LDW                               0xc0
                               ADDW                              _f
                               STW                               0xec
                               LDW                               0xea
@@ -586,10 +614,6 @@ _page_0x0500                  LDW                               0xc0
                               STW                               _z                              ; z = b - (1000 + 2000 - 53 + 2) - (e + 300 - (f - 900))
 
                               LDW                               _a
-                              STW                               0xc0
-                              LDWI                              _page_0x0600
-                              CALL                              giga_vAC
-_page_0x0600                  LDW                               0xc0
                               PrintAcInt16                      
                               PrintString                       _str_0x7efd
                               LDW                               _b
@@ -617,7 +641,7 @@ _page_0x0600                  LDW                               0xc0
 _40                           LDWI                              _10
                               CALL                              giga_vAC                        ; goto 10
 
-_end_0x06d7                   BRA                               _end_0x06d7                     ; end
+_end_0x070a                   BRA                               _end_0x070a                     ; end
 
 
 
@@ -627,14 +651,16 @@ _end_0x06d7                   BRA                               _end_0x06d7     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeStub                  EQU     0x79bd
+romCheck                      EQU     0x79cf
+realTimeStub                  EQU     0x79a7
 resetVideoFlags               EQU     0x7ca2
-initClearFuncs                EQU     0x79cf
-clearVertBlinds               EQU     0x7ac5
-clearCursorRow                EQU     0x7bb6
-printInit                     EQU     0x7ba0
+initClearFuncs                EQU     0x78ee
+clearRect                     EQU     0x7ba4
+clearVertBlinds               EQU     0x7bc9
+clearCursorRow                EQU     0x7acf
+printInit                     EQU     0x79b9
 printText                     EQU     0x79e6
-printDigit                    EQU     0x7aa3
+printDigit                    EQU     0x7aad
 printInt16                    EQU     0x7cae
 printChar                     EQU     0x7da7
 newLineScroll                 EQU     0x7ea2
@@ -666,6 +692,21 @@ romErrAddr          EQU     register1
 romErrPixel         EQU     register2
 
 
+romCheck            LD      giga_romType
+                    ANDI    0xFC
+                    SUBW    romType
+                    BGE     romC_return
+                    LDWI    giga_vram
+                    STW     romErrAddr
+                    
+romC_loop           LD      romErrPixel
+                    POKE    romErrAddr
+                    INC     romErrPixel
+                    BRA     romC_loop                       ; flash left hand corner pixel indicating rom error
+                    
+romC_return         RET                    
+
+
                     ; runs real time, (time sliced), code at regular intervals
                     ; self modifying code allows for timer, midi and user procs
 realTimeStub        RET                                     ; RET gets replaced by PUSH
@@ -694,14 +735,18 @@ bot                 EQU     register10
 vramAddr            EQU     register11
 evenAddr            EQU     register12
 clsAddress          EQU     register13
+clsLines            EQU     register14
 varAddress          EQU     register13
+clrAddress          EQU     register13
+clrLines            EQU     register14
+clrWidth            EQU     register15
     
 
-resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
+resetVideoFlags     LDI     giga_CursorX                    ; cursor x start
                     STW     cursorXY
                     LDWI    ON_BOTTOM_ROW_MSK
                     ANDW    miscFlags
-                    STW     miscFlags                           ; reset on bottom row flag
+                    STW     miscFlags                       ; reset on bottom row flag
                     RET
 
 
@@ -709,15 +754,33 @@ resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
 initClearFuncs      PUSH
                     LDWI    resetVideoFlags
                     CALL    giga_vAC
-            
-                    LD      fgbgColour
-                    ST      giga_sysArg0
-                    ST      giga_sysArg0 + 1
-                    ST      giga_sysArg2
-                    ST      giga_sysArg2 + 1                    ; 4 pixels of fg colour
-    
-                    LDWI    SYS_Draw4_30                        ; setup 4 pixel SYS routine
+                    LDWI    SYS_SetMemory_v2_54             ; setup fill memory SYS routine
                     STW     giga_sysFn
+                    LD      fgbgColour
+                    ST      giga_sysArg1                    ; fill value
+                    POP
+                    RET
+
+
+                    ; clears a rectangle on the viewable screen
+clearRect           PUSH
+                    LDWI    initClearFuncs
+                    CALL    giga_vAC
+                    LD      clrAddress + 1
+                    ST      giga_sysArg3
+                    LD      clrLines
+                    
+clearR_loop         ST      clrLines
+                    LD      clrWidth
+                    ST      giga_sysArg0
+                    LD      clrAddress
+                    ST      giga_sysArg2
+                    SYS     54                              ; fill memory
+                    INC     giga_sysArg3                    ; next line
+                    LD      clrLines
+                    SUBI    1
+                    BNE     clearR_loop
+                    CALL    realTimeStubAddr
                     POP
                     RET
 
@@ -726,34 +789,30 @@ initClearFuncs      PUSH
 clearVertBlinds     PUSH
                     LDWI    initClearFuncs
                     CALL    giga_vAC
-
-                    LDWI    giga_vram
-                    STW     giga_sysArg4
-                    LD      giga_sysArg4 + 1
-                    ST      top
-    
-clearVB_loop        CALL    realTimeStubAddr
+                    LDI     giga_vram >> 8
+                    STW     top  
+                    
+clearVB_loopy       LDI     giga_xres
+                    ST      giga_sysArg0
+                    LDI     0
+                    ST      giga_sysArg2                    ; low start address
                     LD      top
-                    ST      giga_sysArg4 + 1                    ; top line
-                    SYS     30
+                    ST      giga_sysArg3                    ; top line
+                    SYS     54                              ; fill memory
     
+                    LDI     giga_xres
+                    ST      giga_sysArg0
+                    LDI     0
+                    ST      giga_sysArg2                    ; low start address
                     LDWI    giga_yres - 1 + 16
                     SUBW    top
-                    ST      giga_sysArg4 + 1                    ; bottom line
-                    SYS     30
-    
-                    LD      giga_sysArg4
-                    ADDI    0x04
-                    ST      giga_sysArg4
-                    SUBI    giga_xres
-                    BLT     clearVB_loop
-    
-                    LDI     0
-                    ST      giga_sysArg4
-                    INC     top                                 ; next top line
+                    ST      giga_sysArg3                    ; bottom line
+                    SYS     54                              ; fill memory
+                    INC     top                             ; next top line
+                    CALL    realTimeStubAddr
                     LD      top
                     SUBI    giga_yres / 2 + 8
-                    BLT     clearVB_loop
+                    BLT     clearVB_loopy
                     POP
                     RET
 
@@ -928,43 +987,26 @@ printC_exit         RET
 
                     ; clears the top giga_yfont lines of pixels in preparation of text scrolling
 clearCursorRow      PUSH
+                    LDWI    SYS_SetMemory_v2_54
+                    STW     giga_sysFn                      ; setup fill memory SYS routine
                     LD      fgbgColour
-                    ST      giga_sysArg0
-                    ST      giga_sysArg0 + 1
-                    ST      giga_sysArg2
-                    ST      giga_sysArg2 + 1                ; 4 pixels of colour
-    
-                    LDWI    SYS_Draw4_30                    ; setup 4 pixel SYS routine
-                    STW     giga_sysFn
-    
-                    LDWI    giga_videoTable                 ; current cursor high byte address
+                    ST      giga_sysArg1                    ; fill value
+                    LDWI    giga_videoTable
                     PEEK
-                    ST      giga_sysArg4 + 1
+                    ST      giga_sysArg3                    ; row0 high byte address
                     LDI     giga_yfont
 
-clearCR_loopy       ST      clearLoop
-                    CALL    realTimeStubAddr
+clearCR_loopy       ST      clearLoop                    
                     LDI     giga_xres
-                    
-clearCR_loopx       SUBI    4                               ; loop is unrolled 4 times
-                    ST      giga_sysArg4
-                    SYS     30
-                    SUBI    4
-                    ST      giga_sysArg4
-                    SYS     30
-                    SUBI    4
-                    ST      giga_sysArg4
-                    SYS     30
-                    SUBI    4
-                    ST      giga_sysArg4
-                    SYS     30
-                    BGT     clearCR_loopx
-                    
-                    INC     giga_sysArg4 + 1                ; next line
+                    ST      giga_sysArg0
+                    LDI     0
+                    ST      giga_sysArg2                    ; low start address
+                    SYS     54                              ; fill memory
+                    INC     giga_sysArg3                    ; next line
                     LD      clearLoop
                     SUBI    1
                     BNE     clearCR_loopy
-
+                    CALL    realTimeStubAddr
                     LDWI    printInit
                     CALL    giga_vAC                        ; re-initialise the SYS registers
                     POP

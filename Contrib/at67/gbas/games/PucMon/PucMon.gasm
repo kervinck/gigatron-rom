@@ -3246,9 +3246,9 @@ _page_0x2fa0                  LDW                               0xc0
                               LDWI                              2560
                               STW                               clrAddress
                               LDI                               160
-                              ST                                clrWidth
+                              STW                               clrWidth
                               LDI                               116
-                              ST                                clrLines
+                              STW                               clrLines
                               ClearRect                                                         ; cls &h0A00, 160, 116
 
                               Return                                                            ; return
@@ -3265,39 +3265,39 @@ _end_0x19c0                   BRA                               _end_0x19c0     
 
 romCheck                      EQU     0x3cb2
 realTimeStub                  EQU     0x3ca0
-convertEqOp                   EQU     0x30ce
-convert8Arr2d                 EQU     0x34aa
+convertEqOp                   EQU     0x30c4
+convert8Arr2d                 EQU     0x36a0
 resetVars                     EQU     0x3da0
-absolute                      EQU     0x34a0
-rand16bit                     EQU     0x30c6
-shiftRight1bit                EQU     0x33c3
-shiftRight2bit                EQU     0x33b9
-shiftRight3bit                EQU     0x33af
-shiftRight4bit                EQU     0x33a5
-shiftRight6bit                EQU     0x30f5
+absolute                      EQU     0x33c3
+rand16bit                     EQU     0x30bc
+shiftRight1bit                EQU     0x33b9
+shiftRight2bit                EQU     0x33af
+shiftRight3bit                EQU     0x33a5
+shiftRight4bit                EQU     0x30f5
+shiftRight6bit                EQU     0x30eb
 gosubNumericLabel             EQU     0x33cd
-scanlineMode                  EQU     0x30eb
-waitVBlank                    EQU     0x34c0
+scanlineMode                  EQU     0x30e1
+waitVBlank                    EQU     0x34b3
 waitVBlanks                   EQU     0x3aa5
-resetVideoFlags               EQU     0x34b4
-initClearFuncs                EQU     0x3fa0
-clearRect                     EQU     0x42a0
-drawPixel                     EQU     0x3ea1
+resetVideoFlags               EQU     0x34a7
+initClearFuncs                EQU     0x38a0
+clearRect                     EQU     0x41a4
+drawPixel                     EQU     0x3fa0
 drawLineSlow                  EQU     0x35cc
 drawLineSlowExt               EQU     0x3ba1
 drawLineSlowLoop              EQU     0x35a2
 drawLineSlowSwap              EQU     0x3db0
 drawPolyRel                   EQU     0x37b8
-setPolyRelFlipX               EQU     0x30e1
-setPolyRelFlipY               EQU     0x30d7
-draw_sprite                   EQU     0x41a1
-drawSprite                    EQU     0x36bb
-drawSpriteX                   EQU     0x36ae
-drawSpriteY                   EQU     0x36a1
+setPolyRelFlipX               EQU     0x30d7
+setPolyRelFlipY               EQU     0x30cd
+draw_sprite                   EQU     0x42a1
+drawSprite                    EQU     0x3ea1
+drawSpriteX                   EQU     0x36aa
+drawSpriteY                   EQU     0x34bf
 resetMusic                    EQU     0x43a1
 playMusic                     EQU     0x38b1
 musicGetNote                  EQU     0x3eae
-musicPlayNote                 EQU     0x38a0
+musicPlayNote                 EQU     0x36b7
 bcdAdd                        EQU     0x34cc
 bcdInt                        EQU     0x36c8
 bcdDigits                     EQU     0x3fad
@@ -3403,7 +3403,7 @@ resetVars           LDI     0
                     INC     varAddress
                     INC     varAddress
                     LD      varAddress
-                    XORI    giga_One                            ; end of user vars
+                    XORI    giga_One                        ; end of user vars
                     BNE     resetVars
                     RET
 
@@ -3609,11 +3609,11 @@ waitVB_vblank       LDWI    waitVBlank
                     BRA     waitVB_loop
 
 
-resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
+resetVideoFlags     LDI     giga_CursorX                    ; cursor x start
                     STW     cursorXY
                     LDWI    ON_BOTTOM_ROW_MSK
                     ANDW    miscFlags
-                    STW     miscFlags                           ; reset on bottom row flag
+                    STW     miscFlags                       ; reset on bottom row flag
                     RET
 
 
@@ -3621,9 +3621,10 @@ resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
 initClearFuncs      PUSH
                     LDWI    resetVideoFlags
                     CALL    giga_vAC
-    
-                    LDWI    SYS_SetMemory_v2_54                 ; setup fill memory SYS routine
+                    LDWI    SYS_SetMemory_v2_54             ; setup fill memory SYS routine
                     STW     giga_sysFn
+                    LD      fgbgColour
+                    ST      giga_sysArg1                    ; fill value
                     POP
                     RET
 
@@ -3632,13 +3633,11 @@ initClearFuncs      PUSH
 clearRect           PUSH
                     LDWI    initClearFuncs
                     CALL    giga_vAC
-                    LD      fgbgColour
-                    ST      giga_sysArg1                    ; fill value
                     LD      clrAddress + 1
                     ST      giga_sysArg3
                     LD      clrLines
                     
-clearCR_loopy       ST      clrLines
+clearR_loop         ST      clrLines
                     LD      clrWidth
                     ST      giga_sysArg0
                     LD      clrAddress
@@ -3647,7 +3646,7 @@ clearCR_loopy       ST      clrLines
                     INC     giga_sysArg3                    ; next line
                     LD      clrLines
                     SUBI    1
-                    BNE     clearCR_loopy
+                    BNE     clearR_loop
                     CALL    realTimeStubAddr
                     POP
                     RET

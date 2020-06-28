@@ -43,14 +43,17 @@ textWorkArea                  EQU                               0x7fa0
 
 ; Labels
 _entryPoint_                  EQU                               0x0200
-_loop                         EQU                               0x0268
-_next_0x0235                  EQU                               0x023a
-_else_0x02f4                  EQU                               0x02c1
-_end_0x02f6                   EQU                               0x02c3
+_loop                         EQU                               0x0260
+_rand                         EQU                               0x02bd
+_next_0x022d                  EQU                               0x0232
+_else_0x02ec                  EQU                               0x02b9
+_end_0x02ee                   EQU                               0x02bb
+_end_0x032a                   EQU                               0x02e5
 
 ; Global Variables
-_i                            EQU                               0x0030
-_r                            EQU                               0x0032
+_seed                         EQU                               0x0030
+_i                            EQU                               0x0032
+_r                            EQU                               0x0034
 
 ; Local Variables
 
@@ -83,13 +86,10 @@ _entryPoint_                  Initialise
                               InitEqOp                        
                               InitRealTimeStub                                                  ; INIT
 
-                              ResetVideoTable                                                   ; cls init
+                              LDWI                              12345
+                              STW                               _seed                           ; seed = 12345
 
-                              LDI                               0
-                              ST                                cursorXY
-                              LDI                               0
-                              ST                                cursorXY + 1
-                              AtTextCursor                                                      ; at 0, 0
+                              ClearVertBlinds                                                   ; cls
 
                               LDI                               0
                               STW                               _i
@@ -98,7 +98,7 @@ _entryPoint_                  Initialise
                               LDI                               1
                               STW                               0xb2                            ; for i=0 to max
 
-_next_0x0235                  LDWI                              0x0680
+_next_0x022d                  LDWI                              0x0680
                               ADDW                              _i
                               PEEK                              
                               STW                               0xe8
@@ -114,7 +114,7 @@ _next_0x0235                  LDWI                              0x0680
                               LDI                               63
                               POKE                              0xec                            ; poke (127 - a(i) LSL 8) + i, &h3F
 
-                              ForNextFarVarAdd                  _i _next_0x0235 0xb0 0xb2       ; next i
+                              ForNextFarVarAdd                  _i _next_0x022d 0xb0 0xb2       ; next i
 
 _loop                         Rand                              
                               ANDI                              127
@@ -151,16 +151,44 @@ _loop                         Rand
                               PEEK                              
                               XORI                              120
                               CALL                              convertEqOpAddr
-                              JumpFalse                         _else_0x02f4 0
+                              JumpFalse                         _else_0x02ec 0
                               LDWI                              0x0680
                               ADDW                              _r
                               STW                               memAddr
                               LDI                               119
                               POKE                              memAddr                         ; a(r) = a(r) + 1 : if a(r) = 120 then a(r) = 119
 
-_else_0x02f4                  BRA                               _loop                           ; goto &loop
+_else_0x02ec                  BRA                               _loop                           ; goto &loop
 
-_end_0x02f6                   BRA                               _end_0x02f6                     ; end
+_end_0x02ee                   BRA                               _end_0x02ee                     ; end
+
+_rand                         LDW                               _seed
+                              LSLW                              
+                              LSLW                              
+                              LSLW                              
+                              LSLW                              
+                              LSLW                              
+                              LSLW                              
+                              LSLW                              
+                              XORW                              _seed
+                              STW                               _seed                           ; seed = seed XOR (seed <<7)
+
+                              LD                                _seed + 1
+                              STW                               mathShift
+                              ShiftRight1bit                    
+                              XORW                              _seed
+                              STW                               _seed                           ; seed = seed XOR (seed.hi >>1) 'seed = seed XOR (seed >>9)
+
+                              LD                                _seed
+                              ST                                giga_vAC + 1
+                              ORI                               0xFF
+                              XORI                              0xFF
+                              XORW                              _seed
+                              STW                               _seed                           ; seed = seed XOR (seed <<8)
+
+                              Return                                                            ; return
+
+_end_0x032a                   BRA                               _end_0x032a                     ; END
 
 
 
@@ -170,12 +198,13 @@ _end_0x02f6                   BRA                               _end_0x02f6     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeStub                  EQU     0x7ea4
-convertEqOp                   EQU     0x7dea
-rand16bit                     EQU     0x7de2
-resetVideoFlags               EQU     0x7df3
-resetVideoTable               EQU     0x7eb6
-atTextCursor                  EQU     0x7eda
+realTimeStub                  EQU     0x7ded
+convertEqOp                   EQU     0x7dda
+rand16bit                     EQU     0x7dd2
+shiftRight1bit                EQU     0x7de3
+resetVideoFlags               EQU     0x7ea2
+initClearFuncs                EQU     0x7eae
+clearVertBlinds               EQU     0x7ec5
 convertEqOpAddr               EQU     0x00c2
 convertNeOpAddr               EQU     0x00c4
 convertLeOpAddr               EQU     0x00c6
@@ -249,6 +278,13 @@ rand16bit           LDWI    SYS_Random_34
                     RET
 
 
+shiftRight1bit      LDWI    SYS_LSRW1_48
+                    STW     giga_sysFn
+                    LDW     mathShift
+                    SYS     48
+                    RET
+
+
 ; do *NOT* use register4 to register7 during time slicing
 xreset              EQU     register0
 xcount              EQU     register1
@@ -261,7 +297,13 @@ vramAddr            EQU     register11
 evenAddr            EQU     register12
 clsAddress          EQU     register13
 varAddress          EQU     register13
-    
+clrAddress          EQU     register10
+clrLines            EQU     register11
+clrWidth            EQU     register12
+clrStart            EQU     register13
+clrEnd              EQU     register14
+clrRem              EQU     register15
+
 
 resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
                     STW     cursorXY
@@ -271,63 +313,55 @@ resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
                     RET
 
 
-                    ; resets video table pointers
-resetVideoTable     PUSH
-                    LDI     8
-                    STW     vramAddr
-                    LDWI    giga_videoTable
-                    STW     evenAddr
-    
-resetVT_loop        CALL    realTimeStubAddr
-                    LDW     vramAddr
-                    DOKE    evenAddr
-                    INC     evenAddr
-                    INC     evenAddr
-                    INC     vramAddr
-                    LD      vramAddr
-                    SUBI    giga_yres + 8
-                    BLT     resetVT_loop
-                    
+
+initClearFuncs      PUSH
                     LDWI    resetVideoFlags
-                    CALL    giga_vAC                    
+                    CALL    giga_vAC
+            
+                    LD      fgbgColour
+                    ST      giga_sysArg0
+                    ST      giga_sysArg0 + 1
+                    ST      giga_sysArg2
+                    ST      giga_sysArg2 + 1                    ; 4 pixels of bg colour
+    
+                    LDWI    SYS_Draw4_30                        ; setup 4 pixel SYS routine
+                    STW     giga_sysFn
                     POP
                     RET
 
 
-; do *NOT* use register4 to register7 during time slicing
-textStr             EQU     register0
-textNum             EQU     register0
-textBak             EQU     register0
-textLen             EQU     register1
-textOfs             EQU     register2
-textChr             EQU     register3
-textHex             EQU     register8
-textFont            EQU     register9
-textSlice           EQU     register10
-scanLine            EQU     register11
-digitMult           EQU     register12
-digitIndex          EQU     register13
-clearLoop           EQU     register14
+                    ; clears the viewable screen using a vertical blinds effect
+clearVertBlinds     PUSH
+                    LDWI    initClearFuncs
+                    CALL    giga_vAC
+
+                    LDWI    giga_vram
+                    STW     giga_sysArg4
+                    LD      giga_sysArg4 + 1
+                    ST      top
     
+clearVB_loop        CALL    realTimeStubAddr
+                    LD      top
+                    ST      giga_sysArg4 + 1                    ; top line
+                    SYS     30
     
-atTextCursor        LD      cursorXY
-                    SUBI    giga_xres - giga_xfont
-                    BLE     atTC_checkY
+                    LDWI    giga_yres - 1 + 16
+                    SUBW    top
+                    ST      giga_sysArg4 + 1                    ; bottom line
+                    SYS     30
+    
+                    LD      giga_sysArg4
+                    ADDI    0x04
+                    ST      giga_sysArg4
+                    SUBI    giga_xres
+                    BLT     clearVB_loop
+    
                     LDI     0
-                    ST      cursorXY
-                    
-atTC_checkY         LD      cursorXY + 1
-                    SUBI    giga_yres - giga_yfont
-                    BLT     atTC_resbot
-                    LDI     giga_yres - giga_yfont
-                    ST      cursorXY + 1
-                    LDI     ON_BOTTOM_ROW_BIT
-                    ORW     miscFlags
-                    STW     miscFlags                       ; set on bottom row flag
-                    RET
-                    
-atTC_resbot         LDWI    ON_BOTTOM_ROW_MSK
-                    ANDW    miscFlags
-                    STW     miscFlags                       ; reset on bottom row flag
+                    ST      giga_sysArg4
+                    INC     top                                 ; next top line
+                    LD      top
+                    SUBI    giga_yres / 2 + 8
+                    BLT     clearVB_loop
+                    POP
                     RET
 
