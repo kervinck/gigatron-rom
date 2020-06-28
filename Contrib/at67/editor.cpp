@@ -1069,25 +1069,25 @@ namespace Editor
     {
         if(_keyboardMode == Giga)
         {
-            if(_sdlKeyScanCode == _keyboard["Left"]._scanCode  &&  _sdlKeyModifier == _keyboard["Left"]._keyMod)          {Cpu::setIN(Cpu::getIN() & ~INPUT_LEFT);   return true;}
-            else if(_sdlKeyScanCode == _keyboard["Right"]._scanCode  &&  _sdlKeyModifier == _keyboard["Right"]._keyMod)   {Cpu::setIN(Cpu::getIN() & ~INPUT_RIGHT);  return true;}
-            else if(_sdlKeyScanCode == _keyboard["Up"]._scanCode  &&  _sdlKeyModifier == _keyboard["Up"]._keyMod)         {Cpu::setIN(Cpu::getIN() & ~INPUT_UP);     return true;}
-            else if(_sdlKeyScanCode == _keyboard["Down"]._scanCode  &&  _sdlKeyModifier == _keyboard["Down"]._keyMod)     {Cpu::setIN(Cpu::getIN() & ~INPUT_DOWN);   return true;}
-            else if(_sdlKeyScanCode == _keyboard["Start"]._scanCode  &&  _sdlKeyModifier == _keyboard["Start"]._keyMod)   {Cpu::setIN(Cpu::getIN() & ~INPUT_START);  return true;}
+            if(_sdlKeyScanCode == _keyboard["Left"]._scanCode         &&  _sdlKeyModifier == _keyboard["Left"]._keyMod)   {Cpu::setIN(Cpu::getIN() & ~INPUT_LEFT);   return true;}
+            else if(_sdlKeyScanCode == _keyboard["Right"]._scanCode   &&  _sdlKeyModifier == _keyboard["Right"]._keyMod)  {Cpu::setIN(Cpu::getIN() & ~INPUT_RIGHT);  return true;}
+            else if(_sdlKeyScanCode == _keyboard["Up"]._scanCode      &&  _sdlKeyModifier == _keyboard["Up"]._keyMod)     {Cpu::setIN(Cpu::getIN() & ~INPUT_UP);     return true;}
+            else if(_sdlKeyScanCode == _keyboard["Down"]._scanCode    &&  _sdlKeyModifier == _keyboard["Down"]._keyMod)   {Cpu::setIN(Cpu::getIN() & ~INPUT_DOWN);   return true;}
+            else if(_sdlKeyScanCode == _keyboard["Start"]._scanCode   &&  _sdlKeyModifier == _keyboard["Start"]._keyMod)  {Cpu::setIN(Cpu::getIN() & ~INPUT_START);  return true;}
             else if(_sdlKeyScanCode == _keyboard["Select"]._scanCode  &&  _sdlKeyModifier == _keyboard["Select"]._keyMod) {Cpu::setIN(Cpu::getIN() & ~INPUT_SELECT); return true;}
-            else if(_sdlKeyScanCode == _keyboard["A"]._scanCode  &&  _sdlKeyModifier == _keyboard["A"]._keyMod)           {Cpu::setIN(Cpu::getIN() & ~INPUT_A);      return true;}
-            else if(_sdlKeyScanCode == _keyboard["B"]._scanCode  &&  _sdlKeyModifier == _keyboard["B"]._keyMod)           {Cpu::setIN(Cpu::getIN() & ~INPUT_B);      return true;}
+            else if(_sdlKeyScanCode == _keyboard["A"]._scanCode       &&  _sdlKeyModifier == _keyboard["A"]._keyMod)      {Cpu::setIN(Cpu::getIN() & ~INPUT_A);      return true;}
+            else if(_sdlKeyScanCode == _keyboard["B"]._scanCode       &&  _sdlKeyModifier == _keyboard["B"]._keyMod)      {Cpu::setIN(Cpu::getIN() & ~INPUT_B);      return true;}
         }
         else if(_keyboardMode == HwGiga)
         {
-            if(_sdlKeyScanCode == _keyboard["Left"]._scanCode  &&  _sdlKeyModifier == _keyboard["Left"]._keyMod)          {Loader::sendCommandToGiga('A', true); return true;}
-            else if(_sdlKeyScanCode == _keyboard["Right"]._scanCode  &&  _sdlKeyModifier == _keyboard["Right"]._keyMod)   {Loader::sendCommandToGiga('D', true); return true;}
-            else if(_sdlKeyScanCode == _keyboard["Up"]._scanCode  &&  _sdlKeyModifier == _keyboard["Up"]._keyMod)         {Loader::sendCommandToGiga('W', true); return true;}
-            else if(_sdlKeyScanCode == _keyboard["Down"]._scanCode  &&  _sdlKeyModifier == _keyboard["Down"]._keyMod)     {Loader::sendCommandToGiga('S', true); return true;}
-            else if(_sdlKeyScanCode == _keyboard["Start"]._scanCode  &&  _sdlKeyModifier == _keyboard["Start"]._keyMod)   {Loader::sendCommandToGiga('E', true); return true;}
+            if(_sdlKeyScanCode == _keyboard["Left"]._scanCode         &&  _sdlKeyModifier == _keyboard["Left"]._keyMod)   {Loader::sendCommandToGiga('A', true); return true;}
+            else if(_sdlKeyScanCode == _keyboard["Right"]._scanCode   &&  _sdlKeyModifier == _keyboard["Right"]._keyMod)  {Loader::sendCommandToGiga('D', true); return true;}
+            else if(_sdlKeyScanCode == _keyboard["Up"]._scanCode      &&  _sdlKeyModifier == _keyboard["Up"]._keyMod)     {Loader::sendCommandToGiga('W', true); return true;}
+            else if(_sdlKeyScanCode == _keyboard["Down"]._scanCode    &&  _sdlKeyModifier == _keyboard["Down"]._keyMod)   {Loader::sendCommandToGiga('S', true); return true;}
+            else if(_sdlKeyScanCode == _keyboard["Start"]._scanCode   &&  _sdlKeyModifier == _keyboard["Start"]._keyMod)  {Loader::sendCommandToGiga('E', true); return true;}
             else if(_sdlKeyScanCode == _keyboard["Select"]._scanCode  &&  _sdlKeyModifier == _keyboard["Select"]._keyMod) {Loader::sendCommandToGiga('Q', true); return true;}
-            else if(_sdlKeyScanCode == _keyboard["A"]._scanCode  &&  _sdlKeyModifier == _keyboard["A"]._keyMod)           {Loader::sendCommandToGiga('Z', true); return true;}
-            else if(_sdlKeyScanCode == _keyboard["B"]._scanCode  &&  _sdlKeyModifier == _keyboard["B"]._keyMod)           {Loader::sendCommandToGiga('X', true); return true;}
+            else if(_sdlKeyScanCode == _keyboard["A"]._scanCode       &&  _sdlKeyModifier == _keyboard["A"]._keyMod)      {Loader::sendCommandToGiga('Z', true); return true;}
+            else if(_sdlKeyScanCode == _keyboard["B"]._scanCode       &&  _sdlKeyModifier == _keyboard["B"]._keyMod)      {Loader::sendCommandToGiga('X', true); return true;}
         }
 
         return false;
@@ -1177,7 +1177,7 @@ namespace Editor
 
         // Gigatron Keyboard emulation mode
         else if(handleGigaKeyDown()) return;
-#if 1
+#if 0
         else if(_sdlKeyScanCode == SDLK_PAGEUP)
         {
             double gamma = Image::getGammaInput();

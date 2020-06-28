@@ -805,35 +805,10 @@ namespace Operators
             }
             else
             {
-                std::string opcode;
-                switch(int16_t(std::lround(right._value)))
+                handleLogicalOp("LSLW", left);
+                for(uint8_t s=0; s<uint8_t(std::lround(right._value)); s++)
                 {
-                    case 1:
-                    case 2:
-                    case 3:
-                    case 4: opcode = "LSLW"; break;
-
-                    case 5:
-                    case 6:
-                    case 7: Compiler::emitVcpuAsm("LSLW", "", false); Compiler::emitVcpuAsm("LSLW", "", false); Compiler::emitVcpuAsm("LSLW", "", false); Compiler::emitVcpuAsm("LSLW", "", false); break;
-
-                    default: break;
-                }
-
-                handleLogicalOp(opcode, left);
-
-                Compiler::emitVcpuAsm(opcode, "", false);
-
-                switch(int16_t(std::lround(right._value)))
-                {
-                    case 2: Compiler::emitVcpuAsm("LSLW", "", false);                                                                                     break;
-                    case 3: Compiler::emitVcpuAsm("LSLW", "", false); Compiler::emitVcpuAsm("LSLW", "", false);                                           break;
-                    case 4: Compiler::emitVcpuAsm("LSLW", "", false); Compiler::emitVcpuAsm("LSLW", "", false); Compiler::emitVcpuAsm("LSLW", "", false); break;
-                    case 5: Compiler::emitVcpuAsm("LSLW", "", false);                                                                                     break;
-                    case 6: Compiler::emitVcpuAsm("LSLW", "", false); Compiler::emitVcpuAsm("LSLW", "", false);                                           break;
-                    case 7: Compiler::emitVcpuAsm("LSLW", "", false); Compiler::emitVcpuAsm("LSLW", "", false); Compiler::emitVcpuAsm("LSLW", "", false); break;
-
-                    default: break;
+                    Compiler::emitVcpuAsm("LSLW", "", false);
                 }
             }
 

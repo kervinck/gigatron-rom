@@ -91,9 +91,9 @@ _timeString_                  DB                                8 '00:00:00' 0
 
 ; Define Words
 def_words_0x8000              EQU                               0x8000
-def_words_0x8000              DW                                125 
+def_words_0x8000              DW                                -154 
 def_words_0x87d0              EQU                               0x87d0
-def_words_0x87d0              DW                                90 
+def_words_0x87d0              DW                                113 
 def_words_0x8fa0              EQU                               0x8fa0
 def_words_0x8fa0              DW                                0 
 

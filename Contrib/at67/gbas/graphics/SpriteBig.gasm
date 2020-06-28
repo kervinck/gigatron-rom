@@ -326,16 +326,16 @@ _end_0x039a                   BRA                               _end_0x039a     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-romCheck                      EQU     0x7cae
-realTimeStub                  EQU     0x7bed
-scanlineMode                  EQU     0x7bb1
-waitVBlank                    EQU     0x7bc7
-resetVideoFlags               EQU     0x7bbb
-initClearFuncs                EQU     0x7ca1
-clearVertBlinds               EQU     0x7cc5
+romCheck                      EQU     0x7cb2
+realTimeStub                  EQU     0x7ca0
+scanlineMode                  EQU     0x7bb2
+waitVBlank                    EQU     0x7bc8
+resetVideoFlags               EQU     0x7bbc
+initClearFuncs                EQU     0x7bee
+clearVertBlinds               EQU     0x7cc9
 draw_sprite                   EQU     0x7da2
-drawSprite                    EQU     0x7be0
-drawSpriteX                   EQU     0x7bd3
+drawSprite                    EQU     0x7be1
+drawSpriteX                   EQU     0x7bd4
 convertEqOpAddr               EQU     0x00c2
 convertNeOpAddr               EQU     0x00c4
 convertLeOpAddr               EQU     0x00c6
@@ -506,11 +506,11 @@ clrLines            EQU     register14
 clrWidth            EQU     register15
     
 
-resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
+resetVideoFlags     LDI     giga_CursorX                    ; cursor x start
                     STW     cursorXY
                     LDWI    ON_BOTTOM_ROW_MSK
                     ANDW    miscFlags
-                    STW     miscFlags                           ; reset on bottom row flag
+                    STW     miscFlags                       ; reset on bottom row flag
                     RET
 
 
@@ -518,9 +518,10 @@ resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
 initClearFuncs      PUSH
                     LDWI    resetVideoFlags
                     CALL    giga_vAC
-    
-                    LDWI    SYS_SetMemory_v2_54                 ; setup fill memory SYS routine
+                    LDWI    SYS_SetMemory_v2_54             ; setup fill memory SYS routine
                     STW     giga_sysFn
+                    LD      fgbgColour
+                    ST      giga_sysArg1                    ; fill value
                     POP
                     RET
 
@@ -529,28 +530,26 @@ initClearFuncs      PUSH
 clearVertBlinds     PUSH
                     LDWI    initClearFuncs
                     CALL    giga_vAC
-                    LD      fgbgColour
-                    ST      giga_sysArg1                        ; fill value
                     LDI     giga_vram >> 8
                     STW     top  
                     
 clearVB_loopy       LDI     giga_xres
                     ST      giga_sysArg0
                     LDI     0
-                    ST      giga_sysArg2                        ; low start address
+                    ST      giga_sysArg2                    ; low start address
                     LD      top
-                    ST      giga_sysArg3                        ; top line
-                    SYS     54                                  ; fill memory
+                    ST      giga_sysArg3                    ; top line
+                    SYS     54                              ; fill memory
     
                     LDI     giga_xres
                     ST      giga_sysArg0
                     LDI     0
-                    ST      giga_sysArg2                        ; low start address
+                    ST      giga_sysArg2                    ; low start address
                     LDWI    giga_yres - 1 + 16
                     SUBW    top
-                    ST      giga_sysArg3                        ; bottom line
-                    SYS     54                                  ; fill memory
-                    INC     top                                 ; next top line
+                    ST      giga_sysArg3                    ; bottom line
+                    SYS     54                              ; fill memory
+                    INC     top                             ; next top line
                     CALL    realTimeStubAddr
                     LD      top
                     SUBI    giga_yres / 2 + 8

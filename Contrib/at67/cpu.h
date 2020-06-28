@@ -9,7 +9,7 @@
 
 
 #define MAJOR_VERSION "1.0"
-#define MINOR_VERSION "0B"
+#define MINOR_VERSION "1B"
 #define VERSION_STR "gtemuAT67 v" MAJOR_VERSION "." MINOR_VERSION
  
 #define ROM_INST 0

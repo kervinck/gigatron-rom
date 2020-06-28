@@ -22,17 +22,17 @@ resetVars           LDI     0
                     INC     varAddress
                     INC     varAddress
                     LD      varAddress
-                    XORI    giga_One                            ; end of user vars
+                    XORI    giga_One                        ; end of user vars
                     BNE     resetVars
                     RET
 %ENDS
 
 %SUB                resetVideoFlags
-resetVideoFlags     LDI     giga_CursorX                        ; starting cursor position
+resetVideoFlags     LDI     giga_CursorX                    ; starting cursor position
                     STW     cursorXY
                     LDWI    ON_BOTTOM_ROW_MSK
                     ANDW    miscFlags
-                    STW     miscFlags                           ; reset on bottom row flag
+                    STW     miscFlags                       ; reset on bottom row flag
                     RET
 %ENDS
                     
@@ -62,9 +62,10 @@ resetVT_loop        CALLI   realTimeStub
 %SUB                initClearFuncs
 initClearFuncs      PUSH
                     CALLI   resetVideoFlags
-                    
-                    LDWI    SYS_SetMemory_v2_54                 ; setup fill memory SYS routine
+                    LDWI    SYS_SetMemory_v2_54             ; setup fill memory SYS routine
                     STW     giga_sysFn
+                    LD      fgbgColour
+                    ST      giga_sysArg1                    ; fill value                    
                     POP
                     RET
 %ENDS   
@@ -73,8 +74,6 @@ initClearFuncs      PUSH
                     ; clears the viewable screen
 clearScreen         PUSH
                     CALLI   initClearFuncs
-                    LD      fgbgColour
-                    ST      giga_sysArg1                    ; fill value
                     LD      clsAddress + 1
                     ST      giga_sysArg3
                     LDI     120
@@ -97,13 +96,11 @@ clearCS_loopy       ST      clsLines
                     ; clears a rectangle on the viewable screen
 clearRect           PUSH
                     CALLI   initClearFuncs
-                    LD      fgbgColour
-                    ST      giga_sysArg1                    ; fill value
                     LD      clrAddress + 1
                     ST      giga_sysArg3
                     LD      clrLines
                     
-clearCR_loopy       ST      clrLines
+clearR_loop         ST      clrLines
                     LD      clrWidth
                     ST      giga_sysArg0
                     LD      clrAddress
@@ -112,38 +109,36 @@ clearCR_loopy       ST      clrLines
                     INC     giga_sysArg3                    ; next line
                     LD      clrLines
                     SUBI    1
-                    BNE     clearCR_loopy
+                    BNE     clearR_loop
                     CALLI   realTimeStub
                     POP
                     RET
-%ENDS   
+%ENDS
 
 %SUB                clearVertBlinds
                     ; clears the viewable screen using a vertical blinds effect
 clearVertBlinds     PUSH
                     CALLI   initClearFuncs
-                    LD      fgbgColour
-                    ST      giga_sysArg1                        ; fill value
                     LDI     giga_vram >> 8
                     STW     top  
                     
 clearVB_loopy       LDI     giga_xres
                     ST      giga_sysArg0
                     LDI     0
-                    ST      giga_sysArg2                        ; low start address
+                    ST      giga_sysArg2                    ; low start address
                     LD      top
-                    ST      giga_sysArg3                        ; top line
-                    SYS     54                                  ; fill memory
+                    ST      giga_sysArg3                    ; top line
+                    SYS     54                              ; fill memory
     
                     LDI     giga_xres
                     ST      giga_sysArg0
                     LDI     0
-                    ST      giga_sysArg2                        ; low start address
+                    ST      giga_sysArg2                    ; low start address
                     LDWI    giga_yres - 1 + 16
                     SUBW    top
-                    ST      giga_sysArg3                        ; bottom line
-                    SYS     54                                  ; fill memory
-                    INC     top                                 ; next top line
+                    ST      giga_sysArg3                    ; bottom line
+                    SYS     54                              ; fill memory
+                    INC     top                             ; next top line
                     CALLI   realTimeStub
                     LD      top
                     SUBI    giga_yres / 2 + 8

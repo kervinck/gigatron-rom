@@ -676,7 +676,8 @@ namespace Keywords
         UNREFERENCED_PARAM(foundPos);
         UNREFERENCED_PARAM(tokenIndex);
 
-        if(codeLine._tokens.size() > 4)
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ",", false);
+        if(tokens.size() > 3)
         {
             fprintf(stderr, "Keywords::CLS() : Syntax error, expected 'CLS INIT' or 'CLS <address>, <optional width>, <optional height>', in '%s' on line %d\n",
                             codeLine._text.c_str(), codeLineIndex);
@@ -684,38 +685,39 @@ namespace Keywords
         }
 
         Expression::Numeric param;
-        if(codeLine._tokens.size() == 2)
+        if(tokens.size() == 1  &&  tokens[0].size())
         {
-            std::string token = codeLine._tokens[1];
+            std::string token = tokens[0];
             Expression::strToUpper(token);
+            Expression::stripWhitespace(token);
             if(token == "INIT")
             {
                 Compiler::emitVcpuAsm("%ResetVideoTable", "", false);
             }
             else
             {
-                Compiler::parseExpression(codeLineIndex, codeLine._tokens[1], param);
+                Compiler::parseExpression(codeLineIndex, tokens[0], param);
                 Compiler::emitVcpuAsm("STW", "clsAddress", false);
                 Compiler::emitVcpuAsm("%ClearScreen", "",  false);
             }
         }
-        else if(codeLine._tokens.size() > 2)
+        else if(tokens.size() > 1)
         {
-            Compiler::parseExpression(codeLineIndex, codeLine._tokens[1], param);
+            Compiler::parseExpression(codeLineIndex, tokens[0], param);
             Compiler::emitVcpuAsm("STW", "clrAddress", false);
-            Compiler::parseExpression(codeLineIndex, codeLine._tokens[2], param);
-            Compiler::emitVcpuAsm("ST", "clrWidth", false);
+            Compiler::parseExpression(codeLineIndex, tokens[1], param);
+            Compiler::emitVcpuAsm("STW", "clrWidth", false); // runtime uses clrWidth in arithmetic, so make sure all of it is valid
 
-            if(codeLine._tokens.size() == 3)
+            if(tokens.size() == 2)
             {
                 Compiler::emitVcpuAsm("LDI", "120", false);
             }
             else
             {
-                Compiler::parseExpression(codeLineIndex, codeLine._tokens[3], param);
+                Compiler::parseExpression(codeLineIndex, tokens[2], param);
             }
 
-            Compiler::emitVcpuAsm("ST", "clrLines", false);
+            Compiler::emitVcpuAsm("STW", "clrLines", false); // runtime uses clrLines in arithmetic, so make sure all of it is valid
             Compiler::emitVcpuAsm("%ClearRect", "",  false);
         }
         else
@@ -5406,7 +5408,7 @@ namespace Keywords
         if(tokens.size() != 2)
         {
             fprintf(stderr, "Keywords::BCDINT() : Syntax error, use 'BCDINT <dst bcd address>, <int>' bcd value MUST contain at least 5 digits; in '%s' on line %d\n", codeLine._text.c_str(),
-                                                                                                                                                                              codeLineIndex);
+                                                                                                                                                                       codeLineIndex);
             return false;
         }
 

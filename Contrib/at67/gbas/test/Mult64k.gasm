@@ -81,11 +81,11 @@ _timeString_                  DB                                8 '00:00:00' 0
 
 ; Define Words
 def_words_0x8000              EQU                               0x8000
-def_words_0x8000              DW                                115 
+def_words_0x8000              DW                                158 -48 68 72 89 -172 73 -78 -177 179 
 def_words_0x8014              EQU                               0x8014
-def_words_0x8014              DW                                -107 
+def_words_0x8014              DW                                -89 -146 178 129 138 145 -56 -14 -172 -117 
 def_words_0x8028              EQU                               0x8028
-def_words_0x8028              DW                                0 
+def_words_0x8028              DW                                0 0 0 0 0 0 0 0 0 0 
 
 ; Define Images
 

@@ -562,6 +562,8 @@ namespace Cpu
             }
         }
 
+        Loader::closeComPort();
+
         SDL_Quit();
     }
 
@@ -698,6 +700,9 @@ namespace Cpu
             fprintf(stderr, "Cpu::initialise() : failed to initialise SDL.\n");
             _EXIT_(EXIT_FAILURE);
         }
+
+        // Initialise COM port here so that we can see error messages
+        Loader::openComPort();
     }
 
     void cycle(const State& S, State& T)

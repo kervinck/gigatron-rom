@@ -5,7 +5,9 @@ const max = 127
 
 dim a%(max)=0
 
-cls init
+seed = 12345
+
+cls
 
 for i=0 to max
     poke (127 - a(i) LSL 8) + i, &h3F
@@ -13,7 +15,14 @@ next i
 
 loop:
     r = rnd(0) AND max
+    'gosub rand : r = seed AND max
     poke (127 - a(r) LSL 8) + r, &h3F
     a(r) = a(r) + 1 : if a(r) = 120 then a(r) = 119
     goto &loop
 end
+
+rand:
+    seed = seed XOR (seed <<7)
+    seed = seed XOR (seed.hi >>1) 'seed = seed XOR (seed >>9)
+    seed = seed XOR (seed <<8)
+return

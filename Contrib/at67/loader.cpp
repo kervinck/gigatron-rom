@@ -345,13 +345,14 @@ namespace Loader
     bool _disableUploads = false;
 
     int _gt1UploadSize = 0;
+    char _gt1Buffer[MAX_GT1_SIZE];
 
     int _numComPorts = 0;
     int _currentComPort = -1;
-    char _gt1Buffer[MAX_GT1_SIZE];
+    bool _enableComPort = false;
 
+    std::string _configComPort;
     int _configBaudRate = DEFAULT_COM_BAUD_RATE;
-    int _configComPort = DEFAULT_COM_PORT;
     double _configTimeOut = DEFAULT_GIGA_TIMEOUT;
     
     std::string _configGclBuild = ".";
@@ -389,6 +390,9 @@ namespace Loader
         if(Cpu::getHostEndianness() == Cpu::BigEndian) _hostIsBigEndian = true;
 
 #ifndef STAND_ALONE
+        _enableComPort = false;
+        _currentComPort = -1;
+
         _numComPorts = comEnumerate();
         if(_numComPorts == 0) fprintf(stderr, "Loader::initialise() : no COM ports found.\n");
 
@@ -419,19 +423,27 @@ namespace Loader
                 {
                     case Comms:
                     {
+                        // Enable comms
+                        getKeyAsString(_configIniReader, sectionString, "Enable", "0", result, false);
+                        _enableComPort = strtol(result.c_str(), nullptr, 10);
+
                         // Baud rate
                          getKeyAsString(_configIniReader, sectionString, "BaudRate", "115200", result);   
                         _configBaudRate = strtol(result.c_str(), nullptr, 10);
  
                         // Com port
                         char *endPtr;
-                        getKeyAsString(_configIniReader, sectionString, "ComPort", "0", result);   
-                        _configComPort = strtol(result.c_str(), &endPtr, 10);
+                        getKeyAsString(_configIniReader, sectionString, "ComPort", "0", result);
+                        _currentComPort = strtol(result.c_str(), &endPtr, 10);
                         if((endPtr - &result[0]) != int(result.size()))
                         {
-                            _configComPort = comFindPort(result.c_str());
-                            if(_configComPort < 0) _configComPort = DEFAULT_COM_PORT;
+                            _currentComPort = comFindPort(result.c_str());
+                            if(_currentComPort < 0)
+                            {
+                                fprintf(stderr, "Loader::initialise() : Couldn't find COM Port '%s' in INI file '%s'\n", result.c_str(), LOADER_CONFIG_INI);
+                            }
                         }
+                        _configComPort = result;
 
                         // Time out
                         getKeyAsString(_configIniReader, sectionString, "TimeOut", "5.0", result);
@@ -449,10 +461,12 @@ namespace Loader
                         {
                             ConfigRom configRom;
 
+                            // ROM name
                             std::string romName = "RomName" + std::to_string(index);
                             if(getKeyAsString(_configIniReader, sectionString, romName, "", result, false) == false) break;
                             configRom._name = result;
 
+                            // ROM type
                             std::string romVer = "RomType" + std::to_string(index);
                             if(getKeyAsString(_configIniReader, sectionString, romVer, "", result) == false) break;
                             configRom._type = uint8_t(std::stoul(result, nullptr, 16));
@@ -464,6 +478,7 @@ namespace Loader
 
                     case RAM:
                     {
+                        // Enable auto 64K
                         getKeyAsString(_configIniReader, sectionString, "AutoSet64k", "1", result, false);
                         _autoSet64k = strtol(result.c_str(), nullptr, 10);
                     }
@@ -477,7 +492,6 @@ namespace Loader
         {
             fprintf(stderr, "Loader::initialise() : couldn't find loader configuration INI file '%s' : reverting to default values.\n", LOADER_CONFIG_INI);
         }
-
 
         // High score config
         INIReader highScoresIniReader(_exePath + "/" + HIGH_SCORES_INI);
@@ -521,6 +535,8 @@ namespace Loader
 
 
 #ifndef STAND_ALONE
+    const std::string& getConfigComPort(void) {return _configComPort;}
+
     const std::string& getCurrentGame(void) {return _currentGame;}
     void setCurrentGame(const std::string& currentGame) {_currentGame = currentGame;}
 
@@ -555,37 +571,28 @@ namespace Loader
         return int(names.size());
     }
 
-    bool openComPort(int comPort)
+    bool openComPort(void)
     {
+        if(!_enableComPort)
+        {
+            _currentComPort = -1;
+            return false;
+        }
+
         if(_numComPorts == 0)
         {
             _numComPorts = comEnumerate();
             if(_numComPorts == 0)
             {
-                fprintf(stderr, "Loader::openComPort() : no COM ports found.\n");
+                fprintf(stderr, "Loader::openComPort() : no COM ports found\n");
                 return false;
             }
         }
 
-        _currentComPort = comPort;
-
-#ifdef _WIN32
-        if(_currentComPort == -1) _currentComPort = 0;
-#else
-        if(_currentComPort == -1)
-        {
-            _currentComPort = 0;
-            std::vector<std::string> names;
-            matchFileSystemName("/dev/", "tty.usbmodem", names);
-            if(names.size() == 0) matchFileSystemName("/dev/", "ttyACM", names);
-            if(names.size()) _currentComPort = comFindPort(names[0].c_str());
-        }
-#endif        
-
         if(_currentComPort < 0)
         {
             _numComPorts = 0;
-            fprintf(stderr, "Loader::openComPort() : couldn't open any COM port.\n");
+            fprintf(stderr, "Loader::openComPort() : couldn't open COM port '%s'\n", _configComPort.c_str());
             return false;
         } 
         else if(comOpen(_currentComPort, _configBaudRate) == 0)
@@ -598,28 +605,49 @@ namespace Loader
         return true;
     }
 
-    void openComPort(void)
-    {
-        openComPort(_configComPort);
-    }
-
     void closeComPort(void)
     {
         comClose(_currentComPort);
+
+        _currentComPort = -1;
     }
+
+    bool checkComPort(void)
+    {
+        if(!_enableComPort)
+        {
+            fprintf(stderr, "Loader::checkComPort() : Comms in '%s' disabled\n", LOADER_CONFIG_INI);
+            return false;
+        }
+
+        if(_currentComPort < 0)
+        {
+            fprintf(stderr, "Loader::checkComPort() : Invalid COM port '%s'\n", _configComPort.c_str());
+            return false;
+        }
+
+        return true;
+    }
+
 
     bool readCharGiga(char* chr)
     {
+        if(!checkComPort()) return false;
+
         return (comRead(_currentComPort, chr, 1) == 1);
     }
 
     bool sendCharGiga(char chr)
     {
+        if(!checkComPort()) return false;
+
         return (comWrite(_currentComPort, &chr, 1) == 1);
     }
 
     bool readLineGiga(std::string& line)
     {
+        if(!checkComPort()) return false;
+
         line.clear();
         char buffer = 0;
         uint64_t prevFrameCounter = SDL_GetPerformanceCounter();
@@ -644,10 +672,12 @@ namespace Loader
 
     bool readLineGiga(std::vector<std::string>& text)
     {
+        if(!checkComPort()) return false;
+
         std::string line;
         if(!readLineGiga(line))
         {
-            fprintf(stderr, "Loader::readLineGiga() : timed out on serial port : %s\n", comGetPortName(_currentComPort));
+            fprintf(stderr, "Loader::readLineGiga() : timed out on COM port : %s\n", comGetPortName(_currentComPort));
             return false;
         }
 
@@ -658,12 +688,20 @@ namespace Loader
 
     bool readUntilPromptGiga(std::vector<std::string>& text)
     {
+        if(!checkComPort()) return false;
+
         std::string line;
         do
         {
             if(!readLineGiga(line))
             {
-                fprintf(stderr, "Loader::readUntilPromptGiga() : timed out on serial port : %s\n", comGetPortName(_currentComPort));
+                fprintf(stderr, "Loader::readUntilPromptGiga() : timed out on COM port : %s\n", comGetPortName(_currentComPort));
+                return false;
+            }
+
+            if(size_t e = line.find('!') != std::string::npos)
+            {
+                fprintf(stderr, "Loader::readUntilPromptGiga() : Arduino Error : %s\n", &line[e]);
                 return false;
             }
 
@@ -676,11 +714,13 @@ namespace Loader
 
     bool waitForPromptGiga(std::string& line)
     {
+        if(!checkComPort()) return false;
+
         do
         {
             if(!readLineGiga(line))
             {
-                fprintf(stderr, "Loader::waitForPromptGiga() : timed out on serial port : %s\n", comGetPortName(_currentComPort));
+                fprintf(stderr, "Loader::waitForPromptGiga() : timed out on COM port : %s\n", comGetPortName(_currentComPort));
                 return false;
             }
 
@@ -697,50 +737,49 @@ namespace Loader
         return true;
     }
 
-    void sendCommandToGiga(char cmd, std::string& line, bool wait)
+    bool sendCommandToGiga(char cmd, std::string& line, bool wait)
     {
+        if(!checkComPort()) return false;
+
         char command[2] = {cmd, '\n'};
         comWrite(_currentComPort, command, 2);
 
         // Wait for ready prompt
-        if(wait) waitForPromptGiga(line);
+        if(wait)
+        {
+            if(!waitForPromptGiga(line)) return false;
+        }
+
+        return true;
     }
 
-    void sendCommandToGiga(char cmd, bool wait)
+    bool sendCommandToGiga(char cmd, bool wait)
     {
-        UNREFERENCED_PARAM(wait);
-
-        if(!openComPort(_configComPort)) return;
+        if(!checkComPort()) return false;
 
         std::string line;
-        sendCommandToGiga(cmd, line, false);
-
-        closeComPort();
+        return sendCommandToGiga(cmd, line, wait);
     }
 
     bool sendCommandToGiga(const std::string& cmd, std::vector<std::string>& text)
     {
-        if(!openComPort(_configComPort)) return false;
+        if(!checkComPort()) return false;
 
         comWrite(_currentComPort, cmd.c_str(), cmd.size());
-        bool success = readUntilPromptGiga(text);
-
-        closeComPort();
-
-        return success;
+        return readUntilPromptGiga(text);
     }
 
 
     int uploadToGigaThread(void* userData)
     {
-        if(!openComPort(_configComPort)) return -1;
+        if(!checkComPort()) return -1;
 
         Graphics::enableUploadBar(true);
 
         std::string line;
-        sendCommandToGiga('R', line, true);
-        sendCommandToGiga('L', line, true);
-        sendCommandToGiga('U', line, true);
+        if(!sendCommandToGiga('R', line, true)) return -1;
+        if(!sendCommandToGiga('L', line, true)) return -1;
+        if(!sendCommandToGiga('U', line, true)) return -1;
 
         int gt1Size = *((int*)userData);
 
@@ -754,7 +793,6 @@ namespace Loader
             if(!waitForPromptGiga(line))
             {
                 Graphics::enableUploadBar(false);
-                closeComPort();
                 //fprintf(stderr, "\n");
                 return -1;
             }
@@ -765,7 +803,6 @@ namespace Loader
         }
 
         Graphics::enableUploadBar(false);
-        closeComPort();
         //fprintf(stderr, "\n");
 
         return 0;
@@ -773,6 +810,8 @@ namespace Loader
 
     void uploadToGiga(const std::string& filepath, const std::string& filename)
     {
+        if(!checkComPort()) return;
+
         // An upload is already in progress
         if(Graphics::getUploadBarEnabled()) return;
 

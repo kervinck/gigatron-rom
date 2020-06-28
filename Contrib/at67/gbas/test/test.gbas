@@ -1,7 +1,12 @@
 _runtimePath_ "../runtime"
-_codeRomType_ ROMv1
+_codeRomType_ ROMv3
 
 cls
+    set BG_COLOUR, 0
+for i=1 to 158
+    cls &h0801, i, 4
+next i 
+end
 
 init:   a = 1
         

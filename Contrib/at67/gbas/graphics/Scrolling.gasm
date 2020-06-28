@@ -254,7 +254,12 @@ drawRect_y2         EQU     register15
 drawRectF_x1        EQU     register0
 drawRectF_y1        EQU     register1
 drawRectF_x2        EQU     register2
-drawRectF_y2        EQU     register7
+drawRectF_y2        EQU     register3
+drawRectF_lines     EQU     register8
+drawRectF_width     EQU     register9
+drawRectF_start     EQU     register10
+drawRectF_end       EQU     register11
+drawRectF_rem       EQU     register12
 
 drawPoly_mode       EQU     register14
 drawPoly_addr       EQU     register15
@@ -295,7 +300,13 @@ vramAddr            EQU     register11
 evenAddr            EQU     register12
 clsAddress          EQU     register13
 varAddress          EQU     register13
-    
+clrAddress          EQU     register10
+clrLines            EQU     register11
+clrWidth            EQU     register12
+clrStart            EQU     register13
+clrEnd              EQU     register14
+clrRem              EQU     register15
+
 
 resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
                     STW     cursorXY
