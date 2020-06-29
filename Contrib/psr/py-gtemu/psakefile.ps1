@@ -2,8 +2,8 @@ $ErrorActionPreference = 'Stop';
 
 $dirExcludes = '.venv', '.pytest_cache'
 $fileExcludes = @()
-$filesToFormat = get-childitem -Exclude $dirExcludes -Directory | % { get-childitem -path $_ -Recurse -Include '*.py' }
-$filesToFormat += get-item 'gtemu_extension_build.py'
+$filesToFormat = @(get-childitem -Exclude $dirExcludes -Directory | % { get-childitem -path $_ -Recurse -Include '*.py' })
+$filesToFormat += get-item 'gtemu_extension_build.py', 'gtemu.py'
 
 task default -depends isort, Blacken, Flake8, Extension, Test
 
@@ -28,12 +28,6 @@ task Flake8 {
     }
 }
 
-task Test {
-    .\.venv\Scripts\pytest
-    if ($LASTEXITCODE -ne 0 ) {
-        throw "Test failure";
-    }
-}
 
 task Virtualenv {
     try {
@@ -63,9 +57,33 @@ task Extension -depends Packages {
 }
 
 
-task ROM {
-    .\.venv\Scripts\python.exe .\dev.py Main=MainMenu\MainMenu.gcl Boot=CardBoot.gcl Reset=Reset.gcl
+task RomFiles {
+    $testScripts = @(Get-ChildItem 'test-scripts' -Recurse -Include '*.gcl')
+    try {
+        Push-Location 'roms'
+        Remove-Item '*.rom', '*.lst'
+    }
+    catch {
+        New-Item 'roms' -Type Directory | Push-Location
+    }
+    try {
+        $testScripts | foreach {
+            ..\.venv\Scripts\python.exe ..\ROMv4.py "Reset=$($_.FullName)"
+            if ($LASTEXITCODE -ne 0 ) {
+                throw "Failed to generate ROM from $($_.FullName)";
+            }
+            Rename-Item ROMv4.rom "$($_.Basename).rom"
+            Rename-Item ROMv4.lst "$($_.Basename).lst"
+        }
+    }
+    finally {
+        Pop-Location
+    }
+}
+
+task Test -depends RomFiles {
+    .\.venv\Scripts\pytest
     if ($LASTEXITCODE -ne 0 ) {
-        throw "Rom failed";
+        throw "Test failure";
     }
 }

@@ -2,3 +2,9 @@
 /_gtemu.c
 _gtemu*.pyd
 /Release/
+__pycache__/
+/roms/*.rom
+/roms/*.lst
+/*.exe
+/*.obj
+.vscode

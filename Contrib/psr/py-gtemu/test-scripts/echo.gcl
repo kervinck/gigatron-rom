@@ -1,0 +1,104 @@
+{ 
+    Echo Test
+    ---------
+
+    When this program is loaded as the Reset script for the Gigatron
+    then all that the Gigatron will do is read input from the serial port
+    and echo it back out again using SYS_SendSerial1_v3_80.
+
+    It maintains a circular buffer of size 128, which is initialised with the bytes
+    'READY'.
+
+    It is intended to support testing of the gtemu.py sending and recieving code.
+
+    Logic copied from https://www.snellman.net/blog/archive/2016-12-13-ring-buffers/
+    I think this is right - I'm really using 8-bit unsigned counters, but combining with
+    a second byte to make an array index (the array is at a page boundary)
+}
+
+gcl0x
+
+{{ Setup video }
+[
+  { Setup video indirection table }
+  $100 p= {videoTable}
+  $800 q= {frame}
+  [do
+    >q,  p. <p++                { Y[i] = 8..127}
+    0    p. <p++                {dX[i] = 0}
+    >q++ q  if>0loop]
+
+  { Clear screen }
+  \SYS_SetMemory_v2_54 _sysFn=  {!!! Not in ROM v1 !!!}
+  32 \sysArgs1.                 {Color blue}
+  $800 [do
+    p= _sysArgs2=               {Destination}
+    160 \sysArgs0.              {Count}
+    54!!                        {SYS call}
+    $100 p+ if>0loop]
+]
+}
+
+{ Change into default video mode }
+\SYS_SetMode_v2_80 _sysFn=      {!!! Not in ROM v1 !!!}
+1 80!!                          {Mode 1 -> "ABC-"}
+
+{ Convert vAC into a valid index, zeroing the MSB of the low-byte }
+$ff7f Mask=
+
+{ vAC is non-zero if there is anything in the buffer }
+[def ReadPointer WritePointer^ ret] NonEmpty=
+
+{ Number of bytes in the buffer }
+[def WritePointer ReadPointer- ret] Size=
+
+{ vAC is zero if the buffer is full }
+[def push Size! $80^ pop ret] NonFull=
+
+{ Add byte to buffer if it is not full. If it is full overwrite last byte written with $00 to show an overflow }
+[def push 
+    data=
+    NonFull! [ if=0 
+        $00 data= 
+      else
+        <WritePointer++             { Increment low-byte of WritePointer }
+    ]
+    WritePointer Mask& address=       { Mask WritePointer and store in address }
+    data address.                    { Load original value and store through newly calculated pointer}
+    pop ret 
+] Push=
+
+{ Write all available bytes out of the output port }
+[ def push 
+    [ do
+        NonEmpty! [ if=0 pop ret ]     { return straight away with 0 exit if there's nothing to send }
+        { Technically we can send up to 31 bytes in a go }
+        { However we need to watch the wrap around }
+        { and anyway, we're not really trying to test SYS_SendSerial1_v3_80 }
+        ReadPointer Mask& \sysArgs0:  { Pointer to read from }
+        1 \sysArgs2.                   { Starting at bit one }
+        8 \sysArgs3.                   { Transmit 8 bits }
+        \SYS_SendSerial1_v3_80 _sysFn=
+        80!! 
+    [ if=0 <ReadPointer++ loop ] 
+    ]
+    pop ret                         { We return 0 if we transmitted everything successfully, non-zero otherwise }
+] WriteOut=
+
+\InitialReadPointer ReadPointer=
+\InitialWritePointer WritePointer=
+
+[ do
+    [ do
+        \serialRaw, data=  
+        { Is there a byte? }
+        $ff^ [if<>0  { yes } data Push! loop ] ]
+    WriteOut!
+  loop ]
+
+
+*=$300
+{ Ring Buffer }
+_InitialReadPointer=*
+`READY
+_InitialWritePointer=*
