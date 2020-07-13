@@ -96,17 +96,20 @@ def waitReply(expectPrompt=True):
 
 def readLine():
   """Read line from serial port with optional verbosity"""
-  line = ser.readline()
-  if line:
-    line = line.decode()        # Convert from bytes to Unicode
-    line = line.rstrip()        # Remove any trailing newline and spaces
-    log('<', line)
-  else:
-    line = None                 # Signal that there is a timeout
-    if args.verbose:
-      sys.stdout.write('.')
-      sys.stdout.flush()
-  return line
+  try:
+    line = ser.readline()
+    if line:
+      line = line.decode()        # Convert from bytes to Unicode
+      line = line.rstrip()        # Remove any trailing newline and spaces
+      log('<', line)
+    else:
+      line = None                 # Signal that there is a timeout
+      if args.verbose:
+        sys.stdout.write('.')
+        sys.stdout.flush()
+    return line
+  except UnicodeDecodeError:
+    return readLine()
 
 def sendGt1(fp):
   """Send Gigatron object file"""
